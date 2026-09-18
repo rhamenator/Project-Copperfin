@@ -524,6 +524,62 @@ void test_spawn_rejects_by_reference_argument() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_spawn_failed_handle_assignment_does_not_leave_orphan_task() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_failed_handle_assignment";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path marker_path = temp_root / "worker_ran.txt";
+    const fs::path main_path = temp_root / "spawn_failed_handle_assignment.prg";
+    write_text(
+        main_path,
+        "PUBLIC error_seen, after_spawn\n"
+        "error_seen = .F.\n"
+        "after_spawn = .F.\n"
+        "ON ERROR DO handleerr\n"
+        "SPAWN worker TO missing.prop\n"
+        "after_spawn = .T.\n"
+        "SLEEP 200\n"
+        "RETURN\n"
+        "PROCEDURE handleerr\n"
+        "error_seen = .T.\n"
+        "RETURN\n"
+        "ENDPROC\n"
+        "PROCEDURE worker\n"
+        "STRTOFILE('ran', '" + marker_path.string() + "')\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6450: failed-handle-assignment test should complete: " + state.message);
+
+    const auto error_seen_it = state.globals.find("error_seen");
+    expect(error_seen_it != state.globals.end() && error_seen_it->second.boolean_value,
+           "#6450: SPAWN worker TO missing.prop should raise a catchable error the ON ERROR handler observes");
+
+    const auto after_spawn_it = state.globals.find("after_spawn");
+    expect(after_spawn_it != state.globals.end() && after_spawn_it->second.boolean_value,
+           "#6450: execution should resume normally after the handled SPAWN target-assignment failure");
+
+    const auto spawn_event = std::find_if(
+        state.events.begin(), state.events.end(),
+        [](const auto &event) { return event.category == "runtime.task.spawn"; });
+    expect(spawn_event == state.events.end(),
+           "#6450: a failed target assignment must mean the task was never started at all -- no "
+           "runtime.task.spawn event should be emitted");
+
+    expect(!std::filesystem::exists(marker_path, ignored),
+           "#6450: the worker must never have started running -- a task whose handle assignment failed must "
+           "be rolled back before the child is created, not started and then left running with no reachable "
+           "handle (the original bug: the task ran to completion despite the assignment failure)");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_spawn_cancellation_propagates_to_sibling_tasks() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_cancel_cmd";

@@ -1,3 +1,49 @@
+- 2026-09-18: Review-round fix for #6450 (PR #6475): a Copilot review
+  found that publishing the task handle before task creation/launch/
+  registration introduces a narrower version of the same problem if
+  one of *those* steps itself throws (e.g. `std::async` failing to
+  start a thread under resource exhaustion) -- the target would be
+  left holding a dangling, unregistered handle, or the exception
+  would escape uncaught entirely. Wrapped `make_shared<AsyncTaskState>`/
+  `std::async`/`register_async_task()` in a `try`/`catch`: on any
+  `std::exception`, the target is reassigned to empty, the (possibly
+  already-launched) task's cancellation token is set on a best-effort
+  basis, and a new catchable `Runtime.Prg.Dispatch.Error.SpawnLaunchFailed`
+  error is raised instead of letting the exception propagate. Added
+  across all four locale catalogs. This is defensive code for
+  allocation/thread-exhaustion failures impractical to deterministically
+  trigger in a portable CI test, so it isn't independently covered by
+  a fail-then-pass regression, unlike the primary fix. Updated
+  `RQ-CF-PRG-049`. All 396 tests pass, reconfirmed after the
+  review-fix round.
+
+- 2026-09-18: Fixed #6450: `SPAWN worker TO missing.prop` under `ON
+  ERROR` caught the target-assignment failure and let the program
+  continue, but the worker was already started and registered by the
+  time the assignment was attempted, so it kept running with no
+  reachable handle to `AWAIT` or cancel. Moved the handle allocation
+  and `assign_runtime_target_value()` call from after task creation
+  and registration to immediately after the child's entry frame is
+  constructed (target already resolved) but before `std::async` starts
+  it or `register_async_task()` registers it -- so a failed assignment
+  now costs nothing to unwind: the unstarted child simply falls out of
+  scope. Removed the now-redundant post-registration assignment
+  attempt. Added
+  `test_spawn_failed_handle_assignment_does_not_leave_orphan_task`,
+  which proves the worker never runs at all via an observable side
+  effect (a marker file written by `STRTOFILE()`) outside the child's
+  own otherwise-unreachable deep-copied globals -- the issue's own
+  repro output already shows no `runtime.task.spawn` event even in
+  the unfixed version, so checking only for that event's absence
+  would not have caught the regression. Added `RQ-CF-PRG-049`. This is
+  the fourth fix from the #6471 tracking issue; it covers only the
+  reported target-assignment-failure trigger, which requires no
+  rollback/cancellation machinery since nothing has started yet at
+  the point of failure -- it does not install a general rollback
+  guard for a failure occurring after the child has already started,
+  since no such trigger is reported here. All 396 tests pass. Verified
+  fail-then-pass.
+
 - 2026-09-18: Fixed #6447: `SPAWN Worker WITH @counter TO task_handle`
   accepted the by-reference `@counter` argument, ran the task to
   completion, and reported success while `counter` in the caller

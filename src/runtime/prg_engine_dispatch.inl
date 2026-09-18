@@ -2480,28 +2480,83 @@
                         std::move(call_argument_references));
                 }
 
+                // #6450: the target routine/file has already resolved and
+                // the child's entry frame is already pushed (so we know the
+                // spawn itself is otherwise going to succeed), but the child
+                // has not yet been started and no task is registered. This
+                // is the last point a target-assignment failure costs
+                // nothing to roll back: `child` simply falls out of scope
+                // unstarted. A failed assignment (a typo, a released
+                // object, an invalid property, a failing setter) must never
+                // leave a live, registered, unreachable worker running, so
+                // the handle is reserved and published to the TO target
+                // before the task is created, started, or registered.
                 const long long handle = allocate_async_task_handle();
-                auto task = std::make_shared<AsyncTaskState>();
-                task->handle = handle;
-                task->routine_name = target;
-                task->source_path = task_source_path;
-                task->cancel_requested = child->task_cancel_requested;
-                task->future = std::async(std::launch::async, [child]() mutable
+                if (!statement.names.empty() && !statement.names.front().empty())
                 {
-                    RuntimePauseState result = child->run(DebugResumeAction::continue_run);
-                    // #6453: this async lambda's return is the only place a
-                    // spawned child's run() result is ever observed (AWAIT
-                    // treats it as terminal regardless of pause reason, and
-                    // nothing re-drives this child afterward), so this is
-                    // every terminal path -- QUIT, natural fall-off,
-                    // cancellation, and error abort alike. QUIT already runs
-                    // this same cleanup via perform_quit(); the call here is
-                    // a no-op in that case and closes the gap for every
-                    // other exit.
-                    child->cleanup_runtime_resources_for_shutdown();
-                    return result;
-                }).share();
-                register_async_task(task);
+                    ExecutionOutcome outcome = assign_runtime_target_value(
+                        statement.names.front(), make_number_value(static_cast<double>(handle)));
+                    if (!outcome.ok)
+                    {
+                        return outcome;
+                    }
+                }
+
+                // #6450 review: the handle is already published to the TO
+                // target above. If creating, launching, or registering the
+                // task itself throws (e.g. std::async failing to start a
+                // thread, or allocation failure) the target must not be
+                // left holding a dangling, unregistered handle -- restore
+                // it and surface a catchable error instead of letting the
+                // handle point at nothing, or letting the exception escape
+                // uncaught.
+                std::shared_ptr<AsyncTaskState> task;
+                try
+                {
+                    task = std::make_shared<AsyncTaskState>();
+                    task->handle = handle;
+                    task->routine_name = target;
+                    task->source_path = task_source_path;
+                    task->cancel_requested = child->task_cancel_requested;
+                    task->future = std::async(std::launch::async, [child]() mutable
+                    {
+                        RuntimePauseState result = child->run(DebugResumeAction::continue_run);
+                        // #6453: this async lambda's return is the only place a
+                        // spawned child's run() result is ever observed (AWAIT
+                        // treats it as terminal regardless of pause reason, and
+                        // nothing re-drives this child afterward), so this is
+                        // every terminal path -- QUIT, natural fall-off,
+                        // cancellation, and error abort alike. QUIT already runs
+                        // this same cleanup via perform_quit(); the call here is
+                        // a no-op in that case and closes the gap for every
+                        // other exit.
+                        child->cleanup_runtime_resources_for_shutdown();
+                        return result;
+                    }).share();
+                    register_async_task(task);
+                }
+                catch (const std::exception &setup_error)
+                {
+                    // std::async can still have launched the child's thread
+                    // even if a later step (e.g. register_async_task()'s
+                    // own allocation) throws; request its cooperative
+                    // cancellation on a best-effort basis since it can no
+                    // longer be un-started.
+                    if (task != nullptr && task->cancel_requested != nullptr)
+                    {
+                        task->cancel_requested->store(true, std::memory_order_relaxed);
+                    }
+                    if (!statement.names.empty() && !statement.names.front().empty())
+                    {
+                        (void)assign_runtime_target_value(statement.names.front(), make_empty_value());
+                    }
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.SpawnLaunchFailed",
+                        {{"command", "SPAWN"}, {"reason", setup_error.what()}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
 
                 std::string detail = "handle=" + std::to_string(handle) + " target=" + target;
                 if (!statement.expression.empty())
@@ -2510,11 +2565,8 @@
                 }
                 if (!statement.names.empty() && !statement.names.front().empty())
                 {
-                    ExecutionOutcome outcome = assign_runtime_target_value(statement.names.front(), make_number_value(static_cast<double>(handle)));
-                    if (!outcome.ok)
-                    {
-                        return outcome;
-                    }
+                    // #6450: the assignment itself already succeeded above,
+                    // before this task (or its handle) existed at all.
                     detail += " assigned=" + statement.names.front();
                 }
                 events.push_back({.category = "runtime.task.spawn",

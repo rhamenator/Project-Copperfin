@@ -1554,6 +1554,7 @@
   "Runtime.Prg.Dispatch.Error.SaveToFilenameRequired": "SAVE TO exige um nome de arquivo",
   "Runtime.Prg.Dispatch.Error.SaveToOpenFailed": "SAVE TO nao conseguiu abrir o arquivo de saida",
   "Runtime.Prg.Dispatch.Error.SaveToWriteFailed": "SAVE TO nao conseguiu gravar o arquivo de saida",
+  "Runtime.Prg.Dispatch.Error.SpawnLaunchFailed": "{command} falhou ao iniciar a tarefa: {reason}",
   "Runtime.Prg.Dispatch.Error.SpawnRejectsByReferenceArgument": "{command} nao suporta argumentos por referencia: @{variable}",
   "Runtime.Prg.Dispatch.Error.SpawnRequiresTarget": "{command} exige uma rotina ou arquivo de destino",
   "Runtime.Prg.Dispatch.Error.SpawnTargetResolveFailed": "Nao foi possivel resolver o destino de {command}: {target}",
