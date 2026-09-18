@@ -1210,6 +1210,7 @@
   "Runtime.Prg.Dispatch.Error.SaveToFilenameRequired": "SAVE TO: filename required",
   "Runtime.Prg.Dispatch.Error.SaveToOpenFailed": "SAVE TO: unable to open output file",
   "Runtime.Prg.Dispatch.Error.SaveToWriteFailed": "SAVE TO: unable to write output file",
+  "Runtime.Prg.Dispatch.Error.SpawnLaunchFailed": "{command} failed to start the task: {reason}",
   "Runtime.Prg.Dispatch.Error.SpawnRejectsByReferenceArgument": "{command} does not support by-reference arguments: @{variable}",
   "Runtime.Prg.Dispatch.Error.SpawnRequiresTarget": "{command} requires a target routine or file",
   "Runtime.Prg.Dispatch.Error.SpawnTargetResolveFailed": "Unable to resolve {command} target: {target}",

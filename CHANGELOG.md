@@ -1,3 +1,22 @@
+- 2026-09-18: Review-round fix for #6450 (PR #6475): a Copilot review
+  found that publishing the task handle before task creation/launch/
+  registration introduces a narrower version of the same problem if
+  one of *those* steps itself throws (e.g. `std::async` failing to
+  start a thread under resource exhaustion) -- the target would be
+  left holding a dangling, unregistered handle, or the exception
+  would escape uncaught entirely. Wrapped `make_shared<AsyncTaskState>`/
+  `std::async`/`register_async_task()` in a `try`/`catch`: on any
+  `std::exception`, the target is reassigned to empty, the (possibly
+  already-launched) task's cancellation token is set on a best-effort
+  basis, and a new catchable `Runtime.Prg.Dispatch.Error.SpawnLaunchFailed`
+  error is raised instead of letting the exception propagate. Added
+  across all four locale catalogs. This is defensive code for
+  allocation/thread-exhaustion failures impractical to deterministically
+  trigger in a portable CI test, so it isn't independently covered by
+  a fail-then-pass regression, unlike the primary fix. Updated
+  `RQ-CF-PRG-049`. All 396 tests pass, reconfirmed after the
+  review-fix round.
+
 - 2026-09-18: Fixed #6450: `SPAWN worker TO missing.prop` under `ON
   ERROR` caught the target-assignment failure and let the program
   continue, but the worker was already started and registered by the
