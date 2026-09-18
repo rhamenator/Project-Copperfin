@@ -148,11 +148,62 @@
             }
         }
 
+        // #6453: this releases every table/record lock *this runtime
+        // instance* owns, across all of its own data sessions, as part of
+        // shutdown -- it must not touch locks owned by any other runtime
+        // instance sharing the same concurrency_state (e.g. a SPAWN
+        // parent, or a sibling spawned task). A prior version cleared the
+        // whole shared owner map unconditionally, which released every
+        // other runtime's locks too whenever any one runtime shut down.
         void clear_all_shared_lock_ownership()
         {
+            std::set<std::string> owner_keys;
+            for (const auto &[session_id, _] : data_sessions)
+            {
+                owner_keys.insert(make_lock_owner_key(runtime_instance_id, session_id));
+            }
+            owner_keys.insert(current_lock_owner_key());
+
             std::lock_guard<std::mutex> lock(concurrency_state->mutex);
-            concurrency_state->table_lock_owner_by_resource.clear();
-            concurrency_state->record_lock_owner_by_resource.clear();
+
+            for (auto table_it = concurrency_state->table_lock_owner_by_resource.begin();
+                 table_it != concurrency_state->table_lock_owner_by_resource.end();)
+            {
+                if (owner_keys.contains(table_it->second))
+                {
+                    table_it = concurrency_state->table_lock_owner_by_resource.erase(table_it);
+                }
+                else
+                {
+                    ++table_it;
+                }
+            }
+
+            for (auto resource_it = concurrency_state->record_lock_owner_by_resource.begin();
+                 resource_it != concurrency_state->record_lock_owner_by_resource.end();)
+            {
+                for (auto owner_it = resource_it->second.begin();
+                     owner_it != resource_it->second.end();)
+                {
+                    if (owner_keys.contains(owner_it->second))
+                    {
+                        owner_it = resource_it->second.erase(owner_it);
+                    }
+                    else
+                    {
+                        ++owner_it;
+                    }
+                }
+
+                if (resource_it->second.empty())
+                {
+                    resource_it = concurrency_state->record_lock_owner_by_resource.erase(resource_it);
+                }
+                else
+                {
+                    ++resource_it;
+                }
+            }
         }
 
         std::filesystem::path transaction_journal_root_directory() const

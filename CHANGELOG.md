@@ -1,3 +1,23 @@
+- 2026-09-17: Fixed #6453: a spawned task's shutdown (`QUIT` or normal
+  completion) previously released every table/record lock in the whole
+  shared lock-owner map, not just its own. `clear_all_shared_lock_ownership()`
+  cleared `concurrency_state->table_lock_owner_by_resource` and
+  `record_lock_owner_by_resource` unconditionally instead of scoping the
+  erase to the shutting-down runtime's own owner key -- so a `SPAWN`
+  parent holding `FLOCK()` on a table lost that lock the instant any
+  sibling spawned task shut down, and a second sibling could then
+  acquire the same "locked" table. Now scoped by the same
+  `make_lock_owner_key(runtime_instance_id, data_session)` identity the
+  targeted release helpers already used, across all of the shutting-down
+  runtime's own data sessions. Added `RQ-CF-PRG-046`. This is the first
+  fix from the newly filed #6471 tracking issue for six related
+  SPAWN/AWAIT architecture bugs; it covers only the lock-ownership leak
+  on shutdown, not the other five (by-reference writeback loss, orphaned
+  tasks from a failed handle assignment, transaction rollback erasing a
+  committed sibling write, a failed `AWAIT` assignment leaving a task
+  alive and replaying its events, and `READ EVENTS` misclassified as
+  `AWAIT` failure). All 396 tests pass. Verified fail-then-pass.
+
 - 2026-09-17: Review-round fix for #6440's `ERROR` command (PR #6470):
   Copilot found two additional gaps in the dispatch validation. First, the
   numeric-operand check only tested `kind != string`, so a logical or
