@@ -175,6 +175,131 @@ void test_spawn_and_await_command_runs_task_to_completion() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_await_failed_output_assignment_does_not_replay_events_or_leak_task() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_await_failed_assignment";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "await_failed_assignment.prg";
+    write_text(
+        main_path,
+        "PUBLIC error_seen\n"
+        "error_seen = .F.\n"
+        "ON ERROR DO caught\n"
+        "SPAWN worker TO nTask\n"
+        "AWAIT nTask TO missing.property\n"
+        "lStillRegisteredAfterFailure = (CFTASKSTATUS(nTask) == 'completed')\n"
+        "AWAIT nTask TO lSecond\n"
+        "cStatusAfterSecond = CFTASKSTATUS(nTask)\n"
+        "RETURN\n"
+        "PROCEDURE worker\n"
+        "? 'unique_child_output_marker'\n"
+        "RETURN .T.\n"
+        "ENDPROC\n"
+        "PROCEDURE caught\n"
+        "error_seen = .T.\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6456: failed-AWAIT-assignment test should complete: " + state.message);
+
+    const auto error_seen_it = state.globals.find("error_seen");
+    expect(error_seen_it != state.globals.end() && error_seen_it->second.boolean_value,
+           "#6456: AWAIT nTask TO missing.property should raise a catchable error the ON ERROR handler observes");
+
+    const auto still_registered_it = state.globals.find("lstillregisteredafterfailure");
+    expect(still_registered_it != state.globals.end() && still_registered_it->second.boolean_value,
+           "#6456: the task must remain registered (not erased) after a failed output assignment, so a "
+           "later retry AWAIT can still reach it");
+
+    const auto second_it = state.globals.find("lsecond");
+    expect(second_it != state.globals.end() && second_it->second.boolean_value,
+           "#6456: a retry AWAIT with a valid target should successfully consume the still-registered task");
+
+    const auto status_after_second_it = state.globals.find("cstatusaftersecond");
+    expect(status_after_second_it != state.globals.end() &&
+               status_after_second_it->second.string_value == "unknown",
+           "#6456: the successful retry AWAIT should finally erase the task, exactly once");
+
+    const auto marker_count = std::count_if(
+        state.events.begin(), state.events.end(),
+        [](const auto &event) {
+            return event.category == "runtime.print" && event.detail == "unique_child_output_marker";
+        });
+    expect(marker_count == 1,
+           "#6456: the child's event stream must be merged into the parent exactly once, not replayed on the "
+           "retry AWAIT -- got " + std::to_string(marker_count) + " occurrence(s)");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_spawn_read_events_is_rejected_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_read_events_rejected";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "spawn_read_events_rejected.prg";
+    write_text(
+        main_path,
+        "SPAWN event_worker TO nTask\n"
+        "AWAIT nTask TO lJoined\n"
+        "cStatusAfter = CFTASKSTATUS(nTask)\n"
+        "RETURN\n"
+        "PROCEDURE event_worker\n"
+        "? 'before_read_events'\n"
+        "READ EVENTS\n"
+        "? 'after_read_events'\n"
+        "RETURN .T.\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6457: spawned READ EVENTS rejection test should complete: " + state.message);
+
+    const auto joined_it = state.globals.find("ljoined");
+    expect(joined_it != state.globals.end() && !joined_it->second.boolean_value,
+           "#6457: a spawned task that hits READ EVENTS must not report completed");
+
+    const auto status_after_it = state.globals.find("cstatusafter");
+    expect(status_after_it != state.globals.end() && status_after_it->second.string_value == "unknown",
+           "#6457: AWAIT should still consume (erase) the rejected task exactly like any other faulted task");
+
+    const auto before_marker = std::find_if(
+        state.events.begin(), state.events.end(),
+        [](const auto &event) { return event.category == "runtime.print" && event.detail == "before_read_events"; });
+    expect(before_marker != state.events.end(),
+           "#6457: the worker should run up to the READ EVENTS statement");
+
+    const auto after_marker = std::find_if(
+        state.events.begin(), state.events.end(),
+        [](const auto &event) { return event.category == "runtime.print" && event.detail == "after_read_events"; });
+    expect(after_marker == state.events.end(),
+           "#6457: READ EVENTS in a spawned task must fault immediately rather than silently pausing or "
+           "letting execution continue past it");
+
+    const auto await_event = std::find_if(
+        state.events.begin(), state.events.end(),
+        [](const auto &event) { return event.category == "runtime.task.await"; });
+    expect(await_event != state.events.end() && await_event->detail.find("state=event_loop") == std::string::npos,
+           "#6457: the task must not be classified with the nonterminal 'event_loop' pause reason -- READ "
+           "EVENTS in a spawned task must genuinely fault, not silently pause forever, got '" +
+               (await_event != state.events.end() ? await_event->detail : "<missing>") + "'");
+    expect(await_event != state.events.end() &&
+               await_event->detail.find("not supported in a spawned task") != std::string::npos,
+           "#6457: the AWAIT event should report the specific READ EVENTS rejection reason, got '" +
+               (await_event != state.events.end() ? await_event->detail : "<missing>") + "'");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_spawn_task_supervision_observes_status_result_and_output_without_consuming_task() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_task_supervision";
