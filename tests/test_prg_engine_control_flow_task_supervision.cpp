@@ -638,6 +638,86 @@ void test_spawn_natural_completion_releases_its_own_locks() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_spawn_transaction_rollback_does_not_erase_committed_sibling_write() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_transaction_rollback_conflict";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "race.dbf";
+
+    const fs::path main_path = temp_root / "spawn_transaction_rollback_conflict.prg";
+    write_text(
+        main_path,
+        "CREATE TABLE race (name C(12))\n"
+        "SELECT race\n"
+        "APPEND BLANK\n"
+        "REPLACE name WITH 'ORIGINAL1'\n"
+        "APPEND BLANK\n"
+        "REPLACE name WITH 'ORIGINAL2'\n"
+        "BEGIN TRANSACTION\n"
+        "GO 1\n"
+        "REPLACE name WITH 'PARENT'\n"
+        "SPAWN worker TO nTask\n"
+        "AWAIT nTask TO lWorkerDone\n"
+        "lRollbackRaisedError = .F.\n"
+        "TRY\n"
+        "    ROLLBACK\n"
+        "CATCH TO oErr\n"
+        "    lRollbackRaisedError = .T.\n"
+        "ENDTRY\n"
+        "nTxnLevelAfterRollback = TXNLEVEL()\n"
+        "GO 2\n"
+        "cChildRecordAfter = ALLTRIM(name)\n"
+        "RETURN\n"
+        "PROCEDURE worker\n"
+        "SELECT race\n"
+        "GO 2\n"
+        "REPLACE name WITH 'CHILD'\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6451: rollback-conflict test should complete: " + state.message);
+
+    const auto worker_done_it = state.globals.find("lworkerdone");
+    expect(worker_done_it != state.globals.end() && worker_done_it->second.boolean_value,
+           "#6451: the spawned worker's write should be observed as completed before ROLLBACK runs");
+
+    const auto rollback_error_it = state.globals.find("lrollbackraisederror");
+    expect(rollback_error_it != state.globals.end() && rollback_error_it->second.boolean_value,
+           "#6451: ROLLBACK must raise a catchable error instead of silently succeeding when replaying its "
+           "whole-file backup would overwrite a foreign runtime instance's already-committed write to the "
+           "same file");
+
+    const auto txnlevel_it = state.globals.find("ntxnlevelafterrollback");
+    expect(txnlevel_it != state.globals.end() && txnlevel_it->second.number_value == 1.0,
+           "#6451: a ROLLBACK that fails due to a foreign-write conflict must leave the transaction active "
+           "(TXNLEVEL() unchanged), not silently report success and close it");
+
+    const auto child_record_it = state.globals.find("cchildrecordafter");
+    expect(child_record_it != state.globals.end() && child_record_it->second.string_value == "CHILD",
+           "#6451: the spawned worker's committed write to record 2 must survive the parent's failed "
+           "rollback, got '" +
+               (child_record_it != state.globals.end() ? child_record_it->second.string_value : "<missing>") +
+               "'");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+    expect(parse_result.ok, "#6451: race.dbf should remain readable after the failed rollback");
+    if (parse_result.ok && parse_result.table.records.size() == 2U)
+    {
+        expect(parse_result.table.records[1].values[0].display_value == "CHILD",
+               "#6451: on-disk record 2 must retain the spawned worker's committed 'CHILD' write, not be "
+               "reverted to 'ORIGINAL2' by the parent's stale pre-transaction snapshot, got '" +
+                   parse_result.table.records[1].values[0].display_value + "'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_request_cancel_rolls_back_active_transaction_and_resets_txnlevel() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_request_cancel_txn";

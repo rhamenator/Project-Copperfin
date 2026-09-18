@@ -765,6 +765,15 @@ namespace copperfin::runtime
             std::map<std::string, std::shared_ptr<std::recursive_mutex>> critical_sections;
             std::map<std::string, std::string> table_lock_owner_by_resource;
             std::map<std::string, std::map<std::size_t, std::string>> record_lock_owner_by_resource;
+            // #6451: which runtime instance's active transaction currently
+            // holds an outstanding whole-file rollback backup for a given
+            // companion-file resource, and whether some other runtime
+            // instance has written to that resource since that backup was
+            // taken. Lets a rollback detect and refuse to silently overwrite
+            // a foreign runtime's (e.g. a SPAWN child's) already-committed
+            // write to the same file with a stale snapshot.
+            std::map<std::string, std::string> transaction_backup_owner_by_resource;
+            std::set<std::string> foreign_write_since_backup_by_resource;
         };
 
         struct CurrentNativeEventContext

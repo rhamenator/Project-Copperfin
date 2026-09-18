@@ -33,8 +33,22 @@
         bool replay_transaction_journal_state(const TransactionJournalState &state)
         {
             bool ok = true;
-            for (const auto &[_, entry] : state.tracked_files)
+            for (const auto &[key, entry] : state.tracked_files)
             {
+                // #6451: a different runtime instance (e.g. a SPAWN child
+                // with no transaction of its own) wrote to this exact file
+                // after this transaction's backup was taken. Restoring the
+                // backup now would silently erase that already-committed
+                // write, so refuse this file's replay instead -- the
+                // rollback fails catchably rather than reporting success
+                // while discarding foreign committed data.
+                if (shared_transaction_backup_has_foreign_write(key))
+                {
+                    ok = false;
+                    continue;
+                }
+
+                bool entry_ok = true;
                 const std::filesystem::path original = copperfin::platform::path_from_utf8_string(entry.original_path);
                 if (entry.existed_at_start)
                 {
@@ -65,6 +79,7 @@
                     if (copy_error)
                     {
                         ok = false;
+                        entry_ok = false;
                     }
                 }
                 else
@@ -82,8 +97,17 @@
                         if (!std::filesystem::remove(original, remove_error) || remove_error)
                         {
                             ok = false;
+                            entry_ok = false;
                         }
                     }
+                }
+
+                if (entry_ok)
+                {
+                    // #6451: this resource has been reconciled back to its
+                    // pre-transaction state; a later, unrelated transaction
+                    // over the same file starts with a clean slate.
+                    clear_shared_transaction_backup_tracking(key);
                 }
             }
 
@@ -316,8 +340,32 @@
             return true;
         }
 
+        // #6451: called for every table write attempt, regardless of whether
+        // this runtime instance itself has an active transaction (a SPAWN
+        // child cleared its own transaction_level_by_session and so takes
+        // the early-return below, but it can still be the "foreign" writer
+        // that a *different* runtime instance's outstanding rollback backup
+        // needs to know about).
+        void note_potential_foreign_transaction_write(const std::string &table_path)
+        {
+            const std::string owner_key = current_lock_owner_key();
+            std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+            for (const auto &path : transaction_companion_paths(table_path))
+            {
+                const std::string key = normalize_path(copperfin::platform::path_to_utf8_string(path));
+                const auto backup_owner = concurrency_state->transaction_backup_owner_by_resource.find(key);
+                if (backup_owner != concurrency_state->transaction_backup_owner_by_resource.end() &&
+                    backup_owner->second != owner_key)
+                {
+                    concurrency_state->foreign_write_since_backup_by_resource.insert(key);
+                }
+            }
+        }
+
         bool ensure_transaction_backup_for_table(const std::string &table_path)
         {
+            note_potential_foreign_transaction_write(table_path);
+
             if (current_transaction_level() <= 0)
             {
                 return true;
@@ -359,6 +407,15 @@
                 }
 
                 journal.tracked_files.emplace(key, std::move(entry));
+                // #6451: this is the moment this runtime instance's
+                // transaction becomes the resource's protected baseline; any
+                // write to it by a *different* runtime instance from here
+                // on must be flagged before it can poison a later rollback.
+                {
+                    std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+                    concurrency_state->transaction_backup_owner_by_resource[key] = current_lock_owner_key();
+                    concurrency_state->foreign_write_since_backup_by_resource.erase(key);
+                }
                 if (!write_transaction_journal_file(journal))
                 {
                     last_error_message = transaction_backup_journal_persist_message();
@@ -367,6 +424,22 @@
             }
 
             return true;
+        }
+
+        // #6451: releases this resource's rollback-conflict tracking once its
+        // backup is no longer outstanding (replayed or committed), so a later,
+        // unrelated transaction over the same file starts with a clean slate.
+        void clear_shared_transaction_backup_tracking(const std::string &resource_key)
+        {
+            std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+            concurrency_state->transaction_backup_owner_by_resource.erase(resource_key);
+            concurrency_state->foreign_write_since_backup_by_resource.erase(resource_key);
+        }
+
+        bool shared_transaction_backup_has_foreign_write(const std::string &resource_key)
+        {
+            std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+            return concurrency_state->foreign_write_since_backup_by_resource.contains(resource_key);
         }
 
         void refresh_local_cursors_after_transaction_replay()
@@ -472,6 +545,15 @@
             if (found == transaction_journal_by_session.end())
             {
                 return;
+            }
+
+            // #6451: a commit accepts the current on-disk state; this
+            // transaction's rollback protection over these resources is no
+            // longer needed.
+            for (const auto &[key, entry] : found->second.tracked_files)
+            {
+                (void)entry;
+                clear_shared_transaction_backup_tracking(key);
             }
 
             std::error_code ignored;
