@@ -2341,10 +2341,24 @@
                         const std::string reference_name = trim_copy(argument_expression.substr(1U));
                         if (is_memory_variable_reference_text(reference_name))
                         {
-                            argument_continuation.values.push_back(lookup_variable(frame, reference_name));
-                            argument_continuation.references.push_back(reference_name);
-                            ++argument_continuation.next_argument_index;
-                            continue;
+                            // #6447: SPAWN's child runs as a fully independent,
+                            // deep-copied Impl on its own thread with no live
+                            // caller frame to write back into -- sync_byref_arguments()
+                            // has nothing to reach, so an accepted @-reference's
+                            // writeback was silently discarded while the task
+                            // still reported success. Until SPAWN defines a
+                            // safe, documented by-reference contract (stable
+                            // storage identity, an atomic copyout point,
+                            // conflict rules), reject the promise catchably
+                            // instead of silently breaking it.
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.SpawnRejectsByReferenceArgument",
+                                {{"command", "SPAWN"}, {"variable", reference_name}});
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            frame.command_argument_continuation.reset();
+                            frame.command_target_continuation.reset();
+                            return {.ok = false, .message = last_error_message};
                         }
                     }
 

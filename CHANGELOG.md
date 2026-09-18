@@ -1,3 +1,36 @@
+- 2026-09-18: Fixed #6447: `SPAWN Worker WITH @counter TO task_handle`
+  accepted the by-reference `@counter` argument, ran the task to
+  completion, and reported success while `counter` in the caller
+  remained silently unchanged. `SPAWN`'s child runs as a fully
+  independent, deep-copied `Impl` on its own thread; when it finishes,
+  `sync_byref_arguments()` has no live caller frame to write back
+  into, so the accepted `@` promise was always going to be discarded.
+  Rather than build the full safe by-reference contract the issue's
+  acceptance criteria describe (stable typed storage identities, an
+  atomic documented copyout point, conflict rules for concurrent
+  mutation/cancellation/multiple `AWAIT`s -- a materially larger,
+  undesigned feature), this takes the issue's other explicitly
+  sanctioned resolution: `SPAWN`'s argument-continuation loop now
+  rejects an explicit `@variable` argument with a catchable,
+  source-located error naming the variable, before the task starts
+  (before any child `Impl` is created), instead of silently accepting
+  and breaking the promise. A plain (non-`@`) argument is unaffected.
+  Added `test_spawn_rejects_by_reference_argument`. Updated
+  `test_spawn_arguments_use_heap_backed_frame_continuations`, which
+  had been passing `@counter` as one of its arguments without ever
+  checking writeback (exactly the gap the issue flagged) -- it now
+  uses a plain argument, since its actual purpose (UDF-argument
+  evaluation order and heap-backed continuations) doesn't need `@` at
+  all. Added `Runtime.Prg.Dispatch.Error.SpawnRejectsByReferenceArgument`
+  across all four locale catalogs. Added `RQ-CF-PRG-048`. This is the
+  third fix from the #6471 tracking issue; it covers only the
+  explicit `@variable` form -- SPAWN's argument loop has no
+  bare-implicit-reference branch at all (unlike `DO ... WITH`'s), so
+  an unmarked bare variable was already silently by-value with no
+  promise broken, and arrays/cursor fields/object members/transitive
+  aliases are not independently classified here. All 396 tests pass.
+  Verified fail-then-pass.
+
 - 2026-09-18: Review-round fix for #6451 (PR #6473): a Copilot review
   found a genuine TOCTOU race in the first implementation's
   "foreign write" flag -- it was set and checked by two independent,
