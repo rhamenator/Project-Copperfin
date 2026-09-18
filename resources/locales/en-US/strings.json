@@ -1271,6 +1271,7 @@
   "Runtime.Prg.Sql.Error.SqlExecRequiresCommandOrPreparedStatement": "SQLEXEC requires a command or a prepared SQL statement",
   "Runtime.Prg.Transaction.Error.BackupCreateFailed": "Unable to create transaction backup for: {path}",
   "Runtime.Prg.Transaction.Error.BackupJournalPersistFailed": "Unable to persist transaction backup journal",
+  "Runtime.Prg.Transaction.Error.BackupLockTimeout": "Unable to acquire an exclusive transaction lock for: {path}",
   "Runtime.Prg.Transaction.Error.JournalInitializeFailed": "Unable to initialize transaction journal",
   "Runtime.Prg.Transaction.Error.JournalReplayFailed": "Failed to replay transaction journal",
   "Runtime.Prg.Transaction.Error.JournalStatePersistFailed": "Unable to persist transaction journal state",

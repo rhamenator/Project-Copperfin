@@ -35,19 +35,6 @@
             bool ok = true;
             for (const auto &[key, entry] : state.tracked_files)
             {
-                // #6451: a different runtime instance (e.g. a SPAWN child
-                // with no transaction of its own) wrote to this exact file
-                // after this transaction's backup was taken. Restoring the
-                // backup now would silently erase that already-committed
-                // write, so refuse this file's replay instead -- the
-                // rollback fails catchably rather than reporting success
-                // while discarding foreign committed data.
-                if (shared_transaction_backup_has_foreign_write(key))
-                {
-                    ok = false;
-                    continue;
-                }
-
                 bool entry_ok = true;
                 const std::filesystem::path original = copperfin::platform::path_from_utf8_string(entry.original_path);
                 if (entry.existed_at_start)
@@ -102,12 +89,14 @@
                     }
                 }
 
-                if (entry_ok)
+                (void)entry_ok;
+                if (entry.acquired_exclusive_lock)
                 {
-                    // #6451: this resource has been reconciled back to its
-                    // pre-transaction state; a later, unrelated transaction
-                    // over the same file starts with a clean slate.
-                    clear_shared_transaction_backup_tracking(key);
+                    // #6451: release the resource lock this transaction has
+                    // held (blocking any other runtime instance's writes to
+                    // it) since its first write, whether or not this
+                    // specific companion file's replay succeeded.
+                    release_transaction_resource_lock(key);
                 }
             }
 
@@ -340,32 +329,82 @@
             return true;
         }
 
-        // #6451: called for every table write attempt, regardless of whether
-        // this runtime instance itself has an active transaction (a SPAWN
-        // child cleared its own transaction_level_by_session and so takes
-        // the early-return below, but it can still be the "foreign" writer
-        // that a *different* runtime instance's outstanding rollback backup
-        // needs to know about).
-        void note_potential_foreign_transaction_write(const std::string &table_path)
+        // #6451: acquires an exclusive, resource-scoped lock in the same
+        // shared table_lock_owner_by_resource/record_lock_owner_by_resource
+        // maps FLOCK()/RLOCK()/the implicit per-write locks already use, so
+        // it correctly conflicts with (and is conflicted by) any of them
+        // from any other runtime instance -- including a SPAWN child with no
+        // transaction of its own, since REPLACE/APPEND/etc. always take an
+        // implicit record or table lock for the physical write regardless of
+        // transaction state. Returns false (with a runtime.lock_timeout
+        // event, matching FLOCK()'s own contended-timeout behavior) if
+        // another runtime instance already holds a conflicting lock.
+        // `newly_acquired` is false when this runtime instance already owned
+        // the resource lock (e.g. an explicit prior FLOCK()), so the caller
+        // does not release a lock it did not itself acquire.
+        bool acquire_transaction_resource_lock(const std::string &resource_key, bool &newly_acquired)
         {
+            const ReprocessPolicy policy = current_reprocess_policy();
             const std::string owner_key = current_lock_owner_key();
-            std::lock_guard<std::mutex> lock(concurrency_state->mutex);
-            for (const auto &path : transaction_companion_paths(table_path))
+            const SourceLocation location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location;
+            newly_acquired = false;
+
+            for (std::size_t attempt = 0U;; ++attempt)
             {
-                const std::string key = normalize_path(copperfin::platform::path_to_utf8_string(path));
-                const auto backup_owner = concurrency_state->transaction_backup_owner_by_resource.find(key);
-                if (backup_owner != concurrency_state->transaction_backup_owner_by_resource.end() &&
-                    backup_owner->second != owner_key)
                 {
-                    concurrency_state->foreign_write_since_backup_by_resource.insert(key);
+                    std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+                    const auto table_owner_found = concurrency_state->table_lock_owner_by_resource.find(resource_key);
+                    bool other_record_lock_present = false;
+                    const auto shared_record_found = concurrency_state->record_lock_owner_by_resource.find(resource_key);
+                    if (shared_record_found != concurrency_state->record_lock_owner_by_resource.end())
+                    {
+                        for (const auto &[_, record_owner] : shared_record_found->second)
+                        {
+                            if (record_owner != owner_key)
+                            {
+                                other_record_lock_present = true;
+                                break;
+                            }
+                        }
+                    }
+                    const bool table_conflict = table_owner_found != concurrency_state->table_lock_owner_by_resource.end() &&
+                                                table_owner_found->second != owner_key;
+                    if (!table_conflict && !other_record_lock_present)
+                    {
+                        newly_acquired = table_owner_found == concurrency_state->table_lock_owner_by_resource.end();
+                        concurrency_state->table_lock_owner_by_resource[resource_key] = owner_key;
+                        return true;
+                    }
                 }
+
+                if (attempt >= policy.retry_budget)
+                {
+                    events.push_back({.category = "runtime.lock_timeout",
+                                      .detail = "BEGIN TRANSACTION timeout reprocess=" + policy.display_value,
+                                      .location = location});
+                    return false;
+                }
+
+                if (!pause_for_lock_retry("BEGIN TRANSACTION reprocess=" + policy.display_value, location, attempt + 1U))
+                {
+                    return false;
+                }
+            }
+        }
+
+        void release_transaction_resource_lock(const std::string &resource_key)
+        {
+            std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+            const auto found = concurrency_state->table_lock_owner_by_resource.find(resource_key);
+            if (found != concurrency_state->table_lock_owner_by_resource.end() &&
+                found->second == current_lock_owner_key())
+            {
+                concurrency_state->table_lock_owner_by_resource.erase(found);
             }
         }
 
         bool ensure_transaction_backup_for_table(const std::string &table_path)
         {
-            note_potential_foreign_transaction_write(table_path);
-
             if (current_transaction_level() <= 0)
             {
                 return true;
@@ -377,6 +416,7 @@
 
             TransactionJournalState &journal = current_transaction_journal();
             snapshot_verified_file_byte_overrides_for_table(journal, table_path);
+            const std::string primary_resource_key = normalize_path(table_path);
             std::error_code ignored;
             for (const auto &path : transaction_companion_paths(table_path))
             {
@@ -386,9 +426,29 @@
                     continue;
                 }
 
+                // #6451: this is this transaction's first touch of this
+                // exact resource; acquire the resource lock now so that no
+                // other runtime instance can write to it (and silently be
+                // clobbered, or clobber this transaction's own change) for
+                // as long as this transaction's backup over it stays
+                // outstanding. Locks are keyed by the primary table path
+                // only (matching cursor_lock_resource_key()), not per
+                // companion file, so only that one key is meaningful here.
+                bool acquired_exclusive_lock = false;
+                if (key == primary_resource_key)
+                {
+                    if (!acquire_transaction_resource_lock(key, acquired_exclusive_lock))
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Transaction.Error.BackupLockTimeout", {{"path", key}});
+                        return false;
+                    }
+                }
+
                 TransactionJournalFileEntry entry;
                 entry.original_path = key;
                 entry.existed_at_start = std::filesystem::exists(path, ignored);
+                entry.acquired_exclusive_lock = acquired_exclusive_lock;
                 if (entry.existed_at_start)
                 {
                     const std::filesystem::path backup_path = journal.root_path /
@@ -401,45 +461,28 @@
                     if (copy_error)
                     {
                         last_error_message = transaction_backup_message(key);
+                        if (acquired_exclusive_lock)
+                        {
+                            release_transaction_resource_lock(key);
+                        }
                         return false;
                     }
                     entry.backup_path = copperfin::platform::path_to_utf8_string(backup_path);
                 }
 
                 journal.tracked_files.emplace(key, std::move(entry));
-                // #6451: this is the moment this runtime instance's
-                // transaction becomes the resource's protected baseline; any
-                // write to it by a *different* runtime instance from here
-                // on must be flagged before it can poison a later rollback.
-                {
-                    std::lock_guard<std::mutex> lock(concurrency_state->mutex);
-                    concurrency_state->transaction_backup_owner_by_resource[key] = current_lock_owner_key();
-                    concurrency_state->foreign_write_since_backup_by_resource.erase(key);
-                }
                 if (!write_transaction_journal_file(journal))
                 {
                     last_error_message = transaction_backup_journal_persist_message();
+                    if (acquired_exclusive_lock)
+                    {
+                        release_transaction_resource_lock(key);
+                    }
                     return false;
                 }
             }
 
             return true;
-        }
-
-        // #6451: releases this resource's rollback-conflict tracking once its
-        // backup is no longer outstanding (replayed or committed), so a later,
-        // unrelated transaction over the same file starts with a clean slate.
-        void clear_shared_transaction_backup_tracking(const std::string &resource_key)
-        {
-            std::lock_guard<std::mutex> lock(concurrency_state->mutex);
-            concurrency_state->transaction_backup_owner_by_resource.erase(resource_key);
-            concurrency_state->foreign_write_since_backup_by_resource.erase(resource_key);
-        }
-
-        bool shared_transaction_backup_has_foreign_write(const std::string &resource_key)
-        {
-            std::lock_guard<std::mutex> lock(concurrency_state->mutex);
-            return concurrency_state->foreign_write_since_backup_by_resource.contains(resource_key);
         }
 
         void refresh_local_cursors_after_transaction_replay()
@@ -547,13 +590,15 @@
                 return;
             }
 
-            // #6451: a commit accepts the current on-disk state; this
-            // transaction's rollback protection over these resources is no
-            // longer needed.
+            // #6451: a commit accepts the current on-disk state; release
+            // the resource lock this transaction has held (serializing out
+            // any other runtime instance's writes) since its first write.
             for (const auto &[key, entry] : found->second.tracked_files)
             {
-                (void)entry;
-                clear_shared_transaction_backup_tracking(key);
+                if (entry.acquired_exclusive_lock)
+                {
+                    release_transaction_resource_lock(key);
+                }
             }
 
             std::error_code ignored;

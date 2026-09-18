@@ -660,16 +660,13 @@ void test_spawn_transaction_rollback_does_not_erase_committed_sibling_write() {
         "GO 1\n"
         "REPLACE name WITH 'PARENT'\n"
         "SPAWN worker TO nTask\n"
-        "AWAIT nTask TO lWorkerDone\n"
-        "lRollbackRaisedError = .F.\n"
-        "TRY\n"
-        "    ROLLBACK\n"
-        "CATCH TO oErr\n"
-        "    lRollbackRaisedError = .T.\n"
-        "ENDTRY\n"
+        "AWAIT nTask TO lWorkerCompleted\n"
+        "ROLLBACK\n"
         "nTxnLevelAfterRollback = TXNLEVEL()\n"
+        "GO 1\n"
+        "cRecord1After = ALLTRIM(name)\n"
         "GO 2\n"
-        "cChildRecordAfter = ALLTRIM(name)\n"
+        "cRecord2After = ALLTRIM(name)\n"
         "RETURN\n"
         "PROCEDURE worker\n"
         "SELECT race\n"
@@ -683,36 +680,48 @@ void test_spawn_transaction_rollback_does_not_erase_committed_sibling_write() {
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "#6451: rollback-conflict test should complete: " + state.message);
 
-    const auto worker_done_it = state.globals.find("lworkerdone");
-    expect(worker_done_it != state.globals.end() && worker_done_it->second.boolean_value,
-           "#6451: the spawned worker's write should be observed as completed before ROLLBACK runs");
+    // The spawned worker has no transaction of its own, but REPLACE always
+    // takes an implicit record lock for its physical write regardless of
+    // transaction state -- so it must contend with (and lose to) the
+    // parent's transaction-held exclusive lock on the same table, exactly
+    // like any other genuine FLOCK()/RLOCK() conflict.
+    const auto worker_completed_it = state.globals.find("lworkercompleted");
+    expect(worker_completed_it != state.globals.end() && !worker_completed_it->second.boolean_value,
+           "#6451: the spawned worker's REPLACE should contend with the parent's open transaction and fail, "
+           "not silently succeed against a table the parent transaction has claimed");
 
-    const auto rollback_error_it = state.globals.find("lrollbackraisederror");
-    expect(rollback_error_it != state.globals.end() && rollback_error_it->second.boolean_value,
-           "#6451: ROLLBACK must raise a catchable error instead of silently succeeding when replaying its "
-           "whole-file backup would overwrite a foreign runtime instance's already-committed write to the "
-           "same file");
+    const auto lock_timeout_event = std::find_if(
+        state.events.begin(), state.events.end(),
+        [](const auto &event) { return event.category == "runtime.lock_timeout"; });
+    expect(lock_timeout_event != state.events.end(),
+           "#6451: the worker's REPLACE should genuinely contend with the parent's transaction-held lock and "
+           "time out via the reprocess retry budget, not merely fail for an unrelated reason");
 
     const auto txnlevel_it = state.globals.find("ntxnlevelafterrollback");
-    expect(txnlevel_it != state.globals.end() && txnlevel_it->second.number_value == 1.0,
-           "#6451: a ROLLBACK that fails due to a foreign-write conflict must leave the transaction active "
-           "(TXNLEVEL() unchanged), not silently report success and close it");
+    expect(txnlevel_it != state.globals.end() && txnlevel_it->second.number_value == 0.0,
+           "#6451: with the sibling write correctly serialized out, ROLLBACK should succeed normally and "
+           "reset TXNLEVEL() to 0");
 
-    const auto child_record_it = state.globals.find("cchildrecordafter");
-    expect(child_record_it != state.globals.end() && child_record_it->second.string_value == "CHILD",
-           "#6451: the spawned worker's committed write to record 2 must survive the parent's failed "
-           "rollback, got '" +
-               (child_record_it != state.globals.end() ? child_record_it->second.string_value : "<missing>") +
-               "'");
+    const auto record1_it = state.globals.find("crecord1after");
+    expect(record1_it != state.globals.end() && record1_it->second.string_value == "ORIGINAL1",
+           "#6451: record 1 should be rolled back from 'PARENT' to 'ORIGINAL1'");
+
+    const auto record2_it = state.globals.find("crecord2after");
+    expect(record2_it != state.globals.end() && record2_it->second.string_value == "ORIGINAL2",
+           "#6451: record 2 should remain 'ORIGINAL2' -- the worker's 'CHILD' write must never have landed, "
+           "got '" + (record2_it != state.globals.end() ? record2_it->second.string_value : "<missing>") + "'");
 
     const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
-    expect(parse_result.ok, "#6451: race.dbf should remain readable after the failed rollback");
+    expect(parse_result.ok, "#6451: race.dbf should remain readable after the rollback");
     if (parse_result.ok && parse_result.table.records.size() == 2U)
     {
-        expect(parse_result.table.records[1].values[0].display_value == "CHILD",
-               "#6451: on-disk record 2 must retain the spawned worker's committed 'CHILD' write, not be "
-               "reverted to 'ORIGINAL2' by the parent's stale pre-transaction snapshot, got '" +
-                   parse_result.table.records[1].values[0].display_value + "'");
+        expect(parse_result.table.records[0].values[0].display_value == "ORIGINAL1",
+               "#6451: on-disk record 1 should be rolled back to 'ORIGINAL1', got '" +
+                   parse_result.table.records[0].values[0].display_value + "'");
+        expect(parse_result.table.records[1].values[0].display_value == "ORIGINAL2",
+               "#6451: on-disk record 2 should remain 'ORIGINAL2' -- the worker's write was correctly "
+               "serialized out by the parent's open transaction, not silently allowed through and then "
+               "erased, got '" + parse_result.table.records[1].values[0].display_value + "'");
     }
 
     fs::remove_all(temp_root, ignored);

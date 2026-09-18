@@ -1,3 +1,34 @@
+- 2026-09-18: Review-round fix for #6451 (PR #6473): a Copilot review
+  found a genuine TOCTOU race in the first implementation's
+  "foreign write" flag -- it was set and checked by two independent,
+  momentary critical sections, so a sibling write that raced between
+  the check and the backup-restore copy could still land immediately
+  before being silently overwritten, undetected. Rather than narrow
+  that window, the fix is redesigned around genuine mutual exclusion:
+  `ensure_transaction_backup_for_table()` now acquires an exclusive
+  lock on a resource's primary table path (via new
+  `acquire_transaction_resource_lock()`/`release_transaction_resource_lock()`)
+  the moment a transaction first backs it up, reusing the *same*
+  shared `table_lock_owner_by_resource`/`record_lock_owner_by_resource`
+  maps `FLOCK()`/`RLOCK()`/every implicit per-write lock already uses --
+  so a spawned sibling's `REPLACE` (which always takes an implicit
+  record lock across its physical write, regardless of that sibling's
+  own transaction state) now genuinely contends for and times out
+  against the parent's held lock, exactly like any other real lock
+  conflict, instead of racing a check-then-copy. The lock is released
+  on successful replay or commit. Removed the now-superseded
+  `transaction_backup_owner_by_resource`/`foreign_write_since_backup_by_resource`
+  tracking and its "reject on detected conflict" replay path entirely.
+  Rewrote `test_spawn_transaction_rollback_does_not_erase_committed_sibling_write`
+  to prove the new serialization behavior (the sibling's write times
+  out with a `runtime.lock_timeout` event and never lands; the
+  parent's unguarded `ROLLBACK` then succeeds normally). Added
+  `Runtime.Prg.Transaction.Error.BackupLockTimeout` across all four
+  locale catalogs. Updated `RQ-CF-PRG-047`. All 396 tests pass.
+  Verified fail-then-pass (both against the corrected design and,
+  separately, reconfirming the prior flag-based implementation's test
+  still fails without today's redesign).
+
 - 2026-09-18: Fixed #6451: a parent `ROLLBACK` silently erased a spawned
   sibling task's already-committed write to the same table. `SPAWN`
   clears a child's transaction levels/journals, so the child's own
