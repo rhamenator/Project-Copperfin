@@ -1,3 +1,68 @@
+- 2026-09-18: Review-round fix for #6451 (PR #6473): a Copilot review
+  found a genuine TOCTOU race in the first implementation's
+  "foreign write" flag -- it was set and checked by two independent,
+  momentary critical sections, so a sibling write that raced between
+  the check and the backup-restore copy could still land immediately
+  before being silently overwritten, undetected. Rather than narrow
+  that window, the fix is redesigned around genuine mutual exclusion:
+  `ensure_transaction_backup_for_table()` now acquires an exclusive
+  lock on a resource's primary table path (via new
+  `acquire_transaction_resource_lock()`/`release_transaction_resource_lock()`)
+  the moment a transaction first backs it up, reusing the *same*
+  shared `table_lock_owner_by_resource`/`record_lock_owner_by_resource`
+  maps `FLOCK()`/`RLOCK()`/every implicit per-write lock already uses --
+  so a spawned sibling's `REPLACE` (which always takes an implicit
+  record lock across its physical write, regardless of that sibling's
+  own transaction state) now genuinely contends for and times out
+  against the parent's held lock, exactly like any other real lock
+  conflict, instead of racing a check-then-copy. The lock is released
+  on successful replay or commit. Removed the now-superseded
+  `transaction_backup_owner_by_resource`/`foreign_write_since_backup_by_resource`
+  tracking and its "reject on detected conflict" replay path entirely.
+  Rewrote `test_spawn_transaction_rollback_does_not_erase_committed_sibling_write`
+  to prove the new serialization behavior (the sibling's write times
+  out with a `runtime.lock_timeout` event and never lands; the
+  parent's unguarded `ROLLBACK` then succeeds normally). Added
+  `Runtime.Prg.Transaction.Error.BackupLockTimeout` across all four
+  locale catalogs. Updated `RQ-CF-PRG-047`. All 396 tests pass.
+  Verified fail-then-pass (both against the corrected design and,
+  separately, reconfirming the prior flag-based implementation's test
+  still fails without today's redesign).
+
+- 2026-09-18: Fixed #6451: a parent `ROLLBACK` silently erased a spawned
+  sibling task's already-committed write to the same table. `SPAWN`
+  clears a child's transaction levels/journals, so the child's own
+  writes never went through this runtime's transaction bookkeeping; the
+  parent's whole-file journal backup/replay then unconditionally copied
+  its pre-transaction snapshot back over the live DBF/FPT/CDX files on
+  rollback, discarding whatever any other runtime instance (including
+  that child) had written to them since. Added shared per-resource-key
+  tracking in `RuntimeConcurrencyState`
+  (`transaction_backup_owner_by_resource`,
+  `foreign_write_since_backup_by_resource`): the moment a resource's
+  first whole-file backup is taken for an active transaction, that
+  transaction's owner is recorded against the resource; every
+  subsequent write attempt to that resource -- checked unconditionally,
+  regardless of the *writing* runtime's own transaction level, so a
+  transaction-less `SPAWN` child still gets recorded -- flags the
+  resource if the writer isn't the backup's owner. Replay now refuses
+  to restore a flagged resource, failing that `ROLLBACK` (or `CANCEL`,
+  or an implicit fault-triggered rollback) with the same catchable
+  journal-replay-failure error already used for a corrupt/missing
+  backup, and leaves the transaction level unchanged rather than
+  reporting success while quietly discarding the foreign write. Added
+  `test_spawn_transaction_rollback_does_not_erase_committed_sibling_write`.
+  Added `RQ-CF-PRG-047`. This is the second fix from the #6471 tracking
+  issue; it covers only the whole-file-replay-vs-foreign-write race
+  described in #6451, not the other four related SPAWN/AWAIT bugs
+  (by-reference writeback loss, orphaned tasks from a failed handle
+  assignment, a failed `AWAIT` assignment leaving a task alive and
+  replaying its events, and `READ EVENTS` misclassified as `AWAIT`
+  failure), nor does it implement fine-grained per-record generation
+  tracking, atomic multi-companion-file rollback, or protection against
+  a writer outside this process's shared runtime state. All 396 tests
+  pass. Verified fail-then-pass.
+
 - 2026-09-18: Review-round fix for #6453 (PR #6472): a Copilot review found
   that the requirement's own "or normal completion" clause was still
   unmet. `cleanup_runtime_resources_for_shutdown()` (which includes the

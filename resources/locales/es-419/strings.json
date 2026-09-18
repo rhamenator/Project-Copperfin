@@ -388,6 +388,7 @@
   "Runtime.Prg.ReportOutput.Error.WriteFailed": "No se pudo escribir la ruta de salida del reporte: {path}",
   "Runtime.Prg.Transaction.Error.BackupCreateFailed": "No se pudo crear el respaldo de la transaccion para: {path}",
   "Runtime.Prg.Transaction.Error.BackupJournalPersistFailed": "No se pudo persistir el diario de respaldo de la transaccion",
+  "Runtime.Prg.Transaction.Error.BackupLockTimeout": "No se pudo adquirir un bloqueo exclusivo de transaccion para: {path}",
   "Runtime.Prg.Transaction.Error.JournalInitializeFailed": "No se pudo inicializar el diario de la transaccion",
   "Runtime.Prg.Transaction.Error.JournalReplayFailed": "No se pudo reproducir el diario de la transaccion",
   "Runtime.Prg.Transaction.Error.JournalStatePersistFailed": "No se pudo persistir el estado del diario de la transaccion",

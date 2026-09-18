@@ -638,6 +638,95 @@ void test_spawn_natural_completion_releases_its_own_locks() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_spawn_transaction_rollback_does_not_erase_committed_sibling_write() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_transaction_rollback_conflict";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "race.dbf";
+
+    const fs::path main_path = temp_root / "spawn_transaction_rollback_conflict.prg";
+    write_text(
+        main_path,
+        "CREATE TABLE race (name C(12))\n"
+        "SELECT race\n"
+        "APPEND BLANK\n"
+        "REPLACE name WITH 'ORIGINAL1'\n"
+        "APPEND BLANK\n"
+        "REPLACE name WITH 'ORIGINAL2'\n"
+        "BEGIN TRANSACTION\n"
+        "GO 1\n"
+        "REPLACE name WITH 'PARENT'\n"
+        "SPAWN worker TO nTask\n"
+        "AWAIT nTask TO lWorkerCompleted\n"
+        "ROLLBACK\n"
+        "nTxnLevelAfterRollback = TXNLEVEL()\n"
+        "GO 1\n"
+        "cRecord1After = ALLTRIM(name)\n"
+        "GO 2\n"
+        "cRecord2After = ALLTRIM(name)\n"
+        "RETURN\n"
+        "PROCEDURE worker\n"
+        "SELECT race\n"
+        "GO 2\n"
+        "REPLACE name WITH 'CHILD'\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6451: rollback-conflict test should complete: " + state.message);
+
+    // The spawned worker has no transaction of its own, but REPLACE always
+    // takes an implicit record lock for its physical write regardless of
+    // transaction state -- so it must contend with (and lose to) the
+    // parent's transaction-held exclusive lock on the same table, exactly
+    // like any other genuine FLOCK()/RLOCK() conflict.
+    const auto worker_completed_it = state.globals.find("lworkercompleted");
+    expect(worker_completed_it != state.globals.end() && !worker_completed_it->second.boolean_value,
+           "#6451: the spawned worker's REPLACE should contend with the parent's open transaction and fail, "
+           "not silently succeed against a table the parent transaction has claimed");
+
+    const auto lock_timeout_event = std::find_if(
+        state.events.begin(), state.events.end(),
+        [](const auto &event) { return event.category == "runtime.lock_timeout"; });
+    expect(lock_timeout_event != state.events.end(),
+           "#6451: the worker's REPLACE should genuinely contend with the parent's transaction-held lock and "
+           "time out via the reprocess retry budget, not merely fail for an unrelated reason");
+
+    const auto txnlevel_it = state.globals.find("ntxnlevelafterrollback");
+    expect(txnlevel_it != state.globals.end() && txnlevel_it->second.number_value == 0.0,
+           "#6451: with the sibling write correctly serialized out, ROLLBACK should succeed normally and "
+           "reset TXNLEVEL() to 0");
+
+    const auto record1_it = state.globals.find("crecord1after");
+    expect(record1_it != state.globals.end() && record1_it->second.string_value == "ORIGINAL1",
+           "#6451: record 1 should be rolled back from 'PARENT' to 'ORIGINAL1'");
+
+    const auto record2_it = state.globals.find("crecord2after");
+    expect(record2_it != state.globals.end() && record2_it->second.string_value == "ORIGINAL2",
+           "#6451: record 2 should remain 'ORIGINAL2' -- the worker's 'CHILD' write must never have landed, "
+           "got '" + (record2_it != state.globals.end() ? record2_it->second.string_value : "<missing>") + "'");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+    expect(parse_result.ok, "#6451: race.dbf should remain readable after the rollback");
+    if (parse_result.ok && parse_result.table.records.size() == 2U)
+    {
+        expect(parse_result.table.records[0].values[0].display_value == "ORIGINAL1",
+               "#6451: on-disk record 1 should be rolled back to 'ORIGINAL1', got '" +
+                   parse_result.table.records[0].values[0].display_value + "'");
+        expect(parse_result.table.records[1].values[0].display_value == "ORIGINAL2",
+               "#6451: on-disk record 2 should remain 'ORIGINAL2' -- the worker's write was correctly "
+               "serialized out by the parent's open transaction, not silently allowed through and then "
+               "erased, got '" + parse_result.table.records[1].values[0].display_value + "'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_request_cancel_rolls_back_active_transaction_and_resets_txnlevel() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_request_cancel_txn";

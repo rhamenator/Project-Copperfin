@@ -207,6 +207,7 @@ int main() {
     test_spawn_cancellation_propagates_to_sibling_tasks();
     test_spawn_quit_releases_only_its_own_locks_not_the_parents();
     test_spawn_natural_completion_releases_its_own_locks();
+    test_spawn_transaction_rollback_does_not_erase_committed_sibling_write();
     test_request_cancel_rolls_back_active_transaction_and_resets_txnlevel();
     test_spawn_critical_section_serializes_workers();
     test_critical_section_order_policy_rejects_descending_nested_acquire();

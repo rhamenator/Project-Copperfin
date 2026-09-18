@@ -723,6 +723,11 @@ namespace copperfin::runtime
             std::string original_path;
             std::string backup_path;
             bool existed_at_start = false;
+            // #6451: true when this transaction newly acquired the shared
+            // resource lock for this entry (in-process only, never
+            // persisted to the on-disk journal); only such an entry
+            // releases the lock on replay/commit.
+            bool acquired_exclusive_lock = false;
         };
 
         struct VerifiedFileByteOverrideSnapshot

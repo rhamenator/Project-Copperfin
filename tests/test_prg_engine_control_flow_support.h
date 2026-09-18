@@ -145,6 +145,7 @@ void test_spawn_arguments_use_heap_backed_frame_continuations();
 void test_spawn_cancellation_propagates_to_sibling_tasks();
 void test_spawn_quit_releases_only_its_own_locks_not_the_parents();
 void test_spawn_natural_completion_releases_its_own_locks();
+void test_spawn_transaction_rollback_does_not_erase_committed_sibling_write();
 void test_request_cancel_rolls_back_active_transaction_and_resets_txnlevel();
 void test_spawn_critical_section_serializes_workers();
 void test_critical_section_order_policy_rejects_descending_nested_acquire();
