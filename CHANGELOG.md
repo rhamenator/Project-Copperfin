@@ -1,3 +1,56 @@
+- 2026-09-19: Review-round fix for #6247 (PR #6481): a Copilot review
+  found five further gaps in the initial fix, all confirmed real by
+  tracing the exact code path before fixing:
+
+  (1) `relation_matches_current_parent()` evaluates the *same*
+  arbitrary relation-key expression this whole fix exists to guard
+  against (once against the parent, once against the child), and none
+  of its three call sites in `synchronize_skip_parent_for_child()`
+  were protected -- only the nested `synchronize_relations_for_parent()`
+  call was. (2) The nested sync call's own `false` return (meaning the
+  walked parent was closed) was discarded, and the function returned
+  its ordinary `adjusted` flag instead of an invalidation signal, so a
+  closed walked parent could be swallowed as "nothing to adjust."
+  (3) The dispatch-level `SET SKIP`'s own trailing `synchronize_
+  relations_for_parent()` call had its result ignored too, so `SKIP`
+  could still report success after that specific call detected a
+  closure. (4) `SET RELATION`'s designator-parsing atomicity fix
+  didn't cover a *later* failure: once all changes are parsed cleanly,
+  they're inserted into the session's relation list *before* the
+  initial synchronization runs, so a synchronization failure (a
+  relation's own key expression closing its own child) left every
+  *other*, unrelated change already installed despite the command
+  reporting an error.
+
+  Fixed all four: rewrote `synchronize_skip_parent_for_child()` so
+  every `relation_matches_current_parent()` call is immediately
+  followed by generation revalidation of both the parent and the
+  child, and repurposed its return value from "was anything adjusted"
+  (never checked by its only caller) to "did a participant survive"
+  -- `false` now means a genuine invalidation, propagated as a
+  catchable `SKIP` failure at the dispatch site, which now also checks
+  its own trailing `synchronize_relations_for_parent()` call's result.
+  `SET RELATION`'s registration now snapshots the pre-command relation
+  graph and restores it in full if the final initial synchronization
+  fails, so a mid-sync closure rolls back every change from that
+  command, not just the one relation that triggered it.
+
+  Added three more regression tests targeting each mechanism
+  specifically: a relation-key match expression closing the parent
+  during its own two-sided evaluation (verified fail-then-pass with a
+  genuine Valgrind-confirmed invalid read, 38 errors, inside
+  `move_by_visible_records()` reached through the freed parent); a
+  sibling relation closing the *walked* parent during nested
+  synchronization (verified fail-then-pass at the assertion level --
+  the existing internal parent-side check already prevented a crash
+  here, so disabling only the propagation fix surfaced a silent
+  wrong-success instead, exactly matching the reviewer's concern); and
+  registration rolling back a sibling relation when the first
+  relation's own key expression closes its own child during initial
+  sync (also verified fail-then-pass at the assertion level). Replied
+  to and resolved all five review threads on PR #6481 with these
+  fixes. Full suite: 396 tests, 100% pass.
+
 - 2026-09-19: Fixed #6247: `SET RELATION TO dropchild() INTO Child`
   where `dropchild()` does `USE IN Child` reported apparent success
   with the child closed -- under Valgrind, 12 errors across 12

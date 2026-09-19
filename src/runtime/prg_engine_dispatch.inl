@@ -4949,12 +4949,23 @@
                     {
                         cursor->found = false;
                     }
-                    (void)synchronize_skip_parent_for_child(
-                        *cursor, frame, delta, cursor_reference.data_session);
                     // #6247: synchronize_skip_parent_for_child() can run
                     // relation-key expressions belonging to other relations
-                    // in this data session, which can close or replace this
-                    // exact cursor before control returns here.
+                    // in this data session, which can close or replace the
+                    // walked parent or this exact cursor; its own return
+                    // value is the only signal that happened, since the
+                    // cursor generation check just below only catches this
+                    // exact cursor, not an unrelated walked parent.
+                    if (!synchronize_skip_parent_for_child(
+                            *cursor, frame, delta, cursor_reference.data_session))
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", "SKIP"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
                     cursor = resolve_cursor_generation_reference(cursor_reference);
                     if (cursor == nullptr)
                     {
@@ -4965,8 +4976,16 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    synchronize_relations_for_parent(
-                        *cursor, frame, cursor_reference.data_session);
+                    if (!synchronize_relations_for_parent(
+                            *cursor, frame, cursor_reference.data_session))
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", "SKIP"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
                 }
                 events.push_back({.category = "runtime.skip",
                                   .detail = statement.expression,
@@ -5774,6 +5793,16 @@
                     }
 
                     auto &relations = current_session_state().relations;
+                    // #6247 review: the initial synchronization below can
+                    // fail *after* every requested change has already been
+                    // removed/inserted here, because a relation's own key
+                    // expression can close its own child -- close_cursor()
+                    // then scrubs only that one relation, leaving sibling
+                    // changes installed despite the command reporting an
+                    // error. Snapshot the pre-command relation graph so a
+                    // synchronization failure can restore it exactly,
+                    // keeping the whole multi-change command atomic.
+                    const auto relations_before_command = relations;
                     const auto remove_relation = [&](int child_work_area)
                     {
                         relations.erase(
@@ -5834,7 +5863,11 @@
                         // for_parent() already stopped touching freed state
                         // internally, but the command itself must still
                         // fail catchably rather than report success and go
-                        // on to dereference `parent` below.
+                        // on to dereference `parent` below. Restore the
+                        // pre-command relation graph so sibling changes that
+                        // were already inserted above don't survive an
+                        // overall command failure.
+                        relations = relations_before_command;
                         last_error_message = runtime_text(
                             "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
                             {{"command", "SET RELATION"}});
