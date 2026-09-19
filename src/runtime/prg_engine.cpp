@@ -4519,7 +4519,8 @@ namespace copperfin::runtime
             [&](CursorState &cursor,
                 CursorState *joined_cursor,
                 const QueryPlan &plan,
-                std::vector<std::vector<PrgValue>> &rows)
+                std::vector<std::vector<PrgValue>> &rows,
+                bool &cursor_lost)
         {
             const auto is_numeric_sort_value = [](const PrgValue &value) -> bool
             {
@@ -4656,6 +4657,31 @@ namespace copperfin::runtime
                 joined_cursor == nullptr
                     ? std::nullopt
                     : std::optional<CursorPositionSnapshot>(capture_cursor_snapshot(*joined_cursor));
+            // #6251: every expression below (WHERE, projection, GROUP BY,
+            // HAVING, ORDER BY, join-on) is arbitrary VFP code that can run
+            // USE IN/CLOSE ALL on `cursor` or `joined_cursor`. Generation
+            // identity is captured once, up front, and checked after every
+            // evaluation; `cursor_lost` signals the caller to stop
+            // publishing rows and fail catchably instead of continuing
+            // through freed state. Work areas are saved by value now so the
+            // trailing alias-restore logic never has to re-read them off a
+            // possibly-freed cursor.
+            const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(&cursor);
+            const CursorGenerationReference joined_cursor_reference =
+                joined_cursor != nullptr
+                    ? capture_cursor_generation_reference(joined_cursor)
+                    : CursorGenerationReference{};
+            const auto cursor_alive = [&]() -> bool
+            {
+                return resolve_cursor_generation_reference(cursor_reference) != nullptr;
+            };
+            const auto joined_cursor_alive = [&]() -> bool
+            {
+                return joined_cursor == nullptr ||
+                       resolve_cursor_generation_reference(joined_cursor_reference) != nullptr;
+            };
+            const int saved_cursor_work_area = cursor.work_area;
+            const int saved_joined_work_area = joined_cursor != nullptr ? joined_cursor->work_area : 0;
             DataSessionState &session = current_session_state();
             const auto source_alias_it = session.aliases.find(cursor.work_area);
             const std::optional<std::string> source_alias_before =
@@ -4998,10 +5024,26 @@ namespace copperfin::runtime
                 std::vector<QueryGroup> groups;
                 for (std::size_t recno = 1U; recno <= cursor.record_count; ++recno)
                 {
+                    if (cursor_lost)
+                    {
+                        break;
+                    }
                     move_cursor_to(cursor, static_cast<long long>(recno));
-                    if (!current_record_matches_visibility(cursor, frame, {}) ||
-                        (!plan.where_expression.empty() &&
-                         !value_as_bool(evaluate_expression(plan.where_expression, frame, &cursor))))
+                    if (!current_record_matches_visibility(cursor, frame, {}))
+                    {
+                        continue;
+                    }
+                    bool where_matches = true;
+                    if (!plan.where_expression.empty())
+                    {
+                        where_matches = value_as_bool(evaluate_expression(plan.where_expression, frame, &cursor));
+                        if (!cursor_alive() || !joined_cursor_alive())
+                        {
+                            cursor_lost = true;
+                            break;
+                        }
+                    }
+                    if (!where_matches)
                     {
                         continue;
                     }
@@ -5011,6 +5053,15 @@ namespace copperfin::runtime
                     for (const std::string &group_expression : plan.group_expressions)
                     {
                         key_values.push_back(evaluate_expression(group_expression, frame, &cursor));
+                        if (!cursor_alive() || !joined_cursor_alive())
+                        {
+                            cursor_lost = true;
+                            break;
+                        }
+                    }
+                    if (cursor_lost)
+                    {
+                        break;
                     }
                     auto group = std::find_if(
                         groups.begin(),
@@ -5031,6 +5082,10 @@ namespace copperfin::runtime
 
                 for (const QueryGroup &group : groups)
                 {
+                    if (cursor_lost)
+                    {
+                        break;
+                    }
                     if (group.record_numbers.empty())
                     {
                         continue;
@@ -5055,6 +5110,15 @@ namespace copperfin::runtime
                             query_row.values.push_back(
                                 evaluate_expression(projection_expression, frame, &cursor));
                         }
+                        if (!cursor_alive() || !joined_cursor_alive())
+                        {
+                            cursor_lost = true;
+                            break;
+                        }
+                    }
+                    if (cursor_lost)
+                    {
+                        break;
                     }
 
                     if (!plan.having_expression.empty())
@@ -5064,7 +5128,14 @@ namespace copperfin::runtime
                                 plan.having_expression,
                                 group.record_numbers),
                             query_row.values);
-                        if (!value_as_bool(evaluate_expression(having_expression, frame, &cursor)))
+                        const bool having_matches =
+                            value_as_bool(evaluate_expression(having_expression, frame, &cursor));
+                        if (!cursor_alive() || !joined_cursor_alive())
+                        {
+                            cursor_lost = true;
+                            break;
+                        }
+                        if (!having_matches)
                         {
                             continue;
                         }
@@ -5087,7 +5158,16 @@ namespace copperfin::runtime
                                         query_row.values),
                                     frame,
                                     &cursor));
+                            if (!cursor_alive() || !joined_cursor_alive())
+                            {
+                                cursor_lost = true;
+                                break;
+                            }
                         }
+                    }
+                    if (cursor_lost)
+                    {
+                        break;
                     }
                     materialized_rows.push_back(std::move(query_row));
                 }
@@ -5110,10 +5190,19 @@ namespace copperfin::runtime
 
                 const auto materialize_current_row = [&]()
                 {
-                    if (!aggregate_query && !plan.where_expression.empty() &&
-                        !value_as_bool(evaluate_expression(plan.where_expression, frame, &cursor)))
+                    if (!aggregate_query && !plan.where_expression.empty())
                     {
-                        return;
+                        const bool where_matches =
+                            value_as_bool(evaluate_expression(plan.where_expression, frame, &cursor));
+                        if (!cursor_alive() || !joined_cursor_alive())
+                        {
+                            cursor_lost = true;
+                            return;
+                        }
+                        if (!where_matches)
+                        {
+                            return;
+                        }
                     }
 
                     MaterializedQueryRow query_row;
@@ -5144,10 +5233,20 @@ namespace copperfin::runtime
                                     aggregate.arguments,
                                     frame,
                                     &cursor));
+                            if (!cursor_alive() || !joined_cursor_alive())
+                            {
+                                cursor_lost = true;
+                                return;
+                            }
                             continue;
                         }
                         if (projection_expression == "*")
                         {
+                            if (!joined_cursor_alive())
+                            {
+                                cursor_lost = true;
+                                return;
+                            }
                             for (const auto &field_value : record->values)
                             {
                                 query_row.values.push_back(record_value_to_prg_value(field_value));
@@ -5167,6 +5266,11 @@ namespace copperfin::runtime
                         }
                         query_row.values.push_back(
                             evaluate_expression(projection_expression, frame, &cursor));
+                        if (!cursor_alive() || !joined_cursor_alive())
+                        {
+                            cursor_lost = true;
+                            return;
+                        }
                     }
 
                     for (const QueryOrderExpression &order_expression : plan.order_expressions)
@@ -5181,6 +5285,11 @@ namespace copperfin::runtime
                         {
                             query_row.order_keys.push_back(
                                 evaluate_expression(order_expression.expression, frame, &cursor));
+                            if (!cursor_alive() || !joined_cursor_alive())
+                            {
+                                cursor_lost = true;
+                                return;
+                            }
                         }
                     }
 
@@ -5197,6 +5306,10 @@ namespace copperfin::runtime
                 if (joined_cursor == nullptr)
                 {
                     materialize_current_row();
+                    if (cursor_lost)
+                    {
+                        break;
+                    }
                     continue;
                 }
 
@@ -5211,10 +5324,19 @@ namespace copperfin::runtime
                         continue;
                     }
 
-                    if (!plan.join_on_expression.empty() &&
-                        !value_as_bool(evaluate_expression(plan.join_on_expression, frame, &cursor)))
+                    if (!plan.join_on_expression.empty())
                     {
-                        continue;
+                        const bool join_on_matches =
+                            value_as_bool(evaluate_expression(plan.join_on_expression, frame, &cursor));
+                        if (!cursor_alive() || !joined_cursor_alive())
+                        {
+                            cursor_lost = true;
+                            break;
+                        }
+                        if (!join_on_matches)
+                        {
+                            continue;
+                        }
                     }
 
                     if (!current_record(*joined_cursor).has_value())
@@ -5224,9 +5346,13 @@ namespace copperfin::runtime
 
                     matched_join = true;
                     materialize_current_row();
+                    if (cursor_lost)
+                    {
+                        break;
+                    }
                 }
 
-                if (plan.join_kind == QueryPlan::JoinKind::left && !matched_join)
+                if (!cursor_lost && plan.join_kind == QueryPlan::JoinKind::left && !matched_join)
                 {
                     const std::vector<vfp::DbfFieldDescriptor> joined_fields =
                         cursor_field_descriptors(*joined_cursor);
@@ -5264,20 +5390,32 @@ namespace copperfin::runtime
 
                     materialize_current_row();
 
-                    joined_cursor->remote_records = std::move(previous_remote_records);
-                    joined_cursor->remote_fields = std::move(previous_remote_fields);
-                    joined_cursor->remote = previous_remote;
-                    joined_cursor->field_count = previous_field_count;
-                    joined_cursor->record_count = previous_record_count;
-                    joined_cursor->recno = previous_recno;
-                    joined_cursor->found = previous_found;
-                    joined_cursor->bof = previous_bof;
-                    joined_cursor->eof = previous_eof;
+                    // #6251: materialize_current_row() just evaluated the
+                    // projection/order expressions for this synthesized
+                    // blank row; if one of them closed joined_cursor, the
+                    // structural restoration below must not write through
+                    // it.
+                    if (joined_cursor_alive())
+                    {
+                        joined_cursor->remote_records = std::move(previous_remote_records);
+                        joined_cursor->remote_fields = std::move(previous_remote_fields);
+                        joined_cursor->remote = previous_remote;
+                        joined_cursor->field_count = previous_field_count;
+                        joined_cursor->record_count = previous_record_count;
+                        joined_cursor->recno = previous_recno;
+                        joined_cursor->found = previous_found;
+                        joined_cursor->bof = previous_bof;
+                        joined_cursor->eof = previous_eof;
+                    }
+                }
+                if (cursor_lost)
+                {
+                    break;
                 }
             }
             }
 
-            if (aggregate_query && !aggregate_materialized)
+            if (!cursor_lost && aggregate_query && !aggregate_materialized)
             {
                 MaterializedQueryRow query_row;
                 for (const std::optional<QueryAggregateProjection> &aggregate_projection : aggregate_projections)
@@ -5321,32 +5459,54 @@ namespace copperfin::runtime
                 materialized_rows = std::move(distinct_rows);
             }
 
-            restore_cursor_snapshot(cursor, original);
-            if (joined_cursor != nullptr && joined_original.has_value())
+            // #6251: everything above may have closed or replaced `cursor`
+            // and/or `joined_cursor`. This cleanup runs unconditionally
+            // regardless of which branch materialized rows, so it must not
+            // dereference either through a stale reference/pointer; the
+            // saved-by-value work areas are used for alias bookkeeping
+            // instead of re-reading `.work_area` off a possibly-freed
+            // cursor. A closed work area's alias entry was already erased
+            // by close_cursor() itself, so skipping the restore here is
+            // correct, not just safe.
+            if (cursor_alive())
+            {
+                restore_cursor_snapshot(cursor, original);
+            }
+            if (joined_cursor != nullptr && joined_original.has_value() && joined_cursor_alive())
             {
                 restore_cursor_snapshot(*joined_cursor, *joined_original);
             }
-            if (!plan.source_alias.empty())
+            if (!plan.source_alias.empty() && cursor_alive())
             {
                 if (source_alias_before.has_value())
                 {
-                    session.aliases[cursor.work_area] = *source_alias_before;
+                    session.aliases[saved_cursor_work_area] = *source_alias_before;
                 }
                 else
                 {
-                    session.aliases.erase(cursor.work_area);
+                    session.aliases.erase(saved_cursor_work_area);
                 }
             }
-            if (joined_cursor != nullptr && !plan.joined_source_alias.empty())
+            if (joined_cursor != nullptr && !plan.joined_source_alias.empty() && joined_cursor_alive())
             {
                 if (joined_alias_before.has_value())
                 {
-                    session.aliases[joined_cursor->work_area] = *joined_alias_before;
+                    session.aliases[saved_joined_work_area] = *joined_alias_before;
                 }
                 else
                 {
-                    session.aliases.erase(joined_cursor->work_area);
+                    session.aliases.erase(saved_joined_work_area);
                 }
+            }
+
+            if (cursor_lost)
+            {
+                // #6251: a reentrant closure was detected somewhere above --
+                // the caller will fail the whole command catchably, so no
+                // partially-materialized rows should be published as if the
+                // query succeeded.
+                rows.clear();
+                return;
             }
 
             std::stable_sort(
@@ -5833,7 +5993,19 @@ namespace copperfin::runtime
                 }
             }
 
-            build_rows_from_query_plan(*cursor, joined_cursor, plan, refreshed_rows);
+            bool query_cursor_lost = false;
+            build_rows_from_query_plan(*cursor, joined_cursor, plan, refreshed_rows, query_cursor_lost);
+            if (query_cursor_lost)
+            {
+                // #6251: a WHERE/projection/GROUP BY/HAVING/ORDER BY/join-on
+                // expression closed or replaced the source or joined cursor
+                // during materialization. Report failure the same way an
+                // otherwise-invalid query does -- callers (INSERT INTO
+                // ... SELECT's own dispatch-level check, and the .Requery()
+                // method's boolean result) already treat `false` here as a
+                // command/method failure, not a crash.
+                return false;
+            }
             break;
         }
         default:

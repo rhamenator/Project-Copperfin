@@ -1,3 +1,60 @@
+- 2026-09-19: Fixed #6251: `SELECT NAME FROM People WHERE dropcursor()
+  INTO ARRAY result`, where `dropcursor()` does `USE IN People`,
+  reported a fabricated runtime out-of-memory fault natively; an
+  independent projection-callback variant (`SELECT droptext() AS
+  changed FROM People`) hung until its process bound expired.
+  Reproduced 535 Valgrind errors across 49 contexts, invalid reads
+  inside `evaluate_expression()` reached through the freed cursor
+  during row materialization.
+
+  This is the disclosed follow-on from #6246's own review round:
+  `materialize_select_query_rows()` delegates entirely to the
+  general-purpose `requery_native_list_control()`/
+  `build_rows_from_query_plan()` SELECT execution engine, shared by
+  direct `SELECT ... INTO ARRAY`, `INSERT INTO ... SELECT`, and native
+  listbox/grid `.Requery()` -- none of which had any reentrancy
+  protection. This is the largest single fix in the cluster so far:
+  one shared, ~900-line query-materialization function used by three
+  independent callers.
+
+  Added a `bool &cursor_lost` out-parameter to `build_rows_from_
+  query_plan()`. Captured `CursorGenerationReference`s for both the
+  source and joined cursor once, up front, and added liveness checks
+  after every `WHERE`/projection/`GROUP BY`/`HAVING`/`ORDER BY`/
+  join-on expression evaluation across the grouped-query
+  record-collection loop, the grouped-query output-construction loop,
+  the main per-row loop, and the join sub-loop. The `LEFT JOIN`
+  unmatched-row synthesis block's structural restoration of the
+  joined cursor's fields is now guarded too, since the row-
+  materialization call in between can close it. Most importantly, the
+  function's *trailing cleanup block* (position/alias restoration)
+  previously ran unconditionally regardless of which code path
+  executed and unconditionally dereferenced both cursors -- this is
+  now gated on the same liveness checks, using work areas saved by
+  value up front so alias bookkeeping never re-reads `.work_area` off
+  a possibly-freed cursor. A detected closure clears the output rows
+  and returns early rather than publishing partial results.
+  `requery_native_list_control()` propagates the closure as its own
+  `false` return, exactly like its other existing failure paths --
+  already handled gracefully by both of its callers (a catchable
+  dispatch-level error for `SELECT`, a plain `false` result for
+  `.Requery()`).
+
+  Added `test_select_where_expression_closing_source_cursor_fails_
+  catchably` and `test_select_projection_expression_closing_source_
+  cursor_fails_catchably`. Verified fail-then-pass with genuine
+  Valgrind-confirmed memory corruption: 535 errors/49 contexts with
+  the guards reverted, cleared to 0 with them restored.
+
+  Deliberately not fixed, and explicitly disclosed: `aggregate_
+  function_value()`'s pre-existing bare aggregate-call scanning gap
+  (#6243/#6245) and its newly-identified `GROUP BY` analogue,
+  `evaluate_group_aggregate()`'s own unprotected per-record scan --
+  both need a distinct fix mechanism and are left for a future pass.
+  Order/index-expression side effects share reentrancy surface with
+  #6269's already-closed `SET FILTER` scope, not investigated here.
+  Added `RQ-CF-PRG-058`.
+
 - 2026-09-19: Review-round fix for #6247 (PR #6481): a Copilot review
   found five further gaps in the initial fix, all confirmed real by
   tracing the exact code path before fixing:
