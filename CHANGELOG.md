@@ -1,3 +1,26 @@
+- 2026-09-19: Closed #6244 (`DELETE ALL FOR`/`RECALL ALL FOR`/`DELETE
+  FROM ... WHERE` crash when the predicate closes its own target via
+  `USE IN`) with no new production-code change. `#6243`'s own
+  acceptance criteria explicitly asked to audit every other caller of
+  `collect_aggregate_scope_records()` for the same reentrant-closure
+  failure; `set_deleted_flag()` (the sole implementation behind all
+  three commands) routes exclusively through that same shared helper,
+  already hardened for `RQ-CF-PRG-052`, and has no other reentrant
+  surface of its own (no further expression evaluation during
+  deletion-flag writing or lock handling, no `synchronize_relations_for_parent()`
+  call unlike `REPLACE`) -- all three commands are also already wrapped
+  in the pre-existing `execute_with_command_undo()` at the dispatch
+  level. Added `test_delete_all_for_expression_closing_target_cursor_fails_catchably`
+  and `test_recall_all_and_delete_from_for_expression_closing_target_cursor_fails_catchably`,
+  reproducing the issue's exact trigger for all three commands against
+  the already-merged code; verified the tests are not vacuously
+  passing by temporarily disabling the relevant check and confirming
+  all three assertions fail as expected. Added `RQ-CF-PRG-053`. This
+  is the second issue closed from the ~18-issue reentrant-cursor-closure
+  cluster, and the second/third confirmation that hardening a
+  widely-shared helper closes multiple tracked issues at once. All 396
+  tests pass.
+
 - 2026-09-18: Review-round fix for #6243 (PR #6477): a Copilot review
   found three further gaps in the reentrant-cursor-closure fix.
   (1) `current_record_matches_visibility()` evaluates the cursor's own
