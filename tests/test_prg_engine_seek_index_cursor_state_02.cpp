@@ -518,12 +518,18 @@ void test_set_filter_expression_closing_target_cursor_completes_gracefully() {
            "#6269: script execution should continue normally after SET FILTER, matching VFP9's own "
            "non-error completion -- SET FILTER must not raise a catchable error for this case");
 
-    expect(
-        std::count_if(state.events.begin(), state.events.end(), [](const auto& event) {
-            return event.category == "runtime.filter";
-        }) >= 1,
-        "#6269: SET FILTER should still emit its runtime.filter event even though the cursor closed "
-        "during expression evaluation");
+    const auto filter_event = std::find_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.filter";
+    });
+    expect(filter_event != state.events.end(),
+           "#6269: SET FILTER should still emit its runtime.filter event even though the cursor closed "
+           "during expression evaluation");
+    if (filter_event != state.events.end()) {
+        expect(filter_event->detail == "true",
+               "#6269: the event detail must be built from the locally-evaluated filter_clause ('true', "
+               "from dropcursor()'s .T. return), not re-read off the freed cursor -- got '" +
+                   filter_event->detail + "'");
+    }
 
     fs::remove_all(temp_root, ignored);
 }
