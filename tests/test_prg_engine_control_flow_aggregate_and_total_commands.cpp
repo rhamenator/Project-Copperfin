@@ -1207,4 +1207,170 @@ void test_total_command_for_sql_result_cursors() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #6245: COUNT's scope-collection (the FOR/WHILE predicate) routes through
+// collect_aggregate_scope_records(), the exact shared helper #6243/
+// RQ-CF-PRG-052 hardened against reentrant target closure. Proves that
+// hardening also closes this command's own trigger, with no further
+// production-code change needed.
+void test_count_for_expression_closing_target_cursor_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_count_closes_target_cursor";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    const fs::path main_path = temp_root / "count_closes_target_cursor.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    COUNT ALL FOR dropcursor() TO nResult\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "lStillOpen = USED('People')\n"
+        "RETURN\n"
+        "FUNCTION dropcursor\n"
+        "USE IN People\n"
+        "RETURN .T.\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6245: COUNT ALL FOR-closes-own-target script should complete without crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6245: COUNT ALL FOR must raise a catchable error instead of continuing through the closed "
+           "cursor");
+
+    const auto still_open_it = state.globals.find("lstillopen");
+    expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+           "#6245: the predicate's USE IN People should genuinely have closed the cursor");
+
+    const auto result_it = state.globals.find("nresult");
+    expect(result_it == state.globals.end(),
+           "#6245: nResult must never be assigned when COUNT ALL FOR failed to complete");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+// #6245: unlike the scope predicate above (already covered by
+// collect_aggregate_scope_records()'s existing hardening),
+// aggregate_record_values() evaluates each matched record's own value
+// expression in a *separate*, previously-unprotected loop -- e.g.
+// SUM(dropcursor()) closes the cursor from the value expression itself,
+// not the FOR/WHILE predicate. This is the genuinely new fix in this
+// issue.
+void test_sum_value_expression_closing_target_cursor_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_sum_value_expr_closes_target_cursor";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    const fs::path main_path = temp_root / "sum_value_expr_closes_target_cursor.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    SUM dropcursor() TO nResult\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "lStillOpen = USED('People')\n"
+        "RETURN\n"
+        "FUNCTION dropcursor\n"
+        "USE IN People\n"
+        "RETURN 1\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6245: SUM-value-expression-closes-own-target script should complete without crashing: " +
+               state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6245: SUM must raise a catchable error when its own value expression closes the cursor, "
+           "instead of continuing to iterate through it");
+
+    const auto still_open_it = state.globals.find("lstillopen");
+    expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+           "#6245: the value expression's USE IN People should genuinely have closed the cursor");
+
+    const auto result_it = state.globals.find("nresult");
+    expect(result_it == state.globals.end(),
+           "#6245: nResult must never be assigned when SUM failed to complete");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+// #6245: TOTAL's own scope-collection routes through the same shared
+// helper too. Unlike COUNT/SUM, TOTAL's grouping and output-construction
+// afterward operate entirely on a snapshot copy of the source records
+// taken *before* scope collection, never touching the live cursor again
+// -- so TOTAL needed no further production-code change either, verified
+// here rather than assumed.
+void test_total_for_expression_closing_target_cursor_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_total_closes_target_cursor";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+    const fs::path output_path = temp_root / "totals.dbf";
+
+    const fs::path main_path = temp_root / "total_closes_target_cursor.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    TOTAL TO '" + output_path.string() + "' ON NAME FIELDS AGE FOR dropcursor()\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "lStillOpen = USED('People')\n"
+        "RETURN\n"
+        "FUNCTION dropcursor\n"
+        "USE IN People\n"
+        "RETURN .T.\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6245: TOTAL-closes-own-target script should complete without crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6245: TOTAL must raise a catchable error instead of continuing through the closed cursor");
+
+    const auto still_open_it = state.globals.find("lstillopen");
+    expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+           "#6245: the predicate's USE IN People should genuinely have closed the cursor");
+
+    std::error_code output_exists_error;
+    expect(!std::filesystem::exists(output_path, output_exists_error),
+           "#6245: TOTAL must not publish a partial output table when the FOR predicate closed its source");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace cf_test_prg_engine_control_flow

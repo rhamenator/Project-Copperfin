@@ -42,6 +42,9 @@ int main() {
     test_total_command_errors_use_default_locale_messages();
     test_total_command_supports_currency_and_integer_fields();
     test_total_command_for_sql_result_cursors();
+    test_count_for_expression_closing_target_cursor_fails_catchably();
+    test_sum_value_expression_closing_target_cursor_fails_catchably();
+    test_total_for_expression_closing_target_cursor_fails_catchably();
     test_select_query_into_array_commands();
     test_create_table_free_dynamic_target();
     test_private_declaration_masks_caller_variable();
