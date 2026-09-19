@@ -3035,6 +3035,18 @@
             const bool original_bof = cursor.bof;
             const bool original_eof = cursor.eof;
 
+            // #6246: default/explicit value expressions evaluated below can
+            // execute arbitrary VFP code, including USE IN/CLOSE ALL on
+            // this exact cursor. replace_current_record_fields() already
+            // detects that and fails catchably (RQ-CF-PRG-052), but this
+            // function's OWN failure path below then unconditionally
+            // touched the same cursor again to roll the blank-record
+            // append back -- exactly the kind of freed-state access that
+            // fix closed for REPLACE itself. Capture identity so the
+            // rollback path can tell whether there is anything left to
+            // roll back through.
+            const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(&cursor);
+
             if (!append_blank_record(cursor))
             {
                 return false;
@@ -3073,22 +3085,40 @@
             }
 
             const std::string replace_error = last_error_message;
-            if (cursor.remote)
+            CursorState *live_cursor = resolve_cursor_generation_reference(cursor_reference);
+            if (live_cursor == nullptr)
             {
-                if (cursor.remote_records.size() > original_record_count)
-                {
-                    cursor.remote_records.resize(original_record_count);
-                }
-                cursor.record_count = cursor.remote_records.size();
-                move_cursor_to(cursor, static_cast<long long>(std::min(original_recno, cursor.record_count)));
+                // The value/default expression already closed or replaced
+                // this exact cursor -- there is nothing left here to roll
+                // the append back through. For a local table-backed
+                // cursor, the outer execute_with_command_undo() wrapper
+                // (prg_engine_dispatch.inl) already captured this table's
+                // pre-command file backup by path *before* this function
+                // ran, and will restore it now that this function is about
+                // to report failure, so the durable append is still
+                // correctly undone -- just not through this freed cursor.
+                // For a remote cursor, the appended record lived inside
+                // this same now-destroyed CursorState and was erased along
+                // with it, so there is nothing durable left to undo at all.
+                last_error_message = replace_error;
+                return false;
             }
-            else if (!cursor.source_path.empty())
+            if (live_cursor->remote)
             {
-                const auto rollback_result = vfp::truncate_dbf_table_file(cursor.source_path, original_record_count);
+                if (live_cursor->remote_records.size() > original_record_count)
+                {
+                    live_cursor->remote_records.resize(original_record_count);
+                }
+                live_cursor->record_count = live_cursor->remote_records.size();
+                move_cursor_to(*live_cursor, static_cast<long long>(std::min(original_recno, live_cursor->record_count)));
+            }
+            else if (!live_cursor->source_path.empty())
+            {
+                const auto rollback_result = vfp::truncate_dbf_table_file(live_cursor->source_path, original_record_count);
                 if (rollback_result.ok)
                 {
-                    cursor.record_count = rollback_result.record_count;
-                    move_cursor_to(cursor, static_cast<long long>(std::min(original_recno, cursor.record_count)));
+                    live_cursor->record_count = rollback_result.record_count;
+                    move_cursor_to(*live_cursor, static_cast<long long>(std::min(original_recno, live_cursor->record_count)));
                 }
                 else
                 {
@@ -3096,9 +3126,9 @@
                     return false;
                 }
             }
-            cursor.found = original_found;
-            cursor.bof = original_bof;
-            cursor.eof = original_eof;
+            live_cursor->found = original_found;
+            live_cursor->bof = original_bof;
+            live_cursor->eof = original_eof;
             last_error_message = replace_error;
             return false;
         }

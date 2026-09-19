@@ -685,4 +685,126 @@ void test_sql_style_for_clauses_accept_macro_expressions() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #6246: an explicit or default field-value expression evaluated during
+// INSERT INTO can execute arbitrary VFP code, including USE IN/CLOSE
+// ALL on the exact target the append already durably wrote a blank
+// record into. replace_current_record_fields() itself already detects
+// this (RQ-CF-PRG-052), but insert_record_values()'s own failure-
+// rollback path (truncating the file back to its original record
+// count) unconditionally touched the same freed cursor again -- this
+// proves it no longer does, and that the outer execute_with_command_undo()
+// wrapper still correctly restores the file to its pre-INSERT state by
+// path.
+void test_insert_into_values_expression_closing_target_cursor_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_insert_closes_target_cursor";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "insert_closes_target_cursor.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    INSERT INTO People (NAME, AGE) VALUES (droptext(), 99)\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "lStillOpen = USED('People')\n"
+        "RETURN\n"
+        "FUNCTION droptext\n"
+        "USE IN People\n"
+        "RETURN 'CHANGED'\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6246: INSERT-closes-own-target script should complete without crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6246: INSERT INTO must raise a catchable error instead of continuing through the closed "
+           "cursor");
+
+    const auto still_open_it = state.globals.find("lstillopen");
+    expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+           "#6246: the value expression's USE IN People should genuinely have closed the cursor");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 3U);
+    expect(parse_result.ok, "#6246: people.dbf should remain readable after the failed INSERT");
+    expect(parse_result.table.records.size() == 2U,
+           "#6246: the command-undo wrapper must restore the original record count -- no blank or partial "
+           "third record should remain durable, got " + std::to_string(parse_result.table.records.size()) +
+               " record(s)");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+// #6246: INSERT INTO ... SELECT materializes the source query's rows
+// before the dispatch code re-touches the destination cursor for its
+// own position/record-count snapshot and eventual rollback. The SELECT
+// query's own WHERE predicate can close the destination -- exercising
+// this before the assignment-expression path the test above covers.
+void test_insert_into_select_where_expression_closing_target_cursor_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_insert_select_closes_target_cursor";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path target_path = temp_root / "target.dbf";
+    write_people_dbf(target_path, {{"ALPHA", 10}});
+    const fs::path source_path = temp_root / "source.dbf";
+    write_people_dbf(source_path, {{"BRAVO", 20}, {"CHARLIE", 30}});
+
+    const fs::path main_path = temp_root / "insert_select_closes_target_cursor.prg";
+    write_text(
+        main_path,
+        "USE '" + target_path.string() + "' ALIAS Target IN 0\n"
+        "USE '" + source_path.string() + "' ALIAS Source IN 1\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    INSERT INTO Target (NAME, AGE) SELECT NAME, AGE FROM Source WHERE droptarget()\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "lStillOpen = USED('Target')\n"
+        "RETURN\n"
+        "FUNCTION droptarget\n"
+        "USE IN Target\n"
+        "RETURN .T.\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6246: INSERT SELECT-closes-own-target script should complete without crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6246: INSERT INTO ... SELECT must raise a catchable error when the SELECT's own WHERE "
+           "predicate closes the destination cursor");
+
+    const auto still_open_it = state.globals.find("lstillopen");
+    expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+           "#6246: the WHERE predicate's USE IN Target should genuinely have closed the destination "
+           "cursor");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(target_path.string(), 3U);
+    expect(parse_result.ok, "#6246: target.dbf should remain readable after the failed INSERT SELECT");
+    expect(parse_result.table.records.size() == 1U,
+           "#6246: no source row should have been inserted into the destination, got " +
+               std::to_string(parse_result.table.records.size()) + " record(s)");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 } // namespace copperfin::table_mutation_tests

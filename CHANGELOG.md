@@ -1,3 +1,49 @@
+- 2026-09-19: Fixed #6246: `INSERT INTO People (name, age) VALUES
+  (droptext(), 99)` where `droptext()` does `USE IN People` reported a
+  fabricated `Runtime resource fault: out of memory` while the DBF
+  header had already durably advanced from two records to three --
+  and under Valgrind, 789 errors across 45 contexts. Unlike #6244/#6245,
+  the already-hardened shared helpers (`replace_current_record_fields()`,
+  `collect_aggregate_scope_records()`) were *not* sufficient here on
+  their own: `INSERT`'s own callers each had an independent, additional
+  reentrant re-touch of the target cursor.
+
+  `insert_record_values()` appends a blank record durably to disk
+  *before* evaluating explicit/default field-value expressions via the
+  already-hardened `replace_current_record_fields()`. When that
+  correctly detects and reports a reentrant closure, this function's
+  *own* failure-rollback block (truncating the file back to the
+  original record count, resetting `cursor.record_count`/`found`/etc.)
+  unconditionally reused the same now-possibly-freed cursor anyway.
+  Captured a `CursorGenerationReference` at entry and gated the whole
+  rollback block on it -- when the cursor is gone, the block is
+  skipped entirely, relying on the outer `execute_with_command_undo()`
+  wrapper's file-path-based restore (captured before the operation
+  ran, so it works regardless of in-memory cursor lifetime) to still
+  durably undo the append.
+
+  A second, independent gap one layer up in `INSERT INTO ... SELECT`
+  dispatch: the source query's materialization runs before the
+  dispatch code's own position/record-count snapshot, and the
+  wrapped operation's failure-cleanup block re-touched the destination
+  cursor afterward too. Both points now reacquire and revalidate
+  against a `CursorGenerationReference` captured immediately after the
+  destination is first resolved.
+
+  Added `test_insert_into_values_expression_closing_target_cursor_fails_catchably`
+  and `test_insert_into_select_where_expression_closing_target_cursor_fails_catchably`.
+  Verified fail-then-pass with an actual reproduction: the reverted
+  implementation crashed with a real `SIGSEGV` (exit code 139),
+  matching the issue's own reported uninstrumented-build crash. Added
+  `RQ-CF-PRG-055`.
+
+  This is the fourth issue closed from the ~18-issue reentrant-cursor-
+  closure cluster, and the first where "the shared helper already
+  covers it" did not hold -- each caller had its own independent gap.
+  Autoincrement defaults (#6126) and ignored DBC defaults (#6124) are
+  explicitly out of scope per the issue's own duplicate-search note.
+  All 396 tests pass.
+
 - 2026-09-19: Review-round fix for #6245 (PR #6479): a Copilot review
   found that the multi-target `SUM`/`AVERAGE`/`MIN`/`MAX` variable
   loop (e.g. `SUM AGE, dropcursor() TO nFirst, nSecond`) published
