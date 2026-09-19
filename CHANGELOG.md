@@ -44,6 +44,38 @@
   explicitly out of scope per the issue's own duplicate-search note.
   All 396 tests pass.
 
+- 2026-09-19: Review-round finding for #6246 (PR #6480, not a code
+  change): a Copilot review noted that `capture_cursor_generation_reference`/
+  `resolve_cursor_generation_reference` around `materialize_select_query_rows()`
+  only revalidates the destination cursor *after* materialization returns,
+  and if `Target` is also the `SELECT`'s `FROM`/`JOIN` source, the same raw
+  `CursorState*` is handed into `build_rows_from_query_plan`'s per-row
+  loops, which evaluate the `WHERE`/projection/join-on expressions
+  directly against that reference (`evaluate_expression(plan.where_expression,
+  frame, &cursor)` and siblings) with no generation check at all. Traced
+  the call chain to confirm this precisely: `materialize_select_query_rows()`
+  delegates entirely to the general-purpose `requery_native_list_control()`
+  (the native listbox/grid SQL-rowsource requery engine, not
+  `INSERT`-specific code), whose per-row loops have zero reentrancy
+  protection today. A `WHERE`-clause UDF calling `USE IN Target` mid-query
+  would free the cursor *inside* that call, before this PR's dispatch-level
+  check ever runs -- confirmed as a real, distinct gap from the one
+  #6246 fixes.
+
+  This is the general `SELECT`/listbox-requery reentrancy surface already
+  tracked as its own cluster item (#6251), not `INSERT INTO`'s own
+  dispatch logic -- fixing it properly means threading a
+  `CursorGenerationReference` through every per-row loop in
+  `build_rows_from_query_plan()` (aggregate, grouped, joined, and plain
+  projection paths) and through `requery_native_list_control()` generally,
+  which is a general-engine change, not an `INSERT`-scoped one. Rather than
+  expand this PR indefinitely, narrowed `RQ-CF-PRG-055`'s claims to
+  explicitly disclose that `INSERT INTO ... SELECT` targeting itself as
+  the source is *not* protected by this fix when the closure happens
+  during materialization itself, and left the gap for #6251 to close.
+  Replied to and resolved the review thread with this reasoning. No test
+  or production code changed as a result of this finding.
+
 - 2026-09-19: Review-round fix for #6245 (PR #6479): a Copilot review
   found that the multi-target `SUM`/`AVERAGE`/`MIN`/`MAX` variable
   loop (e.g. `SUM AGE, dropcursor() TO nFirst, nSecond`) published
