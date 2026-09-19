@@ -333,10 +333,20 @@
                     continue;
                 }
 
+                const CursorGenerationReference child_reference = capture_cursor_generation_reference(child);
                 const std::string search_key = value_as_string(
                     evaluate_expression(relation.expression, frame, &parent));
                 if (resolve_cursor_generation_reference(parent_reference) == nullptr)
                 {
+                    return false;
+                }
+                child = resolve_cursor_generation_reference(child_reference);
+                if (child == nullptr)
+                {
+                    // #6247: the relation's own key expression closed or
+                    // replaced its own child cursor -- nothing left to seek
+                    // into. Fail the whole synchronization call catchably
+                    // instead of continuing through freed state.
                     return false;
                 }
                 if (child->active_order_expression.empty() && child->orders.empty())
@@ -403,9 +413,23 @@
             {
                 return false;
             }
+            // #6247: nested synchronize_relations_for_parent() below can run
+            // arbitrary relation-key expressions for *any* relation in this
+            // data session, not just the one being walked here -- including
+            // ones that close or replace this exact child, or the parent
+            // being walked. Both are revalidated by generation identity
+            // after every reentrant point instead of being dereferenced
+            // unconditionally.
+            const CursorGenerationReference child_reference = capture_cursor_generation_reference(&child);
             const auto relations = session->second.relations;
             for (const auto &relation : relations)
             {
+                if (resolve_cursor_generation_reference(child_reference) == nullptr)
+                {
+                    // An earlier relation's nested synchronization in this
+                    // same loop already closed or replaced this child.
+                    return adjusted;
+                }
                 if (!relation.skip_one_to_many || relation.child_work_area != child.work_area)
                 {
                     continue;
@@ -419,6 +443,7 @@
                 {
                     continue;
                 }
+                const CursorGenerationReference parent_reference = capture_cursor_generation_reference(parent);
 
                 const std::size_t max_parent_steps = parent->record_count + 1U;
                 for (std::size_t step = 0U; step < max_parent_steps; ++step)
@@ -429,6 +454,15 @@
                     }
 
                     synchronize_relations_for_parent(*parent, frame, relation_data_session);
+                    parent = resolve_cursor_generation_reference(parent_reference);
+                    if (parent == nullptr)
+                    {
+                        return adjusted;
+                    }
+                    if (resolve_cursor_generation_reference(child_reference) == nullptr)
+                    {
+                        return adjusted;
+                    }
                     if (!relation_matches_current_parent(relation, *parent, child, frame))
                     {
                         continue;

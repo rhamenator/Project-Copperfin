@@ -349,6 +349,198 @@ void test_local_relation_introspection_preserves_order_and_session_state()
     check("cfreshtarget", "", "TARGET should be empty in a fresh data session");
     fs::remove_all(temp_root, ignored);
 }
+
+void test_set_relation_key_expression_closing_child_fails_catchably()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_relation_closes_child";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path parent_path = temp_root / "parent.dbf";
+    const fs::path child_path = temp_root / "child.dbf";
+    write_people_dbf(parent_path, {{"PARENT10", 10}});
+    write_people_dbf(child_path, {{"CHILD10", 10}});
+
+    const fs::path main_path = temp_root / "relation_closes_child.prg";
+    write_text(
+        main_path,
+        "USE '" + parent_path.string() + "' ALIAS Parent IN 0\n"
+        "USE '" + child_path.string() + "' ALIAS Child IN 0\n"
+        "SET ORDER TO AGE IN Child\n"
+        "SELECT Parent\n"
+        "GO TOP IN Parent\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    SET RELATION TO dropchild() INTO Child\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "lStillOpen = USED('Child')\n"
+        "after = 1\n"
+        "RETURN\n"
+        "FUNCTION dropchild\n"
+        "    USE IN Child\n"
+        "    RETURN 'Alice'\n"
+        "ENDFUNC\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+    expect(state.completed,
+           "#6247: SET RELATION whose key expression closes its own child should complete without crashing: " +
+               state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6247: SET RELATION must raise a catchable error instead of continuing through the closed child");
+
+    const auto still_open_it = state.globals.find("lstillopen");
+    expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+           "#6247: the key expression's USE IN Child should genuinely have closed the child");
+
+    const auto after_it = state.globals.find("after");
+    expect(after_it != state.globals.end(), "#6247: script execution should continue after the caught error");
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_set_relation_registration_closing_earlier_child_fails_atomically()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_relation_registration_closes_earlier_child";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path parent_path = temp_root / "parent.dbf";
+    const fs::path first_child_path = temp_root / "first_child.dbf";
+    const fs::path second_child_path = temp_root / "second_child.dbf";
+    write_people_dbf(parent_path, {{"PARENT10", 10}});
+    write_people_dbf(first_child_path, {{"FIRST10", 10}});
+    write_people_dbf(second_child_path, {{"SECOND10", 10}});
+
+    const fs::path main_path = temp_root / "relation_registration_closes_earlier_child.prg";
+    write_text(
+        main_path,
+        "USE '" + parent_path.string() + "' ALIAS Parent IN 0\n"
+        "USE '" + first_child_path.string() + "' ALIAS FirstChild IN 0\n"
+        "USE '" + second_child_path.string() + "' ALIAS SecondChild IN 0\n"
+        "SET ORDER TO AGE IN FirstChild\n"
+        "SET ORDER TO AGE IN SecondChild\n"
+        "SELECT Parent\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    SET RELATION TO AGE INTO FirstChild, AGE INTO dropfirstchild()\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "lFirstStillOpen = USED('FirstChild')\n"
+        "cRelationAfter = SET('RELATION')\n"
+        "after = 1\n"
+        "RETURN\n"
+        "FUNCTION dropfirstchild\n"
+        "    USE IN FirstChild\n"
+        "    RETURN 'SecondChild'\n"
+        "ENDFUNC\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+    expect(state.completed,
+           "#6247: SET RELATION whose second designator closes an already-resolved earlier child should "
+           "complete without crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6247: SET RELATION must raise a catchable error instead of registering through a freed earlier child");
+
+    const auto first_still_open_it = state.globals.find("lfirststillopen");
+    expect(first_still_open_it != state.globals.end() && !first_still_open_it->second.boolean_value,
+           "#6247: the second designator's USE IN FirstChild should genuinely have closed FirstChild");
+
+    const auto relation_after_it = state.globals.find("crelationafter");
+    expect(relation_after_it != state.globals.end() && format_value(relation_after_it->second).empty(),
+           "#6247: no relation should be registered when a later designator invalidates an earlier participant "
+           "-- registration must be atomic, not partially applied");
+
+    const auto after_it = state.globals.find("after");
+    expect(after_it != state.globals.end(), "#6247: script execution should continue after the caught error");
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_set_skip_sibling_relation_closing_original_child_fails_catchably()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_relation_skip_closes_original_child";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path parent_path = temp_root / "parent.dbf";
+    const fs::path child_path = temp_root / "child.dbf";
+    const fs::path other_path = temp_root / "other.dbf";
+    write_people_dbf(parent_path, {{"PARENT10", 10}, {"PARENT20", 20}});
+    write_people_dbf(child_path, {{"CHILD10", 10}});
+    write_people_dbf(other_path, {{"OTHER10", 10}});
+
+    const fs::path main_path = temp_root / "relation_skip_closes_original_child.prg";
+    write_text(
+        main_path,
+        "USE '" + parent_path.string() + "' ALIAS Parent IN 0\n"
+        "USE '" + child_path.string() + "' ALIAS Child IN 0\n"
+        "USE '" + other_path.string() + "' ALIAS Other IN 0\n"
+        "SET ORDER TO AGE IN Child\n"
+        "SET ORDER TO AGE IN Other\n"
+        "SELECT Parent\n"
+        "GO TOP IN Parent\n"
+        "GO TOP IN Child\n"
+        "GO TOP IN Other\n"
+        "SET RELATION TO AGE INTO Child\n"
+        "SET RELATION TO dropchild() INTO Other ADDITIVE\n"
+        "SET SKIP TO Child\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    SKIP 1 IN Child\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "lChildStillOpen = USED('Child')\n"
+        "after = 1\n"
+        "RETURN\n"
+        // Only fires once Parent has been walked to record 2 -- exclusively
+        // reachable from inside the one-to-many SKIP's nested parent-relation
+        // synchronization, not from any of the earlier registration/GO TOP
+        // syncs (Parent stays on record 1 for all of those).
+        "FUNCTION dropchild\n"
+        "    IF RECNO('Parent') == 2\n"
+        "        USE IN Child\n"
+        "    ENDIF\n"
+        "    RETURN 'Alice'\n"
+        "ENDFUNC\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+    expect(state.completed,
+           "#6247: SKIP whose one-to-many parent walk triggers a sibling relation's key expression that "
+           "closes the original SKIP-target child should complete without crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6247: SKIP must raise a catchable error instead of continuing through the closed original child");
+
+    const auto still_open_it = state.globals.find("lchildstillopen");
+    expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+           "#6247: the sibling relation's USE IN Child should genuinely have closed Child");
+
+    const auto after_it = state.globals.find("after");
+    expect(after_it != state.globals.end(), "#6247: script execution should continue after the caught error");
+    fs::remove_all(temp_root, ignored);
+}
 }
 
 int main()
@@ -358,6 +550,9 @@ int main()
     test_local_set_relation_refreshes_after_parent_mutation();
     test_local_set_relation_additive_and_explicit_parent();
     test_local_relation_introspection_preserves_order_and_session_state();
+    test_set_relation_key_expression_closing_child_fails_catchably();
+    test_set_relation_registration_closing_earlier_child_fails_atomically();
+    test_set_skip_sibling_relation_closing_original_child_fails_catchably();
     if (copperfin::test_support::test_failures() != 0)
     {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

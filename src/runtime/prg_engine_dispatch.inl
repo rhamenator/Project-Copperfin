@@ -4951,6 +4951,20 @@
                     }
                     (void)synchronize_skip_parent_for_child(
                         *cursor, frame, delta, cursor_reference.data_session);
+                    // #6247: synchronize_skip_parent_for_child() can run
+                    // relation-key expressions belonging to other relations
+                    // in this data session, which can close or replace this
+                    // exact cursor before control returns here.
+                    cursor = resolve_cursor_generation_reference(cursor_reference);
+                    if (cursor == nullptr)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", "SKIP"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
                     synchronize_relations_for_parent(
                         *cursor, frame, cursor_reference.data_session);
                 }
@@ -5663,10 +5677,21 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
+                    // #6247: designator expressions below (e.g. `INTO
+                    // (fn())`) can execute arbitrary VFP code that closes or
+                    // replaces the parent, or an already-resolved earlier
+                    // child, before this multi-change registration finishes
+                    // parsing. Every participant is revalidated by
+                    // generation identity once parsing completes, before
+                    // any relation is actually registered, so the whole
+                    // command fails atomically instead of registering some
+                    // relations through freed cursors.
+                    const CursorGenerationReference parent_reference = capture_cursor_generation_reference(parent);
 
                     struct RelationChange
                     {
                         CursorState *child = nullptr;
+                        CursorGenerationReference child_reference{};
                         std::string source;
                         bool disable = false;
                     };
@@ -5714,8 +5739,37 @@
                             }
                             changes.push_back({
                                 .child = child,
+                                .child_reference = capture_cursor_generation_reference(child),
                                 .source = source,
                                 .disable = normalize_identifier(source) == "off"});
+                        }
+                    }
+
+                    parent = resolve_cursor_generation_reference(parent_reference);
+                    if (parent == nullptr)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", "SET RELATION"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    for (RelationChange &change : changes)
+                    {
+                        if (change.child == nullptr)
+                        {
+                            continue;
+                        }
+                        change.child = resolve_cursor_generation_reference(change.child_reference);
+                        if (change.child == nullptr)
+                        {
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                {{"command", "SET RELATION"}});
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
                         }
                     }
 
@@ -5772,9 +5826,21 @@
                                           .detail = change.source + " -> " + change.child->alias,
                                           .location = statement.location});
                     }
-                    if (synchronized)
+                    if (synchronized && !synchronize_relations_for_parent(*parent, frame))
                     {
-                        synchronize_relations_for_parent(*parent, frame);
+                        // #6247: a relation's own key expression closed or
+                        // replaced the parent or its own child during this
+                        // initial synchronization -- synchronize_relations_
+                        // for_parent() already stopped touching freed state
+                        // internally, but the command itself must still
+                        // fail catchably rather than report success and go
+                        // on to dereference `parent` below.
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", "SET RELATION"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
                     }
                     const bool has_unscoped_clear = std::any_of(
                         changes.begin(), changes.end(), [](const RelationChange &change) { return change.child == nullptr; });

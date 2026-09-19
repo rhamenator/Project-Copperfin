@@ -1,3 +1,89 @@
+- 2026-09-19: Fixed #6247: `SET RELATION TO dropchild() INTO Child`
+  where `dropchild()` does `USE IN Child` reported apparent success
+  with the child closed -- under Valgrind, 12 errors across 12
+  contexts, first invalid read at `child->active_order_expression
+  .empty()` right after the closing key expression evaluated. This
+  is the same command family as #6243's relation-sync fix, but that
+  fix only protected the *parent* cursor across key evaluation, never
+  the relation's own *child* -- and tracing the rest of the issue's
+  acceptance criteria turned up two more independently real defects
+  in the same code:
+
+  Registration itself evaluates each `INTO <designator>` left to
+  right, and a designator can be a full expression (`INTO
+  dropfirstchild()`) that runs arbitrary code. A later designator's
+  side effect closing an *earlier* already-resolved child (stored as
+  a raw pointer in the parsed change list) was never re-checked
+  before that pointer got dereferenced to register the relation.
+
+  One-to-many `SET SKIP`'s parent-walk logic nests a call to the
+  same relation-synchronization routine to advance the parent, which
+  evaluates *every* relation on that parent -- including a sibling
+  relation whose key expression can close the original SKIP-target
+  child (a cursor the nested call itself never touches, so its own
+  parent-side protection doesn't see it) before the outer function
+  gets a chance to look at it again.
+
+  Fixed all three: `synchronize_relations_for_parent()` now captures
+  and revalidates a `CursorGenerationReference` for the current
+  relation's own child, matching the existing parent-side check.
+  `SET RELATION`'s registration now captures a reference for the
+  parent and for each parsed child, then re-validates every one of
+  them in a single pass right after parsing and before any relation
+  is actually registered or removed -- so a later designator
+  invalidating an earlier participant fails the whole command
+  atomically rather than partially registering. `SET SKIP`'s
+  one-to-many walk now revalidates both the parent being walked and
+  the original child at the top of its relation loop and again after
+  every nested synchronization call, propagating a catchable failure
+  instead of continuing through whichever one got closed. Also
+  propagated `synchronize_relations_for_parent()`'s existing boolean
+  result at `SET RELATION`'s own final post-registration sync call
+  and at `SET SKIP`'s dispatch site, both of which previously
+  dereferenced the same cursor unconditionally right after ignoring
+  that result.
+
+  Checked the issue's "alias/work-area reuse must never revive a
+  stale relation" criterion separately: `close_cursor()` already
+  scrubs every relation referencing the closing work area
+  immediately, before the slot can be reused, so no fix was needed
+  there.
+
+  Added `test_set_relation_key_expression_closing_child_fails_catchably`,
+  `test_set_relation_registration_closing_earlier_child_fails_atomically`,
+  and `test_set_skip_sibling_relation_closing_original_child_fails_catchably`.
+  Also updated the existing `test_replace_set_relation_expression_
+  closing_parent_fails_catchably` (#6243): its `SET RELATION` line now
+  correctly fails catchably on the closure it triggers at registration
+  time, so the test's `close_via_relation()` helper now gates its `USE
+  IN` to the *second* call, letting the test still exercise REPLACE's
+  own post-write resynchronization specifically, as originally intended.
+
+  Verified fail-then-pass for all three new fixes with genuine
+  Valgrind-confirmed memory corruption reproduced by temporarily
+  reverting each guard in turn: 202 errors/61 contexts (child-side
+  relation sync, an invalid write inside `move_cursor_to` reached via
+  `seek_in_cursor`), 14 errors/6 contexts (registration atomicity, an
+  invalid read constructing a string from a freed child's `alias`
+  field), and 12 errors/10 contexts (SET SKIP nested sync, an invalid
+  read inside `close_cursor()`'s own map erase reached transitively).
+  All three cleared to zero with the guards restored. Added
+  `RQ-CF-PRG-056`.
+
+  This is the fifth issue closed from the ~18-issue reentrant-
+  cursor-closure cluster (after #6243, #6244, #6245, #6246). Out of
+  scope and not addressed here, per the issue's own broader
+  acceptance criteria: full coverage across relation cycles, nested
+  3+ level relation chains, `SET RELATION OFF` racing a mid-evaluation
+  closure, and order/index-expression side effects during relation-key
+  evaluation (index expressions can in principle invoke UDFs too,
+  sharing surface with #6269's `SET FILTER` scope and general
+  index-expression reentrancy -- not investigated here).
+  `move_by_visible_records()`'s own `SET FILTER` evaluation during the
+  one-to-many parent walk is a related, separately-tracked reentrancy
+  surface (#6269), not hardened by this fix. Full suite: 396 tests,
+  100% pass (2 platform-conditional skips).
+
 - 2026-09-19: Fixed #6246: `INSERT INTO People (name, age) VALUES
   (droptext(), 99)` where `droptext()` does `USE IN People` reported a
   fabricated `Runtime resource fault: out of memory` while the DBF
