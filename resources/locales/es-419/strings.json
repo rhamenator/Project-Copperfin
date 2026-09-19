@@ -1555,6 +1555,7 @@
   "Runtime.Prg.Dispatch.Error.SaveToOpenFailed": "SAVE TO no pudo abrir el archivo de salida",
   "Runtime.Prg.Dispatch.Error.SaveToWriteFailed": "SAVE TO no pudo escribir el archivo de salida",
   "Runtime.Prg.Dispatch.Error.SpawnLaunchFailed": "{command} no pudo iniciar la tarea: {reason}",
+  "Runtime.Prg.Dispatch.Error.SpawnedTaskRejectsEventLoop": "{command} no es compatible en una tarea generada",
   "Runtime.Prg.Dispatch.Error.SpawnRejectsByReferenceArgument": "{command} no admite argumentos por referencia: @{variable}",
   "Runtime.Prg.Dispatch.Error.SpawnRequiresTarget": "{command} requiere una rutina o archivo destino",
   "Runtime.Prg.Dispatch.Error.SpawnTargetResolveFailed": "No se pudo resolver el destino de {command}: {target}",

@@ -28,9 +28,33 @@ machine status values are invariant and are not localized.
   consume the task.
 - Cancellation sets only the child's cooperative cancellation token. It does
   not enter or mutate the child's evaluator state directly.
-- `AWAIT` remains the explicit blocking join. It still merges child events,
-  assigns its completion flag, and erases the task. Later supervision calls on
-  that handle therefore return the documented unknown values.
+- `AWAIT` remains the explicit blocking join. It attempts its optional `TO`
+  output assignment *before* merging child events or erasing the task, so
+  consumption is atomic from the language program's perspective: a catchable
+  assignment failure (a typo, a released object, an invalid property) leaves
+  the task exactly as it was before the `AWAIT` -- still registered, its
+  events not yet merged into the parent -- rather than partially consuming
+  it. A later retry `AWAIT` on the same handle (with a valid target, or none)
+  re-attempts the same sequence and completes consumption exactly once: it
+  merges child events, assigns its completion flag, and erases the task.
+  Later supervision calls on that handle then return the documented unknown
+  values. Completion polling (`CFTASKSTATUS`/`CFTASKRESULT`/`CFTASKOUTPUT`) is
+  unaffected by a failed `AWAIT` assignment and continues to report the
+  task's retained terminal state until an `AWAIT` actually consumes it.
+- A runtime created by `SPAWN` cannot execute `READ EVENTS`: it raises a
+  catchable, source-located error and terminates that task's execution
+  immediately instead of pausing. A spawned child's `run()` is invoked
+  exactly once by the `std::async` closure that hosts it; there is no
+  mechanism to resume it, route a host/COM event into it, or execute `CLEAR
+  EVENTS` against it afterward, so a paused-in-`READ EVENTS` child has no
+  path back to completion. This is a deliberate rejection of an unsupported
+  construct, not a design for live spawned event-loop workers -- `AWAIT`
+  observes the resulting fault exactly like any other task-side error
+  (`CFTASKSTATUS` reports the terminal state, the task is fully consumed).
+  `READ EVENTS` executed by the root/interactive session is unaffected.
+  `ACTIVATE MENU`/`POPUP`/`WINDOW` share the same one-shot-publish mechanism
+  in a spawned task but are not currently rejected; avoid them in `SPAWN`
+  targets.
 - A child owns its runtime state. The parent observes only the immutable
   `RuntimePauseState` published through the future after the child returns.
 - Completion publication is serialized by a mutex owned by that task. Multiple
@@ -55,7 +79,12 @@ worker thread.
 
 ## Compatibility And Nonclaims
 
-Existing `SPAWN` and `AWAIT` source continues to behave as before. The new
+Existing `SPAWN` and `AWAIT` source continues to behave as before, with two
+narrow exceptions documented above under Lifetime And Isolation: `AWAIT`'s
+consumption is now atomic with respect to a failing optional `TO` assignment
+(previously such a failure left the task partially, incoherently consumed),
+and a spawned task executing `READ EVENTS` now raises a catchable error
+immediately instead of silently pausing forever with no way to resume. The new
 functions do not execute .NET, Python, R, or another external language; choose,
 authorize, or hash an artifact; route a polyglot request; or weaken the
 separate policy, audit, bounded-process, and response-admission requirements.

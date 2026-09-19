@@ -1103,6 +1103,12 @@ namespace copperfin::runtime
         std::size_t max_loop_iterations = 200000;
         std::filesystem::path runtime_temp_directory;
         std::uint64_t runtime_instance_id = 0;
+        // #6457: true only for a runtime created by SPAWN (never for the
+        // root/interactive session). Explicit rather than inferred from
+        // runtime_instance_id's counter range, and set on every child
+        // regardless of nesting depth (a spawned child that itself SPAWNs a
+        // grandchild still marks that grandchild true).
+        bool is_spawned_child = false;
         std::uint64_t next_cursor_binding_identity = 1U;
         std::size_t next_popup_action_id = 0;
         std::vector<std::filesystem::path> owned_xasset_bootstrap_paths;

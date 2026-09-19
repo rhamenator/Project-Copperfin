@@ -2422,6 +2422,7 @@
                 child->command_undo_stack_by_session.clear();
                 static std::atomic<std::uint64_t> spawned_runtime_instance_counter{1000000ULL};
                 child->runtime_instance_id = spawned_runtime_instance_counter.fetch_add(1ULL, std::memory_order_relaxed);
+                child->is_spawned_child = true;
                 child->current_data_session = current_data_session;
                 std::string task_source_path = program.path;
                 if (const auto routine = find_unqualified_routine_lookup(program.path, target); routine.has_value())
@@ -2616,14 +2617,15 @@
                 task->future.wait();
                 (void)refresh_async_task_completion(task);
 
-                if (!task->result.events.empty())
-                {
-                    events.insert(events.end(), task->result.events.begin(), task->result.events.end());
-                }
-
-                std::string detail = "handle=" + std::to_string(handle) +
-                                     " state=" + debug_pause_reason_name(task->result.reason) +
-                                     " message=" + task->result.message;
+                // #6456: attempt the optional output assignment *before*
+                // merging the child's event stream into the parent or
+                // erasing the task, so a catchable assignment failure (e.g.
+                // TO missing.property) leaves consumption entirely
+                // uncommitted -- refresh_async_task_completion() is
+                // idempotent, so a later retry AWAIT on the same handle
+                // re-enters here and completes consumption exactly once,
+                // instead of replaying the already-merged event stream or
+                // leaking a completed-but-unerased task.
                 if (!statement.names.empty() && !statement.names.front().empty())
                 {
                     const bool completed = task->result.reason == DebugPauseReason::completed;
@@ -2634,6 +2636,18 @@
                     {
                         return outcome;
                     }
+                }
+
+                if (!task->result.events.empty())
+                {
+                    events.insert(events.end(), task->result.events.begin(), task->result.events.end());
+                }
+
+                std::string detail = "handle=" + std::to_string(handle) +
+                                     " state=" + debug_pause_reason_name(task->result.reason) +
+                                     " message=" + task->result.message;
+                if (!statement.names.empty() && !statement.names.front().empty())
+                {
                     detail += " assigned=" + statement.names.front();
                 }
 
@@ -3923,6 +3937,25 @@
                 return {.ok = false, .message = last_error_message};
             }
             case StatementKind::read_events:
+                if (is_spawned_child)
+                {
+                    // #6457: a spawned task's run() is invoked exactly once
+                    // by SPAWN's std::async closure -- there is no way to
+                    // resume it, route a host/COM event to it, or CLEAR
+                    // EVENTS it afterward. Publishing a waiting-for-events
+                    // pause as that one-shot future's terminal result made
+                    // AWAIT misclassify a live, unfinished worker as a
+                    // failure and erase its only handle. Until spawned
+                    // event-loop workers are actually supported, reject
+                    // READ EVENTS in a spawned task catchably instead of
+                    // silently abandoning it.
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.SpawnedTaskRejectsEventLoop",
+                        {{"command", "READ EVENTS"}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
                 waiting_for_events = true;
                 events.push_back({.category = "runtime.event_loop",
                                   .detail = "READ EVENTS entered",

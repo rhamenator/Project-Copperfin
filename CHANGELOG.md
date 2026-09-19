@@ -1,3 +1,53 @@
+- 2026-09-18: Fixed #6456 and #6457, the final two issues in the #6471
+  SPAWN/AWAIT tracking cluster.
+
+  #6456: a caught `AWAIT nTask TO missing.property` assignment failure
+  on a completed task left `CFTASKSTATUS()` still reporting
+  `completed`, let a second `AWAIT` on the same handle succeed again,
+  and replayed the child's already-merged `runtime.print`/diagnostic
+  events a second time -- because the event-stream merge and
+  `erase_async_task()` both ran unconditionally before the optional
+  output assignment was even attempted. Moved the
+  `assign_runtime_target_value()` call to run first; a failure now
+  leaves the task's consumption entirely uncommitted (still
+  registered, events not yet merged), so a retry `AWAIT` with a valid
+  target completes consumption exactly once.
+  `refresh_async_task_completion()` was already idempotent, so no
+  other change was needed for the retry path to work correctly. Added
+  `test_await_failed_output_assignment_does_not_replay_events_or_leak_task`.
+
+  #6457: a spawned worker that entered `READ EVENTS` had its
+  nonterminal `RuntimePauseState{reason=event_loop}` published as the
+  one-shot `std::async` future's terminal result, since `SPAWN`'s
+  child `run()` is invoked exactly once with no way to resume it,
+  route an event to it, or `CLEAR EVENTS` it afterward. `AWAIT`
+  therefore misclassified a live, unfinished worker as a failure and
+  erased its only handle. Added an explicit `is_spawned_child` flag
+  (set only by `SPAWN`, never for the root session) and made `READ
+  EVENTS` raise a catchable, source-located error immediately when
+  that flag is set, instead of pausing. This is the issue's own
+  explicitly sanctioned "reject the construct" alternative to
+  building full live-worker event-loop supervision (resuming a paused
+  child, routing host/COM events into it, `CLEAR EVENTS`/`CFTASKCANCEL`
+  while waiting), which remains a materially larger, undesigned
+  feature. `ACTIVATE MENU`/`POPUP`/`WINDOW` share the identical
+  one-shot-publish mechanism and bug shape but are UI constructs with
+  no plausible legitimate use in a headless worker; not guarded here,
+  a disclosed gap. Added `test_spawn_read_events_is_rejected_catchably`;
+  an early version of this test's key assertion merely searched the
+  `AWAIT` event detail for the substring "READ EVENTS", which passed
+  against both the fixed and unfixed code because the *old* generic
+  "waiting in READ EVENTS" message already contains that literal
+  substring -- tightened to check the pause reason is not the
+  nonterminal `event_loop` value and the message names the specific
+  rejection, which only the fix satisfies.
+
+  Added `Runtime.Prg.Dispatch.Error.SpawnedTaskRejectsEventLoop` across
+  all four locale catalogs. Added `RQ-CF-PRG-050` and `RQ-CF-PRG-051`.
+  This closes out the #6471 tracking issue's full six-issue sequence
+  (#6453, #6451, #6447, #6450, #6456, #6457). All 396 tests pass.
+  Verified fail-then-pass for both fixes.
+
 - 2026-09-18: Review-round fix for #6450 (PR #6475): a Copilot review
   found that publishing the task handle before task creation/launch/
   registration introduces a narrower version of the same problem if
