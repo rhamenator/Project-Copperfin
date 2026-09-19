@@ -323,11 +323,22 @@
             {
                 return false;
             }
-            if (honor_filter &&
-                !cursor.filter_expression.empty() &&
-                !evaluate_visibility_expression(cursor.filter_expression, frame, &cursor))
+            if (honor_filter && !cursor.filter_expression.empty())
             {
-                return false;
+                // #6243 review: the filter expression can execute arbitrary
+                // VFP code, including closing/replacing this exact cursor.
+                // Capture identity before evaluating it so the FOR/extra
+                // expression below is never evaluated against a cursor the
+                // filter has already invalidated.
+                const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(&cursor);
+                if (!evaluate_visibility_expression(cursor.filter_expression, frame, &cursor))
+                {
+                    return false;
+                }
+                if (resolve_cursor_generation_reference(cursor_reference) == nullptr)
+                {
+                    return false;
+                }
             }
             if (!extra_expression.empty() && !evaluate_visibility_expression(extra_expression, frame, &cursor))
             {
@@ -1315,6 +1326,21 @@
                 }
                 return true;
             };
+            // #6243 review: synchronize_relations_for_parent() itself
+            // evaluates arbitrary relation expressions against this exact
+            // cursor and can therefore also close/replace it; check its
+            // report before reporting overall success.
+            const auto synchronize_relations_or_fail = [&](CursorState &live_cursor) -> bool
+            {
+                if (!synchronize_relations_for_parent(live_cursor, frame))
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", "REPLACE"}});
+                    return false;
+                }
+                return true;
+            };
 
             if (cursor.remote)
             {
@@ -1372,7 +1398,10 @@
                     }
                     field->display_value = assignment.serialized_value;
                 }
-                synchronize_relations_for_parent(cursor, frame);
+                if (!synchronize_relations_or_fail(cursor))
+                {
+                    return false;
+                }
                 return true;
             }
 
@@ -1506,7 +1535,10 @@
                     cursor.buffered_field_states[cursor.recno][field_index] =
                         cursor.buffered_appended_records.contains(cursor.recno) ? 4 : 2;
                 }
-                synchronize_relations_for_parent(cursor, frame);
+                if (!synchronize_relations_or_fail(cursor))
+                {
+                    return false;
+                }
                 return true;
             }
 
@@ -1586,7 +1618,10 @@
             {
                 unlock_cursor_record_lock(cursor, cursor.recno);
             }
-            synchronize_relations_for_parent(cursor, frame);
+            if (!synchronize_relations_or_fail(cursor))
+            {
+                return false;
+            }
             return true;
         }
 

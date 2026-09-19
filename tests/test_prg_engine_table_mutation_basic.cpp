@@ -1243,4 +1243,205 @@ void test_replace_for_clause_closing_target_cursor_fails_catchably() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #6243 review: a scoped REPLACE processes matched records one at a time,
+// writing each to disk as it goes. If a LATER record's assignment
+// expression closes the target after an EARLIER record already
+// committed, the earlier write is not itself corrupted or crashed
+// through (the two tests above already prove that) -- but it must not
+// be left applied while REPLACE reports the whole command as failed.
+// REPLACE and UPDATE are already wrapped in execute_with_command_undo()
+// at the dispatch level, which snapshots the table before the command
+// and rolls back via the same file-path-keyed mechanism (independent of
+// any in-memory CursorState) whenever the wrapped operation returns
+// false -- this proves that pre-existing mechanism actually delivers
+// failure-atomicity for this exact reentrant-closure trigger, not just
+// that it doesn't crash.
+void test_replace_for_clause_partial_write_before_reentrant_closure_is_rolled_back() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_replace_partial_write_rollback";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "replace_partial_write_rollback.prg";
+    write_text(
+        main_path,
+        "PUBLIC nCallCount\n"
+        "nCallCount = 0\n"
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    REPLACE NAME WITH bump_and_maybe_close() FOR .T.\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "RETURN\n"
+        "FUNCTION bump_and_maybe_close\n"
+        "nCallCount = nCallCount + 1\n"
+        "IF nCallCount = 2\n"
+        "    USE IN People\n"
+        "ENDIF\n"
+        "RETURN 'CHANGED'\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6243: partial-write-rollback test should complete without crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6243: the second record's reentrant closure should raise a catchable error");
+
+    const auto call_count_it = state.globals.find("ncallcount");
+    expect(call_count_it != state.globals.end() && call_count_it->second.number_value == 2.0,
+           "#6243: the first record's assignment should have run (and committed) before the second record's "
+           "closure was detected, proving this test actually exercises a partial-write-then-rollback, not a "
+           "first-record failure");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+    expect(parse_result.ok, "#6243: people.dbf should remain readable after the rolled-back REPLACE");
+    if (parse_result.ok && parse_result.table.records.size() == 2U) {
+        expect(parse_result.table.records[0].values[0].display_value == "ALPHA",
+               "#6243: the first record's already-committed write must be rolled back by the command-undo "
+               "journal when the overall REPLACE fails, got '" +
+                   parse_result.table.records[0].values[0].display_value + "'");
+        expect(parse_result.table.records[1].values[0].display_value == "BRAVO",
+               "#6243: the second (never-written) record should also read back as its original value, got '" +
+                   parse_result.table.records[1].values[0].display_value + "'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+// #6243 review: current_record_matches_visibility() evaluates the
+// cursor's active SET FILTER expression *and then* the FOR/extra
+// expression, both against the same cursor. If the filter expression
+// closes the cursor, the FOR expression used to be evaluated against
+// it anyway, before the caller's own generation check (which only runs
+// after the whole call returns) ever gets a chance to catch it.
+void test_replace_for_clause_with_active_filter_closing_cursor_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_replace_filter_closes_target_cursor";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    const fs::path main_path = temp_root / "replace_filter_closes_target_cursor.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET FILTER TO close_via_filter()\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    REPLACE NAME WITH 'X' FOR NAME == 'ALPHA'\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "lStillOpen = USED('People')\n"
+        "RETURN\n"
+        "FUNCTION close_via_filter\n"
+        "USE IN People\n"
+        "RETURN .T.\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6243: REPLACE FOR-with-active-filter script should complete without crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6243: REPLACE must raise a catchable error when SET FILTER's own expression closes the cursor, "
+           "instead of then evaluating the FOR clause against the closed cursor");
+
+    const auto still_open_it = state.globals.find("lstillopen");
+    expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+           "#6243: the SET FILTER expression's USE IN People should genuinely have closed the cursor");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(parse_result.ok, "#6243: people.dbf should remain readable after the failed filtered REPLACE");
+    if (parse_result.ok && !parse_result.table.records.empty()) {
+        expect(parse_result.table.records[0].values[0].display_value == "ALPHA",
+               "#6243: the record must retain its original value, got '" +
+                   parse_result.table.records[0].values[0].display_value + "'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+// #6243 review: synchronize_relations_for_parent(), called after a
+// successful REPLACE to keep any SET RELATION child cursor in sync,
+// evaluates the relation's own key expression against the parent
+// cursor -- arbitrary VFP code that can close the parent itself. The
+// function used to keep iterating relations (re-reading
+// parent.work_area) and its caller reported success while continuing
+// to use the now-freed parent.
+void test_replace_set_relation_expression_closing_parent_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_replace_relation_closes_parent";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path parent_path = temp_root / "parent.dbf";
+    write_people_dbf(parent_path, {{"ALPHA", 10}});
+    const fs::path child_path = temp_root / "child.dbf";
+    write_people_dbf(child_path, {{"BETA", 20}});
+
+    const fs::path main_path = temp_root / "replace_relation_closes_parent.prg";
+    write_text(
+        main_path,
+        "USE '" + parent_path.string() + "' ALIAS Parent IN 1\n"
+        "USE '" + child_path.string() + "' ALIAS Child IN 2\n"
+        "SELECT Parent\n"
+        "SET RELATION TO close_via_relation() INTO Child\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    REPLACE NAME WITH 'CHANGED'\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "lStillOpen = USED('Parent')\n"
+        "RETURN\n"
+        "FUNCTION close_via_relation\n"
+        "USE IN Parent\n"
+        "RETURN '1'\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6243: REPLACE SET-RELATION-closes-parent script should complete without crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6243: REPLACE must raise a catchable error when relation synchronization closes the parent "
+           "cursor, instead of reporting success while continuing to use it");
+
+    const auto still_open_it = state.globals.find("lstillopen");
+    expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+           "#6243: the relation expression's USE IN Parent should genuinely have closed the parent cursor");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(parent_path.string(), 1U);
+    expect(parse_result.ok, "#6243: parent.dbf should remain readable after the failed REPLACE");
+    if (parse_result.ok && !parse_result.table.records.empty()) {
+        expect(parse_result.table.records[0].values[0].display_value == "ALPHA",
+               "#6243: the field write must be rolled back by the command-undo journal since the overall "
+               "REPLACE reported failure, got '" +
+                   parse_result.table.records[0].values[0].display_value + "'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 } // namespace copperfin::table_mutation_tests

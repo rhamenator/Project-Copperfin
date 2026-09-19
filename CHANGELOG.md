@@ -1,3 +1,51 @@
+- 2026-09-18: Review-round fix for #6243 (PR #6477): a Copilot review
+  found three further gaps in the reentrant-cursor-closure fix.
+  (1) `current_record_matches_visibility()` evaluates the cursor's own
+  `SET FILTER` expression and then the `FOR`/extra expression against
+  the same cursor -- if the filter closed it, the FOR expression still
+  ran against the freed cursor, since the outer generation check only
+  runs after the whole call returns. Fixed by revalidating between the
+  two internal evaluations. (2) `synchronize_relations_for_parent()`
+  (called after every successful `REPLACE` to keep `SET RELATION`
+  children in sync) itself evaluates arbitrary relation expressions
+  against the parent and was unchecked -- a relation callback closing
+  the parent left the caller reporting success while continuing to use
+  the freed cursor. Changed from `void` to `bool`, revalidating both
+  between relation-loop iterations and after each relation's own
+  key-expression evaluation; `replace_current_record_fields()` now
+  checks it and fails catchably instead of returning success.
+  (3) Asked whether a multi-record scoped `REPLACE` could report
+  failure while having already committed earlier records to disk.
+  Investigation found the pre-existing `execute_with_command_undo()`
+  wrapper already around `REPLACE`/`UPDATE` at the dispatch level
+  delivers atomicity here for free -- it snapshots and restores by
+  file path, independent of cursor lifetime, and rolls back whenever
+  the wrapped operation reports failure (which the #6243 fix already
+  does correctly). A new test proves this rather than newly
+  implementing it.
+
+  Added `test_replace_for_clause_with_active_filter_closing_cursor_fails_catchably`,
+  `test_replace_set_relation_expression_closing_parent_fails_catchably`,
+  and `test_replace_for_clause_partial_write_before_reentrant_closure_is_rolled_back`.
+  The two narrow-window tests for (1) and (2) could not be independently
+  proven to crash in a plain debug build or under a full Valgrind
+  memcheck run with their specific guards disabled (0 errors) -- the
+  freed cursor's memory appears to get transparently reused before
+  being read in these particular narrow, single-record scenarios, the
+  same allocator-timing unreliability the issue's own report already
+  describes for the broader trigger. The fixes are still a direct,
+  minimal, correct response to the specific reviewer-identified gaps,
+  verified functionally even without an independent memory-corruption
+  reproduction for these two.
+
+  This hardens `current_record_matches_visibility()` and
+  `synchronize_relations_for_parent()`, both shared helpers used well
+  beyond REPLACE/UPDATE, so it also incidentally protects every other
+  `FOR`-clause command and `SET RELATION` parent-side caller from the
+  same two specific gaps -- not independently claimed fixed for those
+  callers' own separate risks. Updated `RQ-CF-PRG-052`. All 396 tests
+  pass, reconfirmed after the review-fix round.
+
 - 2026-09-18: Fixed #6243: `REPLACE`/`UPDATE` field-value expressions and
   `FOR`/`WHILE`/`NEXT`/`RECORD` scope predicates can execute arbitrary
   VFP code, including `USE IN`/`CLOSE ALL` on the exact cursor being

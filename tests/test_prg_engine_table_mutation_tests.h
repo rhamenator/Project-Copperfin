@@ -25,6 +25,9 @@ namespace copperfin::table_mutation_tests
     void test_multi_field_replace_uses_original_values_for_later_expressions();
     void test_replace_expression_closing_target_cursor_fails_catchably();
     void test_replace_for_clause_closing_target_cursor_fails_catchably();
+    void test_replace_for_clause_partial_write_before_reentrant_closure_is_rolled_back();
+    void test_replace_for_clause_with_active_filter_closing_cursor_fails_catchably();
+    void test_replace_set_relation_expression_closing_parent_fails_catchably();
     void test_pack_compacts_deleted_local_records();
     void test_zap_truncates_local_table_records();
     void test_pack_is_reverted_by_undo();
