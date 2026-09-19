@@ -1444,4 +1444,152 @@ void test_replace_set_relation_expression_closing_parent_fails_catchably() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #6244: DELETE/RECALL's scope-record collection routes entirely through
+// set_deleted_flag() -> collect_aggregate_scope_records(), the exact
+// shared helper #6243 hardened against reentrant target closure (the
+// issue's own acceptance criteria explicitly asked for that helper's
+// other callers to be audited for the same failure). set_deleted_flag()
+// itself never evaluates further arbitrary expressions after scope
+// collection returns (no relation sync, no per-record VFP callback), so
+// this issue's exact repro (DELETE ALL FOR dropcursor() where
+// dropcursor() does USE IN) is verified fixed here as a direct
+// consequence of #6243, without needing any further production-code
+// change -- this test exists to prove that rather than assume it.
+void test_delete_all_for_expression_closing_target_cursor_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_delete_closes_target_cursor";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    const fs::path main_path = temp_root / "delete_closes_target_cursor.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    DELETE ALL FOR dropcursor()\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "lStillOpen = USED('People')\n"
+        "RETURN\n"
+        "FUNCTION dropcursor\n"
+        "USE IN People\n"
+        "RETURN .T.\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6244: DELETE ALL-closes-own-target script should complete without crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6244: DELETE ALL FOR must raise a catchable error instead of continuing through the closed "
+           "cursor");
+
+    const auto still_open_it = state.globals.find("lstillopen");
+    expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+           "#6244: the predicate's USE IN People should genuinely have closed the cursor");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(parse_result.ok, "#6244: people.dbf should remain readable after the failed DELETE");
+    if (parse_result.ok && !parse_result.table.records.empty()) {
+        expect(!parse_result.table.records[0].deleted,
+               "#6244: the record must not have been marked deleted by a DELETE that failed to complete");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+// #6244: mirrors the DELETE test above for RECALL ALL FOR, and for the
+// SQL-style DELETE FROM ... WHERE form -- both also route through
+// set_deleted_flag()/collect_aggregate_scope_records().
+void test_recall_all_and_delete_from_for_expression_closing_target_cursor_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_recall_deletefrom_closes_target_cursor";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path recall_table_path = temp_root / "recall_people.dbf";
+    write_people_dbf(recall_table_path, {{"ALPHA", 10}});
+    const fs::path delete_from_table_path = temp_root / "delete_from_people.dbf";
+    write_people_dbf(delete_from_table_path, {{"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "recall_deletefrom_closes_target_cursor.prg";
+    write_text(
+        main_path,
+        "USE '" + recall_table_path.string() + "' ALIAS RecallPeople IN 0\n"
+        "DELETE ALL\n"
+        "lRecallErrorCaught = .F.\n"
+        "TRY\n"
+        "    RECALL ALL FOR drop_recall_cursor()\n"
+        "CATCH TO oErr\n"
+        "    lRecallErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "lRecallStillOpen = USED('RecallPeople')\n"
+        "USE '" + delete_from_table_path.string() + "' ALIAS DeleteFromPeople IN 1\n"
+        "lDeleteFromErrorCaught = .F.\n"
+        "TRY\n"
+        "    DELETE FROM DeleteFromPeople WHERE drop_delete_from_cursor()\n"
+        "CATCH TO oErr\n"
+        "    lDeleteFromErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "lDeleteFromStillOpen = USED('DeleteFromPeople')\n"
+        "RETURN\n"
+        "FUNCTION drop_recall_cursor\n"
+        "USE IN RecallPeople\n"
+        "RETURN .T.\n"
+        "ENDFUNC\n"
+        "FUNCTION drop_delete_from_cursor\n"
+        "USE IN DeleteFromPeople\n"
+        "RETURN .T.\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6244: RECALL/DELETE FROM-close-own-target script should complete without crashing: " + state.message);
+
+    const auto recall_error_it = state.globals.find("lrecallerrorcaught");
+    expect(recall_error_it != state.globals.end() && recall_error_it->second.boolean_value,
+           "#6244: RECALL ALL FOR must raise a catchable error instead of continuing through the closed "
+           "cursor");
+    const auto recall_still_open_it = state.globals.find("lrecallstillopen");
+    expect(recall_still_open_it != state.globals.end() && !recall_still_open_it->second.boolean_value,
+           "#6244: the predicate's USE IN RecallPeople should genuinely have closed the cursor");
+
+    const auto delete_from_error_it = state.globals.find("ldeletefromerrorcaught");
+    expect(delete_from_error_it != state.globals.end() && delete_from_error_it->second.boolean_value,
+           "#6244: DELETE FROM ... WHERE must raise a catchable error instead of continuing through the "
+           "closed cursor");
+    const auto delete_from_still_open_it = state.globals.find("ldeletefromstillopen");
+    expect(delete_from_still_open_it != state.globals.end() && !delete_from_still_open_it->second.boolean_value,
+           "#6244: the predicate's USE IN DeleteFromPeople should genuinely have closed the cursor");
+
+    const auto recall_parse_result = copperfin::vfp::parse_dbf_table_from_file(recall_table_path.string(), 1U);
+    expect(recall_parse_result.ok, "#6244: recall_people.dbf should remain readable after the failed RECALL");
+    if (recall_parse_result.ok && !recall_parse_result.table.records.empty()) {
+        expect(recall_parse_result.table.records[0].deleted,
+               "#6244: the record's DELETE ALL (before the failed RECALL) must survive unrecalled");
+    }
+
+    const auto delete_from_parse_result =
+        copperfin::vfp::parse_dbf_table_from_file(delete_from_table_path.string(), 1U);
+    expect(delete_from_parse_result.ok, "#6244: delete_from_people.dbf should remain readable after the failed DELETE FROM");
+    if (delete_from_parse_result.ok && !delete_from_parse_result.table.records.empty()) {
+        expect(!delete_from_parse_result.table.records[0].deleted,
+               "#6244: the record must not have been marked deleted by a DELETE FROM that failed to complete");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 } // namespace copperfin::table_mutation_tests
