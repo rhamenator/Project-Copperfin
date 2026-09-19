@@ -1318,6 +1318,67 @@ void test_sum_value_expression_closing_target_cursor_fails_catchably() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #6245 review: a multi-target SUM/AVERAGE/MIN/MAX used to assign each
+// target variable immediately after its own expression's value pass,
+// so SUM age, dropcursor() TO nFirst, nSecond would overwrite nFirst
+// with the real AGE sum and only then fail when dropcursor() (the
+// second expression) closed the cursor -- leaving one pre-existing
+// result variable clobbered while the overall command reported
+// failure. Proves every target is now published atomically, only
+// after all expressions succeed.
+void test_sum_multiple_targets_preserves_earlier_targets_when_later_expression_closes_cursor() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_sum_multi_target_atomic_failure";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    const fs::path main_path = temp_root / "sum_multi_target_atomic_failure.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "nFirst = -999\n"
+        "nSecond = -999\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    SUM AGE, dropcursor() TO nFirst, nSecond\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "RETURN\n"
+        "FUNCTION dropcursor\n"
+        "USE IN People\n"
+        "RETURN 1\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6245: SUM-multi-target-atomic-failure script should complete without crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6245: SUM with multiple targets must raise a catchable error when a later value expression "
+           "closes the cursor");
+
+    const auto first_it = state.globals.find("nfirst");
+    expect(first_it != state.globals.end() && first_it->second.number_value == -999.0,
+           "#6245: nFirst must retain its pre-command value, not the real AGE sum computed before the "
+           "second expression closed the cursor -- targets must publish atomically or not at all, got '" +
+               (first_it != state.globals.end() ? copperfin::runtime::format_value(first_it->second) : "<missing>") +
+               "'");
+
+    const auto second_it = state.globals.find("nsecond");
+    expect(second_it != state.globals.end() && second_it->second.number_value == -999.0,
+           "#6245: nSecond must also retain its pre-command value");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 // #6245: TOTAL's own scope-collection routes through the same shared
 // helper too. Unlike COUNT/SUM, TOTAL's grouping and output-construction
 // afterward operate entirely on a snapshot copy of the source records

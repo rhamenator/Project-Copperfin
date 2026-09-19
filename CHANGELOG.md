@@ -1,3 +1,25 @@
+- 2026-09-19: Review-round fix for #6245 (PR #6479): a Copilot review
+  found that the multi-target `SUM`/`AVERAGE`/`MIN`/`MAX` variable
+  loop (e.g. `SUM AGE, dropcursor() TO nFirst, nSecond`) published
+  each target immediately after its own expression's value pass
+  rather than atomically -- a later expression closing the cursor
+  left an earlier target already overwritten with a real computed
+  value while the command still reported failure, violating the
+  requirement to preserve pre-command result variables on failure.
+  Fixed by accumulating every expression's result first and
+  publishing to targets only after all of them succeed, matching the
+  array-target branch's existing atomicity. Also fixed a wrong
+  issue cross-reference in a new code comment (`#6252` where
+  `#6243`/`#6244` was meant). Added
+  `test_sum_multiple_targets_preserves_earlier_targets_when_later_expression_closes_cursor`,
+  which pre-seeds two target variables to a sentinel and proves both
+  retain it after a caught failure; verified fail-then-pass by
+  temporarily reintroducing the original inline-assignment pattern
+  and confirming it reproduces the reviewer's exact scenario
+  (`nFirst` observed overwritten with `'10'`, the real `AGE` sum,
+  despite the command failing). All 396 tests pass, reconfirmed after
+  the review-fix round.
+
 - 2026-09-19: Fixed #6245: `COUNT`/`TOTAL` predicates closing their own
   source cursor (e.g. `COUNT ALL FOR dropcursor() TO result` where
   `dropcursor()` does `USE IN People`) already crashed `SIGSEGV`, but

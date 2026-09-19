@@ -366,7 +366,7 @@
             // #6245: the value expression evaluated per matched record can
             // execute arbitrary VFP code, including USE IN/CLOSE ALL on
             // this exact cursor -- collect_aggregate_scope_records()'s own
-            // #6243/#6252 hardening only protects the scope/FOR/WHILE
+            // #6243/#6244 hardening only protects the scope/FOR/WHILE
             // predicates that produced `records`, not this later pass over
             // them.
             cursor_lost = false;
@@ -1054,11 +1054,19 @@
                 return true;
             }
 
-            for (std::size_t index = 0; index < expressions.size(); ++index)
+            // #6245 review: compute every expression's result first and
+            // publish to the target variables only after all of them
+            // succeed, so a later expression closing the cursor cannot
+            // leave an earlier target already overwritten while the
+            // overall command reports failure -- matching the array-target
+            // branch above, which was already atomic in this respect.
+            std::vector<PrgValue> results;
+            results.reserve(expressions.size());
+            for (const std::string &expression : expressions)
             {
                 bool value_cursor_lost = false;
-                const PrgValue result =
-                    aggregate_record_values(*cursor, function, expressions[index], records, frame, value_cursor_lost);
+                results.push_back(
+                    aggregate_record_values(*cursor, function, expression, records, frame, value_cursor_lost));
                 if (value_cursor_lost)
                 {
                     error_message = runtime_text(
@@ -1066,9 +1074,13 @@
                         {{"command", uppercase_copy(function)}});
                     return false;
                 }
-                if (!targets.empty())
+            }
+
+            if (!targets.empty())
+            {
+                for (std::size_t index = 0; index < results.size(); ++index)
                 {
-                    assign_variable(frame, targets[index], result);
+                    assign_variable(frame, targets[index], results[index]);
                 }
             }
 
