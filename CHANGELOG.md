@@ -1,3 +1,81 @@
+- 2026-09-19: Fixed #6246: `INSERT INTO People (name, age) VALUES
+  (droptext(), 99)` where `droptext()` does `USE IN People` reported a
+  fabricated `Runtime resource fault: out of memory` while the DBF
+  header had already durably advanced from two records to three --
+  and under Valgrind, 789 errors across 45 contexts. Unlike #6244/#6245,
+  the already-hardened shared helpers (`replace_current_record_fields()`,
+  `collect_aggregate_scope_records()`) were *not* sufficient here on
+  their own: `INSERT`'s own callers each had an independent, additional
+  reentrant re-touch of the target cursor.
+
+  `insert_record_values()` appends a blank record durably to disk
+  *before* evaluating explicit/default field-value expressions via the
+  already-hardened `replace_current_record_fields()`. When that
+  correctly detects and reports a reentrant closure, this function's
+  *own* failure-rollback block (truncating the file back to the
+  original record count, resetting `cursor.record_count`/`found`/etc.)
+  unconditionally reused the same now-possibly-freed cursor anyway.
+  Captured a `CursorGenerationReference` at entry and gated the whole
+  rollback block on it -- when the cursor is gone, the block is
+  skipped entirely, relying on the outer `execute_with_command_undo()`
+  wrapper's file-path-based restore (captured before the operation
+  ran, so it works regardless of in-memory cursor lifetime) to still
+  durably undo the append.
+
+  A second, independent gap one layer up in `INSERT INTO ... SELECT`
+  dispatch: the source query's materialization runs before the
+  dispatch code's own position/record-count snapshot, and the
+  wrapped operation's failure-cleanup block re-touched the destination
+  cursor afterward too. Both points now reacquire and revalidate
+  against a `CursorGenerationReference` captured immediately after the
+  destination is first resolved.
+
+  Added `test_insert_into_values_expression_closing_target_cursor_fails_catchably`
+  and `test_insert_into_select_where_expression_closing_target_cursor_fails_catchably`.
+  Verified fail-then-pass with an actual reproduction: the reverted
+  implementation crashed with a real `SIGSEGV` (exit code 139),
+  matching the issue's own reported uninstrumented-build crash. Added
+  `RQ-CF-PRG-055`.
+
+  This is the fourth issue closed from the ~18-issue reentrant-cursor-
+  closure cluster, and the first where "the shared helper already
+  covers it" did not hold -- each caller had its own independent gap.
+  Autoincrement defaults (#6126) and ignored DBC defaults (#6124) are
+  explicitly out of scope per the issue's own duplicate-search note.
+  All 396 tests pass.
+
+- 2026-09-19: Review-round finding for #6246 (PR #6480, not a code
+  change): a Copilot review noted that `capture_cursor_generation_reference`/
+  `resolve_cursor_generation_reference` around `materialize_select_query_rows()`
+  only revalidates the destination cursor *after* materialization returns,
+  and if `Target` is also the `SELECT`'s `FROM`/`JOIN` source, the same raw
+  `CursorState*` is handed into `build_rows_from_query_plan`'s per-row
+  loops, which evaluate the `WHERE`/projection/join-on expressions
+  directly against that reference (`evaluate_expression(plan.where_expression,
+  frame, &cursor)` and siblings) with no generation check at all. Traced
+  the call chain to confirm this precisely: `materialize_select_query_rows()`
+  delegates entirely to the general-purpose `requery_native_list_control()`
+  (the native listbox/grid SQL-rowsource requery engine, not
+  `INSERT`-specific code), whose per-row loops have zero reentrancy
+  protection today. A `WHERE`-clause UDF calling `USE IN Target` mid-query
+  would free the cursor *inside* that call, before this PR's dispatch-level
+  check ever runs -- confirmed as a real, distinct gap from the one
+  #6246 fixes.
+
+  This is the general `SELECT`/listbox-requery reentrancy surface already
+  tracked as its own cluster item (#6251), not `INSERT INTO`'s own
+  dispatch logic -- fixing it properly means threading a
+  `CursorGenerationReference` through every per-row loop in
+  `build_rows_from_query_plan()` (aggregate, grouped, joined, and plain
+  projection paths) and through `requery_native_list_control()` generally,
+  which is a general-engine change, not an `INSERT`-scoped one. Rather than
+  expand this PR indefinitely, narrowed `RQ-CF-PRG-055`'s claims to
+  explicitly disclose that `INSERT INTO ... SELECT` targeting itself as
+  the source is *not* protected by this fix when the closure happens
+  during materialization itself, and left the gap for #6251 to close.
+  Replied to and resolved the review thread with this reasoning. No test
+  or production code changed as a result of this finding.
+
 - 2026-09-19: Review-round fix for #6245 (PR #6479): a Copilot review
   found that the multi-target `SUM`/`AVERAGE`/`MIN`/`MAX` variable
   loop (e.g. `SUM AGE, dropcursor() TO nFirst, nSecond`) published

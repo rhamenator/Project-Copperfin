@@ -4569,12 +4569,31 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
+                // #6246: INSERT INTO ... SELECT materializes the source
+                // query's rows *before* touching the destination cursor
+                // again below; the query's own expressions can execute
+                // arbitrary VFP code, including USE IN/CLOSE ALL on this
+                // exact destination cursor (e.g. if it is also used as the
+                // SELECT source). Capture identity now so every later
+                // reentrant point can be revalidated instead of continuing
+                // through a freed CursorState.
+                const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(cursor);
+
                 const bool inserts_query_rows =
                     normalize_identifier(statement.tertiary_expression) == "select";
                 std::vector<std::vector<PrgValue>> query_rows;
                 if (inserts_query_rows &&
                     !materialize_select_query_rows(statement.secondary_expression, frame, query_rows))
                 {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                cursor = resolve_cursor_generation_reference(cursor_reference);
+                if (cursor == nullptr)
+                {
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                                     {{"command", "INSERT INTO"}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -4610,12 +4629,22 @@
                     });
                 if (!inserted)
                 {
-                    if (cursor->remote)
+                    // #6246: a value/default/query expression evaluated
+                    // inside the wrapped operation above may already have
+                    // closed or replaced this exact cursor -- insert_record_values()
+                    // itself already avoids touching it further in that
+                    // case, but this cleanup must not blindly reuse the
+                    // pre-lambda `cursor` pointer either.
+                    cursor = resolve_cursor_generation_reference(cursor_reference);
+                    if (cursor != nullptr)
                     {
-                        cursor->remote_records = original_remote_records;
+                        if (cursor->remote)
+                        {
+                            cursor->remote_records = original_remote_records;
+                        }
+                        cursor->record_count = original_record_count;
+                        restore_cursor_snapshot(*cursor, original_position);
                     }
-                    cursor->record_count = original_record_count;
-                    restore_cursor_snapshot(*cursor, original_position);
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};

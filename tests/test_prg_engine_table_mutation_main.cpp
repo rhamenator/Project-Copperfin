@@ -60,6 +60,8 @@ int main()
     test_flock_retry_blocking_is_rejected_inside_critical_section();
     test_insert_into_and_delete_from_local_table();
     test_insert_into_select_materializes_filtered_ordered_rows();
+    test_insert_into_values_expression_closing_target_cursor_fails_catchably();
+    test_insert_into_select_where_expression_closing_target_cursor_fails_catchably();
     test_insert_into_select_rolls_back_the_whole_failed_batch();
     test_insert_into_rolls_back_failed_local_append();
     test_indexed_table_mutation_succeeds_for_structural_indexes();
