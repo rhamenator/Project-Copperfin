@@ -5907,6 +5907,16 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
+                    // #6269: the filter expression evaluated just below can
+                    // run arbitrary VFP code, including USE IN/CLOSE ALL on
+                    // this exact cursor. VFP9 itself does not raise an error
+                    // in that case -- SET FILTER simply completes and a
+                    // later USED() correctly reports the closure -- so this
+                    // revalidates by generation identity rather than
+                    // failing catchably, and skips the (now pointless)
+                    // write to the freed cursor's filter_expression instead
+                    // of continuing through it.
+                    const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(cursor);
 
                     if (normalize_identifier(filter_clause) == "off")
                     {
@@ -5925,10 +5935,14 @@
                         filter_clause = unquote_string(filter_clause);
                     }
 
-                    cursor->filter_expression = filter_clause;
+                    cursor = resolve_cursor_generation_reference(cursor_reference);
+                    if (cursor != nullptr)
+                    {
+                        cursor->filter_expression = filter_clause;
+                    }
 
                     events.push_back({.category = "runtime.filter",
-                                      .detail = cursor->filter_expression.empty() ? "OFF" : cursor->filter_expression,
+                                      .detail = filter_clause.empty() ? "OFF" : filter_clause,
                                       .location = statement.location});
                     return {};
                 }

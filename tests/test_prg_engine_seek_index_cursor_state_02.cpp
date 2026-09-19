@@ -471,4 +471,61 @@ void test_set_filter_in_targets_nonselected_alias() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #6269: a parenthesized SET FILTER expression can run arbitrary VFP code,
+// including USE IN/CLOSE ALL on the exact work area receiving the filter.
+// Real VFP9 does not raise an error in that case -- SET FILTER simply
+// completes and a later USED() correctly reports the closure -- so this
+// verifies graceful completion, not a catchable error like the sibling
+// #6243/#6247 fixes.
+void test_set_filter_expression_closing_target_cursor_completes_gracefully() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_filter_closes_target";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    const fs::path main_path = temp_root / "set_filter_closes_target.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET FILTER TO (dropcursor()) IN People\n"
+        "lStillOpen = USED('People')\n"
+        "after = 1\n"
+        "RETURN\n"
+        "FUNCTION dropcursor\n"
+        "USE IN People\n"
+        "RETURN .T.\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6269: SET FILTER whose own expression closes its target should complete without crashing, "
+           "matching VFP9's graceful (non-error) behavior: " + state.message);
+
+    const auto still_open_it = state.globals.find("lstillopen");
+    expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+           "#6269: dropcursor()'s USE IN People should genuinely have closed People, and USED() must "
+           "correctly report that afterward");
+
+    const auto after_it = state.globals.find("after");
+    expect(after_it != state.globals.end(),
+           "#6269: script execution should continue normally after SET FILTER, matching VFP9's own "
+           "non-error completion -- SET FILTER must not raise a catchable error for this case");
+
+    expect(
+        std::count_if(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.filter";
+        }) >= 1,
+        "#6269: SET FILTER should still emit its runtime.filter event even though the cursor closed "
+        "during expression evaluation");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }
