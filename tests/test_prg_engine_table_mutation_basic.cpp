@@ -1119,4 +1119,128 @@ void test_multi_field_replace_uses_original_values_for_later_expressions() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #6243: a field-value assignment expression can execute arbitrary VFP
+// code (here, a UDF that closes the mutation target itself via USE IN).
+// The dispatch path used to resolve a raw CursorState& once and keep
+// using it -- including cursor.record_count, the shared table lock, and
+// serialize_value_for_cursor_field()'s field-type lookup -- through
+// whatever the callback did to it, reading/writing freed memory
+// (SIGSEGV or Valgrind-detected use-after-free depending on allocator
+// timing, per the issue's own retained probes). REPLACE must instead
+// revalidate the cursor's generation identity after the callback and
+// fail catchably if it was closed or replaced, never continue through
+// freed state.
+void test_replace_expression_closing_target_cursor_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_replace_closes_target_cursor";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    const fs::path main_path = temp_root / "replace_closes_target_cursor.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    REPLACE NAME WITH droptext()\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "lStillOpen = USED('People')\n"
+        "RETURN\n"
+        "FUNCTION droptext\n"
+        "USE IN People\n"
+        "RETURN 'CHANGED'\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6243: REPLACE-closes-own-target script should complete without crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6243: REPLACE must raise a catchable error instead of continuing through the closed cursor");
+
+    const auto still_open_it = state.globals.find("lstillopen");
+    expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+           "#6243: the callback's USE IN People should genuinely have closed the cursor (proving real "
+           "contention with the fix, not a coincidental pass)");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(parse_result.ok, "#6243: people.dbf should remain readable after the failed REPLACE");
+    if (parse_result.ok && !parse_result.table.records.empty()) {
+        expect(parse_result.table.records[0].values[0].display_value == "ALPHA",
+               "#6243: the record must retain its original value, not a half-applied or corrupted write, got '" +
+                   parse_result.table.records[0].values[0].display_value + "'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+// #6243: the same reentrancy hazard exists in REPLACE's own FOR/WHILE
+// scope-record collection (collect_aggregate_scope_records(), shared with
+// DELETE/RECALL and TOTAL/SUM/COUNT/AVERAGE): the FOR predicate is
+// arbitrary VFP code evaluated once per candidate record, and used to
+// call move_cursor_to()/current_record_matches_visibility() again on the
+// very next iteration (or restore_cursor_snapshot() at the end) without
+// checking whether the predicate had already closed the cursor.
+void test_replace_for_clause_closing_target_cursor_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_replace_for_closes_target_cursor";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "replace_for_closes_target_cursor.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    REPLACE NAME WITH 'X' FOR droptext()\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "lStillOpen = USED('People')\n"
+        "RETURN\n"
+        "FUNCTION droptext\n"
+        "USE IN People\n"
+        "RETURN .T.\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6243: REPLACE FOR-closes-own-target script should complete without crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6243: REPLACE FOR must raise a catchable error instead of continuing to iterate through the "
+           "closed cursor");
+
+    const auto still_open_it = state.globals.find("lstillopen");
+    expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+           "#6243: the FOR predicate's USE IN People should genuinely have closed the cursor");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+    expect(parse_result.ok, "#6243: people.dbf should remain readable after the failed scoped REPLACE");
+    if (parse_result.ok && parse_result.table.records.size() == 2U) {
+        expect(parse_result.table.records[0].values[0].display_value == "ALPHA",
+               "#6243: no record should have been mutated by a scoped REPLACE that failed to complete, got '" +
+                   parse_result.table.records[0].values[0].display_value + "'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 } // namespace copperfin::table_mutation_tests

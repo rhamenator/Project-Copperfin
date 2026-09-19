@@ -1,3 +1,50 @@
+- 2026-09-18: Fixed #6243: `REPLACE`/`UPDATE` field-value expressions and
+  `FOR`/`WHILE`/`NEXT`/`RECORD` scope predicates can execute arbitrary
+  VFP code, including `USE IN`/`CLOSE ALL` on the exact cursor being
+  mutated -- e.g. `REPLACE name WITH droptext()` where `droptext()`
+  does `USE IN People`. The dispatch path resolved a raw `CursorState`
+  once and kept using it (descriptor lookup, serialization, lock
+  release, record-count update, relation sync) through whatever the
+  callback did to it, reading/writing freed memory: an uninstrumented
+  build crashed with `SIGSEGV`, and Valgrind found 401-961
+  use-after-free errors depending on the command. This is the first
+  issue tackled from a newly identified cluster of ~18 reentrant-
+  cursor-closure use-after-free issues sharing the exact root-cause
+  shape already fixed once for `CURVAL()`/`OLDVAL()` and
+  `GO`/`SKIP`/`SEEK`/record `UNLOCK`.
+
+  Hardened `replace_current_record_fields()` (all three of its
+  remote/buffered/direct-local sub-paths) to capture a
+  `CursorGenerationReference` once and revalidate it after every
+  per-assignment `evaluate_expression()` call, failing catchably and
+  touching no further cursor-derived state on a mismatch (including
+  not attempting to release a lock the closing operation already
+  released). Also hardened `collect_aggregate_scope_records()` -- the
+  scope/`FOR`/`WHILE`/`NEXT`/`RECORD` record-collection helper shared
+  by `REPLACE`/`UPDATE`, `DELETE`/`RECALL`, and
+  `TOTAL`/`SUM`/`COUNT`/`AVERAGE` -- the same way, adding a new
+  non-defaulted `bool &cursor_lost` out-parameter that forced (via
+  compile errors) updating all 7 pre-existing call sites across both
+  files to handle the failure.
+
+  Added `test_replace_expression_closing_target_cursor_fails_catchably`
+  and `test_replace_for_clause_closing_target_cursor_fails_catchably`.
+  Verified fail-then-pass with an actual reproduction: the reverted
+  implementation didn't just fail an assertion, it crashed with a real
+  `SIGSEGV` (exit code 139), exactly matching the issue's own reported
+  uninstrumented-build crash. Added `RQ-CF-PRG-052`.
+
+  This fix's scope is REPLACE/UPDATE-specific, but hardening the
+  shared `collect_aggregate_scope_records()` helper incidentally closes
+  the identical vector for DELETE/RECALL (#6244) and
+  TOTAL/SUM/COUNT/AVERAGE (#6245) too, as a side effect -- those two
+  issues are not independently claimed fixed, since each may have its
+  own separate, unexamined reentrancy risk beyond the shared helper. A
+  second, structurally identical implementation of bare aggregate
+  *function*-call scanning (`aggregate_function_value()`, used by e.g.
+  `? SUM(amount FOR condition)`) was found during this investigation
+  and is a disclosed, not-yet-fixed analogous gap. All 396 tests pass.
+
 - 2026-09-18: Fixed #6456 and #6457, the final two issues in the #6471
   SPAWN/AWAIT tracking cluster.
 

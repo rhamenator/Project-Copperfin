@@ -233,13 +233,35 @@
             const AggregateScopeClause &scope,
             const std::string &for_expression,
             const std::string &while_expression,
+            bool &cursor_lost,
             bool honor_set_deleted = true)
         {
+            // #6243/#6244/#6245: NEXT/RECORD scope expressions and the
+            // FOR/WHILE predicates below all execute arbitrary VFP code,
+            // including USE IN/CLOSE ALL on this exact cursor. Every caller
+            // of this shared helper (REPLACE/UPDATE, DELETE/RECALL,
+            // TOTAL/SUM/COUNT/AVERAGE) must revalidate before touching the
+            // cursor again rather than continuing through a freed
+            // CursorState -- cursor_lost signals that this happened so the
+            // caller can fail the whole scoped operation catchably instead
+            // of using a partial record list against a target that's gone.
+            cursor_lost = false;
             std::vector<std::size_t> records;
             if (cursor.record_count == 0U)
             {
                 return records;
             }
+
+            const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(&cursor);
+            const auto still_live = [&]() -> bool
+            {
+                if (resolve_cursor_generation_reference(cursor_reference) == nullptr)
+                {
+                    cursor_lost = true;
+                    return false;
+                }
+                return true;
+            };
 
             std::size_t start_recno = 1U;
             std::size_t end_recno = cursor.record_count;
@@ -257,6 +279,10 @@
             case AggregateScopeKind::next_records:
             {
                 const long long requested = static_cast<long long>(std::llround(value_as_number(evaluate_expression(scope.raw_value, frame, &cursor))));
+                if (!still_live())
+                {
+                    return records;
+                }
                 if (requested <= 0)
                 {
                     return records;
@@ -272,6 +298,10 @@
             case AggregateScopeKind::record:
             {
                 const long long requested = static_cast<long long>(std::llround(value_as_number(evaluate_expression(scope.raw_value, frame, &cursor))));
+                if (!still_live())
+                {
+                    return records;
+                }
                 if (requested < 1LL || requested > static_cast<long long>(cursor.record_count))
                 {
                     return records;
@@ -285,19 +315,40 @@
             const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
             for (std::size_t recno = start_recno; recno <= end_recno; ++recno)
             {
-                move_cursor_to(cursor, static_cast<long long>(recno));
-                if (!while_expression.empty() && !value_as_bool(evaluate_expression(while_expression, frame, &cursor)))
+                if (!still_live())
                 {
-                    break;
+                    return records;
                 }
-                if (current_record_matches_visibility(
-                        cursor,
-                        frame,
-                        for_expression,
-                        honor_set_deleted))
+                move_cursor_to(cursor, static_cast<long long>(recno));
+                if (!while_expression.empty())
+                {
+                    const bool while_result = value_as_bool(evaluate_expression(while_expression, frame, &cursor));
+                    if (!still_live())
+                    {
+                        return records;
+                    }
+                    if (!while_result)
+                    {
+                        break;
+                    }
+                }
+                const bool matches = current_record_matches_visibility(
+                    cursor,
+                    frame,
+                    for_expression,
+                    honor_set_deleted);
+                if (!still_live())
+                {
+                    return records;
+                }
+                if (matches)
                 {
                     records.push_back(recno);
                 }
+            }
+            if (!still_live())
+            {
+                return records;
             }
             restore_cursor_snapshot(cursor, original);
 
@@ -534,12 +585,21 @@
                 return false;
             }
 
+            bool records_cursor_lost = false;
             std::vector<std::size_t> records = collect_aggregate_scope_records(
                 *cursor,
                 frame,
                 plan.scope,
                 plan.for_expression,
-                plan.while_expression);
+                plan.while_expression,
+                records_cursor_lost);
+            if (records_cursor_lost)
+            {
+                error_message = runtime_text(
+                    "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                    {{"command", "TOTAL"}});
+                return false;
+            }
             if (records.empty())
             {
                 const std::string target_path = value_as_string(evaluate_expression(plan.target_expression, frame));
@@ -809,12 +869,21 @@
                     return false;
                 }
 
+                bool records_cursor_lost = false;
                 const std::vector<std::size_t> records = collect_aggregate_scope_records(
                     *cursor,
                     frame,
                     scope,
                     statement.secondary_expression,
-                    statement.tertiary_expression);
+                    statement.tertiary_expression,
+                    records_cursor_lost);
+                if (records_cursor_lost)
+                {
+                    error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", uppercase_copy(function)}});
+                    return false;
+                }
                 const PrgValue result = aggregate_record_values(*cursor, function, {}, records, frame);
                 if (to_array)
                 {
@@ -921,12 +990,21 @@
                 return false;
             }
 
+            bool records_cursor_lost = false;
             const std::vector<std::size_t> records = collect_aggregate_scope_records(
                 *cursor,
                 frame,
                 scope,
                 statement.secondary_expression,
-                statement.tertiary_expression);
+                statement.tertiary_expression,
+                records_cursor_lost);
+            if (records_cursor_lost)
+            {
+                error_message = runtime_text(
+                    "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                    {{"command", uppercase_copy(function)}});
+                return false;
+            }
 
             if (to_array)
             {
