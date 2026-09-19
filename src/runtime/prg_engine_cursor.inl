@@ -333,10 +333,20 @@
                     continue;
                 }
 
+                const CursorGenerationReference child_reference = capture_cursor_generation_reference(child);
                 const std::string search_key = value_as_string(
                     evaluate_expression(relation.expression, frame, &parent));
                 if (resolve_cursor_generation_reference(parent_reference) == nullptr)
                 {
+                    return false;
+                }
+                child = resolve_cursor_generation_reference(child_reference);
+                if (child == nullptr)
+                {
+                    // #6247: the relation's own key expression closed or
+                    // replaced its own child cursor -- nothing left to seek
+                    // into. Fail the whole synchronization call catchably
+                    // instead of continuing through freed state.
                     return false;
                 }
                 if (child->active_order_expression.empty() && child->orders.empty())
@@ -381,6 +391,17 @@
                    relation_key_for_cursor(relation, child, frame);
         }
 
+        // #6247 review: returns false only when a relation-key expression
+        // closed or replaced a participating cursor (this child, a walked
+        // parent, or either side of a relation-key match evaluation) --
+        // callers must treat that as a catchable failure, not as "nothing
+        // needed adjusting" (the prior bool result was never checked by its
+        // only caller, so repurposing it here changes no observable
+        // behavior for the ordinary case). relation_matches_current_parent()
+        // evaluates the exact arbitrary relation-key expression this whole
+        // function exists to guard against, so every call to it below is
+        // followed by a generation revalidation of both the parent and the
+        // child before the result is used for anything else.
         bool synchronize_skip_parent_for_child(
             CursorState &child,
             const Frame &frame,
@@ -391,21 +412,32 @@
             // session rather than the callback-selected session.
             if (delta == 0)
             {
-                return false;
+                return true;
             }
 
             const int direction = delta > 0 ? 1 : -1;
-            bool adjusted = false;
             const int relation_data_session =
                 target_data_session == 0 ? current_data_session : target_data_session;
             const auto session = data_sessions.find(relation_data_session);
             if (session == data_sessions.end())
             {
-                return false;
+                return true;
             }
+            const CursorGenerationReference child_reference = capture_cursor_generation_reference(&child);
+            const auto child_alive = [&]() -> bool
+            {
+                return resolve_cursor_generation_reference(child_reference) != nullptr;
+            };
+
             const auto relations = session->second.relations;
             for (const auto &relation : relations)
             {
+                if (!child_alive())
+                {
+                    // An earlier relation's processing in this same loop
+                    // already closed or replaced this child.
+                    return false;
+                }
                 if (!relation.skip_one_to_many || relation.child_work_area != child.work_area)
                 {
                     continue;
@@ -415,7 +447,19 @@
                 CursorState *parent = parent_entry == session->second.cursors.end()
                     ? nullptr
                     : &parent_entry->second;
-                if (parent == nullptr || relation_matches_current_parent(relation, *parent, child, frame))
+                if (parent == nullptr)
+                {
+                    continue;
+                }
+                const CursorGenerationReference parent_reference = capture_cursor_generation_reference(parent);
+
+                const bool already_matches = relation_matches_current_parent(relation, *parent, child, frame);
+                parent = resolve_cursor_generation_reference(parent_reference);
+                if (parent == nullptr || !child_alive())
+                {
+                    return false;
+                }
+                if (already_matches)
                 {
                     continue;
                 }
@@ -428,8 +472,23 @@
                         break;
                     }
 
-                    synchronize_relations_for_parent(*parent, frame, relation_data_session);
-                    if (!relation_matches_current_parent(relation, *parent, child, frame))
+                    if (!synchronize_relations_for_parent(*parent, frame, relation_data_session))
+                    {
+                        return false;
+                    }
+                    parent = resolve_cursor_generation_reference(parent_reference);
+                    if (parent == nullptr || !child_alive())
+                    {
+                        return false;
+                    }
+
+                    const bool matches_now = relation_matches_current_parent(relation, *parent, child, frame);
+                    parent = resolve_cursor_generation_reference(parent_reference);
+                    if (parent == nullptr || !child_alive())
+                    {
+                        return false;
+                    }
+                    if (!matches_now)
                     {
                         continue;
                     }
@@ -441,19 +500,29 @@
                         while (true)
                         {
                             const CursorPositionSnapshot before_next = capture_cursor_snapshot(child);
-                            if (!move_by_visible_records(child, frame, 1) ||
-                                !relation_matches_current_parent(relation, *parent, child, frame))
+                            if (!move_by_visible_records(child, frame, 1))
+                            {
+                                restore_cursor_snapshot(child, before_next);
+                                break;
+                            }
+                            const bool still_matches =
+                                relation_matches_current_parent(relation, *parent, child, frame);
+                            parent = resolve_cursor_generation_reference(parent_reference);
+                            if (parent == nullptr || !child_alive())
+                            {
+                                return false;
+                            }
+                            if (!still_matches)
                             {
                                 restore_cursor_snapshot(child, before_next);
                                 break;
                             }
                         }
                     }
-                    adjusted = true;
                     break;
                 }
             }
-            return adjusted;
+            return true;
         }
 
         vfp::DbfTableParseResult parse_table_path(

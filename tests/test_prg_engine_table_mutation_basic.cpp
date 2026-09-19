@@ -1403,6 +1403,12 @@ void test_replace_set_relation_expression_closing_parent_fails_catchably() {
         "USE '" + parent_path.string() + "' ALIAS Parent IN 1\n"
         "USE '" + child_path.string() + "' ALIAS Child IN 2\n"
         "SELECT Parent\n"
+        // #6247 hardened SET RELATION's own initial-registration synchronization
+        // to fail catchably too when a relation's key expression closes the
+        // parent -- gate the destructive USE IN to the *second* call so this
+        // test still exercises REPLACE's own post-write resynchronization
+        // (RQ-CF-PRG-052) specifically, rather than SET RELATION's own.
+        "nRelationCalls = 0\n"
         "SET RELATION TO close_via_relation() INTO Child\n"
         "lErrorCaught = .F.\n"
         "TRY\n"
@@ -1413,7 +1419,10 @@ void test_replace_set_relation_expression_closing_parent_fails_catchably() {
         "lStillOpen = USED('Parent')\n"
         "RETURN\n"
         "FUNCTION close_via_relation\n"
-        "USE IN Parent\n"
+        "nRelationCalls = nRelationCalls + 1\n"
+        "IF nRelationCalls >= 2\n"
+        "    USE IN Parent\n"
+        "ENDIF\n"
         "RETURN '1'\n"
         "ENDFUNC\n");
 
