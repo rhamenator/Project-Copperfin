@@ -323,11 +323,22 @@
             {
                 return false;
             }
-            if (honor_filter &&
-                !cursor.filter_expression.empty() &&
-                !evaluate_visibility_expression(cursor.filter_expression, frame, &cursor))
+            if (honor_filter && !cursor.filter_expression.empty())
             {
-                return false;
+                // #6243 review: the filter expression can execute arbitrary
+                // VFP code, including closing/replacing this exact cursor.
+                // Capture identity before evaluating it so the FOR/extra
+                // expression below is never evaluated against a cursor the
+                // filter has already invalidated.
+                const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(&cursor);
+                if (!evaluate_visibility_expression(cursor.filter_expression, frame, &cursor))
+                {
+                    return false;
+                }
+                if (resolve_cursor_generation_reference(cursor_reference) == nullptr)
+                {
+                    return false;
+                }
             }
             if (!extra_expression.empty() && !evaluate_visibility_expression(extra_expression, frame, &cursor))
             {
@@ -1255,7 +1266,8 @@
                 bool additive = false;
             };
 
-            const auto serialize_value_for_cursor_field = [&](const std::string &field_name, const PrgValue &value)
+            const auto serialize_value_for_cursor_field =
+                [&](CursorState &target_cursor, const std::string &field_name, const PrgValue &value)
             {
                 vfp::DbfRecordValue field{
                     .field_name = field_name,
@@ -1263,9 +1275,9 @@
                     .is_null = false,
                     .display_value = {}};
                 const std::string normalized_field = collapse_identifier(field_name);
-                if (cursor.remote && cursor.recno > 0U && cursor.recno <= cursor.remote_records.size())
+                if (target_cursor.remote && target_cursor.recno > 0U && target_cursor.recno <= target_cursor.remote_records.size())
                 {
-                    const auto &record = cursor.remote_records[cursor.recno - 1U];
+                    const auto &record = target_cursor.remote_records[target_cursor.recno - 1U];
                     const auto found = std::find_if(
                         record.values.begin(),
                         record.values.end(),
@@ -1280,7 +1292,7 @@
                 }
                 else
                 {
-                    const auto descriptors = cursor_field_descriptors(cursor);
+                    const auto descriptors = cursor_field_descriptors(target_cursor);
                     const auto found = std::find_if(
                         descriptors.begin(),
                         descriptors.end(),
@@ -1294,6 +1306,40 @@
                     }
                 }
                 return serialize_prg_value_for_record_field(field, value);
+            };
+
+            // #6243: the mutation target's identity, captured once so every
+            // reentrant evaluation below (field-value expressions can run
+            // arbitrary VFP code, including USE IN/CLOSE ALL on this exact
+            // cursor) can be revalidated before touching cursor state again,
+            // instead of continuing through a freed CursorState.
+            const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(&cursor);
+            const auto reacquire_cursor_or_fail = [&](CursorState *&live_cursor) -> bool
+            {
+                live_cursor = resolve_cursor_generation_reference(cursor_reference);
+                if (live_cursor == nullptr)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", "REPLACE"}});
+                    return false;
+                }
+                return true;
+            };
+            // #6243 review: synchronize_relations_for_parent() itself
+            // evaluates arbitrary relation expressions against this exact
+            // cursor and can therefore also close/replace it; check its
+            // report before reporting overall success.
+            const auto synchronize_relations_or_fail = [&](CursorState &live_cursor) -> bool
+            {
+                if (!synchronize_relations_for_parent(live_cursor, frame))
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", "REPLACE"}});
+                    return false;
+                }
+                return true;
             };
 
             if (cursor.remote)
@@ -1312,6 +1358,11 @@
                 for (const auto &assignment : assignments)
                 {
                     const PrgValue value = evaluate_expression(assignment.expression, frame);
+                    CursorState *live_cursor = nullptr;
+                    if (!reacquire_cursor_or_fail(live_cursor))
+                    {
+                        return false;
+                    }
                     const std::string normalized_field = collapse_identifier(assignment.field_name);
                     auto field = std::find_if(record.values.begin(), record.values.end(), [&](vfp::DbfRecordValue &candidate)
                                               { return collapse_identifier(candidate.field_name) == normalized_field; });
@@ -1322,7 +1373,7 @@
                             {{"fieldName", assignment.field_name}});
                         return false;
                     }
-                    std::string serialized_value = serialize_value_for_cursor_field(assignment.field_name, value);
+                    std::string serialized_value = serialize_value_for_cursor_field(*live_cursor, assignment.field_name, value);
                     if (assignment.additive && field->field_type == 'M')
                     {
                         serialized_value = field->display_value + serialized_value;
@@ -1347,7 +1398,10 @@
                     }
                     field->display_value = assignment.serialized_value;
                 }
-                synchronize_relations_for_parent(cursor, frame);
+                if (!synchronize_relations_or_fail(cursor))
+                {
+                    return false;
+                }
                 return true;
             }
 
@@ -1404,7 +1458,15 @@
                 for (const auto &assignment : assignments)
                 {
                     const PrgValue value = evaluate_expression(assignment.expression, frame);
-                    std::string serialized_value = serialize_value_for_cursor_field(assignment.field_name, value);
+                    CursorState *live_cursor = nullptr;
+                    if (!reacquire_cursor_or_fail(live_cursor))
+                    {
+                        // The cursor (and any lock ownership it held) is
+                        // already gone; there is nothing left to release
+                        // through a dangling reference.
+                        return false;
+                    }
+                    std::string serialized_value = serialize_value_for_cursor_field(*live_cursor, assignment.field_name, value);
                     // Buffered (CURSORSETPROP-buffering) records are held in
                     // memory until a later flush, not written through
                     // write_field_bytes() immediately, so they can't get
@@ -1420,7 +1482,7 @@
                     if (allow_truncation)
                     {
                         const std::string normalized_field = collapse_identifier(assignment.field_name);
-                        const auto descriptors = cursor_field_descriptors(cursor);
+                        const auto descriptors = cursor_field_descriptors(*live_cursor);
                         const auto descriptor = std::find_if(
                             descriptors.begin(),
                             descriptors.end(),
@@ -1473,7 +1535,10 @@
                     cursor.buffered_field_states[cursor.recno][field_index] =
                         cursor.buffered_appended_records.contains(cursor.recno) ? 4 : 2;
                 }
-                synchronize_relations_for_parent(cursor, frame);
+                if (!synchronize_relations_or_fail(cursor))
+                {
+                    return false;
+                }
                 return true;
             }
 
@@ -1500,7 +1565,16 @@
             for (const auto &assignment : assignments)
             {
                 const PrgValue value = evaluate_expression(assignment.expression, frame);
-                std::string serialized_value = serialize_value_for_cursor_field(assignment.field_name, value);
+                CursorState *live_cursor = nullptr;
+                if (!reacquire_cursor_or_fail(live_cursor))
+                {
+                    // close_cursor() already released this cursor's lock
+                    // ownership before erasing it, so there is no lock left
+                    // to release here, and cursor/temporary_record_lock must
+                    // not be touched again.
+                    return false;
+                }
+                std::string serialized_value = serialize_value_for_cursor_field(*live_cursor, assignment.field_name, value);
                 // Overflow handling (truncate vs. a detailed error) is now
                 // decided uniformly at the vfp:: layer, which has the
                 // field's real width and the table path in hand for a
@@ -1544,7 +1618,10 @@
             {
                 unlock_cursor_record_lock(cursor, cursor.recno);
             }
-            synchronize_relations_for_parent(cursor, frame);
+            if (!synchronize_relations_or_fail(cursor))
+            {
+                return false;
+            }
             return true;
         }
 
@@ -1565,13 +1642,22 @@
             }
 
             const AggregateScopeClause effective_scope = scope.value_or(AggregateScopeClause{});
+            bool target_records_cursor_lost = false;
             const std::vector<std::size_t> target_records = collect_aggregate_scope_records(
                 cursor,
                 frame,
                 effective_scope,
                 for_expression,
                 while_expression,
+                target_records_cursor_lost,
                 effective_scope.kind != AggregateScopeKind::record);
+            if (target_records_cursor_lost)
+            {
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                    {{"command", "REPLACE"}});
+                return false;
+            }
             for (const std::size_t recno : target_records)
             {
                 move_cursor_to(cursor, static_cast<long long>(recno));
@@ -3141,13 +3227,22 @@
                 }
                 else
                 {
+                    bool target_records_cursor_lost = false;
                     target_records = collect_aggregate_scope_records(
                         cursor,
                         frame,
                         scope.value_or(AggregateScopeClause{}),
                         for_expression,
                         while_expression,
+                        target_records_cursor_lost,
                         deleted);
+                    if (target_records_cursor_lost)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", deleted ? "DELETE" : "RECALL"}});
+                        return false;
+                    }
                 }
 
                 for (const std::size_t recno : target_records)
@@ -3183,13 +3278,22 @@
                 }
                 else
                 {
+                    bool target_records_cursor_lost = false;
                     target_records = collect_aggregate_scope_records(
                         cursor,
                         frame,
                         scope.value_or(AggregateScopeClause{}),
                         for_expression,
                         while_expression,
+                        target_records_cursor_lost,
                         deleted);
+                    if (target_records_cursor_lost)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", deleted ? "DELETE" : "RECALL"}});
+                        return false;
+                    }
                 }
 
                 for (const std::size_t recno : target_records)
@@ -3252,13 +3356,22 @@
             }
             else
             {
+                bool target_records_cursor_lost = false;
                 target_records = collect_aggregate_scope_records(
                     cursor,
                     frame,
                     scope.value_or(AggregateScopeClause{}),
                     for_expression,
                     while_expression,
+                    target_records_cursor_lost,
                     deleted);
+                if (target_records_cursor_lost)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", deleted ? "DELETE" : "RECALL"}});
+                    return false;
+                }
             }
 
             for (const std::size_t recno : target_records)

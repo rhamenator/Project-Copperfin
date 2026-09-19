@@ -1,3 +1,98 @@
+- 2026-09-18: Review-round fix for #6243 (PR #6477): a Copilot review
+  found three further gaps in the reentrant-cursor-closure fix.
+  (1) `current_record_matches_visibility()` evaluates the cursor's own
+  `SET FILTER` expression and then the `FOR`/extra expression against
+  the same cursor -- if the filter closed it, the FOR expression still
+  ran against the freed cursor, since the outer generation check only
+  runs after the whole call returns. Fixed by revalidating between the
+  two internal evaluations. (2) `synchronize_relations_for_parent()`
+  (called after every successful `REPLACE` to keep `SET RELATION`
+  children in sync) itself evaluates arbitrary relation expressions
+  against the parent and was unchecked -- a relation callback closing
+  the parent left the caller reporting success while continuing to use
+  the freed cursor. Changed from `void` to `bool`, revalidating both
+  between relation-loop iterations and after each relation's own
+  key-expression evaluation; `replace_current_record_fields()` now
+  checks it and fails catchably instead of returning success.
+  (3) Asked whether a multi-record scoped `REPLACE` could report
+  failure while having already committed earlier records to disk.
+  Investigation found the pre-existing `execute_with_command_undo()`
+  wrapper already around `REPLACE`/`UPDATE` at the dispatch level
+  delivers atomicity here for free -- it snapshots and restores by
+  file path, independent of cursor lifetime, and rolls back whenever
+  the wrapped operation reports failure (which the #6243 fix already
+  does correctly). A new test proves this rather than newly
+  implementing it.
+
+  Added `test_replace_for_clause_with_active_filter_closing_cursor_fails_catchably`,
+  `test_replace_set_relation_expression_closing_parent_fails_catchably`,
+  and `test_replace_for_clause_partial_write_before_reentrant_closure_is_rolled_back`.
+  The two narrow-window tests for (1) and (2) could not be independently
+  proven to crash in a plain debug build or under a full Valgrind
+  memcheck run with their specific guards disabled (0 errors) -- the
+  freed cursor's memory appears to get transparently reused before
+  being read in these particular narrow, single-record scenarios, the
+  same allocator-timing unreliability the issue's own report already
+  describes for the broader trigger. The fixes are still a direct,
+  minimal, correct response to the specific reviewer-identified gaps,
+  verified functionally even without an independent memory-corruption
+  reproduction for these two.
+
+  This hardens `current_record_matches_visibility()` and
+  `synchronize_relations_for_parent()`, both shared helpers used well
+  beyond REPLACE/UPDATE, so it also incidentally protects every other
+  `FOR`-clause command and `SET RELATION` parent-side caller from the
+  same two specific gaps -- not independently claimed fixed for those
+  callers' own separate risks. Updated `RQ-CF-PRG-052`. All 396 tests
+  pass, reconfirmed after the review-fix round.
+
+- 2026-09-18: Fixed #6243: `REPLACE`/`UPDATE` field-value expressions and
+  `FOR`/`WHILE`/`NEXT`/`RECORD` scope predicates can execute arbitrary
+  VFP code, including `USE IN`/`CLOSE ALL` on the exact cursor being
+  mutated -- e.g. `REPLACE name WITH droptext()` where `droptext()`
+  does `USE IN People`. The dispatch path resolved a raw `CursorState`
+  once and kept using it (descriptor lookup, serialization, lock
+  release, record-count update, relation sync) through whatever the
+  callback did to it, reading/writing freed memory: an uninstrumented
+  build crashed with `SIGSEGV`, and Valgrind found 401-961
+  use-after-free errors depending on the command. This is the first
+  issue tackled from a newly identified cluster of ~18 reentrant-
+  cursor-closure use-after-free issues sharing the exact root-cause
+  shape already fixed once for `CURVAL()`/`OLDVAL()` and
+  `GO`/`SKIP`/`SEEK`/record `UNLOCK`.
+
+  Hardened `replace_current_record_fields()` (all three of its
+  remote/buffered/direct-local sub-paths) to capture a
+  `CursorGenerationReference` once and revalidate it after every
+  per-assignment `evaluate_expression()` call, failing catchably and
+  touching no further cursor-derived state on a mismatch (including
+  not attempting to release a lock the closing operation already
+  released). Also hardened `collect_aggregate_scope_records()` -- the
+  scope/`FOR`/`WHILE`/`NEXT`/`RECORD` record-collection helper shared
+  by `REPLACE`/`UPDATE`, `DELETE`/`RECALL`, and
+  `TOTAL`/`SUM`/`COUNT`/`AVERAGE` -- the same way, adding a new
+  non-defaulted `bool &cursor_lost` out-parameter that forced (via
+  compile errors) updating all 7 pre-existing call sites across both
+  files to handle the failure.
+
+  Added `test_replace_expression_closing_target_cursor_fails_catchably`
+  and `test_replace_for_clause_closing_target_cursor_fails_catchably`.
+  Verified fail-then-pass with an actual reproduction: the reverted
+  implementation didn't just fail an assertion, it crashed with a real
+  `SIGSEGV` (exit code 139), exactly matching the issue's own reported
+  uninstrumented-build crash. Added `RQ-CF-PRG-052`.
+
+  This fix's scope is REPLACE/UPDATE-specific, but hardening the
+  shared `collect_aggregate_scope_records()` helper incidentally closes
+  the identical vector for DELETE/RECALL (#6244) and
+  TOTAL/SUM/COUNT/AVERAGE (#6245) too, as a side effect -- those two
+  issues are not independently claimed fixed, since each may have its
+  own separate, unexamined reentrancy risk beyond the shared helper. A
+  second, structurally identical implementation of bare aggregate
+  *function*-call scanning (`aggregate_function_value()`, used by e.g.
+  `? SUM(amount FOR condition)`) was found during this investigation
+  and is a disclosed, not-yet-fixed analogous gap. All 396 tests pass.
+
 - 2026-09-18: Fixed #6456 and #6457, the final two issues in the #6471
   SPAWN/AWAIT tracking cluster.
 

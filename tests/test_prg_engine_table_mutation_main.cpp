@@ -29,6 +29,11 @@ int main()
     test_replace_matches_local_field_names_case_insensitively();
     test_undo_restores_scoped_additive_replace_bytes();
     test_multi_field_replace_uses_original_values_for_later_expressions();
+    test_replace_expression_closing_target_cursor_fails_catchably();
+    test_replace_for_clause_closing_target_cursor_fails_catchably();
+    test_replace_for_clause_partial_write_before_reentrant_closure_is_rolled_back();
+    test_replace_for_clause_with_active_filter_closing_cursor_fails_catchably();
+    test_replace_set_relation_expression_closing_parent_fails_catchably();
     test_pack_compacts_deleted_local_records();
     test_pack_is_reverted_by_undo();
     test_zap_truncates_local_table_records();

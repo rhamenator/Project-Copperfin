@@ -258,7 +258,13 @@
             session.next_work_area = std::min(session.next_work_area, closed_work_area);
         }
 
-        void synchronize_relations_for_parent(
+        // #6243 review: returns false if `parent` was closed or replaced by
+        // a relation expression partway through synchronization, so a
+        // caller that needs to know (e.g. a mutation command that must not
+        // report success while continuing through a freed target) can
+        // react. Every pre-existing caller ignored the previous void
+        // return, so they remain unaffected by this signature change.
+        bool synchronize_relations_for_parent(
             CursorState &parent,
             const Frame &frame,
             int target_data_session = 0)
@@ -267,7 +273,7 @@
             // captured cursor's session, even if the callback selected another.
             if (relation_synchronization_active)
             {
-                return;
+                return true;
             }
 
             struct RelationSynchronizationGuard
@@ -291,11 +297,21 @@
             const auto session = data_sessions.find(relation_data_session);
             if (session == data_sessions.end())
             {
-                return;
+                return true;
             }
             const auto relations = session->second.relations;
+            const CursorGenerationReference parent_reference = capture_cursor_generation_reference(&parent);
             for (const auto &relation : relations)
             {
+                if (resolve_cursor_generation_reference(parent_reference) == nullptr)
+                {
+                    // An earlier relation's expression already closed or
+                    // replaced this exact parent cursor -- stop touching it
+                    // (including this iteration's own parent.work_area
+                    // comparison) rather than continuing through freed
+                    // state.
+                    return false;
+                }
                 if (relation.parent_work_area != parent.work_area)
                 {
                     continue;
@@ -319,6 +335,10 @@
 
                 const std::string search_key = value_as_string(
                     evaluate_expression(relation.expression, frame, &parent));
+                if (resolve_cursor_generation_reference(parent_reference) == nullptr)
+                {
+                    return false;
+                }
                 if (child->active_order_expression.empty() && child->orders.empty())
                 {
                     child->found = false;
@@ -328,6 +348,7 @@
 
                 (void)seek_in_cursor(*child, search_key, frame);
             }
+            return true;
         }
 
         std::string relation_key_for_cursor(
@@ -1350,7 +1371,7 @@
                 : nullptr;
         }
 
-        CursorGenerationReference capture_cursor_generation_reference(CursorState *cursor)
+        CursorGenerationReference capture_cursor_generation_reference(const CursorState *cursor)
         {
             // RQ-CF-PRG-035: use the same session/work-area generation identity
             // as nested CURVAL/OLDVAL evaluation without retaining its pointer.
