@@ -1,3 +1,36 @@
+- 2026-09-19: Fixed #6269: `SET FILTER TO (DropCursor()) IN people`
+  where `DropCursor()` does `USE IN people` reported apparent success
+  with the closure invisible to the caller -- reproduced 16 Valgrind
+  errors across 12 contexts, an invalid string-copy read through the
+  freed cursor's `filter_expression` field reached from the
+  `runtime.filter` event's own detail construction.
+
+  Unlike every other issue in this reentrant-cursor-closure cluster
+  (#6243-#6247), the correct VFP-compatible response here is *not* a
+  catchable error: the issue's own VFP9/Wine comparison shows real
+  VFP9 lets `SET FILTER` complete successfully even when its own
+  expression closes the target, and a later `USED()` correctly
+  reports the closure (`success;used=.F.`). Matched that: capture a
+  `CursorGenerationReference` for the target cursor before evaluating
+  the filter clause, then after evaluation, only write
+  `filter_expression` if the cursor survived -- otherwise skip the
+  now-pointless write instead of continuing through freed memory. The
+  `runtime.filter` event's detail is now built from the local
+  `filter_clause` string rather than re-reading it off the cursor, so
+  the event still emits correctly either way.
+
+  Added `test_set_filter_expression_closing_target_cursor_completes_
+  gracefully`. Verified fail-then-pass with genuine Valgrind-confirmed
+  memory corruption (16 errors/12 contexts with the guard reverted,
+  cleared to 0 with it restored). Added `RQ-CF-PRG-057`.
+
+  This is the sixth issue closed from the ~18-issue reentrant-cursor-
+  closure cluster, and the first where graceful completion (not a
+  catchable error) is the correct fix -- worth checking each
+  remaining cluster issue's own VFP9-comparison evidence rather than
+  defaulting to the catchable-error pattern used elsewhere. Full
+  suite: 396 tests, 100% pass.
+
 - 2026-09-19: Review-round fix for #6247 (PR #6481): a Copilot review
   found five further gaps in the initial fix, all confirmed real by
   tracing the exact code path before fixing:

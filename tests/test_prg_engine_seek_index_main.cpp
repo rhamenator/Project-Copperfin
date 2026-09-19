@@ -70,6 +70,7 @@ int main()
     test_set_filter_defers_local_cursor_evaluation_until_navigation();
     test_seek_respects_active_filter_visibility();
     test_set_filter_in_targets_nonselected_alias();
+    test_set_filter_expression_closing_target_cursor_completes_gracefully();
 
     if (copperfin::test_support::test_failures() != 0)
     {
