@@ -1,3 +1,62 @@
+- 2026-09-19: Review-round fix for #6245 (PR #6479): a Copilot review
+  found that the multi-target `SUM`/`AVERAGE`/`MIN`/`MAX` variable
+  loop (e.g. `SUM AGE, dropcursor() TO nFirst, nSecond`) published
+  each target immediately after its own expression's value pass
+  rather than atomically -- a later expression closing the cursor
+  left an earlier target already overwritten with a real computed
+  value while the command still reported failure, violating the
+  requirement to preserve pre-command result variables on failure.
+  Fixed by accumulating every expression's result first and
+  publishing to targets only after all of them succeed, matching the
+  array-target branch's existing atomicity. Also fixed a wrong
+  issue cross-reference in a new code comment (`#6252` where
+  `#6243`/`#6244` was meant). Added
+  `test_sum_multiple_targets_preserves_earlier_targets_when_later_expression_closes_cursor`,
+  which pre-seeds two target variables to a sentinel and proves both
+  retain it after a caught failure; verified fail-then-pass by
+  temporarily reintroducing the original inline-assignment pattern
+  and confirming it reproduces the reviewer's exact scenario
+  (`nFirst` observed overwritten with `'10'`, the real `AGE` sum,
+  despite the command failing). All 396 tests pass, reconfirmed after
+  the review-fix round.
+
+- 2026-09-19: Fixed #6245: `COUNT`/`TOTAL` predicates closing their own
+  source cursor (e.g. `COUNT ALL FOR dropcursor() TO result` where
+  `dropcursor()` does `USE IN People`) already crashed `SIGSEGV`, but
+  their scope-collection was already fixed for free by
+  `RQ-CF-PRG-052`/`053`'s hardening of the shared
+  `collect_aggregate_scope_records()` helper -- verified rather than
+  assumed. `TOTAL`'s own grouping/output-construction, which the issue
+  itself described as "retaining the cursor," was traced and confirmed
+  to already operate entirely on a `source_records` snapshot copied
+  *before* scope collection, never touching the live cursor again.
+
+  The genuinely new gap: `aggregate_record_values()`, used by the
+  `SUM`/`AVERAGE`/`MIN`/`MAX` command forms after scope collection
+  returns, evaluates each matched record's own *value* expression in a
+  separate, previously-unprotected loop -- `SUM(dropcursor())` closes
+  the cursor from the value expression itself, not the `FOR`/`WHILE`
+  predicate. Added a new non-defaulted `bool &cursor_lost`
+  out-parameter and hardened its loop the same way as
+  `collect_aggregate_scope_records()`; updated all 3 call sites to
+  fail catchably instead of using a fabricated `0.0` result.
+
+  Added `test_count_for_expression_closing_target_cursor_fails_catchably`,
+  `test_sum_value_expression_closing_target_cursor_fails_catchably`,
+  and `test_total_for_expression_closing_target_cursor_fails_catchably`.
+  Verified fail-then-pass for the genuinely new `SUM` fix by
+  temporarily disabling its two checks and confirming the test fails
+  as expected. Added `RQ-CF-PRG-054`.
+
+  This is the third issue closed from the ~18-issue reentrant-cursor-
+  closure cluster. `aggregate_function_value()` (the *bare
+  function-call* form, `? SUM(field FOR cond)`, as opposed to the
+  command form this issue covers) remains a disclosed, not-yet-fixed
+  analogous gap, since fixing it requires wiring a catchable-fault
+  signal through expression evaluation rather than statement dispatch.
+  `CALCULATE` is excluded per the issue's own finding that its tested
+  trigger produced no Valgrind error. All 396 tests pass.
+
 - 2026-09-19: Closed #6244 (`DELETE ALL FOR`/`RECALL ALL FOR`/`DELETE
   FROM ... WHERE` crash when the predicate closes its own target via
   `USE IN`) with no new production-code change. `#6243`'s own

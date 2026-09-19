@@ -360,8 +360,16 @@
             const std::string &function,
             const std::string &value_expression,
             const std::vector<std::size_t> &records,
-            const Frame &frame)
+            const Frame &frame,
+            bool &cursor_lost)
         {
+            // #6245: the value expression evaluated per matched record can
+            // execute arbitrary VFP code, including USE IN/CLOSE ALL on
+            // this exact cursor -- collect_aggregate_scope_records()'s own
+            // #6243/#6244 hardening only protects the scope/FOR/WHILE
+            // predicates that produced `records`, not this later pass over
+            // them.
+            cursor_lost = false;
             if (function == "count")
             {
                 return make_number_value(static_cast<double>(records.size()));
@@ -371,6 +379,7 @@
                 return make_number_value(0.0);
             }
 
+            const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(&cursor);
             const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
             double sum = 0.0;
             double min_value = 0.0;
@@ -379,9 +388,19 @@
 
             for (const std::size_t recno : records)
             {
+                if (resolve_cursor_generation_reference(cursor_reference) == nullptr)
+                {
+                    cursor_lost = true;
+                    return make_number_value(0.0);
+                }
                 move_cursor_to(cursor, static_cast<long long>(recno));
                 const auto numeric_value = try_parse_aggregate_numeric_value(
                     evaluate_expression(value_expression, frame, &cursor));
+                if (resolve_cursor_generation_reference(cursor_reference) == nullptr)
+                {
+                    cursor_lost = true;
+                    return make_number_value(0.0);
+                }
                 if (!numeric_value.has_value())
                 {
                     continue;
@@ -884,7 +903,15 @@
                         {{"command", uppercase_copy(function)}});
                     return false;
                 }
-                const PrgValue result = aggregate_record_values(*cursor, function, {}, records, frame);
+                bool value_cursor_lost = false;
+                const PrgValue result = aggregate_record_values(*cursor, function, {}, records, frame, value_cursor_lost);
+                if (value_cursor_lost)
+                {
+                    error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", uppercase_copy(function)}});
+                    return false;
+                }
                 if (to_array)
                 {
                     assign_array(array_name, {result}, 1U);
@@ -1012,18 +1039,48 @@
                 array_values.reserve(expressions.size());
                 for (const std::string &expression : expressions)
                 {
-                    array_values.push_back(aggregate_record_values(*cursor, function, expression, records, frame));
+                    bool value_cursor_lost = false;
+                    array_values.push_back(
+                        aggregate_record_values(*cursor, function, expression, records, frame, value_cursor_lost));
+                    if (value_cursor_lost)
+                    {
+                        error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", uppercase_copy(function)}});
+                        return false;
+                    }
                 }
                 assign_array(array_name, array_values, 1U);
                 return true;
             }
 
-            for (std::size_t index = 0; index < expressions.size(); ++index)
+            // #6245 review: compute every expression's result first and
+            // publish to the target variables only after all of them
+            // succeed, so a later expression closing the cursor cannot
+            // leave an earlier target already overwritten while the
+            // overall command reports failure -- matching the array-target
+            // branch above, which was already atomic in this respect.
+            std::vector<PrgValue> results;
+            results.reserve(expressions.size());
+            for (const std::string &expression : expressions)
             {
-                const PrgValue result = aggregate_record_values(*cursor, function, expressions[index], records, frame);
-                if (!targets.empty())
+                bool value_cursor_lost = false;
+                results.push_back(
+                    aggregate_record_values(*cursor, function, expression, records, frame, value_cursor_lost));
+                if (value_cursor_lost)
                 {
-                    assign_variable(frame, targets[index], result);
+                    error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", uppercase_copy(function)}});
+                    return false;
+                }
+            }
+
+            if (!targets.empty())
+            {
+                for (std::size_t index = 0; index < results.size(); ++index)
+                {
+                    assign_variable(frame, targets[index], results[index]);
                 }
             }
 
