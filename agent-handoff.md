@@ -18,19 +18,21 @@ Issue #6458 is open, repository-owner-authored, and carries the exact
 VFP-compatible alternate literal delimiters for generated report/label paths,
 localized failure for unrepresentable paths, and exact-path logical/snapshot
 regressions. Focused Linux `test_prg_engine_work_areas` and
-`test_xasset_methods` pass. The owner asked about doubled apostrophes, so the
+`test_xasset_methods` pass on the review-fix head. The owner asked about doubled apostrophes, so the
 generator now follows the VFP9 help's documented alternate quote/bracket forms
 and the parser changes are scoped to report/label asset paths. PR review found
 keyword-in-filename parsing and diagnostic-fallback gaps; both are fixed in the
-worktree, along with strict verified-byte snapshot and localized-error tests,
-and await a signed follow-up commit. PR sanitizer and 14 of 15 standard checks
-passed on the initial head; Windows generated-launcher failed in the unrelated
-Python-sidecar test. Full macOS native validation passed both changed suites
-but failed unrelated PowerShell-host and VAL-number tests; a base-branch run is
-underway to compare. Full Windows native validation is also underway.
-Next: push the review fixes, revalidate hosted checks and both platform runs,
-resolve review threads, merge safely, and close #6458 only after acceptance
-evidence passes.
+signed commit `b6ab0b0dd57fafb6ad080781f34c44106e56d50f`, along with strict
+verified-byte snapshot and localized-error tests. All three inline review
+threads have responses and are resolved. All 15 PR checks on that head pass,
+including ASan/UBSan and the Windows generated-launcher process check. Full
+macOS native validation passed both changed suites; its only two failures are
+`test_access_saveastext_export` and `test_prg_engine_string_math_functions`,
+which fail identically on the exact base commit `37aad494f7c61931c9588010990f8371e80b718a`
+in run 35746900704. The final-head macOS run is 35748348840. Final-head
+Windows native validation run 35748340569 remains in progress. Next: finish
+Windows native evidence, ensure final PR checks pass, merge safely, and close
+#6458 only after acceptance evidence passes.
 
 ## Workspace preservation
 
