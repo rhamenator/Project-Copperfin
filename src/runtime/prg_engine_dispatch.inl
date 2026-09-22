@@ -5605,11 +5605,26 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
+                    // RQ-CF-PRG-SET-SKIP-001: child designators may call VFP
+                    // code that closes/replaces any cursor or switches data
+                    // sessions. Keep identities, never map-node pointers,
+                    // across those callbacks and defer every flag mutation.
+                    const CursorGenerationReference parent_reference =
+                        capture_cursor_generation_reference(parent);
+                    const auto invalidated_cursor = [&]() -> ExecutionOutcome
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", "SET SKIP"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    };
 
                     const std::string skip_clause = strip_set_to_value(option_value);
-                    auto &relations = current_session_state().relations;
                     if (skip_clause.empty())
                     {
+                        auto &relations = current_session_state().relations;
                         for (auto &relation : relations)
                         {
                             if (relation.parent_work_area == parent->work_area)
@@ -5623,10 +5638,22 @@
                         return {};
                     }
 
-                    std::string enabled_detail;
+                    std::vector<CursorGenerationReference> child_references;
                     for (const std::string &raw_alias : split_csv_like(skip_clause))
                     {
                         const std::string child_designator = evaluate_cursor_designator_expression(raw_alias, frame);
+                        if (current_data_session != parent_reference.data_session ||
+                            resolve_cursor_generation_reference(parent_reference) == nullptr)
+                        {
+                            return invalidated_cursor();
+                        }
+                        for (const auto &reference : child_references)
+                        {
+                            if (resolve_cursor_generation_reference(reference) == nullptr)
+                            {
+                                return invalidated_cursor();
+                            }
+                        }
                         CursorState *child = resolve_cursor_target(child_designator);
                         if (child == nullptr)
                         {
@@ -5637,7 +5664,30 @@
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};
                         }
+                        child_references.push_back(capture_cursor_generation_reference(child));
+                    }
 
+                    parent = resolve_cursor_generation_reference(parent_reference);
+                    if (current_data_session != parent_reference.data_session || parent == nullptr)
+                    {
+                        return invalidated_cursor();
+                    }
+                    std::vector<CursorState *> children;
+                    children.reserve(child_references.size());
+                    for (const auto &reference : child_references)
+                    {
+                        CursorState *child = resolve_cursor_generation_reference(reference);
+                        if (child == nullptr)
+                        {
+                            return invalidated_cursor();
+                        }
+                        children.push_back(child);
+                    }
+
+                    auto &relations = current_session_state().relations;
+                    std::string enabled_detail;
+                    for (CursorState *child : children)
+                    {
                         bool relation_found = false;
                         for (auto &relation : relations)
                         {

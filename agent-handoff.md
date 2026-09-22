@@ -2,39 +2,29 @@
 
 ## Last shipped slice
 
-PR #6487 fixed #6388 and merged into `v1-development` as
-`aff8752dd00c3580d42d35c70e63659e6fb2d902`; #6388 is closed. PR #6485
-partially fixed #5680 and merged; #5680 remains open. The prior cloud-
-validation PR #6484 and #6251 fix PR #6483 also merged.
+PR #6488 fixed #6389 and merged into `v1-development` as
+`42eeb318c7e6d820be31b9b5108169af37df80c0`; #6389 is closed. Its final
+head passed all 18 hosted checks, and both review threads were resolved. The
+prior #6388, #5680 partial, cloud-validation, and #6251 PRs also merged;
+#5680 remains open. PR #6486 was closed without merge after the macOS clone
+destination-identity gap found in review; #5680 still needs a safer design and
+network/removable-volume qualification.
 
 ## Active slice
 
-Issue #6389 is repository-owner-authored and carries the exact
-`agent-approved` label. PR #6488 contains its fix and completed hosted
-validation on code head `2a652e58`; consult live PR/issue state for merge
-and closure. Worktree:
+Issue #6460 is open, repository-owner-authored, and carries the exact
+`agent-approved` label. Worktree:
 `/home/rich/.codex/worktrees/fix-5680-staged-import-authority/Project-Copperfin`.
-Branch: `codex/fix-6389-wrapper-temp`, based on the merge of #6487. The
-in-progress change makes temporary-root discovery nonthrowing, creates an
-OS-random private wrapper staging directory, retains the prior primary output
-until publication, and catches residual build exceptions in the host so it
-aborts deferred package transactions. Missing/non-directory temp roots and
-an injected create failure have API regressions; an end-to-end host regression
-proves rollback preserves the prior DLL and consumes transaction markers.
-Focused Linux `test_runtime_pipeline` and `test_build_host_output` passed.
-All 18 hosted checks passed on PR #6488 code head `2a652e58`; two review
-threads were answered and resolved. The first runtime-pipeline run found
-its test fixture root was group-writable under this host's `0002` umask,
-violating the private-staging parent policy; the fixture now tightens its
-permissions.
-
-PR #6486 was closed without merge after review found an unsafe macOS clone
-destination-identity gap: `fclonefileat()` binds the source but does not return
-the clone's identity, so reopening the mutable destination could adopt or
-remove another file. #5680 stays open for a safer design, network/removable
-qualification, and remaining deterministic race evidence. Next: confirm
-PR #6488 final checks/review, merge safely, close #6389 with evidence, then
-select the next admitted defect until the 17:00 EDT takeover cutoff.
+Branch: `codex/fix-6460-set-skip-uaf`, based on the merge of #6488. The
+in-progress change captures parent/child cursor generation references across
+`SET SKIP TO` expression callbacks, rejects closure/replacement or a data
+session switch before mutating relation flags, and preserves valid callback
+behavior. Focused Linux `test_prg_engine_relations` passed under Debug and local
+Clang ASan/UBSan with leak detection, covering closure, replacement, session
+switch, atomicity, `TRY/CATCH`, and `ON ERROR` cases.
+The Cloud Defect Hunt PR sanitizer lane now includes this relation test.
+Next: publish PR, run hosted ASan/UBSan and platform checks, resolve review,
+merge safely, and close #6460 only after acceptance evidence passes.
 
 ## Workspace preservation
 
