@@ -70,4 +70,5 @@ void test_set_filter_scopes_local_cursor_visibility();
 void test_set_filter_defers_local_cursor_evaluation_until_navigation();
 void test_seek_respects_active_filter_visibility();
 void test_set_filter_in_targets_nonselected_alias();
+void test_set_filter_expression_closing_target_cursor_completes_gracefully();
 }
