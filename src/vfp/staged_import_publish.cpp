@@ -36,6 +36,7 @@
 #include <sys/random.h>
 #elif defined(__APPLE__)
 #include <stdlib.h>
+#include <sys/clonefile.h>
 #endif
 
 namespace copperfin::vfp {
@@ -226,6 +227,12 @@ public:
     copperfin::platform::ScopedFd fd;
     dev_t device = 0;
     ino_t inode = 0;
+#if defined(__APPLE__)
+    copperfin::platform::ScopedFd published_fd;
+    dev_t published_device = 0;
+    ino_t published_inode = 0;
+    std::string expected_sha256;
+#endif
 #endif
 };
 
@@ -421,6 +428,19 @@ StagedImportFileHandle open_staged_import_file_for_publish(
     auto impl = std::make_unique<StagedImportFileHandle::Impl>();
     impl->device = status.st_dev;
     impl->inode = status.st_ino;
+#if defined(__APPLE__)
+    if (expected_sha256.empty()) {
+        const auto digest = copperfin::security::sha256_hex_for_native_file(
+            static_cast<std::intptr_t>(fd.get()),
+            (std::numeric_limits<std::uint64_t>::max)());
+        if (!digest.ok) {
+            return {};
+        }
+        impl->expected_sha256 = digest.hex_digest;
+    } else {
+        impl->expected_sha256 = expected_sha256;
+    }
+#endif
     // Held open for the handle's entire lifetime (not just used to capture
     // identity here): as long as this descriptor stays open, the kernel
     // cannot free this specific inode number for reuse by an unrelated
@@ -462,6 +482,36 @@ bool publish_staged_import_file(
         "/proc/self/fd/" + std::to_string(handle.impl_->fd.get());
     return ::linkat(AT_FDCWD, descriptor_path.c_str(), AT_FDCWD,
                     destination.c_str(), AT_SYMLINK_FOLLOW) == 0;
+#elif defined(__APPLE__)
+    // APFS clones directly from the retained descriptor into a new name.
+    // The clone operation is atomic and fails if the destination exists.
+    // Volumes without descriptor-based cloning fail closed.
+    (void)staged_path;
+    if (::fclonefileat(handle.impl_->fd.get(), AT_FDCWD,
+                       destination.c_str(), 0) != 0) {
+        return false;
+    }
+    copperfin::platform::ScopedFd published(::open(
+        destination.c_str(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC));
+    struct stat published_status{};
+    if (!published.valid() ||
+        ::fstat(published.get(), &published_status) != 0 ||
+        !S_ISREG(published_status.st_mode)) {
+        return false;
+    }
+    // A same-authority writer can mutate the retained source inode. Verify
+    // the clone against the bytes generated before any staged name existed.
+    handle.impl_->published_device = published_status.st_dev;
+    handle.impl_->published_inode = published_status.st_ino;
+    handle.impl_->published_fd = std::move(published);
+    const auto digest = copperfin::security::sha256_hex_for_native_file(
+        static_cast<std::intptr_t>(handle.impl_->published_fd.get()),
+        (std::numeric_limits<std::uint64_t>::max)());
+    if (!digest.ok || digest.hex_digest != handle.impl_->expected_sha256) {
+        (void)remove_published_import_file_if_identity_matches(handle, destination);
+        return false;
+    }
+    return true;
 #else
     // Other POSIX systems have no equivalent descriptor-based hard-link
     // primitive. The owner-private staging directory excludes other users;
@@ -501,7 +551,13 @@ bool remove_published_import_file_if_identity_matches(
     if (::fstat(fd.get(), &status) != 0 || !S_ISREG(status.st_mode)) {
         return false;
     }
+#if defined(__APPLE__)
+    if (!handle.impl_->published_fd.valid() ||
+        status.st_dev != handle.impl_->published_device ||
+        status.st_ino != handle.impl_->published_inode) {
+#else
     if (status.st_dev != handle.impl_->device || status.st_ino != handle.impl_->inode) {
+#endif
         return false;
     }
     // A residual TOCTOU gap remains between this fstat() and the unlink()

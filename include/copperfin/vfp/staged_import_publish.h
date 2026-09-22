@@ -93,7 +93,7 @@ private:
     const std::filesystem::path& staged_path,
     std::string_view expected_sha256 = {});
 
-// Publishes the file `handle` was opened against as a new hard link at
+// Publishes the file `handle` was opened against at
 // `destination`, which must not already exist. On Windows, `handle` was
 // opened denying other processes write/delete/rename access to
 // `staged_path` (FILE_SHARE_READ only), so `staged_path` is guaranteed to
@@ -101,8 +101,10 @@ private:
 // publication is fully race-free. Linux links from the retained descriptor
 // with linkat(AT_EMPTY_PATH) or the capability-free /proc/self/fd form, so a
 // swapped staged pathname cannot redirect the published bytes; an unlinked
-// original or unsupported backing filesystem fails closed. Other POSIX
-// systems use the owner-private staging
+// original or unsupported backing filesystem fails closed. macOS atomically
+// clones from the retained descriptor where the volume supports cloning,
+// then verifies the clone against the generated-byte digest; unsupported
+// volumes fail closed. Other POSIX systems use the owner-private staging
 // namespace plus an immediate pathname identity recheck; same-authority
 // mutation between recheck and link remains a platform limitation. Returns
 // false, leaving `destination` untouched, on failure or collision.
@@ -112,8 +114,8 @@ private:
     const std::filesystem::path& destination);
 
 // Removes `published_path` only if it still refers to the exact object
-// `handle` was opened against (captured once, at staging time, before
-// publication) -- used to roll back a successful publish after a later
+// published from `handle` (the original staged identity for hard links,
+// the new clone identity on macOS) -- used to roll back after a later
 // commit step in the same transaction fails. Returns false, leaving
 // `published_path` untouched, if identity cannot be confirmed (including
 // if the path no longer exists or now names a different object). A caller

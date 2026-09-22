@@ -6398,8 +6398,8 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
     // (#5679) -- so the destination is left exactly as it was found for
     // every entry that could be safely reclaimed. The staging copies
     // themselves are cleaned up afterward by removing staging_dir; each
-    // committed file is now an independent hard link to the same data,
-    // unaffected by that removal.
+    // committed file has its own final path (a hard link on Linux/Windows,
+    // a descriptor-based clone on macOS), unaffected by that removal.
     std::vector<StagedImportFile> committed;
     committed.reserve(staged.size());
     bool rollback_left_unreclaimed_entry = false;
@@ -6446,8 +6446,8 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
     // (the transaction has fully succeeded by this point, so there is no
     // further rollback to protect against for any of these entries), then
     // removes staging_dir itself; each committed file at its own
-    // final_path is an independent hard link to the same data, unaffected
-    // by removing the staged_path name or the directory that held it.
+    // final_path is unaffected by removing the staged_path name or the
+    // directory that held it.
     const bool staging_cleanup_ok = cleanup_staging(committed);
 
     // #5681: report a distinct, non-generic-success result when cleanup

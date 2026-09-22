@@ -230,6 +230,14 @@ void test_publish_fails_closed_when_staged_path_is_swapped_before_publish() {
     expect(published, "Windows should publish the protected original file");
     expect(read_file(destination) == "verified original bytes",
            "Windows must never publish attempted replacement bytes");
+#elif defined(__APPLE__)
+    if (published) {
+        expect(read_file(destination) == "verified original bytes",
+               "macOS must never clone replacement bytes from a rebound staged name");
+    } else {
+        expect(!fs::exists(destination),
+               "an unlinked macOS source must fail closed without a final path");
+    }
 #else
     expect(!published, "publish must fail closed once staged_path's identity no longer matches "
                         "what was verified at staging time");
@@ -244,7 +252,26 @@ void test_publish_fails_closed_when_staged_path_is_swapped_before_publish() {
     fs::remove_all(dir, ignored);
 }
 
-#if defined(__linux__)
+#if defined(__APPLE__)
+void test_clone_rejects_source_mutation_after_verification() {
+    const fs::path dir = make_scratch_dir("copperfin_staged_import_clone_source_mutation");
+    const fs::path staged = dir / "staged.dbf";
+    const fs::path destination = dir / "final.dbf";
+    write_file(staged, "verified original bytes");
+    auto handle = copperfin::vfp::open_staged_import_file_for_publish(staged);
+    expect(handle.valid(), "opening the original before mutation should succeed");
+    write_file(staged, "mutated source contents");
+    expect(!copperfin::vfp::publish_staged_import_file(handle, staged, destination),
+           "macOS must reject a clone whose bytes differ from those verified");
+    expect(!fs::exists(destination),
+           "a rejected source mutation must not leave substituted final bytes");
+    handle = copperfin::vfp::StagedImportFileHandle{};
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+}
+#endif
+
+#if defined(__linux__) || defined(__APPLE__)
 void test_publish_uses_retained_descriptor_after_staged_name_is_rebound() {
     const fs::path dir = make_scratch_dir("copperfin_staged_import_retained_descriptor");
     const fs::path staged = dir / "staged.dbf";
@@ -256,7 +283,7 @@ void test_publish_uses_retained_descriptor_after_staged_name_is_rebound() {
     fs::rename(staged, retained_name);
     write_file(staged, "swapped-in malicious bytes");
     expect(copperfin::vfp::publish_staged_import_file(handle, staged, destination),
-           "Linux should publish from the retained descriptor when the original is still linked");
+           "the retained descriptor should publish the original after its name is rebound");
     expect(read_file(destination) == "verified original bytes",
            "a rebound staged name must never substitute its bytes into the final path");
     handle = copperfin::vfp::StagedImportFileHandle{};
@@ -468,7 +495,10 @@ int main() {
     test_open_rejects_symlink();
 #endif
     test_publish_fails_closed_when_staged_path_is_swapped_before_publish();
-#if defined(__linux__)
+#if defined(__APPLE__)
+    test_clone_rejects_source_mutation_after_verification();
+#endif
+#if defined(__linux__) || defined(__APPLE__)
     test_publish_uses_retained_descriptor_after_staged_name_is_rebound();
 #endif
     test_publish_fails_if_destination_already_exists();

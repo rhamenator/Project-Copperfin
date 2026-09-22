@@ -2,37 +2,27 @@
 
 ## Last shipped slice
 
-PR #6484 added cloud defect-hunt validation and merged into `v1-development` as
-`6b0824aa27caf5550edcaacb9e72c2feba6614da`. PR #6483 fixed issue #6251
-and merged as `12debe05e3e9921a2f62b70944f2c95805917c4f`; #6251 is closed.
+PR #6485 partially fixed #5680 and merged into `v1-development` as
+`6d6c42697f44287b4d130418babfe5e50c0fee3d`; #5680 remains open. The
+prior cloud-validation PR #6484 and #6251 fix PR #6483 also merged.
 
 ## Active slice
 
 Issue #5680 is open, repository-owner-authored, and carries the exact
-`agent-approved` label. Worktree:
+`agent-approved` label. Current macOS follow-up worktree:
 `/home/rich/.codex/worktrees/fix-5680-staged-import-authority/Project-Copperfin`.
-Branch: `codex/fix-5680-staging-authority`. PR #6485 targets
-`v1-development`. The branch adds private OS-random staging, a Windows
-no-delete-share directory-chain lease, Linux descriptor-bound publication,
-and SHA-256 verification of staged DBF/FPT/DBC handles against bytes generated
-in memory by the writer. It resolves existing destination-parent aliases and
-restores creation of missing destination directories. The first CI run found
-a regression for missing destination parents; the revision fixes it. A later
-review found that cleanup could delete a pre-existing dangling symlink or
-concurrent entry, so failed imports again leave empty destination parents as
-they did before this PR. Windows pin failure now attempts identity-checked
-cleanup of its newly created private staging directory. Focused Linux CMake
-tests `test_staged_import_publish`, `test_vfp_assets`, and
-`test_prg_engine_data_io` passed before these last cleanup changes; the first
-two passed again afterward. The prior hosted CI run is green; the latest
-cleanup revision still needs hosted CI and review.
+Branch: `codex/fix-5680-macos-clone`, based on the merge of #6485. The
+follow-up uses APFS `fclonefileat()` to atomically clone from the retained
+staged descriptor, rejects unsupported volumes, verifies the clone against
+the generated-byte digest, and records its independent identity for rollback.
+Focused Linux `test_staged_import_publish` passes. Hosted macOS compilation
+and behavior, broader CI, and review remain pending.
 
-Do not close #5680 after this PR: macOS still has a same-authority path
-recheck/link race, and network/removable-volume behavior is not qualified.
-Next: investigate current CI results, fix any real failures, respond to and
-resolve review threads only when addressed, then merge a safe partial PR.
-Continue #5680 or record an evidence-based deferral before selecting unrelated
-work.
+Do not close #5680 after this follow-up without network/removable-volume
+qualification and remaining deterministic race evidence. Next: publish the
+macOS follow-up PR, inspect hosted macOS/CI and reviews, then merge only if
+safe. Continue #5680 or record an evidence-based deferral before selecting
+unrelated work.
 
 ## Workspace preservation
 
