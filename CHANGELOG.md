@@ -3,8 +3,9 @@
   failure. Wrapper staging uses an OS-random, exclusively created private
   directory, and failure before staging leaves the prior primary output
   intact. The build host catches residual build exceptions and rolls back its
-  deferred package transaction. Added missing-root, file-valued-root,
-  injected-create-failure, and host rollback regressions.
+  deferred package transaction. Runtime diagnostics now follow the build
+  host's explicit `--locale` selection. Added missing-root, file-valued-root,
+  injected-create-failure, and host rollback/locale regressions.
 
 - 2026-09-22: Hardened locale catalog discovery for #6388. A deleted or
   inaccessible current directory now skips developer-tree probing and uses

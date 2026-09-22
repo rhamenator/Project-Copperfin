@@ -18,6 +18,7 @@
 #include "copperfin/security/security_model.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/project_workspace.h"
+#include "localized_text.h"
 
 #include <algorithm>
 #include <cerrno>
@@ -568,6 +569,7 @@ int run_build_host_main(int argc, char** argv) {
         copperfin::platform::resolve_running_executable_path(invocation_path);
     const copperfin::localization::LocalizedCatalog catalog =
         load_localization(running_executable_path, explicit_locale_from_arguments(argc, argv));
+    const copperfin::runtime::RuntimeCatalogScope runtime_catalog_scope(&catalog);
 
     const auto hardening = copperfin::security::apply_default_process_hardening();
     if (!hardening.applied) {

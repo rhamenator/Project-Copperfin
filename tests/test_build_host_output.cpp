@@ -1252,10 +1252,15 @@ void run_library_build_host_temp_failure_rollback(const std::string& build_host_
         write_text(project_dir / "librarymain.prg", "PROCEDURE InitLibrary\n? 'changed'\nRETURN\nENDPROC\n");
         ProcessResult failed;
         {
+            ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+            ScopedTestLocaleCatalogDirectory locale_dir;
             ScopedEnvironmentValue tmpdir("TMPDIR", (root / "missing").string());
             ScopedEnvironmentValue temp("TEMP", (root / "missing").string());
             ScopedEnvironmentValue tmp("TMP", (root / "missing").string());
-            failed = run_process_capture(build_host_path, args, root);
+            auto localized_args = args;
+            localized_args.insert(localized_args.begin() + 1,
+                                  {"--locale", "es-419"});
+            failed = run_process_capture(build_host_path, localized_args, root);
         }
         expect(failed.exit_code == 8 &&
                    failed.stdout_text.find("status: error") != std::string::npos,
@@ -1263,6 +1268,10 @@ void run_library_build_host_temp_failure_rollback(const std::string& build_host_
                    process_failure_detail(failed));
         expect(read_text(primary) == previous,
                "#6389: host rollback must preserve the previous primary output");
+        expect(failed.stdout_text.find(build_host_catalog("es-419").translate(
+                   "Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed")) !=
+                   std::string::npos,
+               "#6389: staging failure must honor --locale over COPPERFIN_LOCALE");
         expect(!fs::exists(package_root.string() + ".copperfin-materializing") &&
                    !fs::exists(package_root.string() + ".copperfin-previous") &&
                    !fs::exists(package_root.string() + ".copperfin-previous.owner"),

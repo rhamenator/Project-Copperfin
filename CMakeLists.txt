@@ -792,6 +792,7 @@ add_executable(copperfin_build_host
 )
 
 target_link_libraries(copperfin_build_host PRIVATE cf_runtime_pipeline cf_localization)
+target_include_directories(copperfin_build_host PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime)
 
 if(WIN32)
     add_executable(copperfin_launcher_guard
