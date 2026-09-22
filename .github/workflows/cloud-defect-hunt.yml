@@ -1,0 +1,95 @@
+name: Cloud Defect Hunt
+
+on:
+  pull_request:
+    branches: [main, v1-development]
+    paths:
+      - '.github/workflows/cloud-defect-hunt.yml'
+      - 'scripts/run-cloud-validation.py'
+      - 'CMakeLists.txt'
+      - 'tests/**'
+      - 'src/**'
+      - 'include/**'
+  schedule:
+    - cron: '23 3 * * *'
+  workflow_dispatch:
+    inputs:
+      lane:
+        description: Validation lane
+        type: choice
+        options: [all, sanitizer, fuzz, stress, migration]
+        default: all
+      profile:
+        description: Bounded campaign size
+        type: choice
+        options: [pr, nightly]
+        default: pr
+      seconds:
+        description: Fuzz seconds (0 selects profile default; maximum 1800)
+        type: number
+        default: 0
+      iterations:
+        description: Stress repetitions (0 selects profile default; maximum 30)
+        type: number
+        default: 0
+      rows:
+        description: Migration rows (0 selects profile default; maximum 50000)
+        type: number
+        default: 0
+      seed:
+        description: Reproducer seed
+        type: number
+        default: 1
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloud-defect-hunt-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  campaign:
+    strategy:
+      fail-fast: false
+      matrix:
+        lane: [sanitizer, fuzz, stress, migration]
+    name: ${{ matrix.lane }} (${{ github.event_name == 'schedule' && 'nightly' || inputs.profile || 'pr' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Check out source
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.lane == 'all' || inputs.lane == matrix.lane }}
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up .NET for native test inventory
+        if: ${{ matrix.lane == 'sanitizer' && (github.event_name != 'workflow_dispatch' || inputs.lane == 'all' || inputs.lane == matrix.lane) }}
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Run bounded campaign
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.lane == 'all' || inputs.lane == matrix.lane }}
+        env:
+          COPPERFIN_LANE: ${{ matrix.lane }}
+          COPPERFIN_PROFILE: ${{ github.event_name == 'schedule' && 'nightly' || inputs.profile || 'pr' }}
+          COPPERFIN_SECONDS: ${{ inputs.seconds || 0 }}
+          COPPERFIN_ITERATIONS: ${{ inputs.iterations || 0 }}
+          COPPERFIN_ROWS: ${{ inputs.rows || 0 }}
+          COPPERFIN_SEED: ${{ inputs.seed || 1 }}
+        run: >-
+          python3 scripts/run-cloud-validation.py "$COPPERFIN_LANE"
+          --profile "$COPPERFIN_PROFILE"
+          --seconds "$COPPERFIN_SECONDS"
+          --iterations "$COPPERFIN_ITERATIONS"
+          --rows "$COPPERFIN_ROWS"
+          --seed "$COPPERFIN_SEED"
+
+      - name: Retain failure diagnostics and reproducer
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cloud-defect-hunt-${{ matrix.lane }}-${{ github.run_id }}
+          path: artifacts/cloud-validation/${{ matrix.lane }}/
+          retention-days: 14
+          if-no-files-found: warn

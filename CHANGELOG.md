@@ -1,3 +1,10 @@
+- 2026-09-21: Added a hosted Linux defect-hunt workflow for Clang
+  ASan/UBSan, the existing DBF header libFuzzer target, repeated runtime
+  sequences, and seeded synthetic dBASE III migration round trips. PR,
+  nightly, and bounded manual campaigns retain failure diagnostics and
+  avoid committing generated corpora or large fixtures. Documented the
+  cloud-first validation ladder and platform boundaries.
+
 - 2026-09-19: Fixed #6269: `SET FILTER TO (DropCursor()) IN people`
   where `DropCursor()` does `USE IN people` reported apparent success
   with the closure invisible to the caller -- reproduced 16 Valgrind
