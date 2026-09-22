@@ -9,8 +9,10 @@ validation PR #6484 and #6251 fix PR #6483 also merged.
 
 ## Active slice
 
-Issue #6389 is open, repository-owner-authored, and carries the exact
-`agent-approved` label. Worktree:
+Issue #6389 is repository-owner-authored and carries the exact
+`agent-approved` label. PR #6488 contains its fix and completed hosted
+validation on code head `2a652e58`; consult live PR/issue state for merge
+and closure. Worktree:
 `/home/rich/.codex/worktrees/fix-5680-staged-import-authority/Project-Copperfin`.
 Branch: `codex/fix-6389-wrapper-temp`, based on the merge of #6487. The
 in-progress change makes temporary-root discovery nonthrowing, creates an
@@ -20,17 +22,19 @@ aborts deferred package transactions. Missing/non-directory temp roots and
 an injected create failure have API regressions; an end-to-end host regression
 proves rollback preserves the prior DLL and consumes transaction markers.
 Focused Linux `test_runtime_pipeline` and `test_build_host_output` passed.
-The first runtime-pipeline run found its test fixture root was group-writable under this host's `0002`
-umask, violating the private-staging parent policy; the fixture now tightens
-its permissions. Hosted CI/review remain pending.
+All 18 hosted checks passed on PR #6488 code head `2a652e58`; two review
+threads were answered and resolved. The first runtime-pipeline run found
+its test fixture root was group-writable under this host's `0002` umask,
+violating the private-staging parent policy; the fixture now tightens its
+permissions.
 
 PR #6486 was closed without merge after review found an unsafe macOS clone
 destination-identity gap: `fclonefileat()` binds the source but does not return
 the clone's identity, so reopening the mutable destination could adopt or
 remove another file. #5680 stays open for a safer design, network/removable
-qualification, and remaining deterministic race evidence. Next: finish #6389
-focused validation, publish its PR, inspect CI and review, fix real failures,
-then merge safely and close #6389 only if all acceptance criteria are verified.
+qualification, and remaining deterministic race evidence. Next: confirm
+PR #6488 final checks/review, merge safely, close #6389 with evidence, then
+select the next admitted defect until the 17:00 EDT takeover cutoff.
 
 ## Workspace preservation
 
