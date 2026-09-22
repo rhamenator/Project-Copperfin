@@ -2,6 +2,21 @@
 
 ## Last shipped slice
 
+PR #6491 fixed #6459 and merged into `v1-development` as
+`558f243b5518cb8a074c54b8453a78b269056021`; #6459 is closed (manually --
+`v1-development` is not the default branch, so `Fixes #N` does not
+auto-close). Before merging, the two Windows full-suite failures left open at
+the prior takeover (`test_vfp_assets`, `test_staged_import_publish`) were
+compared against a dedicated exact-base hosted Windows Native Validation run
+dispatched at the PR's merge-base commit `18ac9c6e1` (temporary branch
+`exact-base-6491-validation`, run 35788893430, deleted after use). Both
+failures reproduced byte-for-byte identically at the exact base and at the PR
+final head 15df3773f (same two tests, same assertion text, same `99% tests
+passed, 2 tests failed out of 398`), confirming they are pre-existing and
+unrelated to #6459's change. No new PR review comments existed beyond the
+already-addressed snapshot-path finding at merge time. Scratch build
+directory `~/temp/copperfin-6459-build` (565M) removed after merge.
+
 PR #6490 fixed #6458 and merged into `v1-development` as
 `18ac9c6e133249f6003154f014173b330aa158e4`; #6458 is closed. The final
 head passed all 15 hosted checks, including ASan/UBSan and Windows validation.
@@ -15,22 +30,15 @@ found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Issue #6459 is open, repository-owner-authored, and carries the exact
-`agent-approved` label. PR #6491 on branch `codex/fix-6459-mnx-runtime-symbol` derives a
-bounded SHA-256 menu symbol from each non-shortcut MNX logical path while
-retaining the source filename stem in the executable model. Generated DEFINE,
-ACTIVATE, DEACTIVATE, and RELEASE lines use the same symbol; shortcut popup
-names and synthetic submenu targets are validated before entering generated
-source. Review found that verified temporary snapshots could change the symbol;
-the model now receives the original logical path from runtime materialization,
-with a focused regression. Focused Linux `test_xasset_methods` and `test_prg_engine_work_areas`
-passed on the review-fix worktree, including actual generated-menu activation
-and teardown. Initial PR #6491 required checks passed; macOS native run
-35772648616 failed only the two full-suite tests already observed on the exact
-base in #6490, while both changed suites passed. Windows native run
-35772652194 is in progress. Next: push the snapshot review fix, revalidate
-hosted checks, address any new review comments, and merge only with sufficient
-evidence.
+None. Issue #6492 (`PREVIEW` inside a quoted REPORT/LABEL `TO FILE` output
+filename incorrectly enters preview mode and creates no output) is open and
+repository-owner-authored but does not carry `agent-approved`; per the Agent
+Issue Intake Boundary it is not yet authorized for unattended/agent-selected
+work. It was reproduced but not fixed during the prior takeover's first
+discovery cycle (see below); leave it for owner labeling or direct
+instruction before starting a fix. The next work-selection point should also
+re-check live GitHub state and `docs/05-roadmap.md` for the highest-value
+unfinished subgoal, since no other slice is currently retained in-progress.
 
 ## Workspace preservation
 
@@ -39,10 +47,13 @@ Preserve unrelated untracked user files in the main checkout:
 - `AGENTS.md`
 - `Z:\\home\\rich\\temp\\vfp9-probes\\empty-object-205\\vfp.out`
 
-The `copperfin-defect-takeover-until-17-edt` heartbeat resumes this task every
-30 minutes and stays quiet while CI/review is merely pending. At 17:00
-America/Detroit on 2026-09-22, cease takeover and begin one focused cycle of
-the owner's second-pass discovery prompt at
-`/home/rich/.codex/attachments/8240047a-fb25-4c54-acfc-f00d26d2f937/Pasted text.txt`.
-Then change the heartbeat to a relaxed weekly discovery cadence. The older
-`continue-copperfin-issue-loop` heartbeat is paused.
+The defect-fix takeover ended at 17:00 America/Detroit on 2026-09-22. The
+first focused cycle of the owner's second-pass discovery prompt found and
+reproduced issue #6492: `PREVIEW` inside a quoted REPORT/LABEL `TO FILE` output
+pathname incorrectly enters preview mode and creates no output. A temporary
+Linux regression failed for both commands; the test edit was removed, and no
+production fix was committed. Per the owner's subsequent direction, the
+discovery heartbeat now runs hourly; the older
+`continue-copperfin-issue-loop` heartbeat is paused. Next discovery cycle:
+inspect fixes since this pass or shift to an independent invariant if newly
+filed issues are being resolved.
