@@ -933,6 +933,16 @@ void test_build_menu_xasset_activation_uses_vfp_path_stem() {
                spaced_model.actions[0].action_id == model.actions[0].action_id &&
                spaced_model.actions[0].routine_name == model.actions[0].routine_name,
            "#6459: unsafe filename stems must not alter action routing or source metadata");
+
+    const std::string logical_path = document.path;
+    document.path = R"(E:\TemporarySnapshots\opaque-copy.mnx)";
+    const auto snapshot_model = copperfin::runtime::build_xasset_executable_model(
+        document, logical_path);
+    expect(snapshot_model.ok && snapshot_model.asset_path == logical_path &&
+               snapshot_model.activation_source_stem == "main menu" &&
+               snapshot_model.activation_target == spaced_model.activation_target &&
+               snapshot_model.startup_lines == spaced_model.startup_lines,
+           "#6459: verified-snapshot filenames must not change logical menu identity");
 }
 
 void test_menu_popup_names_fail_before_source_generation() {

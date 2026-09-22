@@ -16,15 +16,21 @@ found a macOS clone destination-identity gap.
 ## Active slice
 
 Issue #6459 is open, repository-owner-authored, and carries the exact
-`agent-approved` label. Branch `codex/fix-6459-mnx-runtime-symbol` derives a
+`agent-approved` label. PR #6491 on branch `codex/fix-6459-mnx-runtime-symbol` derives a
 bounded SHA-256 menu symbol from each non-shortcut MNX logical path while
 retaining the source filename stem in the executable model. Generated DEFINE,
 ACTIVATE, DEACTIVATE, and RELEASE lines use the same symbol; shortcut popup
 names and synthetic submenu targets are validated before entering generated
-source. Focused Linux `test_xasset_methods` and `test_prg_engine_work_areas`
-passed, including actual generated-menu activation and teardown. Next: finish
-requirements/documentation, review the compatibility boundary, push a PR,
-run hosted validation, and address review comments before merge.
+source. Review found that verified temporary snapshots could change the symbol;
+the model now receives the original logical path from runtime materialization,
+with a focused regression. Focused Linux `test_xasset_methods` and `test_prg_engine_work_areas`
+passed on the review-fix worktree, including actual generated-menu activation
+and teardown. Initial PR #6491 required checks passed; macOS native run
+35772648616 failed only the two full-suite tests already observed on the exact
+base in #6490, while both changed suites passed. Windows native run
+35772652194 is in progress. Next: push the snapshot review fix, revalidate
+hosted checks, address any new review comments, and merge only with sufficient
+evidence.
 
 ## Workspace preservation
 

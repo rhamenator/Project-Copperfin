@@ -68,7 +68,9 @@ struct XAssetExecutableModel {
     std::vector<XAssetLifecycleStep> shutdown_steps;
 };
 
-XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocumentModel& document);
+XAssetExecutableModel build_xasset_executable_model(
+    const studio::StudioDocumentModel& document,
+    const std::string& logical_asset_path = {});
 std::string build_xasset_bootstrap_source(
     const XAssetExecutableModel& model,
     bool include_read_events,

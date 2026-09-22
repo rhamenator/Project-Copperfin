@@ -27,7 +27,8 @@
             return std::nullopt;
         }
 
-        const XAssetExecutableModel model = build_xasset_executable_model(open_result.document);
+        const XAssetExecutableModel model = build_xasset_executable_model(
+            open_result.document, asset_path);
         if (!model.ok || !model.runnable_startup)
         {
             last_error_message = model.error.empty()

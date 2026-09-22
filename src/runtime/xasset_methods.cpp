@@ -568,9 +568,11 @@ void refresh_menu_action_bindings(
 
 }  // namespace
 
-XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocumentModel& document) {
+XAssetExecutableModel build_xasset_executable_model(
+    const studio::StudioDocumentModel& document,
+    const std::string& logical_asset_path) {
     XAssetExecutableModel model;
-    model.asset_path = document.path;
+    model.asset_path = logical_asset_path.empty() ? document.path : logical_asset_path;
 
     if (!document.table_preview_available) {
         model.error = xasset_text("Runtime.XAsset.Error.TablePreviewMissing");
@@ -743,12 +745,12 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
                 model.activation_target = "shortcut";
             }
         } else {
-            model.activation_source_stem = filename_stem_for_vfp_path(document.path);
+            model.activation_source_stem = filename_stem_for_vfp_path(model.asset_path);
             if (model.activation_source_stem.empty()) {
                 model.error = xasset_text("Runtime.XAsset.Error.MenuPathMissingStem");
                 return model;
             }
-            const auto digest = security::sha256_hex_for_text(document.path);
+            const auto digest = security::sha256_hex_for_text(model.asset_path);
             if (!digest.ok || digest.hex_digest.size() != 64U) {
                 model.error = digest.error.empty()
                     ? xasset_text("Runtime.XAsset.Error.MenuSymbolUnavailable")
@@ -783,7 +785,7 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
 
         model.runnable_startup = !model.startup_lines.empty();
     } else if (document.kind == studio::StudioAssetKind::report || document.kind == studio::StudioAssetKind::label) {
-        const auto quoted_path = quote_vfp_path_literal(document.path);
+        const auto quoted_path = quote_vfp_path_literal(model.asset_path);
         if (!quoted_path.has_value()) {
             model.error = xasset_text("Runtime.XAsset.Error.PathUnrepresentable");
             return model;
