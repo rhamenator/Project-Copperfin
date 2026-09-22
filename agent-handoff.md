@@ -30,9 +30,14 @@ macOS native validation passed both changed suites; its only two failures are
 `test_access_saveastext_export` and `test_prg_engine_string_math_functions`,
 which fail identically on the exact base commit `37aad494f7c61931c9588010990f8371e80b718a`
 in run 35746900704. The final-head macOS run is 35748348840. Final-head
-Windows native validation run 35748340569 remains in progress. Next: finish
-Windows native evidence, ensure final PR checks pass, merge safely, and close
-#6458 only after acceptance evidence passes.
+Windows native validation run 35748340569 passed both changed suites. It
+failed `test_staged_import_publish`, `test_vfp_assets`, and
+`test_access_saveastext_export`; the first two failed identically on exact-base
+run 35758010492. The Access export failure occurred only on the PR run and is
+outside the changed code. The latest PR head `d4e32b5dd695ef471b969bc82cdd435a91241476`
+passed all 15 required checks, including ASan/UBSan and Windows launcher
+validation. Next: document the remaining Access export validation limit in
+PR #6490, merge safely, and close #6458 with evidence.
 
 ## Workspace preservation
 
