@@ -275,6 +275,20 @@ set_source_files_properties(
     PROPERTIES COMPILE_OPTIONS "$<IF:$<CXX_COMPILER_ID:MSVC>,/W1,-w>"
 )
 
+# The upstream ref10 field arithmetic intentionally left-shifts negative
+# signed limbs. Keep the vendored files byte-for-byte intact while excluding
+# only that known shift-base diagnostic from their UBSan instrumentation.
+# AddressSanitizer and every other UBSan check remain active for these files.
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    set_property(SOURCE
+        src/licensing/third_party/ed25519_ref/fe.c
+        src/licensing/third_party/ed25519_ref/ge.c
+        src/licensing/third_party/ed25519_ref/sc.c
+        src/licensing/third_party/ed25519_ref/sha512.c
+        src/licensing/third_party/ed25519_ref/verify.c
+        APPEND PROPERTY COMPILE_OPTIONS -fno-sanitize=shift-base)
+endif()
+
 # cf_licensing retains the archived product-license parser/verifier for a
 # possible later policy decision. Product loading is disabled by default.
 # Package/launcher trust reuses only the low-level cryptographic primitives

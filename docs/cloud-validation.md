@@ -14,7 +14,7 @@ routes. The `Cloud Defect Hunt` workflow adds independent Linux jobs:
 
 | Lane | Pull request | Nightly | Evidence |
 | --- | --- | --- | --- |
-| `sanitizer` | Selected runtime, DBF, and migration tests under Clang ASan/UBSan | Full native CTest inventory under Clang ASan/UBSan | Memory and undefined behavior diagnostics |
+| `sanitizer` | Selected runtime, package, DBF, and migration tests under Clang ASan/UBSan | Full native CTest inventory under Clang ASan/UBSan | Memory and undefined behavior diagnostics |
 | `fuzz` | 30-second libFuzzer campaign against the DBF header parser | 600-second campaign | Seed, libFuzzer log, crash input on failure |
 | `stress` | Two repetitions of existing task, database lifecycle, buffering, and data-I/O sequences | Twelve repetitions | CTest failure sequence; this repeats fixed state sequences, not randomized scheduling |
 | `migration` | Seeded 1,000-row dBASE III to VFP-native round trip plus DBF/staged-import tests | Seeded 20,000-row round trip plus those tests | Seed, row count, file sizes, peak child RSS |
@@ -33,7 +33,12 @@ MSVC `/W4 /permissive-`. This change adds no clang-tidy, C# analyzer, or
 PowerShell analyzer gate. ThreadSanitizer is not enabled: it requires a
 separate, stable run of the runtime's thread-sensitive tests before its
 findings could be made a reliable gate. ASan and UBSan are combined with
-abort-on-error; neither is mixed with TSan.
+abort-on-error; neither is mixed with TSan. The byte-for-byte vendored
+Ed25519 reference verifier alone excludes UBSan `shift-base` instrumentation
+for its signed-limb arithmetic; ASan and other UBSan checks remain active.
+The first full run found and led to correction of a POSIX package-content
+file-descriptor parsing lifetime bug (`RQ-CF-CONTAINMENT-001`), and its
+runtime-pipeline regression is now in the PR sanitizer selection.
 
 ## Dispatch and validation ladder
 
