@@ -377,55 +377,23 @@ void test_audit_failures_withhold_start_but_cannot_extend_stop() {
            "RQ-CF-AGENT-005: stop audit failure must remain visible without extending authority");
 }
 
+void throw_synthetic_policy_fault() {
+    throw std::runtime_error("synthetic workspace-agent policy fault");
+}
+
 void test_policy_exception_fails_closed_and_restores_transition() {
-#if !defined(_WIN32)
-    namespace fs = std::filesystem;
-    const fs::path original_directory = fs::current_path();
-    const fs::path removed_directory = fs::temp_directory_path() /
-        ("copperfin-workspace-agent-session-" +
-         std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
-    std::error_code filesystem_error;
-    fs::create_directories(removed_directory, filesystem_error);
-    if (filesystem_error) {
-        expect(false, "RQ-CF-AGENT-005: policy-exception fixture directory should be created");
-        return;
-    }
-    fs::current_path(removed_directory, filesystem_error);
-    if (filesystem_error) {
-        fs::remove_all(removed_directory, filesystem_error);
-        expect(false, "RQ-CF-AGENT-005: policy-exception fixture should become the working directory");
-        return;
-    }
-
-    const char* configured_locale = std::getenv("COPPERFIN_LOCALE_DIR");
-    const bool had_configured_locale = configured_locale != nullptr;
-    const std::string saved_locale = had_configured_locale ? configured_locale : "";
-    unsetenv("COPPERFIN_LOCALE_DIR");
-    filesystem_error.clear();
-    fs::remove(removed_directory, filesystem_error);
-    if (filesystem_error) {
-        fs::current_path(original_directory, filesystem_error);
-        fs::remove_all(removed_directory, filesystem_error);
-        if (had_configured_locale) {
-            setenv("COPPERFIN_LOCALE_DIR", saved_locale.c_str(), 1);
-        }
-        expect(false, "RQ-CF-AGENT-005: policy-exception fixture directory should be removable");
-        return;
-    }
-
+    // #6388 makes catalog discovery robust to a deleted cwd, so a policy
+    // exception needs an explicit test-only injection instead of depending
+    // on an unrelated localization defect.
+    copperfin::security::set_workspace_agent_session_policy_test_only_throw_hook_for_testing(
+        &throw_synthetic_policy_fault);
     WorkspaceAgentSessionController controller;
     AuditContext failed_policy_audit;
     const auto denied = controller.start(
         request_for(WorkspaceAgentAccessMode::workspace_sandbox),
         sink_for(failed_policy_audit));
-
-    filesystem_error.clear();
-    fs::current_path(original_directory, filesystem_error);
-    if (had_configured_locale) {
-        setenv("COPPERFIN_LOCALE_DIR", saved_locale.c_str(), 1);
-    }
-    expect(!filesystem_error,
-           "RQ-CF-AGENT-005: policy-exception fixture should restore the working directory");
+    copperfin::security::set_workspace_agent_session_policy_test_only_throw_hook_for_testing(
+        nullptr);
     expect(!denied.activated && denied.audit_committed &&
                denied.diagnostic_code == "workspace_agent.policy_evaluation_failed" &&
                denied.policy_decision.diagnostic_code ==
@@ -444,7 +412,6 @@ void test_policy_exception_fails_closed_and_restores_transition() {
     AuditContext stop_audit;
     expect(controller.stop(sink_for(stop_audit)).revoked,
            "RQ-CF-AGENT-005: recovered session should remain immediately revocable");
-#endif
 }
 
 void throw_synthetic_stop_fault() {
@@ -459,7 +426,7 @@ void test_stop_exception_restores_transition() {
     // forever. The real trigger isn't reproducible deterministically through
     // the public API, so this uses the dedicated test-only fault-injection
     // hook (see workspace_agent_session_test_hooks.h) rather than a natural
-    // failure condition, unlike test_policy_exception_fails_closed_and_restores_transition
+    // failure condition, as in test_policy_exception_fails_closed_and_restores_transition
     // above.
     copperfin::security::set_workspace_agent_session_stop_test_only_throw_hook_for_testing(
         nullptr);

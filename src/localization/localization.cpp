@@ -594,11 +594,11 @@ std::filesystem::path resolve_catalog_root(const std::filesystem::path& executab
             }
             ancestor = parent;
         }
-        return "resources/locales";
     }
 
-    // A process can outlive its launch directory. Use the running executable
-    // for a stable absolute fallback instead of asking for the lost cwd again.
+    // A process can outlive or lose access to its launch directory. After
+    // developer-tree discovery fails, prefer the running executable's
+    // resources even when current_path() itself returned a pathname.
     const fs::path running_executable = platform::resolve_running_executable_path({});
     if (const fs::path discovered = find_executable_catalog(running_executable);
         !discovered.empty()) {
@@ -607,9 +607,12 @@ std::filesystem::path resolve_catalog_root(const std::filesystem::path& executab
     const fs::path fallback_root = !running_executable.empty()
         ? running_executable.parent_path()
         : resolve_executable_root(executable_path);
-    return fallback_root.empty()
-        ? fs::path("resources/locales")
-        : fallback_root / ".." / "share" / "copperfin" / "locales";
+    if (!fallback_root.empty()) {
+        return fallback_root / ".." / "share" / "copperfin" / "locales";
+    }
+    return !cwd_error && !current_directory.empty()
+        ? current_directory / "resources" / "locales"
+        : fs::path("resources/locales");
 }
 
 std::optional<std::string> LocalizedCatalog::find(std::string_view key) const {

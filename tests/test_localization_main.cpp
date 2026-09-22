@@ -88,7 +88,25 @@ void test_localization_survives_deleted_working_directory() {
         ::alarm(20U);
         try {
             ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
-            if (::chdir(vanished.c_str()) != 0 || ::rmdir(vanished.c_str()) != 0) {
+            ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+            if (::chdir(vanished.c_str()) != 0) {
+                ::_exit(2);
+            }
+            std::error_code permissions_error;
+            fs::permissions(vanished, fs::perms::none,
+                            fs::perm_options::replace, permissions_error);
+            if (permissions_error) {
+                ::_exit(8);
+            }
+            const fs::path inaccessible_root =
+                copperfin::localization::resolve_catalog_root();
+            fs::permissions(vanished, fs::perms::owner_all,
+                            fs::perm_options::replace, permissions_error);
+            if (permissions_error || inaccessible_root.empty() ||
+                !inaccessible_root.is_absolute()) {
+                ::_exit(9);
+            }
+            if (::rmdir(vanished.c_str()) != 0) {
                 ::_exit(2);
             }
             const fs::path root = copperfin::localization::resolve_catalog_root();

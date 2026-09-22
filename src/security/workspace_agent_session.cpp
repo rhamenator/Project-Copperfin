@@ -268,7 +268,8 @@ private:
 #if defined(COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS)
 // See workspace_agent_session_test_hooks.h. Relaxed ordering is sufficient:
 // this exists only for single-threaded test setup/teardown around a call to
-// stop(), never for production synchronization.
+// start()/stop(), never for production synchronization.
+std::atomic<void (*)()> policy_test_only_throw_hook{nullptr};
 std::atomic<void (*)()> stop_test_only_throw_hook{nullptr};
 #endif
 
@@ -684,6 +685,11 @@ bool same_serialized_process_invocation(
 }  // namespace
 
 #if defined(COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS)
+void set_workspace_agent_session_policy_test_only_throw_hook_for_testing(
+    void (*hook)()) {
+    policy_test_only_throw_hook.store(hook, std::memory_order_relaxed);
+}
+
 void set_workspace_agent_session_stop_test_only_throw_hook_for_testing(
     void (*hook)()) {
     stop_test_only_throw_hook.store(hook, std::memory_order_relaxed);
@@ -756,6 +762,12 @@ WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
         decision = controller_denial("workspace_agent.session_already_active");
     } else {
         try {
+#if defined(COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS)
+            if (const auto hook = policy_test_only_throw_hook.exchange(
+                    nullptr, std::memory_order_relaxed); hook != nullptr) {
+                hook();
+            }
+#endif
             decision = evaluate_workspace_agent_activation(request);
         } catch (...) {
             decision = controller_denial("workspace_agent.policy_evaluation_failed");

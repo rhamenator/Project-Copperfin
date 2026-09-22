@@ -17,7 +17,13 @@ directory is unavailable, then use an executable-root fallback. PATH lookup
 also skips an unavailable current-directory entry. A POSIX subprocess removes
 its current directory and proves direct catalog resolution, an Access asset
 error, and a native runtime UNDO error remain structured and catchable.
-Focused Linux `test_localization` passes; hosted CI and review remain pending.
+The review revision also fixes the locale environment in the subprocess,
+tries executable resources after unsuccessful developer-tree discovery, and
+replaces a workspace-agent test's old dependency on the cwd exception with
+a test-only policy fault. Focused Linux `test_localization` and
+`test_workspace_agent_session` pass. The first hosted run had an expected
+workspace-agent test failure from that obsolete fixture and an unrelated
+macOS .NET benchmark failure; the revision needs hosted CI and review.
 
 PR #6486 was closed without merge after review found an unsafe macOS clone
 destination-identity gap: `fclonefileat()` binds the source but does not return
