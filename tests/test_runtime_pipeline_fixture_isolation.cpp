@@ -65,6 +65,15 @@ std::filesystem::path create_fixture_namespace_root() {
             // host spelling while retaining the actual directory-entry name.
             return normalize_windows_fixture_root_spelling(candidate);
 #else
+            // Native-wrapper staging now requires a trusted immediate TEMP
+            // parent; the runner may inherit a group-writable umask.
+            std::filesystem::permissions(
+                candidate, std::filesystem::perms::owner_all,
+                std::filesystem::perm_options::replace, error);
+            if (error) {
+                std::filesystem::remove(candidate, error);
+                throw std::runtime_error("Unable to make runtime-pipeline fixture private.");
+            }
             return candidate;
 #endif
         }

@@ -1469,4 +1469,52 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         "#2606: runtime package invalid-plan diagnostics should refresh to qps-ploc when the runtime locale changes in-process");
 }
 
+void test_native_wrapper_unavailable_temp_root_preserves_primary_output() {
+    // RQ-CF-PACKAGE-TEMP-001: staging failures are result failures and leave
+    // the previous primary artifact untouched.
+    namespace fs = std::filesystem;
+    const fs::path root = fs::temp_directory_path() /
+        "copperfin_native_wrapper_unavailable_temp_root";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root / "source");
+    write_text(root / "source" / "CMakeLists.txt", "cmake_minimum_required(VERSION 3.20)\n");
+    write_text(root / "previous.dll", "previous-primary-output");
+    write_text(root / "not-a-directory", "file");
+
+    copperfin::runtime::RuntimePackagePlan plan;
+    plan.ok = true;
+    plan.output_kind = copperfin::runtime::BuildOutputKind::dll;
+    plan.native_wrapper_cmake_path = (root / "source" / "CMakeLists.txt").string();
+    plan.launcher_output_path = (root / "previous.dll").string();
+    const auto expected = runtime_pipeline_english_catalog().translate(
+        "Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed");
+    const auto check_failure = [&](const char* case_name) {
+        const auto result = copperfin::runtime::build_runtime_package_primary_output(
+            plan,
+            copperfin::security::default_native_security_profile(),
+            copperfin::platform::default_extensibility_profile());
+        expect(!result.ok && result.error == expected,
+               std::string("#6389: ") + case_name + " must return the localized staging failure");
+        expect(read_text(root / "previous.dll") == "previous-primary-output",
+               std::string("#6389: ") + case_name + " must preserve the prior primary output");
+    };
+
+    {
+        ScopedEnvironmentVariable tmpdir("TMPDIR", (root / "missing").string());
+        ScopedEnvironmentVariable temp("TEMP", (root / "missing").string());
+        ScopedEnvironmentVariable tmp("TMP", (root / "missing").string());
+        check_failure("missing temporary root");
+    }
+    {
+        ScopedEnvironmentVariable tmpdir("TMPDIR", (root / "not-a-directory").string());
+        ScopedEnvironmentVariable temp("TEMP", (root / "not-a-directory").string());
+        ScopedEnvironmentVariable tmp("TMP", (root / "not-a-directory").string());
+        check_failure("file-valued temporary root");
+    }
+    copperfin::runtime::test_hooks::force_native_wrapper_staging_create_failure_once();
+    check_failure("injected staging creation failure");
+    fs::remove_all(root, ignored);
+}
+
 }  // namespace cf_test_runtime_pipeline

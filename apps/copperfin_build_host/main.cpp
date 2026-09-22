@@ -794,10 +794,16 @@ int run_build_host_main(int argc, char** argv) {
     auto final_plan = materialized.plan;
 
     if (is_library_output_kind(materialized.plan.output_kind)) {
-        auto build_result = copperfin::runtime::build_runtime_package_primary_output(
-            materialized.plan,
-            security_profile,
-            extensibility_profile);
+        copperfin::runtime::RuntimeBuildResult build_result;
+        try {
+            build_result = copperfin::runtime::build_runtime_package_primary_output(
+                materialized.plan,
+                security_profile,
+                extensibility_profile);
+        } catch (const std::exception&) {
+            build_result.error = catalog.translate(
+                "Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed");
+        }
         if (!build_result.ok) {
             const auto rollback_result = copperfin::runtime::abort_runtime_package_transaction(
                 materialized.plan);
