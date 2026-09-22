@@ -13,18 +13,19 @@ network/removable-volume qualification.
 ## Active slice
 
 Issue #6460 is open, repository-owner-authored, and carries the exact
-`agent-approved` label. Worktree:
-`/home/rich/.codex/worktrees/fix-5680-staged-import-authority/Project-Copperfin`.
-Branch: `codex/fix-6460-set-skip-uaf`, based on the merge of #6488. The
-in-progress change captures parent/child cursor generation references across
+`agent-approved` label. PR #6489 on branch `codex/fix-6460-set-skip-uaf`
+captures parent/child cursor generation references across
 `SET SKIP TO` expression callbacks, rejects closure/replacement or a data
 session switch before mutating relation flags, and preserves valid callback
 behavior. Focused Linux `test_prg_engine_relations` passed under Debug and local
 Clang ASan/UBSan with leak detection, covering closure, replacement, session
-switch, atomicity, `TRY/CATCH`, and `ON ERROR` cases.
-The Cloud Defect Hunt PR sanitizer lane now includes this relation test.
-Next: publish PR, run hosted ASan/UBSan and platform checks, resolve review,
-merge safely, and close #6460 only after acceptance evidence passes.
+switch, atomicity (including preservation of an existing `SET SKIP` setting),
+`TRY/CATCH`, and `ON ERROR` cases. All 15 hosted checks passed on the initial
+head, including the Cloud Defect Hunt sanitizer lane that now runs this test.
+Copilot requested the additional existing-setting rollback test, which passed
+locally under Debug and ASan/UBSan and is awaiting final hosted validation.
+Next: push that final test and evidence update, wait for hosted checks and
+review, merge safely, and close #6460 only after acceptance evidence passes.
 
 ## Workspace preservation
 

@@ -783,7 +783,7 @@ void test_set_skip_registration_revalidates_callback_cursors()
     write_people_dbf(second_path, {{"SECOND10", 10}});
 
     const auto run_case = [&](const std::string &name, const std::string &command,
-                              const std::string &callback)
+                              const std::string &callback, bool existing_skip = false)
     {
         const fs::path script = root / (name + ".prg");
         write_text(script,
@@ -796,7 +796,9 @@ void test_set_skip_registration_revalidates_callback_cursors()
             "SELECT Parent\n"
             "SET RELATION TO AGE INTO Child\n"
             "SET RELATION TO AGE INTO SecondChild ADDITIVE\n"
+            + (existing_skip ? "SET SKIP TO SecondChild\n" : "") +
             "nSelectedBefore = SELECT()\n"
+            "cSkipBefore = SET('SKIP')\n"
             "cRelationBefore = SET('RELATION')\n"
             "lFileLockBefore = FLOCK()\n"
             "lCaught = .F.\n"
@@ -903,6 +905,17 @@ void test_set_skip_registration_revalidates_callback_cursors()
                missing.globals.contains("lfilelockafter") &&
                missing.globals.at("lfilelockafter").boolean_value,
            "#6460: failed registration must retain the caller's parent file lock");
+
+    const auto existing_skip = run_case(
+        "existing_skip_preserved", "SET SKIP TO Child, 'Missing'", "", true);
+    expect(existing_skip.completed && existing_skip.globals.contains("lcaught") &&
+               existing_skip.globals.at("lcaught").boolean_value,
+           "#6460: failed registration over an existing SET SKIP must be catchable");
+    expect(existing_skip.globals.contains("cskipbefore") &&
+               format_value(existing_skip.globals.at("cskipbefore")) == "SecondChild" &&
+               existing_skip.globals.contains("cskipafter") &&
+               format_value(existing_skip.globals.at("cskipafter")) == "SecondChild",
+           "#6460: failure must preserve the previous child's enabled skip flag");
 
     const auto valid = run_case(
         "valid_expression", "SET SKIP TO choosechild()",

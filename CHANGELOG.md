@@ -3,7 +3,7 @@
   child by data-session, work-area, and binding generation before changing
   relation flags. A callback that closes or replaces a cursor, or switches
   data sessions, raises a catchable error without leaving partial skip state.
-  Added registration, rollback, file-lock, `TRY/CATCH`, and `ON ERROR` regressions and
+  Added registration, existing-setting rollback, file-lock, `TRY/CATCH`, and `ON ERROR` regressions and
   included the relation suite in the hosted PR sanitizer lane.
 
 - 2026-09-22: Hardened native-wrapper temporary staging for #6389. Missing or
