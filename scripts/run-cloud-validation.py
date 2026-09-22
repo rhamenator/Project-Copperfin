@@ -17,7 +17,8 @@ TARGETS = {
     "stress": ["test_prg_engine_control_flow", "test_prg_engine_database_lifecycle",
                "test_prg_engine_runtime_surface_functions_buffering", "test_prg_engine_data_io"],
     "migration": ["test_cloud_migration_stress", "test_dbf_table", "test_staged_import_publish"],
-    "sanitizer-pr": ["test_prg_engine_control_flow", "test_prg_engine_database_lifecycle",
+    "sanitizer-pr": ["test_prg_engine_control_flow", "test_prg_engine_relations",
+                     "test_prg_engine_database_lifecycle",
                      "test_prg_engine_runtime_surface_functions_buffering", "test_prg_engine_data_io",
                      "test_cloud_migration_stress", "test_dbf_table", "test_runtime_pipeline",
                      "test_package_launcher_inventory_trust"],
@@ -109,7 +110,8 @@ def main():
                             "^(test_prg_engine_control_flow|test_prg_engine_database_lifecycle|"
                             "test_prg_engine_runtime_surface_functions_buffering|test_prg_engine_data_io)$"])
         elif args.profile == "pr":
-            command.extend(["-R", "^(test_prg_engine_control_flow|test_prg_engine_database_lifecycle|"
+            command.extend(["-R", "^(test_prg_engine_control_flow|test_prg_engine_relations|"
+                            "test_prg_engine_database_lifecycle|"
                             "test_prg_engine_runtime_surface_functions_buffering|test_prg_engine_data_io|"
                             "test_cloud_migration_stress|test_dbf_table|test_runtime_pipeline|"
                             "test_package_launcher_inventory_trust|test_native_test_isolation_contract)$"])
