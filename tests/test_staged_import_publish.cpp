@@ -55,26 +55,26 @@ void test_private_staging_directory_is_new_and_restricted() {
     // Force an untrusted destination parent regardless of runner umask.
     fs::permissions(dir, fs::perms::group_write, fs::perm_options::add);
 #endif
-    const auto first = copperfin::vfp::create_private_import_staging_directory(dir);
-    const auto second = copperfin::vfp::create_private_import_staging_directory(dir);
-    expect(first.has_value() && second.has_value() && first != second,
+    auto first = copperfin::vfp::create_private_import_staging_directory(dir);
+    auto second = copperfin::vfp::create_private_import_staging_directory(dir);
+    expect(first.has_value() && second.has_value() && first->path() != second->path(),
            "each import must receive a newly created staging directory");
     if (first.has_value()) {
-        expect(copperfin::platform::verify_private_directory(*first).ok,
+        expect(copperfin::platform::verify_private_directory(first->path()).ok,
                "first staging directory must satisfy the platform privacy contract");
 #if !defined(_WIN32)
         struct stat destination_status{};
         struct stat staging_status{};
         expect(::stat(dir.c_str(), &destination_status) == 0 &&
-                   ::stat(first->c_str(), &staging_status) == 0 &&
+                   ::stat(first->path().c_str(), &staging_status) == 0 &&
                    destination_status.st_dev == staging_status.st_dev,
                "staging and destination must remain on the same volume");
-        expect(first->parent_path() != dir,
+        expect(first->path().parent_path() != dir,
                "an untrusted destination parent must be skipped");
 #endif
     }
     if (second.has_value()) {
-        expect(copperfin::platform::verify_private_directory(*second).ok,
+        expect(copperfin::platform::verify_private_directory(second->path()).ok,
                "second staging directory must satisfy the platform privacy contract");
     }
     const fs::path missing_parent = dir / "missing";
@@ -83,22 +83,80 @@ void test_private_staging_directory_is_new_and_restricted() {
     expect(!fs::exists(missing_parent), "failed staging must leave a missing parent absent");
     std::error_code ignored;
     if (first.has_value()) {
-        fs::remove_all(*first, ignored);
+        first->release();
+        fs::remove_all(first->path(), ignored);
     }
     if (second.has_value()) {
-        fs::remove_all(*second, ignored);
+        second->release();
+        fs::remove_all(second->path(), ignored);
     }
     fs::remove_all(dir, ignored);
 }
+
+#if !defined(_WIN32)
+void test_private_staging_accepts_indirect_destination_parent() {
+    const fs::path dir = make_scratch_dir("copperfin_staged_import_indirect_parent");
+    const fs::path real = dir / "real";
+    const fs::path alias = dir / "alias";
+    fs::create_directory(real);
+    fs::create_directory_symlink(real, alias);
+    auto staged = copperfin::vfp::create_private_import_staging_directory(alias);
+    expect(staged.has_value(), "an existing symlink alias to the destination must be resolved");
+    if (staged.has_value()) {
+        expect(copperfin::platform::verify_private_directory(staged->path()).ok,
+               "indirect destination parent must still produce private staging");
+        std::error_code ignored;
+        staged->release();
+        fs::remove_all(staged->path(), ignored);
+    }
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+}
+#endif
+
+#if defined(_WIN32)
+void test_private_staging_lease_blocks_parent_rename() {
+    const fs::path dir = make_scratch_dir("copperfin_staged_import_locked_parent");
+    const fs::path moved = dir.parent_path() / "copperfin_staged_import_locked_parent_moved";
+    std::error_code ignored;
+    fs::remove_all(moved, ignored);
+    auto staged = copperfin::vfp::create_private_import_staging_directory(dir);
+    expect(staged.has_value(), "Windows staging must pin its directory chain");
+    if (staged.has_value()) {
+        std::error_code rename_error;
+        fs::rename(dir, moved, rename_error);
+        expect(static_cast<bool>(rename_error),
+               "Windows must deny parent replacement while staging is active");
+        staged->release();
+        fs::remove_all(staged->path(), ignored);
+    }
+    fs::remove_all(dir, ignored);
+    fs::remove_all(moved, ignored);
+}
+#endif
 
 void test_open_succeeds_on_regular_file() {
     const fs::path dir = make_scratch_dir("copperfin_staged_import_publish_open_ok");
     const fs::path staged = dir / "staged.dbf";
     write_file(staged, "original bytes");
 
-    const auto handle = copperfin::vfp::open_staged_import_file_for_publish(staged);
+    const auto handle = copperfin::vfp::open_staged_import_file_for_publish(
+        staged, "52c3935626c104b2cbc9031291a1c4d56614c38f52072a361d658a58a9c48698");
     expect(handle.valid(), "opening a freshly written regular file should succeed");
 
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+}
+
+void test_open_rejects_replacement_before_handle_acquisition() {
+    const fs::path dir = make_scratch_dir("copperfin_staged_import_preopen_swap");
+    const fs::path staged = dir / "staged.dbf";
+    // The expected digest was captured from the writer's in-memory bytes.
+    // Simulate a replacement before the importer's first read handle opens.
+    write_file(staged, "swapped-in malicious bytes");
+    const auto handle = copperfin::vfp::open_staged_import_file_for_publish(
+        staged, "925180315c34a6f857b152519752f58b338c8791cab51d73d9806a8c8d939dcc");
+    expect(!handle.valid(), "a file substituted before handle acquisition must be rejected");
     std::error_code ignored;
     fs::remove_all(dir, ignored);
 }
@@ -397,7 +455,13 @@ void test_release_and_remove_staged_files_reports_incomplete_cleanup() {
 
 int main() {
     test_private_staging_directory_is_new_and_restricted();
+#if !defined(_WIN32)
+    test_private_staging_accepts_indirect_destination_parent();
+#else
+    test_private_staging_lease_blocks_parent_rename();
+#endif
     test_open_succeeds_on_regular_file();
+    test_open_rejects_replacement_before_handle_acquisition();
     test_open_rejects_missing_file();
     test_open_rejects_directory();
 #if !defined(_WIN32)

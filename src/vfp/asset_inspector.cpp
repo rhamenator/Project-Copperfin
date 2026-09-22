@@ -6252,15 +6252,46 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
 
     // Stage every file in a newly created private directory on the
     // destination volume, verify each one, and only then publish links.
-    const auto private_staging_dir = create_private_import_staging_directory(dbc_dir);
-    if (!private_staging_dir.has_value()) {
+    // The previous create_directories(staging_dir) also created a missing
+    // destination parent. Preserve that behavior, while tracking each new
+    // parent so a failed import can remove it if it remains empty.
+    std::vector<fs::path> created_destination_parents;
+    for (fs::path missing = dbc_dir; !missing.empty(); missing = missing.parent_path()) {
+        std::error_code exists_error;
+        if (fs::exists(missing, exists_error) || exists_error) {
+            break;
+        }
+        created_destination_parents.push_back(missing);
+    }
+    const auto cleanup_new_destination_parents = [&] {
+        for (const fs::path& path : created_destination_parents) {
+            std::error_code ignored;
+            fs::remove(path, ignored);
+        }
+    };
+    std::error_code mkdir_error;
+    if (!dbc_dir.empty()) {
+        fs::create_directories(dbc_dir, mkdir_error);
+    }
+    if (mkdir_error) {
+        cleanup_new_destination_parents();
         return failure(asset_inspector_text("Vfp.AssetInspector.Error.DatabaseImportStagingFailed"));
     }
-    const fs::path& staging_dir = *private_staging_dir;
+    auto private_staging_dir = create_private_import_staging_directory(dbc_dir);
+    if (!private_staging_dir.has_value()) {
+        cleanup_new_destination_parents();
+        return failure(asset_inspector_text("Vfp.AssetInspector.Error.DatabaseImportStagingFailed"));
+    }
+    const fs::path& staging_dir = private_staging_dir->path();
 
     std::vector<StagedImportFile> staged;
+    const auto cleanup_staging = [&](std::vector<StagedImportFile>& files) {
+        private_staging_dir->release();
+        return remove_staged_import_files_and_directory(files, staging_dir);
+    };
     const auto abort_staging = [&](std::string message) {
-        remove_staged_import_files_and_directory(staged, staging_dir);
+        cleanup_staging(staged);
+        cleanup_new_destination_parents();
         return failure(std::move(message));
     };
 
@@ -6270,12 +6301,18 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
             return abort_staging(rows.error);
         }
         const fs::path staged_path = staging_dir / destination.path.filename();
+        DbfGeneratedDigests generated_digests;
         const DbfWriteResult write_result = create_dbf_table_file(
             copperfin::platform::path_to_utf8_string(staged_path),
             destination.plan->fields,
-            rows.rows);
+            rows.rows,
+            &generated_digests);
         if (!write_result.ok) {
             return abort_staging(write_result.error);
+        }
+        if (generated_digests.table_sha256.empty()) {
+            return abort_staging(asset_inspector_text(
+                "Vfp.AssetInspector.Error.DatabaseImportStagedFileIdentityFailed"));
         }
         // #5680: open and identity-pin the staged file the instant after
         // create_dbf_table_file() closes it, rather than trusting
@@ -6283,7 +6320,8 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
         // loop below reaches it. Linux publishes from this retained
         // descriptor; Windows denies writes and name replacement while it
         // is open. Other POSIX platforms recheck identity before linking.
-        StagedImportFileHandle staged_handle = open_staged_import_file_for_publish(staged_path);
+        StagedImportFileHandle staged_handle = open_staged_import_file_for_publish(
+            staged_path, generated_digests.table_sha256);
         if (!staged_handle.valid()) {
             return abort_staging(asset_inspector_text(
                 "Vfp.AssetInspector.Error.DatabaseImportStagedFileIdentityFailed"));
@@ -6302,10 +6340,15 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
                 return field.type == 'M' || field.type == 'G' || field.type == 'P';
             });
         if (has_memo_field) {
+            if (generated_digests.memo_sha256.empty()) {
+                return abort_staging(asset_inspector_text(
+                    "Vfp.AssetInspector.Error.DatabaseImportStagedFileIdentityFailed"));
+            }
             fs::path staged_memo_path = staged_path;
             staged_memo_path.replace_extension(".fpt");
             StagedImportFileHandle staged_memo_handle =
-                open_staged_import_file_for_publish(staged_memo_path);
+                open_staged_import_file_for_publish(
+                    staged_memo_path, generated_digests.memo_sha256);
             if (!staged_memo_handle.valid()) {
                 return abort_staging(asset_inspector_text(
                     "Vfp.AssetInspector.Error.DatabaseImportStagedFileIdentityFailed"));
@@ -6332,14 +6375,21 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
         catalog_rows.push_back({"Table", destination.plan->name, std::string{}});
     }
     const fs::path staged_dbc_path = staging_dir / dbc_fs_path.filename();
+    DbfGeneratedDigests catalog_digests;
     const DbfWriteResult catalog_result = create_dbf_table_file(
         copperfin::platform::path_to_utf8_string(staged_dbc_path),
         catalog_fields,
-        catalog_rows);
+        catalog_rows,
+        &catalog_digests);
     if (!catalog_result.ok) {
         return abort_staging(catalog_result.error);
     }
-    StagedImportFileHandle staged_dbc_handle = open_staged_import_file_for_publish(staged_dbc_path);
+    if (catalog_digests.table_sha256.empty()) {
+        return abort_staging(asset_inspector_text(
+            "Vfp.AssetInspector.Error.DatabaseImportStagedFileIdentityFailed"));
+    }
+    StagedImportFileHandle staged_dbc_handle = open_staged_import_file_for_publish(
+        staged_dbc_path, catalog_digests.table_sha256);
     if (!staged_dbc_handle.valid()) {
         return abort_staging(asset_inspector_text(
             "Vfp.AssetInspector.Error.DatabaseImportStagedFileIdentityFailed"));
@@ -6386,8 +6436,8 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
             // path (potentially holding this transaction's actual data,
             // rather than a now-redundant staged copy of it) is the more
             // severe of the two residual states.
-            const bool staging_cleanup_ok =
-                remove_staged_import_files_and_directory(staged, staging_dir);
+            const bool staging_cleanup_ok = cleanup_staging(staged);
+            cleanup_new_destination_parents();
             std::string commit_failed_key = "Vfp.AssetInspector.Error.DatabaseImportCommitFailed";
             if (rollback_left_unreclaimed_entry) {
                 commit_failed_key = "Vfp.AssetInspector.Error.DatabaseImportCommitFailedUnreclaimedEntry";
@@ -6415,7 +6465,7 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
     // removes staging_dir itself; each committed file at its own
     // final_path is an independent hard link to the same data, unaffected
     // by removing the staged_path name or the directory that held it.
-    const bool staging_cleanup_ok = remove_staged_import_files_and_directory(committed, staging_dir);
+    const bool staging_cleanup_ok = cleanup_staging(committed);
 
     // #5681: report a distinct, non-generic-success result when cleanup
     // did not fully complete rather than an unqualified "ok" -- the

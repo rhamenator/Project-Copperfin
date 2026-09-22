@@ -2,19 +2,26 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
+#if defined(__linux__) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE 1
+#endif
+
 #include "copperfin/vfp/staged_import_publish.h"
 #include "copperfin/platform/private_directory.h"
 
 #include "../platform/scoped_resource.h"
+#include "../security/sha256_native.h"
 
 #include <algorithm>
 #include <array>
 #include <cerrno>
 #include <cstdint>
 #include <filesystem>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <utility>
 
@@ -33,14 +40,53 @@
 
 namespace copperfin::vfp {
 
-std::optional<std::filesystem::path> create_private_import_staging_directory(
+class PrivateImportStagingDirectory::Impl {
+public:
+    std::filesystem::path path;
+#if defined(_WIN32)
+    std::vector<copperfin::platform::ScopedHandle> directory_chain;
+#endif
+};
+
+PrivateImportStagingDirectory::PrivateImportStagingDirectory() noexcept = default;
+PrivateImportStagingDirectory::PrivateImportStagingDirectory(std::unique_ptr<Impl> impl) noexcept
+    : impl_(std::move(impl)) {}
+PrivateImportStagingDirectory::~PrivateImportStagingDirectory() = default;
+PrivateImportStagingDirectory::PrivateImportStagingDirectory(
+    PrivateImportStagingDirectory&&) noexcept = default;
+PrivateImportStagingDirectory& PrivateImportStagingDirectory::operator=(
+    PrivateImportStagingDirectory&&) noexcept = default;
+
+const std::filesystem::path& PrivateImportStagingDirectory::path() const noexcept {
+    static const std::filesystem::path empty;
+    return impl_ ? impl_->path : empty;
+}
+
+void PrivateImportStagingDirectory::release() noexcept {
+#if defined(_WIN32)
+    if (impl_) {
+        impl_->directory_chain.clear();
+    }
+#endif
+}
+
+std::optional<PrivateImportStagingDirectory> create_private_import_staging_directory(
     const std::filesystem::path& destination_parent) {
     namespace fs = std::filesystem;
     std::error_code absolute_error;
-    const fs::path parent = fs::absolute(
+    const fs::path requested_parent = fs::absolute(
         destination_parent.empty() ? fs::path(".") : destination_parent,
         absolute_error).lexically_normal();
-    if (absolute_error || parent.empty()) {
+    if (absolute_error || requested_parent.empty()) {
+        return std::nullopt;
+    }
+    // private_directory's component walk correctly rejects reparse points
+    // and symlinks. Resolve a caller's existing destination directory once
+    // before that walk, so ordinary /tmp -> /private/tmp style aliases can
+    // still be used while staging itself remains on a direct physical path.
+    std::error_code canonical_error;
+    const fs::path parent = fs::canonical(requested_parent, canonical_error);
+    if (canonical_error || parent.empty()) {
         return std::nullopt;
     }
     static constexpr char hex[] = "0123456789abcdef";
@@ -97,7 +143,43 @@ std::optional<std::filesystem::path> create_private_import_staging_directory(
             const fs::path candidate = candidate_parent / leaf;
             const auto created = copperfin::platform::create_private_directory(candidate);
             if (created.ok) {
-                return candidate;
+                auto impl = std::make_unique<PrivateImportStagingDirectory::Impl>();
+                impl->path = candidate;
+#if defined(_WIN32)
+                // Protect every pathname component below the volume root,
+                // including the new private directory, until staging ends.
+                // A no-delete-share open denies directory rename/removal
+                // even when another account has DELETE_CHILD on its parent.
+                fs::path current = candidate.root_path();
+                if (current.empty()) {
+                    return std::nullopt;
+                }
+                for (const auto& component : candidate.relative_path()) {
+                    if (component.empty() || component == "." || component == "..") {
+                        return std::nullopt;
+                    }
+                    current /= component;
+                    copperfin::platform::ScopedHandle pinned(::CreateFileW(
+                        current.c_str(), FILE_READ_ATTRIBUTES,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+                        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+                        nullptr));
+                    if (!pinned.valid()) {
+                        return std::nullopt;
+                    }
+                    BY_HANDLE_FILE_INFORMATION info{};
+                    if (::GetFileInformationByHandle(pinned.get(), &info) == 0 ||
+                        (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0U ||
+                        (info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
+                        return std::nullopt;
+                    }
+                    impl->directory_chain.push_back(std::move(pinned));
+                }
+                if (!copperfin::platform::verify_private_directory(candidate).ok) {
+                    return std::nullopt;
+                }
+#endif
+                return PrivateImportStagingDirectory(std::move(impl));
             }
             if (created.failure == copperfin::platform::PrivateDirectoryFailure::already_exists) {
                 continue;
@@ -221,7 +303,8 @@ bool file_identity_from_handle(
 }  // namespace
 
 StagedImportFileHandle open_staged_import_file_for_publish(
-    const std::filesystem::path& staged_path) {
+    const std::filesystem::path& staged_path,
+    const std::string_view expected_sha256) {
     auto handle = open_exclusive_regular_file(staged_path, GENERIC_READ | DELETE);
     if (!handle.valid()) {
         return {};
@@ -229,6 +312,14 @@ StagedImportFileHandle open_staged_import_file_for_publish(
     auto impl = std::make_unique<StagedImportFileHandle::Impl>();
     if (!file_identity_from_handle(handle.get(), impl->volume_serial, impl->file_index)) {
         return {};
+    }
+    if (!expected_sha256.empty()) {
+        const auto digest = copperfin::security::sha256_hex_for_native_file(
+            reinterpret_cast<std::intptr_t>(handle.get()),
+            (std::numeric_limits<std::uint64_t>::max)());
+        if (!digest.ok || digest.hex_digest != expected_sha256) {
+            return {};
+        }
     }
     impl->handle = std::move(handle);
     return StagedImportFileHandle(std::move(impl));
@@ -289,7 +380,8 @@ bool remove_published_import_file_if_identity_matches(
 #else  // POSIX
 
 StagedImportFileHandle open_staged_import_file_for_publish(
-    const std::filesystem::path& staged_path) {
+    const std::filesystem::path& staged_path,
+    const std::string_view expected_sha256) {
     const int raw_fd = ::open(
         staged_path.c_str(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (raw_fd < 0) {
@@ -299,6 +391,14 @@ StagedImportFileHandle open_staged_import_file_for_publish(
     struct stat status{};
     if (::fstat(fd.get(), &status) != 0 || !S_ISREG(status.st_mode)) {
         return {};
+    }
+    if (!expected_sha256.empty()) {
+        const auto digest = copperfin::security::sha256_hex_for_native_file(
+            static_cast<std::intptr_t>(fd.get()),
+            (std::numeric_limits<std::uint64_t>::max)());
+        if (!digest.ok || digest.hex_digest != expected_sha256) {
+            return {};
+        }
     }
     auto impl = std::make_unique<StagedImportFileHandle::Impl>();
     impl->device = status.st_dev;
@@ -322,15 +422,28 @@ bool publish_staged_import_file(
     if (!handle.valid()) {
         return false;
     }
-#if defined(__linux__) && defined(AT_EMPTY_PATH)
+#if defined(__linux__)
     // Linux links directly from the descriptor retained since verification.
     // Rebinding staged_path cannot redirect this operation to substituted
-    // bytes. If the original inode lost its last name, linkat fails closed.
-    // Filesystems that do not support descriptor-based hard links likewise
-    // fail closed; falling back to a pathname would restore the source race.
+    // bytes. Some kernels require CAP_DAC_READ_SEARCH for AT_EMPTY_PATH;
+    // /proc/self/fd with AT_SYMLINK_FOLLOW is the documented unprivileged
+    // descriptor-bound alternative. Neither path can resurrect a fully
+    // unlinked ordinary file. Lack of procfs or unsupported backing storage
+    // fails closed, without falling back to the mutable staged pathname.
     (void)staged_path;
-    return ::linkat(handle.impl_->fd.get(), "", AT_FDCWD,
-                    destination.c_str(), AT_EMPTY_PATH) == 0;
+#if defined(AT_EMPTY_PATH)
+    if (::linkat(handle.impl_->fd.get(), "", AT_FDCWD,
+                 destination.c_str(), AT_EMPTY_PATH) == 0) {
+        return true;
+    }
+    if (errno != EPERM && errno != ENOENT) {
+        return false;
+    }
+#endif
+    const std::string descriptor_path =
+        "/proc/self/fd/" + std::to_string(handle.impl_->fd.get());
+    return ::linkat(AT_FDCWD, descriptor_path.c_str(), AT_FDCWD,
+                    destination.c_str(), AT_SYMLINK_FOLLOW) == 0;
 #else
     // Other POSIX systems have no equivalent descriptor-based hard-link
     // primitive. The owner-private staging directory excludes other users;

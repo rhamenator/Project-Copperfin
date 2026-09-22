@@ -6,6 +6,7 @@
 #include "copperfin/vfp/dbf_text_encoding.h"
 
 #include "dbf_table_raw_mutation.h"
+#include "../security/sha256_native.h"
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/environment.h"
@@ -2407,7 +2408,8 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
     const std::vector<DbfFieldDescriptor>& fields,
     const std::vector<std::vector<std::string>>& records,
     const DbfCreateOverrides* overrides,
-    std::uint8_t code_page_mark = 0U) {
+    std::uint8_t code_page_mark = 0U,
+    DbfGeneratedDigests* generated_digests = nullptr) {
     if (fields.empty()) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CreateFieldRequired")};
     }
@@ -2627,7 +2629,25 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
     const std::vector<std::uint8_t> original_memo_bytes = has_memo_fields ? read_binary_file(memo_path) : std::vector<std::uint8_t>{};
     const bool had_memo_file = has_memo_fields && !original_memo_bytes.empty();
 
-    if (!stamp_dbf_last_update_date(bytes) || !write_binary_file(path, bytes)) {
+    if (!stamp_dbf_last_update_date(bytes)) {
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = records.size()};
+    }
+    DbfGeneratedDigests proof;
+    if (generated_digests != nullptr) {
+        const auto table_digest = security::sha256_hex_for_native_bytes(bytes);
+        if (!table_digest.ok) {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = records.size()};
+        }
+        proof.table_sha256 = table_digest.hex_digest;
+        if (has_memo_fields) {
+            const auto memo_digest = security::sha256_hex_for_native_bytes(memo_bytes);
+            if (!memo_digest.ok) {
+                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteMemoSidecarFailed"), .record_count = records.size()};
+            }
+            proof.memo_sha256 = memo_digest.hex_digest;
+        }
+    }
+    if (!write_binary_file(path, bytes)) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = records.size()};
     }
     if (has_memo_fields && !write_binary_file(memo_path, memo_bytes)) {
@@ -2650,6 +2670,9 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteMemoSidecarFailed"), .record_count = records.size()};
     }
 
+    if (generated_digests != nullptr) {
+        *generated_digests = std::move(proof);
+    }
     return {.ok = true, .error = {}, .record_count = records.size()};
 }
 
@@ -3225,8 +3248,10 @@ DbfRawRecordMutationResult stage_dbf_raw_record_reorder(
 DbfWriteResult create_dbf_table_file(
     const std::string& path,
     const std::vector<DbfFieldDescriptor>& fields,
-    const std::vector<std::vector<std::string>>& records) {
-    return create_dbf_table_file_with_memo_payloads(path, fields, records, nullptr);
+    const std::vector<std::vector<std::string>>& records,
+    DbfGeneratedDigests* generated_digests) {
+    return create_dbf_table_file_with_memo_payloads(
+        path, fields, records, nullptr, 0U, generated_digests);
 }
 
 // #5485: the first legacy binary-output target. Writes a dBASE III-
