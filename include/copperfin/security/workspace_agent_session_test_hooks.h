@@ -8,6 +8,12 @@
 
 namespace copperfin::security {
 
+// Injects one policy-evaluation exception in start() so its audited
+// fail-closed transition remains testable without relying on an unrelated
+// localization failure. Tests must clear the process-global hook after use.
+void set_workspace_agent_session_policy_test_only_throw_hook_for_testing(
+    void (*hook)());
+
 // Test-only fault-injection seam for WorkspaceAgentSessionController::stop()'s
 // exception-safety guarantee (issue #5401): stop() calls this exactly once,
 // after transition_ has been set to stopping but before the revocation-lease

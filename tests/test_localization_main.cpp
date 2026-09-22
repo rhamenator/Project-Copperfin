@@ -3,6 +3,12 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "test_localization_support.h"
+#include "copperfin/vfp/access_container.h"
+
+#if !defined(_WIN32)
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
 
 void test_catalog_loading_and_fallback();
 void test_catalog_file_accepts_one_leading_utf8_bom();
@@ -67,7 +73,81 @@ void test_inspect_license_status_preserves_machine_contracts(const std::string& 
 void test_runtime_package_warnings_pseudo_localize();
 void test_inspect_error_prefix_routes_through_localization(const std::string& inspect_path);
 
+#if !defined(_WIN32)
+void test_localization_survives_deleted_working_directory() {
+    namespace fs = std::filesystem;
+    ScopedTempDirectory temp("copperfin_localization_deleted_cwd");
+    const fs::path vanished = temp.path() / "vanished";
+    const fs::path program = temp.path() / "undo.prg";
+    fs::create_directory(vanished);
+    write_text(program, "UNDO\n");
+
+    const pid_t child = ::fork();
+    expect(child >= 0, "#6388: subprocess should start");
+    if (child == 0) {
+        ::alarm(20U);
+        try {
+            ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
+            ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+            if (::chdir(vanished.c_str()) != 0) {
+                ::_exit(2);
+            }
+            std::error_code permissions_error;
+            fs::permissions(vanished, fs::perms::none,
+                            fs::perm_options::replace, permissions_error);
+            if (permissions_error) {
+                ::_exit(8);
+            }
+            const fs::path inaccessible_root =
+                copperfin::localization::resolve_catalog_root();
+            fs::permissions(vanished, fs::perms::owner_all,
+                            fs::perm_options::replace, permissions_error);
+            if (permissions_error || inaccessible_root.empty() ||
+                !inaccessible_root.is_absolute()) {
+                ::_exit(9);
+            }
+            if (::rmdir(vanished.c_str()) != 0) {
+                ::_exit(2);
+            }
+            const fs::path root = copperfin::localization::resolve_catalog_root();
+            if (root.empty() || !root.is_absolute()) {
+                ::_exit(3);
+            }
+            ScopedEnvironmentValue search_path("PATH", ":");
+            const fs::path basename_root = copperfin::localization::resolve_catalog_root(
+                "copperfin_missing_invocation");
+            if (basename_root.empty() || !basename_root.is_absolute()) {
+                ::_exit(7);
+            }
+            const auto asset = copperfin::vfp::parse_access_container_header({0x00U});
+            if (asset.ok || asset.error.find("21 bytes") == std::string::npos) {
+                ::_exit(4);
+            }
+            auto session = copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(program, temp.path()));
+            const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            if (state.reason != copperfin::runtime::DebugPauseReason::error ||
+                state.message != "No command to UNDO") {
+                ::_exit(5);
+            }
+            ::_exit(0);
+        } catch (...) {
+            ::_exit(6);
+        }
+    }
+    if (child > 0) {
+        int status = 0;
+        expect(::waitpid(child, &status, 0) == child && WIFEXITED(status) &&
+                   WEXITSTATUS(status) == 0,
+               "#6388: deleted-cwd subprocess should retain root, asset, and runtime diagnostics");
+    }
+}
+#endif
+
 int main(int argc, char** argv) {
+#if !defined(_WIN32)
+    test_localization_survives_deleted_working_directory();
+#endif
     test_catalog_loading_and_fallback();
     test_catalog_file_accepts_one_leading_utf8_bom();
     test_bcp47_script_locale_normalization_and_catalog_fallback();

@@ -211,8 +211,13 @@ std::filesystem::path resolve_executable_invocation_path(
 #endif
     const std::vector<fs::path> suffixes = executable_search_suffixes(invocation_path);
     for (const auto& raw_root : search_roots) {
-        const fs::path search_root =
-            raw_root.empty() ? fs::current_path() : fs::path(raw_root);
+        std::error_code current_path_error;
+        const fs::path search_root = raw_root.empty()
+            ? fs::current_path(current_path_error)
+            : fs::path(raw_root);
+        if (current_path_error) {
+            continue;
+        }
         for (const fs::path& suffix : suffixes) {
             fs::path candidate = search_root / invocation_path;
             candidate += suffix.native();
