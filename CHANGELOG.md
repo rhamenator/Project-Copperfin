@@ -1,3 +1,12 @@
+- 2026-09-22: Hardened locale catalog discovery for #6388. A deleted or
+  inaccessible current directory now skips developer-tree probing and uses
+  an executable-root fallback without throwing while an asset or runtime
+  error is being reported. PATH search also skips an unavailable current
+  directory. A POSIX subprocess regression removes its own current directory
+  and checks direct discovery, an Access-header diagnostic, and a native
+  runtime UNDO diagnostic. Existing override and locale fallback behavior
+  remains covered by the localization suite.
+
 - 2026-09-22: Hardened the shared JSON/SQL database-import materializer for
   #5680. Each import now creates a fresh, owner-private staging directory
   with an operating-system-random name on the destination volume; an

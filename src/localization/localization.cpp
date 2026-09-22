@@ -548,15 +548,19 @@ LocalizedCatalog load_catalogs(const std::filesystem::path& locale_root, std::st
 }
 
 std::filesystem::path resolve_catalog_root(const std::filesystem::path& executable_path) {
+    namespace fs = std::filesystem;
     const auto configured = platform::read_environment_path("COPPERFIN_LOCALE_DIR");
     if (configured.has_value() && path_has_non_whitespace(*configured)) {
         // Explicit overrides are authoritative; catalog validation applies only to discovery.
         return *configured;
     }
 
-    if (!executable_path.empty()) {
-        const std::filesystem::path executable_root = resolve_executable_root(executable_path);
-        const std::vector<std::filesystem::path> candidates{
+    const auto find_executable_catalog = [](const fs::path& path) -> fs::path {
+        if (path.empty()) {
+            return {};
+        }
+        const fs::path executable_root = resolve_executable_root(path);
+        const std::vector<fs::path> candidates{
             executable_root / ".." / "share" / "copperfin" / "locales",
             executable_root / "share" / "copperfin" / "locales",
             executable_root / "resources" / "locales",
@@ -568,27 +572,44 @@ std::filesystem::path resolve_catalog_root(const std::filesystem::path& executab
                 return candidate;
             }
         }
+        return {};
+    };
+    if (const fs::path discovered = find_executable_catalog(executable_path);
+        !discovered.empty()) {
+        return discovered;
     }
 
-    const std::filesystem::path developer_tree = std::filesystem::current_path() / "resources" / "locales";
-    if (can_supply_default_catalog(developer_tree)) {
-        return developer_tree;
-    }
-
-    std::filesystem::path ancestor = std::filesystem::absolute(std::filesystem::current_path());
-    while (!ancestor.empty()) {
-        const std::filesystem::path ancestor_developer_tree = ancestor / "resources" / "locales";
-        if (can_supply_default_catalog(ancestor_developer_tree)) {
-            return ancestor_developer_tree;
+    std::error_code cwd_error;
+    const fs::path current_directory = fs::current_path(cwd_error);
+    if (!cwd_error && !current_directory.empty()) {
+        fs::path ancestor = current_directory;
+        while (!ancestor.empty()) {
+            const fs::path developer_tree = ancestor / "resources" / "locales";
+            if (can_supply_default_catalog(developer_tree)) {
+                return developer_tree;
+            }
+            const fs::path parent = ancestor.parent_path();
+            if (parent == ancestor) {
+                break;
+            }
+            ancestor = parent;
         }
-        const std::filesystem::path parent = ancestor.parent_path();
-        if (parent == ancestor) {
-            break;
-        }
-        ancestor = parent;
+        return "resources/locales";
     }
 
-    return "resources/locales";
+    // A process can outlive its launch directory. Use the running executable
+    // for a stable absolute fallback instead of asking for the lost cwd again.
+    const fs::path running_executable = platform::resolve_running_executable_path({});
+    if (const fs::path discovered = find_executable_catalog(running_executable);
+        !discovered.empty()) {
+        return discovered;
+    }
+    const fs::path fallback_root = !running_executable.empty()
+        ? running_executable.parent_path()
+        : resolve_executable_root(executable_path);
+    return fallback_root.empty()
+        ? fs::path("resources/locales")
+        : fallback_root / ".." / "share" / "copperfin" / "locales";
 }
 
 std::optional<std::string> LocalizedCatalog::find(std::string_view key) const {
