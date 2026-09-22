@@ -48,8 +48,20 @@ void test_xasset_report_label_bootstrap_quoted_paths() {
             const fs::path program = root / (std::string(prefix) +
                 (use_snapshot ? "_snapshot.prg" : "_logical.prg"));
             write_text(program, source);
+            auto options = make_runtime_session_options(program.string(), root.string());
+            if (use_snapshot) {
+                options.require_verified_file_byte_overrides = true;
+                options.verified_file_byte_overrides.emplace(
+                    expected.string(), read_text(expected));
+                fs::path memo = expected;
+                memo.replace_extension(std::string(extension) == ".frx" ? ".frt" : ".lbt");
+                if (fs::exists(memo)) {
+                    options.verified_file_byte_overrides.emplace(
+                        memo.string(), read_text(memo));
+                }
+            }
             auto session = copperfin::runtime::PrgRuntimeSession::create(
-                make_runtime_session_options(program.string(), root.string()));
+                options);
             const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
             expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop,
                    "#6458: generated report/label bootstrap must open the asset");
@@ -85,8 +97,10 @@ void test_xasset_report_label_bootstrap_quoted_paths() {
 
         document.path = (root / ("invalid\nname" + std::string(extension))).string();
         const auto invalid = copperfin::runtime::build_xasset_executable_model(document);
-        expect(!invalid.ok && !invalid.error.empty(),
-               "#6458: an unrepresentable control byte must fail model construction");
+        expect(!invalid.ok &&
+                   invalid.error == active_runtime_text(
+                       "Runtime.XAsset.Error.PathUnrepresentable"),
+               "#6458: an unrepresentable control byte must return its localized diagnostic");
         const auto invalid_snapshot = copperfin::runtime::build_xasset_bootstrap_source(
             model, true, "invalid\npath");
         expect(invalid_snapshot.find("THROW ") != std::string::npos &&
@@ -114,6 +128,40 @@ void test_xasset_report_label_bootstrap_quoted_paths() {
         expect(!no_delimiter.ok && !no_delimiter.error.empty(),
                "#6458: conflicting quote and bracket delimiters must fail safely");
 #endif
+    }
+    fs::remove_all(root, ignored);
+}
+
+void test_report_label_path_keywords_do_not_become_clauses() {
+    // RQ-CF-XASSET-PATH-001: command options begin after the path token.
+    namespace fs = std::filesystem;
+    const fs::path root = fs::temp_directory_path() / "copperfin_report_label_path_keywords";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    for (const auto& [command, extension] : {
+             std::tuple{"REPORT FORM", ".frx"},
+             std::tuple{"LABEL FORM", ".lbx"}}) {
+        std::string stem = "O'Brien PREVIEW FOR TO";
+#if !defined(_WIN32)
+        stem += " \"quoted\"";
+#endif
+        const fs::path asset = root / (stem + extension);
+        write_synthetic_report_surface(asset);
+        const fs::path output = root / (std::string(extension) + ".txt");
+        const fs::path program = root / (std::string(extension) + ".prg");
+#if defined(_WIN32)
+        const std::string literal = "\"" + asset.string() + "\"";
+#else
+        const std::string literal = "[" + asset.string() + "]";
+#endif
+        write_text(program, std::string(command) + " " + literal +
+            " TO FILE '" + output.string() + "'\nRETURN\n");
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(program.string(), root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed && fs::exists(output),
+               "#6458: PREVIEW/FOR/TO inside report or label path must not become command clauses");
     }
     fs::remove_all(root, ignored);
 }

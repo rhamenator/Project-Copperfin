@@ -14,15 +14,23 @@ network/removable-volume qualification.
 ## Active slice
 
 Issue #6458 is open, repository-owner-authored, and carries the exact
-`agent-approved` label. Branch `codex/fix-6458-xasset-path-literals` implements
+`agent-approved` label. PR #6490 on branch `codex/fix-6458-xasset-path-literals` implements
 VFP-compatible alternate literal delimiters for generated report/label paths,
 localized failure for unrepresentable paths, and exact-path logical/snapshot
 regressions. Focused Linux `test_prg_engine_work_areas` and
 `test_xasset_methods` pass. The owner asked about doubled apostrophes, so the
 generator now follows the VFP9 help's documented alternate quote/bracket forms
-and the parser changes are scoped to report/label asset paths.
-Next: finish boundary review, run hosted platform checks, resolve review,
-merge safely, and close #6458 only after acceptance evidence passes.
+and the parser changes are scoped to report/label asset paths. PR review found
+keyword-in-filename parsing and diagnostic-fallback gaps; both are fixed in the
+worktree, along with strict verified-byte snapshot and localized-error tests,
+and await a signed follow-up commit. PR sanitizer and 14 of 15 standard checks
+passed on the initial head; Windows generated-launcher failed in the unrelated
+Python-sidecar test. Full macOS native validation passed both changed suites
+but failed unrelated PowerShell-host and VAL-number tests; a base-branch run is
+underway to compare. Full Windows native validation is also underway.
+Next: push the review fixes, revalidate hosted checks and both platform runs,
+resolve review threads, merge safely, and close #6458 only after acceptance
+evidence passes.
 
 ## Workspace preservation
 

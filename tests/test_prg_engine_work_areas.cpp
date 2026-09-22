@@ -1988,6 +1988,7 @@ int main() {
     test_use_missing_target_uses_localized_error();
     test_report_form_to_file_renders_without_event_loop_pause();
     test_xasset_report_label_bootstrap_quoted_paths();
+    test_report_label_path_keywords_do_not_become_clauses();
     test_sys2040_report_status_tracks_preview_and_output();
     test_label_form_to_file_renders_without_event_loop_pause();
     test_report_and_label_to_file_emit_filtered_data_rows();

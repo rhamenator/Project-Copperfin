@@ -118,8 +118,10 @@ std::optional<std::string> quote_vfp_path_literal(const std::string& path) {
 }
 
 std::string unrepresentable_path_statement() {
-    return "THROW " + *quote_vfp_path_literal(
-        xasset_text("Runtime.XAsset.Error.PathUnrepresentable")) + "\n";
+    const auto translated = quote_vfp_path_literal(
+        xasset_text("Runtime.XAsset.Error.PathUnrepresentable"));
+    return "THROW " + translated.value_or(
+        "'Asset path cannot be represented in generated source.'") + "\n";
 }
 
 bool starts_with_insensitive(const std::string& value, const std::string& prefix) {

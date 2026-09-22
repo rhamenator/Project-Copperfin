@@ -3,7 +3,9 @@
   bracket literal form so apostrophes and both quote characters retain the
   exact path. Report and label path parsing accepts those forms; paths that
   cannot be represented as one safe source line fail with a localized error.
-  Added logical/snapshot and Unicode path regressions.
+  Command options are parsed after the path token, and localized failures have
+  a safe fallback for invalid custom translations. Added logical/snapshot,
+  strict verified-byte, keyword-in-filename, and Unicode path regressions.
 
 - 2026-09-22: Hardened `SET SKIP TO` registration for #6460. Child-designator
   callbacks now revalidate the selected parent and every previously resolved

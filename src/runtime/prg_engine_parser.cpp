@@ -2159,13 +2159,14 @@ Program parse_program_impl(
             statement.kind = StatementKind::report_form;
             const std::string body = trim_copy(line.substr(12U));
             statement.identifier = take_first_asset_path_token(body);
-            statement.secondary_expression = has_keyword(body, "PREVIEW") ? "preview" : std::string{};
+            const std::string clauses = trim_copy(body.substr(statement.identifier.size()));
+            statement.secondary_expression = has_keyword(clauses, "PREVIEW") ? "preview" : std::string{};
             statement.tertiary_expression =
-                extract_command_clause(body, "TO", {"PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT", "FOR", "WHILE"});
+                extract_command_clause(clauses, "TO", {"PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT", "FOR", "WHILE"});
             statement.quaternary_expression =
-                extract_command_clause(body, "FOR", {"WHILE", "TO", "PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT"});
+                extract_command_clause(clauses, "FOR", {"WHILE", "TO", "PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT"});
             const std::string while_clause =
-                extract_command_clause(body, "WHILE", {"FOR", "TO", "PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT"});
+                extract_command_clause(clauses, "WHILE", {"FOR", "TO", "PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT"});
             if (!while_clause.empty()) {
                 statement.names.push_back(while_clause);
             }
@@ -2173,13 +2174,14 @@ Program parse_program_impl(
             statement.kind = StatementKind::label_form;
             const std::string body = trim_copy(line.substr(11U));
             statement.identifier = take_first_asset_path_token(body);
-            statement.secondary_expression = has_keyword(body, "PREVIEW") ? "preview" : std::string{};
+            const std::string clauses = trim_copy(body.substr(statement.identifier.size()));
+            statement.secondary_expression = has_keyword(clauses, "PREVIEW") ? "preview" : std::string{};
             statement.tertiary_expression =
-                extract_command_clause(body, "TO", {"PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT", "FOR", "WHILE"});
+                extract_command_clause(clauses, "TO", {"PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT", "FOR", "WHILE"});
             statement.quaternary_expression =
-                extract_command_clause(body, "FOR", {"WHILE", "TO", "PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT"});
+                extract_command_clause(clauses, "FOR", {"WHILE", "TO", "PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT"});
             const std::string while_clause =
-                extract_command_clause(body, "WHILE", {"FOR", "TO", "PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT"});
+                extract_command_clause(clauses, "WHILE", {"FOR", "TO", "PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT"});
             if (!while_clause.empty()) {
                 statement.names.push_back(while_clause);
             }
