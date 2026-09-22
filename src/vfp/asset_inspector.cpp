@@ -6253,33 +6253,18 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
     // Stage every file in a newly created private directory on the
     // destination volume, verify each one, and only then publish links.
     // The previous create_directories(staging_dir) also created a missing
-    // destination parent. Preserve that behavior, while tracking each new
-    // parent so a failed import can remove it if it remains empty.
-    std::vector<fs::path> created_destination_parents;
-    for (fs::path missing = dbc_dir; !missing.empty(); missing = missing.parent_path()) {
-        std::error_code exists_error;
-        if (fs::exists(missing, exists_error) || exists_error) {
-            break;
-        }
-        created_destination_parents.push_back(missing);
-    }
-    const auto cleanup_new_destination_parents = [&] {
-        for (const fs::path& path : created_destination_parents) {
-            std::error_code ignored;
-            fs::remove(path, ignored);
-        }
-    };
+    // destination parent. Preserve that behavior. A failed import may leave
+    // empty parent directories, as before; removing paths merely observed as
+    // absent could delete an entry created concurrently by another process.
     std::error_code mkdir_error;
     if (!dbc_dir.empty()) {
         fs::create_directories(dbc_dir, mkdir_error);
     }
     if (mkdir_error) {
-        cleanup_new_destination_parents();
         return failure(asset_inspector_text("Vfp.AssetInspector.Error.DatabaseImportStagingFailed"));
     }
     auto private_staging_dir = create_private_import_staging_directory(dbc_dir);
     if (!private_staging_dir.has_value()) {
-        cleanup_new_destination_parents();
         return failure(asset_inspector_text("Vfp.AssetInspector.Error.DatabaseImportStagingFailed"));
     }
     const fs::path& staging_dir = private_staging_dir->path();
@@ -6291,7 +6276,6 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
     };
     const auto abort_staging = [&](std::string message) {
         cleanup_staging(staged);
-        cleanup_new_destination_parents();
         return failure(std::move(message));
     };
 
@@ -6437,7 +6421,6 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
             // rather than a now-redundant staged copy of it) is the more
             // severe of the two residual states.
             const bool staging_cleanup_ok = cleanup_staging(staged);
-            cleanup_new_destination_parents();
             std::string commit_failed_key = "Vfp.AssetInspector.Error.DatabaseImportCommitFailed";
             if (rollback_left_unreclaimed_entry) {
                 commit_failed_key = "Vfp.AssetInspector.Error.DatabaseImportCommitFailedUnreclaimedEntry";

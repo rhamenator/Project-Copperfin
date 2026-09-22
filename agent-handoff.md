@@ -11,16 +11,21 @@ and merged as `12debe05e3e9921a2f62b70944f2c95805917c4f`; #6251 is closed.
 Issue #5680 is open, repository-owner-authored, and carries the exact
 `agent-approved` label. Worktree:
 `/home/rich/.codex/worktrees/fix-5680-staged-import-authority/Project-Copperfin`.
-Branch: `codex/fix-5680-staging-authority`. Draft PR #6485 targets
+Branch: `codex/fix-5680-staging-authority`. PR #6485 targets
 `v1-development`. The branch adds private OS-random staging, a Windows
 no-delete-share directory-chain lease, Linux descriptor-bound publication,
 and SHA-256 verification of staged DBF/FPT/DBC handles against bytes generated
 in memory by the writer. It resolves existing destination-parent aliases and
 restores creation of missing destination directories. The first CI run found
-a regression for missing destination parents; the revision fixes it. Focused
-Linux CMake tests `test_staged_import_publish`, `test_vfp_assets`, and
-`test_prg_engine_data_io` pass on the revised branch. Hosted CI on the latest
-commit and five automated review threads still need inspection and response.
+a regression for missing destination parents; the revision fixes it. A later
+review found that cleanup could delete a pre-existing dangling symlink or
+concurrent entry, so failed imports again leave empty destination parents as
+they did before this PR. Windows pin failure now attempts identity-checked
+cleanup of its newly created private staging directory. Focused Linux CMake
+tests `test_staged_import_publish`, `test_vfp_assets`, and
+`test_prg_engine_data_io` passed before these last cleanup changes; the first
+two passed again afterward. The prior hosted CI run is green; the latest
+cleanup revision still needs hosted CI and review.
 
 Do not close #5680 after this PR: macOS still has a same-authority path
 recheck/link race, and network/removable-volume behavior is not qualified.
@@ -37,6 +42,9 @@ Preserve unrelated untracked user files in the main checkout:
 - `Z:\\home\\rich\\temp\\vfp9-probes\\empty-object-205\\vfp.out`
 
 The `copperfin-defect-takeover-until-17-edt` heartbeat resumes this task every
-30 minutes, stays quiet while CI/review is merely pending, and should pause
-around 17:00 America/Detroit on 2026-09-22 to await the owner's secondary
-sweep prompt. The older `continue-copperfin-issue-loop` heartbeat is paused.
+30 minutes and stays quiet while CI/review is merely pending. At 17:00
+America/Detroit on 2026-09-22, cease takeover and begin one focused cycle of
+the owner's second-pass discovery prompt at
+`/home/rich/.codex/attachments/8240047a-fb25-4c54-acfc-f00d26d2f937/Pasted text.txt`.
+Then change the heartbeat to a relaxed weekly discovery cadence. The older
+`continue-copperfin-issue-loop` heartbeat is paused.

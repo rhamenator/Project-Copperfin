@@ -146,16 +146,30 @@ std::optional<PrivateImportStagingDirectory> create_private_import_staging_direc
                 auto impl = std::make_unique<PrivateImportStagingDirectory::Impl>();
                 impl->path = candidate;
 #if defined(_WIN32)
+                const auto cleanup_failed_pin = [&] {
+                    // Drop the no-delete-share handles before removing the
+                    // new directory. Never remove a replacement at this path.
+                    impl->directory_chain.clear();
+                    const auto current =
+                        copperfin::platform::verify_private_directory(candidate);
+                    if (current.ok && current.storage_id == created.storage_id &&
+                        current.file_id == created.file_id) {
+                        std::error_code ignored;
+                        fs::remove(candidate, ignored);
+                    }
+                };
                 // Protect every pathname component below the volume root,
                 // including the new private directory, until staging ends.
                 // A no-delete-share open denies directory rename/removal
                 // even when another account has DELETE_CHILD on its parent.
                 fs::path current = candidate.root_path();
                 if (current.empty()) {
+                    cleanup_failed_pin();
                     return std::nullopt;
                 }
                 for (const auto& component : candidate.relative_path()) {
                     if (component.empty() || component == "." || component == "..") {
+                        cleanup_failed_pin();
                         return std::nullopt;
                     }
                     current /= component;
@@ -165,17 +179,21 @@ std::optional<PrivateImportStagingDirectory> create_private_import_staging_direc
                         FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
                         nullptr));
                     if (!pinned.valid()) {
+                        cleanup_failed_pin();
                         return std::nullopt;
                     }
                     BY_HANDLE_FILE_INFORMATION info{};
                     if (::GetFileInformationByHandle(pinned.get(), &info) == 0 ||
                         (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0U ||
                         (info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
+                        pinned.reset();
+                        cleanup_failed_pin();
                         return std::nullopt;
                     }
                     impl->directory_chain.push_back(std::move(pinned));
                 }
                 if (!copperfin::platform::verify_private_directory(candidate).ok) {
+                    cleanup_failed_pin();
                     return std::nullopt;
                 }
 #endif

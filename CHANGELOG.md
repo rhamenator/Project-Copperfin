@@ -9,6 +9,10 @@
   when `AT_EMPTY_PATH` requires a capability. Windows retains no-delete-share
   handles for the staging directory chain as well as share-denying file
   handles. Existing destination aliases are resolved to physical paths.
+  Failed imports retain any empty destination parents created along the way,
+  preserving prior behavior without removing entries another process may own;
+  Windows staging pin failures attempt to remove the newly created private
+  directory after checking its identity.
   Added focused privacy, same-volume, digest, directory-lease, and pathname-
   rebinding coverage. The macOS recheck/link race against same-authority
   mutation and network/removable-volume qualification remain open under #5680.
