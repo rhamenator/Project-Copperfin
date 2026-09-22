@@ -2,70 +2,49 @@
 
 ## Last shipped slice
 
-PR #6372 fixed issue #6319 and merged into `v1-development` as
-`bdbc046fe4b974555c71c44527edaed19f28a9db` on 2026-09-15. Expression-driven
-`GO`, `SKIP`, `SEEK`, and record-specific `UNLOCK` now retain and reacquire the
-origin cursor generation and data-session state across reentrant evaluation.
-All hosted checks passed after one unrelated Windows Python-sidecar rerun, every
-review conversation was resolved, issue #6319 was manually closed, and its
-scratch sanitizer build was removed.
+PR #6484 added cloud defect-hunt validation and merged into `v1-development` as
+`6b0824aa27caf5550edcaacb9e72c2feba6614da`. PR #6483 fixed issue #6251
+and merged as `12debe05e3e9921a2f62b70944f2c95805917c4f`; #6251 is closed.
 
 ## Active slice
 
-Issue #6288 is open, repository-owner-authored, and carries the exact
-`agent-approved` label. Branch: `codex/fix-6288-removeobject-lifecycle`.
+Issue #5680 is open, repository-owner-authored, and carries the exact
+`agent-approved` label. Worktree:
+`/home/rich/.codex/worktrees/fix-5680-staged-import-authority/Project-Copperfin`.
+Branch: `codex/fix-5680-staging-authority`. PR #6485 targets
+`v1-development`. The branch adds private OS-random staging, a Windows
+no-delete-share directory-chain lease, Linux descriptor-bound publication,
+and SHA-256 verification of staged DBF/FPT/DBC handles against bytes generated
+in memory by the writer. It resolves existing destination-parent aliases and
+restores creation of missing destination directories. The first CI run found
+a regression for missing destination parents; the revision fixes it. A later
+review found that cleanup could delete a pre-existing dangling symlink or
+concurrent entry, so failed imports again leave empty destination parents as
+they did before this PR. Windows pin failure now attempts identity-checked
+cleanup of its newly created private staging directory. Focused Linux CMake
+tests `test_staged_import_publish`, `test_vfp_assets`, and
+`test_prg_engine_data_io` passed before these last cleanup changes; the first
+two passed again afterward. The prior hosted CI run is green; the latest
+cleanup revision still needs hosted CI and review.
 
-Native `RemoveObject()` now routes a validated child through the existing
-subtree release lifecycle. Child-first `Destroy` callbacks run exactly once;
-runtime handles, event/COM/window bindings, active-form metadata, and references
-held by variables, arrays, collections, and object properties are retired.
-Missing, empty, and hidden targets preserve the graph and raise localized error
-1925. Declared visibility is enforced before mutation. A release-in-progress
-ownership guard supports reentrant owner release without invalidating the active
-child’s `THIS` frame or clearing its outer reservation. Direct invocation
-arguments and suspended expression/command continuations also discard retired
-identities before resuming while runtime object-reference provenance keeps
-identically encoded application text unchanged in globals, direct arguments,
-and keyed collections. Direct method dispatch retains the stable source handle
-when the method removes itself before after-source delegates run. Queued sibling releases run synchronously, and `AddObject()` rejects
-new children on an owner already reserved for retirement. Completed sibling
-callbacks remain retired until outer cleanup so aliases cannot dispatch them twice. The obsolete detached-child test matrix was
-replaced with focused differential lifecycle coverage; adjacent child collection
-and standalone `Release()` tests remain active. `RQ-CF-PRG-036`, language
-coverage, locale catalogs, and the changelog are updated.
-
-Validation passes for the runtime-surface, parser-classes, control-flow, locale,
-and safety-traceability tests. A fresh Clang ASan/UBSan build passes the complete
-runtime-surface executable after correcting an unrelated malformed `SYS(2021)`
-DBF test initializer exposed by ASan. After the final review-hardening pass,
-Valgrind reports zero errors and no leaks across 18,407,099 allocations. PR #6403 is open.
-
-Owner paused the Codex bug hunt on 2026-09-15 and handed PR #6403 to Claude to
-finish. Of the 15 review threads, 14 were already resolved; the last
-(`chatgpt-codex-connector` P1, `prg_engine_native_object_focus_dispatch.inl:707`,
-databaseId 4018806350) reported that `SetFocus()`'s `GotFocus()`/`Valid()`
-callbacks can call `RemoveObject()` on the very control whose focus
-transition is in progress, and `set_native_focus()` kept dereferencing the
-erased `RuntimeOleObjectState&` afterward. Reproduced as a real SIGSEGV and a
-Valgrind invalid-read at the exact flagged line, fixed by re-resolving both
-the focused-control handle (after `GotFocus`) and the previously-focused
-handle (before `LostFocus`, since `Valid()` can also self-remove) through
-`ole_objects` instead of reusing the possibly-retired reference. New
-regression: `tests/test_prg_engine_native_focus_move_events.cpp`
-(`test_native_focus_self_removal_during_callbacks_does_not_use_after_free`),
-fail-then-pass verified (segfault/valgrind-dirty before, clean after).
-`RQ-CF-PRG-036` and the changelog are updated to cover this fix. Next: push
-the signed/DCO commit, resolve the remaining review thread, run the full
-ctest suite, wait for CI green, merge, close #6288, sync `v1-development`.
+Do not close #5680 after this PR: macOS still has a same-authority path
+recheck/link race, and network/removable-volume behavior is not qualified.
+Next: investigate current CI results, fix any real failures, respond to and
+resolve review threads only when addressed, then merge a safe partial PR.
+Continue #5680 or record an evidence-based deferral before selecting unrelated
+work.
 
 ## Workspace preservation
 
-Preserve these unrelated untracked user files:
+Preserve unrelated untracked user files in the main checkout:
 
 - `AGENTS.md`
 - `Z:\\home\\rich\\temp\\vfp9-probes\\empty-object-205\\vfp.out`
 
-The `continue-copperfin-issue-loop` heartbeat is active every 30 minutes. It
-waits only while CI/CD or external review is pending; after a green, resolved PR
-it merges, closes the issue manually when needed, syncs `v1-development`, and
-selects the next approved issue.
+The `copperfin-defect-takeover-until-17-edt` heartbeat resumes this task every
+30 minutes and stays quiet while CI/review is merely pending. At 17:00
+America/Detroit on 2026-09-22, cease takeover and begin one focused cycle of
+the owner's second-pass discovery prompt at
+`/home/rich/.codex/attachments/8240047a-fb25-4c54-acfc-f00d26d2f937/Pasted text.txt`.
+Then change the heartbeat to a relaxed weekly discovery cadence. The older
+`continue-copperfin-issue-loop` heartbeat is paused.

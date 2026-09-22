@@ -462,7 +462,7 @@ target_link_libraries(cf_vfp_assets PUBLIC cf_localization)
 # (cf_security) admit and revalidate the PowerShell host; admit_polyglot_supporting_artifact()/
 # revalidate_polyglot_supporting_artifact_admission() (cf_platform_profile)
 # do the same for the pinned-digest export script.
-target_link_libraries(cf_vfp_assets PRIVATE cf_security cf_platform_profile)
+target_link_libraries(cf_vfp_assets PRIVATE cf_security cf_platform_profile cf_platform_support)
 
 if(NOT WIN32)
     target_link_libraries(cf_vfp_assets PRIVATE Iconv::Iconv)

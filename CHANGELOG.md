@@ -1,3 +1,23 @@
+- 2026-09-22: Hardened the shared JSON/SQL database-import materializer for
+  #5680. Each import now creates a fresh, owner-private staging directory
+  with an operating-system-random name on the destination volume; an
+  untrusted destination parent is skipped in favor of a trusted ancestor.
+  The DBF writer now provides SHA-256 digests of its generated in-memory
+  table and memo bytes; each retained staging handle must match before
+  commit, including across the writer-close/handle-open gap. Linux publishes
+  from the retained descriptor, with the documented `/proc/self/fd` route
+  when `AT_EMPTY_PATH` requires a capability. Windows retains no-delete-share
+  handles for the staging directory chain as well as share-denying file
+  handles. Existing destination aliases are resolved to physical paths.
+  Failed imports retain any empty destination parents created along the way,
+  preserving prior behavior without removing entries another process may own;
+  Windows staging pin failures attempt to remove the newly created private
+  directory after checking its identity.
+  Added focused privacy, same-volume, digest, directory-lease, and pathname-
+  rebinding coverage. The macOS recheck/link race against same-authority
+  mutation and network/removable-volume qualification remain open under #5680.
+  Updated `RQ-CF-MODERNIZATION-004` and `-005`.
+
 - 2026-09-21: Added a hosted Linux defect-hunt workflow for Clang
   ASan/UBSan, the existing DBF header libFuzzer target, repeated runtime
   sequences, and seeded synthetic dBASE III migration round trips. PR,

@@ -2,14 +2,26 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
+#if defined(__linux__) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE 1
+#endif
+
 #include "copperfin/vfp/staged_import_publish.h"
+#include "copperfin/platform/private_directory.h"
 
 #include "../platform/scoped_resource.h"
+#include "../security/sha256_native.h"
 
 #include <algorithm>
+#include <array>
+#include <cerrno>
 #include <cstdint>
+#include <filesystem>
+#include <limits>
 #include <memory>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <utility>
 
@@ -18,8 +30,191 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #endif
+#if defined(_WIN32)
+#include <bcrypt.h>
+#elif defined(__linux__)
+#include <sys/random.h>
+#elif defined(__APPLE__)
+#include <stdlib.h>
+#endif
 
 namespace copperfin::vfp {
+
+class PrivateImportStagingDirectory::Impl {
+public:
+    std::filesystem::path path;
+#if defined(_WIN32)
+    std::vector<copperfin::platform::ScopedHandle> directory_chain;
+#endif
+};
+
+PrivateImportStagingDirectory::PrivateImportStagingDirectory() noexcept = default;
+PrivateImportStagingDirectory::PrivateImportStagingDirectory(std::unique_ptr<Impl> impl) noexcept
+    : impl_(std::move(impl)) {}
+PrivateImportStagingDirectory::~PrivateImportStagingDirectory() = default;
+PrivateImportStagingDirectory::PrivateImportStagingDirectory(
+    PrivateImportStagingDirectory&&) noexcept = default;
+PrivateImportStagingDirectory& PrivateImportStagingDirectory::operator=(
+    PrivateImportStagingDirectory&&) noexcept = default;
+
+const std::filesystem::path& PrivateImportStagingDirectory::path() const noexcept {
+    static const std::filesystem::path empty;
+    return impl_ ? impl_->path : empty;
+}
+
+void PrivateImportStagingDirectory::release() noexcept {
+#if defined(_WIN32)
+    if (impl_) {
+        impl_->directory_chain.clear();
+    }
+#endif
+}
+
+std::optional<PrivateImportStagingDirectory> create_private_import_staging_directory(
+    const std::filesystem::path& destination_parent) {
+    namespace fs = std::filesystem;
+    std::error_code absolute_error;
+    const fs::path requested_parent = fs::absolute(
+        destination_parent.empty() ? fs::path(".") : destination_parent,
+        absolute_error).lexically_normal();
+    if (absolute_error || requested_parent.empty()) {
+        return std::nullopt;
+    }
+    // private_directory's component walk correctly rejects reparse points
+    // and symlinks. Resolve a caller's existing destination directory once
+    // before that walk, so ordinary /tmp -> /private/tmp style aliases can
+    // still be used while staging itself remains on a direct physical path.
+    std::error_code canonical_error;
+    const fs::path parent = fs::canonical(requested_parent, canonical_error);
+    if (canonical_error || parent.empty()) {
+        return std::nullopt;
+    }
+    static constexpr char hex[] = "0123456789abcdef";
+#if !defined(_WIN32)
+    struct stat destination_status{};
+    if (::stat(parent.c_str(), &destination_status) != 0 ||
+        !S_ISDIR(destination_status.st_mode)) {
+        return std::nullopt;
+    }
+#endif
+    for (fs::path candidate_parent = parent;; candidate_parent = candidate_parent.parent_path()) {
+#if !defined(_WIN32)
+        // A group-writable destination may still live below a trusted
+        // same-volume ancestor (for example, /tmp). Put the private staging
+        // directory there rather than weakening its parent trust contract.
+        struct stat candidate_status{};
+        if (::stat(candidate_parent.c_str(), &candidate_status) != 0 ||
+            !S_ISDIR(candidate_status.st_mode) ||
+            candidate_status.st_dev != destination_status.st_dev) {
+            return std::nullopt;
+        }
+#endif
+        bool try_parent = false;
+        for (int attempt = 0; attempt < 8; ++attempt) {
+            std::array<unsigned char, 16U> bytes{};
+#if defined(_WIN32)
+            if (::BCryptGenRandom(nullptr, bytes.data(), static_cast<ULONG>(bytes.size()),
+                                  BCRYPT_USE_SYSTEM_PREFERRED_RNG) < 0) {
+                return std::nullopt;
+            }
+#elif defined(__linux__)
+            std::size_t offset = 0U;
+            while (offset < bytes.size()) {
+                const ssize_t count = ::getrandom(bytes.data() + offset, bytes.size() - offset, 0);
+                if (count < 0 && errno == EINTR) {
+                    continue;
+                }
+                if (count <= 0) {
+                    return std::nullopt;
+                }
+                offset += static_cast<std::size_t>(count);
+            }
+#elif defined(__APPLE__)
+            ::arc4random_buf(bytes.data(), bytes.size());
+#else
+            return std::nullopt;
+#endif
+            std::string leaf = ".copperfin-import-";
+            leaf.reserve(leaf.size() + bytes.size() * 2U);
+            for (const unsigned char byte : bytes) {
+                leaf.push_back(hex[(byte >> 4U) & 0x0fU]);
+                leaf.push_back(hex[byte & 0x0fU]);
+            }
+            const fs::path candidate = candidate_parent / leaf;
+            const auto created = copperfin::platform::create_private_directory(candidate);
+            if (created.ok) {
+                auto impl = std::make_unique<PrivateImportStagingDirectory::Impl>();
+                impl->path = candidate;
+#if defined(_WIN32)
+                const auto cleanup_failed_pin = [&] {
+                    // Drop the no-delete-share handles before removing the
+                    // new directory. Never remove a replacement at this path.
+                    impl->directory_chain.clear();
+                    const auto current =
+                        copperfin::platform::verify_private_directory(candidate);
+                    if (current.ok && current.storage_id == created.storage_id &&
+                        current.file_id == created.file_id) {
+                        std::error_code ignored;
+                        fs::remove(candidate, ignored);
+                    }
+                };
+                // Protect every pathname component below the volume root,
+                // including the new private directory, until staging ends.
+                // A no-delete-share open denies directory rename/removal
+                // even when another account has DELETE_CHILD on its parent.
+                fs::path current = candidate.root_path();
+                if (current.empty()) {
+                    cleanup_failed_pin();
+                    return std::nullopt;
+                }
+                for (const auto& component : candidate.relative_path()) {
+                    if (component.empty() || component == "." || component == "..") {
+                        cleanup_failed_pin();
+                        return std::nullopt;
+                    }
+                    current /= component;
+                    copperfin::platform::ScopedHandle pinned(::CreateFileW(
+                        current.c_str(), FILE_READ_ATTRIBUTES,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+                        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+                        nullptr));
+                    if (!pinned.valid()) {
+                        cleanup_failed_pin();
+                        return std::nullopt;
+                    }
+                    BY_HANDLE_FILE_INFORMATION info{};
+                    if (::GetFileInformationByHandle(pinned.get(), &info) == 0 ||
+                        (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0U ||
+                        (info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
+                        pinned.reset();
+                        cleanup_failed_pin();
+                        return std::nullopt;
+                    }
+                    impl->directory_chain.push_back(std::move(pinned));
+                }
+                if (!copperfin::platform::verify_private_directory(candidate).ok) {
+                    cleanup_failed_pin();
+                    return std::nullopt;
+                }
+#endif
+                return PrivateImportStagingDirectory(std::move(impl));
+            }
+            if (created.failure == copperfin::platform::PrivateDirectoryFailure::already_exists) {
+                continue;
+            }
+#if !defined(_WIN32)
+            if (created.failure == copperfin::platform::PrivateDirectoryFailure::access_denied) {
+                try_parent = true;
+                break;
+            }
+#endif
+            return std::nullopt;
+        }
+        if (!try_parent || candidate_parent == candidate_parent.root_path()) {
+            return std::nullopt;
+        }
+    }
+}
 
 class StagedImportFileHandle::Impl {
 public:
@@ -126,7 +321,8 @@ bool file_identity_from_handle(
 }  // namespace
 
 StagedImportFileHandle open_staged_import_file_for_publish(
-    const std::filesystem::path& staged_path) {
+    const std::filesystem::path& staged_path,
+    const std::string_view expected_sha256) {
     auto handle = open_exclusive_regular_file(staged_path, GENERIC_READ | DELETE);
     if (!handle.valid()) {
         return {};
@@ -134,6 +330,14 @@ StagedImportFileHandle open_staged_import_file_for_publish(
     auto impl = std::make_unique<StagedImportFileHandle::Impl>();
     if (!file_identity_from_handle(handle.get(), impl->volume_serial, impl->file_index)) {
         return {};
+    }
+    if (!expected_sha256.empty()) {
+        const auto digest = copperfin::security::sha256_hex_for_native_file(
+            reinterpret_cast<std::intptr_t>(handle.get()),
+            (std::numeric_limits<std::uint64_t>::max)());
+        if (!digest.ok || digest.hex_digest != expected_sha256) {
+            return {};
+        }
     }
     impl->handle = std::move(handle);
     return StagedImportFileHandle(std::move(impl));
@@ -194,7 +398,8 @@ bool remove_published_import_file_if_identity_matches(
 #else  // POSIX
 
 StagedImportFileHandle open_staged_import_file_for_publish(
-    const std::filesystem::path& staged_path) {
+    const std::filesystem::path& staged_path,
+    const std::string_view expected_sha256) {
     const int raw_fd = ::open(
         staged_path.c_str(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (raw_fd < 0) {
@@ -204,6 +409,14 @@ StagedImportFileHandle open_staged_import_file_for_publish(
     struct stat status{};
     if (::fstat(fd.get(), &status) != 0 || !S_ISREG(status.st_mode)) {
         return {};
+    }
+    if (!expected_sha256.empty()) {
+        const auto digest = copperfin::security::sha256_hex_for_native_file(
+            static_cast<std::intptr_t>(fd.get()),
+            (std::numeric_limits<std::uint64_t>::max)());
+        if (!digest.ok || digest.hex_digest != expected_sha256) {
+            return {};
+        }
     }
     auto impl = std::make_unique<StagedImportFileHandle::Impl>();
     impl->device = status.st_dev;
@@ -227,26 +440,34 @@ bool publish_staged_import_file(
     if (!handle.valid()) {
         return false;
     }
-    // Unlike a read, publication cannot be bound purely to the already-open
-    // descriptor: POSIX has no primitive that hard-links "the object this
-    // descriptor refers to" once its last directory entry has been
-    // removed. (The tempting /proc/self/fd or /dev/fd + linkat(..,
-    // AT_SYMLINK_FOLLOW) trick was tried and confirmed, empirically, not to
-    // work for this case -- the kernel deliberately refuses to resurrect a
-    // fully unlinked inode this way once its link count reaches zero,
-    // unlike the AT_EMPTY_PATH form reserved for CAP_DAC_READ_SEARCH/
-    // O_TMPFILE use.) Instead, re-open staged_path fresh (a second,
-    // independent descriptor from the one held since staging) and compare
-    // its identity to what was captured then; a mismatch means a
-    // concurrent actor replaced staged_path (by unlink+recreate, rename-
-    // over, or otherwise) since it was opened, in which case this fails
-    // the publish closed rather than linking either the original (no
-    // longer nameable under this path) or the substituted content. A
-    // residual race remains between this check and the link() call below,
-    // narrowed to two syscalls -- the same class of limitation documented
-    // on remove_published_import_file_if_identity_matches() below, and
-    // the best available mitigation in standard POSIX without additional
-    // privilege.
+#if defined(__linux__)
+    // Linux links directly from the descriptor retained since verification.
+    // Rebinding staged_path cannot redirect this operation to substituted
+    // bytes. Some kernels require CAP_DAC_READ_SEARCH for AT_EMPTY_PATH;
+    // /proc/self/fd with AT_SYMLINK_FOLLOW is the documented unprivileged
+    // descriptor-bound alternative. Neither path can resurrect a fully
+    // unlinked ordinary file. Lack of procfs or unsupported backing storage
+    // fails closed, without falling back to the mutable staged pathname.
+    (void)staged_path;
+#if defined(AT_EMPTY_PATH)
+    if (::linkat(handle.impl_->fd.get(), "", AT_FDCWD,
+                 destination.c_str(), AT_EMPTY_PATH) == 0) {
+        return true;
+    }
+    if (errno != EPERM && errno != ENOENT) {
+        return false;
+    }
+#endif
+    const std::string descriptor_path =
+        "/proc/self/fd/" + std::to_string(handle.impl_->fd.get());
+    return ::linkat(AT_FDCWD, descriptor_path.c_str(), AT_FDCWD,
+                    destination.c_str(), AT_SYMLINK_FOLLOW) == 0;
+#else
+    // Other POSIX systems have no equivalent descriptor-based hard-link
+    // primitive. The owner-private staging directory excludes other users;
+    // re-open and compare identity immediately before the pathname link.
+    // Same-authority mutation between these calls remains a documented
+    // platform limitation and cannot be claimed as race-free.
     const int raw_fd = ::open(staged_path.c_str(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (raw_fd < 0) {
         return false;
@@ -261,6 +482,7 @@ bool publish_staged_import_file(
     }
     recheck_fd.reset();
     return ::link(staged_path.c_str(), destination.c_str()) == 0;
+#endif
 }
 
 bool remove_published_import_file_if_identity_matches(

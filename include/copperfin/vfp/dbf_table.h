@@ -72,6 +72,14 @@ struct DbfWriteResult {
     std::size_t record_count = 0;
 };
 
+// Optional import-time proof of the bytes assembled by the DBF writer before
+// they enter the staging filesystem. The importer compares these digests
+// against its retained read handles, closing the write-close/reopen gap.
+struct DbfGeneratedDigests {
+    std::string table_sha256;
+    std::string memo_sha256;
+};
+
 // Returns whether a type and width can be admitted by the ordinary DBF writer.
 // This excludes the writer's internal raw-byte preservation override.
 [[nodiscard]] bool is_dbf_table_field_storage_layout_writable(char type, std::uint8_t length);
@@ -83,7 +91,8 @@ DbfTableParseResult parse_dbf_table_from_file(
 DbfWriteResult create_dbf_table_file(
     const std::string& path,
     const std::vector<DbfFieldDescriptor>& fields,
-    const std::vector<std::vector<std::string>>& records);
+    const std::vector<std::vector<std::string>>& records,
+    DbfGeneratedDigests* generated_digests = nullptr);
 // #5485: writes a dBASE III-compatible table (C/N/L/D fields, no memo/index
 // sidecar). Fails closed if `path` already exists rather than overwriting.
 DbfWriteResult create_dbase_iii_table_file(
