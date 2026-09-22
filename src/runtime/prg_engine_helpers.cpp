@@ -214,6 +214,26 @@ std::string take_first_token(std::string value) {
     return separator == std::string::npos ? value : value.substr(0U, separator);
 }
 
+std::string take_first_asset_path_token(std::string value) {
+    value = trim_copy(std::move(value));
+    if (!value.empty() && (value.front() == '"' || value.front() == '[')) {
+        const char closing = value.front() == '[' ? ']' : '"';
+        const auto end = value.find(closing, 1U);
+        return end == std::string::npos ? value : value.substr(0U, end + 1U);
+    }
+    return take_first_token(std::move(value));
+}
+
+std::string unquote_asset_path_token(std::string value) {
+    value = trim_copy(std::move(value));
+    if (value.size() >= 2U &&
+        ((value.front() == '"' && value.back() == '"') ||
+         (value.front() == '[' && value.back() == ']'))) {
+        return value.substr(1U, value.size() - 2U);
+    }
+    return unquote_string(std::move(value));
+}
+
 std::pair<std::string, std::string> split_first_word(std::string value) {
     value = trim_copy(std::move(value));
     if (value.empty()) {

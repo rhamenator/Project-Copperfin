@@ -3,7 +3,9 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/localization/localization.h"
+#include "copperfin/platform/path.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "prg_engine_test_support.h"
 #include <algorithm>
@@ -24,6 +26,7 @@
 #include <sstream>
 #include <string_view>
 #include <system_error>
+#include <tuple>
 #include <vector>
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -66,7 +69,8 @@ void write_synthetic_report_surface(const std::filesystem::path& asset_path) {
         {"8", "", "NAME", "100", "20", "700", "100", "name-field-guid"}
     };
 
-    const auto create_result = copperfin::vfp::create_dbf_table_file(asset_path.string(), fields, records);
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(asset_path), fields, records);
     expect(create_result.ok, "synthetic report surface fixture should be created");
 }
 
@@ -1983,6 +1987,8 @@ int main() {
     test_use_and_data_session_isolation();
     test_use_missing_target_uses_localized_error();
     test_report_form_to_file_renders_without_event_loop_pause();
+    test_xasset_report_label_bootstrap_quoted_paths();
+    test_report_label_path_keywords_do_not_become_clauses();
     test_sys2040_report_status_tracks_preview_and_output();
     test_label_form_to_file_renders_without_event_loop_pause();
     test_report_and_label_to_file_emit_filtered_data_rows();

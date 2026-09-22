@@ -38,6 +38,8 @@ bool paths_equal_for_platform(const std::string& left, const std::string& right)
 bool is_index_file_path(const std::string& value);
 std::string unquote_string(std::string value);
 std::string take_first_token(std::string value);
+std::string unquote_asset_path_token(std::string value);
+std::string take_first_asset_path_token(std::string value);
 std::pair<std::string, std::string> split_first_word(std::string value);
 std::string take_keyword_value(const std::string& text, const std::string& keyword);
 std::string runtime_error_parameter(const std::string& message);

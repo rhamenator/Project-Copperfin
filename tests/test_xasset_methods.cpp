@@ -76,9 +76,14 @@ void test_xasset_executable_model_errors_resolve_through_localization_catalog() 
     const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     const std::vector<std::string_view> keys{
+        "Runtime.XAsset.Error.PathUnrepresentable",
         "Runtime.XAsset.Error.TablePreviewMissing",
         "Runtime.XAsset.Error.UnsupportedExecutableFamily"};
 
+    expect(
+        english_catalog.translate("Runtime.XAsset.Error.PathUnrepresentable") ==
+            "Asset path cannot be represented in generated source.",
+        "#6458: unrepresentable xAsset path must have a localized diagnostic");
     expect(
         english_catalog.translate("Runtime.XAsset.Error.TablePreviewMissing") ==
             "Asset does not have a table preview.",
