@@ -56,6 +56,7 @@ struct XAssetExecutableModel {
     bool root_is_form = false;
     std::string activation_kind;
     std::string activation_target;
+    std::string activation_source_stem;
     std::string error;
     std::vector<XAssetMethod> methods;
     std::vector<XAssetActionBinding> actions;
