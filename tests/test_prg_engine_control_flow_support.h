@@ -134,6 +134,9 @@ void test_sum_value_expression_closing_target_cursor_fails_catchably();
 void test_sum_multiple_targets_preserves_earlier_targets_when_later_expression_closes_cursor();
 void test_total_for_expression_closing_target_cursor_fails_catchably();
 void test_select_query_into_array_commands();
+void test_select_where_expression_closing_source_cursor_fails_catchably();
+void test_select_filter_closing_source_cursor_fails_catchably();
+void test_select_projection_expression_closing_source_cursor_fails_catchably();
 void test_create_table_free_dynamic_target();
 
 // ==== Concurrency tests (SPAWN/AWAIT/YIELD/critical sections/DOEVENTS) ====

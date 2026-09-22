@@ -83,6 +83,208 @@ void test_select_query_into_array_commands() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #6251: a WHERE-clause callback can close the SELECT's own source cursor
+// during row materialization. Verifies the command fails catchably instead
+// of continuing through freed CursorState -- USED() confirms genuine
+// closure and _TALLY is not published as if the query had succeeded.
+void test_select_where_expression_closing_source_cursor_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_select_where_closes_source";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "select_where_closes_source.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SELECT CNT(*) FROM People INTO ARRAY prior\n"
+        "beforeTally = _TALLY\n"
+        "DIMENSION result[1]\n"
+        "result[1] = 'SENTINEL'\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    SELECT NAME FROM People WHERE dropcursor() INTO ARRAY result\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "afterTally = _TALLY\n"
+        "resultPreserved = result[1] == 'SENTINEL' AND ALEN(result, 1) == 1\n"
+        "lStillOpen = USED('People')\n"
+        "after = 1\n"
+        "RETURN\n"
+        "FUNCTION dropcursor\n"
+        "USE IN People\n"
+        "RETURN .T.\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+    expect(state.completed,
+           "#6251: SELECT whose WHERE clause closes its own source cursor should complete without "
+           "crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6251: SELECT must raise a catchable error instead of continuing through the closed source");
+
+    const auto still_open_it = state.globals.find("lstillopen");
+    expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+           "#6251: dropcursor()'s USE IN People should genuinely have closed People");
+
+    const auto before_tally_it = state.globals.find("beforetally");
+    const auto after_tally_it = state.globals.find("aftertally");
+    expect(before_tally_it != state.globals.end() &&
+               copperfin::runtime::format_value(before_tally_it->second) == "1" &&
+               after_tally_it != state.globals.end() &&
+               copperfin::runtime::format_value(after_tally_it->second) == "1",
+           "#6251: failed SELECT must preserve the preceding query's system _TALLY");
+    const auto result_it = state.globals.find("resultpreserved");
+    expect(result_it != state.globals.end() && result_it->second.boolean_value,
+           "#6251: failed SELECT must preserve the target array sentinel");
+
+    const auto after_it = state.globals.find("after");
+    expect(after_it != state.globals.end(), "#6251: script execution should continue after the caught error");
+    fs::remove_all(temp_root, ignored);
+}
+
+// A stored SET FILTER callback runs inside the visibility check, before
+// WHERE. Its false result must not hide a cursor closure from SELECT.
+void test_select_filter_closing_source_cursor_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_select_filter_closes_source";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+    const fs::path main_path = temp_root / "select_filter_closes_source.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SELECT CNT(*) FROM People INTO ARRAY prior\n"
+        "beforeTally = _TALLY\n"
+        "DIMENSION result[1]\n"
+        "result[1] = 'SENTINEL'\n"
+        "SET FILTER TO dropcursor() IN People\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    SELECT NAME FROM People INTO ARRAY result\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "afterTally = _TALLY\n"
+        "resultPreserved = result[1] == 'SENTINEL' AND ALEN(result, 1) == 1\n"
+        "lStillOpen = USED('People')\n"
+        "after = 1\n"
+        "RETURN\n"
+        "FUNCTION dropcursor\n"
+        "USE IN People\n"
+        "RETURN .F.\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6251: SELECT filter callback closure should fail catchably: " + state.message);
+    const auto error_it = state.globals.find("lerrorcaught");
+    expect(error_it != state.globals.end() && error_it->second.boolean_value,
+           "#6251: SELECT must detect a cursor closed by its stored visibility filter");
+    const auto open_it = state.globals.find("lstillopen");
+    expect(open_it != state.globals.end() && !open_it->second.boolean_value,
+           "#6251: visibility filter must genuinely close the source cursor");
+    const auto before_it = state.globals.find("beforetally");
+    const auto after_it = state.globals.find("aftertally");
+    expect(before_it != state.globals.end() &&
+               copperfin::runtime::format_value(before_it->second) == "1" &&
+               after_it != state.globals.end() &&
+               copperfin::runtime::format_value(after_it->second) == "1",
+           "#6251: visibility-filter closure must preserve system _TALLY");
+    const auto result_it = state.globals.find("resultpreserved");
+    expect(result_it != state.globals.end() && result_it->second.boolean_value,
+           "#6251: visibility-filter closure must preserve the target array");
+    expect(state.globals.find("after") != state.globals.end(),
+           "#6251: script execution must continue after the caught filter error");
+    fs::remove_all(temp_root, ignored);
+}
+
+// #6251: a projection expression can independently close the source cursor,
+// distinct from the WHERE-clause trigger above.
+void test_select_projection_expression_closing_source_cursor_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_select_projection_closes_source";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "select_projection_closes_source.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SELECT CNT(*) FROM People INTO ARRAY prior\n"
+        "beforeTally = _TALLY\n"
+        "DIMENSION result[1]\n"
+        "result[1] = 'SENTINEL'\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    SELECT droptext() AS changed FROM People INTO ARRAY result\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "afterTally = _TALLY\n"
+        "resultPreserved = result[1] == 'SENTINEL' AND ALEN(result, 1) == 1\n"
+        "lStillOpen = USED('People')\n"
+        "after = 1\n"
+        "RETURN\n"
+        "FUNCTION droptext\n"
+        "IF RECNO('People') == 1\n"
+        "    RETURN 'FIRST'\n"
+        "ENDIF\n"
+        "USE IN People\n"
+        "RETURN 'CHANGED'\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+    expect(state.completed,
+           "#6251: SELECT whose projection expression closes its own source cursor should complete "
+           "without crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6251: SELECT must raise a catchable error instead of continuing through the closed source");
+
+    const auto still_open_it = state.globals.find("lstillopen");
+    expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+           "#6251: droptext()'s USE IN People should genuinely have closed People");
+
+    const auto before_tally_it = state.globals.find("beforetally");
+    const auto after_tally_it = state.globals.find("aftertally");
+    expect(before_tally_it != state.globals.end() &&
+               copperfin::runtime::format_value(before_tally_it->second) == "1" &&
+               after_tally_it != state.globals.end() &&
+               copperfin::runtime::format_value(after_tally_it->second) == "1",
+           "#6251: projection failure after one row must preserve system _TALLY");
+    const auto result_it = state.globals.find("resultpreserved");
+    expect(result_it != state.globals.end() && result_it->second.boolean_value,
+           "#6251: projection failure after one row must preserve the target array sentinel");
+
+    const auto after_it = state.globals.find("after");
+    expect(after_it != state.globals.end(), "#6251: script execution should continue after the caught error");
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace cf_test_prg_engine_control_flow
 
 namespace cf_test_prg_engine_control_flow {
