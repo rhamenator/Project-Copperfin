@@ -6,9 +6,17 @@
 
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace copperfin::vfp {
+
+// Creates an exclusively named, owner-private staging directory on the
+// destination volume. If the destination parent permits other users to
+// replace children, an eligible trusted ancestor is used instead. The name
+// comes from operating-system randomness; existing entries are never adopted.
+[[nodiscard]] std::optional<std::filesystem::path> create_private_import_staging_directory(
+    const std::filesystem::path& destination_parent);
 
 // Move-only handle produced by open_staged_import_file_for_publish(), used
 // by materialize_database_json_import_plan() (#5679/#5680) to bind a
@@ -59,16 +67,13 @@ private:
 // opened denying other processes write/delete/rename access to
 // `staged_path` (FILE_SHARE_READ only), so `staged_path` is guaranteed to
 // still name the original verified file at the moment of this call and
-// publication is fully race-free. On POSIX, no such share-deny exists, and
-// no primitive lets this function hard-link "the object `handle` refers
-// to" once its last directory entry has been removed -- instead this
-// re-verifies `staged_path`'s identity against what `handle` captured at
-// staging time immediately before linking, and fails closed (rather than
-// publishing either stale or substituted content) if it no longer matches,
-// narrowing the race to the two syscalls immediately around that check
-// instead of the whole staging-to-commit window. Returns false, leaving
-// `destination` untouched, on any failure, including if `destination`
-// already exists or `staged_path`'s identity no longer matches.
+// publication is fully race-free. Linux links directly from the retained
+// descriptor with linkat(AT_EMPTY_PATH), so a swapped staged pathname cannot
+// redirect the published bytes; an unlinked original or unsupported backing
+// filesystem fails closed. Other POSIX systems use the owner-private staging
+// namespace plus an immediate pathname identity recheck; same-authority
+// mutation between recheck and link remains a platform limitation. Returns
+// false, leaving `destination` untouched, on failure or collision.
 [[nodiscard]] bool publish_staged_import_file(
     const StagedImportFileHandle& handle,
     const std::filesystem::path& staged_path,

@@ -1,3 +1,15 @@
+- 2026-09-22: Hardened the shared JSON/SQL database-import materializer for
+  #5680. Each import now creates a fresh, owner-private staging directory
+  with an operating-system-random name on the destination volume; an
+  untrusted destination parent is skipped in favor of a trusted ancestor.
+  Linux publishes hard links from the descriptor retained after staging,
+  preventing a rebound staging pathname from substituting different bytes.
+  Added focused privacy, same-volume, and pathname-rebinding coverage.
+  Windows continues to protect the staged identity with a share-denying
+  handle. The macOS recheck/link race against same-authority mutation and
+  network/removable-volume qualification remain open under #5680.
+  Updated `RQ-CF-MODERNIZATION-004` and `-005`.
+
 - 2026-09-21: Added a hosted Linux defect-hunt workflow for Clang
   ASan/UBSan, the existing DBF header libFuzzer target, repeated runtime
   sequences, and seeded synthetic dBASE III migration round trips. PR,

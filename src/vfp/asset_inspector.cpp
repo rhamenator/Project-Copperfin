@@ -28,7 +28,6 @@
 #include <map>
 #include <mutex>
 #include <optional>
-#include <random>
 #include <set>
 #include <sstream>
 #include <string_view>
@@ -5936,14 +5935,6 @@ bool table_name_is_safe_filesystem_component(const std::string& name) {
     return name.find_first_of("/\\:") == std::string::npos;
 }
 
-std::string generate_import_staging_suffix() {
-    static thread_local std::mt19937_64 engine{std::random_device{}()};
-    std::uniform_int_distribution<std::uint64_t> distribution;
-    std::ostringstream stream;
-    stream << std::hex << std::setfill('0') << std::setw(16) << distribution(engine);
-    return stream.str();
-}
-
 struct StagedImportFile {
     std::filesystem::path staged_path;
     std::filesystem::path final_path;
@@ -6259,16 +6250,13 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
         table_destinations.push_back({&table_plan, table_path});
     }
 
-    // Stage every file in a temporary directory beside the destination DBC
-    // (same volume, so the final commit renames are atomic on POSIX and
-    // Windows), verify each one, and only then commit them into place.
-    const fs::path staging_dir = dbc_dir /
-        (".copperfin-import-" + generate_import_staging_suffix());
-    std::error_code mkdir_error;
-    fs::create_directories(staging_dir, mkdir_error);
-    if (mkdir_error) {
+    // Stage every file in a newly created private directory on the
+    // destination volume, verify each one, and only then publish links.
+    const auto private_staging_dir = create_private_import_staging_directory(dbc_dir);
+    if (!private_staging_dir.has_value()) {
         return failure(asset_inspector_text("Vfp.AssetInspector.Error.DatabaseImportStagingFailed"));
     }
+    const fs::path& staging_dir = *private_staging_dir;
 
     std::vector<StagedImportFile> staged;
     const auto abort_staging = [&](std::string message) {
@@ -6292,9 +6280,9 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
         // #5680: open and identity-pin the staged file the instant after
         // create_dbf_table_file() closes it, rather than trusting
         // staged_path to still name the same bytes by the time the commit
-        // loop below reaches it -- publish_staged_import_file() then
-        // publishes through this handle instead of re-resolving staged_path
-        // by name.
+        // loop below reaches it. Linux publishes from this retained
+        // descriptor; Windows denies writes and name replacement while it
+        // is open. Other POSIX platforms recheck identity before linking.
         StagedImportFileHandle staged_handle = open_staged_import_file_for_publish(staged_path);
         if (!staged_handle.valid()) {
             return abort_staging(asset_inspector_text(
@@ -6365,13 +6353,10 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
     // fail-closed preflight checks above against anything created during
     // the staging window; publish_staged_import_file() fails instead of
     // replacing when the destination already exists (like create_hard_link()
-    // did), and additionally re-verifies each entry's identity-pinned
-    // handle (opened above, immediately after that entry's own staged file
-    // was written) against staged_path's current contents right before
-    // linking, so a staged file replaced during the staging or commit
-    // window fails that entry's publish closed rather than letting the
-    // substituted content reach the final destination under the original,
-    // verified name (#5680). If any commit fails partway, every already-committed file is
+    // did). On Linux, publication uses the file's retained descriptor;
+    // Windows prevents replacement while the handle is open. Other POSIX
+    // systems recheck identity immediately before linking (#5680). If any
+    // commit fails partway, every already-committed file is
     // removed -- via remove_published_import_file_if_identity_matches(),
     // which refuses to remove an entry whose final_path no longer refers to
     // the exact object this transaction published there, so a final_path

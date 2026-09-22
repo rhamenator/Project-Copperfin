@@ -3,6 +3,7 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "copperfin/vfp/staged_import_publish.h"
+#include "copperfin/platform/private_directory.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -12,6 +13,9 @@
 #include <string_view>
 #include <system_error>
 #include <vector>
+#if !defined(_WIN32)
+#include <sys/stat.h>
+#endif
 
 namespace {
 
@@ -43,6 +47,48 @@ fs::path make_scratch_dir(std::string_view name) {
     fs::remove_all(dir, ignored);
     fs::create_directories(dir);
     return dir;
+}
+
+void test_private_staging_directory_is_new_and_restricted() {
+    const fs::path dir = make_scratch_dir("copperfin_staged_import_private_directory");
+#if !defined(_WIN32)
+    // Force an untrusted destination parent regardless of runner umask.
+    fs::permissions(dir, fs::perms::group_write, fs::perm_options::add);
+#endif
+    const auto first = copperfin::vfp::create_private_import_staging_directory(dir);
+    const auto second = copperfin::vfp::create_private_import_staging_directory(dir);
+    expect(first.has_value() && second.has_value() && first != second,
+           "each import must receive a newly created staging directory");
+    if (first.has_value()) {
+        expect(copperfin::platform::verify_private_directory(*first).ok,
+               "first staging directory must satisfy the platform privacy contract");
+#if !defined(_WIN32)
+        struct stat destination_status{};
+        struct stat staging_status{};
+        expect(::stat(dir.c_str(), &destination_status) == 0 &&
+                   ::stat(first->c_str(), &staging_status) == 0 &&
+                   destination_status.st_dev == staging_status.st_dev,
+               "staging and destination must remain on the same volume");
+        expect(first->parent_path() != dir,
+               "an untrusted destination parent must be skipped");
+#endif
+    }
+    if (second.has_value()) {
+        expect(copperfin::platform::verify_private_directory(*second).ok,
+               "second staging directory must satisfy the platform privacy contract");
+    }
+    const fs::path missing_parent = dir / "missing";
+    expect(!copperfin::vfp::create_private_import_staging_directory(missing_parent).has_value(),
+           "staging must not create or adopt an unverified parent directory");
+    expect(!fs::exists(missing_parent), "failed staging must leave a missing parent absent");
+    std::error_code ignored;
+    if (first.has_value()) {
+        fs::remove_all(*first, ignored);
+    }
+    if (second.has_value()) {
+        fs::remove_all(*second, ignored);
+    }
+    fs::remove_all(dir, ignored);
 }
 
 void test_open_succeeds_on_regular_file() {
@@ -96,24 +142,15 @@ void test_open_rejects_symlink() {
 }
 #endif
 
-// #5680: the core security property. publish_staged_import_file() must
-// never let bytes a concurrent actor swapped into staged_path's name after
-// opening reach `destination` under the original, verified name -- POSIX
-// has no primitive to hard-link "the object the handle refers to" once its
-// last directory entry is gone (confirmed empirically: the tempting
-// /proc/self/fd + linkat(AT_SYMLINK_FOLLOW) trick does not survive an
-// intervening unlink), so the achievable, still-sound property is fail-
-// closed detection instead: a staged_path identity mismatch at publish
-// time must refuse to publish anything for that entry, never the
-// substituted content and never stale content under a name that no longer
-// verifiably matches.
+// #5680: removal of the staged file's last name must fail closed rather
+// than publishing a newly created file at that name.
 void test_publish_fails_closed_when_staged_path_is_swapped_before_publish() {
     const fs::path dir = make_scratch_dir("copperfin_staged_import_publish_swap_before_publish");
     const fs::path staged = dir / "staged.dbf";
     const fs::path destination = dir / "final.dbf";
     write_file(staged, "verified original bytes");
 
-    const auto handle = copperfin::vfp::open_staged_import_file_for_publish(staged);
+    auto handle = copperfin::vfp::open_staged_import_file_for_publish(staged);
     expect(handle.valid(), "opening the staged file before the swap should succeed");
 
     // Simulate a concurrent replacement of staged_path between staging and
@@ -125,16 +162,50 @@ void test_publish_fails_closed_when_staged_path_is_swapped_before_publish() {
 
     const bool published =
         copperfin::vfp::publish_staged_import_file(handle, staged, destination);
+#if defined(_WIN32)
+    // Windows' FILE_SHARE_READ-only handle prevents the removal and the
+    // attempted truncating write. The original must remain publishable.
+    expect(static_cast<bool>(remove_error),
+           "Windows must deny removal while the staged identity handle is open");
+    expect(read_file(staged) == "verified original bytes",
+           "Windows must deny the attempted replacement write");
+    expect(published, "Windows should publish the protected original file");
+    expect(read_file(destination) == "verified original bytes",
+           "Windows must never publish attempted replacement bytes");
+#else
     expect(!published, "publish must fail closed once staged_path's identity no longer matches "
                         "what was verified at staging time");
 
     std::error_code exists_error;
     expect(!fs::exists(destination, exists_error),
            "a fail-closed publish must not create any file at the destination");
+#endif
 
+    handle = copperfin::vfp::StagedImportFileHandle{};
     std::error_code ignored;
     fs::remove_all(dir, ignored);
 }
+
+#if defined(__linux__)
+void test_publish_uses_retained_descriptor_after_staged_name_is_rebound() {
+    const fs::path dir = make_scratch_dir("copperfin_staged_import_retained_descriptor");
+    const fs::path staged = dir / "staged.dbf";
+    const fs::path retained_name = dir / "retained-original.dbf";
+    const fs::path destination = dir / "final.dbf";
+    write_file(staged, "verified original bytes");
+    auto handle = copperfin::vfp::open_staged_import_file_for_publish(staged);
+    expect(handle.valid(), "opening the staged file should pin its original identity");
+    fs::rename(staged, retained_name);
+    write_file(staged, "swapped-in malicious bytes");
+    expect(copperfin::vfp::publish_staged_import_file(handle, staged, destination),
+           "Linux should publish from the retained descriptor when the original is still linked");
+    expect(read_file(destination) == "verified original bytes",
+           "a rebound staged name must never substitute its bytes into the final path");
+    handle = copperfin::vfp::StagedImportFileHandle{};
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+}
+#endif
 
 void test_publish_fails_if_destination_already_exists() {
     const fs::path dir = make_scratch_dir("copperfin_staged_import_publish_destination_exists");
@@ -325,6 +396,7 @@ void test_release_and_remove_staged_files_reports_incomplete_cleanup() {
 }  // namespace
 
 int main() {
+    test_private_staging_directory_is_new_and_restricted();
     test_open_succeeds_on_regular_file();
     test_open_rejects_missing_file();
     test_open_rejects_directory();
@@ -332,6 +404,9 @@ int main() {
     test_open_rejects_symlink();
 #endif
     test_publish_fails_closed_when_staged_path_is_swapped_before_publish();
+#if defined(__linux__)
+    test_publish_uses_retained_descriptor_after_staged_name_is_rebound();
+#endif
     test_publish_fails_if_destination_already_exists();
     test_publish_fails_on_invalid_handle();
     test_remove_published_file_when_identity_matches();

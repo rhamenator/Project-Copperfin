@@ -3,12 +3,17 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "copperfin/vfp/staged_import_publish.h"
+#include "copperfin/platform/private_directory.h"
 
 #include "../platform/scoped_resource.h"
 
 #include <algorithm>
+#include <array>
+#include <cerrno>
 #include <cstdint>
+#include <filesystem>
 #include <memory>
+#include <optional>
 #include <string>
 #include <system_error>
 #include <utility>
@@ -18,8 +23,98 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #endif
+#if defined(_WIN32)
+#include <bcrypt.h>
+#elif defined(__linux__)
+#include <sys/random.h>
+#elif defined(__APPLE__)
+#include <stdlib.h>
+#endif
 
 namespace copperfin::vfp {
+
+std::optional<std::filesystem::path> create_private_import_staging_directory(
+    const std::filesystem::path& destination_parent) {
+    namespace fs = std::filesystem;
+    std::error_code absolute_error;
+    const fs::path parent = fs::absolute(
+        destination_parent.empty() ? fs::path(".") : destination_parent,
+        absolute_error).lexically_normal();
+    if (absolute_error || parent.empty()) {
+        return std::nullopt;
+    }
+    static constexpr char hex[] = "0123456789abcdef";
+#if !defined(_WIN32)
+    struct stat destination_status{};
+    if (::stat(parent.c_str(), &destination_status) != 0 ||
+        !S_ISDIR(destination_status.st_mode)) {
+        return std::nullopt;
+    }
+#endif
+    for (fs::path candidate_parent = parent;; candidate_parent = candidate_parent.parent_path()) {
+#if !defined(_WIN32)
+        // A group-writable destination may still live below a trusted
+        // same-volume ancestor (for example, /tmp). Put the private staging
+        // directory there rather than weakening its parent trust contract.
+        struct stat candidate_status{};
+        if (::stat(candidate_parent.c_str(), &candidate_status) != 0 ||
+            !S_ISDIR(candidate_status.st_mode) ||
+            candidate_status.st_dev != destination_status.st_dev) {
+            return std::nullopt;
+        }
+#endif
+        bool try_parent = false;
+        for (int attempt = 0; attempt < 8; ++attempt) {
+            std::array<unsigned char, 16U> bytes{};
+#if defined(_WIN32)
+            if (::BCryptGenRandom(nullptr, bytes.data(), static_cast<ULONG>(bytes.size()),
+                                  BCRYPT_USE_SYSTEM_PREFERRED_RNG) < 0) {
+                return std::nullopt;
+            }
+#elif defined(__linux__)
+            std::size_t offset = 0U;
+            while (offset < bytes.size()) {
+                const ssize_t count = ::getrandom(bytes.data() + offset, bytes.size() - offset, 0);
+                if (count < 0 && errno == EINTR) {
+                    continue;
+                }
+                if (count <= 0) {
+                    return std::nullopt;
+                }
+                offset += static_cast<std::size_t>(count);
+            }
+#elif defined(__APPLE__)
+            ::arc4random_buf(bytes.data(), bytes.size());
+#else
+            return std::nullopt;
+#endif
+            std::string leaf = ".copperfin-import-";
+            leaf.reserve(leaf.size() + bytes.size() * 2U);
+            for (const unsigned char byte : bytes) {
+                leaf.push_back(hex[(byte >> 4U) & 0x0fU]);
+                leaf.push_back(hex[byte & 0x0fU]);
+            }
+            const fs::path candidate = candidate_parent / leaf;
+            const auto created = copperfin::platform::create_private_directory(candidate);
+            if (created.ok) {
+                return candidate;
+            }
+            if (created.failure == copperfin::platform::PrivateDirectoryFailure::already_exists) {
+                continue;
+            }
+#if !defined(_WIN32)
+            if (created.failure == copperfin::platform::PrivateDirectoryFailure::access_denied) {
+                try_parent = true;
+                break;
+            }
+#endif
+            return std::nullopt;
+        }
+        if (!try_parent || candidate_parent == candidate_parent.root_path()) {
+            return std::nullopt;
+        }
+    }
+}
 
 class StagedImportFileHandle::Impl {
 public:
@@ -227,26 +322,21 @@ bool publish_staged_import_file(
     if (!handle.valid()) {
         return false;
     }
-    // Unlike a read, publication cannot be bound purely to the already-open
-    // descriptor: POSIX has no primitive that hard-links "the object this
-    // descriptor refers to" once its last directory entry has been
-    // removed. (The tempting /proc/self/fd or /dev/fd + linkat(..,
-    // AT_SYMLINK_FOLLOW) trick was tried and confirmed, empirically, not to
-    // work for this case -- the kernel deliberately refuses to resurrect a
-    // fully unlinked inode this way once its link count reaches zero,
-    // unlike the AT_EMPTY_PATH form reserved for CAP_DAC_READ_SEARCH/
-    // O_TMPFILE use.) Instead, re-open staged_path fresh (a second,
-    // independent descriptor from the one held since staging) and compare
-    // its identity to what was captured then; a mismatch means a
-    // concurrent actor replaced staged_path (by unlink+recreate, rename-
-    // over, or otherwise) since it was opened, in which case this fails
-    // the publish closed rather than linking either the original (no
-    // longer nameable under this path) or the substituted content. A
-    // residual race remains between this check and the link() call below,
-    // narrowed to two syscalls -- the same class of limitation documented
-    // on remove_published_import_file_if_identity_matches() below, and
-    // the best available mitigation in standard POSIX without additional
-    // privilege.
+#if defined(__linux__) && defined(AT_EMPTY_PATH)
+    // Linux links directly from the descriptor retained since verification.
+    // Rebinding staged_path cannot redirect this operation to substituted
+    // bytes. If the original inode lost its last name, linkat fails closed.
+    // Filesystems that do not support descriptor-based hard links likewise
+    // fail closed; falling back to a pathname would restore the source race.
+    (void)staged_path;
+    return ::linkat(handle.impl_->fd.get(), "", AT_FDCWD,
+                    destination.c_str(), AT_EMPTY_PATH) == 0;
+#else
+    // Other POSIX systems have no equivalent descriptor-based hard-link
+    // primitive. The owner-private staging directory excludes other users;
+    // re-open and compare identity immediately before the pathname link.
+    // Same-authority mutation between these calls remains a documented
+    // platform limitation and cannot be claimed as race-free.
     const int raw_fd = ::open(staged_path.c_str(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (raw_fd < 0) {
         return false;
@@ -261,6 +351,7 @@ bool publish_staged_import_file(
     }
     recheck_fd.reset();
     return ::link(staged_path.c_str(), destination.c_str()) == 0;
+#endif
 }
 
 bool remove_published_import_file_if_identity_matches(
