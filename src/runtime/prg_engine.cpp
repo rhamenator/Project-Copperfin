@@ -5029,7 +5029,13 @@ namespace copperfin::runtime
                         break;
                     }
                     move_cursor_to(cursor, static_cast<long long>(recno));
-                    if (!current_record_matches_visibility(cursor, frame, {}))
+                    const bool visible = current_record_matches_visibility(cursor, frame, {});
+                    if (!cursor_alive() || !joined_cursor_alive())
+                    {
+                        cursor_lost = true;
+                        break;
+                    }
+                    if (!visible)
                     {
                         continue;
                     }
@@ -5177,7 +5183,13 @@ namespace copperfin::runtime
             for (std::size_t recno = 1U; recno <= cursor.record_count; ++recno)
             {
                 move_cursor_to(cursor, static_cast<long long>(recno));
-                if (!current_record_matches_visibility(cursor, frame, {}))
+                const bool visible = current_record_matches_visibility(cursor, frame, {});
+                if (!cursor_alive() || !joined_cursor_alive())
+                {
+                    cursor_lost = true;
+                    break;
+                }
+                if (!visible)
                 {
                     continue;
                 }
@@ -5319,7 +5331,13 @@ namespace copperfin::runtime
                      ++joined_recno)
                 {
                     move_cursor_to(*joined_cursor, static_cast<long long>(joined_recno));
-                    if (!current_record_matches_visibility(*joined_cursor, frame, {}))
+                    const bool joined_visible = current_record_matches_visibility(*joined_cursor, frame, {});
+                    if (!cursor_alive() || !joined_cursor_alive())
+                    {
+                        cursor_lost = true;
+                        break;
+                    }
+                    if (!joined_visible)
                     {
                         continue;
                     }

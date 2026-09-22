@@ -20,8 +20,8 @@
   Added a `bool &cursor_lost` out-parameter to `build_rows_from_
   query_plan()`. Captured `CursorGenerationReference`s for both the
   source and joined cursor once, up front, and added liveness checks
-  after every `WHERE`/projection/`GROUP BY`/`HAVING`/`ORDER BY`/
-  join-on expression evaluation across the grouped-query
+  after visibility-filter, `WHERE`, projection, `GROUP BY`, `HAVING`,
+  `ORDER BY`, and join-on expression evaluation across the grouped-query
   record-collection loop, the grouped-query output-construction loop,
   the main per-row loop, and the join sub-loop. The `LEFT JOIN`
   unmatched-row synthesis block's structural restoration of the
@@ -45,6 +45,9 @@
   cursor_fails_catchably`. Verified fail-then-pass with genuine
   Valgrind-confirmed memory corruption: 535 errors/49 contexts with
   the guards reverted, cleared to 0 with them restored.
+  Review hardening added a stored-filter closure regression and checked
+  that failed queries preserve the actual system `_TALLY` and an
+  existing target array, including a projection failure after one row.
 
   Deliberately not fixed, and explicitly disclosed: `aggregate_
   function_value()`'s pre-existing bare aggregate-call scanning gap

@@ -48,6 +48,7 @@ int main() {
     test_total_for_expression_closing_target_cursor_fails_catchably();
     test_select_query_into_array_commands();
     test_select_where_expression_closing_source_cursor_fails_catchably();
+    test_select_filter_closing_source_cursor_fails_catchably();
     test_select_projection_expression_closing_source_cursor_fails_catchably();
     test_create_table_free_dynamic_target();
     test_private_declaration_masks_caller_variable();
