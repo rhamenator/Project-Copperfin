@@ -2,36 +2,39 @@
 
 ## Last shipped slice
 
-PR #6485 partially fixed #5680 and merged into `v1-development` as
-`6d6c42697f44287b4d130418babfe5e50c0fee3d`; #5680 remains open. The
-prior cloud-validation PR #6484 and #6251 fix PR #6483 also merged.
+PR #6487 fixed #6388 and merged into `v1-development` as
+`aff8752dd00c3580d42d35c70e63659e6fb2d902`; #6388 is closed. PR #6485
+partially fixed #5680 and merged; #5680 remains open. The prior cloud-
+validation PR #6484 and #6251 fix PR #6483 also merged.
 
 ## Active slice
 
-Issue #6388 is open, repository-owner-authored, and carries the exact
-`agent-approved` label. Worktree:
+Issue #6389 is repository-owner-authored and carries the exact
+`agent-approved` label. PR #6488 contains its fix and completed hosted
+validation on code head `2a652e58`; consult live PR/issue state for merge
+and closure. Worktree:
 `/home/rich/.codex/worktrees/fix-5680-staged-import-authority/Project-Copperfin`.
-Branch: `codex/fix-6388-localization-cwd`, based on the merge of #6485. The
-change makes locale discovery skip developer-tree probing when the current
-directory is unavailable, then use an executable-root fallback. PATH lookup
-also skips an unavailable current-directory entry. A POSIX subprocess removes
-its current directory and proves direct catalog resolution, an Access asset
-error, and a native runtime UNDO error remain structured and catchable.
-The review revision also fixes the locale environment in the subprocess,
-tries executable resources after unsuccessful developer-tree discovery, and
-replaces a workspace-agent test's old dependency on the cwd exception with
-a test-only policy fault. Focused Linux `test_localization` and
-`test_workspace_agent_session` pass. The first hosted run had an expected
-workspace-agent test failure from that obsolete fixture and an unrelated
-macOS .NET benchmark failure; the revision needs hosted CI and review.
+Branch: `codex/fix-6389-wrapper-temp`, based on the merge of #6487. The
+in-progress change makes temporary-root discovery nonthrowing, creates an
+OS-random private wrapper staging directory, retains the prior primary output
+until publication, and catches residual build exceptions in the host so it
+aborts deferred package transactions. Missing/non-directory temp roots and
+an injected create failure have API regressions; an end-to-end host regression
+proves rollback preserves the prior DLL and consumes transaction markers.
+Focused Linux `test_runtime_pipeline` and `test_build_host_output` passed.
+All 18 hosted checks passed on PR #6488 code head `2a652e58`; two review
+threads were answered and resolved. The first runtime-pipeline run found
+its test fixture root was group-writable under this host's `0002` umask,
+violating the private-staging parent policy; the fixture now tightens its
+permissions.
 
 PR #6486 was closed without merge after review found an unsafe macOS clone
 destination-identity gap: `fclonefileat()` binds the source but does not return
 the clone's identity, so reopening the mutable destination could adopt or
 remove another file. #5680 stays open for a safer design, network/removable
-qualification, and remaining deterministic race evidence. Next: publish the
-#6388 PR, inspect CI and review, fix real failures, then merge safely and close
-#6388 only if all acceptance criteria are verified.
+qualification, and remaining deterministic race evidence. Next: confirm
+PR #6488 final checks/review, merge safely, close #6389 with evidence, then
+select the next admitted defect until the 17:00 EDT takeover cutoff.
 
 ## Workspace preservation
 

@@ -1225,6 +1225,61 @@ void run_build_host_explicit_locale_manifest_smoke(const std::string& build_host
     fs::remove_all(temp_root, ignored);
 }
 
+void run_library_build_host_temp_failure_rollback(const std::string& build_host_path) {
+    // RQ-CF-PACKAGE-TEMP-001: a failed staging start must consume the
+    // materialization transaction and retain the last published output.
+    namespace fs = std::filesystem;
+    const fs::path root = fs::temp_directory_path() /
+        "copperfin_build_host_temp_failure_rollback";
+    const fs::path project_dir = root / "project";
+    const fs::path output_dir = root / "output";
+    const fs::path project_path = project_dir / "librarydemo.pjx";
+    const fs::path package_root = output_dir / "LibraryDemo";
+    const fs::path primary = package_root / "LibraryDemo.dll";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(project_dir);
+    fs::create_directories(output_dir);
+    write_text(project_dir / "librarymain.prg", "PROCEDURE InitLibrary\nRETURN\nENDPROC\n");
+    write_text(project_dir / "helper.prg", "RETURN\n");
+    write_synthetic_project(project_path, project_dir, output_dir / "LibraryDemo.dll");
+    const std::vector<std::string> args{
+        "build", "--project", project_path.string(), "--output-dir", output_dir.string()};
+    const auto first = run_process_capture(build_host_path, args, root);
+    expect_process_success(first, "#6389: baseline DLL build must succeed");
+    if (first.exit_code == 0) {
+        const auto previous = read_text(primary);
+        write_text(project_dir / "librarymain.prg", "PROCEDURE InitLibrary\n? 'changed'\nRETURN\nENDPROC\n");
+        ProcessResult failed;
+        {
+            ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+            ScopedTestLocaleCatalogDirectory locale_dir;
+            ScopedEnvironmentValue tmpdir("TMPDIR", (root / "missing").string());
+            ScopedEnvironmentValue temp("TEMP", (root / "missing").string());
+            ScopedEnvironmentValue tmp("TMP", (root / "missing").string());
+            auto localized_args = args;
+            localized_args.insert(localized_args.begin() + 1,
+                                  {"--locale", "es-419"});
+            failed = run_process_capture(build_host_path, localized_args, root);
+        }
+        expect(failed.exit_code == 8 &&
+                   failed.stdout_text.find("status: error") != std::string::npos,
+               "#6389: host must report a handled staging error" +
+                   process_failure_detail(failed));
+        expect(read_text(primary) == previous,
+               "#6389: host rollback must preserve the previous primary output");
+        expect(failed.stdout_text.find(build_host_catalog("es-419").translate(
+                   "Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed")) !=
+                   std::string::npos,
+               "#6389: staging failure must honor --locale over COPPERFIN_LOCALE");
+        expect(!fs::exists(package_root.string() + ".copperfin-materializing") &&
+                   !fs::exists(package_root.string() + ".copperfin-previous") &&
+                   !fs::exists(package_root.string() + ".copperfin-previous.owner"),
+               "#6389: host rollback must consume all package transaction artifacts");
+    }
+    fs::remove_all(root, ignored);
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -1235,6 +1290,7 @@ int main(int argc, char** argv) {
 
     test_value_for_key_accepts_crlf_output();
     run_library_build_host_smoke(argv[1], "dll");
+    run_library_build_host_temp_failure_rollback(argv[1]);
     run_library_build_host_smoke(argv[1], "fll");
     run_app_build_host_smoke(argv[1]);
     run_fxp_build_host_smoke(argv[1]);

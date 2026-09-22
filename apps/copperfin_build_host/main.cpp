@@ -18,6 +18,7 @@
 #include "copperfin/security/security_model.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/project_workspace.h"
+#include "localized_text.h"
 
 #include <algorithm>
 #include <cerrno>
@@ -568,6 +569,7 @@ int run_build_host_main(int argc, char** argv) {
         copperfin::platform::resolve_running_executable_path(invocation_path);
     const copperfin::localization::LocalizedCatalog catalog =
         load_localization(running_executable_path, explicit_locale_from_arguments(argc, argv));
+    const copperfin::runtime::RuntimeCatalogScope runtime_catalog_scope(&catalog);
 
     const auto hardening = copperfin::security::apply_default_process_hardening();
     if (!hardening.applied) {
@@ -794,13 +796,23 @@ int run_build_host_main(int argc, char** argv) {
     auto final_plan = materialized.plan;
 
     if (is_library_output_kind(materialized.plan.output_kind)) {
-        auto build_result = copperfin::runtime::build_runtime_package_primary_output(
-            materialized.plan,
-            security_profile,
-            extensibility_profile);
+        copperfin::runtime::RuntimeBuildResult build_result;
+        bool build_threw = false;
+        try {
+            build_result = copperfin::runtime::build_runtime_package_primary_output(
+                materialized.plan,
+                security_profile,
+                extensibility_profile);
+        } catch (...) {
+            build_threw = true;
+        }
         if (!build_result.ok) {
             const auto rollback_result = copperfin::runtime::abort_runtime_package_transaction(
                 materialized.plan);
+            if (build_threw) {
+                build_result.error = catalog.translate(
+                    "Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed");
+            }
             if (!rollback_result.ok) {
                 build_result.error += "\n" + rollback_result.error;
             }
