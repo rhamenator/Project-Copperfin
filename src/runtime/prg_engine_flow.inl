@@ -1474,7 +1474,7 @@
         std::filesystem::path resolve_asset_path(const std::string &raw_path, const char *extension) const
         {
             std::filesystem::path asset_path = copperfin::platform::path_from_utf8_string(
-                unquote_string(take_first_token(raw_path)));
+                unquote_asset_path_token(take_first_asset_path_token(raw_path)));
             if (asset_path.extension().empty())
             {
                 asset_path += extension;

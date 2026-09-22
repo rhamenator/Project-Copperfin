@@ -2158,7 +2158,7 @@ Program parse_program_impl(
         } else if (starts_with_insensitive(line, "REPORT FORM ")) {
             statement.kind = StatementKind::report_form;
             const std::string body = trim_copy(line.substr(12U));
-            statement.identifier = take_first_token(body);
+            statement.identifier = take_first_asset_path_token(body);
             statement.secondary_expression = has_keyword(body, "PREVIEW") ? "preview" : std::string{};
             statement.tertiary_expression =
                 extract_command_clause(body, "TO", {"PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT", "FOR", "WHILE"});
@@ -2172,7 +2172,7 @@ Program parse_program_impl(
         } else if (starts_with_insensitive(line, "LABEL FORM ")) {
             statement.kind = StatementKind::label_form;
             const std::string body = trim_copy(line.substr(11U));
-            statement.identifier = take_first_token(body);
+            statement.identifier = take_first_asset_path_token(body);
             statement.secondary_expression = has_keyword(body, "PREVIEW") ? "preview" : std::string{};
             statement.tertiary_expression =
                 extract_command_clause(body, "TO", {"PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT", "FOR", "WHILE"});

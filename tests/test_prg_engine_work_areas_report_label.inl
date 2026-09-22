@@ -1,3 +1,123 @@
+void test_xasset_report_label_bootstrap_quoted_paths() {
+    // RQ-CF-XASSET-PATH-001: generated source must resolve the exact logical
+    // or verified execution path using VFP's alternate literal delimiters.
+    namespace fs = std::filesystem;
+    const fs::path root = fs::temp_directory_path() / "copperfin_xasset_quoted_paths";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+
+    for (const auto& [kind, extension, prefix] : {
+             std::tuple{copperfin::studio::StudioAssetKind::report, ".frx", "report"},
+             std::tuple{copperfin::studio::StudioAssetKind::label, ".lbx", "label"}}) {
+        std::string odd_name = "O'Brien spaced";
+#if !defined(_WIN32)
+        odd_name += " \"quoted\"";
+#endif
+        const fs::path logical = root / (odd_name + extension);
+        const fs::path snapshot = root / ("snapshot O'Brien" + std::string(extension));
+        write_synthetic_report_surface(logical);
+        write_synthetic_report_surface(snapshot);
+
+        copperfin::studio::StudioDocumentModel document;
+        document.path = logical.string();
+        document.kind = kind;
+        document.table_preview_available = true;
+        const auto model = copperfin::runtime::build_xasset_executable_model(document);
+        expect(model.ok && model.asset_path == logical.string(),
+               "#6458: report/label model must preserve the logical path");
+        expect(model.startup_lines.size() == 1U &&
+                   model.startup_lines[0].find("O'Brien") != std::string::npos,
+               "#6458: model startup must retain embedded apostrophes");
+
+        for (const bool use_snapshot : {false, true}) {
+            const fs::path expected = use_snapshot ? snapshot : logical;
+            const std::string source = copperfin::runtime::build_xasset_bootstrap_source(
+                model, true, use_snapshot ? snapshot.string() : std::string{});
+#if defined(_WIN32)
+            const std::string expected_delimiter = std::string(prefix == std::string("report")
+                ? "REPORT FORM \"" : "LABEL FORM \"");
+#else
+            const std::string expected_delimiter =
+                std::string(prefix == std::string("report") ? "REPORT FORM " : "LABEL FORM ") +
+                (use_snapshot ? "\"" : "[");
+#endif
+            expect(source.find(expected_delimiter) != std::string::npos &&
+                       source.find("O'Brien") != std::string::npos,
+                   "#6458: generated source must choose a VFP delimiter around the exact path");
+            const fs::path program = root / (std::string(prefix) +
+                (use_snapshot ? "_snapshot.prg" : "_logical.prg"));
+            write_text(program, source);
+            auto session = copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(program.string(), root.string()));
+            const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop,
+                   "#6458: generated report/label bootstrap must open the asset");
+            expect(std::any_of(state.events.begin(), state.events.end(), [&](const auto& event) {
+                return event.category == std::string(prefix) + ".preview" &&
+                    event.detail == expected.string();
+            }), "#6458: preview must use the exact logical or verified snapshot path");
+        }
+
+        const fs::path unicode = root / copperfin::platform::path_from_utf8_string(
+            "caf\xC3\xA9 O'Brien" + std::string(extension));
+        write_synthetic_report_surface(unicode);
+        document.path = copperfin::platform::path_to_utf8_string(unicode);
+        const auto unicode_model = copperfin::runtime::build_xasset_executable_model(document);
+        expect(unicode_model.ok && unicode_model.asset_path == document.path,
+               "#6458: Unicode logical path must survive model construction");
+        const fs::path unicode_program = root / (std::string(prefix) + "_unicode.prg");
+        write_text(unicode_program,
+                   copperfin::runtime::build_xasset_bootstrap_source(unicode_model, true));
+        auto unicode_session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(
+                copperfin::platform::path_to_utf8_string(unicode_program),
+                copperfin::platform::path_to_utf8_string(root)));
+        const auto unicode_state = unicode_session.run(
+            copperfin::runtime::DebugResumeAction::continue_run);
+        expect(unicode_state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                   std::any_of(unicode_state.events.begin(), unicode_state.events.end(),
+                       [&](const auto& event) {
+                           return event.category == std::string(prefix) + ".preview" &&
+                               event.detail == document.path;
+                       }),
+               "#6458: Unicode report/label path must resolve exactly");
+
+        document.path = (root / ("invalid\nname" + std::string(extension))).string();
+        const auto invalid = copperfin::runtime::build_xasset_executable_model(document);
+        expect(!invalid.ok && !invalid.error.empty(),
+               "#6458: an unrepresentable control byte must fail model construction");
+        const auto invalid_snapshot = copperfin::runtime::build_xasset_bootstrap_source(
+            model, true, "invalid\npath");
+        expect(invalid_snapshot.find("THROW ") != std::string::npos &&
+                   invalid_snapshot.find("invalid\npath") == std::string::npos,
+               "#6458: unrepresentable override must fail in generated source without injection");
+        const fs::path invalid_program = root / (std::string(prefix) + "_invalid.prg");
+        write_text(invalid_program, invalid_snapshot);
+        auto invalid_session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(invalid_program.string(), root.string()));
+        const auto invalid_state = invalid_session.run(
+            copperfin::runtime::DebugResumeAction::continue_run);
+        expect(invalid_state.reason == copperfin::runtime::DebugPauseReason::error &&
+                   invalid_state.location.line == 2U &&
+                   invalid_state.statement_text.find("THROW ") == 0U,
+               "#6458: unrepresentable snapshot path must fail at the generated source line");
+        document.path = (root / ("bracket] name" + std::string(extension))).string();
+        const auto bracket_name = copperfin::runtime::build_xasset_executable_model(document);
+        expect(bracket_name.ok && bracket_name.startup_lines.size() == 1U &&
+                   bracket_name.startup_lines[0].find(" FORM '") != std::string::npos &&
+                   bracket_name.startup_lines[0].find("bracket] name") != std::string::npos,
+               "#6458: a closing bracket alone must use an available quote delimiter");
+#if !defined(_WIN32)
+        document.path = (root / ("both'\"]." + std::string(extension))).string();
+        const auto no_delimiter = copperfin::runtime::build_xasset_executable_model(document);
+        expect(!no_delimiter.ok && !no_delimiter.error.empty(),
+               "#6458: conflicting quote and bracket delimiters must fail safely");
+#endif
+    }
+    fs::remove_all(root, ignored);
+}
+
 void test_report_form_to_file_renders_without_event_loop_pause() {
     namespace fs = std::filesystem;
     const fs::path report_path = R"(C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx)";

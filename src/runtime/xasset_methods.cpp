@@ -95,6 +95,33 @@ std::string filename_stem_for_vfp_path(const std::string& value) {
     return leaf.substr(0U, dot);
 }
 
+std::optional<std::string> quote_vfp_path_literal(const std::string& path) {
+    for (const unsigned char ch : path) {
+        // The bootstrap is line-oriented. A control byte cannot be placed
+        // inside one source literal without changing the command boundary.
+        if (ch < 0x20U || ch == 0x7fU) {
+            return std::nullopt;
+        }
+    }
+    // VFP's documented syntax uses an alternate delimiter or brackets when
+    // a path contains quote characters. Do not emit SQL-style doubled quotes.
+    if (path.find('\'') == std::string::npos) {
+        return "'" + path + "'";
+    }
+    if (path.find('"') == std::string::npos) {
+        return "\"" + path + "\"";
+    }
+    if (path.find(']') == std::string::npos) {
+        return "[" + path + "]";
+    }
+    return std::nullopt;
+}
+
+std::string unrepresentable_path_statement() {
+    return "THROW " + *quote_vfp_path_literal(
+        xasset_text("Runtime.XAsset.Error.PathUnrepresentable")) + "\n";
+}
+
 bool starts_with_insensitive(const std::string& value, const std::string& prefix) {
     if (value.size() < prefix.size()) {
         return false;
@@ -702,12 +729,16 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
 
         model.runnable_startup = !model.startup_lines.empty();
     } else if (document.kind == studio::StudioAssetKind::report || document.kind == studio::StudioAssetKind::label) {
-        const std::string quoted_path = "'" + document.path + "'";
+        const auto quoted_path = quote_vfp_path_literal(document.path);
+        if (!quoted_path.has_value()) {
+            model.error = xasset_text("Runtime.XAsset.Error.PathUnrepresentable");
+            return model;
+        }
         std::string command_text;
         if (document.kind == studio::StudioAssetKind::report) {
-            command_text = "REPORT FORM " + quoted_path + " PREVIEW";
+            command_text = "REPORT FORM " + *quoted_path + " PREVIEW";
         } else {
-            command_text = "LABEL FORM " + quoted_path + " PREVIEW";
+            command_text = "LABEL FORM " + *quoted_path + " PREVIEW";
         }
         model.startup_lines.push_back(command_text);
         append_lifecycle_step(model.startup_steps, {
@@ -800,9 +831,15 @@ std::string build_xasset_bootstrap_source(
         if (has_form_lifecycle && starts_with_insensitive(line, "DO ")) {
             stream << "__cf_xasset_instance." << trim_copy(line.substr(3U)) << "()\n";
         } else if (!execution_asset_path.empty() && starts_with_insensitive(line, "REPORT FORM ")) {
-            stream << "REPORT FORM '" << execution_asset_path << "' PREVIEW\n";
+            const auto literal = quote_vfp_path_literal(execution_asset_path);
+            stream << (literal.has_value()
+                ? "REPORT FORM " + *literal + " PREVIEW\n"
+                : unrepresentable_path_statement());
         } else if (!execution_asset_path.empty() && starts_with_insensitive(line, "LABEL FORM ")) {
-            stream << "LABEL FORM '" << execution_asset_path << "' PREVIEW\n";
+            const auto literal = quote_vfp_path_literal(execution_asset_path);
+            stream << (literal.has_value()
+                ? "LABEL FORM " + *literal + " PREVIEW\n"
+                : unrepresentable_path_statement());
         } else {
             stream << line << "\n";
         }

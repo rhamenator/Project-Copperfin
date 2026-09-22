@@ -262,6 +262,7 @@ Current behavior:
 - the shared Visual Studio and standalone Studio project shells can now build a project and surface a first integrated debugger pane on top of the native runtime host
 - runnable `SCX/VCX` startup assets can now be executed through generated method bootstraps from both source trees and packaged content
 - runnable `FRX/LBX` startup assets can now be executed as direct preview/event-loop surfaces
+- generated report/label bootstraps retain the logical asset path in model and debugger metadata while executing the verified snapshot path when one is supplied; source literals use VFP's documented alternate quotes or brackets, so apostrophes, spaces, Unicode, and both quote characters can resolve exactly when a safe delimiter exists. Control bytes and a path containing all three closing delimiters fail with a localized error rather than being inserted into generated source.
 - runnable `MNX/MNT` startup assets can now execute setup code and activate shortcut/menu event loops through a dedicated menu bootstrap model
 - waiting menu runtimes can now dispatch concrete menu-item actions back into the native runtime
 - deeper menu trees now participate in runtime execution because xAsset bootstrapping reads the full `MNX` table instead of the eight-record Studio preview
