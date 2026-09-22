@@ -17,3 +17,10 @@ against a future upstream release if one is ever needed.
 
 This code is called only from `src/licensing/ed25519_verify.h`'s thin
 wrapper, which exposes no signing entry point.
+
+Clang/GCC sanitizer builds disable only `shift-base` instrumentation for
+these unmodified upstream C files. The ref10 field arithmetic left-shifts
+negative signed limbs as part of its representation; UBSan otherwise aborts
+on the valid RFC test vector before the verifier can be exercised. ASan and
+all other UBSan checks remain enabled. This exception does not apply to
+Copperfin-owned code.

@@ -672,6 +672,17 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
 
+    copperfin_set_test_isolation(test_cloud_migration_stress
+        PARALLEL_SAFE
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+
     foreach(test_name IN ITEMS
             test_native_platform_workflow_contract
             test_windows_installer_lifecycle_contract

@@ -88,7 +88,8 @@ std::optional<int> fd_from_path(const std::filesystem::path& path) {
     }
     errno = 0;
     char* end = nullptr;
-    const long descriptor = std::strtol(std::string(suffix).c_str(), &end, 10);
+    const std::string suffix_text(suffix);
+    const long descriptor = std::strtol(suffix_text.c_str(), &end, 10);
     if (errno != 0 || end == nullptr || *end != '\0' || descriptor < 0 ||
         descriptor > std::numeric_limits<int>::max()) {
         return std::nullopt;

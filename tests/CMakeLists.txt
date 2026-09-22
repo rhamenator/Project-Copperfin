@@ -4566,6 +4566,10 @@ copperfin_add_test(test_staged_import_publish cf_vfp_assets
     test_staged_import_publish.cpp
 )
 
+copperfin_add_test(test_cloud_migration_stress cf_vfp_assets
+    test_cloud_migration_stress.cpp
+)
+
 # Bounded, deterministic defense-in-depth robustness coverage for the DBF
 # header parser (docs/36-dbf-header-parser-robustness-testing.md). These
 # targets exist only when explicitly requested. When the local compiler

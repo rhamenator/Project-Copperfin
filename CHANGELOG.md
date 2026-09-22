@@ -1,3 +1,16 @@
+- 2026-09-21: Added a hosted Linux defect-hunt workflow for Clang
+  ASan/UBSan, the existing DBF header libFuzzer target, repeated runtime
+  sequences, and seeded synthetic dBASE III migration round trips. PR,
+  nightly, and bounded manual campaigns retain failure diagnostics and
+  avoid committing generated corpora or large fixtures. Documented the
+  cloud-first validation ladder and platform boundaries.
+  Its first full campaign found a POSIX package-content file-descriptor
+  parser stack lifetime bug (`RQ-CF-CONTAINMENT-001`), now fixed and covered
+  by the PR sanitizer runtime-pipeline selection. The new migration test now
+  has a complete isolation declaration. The byte-for-byte vendored Ed25519
+  verifier retains a narrowly scoped UBSan shift-base exception for its
+  signed-limb arithmetic; all project code remains fully instrumented.
+
 - 2026-09-19: Fixed #6251: `SELECT NAME FROM People WHERE dropcursor()
   INTO ARRAY result`, where `dropcursor()` does `USE IN People`,
   reported a fabricated runtime out-of-memory fault natively; an
