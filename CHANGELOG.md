@@ -1,3 +1,7 @@
+- 2026-09-22: Generated non-shortcut MNX bootstraps now use a stable, legal
+  internal menu symbol for definition, activation, deactivation, and release,
+  preserving the logical filename stem separately. Invalid shortcut popup
+  names fail before generated source executes (#6459).
 - 2026-09-22: Corrected generated `FRX`/`LBX` startup paths for #6458. The
   bootstrap now chooses VFP's documented single-quote, double-quote, or
   bracket literal form so apostrophes and both quote characters retain the

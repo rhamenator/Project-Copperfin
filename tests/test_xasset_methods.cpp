@@ -76,6 +76,9 @@ void test_xasset_executable_model_errors_resolve_through_localization_catalog() 
     const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     const std::vector<std::string_view> keys{
+        "Runtime.XAsset.Error.MenuPathMissingStem",
+        "Runtime.XAsset.Error.MenuPopupNameInvalid",
+        "Runtime.XAsset.Error.MenuSymbolUnavailable",
         "Runtime.XAsset.Error.PathUnrepresentable",
         "Runtime.XAsset.Error.TablePreviewMissing",
         "Runtime.XAsset.Error.UnsupportedExecutableFamily"};
@@ -683,7 +686,9 @@ void test_xasset_executable_model_skips_deleted_records() {
     const auto menu_model = copperfin::runtime::build_xasset_executable_model(menu_document);
     expect(menu_model.ok, "#699: menu xAsset model should still build with deleted records present");
     expect(menu_model.activation_kind == "menu", "#699: deleted shortcut records should not force popup activation");
-    expect(menu_model.activation_target == "deletedmenu", "#699: live non-shortcut menu activation should use the path stem");
+    expect(menu_model.activation_source_stem == "deletedmenu" &&
+               menu_model.activation_target.rfind("__cf_menu_", 0U) == 0U,
+           "#699/#6459: live non-shortcut menus should retain the path stem and use an internal symbol");
     expect(menu_model.actions.empty(), "#699: deleted menu item records should not become actions");
     expect(menu_model.methods.empty(), "#699: deleted menu command records should not materialize methods");
 }
@@ -890,21 +895,106 @@ void test_build_menu_xasset_activation_uses_vfp_path_stem() {
         make_record(0, {
             {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "1"},
             {.field_name = "NAME", .field_type = 'M', .display_value = "MainMenu"}
+        }),
+        make_record(1, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "3"},
+            {.field_name = "LEVELNAME", .field_type = 'M', .display_value = "MainMenu"},
+            {.field_name = "ITEMNUM", .field_type = 'C', .display_value = "1"},
+            {.field_name = "PROMPT", .field_type = 'M', .display_value = "Run"},
+            {.field_name = "COMMAND", .field_type = 'M', .display_value = "x = 1"}
         })
     };
 
     const auto model = copperfin::runtime::build_xasset_executable_model(document);
     expect(model.ok, "#698: non-shortcut menu xAsset model should build from Windows-style paths");
     expect(model.activation_kind == "menu", "#698: non-shortcut menus should activate as menus");
-    expect(model.activation_target == "mainmenu", "#698: activation target should use the VFP path filename stem");
+    expect(model.activation_source_stem == "mainmenu" &&
+               model.activation_target.rfind("__cf_menu_", 0U) == 0U &&
+               model.activation_target.size() == 74U,
+           "#698/#6459: menu model should retain its VFP path stem and derive a legal internal symbol");
     expect(model.startup_lines.size() == 1U, "#698: non-shortcut menu startup should contain one activation line");
     if (!model.startup_lines.empty()) {
-        expect(model.startup_lines[0] == "ACTIVATE MENU mainmenu",
+        expect(model.startup_lines[0] == "ACTIVATE MENU " + model.activation_target,
                "#698: generated activation line should not include Windows directory text");
     }
     const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
-    expect(bootstrap.find("DEFINE MENU mainmenu") != std::string::npos,
+    expect(bootstrap.find("DEFINE MENU " + model.activation_target) != std::string::npos,
            "#4753: generated non-shortcut menu bootstrap should define its menu before activation");
+    expect(model.actions.size() == 1U &&
+               model.actions[0].action_id == "mainmenu.item1" &&
+               bootstrap.find("PROCEDURE " + model.actions[0].routine_name) != std::string::npos,
+           "#6459: internal menu naming must preserve action routing and source metadata");
+
+    document.path = R"(E:\Project-Copperfin\samples\main menu.mnx)";
+    const auto spaced_model = copperfin::runtime::build_xasset_executable_model(document);
+    expect(spaced_model.ok && spaced_model.activation_source_stem == "main menu" &&
+               spaced_model.activation_target != model.activation_target &&
+               spaced_model.actions.size() == 1U &&
+               spaced_model.actions[0].action_id == model.actions[0].action_id &&
+               spaced_model.actions[0].routine_name == model.actions[0].routine_name,
+           "#6459: unsafe filename stems must not alter action routing or source metadata");
+
+    const std::string logical_path = document.path;
+    document.path = R"(E:\TemporarySnapshots\opaque-copy.mnx)";
+    const auto snapshot_model = copperfin::runtime::build_xasset_executable_model(
+        document, logical_path);
+    expect(snapshot_model.ok && snapshot_model.asset_path == logical_path &&
+               snapshot_model.activation_source_stem == "main menu" &&
+               snapshot_model.activation_target == spaced_model.activation_target &&
+               snapshot_model.startup_lines == spaced_model.startup_lines,
+           "#6459: verified-snapshot filenames must not change logical menu identity");
+}
+
+void test_menu_popup_names_fail_before_source_generation() {
+    const auto active_catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        copperfin::localization::select_locale());
+    copperfin::studio::StudioDocumentModel document;
+    document.path = "shortcut.mnx";
+    document.kind = copperfin::studio::StudioAssetKind::menu;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "4"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "Shortcut"}
+        }),
+        make_record(1, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "2"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "bad popup\nQUIT"}
+        })
+    };
+    const auto invalid_root = copperfin::runtime::build_xasset_executable_model(document);
+    expect(!invalid_root.ok &&
+               invalid_root.error == active_catalog.translate(
+                   "Runtime.XAsset.Error.MenuPopupNameInvalid"),
+           "#6459: invalid shortcut popup names must fail with a localized model error");
+
+    document.table_preview.records[1] = make_record(1, {
+        {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "2"},
+        {.field_name = "NAME", .field_type = 'M', .display_value = "Shortcut"}
+    });
+    document.table_preview.records.push_back(make_record(2, {
+        {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "3"},
+        {.field_name = "LEVELNAME", .field_type = 'C', .display_value = "Shortcut"},
+        {.field_name = "ITEMNUM", .field_type = 'C', .display_value = "1"}
+    }));
+    document.table_preview.records.push_back(make_record(3, {
+        {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "2"},
+        {.field_name = "NAME", .field_type = 'M', .display_value = "bad; QUIT"}
+    }));
+    const auto invalid_submenu = copperfin::runtime::build_xasset_executable_model(document);
+    expect(!invalid_submenu.ok &&
+               invalid_submenu.error == active_catalog.translate(
+                   "Runtime.XAsset.Error.MenuPopupNameInvalid"),
+           "#6459: invalid submenu activation names must fail before source generation");
+
+    document.path = "folder/";
+    document.table_preview.records.clear();
+    const auto missing_stem = copperfin::runtime::build_xasset_executable_model(document);
+    expect(!missing_stem.ok &&
+               missing_stem.error == active_catalog.translate(
+                   "Runtime.XAsset.Error.MenuPathMissingStem"),
+           "#6459: a menu path without a filename stem must fail catchably");
 }
 
 void test_build_menu_xasset_rejects_partial_numeric_object_types() {
@@ -942,8 +1032,9 @@ void test_build_menu_xasset_rejects_partial_numeric_object_types() {
     expect(model.ok, "#4858: menu model should tolerate invalid numeric object-type metadata");
     expect(model.activation_kind == "menu",
            "#4858: trailing/grouped shortcut types must not alias valid OBJTYPE 4");
-    expect(model.activation_target == "strict_numeric_types",
-           "#4858: invalid shortcut types should retain the ordinary menu path-stem target");
+    expect(model.activation_source_stem == "strict_numeric_types" &&
+               model.activation_target.rfind("__cf_menu_", 0U) == 0U,
+           "#4858/#6459: invalid shortcut types should retain the source stem and use a menu symbol");
     expect(model.actions.empty(),
            "#4858: trailing menu-item types must not alias valid OBJTYPE 3 actions");
 }
@@ -1081,6 +1172,7 @@ int main() {
     test_xasset_executable_model_skips_deleted_records();
     test_build_menu_xasset_executable_model();
     test_build_menu_xasset_activation_uses_vfp_path_stem();
+    test_menu_popup_names_fail_before_source_generation();
     test_build_menu_xasset_rejects_partial_numeric_object_types();
     test_build_report_xasset_executable_model();
     test_build_label_xasset_executable_model();

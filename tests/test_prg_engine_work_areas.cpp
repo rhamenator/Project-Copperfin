@@ -270,6 +270,7 @@ void test_use_missing_target_uses_localized_error() {
 }
 
 #include "test_prg_engine_work_areas_report_label.inl"
+#include "test_prg_engine_work_areas_menu.inl"
 
 void test_cross_session_alias_and_work_area_isolation() {
     namespace fs = std::filesystem;
@@ -1988,6 +1989,7 @@ int main() {
     test_use_missing_target_uses_localized_error();
     test_report_form_to_file_renders_without_event_loop_pause();
     test_xasset_report_label_bootstrap_quoted_paths();
+    test_xasset_menu_bootstrap_uses_safe_runtime_symbols();
     test_report_label_path_keywords_do_not_become_clauses();
     test_sys2040_report_status_tracks_preview_and_output();
     test_label_form_to_file_renders_without_event_loop_pause();

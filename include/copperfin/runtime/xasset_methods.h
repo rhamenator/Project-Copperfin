@@ -56,6 +56,7 @@ struct XAssetExecutableModel {
     bool root_is_form = false;
     std::string activation_kind;
     std::string activation_target;
+    std::string activation_source_stem;
     std::string error;
     std::vector<XAssetMethod> methods;
     std::vector<XAssetActionBinding> actions;
@@ -67,7 +68,9 @@ struct XAssetExecutableModel {
     std::vector<XAssetLifecycleStep> shutdown_steps;
 };
 
-XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocumentModel& document);
+XAssetExecutableModel build_xasset_executable_model(
+    const studio::StudioDocumentModel& document,
+    const std::string& logical_asset_path = {});
 std::string build_xasset_bootstrap_source(
     const XAssetExecutableModel& model,
     bool include_read_events,

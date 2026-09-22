@@ -4,6 +4,7 @@
 
 #include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/runtime/xasset_methods.h"
+#include "copperfin/security/sha256.h"
 #include "localized_text.h"
 
 #include <algorithm>
@@ -93,6 +94,25 @@ std::string filename_stem_for_vfp_path(const std::string& value) {
         return leaf;
     }
     return leaf.substr(0U, dot);
+}
+
+bool is_vfp_menu_identifier(std::string_view value) {
+    // VFP names are limited to 128 characters and use letters, digits, and
+    // underscores, with a letter or underscore first. Keep generated source
+    // to the portable ASCII subset of that documented grammar.
+    if (value.empty() || value.size() > 128U) {
+        return false;
+    }
+    const auto initial = value.front();
+    if (!((initial >= 'A' && initial <= 'Z') ||
+          (initial >= 'a' && initial <= 'z') || initial == '_')) {
+        return false;
+    }
+    return std::all_of(value.begin() + 1, value.end(), [](const char ch) {
+        return (ch >= 'A' && ch <= 'Z') ||
+               (ch >= 'a' && ch <= 'z') ||
+               (ch >= '0' && ch <= '9') || ch == '_';
+    });
 }
 
 std::optional<std::string> quote_vfp_path_literal(const std::string& path) {
@@ -548,9 +568,11 @@ void refresh_menu_action_bindings(
 
 }  // namespace
 
-XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocumentModel& document) {
+XAssetExecutableModel build_xasset_executable_model(
+    const studio::StudioDocumentModel& document,
+    const std::string& logical_asset_path) {
     XAssetExecutableModel model;
-    model.asset_path = document.path;
+    model.asset_path = logical_asset_path.empty() ? document.path : logical_asset_path;
 
     if (!document.table_preview_available) {
         model.error = xasset_text("Runtime.XAsset.Error.TablePreviewMissing");
@@ -592,6 +614,10 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
                 std::string action_kind = "command";
                 if (action_method == nullptr) {
                     if (const auto submenu_name = find_following_submenu_name(document, record_position)) {
+                        if (!is_vfp_menu_identifier(*submenu_name)) {
+                            model.error = xasset_text("Runtime.XAsset.Error.MenuPopupNameInvalid");
+                            return model;
+                        }
                         const auto wrapped = make_wrapped_method(
                             record.record_index,
                             studio::StudioObjectMissingFieldIndex,
@@ -710,12 +736,28 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
         model.activation_kind = shortcut_menu ? "popup" : "menu";
         if (shortcut_menu) {
             if (const auto first_container_name = find_first_menu_container_name(document)) {
+                if (!is_vfp_menu_identifier(*first_container_name)) {
+                    model.error = xasset_text("Runtime.XAsset.Error.MenuPopupNameInvalid");
+                    return model;
+                }
                 model.activation_target = *first_container_name;
             } else {
                 model.activation_target = "shortcut";
             }
         } else {
-            model.activation_target = filename_stem_for_vfp_path(document.path);
+            model.activation_source_stem = filename_stem_for_vfp_path(model.asset_path);
+            if (model.activation_source_stem.empty()) {
+                model.error = xasset_text("Runtime.XAsset.Error.MenuPathMissingStem");
+                return model;
+            }
+            const auto digest = security::sha256_hex_for_text(model.asset_path);
+            if (!digest.ok || digest.hex_digest.size() != 64U) {
+                model.error = digest.error.empty()
+                    ? xasset_text("Runtime.XAsset.Error.MenuSymbolUnavailable")
+                    : digest.error;
+                return model;
+            }
+            model.activation_target = "__cf_menu_" + digest.hex_digest;
         }
 
         if (!model.activation_target.empty()) {
@@ -729,9 +771,21 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
             model.startup_enters_event_loop = true;
         }
 
+        if (!shortcut_menu) {
+            for (const std::string_view verb : {"DEACTIVATE MENU ", "RELEASE MENU "}) {
+                const std::string command_text = std::string(verb) + model.activation_target;
+                model.shutdown_lines.push_back(command_text);
+                append_lifecycle_step(model.shutdown_steps, {
+                    .kind = verb == "DEACTIVATE MENU " ? "deactivation" : "release",
+                    .command_text = command_text,
+                    .routine_name = ""
+                });
+            }
+        }
+
         model.runnable_startup = !model.startup_lines.empty();
     } else if (document.kind == studio::StudioAssetKind::report || document.kind == studio::StudioAssetKind::label) {
-        const auto quoted_path = quote_vfp_path_literal(document.path);
+        const auto quoted_path = quote_vfp_path_literal(model.asset_path);
         if (!quoted_path.has_value()) {
             model.error = xasset_text("Runtime.XAsset.Error.PathUnrepresentable");
             return model;
