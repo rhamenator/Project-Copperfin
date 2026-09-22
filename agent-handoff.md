@@ -23,9 +23,10 @@ switch, atomicity (including preservation of an existing `SET SKIP` setting),
 `TRY/CATCH`, and `ON ERROR` cases. All 15 hosted checks passed on the initial
 head, including the Cloud Defect Hunt sanitizer lane that now runs this test.
 Copilot requested the additional existing-setting rollback test, which passed
-locally under Debug and ASan/UBSan and is awaiting final hosted validation.
-Next: push that final test and evidence update, wait for hosted checks and
-review, merge safely, and close #6460 only after acceptance evidence passes.
+locally under Debug and ASan/UBSan; all 15 hosted checks passed again on the
+review-amended head, and the PR review has no inline findings.
+Next: merge #6489, close #6460 with the hosted evidence, remove scratch builds,
+and select the next approved defect.
 
 ## Workspace preservation
 
