@@ -187,6 +187,18 @@ Apply these rules whenever a change touches operator-facing or procedure-definin
   unambiguously replace or cancel the applicable work is never evidence that
   earlier work is complete, cancelled, or no longer required.
 
+## Cloud validation preference
+
+Prefer local execution for fast focused feedback. This public repository's
+standard hosted Linux, Windows, and macOS runners are the normal place for
+broad builds, full regression, sanitizer, fuzz, stress, packaging, and
+qualification work. Prefer hosted Windows before the local Windows VM when it
+can provide equivalent evidence; reserve the VM for VFP9, interactive,
+persistent-environment, or cloud-inadequate work. Use hosted macOS for modern
+automated macOS qualification. For long CI runs use blocking `gh run watch`
+or `gh pr checks --watch`, not model-turn polling. See
+`docs/cloud-validation.md` for the validation ladder and lane boundaries.
+
 ## Live Agent Channel
 
 When Claude Code is also active on this repo (e.g. covering after a weekly/session limit handoff), check current `.agent-channel/messages/` through `scripts/agent_channel.py` at the start of a turn and before picking new work, per `.agent-channel/README.md`. This is a live scratch channel for coordination, not a substitute for `agent-handoff.md` or `CHANGELOG.md`.
