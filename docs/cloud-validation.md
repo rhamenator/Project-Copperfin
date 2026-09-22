@@ -17,7 +17,7 @@ routes. The `Cloud Defect Hunt` workflow adds independent Linux jobs:
 | `sanitizer` | Selected runtime, package, DBF, and migration tests under Clang ASan/UBSan | Full native CTest inventory under Clang ASan/UBSan | Memory and undefined behavior diagnostics |
 | `fuzz` | 30-second libFuzzer campaign against the DBF header parser | 600-second campaign | Seed, libFuzzer log, crash input on failure |
 | `stress` | Two repetitions of existing task, database lifecycle, buffering, and data-I/O sequences | Twelve repetitions | CTest failure sequence; this repeats fixed state sequences, not randomized scheduling |
-| `migration` | Seeded 1,000-row dBASE III to VFP-native round trip plus DBF/staged-import tests | Seeded 20,000-row round trip plus those tests | Seed, row count, file sizes, peak child RSS |
+| `migration` | Seeded 1,000-row dBASE III to VFP-native round trip plus DBF/staged-import tests | Seeded 100,000-row round trip (over 20 MB per table) plus those tests | Seed, row count, file sizes, peak child RSS |
 
 The fuzz lane presently has one real coverage-guided target: DBF header
 parsing. Its seed corpus is copied to a writable artifact directory before
@@ -46,7 +46,7 @@ runtime-pipeline regression is now in the PR sanitizer selection.
 2. Push a branch, then dispatch a targeted cloud lane if deeper evidence is
    needed: `gh workflow run cloud-defect-hunt.yml --ref <branch> -f lane=fuzz
    -f profile=nightly -f seconds=600`. Manual inputs are bounded by the
-   driver: fuzz seconds 1–1800, stress repetitions 1–30, rows 1–50,000.
+   driver: fuzz seconds 1–1800, stress repetitions 1–30, rows 1–300,000.
 3. Use ordinary PR checks for the hosted Linux, Windows, macOS, and new
    defect-hunt lanes. Nightly jobs run independently; manual `all` dispatch
    selects all four jobs.

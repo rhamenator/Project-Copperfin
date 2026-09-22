@@ -49,9 +49,9 @@ def main():
     args = parser.parse_args()
     seconds = args.seconds or (600 if args.profile == "nightly" else 30)
     iterations = args.iterations or (12 if args.profile == "nightly" else 2)
-    rows = args.rows or (20000 if args.profile == "nightly" else 1000)
-    if not 1 <= seconds <= 1800 or not 1 <= iterations <= 30 or not 1 <= rows <= 50000 or not 1 <= args.seed <= 2147483647:
-        parser.error("seconds=1..1800, iterations=1..30, rows=1..50000, seed=1..2147483647")
+    rows = args.rows or (100000 if args.profile == "nightly" else 1000)
+    if not 1 <= seconds <= 1800 or not 1 <= iterations <= 30 or not 1 <= rows <= 300000 or not 1 <= args.seed <= 2147483647:
+        parser.error("seconds=1..1800, iterations=1..30, rows=1..300000, seed=1..2147483647")
 
     evidence = ROOT / "artifacts" / "cloud-validation" / args.lane
     evidence.mkdir(parents=True, exist_ok=True)

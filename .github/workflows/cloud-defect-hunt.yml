@@ -33,7 +33,7 @@ on:
         type: number
         default: 0
       rows:
-        description: Migration rows (0 selects profile default; maximum 50000)
+        description: Migration rows (0 selects profile default; maximum 300000)
         type: number
         default: 0
       seed:

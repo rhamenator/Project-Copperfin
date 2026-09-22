@@ -16,8 +16,8 @@
 int main(int argc, char** argv) {
     const std::uint32_t seed = argc > 1 ? static_cast<std::uint32_t>(std::stoul(argv[1])) : 1U;
     const std::size_t rows = argc > 2 ? std::stoul(argv[2]) : 300U;
-    if (rows < 1U || rows > 50000U) {
-        std::cerr << "rows must be between 1 and 50000\n";
+    if (rows < 1U || rows > 300000U) {
+        std::cerr << "rows must be between 1 and 300000\n";
         return 2;
     }
     const auto nonce = std::chrono::steady_clock::now().time_since_epoch().count();
@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     const auto source = root / "source.dbf";
     const auto destination = root / "imported.dbf";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "ROWKEY", .type = 'C', .length = 20U},
+        {.name = "ROWKEY", .type = 'C', .length = 200U},
         {.name = "AMOUNT", .type = 'N', .length = 10U}
     };
     std::mt19937 generator(seed);
