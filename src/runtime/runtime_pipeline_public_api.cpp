@@ -23,19 +23,12 @@
 #include <string>
 #include <vector>
 #if defined(_WIN32)
-#include <bcrypt.h>
-#elif defined(__linux__)
-#include <sys/random.h>
-#elif defined(__APPLE__)
-#include <cstdlib>
-#endif
-
-#if defined(_WIN32)
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <bcrypt.h>
 #else
 #include <dirent.h>
 #include <fcntl.h>
@@ -43,6 +36,11 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#if defined(__linux__)
+#include <sys/random.h>
+#elif defined(__APPLE__)
+#include <cstdlib>
+#endif
 #endif
 
 namespace copperfin::runtime {

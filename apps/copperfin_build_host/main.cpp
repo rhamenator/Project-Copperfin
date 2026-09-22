@@ -795,18 +795,22 @@ int run_build_host_main(int argc, char** argv) {
 
     if (is_library_output_kind(materialized.plan.output_kind)) {
         copperfin::runtime::RuntimeBuildResult build_result;
+        bool build_threw = false;
         try {
             build_result = copperfin::runtime::build_runtime_package_primary_output(
                 materialized.plan,
                 security_profile,
                 extensibility_profile);
-        } catch (const std::exception&) {
-            build_result.error = catalog.translate(
-                "Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed");
+        } catch (...) {
+            build_threw = true;
         }
         if (!build_result.ok) {
             const auto rollback_result = copperfin::runtime::abort_runtime_package_transaction(
                 materialized.plan);
+            if (build_threw) {
+                build_result.error = catalog.translate(
+                    "Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed");
+            }
             if (!rollback_result.ok) {
                 build_result.error += "\n" + rollback_result.error;
             }
