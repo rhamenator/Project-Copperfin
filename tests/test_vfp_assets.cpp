@@ -4152,6 +4152,71 @@ void test_export_database_as_json_still_accepts_valid_numeric_forms() {
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5631: EXPORT DATABASE ... TYPE JSON silently converted a NULL/unknown
+// Logical cell to the JSON literal false, since decode_value() (src/vfp/
+// dbf_table.cpp) never set is_null for '?' (the only blank/NULL sentinel
+// this codebase's own writer produces for a Logical field, both at
+// APPEND BLANK and for an explicit REPLACE ... WITH .NULL.), and the JSON
+// exporter's own logical branch had no NULL fallback at all (unlike every
+// SQL exporter, which already mapped an unrecognized value to NULL). A
+// subsequent JSON import could then never distinguish the original
+// NULL/unknown value from a real false value.
+void test_export_database_as_json_reports_null_logical_value_not_false() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_json_null_logical_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "flags.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "flags", ""}});
+    expect(dbc_create.ok, "#5631: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "ENABLED", .type = 'L', .offset = 1U, .length = 1U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields,
+        {{".T."}, {".F."}, {"null"}});
+    expect(table_create.ok, "#5631: DBF fixture should be created: " + table_create.error);
+
+    const auto result = copperfin::vfp::export_database_as_json(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "#5631: export_database_as_json should succeed: " + result.error);
+    if (result.ok) {
+        expect(result.json.find("\"ENABLED\": true") != std::string::npos,
+               "#5631: a true Logical cell should still export as JSON true");
+        expect(result.json.find("\"ENABLED\": false") != std::string::npos,
+               "#5631: a false Logical cell should still export as JSON false");
+        expect(result.json.find("\"ENABLED\": null") != std::string::npos,
+               "#5631: a NULL/unknown Logical cell must export as JSON null, not false, got: " + result.json);
+        const auto plan = copperfin::vfp::build_database_json_import_plan(result.json);
+        expect(plan.ok, "the resulting JSON should itself be valid enough for the import planner to parse: " + plan.error_code);
+    }
+
+    const auto parsed = copperfin::vfp::parse_dbf_table_from_file(
+        copperfin::platform::path_to_utf8_string(table_path), 3U);
+    expect(parsed.ok, "#5631: DBF fixture should remain parseable");
+    if (parsed.ok && parsed.table.records.size() == 3U) {
+        expect(!parsed.table.records[0].values[0].is_null && parsed.table.records[0].values[0].display_value == "true",
+               "#5631: decode_value() should still report a true byte as non-null true");
+        expect(!parsed.table.records[1].values[0].is_null && parsed.table.records[1].values[0].display_value == "false",
+               "#5631: decode_value() should still report a false byte as non-null false");
+        expect(parsed.table.records[2].values[0].is_null,
+               "#5631: decode_value() must report the '?' sentinel byte as is_null, not a fabricated false");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 // #5630 review (self, proactive sibling-gap check performed while fixing
 // the numeric-value injection this issue reports): the fields array's own
 // "type" property embeds a field descriptor's raw type byte directly with
@@ -9040,6 +9105,7 @@ int main() {
     test_export_database_as_json_fails_closed_on_numeric_structural_injection();
     test_export_database_as_json_fails_closed_on_unsafe_numeric_forms();
     test_export_database_as_json_still_accepts_valid_numeric_forms();
+    test_export_database_as_json_reports_null_logical_value_not_false();
     test_export_database_as_json_escapes_crafted_field_type_byte();
     test_export_database_as_json_fails_closed_on_non_ascii_field_type_byte();
     test_export_database_family_fails_closed_on_invalid_utf8_field_name();

@@ -1731,6 +1731,17 @@ DecodedDbfValue decode_value(
             if (value == 'N' || value == 'n' || value == 'F' || value == 'f') {
                 return "false";
             }
+            // Anything other than a recognized true/false byte -- including
+            // '?', the only blank/NULL sentinel this codebase's own writer
+            // ever produces for a Logical field (both at APPEND BLANK time
+            // in make_blank_raw_record() and for an explicit
+            // REPLACE ... WITH .NULL. in write_field_bytes()'s
+            // is_null_token branch), and any other malformed byte a
+            // non-Copperfin-written DBF could contain -- is NULL/unknown,
+            // not a fabricated false. Without this, callers such as the
+            // JSON exporter cannot distinguish NULL/unknown from a real
+            // false value and silently corrupt three-valued data (#5631).
+            is_null = true;
             return std::string(1U, value);
         }
         case 'D': {
