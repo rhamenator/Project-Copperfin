@@ -19,9 +19,11 @@ this repo, neither of which tracks the other:
   closes multiple issues for the cost of one. It answers "which issue to
   pick up next."
 
-**Every cluster below is Lane A/C/G-adjacent runtime, format, and
-command-surface work.** Lanes A and C are recorded "Closed" in docs/05 at
-the MVP/implementation-complete level, but that closure was a coarse
+**Most clusters below are Lane A/C-adjacent runtime, format, and
+command-surface work** (a handful, like cluster 3, belong to other lanes —
+see each cluster's own text and [Lane Status](#lane-status), this is not a
+single-lane claim). Lanes A and C are recorded "Closed" in docs/05 at the
+MVP/implementation-complete level, but that closure was a coarse
 milestone, not a claim that every command/expression/format edge case is
 bug-free — this granular backlog is exactly the residue that ongoing
 agent-driven bug hunts keep finding underneath an already-shipped surface.
@@ -32,11 +34,16 @@ precisely what each cluster below represents.
 
 **How to use this:** when picking "next work" with no other explicit
 instruction, take the next `NOT STARTED` cluster in [Cluster Order](#cluster-order)
-below. Within a cluster, pick issues by shared-root-cause leverage — fix
-the common helper first if one exists. Update this file's status markers
-as clusters progress; the companion memory file
-`project_copperfin_issue_cluster_roadmap.md` should stay a short pointer
-to this document rather than duplicating its content going forward.
+below — but first revalidate that specific issue's current state, author,
+and `agent-approved` label live via `gh issue view`, per the
+fail-closed Agent Issue Intake Boundary in `agents.md`; this document is a
+dated snapshot, not a substitute for that check, and an issue cited here
+can have been closed, relabeled, or edited since. Within a cluster, pick
+issues by shared-root-cause leverage — fix the common helper first if one
+exists. Update this file's status markers as clusters progress; the
+companion memory file `project_copperfin_issue_cluster_roadmap.md` should
+stay a short pointer to this document rather than duplicating its content
+going forward.
 
 ## Scale reality
 
@@ -58,14 +65,16 @@ itself about coverage gaps, not the underlying defects).
 As clusters get exhausted, or periodically regardless, re-run
 `gh issue list --label agent-approved --state open --limit 1000
 --json number,title,labels,createdAt` and diff against every cluster's
-cited numbers, since new waves land (see
-[[project_copperfin_codex_availability]]) and this categorization decays
-the same way the original 12-cluster list did between 2026-09-19 and
-2026-09-23. The 35 lettered-lane epics (`#1`-`#46`, titled
-`A1:`.../`J3:`) plus the backlog-umbrella roots (`#108`-`#114`,
-`#137`-`#141`) are the top-level structural bucket every cluster above
-rolls up under (see [Lane Status](#lane-status)) — excluded from the
-counts above since they're long-lived umbrellas, not closeable bugs.
+cited numbers, since new waves of `agent-approved` labeling land
+periodically and this categorization decays the same way the original
+12-cluster list did between 2026-09-19 and
+2026-09-23. The lettered-lane root issues cited in `docs/05-roadmap.md`'s
+Lettered Lane History table (see [Lane Status](#lane-status) below for
+the exact per-lane roots, e.g. Lane A `#7`-`#12`, Lane H `#113`) are the
+top-level structural bucket every cluster above rolls up under —
+excluded from the counts above since they're long-lived umbrellas, not
+closeable bugs. Use that table, not a guessed issue range, as the
+categorization axis for any future sweep.
 
 Only 3 open issues currently lack `agent-approved` (out of 937 total open):
 `#4905` (owner-policy, unrelated to bug work) and `#6499`/`#6506` (both
@@ -92,10 +101,12 @@ reproduced here except as a locator for where cluster work fits:
 | J | Portable core boundary, macOS port, Linux port | Active |
 
 The `RELEASE-READINESS-REVIEW.md` procedural checklist (the independent
-human review gate before first stable release) has not started. Reaching
-it requires the live tree under D/F/G to close and this backlog to be
-substantially worked down — there is no shortcut around the cluster work
-below.
+human review gate before first stable release) has not started. Neither
+that document nor `docs/05-roadmap.md` states D/F/G closure or a specific
+backlog fraction as a formal precondition for starting it — this is this
+document's own sequencing judgment (working the cluster backlog down
+first reduces the chance of the review surfacing defects this doc already
+tracks), not a release gate stated elsewhere.
 
 ## Cluster Order
 
@@ -161,8 +172,9 @@ cleanup). Directly adjacent to the #6453 (`cleanup_runtime_resources_for_shutdow
 #6291, #6356-#6369. VFP operators (`#`, `$`, `==`, `%`, `^`, dotted
 logicals), `NULL`/date literals, `ISNULL()`/`NVL()`/`ALLTRIM()`, `TOP`,
 `IIF` mistranslate or produce invalid SQL across MySQL/Postgres/SQL
-Server/Oracle/SQLite. Builds on prior vendor-dialect-exporter context
-([[project_copperfin_db_federation_priority]]).
+Server/Oracle/SQLite. Builds on prior vendor-dialect-exporter context;
+the Postgres/SQL Server/Oracle connectors are tracked, committed v1
+scope under root issue #30 (Lane H), not optional/future work.
 
 ### 4. Malformed-DBF-input data integrity — `NOT STARTED`
 
@@ -243,8 +255,11 @@ TRBETWEEN), #6412 (VIEW), #6414 (HELP/SET HELP/TOPIC).
 ### 10. Access saved-query extraction — `NOT STARTED`
 
 ~5 issues: #6423-#6427. Drops joins/`GROUP BY`/aliases/`SELECT *`/`DESC`.
-Small, tight, in Access-migration code already explored this project
-([[project_copperfin_access_migration_priority]]).
+Small, tight, in Access-migration code already explored this project:
+Access is rumored EOL so `IMPORT TYPE ACCESS` fidelity matters, VBA
+translation (not just extraction) is confirmed genuinely hard and stays
+out of scope, and forms/VBA reconnaissance for this area is solved via
+`Application.SaveAsText` COM automation.
 
 ### 11. Studio/Designer/Builder — `NOT STARTED`
 
@@ -392,9 +407,9 @@ callback) — this is genuine multi-process/multi-session race behavior.
 #6038. Multi-page Access TDEFs get omitted instead of reassembled, Jet3
 text decoding corrupts non-ASCII, TDEF index/relationship metadata isn't
 decoded, Jet4 compressed-Unicode decoding is incomplete. Same
-Access-migration code area as cluster 10 (saved-query extraction) and
-this project's prior exploration
-([[project_copperfin_access_migration_priority]]).
+Access-migration code area as cluster 10 (saved-query extraction), with
+real Jet3/Jet4 MDB fixtures (including a suspected Access 2.0 specimen)
+available locally.
 
 ### 21. .NET/C# polyglot code-gen correctness — `NOT STARTED`
 
@@ -515,8 +530,14 @@ engine's own foundational gaps.
 
 ### Coverage-hunt umbrella #6498 — `IN PROGRESS`
 
-Three owner-labeled `agent-approved` children, a targeted coverage
-campaign rather than a shared-root-cause cluster:
+A targeted coverage campaign (not a shared-root-cause cluster) linking 8
+issues total: 3 newly-scoped children plus 5 pre-existing "do not
+duplicate" issues the umbrella explicitly tracks to closure. Per the
+umbrella's own text: "Close this cluster only when each linked issue is
+closed with evidence or an explicit, owner-reviewed exclusion is
+recorded" — so #6498 itself does not close on the 3 children alone.
+
+Newly-scoped children:
 
 - #6495 (concurrency state-sequence hunt) — `DONE`, PR #6500, merged
   `bac49af30`. Surfaced #6499 (filed, not fixed, see cluster 1 above).
@@ -526,6 +547,20 @@ campaign rather than a shared-root-cause cluster:
   merged, so it can proceed on a corrected baseline.
 - #6497 (release-lifecycle coverage) — `NOT STARTED`, queued behind
   #6496.
+
+Pre-existing linked issues (all confirmed `OPEN` as of 2026-09-23, not
+otherwise clustered above):
+
+- #5800 (fuzz coverage for most production parsers beyond the DBF
+  header) — `NOT STARTED`.
+- #5804 (deterministic allocation-failure coverage for critical
+  operations) — `NOT STARTED`.
+- #222 (`[gap-03]` disk I/O failure injection / staged-write rollback)
+  — `NOT STARTED`.
+- #5802 (continuous real-VFP9 interoperability validation provisioning)
+  — `NOT STARTED`.
+- #4403 (MVP release: archive runtime recovery traceability evidence)
+  — `NOT STARTED`.
 
 ### Singleton follow-ups
 
@@ -546,9 +581,11 @@ campaign rather than a shared-root-cause cluster:
 
 ## Recommended order
 
-1. Finish #6496 then #6497 to close out umbrella #6498 (small, 2 issues,
-   already "next" per `agent-handoff.md`, warm context from #6047/#5567/
-   #5631).
+1. Finish #6496 then #6497 (already "next" per `agent-handoff.md`, warm
+   context from #6047/#5567/#5631) — this does not close umbrella #6498
+   by itself, since 5 pre-existing linked issues (#5800, #5804, #222,
+   #5802, #4403) also gate its closure; picking those up is a separate,
+   later decision.
 2. Return to cluster 1's remaining 10 issues to close it out entirely —
    warm context, well-understood fix pattern, closest cluster to `DONE`
    (grew from 7 to 10 after the sweep found #6240/#6241/#6242 belong

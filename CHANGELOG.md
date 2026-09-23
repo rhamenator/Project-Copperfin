@@ -1,3 +1,11 @@
+- 2026-09-23: Added `docs/81-defect-cluster-and-completion-roadmap.md`,
+  bridging `docs/05-roadmap.md`'s lettered-lane macro completion
+  structure with the actual open, `agent-approved` bug/gap backlog (934
+  open issues), tracked as thematic clusters with an explicit recommended
+  pick order. A follow-up full-backlog categorization sweep added 18 more
+  clusters (13-30) and backfilled three of the original 12, bringing
+  clustered coverage from ~185 to ~740 of the 934 open issues. Replaces a
+  previously memory-only, single-agent-visible version of this tracking.
 - 2026-09-23: Recorded PR #6505's merge (issue #6047 closed) in
   `agent-handoff.md`, including the full account of the Codex/Copilot
   review round on that PR, and selected #6496 (migration fidelity
