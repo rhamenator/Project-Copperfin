@@ -40,16 +40,32 @@ to this document rather than duplicating its content going forward.
 
 ## Scale reality
 
-The 12 clusters below, plus the two currently-tracked umbrella/singleton
-groups, account for on the order of 150-250 of the 934 open issues (rough
-estimate from original per-cluster counts, several already partly worked
-down). **The remainder has not been clustered yet.** As clusters get
-exhausted, or on request, re-run a full categorization sweep over
-`gh issue list --label agent-approved --state open` rather than assuming
-the list below is exhaustive. The 35 lettered-lane epics (`#1`-`#46`,
-titled `A1:`.../`J3:`) are the natural top-level bucket every concrete bug
-should roll up under once categorized; use them as the categorization
-axis for any future sweep.
+**Updated 2026-09-23** after a full categorization sweep of the backlog.
+The 30 clusters below, plus the umbrella/singleton groups, now account
+for roughly **740 of the 934 open issues** (185 from the original 12
+clusters' cited numbers/ranges plus backfills, ~530 more from the 18
+clusters added in the sweep — both figures approximate, since clusters
+are cited as representative ranges, not exhaustively verified
+issue-by-issue). The residual ~190 uncategorized issues are a genuine
+long tail of scattered one-offs (documentation-only fixes, single
+CI/tooling issues, single backlog-grooming issues) not worth forcing into
+named clusters; a handful of small groups worth noting without full
+cluster status: `#98`/`#105`/`#106`/`#271` (Lane A `SET()`-state-isolation
+residual slices under umbrella `#8`), `#222`-`#235` (`[gap-XX]`-labeled
+malformed-input test-coverage tracking, overlaps cluster 4's theme but is
+itself about coverage gaps, not the underlying defects).
+
+As clusters get exhausted, or periodically regardless, re-run
+`gh issue list --label agent-approved --state open --limit 1000
+--json number,title,labels,createdAt` and diff against every cluster's
+cited numbers, since new waves land (see
+[[project_copperfin_codex_availability]]) and this categorization decays
+the same way the original 12-cluster list did between 2026-09-19 and
+2026-09-23. The 35 lettered-lane epics (`#1`-`#46`, titled
+`A1:`.../`J3:`) plus the backlog-umbrella roots (`#108`-`#114`,
+`#137`-`#141`) are the top-level structural bucket every cluster above
+rolls up under (see [Lane Status](#lane-status)) — excluded from the
+counts above since they're long-lived umbrellas, not closeable bugs.
 
 Only 3 open issues currently lack `agent-approved` (out of 937 total open):
 `#4905` (owner-policy, unrelated to bug work) and `#6499`/`#6506` (both
@@ -108,9 +124,12 @@ the catchable-error pattern), #6251 (SELECT, PR #6483 — the big one, a
 single ~900-line shared query-materialization function), #6460 (SET SKIP
 TO registration, fixed 2026-09-22).
 
-**Remaining (7):** #6320 (GATHER), #6321/#6322 (APPEND FROM local/remote),
+**Remaining (10):** #6320 (GATHER), #6321/#6322 (APPEND FROM local/remote),
 #6331 (SCAN), #6415 (property-read event handlers), #6420 (BINDEVENT),
-#6192 (QueryUnload self-release — overlaps cluster 2 below).
+#6192 (QueryUnload self-release — overlaps cluster 2 below), and three
+more found in the 2026-09-23 full-backlog sweep: #6240 (REPORT expression
+closing the active cursor, heap UAF), #6241 (COPY TO predicate erasing
+the source cursor), #6242 (LOCATE predicate writing to a freed cursor).
 
 **Disclosed, not yet fixed, needs a different mechanism:**
 `aggregate_function_value()`'s bare-call form (`? SUM(field FOR cond)` as
@@ -164,10 +183,16 @@ wrong semantics.
 
 ### 6. REPORT/COPY TO memory & correctness — `NOT STARTED`
 
-~10 issues: #6203-#6209, #6238-#6239. Full result sets materialized in
-memory (DoS-shaped), `_TALLY` never updated, scope/`WHILE` ignored on
-`COPY TO`, bare `REPORT FORM` becomes interactive, saved data
-environments ignored.
+~17 issues: #6203-#6209, #6238-#6239, plus found in the 2026-09-23
+full-backlog sweep: #5849 (REPORT/LABEL output not published atomically),
+#5850 (cursor state not restored when a report expression fails), #6349
+(`COPY TO` clears deletion markers and resurrects records), #6350 (`COPY
+TO WITH CDX` drops the structural index), #6351 (`COPY TO DATABASE`
+doesn't register the table), #6352 (`COPY STRUCTURE` fails on valid
+nullable tables), #6413 (`?`/`??` drop every expression after the first).
+Full result sets materialized in memory (DoS-shaped), `_TALLY` never
+updated, scope/`WHILE` ignored on `COPY TO`, bare `REPORT FORM` becomes
+interactive, saved data environments ignored.
 
 ### 7. Menu/Popup subsystem — `NOT STARTED` (feature-gap, not a bug cluster)
 
@@ -194,6 +219,27 @@ EVENTTRACKING/COVERAGE/DEBUGOUT/TABLEVALIDATE/KEYCOMP/STRICTDATE/
 NULLDISPLAY` and more, inert or wrong-default. Sample spot-checked open:
 #6264, #6266, #6267.
 
+Issue numbers backfilled by the 2026-09-23 full-backlog sweep (~64,
+consistent with the "~60+" original estimate): #107 (SET FIELDS), #6213
+(SAFETY), #6214 (ANSI), #6215 (MULTILOCKS), #6216 (OPTIMIZE), #6217
+(TALK), #6220 (SYSMENU), #6221 (unknown SET options fabricate settings),
+#6222 (ENGINEBEHAVIOR), #6223 (COMPATIBLE), #6224 (invalid operands
+silently clamped), #6228 (CARRY), #6229 (NULL), #6265 (BLOCKSIZE), #6268
+(ASSERTS/ASSERT), #6271 (STRICTDATE), #6323 (NOCPTRANS), #6324
+(CPDIALOG), #6325 (COMPILE/CPCOMPILE), #6326 (EVENTLIST/EVENTTRACKING),
+#6327 (COVERAGE), #6328 (DEBUGOUT), #6329 (CLASSLIB), #6330 (LIBRARY),
+#6332 (SYSFORMATS), #6333 (TEXTMERGE), #6334 (ORDER), #6335
+(SEEK/INDEXSEEK), #6336 (REPORTBEHAVIOR), #6337 (PROCEDURE), #6338
+(RELEASE PROCEDURE misparsed), #6339 (KEY), #6341 (ESCAPE), #6384
+(NULLDISPLAY), #6390 (KEYCOMP), #6391 (TABLEVALIDATE), #6392
+(AUTOINCERROR), #6393 (SQLBUFFERING), #6395 (UNIQUE), #6396
+(VARCHARMAPPING), #6397 (TABLEPROMPT), #6398 (TYPEAHEAD), #6399
+(FULLPATH), #6400 (FUNCTION/CLEAR MACROS), #6401 (CONFIRM), #6402
+(DEVELOPMENT), #6404 (OLEOBJECT), #6405 (RESOURCE), #6406 (BROWSEIME/
+IMEMode/IMESTATUS), #6407 (NOTIFY), #6408 (STATUS/STATUS BAR/MESSAGE/
+BRSTATUS), #6409 (BELL), #6410 (CURSOR/SYS(2002)), #6411 (STEP/ECHO/
+TRBETWEEN), #6412 (VIEW), #6414 (HELP/SET HELP/TOPIC).
+
 ### 10. Access saved-query extraction — `NOT STARTED`
 
 ~5 issues: #6423-#6427. Drops joins/`GROUP BY`/aliases/`SELECT *`/`DESC`.
@@ -216,6 +262,254 @@ binding leak, `CLEAR DLLS`/`ADLLS`.
 (FLOCK/RLOCK cross-process coordination), #6264/#6266-#6267 (SET
 LOCK/KEY/INDEX, overlaps cluster 9), #6342-#6348/#6380-#6383 (APPEND
 FROM/COPY TO format-specific gaps).
+
+## Additional clusters (2026-09-23 full-backlog sweep)
+
+The original 12 clusters above were built from a skim of the backlog on
+2026-09-19, when it held ~280 open issues; the backlog has since grown to
+934. This sweep categorized the previously-untracked remainder — 711
+issues, concentrated in two ranges the original clusters never touched at
+all (#5500-#5999: 391 issues; #1000-#5499: 69 issues) plus a further 220
+in #6000-#6499 the original clusters only partially covered. Some of that
+711 turned out to belong to the 12 clusters above by theme even though
+the original text never cited their issue numbers (backfilled into
+clusters 1, 6, and 9 above rather than duplicated here).
+
+Ranges below are cited the same way as clusters 1-12 (representative,
+not necessarily gap-free) and were spot-checked, not individually
+verified issue-by-issue — see [Scale reality](#scale-reality) for the
+residual-tail accounting.
+
+### 13. EXPORT/IMPORT DATABASE data-integrity & cross-format fidelity — `NOT STARTED`
+
+~70 issues, part of Lane H: #5563-#5657 (most of this range), #5664,
+#5667, #5672, #5674, #5675, #5683, #5684, #5692, #5695, #5701, #5705,
+#5706, #5708, #5712-#5716, #5742, #5748-#5750, #5760-#5763. The largest
+single new cluster. A systematic bug-hunt wave against `EXPORT
+DATABASE`/`IMPORT DATABASE` across every target (JSON, SQL Server,
+MySQL, XBASE, Access): silent data loss (NULL-as-zero, dropped Unicode,
+dropped catalog properties/precision/DCT properties), false success
+reporting (missing tables, unreadable catalogs, ambiguous case-folded
+files, truncated DBC treated as valid), and outright corruption
+(overlapping-field serialization, duplicate identities, impossible
+numeric precision accepted). Overlaps cluster 4 (malformed-DBF-input) at
+the edges — cluster 4 is about a hostile/corrupt *DBF* being read;
+this cluster is about a *correct* source being mis-translated on export
+or import.
+
+### 14. Shared-temp-directory / symlink-race / TOCTOU security hardening — `NOT STARTED`
+
+~45 issues, cross-cutting many subsystems rather than one root cause,
+all `safety`+`security`-labeled: #5574, #5578, #5588, #5591, #5592,
+#5597, #5599, #5600, #5605, #5607, #5613, #5614, #5616, #5621, #5627,
+#5628, #5669, #5679, #5681, #5682, #5702, #5709, #5726, #5761, #5769,
+#5770, #5771, #5774-#5780, #5784, #5791, #5792, #5795, #5834, #5835,
+#5846, #6386. Designer undo journals, xAsset bootstrap wrappers,
+`NEWOBJECT` VCX source, runtime-bridge bootstrap, CDX/DBF staging,
+license loading, native-wrapper builds, and package staging all follow a
+predictable shared-temp path or a symlink an attacker can pre-place,
+instead of using an exclusively-created, identity-checked location. A
+single shared fix pattern (matching this project's own established
+"private, identity-receipted, exclusively-created staging" convention
+used elsewhere) likely closes most of these at once if applied as a
+shared helper rather than per-site.
+
+### 15. Resource-exhaustion / unbounded-allocation DoS hardening — `NOT STARTED`
+
+~45 issues: #5594, #5595, #5598, #5608, #5609, #5611, #5612, #5615,
+#5623, #5628, #5642, #5686, #5687, #5703, #5728, #5731, #5740, #5741,
+#5759, #5764-#5768, #5782, #5787, #5790, #5800, #5804, #5811, #5828,
+#5946, #6003, #6004, #6029, #6030, #6050. Functions/paths that read an
+entire file, buffer an entire request, or materialize an entire
+structure into memory with no size/length/depth bound before validating
+it — `FILETOSTR`, `XMLTOCURSOR`, `AGETFILEVERSION`, array/list-control
+materialization, PRG include-chain depth, audit-log rewrites, project
+inventory enumeration, `SPACE`/`REPLICATE`, `PADL`/`PADR`/`PADC`,
+`FREAD`/`FGETS`. Distinct from cluster 14 (both are `safety`-labeled, but
+this is about size/depth bounds, not path/identity races) and from
+cluster 4 (this is a resource bound, not a data-integrity/corruption
+outcome).
+
+### 16. CDX/NDX/MDX/IDX index format integrity — `NOT STARTED`
+
+~20 issues: #5589, #5603, #5604, #5615, #5618-#5622, #5676, #5855-#5857,
+#6052, #6053, #6089, #6099-#6101, #6138. Index writers publish entries
+that don't exist in the DBF, accept/produce tag-name and key-expression
+mismatches between writer and reader, don't sync durably, can't replace
+an existing destination on Windows, and readers accept zero-filled or
+structurally invalid roots/blocks as valid. `INDEX ON`/`REINDEX`/`DELETE
+TAG` are also silently no-ops (#6099-#6101) — could arguably split into
+its own cluster if picked up separately from the byte-format issues.
+
+### 17. Built-in function correctness — `NOT STARTED`
+
+**By far the largest new cluster, ~150+ issues** spanning numeric
+(`ROUND`, `MOD`, `CEILING`/`FLOOR`, `CHR`/`STR` truncation-vs-rounding),
+string (`PAD*`, `SOUNDEX`, `STRCONV`, `PROPER`, `LTRIM`/`RTRIM`/`ALLTRIM`,
+`STREXTRACT`, code-page/non-ASCII handling), array (`AFIELDS`, `ADIR`,
+`AUSED`, `ACOPY`, `ALINES`, `ASORT`, `ASCAN`), file I/O (`FPUTS`,
+`FGETS`, `FCHSIZE`, `FFLUSH`, `FCLOSE`, `FSEEK`, `FWRITE`), date/time
+(`WEEK`, `DOW`, `QUARTER`, `MDY`, `TIME`, `SECONDS`, `DATE`/`DATETIME`
+argument handling), and type-system (`VARTYPE`, `TYPE`, `TRANSFORM`,
+`CAST`) built-ins. Representative range: #5565, #5570, #5704-#5716,
+#5877-#5942, #5980-#5999, #6002, #6005, #6013-#6016, #6027, #6031-#6034,
+#6039, #6042, #6046-#6062, #6144, #6145. **Needs sub-splitting by
+function family when picked up** — this range is too large and too
+low-leverage-shared (each function is its own independent bug, not a
+shared root cause) to work as one slice; treat the family groupings in
+this paragraph as the natural sub-cluster boundaries. Closely related to
+cluster 24 (NULL/type-coercion) and cluster 25 (Currency precision)
+below — those are kept separate because they share an actual root cause
+across their own issues, unlike this grab-bag.
+
+### 18. DBC (Database Container) command surface non-functional — `NOT STARTED`
+
+~25 issues, unusually coherent for this size: #6099-#6126 (most of this
+range). Nearly every DBC-scoped command is either a complete no-op that
+reports success (`CREATE DATABASE`, `ADD TABLE`, `REMOVE TABLE`, `DROP
+TABLE`, `CREATE CONNECTION`, `CREATE TRIGGER`), silently misrouted to
+operate on the currently-selected table instead of the database
+(`PACK DATABASE`, `DELETE DATABASE`, `DELETE VIEW`, `DELETE CONNECTION`),
+or simply ignored (`CREATE SQL VIEW`, `RENAME TABLE`, `DBGETPROP`/
+`DBSETPROP`, `ADBOBJECTS`, DBC field/record validation rules and
+defaults, long field names, autoincrement `NextValue`). This reads as an
+entire command family that was stubbed once and never implemented –
+worth checking whether one shared DBC-dispatch entry point explains all
+of it before fixing each command independently.
+
+### 19. Concurrent/multi-process DBF mutation corruption — `NOT STARTED`
+
+~8 issues: #5670, #5671, #6087, #6088, #6094, #6191. Concurrent
+`APPEND`/field-`REPLACE` operations lose successful writes or mix rows
+from different FPT generations; `APPEND FROM` variants bypass held table
+locks; targeted append retries after a late write failure can duplicate
+records. Distinct from cluster 1 (single-process reentrant UAF via
+callback) — this is genuine multi-process/multi-session race behavior.
+
+### 20. Access/Jet migration read-side gaps — `NOT STARTED`
+
+~10 issues: #5538, #5539, #5541, #5547, #5688, #5760, #5831, #5832,
+#6038. Multi-page Access TDEFs get omitted instead of reassembled, Jet3
+text decoding corrupts non-ASCII, TDEF index/relationship metadata isn't
+decoded, Jet4 compressed-Unicode decoding is incomplete. Same
+Access-migration code area as cluster 10 (saved-query extraction) and
+this project's prior exploration
+([[project_copperfin_access_migration_priority]]).
+
+### 21. .NET/C# polyglot code-gen correctness — `NOT STARTED`
+
+~20 issues, part of Lane H: #5851, #5861-#5866, #5871, #5892, #6135,
+#6137, #6248, #6249, #6305, #6378, #6428, #6429, #6431. Two related
+sub-themes: generated C# quality (reserved-keyword identifier collisions,
+duplicate type names across same-root forms, dropped procedure
+arguments/return values, assignments copied instead of lowered, `WAIT`
+printed as literal source text) and the LINQ descriptor generator
+(empty/duplicated catalogs, syntactically-impossible SELECTs accepted,
+`GROUP BY`/`HAVING`/join/`UNION` structure discarded).
+
+### 22. xAsset/Studio real-fixture format-parity gaps — `NOT STARTED`
+
+~20 issues: #5957-#5975, #6078-#6083. Studio flattens real VFP9 MNX menu
+hierarchies, misplaces nearly every object in real FRX reports, drops
+qualified SCX parent paths, and several generated output formats (APP,
+FXP, OCX, FLL) are confirmed byte-format-invalid against real VFP9 via
+this project's own fixture-based verification discipline (`bug,
+test-coverage` labels). Also Visual Studio project-analysis scanners
+corrupting legacy ANSI source and misinterpreting comments/TEXT payloads
+as executable. Related to, but distinct from, cluster 11
+(Studio/Designer/Builder, which is about designer UNDO/dry-run/read-only
+violations rather than output-format fidelity) and cluster 7
+(Menu/Popup, which is runtime MNX *behavior* rather than Studio's
+MNX *parsing*).
+
+### 23. COM/event/object-lifecycle reentrancy safety — `NOT STARTED`
+
+~12 issues: #5841, #5847, #5858-#5860, #5870, #6098, #6278-#6280, #6375.
+Native object construction UAF when `Init` releases the object mid-call,
+UI objects and event sources not revalidated after a reentrant handler
+releases them, COM event delivery deadlocking on reentrant disconnect,
+form `Release()` destroying child controls before `Destroy` fires or
+leaving a phantom reference. Thematically adjacent to cluster 1
+(reentrant-cursor UAF) and cluster 2 (session/shutdown) but about
+native/COM object lifetime rather than `CursorState`.
+
+### 24. Type-coercion / three-valued NULL-logic correctness — `NOT STARTED`
+
+~12 issues: #5934, #5936, #5939, #5940, #5942, #5979, #6034, #6140,
+#6141, #6142. `EMPTY()`/`ISBLANK()` report `NULL` as empty/blank instead
+of `.F.`, logical operators and arithmetic silently truth-test or
+coerce non-Logical/NULL operands, `INLIST` coerces null comparisons,
+numeric equality merges distinct values within an epsilon. **Directly
+overlaps issue #6506** (already tracked as a singleton follow-up above,
+filed from this session's #6047 work) — when #6506 is picked up, survey
+this cluster's issues first, since several may already be covered by
+whatever `PrgValue`/`is_null` representation change #6506 ends up
+choosing.
+
+### 25. Currency/numeric-precision type fidelity — `NOT STARTED`
+
+~8 issues: #6035-#6041. `Currency` results from external functions and
+aggregates lose fixed-point precision through `double` accumulators,
+`CEILING`/`FLOOR` miscompute negative Currency, Date/DateTime/Character
+`MIN`/`MAX` aggregates fabricate a Number zero instead of the correct
+type. Could be folded into cluster 17 (built-in function correctness) if
+picked up together, but kept separate here since these five share one
+real root cause (`Currency`'s internal representation not being
+preserved through the aggregate/function pipeline).
+
+### 26. CI/build/test infrastructure fixes — `NOT STARTED` (not product bugs)
+
+~15 issues: #5801, #5802, #5805, #5809, #5815, #5816, #5820-#5829.
+Windows installer lane aborting on one bad mirror, sanitizer/exporter
+coverage gaps, VSIX lifecycle gate failures on VS2026, test fixtures
+colliding across concurrent build trees. Lower priority than the
+product-facing clusters above — these affect development velocity, not
+shipped behavior — but still open and `agent-approved`.
+
+### 27. `[Architecture]` cross-cutting design proposals — `NOT STARTED` (not closeable bugs)
+
+~9 issues: #6017-#6025, #6043. Proposals for durable-publication/
+multi-file-recovery contract unification, shared callback/reentrancy/
+shutdown ownership rules, legacy-bytes-vs-Unicode boundary separation,
+schema-evolution standardization, explicit capability-admission
+semantics, and optimizer-correctness/cost-ranking separation. These are
+design decisions that would *inform* how several of the clusters above
+get fixed, not independently closeable defects — read before starting
+cluster 1, 2, 14, or 19 in particular, since their proposals overlap
+those clusters' actual fix patterns.
+
+### 28. Native PRG class-system parity residuals (`#3217` umbrella) — `NOT STARTED`
+
+~12 issues, all legacy-numbered slices of umbrella #3217: #3223, #3256,
+#3263, #3277, #3334, #3754, #3829, #4239, #4431, #4432, #4617, #4618,
+#4630, #4686, #4747, #4753, #5123. `NEWOBJECT` forwarding reserved
+slots into `Init`, declarative `ADD OBJECT` support, `ACLASS` appending
+a nonexistent ancestor, `PageFrame` mutation parity, `SET SKIP OF
+BAR`/`MRKBAR` state, one-to-many `SET SKIP` navigation, native list
+collection/`ListBox` parity, defined-menu lifecycle.
+
+### 29. Runtime surface stub replacement (`#3249` umbrella) — `NOT STARTED`
+
+~5 issues: #3250, #3252, #3253, #3254, plus #6044 (found in this sweep,
+same theme). `GETPICT`/`GETCOLOR`/`GETFONT`/`VARREAD` host-contract
+depth, `AFONT`/`APRINTERS` fixed-stub enumeration, `AGETFILEVERSION`
+metadata parity.
+
+### 30. Foundational SQL SELECT / buffering-mode gaps (legacy-numbered) — `NOT STARTED`
+
+~5 issues, high severity despite the small count: #3852 (`TABLEUPDATE()`/
+`TABLEREVERT()` don't exist; `CURSORSETPROP`/`CURSORGETPROP` are a
+complete no-op stub — buffering modes entirely unimplemented at the time
+this was filed; note this may already be substantially addressed by this
+session's buffered-`REPLACE`/`TABLEUPDATE()` work on #6047's PR #6505 —
+verify current state before assuming it's still fully open), #3958
+(`COPY STRUCTURE EXTENDED TO` entirely unimplemented), #3960 (`GROUP
+BY`/`HAVING` entirely unimplemented, silently corrupts the query
+instead), #3966 (`TOP n` not recognized, corrupts the projection clause
+instead of limiting rows), #3972 (aggregate functions in `SELECT` don't
+work at all). Predates cluster 3 (SQL federation, which is about
+*translating* VFP SQL to other backends) — this is the *native* VFP SQL
+engine's own foundational gaps.
 
 ## Umbrella and singleton tracking (outside the 12 clusters)
 
@@ -255,21 +549,42 @@ campaign rather than a shared-root-cause cluster:
 1. Finish #6496 then #6497 to close out umbrella #6498 (small, 2 issues,
    already "next" per `agent-handoff.md`, warm context from #6047/#5567/
    #5631).
-2. Return to cluster 1's remaining 7 issues to close it out entirely —
-   warm context, well-understood fix pattern, closest cluster to `DONE`.
-3. Cluster 4 (malformed-DBF-input) — DBF byte-format context is warm from
-   #6047/cluster-1 work; natural next pick even though it's a fresh
-   cluster.
-4. Cluster 2 (session/shutdown) — adjacent to recently-closed #6453 work.
-5. Clusters 3, 5, 6, 9, 10, 11, 12 in roughly listed order — no strong
-   sequencing dependency between them; pick by whichever has the most
-   current context or owner interest at the time.
-6. Clusters 7, 8 (Menu/Popup, legacy interactive I/O) last — these are
-   feature-gap areas (large implementation lifts), not bug clusters, and
-   benefit from being tackled with more design headroom than a
-   between-other-things slice affords.
+2. Return to cluster 1's remaining 10 issues to close it out entirely —
+   warm context, well-understood fix pattern, closest cluster to `DONE`
+   (grew from 7 to 10 after the sweep found #6240/#6241/#6242 belong
+   here too).
+3. Cluster 27 (`[Architecture]` proposals) — read-only, small (9 issues),
+   and several of its proposals directly inform how to approach clusters
+   1, 2, 14, and 19; cheap to read now before committing to a fix
+   pattern in those larger clusters.
+4. Cluster 4 (malformed-DBF-input) and/or cluster 13 (EXPORT/IMPORT
+   DATABASE fidelity) — DBF/DBC byte-format and migration context is
+   warm from #6047/cluster-1 work; cluster 13 is the single largest new
+   cluster (~70 issues) and directly adjacent to #6496's own
+   migration-fidelity coverage hunt, so doing them back-to-back has real
+   shared-context leverage.
+5. Cluster 18 (DBC command surface) — unusually coherent and
+   self-contained (~25 issues) for its size; good candidate for a single
+   focused pass once a shared DBC-dispatch entry point is confirmed.
+6. Cluster 2 (session/shutdown) — adjacent to recently-closed #6453 work.
+7. Cluster 24 (NULL/type-coercion) — read alongside singleton #6506
+   before starting either, since they likely share a fix.
+8. Clusters 14, 15 (shared-temp/symlink races; resource-exhaustion DoS)
+   — both cross-cutting `safety`/`security` hardening passes, worth
+   doing together since a shared helper may close much of both at once.
+9. Clusters 3, 5, 6, 9, 10, 11, 12, 16, 19, 20, 21, 22, 23, 25, 28, 29,
+   30 in roughly listed order — no strong sequencing dependency between
+   them; pick by whichever has the most current context or owner
+   interest at the time. Cluster 17 (built-in function correctness) is
+   the largest of all (~150+ issues) but explicitly needs sub-splitting
+   by function family before picking it up — don't take it as one slice.
+10. Clusters 7, 8 (Menu/Popup, legacy interactive I/O) last — these are
+    feature-gap areas (large implementation lifts), not bug clusters,
+    and benefit from being tackled with more design headroom than a
+    between-other-things slice affords.
+11. Cluster 26 (CI/build/test infra) — lowest priority; doesn't affect
+    shipped product behavior, pick up opportunistically.
 
-Re-survey the full backlog (`gh issue list --label agent-approved --state
-open`) once clusters 1-4 are exhausted, since the >900-issue pool is far
-larger than what's clustered here and new waves land periodically (see
-[[project_copperfin_codex_availability]]).
+Re-survey the full backlog periodically (see [Scale reality](#scale-reality)
+for the exact command) — this categorization will itself go stale the
+same way the original 12-cluster list did.
