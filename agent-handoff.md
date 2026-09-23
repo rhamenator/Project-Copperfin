@@ -2,55 +2,66 @@
 
 ## Last shipped slice
 
-PR #6491 fixed #6459 and merged into `v1-development` as
-`558f243b5518cb8a074c54b8453a78b269056021`; #6459 is closed (manually --
-`v1-development` is not the default branch, so `Fixes #N` does not
-auto-close). Before merging, the two Windows full-suite failures left open at
-the prior takeover (`test_vfp_assets`, `test_staged_import_publish`) were
-compared against a dedicated exact-base hosted Windows Native Validation run
-dispatched at the PR's merge-base commit `18ac9c6e1` (temporary branch
-`exact-base-6491-validation`, run 35788893430, deleted after use). Both
-failures reproduced byte-for-byte identically at the exact base and at the PR
-final head 15df3773f (same two tests, same assertion text, same `99% tests
-passed, 2 tests failed out of 398`), confirming they are pre-existing and
-unrelated to #6459's change. No new PR review comments existed beyond the
-already-addressed snapshot-path finding at merge time. Scratch build
-directory `~/temp/copperfin-6459-build` (565M) removed after merge.
+PR #6500 fixed #6495 (concurrency state-sequence hunt, child of umbrella
+#6498) and merged into `v1-development` as
+`bac49af30ba1e80e2707d6d1d1a8a7b4fa0d19e4`; #6495 is closed manually. Added
+four state-sequence tests in
+`tests/test_prg_engine_control_flow_task_supervision_state_sequences.cpp`
+covering both required crossings (SPAWN/AWAIT/cancellation/teardown and
+cursor-lock/transaction/caught-error/retry); see `docs/38-prg-task-supervision.md`'s
+State-Sequence Coverage section for the full invariant/expected-result
+writeup. No production runtime-code changes were needed -- real
+record/table-lock contention plus `SET REPROCESS TO n` provided the
+synchronization; `tests/CMakeLists.txt` did gain one new test-target source
+registration. A review round (Codex + Copilot) correctly found that one
+sequence lacked an assertion proving genuine contention occurred (a real
+missing-evidence/false-pass risk); that was fixed before merge -- every
+sequence now asserts on runtime-emitted contention/cancellation evidence.
+Review also correctly noted that getting two spawned sides into position
+still uses a fixed wait, since no injected-yield-point/barrier scheduler
+exists in this subsystem -- that limitation was *not* removed, only
+documented honestly and given wider timing margins for sanitizer/loaded-
+runner robustness; a future slice could add a real synchronization seam. The
+hunt surfaced and filed a real, not-yet-fixed defect, #6499 (cancellation
+observed inside an explicit `FLOCK()`/`RLOCK()` retry loop is silently
+swallowed instead of halting the calling script) -- deliberately not fixed
+as part of this coverage-only slice; the affected test documents current
+behavior with an inline citation. Local Linux Debug: 8 total consecutive
+full runs across two rounds passed cleanly (~110s each, no flakiness).
+Scratch build directory `~/temp/copperfin-6495-build` (654M) removed after
+merge.
 
-PR #6490 fixed #6458 and merged into `v1-development` as
-`18ac9c6e133249f6003154f014173b330aa158e4`; #6458 is closed. The final
-head passed all 15 hosted checks, including ASan/UBSan and Windows validation.
-The changed suites passed on full macOS and Windows native runs. Both macOS
-full-suite failures and two of three Windows full-suite failures reproduced on
-exact-base runs. The remaining Windows Access export failure is outside the
-changed files and recorded in the PR discussion and requirements row. Earlier
-#6460, #6389, #6388, #5680 partial, cloud-validation, and #6251 PRs also
-merged; #5680 remains open. PR #6486 was closed without merge after review
-found a macOS clone destination-identity gap.
+Earlier shipped slices (#6459/#6458/#6460/#6389/#6388/cloud-validation/#6251)
+all merged; #5680 remains open (partial). PR #6486 was closed without merge
+after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-The owner labeled `agent-approved` on the three coverage-cluster children of
-umbrella #6498 (#6495, #6496, #6497) and directed starting with #6495
-(concurrency state-sequence hunt), judged highest-priority since concurrency
-defects are this codebase's most severe hazard class and are historically
-under-caught by the existing fixed-sequence `stress` lane. PR TBD on branch
-`codex/fix-6495-state-sequence-hunt` adds four deterministic, seed-replayable
-state-sequence tests in `tests/test_prg_engine_control_flow_task_supervision_state_sequences.cpp`
-(see `docs/38-prg-task-supervision.md`'s new State-Sequence Coverage section
-for the full invariant/expected-result writeup). Real record/table-lock
-contention plus `SET REPROCESS TO n` provide deterministic synchronization
-without any production-code or build-system changes; the tests compile into
-`test_prg_engine_control_flow`, so hosted `stress`-lane repetitions exercise
-them automatically. The hunt surfaced and filed a real, not-yet-fixed defect,
-#6499 (cancellation observed inside an explicit FLOCK()/RLOCK() retry loop is
-silently swallowed instead of halting) -- deliberately not fixed as part of
-this coverage-only slice; the affected test documents current behavior with
-an inline citation instead. Local Linux Debug: 5 consecutive full runs of
-`test_prg_engine_control_flow` passed cleanly (~110s each, no flakiness).
-Next: push, open the PR, validate hosted checks, merge, then continue with
-#6496 or #6497 (both also `agent-approved`) or re-check live GitHub state for
-higher-priority work.
+Working toward #6496 (migration fidelity coverage hunt: NULL, deleted rows,
+memos, multi-file recovery), the second of the three owner-labeled
+`agent-approved` coverage-cluster children of umbrella #6498 (#6495 done
+above; #6497 remains `agent-approved` and not yet started). #6496's own
+bounded campaign explicitly expects to hit three separate, independently
+`agent-approved` P1 data-integrity defects in this exact area; per direct
+owner instruction, fixing them is now part of this workstream rather than
+being documented as known-failing gaps:
+
+- #5631 (JSON export turns NULL/unknown logical values into `false`) --
+  contained fix, no policy ambiguity.
+- #5567 (legacy DBF import silently reactivates deleted source records) --
+  the issue itself flagged this as needing an owner policy call (docs/69
+  currently documents the opposite as intentional); owner confirmed:
+  preserve the deleted flag through import, and update docs/69.
+- #6047 (nullable DBF writes silently lose NULL) -- owner confirmed full
+  scope: on-disk `_NullFlags` bitmap support across `CREATE TABLE`/`CURSOR`,
+  `REPLACE`, `APPEND`, buffered updates, transactions/rollback, multiple
+  field types spanning multiple bitmap bytes. This is substantial on its
+  own; if it still feels too large once underway, split it further per
+  `agents.md`'s slice-sizing rule rather than cutting acceptance criteria.
+
+No implementation started yet this turn; plan is #5631 first (smallest,
+cleanest), then #5567, then #6047, then #6496's own coverage tests on a
+more-correct baseline.
 
 ## Workspace preservation
 
