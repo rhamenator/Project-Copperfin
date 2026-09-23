@@ -125,3 +125,66 @@ passes both SET POINT targets under four locales (`8/8`), and Windows Native
 run `31329773507` passes `330/330`. Every platform executes
 `test_prg_engine_control_flow` successfully. Candidate protected checks
 conclude seven successes plus the non-failing neutral Socket project report.
+
+## State-Sequence Coverage (#6495)
+
+`tests/test_prg_engine_control_flow_task_supervision_state_sequences.cpp`
+adds four short sequences answering #6495's coverage gap that the `stress`
+Cloud Defect Hunt lane only repeats fixed whole-test sequences rather than
+constructing new interleavings. Getting two spawned sides into position
+still uses a fixed, generous wait rather than a true injected
+yield-point/barrier scheduler -- no such seam exists anywhere in the PRG
+engine's SPAWN/lock/transaction subsystem yet, and adding one was judged out
+of scope for this coverage-only slice. What these sequences do not do is
+trust that wait blindly: three of the four use real record/table-lock
+contention (with `SET REPROCESS TO n` widening `pause_for_lock_retry`'s real
+linear backoff once contention has actually started), and every sequence
+asserts on runtime-emitted evidence -- a `runtime.lock_retry`,
+`runtime.lock_timeout`, or `runtime.task.cancelled` event, or an equivalent
+state check -- that the intended contention or cancellation genuinely
+occurred, not merely that the script ran to completion. A review round on an
+earlier draft correctly found one sequence (the fourth, below) where that
+evidence check was missing and a lost race could have silently passed
+without exercising the crossing at all; it now requires a child-specific
+`runtime.lock_retry` event before accepting the sequence. If scheduling
+jitter ever causes two sides to miss each other despite the generous
+margins, the affected assertion fails loudly instead of a false pass. They
+compile into `test_prg_engine_control_flow`, so hosted `stress`-lane
+repetitions (`scripts/run-cloud-validation.py`) exercise them automatically.
+
+Two sequences extend the SPAWN/AWAIT/cancellation/teardown crossing:
+`test_state_sequence_await_retry_after_cancellation_reuses_still_registered_task`
+generalizes #6456's erase-only-on-success AWAIT ordering to a task that ends
+via cancellation rather than natural completion, proving it too remains
+registered and exactly-once-consumable after a failed output assignment.
+`test_state_sequence_cancellation_during_widened_lock_retry_leaves_no_residual_lock_ownership`
+proves a task cancelled while genuinely blocked mid explicit `FLOCK()` retry
+leaves no residual shared lock-owner entry, extending #6453's
+release-scoping invariant to the cancelled-while-waiting path -- and, in
+doing so, surfaced a real, newly filed, and *not yet fixed* defect (#6499):
+cancellation observed inside an explicit `FLOCK()`/`RLOCK()` retry loop is
+silently swallowed by `pause_for_lock_retry` (the cancellation bookkeeping
+runs and a `runtime.task.cancelled` event still fires, but the function
+returns `false` exactly like an ordinary retry-budget timeout, so the calling
+script's `RETURN FLOCK()` completes normally with `.F.` instead of halting).
+This differs from the correctly-halting per-statement dispatch loop and
+`SLEEP` cancellation checkpoints. The test documents today's actual behavior
+with an inline citation rather than asserting the not-yet-fixed halt
+semantics, per #6495's direction to file focused defects rather than hide or
+paper over them.
+
+Two more extend the cursor-lock/transaction-state/caught-error/retry
+crossing: `test_state_sequence_retry_after_caught_rollback_succeeds_cleanly`
+proves a transaction that fails on a genuinely record-lock-contended
+`REPLACE`, gets caught and rolled back, leaves no journal/transaction-level
+residue before an immediately following retry commits cleanly.
+`test_state_sequence_record_lock_handoff_across_rollback_and_child_quit_leaves_no_residue`
+proves an explicit `RLOCK()` released after a caught error extends #6453's
+QUIT-releases-only-its-own-locks invariant from table-level `FLOCK()` to
+record-level `RLOCK()` specifically, deliberately releasing the parent's lock
+via an explicit `UNLOCK` after `ROLLBACK` rather than assuming an unverified
+ROLLBACK-releases-explicit-locks parity claim.
+
+Local Linux Debug: the full `test_prg_engine_control_flow` binary (all
+existing coverage plus these four sequences) passed cleanly across 5
+consecutive full runs (~110s each, no flakiness observed).
