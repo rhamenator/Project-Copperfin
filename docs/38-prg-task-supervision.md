@@ -129,13 +129,26 @@ conclude seven successes plus the non-failing neutral Socket project report.
 ## State-Sequence Coverage (#6495)
 
 `tests/test_prg_engine_control_flow_task_supervision_state_sequences.cpp`
-adds four deterministic, seed-replayable short sequences answering #6495's
-coverage gap that the `stress` Cloud Defect Hunt lane only repeats fixed
-whole-test sequences rather than constructing new interleavings. Each
-sequence uses real record/table-lock contention and `SET REPROCESS TO n`
-(which widens `pause_for_lock_retry`'s real linear backoff) as its
-synchronization mechanism instead of guessed sleep timing, so the exact
-interleaving is reproducible from the fixed script alone, not luck. They
+adds four short sequences answering #6495's coverage gap that the `stress`
+Cloud Defect Hunt lane only repeats fixed whole-test sequences rather than
+constructing new interleavings. Getting two spawned sides into position
+still uses a fixed, generous wait rather than a true injected
+yield-point/barrier scheduler -- no such seam exists anywhere in the PRG
+engine's SPAWN/lock/transaction subsystem yet, and adding one was judged out
+of scope for this coverage-only slice. What these sequences do not do is
+trust that wait blindly: three of the four use real record/table-lock
+contention (with `SET REPROCESS TO n` widening `pause_for_lock_retry`'s real
+linear backoff once contention has actually started), and every sequence
+asserts on runtime-emitted evidence -- a `runtime.lock_retry`,
+`runtime.lock_timeout`, or `runtime.task.cancelled` event, or an equivalent
+state check -- that the intended contention or cancellation genuinely
+occurred, not merely that the script ran to completion. A review round on an
+earlier draft correctly found one sequence (the fourth, below) where that
+evidence check was missing and a lost race could have silently passed
+without exercising the crossing at all; it now requires a child-specific
+`runtime.lock_retry` event before accepting the sequence. If scheduling
+jitter ever causes two sides to miss each other despite the generous
+margins, the affected assertion fails loudly instead of a false pass. They
 compile into `test_prg_engine_control_flow`, so hosted `stress`-lane
 repetitions (`scripts/run-cloud-validation.py`) exercise them automatically.
 

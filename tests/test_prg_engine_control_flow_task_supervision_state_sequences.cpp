@@ -2,17 +2,30 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
-// #6495 state-sequence hunt: deterministic, seed-replayable short sequences
-// crossing SPAWN/AWAIT/cancellation/teardown and cursor-lock/transaction
-// state. The existing `stress` Cloud Defect Hunt lane only repeats a fixed
-// set of whole tests (docs/cloud-validation.md); it does not construct new
-// interleavings. Each sequence below is deterministic without relying on raw
-// OS thread-scheduling luck: real record/table-lock contention (which only
-// proceeds once a genuine conflict is confirmed under
-// `concurrency_state->mutex`) and `SET REPROCESS TO n` (which widens the
-// existing linear per-attempt backoff, `prg_engine_records.inl`'s
-// `pause_for_lock_retry`) give a wide, real synchronization window instead
-// of a guessed one. Each function documents its invariant and expected
+// #6495 state-sequence hunt: short sequences crossing SPAWN/AWAIT/
+// cancellation/teardown and cursor-lock/transaction state. The existing
+// `stress` Cloud Defect Hunt lane only repeats a fixed set of whole tests
+// (docs/cloud-validation.md); it does not construct new interleavings.
+//
+// Synchronization and self-verification, honestly stated (a review round on
+// this slice correctly flagged an earlier draft's claim of full
+// timing-independence as overstated): getting two spawned sides into
+// position still uses a fixed, generous wait rather than a true injected
+// yield-point/barrier scheduler -- there is no such seam anywhere in the PRG
+// engine's SPAWN/lock/transaction subsystem yet (adding one was judged out
+// of scope for this coverage-only slice; see the issue for the tradeoff).
+// What each sequence does NOT do is trust that wait blindly: every sequence
+// asserts on runtime-emitted evidence (a `runtime.lock_retry`/
+// `runtime.lock_timeout`/`runtime.task.cancelled` event, or an equivalent
+// state check) that the intended contention or cancellation genuinely
+// occurred, not merely that the script ran to completion. If scheduling
+// jitter ever causes two sides to miss each other, the affected assertion
+// fails loudly instead of the sequence silently reporting false success.
+// `SET REPROCESS TO n` (widening `prg_engine_records.inl`'s
+// `pause_for_lock_retry`'s real linear per-attempt backoff) is used where a
+// spawned side's own lock-retry loop needs a wide, real window once
+// contention has actually started; it does not by itself synchronize the
+// two sides' startup. Each function documents its invariant and expected
 // result before the script that exercises it, per #6495's acceptance
 // criteria. These tests are compiled into `test_prg_engine_control_flow`, so
 // they are automatically included in that binary's existing `stress` lane
@@ -32,6 +45,15 @@ namespace cf_test_prg_engine_control_flow {
 // Expected result: the first AWAIT with a bad target raises a catchable
 // error and leaves the task's status different from the post-erase sentinel
 // ('unknown'); the retry AWAIT then succeeds and finally erases it.
+// Timing: the worker's `SLEEP 2000` costs nothing in the intended outcome --
+// `SLEEP`'s own cancellation loop (`prg_engine_dispatch.inl`) checks the
+// cancel token every 1ms and breaks out as soon as the canceler's `SLEEP 1`
+// fires, so the real elapsed time stays a few ms regardless of the large
+// requested duration. What it buys is margin: the worker would have to be
+// descheduled for nearly 2 full seconds relative to the canceler for the
+// race described in review to actually flip the outcome, and if it ever
+// did, the `cancelled_event` assertion below fails loudly rather than the
+// sequence silently reporting a false pass.
 void test_state_sequence_await_retry_after_cancellation_reuses_still_registered_task() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_state_seq_await_retry_after_cancel";
@@ -56,7 +78,7 @@ void test_state_sequence_await_retry_after_cancellation_reuses_still_registered_
         "cStatusAfterRetry = CFTASKSTATUS(nWorker)\n"
         "RETURN\n"
         "PROCEDURE worker\n"
-        "SLEEP 50\n"
+        "SLEEP 2000\n"
         "RETURN .T.\n"
         "ENDPROC\n"
         "PROCEDURE canceler\n"
@@ -237,13 +259,16 @@ void test_state_sequence_cancellation_during_widened_lock_retry_leaves_no_residu
 // explicit ROLLBACK must leave no journal/transaction-level residue that
 // would corrupt or block an immediately following retry of the same logical
 // operation.
-// Timing: the parent's `SLEEP 10` after SPAWNing the holder is a fixed,
+// Timing: the parent's `SLEEP 50` after SPAWNing the holder is a fixed,
 // generous window for the holder's own background thread to start and
 // acquire its RLOCK() before the parent's REPLACE ever attempts the same
 // record (PRG scripts cannot observe a sibling's variables to synchronize
-// more precisely -- SPAWN deep-copies an independent Impl). The holder's own
-// `SLEEP 150` then keeps it held well past the parent's default `SET
-// REPROCESS` budget (8 attempts, ~36ms cumulative backoff), guaranteeing the
+// more precisely -- SPAWN deep-copies an independent Impl). If the holder is
+// somehow not ready in time, `caught` never runs and `error_seen`/
+// `timeout_event` below fail loudly rather than silently accepting an
+// untested sequence. The holder's own `SLEEP 300` then keeps it held well
+// past the parent's default `SET REPROCESS` budget (8 attempts, ~36ms
+// cumulative backoff) plus the startup margin above, guaranteeing the
 // parent's REPLACE genuinely exhausts its retry budget while the holder
 // still owns the record, rather than racing a hold that might release first.
 // Expected result: the first transaction attempt fails with a catchable
@@ -272,7 +297,7 @@ void test_state_sequence_retry_after_caught_rollback_succeeds_cleanly() {
         "APPEND BLANK\n"
         "REPLACE name WITH 'ORIGINAL2'\n"
         "SPAWN holder TO nHolder\n"
-        "SLEEP 10\n"
+        "SLEEP 50\n"
         "BEGIN TRANSACTION\n"
         "GO 2\n"
         "REPLACE name WITH 'FIRSTATTEMPT'\n"
@@ -298,7 +323,7 @@ void test_state_sequence_retry_after_caught_rollback_succeeds_cleanly() {
         "SELECT race\n"
         "GO 2\n"
         "lHolderLocked = RLOCK()\n"
-        "SLEEP 150\n"
+        "SLEEP 300\n"
         "RETURN lHolderLocked\n"
         "ENDPROC\n");
 
@@ -389,7 +414,14 @@ void test_state_sequence_retry_after_caught_rollback_succeeds_cleanly() {
 // retry budget well past the real time the parent's divide-by-zero fault,
 // error-handler dispatch, and actual transaction-journal rollback I/O take,
 // so the child reliably outlasts that handling instead of racing a bare
-// ~36ms default budget against unpredictable rollback I/O latency.
+// ~36ms default budget against unpredictable rollback I/O latency. The
+// parent's `SLEEP 50` before triggering the fault is a generous window for
+// the child to start and reach its own RLOCK() first; if the child is
+// somehow not ready in time and finds the record already free, the
+// `child_retry_event` assertion below (requiring genuine evidence of
+// contention, not just eventual success) fails loudly instead of every
+// other assertion silently passing without exercising the intended
+// blocked-handoff crossing.
 // Expected result: the child's RLOCK() fails while the parent still holds
 // it, succeeds once the parent's UNLOCK releases it, and the parent can
 // RLOCK() the same record again immediately after the child's QUIT with no
@@ -415,7 +447,7 @@ void test_state_sequence_record_lock_handoff_across_rollback_and_child_quit_leav
         "BEGIN TRANSACTION\n"
         "lParentLocked = RLOCK()\n"
         "SPAWN child TO nChild\n"
-        "SLEEP 10\n"
+        "SLEEP 50\n"
         "? 1 / 0\n"
         "RETURN\n"
         "PROCEDURE caught\n"
@@ -453,6 +485,17 @@ void test_state_sequence_record_lock_handoff_across_rollback_and_child_quit_leav
     expect(error_seen_it != state.globals.end() && error_seen_it->second.boolean_value,
            "#6495 V2b: the deliberate divide-by-zero should raise a catchable error the ON ERROR handler "
            "observes, independent of the lock-handoff mechanics under test");
+
+    const auto child_retry_event = std::find_if(
+        state.events.begin(), state.events.end(),
+        [](const auto &event) {
+            return event.category == "runtime.lock_retry" && event.detail.find("RLOCK") != std::string::npos &&
+                   event.detail.find("recno=1") != std::string::npos;
+        });
+    expect(child_retry_event != state.events.end(),
+           "#6495 V2b: the child must genuinely contend on record 1's RLOCK() while the parent still holds it -- "
+           "without this evidence, a child that started late enough to find the record already free would let "
+           "every other assertion below pass without ever exercising the intended blocked-handoff crossing");
 
     const auto child_done_it = state.globals.find("lchilddone");
     expect(child_done_it != state.globals.end() && child_done_it->second.boolean_value,
