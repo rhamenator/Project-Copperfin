@@ -7,10 +7,10 @@ this repo, neither of which tracks the other:
 
 - **The macro layer** (`docs/05-roadmap.md`, `docs/31-specification-compliance-gap-analysis.md`,
   `docs/23-phase-a-dependency-breakdown.md`, `docs/RELEASE-READINESS-REVIEW.md`)
-  organizes the whole product as a completion tree of ten lettered lanes
-  (`A`-`J`, see [Lane Status](#lane-status) below), deliberately without
-  citing individual issue numbers. It answers "what does v1 completion
-  look like."
+  organizes the whole product as a completion tree of nine lettered lanes
+  — `A`, `C`-`J`; lane `B` was never assigned, see [Lane Status](#lane-status)
+  below — deliberately without citing individual issue numbers. It answers
+  "what does v1 completion look like."
 - **The micro layer** — this document — tracks the actual open,
   `agent-approved` bug/gap backlog (**934 open issues** as of 2026-09-23,
   up from ~280 when this tracking started 2026-09-19) as thematic
@@ -19,10 +19,12 @@ this repo, neither of which tracks the other:
   closes multiple issues for the cost of one. It answers "which issue to
   pick up next."
 
-**Most clusters below are Lane A/C-adjacent runtime, format, and
-command-surface work** (a handful, like cluster 3, belong to other lanes —
-see each cluster's own text and [Lane Status](#lane-status), this is not a
-single-lane claim). Lanes A and C are recorded "Closed" in docs/05 at the
+**Clusters below span multiple lanes, not a single one** — most are Lane
+A/C runtime, format, and command-surface work (clusters 3, 13, and 21 are
+Lane H; cluster 14 is security work adjacent to Lane I; cluster 26 is CI
+infrastructure rather than runtime/format/command-surface work). Check
+each cluster's own text for its lane, not a blanket assumption. Where a
+cluster is Lane A/C: that lane is recorded "Closed" in docs/05 at the
 MVP/implementation-complete level, but that closure was a coarse
 milestone, not a claim that every command/expression/format edge case is
 bug-free — this granular backlog is exactly the residue that ongoing
@@ -30,12 +32,16 @@ agent-driven bug hunts keep finding underneath an already-shipped surface.
 That is expected, not a regression in lane status; docs/05 itself frames
 completion as revisited "only if a regression, new compatibility evidence,
 or release-validation failure creates a new acceptance gap," which is
-precisely what each cluster below represents.
+precisely what each Lane-A/C cluster below represents.
 
 **How to use this:** when picking "next work" with no other explicit
-instruction, take the next `NOT STARTED` cluster in [Cluster Order](#cluster-order)
-below — but first revalidate that specific issue's current state, author,
-and `agent-approved` label live via `gh issue view`, per the
+instruction, follow [Recommended order](#recommended-order) below, not a
+blind "next `NOT STARTED` cluster in listed order" scan — the two
+diverge (e.g. the recommended order finishes in-progress cluster 1 and
+reads cluster 27 before touching cluster 2, even though cluster 2 is
+listed earlier and is itself `NOT STARTED`). First revalidate the chosen
+issue's current state, author, and `agent-approved` label live via
+`gh issue view`, per the
 fail-closed Agent Issue Intake Boundary in `agents.md`; this document is a
 dated snapshot, not a substitute for that check, and an issue cited here
 can have been closed, relabeled, or edited since. Within a cluster, pick
@@ -300,7 +306,9 @@ residual-tail accounting.
 ~70 issues, part of Lane H: #5563-#5657 (most of this range), #5664,
 #5667, #5672, #5674, #5675, #5683, #5684, #5692, #5695, #5701, #5705,
 #5706, #5708, #5712-#5716, #5742, #5748-#5750, #5760-#5763. The largest
-single new cluster. A systematic bug-hunt wave against `EXPORT
+single-root-cause-coherent new cluster (cluster 17 below is larger in
+raw issue count but explicitly needs sub-splitting rather than being one
+coherent unit). A systematic bug-hunt wave against `EXPORT
 DATABASE`/`IMPORT DATABASE` across every target (JSON, SQL Server,
 MySQL, XBASE, Access): silent data loss (NULL-as-zero, dropped Unicode,
 dropped catalog properties/precision/DCT properties), false success
@@ -596,10 +604,10 @@ otherwise clustered above):
    pattern in those larger clusters.
 4. Cluster 4 (malformed-DBF-input) and/or cluster 13 (EXPORT/IMPORT
    DATABASE fidelity) — DBF/DBC byte-format and migration context is
-   warm from #6047/cluster-1 work; cluster 13 is the single largest new
-   cluster (~70 issues) and directly adjacent to #6496's own
-   migration-fidelity coverage hunt, so doing them back-to-back has real
-   shared-context leverage.
+   warm from #6047/cluster-1 work; cluster 13 is the largest
+   single-root-cause-coherent new cluster (~70 issues) and directly
+   adjacent to #6496's own migration-fidelity coverage hunt, so doing
+   them back-to-back has real shared-context leverage.
 5. Cluster 18 (DBC command surface) — unusually coherent and
    self-contained (~25 issues) for its size; good candidate for a single
    focused pass once a shared DBC-dispatch entry point is confirmed.
