@@ -30,15 +30,27 @@ found a macOS clone destination-identity gap.
 
 ## Active slice
 
-None. Issue #6492 (`PREVIEW` inside a quoted REPORT/LABEL `TO FILE` output
-filename incorrectly enters preview mode and creates no output) is open and
-repository-owner-authored but does not carry `agent-approved`; per the Agent
-Issue Intake Boundary it is not yet authorized for unattended/agent-selected
-work. It was reproduced but not fixed during the prior takeover's first
-discovery cycle (see below); leave it for owner labeling or direct
-instruction before starting a fix. The next work-selection point should also
-re-check live GitHub state and `docs/05-roadmap.md` for the highest-value
-unfinished subgoal, since no other slice is currently retained in-progress.
+The owner labeled `agent-approved` on the three coverage-cluster children of
+umbrella #6498 (#6495, #6496, #6497) and directed starting with #6495
+(concurrency state-sequence hunt), judged highest-priority since concurrency
+defects are this codebase's most severe hazard class and are historically
+under-caught by the existing fixed-sequence `stress` lane. PR TBD on branch
+`codex/fix-6495-state-sequence-hunt` adds four deterministic, seed-replayable
+state-sequence tests in `tests/test_prg_engine_control_flow_task_supervision_state_sequences.cpp`
+(see `docs/38-prg-task-supervision.md`'s new State-Sequence Coverage section
+for the full invariant/expected-result writeup). Real record/table-lock
+contention plus `SET REPROCESS TO n` provide deterministic synchronization
+without any production-code or build-system changes; the tests compile into
+`test_prg_engine_control_flow`, so hosted `stress`-lane repetitions exercise
+them automatically. The hunt surfaced and filed a real, not-yet-fixed defect,
+#6499 (cancellation observed inside an explicit FLOCK()/RLOCK() retry loop is
+silently swallowed instead of halting) -- deliberately not fixed as part of
+this coverage-only slice; the affected test documents current behavior with
+an inline citation instead. Local Linux Debug: 5 consecutive full runs of
+`test_prg_engine_control_flow` passed cleanly (~110s each, no flakiness).
+Next: push, open the PR, validate hosted checks, merge, then continue with
+#6496 or #6497 (both also `agent-approved`) or re-check live GitHub state for
+higher-priority work.
 
 ## Workspace preservation
 

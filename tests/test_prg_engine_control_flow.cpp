@@ -220,6 +220,10 @@ int main() {
     test_spawn_natural_completion_releases_its_own_locks();
     test_spawn_transaction_rollback_does_not_erase_committed_sibling_write();
     test_request_cancel_rolls_back_active_transaction_and_resets_txnlevel();
+    test_state_sequence_await_retry_after_cancellation_reuses_still_registered_task();
+    test_state_sequence_cancellation_during_widened_lock_retry_leaves_no_residual_lock_ownership();
+    test_state_sequence_retry_after_caught_rollback_succeeds_cleanly();
+    test_state_sequence_record_lock_handoff_across_rollback_and_child_quit_leaves_no_residue();
     test_spawn_critical_section_serializes_workers();
     test_critical_section_order_policy_rejects_descending_nested_acquire();
     test_critical_section_exit_order_is_enforced();

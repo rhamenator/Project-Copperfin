@@ -1,3 +1,13 @@
+- 2026-09-22: Added four deterministic, seed-replayable state-sequence tests
+  covering the SPAWN/AWAIT/cancellation/teardown and cursor-lock/transaction/
+  caught-error/retry crossings (#6495), using real lock contention and `SET
+  REPROCESS TO n` instead of guessed sleep timing for reproducibility. They
+  compile into `test_prg_engine_control_flow`, so hosted `stress`-lane
+  repetitions exercise them automatically. Filed #6499 for a real,
+  not-yet-fixed defect the hunt surfaced: cancellation observed inside an
+  explicit `FLOCK()`/`RLOCK()` retry loop is silently swallowed instead of
+  halting the calling script, unlike the correctly-halting per-statement
+  dispatch loop and `SLEEP` cancellation checkpoints.
 - 2026-09-22: Generated non-shortcut MNX bootstraps now use a stable, legal
   internal menu symbol for definition, activation, deactivation, and release,
   preserving the logical filename stem separately. Invalid shortcut popup
