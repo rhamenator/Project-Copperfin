@@ -1,3 +1,10 @@
+- 2026-09-23: Recorded PR #6505's merge (issue #6047 closed) in
+  `agent-handoff.md`, including the full account of the Codex/Copilot
+  review round on that PR, and selected #6496 (migration fidelity
+  coverage hunt) as the next workstream now that all three of its
+  expected prerequisite defects (#5631, #5567, #6047) are fixed. Closed
+  two now-superseded mid-investigation docs PRs (#6507, #6508) without
+  merging and deleted their branches.
 - 2026-09-23: `import_xbase_table_to_vfp_native()` now preserves the source
   table's own deleted-record flags instead of silently reactivating every
   row (#5567), via a single-pass `create_dbf_table_file_with_deleted_flags()`
