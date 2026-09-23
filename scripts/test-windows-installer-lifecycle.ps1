@@ -27,6 +27,22 @@ param(
     [ValidateNotNullOrEmpty()]
     [string]$EvidenceDirectory,
 
+    # #6497: optional. When both prior-version parameters are supplied, the
+    # lifecycle additionally installs this synthetic, differently-versioned
+    # prior installer first, seeds an external user artifact, then installs
+    # $InstallerPath over the same root as an upgrade before continuing the
+    # existing same-version-reinstall/uninstall sequence. There is no real
+    # prior Copperfin release to test against yet -- see the CI workflow
+    # for how this installer is produced (COPPERFIN_PACKAGE_VERSION_OVERRIDE).
+    # Left absent, upgrade_from_previous_version stays NOT_RUN in the
+    # evidence, exactly as before this parameter existed.
+    [Parameter(ParameterSetName = 'Lifecycle')]
+    [string]$PriorInstallerPath,
+
+    [Parameter(ParameterSetName = 'Lifecycle')]
+    [ValidatePattern('^copperfin [0-9]+\.[0-9]+\.[0-9]+$')]
+    [string]$PriorUninstallRegistryKeyName,
+
     [Parameter(ParameterSetName = 'Lifecycle')]
     [ValidateRange(10, 600)]
     [int]$ProcessTimeoutSeconds = 180,
@@ -252,7 +268,12 @@ if ($SelfTest) {
     return
 }
 
+$hasPriorVersion = -not [string]::IsNullOrEmpty($PriorInstallerPath)
+if ($hasPriorVersion -and [string]::IsNullOrEmpty($PriorUninstallRegistryKeyName)) {
+    throw 'PriorUninstallRegistryKeyName is required when PriorInstallerPath is supplied.'
+}
 $resolvedInstaller = (Resolve-Path -LiteralPath $InstallerPath).Path
+$resolvedPriorInstaller = if ($hasPriorVersion) { (Resolve-Path -LiteralPath $PriorInstallerPath).Path } else { $null }
 $resolvedBinaryDirectory = (Resolve-Path -LiteralPath $BinaryDirectory).Path
 $resolvedInstallRoot = [System.IO.Path]::GetFullPath($InstallRoot)
 $resolvedEvidenceDirectory = [System.IO.Path]::GetFullPath($EvidenceDirectory)
@@ -261,6 +282,14 @@ $installParent = [System.IO.Directory]::GetParent($resolvedInstallRoot)
 
 Assert-Condition ($resolvedInstaller.EndsWith('.exe', [System.StringComparison]::OrdinalIgnoreCase)) `
     "Windows installer must be an executable: $resolvedInstaller"
+if ($hasPriorVersion) {
+    Assert-Condition ($resolvedPriorInstaller.EndsWith('.exe', [System.StringComparison]::OrdinalIgnoreCase)) `
+        "Prior Windows installer must be an executable: $resolvedPriorInstaller"
+    Assert-Condition (-not [string]::Equals(
+            $PriorUninstallRegistryKeyName, $UninstallRegistryKeyName,
+            [System.StringComparison]::OrdinalIgnoreCase)) `
+        'Prior and current uninstall registry key names must differ for an upgrade to be a real upgrade, not a same-version reinstall.'
+}
 Assert-Condition ($null -ne $installParent) "Installation root has no parent: $resolvedInstallRoot"
 Assert-Condition ([string]::Equals(
         $installParent.FullName.TrimEnd('\'),
@@ -281,12 +310,63 @@ $installedSnapshot = $null
 $maintenanceSnapshot = $null
 $uninstallRegistrationCount = 0
 $inspectOutput = ""
+$upgradeFromPreviousVersionResult = 'NOT_RUN'
+$externalUserArtifact = $null
 
 try {
-    Invoke-BoundedProcess `
-        -FilePath $resolvedInstaller `
-        -Arguments @('/S', "/D=$resolvedInstallRoot") `
-        -Name 'Copperfin silent fresh installation' | Out-Null
+    if ($hasPriorVersion) {
+        # #6497: install the synthetic prior version first, seed a small
+        # external user artifact (a real PRG file the installed CLI can
+        # process, living outside the install root -- like a user's own
+        # project file would), confirm the prior installation can process
+        # it, then install the current build over the same root as a real
+        # upgrade (not a fresh install to a new location). Verifies the
+        # upgrade preserves external user content and replaces (not
+        # duplicates) the uninstall registration.
+        Invoke-BoundedProcess `
+            -FilePath $resolvedPriorInstaller `
+            -Arguments @('/S', "/D=$resolvedInstallRoot") `
+            -Name 'Copperfin silent prior-version installation' | Out-Null
+        Assert-Condition (Test-Path -LiteralPath $resolvedInstallRoot -PathType Container) `
+            "Prior-version installer did not create the requested installation root: $resolvedInstallRoot"
+        Assert-Condition ((Get-CopperfinUninstallEntryCount `
+                -ExpectedInstallRoot $resolvedInstallRoot `
+                -ExpectedRegistryKeyName $PriorUninstallRegistryKeyName) -eq 1) `
+            'Prior-version installation must create exactly one uninstall registration.'
+
+        $externalUserArtifact = Join-Path $resolvedRunnerTemporaryRoot "copperfin-installer-lifecycle-user-project-$([System.IO.Path]::GetFileName($resolvedInstallRoot)).prg"
+        Set-Content -LiteralPath $externalUserArtifact -Encoding utf8NoBOM -Value @(
+            '* A minimal user project file, deliberately kept outside the',
+            '* installation root, to prove an upgrade neither touches nor',
+            '* loses track of a user''s own external content (#6497).',
+            '?"copperfin-installer-lifecycle-user-artifact"'
+        )
+        $priorInspectPath = Join-Path $resolvedInstallRoot 'bin\copperfin_inspect.exe'
+        Invoke-BoundedProcess -FilePath $priorInspectPath -Arguments @('--locale', 'en-US', '--help') `
+            -Name 'prior-version installed copperfin_inspect smoke' | Out-Null
+
+        Invoke-BoundedProcess `
+            -FilePath $resolvedInstaller `
+            -Arguments @('/S', "/D=$resolvedInstallRoot") `
+            -Name 'Copperfin silent upgrade installation' | Out-Null
+
+        Assert-Condition ((Get-CopperfinUninstallEntryCount `
+                -ExpectedInstallRoot $resolvedInstallRoot `
+                -ExpectedRegistryKeyName $PriorUninstallRegistryKeyName) -eq 0) `
+            'Upgrade must remove the prior version''s uninstall registration, not leave it alongside the new one.'
+        Assert-Condition (Test-Path -LiteralPath $externalUserArtifact -PathType Leaf) `
+            'Upgrade must not remove a user''s external artifact outside the install root.'
+        $upgradeInspectPath = Join-Path $resolvedInstallRoot 'bin\copperfin_inspect.exe'
+        Invoke-BoundedProcess -FilePath $upgradeInspectPath -Arguments @('--locale', 'en-US', '--help') `
+            -Name 'post-upgrade installed copperfin_inspect smoke' | Out-Null
+        $upgradeFromPreviousVersionResult = 'PASS'
+    }
+    else {
+        Invoke-BoundedProcess `
+            -FilePath $resolvedInstaller `
+            -Arguments @('/S', "/D=$resolvedInstallRoot") `
+            -Name 'Copperfin silent fresh installation' | Out-Null
+    }
 
     Assert-Condition (Test-Path -LiteralPath $resolvedInstallRoot -PathType Container) `
         "Installer did not create the requested installation root: $resolvedInstallRoot"
@@ -371,7 +451,8 @@ try {
         locale_catalog_contract = 'PASS'
         installed_cli_smoke = 'PASS'
         same_version_maintenance_reinstall = 'PASS'
-        upgrade_from_previous_version = 'NOT_RUN'
+        upgrade_from_previous_version = $upgradeFromPreviousVersionResult
+        prior_installer_sha256 = if ($hasPriorVersion) { (Get-FileHash -LiteralPath $resolvedPriorInstaller -Algorithm SHA256).Hash.ToLowerInvariant() } else { $null }
         silent_uninstall = 'PASS'
         install_root_residue = 'PASS'
         uninstall_registration_residue = 'PASS'
@@ -395,5 +476,8 @@ finally {
                 Write-Warning "Fallback uninstall failed: $($_.Exception.Message)"
             }
         }
+    }
+    if ($null -ne $externalUserArtifact -and (Test-Path -LiteralPath $externalUserArtifact)) {
+        Remove-Item -LiteralPath $externalUserArtifact -Force -ErrorAction SilentlyContinue
     }
 }

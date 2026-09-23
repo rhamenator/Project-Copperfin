@@ -31,6 +31,11 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # #6497: full history so the prior-version installer step below
+          # can check out a genuinely older commit for upgrade-lifecycle
+          # testing.
+          fetch-depth: 0
 
       - name: Install NSIS
         shell: pwsh
@@ -90,6 +95,50 @@ jobs:
           -DCOPPERFIN_EXPECTED_ARTIFACT_SUFFIXES="Windows.exe;Windows.zip"
           -P tests/run_cpack_artifact_contract_check.cmake
 
+      # #6497: there is no real prior Copperfin release to upgrade from yet.
+      # This builds a genuinely older commit's source (not just a version
+      # stamp on today's source) with a synthetic, differently-versioned
+      # package stamp (COPPERFIN_PACKAGE_VERSION_OVERRIDE), purely so the
+      # installer-lifecycle step below can exercise real upgrade mechanics
+      # (state preservation, uninstall-registration replacement) now,
+      # ahead of an actual release. This installer is never uploaded as a
+      # release artifact and never runs run_package_version_contract_check.cmake
+      # (which would, correctly, reject its CPack/VSIX-manifest mismatch --
+      # irrelevant here since this build only needs to produce one working
+      # NSIS installer, not a self-consistent release candidate). A
+      # `git worktree` is used so the main checkout above is left
+      # untouched.
+      - name: Build synthetic prior-version installer for upgrade testing
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $priorCommit = (git log --before="90 days ago" -n 1 --format=%H HEAD).Trim()
+          if ([string]::IsNullOrEmpty($priorCommit)) {
+            throw "No commit found at least 90 days before HEAD; cannot build a synthetic prior version."
+          }
+          Write-Host "Using $priorCommit as the synthetic prior version's source."
+          git worktree add ../copperfin-prior-version $priorCommit
+          Push-Location ../copperfin-prior-version
+          try {
+            cmake -S . -B build -A x64 -DCOPPERFIN_BUILD_TESTS=OFF -DCOPPERFIN_REQUIRE_X64=ON -DCOPPERFIN_PACKAGE_VERSION_OVERRIDE=0.0.1
+            cmake --build build --config Release --target copperfin_studio_host copperfin_runtime_host copperfin_build_host copperfin_inspect copperfin_mcp_host --parallel 2
+            msbuild vsix/Copperfin.Studio/Copperfin.Studio.csproj /restore /t:Rebuild /m:2 /p:Configuration=Release
+            cmake -E remove_directory build/package
+            cmake -E make_directory build/package
+            cpack --config build/CPackConfig.cmake -B build/package -C Release -G NSIS
+            cmake -E remove_directory build/package/_CPack_Packages
+          }
+          finally {
+            Pop-Location
+          }
+          $priorInstaller = @(Get-ChildItem -LiteralPath ../copperfin-prior-version/build/package -Filter 'copperfin-*-Windows.exe' -File)
+          if ($priorInstaller.Count -ne 1) {
+            throw "Synthetic prior-version build produced $($priorInstaller.Count) Windows installers; expected exactly one."
+          }
+          $priorKey = (Get-Content -LiteralPath ../copperfin-prior-version/build/CopperfinPackageInstallRegistryKey.txt -Raw).Trim()
+          "PRIOR_INSTALLER_PATH=$($priorInstaller[0].FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "PRIOR_UNINSTALL_REGISTRY_KEY=$priorKey" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
       - name: Exercise Windows installer lifecycle
         shell: pwsh
         run: |
@@ -100,12 +149,28 @@ jobs:
           }
           $installRoot = Join-Path $env:RUNNER_TEMP "copperfin-installer-lifecycle-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
           $uninstallRegistryKeyName = (Get-Content -LiteralPath build/CopperfinPackageInstallRegistryKey.txt -Raw).Trim()
-          ./scripts/test-windows-installer-lifecycle.ps1 `
-            -InstallerPath $installer[0].FullName `
-            -BinaryDirectory (Join-Path $env:GITHUB_WORKSPACE 'build') `
-            -InstallRoot $installRoot `
-            -UninstallRegistryKeyName $uninstallRegistryKeyName `
-            -EvidenceDirectory (Join-Path $env:GITHUB_WORKSPACE 'artifacts/windows-installer-lifecycle')
+          $lifecycleArguments = @(
+            '-InstallerPath', $installer[0].FullName,
+            '-BinaryDirectory', (Join-Path $env:GITHUB_WORKSPACE 'build'),
+            '-InstallRoot', $installRoot,
+            '-UninstallRegistryKeyName', $uninstallRegistryKeyName,
+            '-EvidenceDirectory', (Join-Path $env:GITHUB_WORKSPACE 'artifacts/windows-installer-lifecycle')
+          )
+          if (-not [string]::IsNullOrEmpty($env:PRIOR_INSTALLER_PATH)) {
+            $lifecycleArguments += @(
+              '-PriorInstallerPath', $env:PRIOR_INSTALLER_PATH,
+              '-PriorUninstallRegistryKeyName', $env:PRIOR_UNINSTALL_REGISTRY_KEY
+            )
+          }
+          & ./scripts/test-windows-installer-lifecycle.ps1 @lifecycleArguments
+
+      - name: Clean up synthetic prior-version worktree
+        if: always()
+        shell: pwsh
+        run: |
+          if (Test-Path -LiteralPath ../copperfin-prior-version) {
+            git worktree remove --force ../copperfin-prior-version
+          }
 
       - name: Create exact Corresponding Source archive
         uses: ./.github/actions/create-release-source

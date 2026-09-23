@@ -6,6 +6,21 @@ option(COPPERFIN_REQUIRE_X64
     "Require an x64 Windows toolchain for managed-product packaging"
     OFF)
 
+# #6497: a synthetic packaging-only version stamp, used solely to build a
+# deliberately differently-versioned installer for CI installer-lifecycle
+# upgrade testing (there is no real prior Copperfin release to upgrade
+# from yet). Never claims a real historical release -- only
+# CPACK_PACKAGE_VERSION/CopperfinPackageVersion.txt/the CPack file name and
+# uninstall registry key are affected; PROJECT_VERSION (the software's own
+# internal version identity) and the VSIX manifest are untouched, so this
+# is deliberately never used for an actual release artifact -- the
+# existing run_package_version_contract_check.cmake would (correctly)
+# reject the resulting mismatch between CPack and the VSIX manifest for
+# any build that sets this.
+set(COPPERFIN_PACKAGE_VERSION_OVERRIDE ""
+    CACHE STRING
+    "Synthetic CPack-only version stamp for installer-lifecycle upgrade testing; leave empty for a real build")
+
 # Keep the configure-time architecture result available to install-contract
 # checks; CMake does not persist CMAKE_SIZEOF_VOID_P in its public cache.
 set(COPPERFIN_NATIVE_POINTER_SIZE "${CMAKE_SIZEOF_VOID_P}" CACHE INTERNAL
@@ -930,7 +945,11 @@ file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/resources/locales"
 set(CPACK_PACKAGE_NAME "copperfin")
 set(CPACK_PACKAGE_VENDOR "Copperfin")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Copperfin standalone runtime and studio host tooling")
-set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+if(COPPERFIN_PACKAGE_VERSION_OVERRIDE)
+    set(CPACK_PACKAGE_VERSION "${COPPERFIN_PACKAGE_VERSION_OVERRIDE}")
+else()
+    set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+endif()
 set(CPACK_PACKAGE_CONTACT "maintainers@copperfin.local")
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}")
 set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION}")
