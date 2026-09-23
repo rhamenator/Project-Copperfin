@@ -394,6 +394,26 @@ DbfImportResult import_xbase_table_to_vfp_native(
         }
     }
 
+    // Third pass: #5567 -- carry the source's own deletion flag through.
+    // create_dbf_table_file() always creates active rows, and the source
+    // reader's `deleted` bit has no other channel into the row-value
+    // vectors the first pass above builds, so a deleted source record
+    // (a deleted customer, transaction, or otherwise obsolete row) would
+    // otherwise silently become live data in the destination. Equivalent
+    // record content requires the destination's active row set to match
+    // the source's, not merely its field values.
+    for (std::size_t record_index = 0U; record_index < source.table.records.size(); ++record_index) {
+        if (!source.table.records[record_index].deleted) {
+            continue;
+        }
+        const DbfWriteResult delete_result =
+            set_record_deleted_flag(destination_path, record_index, true);
+        if (!delete_result.ok) {
+            remove_destination_artifacts(destination_path);
+            return {.ok = false, .error = delete_result.error};
+        }
+    }
+
     return {
         .ok = true,
         .error = {},

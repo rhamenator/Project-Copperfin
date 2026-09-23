@@ -1320,6 +1320,73 @@ void test_import_xbase_table_to_vfp_native_round_trips_synthetic_foxpro() {
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5567: import_xbase_table_to_vfp_native() copied every parsed source
+// record's field values but never transferred DbfRecord::deleted, so a
+// deleted source row (a deleted customer, transaction, or otherwise
+// obsolete record) silently became live data in the destination.
+void test_import_xbase_table_to_vfp_native_preserves_deleted_record_flag() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_import_deleted_flag_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "QTY", .type = 'N', .length = 5U, .decimal_count = 0U},
+    };
+    const fs::path source = temp_dir / "source_dbase3.dbf";
+    const auto create_result = copperfin::vfp::create_dbase_iii_table_file(
+        source.string(), fields, {{"1"}, {"2"}});
+    expect(create_result.ok, "#5567: creating the dBASE III source fixture should succeed");
+
+    // set_record_deleted_flag() deliberately refuses to mutate a legacy
+    // dBASE-family file (dbase_read_only_mutation_error()), so a genuine
+    // dBASE III fixture must have its deletion marker patched directly at
+    // the byte level, exactly matching #5567's own reported reproduction
+    // (setting the row's first byte to 0x2A at the parsed header/record
+    // layout) rather than through that guarded public API.
+    const auto header_check = copperfin::vfp::parse_dbf_table_from_file(source.string(), 0U);
+    expect(header_check.ok, "#5567: the source fixture's header should parse before byte-level patching");
+    auto source_bytes = read_binary_file(source);
+    expect(!source_bytes.empty(), "#5567: the source fixture should be readable back for patching");
+    if (header_check.ok && !source_bytes.empty()) {
+        const std::size_t record_offset = header_check.table.header.header_length;
+        expect(record_offset < source_bytes.size(), "#5567: the computed record offset should be in range");
+        if (record_offset < source_bytes.size()) {
+            source_bytes[record_offset] = 0x2AU;
+            expect(write_binary_file(source, source_bytes), "#5567: the deletion-marker patch should be writable");
+        }
+    }
+
+    const auto source_check = copperfin::vfp::parse_dbf_table_from_file(source.string(), 2U);
+    expect(source_check.ok && source_check.table.records.size() == 2U &&
+               source_check.table.records[0U].deleted && !source_check.table.records[1U].deleted,
+           "#5567: the source fixture should report exactly its first record as deleted before import");
+
+    const fs::path destination = temp_dir / "imported.dbf";
+    const auto import_result = copperfin::vfp::import_xbase_table_to_vfp_native(source.string(), destination.string());
+    expect(import_result.ok, "#5567: importing a source with a deleted record should succeed: " + import_result.error);
+    expect(import_result.record_count == 2U, "#5567: the import result should still report both source records");
+
+    const auto imported = copperfin::vfp::parse_dbf_table_from_file(destination.string(), 2U);
+    expect(imported.ok, "#5567: the imported destination table should itself parse");
+    if (imported.ok && imported.table.records.size() == 2U) {
+        expect(imported.table.records[0U].deleted,
+               "#5567: the imported destination's first record must be deleted, matching the source, not "
+               "silently reactivated");
+        expect(!imported.table.records[1U].deleted,
+               "#5567: the imported destination's second (never-deleted) record must remain active");
+        if (imported.table.records[0U].values.size() == 1U) {
+            expect(imported.table.records[0U].values[0U].display_value == "1",
+                   "#5567: a deleted record's own field values must still be preserved, only its own deletion "
+                   "flag changes meaning, got '" + imported.table.records[0U].values[0U].display_value + "'");
+        }
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 // #5534: a two-tag synthetic CDX, matching the exact byte layout already
 // independently verified against real Jet3/Jet4-adjacent CDX work
 // elsewhere in this test suite (tests/test_vfp_assets.cpp's
@@ -3871,6 +3938,7 @@ int main(int argc, char* argv[]) {
     test_import_xbase_table_to_vfp_native_rejects_foxpro_general_field();
     test_import_xbase_table_to_vfp_native_rejects_foxpro_field_with_non_utf8_bytes();
     test_import_xbase_table_to_vfp_native_round_trips_synthetic_foxpro();
+    test_import_xbase_table_to_vfp_native_preserves_deleted_record_flag();
     test_infer_xbase_index_relations_finds_shared_indexed_column();
     test_infer_xbase_index_relations_ignores_unreadable_table();
     test_double_field_round_trips_full_ieee754_precision();

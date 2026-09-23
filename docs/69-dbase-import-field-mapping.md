@@ -180,12 +180,17 @@ destination file is created or written -- see
   unsupported (see the table above); adding it is a separate, larger
   slice touching core `dbf_table.cpp` write internals used by many other
   callers, not just this importer.
-- No deleted-record-flag preservation: every source record (deleted or not)
-  is imported as an active record in the destination table. A future slice
-  may choose to either preserve the flag or offer a `PACK`-equivalent
-  filter; this slice does neither, since the base VFP-native table-creation
-  API used here (`create_dbf_table_file()`) does not expose per-record
-  deleted-flag control.
+- ~~No deleted-record-flag preservation~~: **superseded by #5567.** A
+  deleted source record now imports as a deleted destination record too
+  (`import_xbase_table_to_vfp_native()`'s third pass calls the existing
+  public `set_record_deleted_flag()` once per deleted source record after
+  the table and its memo content are written), matching the broader
+  equivalent-record-content goal instead of silently reactivating obsolete
+  rows. This was a real, undocumented-facing gap despite being recorded
+  here as intentional: the exclusion did not reconcile with #5517's stated
+  equivalent-content goal, and the owner confirmed preservation is the
+  intended behavior. No `PACK`-equivalent deleted-row filtering option is
+  offered; that remains a possible future slice if a caller wants it.
 - Destination-existence check is a non-atomic `std::filesystem::exists()`
   probe before writing, matching this table-creation family's existing
   behavior elsewhere in the codebase (unlike #5485's `create_dbase_iii_table_file()`,
