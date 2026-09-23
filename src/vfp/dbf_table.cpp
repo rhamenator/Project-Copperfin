@@ -460,7 +460,19 @@ struct RawFieldDescriptor {
     std::uint32_t offset = 0;
     std::uint8_t length = 0;
     std::uint8_t decimal_count = 0;
+    bool nullable = false;
 };
+
+// #6047: VFP9's field-descriptor flags byte, offset 18 (0x12) of each
+// 32-byte descriptor (docs/80-dbf-nullflags-field-format-notes.md). Bit
+// 0x02 marks a field nullable; 0x01 marks a hidden system column and 0x04
+// a binary column (both used, but not individually confirmed, on the
+// hidden "_NullFlags" field itself).
+constexpr std::uint8_t dbf_field_flag_nullable = 0x02U;
+constexpr std::uint8_t dbf_field_flag_system_column = 0x01U;
+constexpr std::uint8_t dbf_field_flag_binary_column = 0x04U;
+constexpr char dbf_null_flags_field_type = '0';
+constexpr const char* dbf_null_flags_field_name = "_NullFlags";
 
 enum class DbfMemoStorageFormat {
     visual_foxpro,
@@ -659,7 +671,13 @@ std::vector<RawFieldDescriptor> read_raw_field_descriptors(const std::vector<std
             .type = static_cast<char>(table_bytes[descriptor_offset + dbf_descriptor_name_width]),
             .offset = read_le_u32(table_bytes, descriptor_offset + 12U),
             .length = table_bytes[descriptor_offset + 16U],
-            .decimal_count = table_bytes[descriptor_offset + 17U]
+            .decimal_count = table_bytes[descriptor_offset + 17U],
+            // #6047: this function only ever walks the 32-byte VFP
+            // descriptor layout (fixed +=32U stride below), so offset 18 is
+            // always the real flags byte here -- unlike
+            // parse_dbf_field_descriptor_block(), which must guard this for
+            // legacy 16-byte FoxBASE descriptors.
+            .nullable = (table_bytes[descriptor_offset + 18U] & dbf_field_flag_nullable) != 0U
         });
         descriptor_offset += 32U;
     }
@@ -699,6 +717,64 @@ std::optional<RawFieldDescriptor> find_raw_field(
         match = field;
     }
     return match;
+}
+
+// #6047: sets or clears one field's bit in its record's _NullFlags bitmap,
+// if the table has one and the named field is nullable
+// (docs/80-dbf-nullflags-field-format-notes.md). `header`/`record_index`
+// use the exact same record-offset convention write_field_bytes() itself
+// does, so this works unchanged whether `table_bytes` is a whole-file
+// buffer or a single-record buffer addressed with a zeroed header_length
+// (the existing replace_record_field_value_targeted() fast-path
+// convention). A no-op for a table with no _NullFlags field, or a field
+// that isn't declared nullable -- REPLACE ... WITH .NULL. on a genuinely
+// NOT NULL field is rejected by the PRG engine's own field-rule validation
+// before reaching this writer, not by this low-level function.
+void apply_null_flag_bit(
+    std::vector<std::uint8_t>& table_bytes,
+    const DbfHeader& header,
+    std::size_t record_index,
+    const std::vector<RawFieldDescriptor>& fields,
+    const std::string& field_name,
+    bool is_null) {
+    const auto null_flags_field = std::find_if(
+        fields.begin(), fields.end(),
+        [](const RawFieldDescriptor& f) {
+            return f.type == dbf_null_flags_field_type &&
+                   ascii_lowercase_copy(trim_both(f.name)) == ascii_lowercase_copy(dbf_null_flags_field_name);
+        });
+    if (null_flags_field == fields.end()) {
+        return;
+    }
+    const std::string normalized_target = ascii_lowercase_copy(trim_both(field_name));
+    int bit_index = -1;
+    int next_bit = 0;
+    for (const auto& f : fields) {
+        if ((f.type == dbf_null_flags_field_type &&
+             ascii_lowercase_copy(trim_both(f.name)) == ascii_lowercase_copy(dbf_null_flags_field_name)) ||
+            !f.nullable) {
+            continue;
+        }
+        if (ascii_lowercase_copy(trim_both(f.name)) == normalized_target) {
+            bit_index = next_bit;
+        }
+        ++next_bit;
+    }
+    if (bit_index < 0) {
+        return;
+    }
+    const std::size_t record_offset = header.header_length + (record_index * header.record_length);
+    const std::size_t byte_offset =
+        record_offset + null_flags_field->offset + static_cast<std::size_t>(bit_index / 8);
+    if (byte_offset >= table_bytes.size()) {
+        return;
+    }
+    const std::uint8_t bit_mask = static_cast<std::uint8_t>(1U << (bit_index % 8));
+    if (is_null) {
+        table_bytes[byte_offset] |= bit_mask;
+    } else {
+        table_bytes[byte_offset] &= static_cast<std::uint8_t>(~bit_mask);
+    }
 }
 
 bool supports_direct_field_writes(char field_type) {
@@ -1971,6 +2047,16 @@ FieldDescriptorParseResult parse_dbf_field_descriptor_block(
             : next_physical_field_offset;
         field.length = bytes[field_offset + layout.descriptor_length_offset];
         field.decimal_count = bytes[field_offset + layout.descriptor_decimal_count_offset];
+        // #6047: the field-descriptor flags byte immediately follows the
+        // decimal-count byte, but only in the 32-byte VFP descriptor layout
+        // (docs/80-dbf-nullflags-field-format-notes.md). FoxBASE's legacy
+        // 16-byte descriptors have no flags byte at all -- reading offset
+        // 18 there lands inside the *next* descriptor (or the terminator),
+        // spuriously flagging legacy fields as nullable.
+        const std::size_t flags_offset = field_offset + layout.descriptor_decimal_count_offset + 1U;
+        field.nullable = layout.descriptor_size == 32U && flags_offset < bytes.size() &&
+            flags_offset < field_offset + layout.descriptor_size &&
+            (bytes[flags_offset] & dbf_field_flag_nullable) != 0U;
         const DbfFormatFamily strict_layout_family = header.format_family();
         const bool is_strict_legacy_family =
             strict_layout_family == DbfFormatFamily::dbase ||
@@ -2160,6 +2246,38 @@ DbfTableParseResult parse_dbf_table_from_file(
     }
     table.fields = std::move(field_result.fields);
 
+    // #6047: the hidden "_NullFlags" bitmap field is never user-visible in
+    // real VFP9 (AFIELDS()/FCOUNT()/SELECT * all hide it), so it is removed
+    // from `table.fields` here: existing callers (schema-rewrite/ALTER
+    // TABLE preservation, exporters, etc.) already expect `table.fields`
+    // to enumerate every physical field exactly as read
+    // (test_schema_rewrites_preserve_opaque_null_flag_field_type et al.),
+    // so hiding it from ordinary user-facing field enumeration (AFIELDS()/
+    // FCOUNT()/SELECT *, matching real VFP9) is the runtime cursor layer's
+    // job, not this parser's -- see the three `cursor.local_fields =
+    // table_result.table.fields` assignment sites, which filter this
+    // field out themselves before caching it. This only records the
+    // field's own physical offset/length for the per-record bit decode
+    // below, and the bit index (declaration order among nullable fields
+    // only, LSB-first -- docs/80-dbf-nullflags-field-format-notes.md) each
+    // field owns within it.
+    std::optional<DbfFieldDescriptor> null_flags_field;
+    std::vector<int> null_flags_bit_index_by_field(table.fields.size(), -1);
+    {
+        int next_bit = 0;
+        for (std::size_t i = 0U; i < table.fields.size(); ++i) {
+            if (table.fields[i].type == dbf_null_flags_field_type &&
+                ascii_lowercase_copy(trim_both(table.fields[i].name)) ==
+                    ascii_lowercase_copy(dbf_null_flags_field_name)) {
+                null_flags_field = table.fields[i];
+                continue;
+            }
+            if (table.fields[i].nullable) {
+                null_flags_bit_index_by_field[i] = next_bit++;
+            }
+        }
+    }
+
     if (resolved_memo_sidecar_path.empty() &&
         table_uses_memo_sidecar(table.header, table.fields)) {
         memo_resolution = resolve_memo_sidecar_path(path, table.header);
@@ -2187,7 +2305,28 @@ DbfTableParseResult parse_dbf_table_from_file(
         record.record_index = record_index;
         record.deleted = bytes[record_offset] == 0x2AU;
 
-        for (const auto& field : table.fields) {
+        // #6047: decode this record's _NullFlags bitmap once, if present,
+        // so each nullable field's real per-record NULL bit (the
+        // authoritative signal -- see docs/80-dbf-nullflags-field-format-notes.md)
+        // can override whatever a type-specific heuristic in decode_value()
+        // would otherwise guess from a blank/ambiguous byte pattern.
+        // A byte vector, not a fixed-width integer accumulator: a table can
+        // have more than 16 nullable fields, needing more than 2 bitmap
+        // bytes, and squeezing that into a uint16_t silently drops the
+        // high bits (and risks an over-wide shift) past field 16.
+        std::vector<std::uint8_t> null_flags_bytes;
+        if (null_flags_field.has_value()) {
+            const std::size_t null_flags_start = record_offset + null_flags_field->offset;
+            const std::size_t null_flags_end = null_flags_start + null_flags_field->length;
+            if (null_flags_end <= bytes.size()) {
+                null_flags_bytes.assign(
+                    bytes.begin() + static_cast<std::ptrdiff_t>(null_flags_start),
+                    bytes.begin() + static_cast<std::ptrdiff_t>(null_flags_end));
+            }
+        }
+
+        for (std::size_t field_index = 0U; field_index < table.fields.size(); ++field_index) {
+            const auto& field = table.fields[field_index];
             const std::size_t field_start = record_offset + field.offset;
             const std::size_t field_end = field_start + field.length;
             if (field_end > bytes.size()) {
@@ -2214,6 +2353,13 @@ DbfTableParseResult parse_dbf_table_from_file(
                     .table = {},
                     .error = dbf_table_text("Vfp.DbfTable.Error.TextEncodingConversionFailed")
                 };
+            }
+            const int bit_index = null_flags_bit_index_by_field[field_index];
+            if (bit_index >= 0) {
+                const std::size_t byte_index = static_cast<std::size_t>(bit_index) / 8U;
+                const unsigned bit_in_byte = static_cast<unsigned>(bit_index) % 8U;
+                is_null = byte_index < null_flags_bytes.size() &&
+                    ((null_flags_bytes[byte_index] >> bit_in_byte) & 1U) != 0U;
             }
             record.values.push_back({
                 .field_name = field.name,
@@ -2371,7 +2517,19 @@ static DbfRewriteRowsResult collect_dbf_rewrite_rows(
 
             const auto& source_field = table.fields[*source_index];
             const auto& source_value = record.values[*source_index];
-            output_record.push_back(source_value.display_value);
+            // #6047: a preserved-but-decoded NULL field's display_value is
+            // just blank/empty, not the literal "null" sentinel the
+            // create-time bitmap computation below looks for -- without
+            // this, a schema rewrite (ALTER TABLE) would silently drop
+            // every existing NULL state for a non-string field. String
+            // fields (C/V/Q) are deliberately excluded, matching the
+            // sentinel's existing convention elsewhere: their real value
+            // could legitimately be that literal text.
+            const bool source_is_string_field =
+                output_fields[output_index].type == 'C' || output_fields[output_index].type == 'V' ||
+                output_fields[output_index].type == 'Q';
+            output_record.push_back(
+                (source_value.is_null && !source_is_string_field) ? std::string("null") : source_value.display_value);
 
             if (is_memo_pointer_field(source_field.type) &&
                 is_memo_pointer_field(output_fields[output_index].type) &&
@@ -2501,9 +2659,46 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
             .type = field.type,
             .offset = next_offset,
             .length = field.length,
-            .decimal_count = field.decimal_count
+            .decimal_count = field.decimal_count,
+            .nullable = field.nullable
         });
         next_offset += field.length;
+    }
+
+    // #6047: a hidden "_NullFlags" bitmap field, one bit per nullable field
+    // (not per field) in declaration order, LSB-first, spans
+    // ceil(nullable_count/8) bytes -- recovered from real VFP9 behavior,
+    // docs/80-dbf-nullflags-field-format-notes.md. Appended last, after
+    // every real field, exactly like real VFP9 does.
+    const std::size_t null_flags_field_index = raw_fields.size();
+    const std::size_t nullable_field_count = static_cast<std::size_t>(
+        std::count_if(raw_fields.begin(), raw_fields.end(),
+                      [](const RawFieldDescriptor& f) { return f.nullable; }));
+    const bool has_nullable_fields = nullable_field_count > 0U;
+    if (has_nullable_fields) {
+        const std::uint8_t null_flags_length =
+            static_cast<std::uint8_t>((nullable_field_count + 7U) / 8U);
+        raw_fields.push_back({
+            .name = dbf_null_flags_field_name,
+            .type = dbf_null_flags_field_type,
+            .offset = next_offset,
+            .length = null_flags_length,
+            .decimal_count = 0U,
+            .nullable = false
+        });
+        next_offset += null_flags_length;
+    }
+    // Maps a field index in `raw_fields` to its bit index within the
+    // _NullFlags bitmap (nullable fields only, in declaration order), or
+    // -1 for a non-nullable field / the bitmap field itself.
+    std::vector<int> null_flags_bit_index_by_field(raw_fields.size(), -1);
+    {
+        int next_bit = 0;
+        for (std::size_t i = 0U; i < raw_fields.size(); ++i) {
+            if (raw_fields[i].nullable) {
+                null_flags_bit_index_by_field[i] = next_bit++;
+            }
+        }
     }
 
     const std::uint16_t header_length = static_cast<std::uint16_t>(32U + (raw_fields.size() * 32U) + 1U);
@@ -2526,6 +2721,12 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
         write_le_u32(bytes, descriptor_offset + 12U, field.offset);
         bytes[descriptor_offset + 16U] = field.length;
         bytes[descriptor_offset + 17U] = field.decimal_count;
+        // #6047: field-descriptor flags byte (docs/80-dbf-nullflags-field-format-notes.md).
+        // The _NullFlags bitmap field itself is marked system+binary, never
+        // nullable (it is never itself NULL).
+        bytes[descriptor_offset + 18U] = (field.type == dbf_null_flags_field_type)
+            ? static_cast<std::uint8_t>(dbf_field_flag_system_column | dbf_field_flag_binary_column)
+            : (field.nullable ? dbf_field_flag_nullable : static_cast<std::uint8_t>(0U));
         descriptor_offset += 32U;
     }
     bytes[descriptor_offset] = 0x0DU;
@@ -2546,17 +2747,21 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
     std::vector<std::uint8_t> memo_bytes = has_memo_fields ? create_empty_memo_sidecar() : std::vector<std::uint8_t>{};
 
     for (std::size_t record_index = 0; record_index < records.size(); ++record_index) {
-        if (records[record_index].size() != raw_fields.size()) {
+        // #6047: `null_flags_field_index` is the real (caller-supplied)
+        // field count -- the synthetic _NullFlags field appended above has
+        // no entry in `records`/`overrides` and is computed/written
+        // separately below.
+        if (records[record_index].size() != null_flags_field_index) {
             return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch"), .record_count = records.size()};
         }
         if (overrides != nullptr && overrides->memo_payloads != nullptr &&
             (record_index >= overrides->memo_payloads->size() ||
-             (*overrides->memo_payloads)[record_index].size() != raw_fields.size())) {
+             (*overrides->memo_payloads)[record_index].size() != null_flags_field_index)) {
             return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch"), .record_count = records.size()};
         }
         if (overrides != nullptr && overrides->raw_field_bytes != nullptr &&
             (record_index >= overrides->raw_field_bytes->size() ||
-             (*overrides->raw_field_bytes)[record_index].size() != raw_fields.size())) {
+             (*overrides->raw_field_bytes)[record_index].size() != null_flags_field_index)) {
             return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch"), .record_count = records.size()};
         }
         if (overrides != nullptr && overrides->deleted_flags != nullptr &&
@@ -2570,7 +2775,7 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
                     (*overrides->deleted_flags)[record_index]
                 ? 0x2AU
                 : 0x20U;
-        for (std::size_t field_index = 0; field_index < raw_fields.size(); ++field_index) {
+        for (std::size_t field_index = 0; field_index < null_flags_field_index; ++field_index) {
             DbfWriteResult write_result;
             const bool has_raw_field_override =
                 overrides != nullptr && overrides->raw_field_bytes != nullptr &&
@@ -2618,6 +2823,43 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
             }
             if (!write_result.ok) {
                 return write_result;
+            }
+        }
+
+        // #6047: compute and write this record's _NullFlags bitmap. Uses
+        // the same "null" text-sentinel convention write_field_bytes()
+        // already recognizes for non-string field types (a Character/
+        // Varchar/Varbinary field's real value could legitimately be that
+        // literal text, so the sentinel is deliberately not extended to
+        // string types here -- REPLACE ... WITH .NULL. through the PRG
+        // engine's own explicit is_null parameter is the path that
+        // correctly supports every field type; see replace_record_field_value()).
+        if (has_nullable_fields) {
+            const RawFieldDescriptor& null_flags_field = raw_fields[null_flags_field_index];
+            // Byte vector, not a fixed-width integer: see the matching
+            // comment on the read side (parse_dbf_table_from_file) for why
+            // a uint16_t accumulator silently breaks past 16 nullable
+            // fields.
+            std::vector<std::uint8_t> null_flags_bytes(null_flags_field.length, 0U);
+            for (std::size_t field_index = 0U; field_index < null_flags_field_index; ++field_index) {
+                if (null_flags_bit_index_by_field[field_index] < 0) {
+                    continue;
+                }
+                const RawFieldDescriptor& field = raw_fields[field_index];
+                const bool is_string_field = field.type == 'C' || field.type == 'V' || field.type == 'Q';
+                const bool value_is_null_token =
+                    !is_string_field &&
+                    lowercase_copy(trim_both(records[record_index][field_index])) == "null";
+                if (value_is_null_token) {
+                    const std::size_t bit_index = static_cast<std::size_t>(null_flags_bit_index_by_field[field_index]);
+                    const std::size_t byte_index = bit_index / 8U;
+                    if (byte_index < null_flags_bytes.size()) {
+                        null_flags_bytes[byte_index] |= static_cast<std::uint8_t>(1U << (bit_index % 8U));
+                    }
+                }
+            }
+            for (std::uint8_t byte_index = 0U; byte_index < null_flags_field.length; ++byte_index) {
+                bytes[record_offset + null_flags_field.offset + byte_index] = null_flags_bytes[byte_index];
             }
         }
     }
@@ -2693,12 +2935,41 @@ static DbfWriteResult rewrite_dbf_table_schema(
     const std::vector<DbfFieldDescriptor>& fields,
     const std::vector<std::optional<std::size_t>>& source_field_indices,
     const std::vector<bool>& preserve_raw_source_fields) {
+    // #6047: every caller here builds `fields` from `table.fields` verbatim,
+    // which intentionally still includes an existing physical `_NullFlags`
+    // bitmap field (kept unfiltered in `table.fields` for exactly this kind
+    // of opaque-field-preserving rewrite machinery). Left as an ordinary
+    // output column, it would be preserved byte-for-byte by the opaque-field
+    // path AND create_dbf_table_file_with_memo_payloads() would then also
+    // append a brand-new synthetic bitmap on top, producing two same-named
+    // fields (the reader then arbitrarily selects whichever one it scans
+    // last). Drop it here instead -- create_dbf_table_file_with_memo_payloads()
+    // always recomputes a correctly-sized fresh bitmap when any output field
+    // is nullable, and collect_dbf_rewrite_rows() (below) preserves each
+    // mapped field's real NULL state into that fresh bitmap via the "null"
+    // text sentinel, so no information is lost.
+    std::vector<DbfFieldDescriptor> filtered_fields;
+    std::vector<std::optional<std::size_t>> filtered_source_field_indices;
+    std::vector<bool> filtered_preserve_raw_source_fields;
+    filtered_fields.reserve(fields.size());
+    filtered_source_field_indices.reserve(fields.size());
+    filtered_preserve_raw_source_fields.reserve(fields.size());
+    for (std::size_t i = 0U; i < fields.size(); ++i) {
+        if (fields[i].type == dbf_null_flags_field_type &&
+            ascii_lowercase_copy(trim_both(fields[i].name)) == ascii_lowercase_copy(dbf_null_flags_field_name)) {
+            continue;
+        }
+        filtered_fields.push_back(fields[i]);
+        filtered_source_field_indices.push_back(source_field_indices[i]);
+        filtered_preserve_raw_source_fields.push_back(preserve_raw_source_fields[i]);
+    }
+
     DbfRewriteRowsResult rewrite_rows = collect_dbf_rewrite_rows(
         path,
         table,
-        fields,
-        source_field_indices,
-        preserve_raw_source_fields);
+        filtered_fields,
+        filtered_source_field_indices,
+        filtered_preserve_raw_source_fields);
     if (!rewrite_rows.ok) {
         return {
             .ok = false,
@@ -2715,7 +2986,7 @@ static DbfWriteResult rewrite_dbf_table_schema(
     };
     return create_dbf_table_file_with_memo_payloads(
         path,
-        fields,
+        filtered_fields,
         rewrite_rows.records,
         &overrides,
         table.header.code_page_mark);
@@ -3710,7 +3981,8 @@ std::optional<DbfWriteResult> replace_record_field_value_targeted(
     std::size_t record_index,
     const std::string& field_name,
     const std::string& value,
-    bool allow_truncation) {
+    bool allow_truncation,
+    bool is_null) {
     if (const auto sidecar_error = ambiguous_required_sidecar_error_for_path(path); sidecar_error.has_value()) {
         return DbfWriteResult{.ok = false, .error = *sidecar_error};
     }
@@ -3773,11 +4045,19 @@ std::optional<DbfWriteResult> replace_record_field_value_targeted(
     DbfHeader single_record_header = header;
     single_record_header.header_length = 0U;
     single_record_header.record_count = 1U;
+    // #6047: an explicit is_null request always blanks storage the same
+    // way regardless of field type (matching the existing blank-record
+    // convention), and separately flips the field's own _NullFlags bit --
+    // see apply_null_flag_bit()'s own comment for why this is a cleaner
+    // seam than extending write_field_bytes()'s type-specific "null" text
+    // sentinel, which is deliberately never recognized for string types.
     const DbfWriteResult write_result = write_field_bytes(
-        record_bytes, single_record_header, 0U, *field, value, path, allow_truncation, record_index);
+        record_bytes, single_record_header, 0U, *field, is_null ? std::string{} : value, path, allow_truncation,
+        record_index);
     if (!write_result.ok) {
         return DbfWriteResult{.ok = false, .error = write_result.error, .record_count = header.record_count};
     }
+    apply_null_flag_bit(record_bytes, single_record_header, 0U, fields, field_name, is_null);
 
     io.clear();
     io.seekp(static_cast<std::streamoff>(record_offset));
@@ -3809,7 +4089,8 @@ static DbfWriteResult replace_record_field_value_impl(
     const std::string& field_name,
     const std::string& value,
     bool additive,
-    bool allow_truncation) {
+    bool allow_truncation,
+    bool is_null) {
     SidecarPathResolution memo_resolution;
     if (primary_always_requires_memo_sidecar(path)) {
         memo_resolution = resolve_memo_sidecar_path(path);
@@ -3926,7 +4207,15 @@ static DbfWriteResult replace_record_field_value_impl(
                 header_result.header.record_count);
         }
     } else {
-        result = write_field_bytes(bytes, header_result.header, record_index, *field, value, path, allow_truncation);
+        // #6047: memo-field NULL is intentionally not handled here (a
+        // separate, pointer-based storage mechanism, out of scope for this
+        // slice) -- is_null only affects the ordinary field-storage branch.
+        result = write_field_bytes(
+            bytes, header_result.header, record_index, *field, is_null ? std::string{} : value, path,
+            allow_truncation);
+        if (result.ok) {
+            apply_null_flag_bit(bytes, header_result.header, record_index, fields, field_name, is_null);
+        }
     }
     if (!result.ok) {
         return result;
@@ -3955,15 +4244,16 @@ DbfWriteResult replace_record_field_value(
     std::size_t record_index,
     const std::string& field_name,
     const std::string& value,
-    bool allow_truncation) {
+    bool allow_truncation,
+    bool is_null) {
     if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
         return *error;
     }
-    if (const auto fast_result = replace_record_field_value_targeted(path, record_index, field_name, value, allow_truncation);
+    if (const auto fast_result = replace_record_field_value_targeted(path, record_index, field_name, value, allow_truncation, is_null);
         fast_result.has_value()) {
         return *fast_result;
     }
-    return replace_record_field_value_impl(path, record_index, field_name, value, false, allow_truncation);
+    return replace_record_field_value_impl(path, record_index, field_name, value, false, allow_truncation, is_null);
 }
 
 DbfWriteResult replace_record_field_value_additive(
@@ -3971,7 +4261,8 @@ DbfWriteResult replace_record_field_value_additive(
     std::size_t record_index,
     const std::string& field_name,
     const std::string& value,
-    bool allow_truncation) {
+    bool allow_truncation,
+    bool is_null) {
     if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
         return *error;
     }
@@ -3979,7 +4270,7 @@ DbfWriteResult replace_record_field_value_additive(
     // than replace); the fast path above never handles memo fields, so an
     // additive request always goes straight to the full-rewrite path, which
     // already implements the memo-append semantics.
-    return replace_record_field_value_impl(path, record_index, field_name, value, true, allow_truncation);
+    return replace_record_field_value_impl(path, record_index, field_name, value, true, allow_truncation, is_null);
 }
 
 DbfWriteResult replace_record_field_value_full_rewrite(
@@ -3987,11 +4278,12 @@ DbfWriteResult replace_record_field_value_full_rewrite(
     std::size_t record_index,
     const std::string& field_name,
     const std::string& value,
-    bool allow_truncation) {
+    bool allow_truncation,
+    bool is_null) {
     if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
         return *error;
     }
-    return replace_record_field_value_impl(path, record_index, field_name, value, false, allow_truncation);
+    return replace_record_field_value_impl(path, record_index, field_name, value, false, allow_truncation, is_null);
 }
 
 DbfWriteResult replace_record_field_value_additive_full_rewrite(
@@ -3999,11 +4291,12 @@ DbfWriteResult replace_record_field_value_additive_full_rewrite(
     std::size_t record_index,
     const std::string& field_name,
     const std::string& value,
-    bool allow_truncation) {
+    bool allow_truncation,
+    bool is_null) {
     if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
         return *error;
     }
-    return replace_record_field_value_impl(path, record_index, field_name, value, true, allow_truncation);
+    return replace_record_field_value_impl(path, record_index, field_name, value, true, allow_truncation, is_null);
 }
 
 DbfWriteResult set_record_deleted_flag(

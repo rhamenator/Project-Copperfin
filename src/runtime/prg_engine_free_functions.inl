@@ -1469,6 +1469,49 @@
             return text;
         }
 
+        // #6047: the hidden "_NullFlags" bitmap field is never user-visible
+        // in real VFP9 (AFIELDS()/FCOUNT()/SELECT * all hide it), so every
+        // cursor-opening call site filters it out of the field list it
+        // caches, rather than the shared parse_dbf_table_from_file()
+        // parser itself, which existing non-cursor consumers (schema-
+        // rewrite/ALTER TABLE preservation, exporters) still expect to see
+        // every physical field exactly as read.
+        std::vector<vfp::DbfFieldDescriptor> visible_cursor_fields(
+            const std::vector<vfp::DbfFieldDescriptor> &physical_fields)
+        {
+            std::vector<vfp::DbfFieldDescriptor> visible;
+            visible.reserve(physical_fields.size());
+            for (const auto &field : physical_fields)
+            {
+                if (field.type == '0' && collapse_identifier(field.name) == "NULLFLAGS")
+                {
+                    continue;
+                }
+                visible.push_back(field);
+            }
+            return visible;
+        }
+
+        // #6047: same filtering as visible_cursor_fields(), but for one
+        // already-decoded record's per-field values (e.g. GETFLDSTATE()'s
+        // -1/ordinal forms, which index directly into DbfRecord::values and
+        // would otherwise see one extra hidden column).
+        std::vector<vfp::DbfRecordValue> visible_record_values(
+            const std::vector<vfp::DbfRecordValue> &physical_values)
+        {
+            std::vector<vfp::DbfRecordValue> visible;
+            visible.reserve(physical_values.size());
+            for (const auto &value : physical_values)
+            {
+                if (value.field_type == '0' && collapse_identifier(value.field_name) == "NULLFLAGS")
+                {
+                    continue;
+                }
+                visible.push_back(value);
+            }
+            return visible;
+        }
+
         PrgValue record_value_to_prg_value(const vfp::DbfRecordValue &field)
         {
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.field_type)));

@@ -598,6 +598,189 @@ void test_create_cursor_not_null_insert_failure_rolls_back() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #6047: CREATE TABLE/CURSOR accepted a NULL clause and REPLACE ... WITH
+// .NULL. accepted syntactically, but the storage layer had no channel to
+// represent NULL at all -- the assigned NULL state was silently lost,
+// reading back as an ordinary blank/zero value. This exercises the
+// storage-layer fix directly against the on-disk bytes (VARTYPE()/EMPTY()/
+// NVL()/EVL()/aggregate runtime-value-representation semantics are a
+// separate, not-yet-scheduled follow-up -- see docs/80-dbf-nullflags-field-format-notes.md).
+void test_create_table_replace_with_null_persists_null_flag() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_structure_replace_null";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "typednull.dbf";
+    const fs::path main_path = temp_root / "replace_null.prg";
+    write_text(
+        main_path,
+        "CREATE TABLE '" + table_path.string() + "' (n N(5) NULL, d D NULL, txt C(5) NULL, notnull N(5) NOT NULL)\n"
+        "APPEND BLANK\n"
+        "REPLACE n WITH .NULL., d WITH .NULL., txt WITH .NULL., notnull WITH 42\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6047: REPLACE ... WITH .NULL. script should complete: " + state.message);
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(parse_result.ok, "#6047: the table should remain readable after REPLACE ... WITH .NULL.");
+    // #6047: table.fields (and therefore each record's values) intentionally
+    // still includes the physical _NullFlags field -- look up by name
+    // rather than asserting an exact values.size(), so this test doesn't
+    // silently no-op if that field count ever changes again. An earlier
+    // version of this test asserted `values.size() == 4U`, which the real
+    // record (5 values, including _NullFlags) never satisfied -- every
+    // expect() below was silently skipped, and the underlying REPLACE ...
+    // WITH .NULL. bit-writing bug this test exists to catch went
+    // undetected. Fail loudly if the expected fields are ever missing.
+    if (parse_result.ok && parse_result.table.records.size() == 1U) {
+        const auto &values = parse_result.table.records.front().values;
+        const auto find_value = [&](const std::string &name) -> const copperfin::vfp::DbfRecordValue * {
+            for (const auto &value : values) {
+                if (copperfin::test_support::uppercase_ascii(value.field_name) ==
+                    copperfin::test_support::uppercase_ascii(name)) {
+                    return &value;
+                }
+            }
+            return nullptr;
+        };
+        const auto *field_n = find_value("n");
+        const auto *field_d = find_value("d");
+        const auto *field_txt = find_value("txt");
+        const auto *field_notnull = find_value("notnull");
+        expect(field_n != nullptr && field_d != nullptr && field_txt != nullptr && field_notnull != nullptr,
+               "#6047: all four declared fields must be present in the parsed record");
+        if (field_n != nullptr) {
+            expect(field_n->is_null, "#6047: a Numeric field explicitly set to .NULL. must report is_null, not read back as an ordinary 0");
+        }
+        if (field_d != nullptr) {
+            expect(field_d->is_null, "#6047: a Date field explicitly set to .NULL. must report is_null, not read back as an ordinary blank date");
+        }
+        if (field_txt != nullptr) {
+            expect(field_txt->is_null, "#6047: a Character field explicitly set to .NULL. must report is_null -- this is the case the old text-sentinel convention could never represent at all, since it is deliberately never recognized for string types");
+        }
+        if (field_notnull != nullptr) {
+            expect(!field_notnull->is_null && field_notnull->display_value.find("42") != std::string::npos,
+                   "#6047: a NOT NULL field assigned a real value must remain non-null with its real value, got is_null=" +
+                       std::string(field_notnull->is_null ? "true" : "false") + " display_value='" + field_notnull->display_value + "'");
+        }
+    }
+
+    // Clearing a field back to a real value must clear its bit again, not
+    // leave it permanently stuck null.
+    const fs::path clear_path = temp_root / "clear_null.prg";
+    write_text(
+        clear_path,
+        "USE '" + table_path.string() + "'\n"
+        "REPLACE n WITH 7\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession clear_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(clear_path.string(), temp_root.string()));
+    const auto clear_state = clear_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(clear_state.completed, "#6047: clearing REPLACE script should complete: " + clear_state.message);
+
+    const auto cleared_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(cleared_result.ok, "#6047: the table should remain readable after clearing the null field");
+    if (cleared_result.ok && cleared_result.table.records.size() == 1U &&
+        !cleared_result.table.records.front().values.empty()) {
+        const auto &field_n = cleared_result.table.records.front().values[0];
+        expect(!field_n.is_null && field_n.display_value.find('7') != std::string::npos,
+               "#6047: REPLACE with a real value must clear a previously-set _NullFlags bit, got is_null=" +
+                   std::string(field_n.is_null ? "true" : "false") + " display_value='" + field_n.display_value + "'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_alter_table_add_column_preserves_existing_null_flags_bitmap() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_structure_alter_null";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "altertypednull.dbf";
+    const fs::path main_path = temp_root / "alter_null.prg";
+    write_text(
+        main_path,
+        "CREATE TABLE '" + table_path.string() + "' (n N(5) NULL, txt C(5) NOT NULL)\n"
+        "APPEND BLANK\n"
+        "REPLACE n WITH .NULL., txt WITH 'keep'\n"
+        "ALTER TABLE '" + table_path.string() + "' ADD COLUMN extra N(5) NULL\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6047: ALTER TABLE ADD COLUMN after REPLACE ... WITH .NULL. script should complete: " + state.message);
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(parse_result.ok, "#6047: the table should remain readable after ALTER TABLE ADD COLUMN");
+    if (parse_result.ok) {
+        // #6047: the rewrite must never duplicate the hidden _NullFlags
+        // bitmap field -- exactly one physical field of that name/type may
+        // exist after ALTER TABLE ADD COLUMN on a table that already had one.
+        const std::size_t null_flags_field_count = static_cast<std::size_t>(std::count_if(
+            parse_result.table.fields.begin(), parse_result.table.fields.end(),
+            [](const copperfin::vfp::DbfFieldDescriptor &field) {
+                return field.type == '0' &&
+                       copperfin::test_support::uppercase_ascii(field.name) == "_NULLFLAGS";
+            }));
+        expect(null_flags_field_count == 1U,
+               "#6047: ALTER TABLE ADD COLUMN must not duplicate the _NullFlags bitmap field, found " +
+                   std::to_string(null_flags_field_count));
+    }
+    expect(parse_result.ok && parse_result.table.records.size() == 1U, "#6047: exactly one record expected after ALTER TABLE ADD COLUMN");
+    if (parse_result.ok && parse_result.table.records.size() == 1U) {
+        const auto &values = parse_result.table.records.front().values;
+        const auto find_value = [&](const std::string &name) -> const copperfin::vfp::DbfRecordValue * {
+            for (const auto &value : values) {
+                if (copperfin::test_support::uppercase_ascii(value.field_name) ==
+                    copperfin::test_support::uppercase_ascii(name)) {
+                    return &value;
+                }
+            }
+            return nullptr;
+        };
+        const auto *field_n = find_value("n");
+        const auto *field_txt = find_value("txt");
+        expect(field_n != nullptr && field_n->is_null,
+               "#6047: ALTER TABLE ADD COLUMN must preserve a pre-existing field's real NULL state through the schema rewrite");
+        expect(field_txt != nullptr && field_txt->display_value.find("keep") != std::string::npos,
+               "#6047: ALTER TABLE ADD COLUMN must preserve a pre-existing non-null field's real value through the schema rewrite");
+    }
+
+    // The newly ALTER-added column's own explicit NULL clause must also get
+    // a physical bit -- REPLACE ... WITH .NULL. on it must actually persist.
+    const fs::path replace_new_path = temp_root / "replace_new_column.prg";
+    write_text(
+        replace_new_path,
+        "USE '" + table_path.string() + "'\n"
+        "REPLACE extra WITH .NULL.\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession replace_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(replace_new_path.string(), temp_root.string()));
+    const auto replace_state = replace_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(replace_state.completed, "#6047: REPLACE on ALTER-added column script should complete: " + replace_state.message);
+
+    const auto final_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(final_result.ok && final_result.table.records.size() == 1U, "#6047: table should remain readable after replacing the ALTER-added column");
+    if (final_result.ok && final_result.table.records.size() == 1U) {
+        const auto &values = final_result.table.records.front().values;
+        const auto found = std::find_if(values.begin(), values.end(), [](const copperfin::vfp::DbfRecordValue &value) {
+            return copperfin::test_support::uppercase_ascii(value.field_name) == "EXTRA";
+        });
+        expect(found != values.end() && found->is_null,
+               "#6047: an ALTER TABLE ADD COLUMN ... NULL field must get a real physical bit, not silently stay non-nullable");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_not_null_insert_failure_rolls_back() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_structure_not_null";
@@ -1040,6 +1223,8 @@ int main() {
     test_create_cursor_uses_temp_backed_local_table_flow();
     test_create_cursor_name_clause_uses_named_alias();
     test_create_cursor_not_null_insert_failure_rolls_back();
+    test_create_table_replace_with_null_persists_null_flag();
+    test_alter_table_add_column_preserves_existing_null_flags_bitmap();
     test_not_null_insert_failure_rolls_back();
     test_table_structure_runtime_errors_localize();
     test_pack_memo_rewrites_memo_sidecar();

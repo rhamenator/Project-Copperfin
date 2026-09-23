@@ -182,8 +182,10 @@ std::optional<TableFieldDeclaration> parse_table_field_declaration(std::string t
         }
         if (find_keyword_top_level(tail, "NOT NULL") != std::string::npos) {
             declaration.nullable = false;
+            declaration.null_clause_specified = true;
         } else if (find_keyword_top_level(tail, "NULL") != std::string::npos) {
             declaration.nullable = true;
+            declaration.null_clause_specified = true;
         }
     }
 
@@ -206,7 +208,15 @@ std::vector<vfp::DbfFieldDescriptor> table_field_descriptors(const std::vector<T
     std::vector<vfp::DbfFieldDescriptor> fields;
     fields.reserve(declarations.size());
     for (const auto& declaration : declarations) {
-        fields.push_back(declaration.descriptor);
+        vfp::DbfFieldDescriptor field = declaration.descriptor;
+        // #6047: only an *explicit* NULL clause gets a physical _NullFlags
+        // bit. `declaration.nullable` alone defaults true for any field
+        // with no clause at all (needed for NOT-NULL-constraint
+        // enforcement, see TableFieldDeclaration's own comment), so using
+        // it here unconditionally would make every ordinary unspecified
+        // field silently consume a bitmap bit.
+        field.nullable = declaration.null_clause_specified && declaration.nullable;
+        fields.push_back(std::move(field));
     }
     return fields;
 }

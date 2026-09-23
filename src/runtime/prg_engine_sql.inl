@@ -596,7 +596,7 @@
 
                 resolved_path = copperfin::platform::path_to_utf8_string(table_path);
                 dbf_identity = resolved_path;
-                field_count = table_result.table.fields.size();
+                field_count = visible_cursor_fields(table_result.table.fields).size();
                 record_count = table_result.table.header.record_count;
                 std::size_t record_length = table_result.table.header.record_length;
                 std::vector<CursorState::OrderState> orders = load_cursor_orders(resolved_path);
@@ -651,7 +651,7 @@
                 cursor.bof = record_count == 0U;
                 cursor.eof = record_count == 0U;
                 cursor.orders = std::move(orders);
-                cursor.local_fields = table_result.table.fields;
+                cursor.local_fields = visible_cursor_fields(table_result.table.fields);
                 cursor.field_rules = field_rules;
                 session.cursors[target_area] = std::move(cursor);
                 register_open_cursor_alias(session, target_area, alias);

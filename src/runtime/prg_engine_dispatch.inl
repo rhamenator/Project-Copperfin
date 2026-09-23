@@ -7472,9 +7472,20 @@
                             return false;
                         }
                         affected_field = declaration->descriptor.name;
+                        // #6047: declaration->descriptor is built before the
+                        // NULL-clause tail is parsed, so its own .nullable
+                        // is never set -- table_field_descriptors() is the
+                        // only place that normally applies
+                        // null_clause_specified && nullable onto a
+                        // descriptor, and this ALTER TABLE path bypasses it
+                        // entirely. Without this, "ALTER TABLE ADD COLUMN x
+                        // C(5) NULL" would create a column with no physical
+                        // nullability bit at all.
+                        vfp::DbfFieldDescriptor field_descriptor = declaration->descriptor;
+                        field_descriptor.nullable = declaration->null_clause_specified && declaration->nullable;
                         add_result = action == "add"
-                                         ? vfp::add_dbf_table_field(copperfin::platform::path_to_utf8_string(table_path), declaration->descriptor)
-                                         : vfp::alter_dbf_table_field(copperfin::platform::path_to_utf8_string(table_path), declaration->descriptor);
+                                         ? vfp::add_dbf_table_field(copperfin::platform::path_to_utf8_string(table_path), field_descriptor)
+                                         : vfp::alter_dbf_table_field(copperfin::platform::path_to_utf8_string(table_path), field_descriptor);
                     }
                     else
                     {
@@ -7524,9 +7535,9 @@
                         if (!cursor.remote && normalize_path(cursor.source_path) ==
                             normalize_path(copperfin::platform::path_to_utf8_string(table_path)))
                         {
-                            cursor.field_count = schema_result.table.fields.size();
+                            cursor.local_fields = visible_cursor_fields(schema_result.table.fields);
+                            cursor.field_count = cursor.local_fields.size();
                             cursor.record_length = schema_result.table.header.record_length;
-                            cursor.local_fields = schema_result.table.fields;
                             cursor.record_count = add_result.record_count;
                             const std::string normalized_field = collapse_identifier(affected_field);
                             if (action == "drop")
@@ -8339,7 +8350,7 @@
                             std::string(1U, field.type),
                             std::to_string(field.length),
                             std::to_string(field.decimal_count),
-                            "F",
+                            field.nullable ? "T" : "F",
                             "F",
                             {},
                             {},

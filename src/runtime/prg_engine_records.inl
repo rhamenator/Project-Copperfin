@@ -1264,6 +1264,14 @@
                 std::string field_name;
                 std::string serialized_value;
                 bool additive = false;
+                // #6047: the runtime's own PrgValue already knows a
+                // .NULL. right-hand side's null-ness (make_null_value());
+                // this carries it through to the vfp:: writer so it can
+                // set the field's real _NullFlags bit, rather than relying
+                // on serialize_prg_value_for_record_field()'s ordinary
+                // string serialization (which, for .NULL., is simply "",
+                // indistinguishable from a genuinely empty value).
+                bool is_null = false;
             };
 
             const auto serialize_value_for_cursor_field =
@@ -1501,7 +1509,8 @@
                     evaluated_assignments.push_back({
                         .field_name = assignment.field_name,
                         .serialized_value = std::move(serialized_value),
-                        .additive = assignment.additive});
+                        .additive = assignment.additive,
+                        .is_null = value.is_null});
                 }
 
                 for (const auto &assignment : evaluated_assignments)
@@ -1529,7 +1538,10 @@
                     {
                         field->display_value = assignment.serialized_value;
                     }
-                    field->is_null = false;
+                    // #6047: this previously hardcoded false unconditionally,
+                    // discarding a buffered REPLACE ... WITH .NULL. before
+                    // it could ever reach a later TABLEUPDATE() flush.
+                    field->is_null = assignment.is_null;
                     const std::size_t field_index = static_cast<std::size_t>(
                         std::distance(buffered->second.values.begin(), field));
                     cursor.buffered_field_states[cursor.recno][field_index] =
@@ -1585,7 +1597,8 @@
                 evaluated_assignments.push_back({
                     .field_name = assignment.field_name,
                     .serialized_value = std::move(serialized_value),
-                    .additive = assignment.additive});
+                    .additive = assignment.additive,
+                    .is_null = value.is_null});
             }
 
             for (const auto &assignment : evaluated_assignments)
@@ -1596,13 +1609,15 @@
                           cursor.recno - 1U,
                           assignment.field_name,
                           assignment.serialized_value,
-                          allow_truncation)
+                          allow_truncation,
+                          assignment.is_null)
                     : vfp::replace_record_field_value(
                           cursor.source_path,
                           cursor.recno - 1U,
                           assignment.field_name,
                           assignment.serialized_value,
-                          allow_truncation);
+                          allow_truncation,
+                          assignment.is_null);
                 if (!result.ok)
                 {
                     last_error_message = result.error;
@@ -1959,7 +1974,8 @@
                     recno - 1U,
                     field.field_name,
                     field.display_value,
-                    allow_truncation);
+                    allow_truncation,
+                    field.is_null);
                 if (!result.ok)
                 {
                     last_error_message = result.error;
@@ -2110,7 +2126,8 @@
                     staged_record_index,
                     field.field_name,
                     field.display_value,
-                    allow_truncation);
+                    allow_truncation,
+                    field.is_null);
                 if (!replacement.ok)
                 {
                     return fail(replacement.error);
@@ -2311,6 +2328,11 @@
                 {
                     return make_null_value();
                 }
+                // #6047: GETFLDSTATE(-1)/ordinal forms below index directly
+                // into these values and must match FCOUNT()'s user-visible
+                // field count, not the physical DBF record (which still
+                // includes the hidden _NullFlags bookkeeping field).
+                const std::vector<vfp::DbfRecordValue> visible_values = visible_record_values(record->values);
                 const bool appended = cursor->buffered_appended_records.contains(cursor->recno);
                 const int unchanged_state = appended ? 3 : 1;
                 const auto field_state = [&](std::size_t field_index) -> int
@@ -2339,9 +2361,9 @@
                 if (is_integral && requested == -1.0)
                 {
                     std::string states;
-                    states.reserve(record->values.size() + 1U);
+                    states.reserve(visible_values.size() + 1U);
                     states += static_cast<char>('0' + deletion_state());
-                    for (std::size_t index = 0U; index < record->values.size(); ++index)
+                    for (std::size_t index = 0U; index < visible_values.size(); ++index)
                     {
                         states += static_cast<char>('0' + field_state(index));
                     }
@@ -2352,7 +2374,7 @@
                     return make_number_value(static_cast<double>(deletion_state()));
                 }
                 if (is_integral && requested > 0.0 &&
-                    requested <= static_cast<double>(record->values.size()))
+                    requested <= static_cast<double>(visible_values.size()))
                 {
                     return make_number_value(static_cast<double>(
                         field_state(static_cast<std::size_t>(requested - 1.0))));
@@ -2364,18 +2386,18 @@
 
                 const std::string field_name = collapse_identifier(value_as_string(arguments[0]));
                 const auto field = std::find_if(
-                    record->values.begin(),
-                    record->values.end(),
+                    visible_values.begin(),
+                    visible_values.end(),
                     [&](const vfp::DbfRecordValue &candidate)
                     {
                         return collapse_identifier(candidate.field_name) == field_name;
                     });
-                if (field == record->values.end())
+                if (field == visible_values.end())
                 {
                     return make_empty_value();
                 }
                 return make_number_value(static_cast<double>(field_state(static_cast<std::size_t>(
-                    std::distance(record->values.begin(), field)))));
+                    std::distance(visible_values.begin(), field)))));
             }
 
             if (function == "setfldstate")
@@ -2418,6 +2440,10 @@
                 {
                     return make_boolean_value(false);
                 }
+                // #6047: see the matching comment in GETFLDSTATE above --
+                // ordinal/name lookups here must not see the hidden
+                // _NullFlags bookkeeping field either.
+                const std::vector<vfp::DbfRecordValue> visible_values = visible_record_values(record->values);
 
                 const auto materialize_modified_record = [&]() -> bool
                 {
@@ -2485,7 +2511,7 @@
                     return make_boolean_value(true);
                 }
                 if (is_integral && requested_field > 0.0 &&
-                    requested_field <= static_cast<double>(record->values.size()))
+                    requested_field <= static_cast<double>(visible_values.size()))
                 {
                     if (!materialize_modified_record())
                     {
@@ -2502,13 +2528,13 @@
 
                 const std::string field_name = collapse_identifier(value_as_string(arguments[0]));
                 const auto field = std::find_if(
-                    record->values.begin(),
-                    record->values.end(),
+                    visible_values.begin(),
+                    visible_values.end(),
                     [&](const vfp::DbfRecordValue &candidate)
                     {
                         return collapse_identifier(candidate.field_name) == field_name;
                     });
-                if (field == record->values.end())
+                if (field == visible_values.end())
                 {
                     return make_boolean_value(false);
                 }
@@ -2517,7 +2543,7 @@
                     return make_boolean_value(false);
                 }
                 cursor->buffered_field_states[cursor->recno][static_cast<std::size_t>(
-                    std::distance(record->values.begin(), field))] = state;
+                    std::distance(visible_values.begin(), field))] = state;
                 return make_boolean_value(true);
             }
 
@@ -2910,7 +2936,8 @@
                         persisted_recno - 1U,
                         field.field_name,
                         field.display_value,
-                        allow_truncation);
+                        allow_truncation,
+                        field.is_null);
                     if (!result.ok)
                     {
                         last_error_message = result.error;
