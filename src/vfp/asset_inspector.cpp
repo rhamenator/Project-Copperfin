@@ -2910,10 +2910,21 @@ DatabaseExportResult export_database_as_json(
                 if (rv.is_null) {
                     json << "null";
                 } else if (is_logical) {
+                    // #5631: decode_value() (src/vfp/dbf_table.cpp) only
+                    // ever produces exactly "true" or "false" for a
+                    // recognized logical byte; anything else is already
+                    // reported via is_null above. Map only the two
+                    // recognized values, matching every SQL exporter's own
+                    // explicit fallback-to-NULL pattern, instead of
+                    // defaulting an unrecognized value to false.
                     const std::string& lv = rv.display_value;
-                    json << ((lv == "true" || lv == "T" || lv == "t" ||
-                              lv == "Y"    || lv == "y")
-                             ? "true" : "false");
+                    if (lv == "true") {
+                        json << "true";
+                    } else if (lv == "false") {
+                        json << "false";
+                    } else {
+                        json << "null";
+                    }
                 } else if (is_numeric && !rv.display_value.empty()) {
                     // #5630/#5571 (found by an automated Codex code-review
                     // pass): a numeric cell's decoded display_value was
