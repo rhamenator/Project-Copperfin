@@ -193,9 +193,19 @@ void test_migration_preserves_null_deleted_and_memo_fidelity() {
         'c', 'a', 'f', 0xC3U, 0xA9U, ' ', 0xE2U, 0x98U, 0x95U};
     const auto products_blocks = build_dbase_iii_memo_file(
         products_memo, {{}, {'G', 'i', 'f', 't'}, non_ascii_payload});
+    // Record 1's ID is deliberately 0, not another nonzero digit: dBASE III
+    // has no on-disk representation of "this Numeric field is NULL" at all
+    // (unlike Logical, whose "?" byte is a real, documented blank/unknown
+    // sentinel this codebase's own writer produces) -- so the fidelity
+    // property actually testable for a Numeric source field is "a real
+    // zero round-trips as zero, not as blank/is_null," disambiguating a
+    // genuine zero from whatever a hypothetical blank-defaults-to-zero bug
+    // would also produce. NULL-versus-blank/zero for Character/Numeric
+    // destination fields is not applicable to this specific import path
+    // (dBASE-family source -> VFP-native) for the same reason.
     const std::vector<std::vector<std::string>> products_records{
         {"1  ", "Widget    ", "T", ascii_block_number(products_blocks[0], 10U)},
-        {"2  ", "Gadget    ", "F", ascii_block_number(products_blocks[1], 10U)},
+        {"0  ", "Gadget    ", "F", ascii_block_number(products_blocks[1], 10U)},
         {"3  ", "Gizmo     ", " ", ascii_block_number(products_blocks[2], 10U)},
     };
     build_dbase_iii_table(products_source, products_fields, products_records,
@@ -228,13 +238,23 @@ void test_migration_preserves_null_deleted_and_memo_fidelity() {
         "#6496: CUSTOMERS migration should succeed with both records: " + customers_import.error);
 
     // --- Table identity: CUSTOMERS' destination must be its own 2-field,
-    // 2-record table -- no PRODUCTS content, no field bleed. ---
+    // 2-record table -- no PRODUCTS content, no field bleed. Checks field
+    // name AND type, not just display_value: a regression that mapped a
+    // field to the wrong destination type could otherwise still pass here
+    // if the mistranslated value happened to display the same text.
     const auto customers_parsed = copperfin::vfp::parse_dbf_table_from_file(customers_dest.string(), 10U);
     expect(customers_parsed.ok && customers_parsed.table.fields.size() == 2U &&
                customers_parsed.table.records.size() == 2U,
         "#6496: CUSTOMERS destination should have exactly its own 2 fields and 2 records, not PRODUCTS'");
+    if (customers_parsed.ok && customers_parsed.table.fields.size() == 2U) {
+        expect(customers_parsed.table.fields[0U].name == "ID" && customers_parsed.table.fields[0U].type == 'N' &&
+                   customers_parsed.table.fields[1U].name == "NAME" && customers_parsed.table.fields[1U].type == 'C',
+            "#6496: CUSTOMERS destination field names/types must match the source, not PRODUCTS'");
+    }
     if (customers_parsed.ok && customers_parsed.table.records.size() == 2U) {
-        expect(customers_parsed.table.records[0U].values[1U].display_value.starts_with("Alice") &&
+        expect(customers_parsed.table.records[0U].values[1U].field_type == 'C' &&
+                   customers_parsed.table.records[0U].values[1U].display_value.starts_with("Alice") &&
+                   customers_parsed.table.records[1U].values[1U].field_type == 'C' &&
                    customers_parsed.table.records[1U].values[1U].display_value.starts_with("Bob"),
             "#6496: CUSTOMERS record order should be preserved and unmixed with PRODUCTS content");
     }
@@ -244,6 +264,26 @@ void test_migration_preserves_null_deleted_and_memo_fidelity() {
     expect(products_parsed.ok && products_parsed.table.records.size() == 3U,
         "#6496: PRODUCTS destination should retain all 3 records (including the deleted one): " +
             products_parsed.error);
+    if (products_parsed.ok) {
+        const auto find_descriptor = [&](const std::string& name) -> const copperfin::vfp::DbfFieldDescriptor* {
+            for (const auto& field : products_parsed.table.fields) {
+                if (field.name == name) {
+                    return &field;
+                }
+            }
+            return nullptr;
+        };
+        const auto* id_descriptor = find_descriptor("ID");
+        const auto* name_descriptor = find_descriptor("NAME");
+        const auto* active_descriptor = find_descriptor("ACTIVE");
+        const auto* note_descriptor = find_descriptor("NOTE");
+        expect(id_descriptor != nullptr && id_descriptor->type == 'N' &&
+                   name_descriptor != nullptr && name_descriptor->type == 'C' &&
+                   active_descriptor != nullptr && active_descriptor->type == 'L' &&
+                   note_descriptor != nullptr && note_descriptor->type == 'M',
+            "#6496: PRODUCTS destination field types must match the source (ID=N, NAME=C, ACTIVE=L, NOTE=M) -- "
+            "a mistranslated field type could otherwise pass unnoticed if its displayed text still looked right");
+    }
     if (products_parsed.ok && products_parsed.table.records.size() == 3U) {
         const auto find_field = [&](std::size_t row, const std::string& name) -> const copperfin::vfp::DbfRecordValue* {
             for (const auto& value : products_parsed.table.records[row].values) {
@@ -268,6 +308,12 @@ void test_migration_preserves_null_deleted_and_memo_fidelity() {
         expect(active2 != nullptr && active2->is_null,
             "#6496: a blank/unknown Logical byte at the source must round-trip as NULL, not a silent false, matching #5631's own fix");
 
+        const auto* id1 = find_field(1U, "ID");
+        expect(id1 != nullptr && !id1->is_null && id1->display_value.find('0') != std::string::npos &&
+                   id1->display_value.find_first_not_of("0 ") == std::string::npos,
+            "#6496: a genuine Numeric 0 must round-trip as zero, not blank/is_null, disambiguating a real zero "
+            "from whatever a hypothetical blank-defaults-to-zero bug would also produce");
+
         const auto* note0 = find_field(0U, "NOTE");
         const auto* note1 = find_field(1U, "NOTE");
         const auto* note2 = find_field(2U, "NOTE");
@@ -291,6 +337,25 @@ void test_migration_preserves_null_deleted_and_memo_fidelity() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #6496: this specifically covers BATCH-level failure isolation (one
+// table of a multi-table migration batch already fully written/staged,
+// including its own memo sidecar, when a LATER table's own import call
+// fails) -- not a single import call failing partway through its own
+// internal two-pass write (create table, then fill memo content record by
+// record; see import_xbase_table_to_vfp_native()'s own
+// remove_destination_artifacts() rollback on a second-pass memo-write
+// failure). That specific rollback path is real, confirmed-present
+// production code, but was not independently re-exercised here: reaching
+// it via only this public API requires an encode_dbf_text() failure,
+// which needs a non-UTF-8 destination code page this function's current
+// signature has no way to request (its VFP-native output always uses
+// code_page_mark 0 / UTF-8, which real UTF-8 source text always encodes
+// into successfully). The underlying primitive this rollback path relies
+// on is already independently verified by test_dbf_table.cpp's own
+// test_replace_write_failure_leaves_original_dbf_intact and
+// test_memo_sidecar_write_failure_leaves_dbf_header_consistent, so the
+// safety property itself is not unverified, just not re-proven through
+// this specific import wrapper's own call path in this test.
 void test_migration_failure_after_first_table_leaves_no_orphan_and_source_unchanged() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_migration_failure_retry_6496";
@@ -322,7 +387,9 @@ void test_migration_failure_after_first_table_leaves_no_orphan_and_source_unchan
     // import_xbase_table_to_vfp_native() documents that it never
     // overwrites an existing destination and fails closed instead.
     const fs::path customers_dest = temp_root / "customers.dbf";
-    expect(write_binary_file(customers_dest, {'p', 'r', 'e', '-', 'e', 'x', 'i', 's', 't', 'i', 'n', 'g'}),
+    const std::vector<std::uint8_t> blocking_bytes_before{
+        'p', 'r', 'e', '-', 'e', 'x', 'i', 's', 't', 'i', 'n', 'g'};
+    expect(write_binary_file(customers_dest, blocking_bytes_before),
         "pre-existing blocking file should be writable");
     const auto blocking_import = copperfin::vfp::import_xbase_table_to_vfp_native(
         customers_source.string(), customers_dest.string());
@@ -339,8 +406,9 @@ void test_migration_failure_after_first_table_leaves_no_orphan_and_source_unchan
 
     // The blocking file must be exactly what it was -- the failed import
     // must not have partially overwritten it (an orphaned partial write).
-    const auto blocking_bytes_after = read_binary_file(customers_dest);
-    expect(blocking_bytes_after.size() == 12U && blocking_bytes_after[0U] == 'p',
+    // Compares the complete byte vector, not just length and first byte:
+    // a partial overwrite of any later byte would otherwise pass.
+    expect(read_binary_file(customers_dest) == blocking_bytes_before,
         "#6496: a failed import must not partially overwrite the colliding destination file");
 
     // Source bytes for both tables must be completely unchanged -- the
