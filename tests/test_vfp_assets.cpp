@@ -7117,21 +7117,17 @@ void test_export_database_as_oracle_sql_fails_closed_on_non_null_empty_character
     fs::remove_all(temp_dir, ignored);
 }
 
-// #5717 PR review (chatgpt-codex-connector, P1): this codebase does not
-// currently decode a VFP nullable field's own `_NullFlags` record bitmap
-// at all, so a genuinely null value and a genuinely non-null empty value
-// in a *nullable* field are indistinguishable in this codebase's own
-// in-memory representation. The empty-character-value check above must
-// not apply to a table that declares a nullable field (identified here by
-// the presence of the special type-`0` `_NullFlags` pseudo-field in its
-// own descriptor list), since it cannot tell the two cases apart and
-// would otherwise reject a genuinely null value's own (previously
-// correctly working, if by Oracle's own accidental empty-string-is-null
-// behavior) export. create_dbf_table_file() itself cannot write a type-`0`
-// field (it is not among the directly-writable storage types), so this
-// fixture is built from raw DBF bytes directly, modeling a real VFP
-// nullable-field table this codebase's own writer cannot itself produce
-// but a real VFP application routinely can.
+// #6047 decodes a VFP nullable field's own `_NullFlags` record bitmap and
+// applies it back to the field(s) it governs, so a genuinely null value
+// and a genuinely non-null empty value in a nullable field are no longer
+// indistinguishable (see asset_inspector.cpp's own updated comment at this
+// export path). This fixture models a real VFP nullable-Character-field
+// table with NAME genuinely NULL: both the NAME descriptor's own flags
+// byte (offset 18, bit 0x02) and the record's _NullFlags bit for NAME are
+// set, matching what a real VFP-written file always keeps consistent
+// (docs/80-dbf-nullflags-field-format-notes.md). create_dbf_table_file()
+// itself cannot yet write a type-`0` field directly, so this fixture is
+// still built from raw DBF bytes.
 void test_export_database_as_oracle_sql_allows_blank_value_in_table_with_nullable_fields() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_oracle_sql_nullable_field_tests";
@@ -7166,7 +7162,8 @@ void test_export_database_as_oracle_sql_allows_blank_value_in_table_with_nullabl
     bytes[11] = static_cast<std::uint8_t>((record_length >> 8U) & 0xFFU);
 
     const auto write_descriptor = [&](std::size_t offset, const char* name, char type,
-                                       std::uint32_t field_offset, std::uint8_t length) {
+                                       std::uint32_t field_offset, std::uint8_t length,
+                                       std::uint8_t flags = 0U) {
         std::memcpy(bytes.data() + offset, name, std::strlen(name));
         bytes[offset + 11U] = static_cast<std::uint8_t>(type);
         bytes[offset + 12U] = static_cast<std::uint8_t>(field_offset & 0xFFU);
@@ -7174,15 +7171,16 @@ void test_export_database_as_oracle_sql_allows_blank_value_in_table_with_nullabl
         bytes[offset + 14U] = static_cast<std::uint8_t>((field_offset >> 16U) & 0xFFU);
         bytes[offset + 15U] = static_cast<std::uint8_t>((field_offset >> 24U) & 0xFFU);
         bytes[offset + 16U] = length;
+        bytes[offset + 18U] = flags;
     };
-    write_descriptor(32U, "NAME", 'C', 1U, 10U);
-    write_descriptor(64U, "_NullFlags", '0', 11U, 1U);
+    write_descriptor(32U, "NAME", 'C', 1U, 10U, /*flags=*/0x02U);  // nullable
+    write_descriptor(64U, "_NullFlags", '0', 11U, 1U, /*flags=*/0x05U);  // system+binary
     bytes[96] = 0x0DU;  // field descriptor terminator
 
     const std::size_t record_offset = header_length;
     bytes[record_offset] = 0x20U;  // not deleted
     std::memset(bytes.data() + record_offset + 1U, ' ', 10U);  // blank NAME
-    bytes[record_offset + 11U] = 0U;  // _NullFlags byte, content irrelevant here
+    bytes[record_offset + 11U] = 0x01U;  // _NullFlags bit 0 (NAME, the only nullable field) set
     bytes.back() = 0x1AU;  // EOF marker
 
     {
@@ -7193,10 +7191,18 @@ void test_export_database_as_oracle_sql_allows_blank_value_in_table_with_nullabl
     const auto result = copperfin::vfp::export_database_as_oracle_sql(
         copperfin::platform::path_to_utf8_string(dbc_path));
     expect(result.ok,
-           "export_database_as_oracle_sql should not fail closed on a blank character value in a table that declares a nullable field, since it cannot currently tell a genuine NULL from a genuine empty string there: " + result.error);
+           "export_database_as_oracle_sql should not fail closed on a genuinely NULL character value in a nullable field: " + result.error);
     if (result.ok) {
-        expect(result.sql.find("VALUES ('', NULL)") != std::string::npos,
-               "export_database_as_oracle_sql should still emit a plain '' literal for the blank NAME value in a nullable-field table (the pre-existing, Oracle-accidental-NULL behavior), not reject the export: " + result.sql);
+        // #6047 note: the exporter still emits a spurious visible
+        // "_NullFlags" CLOB column here -- a separate, pre-existing gap
+        // (this exporter, like every other, iterates tbl.table.fields
+        // directly rather than through the runtime cursor system's own
+        // visible_cursor_fields() filter added for #6047) left for a
+        // follow-up rather than expanded into this slice; hence two NULLs,
+        // not one.
+        expect(result.sql.find("VALUES (NULL, NULL)") != std::string::npos,
+               "export_database_as_oracle_sql should emit NULL (not reject, and not a plain '' literal) for the "
+               "genuinely null NAME value, now that #6047 decodes _NullFlags correctly: " + result.sql);
     }
 
     fs::remove_all(temp_dir, ignored);

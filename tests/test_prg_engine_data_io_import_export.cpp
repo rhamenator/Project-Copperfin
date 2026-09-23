@@ -426,6 +426,55 @@ void test_copy_structure_extended_emits_vfp_metadata_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_copy_structure_extended_reports_nullable_field_flag() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_struct_extended_nullable";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> source_fields{
+        {.name = "REQUIRED", .type = 'C', .length = 12U, .nullable = false},
+        {.name = "OPTIONAL", .type = 'N', .length = 5U, .nullable = true},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(
+        source_path.string(), source_fields, {{"Alice", "42"}});
+    expect(source_create.ok, "COPY STRUCTURE EXTENDED nullable-flag source fixture should be created");
+
+    const fs::path extended_path = temp_root / "structure_extended.dbf";
+    const fs::path main_path = temp_root / "copy_struct_extended_nullable.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY STRUCTURE EXTENDED TO '" + extended_path.string() + "'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY STRUCTURE EXTENDED nullable-flag script should complete: " + state.message);
+
+    const auto extended = copperfin::vfp::parse_dbf_table_from_file(extended_path.string(), 100U);
+    expect(extended.ok && extended.table.records.size() == 2U,
+           "COPY STRUCTURE EXTENDED nullable-flag output should have one row per source field");
+    if (extended.ok && extended.table.records.size() == 2U) {
+        const auto value = [&](std::size_t row, const std::string& field_name) {
+            const auto& values = extended.table.records[row].values;
+            const auto found = std::find_if(values.begin(), values.end(), [&](const auto& candidate) {
+                return candidate.field_name == field_name;
+            });
+            return found == values.end() ? std::string{} : found->display_value;
+        };
+        expect(value(0U, "FIELD_NAME") == "REQUIRED" && value(0U, "FIELD_NULL") == "false",
+               "COPY STRUCTURE EXTENDED should report a non-nullable field's FIELD_NULL as false");
+        expect(value(1U, "FIELD_NAME") == "OPTIONAL" && value(1U, "FIELD_NULL") == "true",
+               "COPY STRUCTURE EXTENDED should report a nullable field's FIELD_NULL as true");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_to_from_empty_table_produces_valid_empty_dbf() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_copy_empty_table";

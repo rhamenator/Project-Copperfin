@@ -18,6 +18,12 @@ struct DbfFieldDescriptor {
     std::uint32_t offset = 0;
     std::uint8_t length = 0;
     std::uint8_t decimal_count = 0;
+    // #6047: mirrors the on-disk field-descriptor flags byte's 0x02 bit,
+    // recovered from real VFP9 behavior (docs/80-dbf-nullflags-field-format-notes.md).
+    // A nullable field's per-record NULL state lives in the hidden
+    // "_NullFlags" bitmap field, not in this struct or in ordinary field
+    // storage; this flag only records that the field *can* hold NULL.
+    bool nullable = false;
 };
 
 struct DbfRecordValue {
@@ -118,18 +124,25 @@ DbfWriteResult add_dbf_table_field(const std::string& path, const DbfFieldDescri
 DbfWriteResult drop_dbf_table_field(const std::string& path, const std::string& field_name);
 DbfWriteResult alter_dbf_table_field(const std::string& path, const DbfFieldDescriptor& field);
 DbfWriteResult append_blank_record_to_file(const std::string& path);
+// #6047: `is_null`, when true, blanks the field's storage exactly like an
+// empty value regardless of type and sets its bit in the table's
+// _NullFlags bitmap (a no-op if the table has none, or if `field_name`
+// isn't declared nullable -- see apply_null_flag_bit(), dbf_table.cpp).
+// When false, clears that bit if present and writes `value` normally.
 DbfWriteResult replace_record_field_value(
     const std::string& path,
     std::size_t record_index,
     const std::string& field_name,
     const std::string& value,
-    bool allow_truncation = false);
+    bool allow_truncation = false,
+    bool is_null = false);
 DbfWriteResult replace_record_field_value_additive(
     const std::string& path,
     std::size_t record_index,
     const std::string& field_name,
     const std::string& value,
-    bool allow_truncation = false);
+    bool allow_truncation = false,
+    bool is_null = false);
 // Whole-file-read/mutate/atomically-rewrite variants of the two entry
 // points above, bypassing the targeted-I/O fast paths those use by
 // default (see #5509). Exists for callers that specifically need
@@ -146,13 +159,15 @@ DbfWriteResult replace_record_field_value_full_rewrite(
     std::size_t record_index,
     const std::string& field_name,
     const std::string& value,
-    bool allow_truncation = false);
+    bool allow_truncation = false,
+    bool is_null = false);
 DbfWriteResult replace_record_field_value_additive_full_rewrite(
     const std::string& path,
     std::size_t record_index,
     const std::string& field_name,
     const std::string& value,
-    bool allow_truncation = false);
+    bool allow_truncation = false,
+    bool is_null = false);
 DbfWriteResult set_record_deleted_flag(
     const std::string& path,
     std::size_t record_index,

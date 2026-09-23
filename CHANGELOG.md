@@ -4,6 +4,40 @@
   call rather than a per-record rewrite loop. Also fixed `EXPORT DATABASE
   ... TYPE JSON` silently converting a NULL/unknown Logical cell to `false`
   instead of JSON `null` (#5631).
+- 2026-09-23: Fixed a Codex + Copilot review round's 11 findings on PR #6505
+  (#6047's `_NullFlags` storage layer), the most severe being a confirmed
+  root cause: `read_raw_field_descriptors()` (used by every `REPLACE`
+  writer) never decoded the nullable flags byte, so `REPLACE ... WITH
+  .NULL.` silently never set or cleared any bit -- masked by the original
+  regression test's own broken guard condition (`values.size() == 4U`,
+  which a real 5-value record could never satisfy, so its assertions
+  silently never ran). Also fixed: schema rewrites (`ALTER TABLE`)
+  duplicating `_NullFlags` instead of reusing/recomputing one bitmap;
+  `_NullFlags` identified by type alone (collision risk with a preserved
+  opaque type-`0` field); a `uint16_t` bitmap accumulator silently breaking
+  past 16 nullable fields; `ALTER TABLE ADD/ALTER COLUMN` never applying an
+  explicit `NULL` clause's physical bit; the flags-byte offset being read
+  unconditionally and misreading legacy FoxBASE's 16-byte descriptors;
+  three buffered-`TABLEUPDATE()`-flush call sites not threading `is_null`
+  through; and `GETFLDSTATE()`/`SETFLDSTATE()`'s ordinal/`-1` forms seeing
+  the hidden field. Two new regression tests added; the original test's
+  guard rewritten to look up fields by name. See docs/32's `RQ-CF-PRG-059`
+  row for the full account.
+- 2026-09-23: Added on-disk nullable-field support for #6047. `CREATE
+  TABLE`/`CREATE CURSOR` fields declared with an explicit `NULL` clause now
+  persist a physical nullability bit: a hidden `_NullFlags` bitmap field is
+  appended when needed (recovered empirically from a real VFP9 9.0 SP2
+  instance, see `docs/80-dbf-nullflags-field-format-notes.md`), and each
+  field's descriptor flags byte records its own nullability. `REPLACE ...
+  WITH .NULL.` now sets/clears the bit and blanks storage instead of being
+  silently discarded (both the immediate-write and buffered-update paths);
+  reading a record back reports `is_null` authoritatively from the bitmap.
+  The hidden field never appears in a cursor's user-visible field list.
+  `COPY STRUCTURE EXTENDED`'s `FIELD_NULL` metadata column now reports real
+  nullability instead of an unconditional `"F"`. Scope is the storage layer
+  only, per explicit owner direction; the `PrgValue`/`VARTYPE()`/`EMPTY()`/
+  `NVL()`/`EVL()`/aggregate-on-NULL semantics redesign flagged during scoping
+  is deferred to a separate follow-up issue.
 - 2026-09-23: Recorded PR #6500's merge (issue #6495 closed) in
   `agent-handoff.md` and selected #6496 as the next workstream, including the
   three pre-existing `agent-approved` data-integrity defects (#5631, #5567,

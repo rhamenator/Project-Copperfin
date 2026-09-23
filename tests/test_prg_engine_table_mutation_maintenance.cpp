@@ -472,6 +472,67 @@ void test_table_buffered_replace_numeric_overflow_honors_truncateonoverflow_at_c
     fs::remove_all(temp_root, ignored);
 }
 
+// #6047: a buffered REPLACE ... WITH .NULL. correctly recorded is_null on
+// the in-memory buffered record, but every TABLEUPDATE() flush path called
+// the on-disk writer with the default is_null=false, silently discarding
+// the NULL state -- the record was blanked, not marked null. Proves
+// TABLEUPDATE() actually persists it, through the mode-5 (table-buffered)
+// commit path.
+void test_table_buffered_replace_null_persists_through_tableupdate() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_buffered_null_tableupdate";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "nullable.dbf";
+    const fs::path create_path = temp_root / "create_nullable.prg";
+    write_text(
+        create_path,
+        "CREATE TABLE '" + table_path.string() + "' (n N(5) NULL, txt C(5) NOT NULL)\n"
+        "APPEND BLANK\n"
+        "REPLACE txt WITH 'orig'\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession create_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(create_path.string(), temp_root.string()));
+    const auto create_state = create_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(create_state.completed, "#6047: nullable table fixture setup should complete: " + create_state.message);
+
+    const fs::path main_path = temp_root / "buffered_replace_null.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS Nullable IN 0\n"
+        "=CURSORSETPROP('Buffering', 5, 'Nullable')\n"
+        "REPLACE n WITH .NULL.\n"
+        "lCommitted = TABLEUPDATE(.T., .T., 'Nullable')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6047: buffered REPLACE ... WITH .NULL. followed by TABLEUPDATE() should complete: " + state.message);
+
+    const auto committed = state.globals.find("lcommitted");
+    expect(committed != state.globals.end(), "script should expose the TABLEUPDATE result");
+    if (committed != state.globals.end()) {
+        expect(copperfin::runtime::format_value(committed->second) == "true",
+               "TABLEUPDATE should commit the buffered NULL replace");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(parse_result.ok && parse_result.table.records.size() == 1U, "table should remain readable after TABLEUPDATE()");
+    if (parse_result.ok && parse_result.table.records.size() == 1U) {
+        const auto &values = parse_result.table.records.front().values;
+        const auto field_n = std::find_if(values.begin(), values.end(), [](const copperfin::vfp::DbfRecordValue &value) {
+            return copperfin::test_support::uppercase_ascii(value.field_name) == "N";
+        });
+        expect(field_n != values.end() && field_n->is_null,
+               "#6047: TABLEUPDATE() must persist a buffered REPLACE ... WITH .NULL. as a real NULL, not a blank value");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_character_field_at_maximum_width_round_trips() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_exact_char_width";
