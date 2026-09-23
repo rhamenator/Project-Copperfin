@@ -1,3 +1,9 @@
+- 2026-09-23: Recorded PR #6500's merge (issue #6495 closed) in
+  `agent-handoff.md` and selected #6496 as the next workstream, including the
+  three pre-existing `agent-approved` data-integrity defects (#5631, #5567,
+  #6047) its own coverage campaign is expected to hit, per direct owner
+  instruction to fix them as part of this work rather than document them as
+  known-failing gaps.
 - 2026-09-22: Added four deterministic, seed-replayable state-sequence tests
   covering the SPAWN/AWAIT/cancellation/teardown and cursor-lock/transaction/
   caught-error/retry crossings (#6495), using real lock contention and `SET
