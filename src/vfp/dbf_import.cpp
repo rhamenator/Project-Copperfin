@@ -362,7 +362,21 @@ DbfImportResult import_xbase_table_to_vfp_native(
         target_records.push_back(std::move(row));
     }
 
-    const DbfWriteResult create_result = create_dbf_table_file(destination_path, plan.target_fields, target_records);
+    // #5567 review (chatgpt-codex-connector/Copilot, P1): carry the
+    // source's own deletion flags through in this same single-pass create
+    // call rather than a separate set_record_deleted_flag() call per
+    // deleted record afterward -- that API re-reads and rewrites the
+    // *entire* file on every call, so a per-record loop over d deleted
+    // rows in an S-byte destination cost Theta(d*S) I/O instead of O(S),
+    // making an ordinary deleted-heavy legacy table impractical to import
+    // at scale.
+    std::vector<bool> deleted_flags;
+    deleted_flags.reserve(source.table.records.size());
+    for (const DbfRecord& record : source.table.records) {
+        deleted_flags.push_back(record.deleted);
+    }
+    const DbfWriteResult create_result = create_dbf_table_file_with_deleted_flags(
+        destination_path, plan.target_fields, target_records, deleted_flags);
     if (!create_result.ok) {
         return {.ok = false, .error = create_result.error};
     }
@@ -391,26 +405,6 @@ DbfImportResult import_xbase_table_to_vfp_native(
                 remove_destination_artifacts(destination_path);
                 return {.ok = false, .error = memo_result.error};
             }
-        }
-    }
-
-    // Third pass: #5567 -- carry the source's own deletion flag through.
-    // create_dbf_table_file() always creates active rows, and the source
-    // reader's `deleted` bit has no other channel into the row-value
-    // vectors the first pass above builds, so a deleted source record
-    // (a deleted customer, transaction, or otherwise obsolete row) would
-    // otherwise silently become live data in the destination. Equivalent
-    // record content requires the destination's active row set to match
-    // the source's, not merely its field values.
-    for (std::size_t record_index = 0U; record_index < source.table.records.size(); ++record_index) {
-        if (!source.table.records[record_index].deleted) {
-            continue;
-        }
-        const DbfWriteResult delete_result =
-            set_record_deleted_flag(destination_path, record_index, true);
-        if (!delete_result.ok) {
-            remove_destination_artifacts(destination_path);
-            return {.ok = false, .error = delete_result.error};
         }
     }
 

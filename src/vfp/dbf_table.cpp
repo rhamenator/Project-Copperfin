@@ -3265,6 +3265,17 @@ DbfWriteResult create_dbf_table_file(
         path, fields, records, nullptr, 0U, generated_digests);
 }
 
+DbfWriteResult create_dbf_table_file_with_deleted_flags(
+    const std::string& path,
+    const std::vector<DbfFieldDescriptor>& fields,
+    const std::vector<std::vector<std::string>>& records,
+    const std::vector<bool>& deleted_flags,
+    DbfGeneratedDigests* generated_digests) {
+    const DbfCreateOverrides overrides{.deleted_flags = &deleted_flags};
+    return create_dbf_table_file_with_memo_payloads(
+        path, fields, records, &overrides, 0U, generated_digests);
+}
+
 // #5485: the first legacy binary-output target. Writes a dBASE III-
 // compatible table (structure + data only, no memo/index sidecar) using
 // #5482's read-side ground truth for the format: a 32-byte main header with
