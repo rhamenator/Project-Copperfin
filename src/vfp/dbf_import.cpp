@@ -362,7 +362,21 @@ DbfImportResult import_xbase_table_to_vfp_native(
         target_records.push_back(std::move(row));
     }
 
-    const DbfWriteResult create_result = create_dbf_table_file(destination_path, plan.target_fields, target_records);
+    // #5567 review (chatgpt-codex-connector/Copilot, P1): carry the
+    // source's own deletion flags through in this same single-pass create
+    // call rather than a separate set_record_deleted_flag() call per
+    // deleted record afterward -- that API re-reads and rewrites the
+    // *entire* file on every call, so a per-record loop over d deleted
+    // rows in an S-byte destination cost Theta(d*S) I/O instead of O(S),
+    // making an ordinary deleted-heavy legacy table impractical to import
+    // at scale.
+    std::vector<bool> deleted_flags;
+    deleted_flags.reserve(source.table.records.size());
+    for (const DbfRecord& record : source.table.records) {
+        deleted_flags.push_back(record.deleted);
+    }
+    const DbfWriteResult create_result = create_dbf_table_file_with_deleted_flags(
+        destination_path, plan.target_fields, target_records, deleted_flags);
     if (!create_result.ok) {
         return {.ok = false, .error = create_result.error};
     }

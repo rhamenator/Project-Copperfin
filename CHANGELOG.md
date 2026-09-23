@@ -1,3 +1,9 @@
+- 2026-09-23: `import_xbase_table_to_vfp_native()` now preserves the source
+  table's own deleted-record flags instead of silently reactivating every
+  row (#5567), via a single-pass `create_dbf_table_file_with_deleted_flags()`
+  call rather than a per-record rewrite loop. Also fixed `EXPORT DATABASE
+  ... TYPE JSON` silently converting a NULL/unknown Logical cell to `false`
+  instead of JSON `null` (#5631).
 - 2026-09-23: Recorded PR #6500's merge (issue #6495 closed) in
   `agent-handoff.md` and selected #6496 as the next workstream, including the
   three pre-existing `agent-approved` data-integrity defects (#5631, #5567,

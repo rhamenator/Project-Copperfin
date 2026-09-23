@@ -93,6 +93,21 @@ DbfWriteResult create_dbf_table_file(
     const std::vector<DbfFieldDescriptor>& fields,
     const std::vector<std::vector<std::string>>& records,
     DbfGeneratedDigests* generated_digests = nullptr);
+// #5567 review (chatgpt-codex-connector/Copilot, P1): a caller that already
+// knows which of its records are deleted at creation time (e.g. a DBF-to-
+// DBF import preserving the source's own deletion flags) should be able to
+// set every deletion marker in this same single-pass write, rather than
+// calling set_record_deleted_flag() once per deleted record afterward --
+// that API re-reads and rewrites the *entire* file on every call, making a
+// per-record loop over d deleted rows in an S-byte destination cost
+// Theta(d*S) I/O instead of O(S). `deleted_flags`, when non-null, must have
+// exactly `records.size()` entries.
+DbfWriteResult create_dbf_table_file_with_deleted_flags(
+    const std::string& path,
+    const std::vector<DbfFieldDescriptor>& fields,
+    const std::vector<std::vector<std::string>>& records,
+    const std::vector<bool>& deleted_flags,
+    DbfGeneratedDigests* generated_digests = nullptr);
 // #5485: writes a dBASE III-compatible table (C/N/L/D fields, no memo/index
 // sidecar). Fails closed if `path` already exists rather than overwriting.
 DbfWriteResult create_dbase_iii_table_file(
