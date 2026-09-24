@@ -1750,9 +1750,13 @@ void test_copy_to_predicate_closing_source_fails_catchably() {
         int drop_on_call = 1;
         bool reopen = false;
         bool filter = false;
+        bool close_all = false;
     };
     const std::vector<Scenario> scenarios = {
         {"array_for_first", "COPY TO ARRAY", "COPY TO ARRAY aResult FOR DropCursor()", "", 1},
+        // #6534 review: CLOSE ALL from the predicate.
+        {"array_for_close_all", "COPY TO ARRAY", "COPY TO ARRAY aResult FOR DropCursor()", "", 2, false, false, true},
+        {"csv_filter_close_all", "COPY TO", "COPY TO '<DEST>' TYPE CSV", "out.csv", 1, false, true, true},
         {"array_for_middle_reopen", "COPY TO ARRAY", "COPY TO ARRAY aResult FOR DropCursor()", "", 2, true},
         {"array_filter_last", "COPY TO ARRAY", "COPY TO ARRAY aResult", "", 3, false, true},
         {"dbf_for_first", "COPY TO", "COPY TO '<DEST>' FOR DropCursor()", "out.dbf", 1},
@@ -1775,6 +1779,7 @@ void test_copy_to_predicate_closing_source_fails_catchably() {
             "nCalls = 0\n"
             "nDropOnCall = " + std::to_string(scenario.drop_on_call) + "\n"
             "lReopen = " + (scenario.reopen ? ".T." : ".F.") + "\n"
+            "lCloseAll = " + (scenario.close_all ? ".T." : ".F.") + "\n"
             "lErrorCaught = .F.\n"
             "cErrMsg = ''\n"
             "DIMENSION aResult[1]\n"
@@ -1801,7 +1806,11 @@ void test_copy_to_predicate_closing_source_fails_catchably() {
             "FUNCTION DropCursor\n"
             "    nCalls = nCalls + 1\n"
             "    IF nCalls = nDropOnCall\n"
-            "        USE IN Source\n"
+            "        IF lCloseAll\n"
+            "            CLOSE ALL\n"
+            "        ELSE\n"
+            "            USE IN Source\n"
+            "        ENDIF\n"
             "        IF lReopen\n"
             "            CREATE CURSOR Replacement (ID I)\n"
             "            INSERT INTO Replacement VALUES (99)\n"
@@ -1842,6 +1851,90 @@ void test_copy_to_predicate_closing_source_fails_catchably() {
         });
         expect(success_events == 0, prefix + "the failed copy must not emit a success event");
     }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+
+// #6534 review: the predicate closes the source and then faults inside an
+// ON ERROR ... RESUME handler. Resuming the predicate must not resume the copy
+// through the freed cursor; the lost-target error reaches the same handler.
+void test_copy_to_predicate_closing_source_under_on_error_resume() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_copy_to_6241_on_error";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto active_catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        copperfin::localization::select_locale());
+    const auto global_text = [](const auto &state, const std::string &name) -> std::string {
+        const auto found = state.globals.find(name);
+        return found == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(found->second);
+    };
+
+    const fs::path destination = temp_root / "out.dbf";
+    const fs::path script_path = temp_root / "copy_on_error.prg";
+    write_text(
+        script_path,
+        "PUBLIC nHandled, cMessages\n"
+        "nHandled = 0\n"
+        "cMessages = ''\n"
+        "nCalls = 0\n"
+        "DIMENSION aResult[1]\n"
+        "aResult[1] = 'keep'\n"
+        "CREATE CURSOR Source (ID I)\n"
+        "INSERT INTO Source VALUES (1)\n"
+        "INSERT INTO Source VALUES (2)\n"
+        "SELECT Source\n"
+        "ON ERROR DO HandleCopyFault WITH MESSAGE()\n"
+        "COPY TO ARRAY aResult FOR DropThenFault()\n"
+        "SELECT 0\n"
+        "CREATE CURSOR Source2 (ID I)\n"
+        "INSERT INTO Source2 VALUES (1)\n"
+        "nCalls = 0\n"
+        "COPY TO '" + destination.string() + "' FOR DropThenFault2()\n"
+        "ON ERROR\n"
+        "cKeep = aResult[1]\n"
+        "lAfter = .T.\n"
+        "RETURN\n"
+        "PROCEDURE HandleCopyFault\n"
+        "    LPARAMETERS cMessage\n"
+        "    nHandled = nHandled + 1\n"
+        "    cMessages = cMessages + cMessage + '|'\n"
+        "    RESUME\n"
+        "ENDPROC\n"
+        "FUNCTION DropThenFault\n"
+        "    nCalls = nCalls + 1\n"
+        "    USE IN Source\n"
+        "    nBad = 1 / 0\n"
+        "    RETURN .T.\n"
+        "ENDFUNC\n"
+        "FUNCTION DropThenFault2\n"
+        "    nCalls = nCalls + 1\n"
+        "    USE IN Source2\n"
+        "    nBad = 1 / 0\n"
+        "    RETURN .T.\n"
+        "ENDFUNC\n");
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(script_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6241 ON ERROR: script should complete: " + state.message);
+    expect(global_text(state, "lafter") == "true", "#6241 ON ERROR: execution should continue after both copies");
+    const std::string messages = global_text(state, "cmessages");
+    for (const std::string command : {"COPY TO ARRAY", "COPY TO"}) {
+        const std::string expected = active_catalog.translate(
+            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", {{"command", command}});
+        expect(messages.find(expected) != std::string::npos,
+            "#6241 ON ERROR: the lost-source " + command + " error should reach the handler, got: " + messages);
+    }
+    expect(global_text(state, "ckeep") == "keep", "#6241 ON ERROR: the destination array must keep its contents");
+    expect(!fs::exists(destination), "#6241 ON ERROR: no output file should be published");
+    const auto success_events = std::count_if(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.copy_to" || event.category == "runtime.copy_to_array";
+    });
+    expect(success_events == 0, "#6241 ON ERROR: neither failed copy may emit a success event");
 
     fs::remove_all(temp_root, ignored);
 }
