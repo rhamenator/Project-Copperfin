@@ -9,6 +9,27 @@
             return std::nullopt;
         }
 
+        // #6415: property event delegates, _Access methods, and list selector
+        // expressions run user code that can release this object (or its
+        // container) and erase it from ole_objects. Handles are never reused,
+        // so the handle is a stable identity: re-check it after each such
+        // call and fail catchably instead of touching the erased state. The
+        // read never returns normally once the source is gone, because every
+        // caller still holds the (now dangling) reference it passed in.
+        const int source_handle = runtime_object.handle;
+        const auto source_released = [&]()
+        {
+            return ole_objects.find(source_handle) == ole_objects.end();
+        };
+        const auto raise_source_released = [&]()
+        {
+            throw PrgCompatibilityError(
+                runtime_text(
+                    "Runtime.Prg.Core.Error.OleObjectNotFoundForPropertyRead",
+                    {{"propertyPath", property_name}}),
+                1924);
+        };
+
         const auto evaluate_integer_selector_expression = [&](const std::string& expression)
             -> std::optional<long long>
         {
@@ -23,6 +44,10 @@
                 return std::nullopt;
             }
             const PrgValue evaluated = evaluate_expression(trimmed_expression, source_frame);
+            if (source_released())
+            {
+                raise_source_released();
+            }
             return static_cast<long long>(std::llround(value_as_number(evaluated)));
         };
 
@@ -426,12 +451,16 @@
             {
                 for (const NativeEventBinding &binding : bindings)
                 {
+                    if (source_released())
+                    {
+                        break;
+                    }
                     const bool binding_after_source_member = (binding.flags & 1) == 0;
                     if (binding_after_source_member == after_source_member)
                     {
                         (void)invoke_native_event_delegate(
                             binding,
-                            {.source_handle = runtime_object.handle,
+                            {.source_handle = source_handle,
                              .event_name = normalized_property_name,
                              .event_type = 2},
                             {},
@@ -441,12 +470,32 @@
             };
 
             invoke_delegates_for_phase(false);
+            if (source_released())
+            {
+                raise_source_released();
+            }
             auto result = perform_property_read();
-            invoke_delegates_for_phase(true);
+            if (!source_released())
+            {
+                invoke_delegates_for_phase(true);
+            }
+            // #6538 review: never return normally once the source is gone,
+            // even with a value in hand -- the 16 callers still hold the
+            // erased RuntimeOleObjectState& and some keep using it (e.g. the
+            // Enter-key path reads Enabled and then dispatches Click).
+            if (source_released())
+            {
+                raise_source_released();
+            }
             return result;
         }
 
-        return perform_property_read();
+        auto result = perform_property_read();
+        if (source_released())
+        {
+            raise_source_released();
+        }
+        return result;
     }
 
     std::optional<std::string> PrgRuntimeSession::Impl::read_native_property_expression_if_present(

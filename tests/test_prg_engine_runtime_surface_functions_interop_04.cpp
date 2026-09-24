@@ -887,4 +887,153 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+
+    // #6415: a property-read event handler (or _Access method) that releases
+    // the source object used to leave the read dereferencing erased object
+    // state. The read must fail catchably (error 1924) or, when the value was
+    // already produced, return it; later handlers must not run on a freed source.
+    void test_property_read_handler_releasing_source_fails_catchably()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_property_read_release_6415";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto global_text = [](const auto &state, const std::string &name) -> std::string {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(found->second);
+        };
+        const fs::path main_path = temp_root / "property_read_release.prg";
+        write_text(
+            main_path,
+            "PUBLIC oSource, oForm, nFirst, nSecond, nAfter\n"
+            "nFirst = 0\n"
+            "nSecond = 0\n"
+            "nAfter = 0\n"
+            "* 1: issue repro plus a second before-handler that must not run\n"
+            "oSource = CREATEOBJECT('SourceThing')\n"
+            "nBind1 = BINDEVENT(oSource, 'Caption', 'ReleaseSource', 1)\n"
+            "nBind2 = BINDEVENT(oSource, 'Caption', 'SecondHandler', 1)\n"
+            "nErrBefore = 0\n"
+            "TRY\n"
+            "    cBefore = oSource.Caption\n"
+            "CATCH TO oErr\n"
+            "    nErrBefore = oErr.ErrorNo\n"
+            "ENDTRY\n"
+            "* 2: an after-handler releases the source once the value is read\n"
+            "oSource = CREATEOBJECT('SourceThing')\n"
+            "nBind3 = BINDEVENT(oSource, 'Caption', 'AfterRelease', 0)\n"
+            "nErrAfter = 0\n"
+            "cAfter = ''\n"
+            "TRY\n"
+            "    cAfter = oSource.Caption\n"
+            "CATCH TO oErr\n"
+            "    nErrAfter = oErr.ErrorNo\n"
+            "ENDTRY\n"
+            "* 3: an _Access method releases its own object\n"
+            "oSource = CREATEOBJECT('SelfReleasingAccess')\n"
+            "nErrAccess = 0\n"
+            "cAccess = ''\n"
+            "TRY\n"
+            "    cAccess = oSource.Caption\n"
+            "CATCH TO oErr\n"
+            "    nErrAccess = oErr.ErrorNo\n"
+            "ENDTRY\n"
+            "* 4: the handler releases the source's container\n"
+            "oForm = CREATEOBJECT('HostForm')\n"
+            "nBind4 = BINDEVENT(oForm.lblChild, 'Caption', 'ReleaseForm', 1)\n"
+            "nErrContainer = 0\n"
+            "TRY\n"
+            "    cContainer = oForm.lblChild.Caption\n"
+            "CATCH TO oErr\n"
+            "    nErrContainer = oErr.ErrorNo\n"
+            "ENDTRY\n"
+            "* 5: a List() argument UDF releases the list before dispatch\n"
+            "PUBLIC oList, nSelector\n"
+            "nSelector = 0\n"
+            "oList = CREATEOBJECT('ListBox')\n"
+            "oList.AddItem('first')\n"
+            "oList.AddItem('second')\n"
+            "nErrSelector = 0\n"
+            "cSelector = ''\n"
+            "TRY\n"
+            "    cSelector = oList.List(ReleaseList())\n"
+            "CATCH TO oErr\n"
+            "    nErrSelector = oErr.ErrorNo\n"
+            "ENDTRY\n"
+            "lAfter = .T.\n"
+            "RETURN\n"
+            "FUNCTION ReleaseList\n"
+            "    nSelector = nSelector + 1\n"
+            "    RELEASE oList\n"
+            "    RETURN 1\n"
+            "ENDFUNC\n"
+            "PROCEDURE ReleaseSource\n"
+            "    nFirst = nFirst + 1\n"
+            "    oSource.Release()\n"
+            "ENDPROC\n"
+            "PROCEDURE SecondHandler\n"
+            "    nSecond = nSecond + 1\n"
+            "ENDPROC\n"
+            "PROCEDURE AfterRelease\n"
+            "    nAfter = nAfter + 1\n"
+            "    oSource.Release()\n"
+            "ENDPROC\n"
+            "PROCEDURE ReleaseForm\n"
+            "    oForm.Release()\n"
+            "ENDPROC\n"
+            "DEFINE CLASS SourceThing AS Custom\n"
+            "    Caption = 'alive'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SelfReleasingAccess AS Custom\n"
+            "    Caption = 'alive'\n"
+            "    PROCEDURE Caption_Access\n"
+            "        THIS.Release()\n"
+            "        RETURN 'accessed'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS HostForm AS Form\n"
+            "    ADD OBJECT lblChild AS Label WITH Caption = 'child'\n"
+            "ENDDEFINE\n");
+
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6415: script should complete: " + state.message);
+        expect(global_text(state, "lafter") == "true", "#6415: execution should continue after every read");
+        expect(global_text(state, "nfirst") == "1", "#6415: the releasing before-handler should run once");
+        expect(global_text(state, "nerrbefore") == "1924",
+               "#6415: reading after a before-handler released the source should raise error 1924, got: " +
+                   global_text(state, "nerrbefore"));
+        expect(global_text(state, "nsecond") == "0",
+               "#6415: a later handler must not run on a released source, got: " + global_text(state, "nsecond"));
+        // #6538 review: once the source is gone the read never returns
+        // normally, even with a value in hand, because callers still hold the
+        // erased object reference.
+        expect(global_text(state, "nafter") == "1" && global_text(state, "nerrafter") == "1924",
+               "#6415: an after-handler releasing the source should raise error 1924, got: " +
+                   global_text(state, "cafter") + " / error " + global_text(state, "nerrafter"));
+        expect(global_text(state, "nerraccess") == "1924",
+               "#6415: an _Access method that releases THIS should raise error 1924, got: " +
+                   global_text(state, "caccess") + " / error " + global_text(state, "nerraccess"));
+        // Direct List(<expr>) syntax evaluates its argument before dispatch,
+        // so a releasing argument surfaces as the OLE "object not found for
+        // method invocation" fault (1429) rather than reaching the
+        // selector-text branch with an erased source.
+        expect(global_text(state, "nerrselector") == "1429" && global_text(state, "nselector") == "1",
+               "#6415: a List() argument releasing the list should fail catchably (1429), got: " +
+                   global_text(state, "cselector") + " / error " + global_text(state, "nerrselector") +
+                   " / selector calls " + global_text(state, "nselector"));
+        // Copperfin may keep a released form's children alive until the
+        // container is torn down, so either outcome is memory-safe; what
+        // matters (checked under ASan) is never reading erased state.
+        expect(global_text(state, "nerrcontainer") == "1924" ||
+                   (global_text(state, "nerrcontainer") == "0" && global_text(state, "ccontainer") == "child"),
+               "#6415: releasing the source's container must fail with 1924 or read the still-live child, got: " +
+                   global_text(state, "ccontainer") + " / error " + global_text(state, "nerrcontainer"));
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 }
