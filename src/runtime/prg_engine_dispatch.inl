@@ -10759,14 +10759,32 @@
                 // GATHER FROM <array>|MEMVAR|NAME <object> [FIELDS <list>] [FOR <expr>]
                 const bool use_memvar = (statement.identifier == "memvar");
                 const bool use_name_object = (statement.identifier == "name");
-                CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                CursorState *cursor = resumed_command_cursor_reference.has_value()
+                    ? resolve_cursor_generation_reference(*resumed_command_cursor_reference)
+                    : resolve_cursor_target(std::to_string(current_selected_work_area()));
                 if (cursor == nullptr)
                 {
-                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.GatherNoCurrentWorkArea");
+                    // #6320: a resumed reference resolving to null means the
+                    // cursor captured before a suspended FOR predicate
+                    // yielded was closed/replaced while control was away;
+                    // that is distinct from never having had a current work
+                    // area, so it gets the same catchable message every
+                    // other reentrant-closure-hardened command uses.
+                    last_error_message = resumed_command_cursor_reference.has_value()
+                        ? runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", {{"command", "GATHER"}})
+                        : runtime_text("Runtime.Prg.Dispatch.Error.GatherNoCurrentWorkArea");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
+                // #6320: the FOR predicate below can run arbitrary VFP code
+                // (a nested EVALUATE()/UDF) that closes or replaces this
+                // exact cursor before returning. Capture its identity now
+                // and re-resolve it after the predicate returns -- the raw
+                // pointer above must never be dereferenced again once the
+                // predicate has been evaluated.
+                const CursorGenerationReference cursor_reference =
+                    resumed_command_cursor_reference.value_or(capture_cursor_generation_reference(cursor));
                 const auto rec = current_record(*cursor);
                 if (!rec.has_value())
                 {
@@ -10784,7 +10802,21 @@
                                                      : evaluate_resumable_expression(frame, predicate_statement, cursor);
                     if (!predicate_value.has_value())
                     {
+                        if (frame.expression_continuation.has_value())
+                        {
+                            frame.expression_continuation->command_cursor_reference = cursor_reference;
+                        }
                         return {};
+                    }
+                    cursor = resolve_cursor_generation_reference(cursor_reference);
+                    if (cursor == nullptr)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", "GATHER"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
                     }
                     if (!value_as_bool(*predicate_value))
                     {

@@ -100,6 +100,8 @@ int main() {
     test_append_from_array_macro_source_preserves_date_and_datetime_fields();
     test_gather_memvar_round_trips_field_values();
     test_gather_from_array_is_reverted_by_undo();
+    test_gather_for_clause_closing_target_cursor_fails_catchably();
+    test_gather_for_clause_closing_target_cursor_and_returning_false_fails_catchably();
     test_m_dot_namespace_shares_bare_memory_variable_binding();
     test_browse_emits_effective_cursor_view_metadata();
     test_browse_like_and_except_field_filters_surface_event_metadata();

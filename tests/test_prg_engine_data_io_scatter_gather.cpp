@@ -2119,4 +2119,151 @@ void test_gather_from_array_is_reverted_by_undo() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #6320: the FOR predicate below can execute arbitrary VFP code through a
+// nested EVALUATE() call (an evaluation depth the outer expression
+// continuation's own direct-UDF-call trampoline does not protect, per the
+// issue's own analysis) that closes the GATHER target itself via USE IN.
+// GATHER used to keep reading/writing through the freed CursorState
+// (recno, source_path, field descriptors) after the predicate returned
+// true. It must instead revalidate the cursor's generation identity after
+// the predicate runs and fail catchably if it was closed or replaced,
+// never continue through freed state.
+void test_gather_for_clause_closing_target_cursor_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_gather_for_closes_target_cursor";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_simple_dbf(table_path, {"Alice"});
+
+    const fs::path main_path = temp_root / "gather_for_closes_target_cursor.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO 1\n"
+        "SCATTER FIELDS NAME TO aRow\n"
+        "aRow[1] = 'Changed'\n"
+        "lErrorCaught = .F.\n"
+        "cErrMsg = ''\n"
+        "TRY\n"
+        "    GATHER FROM aRow FIELDS NAME FOR EVALUATE('CloseTarget()')\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "    cErrMsg = oErr.Message\n"
+        "ENDTRY\n"
+        "lStillOpen = USED('People')\n"
+        "RETURN\n"
+        "FUNCTION CloseTarget\n"
+        "USE IN People\n"
+        "RETURN .T.\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6320: GATHER FOR-closes-own-target script should complete without crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6320: GATHER FOR must raise a catchable error instead of continuing through the closed cursor");
+
+    // Without the fix, this still often "fails" too, but only because
+    // dereferencing the freed CursorState corrupts something incidental
+    // (e.g. a garbage std::string length triggering an allocation fault) --
+    // not because the fix's own revalidation ran. Pin the exact message so
+    // a coincidental UB-driven failure elsewhere can't masquerade as this
+    // fix working.
+    const auto err_msg_it = state.globals.find("cerrmsg");
+    expect(err_msg_it != state.globals.end() &&
+               copperfin::runtime::format_value(err_msg_it->second) == "GATHER target work area not found",
+           "#6320: the caught error must be the specific target-work-area-lost message, not an incidental "
+           "fault from corrupted freed memory, got '" +
+               (err_msg_it != state.globals.end() ? copperfin::runtime::format_value(err_msg_it->second) : "<missing>") +
+               "'");
+
+    const auto still_open_it = state.globals.find("lstillopen");
+    expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+           "#6320: the FOR predicate's USE IN People should genuinely have closed the cursor (proving real "
+           "contention with the fix, not a coincidental pass)");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(parse_result.ok, "#6320: people.dbf should remain readable after the failed GATHER");
+    if (parse_result.ok && !parse_result.table.records.empty()) {
+        expect(parse_result.table.records[0].values[0].display_value == "Alice",
+               "#6320: the record must retain its original value, not a half-applied write, got '" +
+                   parse_result.table.records[0].values[0].display_value + "'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+// #6320: the same hazard exists when the FOR predicate closes the target
+// and then returns false. Before the fix, the "skipped" branch never
+// dereferenced the cursor, so this path happened to be memory-safe, but it
+// still emitted a silent "skipped" success without ever noticing the
+// cursor was gone -- exactly the "false success" the issue's acceptance
+// criteria forbids. The fix revalidates before branching on the predicate
+// result, so a closed-then-false predicate is now caught the same way as
+// a closed-then-true one.
+void test_gather_for_clause_closing_target_cursor_and_returning_false_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_gather_for_closes_target_cursor_false";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_simple_dbf(table_path, {"Alice"});
+
+    const fs::path main_path = temp_root / "gather_for_closes_target_cursor_false.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO 1\n"
+        "SCATTER FIELDS NAME TO aRow\n"
+        "aRow[1] = 'Changed'\n"
+        "lErrorCaught = .F.\n"
+        "cErrMsg = ''\n"
+        "TRY\n"
+        "    GATHER FROM aRow FIELDS NAME FOR EVALUATE('CloseTargetReturnFalse()')\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "    cErrMsg = oErr.Message\n"
+        "ENDTRY\n"
+        "lStillOpen = USED('People')\n"
+        "RETURN\n"
+        "FUNCTION CloseTargetReturnFalse\n"
+        "USE IN People\n"
+        "RETURN .F.\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6320: GATHER FOR-closes-own-target-then-false script should complete without crashing: " +
+               state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6320: a false FOR predicate must not silently report GATHER as skipped when it closed the "
+           "target cursor first");
+
+    const auto err_msg_it = state.globals.find("cerrmsg");
+    expect(err_msg_it != state.globals.end() &&
+               copperfin::runtime::format_value(err_msg_it->second) == "GATHER target work area not found",
+           "#6320: the caught error must be the specific target-work-area-lost message, got '" +
+               (err_msg_it != state.globals.end() ? copperfin::runtime::format_value(err_msg_it->second) : "<missing>") +
+               "'");
+
+    const auto still_open_it = state.globals.find("lstillopen");
+    expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+           "#6320: the FOR predicate's USE IN People should genuinely have closed the cursor");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace cf_test_prg_engine_data_io
