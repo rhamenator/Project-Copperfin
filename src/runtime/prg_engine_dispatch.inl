@@ -8291,10 +8291,26 @@
                     const std::size_t num_cols = col_names.empty() ? 1U : col_names.size();
                     std::vector<PrgValue> flat_values;
                     const CursorPositionSnapshot saved = capture_cursor_snapshot(*cursor);
+                    // #6241: the active filter and FOR expression can run a UDF
+                    // that closes or replaces the source cursor. Re-resolve it
+                    // after each evaluation; on loss, fail before assigning the
+                    // array (the caller's array keeps its previous contents).
+                    const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(cursor);
                     for (const std::size_t recno : record_iteration_order(*cursor))
                     {
                         move_cursor_to(*cursor, static_cast<long long>(recno));
-                        if (!current_record_matches_visibility(*cursor, frame, for_expr))
+                        const bool matches = current_record_matches_visibility(*cursor, frame, for_expr);
+                        cursor = resolve_cursor_generation_reference(cursor_reference);
+                        if (cursor == nullptr)
+                        {
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                {{"command", "COPY TO ARRAY"}});
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        if (!matches)
                         {
                             continue;
                         }
@@ -8488,10 +8504,26 @@
                 if (!is_structure)
                 {
                     const CursorPositionSnapshot saved = capture_cursor_snapshot(*cursor);
+                    // #6241: the active filter and FOR expression can run a UDF
+                    // that closes or replaces the source cursor. Re-resolve it
+                    // after each evaluation; on loss, fail before any output
+                    // file is created or written.
+                    const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(cursor);
                     for (const std::size_t recno : record_iteration_order(*cursor))
                     {
                         move_cursor_to(*cursor, static_cast<long long>(recno));
-                        if (!current_record_matches_visibility(*cursor, frame, for_expr))
+                        const bool matches = current_record_matches_visibility(*cursor, frame, for_expr);
+                        cursor = resolve_cursor_generation_reference(cursor_reference);
+                        if (cursor == nullptr)
+                        {
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                {{"command", "COPY TO"}});
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        if (!matches)
                         {
                             continue;
                         }

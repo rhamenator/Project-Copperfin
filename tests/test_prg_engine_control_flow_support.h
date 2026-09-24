@@ -313,6 +313,8 @@ void test_loop_predicates_and_bounds_use_heap_backed_expression_checkpoints();
 void test_scan_predicate_preserves_rest_scope_and_exhaustion_state();
 void test_scan_does_not_resume_on_cursor_reusing_its_work_area();
 void test_locate_predicate_closing_cursor_fails_catchably();
+void test_copy_to_predicate_closing_source_fails_catchably();
+void test_copy_to_predicate_closing_source_under_on_error_resume();
 void test_cancel_releases_frame_owned_native_objects();
 void test_cancel_releases_frame_owned_private_native_objects();
 void test_retry_releases_frame_owned_native_objects();

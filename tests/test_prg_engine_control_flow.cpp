@@ -114,6 +114,8 @@ int main() {
     test_scan_predicate_preserves_rest_scope_and_exhaustion_state();
     test_scan_does_not_resume_on_cursor_reusing_its_work_area();
     test_locate_predicate_closing_cursor_fails_catchably();
+    test_copy_to_predicate_closing_source_fails_catchably();
+    test_copy_to_predicate_closing_source_under_on_error_resume();
     test_cancel_releases_frame_owned_native_objects();
     test_cancel_releases_frame_owned_private_native_objects();
     test_retry_releases_frame_owned_native_objects();
