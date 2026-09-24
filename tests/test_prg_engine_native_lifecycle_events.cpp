@@ -219,16 +219,14 @@ void test_native_query_unload_nodefault_vetoes_quit()
         main_path,
         "PUBLIC cEvents\n"
         "cEvents = ''\n"
-        "oFalse = CREATEOBJECT('FalseForm')\n"
-        "QUIT\n"
-        "lFalseStillAlive = PEMSTATUS(oFalse, 'cEvents', 1)\n"
-        "cAfterFalse = cEvents\n"
-        "oFalse.Release()\n"
         "oVeto = CREATEOBJECT('VetoForm')\n"
         "QUIT\n"
         "lStillAlive = PEMSTATUS(oVeto, 'cEvents', 1)\n"
         "cAfterQuit = cEvents\n"
         "oVeto.Release()\n"
+        "oFalse = CREATEOBJECT('FalseForm')\n"
+        "QUIT\n"
+        "lReachedAfterFalseQuit = .T.\n"
         "RETURN\n"
         "DEFINE CLASS FalseForm AS Form\n"
         "    PROCEDURE QueryUnload\n"
@@ -254,7 +252,7 @@ void test_native_query_unload_nodefault_vetoes_quit()
     auto session = copperfin::runtime::PrgRuntimeSession::create(
         make_runtime_session_options(main_path.string(), temp_root.string()));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed, "native QueryUnload veto script should continue: " + state.message);
+    expect(state.completed, "native QueryUnload veto script should complete: " + state.message);
 
     const auto check = [&](const std::string& name, const std::string& expected)
     {
@@ -268,12 +266,15 @@ void test_native_query_unload_nodefault_vetoes_quit()
         }
     };
 
-    check("lfalsestillalive", "true");
-    check("cafterfalse", "false-query;");
     check("lstillalive", "true");
-    check("cafterquit", "false-query;false-destroy;query;");
-    expect(has_runtime_event(state.events, "prg.object.queryunload_veto", "FalseForm"),
-           "false QueryUnload result should veto QUIT");
+    check("cafterquit", "query;");
+    // #6193: VFP9 ignores QueryUnload's RETURN .F.; only NODEFAULT vetoes.
+    // The FalseForm QUIT therefore proceeds and the next line never runs.
+    check("cevents", "query;destroy;false-query;false-destroy;");
+    expect(state.globals.find("lreachedafterfalsequit") == state.globals.end(),
+           "#6193: QUIT with a RETURN .F. QueryUnload should proceed, not continue the program");
+    expect(!has_runtime_event(state.events, "prg.object.queryunload_veto", "FalseForm"),
+           "#6193: a RETURN .F. QueryUnload result must not veto QUIT");
     expect(has_runtime_event(state.events, "prg.object.queryunload_veto", "VetoForm"),
            "NODEFAULT from QueryUnload should veto QUIT");
     expect(has_runtime_event(state.events, "prg.object.destroy", "VetoForm.Destroy"),
@@ -658,6 +659,70 @@ void test_native_query_unload_self_release_is_memory_safe()
     fs::remove_all(temp_root, ignored);
 }
 
+// #6549 review: WM_CLOSE shares the #6193 conditional. A QueryUnload that
+// returns .F. or .T. (without NODEFAULT) must not veto the close: the form is
+// destroyed and prg.object.window_close is emitted.
+void test_native_window_close_query_unload_return_value_does_not_veto()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_wm_close_return_value_6193";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    for (const std::string return_value : {".F.", ".T."})
+    {
+        const fs::path main_path = temp_root / ("wm_close_return_" + std::string(return_value == ".F." ? "false" : "true") + ".prg");
+        write_text(main_path,
+                   "PUBLIC cEvents\n"
+                   "cEvents = ''\n"
+                   "oForm = CREATEOBJECT('ReturnValueForm')\n"
+                   "nHwnd = oForm.hWnd\n"
+                   "READ EVENTS\n"
+                   "RETURN\n"
+                   "DEFINE CLASS ReturnValueForm AS Form\n"
+                   "    PROCEDURE QueryUnload\n"
+                   "        cEvents = cEvents + 'query;'\n"
+                   "        CLEAR EVENTS\n"
+                   "        RETURN " + return_value + "\n"
+                   "    ENDPROC\n"
+                   "    PROCEDURE Destroy\n"
+                   "        cEvents = cEvents + 'destroy;'\n"
+                   "    ENDPROC\n"
+                   "    PROCEDURE Unload\n"
+                   "        cEvents = cEvents + 'unload;'\n"
+                   "    ENDPROC\n"
+                   "ENDDEFINE\n");
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        const std::string prefix = "#6193 WM_CLOSE RETURN " + return_value + ": ";
+        const auto hwnd = state.globals.find("nhwnd");
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop && hwnd != state.globals.end(),
+               prefix + "script should enter its event loop with a form hWnd");
+        if (hwnd == state.globals.end())
+        {
+            continue;
+        }
+        const auto close = session.dispatch_windows_message(
+            static_cast<std::intptr_t>(std::stoll(format_value(hwnd->second))),
+            0x0010U);
+        expect(close.has_value(), prefix + "the message should be handled");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, prefix + "script should complete: " + state.message);
+        const auto sequence = state.globals.find("cevents");
+        expect(sequence != state.globals.end() && format_value(sequence->second) == "query;destroy;unload;",
+               prefix + "the close should proceed and destroy the form, got: " +
+                   (sequence == state.globals.end() ? std::string("<missing>") : format_value(sequence->second)));
+        expect(!has_runtime_event(state.events, "prg.object.window_close_veto", "ReturnValueForm"),
+               prefix + "a QueryUnload return value must not veto the close");
+        expect(has_runtime_event(state.events, "prg.object.window_close", "ReturnValueForm"),
+               prefix + "the accepted close should emit prg.object.window_close");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 int main()
 {
     test_native_show_hide_refresh_events();
@@ -666,6 +731,7 @@ int main()
     test_native_window_close_dispatches_query_unload_before_destroy();
     test_native_window_close_query_unload_nodefault_vetoes_release();
     test_native_query_unload_self_release_is_memory_safe();
+    test_native_window_close_query_unload_return_value_does_not_veto();
     if (test_failures() != 0)
     {
         std::cerr << test_failures() << " test(s) failed.\n";

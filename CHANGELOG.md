@@ -1,3 +1,7 @@
+- 2026-09-24: A form's `QueryUnload` returning `.F.` no longer vetoes
+  `QUIT` or a window close (#6193). As in VFP9 (re-probed on a real VFP 9.0
+  SP2 install), only `NODEFAULT` cancels the shutdown.
+  `RQ-CF-PRG-QUERYUNLOAD-VETO-001`.
 - 2026-09-24: A form whose `QueryUnload` releases itself during `QUIT` or
   `WM_CLOSE` no longer leaves shutdown reading (or, for `WM_CLOSE`,
   releasing a second time) the erased form (#6192). A self-released form
