@@ -633,6 +633,159 @@ void test_append_from_honors_open_source_cursor_filter() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #6321: an already-open source cursor's SET FILTER expression executes
+// arbitrary VFP code (a UDF doing USE IN) while APPEND FROM holds a raw
+// pointer/reference to the DESTINATION cursor across that evaluation.
+// Closing the destination from the callback used to leave
+// append_blank_record_to_file(cursor->source_path) and the
+// AppendFromCommandUndoGuard's rollback dereferencing freed memory.
+void test_append_from_source_filter_closing_destination_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_append_from_filter_closes_dest";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const fs::path dest_path = temp_root / "dest.dbf";
+    write_simple_dbf(source_path, {"ALPHA"});
+    write_simple_dbf(dest_path, {"DESTINATION"});
+
+    const fs::path main_path = temp_root / "append_from_filter_closes_dest.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "' ALIAS Source IN 0\n"
+        "SET FILTER TO CloseDest() IN Source\n"
+        "USE '" + dest_path.string() + "' ALIAS Dest IN 0\n"
+        "lErrorCaught = .F.\n"
+        "cErrMsg = ''\n"
+        "TRY\n"
+        "    APPEND FROM '" + source_path.string() + "'\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "    cErrMsg = oErr.Message\n"
+        "ENDTRY\n"
+        "lSourceStillOpen = USED('Source')\n"
+        "lDestStillOpen = USED('Dest')\n"
+        "RETURN\n"
+        "FUNCTION CloseDest\n"
+        "USE IN Dest\n"
+        "RETURN .T.\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6321: APPEND FROM filter-closes-destination script should complete without crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6321: APPEND FROM must raise a catchable error instead of continuing through the closed "
+           "destination cursor");
+
+    const auto catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        copperfin::localization::select_locale());
+    const std::string expected_message = catalog.translate(
+        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", {{"command", "APPEND FROM"}});
+    const auto err_msg_it = state.globals.find("cerrmsg");
+    expect(err_msg_it != state.globals.end() &&
+               copperfin::runtime::format_value(err_msg_it->second) == expected_message,
+           "#6321: the caught error must be the specific target-work-area-lost message, got '" +
+               (err_msg_it != state.globals.end() ? copperfin::runtime::format_value(err_msg_it->second) : "<missing>") +
+               "'");
+
+    const auto dest_open_it = state.globals.find("ldeststillopen");
+    expect(dest_open_it != state.globals.end() && !dest_open_it->second.boolean_value,
+           "#6321: the filter callback's USE IN Dest should genuinely have closed the destination cursor");
+    const auto source_open_it = state.globals.find("lsourcestillopen");
+    expect(source_open_it != state.globals.end() && source_open_it->second.boolean_value,
+           "#6321: the source cursor must remain open and untouched when only the destination was closed");
+
+    const auto dest_result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 1U);
+    expect(dest_result.ok, "#6321: dest.dbf should remain readable after the failed APPEND FROM");
+    expect(dest_result.ok && dest_result.table.records.size() == 1U,
+           "#6321: APPEND FROM must not leave a partially-appended row once the destination was closed");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+// #6321: the same evaluation can instead close the SOURCE cursor being
+// filtered -- filter_expression_matches_record() itself used to restore
+// position/order state through that cursor unconditionally afterward.
+void test_append_from_source_filter_closing_source_fails_catchably() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_append_from_filter_closes_source";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const fs::path dest_path = temp_root / "dest.dbf";
+    write_simple_dbf(source_path, {"ALPHA"});
+    write_simple_dbf(dest_path, {"DESTINATION"});
+
+    const fs::path main_path = temp_root / "append_from_filter_closes_source.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "' ALIAS Source IN 0\n"
+        "SET FILTER TO CloseSource() IN Source\n"
+        "USE '" + dest_path.string() + "' ALIAS Dest IN 0\n"
+        "lErrorCaught = .F.\n"
+        "cErrMsg = ''\n"
+        "TRY\n"
+        "    APPEND FROM '" + source_path.string() + "'\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "    cErrMsg = oErr.Message\n"
+        "ENDTRY\n"
+        "lSourceStillOpen = USED('Source')\n"
+        "lDestStillOpen = USED('Dest')\n"
+        "RETURN\n"
+        "FUNCTION CloseSource\n"
+        "USE IN Source\n"
+        "RETURN .T.\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6321: APPEND FROM filter-closes-source script should complete without crashing: " + state.message);
+
+    const auto error_caught_it = state.globals.find("lerrorcaught");
+    expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+           "#6321: APPEND FROM must raise a catchable error instead of continuing through the closed "
+           "source cursor");
+
+    const auto catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        copperfin::localization::select_locale());
+    const std::string expected_message = catalog.translate(
+        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", {{"command", "APPEND FROM"}});
+    const auto err_msg_it = state.globals.find("cerrmsg");
+    expect(err_msg_it != state.globals.end() &&
+               copperfin::runtime::format_value(err_msg_it->second) == expected_message,
+           "#6321: the caught error must be the specific target-work-area-lost message, got '" +
+               (err_msg_it != state.globals.end() ? copperfin::runtime::format_value(err_msg_it->second) : "<missing>") +
+               "'");
+
+    const auto source_open_it = state.globals.find("lsourcestillopen");
+    expect(source_open_it != state.globals.end() && !source_open_it->second.boolean_value,
+           "#6321: the filter callback's USE IN Source should genuinely have closed the source cursor");
+    const auto dest_open_it = state.globals.find("ldeststillopen");
+    expect(dest_open_it != state.globals.end() && dest_open_it->second.boolean_value,
+           "#6321: the destination cursor must remain open and untouched when only the source was closed");
+
+    const auto dest_result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 1U);
+    expect(dest_result.ok, "#6321: dest.dbf should remain readable after the failed APPEND FROM");
+    expect(dest_result.ok && dest_result.table.records.size() == 1U,
+           "#6321: APPEND FROM must not leave a partially-appended row once the source was closed");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_skips_extra_source_fields() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_extra_source_field";

@@ -1921,6 +1921,12 @@
                 return candidate.rfind(normalized_target, 0U) == 0U;
             };
 
+            // #6321/RQ-CF-PRG-035 disclosed gap: cursor's own SET FILTER can
+            // close or replace `cursor` itself. Every touch of `cursor` below
+            // this point checks this flag first rather than continuing
+            // through what filter_expression_matches_record() has already
+            // confirmed may be a dangling reference.
+            bool candidate_scan_cursor_lost = false;
             const auto candidate_is_visible = [&](const IndexedCandidate &candidate)
             {
                 const auto &records = cursor.remote ? cursor.remote_records : local_records;
@@ -1932,16 +1938,24 @@
                 {
                     return false;
                 }
-                return filter_expression_matches_record(
+                bool cursor_lost = false;
+                const bool matches = filter_expression_matches_record(
                     cursor,
                     frame,
                     records[candidate.recno - 1U],
                     candidate.recno,
+                    cursor_lost,
                     filter_evaluation_context);
+                if (cursor_lost)
+                {
+                    candidate_scan_cursor_lost = true;
+                    return false;
+                }
+                return matches;
             };
 
             auto next = lower;
-            while (next != candidates.end() && is_match(next->key))
+            while (!candidate_scan_cursor_lost && next != candidates.end() && is_match(next->key))
             {
                 if (candidate_is_visible(*next))
                 {
@@ -1952,7 +1966,7 @@
                 ++next;
             }
 
-            if (is_set_enabled("near"))
+            if (!candidate_scan_cursor_lost && is_set_enabled("near"))
             {
                 while (next != candidates.end())
                 {
@@ -1962,8 +1976,17 @@
                         cursor.found = false;
                         return false;
                     }
+                    if (candidate_scan_cursor_lost)
+                    {
+                        break;
+                    }
                     ++next;
                 }
+            }
+
+            if (candidate_scan_cursor_lost)
+            {
+                return false;
             }
 
             move_cursor_to(cursor, static_cast<long long>(cursor.record_count + 1U));

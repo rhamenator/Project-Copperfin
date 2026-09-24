@@ -65,6 +65,8 @@ int main() {
     test_copy_to_from_empty_table_produces_valid_empty_dbf();
     test_append_from_copies_records_into_current_table();
     test_append_from_honors_open_source_cursor_filter();
+    test_append_from_source_filter_closing_destination_fails_catchably();
+    test_append_from_source_filter_closing_source_fails_catchably();
     test_append_from_skips_extra_source_fields();
     test_append_from_rolls_back_matched_field_write_failure();
     test_append_from_is_reverted_by_undo();

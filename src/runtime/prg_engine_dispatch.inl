@@ -9698,7 +9698,15 @@
                 struct AppendFromCommandUndoGuard
                 {
                     PrgRuntimeSession::Impl &runtime;
-                    CursorState &cursor;
+                    // #6321: a raw CursorState& held here across whatever the
+                    // command body below does (including, for the native-DBF
+                    // source-filter path, an arbitrary VFP callback capable of
+                    // closing this exact destination cursor) would dangle by
+                    // the time this destructor runs on an error unwind. A
+                    // generation reference is re-resolved here instead, and
+                    // the restore is skipped -- nothing to restore into --
+                    // if the destination is gone.
+                    CursorGenerationReference cursor_reference;
                     CursorPositionSnapshot original_position;
                     std::size_t original_record_count = 0U;
                     bool committed = false;
@@ -9711,13 +9719,17 @@
                         else
                         {
                             runtime.rollback_active_command_undo_journal();
-                            cursor.record_count = original_record_count;
-                            runtime.restore_cursor_snapshot(cursor, original_position);
+                            CursorState *live_cursor = runtime.resolve_cursor_generation_reference(cursor_reference);
+                            if (live_cursor != nullptr)
+                            {
+                                live_cursor->record_count = original_record_count;
+                                runtime.restore_cursor_snapshot(*live_cursor, original_position);
+                            }
                         }
                     }
                 } append_from_command_undo_guard{
                     *this,
-                    *cursor,
+                    capture_cursor_generation_reference(cursor),
                     append_from_original_position,
                     append_from_original_record_count};
 
@@ -10404,6 +10416,7 @@
                 }
 
                 CursorState *open_source_cursor = nullptr;
+                std::optional<CursorGenerationReference> open_source_cursor_reference;
                 const std::string normalized_source_path = normalize_path(
                     copperfin::platform::path_to_utf8_string(src_path));
                 for (auto &[_, candidate] : current_session_state().cursors)
@@ -10412,6 +10425,7 @@
                         normalize_path(candidate.source_path) == normalized_source_path)
                     {
                         open_source_cursor = &candidate;
+                        open_source_cursor_reference = capture_cursor_generation_reference(&candidate);
                         break;
                     }
                 }
@@ -10423,6 +10437,15 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
+                // #6321: an already-open source cursor's SET FILTER expression,
+                // evaluated below via filter_expression_matches_record(), can
+                // execute arbitrary VFP code (a UDF doing USE IN) that closes
+                // either that source cursor or this destination -- neither a
+                // raw CursorState* nor a raw reference survives that. Capture
+                // the destination's own generation identity for the same
+                // per-iteration revalidation the source side already needs.
+                const CursorGenerationReference destination_cursor_reference =
+                    capture_cursor_generation_reference(cursor);
                 std::size_t appended_count = 0U;
                 const std::vector<vfp::DbfFieldDescriptor> destination_fields =
                     cursor_field_descriptors(*cursor);
@@ -10435,14 +10458,38 @@
                     {
                         continue;
                     }
-                    if (open_source_cursor != nullptr &&
-                        !filter_expression_matches_record(
+                    if (open_source_cursor != nullptr)
+                    {
+                        bool filter_cursor_lost = false;
+                        const bool filter_matches = filter_expression_matches_record(
                             *open_source_cursor,
                             frame,
                             src_rec,
-                            source_record_index + 1U))
-                    {
-                        continue;
+                            source_record_index + 1U,
+                            filter_cursor_lost);
+                        if (filter_cursor_lost)
+                        {
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                {{"command", "APPEND FROM"}});
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        cursor = resolve_cursor_generation_reference(destination_cursor_reference);
+                        if (cursor == nullptr)
+                        {
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                {{"command", "APPEND FROM"}});
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        if (!filter_matches)
+                        {
+                            continue;
+                        }
                     }
                     // Append a blank record and then replace matching fields by name
                     const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
