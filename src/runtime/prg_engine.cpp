@@ -1047,6 +1047,41 @@ namespace copperfin::runtime
         std::map<int, std::size_t> memowidth_by_session;
         std::map<int, std::map<int, RuntimeSqlConnectionState>> sql_connections_by_session;
         std::map<int, RuntimeOleObjectState> ole_objects;
+        // #6550: a released object is extracted (not erased) so any C++
+        // reference an in-flight property read or method call still holds
+        // stays valid -- VFP9 keeps the object alive until that call ends.
+        // Handle lookups no longer find it (it reads as .NULL.); parked nodes
+        // are destroyed at the next top-level statement boundary.
+        // shared_ptr keeps this member copyable; node handles are move-only.
+        std::map<int, std::shared_ptr<std::map<int, RuntimeOleObjectState>::node_type>> parked_native_objects;
+
+        void park_released_native_object(int handle)
+        {
+            auto node = ole_objects.extract(handle);
+            if (!node.empty())
+            {
+                parked_native_objects.insert_or_assign(
+                    handle,
+                    std::make_shared<std::map<int, RuntimeOleObjectState>::node_type>(std::move(node)));
+            }
+        }
+
+        // #6552 review: bulk removal (CLOSE ALL / CLOSE DATABASES / session
+        // shutdown) can also run inside a handler or method, so it parks every
+        // object instead of clearing the map out from under the caller.
+        void park_all_native_objects()
+        {
+            while (!ole_objects.empty())
+            {
+                park_released_native_object(ole_objects.begin()->first);
+            }
+        }
+
+        RuntimeOleObjectState *find_parked_native_object(int handle)
+        {
+            const auto parked = parked_native_objects.find(handle);
+            return parked == parked_native_objects.end() ? nullptr : &parked->second->mapped();
+        }
         std::map<int, std::vector<NativeClassIdentity>> native_object_class_lineage_by_handle;
         std::map<int, std::map<std::string, std::string>> native_property_expression_text_by_handle;
         std::map<int, std::map<std::string, std::string>> native_default_property_expression_text_by_handle;
@@ -7533,7 +7568,7 @@ namespace copperfin::runtime
             native_default_property_expression_text_by_handle.erase(handle);
             native_object_arrays.erase(handle);
             native_object_class_lineage_by_handle.erase(handle);
-            ole_objects.erase(handle);
+            park_released_native_object(handle);
         }
         if (representative_active_form_handle.has_value() &&
             discarded_handles.contains(*representative_active_form_handle))
@@ -7829,8 +7864,14 @@ namespace copperfin::runtime
         }
         for (Frame &frame : stack)
         {
-            for (auto &[_, value] : frame.locals)
+            for (auto &[name, value] : frame.locals)
             {
+                // #6552 review: an in-flight method's own THIS keeps naming its
+                // (parked) object until the method returns, as in VFP9.
+                if (name == "this")
+                {
+                    continue;
+                }
                 invalidate_released_reference(value);
             }
             for (PrgValue &value : frame.call_arguments)
@@ -7969,7 +8010,7 @@ namespace copperfin::runtime
             native_default_property_expression_text_by_handle.erase(handle);
             native_object_arrays.erase(handle);
             native_object_class_lineage_by_handle.erase(handle);
-            ole_objects.erase(handle);
+            park_released_native_object(handle);
         }
         window_message_bindings.erase(
             std::remove_if(
@@ -9659,6 +9700,10 @@ namespace copperfin::runtime
     {
         const auto finalize_pause_state = [this](DebugPauseReason reason, std::string message)
         {
+            // #6552 review: run() returning means no C++ call chain from a
+            // statement is still active, so parked objects can go on every
+            // terminal path (completion, error, pause).
+            parked_native_objects.clear();
             if (reason == DebugPauseReason::completed || reason == DebugPauseReason::error)
             {
                 release_all_critical_sections();
@@ -9781,6 +9826,9 @@ namespace copperfin::runtime
                         continue;
                     }
                 }
+                // #6550: no C++ reference from a previous top-level statement
+                // survives to here, so objects released during it can go.
+                parked_native_objects.clear();
                 if (stack.empty())
                 {
                     return finalize_pause_state(

@@ -1,3 +1,10 @@
+- 2026-09-24: An object released in the middle of a call that uses it (a
+  `BINDEVENT` handler, an `_Access` method, or the method itself) now stays
+  alive until that call finishes, and the call completes and returns its
+  value, matching real VFP9 (#6550). This replaces the error 1924 introduced
+  by #6415/#6420. Released objects are parked rather than erased and
+  destroyed at the next top-level statement.
+  `RQ-CF-PRG-RELEASE-DURING-CALL-001`.
 - 2026-09-24: A form's `QueryUnload` returning `.F.` no longer vetoes
   `QUIT` or a window close (#6193). As in VFP9 (re-probed on a real VFP 9.0
   SP2 install), only `NODEFAULT` cancels the shutdown.

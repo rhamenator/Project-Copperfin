@@ -43,13 +43,24 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Cluster 1 is complete: #6415 (PR #6538), #6420 (PR #6540), and #6192
-(QueryUnload self-release, current PR) fixed the object/event-lifetime
-cases by re-checking the never-reused handle in `ole_objects` after every
-user callback. Still open from cluster 1's notes: the disclosed
-`aggregate_function_value()` bare-call / `GROUP BY` gap. Next: pick from
-`docs/81`'s cluster order (cluster 2, session/task shutdown cleanup, is
-next and overlaps #6192) using the issue dependency graph.
+VFP9-parity follow-ups from the cluster-1 review (decisions with the owner,
+2026-09-24, backed by real VFP 9.0 SP2 probes in
+`~/temp/vfp9-probes/cf-review/`):
+- #6193 (QueryUnload `RETURN .F.` must not veto; only `NODEFAULT`): merged
+  (PR #6549).
+- #6550 (objects released mid-call stay alive until the call ends, like
+  VFP9; replaces the #6415/#6420 error 1924): current PR. Released objects
+  are parked (`ole_objects.extract`) and cleared at the next top-level
+  statement. `SET COMPATIBLE` is deliberately not involved (#6223); a
+  stricter mode belongs to #6194.
+- #6551 (next): `APPEND FROM ... FOR` is ignored entirely on local targets
+  and evaluated in the wrong context on remote ones. VFP9: one up-front
+  validation call on the target's current record (error 1127 if FOR is not
+  logical), then DBF sources evaluate with the source row selected, and
+  CSV/JSON sources evaluate on a provisionally appended target row.
+- Filed, awaiting `agent-approved`: #6547 (BINDEVENT nFlags before/after
+  inverted; #3688's premise was backwards) and #6548 (property bindings
+  fire on reads; VFP9 fires only on assignment).
 
 ## Workspace preservation
 

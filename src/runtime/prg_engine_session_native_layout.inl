@@ -551,7 +551,7 @@
                 native_property_expression_text_by_handle.erase(handle);
                 native_default_property_expression_text_by_handle.erase(handle);
                 native_object_class_lineage_by_handle.erase(handle);
-                ole_objects.erase(found);
+                park_released_native_object(handle);
             }
         }
 
