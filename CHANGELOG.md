@@ -1,3 +1,28 @@
+- 2026-09-24: Closed the cursor-lifetime part of reentrant-closure
+  cluster 1 (`docs/81`). REPORT FORM / LABEL FORM (#6240) re-resolve the
+  active cursor after every WHILE, FOR/filter, and FRX/LBX object
+  expression, and now render rows before opening the output file, so a
+  failed render no longer truncates an existing destination. Also updated
+  `docs/81` cluster 1 status and `agent-handoff.md`.
+- 2026-09-24 (catch-up; these merged without changelog entries): cursor-
+  lifetime fixes where a callback (FOR/WHILE/filter UDF, `EVALUATE`,
+  `ON ERROR`) closes or replaces the cursor a command is iterating. Each
+  command now re-resolves the cursor by generation identity after the
+  callback and raises the catchable "{command} target work area not
+  found" error instead of reading or writing freed memory. Each fix was
+  verified fail-then-pass under Clang ASan/UBSan:
+  GATHER (#6320, PR #6520); APPEND FROM with an open source filter
+  (#6321, PR #6521); remote/SQL-result APPEND FROM FOR (#6322, PR #6524,
+  which also evaluates the predicate through a record override instead
+  of a provisional row, and fixes the shared leading-`&` visibility
+  evaluator); SCAN resuming on a cursor reusing its work area (#6331,
+  PR #6526); LOCATE/CONTINUE and the shared
+  `seek_visible_record()`/`move_by_visible_records()` navigation used by
+  GO/SKIP and relation walking (#6242, PR #6529); COPY TO / COPY TO ARRAY
+  (#6241, PR #6534). Recorded in `docs/32` rows
+  `RQ-CF-PRG-APPEND-FROM-001/002`, `RQ-CF-PRG-SCAN-001`,
+  `RQ-CF-PRG-LOCATE-001`, `RQ-CF-PRG-COPY-TO-CURSOR-LIFETIME-001`, and
+  `RQ-CF-PRG-REPORT-CURSOR-LIFETIME-001`.
 - 2026-09-23: Added `docs/81-defect-cluster-and-completion-roadmap.md`,
   bridging `docs/05-roadmap.md`'s lettered-lane macro completion
   structure with the actual open, `agent-approved` bug/gap backlog (934

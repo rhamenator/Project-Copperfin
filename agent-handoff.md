@@ -2,52 +2,29 @@
 
 ## Last shipped slice
 
-PR #6505 fixed #6047 (nullable DBF writes silently losing NULL, storage
-layer) and merged into `v1-development` as `c8dac41b02343732361669f07983db68afb655dc`;
-#6047 is closed manually. `CREATE TABLE`/`CREATE CURSOR` fields with an
-explicit `NULL` clause now persist a real physical nullability bit (byte
-layout recovered empirically from a real VFP9 9.0 SP2 instance under Wine,
-`docs/80-dbf-nullflags-field-format-notes.md`); `REPLACE ... WITH .NULL.`
-sets/clears it for both immediate-write and buffered/`TABLEUPDATE()`
-paths; `COPY STRUCTURE EXTENDED`'s `FIELD_NULL` reports real nullability;
-`ALTER TABLE ADD/ALTER COLUMN` respects an explicit `NULL` clause too,
-without duplicating the bitmap field on schema rewrite. Scope is the
-storage layer only, per owner direction during scoping -- the larger
-`PrgValue`/`VARTYPE()`/`EMPTY()`/`NVL()`/`EVL()`/aggregate-on-NULL
-semantics redesign this surfaced is filed as a separate follow-up, #6506,
-not started.
+Reentrant-cursor-closure cluster 1 (`docs/81`), cursor-lifetime part,
+finished 2026-09-24: #6321 (PR #6521), #6322 (PR #6524), #6331 (PR #6526),
+#6242 (PR #6529), #6241 (PR #6534), and #6240 (PR #6536, which also carries
+the `docs/81` status update and the changelog catch-up). All
+merged into `v1-development` with their issues closed manually. Shared
+pattern: capture a `CursorGenerationReference` before any user-code
+evaluation and re-resolve it afterwards (plus `current_data_session` where
+the command must stay in its session); on loss, raise the catchable
+`{command} target work area not found` error before touching the cursor.
+Lessons from the review rounds: (a) positional rollback of a provisional
+row is unsafe once callbacks can PACK the target, so evaluate against a
+`RecordEvaluationOverride` instead (#6322); (b) a leading-`&` visibility
+expression is evaluated twice, so the shared evaluator re-resolves between
+passes; (c) a new loss flag on a shared helper must be threaded to every
+caller (GO/SKIP/relation walking), not only the one under repair. Each fix
+was verified fail-then-pass with a local Clang ASan/UBSan build; after
+halt-on-error stops at the first failure, isolate newly added scenarios to
+prove each one independently.
 
-A Codex + Copilot review round on the initial version of this PR raised 15
-review comments across 11 distinct defects (13 comments replied to as
-fixed, 2 replied to as deliberately-disclosed exceptions -- some defects
-drew more than one comment), the most severe being a confirmed root
-cause:
-`read_raw_field_descriptors()` (used by every `REPLACE` writer, a function
-distinct from the already-correct `parse_dbf_field_descriptor_block()`)
-never decoded the nullable flags byte, so `REPLACE ... WITH .NULL.`
-silently never set or cleared any bit -- masked by the *original*
-regression test's own broken guard condition (`values.size() == 4U`,
-which a real 5-value record including the unfiltered `_NullFlags` field
-could never satisfy, so its assertions silently never ran; a lesson for
-any test asserting an exact field/value count on a table that might have
-hidden bookkeeping fields -- prefer name-based lookup). Also fixed: schema
-rewrites (`ALTER TABLE`) duplicating `_NullFlags`; `_NullFlags` identified
-by type alone (collision risk with a preserved opaque type-`0` field); a
-`uint16_t` bitmap accumulator breaking past 16 nullable fields; `ALTER
-TABLE ADD/ALTER COLUMN` never applying an explicit `NULL` clause's bit;
-the flags-byte offset misreading legacy FoxBASE's 16-byte descriptors;
-three buffered-`TABLEUPDATE()`-flush call sites not threading `is_null`
-through; and `GETFLDSTATE()`/`SETFLDSTATE()` seeing the hidden field (plus
-a self-caught `std::distance()`-against-the-wrong-container bug introduced
-while fixing that last one). Every fix verified fail-then-pass; two new
-regression tests added. Full account in docs/32's `RQ-CF-PRG-059` row.
-Scratch build directory `~/temp/copperfin-6047-build` (958M) removed after
-merge.
-
-Two docs-only PRs from mid-investigation (#6507, #6508) were closed
-without merging once superseded by the final fix -- their branches were
-deleted. The owner explicitly decided not to hand this off to Codex mid-
-investigation; it was finished solo per that direction.
+Earlier: PR #6505 fixed #6047 (nullable DBF writes silently losing NULL,
+storage layer; `RQ-CF-PRG-059`), with #6506 filed for the `PrgValue` NULL
+semantics redesign (not started). #6496 (PR #6516) and #6497 (PR #6517)
+have since merged too.
 
 Earlier: PR #6503 fixed #5567 (legacy DBF import silently reactivating
 deleted source records, merged `565d66f32`) and PR #6502 fixed #5631
@@ -66,21 +43,13 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-All three prerequisite `agent-approved` P1 data-integrity defects that
-#6496's own migration-fidelity coverage campaign was expected to hit are
-now fixed and merged: #5631, #5567, #6047 (full account above). #6047's
-own full scope was deliberately split during implementation: the on-disk
-storage layer (PR #6505, landed) vs. the `PrgValue`/`VARTYPE()`/`EMPTY()`/
-`NVL()`/`EVL()`/aggregate-on-NULL semantics redesign (filed as #6506, not
-started) -- an owner-approved split rather than one oversized slice, per
-`agents.md`'s slice-sizing rule.
-
-Next: start #6496 (migration fidelity coverage hunt: NULL, deleted rows,
-memos, multi-file recovery) on this now-more-correct baseline -- the
-second of the three owner-labeled `agent-approved` coverage-cluster
-children of umbrella #6498 (#6495 done; #6497 remains `agent-approved` and
-not yet started, queued behind #6496). No implementation started yet this
-turn.
+Cluster 1 remaining: #6415 (property-read event handlers releasing their
+source), #6420 (BINDEVENT before-handlers releasing method sources), and
+#6192 (QueryUnload self-release, overlaps cluster 2). These are
+object/event-lifetime use-after-frees, not cursor ones, so they need an
+object-identity equivalent of the generation-reference pattern. Next: pick
+per `docs/81`'s cluster order and the issue dependency graph. No
+implementation started yet.
 
 ## Workspace preservation
 

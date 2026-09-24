@@ -141,12 +141,19 @@ the catchable-error pattern), #6251 (SELECT, PR #6483 — the big one, a
 single ~900-line shared query-materialization function), #6460 (SET SKIP
 TO registration, fixed 2026-09-22).
 
-**Remaining (10):** #6320 (GATHER), #6321/#6322 (APPEND FROM local/remote),
-#6331 (SCAN), #6415 (property-read event handlers), #6420 (BINDEVENT),
-#6192 (QueryUnload self-release — overlaps cluster 2 below), and three
-more found in the 2026-09-23 full-backlog sweep: #6240 (REPORT expression
-closing the active cursor, heap UAF), #6241 (COPY TO predicate erasing
-the source cursor), #6242 (LOCATE predicate writing to a freed cursor).
+**Closed 2026-09-24:** #6320 (GATHER, PR #6520), #6321 (APPEND FROM local
+source filter, PR #6521), #6322 (APPEND FROM remote predicates, PR #6524 --
+predicate now sees the candidate through a generation-keyed record override
+instead of a provisional row), #6331 (SCAN work-area reuse, PR #6526), #6242
+(LOCATE/CONTINUE, PR #6529 -- also made `seek_visible_record()`/
+`move_by_visible_records()` loss-aware for GO/SKIP and relation walking),
+#6241 (COPY TO / COPY TO ARRAY, PR #6534), #6240 (REPORT/LABEL FORM, this
+change -- rows now render before the output file is opened).
+
+**Remaining (3):** #6415 (property-read event handlers), #6420 (BINDEVENT),
+#6192 (QueryUnload self-release -- overlaps cluster 2 below). These are
+object/event-lifetime bugs rather than cursor-lifetime ones, so the
+`CursorGenerationReference` pattern does not apply directly.
 
 **Disclosed, not yet fixed, needs a different mechanism:**
 `aggregate_function_value()`'s bare-call form (`? SUM(field FOR cond)` as
