@@ -168,9 +168,9 @@ halting) — not `agent-approved` yet, pending owner review.
 
 ### 2. Session/task shutdown-cleanup — `NOT STARTED`
 
-All 11 confirmed open: #6183 (unawaited SPAWN workers survive session
-destruction), #6192 (QueryUnload self-release UAF — shared with cluster
-1), #6193 (QueryUnload `RETURN .F.` incorrectly vetoes QUIT), #6194
+10 open (#6192, QueryUnload self-release UAF, was shared with cluster 1
+and closed there by PR #6545): #6183 (unawaited SPAWN workers survive
+session destruction), #6193 (QueryUnload `RETURN .F.` incorrectly vetoes QUIT), #6194
 (architecture: selectable VFP9/Copperfin shutdown modes), #6195 (CLOSE
 ALL invalidates live objects without releasing), #6196 (CLOSE DATABASES
 prematurely closes file handles), #6197 (scoped CLOSE discards unrelated
