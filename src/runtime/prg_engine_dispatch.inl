@@ -4208,6 +4208,7 @@
                 }
 
                 const std::size_t start_recno = cursor->recno == 0U ? 1U : cursor->recno;
+                const CursorGenerationReference scan_cursor_reference = capture_cursor_generation_reference(cursor);
                 if (scan_expression_requires_continuation(
                         frame,
                         statement.expression,
@@ -4219,14 +4220,29 @@
                         statement,
                         ScanSearchKind::enter_scan,
                         cursor->work_area,
-                        capture_cursor_generation_reference(cursor),
+                        scan_cursor_reference,
                         start_recno,
                         frame.pc - 1U,
                         find_matching_endscan(frame, frame.pc - 1U).value_or(frame.pc - 1U),
                         0U,
                         false);
                 }
-                if (!locate_next_matching_record(*cursor, statement.expression, statement.tertiary_expression, frame, start_recno))
+                const bool located = locate_next_matching_record(
+                    *cursor, statement.expression, statement.tertiary_expression, frame, start_recno);
+                // #6331 review: predicates the continuation check cannot see
+                // (EVALUATE/EXECSCRIPT, member calls) run inside the direct
+                // search and can close or replace the cursor too.
+                cursor = resolve_scan_cursor(scan_cursor_reference);
+                if (cursor == nullptr)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", "SCAN"}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                if (!located)
                 {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
@@ -4247,7 +4263,7 @@
                                        .case_stack_depth_at_entry = frame.cases.size(),
                                        .with_stack_depth_at_entry = frame.withs.size(),
                                        .work_area = cursor->work_area,
-                                       .cursor_reference = capture_cursor_generation_reference(cursor),
+                                       .cursor_reference = scan_cursor_reference,
                                        .for_expression = statement.expression,
                                        .while_expression = statement.tertiary_expression,
                                        .iteration_count = 0});
@@ -11314,10 +11330,13 @@
                             {
                                 const ScanExpressionContinuation &scan_continuation =
                                     *candidate.scan_expression_continuation;
-                                const int scan_work_area = scan_continuation.work_area;
                                 const std::size_t scan_resume_pc =
                                     scan_continuation.endscan_statement_index + 1U;
-                                if (CursorState *scan_cursor = find_cursor_by_area(scan_work_area);
+                                // #6331 review: the faulting predicate may have closed
+                                // the scanned cursor and opened a replacement in the
+                                // same work area; only park the original at EOF.
+                                if (CursorState *scan_cursor =
+                                        resolve_cursor_generation_reference(scan_continuation.cursor_reference);
                                     scan_cursor != nullptr)
                                 {
                                     move_cursor_to(

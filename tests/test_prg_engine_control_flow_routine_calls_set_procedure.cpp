@@ -1532,6 +1532,57 @@ void test_scan_does_not_resume_on_cursor_reusing_its_work_area() {
                 global_text(state, "nreplacementsum"));
     }
 
+    // #6331 review: a predicate that leaves the cursor open but switches
+    // DATASESSION must stop the SCAN, not keep iterating the original.
+    {
+        const auto state = run_script("scan_for_session_switch",
+            prologue +
+            "TRY\n"
+            "    SCAN FOR SwitchSession()\n"
+            "        nSeen = nSeen + 1\n"
+            "    ENDSCAN\n"
+            "CATCH TO oErr\n"
+            "    lErrorCaught = .T.\n"
+            "    cErrMsg = oErr.Message\n"
+            "ENDTRY\n"
+            "SET DATASESSION TO 1\n" +
+            epilogue + swap_function +
+            "FUNCTION SwitchSession\n"
+            "SET DATASESSION TO 2\n"
+            "RETURN .T.\n"
+            "ENDFUNC\n");
+        expect(state.completed, "#6331 session switch: script should complete: " + state.message);
+        expect(global_text(state, "lerrorcaught") == "true" &&
+                   global_text(state, "cerrmsg").find(expected_message) != std::string::npos,
+            "#6331 session switch: switching DATASESSION should raise the catchable SCAN error, got: " +
+                global_text(state, "cerrmsg"));
+        expect(global_text(state, "nseen") == "0",
+            "#6331 session switch: the body must not run after the session switch, got: " + global_text(state, "nseen"));
+    }
+
+    // #6331 review: ON ERROR ... RESUME abandoning a faulting predicate must
+    // not park the replacement cursor that reused the work area at EOF.
+    {
+        const auto state = run_script("scan_resume_after_swap",
+            prologue +
+            "ON ERROR DO HandleScanFault\n"
+            "SCAN FOR SwapCursor() + 1 / 0\n"
+            "    nSeen = nSeen + 1\n"
+            "ENDSCAN\n"
+            "ON ERROR\n"
+            "nReplacementRecno = RECNO('Replacement')\n"
+            "lReplacementEof = EOF('Replacement')\n" +
+            epilogue + swap_function +
+            "PROCEDURE HandleScanFault\n"
+            "RESUME\n"
+            "RETURN\n");
+        expect(state.completed, "#6331 RESUME: script should complete: " + state.message);
+        expect(global_text(state, "nseen") == "0", "#6331 RESUME: the SCAN body should be skipped");
+        expect(global_text(state, "nreplacementrecno") == "1" && global_text(state, "lreplacementeof") == "false",
+            "#6331 RESUME: the replacement cursor must keep its own position, got RECNO " +
+                global_text(state, "nreplacementrecno") + " EOF " + global_text(state, "lreplacementeof"));
+    }
+
     fs::remove_all(temp_root, ignored);
 }
 }  // namespace cf_test_prg_engine_control_flow

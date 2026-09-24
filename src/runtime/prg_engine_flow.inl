@@ -1228,7 +1228,22 @@
                     jump_after_completion);
             }
 
-            if (!locate_next_matching_record(*cursor, scan.for_expression, scan.while_expression, frame, cursor->recno + 1U))
+            const bool located = locate_next_matching_record(
+                *cursor, scan.for_expression, scan.while_expression, frame, cursor->recno + 1U);
+            // #6331 review: the direct search can still run user code the
+            // continuation check cannot see (EVALUATE/EXECSCRIPT, member calls).
+            cursor = resolve_scan_cursor(scan.cursor_reference);
+            if (cursor == nullptr)
+            {
+                frame.scans.pop_back();
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                    {{"command", "SCAN"}});
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            if (!located)
             {
                 last_fault_location = statement.location;
                 last_fault_statement = statement.text;
