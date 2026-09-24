@@ -121,7 +121,7 @@ work lands; when a cluster's last issue closes, move a one-line summary
 into `agent-handoff.md`'s history rather than leaving a stale `DONE`
 marker with no context here.
 
-### 1. Reentrant-cursor-closure use-after-free — `IN PROGRESS`
+### 1. Reentrant-cursor-closure use-after-free — `DONE`
 
 Started 2026-09-18. Root cause: several PRG runtime code paths retain a
 raw `CursorState*`/reference across evaluation of an expression that can
@@ -150,10 +150,11 @@ instead of a provisional row), #6331 (SCAN work-area reuse, PR #6526), #6242
 #6241 (COPY TO / COPY TO ARRAY, PR #6534), #6240 (REPORT/LABEL FORM, this
 change -- rows now render before the output file is opened).
 
-**Remaining (3):** #6415 (property-read event handlers), #6420 (BINDEVENT),
-#6192 (QueryUnload self-release -- overlaps cluster 2 below). These are
-object/event-lifetime bugs rather than cursor-lifetime ones, so the
-`CursorGenerationReference` pattern does not apply directly.
+**Closed 2026-09-24 (object/event lifetime):** #6415 (property-read
+handlers releasing their source, PR #6538), #6420 (method before-handlers
+releasing their source, PR #6540), #6192 (QueryUnload self-release, this
+change). These use the never-reused object handle as the stable identity
+and re-check `ole_objects` after each user callback.
 
 **Disclosed, not yet fixed, needs a different mechanism:**
 `aggregate_function_value()`'s bare-call form (`? SUM(field FOR cond)` as
