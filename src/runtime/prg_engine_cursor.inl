@@ -1801,8 +1801,13 @@
             CursorState &cursor,
             const std::string &search_key,
             const Frame &frame,
-            const CursorPositionSnapshot *filter_evaluation_context = nullptr)
+            const CursorPositionSnapshot *filter_evaluation_context = nullptr,
+            bool *cursor_lost = nullptr)
         {
+            if (cursor_lost != nullptr)
+            {
+                *cursor_lost = false;
+            }
             cursor.found = false;
             if (!cursor.remote && cursor.source_path.empty())
             {
@@ -1986,6 +1991,10 @@
 
             if (candidate_scan_cursor_lost)
             {
+                if (cursor_lost != nullptr)
+                {
+                    *cursor_lost = true;
+                }
                 return false;
             }
 

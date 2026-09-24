@@ -4119,6 +4119,7 @@
                 std::string used_order_collation_hint;
                 bool used_order_descending = false;
                 bool found = false;
+                bool seek_cursor_lost = false;
                 {
                     ScopedDataSessionSelection target_session(
                         current_data_session, cursor_reference.data_session);
@@ -4134,9 +4135,26 @@
                         &used_order_name,
                         &used_order_normalization_hint,
                         &used_order_collation_hint,
-                        &used_order_descending);
-                    synchronize_relations_for_parent(
-                        *cursor, frame, cursor_reference.data_session);
+                        &used_order_descending,
+                        &seek_cursor_lost);
+                    // #6321 review: SEEK's own indexed-candidate filter
+                    // evaluation (inside execute_seek()/seek_in_cursor())
+                    // can close or replace `cursor` -- synchronize_relations_for_parent()
+                    // below must not dereference it in that case.
+                    if (!seek_cursor_lost)
+                    {
+                        synchronize_relations_for_parent(
+                            *cursor, frame, cursor_reference.data_session);
+                    }
+                }
+                if (seek_cursor_lost)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", "SEEK"}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
                 }
                 events.push_back({.category = "runtime.seek",
                                   .detail = format_order_metadata_detail(
@@ -9712,6 +9730,16 @@
                     bool committed = false;
                     ~AppendFromCommandUndoGuard()
                     {
+                        // #6321 review: commit/rollback operate on
+                        // current_data_session-keyed journal state, not
+                        // state hung off the destination cursor. A filter
+                        // callback that switches DATASESSION without
+                        // closing anything would otherwise commit/rollback
+                        // the wrong session's (nonexistent) journal here,
+                        // leaving the real one -- created in the
+                        // destination's own origin session -- orphaned.
+                        ScopedDataSessionSelection target_session(
+                            runtime.current_data_session, cursor_reference.data_session);
                         if (committed)
                         {
                             runtime.commit_active_command_undo_journal();

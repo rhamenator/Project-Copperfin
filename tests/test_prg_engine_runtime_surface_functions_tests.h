@@ -33,6 +33,7 @@ namespace copperfin::runtime_surface_tests
     void test_oldval_evaluates_buffered_original_record();
     void test_curval_oldval_reject_reentrant_cursor_replacement();
     void test_navigation_commands_reject_reentrant_cursor_replacement();
+    void test_seek_rejects_cursor_closed_by_own_filter_during_indexed_scan();
     void test_program_reports_active_name_and_stack_depth();
     void test_indexed_program_and_sys16_stack_introspection();
     void test_sys16_preserves_procedure_context();

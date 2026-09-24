@@ -1099,8 +1099,13 @@
             std::string *used_order_name = nullptr,
             std::string *used_order_normalization_hint = nullptr,
             std::string *used_order_collation_hint = nullptr,
-            bool *used_order_descending = nullptr)
+            bool *used_order_descending = nullptr,
+            bool *cursor_lost = nullptr)
         {
+            if (cursor_lost != nullptr)
+            {
+                *cursor_lost = false;
+            }
             const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
             if (!trim_copy(order_designator).empty() && !activate_order(cursor, order_designator, descending_override))
             {
@@ -1197,14 +1202,30 @@
             }
 
             bool found = false;
+            bool seek_cursor_lost = false;
             try
             {
-                found = seek_in_cursor(cursor, search_key, frame, &original);
+                found = seek_in_cursor(cursor, search_key, frame, &original, &seek_cursor_lost);
             }
             catch (...)
             {
                 restore_cursor_snapshot(cursor, original);
                 throw;
+            }
+            if (seek_cursor_lost)
+            {
+                // #6321 review: an indexed candidate's filter expression
+                // closed or replaced `cursor` during seek_in_cursor() above.
+                // Every read of `cursor` below this point (active order
+                // metadata, position restore) would dereference what may now
+                // be freed; the caller must fail catchably instead, exactly
+                // as it already does when the cursor is lost before this
+                // call even starts.
+                if (cursor_lost != nullptr)
+                {
+                    *cursor_lost = true;
+                }
+                return false;
             }
             const std::string runtime_error = last_error_message;
             if (!rushmore_seek_detail.empty())
