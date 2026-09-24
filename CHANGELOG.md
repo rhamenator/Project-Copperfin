@@ -1,3 +1,9 @@
+- 2026-09-24: A `BINDEVENT` property-read handler, `_Access` method, or
+  list selector expression that releases the source object no longer
+  leaves the read touching freed object state (#6415). The read raises
+  catchable error 1924 (or returns a value that was already produced), and
+  later handlers for that read don't run on the released source.
+  `RQ-CF-PRG-PROPERTY-READ-EVENT-LIFETIME-001`.
 - 2026-09-24: Closed the cursor-lifetime part of reentrant-closure
   cluster 1 (`docs/81`). REPORT FORM / LABEL FORM (#6240) re-resolve the
   active cursor after every WHILE, FOR/filter, and FRX/LBX object
