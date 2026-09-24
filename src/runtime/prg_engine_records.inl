@@ -688,18 +688,49 @@
             return false;
         }
 
-        bool move_by_visible_records(CursorState &cursor, const Frame &frame, long long delta)
+        // #6242: `cursor_lost` reports that an active-filter evaluation closed
+        // or replaced `cursor`; callers passing it must check it before
+        // touching the cursor again.
+        bool move_by_visible_records(
+            CursorState &cursor,
+            const Frame &frame,
+            long long delta,
+            bool *cursor_lost = nullptr)
         {
+            if (cursor_lost != nullptr)
+            {
+                *cursor_lost = false;
+            }
             if (delta == 0)
             {
-                return current_record_matches_visibility(cursor, frame, {});
+                const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(&cursor);
+                const bool matches = current_record_matches_visibility(cursor, frame, {});
+                if (resolve_cursor_generation_reference(cursor_reference) == nullptr)
+                {
+                    if (cursor_lost != nullptr)
+                    {
+                        *cursor_lost = true;
+                    }
+                    return false;
+                }
+                return matches;
             }
 
             const int direction = delta > 0 ? 1 : -1;
             long long remaining = std::llabs(delta);
             while (remaining > 0)
             {
-                if (!seek_visible_record(cursor, frame, static_cast<long long>(cursor.recno) + direction, direction, {}, {}, false, true, true))
+                if (!seek_visible_record(
+                        cursor,
+                        frame,
+                        static_cast<long long>(cursor.recno) + direction,
+                        direction,
+                        {},
+                        {},
+                        false,
+                        true,
+                        true,
+                        cursor_lost))
                 {
                     return false;
                 }

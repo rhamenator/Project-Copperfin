@@ -4940,14 +4940,37 @@
                 {
                     ScopedDataSessionSelection target_session(
                         current_data_session, cursor_reference.data_session);
+                    // #6242: an active SET FILTER evaluated during the search
+                    // can close or replace this cursor.
+                    const auto go_target_lost = [&]() -> ExecutionOutcome
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", "GO"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    };
                     if (destination == "TOP")
                     {
-                        (void)seek_visible_record(*cursor, frame, 1, 1, {}, {}, false, true);
+                        bool go_cursor_lost = false;
+                        (void)seek_visible_record(*cursor, frame, 1, 1, {}, {}, false, true, false, &go_cursor_lost);
+                        if (go_cursor_lost)
+                        {
+                            return go_target_lost();
+                        }
                     }
                     else if (destination == "BOTTOM")
                     {
-                        if (!seek_visible_record(*cursor, frame, static_cast<long long>(cursor->record_count), -1, {}, {}, false, true) &&
-                            cursor->record_count > 0U)
+                        bool go_cursor_lost = false;
+                        const bool found_bottom = seek_visible_record(
+                            *cursor, frame, static_cast<long long>(cursor->record_count), -1, {}, {}, false, true, false,
+                            &go_cursor_lost);
+                        if (go_cursor_lost)
+                        {
+                            return go_target_lost();
+                        }
+                        if (!found_bottom && cursor->record_count > 0U)
                         {
                             // VFP keeps physical EOF while reporting both boundary flags when the filtered set is empty.
                             cursor->recno = cursor->record_count + 1U;
@@ -5010,7 +5033,19 @@
                     ScopedDataSessionSelection target_session(
                         current_data_session, cursor_reference.data_session);
                     const long long delta = std::llround(value_as_number(*delta_value));
-                    if (!move_by_visible_records(*cursor, frame, delta))
+                    bool skip_cursor_lost = false;
+                    const bool moved = move_by_visible_records(*cursor, frame, delta, &skip_cursor_lost);
+                    if (skip_cursor_lost)
+                    {
+                        // #6242: an active SET FILTER closed or replaced this cursor.
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", "SKIP"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    if (!moved)
                     {
                         cursor->found = false;
                     }

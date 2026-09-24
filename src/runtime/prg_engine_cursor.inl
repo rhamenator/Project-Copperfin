@@ -467,7 +467,13 @@
                 const std::size_t max_parent_steps = parent->record_count + 1U;
                 for (std::size_t step = 0U; step < max_parent_steps; ++step)
                 {
-                    if (!move_by_visible_records(*parent, frame, direction))
+                    bool parent_lost = false;
+                    const bool parent_moved = move_by_visible_records(*parent, frame, direction, &parent_lost);
+                    if (parent_lost || !child_alive())
+                    {
+                        return false;
+                    }
+                    if (!parent_moved)
                     {
                         break;
                     }
@@ -500,7 +506,17 @@
                         while (true)
                         {
                             const CursorPositionSnapshot before_next = capture_cursor_snapshot(child);
-                            if (!move_by_visible_records(child, frame, 1))
+                            bool child_lost = false;
+                            const bool child_moved = move_by_visible_records(child, frame, 1, &child_lost);
+                            if (child_lost || !child_alive())
+                            {
+                                return false;
+                            }
+                            if (resolve_cursor_generation_reference(parent_reference) == nullptr)
+                            {
+                                return false;
+                            }
+                            if (!child_moved)
                             {
                                 restore_cursor_snapshot(child, before_next);
                                 break;

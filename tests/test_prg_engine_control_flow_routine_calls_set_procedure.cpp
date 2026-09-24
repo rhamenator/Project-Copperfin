@@ -1634,19 +1634,29 @@ void test_locate_predicate_closing_cursor_fails_catchably() {
         int drop_on_call = 1;
         bool reopen = false;
         bool indexed = false;
+        std::string success_event = "runtime.locate";
+        std::size_t prior_success_events = 0U;  // emitted by an earlier, successful command
     };
     const std::vector<Scenario> scenarios = {
         {"locate_for", "LOCATE", "LOCATE FOR DropCursor()\n"},
         {"locate_while", "LOCATE", "LOCATE FOR .T. WHILE DropCursor()\n"},
         {"locate_for_reopen", "LOCATE", "LOCATE FOR DropCursor()\n", 1, true},
-        {"continue_for", "CONTINUE", "LOCATE FOR DropCursor()\nCONTINUE\n", 2},
-        {"continue_for_reopen", "CONTINUE", "LOCATE FOR DropCursor()\nCONTINUE\n", 2, true},
+        {"continue_for", "CONTINUE", "LOCATE FOR DropCursor()\nCONTINUE\n", 2, false, false, "runtime.locate", 1U},
+        {"continue_for_reopen", "CONTINUE", "LOCATE FOR DropCursor()\nCONTINUE\n", 2, true, false, "runtime.locate", 1U},
         {"locate_ordered", "LOCATE", "SET ORDER TO ID\nLOCATE FOR DropCursor()\n", 1, false, true},
         {"locate_index_key", "LOCATE", "SET ORDER TO ID\nLOCATE FOR ID = DropKey()\n", 1, true, true},
         {"scan_evaluate", "SCAN",
             "SCAN FOR EVALUATE('DropCursor()')\n"
             "    nBody = nBody + 1\n"
-            "ENDSCAN\n", 1, true},
+            "ENDSCAN\n", 1, true, false, "runtime.scan"},
+        // #6529 review: an active SET FILTER that closes/replaces the cursor,
+        // on the linear and indexed LOCATE paths and on GO/SKIP navigation.
+        {"filter_locate", "LOCATE", "SET FILTER TO DropCursor()\nLOCATE FOR .T.\n", 1, true},
+        {"filter_locate_indexed", "LOCATE", "SET ORDER TO ID\nSET FILTER TO DropCursor()\nLOCATE FOR ID = 2\n", 1, true, true},
+        // The prologue GO TOP and DropCursor's own GO TOP IN Replacement are
+        // the two expected runtime.go events; the failed GO TOP adds none.
+        {"filter_go_top", "GO", "SET FILTER TO DropCursor()\nGO TOP\n", 1, true, false, "runtime.go", 2U},
+        {"filter_skip", "SKIP", "SET FILTER TO DropCursor()\nSKIP\n", 1, true, false, "runtime.skip"},
     };
 
     for (const auto &scenario : scenarios) {
@@ -1690,6 +1700,18 @@ void test_locate_predicate_closing_cursor_fails_catchably() {
                 " error, got: " + global_text(state, "cerrmsg"));
         expect(global_text(state, "lsourceopen") == "false", prefix + "the closed cursor should stay closed");
         expect(global_text(state, "nbody") == "0", prefix + "no SCAN body should run");
+        const auto count_events = [&](const std::string &category) {
+            return static_cast<std::size_t>(std::count_if(state.events.begin(), state.events.end(),
+                [&](const auto &event) { return event.category == category; }));
+        };
+        expect(count_events(scenario.success_event) == scenario.prior_success_events,
+            prefix + "the failed command must not emit " + scenario.success_event + ", got " +
+                std::to_string(count_events(scenario.success_event)) + " event(s)");
+        const std::size_t prior_rushmore_events =
+            scenario.success_event == "runtime.locate" ? scenario.prior_success_events : 0U;
+        expect(count_events("runtime.rushmore") == prior_rushmore_events,
+            prefix + "the failed search must not emit runtime.rushmore, got " +
+                std::to_string(count_events("runtime.rushmore")) + " event(s)");
         if (scenario.reopen) {
             expect(global_text(state, "nreplacementrecno") == "1" && global_text(state, "lreplacementfound") == "false",
                 prefix + "the replacement cursor must keep its own position and FOUND(), got RECNO " +
