@@ -381,6 +381,22 @@ if(COPPERFIN_PYTHON3_EXECUTABLE)
             ${CMAKE_SOURCE_DIR}/scripts/check-contributor-signoffs.py
             --self-test
     )
+
+    # #6554: changelog fragments -- assembler self-test plus validation of the
+    # fragments actually checked in under changelog.d/.
+    add_test(
+        NAME test_changelog_fragment_assembler
+        COMMAND ${COPPERFIN_PYTHON3_EXECUTABLE}
+            ${CMAKE_SOURCE_DIR}/scripts/assemble_changelog.py
+            --self-test
+    )
+    add_test(
+        NAME test_changelog_fragments_valid
+        COMMAND ${COPPERFIN_PYTHON3_EXECUTABLE}
+            ${CMAKE_SOURCE_DIR}/scripts/assemble_changelog.py
+            --check
+            --root ${CMAKE_SOURCE_DIR}
+    )
 endif()
 
 add_test(
