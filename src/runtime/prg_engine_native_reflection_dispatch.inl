@@ -13,7 +13,9 @@
         // expressions run user code that can release this object (or its
         // container) and erase it from ole_objects. Handles are never reused,
         // so the handle is a stable identity: re-check it after each such
-        // call and fail catchably instead of touching the erased state.
+        // call and fail catchably instead of touching the erased state. The
+        // read never returns normally once the source is gone, because every
+        // caller still holds the (now dangling) reference it passed in.
         const int source_handle = runtime_object.handle;
         const auto source_released = [&]()
         {
@@ -473,18 +475,15 @@
                 raise_source_released();
             }
             auto result = perform_property_read();
-            if (source_released())
+            if (!source_released())
             {
-                // An _Access method released the source after producing its
-                // value; the value itself is still a valid read result.
-                if (!result.has_value())
-                {
-                    raise_source_released();
-                }
-                return result;
+                invoke_delegates_for_phase(true);
             }
-            invoke_delegates_for_phase(true);
-            if (source_released() && !result.has_value())
+            // #6538 review: never return normally once the source is gone,
+            // even with a value in hand -- the 16 callers still hold the
+            // erased RuntimeOleObjectState& and some keep using it (e.g. the
+            // Enter-key path reads Enabled and then dispatches Click).
+            if (source_released())
             {
                 raise_source_released();
             }
@@ -492,7 +491,7 @@
         }
 
         auto result = perform_property_read();
-        if (source_released() && !result.has_value())
+        if (source_released())
         {
             raise_source_released();
         }

@@ -949,8 +949,26 @@ namespace copperfin::runtime_surface_tests
             "CATCH TO oErr\n"
             "    nErrContainer = oErr.ErrorNo\n"
             "ENDTRY\n"
+            "* 5: a List() argument UDF releases the list before dispatch\n"
+            "PUBLIC oList, nSelector\n"
+            "nSelector = 0\n"
+            "oList = CREATEOBJECT('ListBox')\n"
+            "oList.AddItem('first')\n"
+            "oList.AddItem('second')\n"
+            "nErrSelector = 0\n"
+            "cSelector = ''\n"
+            "TRY\n"
+            "    cSelector = oList.List(ReleaseList())\n"
+            "CATCH TO oErr\n"
+            "    nErrSelector = oErr.ErrorNo\n"
+            "ENDTRY\n"
             "lAfter = .T.\n"
             "RETURN\n"
+            "FUNCTION ReleaseList\n"
+            "    nSelector = nSelector + 1\n"
+            "    RELEASE oList\n"
+            "    RETURN 1\n"
+            "ENDFUNC\n"
             "PROCEDURE ReleaseSource\n"
             "    nFirst = nFirst + 1\n"
             "    oSource.Release()\n"
@@ -990,13 +1008,23 @@ namespace copperfin::runtime_surface_tests
                    global_text(state, "nerrbefore"));
         expect(global_text(state, "nsecond") == "0",
                "#6415: a later handler must not run on a released source, got: " + global_text(state, "nsecond"));
-        expect(global_text(state, "nafter") == "1" && global_text(state, "nerrafter") == "0" &&
-                   global_text(state, "cafter") == "alive",
-               "#6415: a read completed before an after-handler released the source keeps its value, got: " +
+        // #6538 review: once the source is gone the read never returns
+        // normally, even with a value in hand, because callers still hold the
+        // erased object reference.
+        expect(global_text(state, "nafter") == "1" && global_text(state, "nerrafter") == "1924",
+               "#6415: an after-handler releasing the source should raise error 1924, got: " +
                    global_text(state, "cafter") + " / error " + global_text(state, "nerrafter"));
-        expect(global_text(state, "nerraccess") == "0" && global_text(state, "caccess") == "accessed",
-               "#6415: an _Access method that releases THIS still returns its value, got: " +
+        expect(global_text(state, "nerraccess") == "1924",
+               "#6415: an _Access method that releases THIS should raise error 1924, got: " +
                    global_text(state, "caccess") + " / error " + global_text(state, "nerraccess"));
+        // Direct List(<expr>) syntax evaluates its argument before dispatch,
+        // so a releasing argument surfaces as the OLE "object not found for
+        // method invocation" fault (1429) rather than reaching the
+        // selector-text branch with an erased source.
+        expect(global_text(state, "nerrselector") == "1429" && global_text(state, "nselector") == "1",
+               "#6415: a List() argument releasing the list should fail catchably (1429), got: " +
+                   global_text(state, "cselector") + " / error " + global_text(state, "nerrselector") +
+                   " / selector calls " + global_text(state, "nselector"));
         // Copperfin may keep a released form's children alive until the
         // container is torn down, so either outcome is memory-safe; what
         // matters (checked under ASan) is never reading erased state.
