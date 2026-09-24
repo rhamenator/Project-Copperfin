@@ -219,16 +219,14 @@ void test_native_query_unload_nodefault_vetoes_quit()
         main_path,
         "PUBLIC cEvents\n"
         "cEvents = ''\n"
-        "oFalse = CREATEOBJECT('FalseForm')\n"
-        "QUIT\n"
-        "lFalseStillAlive = PEMSTATUS(oFalse, 'cEvents', 1)\n"
-        "cAfterFalse = cEvents\n"
-        "oFalse.Release()\n"
         "oVeto = CREATEOBJECT('VetoForm')\n"
         "QUIT\n"
         "lStillAlive = PEMSTATUS(oVeto, 'cEvents', 1)\n"
         "cAfterQuit = cEvents\n"
         "oVeto.Release()\n"
+        "oFalse = CREATEOBJECT('FalseForm')\n"
+        "QUIT\n"
+        "lReachedAfterFalseQuit = .T.\n"
         "RETURN\n"
         "DEFINE CLASS FalseForm AS Form\n"
         "    PROCEDURE QueryUnload\n"
@@ -254,7 +252,7 @@ void test_native_query_unload_nodefault_vetoes_quit()
     auto session = copperfin::runtime::PrgRuntimeSession::create(
         make_runtime_session_options(main_path.string(), temp_root.string()));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed, "native QueryUnload veto script should continue: " + state.message);
+    expect(state.completed, "native QueryUnload veto script should complete: " + state.message);
 
     const auto check = [&](const std::string& name, const std::string& expected)
     {
@@ -268,12 +266,15 @@ void test_native_query_unload_nodefault_vetoes_quit()
         }
     };
 
-    check("lfalsestillalive", "true");
-    check("cafterfalse", "false-query;");
     check("lstillalive", "true");
-    check("cafterquit", "false-query;false-destroy;query;");
-    expect(has_runtime_event(state.events, "prg.object.queryunload_veto", "FalseForm"),
-           "false QueryUnload result should veto QUIT");
+    check("cafterquit", "query;");
+    // #6193: VFP9 ignores QueryUnload's RETURN .F.; only NODEFAULT vetoes.
+    // The FalseForm QUIT therefore proceeds and the next line never runs.
+    check("cevents", "query;destroy;false-query;false-destroy;");
+    expect(state.globals.find("lreachedafterfalsequit") == state.globals.end(),
+           "#6193: QUIT with a RETURN .F. QueryUnload should proceed, not continue the program");
+    expect(!has_runtime_event(state.events, "prg.object.queryunload_veto", "FalseForm"),
+           "#6193: a RETURN .F. QueryUnload result must not veto QUIT");
     expect(has_runtime_event(state.events, "prg.object.queryunload_veto", "VetoForm"),
            "NODEFAULT from QueryUnload should veto QUIT");
     expect(has_runtime_event(state.events, "prg.object.destroy", "VetoForm.Destroy"),

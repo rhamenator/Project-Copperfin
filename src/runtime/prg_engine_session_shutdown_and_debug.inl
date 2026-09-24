@@ -252,11 +252,11 @@
                                       .location = location});
                     continue;
                 }
-                const bool query_unload_rejected =
-                    query_unload_result.has_value() &&
-                    query_unload_result->kind != PrgValueKind::empty &&
-                    !value_as_bool(*query_unload_result);
-                if (query_unload_rejected || query_unload_requested_nodefault)
+                // #6193: QueryUnload's return value never vetoes (VFP9 ignores
+                // RETURN .F. here); only NODEFAULT keeps the form -- and so the
+                // QUIT or window close -- alive.
+                (void)query_unload_result;
+                if (query_unload_requested_nodefault)
                 {
                     events.push_back({.category = "prg.object.queryunload_veto",
                                       .detail = query_unload_prog_id,
