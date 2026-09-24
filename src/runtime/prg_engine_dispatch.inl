@@ -3710,21 +3710,37 @@
                 }
 
                 const std::size_t start_recno = cursor->eof ? (cursor->record_count + 1U) : (cursor->recno + 1U);
-                if (!locate_next_matching_record(
-                        *cursor,
-                        cursor->active_locate_for_expression,
-                        cursor->active_locate_while_expression,
-                        frame,
-                        start_recno))
+                // #6242: copy the active locate expressions; they are owned by
+                // the cursor, which the predicate itself may close.
+                const std::string locate_for_expression = cursor->active_locate_for_expression;
+                const std::string locate_while_expression = cursor->active_locate_while_expression;
+                bool locate_cursor_lost = false;
+                const bool located = locate_next_matching_record(
+                    *cursor,
+                    locate_for_expression,
+                    locate_while_expression,
+                    frame,
+                    start_recno,
+                    locate_cursor_lost);
+                if (locate_cursor_lost)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", "CONTINUE"}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                if (!located)
                 {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
 
-                const std::string locate_detail = cursor->active_locate_for_expression.empty()
+                const std::string locate_detail = locate_for_expression.empty()
                     ? std::string{"ALL"}
-                    : cursor->active_locate_for_expression;
+                    : locate_for_expression;
                 events.push_back({.category = "runtime.locate",
                                   .detail = "CONTINUE " + locate_detail,
                                   .location = statement.location});
@@ -4182,7 +4198,19 @@
                 cursor->active_locate_for_expression = statement.expression;
                 cursor->active_locate_while_expression = statement.tertiary_expression;
                 cursor->locate_active = true;
-                if (!locate_next_matching_record(*cursor, statement.expression, statement.tertiary_expression, frame, 1U))
+                bool locate_cursor_lost = false;
+                const bool located = locate_next_matching_record(
+                    *cursor, statement.expression, statement.tertiary_expression, frame, 1U, locate_cursor_lost);
+                if (locate_cursor_lost)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", "LOCATE"}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                if (!located)
                 {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
@@ -4227,12 +4255,13 @@
                         0U,
                         false);
                 }
+                bool scan_cursor_lost = false;
                 const bool located = locate_next_matching_record(
-                    *cursor, statement.expression, statement.tertiary_expression, frame, start_recno);
+                    *cursor, statement.expression, statement.tertiary_expression, frame, start_recno, scan_cursor_lost);
                 // #6331 review: predicates the continuation check cannot see
                 // (EVALUATE/EXECSCRIPT, member calls) run inside the direct
                 // search and can close or replace the cursor too.
-                cursor = resolve_scan_cursor(scan_cursor_reference);
+                cursor = scan_cursor_lost ? nullptr : resolve_scan_cursor(scan_cursor_reference);
                 if (cursor == nullptr)
                 {
                     last_error_message = runtime_text(

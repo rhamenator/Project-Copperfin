@@ -1228,11 +1228,12 @@
                     jump_after_completion);
             }
 
+            bool scan_cursor_lost = false;
             const bool located = locate_next_matching_record(
-                *cursor, scan.for_expression, scan.while_expression, frame, cursor->recno + 1U);
+                *cursor, scan.for_expression, scan.while_expression, frame, cursor->recno + 1U, scan_cursor_lost);
             // #6331 review: the direct search can still run user code the
             // continuation check cannot see (EVALUATE/EXECSCRIPT, member calls).
-            cursor = resolve_scan_cursor(scan.cursor_reference);
+            cursor = scan_cursor_lost ? nullptr : resolve_scan_cursor(scan.cursor_reference);
             if (cursor == nullptr)
             {
                 frame.scans.pop_back();
