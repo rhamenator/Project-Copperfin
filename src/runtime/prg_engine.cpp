@@ -229,6 +229,15 @@ namespace copperfin::runtime
             std::size_t each_index = 0;
         };
 
+        struct CursorGenerationReference
+        {
+            // RQ-CF-PRG-035: expression continuations retain identity, never
+            // a map-node address that a synchronous callback can erase.
+            int data_session = 0;
+            int work_area = 0;
+            std::uint64_t binding_identity = 0U;
+        };
+
         struct ScanState
         {
             std::size_t scan_statement_index = 0;
@@ -236,6 +245,9 @@ namespace copperfin::runtime
             std::size_t case_stack_depth_at_entry = 0;
             std::size_t with_stack_depth_at_entry = 0;
             int work_area = 0;
+            // #6331: work-area numbers are reused as soon as a cursor closes;
+            // ENDSCAN resolves the scanned cursor by this identity instead.
+            CursorGenerationReference cursor_reference;
             std::string for_expression;
             std::string while_expression;
             std::size_t iteration_count = 0;
@@ -304,15 +316,6 @@ namespace copperfin::runtime
         {
             std::size_t end = 0U;
             PrgValue value;
-        };
-
-        struct CursorGenerationReference
-        {
-            // RQ-CF-PRG-035: expression continuations retain identity, never
-            // a map-node address that a synchronous callback can erase.
-            int data_session = 0;
-            int work_area = 0;
-            std::uint64_t binding_identity = 0U;
         };
 
         struct ScopedDataSessionSelection
@@ -446,6 +449,7 @@ namespace copperfin::runtime
             ScanExpressionStage stage = ScanExpressionStage::while_predicate;
             ScanSearchKind kind = ScanSearchKind::enter_scan;
             int work_area = 0;
+            CursorGenerationReference cursor_reference;
             std::size_t candidate_recno = 1U;
             std::size_t scan_statement_index = 0U;
             std::size_t endscan_statement_index = 0U;

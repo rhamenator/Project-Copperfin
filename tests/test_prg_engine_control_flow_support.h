@@ -311,6 +311,7 @@ void test_if_elseif_predicates_use_heap_backed_expression_checkpoints();
 void test_case_predicates_use_heap_backed_expression_checkpoints();
 void test_loop_predicates_and_bounds_use_heap_backed_expression_checkpoints();
 void test_scan_predicate_preserves_rest_scope_and_exhaustion_state();
+void test_scan_does_not_resume_on_cursor_reusing_its_work_area();
 void test_cancel_releases_frame_owned_native_objects();
 void test_cancel_releases_frame_owned_private_native_objects();
 void test_retry_releases_frame_owned_native_objects();
