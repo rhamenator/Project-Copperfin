@@ -1066,6 +1066,17 @@ namespace copperfin::runtime
             }
         }
 
+        // #6552 review: bulk removal (CLOSE ALL / CLOSE DATABASES / session
+        // shutdown) can also run inside a handler or method, so it parks every
+        // object instead of clearing the map out from under the caller.
+        void park_all_native_objects()
+        {
+            while (!ole_objects.empty())
+            {
+                park_released_native_object(ole_objects.begin()->first);
+            }
+        }
+
         RuntimeOleObjectState *find_parked_native_object(int handle)
         {
             const auto parked = parked_native_objects.find(handle);
@@ -7853,8 +7864,14 @@ namespace copperfin::runtime
         }
         for (Frame &frame : stack)
         {
-            for (auto &[_, value] : frame.locals)
+            for (auto &[name, value] : frame.locals)
             {
+                // #6552 review: an in-flight method's own THIS keeps naming its
+                // (parked) object until the method returns, as in VFP9.
+                if (name == "this")
+                {
+                    continue;
+                }
                 invalidate_released_reference(value);
             }
             for (PrgValue &value : frame.call_arguments)
@@ -9683,6 +9700,10 @@ namespace copperfin::runtime
     {
         const auto finalize_pause_state = [this](DebugPauseReason reason, std::string message)
         {
+            // #6552 review: run() returning means no C++ call chain from a
+            // statement is still active, so parked objects can go on every
+            // terminal path (completion, error, pause).
+            parked_native_objects.clear();
             if (reason == DebugPauseReason::completed || reason == DebugPauseReason::error)
             {
                 release_all_critical_sections();
@@ -9805,16 +9826,15 @@ namespace copperfin::runtime
                         continue;
                     }
                 }
+                // #6550: no C++ reference from a previous top-level statement
+                // survives to here, so objects released during it can go.
+                parked_native_objects.clear();
                 if (stack.empty())
                 {
                     return finalize_pause_state(
                         DebugPauseReason::completed,
                         runtime_text("Runtime.Prg.Session.Message.ExecutionCompleted"));
                 }
-
-                // #6550: no C++ reference from a previous top-level statement
-                // survives to here, so objects released during it can go.
-                parked_native_objects.clear();
 
                 const Statement *next = current_statement();
                 if (next == nullptr)

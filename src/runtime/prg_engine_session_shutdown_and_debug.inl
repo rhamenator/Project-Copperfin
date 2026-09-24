@@ -65,7 +65,7 @@
             next_sql_handle_by_session.clear();
             registered_api_functions_by_session.clear();
             next_api_handle_by_session.clear();
-            ole_objects.clear();
+            park_all_native_objects();
 
             // Ensure FOPEN handles are closed so files are not left locked.
             close_all_file_io_handles();
@@ -339,7 +339,7 @@
             {
                 current_sql_connections().clear();
                 current_registered_api_functions().clear();
-                ole_objects.clear();
+                park_all_native_objects();
                 close_all_file_io_handles();
             }
 

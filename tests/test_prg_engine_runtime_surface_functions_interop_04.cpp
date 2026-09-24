@@ -1132,6 +1132,27 @@ namespace copperfin::runtime_surface_tests
             "CATCH TO oErr\n"
             "    nErrBox = oErr.ErrorNo\n"
             "ENDTRY\n"
+            "* 7 (#6552 review): the method releases THIS, then reads THIS.cTag\n"
+            "oSelfTag = CREATEOBJECT('SelfReleaseThenRead')\n"
+            "nErrSelfTag = 0\n"
+            "xSelfTag = ''\n"
+            "TRY\n"
+            "    xSelfTag = oSelfTag.Ping()\n"
+            "CATCH TO oErr\n"
+            "    nErrSelfTag = oErr.ErrorNo\n"
+            "ENDTRY\n"
+            "* 8 (#6552 review): the before-handler runs CLOSE ALL\n"
+            "nPings = 0\n"
+            "oSource = CREATEOBJECT('SourceThing')\n"
+            "nBind8 = BINDEVENT(oSource, 'Ping', oHandler, 'CloseAllHandler', 1)\n"
+            "nErrCloseAll = 0\n"
+            "xCloseAll = ''\n"
+            "TRY\n"
+            "    xCloseAll = oSource.Ping()\n"
+            "CATCH TO oErr\n"
+            "    nErrCloseAll = oErr.ErrorNo\n"
+            "ENDTRY\n"
+            "nPingsAfterCloseAll = nPings\n"
             "lAfter = .T.\n"
             "RETURN\n"
             "DEFINE CLASS SourceThing AS Custom\n"
@@ -1164,6 +1185,9 @@ namespace copperfin::runtime_surface_tests
             "        UNBINDEVENTS(oSource, 'Ping', oHandler, 'UnbindThenRelease')\n"
             "        oSource.Release()\n"
             "    ENDPROC\n"
+            "    PROCEDURE CloseAllHandler\n"
+            "        CLOSE ALL\n"
+            "    ENDPROC\n"
             "    PROCEDURE RemoveChild\n"
             "        oBox.RemoveObject('oChild')\n"
             "    ENDPROC\n"
@@ -1172,6 +1196,13 @@ namespace copperfin::runtime_surface_tests
             "    PROCEDURE Ping\n"
             "        THIS.Release()\n"
             "        RETURN 'gone'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SelfReleaseThenRead AS Custom\n"
+            "    cTag = 'self'\n"
+            "    PROCEDURE Ping\n"
+            "        THIS.Release()\n"
+            "        RETURN THIS.cTag\n"
             "    ENDPROC\n"
             "ENDDEFINE\n"
             "DEFINE CLASS BoxThing AS Container\n"
@@ -1211,6 +1242,14 @@ namespace copperfin::runtime_surface_tests
         expect(global_text(state, "nerrbox") == "0" && global_text(state, "xbox") == "pong",
                "#6550: container removal still lets the body run, got: " +
                    global_text(state, "xbox") + " / error " + global_text(state, "nerrbox"));
+        expect(global_text(state, "nerrselftag") == "0" && global_text(state, "xselftag") == "self",
+               "#6552: after THIS.Release() the method can still read THIS members, got: " +
+                   global_text(state, "xselftag") + " / error " + global_text(state, "nerrselftag"));
+        expect(global_text(state, "nerrcloseall") == "0" && global_text(state, "xcloseall") == "pong" &&
+                   global_text(state, "npingsaftercloseall") == "1",
+               "#6552: a before-handler running CLOSE ALL still lets the body run safely, got: " +
+                   global_text(state, "xcloseall") + " / error " + global_text(state, "nerrcloseall") + " / pings " +
+                   global_text(state, "npingsaftercloseall"));
 
         fs::remove_all(temp_root, ignored);
     }
