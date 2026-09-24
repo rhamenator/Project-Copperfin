@@ -847,5 +847,182 @@ void test_append_from_json_for_filters_selected_sql_result_cursor() {
 }
 
 
+// #6322: every remote/SQL-result APPEND FROM ... FOR path pushes a provisional
+// row into the target cursor and then evaluates the FOR predicate, which can
+// run arbitrary VFP code. A predicate that closes (or closes and reopens) the
+// target used to leave the command reading/rolling back through a freed
+// CursorState. It must now fail catchably, evaluate the predicate exactly
+// once, and leave no provisional row in any replacement cursor.
+namespace {
+
+enum class RemoteAppendSource { json, csv, dbf };
+
+void run_remote_append_from_predicate_closes_target(
+    RemoteAppendSource source,
+    bool predicate_result,
+    bool reopen_target,
+    const std::string &label) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / ("copperfin_prg_engine_sql_append_from_6322_" + label);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    fs::path source_path;
+    std::string type_clause;
+    switch (source) {
+    case RemoteAppendSource::json:
+        source_path = temp_root / "rows.json";
+        write_text(source_path.string(),
+            "[{\"ID\":\"801\",\"NAME\":\"JULIET\",\"AMOUNT\":\"1\"},"
+            "{\"ID\":\"802\",\"NAME\":\"KILO\",\"AMOUNT\":\"2\"}]");
+        type_clause = " TYPE JSON";
+        break;
+    case RemoteAppendSource::csv:
+        source_path = temp_root / "rows.csv";
+        write_text(source_path.string(),
+            "ID,NAME,AMOUNT\n"
+            "801,JULIET,1.00\n"
+            "802,KILO,2.00\n");
+        type_clause = " TYPE CSV";
+        break;
+    case RemoteAppendSource::dbf: {
+        source_path = temp_root / "rows.dbf";
+        const auto source_write = copperfin::vfp::create_dbf_table_file(
+            source_path.string(),
+            {
+                copperfin::vfp::DbfFieldDescriptor{.name = "ID", .type = 'N', .length = 6U, .decimal_count = 0U},
+                copperfin::vfp::DbfFieldDescriptor{.name = "NAME", .type = 'C', .length = 20U, .decimal_count = 0U},
+                copperfin::vfp::DbfFieldDescriptor{.name = "AMOUNT", .type = 'N', .length = 10U, .decimal_count = 2U},
+            },
+            {
+                {"801", "JULIET", "1"},
+                {"802", "KILO", "2"},
+            });
+        expect(source_write.ok, "#6322 " + label + ": source DBF fixture should be created");
+        break;
+    }
+    }
+
+    const fs::path main_path = temp_root / "remote_append_closes_target.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "nCalls = 0\n"
+        "lErrorCaught = .F.\n"
+        "cErrMsg = ''\n"
+        "TRY\n"
+        "    APPEND FROM '" + source_path.string() + "'" + type_clause + " FOR CloseTarget()\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "    cErrMsg = oErr.Message\n"
+        "ENDTRY\n"
+        "lTargetOpen = USED('sqlcust')\n"
+        "nTargetRows = IIF(USED('sqlcust'), RECCOUNT('sqlcust'), -1)\n"
+        "lAfterAppend = .T.\n"
+        "RETURN\n"
+        "\n"
+        "FUNCTION CloseTarget\n"
+        "    nCalls = nCalls + 1\n"
+        "    USE IN sqlcust\n" +
+        std::string(reopen_target ? "    nReopen = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n" : "") +
+        "    RETURN " + (predicate_result ? ".T." : ".F.") + "\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6322 " + label + ": script should complete past the caught error: " + state.message);
+
+    const auto global_text = [&](const std::string &name) -> std::string {
+        const auto found = state.globals.find(name);
+        return found == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(found->second);
+    };
+    expect(global_text("lafterappend") == "true",
+        "#6322 " + label + ": execution should continue after APPEND FROM");
+    expect(global_text("lerrorcaught") == "true",
+        "#6322 " + label + ": closing the target from the FOR predicate should raise a catchable error");
+    expect(global_text("cerrmsg").find("APPEND FROM target work area not found") != std::string::npos,
+        "#6322 " + label + ": error should report the lost target, got: " + global_text("cerrmsg"));
+    expect(global_text("ncalls") == "1",
+        "#6322 " + label + ": the predicate should be evaluated exactly once before the command stops, got: " +
+            global_text("ncalls"));
+    if (reopen_target) {
+        expect(global_text("ltargetopen") == "true",
+            "#6322 " + label + ": the replacement cursor opened by the predicate should survive");
+        expect(global_text("ntargetrows") == "3",
+            "#6322 " + label + ": the replacement cursor must not receive the provisional row, got: " +
+                global_text("ntargetrows"));
+    } else {
+        expect(global_text("ltargetopen") == "false",
+            "#6322 " + label + ": the closed target should stay closed");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+}  // namespace
+
+// #6322: a FOR predicate that raises an error on a surviving remote target
+// must not leave its provisional row behind in that target.
+void test_remote_append_from_for_predicate_error_leaves_no_provisional_row() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_append_from_6322_error";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path json_path = temp_root / "rows.json";
+    write_text(json_path.string(),
+        "[{\"ID\":\"801\",\"NAME\":\"JULIET\",\"AMOUNT\":\"1\"},"
+        "{\"ID\":\"802\",\"NAME\":\"KILO\",\"AMOUNT\":\"2\"}]");
+    const fs::path main_path = temp_root / "remote_append_predicate_error.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "lErrorCaught = .F.\n"
+        "TRY\n"
+        "    APPEND FROM '" + json_path.string() + "' TYPE JSON FOR RaiseFromPredicate()\n"
+        "CATCH TO oErr\n"
+        "    lErrorCaught = .T.\n"
+        "ENDTRY\n"
+        "nTargetRows = RECCOUNT('sqlcust')\n"
+        "RETURN\n"
+        "\n"
+        "FUNCTION RaiseFromPredicate\n"
+        "    ERROR 'predicate failed'\n"
+        "    RETURN .T.\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6322 predicate error: script should complete: " + state.message);
+    const auto rows = state.globals.find("ntargetrows");
+    const auto caught = state.globals.find("lerrorcaught");
+    expect(caught != state.globals.end() && copperfin::runtime::format_value(caught->second) == "true",
+        "#6322 predicate error: the predicate's error should reach the CATCH block");
+    expect(rows != state.globals.end() && copperfin::runtime::format_value(rows->second) == "3",
+        "#6322 predicate error: the surviving target must not keep a provisional row, got: " +
+            (rows == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(rows->second)));
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_remote_append_from_for_predicate_closing_target_fails_catchably() {
+    run_remote_append_from_predicate_closes_target(RemoteAppendSource::json, true, false, "json_true");
+    run_remote_append_from_predicate_closes_target(RemoteAppendSource::json, false, false, "json_false");
+    run_remote_append_from_predicate_closes_target(RemoteAppendSource::csv, true, false, "csv_true");
+    run_remote_append_from_predicate_closes_target(RemoteAppendSource::csv, false, true, "csv_false_reopen");
+    run_remote_append_from_predicate_closes_target(RemoteAppendSource::dbf, false, false, "dbf_false");
+    run_remote_append_from_predicate_closes_target(RemoteAppendSource::dbf, true, true, "dbf_true_reopen");
+    run_remote_append_from_predicate_closes_target(RemoteAppendSource::json, true, true, "json_true_reopen");
+}
+
+
 }  // namespace copperfin::sql_cursor_mutation_tests
 

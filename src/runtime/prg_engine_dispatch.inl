@@ -9357,6 +9357,93 @@
 
                 if (cursor->remote && cursor->source_path.empty())
                 {
+                    // #6322: the FOR predicate below can execute arbitrary VFP
+                    // code (a UDF doing USE IN/CLOSE ALL, possibly reopening
+                    // the same alias) that frees this target cursor while its
+                    // provisional row is still pushed. Retain the target's
+                    // generation identity instead of trusting the raw pointer
+                    // across the callback, and re-resolve it before rollback,
+                    // commit, or any cursor-state update.
+                    enum class RemoteAppendRowOutcome
+                    {
+                        appended,
+                        rejected,
+                        target_lost
+                    };
+                    const CursorGenerationReference remote_target_reference =
+                        capture_cursor_generation_reference(cursor);
+                    const auto append_remote_row =
+                        [&](vfp::DbfRecord appended_record, const std::string &for_expr) -> RemoteAppendRowOutcome
+                    {
+                        const std::size_t provisional_index = cursor->remote_records.size();
+                        appended_record.record_index = provisional_index;
+                        cursor->remote_records.push_back(std::move(appended_record));
+                        cursor->record_count = cursor->remote_records.size();
+                        cursor->recno = cursor->record_count;
+                        cursor->eof = false;
+                        cursor->bof = cursor->record_count == 0U;
+                        if (trim_copy(for_expr).empty())
+                        {
+                            return RemoteAppendRowOutcome::appended;
+                        }
+
+                        // The predicate may also have appended to or trimmed the
+                        // surviving target, so roll back by position rather than
+                        // assuming the provisional row is still the last one.
+                        const auto roll_back_provisional_row = [&]()
+                        {
+                            if (provisional_index < cursor->remote_records.size())
+                            {
+                                cursor->remote_records.erase(
+                                    cursor->remote_records.begin() + static_cast<std::ptrdiff_t>(provisional_index));
+                                for (std::size_t index = provisional_index; index < cursor->remote_records.size(); ++index)
+                                {
+                                    cursor->remote_records[index].record_index = index;
+                                }
+                            }
+                            cursor->record_count = cursor->remote_records.size();
+                        };
+
+                        bool matches = false;
+                        try
+                        {
+                            matches = current_record_matches_visibility(*cursor, frame, for_expr);
+                        }
+                        catch (...)
+                        {
+                            // A predicate error unwinds the whole command; don't
+                            // leave its provisional row in a surviving target.
+                            cursor = resolve_cursor_generation_reference(remote_target_reference);
+                            if (cursor != nullptr)
+                            {
+                                roll_back_provisional_row();
+                            }
+                            throw;
+                        }
+                        cursor = resolve_cursor_generation_reference(remote_target_reference);
+                        if (cursor == nullptr)
+                        {
+                            // The provisional row was owned by the freed cursor;
+                            // a replacement in the same work area never saw it.
+                            return RemoteAppendRowOutcome::target_lost;
+                        }
+                        if (matches)
+                        {
+                            return RemoteAppendRowOutcome::appended;
+                        }
+                        roll_back_provisional_row();
+                        return RemoteAppendRowOutcome::rejected;
+                    };
+                    const auto remote_target_lost_result = [&]() -> ExecutionOutcome
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", "APPEND FROM"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    };
+
                     if (append_from_sdf || append_from_dif || append_from_sylk ||
                         append_from_tab || append_from_xls)
                     {
@@ -9399,7 +9486,6 @@
                         for (const auto &row : json_rows)
                         {
                             vfp::DbfRecord appended_record;
-                            appended_record.record_index = cursor->remote_records.size();
                             appended_record.deleted = false;
                             appended_record.values.reserve(target_fields.size());
 
@@ -9423,16 +9509,13 @@
                                 appended_record.values.push_back(std::move(value));
                             }
 
-                            cursor->remote_records.push_back(std::move(appended_record));
-                            cursor->record_count = cursor->remote_records.size();
-                            cursor->recno = cursor->record_count;
-                            cursor->eof = false;
-                            cursor->bof = cursor->record_count == 0U;
-
-                            if (!trim_copy(for_expr).empty() && !current_record_matches_visibility(*cursor, frame, for_expr))
+                            const RemoteAppendRowOutcome row_outcome = append_remote_row(std::move(appended_record), for_expr);
+                            if (row_outcome == RemoteAppendRowOutcome::target_lost)
                             {
-                                cursor->remote_records.pop_back();
-                                cursor->record_count = cursor->remote_records.size();
+                                return remote_target_lost_result();
+                            }
+                            if (row_outcome == RemoteAppendRowOutcome::rejected)
+                            {
                                 continue;
                             }
 
@@ -9517,7 +9600,6 @@
                             first_line = false;
 
                             vfp::DbfRecord appended_record;
-                            appended_record.record_index = cursor->remote_records.size();
                             appended_record.deleted = false;
                             appended_record.values.reserve(target_fields.size());
 
@@ -9555,16 +9637,13 @@
                                 appended_record.values.push_back(std::move(value));
                             }
 
-                            cursor->remote_records.push_back(std::move(appended_record));
-                            cursor->record_count = cursor->remote_records.size();
-                            cursor->recno = cursor->record_count;
-                            cursor->eof = false;
-                            cursor->bof = cursor->record_count == 0U;
-
-                            if (!trim_copy(for_expr).empty() && !current_record_matches_visibility(*cursor, frame, for_expr))
+                            const RemoteAppendRowOutcome row_outcome = append_remote_row(std::move(appended_record), for_expr);
+                            if (row_outcome == RemoteAppendRowOutcome::target_lost)
                             {
-                                cursor->remote_records.pop_back();
-                                cursor->record_count = cursor->remote_records.size();
+                                return remote_target_lost_result();
+                            }
+                            if (row_outcome == RemoteAppendRowOutcome::rejected)
+                            {
                                 continue;
                             }
 
@@ -9635,7 +9714,6 @@
                         }
 
                         vfp::DbfRecord appended_record;
-                        appended_record.record_index = cursor->remote_records.size();
                         appended_record.deleted = false;
                         appended_record.values.reserve(target_fields.size());
 
@@ -9667,16 +9745,13 @@
                             appended_record.values.push_back(std::move(value));
                         }
 
-                        cursor->remote_records.push_back(std::move(appended_record));
-                        cursor->record_count = cursor->remote_records.size();
-                        cursor->recno = cursor->record_count;
-                        cursor->eof = false;
-                        cursor->bof = cursor->record_count == 0U;
-
-                        if (!trim_copy(for_expr).empty() && !current_record_matches_visibility(*cursor, frame, for_expr))
+                        const RemoteAppendRowOutcome row_outcome = append_remote_row(std::move(appended_record), for_expr);
+                        if (row_outcome == RemoteAppendRowOutcome::target_lost)
                         {
-                            cursor->remote_records.pop_back();
-                            cursor->record_count = cursor->remote_records.size();
+                            return remote_target_lost_result();
+                        }
+                        if (row_outcome == RemoteAppendRowOutcome::rejected)
+                        {
                             continue;
                         }
 
