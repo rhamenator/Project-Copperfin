@@ -683,6 +683,20 @@ function(copperfin_configure_native_test_isolation)
         AUDIT complete
     )
 
+    # #6496: same isolation profile as test_cloud_migration_stress above --
+    # writes only to its own fs::temp_directory_path() subtree, no child
+    # processes, no network, no shared fixtures.
+    copperfin_set_test_isolation(test_dbf_migration_fidelity
+        PARALLEL_SAFE
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+
     foreach(test_name IN ITEMS
             test_native_platform_workflow_contract
             test_windows_installer_lifecycle_contract

@@ -17,16 +17,31 @@ routes. The `Cloud Defect Hunt` workflow adds independent Linux jobs:
 | `sanitizer` | Selected runtime, package, DBF, and migration tests under Clang ASan/UBSan | Full native CTest inventory under Clang ASan/UBSan | Memory and undefined behavior diagnostics |
 | `fuzz` | 30-second libFuzzer campaign against the DBF header parser | 600-second campaign | Seed, libFuzzer log, crash input on failure |
 | `stress` | Two repetitions of existing task, database lifecycle, buffering, and data-I/O sequences | Twelve repetitions | CTest failure sequence; this repeats fixed state sequences, not randomized scheduling |
-| `migration` | Seeded 1,000-row dBASE III to VFP-native round trip plus DBF/staged-import tests | Seeded 100,000-row round trip (over 20 MB per table) plus those tests | Seed, row count, file sizes, peak child RSS |
+| `migration` | Seeded 1,000-row dBASE III to VFP-native round trip (C/N/L fields, deleted rows) plus DBF/deterministic migration-fidelity/staged-import tests | Seeded 100,000-row round trip (over 20 MB per table) plus those tests | Seed, row count, deleted-row count, file sizes, peak child RSS |
 
 The fuzz lane presently has one real coverage-guided target: DBF header
 parsing. Its seed corpus is copied to a writable artifact directory before
 each campaign. Passing corpus additions are deleted. A crash preserves the
 small reproducer and metadata for 14 days. No PRG, JSON, SQL, CDX, FPT, or
-package fuzz coverage is claimed. The migration stress lane tests one-table
-C/N field fidelity at scale; it does not claim NULL/deleted fidelity or
-streaming-memory bounds. The peak RSS observation is a diagnostic, not a
-memory budget gate.
+package fuzz coverage is claimed. The migration stress lane's scaled round
+trip (`test_cloud_migration_stress`) now also mixes in a Logical field
+with true/false/blank-unknown values and periodically-deleted source rows
+(#6496), verifying NULL-vs-false Logical fidelity and deleted-flag
+fidelity at the same row-count scale the pre-existing C/N content runs
+at; it does not claim streaming-memory bounds -- the peak RSS observation
+remains a diagnostic, not a memory budget gate (see #5563 for the
+streaming-design work that would be needed before one could be set). A
+separate, small deterministic test (`test_dbf_migration_fidelity`,
+also run in this lane) covers what the scaled round trip cannot
+economically vary per row: memo-sidecar fidelity (empty and non-ASCII
+payloads), multi-table migration-batch identity (no cross-contamination
+between tables migrated together), and failure-injection/retry behavior
+(a destination collision partway through a multi-table batch must fail
+closed, leave no orphaned or partially-written file, and leave every
+source file byte-for-byte unchanged). Both were verified fail-then-pass
+against the specific product fixes they exercise (#5567, #5631) by
+temporarily reverting each fix and confirming the new test catches the
+regression, then restoring it.
 
 The full native suites already compile with `-Wall -Wextra -Wpedantic` or
 MSVC `/W4 /permissive-`. This change adds no clang-tidy, C# analyzer, or

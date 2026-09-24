@@ -16,12 +16,14 @@ ROOT = Path(__file__).resolve().parents[1]
 TARGETS = {
     "stress": ["test_prg_engine_control_flow", "test_prg_engine_database_lifecycle",
                "test_prg_engine_runtime_surface_functions_buffering", "test_prg_engine_data_io"],
-    "migration": ["test_cloud_migration_stress", "test_dbf_table", "test_staged_import_publish"],
+    "migration": ["test_cloud_migration_stress", "test_dbf_table", "test_dbf_migration_fidelity",
+                  "test_staged_import_publish"],
     "sanitizer-pr": ["test_prg_engine_control_flow", "test_prg_engine_relations",
                      "test_prg_engine_work_areas", "test_xasset_methods",
                      "test_prg_engine_database_lifecycle",
                      "test_prg_engine_runtime_surface_functions_buffering", "test_prg_engine_data_io",
-                     "test_cloud_migration_stress", "test_dbf_table", "test_runtime_pipeline",
+                     "test_cloud_migration_stress", "test_dbf_table", "test_dbf_migration_fidelity",
+                     "test_runtime_pipeline",
                      "test_package_launcher_inventory_trust"],
 }
 
@@ -100,7 +102,7 @@ def main():
              "-o", str(evidence / "migration-metrics.txt"),
              str(build / "tests/test_cloud_migration_stress"), str(args.seed), str(rows)],
             evidence / "large-migration.log", environment)
-        tests = "^(test_dbf_table|test_staged_import_publish)$"
+        tests = "^(test_dbf_table|test_dbf_migration_fidelity|test_staged_import_publish)$"
         run(["ctest", "--test-dir", str(build), "--no-tests=error", "--output-on-failure", "--timeout", "180",
              "-R", tests], evidence / "ctest.log", environment)
     else:
@@ -115,7 +117,8 @@ def main():
                             "test_prg_engine_work_areas|test_xasset_methods|"
                             "test_prg_engine_database_lifecycle|"
                             "test_prg_engine_runtime_surface_functions_buffering|test_prg_engine_data_io|"
-                            "test_cloud_migration_stress|test_dbf_table|test_runtime_pipeline|"
+                            "test_cloud_migration_stress|test_dbf_table|test_dbf_migration_fidelity|"
+                            "test_runtime_pipeline|"
                             "test_package_launcher_inventory_trust|test_native_test_isolation_contract)$"])
         run(command, evidence / "ctest.log", environment)
     metadata["max_rss_kib"] = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss

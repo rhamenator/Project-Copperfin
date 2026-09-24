@@ -4558,6 +4558,14 @@ copperfin_add_test(test_dbf_table cf_vfp_assets
     test_dbf_table_schema_rewrite_memo.cpp
 )
 
+# #6496: migration-fidelity coverage (NULL, deleted rows, memos,
+# multi-table). Its own executable so the migration lane can select it
+# independently of test_dbf_table's much broader scope.
+copperfin_add_test(test_dbf_migration_fidelity cf_vfp_assets
+    test_dbf_migration_fidelity.cpp
+    test_dbf_table_support.cpp
+)
+
 copperfin_add_test(test_dbf_text_encoding cf_vfp_assets
     test_dbf_text_encoding.cpp
 )

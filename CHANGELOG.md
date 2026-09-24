@@ -6,6 +6,24 @@
   clusters (13-30) and backfilled three of the original 12, bringing
   clustered coverage from ~185 to ~740 of the 934 open issues. Replaces a
   previously memory-only, single-agent-visible version of this tracking.
+- 2026-09-23: Expanded the hosted Cloud Defect Hunt migration lane's
+  coverage beyond one seeded single-table C/N round trip (#6496).
+  `test_cloud_migration_stress`'s scaled round trip now also mixes in a
+  Logical field with true/false/blank-unknown values and periodically-
+  deleted source rows, verifying NULL-vs-false Logical fidelity (#5631)
+  and deleted-flag fidelity (#5567) at scale via a single O(S)
+  whole-file deletion-marker pass rather than per-record
+  `set_record_deleted_flag()` calls. A new deterministic test,
+  `test_dbf_migration_fidelity`, covers what the scaled round trip
+  cannot economically vary per row: memo-sidecar fidelity (empty and
+  non-ASCII payloads), multi-table migration-batch identity (no
+  cross-contamination between tables migrated together), and
+  failure-injection/retry (a destination collision partway through a
+  multi-table batch fails closed, leaves no orphaned file, and leaves
+  every source byte-for-byte unchanged). Both new tests verified
+  fail-then-pass against #5567/#5631's real fixes. No new product
+  defects were found this pass; `docs/cloud-validation.md` updated to
+  reflect the new coverage.
 - 2026-09-23: Recorded PR #6505's merge (issue #6047 closed) in
   `agent-handoff.md`, including the full account of the Codex/Copilot
   review round on that PR, and selected #6496 (migration fidelity
