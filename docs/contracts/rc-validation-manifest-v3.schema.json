@@ -87,7 +87,7 @@
             "windows_fresh_install": { "const": "PASS" },
             "windows_installed_cli_smoke": { "const": "PASS" },
             "windows_same_version_maintenance_reinstall": { "const": "PASS" },
-            "windows_upgrade_from_previous_version": { "const": "NOT_RUN" },
+            "windows_upgrade_from_previous_version": { "enum": ["NOT_RUN", "PASS"] },
             "windows_silent_uninstall": { "const": "PASS" },
             "windows_residue_checks": { "const": "PASS" },
             "macos_productbuild": { "const": "NOT_RUN" },

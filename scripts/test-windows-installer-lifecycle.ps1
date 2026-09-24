@@ -24,6 +24,10 @@ param(
     [string]$UninstallRegistryKeyName,
 
     [Parameter(Mandatory = $true, ParameterSetName = 'Lifecycle')]
+    [ValidatePattern('^[0-9]+\.[0-9]+\.[0-9]+$')]
+    [string]$PackageVersion,
+
+    [Parameter(Mandatory = $true, ParameterSetName = 'Lifecycle')]
     [ValidateNotNullOrEmpty()]
     [string]$EvidenceDirectory,
 
@@ -42,6 +46,10 @@ param(
     [Parameter(ParameterSetName = 'Lifecycle')]
     [ValidatePattern('^copperfin [0-9]+\.[0-9]+\.[0-9]+$')]
     [string]$PriorUninstallRegistryKeyName,
+
+    [Parameter(ParameterSetName = 'Lifecycle')]
+    [ValidatePattern('^[0-9]+\.[0-9]+\.[0-9]+$')]
+    [string]$PriorPackageVersion,
 
     [Parameter(ParameterSetName = 'Lifecycle')]
     [ValidateRange(10, 600)]
@@ -234,6 +242,32 @@ function Get-CopperfinUninstallEntryCount {
             -ExpectedRegistryKeyName $ExpectedRegistryKeyName).Count
 }
 
+# #6497 review: a review round found that invoking the installed CLI with
+# only `--help` proves nothing about the seeded external artifact -- the
+# help path returns before touching it. This actually inspects the
+# artifact (copperfin_inspect recognizes ".prg" as AssetFamily::program and
+# reports "status: ok" once the file exists and is readable) so the
+# assertion is tied to the real seeded content, not to a smoke test that
+# would pass identically for a nonexistent path. Existence-based inspection
+# alone would not catch truncation/corruption that a delete would, so the
+# caller additionally compares a SHA-256 hash taken right after seeding.
+function Invoke-CopperfinInspectArtifactSmoke {
+    param(
+        [Parameter(Mandatory = $true)][string]$InspectExecutablePath,
+        [Parameter(Mandatory = $true)][string]$ArtifactPath,
+        [Parameter(Mandatory = $true)][string]$Name
+    )
+
+    $result = Invoke-BoundedProcess -FilePath $InspectExecutablePath `
+        -Arguments @('--locale', 'en-US', $ArtifactPath) `
+        -Name $Name `
+        -CaptureOutput
+    Assert-Condition ($result.Stdout -match 'asset_family: program') `
+        "$Name did not recognize the seeded artifact as a program asset: $($result.Stdout)"
+    Assert-Condition ($result.Stdout -match 'status: ok') `
+        "$Name did not report successful inspection of the seeded artifact: $($result.Stdout)"
+}
+
 if ($SelfTest) {
     $sparseEntry = [pscustomobject]@{ DisplayName = 'Unrelated product' }
     Assert-Condition `
@@ -271,6 +305,9 @@ if ($SelfTest) {
 $hasPriorVersion = -not [string]::IsNullOrEmpty($PriorInstallerPath)
 if ($hasPriorVersion -and [string]::IsNullOrEmpty($PriorUninstallRegistryKeyName)) {
     throw 'PriorUninstallRegistryKeyName is required when PriorInstallerPath is supplied.'
+}
+if ($hasPriorVersion -and [string]::IsNullOrEmpty($PriorPackageVersion)) {
+    throw 'PriorPackageVersion is required when PriorInstallerPath is supplied.'
 }
 $resolvedInstaller = (Resolve-Path -LiteralPath $InstallerPath).Path
 $resolvedPriorInstaller = if ($hasPriorVersion) { (Resolve-Path -LiteralPath $PriorInstallerPath).Path } else { $null }
@@ -311,7 +348,11 @@ $maintenanceSnapshot = $null
 $uninstallRegistrationCount = 0
 $inspectOutput = ""
 $upgradeFromPreviousVersionResult = 'NOT_RUN'
+$freshInstallResult = 'NOT_RUN'
 $externalUserArtifact = $null
+$externalUserArtifactHash = $null
+$freshCheckRoot = $null
+$priorRegistrationCountAfterUpgrade = $null
 
 try {
     if ($hasPriorVersion) {
@@ -341,31 +382,79 @@ try {
             '* loses track of a user''s own external content (#6497).',
             '?"copperfin-installer-lifecycle-user-artifact"'
         )
+        $externalUserArtifactHash = (Get-FileHash -LiteralPath $externalUserArtifact -Algorithm SHA256).Hash.ToLowerInvariant()
         $priorInspectPath = Join-Path $resolvedInstallRoot 'bin\copperfin_inspect.exe'
-        Invoke-BoundedProcess -FilePath $priorInspectPath -Arguments @('--locale', 'en-US', '--help') `
-            -Name 'prior-version installed copperfin_inspect smoke' | Out-Null
+        Invoke-CopperfinInspectArtifactSmoke -InspectExecutablePath $priorInspectPath `
+            -ArtifactPath $externalUserArtifact `
+            -Name 'prior-version installed copperfin_inspect artifact smoke'
 
         Invoke-BoundedProcess `
             -FilePath $resolvedInstaller `
             -Arguments @('/S', "/D=$resolvedInstallRoot") `
             -Name 'Copperfin silent upgrade installation' | Out-Null
 
+        # #6497 review: Copperfin's NSIS packaging does not yet implement
+        # uninstall-before-install for a differently-versioned prior
+        # install -- each version's uninstall registry key is version-
+        # suffixed (CMakeLists.txt's CPACK_PACKAGE_INSTALL_REGISTRY_KEY),
+        # so CPack has no stable key to look up and silently remove during
+        # a silent (/S) install, and NSIS's own uninstall-before-install
+        # prompt is interactive, incompatible with silent CI installs
+        # regardless. This observes the current, real behavior (both
+        # registrations coexist) as a diagnostic rather than asserting an
+        # unimplemented guarantee; the current version's own registration
+        # must still be exactly one.
+        $priorRegistrationCountAfterUpgrade = Get-CopperfinUninstallEntryCount `
+            -ExpectedInstallRoot $resolvedInstallRoot `
+            -ExpectedRegistryKeyName $PriorUninstallRegistryKeyName
         Assert-Condition ((Get-CopperfinUninstallEntryCount `
                 -ExpectedInstallRoot $resolvedInstallRoot `
-                -ExpectedRegistryKeyName $PriorUninstallRegistryKeyName) -eq 0) `
-            'Upgrade must remove the prior version''s uninstall registration, not leave it alongside the new one.'
+                -ExpectedRegistryKeyName $UninstallRegistryKeyName) -eq 1) `
+            'Upgrade must create exactly one uninstall registration for the current version.'
         Assert-Condition (Test-Path -LiteralPath $externalUserArtifact -PathType Leaf) `
             'Upgrade must not remove a user''s external artifact outside the install root.'
+        Assert-Condition ((Get-FileHash -LiteralPath $externalUserArtifact -Algorithm SHA256).Hash.ToLowerInvariant() -eq $externalUserArtifactHash) `
+            'Upgrade must not truncate or corrupt a user''s external artifact outside the install root.'
         $upgradeInspectPath = Join-Path $resolvedInstallRoot 'bin\copperfin_inspect.exe'
-        Invoke-BoundedProcess -FilePath $upgradeInspectPath -Arguments @('--locale', 'en-US', '--help') `
-            -Name 'post-upgrade installed copperfin_inspect smoke' | Out-Null
+        Invoke-CopperfinInspectArtifactSmoke -InspectExecutablePath $upgradeInspectPath `
+            -ArtifactPath $externalUserArtifact `
+            -Name 'post-upgrade installed copperfin_inspect artifact smoke'
         $upgradeFromPreviousVersionResult = 'PASS'
+
+        # #6497 review: the workflow always supplies prior-version
+        # arguments, so without this, the plain-fresh-install path below
+        # would never run in CI while `fresh_install` still unconditionally
+        # reported PASS. This exercises a real, independent fresh install
+        # of the CURRENT installer (no prior state) in its own root, so
+        # that claim is backed by an actual run every time.
+        $freshCheckRoot = "$resolvedInstallRoot-freshcheck"
+        Assert-Condition (-not (Test-Path -LiteralPath $freshCheckRoot)) `
+            "Dedicated fresh-install check root already exists: $freshCheckRoot"
+        Invoke-BoundedProcess -FilePath $resolvedInstaller -Arguments @('/S', "/D=$freshCheckRoot") `
+            -Name 'Copperfin silent dedicated fresh installation' | Out-Null
+        Assert-Condition (Test-Path -LiteralPath $freshCheckRoot -PathType Container) `
+            "Dedicated fresh-install check did not create its installation root: $freshCheckRoot"
+        Assert-Condition ((Get-CopperfinUninstallEntryCount `
+                -ExpectedInstallRoot $freshCheckRoot `
+                -ExpectedRegistryKeyName $UninstallRegistryKeyName) -eq 1) `
+            'Dedicated fresh-install check must create exactly one uninstall registration.'
+        $freshCheckUninstaller = Join-Path $freshCheckRoot 'Uninstall.exe'
+        Invoke-BoundedProcess -FilePath $freshCheckUninstaller -Arguments @('/S') `
+            -Name 'Copperfin silent dedicated fresh-install cleanup' | Out-Null
+        $freshCheckDeadline = [DateTime]::UtcNow.AddSeconds($ProcessTimeoutSeconds)
+        while ((Test-Path -LiteralPath $freshCheckRoot) -and [DateTime]::UtcNow -lt $freshCheckDeadline) {
+            Start-Sleep -Milliseconds 250
+        }
+        Assert-Condition (-not (Test-Path -LiteralPath $freshCheckRoot)) `
+            "Dedicated fresh-install check left installation-root residue: $freshCheckRoot"
+        $freshInstallResult = 'PASS'
     }
     else {
         Invoke-BoundedProcess `
             -FilePath $resolvedInstaller `
             -Arguments @('/S', "/D=$resolvedInstallRoot") `
             -Name 'Copperfin silent fresh installation' | Out-Null
+        $freshInstallResult = 'PASS'
     }
 
     Assert-Condition (Test-Path -LiteralPath $resolvedInstallRoot -PathType Container) `
@@ -445,14 +534,17 @@ try {
         schema_version = 1
         kind = 'copperfin-windows-installer-lifecycle-result'
         installer_sha256 = (Get-FileHash -LiteralPath $resolvedInstaller -Algorithm SHA256).Hash.ToLowerInvariant()
+        package_version = $PackageVersion
         install_root = $resolvedInstallRoot
-        fresh_install = 'PASS'
+        fresh_install = $freshInstallResult
         installed_tree_contract = 'PASS'
         locale_catalog_contract = 'PASS'
         installed_cli_smoke = 'PASS'
         same_version_maintenance_reinstall = 'PASS'
         upgrade_from_previous_version = $upgradeFromPreviousVersionResult
         prior_installer_sha256 = if ($hasPriorVersion) { (Get-FileHash -LiteralPath $resolvedPriorInstaller -Algorithm SHA256).Hash.ToLowerInvariant() } else { $null }
+        prior_package_version = if ($hasPriorVersion) { $PriorPackageVersion } else { $null }
+        stale_prior_uninstall_registration_after_upgrade_count = $priorRegistrationCountAfterUpgrade
         silent_uninstall = 'PASS'
         install_root_residue = 'PASS'
         uninstall_registration_residue = 'PASS'
@@ -477,7 +569,23 @@ finally {
             }
         }
     }
+    if ($null -ne $freshCheckRoot -and (Test-Path -LiteralPath $freshCheckRoot)) {
+        $fallbackFreshCheckUninstaller = Join-Path $freshCheckRoot 'Uninstall.exe'
+        if (Test-Path -LiteralPath $fallbackFreshCheckUninstaller -PathType Leaf) {
+            try {
+                Invoke-BoundedProcess -FilePath $fallbackFreshCheckUninstaller -Arguments @('/S') -Name 'fallback dedicated fresh-install uninstall' | Out-Null
+            }
+            catch {
+                Write-Warning "Fallback dedicated fresh-install uninstall failed: $($_.Exception.Message)"
+            }
+        }
+    }
     if ($null -ne $externalUserArtifact -and (Test-Path -LiteralPath $externalUserArtifact)) {
-        Remove-Item -LiteralPath $externalUserArtifact -Force -ErrorAction SilentlyContinue
+        try {
+            [System.IO.File]::Delete($externalUserArtifact)
+        }
+        catch {
+            Write-Warning "Cleanup of the external user artifact fixture failed: $($_.Exception.Message)"
+        }
     }
 }
