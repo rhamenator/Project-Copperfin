@@ -1577,25 +1577,47 @@
             return runtime_text("Runtime.Prg.ReportAsset.Error.ResolveFailed", {{"path", copperfin::platform::path_to_utf8_string(path)}});
         }
 
+        // #6240: WHILE, FOR/active-filter, and FRX/LBX object expressions can
+        // all run a UDF that closes or replaces `cursor`. Re-resolve its
+        // generation identity after each one and report the loss through
+        // `cursor_lost` instead of moving, reading, or restoring it again.
         std::vector<std::string> render_report_output_rows(
             CursorState &cursor,
             const Frame &frame,
             const studio::StudioReportLayoutSnapshot &layout,
             const std::vector<vfp::DbfFieldDescriptor> &fields,
             const std::string &for_expression,
-            const std::string &while_expression)
+            const std::string &while_expression,
+            bool &cursor_lost)
         {
+            cursor_lost = false;
+            const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(&cursor);
+            const auto cursor_gone = [&]()
+            {
+                cursor_lost = resolve_cursor_generation_reference(cursor_reference) == nullptr;
+                return cursor_lost;
+            };
             std::vector<std::string> rows;
             const CursorPositionSnapshot saved = capture_cursor_snapshot(cursor);
             for (const std::size_t recno : record_iteration_order(cursor))
             {
                 move_cursor_to(cursor, static_cast<long long>(recno));
-                if (!while_expression.empty() &&
-                    !evaluate_visibility_expression(while_expression, frame, &cursor))
+                const bool while_matches =
+                    while_expression.empty() || evaluate_visibility_expression(while_expression, frame, &cursor);
+                if (cursor_gone())
+                {
+                    return {};
+                }
+                if (!while_matches)
                 {
                     break;
                 }
-                if (!current_record_matches_visibility(cursor, frame, for_expression))
+                const bool matches = current_record_matches_visibility(cursor, frame, for_expression);
+                if (cursor_gone())
+                {
+                    return {};
+                }
+                if (!matches)
                 {
                     continue;
                 }
@@ -1629,9 +1651,12 @@
                             continue;
                         }
 
-                        object_expression_values.push_back(
-                            std::to_string(object.record_index) + ":" +
-                            format_value(evaluate_expression(expression, frame)));
+                        const std::string value = format_value(evaluate_expression(expression, frame));
+                        if (cursor_gone())
+                        {
+                            return {};
+                        }
+                        object_expression_values.push_back(std::to_string(object.record_index) + ":" + value);
                     }
                 }
                 if (!object_expression_values.empty())
@@ -1739,6 +1764,73 @@
                 return {.ok = false, .message = last_error_message};
             }
 
+            // #6240: render every row before the output file is created or
+            // truncated. Report expressions can close or replace the active
+            // cursor; on that loss the command fails catchably and leaves any
+            // existing destination untouched.
+            std::string cursor_output;
+            std::size_t rendered_row_count = 0U;
+            if (CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                cursor != nullptr)
+            {
+                std::ostringstream cursor_header;
+                const std::vector<vfp::DbfFieldDescriptor> fields = cursor_field_descriptors(*cursor);
+                const std::string while_expression =
+                    statement.names.empty() ? std::string{} : trim_copy(statement.names.front());
+                cursor_header << "cursor=" << (cursor->alias.empty() ? std::to_string(cursor->work_area) : cursor->alias) << "\n";
+                if (!fields.empty())
+                {
+                    cursor_header << "fields=";
+                    for (std::size_t index = 0U; index < fields.size(); ++index)
+                    {
+                        if (index > 0U)
+                        {
+                            cursor_header << ",";
+                        }
+                        cursor_header << fields[index].name;
+                    }
+                    cursor_header << "\n";
+                }
+                if (!trim_copy(cursor->filter_expression).empty())
+                {
+                    cursor_header << "set_filter=" << trim_copy(cursor->filter_expression) << "\n";
+                }
+                if (!trim_copy(statement.quaternary_expression).empty())
+                {
+                    cursor_header << "for=" << trim_copy(statement.quaternary_expression) << "\n";
+                }
+                if (!while_expression.empty())
+                {
+                    cursor_header << "while=" << while_expression << "\n";
+                }
+
+                bool cursor_lost = false;
+                const std::vector<std::string> rendered_rows = render_report_output_rows(
+                    *cursor,
+                    frame,
+                    layout,
+                    fields,
+                    trim_copy(statement.quaternary_expression),
+                    while_expression,
+                    cursor_lost);
+                if (cursor_lost)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", std::string(category_prefix) == "label" ? "LABEL FORM" : "REPORT FORM"}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                rendered_row_count = rendered_rows.size();
+                cursor_header << "rows=" << rendered_row_count << "\n";
+                for (const auto &row : rendered_rows)
+                {
+                    cursor_header << row << "\n";
+                }
+                cursor_output = cursor_header.str();
+            }
+
             if (!output_path.parent_path().empty())
             {
                 std::error_code create_output_directory_error;
@@ -1768,54 +1860,7 @@
                 }
             }
 
-            CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
-            std::size_t rendered_row_count = 0U;
-            if (cursor != nullptr)
-            {
-                const std::vector<vfp::DbfFieldDescriptor> fields = cursor_field_descriptors(*cursor);
-                const std::string while_expression =
-                    statement.names.empty() ? std::string{} : trim_copy(statement.names.front());
-                output << "cursor=" << (cursor->alias.empty() ? std::to_string(cursor->work_area) : cursor->alias) << "\n";
-                if (!fields.empty())
-                {
-                    output << "fields=";
-                    for (std::size_t index = 0U; index < fields.size(); ++index)
-                    {
-                        if (index > 0U)
-                        {
-                            output << ",";
-                        }
-                        output << fields[index].name;
-                    }
-                    output << "\n";
-                }
-                if (!trim_copy(cursor->filter_expression).empty())
-                {
-                    output << "set_filter=" << trim_copy(cursor->filter_expression) << "\n";
-                }
-                if (!trim_copy(statement.quaternary_expression).empty())
-                {
-                    output << "for=" << trim_copy(statement.quaternary_expression) << "\n";
-                }
-                if (!while_expression.empty())
-                {
-                    output << "while=" << while_expression << "\n";
-                }
-
-                const std::vector<std::string> rendered_rows = render_report_output_rows(
-                    *cursor,
-                    frame,
-                    layout,
-                    fields,
-                    trim_copy(statement.quaternary_expression),
-                    while_expression);
-                rendered_row_count = rendered_rows.size();
-                output << "rows=" << rendered_row_count << "\n";
-                for (const auto &row : rendered_rows)
-                {
-                    output << row << "\n";
-                }
-            }
+            output << cursor_output;
             output.close();
             if (!output.good())
             {
