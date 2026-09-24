@@ -495,6 +495,20 @@
         {
             const PrgValue object_value = lookup_variable(frame, base_name);
             auto object = resolve_ole_object(object_value);
+            if (!object.has_value() && normalize_identifier(base_name) == "this")
+            {
+                // #6550: inside a method whose object was released mid-call,
+                // THIS still names the parked object, as it does in VFP9.
+                int handle = 0;
+                std::string prog_id;
+                if (parse_object_handle_reference(object_value, handle, prog_id))
+                {
+                    if (RuntimeOleObjectState *parked = find_parked_native_object(handle); parked != nullptr)
+                    {
+                        object = parked;
+                    }
+                }
+            }
             return resolve_runtime_object_member_path(
                 object.has_value() ? *object : nullptr,
                 member_path);

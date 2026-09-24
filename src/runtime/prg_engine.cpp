@@ -1047,6 +1047,30 @@ namespace copperfin::runtime
         std::map<int, std::size_t> memowidth_by_session;
         std::map<int, std::map<int, RuntimeSqlConnectionState>> sql_connections_by_session;
         std::map<int, RuntimeOleObjectState> ole_objects;
+        // #6550: a released object is extracted (not erased) so any C++
+        // reference an in-flight property read or method call still holds
+        // stays valid -- VFP9 keeps the object alive until that call ends.
+        // Handle lookups no longer find it (it reads as .NULL.); parked nodes
+        // are destroyed at the next top-level statement boundary.
+        // shared_ptr keeps this member copyable; node handles are move-only.
+        std::map<int, std::shared_ptr<std::map<int, RuntimeOleObjectState>::node_type>> parked_native_objects;
+
+        void park_released_native_object(int handle)
+        {
+            auto node = ole_objects.extract(handle);
+            if (!node.empty())
+            {
+                parked_native_objects.insert_or_assign(
+                    handle,
+                    std::make_shared<std::map<int, RuntimeOleObjectState>::node_type>(std::move(node)));
+            }
+        }
+
+        RuntimeOleObjectState *find_parked_native_object(int handle)
+        {
+            const auto parked = parked_native_objects.find(handle);
+            return parked == parked_native_objects.end() ? nullptr : &parked->second->mapped();
+        }
         std::map<int, std::vector<NativeClassIdentity>> native_object_class_lineage_by_handle;
         std::map<int, std::map<std::string, std::string>> native_property_expression_text_by_handle;
         std::map<int, std::map<std::string, std::string>> native_default_property_expression_text_by_handle;
@@ -7533,7 +7557,7 @@ namespace copperfin::runtime
             native_default_property_expression_text_by_handle.erase(handle);
             native_object_arrays.erase(handle);
             native_object_class_lineage_by_handle.erase(handle);
-            ole_objects.erase(handle);
+            park_released_native_object(handle);
         }
         if (representative_active_form_handle.has_value() &&
             discarded_handles.contains(*representative_active_form_handle))
@@ -7969,7 +7993,7 @@ namespace copperfin::runtime
             native_default_property_expression_text_by_handle.erase(handle);
             native_object_arrays.erase(handle);
             native_object_class_lineage_by_handle.erase(handle);
-            ole_objects.erase(handle);
+            park_released_native_object(handle);
         }
         window_message_bindings.erase(
             std::remove_if(
@@ -9787,6 +9811,10 @@ namespace copperfin::runtime
                         DebugPauseReason::completed,
                         runtime_text("Runtime.Prg.Session.Message.ExecutionCompleted"));
                 }
+
+                // #6550: no C++ reference from a previous top-level statement
+                // survives to here, so objects released during it can go.
+                parked_native_objects.clear();
 
                 const Statement *next = current_statement();
                 if (next == nullptr)

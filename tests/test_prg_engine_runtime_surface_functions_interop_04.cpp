@@ -890,7 +890,8 @@ namespace copperfin::runtime_surface_tests
 
     // #6415: a property-read event handler (or _Access method) that releases
     // the source object used to leave the read dereferencing erased object
-    // state. The read must fail catchably (error 1924) or, when the value was
+    // state. #6550: like VFP9, the read now completes on the (parked) released
+    // object and returns its value; the earlier 1924 contract was replaced. The
     // already produced, return it; later handlers must not run on a freed source.
     void test_property_read_handler_releasing_source_fails_catchably()
     {
@@ -1002,35 +1003,32 @@ namespace copperfin::runtime_surface_tests
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "#6415: script should complete: " + state.message);
         expect(global_text(state, "lafter") == "true", "#6415: execution should continue after every read");
+        // #6550: VFP9 keeps a released object alive until the in-flight call
+        // ends, so every read below completes and returns its value. (These
+        // scripts use flag 1 as "before", Copperfin's current mapping; #6547
+        // tracks that VFP9 uses 0 for before.)
         expect(global_text(state, "nfirst") == "1", "#6415: the releasing before-handler should run once");
-        expect(global_text(state, "nerrbefore") == "1924",
-               "#6415: reading after a before-handler released the source should raise error 1924, got: " +
-                   global_text(state, "nerrbefore"));
-        expect(global_text(state, "nsecond") == "0",
-               "#6415: a later handler must not run on a released source, got: " + global_text(state, "nsecond"));
-        // #6538 review: once the source is gone the read never returns
-        // normally, even with a value in hand, because callers still hold the
-        // erased object reference.
-        expect(global_text(state, "nafter") == "1" && global_text(state, "nerrafter") == "1924",
-               "#6415: an after-handler releasing the source should raise error 1924, got: " +
+        expect(global_text(state, "nerrbefore") == "0" && global_text(state, "cbefore") == "alive",
+               "#6550: a read whose before-handler released the source completes with its value, got: " +
+                   global_text(state, "cbefore") + " / error " + global_text(state, "nerrbefore"));
+        expect(global_text(state, "nsecond") == "1",
+               "#6550: remaining handlers for the read still run, got: " + global_text(state, "nsecond"));
+        expect(global_text(state, "nafter") == "1" && global_text(state, "nerrafter") == "0" &&
+                   global_text(state, "cafter") == "alive",
+               "#6550: an after-handler releasing the source leaves the read's value intact, got: " +
                    global_text(state, "cafter") + " / error " + global_text(state, "nerrafter"));
-        expect(global_text(state, "nerraccess") == "1924",
-               "#6415: an _Access method that releases THIS should raise error 1924, got: " +
+        expect(global_text(state, "nerraccess") == "0" && global_text(state, "caccess") == "accessed",
+               "#6550: an _Access method that releases THIS returns its value (VFP9), got: " +
                    global_text(state, "caccess") + " / error " + global_text(state, "nerraccess"));
         // Direct List(<expr>) syntax evaluates its argument before dispatch,
         // so a releasing argument surfaces as the OLE "object not found for
-        // method invocation" fault (1429) rather than reaching the
-        // selector-text branch with an erased source.
+        // method invocation" fault (1429).
         expect(global_text(state, "nerrselector") == "1429" && global_text(state, "nselector") == "1",
                "#6415: a List() argument releasing the list should fail catchably (1429), got: " +
                    global_text(state, "cselector") + " / error " + global_text(state, "nerrselector") +
                    " / selector calls " + global_text(state, "nselector"));
-        // Copperfin may keep a released form's children alive until the
-        // container is torn down, so either outcome is memory-safe; what
-        // matters (checked under ASan) is never reading erased state.
-        expect(global_text(state, "nerrcontainer") == "1924" ||
-                   (global_text(state, "nerrcontainer") == "0" && global_text(state, "ccontainer") == "child"),
-               "#6415: releasing the source's container must fail with 1924 or read the still-live child, got: " +
+        expect(global_text(state, "nerrcontainer") == "0" && global_text(state, "ccontainer") == "child",
+               "#6550: releasing the source's container from the handler still completes the read, got: " +
                    global_text(state, "ccontainer") + " / error " + global_text(state, "nerrcontainer"));
 
         fs::remove_all(temp_root, ignored);
@@ -1039,7 +1037,9 @@ namespace copperfin::runtime_surface_tests
 
     // #6420: a BINDEVENT before-handler that releases the source object used
     // to leave method dispatch calling the source method body through erased
-    // object state. It must fail catchably (1924) without running the body or
+    // object state. #6550: like VFP9, the body now runs on the (parked)
+    // released object and its result is returned; the earlier 1924 contract
+    // was replaced. Previously it had to fail catchably without running the body or
     // later before-handlers; after-handlers may still release the source
     // (RQ-CF-PRG-036) and the method result is returned.
     void test_method_before_handler_releasing_source_fails_catchably()
@@ -1057,7 +1057,8 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "method_bindevent_release.prg";
         write_text(
             main_path,
-            "PUBLIC oSource, oHandler, nPings, nSecond, nAfter\n"
+            "PUBLIC oSource, oHandler, nPings, nSecond, nAfter, cLastTag\n"
+            "cLastTag = ''\n"
             "nPings = 0\n"
             "nSecond = 0\n"
             "nAfter = 0\n"
@@ -1097,6 +1098,7 @@ namespace copperfin::runtime_surface_tests
             "* 4: the before-handler releases the source and creates a replacement\n"
             "nPings = 0\n"
             "oSource = CREATEOBJECT('SourceThing')\n"
+            "oSource.cTag = 'old'\n"
             "nBind5 = BINDEVENT(oSource, 'Ping', oHandler, 'ReplaceSource', 1)\n"
             "nErrReplace = 0\n"
             "TRY\n"
@@ -1105,6 +1107,8 @@ namespace copperfin::runtime_surface_tests
             "    nErrReplace = oErr.ErrorNo\n"
             "ENDTRY\n"
             "nPingsAfterReplace = nPings\n"
+            "cReplaceTag = cLastTag\n"
+            "cNewTag = oSource.cTag\n"
             "* 5: the before-handler unbinds itself, then releases the source\n"
             "nPings = 0\n"
             "oSource = CREATEOBJECT('SourceThing')\n"
@@ -1131,8 +1135,10 @@ namespace copperfin::runtime_surface_tests
             "lAfter = .T.\n"
             "RETURN\n"
             "DEFINE CLASS SourceThing AS Custom\n"
+            "    cTag = 'orig'\n"
             "    PROCEDURE Ping\n"
             "        nPings = nPings + 1\n"
+            "        cLastTag = THIS.cTag\n"
             "        RETURN 'pong'\n"
             "    ENDPROC\n"
             "ENDDEFINE\n"
@@ -1152,6 +1158,7 @@ namespace copperfin::runtime_surface_tests
             "    PROCEDURE ReplaceSource\n"
             "        oSource.Release()\n"
             "        oSource = CREATEOBJECT('SourceThing')\n"
+            "        oSource.cTag = 'new'\n"
             "    ENDPROC\n"
             "    PROCEDURE UnbindThenRelease\n"
             "        UNBINDEVENTS(oSource, 'Ping', oHandler, 'UnbindThenRelease')\n"
@@ -1176,14 +1183,15 @@ namespace copperfin::runtime_surface_tests
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "#6420: script should complete: " + state.message);
         expect(global_text(state, "lafter") == "true", "#6420: execution should continue after both calls");
-        expect(global_text(state, "nerrbefore") == "1924",
-               "#6420: a before-handler releasing the source should raise error 1924, got: " +
-                   global_text(state, "nerrbefore"));
-        expect(global_text(state, "npingsafterbefore") == "0",
-               "#6420: the source method body must not run after its source was released, got: " +
+        // #6550: VFP9 keeps a released object alive until the in-flight call
+        // ends: the method body runs on it (THIS still resolves) and returns.
+        expect(global_text(state, "nerrbefore") == "0" && global_text(state, "xbefore") == "pong" &&
+                   global_text(state, "npingsafterbefore") == "1",
+               "#6550: a before-handler releasing the source still runs the body and returns its result, got: " +
+                   global_text(state, "xbefore") + " / error " + global_text(state, "nerrbefore") + " / pings " +
                    global_text(state, "npingsafterbefore"));
-        expect(global_text(state, "nsecond") == "0",
-               "#6420: a later before-handler must not run on a released source, got: " + global_text(state, "nsecond"));
+        expect(global_text(state, "nsecond") == "1",
+               "#6550: remaining before-handlers still run, got: " + global_text(state, "nsecond"));
         expect(global_text(state, "nafter") == "1" && global_text(state, "nerrafter") == "0" &&
                    global_text(state, "xafter") == "pong",
                "#6420: an after-handler may release the source and the method result is returned, got: " +
@@ -1191,18 +1199,17 @@ namespace copperfin::runtime_surface_tests
         expect(global_text(state, "nerrself") == "0" && global_text(state, "xself") == "gone",
                "#6420: a source method that releases itself still returns its result (RQ-CF-PRG-036), got: " +
                    global_text(state, "xself") + " / error " + global_text(state, "nerrself"));
-        expect(global_text(state, "nerrreplace") == "1924" && global_text(state, "npingsafterreplace") == "0",
-               "#6420: release-then-create must not dispatch to the replacement object, got error " +
-                   global_text(state, "nerrreplace") + " / pings " + global_text(state, "npingsafterreplace"));
-        expect(global_text(state, "nerrunbind") == "1924" && global_text(state, "npingsafterunbind") == "0",
-               "#6420: a handler that unbinds itself before releasing should still raise 1924, got error " +
+        expect(global_text(state, "nerrreplace") == "0" && global_text(state, "npingsafterreplace") == "1" &&
+                   global_text(state, "creplacetag") == "old" && global_text(state, "cnewtag") == "new",
+               "#6550: release-then-create runs the body once on the original (parked) object, never the "
+               "replacement, got error " + global_text(state, "nerrreplace") + " / pings " +
+                   global_text(state, "npingsafterreplace") + " / THIS.cTag " + global_text(state, "creplacetag") +
+                   " / new tag " + global_text(state, "cnewtag"));
+        expect(global_text(state, "nerrunbind") == "0" && global_text(state, "npingsafterunbind") == "1",
+               "#6550: a handler that unbinds itself before releasing still lets the body run, got error " +
                    global_text(state, "nerrunbind") + " / pings " + global_text(state, "npingsafterunbind"));
-        // Copperfin may keep a removed child alive, so either outcome is
-        // memory-safe (checked under ASan); dispatching through erased state
-        // is not.
-        expect(global_text(state, "nerrbox") == "1924" ||
-                   (global_text(state, "nerrbox") == "0" && global_text(state, "xbox") == "pong"),
-               "#6420: container removal must fail with 1924 or run on the still-live child, got: " +
+        expect(global_text(state, "nerrbox") == "0" && global_text(state, "xbox") == "pong",
+               "#6550: container removal still lets the body run, got: " +
                    global_text(state, "xbox") + " / error " + global_text(state, "nerrbox"));
 
         fs::remove_all(temp_root, ignored);
