@@ -1036,4 +1036,176 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+
+    // #6420: a BINDEVENT before-handler that releases the source object used
+    // to leave method dispatch calling the source method body through erased
+    // object state. It must fail catchably (1924) without running the body or
+    // later before-handlers; after-handlers may still release the source
+    // (RQ-CF-PRG-036) and the method result is returned.
+    void test_method_before_handler_releasing_source_fails_catchably()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_method_bindevent_release_6420";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto global_text = [](const auto &state, const std::string &name) -> std::string {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(found->second);
+        };
+        const fs::path main_path = temp_root / "method_bindevent_release.prg";
+        write_text(
+            main_path,
+            "PUBLIC oSource, oHandler, nPings, nSecond, nAfter\n"
+            "nPings = 0\n"
+            "nSecond = 0\n"
+            "nAfter = 0\n"
+            "* 1: issue repro (object handler) plus a second before-handler\n"
+            "oSource = CREATEOBJECT('SourceThing')\n"
+            "oHandler = CREATEOBJECT('HandlerThing')\n"
+            "nBind1 = BINDEVENT(oSource, 'Ping', oHandler, 'ReleaseSource', 1)\n"
+            "nBind2 = BINDEVENT(oSource, 'Ping', oHandler, 'SecondHandler', 1)\n"
+            "nErrBefore = 0\n"
+            "xBefore = ''\n"
+            "TRY\n"
+            "    xBefore = oSource.Ping()\n"
+            "CATCH TO oErr\n"
+            "    nErrBefore = oErr.ErrorNo\n"
+            "ENDTRY\n"
+            "nPingsAfterBefore = nPings\n"
+            "* 2: an after-handler releases the source once the method ran\n"
+            "oSource = CREATEOBJECT('SourceThing')\n"
+            "nBind3 = BINDEVENT(oSource, 'Ping', oHandler, 'AfterRelease', 0)\n"
+            "nErrAfter = 0\n"
+            "xAfter = ''\n"
+            "TRY\n"
+            "    xAfter = oSource.Ping()\n"
+            "CATCH TO oErr\n"
+            "    nErrAfter = oErr.ErrorNo\n"
+            "ENDTRY\n"
+            "* 3 (#6540 review): the source method releases itself\n"
+            "oSelf = CREATEOBJECT('SelfReleasing')\n"
+            "nBind4 = BINDEVENT(oSelf, 'Ping', oHandler, 'NoopHandler', 1)\n"
+            "nErrSelf = 0\n"
+            "xSelf = ''\n"
+            "TRY\n"
+            "    xSelf = oSelf.Ping()\n"
+            "CATCH TO oErr\n"
+            "    nErrSelf = oErr.ErrorNo\n"
+            "ENDTRY\n"
+            "* 4: the before-handler releases the source and creates a replacement\n"
+            "nPings = 0\n"
+            "oSource = CREATEOBJECT('SourceThing')\n"
+            "nBind5 = BINDEVENT(oSource, 'Ping', oHandler, 'ReplaceSource', 1)\n"
+            "nErrReplace = 0\n"
+            "TRY\n"
+            "    xReplace = oSource.Ping()\n"
+            "CATCH TO oErr\n"
+            "    nErrReplace = oErr.ErrorNo\n"
+            "ENDTRY\n"
+            "nPingsAfterReplace = nPings\n"
+            "* 5: the before-handler unbinds itself, then releases the source\n"
+            "nPings = 0\n"
+            "oSource = CREATEOBJECT('SourceThing')\n"
+            "nBind6 = BINDEVENT(oSource, 'Ping', oHandler, 'UnbindThenRelease', 1)\n"
+            "nErrUnbind = 0\n"
+            "TRY\n"
+            "    xUnbind = oSource.Ping()\n"
+            "CATCH TO oErr\n"
+            "    nErrUnbind = oErr.ErrorNo\n"
+            "ENDTRY\n"
+            "nPingsAfterUnbind = nPings\n"
+            "* 6: the before-handler removes the source from its container\n"
+            "PUBLIC oBox\n"
+            "nPings = 0\n"
+            "oBox = CREATEOBJECT('BoxThing')\n"
+            "nBind7 = BINDEVENT(oBox.oChild, 'Ping', oHandler, 'RemoveChild', 1)\n"
+            "nErrBox = 0\n"
+            "xBox = ''\n"
+            "TRY\n"
+            "    xBox = oBox.oChild.Ping()\n"
+            "CATCH TO oErr\n"
+            "    nErrBox = oErr.ErrorNo\n"
+            "ENDTRY\n"
+            "lAfter = .T.\n"
+            "RETURN\n"
+            "DEFINE CLASS SourceThing AS Custom\n"
+            "    PROCEDURE Ping\n"
+            "        nPings = nPings + 1\n"
+            "        RETURN 'pong'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS HandlerThing AS Custom\n"
+            "    PROCEDURE ReleaseSource\n"
+            "        oSource.Release()\n"
+            "    ENDPROC\n"
+            "    PROCEDURE SecondHandler\n"
+            "        nSecond = nSecond + 1\n"
+            "    ENDPROC\n"
+            "    PROCEDURE AfterRelease\n"
+            "        nAfter = nAfter + 1\n"
+            "        oSource.Release()\n"
+            "    ENDPROC\n"
+            "    PROCEDURE NoopHandler\n"
+            "    ENDPROC\n"
+            "    PROCEDURE ReplaceSource\n"
+            "        oSource.Release()\n"
+            "        oSource = CREATEOBJECT('SourceThing')\n"
+            "    ENDPROC\n"
+            "    PROCEDURE UnbindThenRelease\n"
+            "        UNBINDEVENTS(oSource, 'Ping', oHandler, 'UnbindThenRelease')\n"
+            "        oSource.Release()\n"
+            "    ENDPROC\n"
+            "    PROCEDURE RemoveChild\n"
+            "        oBox.RemoveObject('oChild')\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SelfReleasing AS Custom\n"
+            "    PROCEDURE Ping\n"
+            "        THIS.Release()\n"
+            "        RETURN 'gone'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BoxThing AS Container\n"
+            "    ADD OBJECT oChild AS SourceThing\n"
+            "ENDDEFINE\n");
+
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6420: script should complete: " + state.message);
+        expect(global_text(state, "lafter") == "true", "#6420: execution should continue after both calls");
+        expect(global_text(state, "nerrbefore") == "1924",
+               "#6420: a before-handler releasing the source should raise error 1924, got: " +
+                   global_text(state, "nerrbefore"));
+        expect(global_text(state, "npingsafterbefore") == "0",
+               "#6420: the source method body must not run after its source was released, got: " +
+                   global_text(state, "npingsafterbefore"));
+        expect(global_text(state, "nsecond") == "0",
+               "#6420: a later before-handler must not run on a released source, got: " + global_text(state, "nsecond"));
+        expect(global_text(state, "nafter") == "1" && global_text(state, "nerrafter") == "0" &&
+                   global_text(state, "xafter") == "pong",
+               "#6420: an after-handler may release the source and the method result is returned, got: " +
+                   global_text(state, "xafter") + " / error " + global_text(state, "nerrafter"));
+        expect(global_text(state, "nerrself") == "0" && global_text(state, "xself") == "gone",
+               "#6420: a source method that releases itself still returns its result (RQ-CF-PRG-036), got: " +
+                   global_text(state, "xself") + " / error " + global_text(state, "nerrself"));
+        expect(global_text(state, "nerrreplace") == "1924" && global_text(state, "npingsafterreplace") == "0",
+               "#6420: release-then-create must not dispatch to the replacement object, got error " +
+                   global_text(state, "nerrreplace") + " / pings " + global_text(state, "npingsafterreplace"));
+        expect(global_text(state, "nerrunbind") == "1924" && global_text(state, "npingsafterunbind") == "0",
+               "#6420: a handler that unbinds itself before releasing should still raise 1924, got error " +
+                   global_text(state, "nerrunbind") + " / pings " + global_text(state, "npingsafterunbind"));
+        // Copperfin may keep a removed child alive, so either outcome is
+        // memory-safe (checked under ASan); dispatching through erased state
+        // is not.
+        expect(global_text(state, "nerrbox") == "1924" ||
+                   (global_text(state, "nerrbox") == "0" && global_text(state, "xbox") == "pong"),
+               "#6420: container removal must fail with 1924 or run on the still-live child, got: " +
+                   global_text(state, "xbox") + " / error " + global_text(state, "nerrbox"));
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 }
