@@ -10759,14 +10759,32 @@
                 // GATHER FROM <array>|MEMVAR|NAME <object> [FIELDS <list>] [FOR <expr>]
                 const bool use_memvar = (statement.identifier == "memvar");
                 const bool use_name_object = (statement.identifier == "name");
-                CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                CursorState *cursor = resumed_command_cursor_reference.has_value()
+                    ? resolve_cursor_generation_reference(*resumed_command_cursor_reference)
+                    : resolve_cursor_target(std::to_string(current_selected_work_area()));
                 if (cursor == nullptr)
                 {
-                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.GatherNoCurrentWorkArea");
+                    // #6320: a resumed reference resolving to null means the
+                    // cursor captured before a suspended FOR predicate
+                    // yielded was closed/replaced while control was away;
+                    // that is distinct from never having had a current work
+                    // area, so it gets the same catchable message every
+                    // other reentrant-closure-hardened command uses.
+                    last_error_message = resumed_command_cursor_reference.has_value()
+                        ? runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", {{"command", "GATHER"}})
+                        : runtime_text("Runtime.Prg.Dispatch.Error.GatherNoCurrentWorkArea");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
+                // #6320: the FOR predicate below can run arbitrary VFP code
+                // (a nested EVALUATE()/UDF) that closes or replaces this
+                // exact cursor before returning. Capture its identity now
+                // and re-resolve it after the predicate returns -- the raw
+                // pointer above must never be dereferenced again once the
+                // predicate has been evaluated.
+                const CursorGenerationReference cursor_reference =
+                    resumed_command_cursor_reference.value_or(capture_cursor_generation_reference(cursor));
                 const auto rec = current_record(*cursor);
                 if (!rec.has_value())
                 {
@@ -10775,6 +10793,26 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
+                // #6320 (review): every checkpoint below that follows an
+                // expression evaluation capable of running arbitrary VFP
+                // code re-resolves through this instead of trusting the
+                // pointer above -- the FOR predicate, and (for a non-bare,
+                // macro-expanded GATHER FROM source) resolve_command_array_name()'s
+                // own resumable evaluation, each get one.
+                const auto revalidate_cursor = [&]() -> bool
+                {
+                    cursor = resolve_cursor_generation_reference(cursor_reference);
+                    if (cursor == nullptr)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", "GATHER"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return false;
+                    }
+                    return true;
+                };
                 if (!trim_copy(statement.quaternary_expression).empty())
                 {
                     Statement predicate_statement = statement;
@@ -10784,7 +10822,15 @@
                                                      : evaluate_resumable_expression(frame, predicate_statement, cursor);
                     if (!predicate_value.has_value())
                     {
+                        if (frame.expression_continuation.has_value())
+                        {
+                            frame.expression_continuation->command_cursor_reference = cursor_reference;
+                        }
                         return {};
+                    }
+                    if (!revalidate_cursor())
+                    {
+                        return {.ok = false, .message = last_error_message};
                     }
                     if (!value_as_bool(*predicate_value))
                     {
@@ -10798,6 +10844,10 @@
                             const auto resolved_array_name = resolve_command_array_name(statement.expression, "GATHER FROM");
                             if (!resolved_array_name.has_value() && frame.command_array_name_continuation.has_value())
                             {
+                                if (frame.expression_continuation.has_value())
+                                {
+                                    frame.expression_continuation->command_cursor_reference = cursor_reference;
+                                }
                                 return {};
                             }
                             detail = (resolved_array_name.has_value() ? *resolved_array_name : statement.expression) + " skipped";
@@ -10807,12 +10857,6 @@
                                           .location = statement.location});
                         return {};
                     }
-                }
-                if (!cursor->remote && !ensure_transaction_backup_for_table(cursor->source_path))
-                {
-                    last_fault_location = statement.location;
-                    last_fault_statement = statement.text;
-                    return {.ok = false, .message = last_error_message};
                 }
 
                 const std::vector<std::string> field_filter = parse_field_filter_clause(statement.secondary_expression);
@@ -10844,6 +10888,10 @@
                     {
                         if (frame.command_array_name_continuation.has_value())
                         {
+                            if (frame.expression_continuation.has_value())
+                            {
+                                frame.expression_continuation->command_cursor_reference = cursor_reference;
+                            }
                             return {};
                         }
                         last_fault_location = statement.location;
@@ -10853,6 +10901,22 @@
                     array_name = *resolved_array_name;
                     source_array = find_array(array_name);
                 }
+                // #6320 (review): parse_command_object_target_path()/
+                // resolve_command_array_name() above can each evaluate a
+                // macro-expanded or otherwise dynamic source-name
+                // expression -- arbitrary VFP code that can close or
+                // replace the cursor just as the FOR predicate can. A
+                // routine call always suspends through
+                // resumed_command_cursor_reference (already threaded
+                // through both continuation points above), so this is
+                // presently unreachable in practice, but it is cheap
+                // defense-in-depth against any future evaluation path
+                // that completes synchronously without suspending.
+                if (!revalidate_cursor())
+                {
+                    return {.ok = false, .message = last_error_message};
+                }
+
                 std::map<std::string, PrgValue> name_value_pairs;
                 bool use_name_value_pairs = false;
                 if (source_array != nullptr && source_array->columns == 2U)
@@ -10873,6 +10937,26 @@
                     }
                     use_name_value_pairs = !name_value_pairs.empty();
                 }
+
+                // #6320 (review): ensure_transaction_backup_for_table(),
+                // acquire_record_lock(), the write below, and its matching
+                // unlock all read/write session-keyed state
+                // (current_session_state()/current_data_session), not
+                // state hung off the CursorState itself. A FOR predicate
+                // or source-name expression that leaves the cursor open
+                // but switches DATASESSION must not journal, lock, or
+                // unlock against whatever session happens to be selected
+                // now -- pin it to the cursor's own origin session for
+                // this whole sequence, exactly as SEEK does.
+                ScopedDataSessionSelection target_session(current_data_session, cursor_reference.data_session);
+
+                if (!cursor->remote && !ensure_transaction_backup_for_table(cursor->source_path))
+                {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
                 bool temporary_record_lock = false;
                 if (!cursor->remote && !acquire_record_lock(*cursor, cursor->recno, "GATHER", false, temporary_record_lock))
                 {

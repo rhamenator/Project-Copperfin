@@ -75,6 +75,10 @@ void test_scatter_memvar_blank_on_empty_table_succeeds();
 void test_scatter_gather_runtime_errors_localize();
 void test_gather_memvar_round_trips_field_values();
 void test_gather_from_array_is_reverted_by_undo();
+void test_gather_for_clause_closing_target_cursor_fails_catchably();
+void test_gather_for_clause_closing_target_cursor_and_returning_false_fails_catchably();
+void test_gather_for_clause_switching_data_session_journals_to_origin_session();
+void test_gather_macro_array_name_closing_target_cursor_fails_catchably();
 
 // ==== Table import/export tests (APPEND FROM/COPY TO/COPY STRUCTURE TO) ====
 void test_copy_to_runtime_errors_localize();
