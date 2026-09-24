@@ -9359,11 +9359,16 @@
                 {
                     // #6322: the FOR predicate below can execute arbitrary VFP
                     // code (a UDF doing USE IN/CLOSE ALL, possibly reopening
-                    // the same alias) that frees this target cursor while its
-                    // provisional row is still pushed. Retain the target's
-                    // generation identity instead of trusting the raw pointer
-                    // across the callback, and re-resolve it before rollback,
-                    // commit, or any cursor-state update.
+                    // the same alias, SET DATASESSION, or DELETE+PACK on this
+                    // same cursor). Never retain the raw target pointer across
+                    // it, and never park a provisional row in remote_records
+                    // while it runs: the predicate sees the candidate through a
+                    // generation-keyed record override instead, and the row is
+                    // appended only after the target is re-resolved in the
+                    // same data session and the predicate accepted it. That
+                    // leaves nothing to roll back on rejection, on an error
+                    // unwinding the command, or after the callback reshaped the
+                    // surviving target.
                     enum class RemoteAppendRowOutcome
                     {
                         appended,
@@ -9375,64 +9380,42 @@
                     const auto append_remote_row =
                         [&](vfp::DbfRecord appended_record, const std::string &for_expr) -> RemoteAppendRowOutcome
                     {
-                        const std::size_t provisional_index = cursor->remote_records.size();
-                        appended_record.record_index = provisional_index;
+                        appended_record.record_index = cursor->remote_records.size();
+                        if (!trim_copy(for_expr).empty())
+                        {
+                            record_evaluation_overrides.push_back(RecordEvaluationOverride{
+                                .cursor_binding_identity = remote_target_reference.binding_identity,
+                                .record = appended_record});
+                            bool matches = false;
+                            try
+                            {
+                                matches = current_record_matches_visibility(*cursor, frame, for_expr);
+                            }
+                            catch (...)
+                            {
+                                record_evaluation_overrides.pop_back();
+                                throw;
+                            }
+                            record_evaluation_overrides.pop_back();
+
+                            cursor = resolve_cursor_generation_reference(remote_target_reference);
+                            if (cursor == nullptr || current_data_session != remote_target_reference.data_session)
+                            {
+                                return RemoteAppendRowOutcome::target_lost;
+                            }
+                            if (!matches)
+                            {
+                                return RemoteAppendRowOutcome::rejected;
+                            }
+                            appended_record.record_index = cursor->remote_records.size();
+                        }
+
                         cursor->remote_records.push_back(std::move(appended_record));
                         cursor->record_count = cursor->remote_records.size();
                         cursor->recno = cursor->record_count;
                         cursor->eof = false;
-                        cursor->bof = cursor->record_count == 0U;
-                        if (trim_copy(for_expr).empty())
-                        {
-                            return RemoteAppendRowOutcome::appended;
-                        }
-
-                        // The predicate may also have appended to or trimmed the
-                        // surviving target, so roll back by position rather than
-                        // assuming the provisional row is still the last one.
-                        const auto roll_back_provisional_row = [&]()
-                        {
-                            if (provisional_index < cursor->remote_records.size())
-                            {
-                                cursor->remote_records.erase(
-                                    cursor->remote_records.begin() + static_cast<std::ptrdiff_t>(provisional_index));
-                                for (std::size_t index = provisional_index; index < cursor->remote_records.size(); ++index)
-                                {
-                                    cursor->remote_records[index].record_index = index;
-                                }
-                            }
-                            cursor->record_count = cursor->remote_records.size();
-                        };
-
-                        bool matches = false;
-                        try
-                        {
-                            matches = current_record_matches_visibility(*cursor, frame, for_expr);
-                        }
-                        catch (...)
-                        {
-                            // A predicate error unwinds the whole command; don't
-                            // leave its provisional row in a surviving target.
-                            cursor = resolve_cursor_generation_reference(remote_target_reference);
-                            if (cursor != nullptr)
-                            {
-                                roll_back_provisional_row();
-                            }
-                            throw;
-                        }
-                        cursor = resolve_cursor_generation_reference(remote_target_reference);
-                        if (cursor == nullptr)
-                        {
-                            // The provisional row was owned by the freed cursor;
-                            // a replacement in the same work area never saw it.
-                            return RemoteAppendRowOutcome::target_lost;
-                        }
-                        if (matches)
-                        {
-                            return RemoteAppendRowOutcome::appended;
-                        }
-                        roll_back_provisional_row();
-                        return RemoteAppendRowOutcome::rejected;
+                        cursor->bof = false;
+                        return RemoteAppendRowOutcome::appended;
                     };
                     const auto remote_target_lost_result = [&]() -> ExecutionOutcome
                     {
