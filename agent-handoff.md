@@ -43,16 +43,10 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-#6415 (property-read event handlers releasing their source) is fixed in
-the current PR: the source handle (never reused) is re-checked in
-`ole_objects` after every delegate/`_Access`/selector evaluation. Cluster 1
-remaining: #6420 (BINDEVENT before-handlers releasing method sources; same
-approach should apply to the method-dispatch path) and #6192 (QueryUnload
-self-release, overlaps cluster 2). These are
-object/event-lifetime use-after-frees, not cursor ones, so they need an
-object-identity equivalent of the generation-reference pattern. Next: pick
-per `docs/81`'s cluster order and the issue dependency graph. No
-implementation started yet.
+#6415 (property-read handlers, PR #6538) and #6420 (method before-handlers,
+current PR) are fixed: the source handle (never reused) is re-checked in
+`ole_objects` after every user callback, raising catchable 1924 on loss.
+Cluster 1 remaining: #6192 (QueryUnload self-release, overlaps cluster 2).
 
 ## Workspace preservation
 

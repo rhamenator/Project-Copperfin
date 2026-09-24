@@ -1036,4 +1036,94 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+
+    // #6420: a BINDEVENT before-handler that releases the source object used
+    // to leave method dispatch calling the source method body through erased
+    // object state. It must fail catchably (1924) without running the body or
+    // later before-handlers; after-handlers may still release the source
+    // (RQ-CF-PRG-036) and the method result is returned.
+    void test_method_before_handler_releasing_source_fails_catchably()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_method_bindevent_release_6420";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto global_text = [](const auto &state, const std::string &name) -> std::string {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(found->second);
+        };
+        const fs::path main_path = temp_root / "method_bindevent_release.prg";
+        write_text(
+            main_path,
+            "PUBLIC oSource, oHandler, nPings, nSecond, nAfter\n"
+            "nPings = 0\n"
+            "nSecond = 0\n"
+            "nAfter = 0\n"
+            "* 1: issue repro (object handler) plus a second before-handler\n"
+            "oSource = CREATEOBJECT('SourceThing')\n"
+            "oHandler = CREATEOBJECT('HandlerThing')\n"
+            "nBind1 = BINDEVENT(oSource, 'Ping', oHandler, 'ReleaseSource', 1)\n"
+            "nBind2 = BINDEVENT(oSource, 'Ping', oHandler, 'SecondHandler', 1)\n"
+            "nErrBefore = 0\n"
+            "xBefore = ''\n"
+            "TRY\n"
+            "    xBefore = oSource.Ping()\n"
+            "CATCH TO oErr\n"
+            "    nErrBefore = oErr.ErrorNo\n"
+            "ENDTRY\n"
+            "nPingsAfterBefore = nPings\n"
+            "* 2: an after-handler releases the source once the method ran\n"
+            "oSource = CREATEOBJECT('SourceThing')\n"
+            "nBind3 = BINDEVENT(oSource, 'Ping', oHandler, 'AfterRelease', 0)\n"
+            "nErrAfter = 0\n"
+            "xAfter = ''\n"
+            "TRY\n"
+            "    xAfter = oSource.Ping()\n"
+            "CATCH TO oErr\n"
+            "    nErrAfter = oErr.ErrorNo\n"
+            "ENDTRY\n"
+            "lAfter = .T.\n"
+            "RETURN\n"
+            "DEFINE CLASS SourceThing AS Custom\n"
+            "    PROCEDURE Ping\n"
+            "        nPings = nPings + 1\n"
+            "        RETURN 'pong'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS HandlerThing AS Custom\n"
+            "    PROCEDURE ReleaseSource\n"
+            "        oSource.Release()\n"
+            "    ENDPROC\n"
+            "    PROCEDURE SecondHandler\n"
+            "        nSecond = nSecond + 1\n"
+            "    ENDPROC\n"
+            "    PROCEDURE AfterRelease\n"
+            "        nAfter = nAfter + 1\n"
+            "        oSource.Release()\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6420: script should complete: " + state.message);
+        expect(global_text(state, "lafter") == "true", "#6420: execution should continue after both calls");
+        expect(global_text(state, "nerrbefore") == "1924",
+               "#6420: a before-handler releasing the source should raise error 1924, got: " +
+                   global_text(state, "nerrbefore"));
+        expect(global_text(state, "npingsafterbefore") == "0",
+               "#6420: the source method body must not run after its source was released, got: " +
+                   global_text(state, "npingsafterbefore"));
+        expect(global_text(state, "nsecond") == "0",
+               "#6420: a later before-handler must not run on a released source, got: " + global_text(state, "nsecond"));
+        expect(global_text(state, "nafter") == "1" && global_text(state, "nerrafter") == "0" &&
+                   global_text(state, "xafter") == "pong",
+               "#6420: an after-handler may release the source and the method result is returned, got: " +
+                   global_text(state, "xafter") + " / error " + global_text(state, "nerrafter"));
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 }

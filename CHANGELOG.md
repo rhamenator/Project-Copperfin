@@ -1,3 +1,8 @@
+- 2026-09-24: A `BINDEVENT` before-handler that releases the source object
+  no longer leaves method dispatch calling the source method through freed
+  state (#6420). The call raises catchable error 1924 without running the
+  method body or later before-handlers; after-handler release is
+  unchanged. `RQ-CF-PRG-METHOD-EVENT-LIFETIME-001`.
 - 2026-09-24: A `BINDEVENT` property-read handler, `_Access` method, or
   list selector expression that releases the source object no longer
   leaves the read touching freed object state (#6415). The read raises

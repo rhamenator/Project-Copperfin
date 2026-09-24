@@ -186,10 +186,22 @@
             }
         }
 
+        // #6420: a before-source handler can release the source (directly or
+        // through its container), erasing `runtime_object`. Handles are never
+        // reused, so re-check the handle before dispatching the next
+        // before-handler or the source method body.
+        const auto source_released = [&]()
+        {
+            return ole_objects.find(source_handle) == ole_objects.end();
+        };
         auto invoke_delegates_for_phase = [&](bool after_source_method)
         {
             for (const NativeEventBinding &binding : bindings)
             {
+                if (!after_source_method && source_released())
+                {
+                    break;
+                }
                 const bool binding_after_source_method = (binding.flags & 1) == 0;
                 if (binding_after_source_method == after_source_method)
                 {
@@ -220,6 +232,14 @@
         {
             ActiveNativeEventKeyGuard active_event_guard(active_native_event_keys, active_event_key);
             invoke_delegates_for_phase(false);
+            if (source_released())
+            {
+                throw PrgCompatibilityError(
+                    runtime_text(
+                        "Runtime.Prg.Core.Error.OleObjectNotFoundForMethodInvocation",
+                        {{"targetIdentifier", identifier}}),
+                    1924);
+            }
             auto result = invoke_native_object_method_body_if_present(
                 runtime_object,
                 normalized_identifier,
