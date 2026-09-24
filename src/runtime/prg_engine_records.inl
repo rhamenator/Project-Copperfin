@@ -490,8 +490,13 @@
             long long start_recno,
             bool start_after_current,
             const std::string &extra_expression,
-            const std::string &while_expression)
+            const std::string &while_expression,
+            bool *cursor_lost = nullptr)
         {
+            if (cursor_lost != nullptr)
+            {
+                *cursor_lost = false;
+            }
             const auto candidates = load_ordered_record_candidates(cursor);
             if (!candidates.has_value())
             {
@@ -546,14 +551,40 @@
                 }
             }
 
+            // #6242: WHILE/FOR/filter evaluation can run a UDF that closes or
+            // replaces `cursor`; stop before touching it again.
+            const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(&cursor);
+            const auto report_cursor_lost = [&]()
+            {
+                if (resolve_cursor_generation_reference(cursor_reference) != nullptr)
+                {
+                    return false;
+                }
+                if (cursor_lost != nullptr)
+                {
+                    *cursor_lost = true;
+                }
+                return true;
+            };
             for (; index >= 0 && index < static_cast<std::ptrdiff_t>(candidates->size()); index += direction)
             {
                 move_cursor_to(cursor, static_cast<long long>((*candidates)[static_cast<std::size_t>(index)].recno));
-                if (!while_expression.empty() && !evaluate_visibility_expression(while_expression, frame, &cursor))
+                const bool while_matches =
+                    while_expression.empty() || evaluate_visibility_expression(while_expression, frame, &cursor);
+                if (report_cursor_lost())
+                {
+                    return false;
+                }
+                if (!while_matches)
                 {
                     break;
                 }
-                if (current_record_matches_visibility(cursor, frame, extra_expression))
+                const bool matches = current_record_matches_visibility(cursor, frame, extra_expression);
+                if (report_cursor_lost())
+                {
+                    return false;
+                }
+                if (matches)
                 {
                     return true;
                 }
@@ -579,8 +610,13 @@
             const std::string &while_expression,
             bool preserve_on_failure,
             bool honor_active_order = false,
-            bool start_after_current = false)
+            bool start_after_current = false,
+            bool *cursor_lost = nullptr)
         {
+            if (cursor_lost != nullptr)
+            {
+                *cursor_lost = false;
+            }
             if (honor_active_order && !cursor.active_order_expression.empty())
             {
                 return seek_ordered_visible_record(
@@ -590,21 +626,48 @@
                     start_recno,
                     start_after_current,
                     extra_expression,
-                    while_expression);
+                    while_expression,
+                    cursor_lost);
             }
 
             const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
             const long long first = direction >= 0 ? std::max<long long>(1, start_recno) : std::min<long long>(start_recno, static_cast<long long>(cursor.record_count));
+            // #6242: WHILE/FOR/filter evaluation can run a UDF that closes or
+            // replaces `cursor`; stop before touching it again.
+            const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(&cursor);
+            const auto report_cursor_lost = [&]()
+            {
+                if (resolve_cursor_generation_reference(cursor_reference) != nullptr)
+                {
+                    return false;
+                }
+                if (cursor_lost != nullptr)
+                {
+                    *cursor_lost = true;
+                }
+                return true;
+            };
             for (long long recno = first;
                  recno >= 1 && recno <= static_cast<long long>(cursor.record_count);
                  recno += direction)
             {
                 move_cursor_to(cursor, recno);
-                if (!while_expression.empty() && !evaluate_visibility_expression(while_expression, frame, &cursor))
+                const bool while_matches =
+                    while_expression.empty() || evaluate_visibility_expression(while_expression, frame, &cursor);
+                if (report_cursor_lost())
+                {
+                    return false;
+                }
+                if (!while_matches)
                 {
                     break;
                 }
-                if (current_record_matches_visibility(cursor, frame, extra_expression))
+                const bool matches = current_record_matches_visibility(cursor, frame, extra_expression);
+                if (report_cursor_lost())
+                {
+                    return false;
+                }
+                if (matches)
                 {
                     return true;
                 }
@@ -625,18 +688,49 @@
             return false;
         }
 
-        bool move_by_visible_records(CursorState &cursor, const Frame &frame, long long delta)
+        // #6242: `cursor_lost` reports that an active-filter evaluation closed
+        // or replaced `cursor`; callers passing it must check it before
+        // touching the cursor again.
+        bool move_by_visible_records(
+            CursorState &cursor,
+            const Frame &frame,
+            long long delta,
+            bool *cursor_lost = nullptr)
         {
+            if (cursor_lost != nullptr)
+            {
+                *cursor_lost = false;
+            }
             if (delta == 0)
             {
-                return current_record_matches_visibility(cursor, frame, {});
+                const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(&cursor);
+                const bool matches = current_record_matches_visibility(cursor, frame, {});
+                if (resolve_cursor_generation_reference(cursor_reference) == nullptr)
+                {
+                    if (cursor_lost != nullptr)
+                    {
+                        *cursor_lost = true;
+                    }
+                    return false;
+                }
+                return matches;
             }
 
             const int direction = delta > 0 ? 1 : -1;
             long long remaining = std::llabs(delta);
             while (remaining > 0)
             {
-                if (!seek_visible_record(cursor, frame, static_cast<long long>(cursor.recno) + direction, direction, {}, {}, false, true, true))
+                if (!seek_visible_record(
+                        cursor,
+                        frame,
+                        static_cast<long long>(cursor.recno) + direction,
+                        direction,
+                        {},
+                        {},
+                        false,
+                        true,
+                        true,
+                        cursor_lost))
                 {
                     return false;
                 }
@@ -917,13 +1011,26 @@
             const std::string &for_expression,
             const std::string &while_expression,
             const Frame &frame,
-            std::size_t start_recno)
+            std::size_t start_recno,
+            bool &cursor_lost)
         {
+            cursor_lost = false;
             if (!cursor.remote && cursor.source_path.empty())
             {
                 last_error_message = runtime_text("Runtime.Prg.Records.Error.RequiresLocalTableBackedCursor");
                 return false;
             }
+
+            // #6242: the index search key, FOR, WHILE, and active-filter
+            // expressions can all run a UDF that closes or replaces `cursor`.
+            // Re-resolve its generation identity after each one and report the
+            // loss through `cursor_lost` instead of touching it again; callers
+            // must check `cursor_lost` before using the cursor.
+            const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(&cursor);
+            const auto cursor_gone = [&]()
+            {
+                return resolve_cursor_generation_reference(cursor_reference) == nullptr;
+            };
 
             const std::string locate_detail = for_expression.empty() ? std::string{"ALL"} : for_expression;
             std::string rushmore_detail = locate_detail + " -> linear_scan";
@@ -1032,6 +1139,11 @@
                             const std::string search_key_text = pattern.operands[1].raw_text;
                             const auto search_value = evaluate_expression(search_key_text, frame);
                             const std::string search_key = value_as_string(search_value);
+                            if (cursor_gone())
+                            {
+                                cursor_lost = true;
+                                return false;
+                            }
 
                             const CursorPositionSnapshot saved_cursor = capture_cursor_snapshot(cursor);
                             const auto restore_order_metadata = [&]() {
@@ -1060,7 +1172,15 @@
                                 cursor.eof = (start_recno > cursor.record_count);
                                 cursor.found = false;
 
-                                if (seek_in_cursor(cursor, search_key, frame, &saved_cursor))
+                                bool seek_cursor_lost = false;
+                                const bool seek_found =
+                                    seek_in_cursor(cursor, search_key, frame, &saved_cursor, &seek_cursor_lost);
+                                if (seek_cursor_lost)
+                                {
+                                    cursor_lost = true;
+                                    return false;
+                                }
+                                if (seek_found)
                                 {
                                     // The index seek only guarantees the cursor landed on a record whose
                                     // key relates to search_key per the index's own ordering/match rules; for
@@ -1069,8 +1189,22 @@
                                     // for_expression before trusting it, otherwise e.g. a record with AGE == 30
                                     // could be reported as matching LOCATE FOR AGE > 30.
                                     restore_order_metadata();
-                                    if (current_record_matches_visibility(cursor, frame, for_expression, true, false) &&
-                                        (while_expression.empty() || evaluate_visibility_expression(while_expression, frame, &cursor)))
+                                    const bool for_matches =
+                                        current_record_matches_visibility(cursor, frame, for_expression, true, false);
+                                    if (cursor_gone())
+                                    {
+                                        cursor_lost = true;
+                                        return false;
+                                    }
+                                    const bool while_matches = for_matches &&
+                                        (while_expression.empty() ||
+                                         evaluate_visibility_expression(while_expression, frame, &cursor));
+                                    if (cursor_gone())
+                                    {
+                                        cursor_lost = true;
+                                        return false;
+                                    }
+                                    if (while_matches)
                                     {
                                         cursor.found = true;
                                         rushmore_detail = locate_detail + " -> index_seek via " + plan.selected_order->order_name +
@@ -1084,6 +1218,11 @@
                             {
                             }
 
+                            if (cursor_gone())
+                            {
+                                cursor_lost = true;
+                                return false;
+                            }
                             restore_full_state();
                             rushmore_detail = locate_detail + " -> linear_scan after index_seek via " + plan.selected_order->order_name +
                                               " (" + plan.decision_rationale + ")";
@@ -1094,6 +1233,7 @@
 
             const bool start_after_current = cursor.recno > 0U &&
                 start_recno == cursor.recno + 1U;
+            bool seek_cursor_lost = false;
             const bool found = seek_visible_record(
                 cursor,
                 frame,
@@ -1103,7 +1243,13 @@
                 while_expression,
                 false,
                 true,
-                start_after_current);
+                start_after_current,
+                &seek_cursor_lost);
+            if (seek_cursor_lost)
+            {
+                cursor_lost = true;
+                return false;
+            }
             cursor.found = found;
             events.push_back({.category = "runtime.rushmore", .detail = rushmore_detail});
             return true;
