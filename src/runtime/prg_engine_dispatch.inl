@@ -9357,6 +9357,76 @@
 
                 if (cursor->remote && cursor->source_path.empty())
                 {
+                    // #6322: the FOR predicate below can execute arbitrary VFP
+                    // code (a UDF doing USE IN/CLOSE ALL, possibly reopening
+                    // the same alias, SET DATASESSION, or DELETE+PACK on this
+                    // same cursor). Never retain the raw target pointer across
+                    // it, and never park a provisional row in remote_records
+                    // while it runs: the predicate sees the candidate through a
+                    // generation-keyed record override instead, and the row is
+                    // appended only after the target is re-resolved in the
+                    // same data session and the predicate accepted it. That
+                    // leaves nothing to roll back on rejection, on an error
+                    // unwinding the command, or after the callback reshaped the
+                    // surviving target.
+                    enum class RemoteAppendRowOutcome
+                    {
+                        appended,
+                        rejected,
+                        target_lost
+                    };
+                    const CursorGenerationReference remote_target_reference =
+                        capture_cursor_generation_reference(cursor);
+                    const auto append_remote_row =
+                        [&](vfp::DbfRecord appended_record, const std::string &for_expr) -> RemoteAppendRowOutcome
+                    {
+                        appended_record.record_index = cursor->remote_records.size();
+                        if (!trim_copy(for_expr).empty())
+                        {
+                            record_evaluation_overrides.push_back(RecordEvaluationOverride{
+                                .cursor_binding_identity = remote_target_reference.binding_identity,
+                                .record = appended_record});
+                            bool matches = false;
+                            try
+                            {
+                                matches = current_record_matches_visibility(*cursor, frame, for_expr);
+                            }
+                            catch (...)
+                            {
+                                record_evaluation_overrides.pop_back();
+                                throw;
+                            }
+                            record_evaluation_overrides.pop_back();
+
+                            cursor = resolve_cursor_generation_reference(remote_target_reference);
+                            if (cursor == nullptr || current_data_session != remote_target_reference.data_session)
+                            {
+                                return RemoteAppendRowOutcome::target_lost;
+                            }
+                            if (!matches)
+                            {
+                                return RemoteAppendRowOutcome::rejected;
+                            }
+                            appended_record.record_index = cursor->remote_records.size();
+                        }
+
+                        cursor->remote_records.push_back(std::move(appended_record));
+                        cursor->record_count = cursor->remote_records.size();
+                        cursor->recno = cursor->record_count;
+                        cursor->eof = false;
+                        cursor->bof = false;
+                        return RemoteAppendRowOutcome::appended;
+                    };
+                    const auto remote_target_lost_result = [&]() -> ExecutionOutcome
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", "APPEND FROM"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    };
+
                     if (append_from_sdf || append_from_dif || append_from_sylk ||
                         append_from_tab || append_from_xls)
                     {
@@ -9399,7 +9469,6 @@
                         for (const auto &row : json_rows)
                         {
                             vfp::DbfRecord appended_record;
-                            appended_record.record_index = cursor->remote_records.size();
                             appended_record.deleted = false;
                             appended_record.values.reserve(target_fields.size());
 
@@ -9423,16 +9492,13 @@
                                 appended_record.values.push_back(std::move(value));
                             }
 
-                            cursor->remote_records.push_back(std::move(appended_record));
-                            cursor->record_count = cursor->remote_records.size();
-                            cursor->recno = cursor->record_count;
-                            cursor->eof = false;
-                            cursor->bof = cursor->record_count == 0U;
-
-                            if (!trim_copy(for_expr).empty() && !current_record_matches_visibility(*cursor, frame, for_expr))
+                            const RemoteAppendRowOutcome row_outcome = append_remote_row(std::move(appended_record), for_expr);
+                            if (row_outcome == RemoteAppendRowOutcome::target_lost)
                             {
-                                cursor->remote_records.pop_back();
-                                cursor->record_count = cursor->remote_records.size();
+                                return remote_target_lost_result();
+                            }
+                            if (row_outcome == RemoteAppendRowOutcome::rejected)
+                            {
                                 continue;
                             }
 
@@ -9517,7 +9583,6 @@
                             first_line = false;
 
                             vfp::DbfRecord appended_record;
-                            appended_record.record_index = cursor->remote_records.size();
                             appended_record.deleted = false;
                             appended_record.values.reserve(target_fields.size());
 
@@ -9555,16 +9620,13 @@
                                 appended_record.values.push_back(std::move(value));
                             }
 
-                            cursor->remote_records.push_back(std::move(appended_record));
-                            cursor->record_count = cursor->remote_records.size();
-                            cursor->recno = cursor->record_count;
-                            cursor->eof = false;
-                            cursor->bof = cursor->record_count == 0U;
-
-                            if (!trim_copy(for_expr).empty() && !current_record_matches_visibility(*cursor, frame, for_expr))
+                            const RemoteAppendRowOutcome row_outcome = append_remote_row(std::move(appended_record), for_expr);
+                            if (row_outcome == RemoteAppendRowOutcome::target_lost)
                             {
-                                cursor->remote_records.pop_back();
-                                cursor->record_count = cursor->remote_records.size();
+                                return remote_target_lost_result();
+                            }
+                            if (row_outcome == RemoteAppendRowOutcome::rejected)
+                            {
                                 continue;
                             }
 
@@ -9635,7 +9697,6 @@
                         }
 
                         vfp::DbfRecord appended_record;
-                        appended_record.record_index = cursor->remote_records.size();
                         appended_record.deleted = false;
                         appended_record.values.reserve(target_fields.size());
 
@@ -9667,16 +9728,13 @@
                             appended_record.values.push_back(std::move(value));
                         }
 
-                        cursor->remote_records.push_back(std::move(appended_record));
-                        cursor->record_count = cursor->remote_records.size();
-                        cursor->recno = cursor->record_count;
-                        cursor->eof = false;
-                        cursor->bof = cursor->record_count == 0U;
-
-                        if (!trim_copy(for_expr).empty() && !current_record_matches_visibility(*cursor, frame, for_expr))
+                        const RemoteAppendRowOutcome row_outcome = append_remote_row(std::move(appended_record), for_expr);
+                        if (row_outcome == RemoteAppendRowOutcome::target_lost)
                         {
-                            cursor->remote_records.pop_back();
-                            cursor->record_count = cursor->remote_records.size();
+                            return remote_target_lost_result();
+                        }
+                        if (row_outcome == RemoteAppendRowOutcome::rejected)
+                        {
                             continue;
                         }
 

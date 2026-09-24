@@ -284,13 +284,29 @@
                     return in_subquery->negated && !contains_null;
                 }
 
+                // #6322 review: a leading-& expression is evaluated twice, and
+                // the first evaluation can run a UDF that closes `cursor`.
+                // Re-resolve its generation identity before the second pass
+                // instead of handing it the stale pointer; callers detect the
+                // loss through their own revalidation.
+                const std::optional<CursorGenerationReference> cursor_reference =
+                    cursor != nullptr ? std::optional<CursorGenerationReference>(capture_cursor_generation_reference(cursor))
+                                      : std::nullopt;
                 const PrgValue evaluated = evaluate_expression(trimmed_expression, frame, cursor);
                 if (evaluated.kind == PrgValueKind::string && trimmed_expression.front() == '&')
                 {
                     const std::string expanded_expression = trim_copy(value_as_string(evaluated));
                     if (!expanded_expression.empty() && expanded_expression != trimmed_expression)
                     {
-                        const bool result = value_as_bool(evaluate_expression(expanded_expression, frame, cursor));
+                        const CursorState *live_cursor = cursor_reference.has_value()
+                            ? resolve_cursor_generation_reference(*cursor_reference)
+                            : nullptr;
+                        if (cursor_reference.has_value() && live_cursor == nullptr)
+                        {
+                            restore_fields();
+                            return false;
+                        }
+                        const bool result = value_as_bool(evaluate_expression(expanded_expression, frame, live_cursor));
                         restore_fields();
                         return result;
                     }
