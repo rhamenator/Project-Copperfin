@@ -69,7 +69,14 @@ require_text("${script}" "run_studio_install_contract_check.cmake" "installed St
 require_text("${script}" "run_locale_catalog_install_contract_check.cmake" "installed locale verification")
 require_text("${script}" "@('--locale', 'en-US', '--help')" "installed executable smoke")
 require_text("${script}" "same-version maintenance reinstall" "maintenance reinstall execution")
-require_text("${script}" "upgrade_from_previous_version = 'NOT_RUN'" "honest upgrade limitation")
+require_text("${script}" "$upgradeFromPreviousVersionResult = 'NOT_RUN'" "honest upgrade limitation default")
+require_text("${script}" "upgrade_from_previous_version = $upgradeFromPreviousVersionResult" "conditional upgrade-result evidence")
+require_text("${script}" "$freshInstallResult = 'NOT_RUN'" "honest fresh-install limitation default")
+require_text("${script}" "fresh_install = $freshInstallResult" "conditional fresh-install evidence")
+require_text("${script}" "Dedicated fresh-install check" "independent current-installer fresh-install exercise")
+require_text("${script}" "Invoke-CopperfinInspectArtifactSmoke" "seeded-artifact inspection smoke, not a bare --help")
+require_text("${script}" "external artifact outside the install root" "external-artifact survival assertion")
+require_text("${script}" "Upgrade must not truncate or corrupt a user" "external-artifact content-fidelity assertion")
 require_text("${script}" "Get-CopperfinUninstallEntries" "uninstall-registration inspection")
 require_text("${script}" "return @(Get-CopperfinUninstallEntries"
     "strict-mode-safe empty uninstall-entry counting")
@@ -99,8 +106,12 @@ require_text("${script}" "Exact CPack uninstall key with cleared values escaped 
     "sparse exact-key executable regression")
 require_text("${workflow}" "CopperfinPackageInstallRegistryKey.txt"
     "generated exact CPack uninstall-key input")
-require_text("${workflow}" "-UninstallRegistryKeyName $uninstallRegistryKeyName"
+require_text("${workflow}" "'-UninstallRegistryKeyName', $uninstallRegistryKeyName,"
     "exact CPack uninstall-key workflow handoff")
+require_text("${workflow}" "'-PackageVersion', $packageVersion"
+    "current package-version workflow handoff")
+require_text("${workflow}" "'-PriorPackageVersion', $env:PRIOR_PACKAGE_VERSION"
+    "prior package-version workflow handoff")
 require_text("CMakeLists.txt" "set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY \"\${CPACK_PACKAGE_NAME} \${CPACK_PACKAGE_VERSION}\")"
     "explicit version-bound CPack uninstall-key identity")
 require_text("CMakeLists.txt" "CopperfinPackageInstallRegistryKey.txt"
@@ -137,7 +148,7 @@ endif()
 require_text("${workflow}" "name: Exercise Windows installer lifecycle" "hosted lifecycle step")
 require_text("${workflow}" "workflow_dispatch:" "manual exact-head validation trigger")
 require_text("${workflow}" "copperfin-*-Windows.exe" "exact NSIS artifact selection")
-require_text("${workflow}" "-InstallerPath $installer[0].FullName" "selected-installer binding")
+require_text("${workflow}" "'-InstallerPath', $installer[0].FullName," "selected-installer binding")
 require_text("${workflow}" "copperfin-installer-lifecycle-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
     "run-scoped installation root")
 require_text("${workflow}" "artifacts/windows-installer-lifecycle/windows-installer-lifecycle.json"

@@ -303,7 +303,7 @@ def validate_schema_instance(instance: object, schema: object, location: str = "
             raise AssemblyError(f"manifest integer at {location} is below its minimum")
 
 
-def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) -> None:
+def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) -> dict:
     try:
         evidence = json.loads(path.read_text(encoding="utf-8-sig"))
     except (OSError, UnicodeError, json.JSONDecodeError) as error:
@@ -312,6 +312,7 @@ def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) ->
         "schema_version",
         "kind",
         "installer_sha256",
+        "package_version",
         "install_root",
         "fresh_install",
         "installed_tree_contract",
@@ -319,6 +320,9 @@ def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) ->
         "installed_cli_smoke",
         "same_version_maintenance_reinstall",
         "upgrade_from_previous_version",
+        "prior_installer_sha256",
+        "prior_package_version",
+        "stale_prior_uninstall_registration_after_upgrade_count",
         "silent_uninstall",
         "install_root_residue",
         "uninstall_registration_residue",
@@ -342,8 +346,10 @@ def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) ->
         evidence["schema_version"] != 1
         or evidence["kind"] != "copperfin-windows-installer-lifecycle-result"
         or any(evidence[field] != "PASS" for field in expected_pass_fields)
-        or evidence["upgrade_from_previous_version"] != "NOT_RUN"
+        or evidence["upgrade_from_previous_version"] not in ("NOT_RUN", "PASS")
         or evidence["installer_sha256"] != sha256(installer)
+        or not isinstance(evidence["package_version"], str)
+        or not evidence["package_version"]
         or evidence["uninstall_registration_count_after_install"] != 1
         or not isinstance(evidence["installed_file_count"], int)
         or isinstance(evidence["installed_file_count"], bool)
@@ -354,6 +360,28 @@ def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) ->
         or "copperfin_inspect" not in evidence["installed_cli_stdout"]
     ):
         raise AssemblyError("Windows installer lifecycle evidence does not prove the required bounded lifecycle")
+    prior_version_fields = (
+        "prior_installer_sha256",
+        "prior_package_version",
+        "stale_prior_uninstall_registration_after_upgrade_count",
+    )
+    if evidence["upgrade_from_previous_version"] == "NOT_RUN":
+        if any(evidence[field] is not None for field in prior_version_fields):
+            raise AssemblyError(
+                "Windows installer lifecycle evidence populated prior-version fields without running the upgrade")
+    elif (
+        not isinstance(evidence["prior_installer_sha256"], str)
+        or not evidence["prior_installer_sha256"]
+        or not isinstance(evidence["prior_package_version"], str)
+        or not evidence["prior_package_version"]
+        or evidence["prior_package_version"] == evidence["package_version"]
+        or not isinstance(evidence["stale_prior_uninstall_registration_after_upgrade_count"], int)
+        or isinstance(evidence["stale_prior_uninstall_registration_after_upgrade_count"], bool)
+        or evidence["stale_prior_uninstall_registration_after_upgrade_count"] < 0
+    ):
+        raise AssemblyError(
+            "Windows installer lifecycle evidence's upgrade result is not backed by valid prior-version fields")
+    return evidence
 
 
 def require_windows_vsix_lifecycle_evidence(path: Path, vsix: Path) -> None:
@@ -467,7 +495,7 @@ def assemble(args: argparse.Namespace) -> Path:
         "windows-installer-lifecycle.json",
         "Windows installer lifecycle evidence",
     )
-    require_windows_installer_lifecycle_evidence(windows_lifecycle, windows_installer)
+    windows_lifecycle_evidence = require_windows_installer_lifecycle_evidence(windows_lifecycle, windows_installer)
     copy_verified(
         windows_lifecycle,
         output_root / "evidence/windows-installer-lifecycle.json",
@@ -560,7 +588,12 @@ def assemble(args: argparse.Namespace) -> Path:
                 "windows_fresh_install": "PASS",
                 "windows_installed_cli_smoke": "PASS",
                 "windows_same_version_maintenance_reinstall": "PASS",
-                "windows_upgrade_from_previous_version": "NOT_RUN",
+                # #6497: reflects the actual, evidence-backed result instead
+                # of a hardcoded claim -- NOT_RUN when no prior installer
+                # was tested, PASS once a real upgrade was exercised and
+                # verified (require_windows_installer_lifecycle_evidence
+                # above already rejected any other/inconsistent value).
+                "windows_upgrade_from_previous_version": windows_lifecycle_evidence["upgrade_from_previous_version"],
                 "windows_silent_uninstall": "PASS",
                 "windows_residue_checks": "PASS",
                 "macos_productbuild": "NOT_RUN",
@@ -652,6 +685,7 @@ def self_test() -> None:
             "schema_version": 1,
             "kind": "copperfin-windows-installer-lifecycle-result",
             "installer_sha256": sha256(windows_installer_fixture),
+            "package_version": "0.1.0",
             "install_root": "C:\\hosted-runner\\copperfin-lifecycle",
             "fresh_install": "PASS",
             "installed_tree_contract": "PASS",
@@ -659,6 +693,9 @@ def self_test() -> None:
             "installed_cli_smoke": "PASS",
             "same_version_maintenance_reinstall": "PASS",
             "upgrade_from_previous_version": "NOT_RUN",
+            "prior_installer_sha256": None,
+            "prior_package_version": None,
+            "stale_prior_uninstall_registration_after_upgrade_count": None,
             "silent_uninstall": "PASS",
             "install_root_residue": "PASS",
             "uninstall_registration_residue": "PASS",
@@ -878,11 +915,47 @@ def self_test() -> None:
             ("false previous-version upgrade", "upgrade_from_previous_version", "PASS"),
             ("wrong installer digest", "installer_sha256", "0" * 64),
             ("missing installed file inventory", "installed_file_count", 0),
+            ("prior fields populated without running the upgrade", "prior_installer_sha256", "a" * 64),
         )
         for description, field, replacement in lifecycle_mutations:
             mutated = dict(lifecycle)
             mutated[field] = replacement
             mutation_path = root / f"bad-lifecycle-{field}.json"
+            mutation_path.write_text(json.dumps(mutated) + "\n", encoding="utf-8")
+            try:
+                require_windows_installer_lifecycle_evidence(
+                    mutation_path,
+                    bundle / "installers/windows/copperfin-0.1.0-Windows.exe",
+                )
+            except AssemblyError:
+                pass
+            else:
+                raise AssemblyError(f"self-test accepted {description}")
+
+        # #6497 review: prove the schema actually accepts a genuine,
+        # internally-consistent upgrade-tested evidence file (not just that
+        # it rejects malformed ones), then prove each way a tested-upgrade
+        # evidence file could be internally inconsistent is still rejected.
+        valid_upgrade_lifecycle = dict(lifecycle)
+        valid_upgrade_lifecycle["upgrade_from_previous_version"] = "PASS"
+        valid_upgrade_lifecycle["prior_installer_sha256"] = "a" * 64
+        valid_upgrade_lifecycle["prior_package_version"] = "0.0.1"
+        valid_upgrade_lifecycle["stale_prior_uninstall_registration_after_upgrade_count"] = 1
+        valid_upgrade_path = root / "good-lifecycle-upgrade.json"
+        valid_upgrade_path.write_text(json.dumps(valid_upgrade_lifecycle) + "\n", encoding="utf-8")
+        require_windows_installer_lifecycle_evidence(
+            valid_upgrade_path,
+            bundle / "installers/windows/copperfin-0.1.0-Windows.exe",
+        )
+        invalid_upgrade_mutations = (
+            ("prior version equal to current version", "prior_package_version", "0.1.0"),
+            ("missing prior installer digest", "prior_installer_sha256", None),
+            ("negative stale registration count", "stale_prior_uninstall_registration_after_upgrade_count", -1),
+        )
+        for description, field, replacement in invalid_upgrade_mutations:
+            mutated = dict(valid_upgrade_lifecycle)
+            mutated[field] = replacement
+            mutation_path = root / f"bad-upgrade-lifecycle-{field}.json"
             mutation_path.write_text(json.dumps(mutated) + "\n", encoding="utf-8")
             try:
                 require_windows_installer_lifecycle_evidence(
