@@ -1171,6 +1171,13 @@ void test_remote_append_from_for_follows_vfp9_semantics() {
             "FUNCTION NotLogical\n"
             "    nCalls = nCalls + 1\n"
             "    RETURN 1\n"
+            "ENDFUNC\n"
+            "FUNCTION ReplaceThenReject\n"
+            "    nCalls = nCalls + 1\n"
+            "    IF nCalls > 1\n"
+            "        REPLACE NAME WITH 'CHANGED' IN sqlcust\n"
+            "    ENDIF\n"
+            "    RETURN nCalls = 1\n"
             "ENDFUNC\n");
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
             make_runtime_session_options(main_path.string(), temp_root.string()));
@@ -1209,6 +1216,16 @@ void test_remote_append_from_for_follows_vfp9_semantics() {
         expect(global_text(state, "nerr") == "1127" && global_text(state, "ncalls") == "1" && global_text(state, "nrows") == "3",
             "#6551 remote non-logical FOR: error 1127 after one validation call, with nothing appended, got error " +
                 global_text(state, "nerr") + " / calls " + global_text(state, "ncalls") + " / rows " + global_text(state, "nrows"));
+    }
+
+    // #6553 review: a FOR callback that REPLACEs the provisional row and then
+    // rejects it must still have that row removed.
+    {
+        const auto state = run_case("replace", "APPEND FROM '" + csv_path.string() + "' TYPE CSV FOR ReplaceThenReject()");
+        expect(state.completed, "#6553 remote replace: script should complete: " + state.message);
+        expect(global_text(state, "nrows") == "3" && global_text(state, "nerr") == "0",
+            "#6553 remote replace: a REPLACEd-then-rejected provisional row should be removed, got rows " +
+                global_text(state, "nrows") + " / error " + global_text(state, "nerr"));
     }
 
     fs::remove_all(temp_root, ignored);

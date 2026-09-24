@@ -1114,6 +1114,7 @@
   "Runtime.Prg.Dispatch.Error.MenuNotDefined": "Menu is not defined: {menuName}",
   "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound": "{command} target work area not found",
   "Runtime.Prg.Dispatch.Error.ForClauseRequiresLogicalExpression": "You must use a logical expression with a FOR or WHILE clause.",
+  "Runtime.Prg.Dispatch.Error.AppendFromTargetReshapedDuringFor": "APPEND FROM target was modified by the FOR clause in a way that prevents removing the rejected row",
   "Runtime.Prg.Dispatch.Error.ContinueRequiresActiveLocate": "CONTINUE requires an active LOCATE command",
   "Runtime.Prg.Dispatch.Error.CopyFileFailed": "COPY FILE failed: {errorMessage}",
   "Runtime.Prg.Dispatch.Error.CopyFileVerifiedBytesUnavailable": "COPY FILE source is not an admitted verified file: {path}",

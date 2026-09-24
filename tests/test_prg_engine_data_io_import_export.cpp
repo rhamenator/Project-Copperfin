@@ -3425,6 +3425,7 @@ void test_append_from_for_follows_vfp9_semantics_on_local_targets() {
             "CATCH TO oErr\n"
             "    nErr = oErr.ErrorNo\n"
             "ENDTRY\n"
+            "SET DATASESSION TO 1\n"
             "cAliasAfter = ALIAS()\n"
             "lSourceOpen = USED('src')\n"
             "nRows = RECCOUNT('Dst')\n"
@@ -3439,6 +3440,29 @@ void test_append_from_for_follows_vfp9_semantics_on_local_targets() {
             "FUNCTION NotLogical\n"
             "    nCalls = nCalls + 1\n"
             "    RETURN 'yes'\n"
+            "ENDFUNC\n"
+            "FUNCTION SwitchLater\n"
+            "    nCalls = nCalls + 1\n"
+            "    IF nCalls = 2\n"
+            "        SET DATASESSION TO 2\n"
+            "    ENDIF\n"
+            "    RETURN .T.\n"
+            "ENDFUNC\n"
+            "FUNCTION AppendThenReject\n"
+            "    nCalls = nCalls + 1\n"
+            "    IF nCalls = 2\n"
+            "        APPEND BLANK IN Dst\n"
+            "    ENDIF\n"
+            "    RETURN .F.\n"
+            "ENDFUNC\n"
+            "FUNCTION PackTarget\n"
+            "    nCalls = nCalls + 1\n"
+            "    IF nCalls = 2\n"
+            "        GO 1\n"
+            "        DELETE\n"
+            "        PACK\n"
+            "    ENDIF\n"
+            "    RETURN .F.\n"
             "ENDFUNC\n");
         auto session = copperfin::runtime::PrgRuntimeSession::create(
             make_runtime_session_options(main_path.string(), temp_root.string()));
@@ -3474,6 +3498,36 @@ void test_append_from_for_follows_vfp9_semantics_on_local_targets() {
         expect(global_text(state, "nerr") == "1127" && global_text(state, "ncalls") == "1" && global_text(state, "nrows") == "1",
             "#6551 non-logical FOR: error 1127 after one validation call, with nothing appended, got error " +
                 global_text(state, "nerr") + " / calls " + global_text(state, "ncalls") + " / rows " + global_text(state, "nrows"));
+    }
+
+    // #6553 review: a per-row FOR that switches DATASESSION stops the command.
+    {
+        const auto state = run_case("session", "APPEND FROM '" + (temp_root / "src.csv").string() + "' TYPE CSV FOR SwitchLater()");
+        expect(state.completed, "#6553 local session switch: script should complete: " + state.message);
+        expect(global_text(state, "nerr") != "0" && global_text(state, "nrows") == "1",
+            "#6553 local session switch: a per-row DATASESSION switch should fail catchably and leave the target unchanged, got error " +
+                global_text(state, "nerr") + " / rows " + global_text(state, "nrows"));
+    }
+    // #6553 review: a FOR callback that DELETE+PACKs an earlier target row and
+    // rejects the candidate must still have the (shifted) candidate removed.
+    // As in VFP9, the callback's own PACK stands, and every row is rejected,
+    // so the table ends empty.
+    {
+        const auto state = run_case("pack", "APPEND FROM '" + (temp_root / "src.csv").string() + "' TYPE CSV FOR PackTarget()");
+        expect(state.completed, "#6553 local pack: script should complete: " + state.message);
+        expect(global_text(state, "nerr") == "0" && global_text(state, "nrows") == "0",
+            "#6553 local pack: the shifted rejected candidate should be removed after the callback's PACK, got error " +
+                global_text(state, "nerr") + " / rows " + global_text(state, "nrows"));
+    }
+
+    // #6553 review: if the callback appends after the candidate and then
+    // rejects it, the candidate can't be identified without guessing, so the
+    // command fails catchably with the dedicated message.
+    {
+        const auto state = run_case("append_after", "APPEND FROM '" + (temp_root / "src.csv").string() + "' TYPE CSV FOR AppendThenReject()");
+        expect(state.completed, "#6553 local append-after: script should complete: " + state.message);
+        expect(global_text(state, "nerr") != "0",
+            "#6553 local append-after: an unresolvable reshape should fail catchably, got error " + global_text(state, "nerr"));
     }
 
     fs::remove_all(temp_root, ignored);
