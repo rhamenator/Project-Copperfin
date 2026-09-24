@@ -470,6 +470,194 @@ void test_native_window_close_query_unload_nodefault_vetoes_release()
 
 } // namespace
 
+// #6192: QueryUnload that releases its own form used to leave QUIT and
+// WM_CLOSE dispatch reading the erased object (and WM_CLOSE releasing it a
+// second time). A self-released form no longer takes part in shutdown: no
+// veto, no second release, and Destroy/Unload run exactly once.
+void test_native_query_unload_self_release_is_memory_safe()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_queryunload_self_release_6192";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::string form_class =
+        "DEFINE CLASS SelfReleaseForm AS Form\n"
+        "    PROCEDURE QueryUnload\n"
+        "        cEvents = cEvents + 'query;'\n"
+        "        THIS.Release()\n"
+        "        CLEAR EVENTS\n"
+        "        RETURN .F.\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Destroy\n"
+        "        cEvents = cEvents + 'destroy;'\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Unload\n"
+        "        cEvents = cEvents + 'unload;'\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n";
+
+    // QUIT path (the issue's repro).
+    {
+        const fs::path main_path = temp_root / "quit_self_release.prg";
+        write_text(main_path,
+                   "PUBLIC cEvents\n"
+                   "cEvents = ''\n"
+                   "oForm = CREATEOBJECT('SelfReleaseForm')\n"
+                   "QUIT\n"
+                   "RETURN\n" +
+                       form_class);
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6192 QUIT: script should complete: " + state.message);
+        const auto sequence = state.globals.find("cevents");
+        expect(sequence != state.globals.end() && format_value(sequence->second) == "query;destroy;unload;",
+               "#6192 QUIT: a self-released form should run Destroy/Unload exactly once, got: " +
+                   (sequence == state.globals.end() ? std::string("<missing>") : format_value(sequence->second)));
+        expect(!has_runtime_event(state.events, "prg.object.queryunload_veto", "SelfReleaseForm"),
+               "#6192 QUIT: a form that released itself cannot veto shutdown");
+        expect(has_runtime_event(state.events, "prg.object.queryunload_released", "SelfReleaseForm"),
+               "#6192 QUIT: shutdown should record that QueryUnload released its form");
+    }
+
+    // WM_CLOSE path.
+    {
+        const fs::path main_path = temp_root / "wm_close_self_release.prg";
+        write_text(main_path,
+                   "PUBLIC cEvents\n"
+                   "cEvents = ''\n"
+                   "oForm = CREATEOBJECT('SelfReleaseForm')\n"
+                   "nHwnd = oForm.hWnd\n"
+                   "READ EVENTS\n"
+                   "RETURN\n" +
+                       form_class);
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop,
+               "#6192 WM_CLOSE: script should enter its event loop");
+        const auto hwnd = state.globals.find("nhwnd");
+        expect(hwnd != state.globals.end(), "#6192 WM_CLOSE: script should export the form hWnd");
+        if (hwnd != state.globals.end())
+        {
+            const auto close = session.dispatch_windows_message(
+                static_cast<std::intptr_t>(std::stoll(format_value(hwnd->second))),
+                0x0010U);
+            expect(close.has_value(), "#6192 WM_CLOSE: the message should be handled");
+            state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(state.completed, "#6192 WM_CLOSE: script should complete: " + state.message);
+            const auto sequence = state.globals.find("cevents");
+            expect(sequence != state.globals.end() && format_value(sequence->second) == "query;destroy;unload;",
+                   "#6192 WM_CLOSE: a self-released form must not be released a second time, got: " +
+                       (sequence == state.globals.end() ? std::string("<missing>") : format_value(sequence->second)));
+            expect(!has_runtime_event(state.events, "prg.object.window_close_veto", "SelfReleaseForm"),
+                   "#6192 WM_CLOSE: a form that released itself cannot veto the close");
+        }
+    }
+
+    // #6545 review: cross-release. In child-first order, frmA's QueryUnload
+    // releases its sibling frmB before frmB is visited; frmB must not get a
+    // QueryUnload, a veto, or a second release, and every Destroy/Unload
+    // runs exactly once.
+    const std::string cross_classes =
+        "DEFINE CLASS FormA AS Form\n"
+        "    PROCEDURE QueryUnload\n"
+        "        cEvents = cEvents + 'a-query;'\n"
+        "        THISFORMSET.frmB.Release()\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Destroy\n"
+        "        cEvents = cEvents + 'a-destroy;'\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Unload\n"
+        "        cEvents = cEvents + 'a-unload;'\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n"
+        "DEFINE CLASS FormB AS Form\n"
+        "    PROCEDURE QueryUnload\n"
+        "        cEvents = cEvents + 'b-query;'\n"
+        "        NODEFAULT\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Destroy\n"
+        "        cEvents = cEvents + 'b-destroy;'\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Unload\n"
+        "        cEvents = cEvents + 'b-unload;'\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n"
+        "DEFINE CLASS CrossSet AS FormSet\n"
+        "    ADD OBJECT frmA AS FormA\n"
+        "    ADD OBJECT frmB AS FormB\n"
+        "    PROCEDURE QueryUnload\n"
+        "        cEvents = cEvents + 'set-query;'\n"
+        "        CLEAR EVENTS\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Destroy\n"
+        "        cEvents = cEvents + 'set-destroy;'\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Unload\n"
+        "        cEvents = cEvents + 'set-unload;'\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n";
+    const std::string expected_cross_sequence =
+        "a-query;b-destroy;b-unload;set-query;a-destroy;a-unload;set-destroy;set-unload;";
+    {
+        const fs::path main_path = temp_root / "quit_cross_release.prg";
+        write_text(main_path,
+                   "PUBLIC cEvents\n"
+                   "cEvents = ''\n"
+                   "oSet = CREATEOBJECT('CrossSet')\n"
+                   "QUIT\n"
+                   "RETURN\n" +
+                       cross_classes);
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6192 QUIT cross-release: script should complete: " + state.message);
+        const auto sequence = state.globals.find("cevents");
+        expect(sequence != state.globals.end() && format_value(sequence->second) == expected_cross_sequence,
+               "#6192 QUIT cross-release: unexpected callback sequence: " +
+                   (sequence == state.globals.end() ? std::string("<missing>") : format_value(sequence->second)));
+        expect(!has_runtime_event(state.events, "prg.object.queryunload_veto", "FormB"),
+               "#6192 QUIT cross-release: an erased sibling cannot veto shutdown");
+    }
+    {
+        const fs::path main_path = temp_root / "wm_close_cross_release.prg";
+        write_text(main_path,
+                   "PUBLIC cEvents\n"
+                   "cEvents = ''\n"
+                   "oSet = CREATEOBJECT('CrossSet')\n"
+                   "nHwnd = oSet.hWnd\n"
+                   "READ EVENTS\n"
+                   "RETURN\n" +
+                       cross_classes);
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        const auto hwnd = state.globals.find("nhwnd");
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop && hwnd != state.globals.end(),
+               "#6192 WM_CLOSE cross-release: script should enter its event loop with a FormSet hWnd");
+        if (hwnd != state.globals.end())
+        {
+            const auto close = session.dispatch_windows_message(
+                static_cast<std::intptr_t>(std::stoll(format_value(hwnd->second))),
+                0x0010U);
+            expect(close.has_value(), "#6192 WM_CLOSE cross-release: the message should be handled");
+            state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(state.completed, "#6192 WM_CLOSE cross-release: script should complete: " + state.message);
+            const auto sequence = state.globals.find("cevents");
+            expect(sequence != state.globals.end() && format_value(sequence->second) == expected_cross_sequence,
+                   "#6192 WM_CLOSE cross-release: unexpected callback sequence: " +
+                       (sequence == state.globals.end() ? std::string("<missing>") : format_value(sequence->second)));
+            expect(!has_runtime_event(state.events, "prg.object.window_close_veto", "CrossSet"),
+                   "#6192 WM_CLOSE cross-release: an erased sibling cannot veto the close");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 int main()
 {
     test_native_show_hide_refresh_events();
@@ -477,6 +665,7 @@ int main()
     test_native_query_unload_nodefault_vetoes_quit();
     test_native_window_close_dispatches_query_unload_before_destroy();
     test_native_window_close_query_unload_nodefault_vetoes_release();
+    test_native_query_unload_self_release_is_memory_safe();
     if (test_failures() != 0)
     {
         std::cerr << test_failures() << " test(s) failed.\n";

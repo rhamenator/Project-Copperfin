@@ -230,6 +230,11 @@
                 events.push_back({.category = "prg.object.queryunload",
                                   .detail = query_unload_method_name,
                                   .location = location});
+                // #6192: QueryUnload can release its own form (THIS.Release()),
+                // erasing `found`. Keep only the handle and prog_id across the
+                // call; a form that released itself no longer takes part in
+                // shutdown, so its return value cannot veto it.
+                const std::string query_unload_prog_id = found->second.prog_id;
                 last_popped_frame_requested_nodefault = false;
                 bool query_unload_requested_nodefault = false;
                 const auto query_unload_result = invoke_native_object_method_if_present(
@@ -240,6 +245,13 @@
                     {},
                     &query_unload_requested_nodefault);
                 (void)consume_last_popped_frame_requested_nodefault();
+                if (ole_objects.find(handle) == ole_objects.end())
+                {
+                    events.push_back({.category = "prg.object.queryunload_released",
+                                      .detail = query_unload_prog_id,
+                                      .location = location});
+                    continue;
+                }
                 const bool query_unload_rejected =
                     query_unload_result.has_value() &&
                     query_unload_result->kind != PrgValueKind::empty &&
@@ -247,7 +259,7 @@
                 if (query_unload_rejected || query_unload_requested_nodefault)
                 {
                     events.push_back({.category = "prg.object.queryunload_veto",
-                                      .detail = found->second.prog_id,
+                                      .detail = query_unload_prog_id,
                                       .location = location});
                     return false;
                 }

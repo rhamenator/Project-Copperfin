@@ -43,10 +43,13 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-#6415 (property-read handlers, PR #6538) and #6420 (method before-handlers,
-current PR) are fixed: the source handle (never reused) is re-checked in
-`ole_objects` after every user callback, raising catchable 1924 on loss.
-Cluster 1 remaining: #6192 (QueryUnload self-release, overlaps cluster 2).
+Cluster 1 is complete: #6415 (PR #6538), #6420 (PR #6540), and #6192
+(QueryUnload self-release, current PR) fixed the object/event-lifetime
+cases by re-checking the never-reused handle in `ole_objects` after every
+user callback. Still open from cluster 1's notes: the disclosed
+`aggregate_function_value()` bare-call / `GROUP BY` gap. Next: pick from
+`docs/81`'s cluster order (cluster 2, session/task shutdown cleanup, is
+next and overlaps #6192) using the issue dependency graph.
 
 ## Workspace preservation
 

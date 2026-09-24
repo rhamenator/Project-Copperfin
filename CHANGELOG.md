@@ -1,3 +1,9 @@
+- 2026-09-24: A form whose `QueryUnload` releases itself during `QUIT` or
+  `WM_CLOSE` no longer leaves shutdown reading (or, for `WM_CLOSE`,
+  releasing a second time) the erased form (#6192). A self-released form
+  can't veto the shutdown, and its `Destroy`/`Unload` run exactly once.
+  This completes cluster 1 in `docs/81`.
+  `RQ-CF-PRG-QUERYUNLOAD-SELF-RELEASE-001`.
 - 2026-09-24: A `BINDEVENT` before-handler that releases the source object
   no longer leaves method dispatch calling the source method through freed
   state (#6420). The call raises catchable error 1924 without running the

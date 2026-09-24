@@ -9530,18 +9530,25 @@ namespace copperfin::runtime
                 const SourceLocation close_location = current_statement() == nullptr
                     ? SourceLocation{}
                     : current_statement()->location;
+                // #6192: QueryUnload can release the target (or its forms),
+                // erasing `target_found`; re-find it by handle afterwards and
+                // never release it a second time.
+                const std::string target_prog_id = target_found->second.prog_id;
                 if (!dispatch_query_unload_for_objects(
                         collect_native_shutdown_order_for_window(*window_close_target),
                         close_location))
                 {
                     events.push_back({.category = "prg.object.window_close_veto",
-                                      .detail = target_found->second.prog_id,
+                                      .detail = target_prog_id,
                                       .location = close_location});
                     return static_cast<std::intptr_t>(0);
                 }
 
-                const std::string target_prog_id = target_found->second.prog_id;
-                (void)release_native_object(target_found->second, "WM_CLOSE");
+                target_found = ole_objects.find(*window_close_target);
+                if (target_found != ole_objects.end())
+                {
+                    (void)release_native_object(target_found->second, "WM_CLOSE");
+                }
                 events.push_back({.category = "prg.object.window_close",
                                   .detail = target_prog_id,
                                   .location = close_location});
