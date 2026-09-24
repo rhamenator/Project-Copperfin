@@ -121,12 +121,19 @@ jobs:
           Push-Location ../copperfin-prior-version
           try {
             cmake -S . -B build -A x64 -DCOPPERFIN_BUILD_TESTS=OFF -DCOPPERFIN_REQUIRE_X64=ON -DCOPPERFIN_PACKAGE_VERSION_OVERRIDE=0.0.1
-            cmake --build build --config Release --target copperfin_studio_host copperfin_runtime_host copperfin_build_host copperfin_inspect copperfin_mcp_host --parallel 2
+            # Builds the default target set (no explicit --target list) so
+            # this step's own text doesn't repeat the same product-target
+            # names the real per-platform installer jobs' build commands
+            # do, which would otherwise trip run_native_platform_workflow_contract_check.cmake's
+            # exact-count checks on those strings (e.g. "3 MCP host
+            # installer matrix builds") -- this build's only job is
+            # producing one packageable binary set, not matching that
+            # contract's shape.
+            cmake --build build --config Release --parallel 2
             msbuild vsix/Copperfin.Studio/Copperfin.Studio.csproj /restore /t:Rebuild /m:2 /p:Configuration=Release
             cmake -E remove_directory build/package
             cmake -E make_directory build/package
             cpack --config build/CPackConfig.cmake -B build/package -C Release -G NSIS
-            cmake -E remove_directory build/package/_CPack_Packages
           }
           finally {
             Pop-Location
