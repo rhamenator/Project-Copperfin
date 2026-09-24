@@ -1457,6 +1457,7 @@
   "Runtime.Prg.Dispatch.Error.ReturnToCrossesExpressionInvocationBoundary": "{command} nao pode desfazer alem de uma chamada de rotina feita a partir de uma expressao ou retorno de chamada de evento",
   "Runtime.Prg.Dispatch.Error.MenuNotDefined": "O menu nao esta definido: {menuName}",
   "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound": "Area de trabalho de destino nao encontrada para {command}",
+  "Runtime.Prg.Dispatch.Error.ForClauseRequiresLogicalExpression": "Voce deve usar uma expressao logica com uma clausula FOR ou WHILE.",
   "Runtime.Prg.Dispatch.Error.ContinueRequiresActiveLocate": "CONTINUE requer um comando LOCATE ativo",
   "Runtime.Prg.Dispatch.Error.CopyFileFailed": "COPY FILE falhou: {errorMessage}",
   "Runtime.Prg.Dispatch.Error.CopyFileVerifiedBytesUnavailable": "A fonte de COPY FILE nao e um arquivo verificado admitido: {path}",

@@ -3388,4 +3388,95 @@ void test_append_from_array_macro_source_preserves_date_and_datetime_fields() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #6551: APPEND FROM ... FOR used to be ignored on local targets. VFP9
+// (probed on a real VFP 9.0 SP2 install) evaluates FOR once up front on the
+// target's current record (error 1127 if not logical), then per row: DBF
+// sources with the source selected, text sources on the row provisionally
+// appended to the target.
+void test_append_from_for_follows_vfp9_semantics_on_local_targets() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_append_from_for_6551_local";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "src.dbf", {"ALPHA", "BRAVO", "CHARLIE"});
+    write_text(temp_root / "src.csv", "NAME\nALPHA\nBRAVO\nCHARLIE\n");
+    const auto global_text = [](const auto &state, const std::string &name) -> std::string {
+        const auto found = state.globals.find(name);
+        return found == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(found->second);
+    };
+    const auto lower = [](std::string text) {
+        std::transform(text.begin(), text.end(), text.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        return text;
+    };
+    const auto run_case = [&](const std::string &label, const std::string &append_statement) {
+        const fs::path dst = temp_root / (label + "_dst.dbf");
+        write_simple_dbf(dst, {"ONE"});
+        const fs::path main_path = temp_root / (label + ".prg");
+        write_text(
+            main_path,
+            "cLog = ''\n"
+            "nCalls = 0\n"
+            "nErr = 0\n"
+            "USE '" + dst.string() + "' ALIAS Dst\n"
+            "TRY\n"
+            "    " + append_statement + "\n"
+            "CATCH TO oErr\n"
+            "    nErr = oErr.ErrorNo\n"
+            "ENDTRY\n"
+            "cAliasAfter = ALIAS()\n"
+            "lSourceOpen = USED('src')\n"
+            "nRows = RECCOUNT('Dst')\n"
+            "GO BOTTOM IN Dst\n"
+            "cBottom = ALLTRIM(Dst.NAME)\n"
+            "RETURN\n"
+            "FUNCTION LogRow\n"
+            "    nCalls = nCalls + 1\n"
+            "    cLog = cLog + ALIAS() + ':' + TRANSFORM(RECNO()) + '/' + TRANSFORM(RECCOUNT()) + ':' + ALLTRIM(NAME) + ';'\n"
+            "    RETURN .T.\n"
+            "ENDFUNC\n"
+            "FUNCTION NotLogical\n"
+            "    nCalls = nCalls + 1\n"
+            "    RETURN 'yes'\n"
+            "ENDFUNC\n");
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    };
+
+    {
+        const auto state = run_case("dbf", "APPEND FROM '" + (temp_root / "src.dbf").string() + "' FOR LogRow() AND NAME = 'BRAVO'");
+        expect(state.completed, "#6551 local DBF: script should complete: " + state.message);
+        expect(lower(global_text(state, "clog")) == "dst:1/1:one;src:1/3:alpha;src:2/3:bravo;src:3/3:charlie;",
+            "#6551 local DBF: FOR should validate once on the target, then run per source row with the source selected, got: " +
+                global_text(state, "clog"));
+        expect(global_text(state, "nrows") == "2" && global_text(state, "cbottom") == "BRAVO",
+            "#6551 local DBF: only the matching source row should be appended, got rows " + global_text(state, "nrows") +
+                " bottom " + global_text(state, "cbottom"));
+        expect(lower(global_text(state, "caliasafter")) == "dst" && global_text(state, "lsourceopen") == "false",
+            "#6551 local DBF: the target stays selected and the temporary source work area is closed, got alias " +
+                global_text(state, "caliasafter") + " / source open " + global_text(state, "lsourceopen"));
+    }
+    {
+        const auto state = run_case("csv", "APPEND FROM '" + (temp_root / "src.csv").string() + "' TYPE CSV FOR LogRow() AND NAME = 'CHARLIE'");
+        expect(state.completed, "#6551 local CSV: script should complete: " + state.message);
+        expect(lower(global_text(state, "clog")) == "dst:1/1:one;dst:2/2:alpha;dst:2/2:bravo;dst:2/2:charlie;",
+            "#6551 local CSV: FOR should validate once, then run on each row provisionally appended to the target, got: " +
+                global_text(state, "clog"));
+        expect(global_text(state, "nrows") == "2" && global_text(state, "cbottom") == "CHARLIE",
+            "#6551 local CSV: rejected provisional rows should be removed again, got rows " + global_text(state, "nrows") +
+                " bottom " + global_text(state, "cbottom"));
+    }
+    {
+        const auto state = run_case("notlogical", "APPEND FROM '" + (temp_root / "src.dbf").string() + "' FOR NotLogical()");
+        expect(state.completed, "#6551 non-logical FOR: script should complete: " + state.message);
+        expect(global_text(state, "nerr") == "1127" && global_text(state, "ncalls") == "1" && global_text(state, "nrows") == "1",
+            "#6551 non-logical FOR: error 1127 after one validation call, with nothing appended, got error " +
+                global_text(state, "nerr") + " / calls " + global_text(state, "ncalls") + " / rows " + global_text(state, "nrows"));
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace cf_test_prg_engine_data_io

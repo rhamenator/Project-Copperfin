@@ -1076,7 +1076,10 @@ void test_remote_append_from_for_predicate_packing_target_keeps_rows_consistent(
         const auto found = state.globals.find(name);
         return found == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(found->second);
     };
-    expect(global_text("ncalls") == "2", "#6322 pack: predicate should run once per source row, got: " + global_text("ncalls"));
+    // #6551: VFP9 evaluates FOR once up front (validation) plus once per
+    // source row, so two source rows mean three calls.
+    expect(global_text("ncalls") == "3",
+        "#6322/#6551 pack: predicate should run once up front and once per source row, got: " + global_text("ncalls"));
     expect(global_text("ntargetrows") == "3",
         "#6322 pack: 3 seeded - 1 packed + 1 accepted candidate should leave 3 rows, got: " + global_text("ntargetrows"));
     expect(global_text("nbottomid") == "802",
@@ -1103,6 +1106,113 @@ void test_remote_append_from_for_predicate_closing_target_fails_catchably() {
         RemoteAppendSource::json, true, close, "json_macro", "&cPred");
 }
 
+
+// #6551: remote/SQL-result targets follow the same VFP9 FOR semantics as
+// local ones: one up-front validation call on the target's current record,
+// then DBF sources with the source selected and text sources on the row
+// provisionally appended to the target.
+void test_remote_append_from_for_follows_vfp9_semantics() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_append_from_6551";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path dbf_path = temp_root / "rows.dbf";
+    const auto source_write = copperfin::vfp::create_dbf_table_file(
+        dbf_path.string(),
+        {
+            copperfin::vfp::DbfFieldDescriptor{.name = "ID", .type = 'N', .length = 6U, .decimal_count = 0U},
+            copperfin::vfp::DbfFieldDescriptor{.name = "NAME", .type = 'C', .length = 20U, .decimal_count = 0U},
+            copperfin::vfp::DbfFieldDescriptor{.name = "AMOUNT", .type = 'N', .length = 10U, .decimal_count = 2U},
+        },
+        {
+            {"801", "JULIET", "1"},
+            {"802", "KILO", "2"},
+        });
+    expect(source_write.ok, "#6551 remote: source DBF fixture should be created");
+    const fs::path csv_path = temp_root / "rows.csv";
+    write_text(csv_path.string(), "ID,NAME,AMOUNT\n801,JULIET,1.00\n802,KILO,2.00\n");
+
+    const auto global_text = [](const auto &state, const std::string &name) -> std::string {
+        const auto found = state.globals.find(name);
+        return found == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(found->second);
+    };
+    const auto lower = [](std::string text) {
+        std::transform(text.begin(), text.end(), text.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        return text;
+    };
+    const auto run_case = [&](const std::string &label, const std::string &append_statement) {
+        const fs::path main_path = temp_root / (label + ".prg");
+        write_text(
+            main_path,
+            "cLog = ''\n"
+            "nCalls = 0\n"
+            "nErr = 0\n"
+            "nConn = SQLCONNECT('dsn=Northwind')\n"
+            "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+            "SELECT sqlcust\n"
+            "GO TOP\n"
+            "TRY\n"
+            "    " + append_statement + "\n"
+            "CATCH TO oErr\n"
+            "    nErr = oErr.ErrorNo\n"
+            "ENDTRY\n"
+            "cAliasAfter = ALIAS()\n"
+            "nRows = RECCOUNT('sqlcust')\n"
+            "GO BOTTOM IN sqlcust\n"
+            "nBottom = sqlcust.ID\n"
+            "RETURN\n"
+            "FUNCTION LogRow\n"
+            "    nCalls = nCalls + 1\n"
+            "    cLog = cLog + ALIAS() + ':' + TRANSFORM(RECNO()) + '/' + TRANSFORM(RECCOUNT()) + ':' + TRANSFORM(ID) + ';'\n"
+            "    RETURN .T.\n"
+            "ENDFUNC\n"
+            "FUNCTION NotLogical\n"
+            "    nCalls = nCalls + 1\n"
+            "    RETURN 1\n"
+            "ENDFUNC\n");
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    };
+
+    {
+        const auto state = run_case("dbf", "APPEND FROM '" + dbf_path.string() + "' FOR LogRow() AND ID = 802");
+        expect(state.completed, "#6551 remote DBF: script should complete: " + state.message);
+        const std::string log = lower(global_text(state, "clog"));
+        expect(log.rfind("sqlcust:1/3:", 0) == 0 &&
+                   log.find(";rows:1/2:801;rows:2/2:802;") != std::string::npos,
+            "#6551 remote DBF: FOR should validate on the target, then run per source row with the source selected, got: " +
+                global_text(state, "clog"));
+        expect(global_text(state, "nrows") == "4" && global_text(state, "nbottom") == "802",
+            "#6551 remote DBF: only the matching source row should be appended, got rows " + global_text(state, "nrows") +
+                " bottom " + global_text(state, "nbottom"));
+        expect(lower(global_text(state, "caliasafter")) == "sqlcust",
+            "#6551 remote DBF: the target stays selected, got " + global_text(state, "caliasafter"));
+    }
+    {
+        const auto state = run_case("csv", "APPEND FROM '" + csv_path.string() + "' TYPE CSV FOR LogRow() AND ID = 802");
+        expect(state.completed, "#6551 remote CSV: script should complete: " + state.message);
+        const std::string log = lower(global_text(state, "clog"));
+        expect(log.rfind("sqlcust:1/3:", 0) == 0 &&
+                   log.find(";sqlcust:4/4:801;sqlcust:4/4:802;") != std::string::npos,
+            "#6551 remote CSV: FOR should run on each row provisionally appended to the target, got: " +
+                global_text(state, "clog"));
+        expect(global_text(state, "nrows") == "4" && global_text(state, "nbottom") == "802",
+            "#6551 remote CSV: the rejected provisional row should be removed, got rows " + global_text(state, "nrows") +
+                " bottom " + global_text(state, "nbottom"));
+    }
+    {
+        const auto state = run_case("notlogical", "APPEND FROM '" + csv_path.string() + "' TYPE CSV FOR NotLogical()");
+        expect(state.completed, "#6551 remote non-logical FOR: script should complete: " + state.message);
+        expect(global_text(state, "nerr") == "1127" && global_text(state, "ncalls") == "1" && global_text(state, "nrows") == "3",
+            "#6551 remote non-logical FOR: error 1127 after one validation call, with nothing appended, got error " +
+                global_text(state, "nerr") + " / calls " + global_text(state, "ncalls") + " / rows " + global_text(state, "nrows"));
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
 
 }  // namespace copperfin::sql_cursor_mutation_tests
 

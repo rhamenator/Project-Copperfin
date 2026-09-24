@@ -65,6 +65,7 @@ int main() {
     test_copy_to_from_empty_table_produces_valid_empty_dbf();
     test_append_from_copies_records_into_current_table();
     test_append_from_honors_open_source_cursor_filter();
+    test_append_from_for_follows_vfp9_semantics_on_local_targets();
     test_append_from_source_filter_closing_destination_fails_catchably();
     test_append_from_source_filter_closing_source_fails_catchably();
     test_append_from_source_filter_switching_data_session_journals_to_origin_session();
