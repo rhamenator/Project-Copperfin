@@ -1162,6 +1162,21 @@
                    scan_expression_contains_user_routine(frame, filter_expression);
         }
 
+        // #6331: a SCAN predicate, filter, or body can close the scanned
+        // cursor and open another one that immediately reuses its work-area
+        // number, or switch DATASESSION. Resolving by work area alone would
+        // resume the loop on that unrelated cursor. Resolve by generation
+        // identity in the scan's own data session; a replacement or session
+        // switch is treated exactly like the cursor having been closed.
+        CursorState *resolve_scan_cursor(const CursorGenerationReference &reference)
+        {
+            if (current_data_session != reference.data_session)
+            {
+                return nullptr;
+            }
+            return resolve_cursor_generation_reference(reference);
+        }
+
         ExecutionOutcome continue_scan_loop(Frame &frame, const Statement &statement, bool jump_after_completion)
         {
             if (frame.scans.empty())
@@ -1183,7 +1198,7 @@
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
             }
-            CursorState *cursor = find_cursor_by_area(scan.work_area);
+            CursorState *cursor = resolve_scan_cursor(scan.cursor_reference);
             if (cursor == nullptr)
             {
                 frame.scans.pop_back();
@@ -1205,6 +1220,7 @@
                     scan_statement,
                     ScanSearchKind::continue_scan,
                     scan.work_area,
+                    scan.cursor_reference,
                     cursor->recno + 1U,
                     scan.scan_statement_index,
                     scan.endscan_statement_index,
@@ -1256,7 +1272,7 @@
             }
 
             const ScanExpressionContinuation continuation = *frame.scan_expression_continuation;
-            CursorState *cursor = find_cursor_by_area(continuation.work_area);
+            CursorState *cursor = resolve_scan_cursor(continuation.cursor_reference);
             if (cursor == nullptr)
             {
                 frame.scan_expression_continuation.reset();
@@ -1285,6 +1301,7 @@
                                        .case_stack_depth_at_entry = frame.cases.size(),
                                        .with_stack_depth_at_entry = frame.withs.size(),
                                        .work_area = continuation.work_area,
+                                       .cursor_reference = continuation.cursor_reference,
                                        .for_expression = continuation.statement.expression,
                                        .while_expression = continuation.statement.tertiary_expression,
                                        .iteration_count = 0});
@@ -1320,7 +1337,7 @@
             while (frame.scan_expression_continuation.has_value())
             {
                 ScanExpressionContinuation &continuation = *frame.scan_expression_continuation;
-                CursorState *cursor = find_cursor_by_area(continuation.work_area);
+                CursorState *cursor = resolve_scan_cursor(continuation.cursor_reference);
                 if (cursor == nullptr)
                 {
                     return complete_scan_expression_search(frame, false);
@@ -1448,6 +1465,7 @@
             const Statement &statement,
             ScanSearchKind kind,
             int work_area,
+            const CursorGenerationReference &cursor_reference,
             std::size_t start_recno,
             std::size_t scan_statement_index,
             std::size_t endscan_statement_index,
@@ -1459,6 +1477,7 @@
                 .stage = ScanExpressionStage::while_predicate,
                 .kind = kind,
                 .work_area = work_area,
+                .cursor_reference = cursor_reference,
                 .candidate_recno = start_recno,
                 .scan_statement_index = scan_statement_index,
                 .endscan_statement_index = endscan_statement_index,

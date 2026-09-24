@@ -1394,4 +1394,144 @@ void test_resume_releases_frame_owned_native_objects() {
     fs::remove_all(temp_root, ignored);
 }
 
+
+// #6331: SCAN used to resume by bare work-area number. A callback that closes
+// the scanned cursor and opens another one reuses that number immediately,
+// so the loop continued on the unrelated replacement cursor.
+void test_scan_does_not_resume_on_cursor_reusing_its_work_area() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_scan_6331";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto active_catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        copperfin::localization::select_locale());
+    const std::string expected_message = active_catalog.translate(
+        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", {{"command", "SCAN"}});
+
+    const auto run_script = [&](const std::string &name, const std::string &body) {
+        const fs::path script_path = temp_root / (name + ".prg");
+        write_text(script_path, body);
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(script_path.string(), temp_root.string(), false));
+        return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    };
+    const auto global_text = [](const auto &state, const std::string &name) -> std::string {
+        const auto found = state.globals.find(name);
+        return found == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(found->second);
+    };
+    const std::string swap_function =
+        "FUNCTION SwapCursor\n"
+        "IF !lSwapped\n"
+        "    lSwapped = .T.\n"
+        "    USE IN Source\n"
+        "    CREATE CURSOR Replacement (ID I)\n"
+        "    INSERT INTO Replacement VALUES (99)\n"
+        "    INSERT INTO Replacement VALUES (98)\n"
+        "    GO TOP IN Replacement\n"
+        "ENDIF\n"
+        "RETURN .T.\n"
+        "ENDFUNC\n";
+    const std::string prologue =
+        "PUBLIC lSwapped\n"
+        "lSwapped = .F.\n"
+        "nSeen = 0\n"
+        "cAliases = ''\n"
+        "lErrorCaught = .F.\n"
+        "cErrMsg = ''\n"
+        "CREATE CURSOR Source (ID I)\n"
+        "INSERT INTO Source VALUES (1)\n"
+        "INSERT INTO Source VALUES (2)\n"
+        "SELECT Source\n"
+        "GO TOP\n";
+    const std::string epilogue =
+        "nReplacementSum = 0\n"
+        "IF USED('Replacement')\n"
+        "    SELECT Replacement\n"
+        "    SUM ID TO nReplacementSum\n"
+        "ENDIF\n"
+        "lAfter = .T.\n"
+        "RETURN\n";
+
+    // Issue repro: the FOR predicate swaps the cursor. The resumable predicate
+    // path must raise the catchable SCAN error, never run the body on it.
+    {
+        const auto state = run_script("scan_for_swap",
+            prologue +
+            "TRY\n"
+            "    SCAN FOR SwapCursor()\n"
+            "        nSeen = nSeen + 1\n"
+            "        cAliases = cAliases + ALIAS() + ':' + TRANSFORM(ID) + ';'\n"
+            "        REPLACE ID WITH -1\n"
+            "    ENDSCAN\n"
+            "CATCH TO oErr\n"
+            "    lErrorCaught = .T.\n"
+            "    cErrMsg = oErr.Message\n"
+            "ENDTRY\n" +
+            epilogue + swap_function);
+        expect(state.completed, "#6331 FOR swap: script should complete: " + state.message);
+        expect(global_text(state, "lafter") == "true", "#6331 FOR swap: execution should continue after the SCAN");
+        expect(global_text(state, "lerrorcaught") == "true",
+            "#6331 FOR swap: losing the scanned cursor should raise a catchable error");
+        expect(global_text(state, "cerrmsg").find(expected_message) != std::string::npos,
+            "#6331 FOR swap: error should report the lost SCAN target, got: " + global_text(state, "cerrmsg"));
+        expect(global_text(state, "nseen") == "0" && global_text(state, "caliases").empty(),
+            "#6331 FOR swap: the body must not run against the replacement cursor, got: " +
+                global_text(state, "caliases"));
+        expect(global_text(state, "nreplacementsum") == "197",
+            "#6331 FOR swap: the replacement cursor must not be mutated, got sum: " +
+                global_text(state, "nreplacementsum"));
+    }
+
+    // The body swaps the cursor: ENDSCAN must end the loop the same way it
+    // does when the cursor is simply closed, not iterate the replacement.
+    {
+        const auto state = run_script("scan_body_swap",
+            prologue +
+            "SCAN\n"
+            "    nSeen = nSeen + 1\n"
+            "    SwapCursor()\n"
+            "ENDSCAN\n"
+            "SELECT Replacement\n"
+            "REPLACE ALL ID WITH ID\n" +
+            epilogue + swap_function);
+        expect(state.completed, "#6331 body swap: script should complete: " + state.message);
+        expect(global_text(state, "nseen") == "1",
+            "#6331 body swap: ENDSCAN must not continue on the replacement cursor, got iterations: " +
+                global_text(state, "nseen"));
+        expect(global_text(state, "nreplacementsum") == "197",
+            "#6331 body swap: the replacement cursor must be untouched, got sum: " +
+                global_text(state, "nreplacementsum"));
+    }
+
+    // Same body swap, but with a UDF FOR clause so ENDSCAN takes the
+    // resumable continuation path.
+    {
+        const auto state = run_script("scan_body_swap_resumable",
+            prologue +
+            "TRY\n"
+            "    SCAN FOR KeepRow()\n"
+            "        nSeen = nSeen + 1\n"
+            "        SwapCursor()\n"
+            "    ENDSCAN\n"
+            "CATCH TO oErr\n"
+            "    lErrorCaught = .T.\n"
+            "ENDTRY\n" +
+            epilogue + swap_function +
+            "FUNCTION KeepRow\n"
+            "RETURN .T.\n"
+            "ENDFUNC\n");
+        expect(state.completed, "#6331 resumable body swap: script should complete: " + state.message);
+        expect(global_text(state, "nseen") == "1",
+            "#6331 resumable body swap: the loop must not continue on the replacement cursor, got iterations: " +
+                global_text(state, "nseen"));
+        expect(global_text(state, "nreplacementsum") == "197",
+            "#6331 resumable body swap: the replacement cursor must be untouched, got sum: " +
+                global_text(state, "nreplacementsum"));
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
 }  // namespace cf_test_prg_engine_control_flow

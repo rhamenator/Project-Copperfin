@@ -112,6 +112,7 @@ int main() {
     test_case_predicates_use_heap_backed_expression_checkpoints();
     test_loop_predicates_and_bounds_use_heap_backed_expression_checkpoints();
     test_scan_predicate_preserves_rest_scope_and_exhaustion_state();
+    test_scan_does_not_resume_on_cursor_reusing_its_work_area();
     test_cancel_releases_frame_owned_native_objects();
     test_cancel_releases_frame_owned_private_native_objects();
     test_retry_releases_frame_owned_native_objects();

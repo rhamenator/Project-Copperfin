@@ -4219,6 +4219,7 @@
                         statement,
                         ScanSearchKind::enter_scan,
                         cursor->work_area,
+                        capture_cursor_generation_reference(cursor),
                         start_recno,
                         frame.pc - 1U,
                         find_matching_endscan(frame, frame.pc - 1U).value_or(frame.pc - 1U),
@@ -4246,6 +4247,7 @@
                                        .case_stack_depth_at_entry = frame.cases.size(),
                                        .with_stack_depth_at_entry = frame.withs.size(),
                                        .work_area = cursor->work_area,
+                                       .cursor_reference = capture_cursor_generation_reference(cursor),
                                        .for_expression = statement.expression,
                                        .while_expression = statement.tertiary_expression,
                                        .iteration_count = 0});
