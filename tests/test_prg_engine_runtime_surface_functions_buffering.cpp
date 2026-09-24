@@ -482,6 +482,83 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    // #6321 review: RQ-CF-PRG-035 hardened SEEK's own resumable search-key
+    // expression (SEEK <expr> IN alias), but seek_in_cursor()'s indexed-
+    // candidate scan separately evaluates the cursor's own SET FILTER per
+    // candidate via filter_expression_matches_record() -- an evaluation
+    // point RQ-CF-PRG-035 explicitly disclosed as not covered ("filter...
+    // expressions executed inside navigation helpers require their own
+    // generation boundaries"). A filter callback that closes the cursor
+    // being scanned used to leave execute_seek() and SEEK's own dispatch
+    // (synchronize_relations_for_parent()) dereferencing it afterward.
+    void test_seek_rejects_cursor_closed_by_own_filter_during_indexed_scan()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_seek_filter_closes_self";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path cdx_path = temp_root / "people.cdx";
+        const fs::path program_path = temp_root / "seek_filter_closes_self.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 10U}},
+            {{"ALPHA"}, {"BRAVO"}});
+        expect(create_result.ok, "#6321: SEEK filter-closes-self fixture should be writable");
+        write_synthetic_cdx(cdx_path, "NAME", "NAME");
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS People\n"
+            "SET ORDER TO TAG NAME IN People\n"
+            "SET FILTER TO CloseTarget() IN People\n"
+            "lErrorCaught = .F.\n"
+            "cErrMsg = ''\n"
+            "TRY\n"
+            "  SEEK 'ALPHA' IN People\n"
+            "CATCH TO oErr\n"
+            "  lErrorCaught = .T.\n"
+            "  cErrMsg = oErr.Message\n"
+            "ENDTRY\n"
+            "lStillOpen = USED('People')\n"
+            "RETURN\n"
+            "FUNCTION CloseTarget\n"
+            "USE IN People\n"
+            "RETURN .T.\n"
+            "ENDFUNC\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(program_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "#6321: SEEK filter-closes-self script should complete without crashing: " + state.message);
+
+        const auto error_caught_it = state.globals.find("lerrorcaught");
+        expect(error_caught_it != state.globals.end() && error_caught_it->second.boolean_value,
+               "#6321: SEEK must raise a catchable error instead of continuing through the cursor its own "
+               "filter closed during the indexed scan");
+
+        const auto catalog = copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+        const std::string expected_message = catalog.translate(
+            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", {{"command", "SEEK"}});
+        const auto err_msg_it = state.globals.find("cerrmsg");
+        expect(err_msg_it != state.globals.end() &&
+                   copperfin::runtime::format_value(err_msg_it->second) == expected_message,
+               "#6321: the caught error must be the specific target-work-area-lost message, got '" +
+                   (err_msg_it != state.globals.end() ? copperfin::runtime::format_value(err_msg_it->second) : "<missing>") +
+                   "'");
+
+        const auto still_open_it = state.globals.find("lstillopen");
+        expect(still_open_it != state.globals.end() && !still_open_it->second.boolean_value,
+               "#6321: the filter callback's USE IN People should genuinely have closed the cursor");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_setfldstate_assigns_buffered_mutation_state()
     {
         namespace fs = std::filesystem;

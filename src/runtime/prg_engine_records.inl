@@ -347,13 +347,24 @@
             return true;
         }
 
+        // #6321: cursor.filter_expression can execute arbitrary VFP code
+        // (a UDF doing USE IN/CLOSE ALL) that closes or replaces `cursor`
+        // itself. current_record_matches_visibility() has no way to report
+        // that back -- it just returns whether the predicate matched -- so
+        // this function re-resolves the cursor's own generation identity
+        // afterward and reports the loss through `cursor_lost` instead of
+        // unconditionally restoring position/order state through a
+        // reference that may now be dangling. Every caller must check
+        // `cursor_lost` before touching `cursor` again.
         bool filter_expression_matches_record(
             CursorState &cursor,
             const Frame &frame,
             const vfp::DbfRecord &record,
             std::size_t recno,
+            bool &cursor_lost,
             const CursorPositionSnapshot *evaluation_context = nullptr)
         {
+            cursor_lost = false;
             if (cursor.filter_expression.empty())
             {
                 return true;
@@ -371,6 +382,7 @@
             }
 
             const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
+            const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(&cursor);
             record_evaluation_overrides.push_back(RecordEvaluationOverride{
                 .cursor_binding_identity = ensure_cursor_binding_identity(cursor),
                 .record = record});
@@ -382,14 +394,22 @@
                     restore_cursor_order_snapshot(cursor, *evaluation_context);
                 }
                 const bool matches = current_record_matches_visibility(cursor, frame, {}, false);
-                restore_cursor_snapshot(cursor, original);
                 record_evaluation_overrides.pop_back();
+                if (resolve_cursor_generation_reference(cursor_reference) == nullptr)
+                {
+                    cursor_lost = true;
+                    return false;
+                }
+                restore_cursor_snapshot(cursor, original);
                 return matches;
             }
             catch (...)
             {
-                restore_cursor_snapshot(cursor, original);
                 record_evaluation_overrides.pop_back();
+                if (resolve_cursor_generation_reference(cursor_reference) != nullptr)
+                {
+                    restore_cursor_snapshot(cursor, original);
+                }
                 throw;
             }
         }

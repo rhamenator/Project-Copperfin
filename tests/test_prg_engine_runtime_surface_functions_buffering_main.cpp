@@ -23,6 +23,7 @@ int main()
     test_oldval_evaluates_buffered_original_record();
     test_curval_oldval_reject_reentrant_cursor_replacement();
     test_navigation_commands_reject_reentrant_cursor_replacement();
+    test_seek_rejects_cursor_closed_by_own_filter_during_indexed_scan();
     test_local_optimistic_table_buffering();
     test_local_optimistic_table_buffering_append_lifecycle();
     test_table_buffer_appends_use_negative_recno_identity();
