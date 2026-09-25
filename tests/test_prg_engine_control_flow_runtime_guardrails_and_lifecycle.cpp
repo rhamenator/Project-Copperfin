@@ -430,7 +430,10 @@ void test_close_all_releases_runtime_handles() {
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "CLOSE ALL handle cleanup script should complete");
     expect(state.sql_connections.empty(), "CLOSE ALL should disconnect SQL handles");
-    expect(state.ole_objects.empty(), "CLOSE ALL should release OLE object handles");
+    // #6195: real VFP9 does not release a live native/Automation object on
+    // CLOSE ALL; only databases, tables, indexes, low-level files, and
+    // procedure files are documented as closed.
+    expect(!state.ole_objects.empty(), "CLOSE ALL should not release a live OLE object handle");
 
     const auto handle_it = state.globals.find("nhandle");
     expect(handle_it != state.globals.end(), "FOPEN handle should be captured before CLOSE ALL");
@@ -456,6 +459,137 @@ void test_close_all_releases_runtime_handles() {
         expect(close_it->second.number_value == -1.0,
                "CLOSE ALL should already close FOPEN handles so follow-up FCLOSE returns -1");
     }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_close_all_preserves_live_form_lifetime() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_close_all_form_lifetime_6195";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto global_text = [](const auto& state, const std::string& name) -> std::string {
+        const auto found = state.globals.find(name);
+        return found == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(found->second);
+    };
+
+    const fs::path main_path = temp_root / "close_all_form_lifetime.prg";
+    write_text(
+        main_path,
+        "PUBLIC cEvents\n"
+        "cEvents = ''\n"
+        "oForm = CREATEOBJECT('HeldForm')\n"
+        "CLOSE ALL\n"
+        "cAfterClose = cEvents\n"
+        "cName = oForm.Name\n"
+        "oForm.Release()\n"
+        "cAfterRelease = cEvents\n"
+        "RETURN\n"
+        "DEFINE CLASS HeldForm AS Form\n"
+        "    Visible = .F.\n"
+        "    Name = 'HeldForm'\n"
+        "    PROCEDURE Destroy\n"
+        "        cEvents = cEvents + 'destroy;'\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Unload\n"
+        "        cEvents = cEvents + 'unload;'\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6195: CLOSE ALL form-lifetime script should complete: " + state.message);
+    expect(global_text(state, "cafterclose") == "",
+           "#6195: CLOSE ALL must not run Destroy/Unload on a live form");
+    expect(global_text(state, "cname") == "HeldForm",
+           "#6195: a form held by a variable must remain readable after CLOSE ALL");
+    expect(global_text(state, "cafterrelease") == "destroy;unload;",
+           "#6195: an explicit Release after CLOSE ALL must still run Destroy/Unload normally");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_close_databases_preserves_low_level_file_handles() {
+    namespace fs = std::filesystem;
+    const auto global_text = [](const auto& state, const std::string& name) -> std::string {
+        const auto found = state.globals.find(name);
+        return found == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(found->second);
+    };
+
+    const auto run_scenario = [&](const std::string& close_spelling, const std::string& label) {
+        const fs::path temp_root = fs::temp_directory_path() /
+            ("copperfin_prg_engine_close_databases_file_handles_6196_" + label);
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "close_databases_file_handles.prg";
+        write_text(
+            main_path,
+            "nHandle = FCREATE('held.dat')\n"
+            + close_spelling + "\n" +
+            "nWrite = FWRITE(nHandle, 'abc')\n"
+            "nClose = FCLOSE(nHandle)\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6196: " + close_spelling + " file-handle script should complete: " + state.message);
+        expect(global_text(state, "nwrite") == "3",
+               "#6196: " + close_spelling + " must not close a low-level FOPEN/FCREATE handle");
+        expect(global_text(state, "nclose") == "0",
+               "#6196: the preserved handle must still close normally after " + close_spelling);
+
+        const auto written = read_text(temp_root / "held.dat");
+        expect(written == "abc", "#6196: the write after " + close_spelling + " must actually reach the file");
+
+        fs::remove_all(temp_root, ignored);
+    };
+
+    run_scenario("CLOSE DATABASE", "database");
+    run_scenario("CLOSE DATABASES", "databases");
+    run_scenario("CLOSE DATABASES ALL", "databases_all");
+}
+
+void test_close_databases_and_close_all_preserve_foxtools_registrations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_close_foxtools_6198";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto global_text = [](const auto& state, const std::string& name) -> std::string {
+        const auto found = state.globals.find(name);
+        return found == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(found->second);
+    };
+
+    const fs::path main_path = temp_root / "close_foxtools.prg";
+    write_text(
+        main_path,
+        "SET LIBRARY TO 'Foxtools' ADDITIVE\n"
+        "hPid = RegFn32('GetCurrentProcessId', '', 'I', 'kernel32.dll')\n"
+        "nBeforeDatabases = CallFn(hPid)\n"
+        "CLOSE DATABASES\n"
+        "nAfterDatabases = CallFn(hPid)\n"
+        "CLOSE ALL\n"
+        "nAfterAll = CallFn(hPid)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6198: Foxtools CLOSE-survival script should complete: " + state.message);
+    const std::string before = global_text(state, "nbeforedatabases");
+    expect(before != "-1" && before != "<missing>",
+           "#6198: the RegFn32 handle must be callable before any CLOSE");
+    expect(global_text(state, "nafterdatabases") == before,
+           "#6198: CLOSE DATABASES must not revoke a RegFn32 registration");
+    expect(global_text(state, "nafterall") == before,
+           "#6198: CLOSE ALL must not revoke a RegFn32 registration");
 
     fs::remove_all(temp_root, ignored);
 }

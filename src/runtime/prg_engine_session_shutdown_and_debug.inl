@@ -338,8 +338,16 @@
             if (close_scope == "all" || close_scope == "databases" || close_scope == "database")
             {
                 current_sql_connections().clear();
-                current_registered_api_functions().clear();
-                park_all_native_objects();
+            }
+            // #6195/#6196/#6198: VFP9's CLOSE ALL closes databases, tables,
+            // indexes, low-level files, and procedure files -- it does not
+            // release live native/Automation objects (forms, Custom
+            // instances) or revoke Foxtools RegFn()/RegFn32() registrations,
+            // and CLOSE DATABASE(S) does not touch low-level files at all.
+            // Real session shutdown (QUIT, session destruction) still parks
+            // objects and closes file handles independently of this scope.
+            if (close_scope == "all")
+            {
                 close_all_file_io_handles();
             }
 
