@@ -174,6 +174,9 @@ int main() {
     test_print_command_emits_event();
     test_close_command_closes_all_work_areas();
     test_close_all_releases_runtime_handles();
+    test_close_all_preserves_live_form_lifetime();
+    test_close_databases_preserves_low_level_file_handles();
+    test_close_databases_and_close_all_preserve_foxtools_registrations();
     test_erase_copy_rename_file_commands();
     test_erase_copy_file_strict_verified_bytes();
     test_rename_file_command_rejects_existing_destination();
