@@ -829,6 +829,7 @@
                             {.name = "OBJINFO", .type = 'M', .length = 4U}
                         },
                         {});
+                    note_dbf_row_set_change(copperfin::platform::path_to_utf8_string(target_path));
                     created = create_result.ok;
                     result_code = created ? "created" : "write-failed";
                     if (created)

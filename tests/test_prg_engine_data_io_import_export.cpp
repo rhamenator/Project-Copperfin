@@ -3410,9 +3410,10 @@ void test_append_from_for_follows_vfp9_semantics_on_local_targets() {
         std::transform(text.begin(), text.end(), text.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
         return text;
     };
-    const auto run_case = [&](const std::string &label, const std::string &append_statement) {
+    const auto run_case = [&](const std::string &label, const std::string &append_statement,
+                              const std::vector<std::string> &initial_rows = {"ONE"}) {
         const fs::path dst = temp_root / (label + "_dst.dbf");
-        write_simple_dbf(dst, {"ONE"});
+        write_simple_dbf(dst, initial_rows);
         const fs::path main_path = temp_root / (label + ".prg");
         write_text(
             main_path,
@@ -3453,6 +3454,24 @@ void test_append_from_for_follows_vfp9_semantics_on_local_targets() {
             "    IF nCalls = 2\n"
             "        APPEND BLANK IN Dst\n"
             "    ENDIF\n"
+            "    RETURN .F.\n"
+            "ENDFUNC\n"
+            "FUNCTION RawOverwriteTarget\n"
+            "    LPARAMETERS cReplacement, cTarget\n"
+            "    nCalls = nCalls + 1\n"
+            "    IF nCalls = 1\n"
+            "        RETURN .T.\n"
+            "    ENDIF\n"
+            "    COPY FILE (cReplacement) TO (cTarget)\n"
+            "    RETURN .F.\n"
+            "ENDFUNC\n"
+            "FUNCTION DeleteCandidateThenPack\n"
+            "    nCalls = nCalls + 1\n"
+            "    IF nCalls = 1\n"
+            "        RETURN .T.\n"
+            "    ENDIF\n"
+            "    DELETE\n"
+            "    PACK\n"
             "    RETURN .F.\n"
             "ENDFUNC\n"
             "FUNCTION PackTarget\n"
@@ -3508,16 +3527,67 @@ void test_append_from_for_follows_vfp9_semantics_on_local_targets() {
             "#6553 local session switch: a per-row DATASESSION switch should fail catchably and leave the target unchanged, got error " +
                 global_text(state, "nerr") + " / rows " + global_text(state, "nrows"));
     }
-    // #6553 review: a FOR callback that DELETE+PACKs an earlier target row and
-    // rejects the candidate must still have the (shifted) candidate removed.
-    // As in VFP9, the callback's own PACK stands, and every row is rejected,
-    // so the table ends empty.
+    // #6553/#6560: a FOR callback that DELETE+PACKs an earlier target row and
+    // rejects the candidate reshapes the target, so the candidate can no longer
+    // be identified safely (byte equality is not identity). The command fails
+    // catchably and truncates nothing: the callback's PACK stands and the
+    // candidate is left in place rather than guessing which row to remove.
     {
         const auto state = run_case("pack", "APPEND FROM '" + (temp_root / "src.csv").string() + "' TYPE CSV FOR PackTarget()");
-        expect(state.completed, "#6553 local pack: script should complete: " + state.message);
-        expect(global_text(state, "nerr") == "0" && global_text(state, "nrows") == "0",
-            "#6553 local pack: the shifted rejected candidate should be removed after the callback's PACK, got error " +
-                global_text(state, "nerr") + " / rows " + global_text(state, "nrows"));
+        expect(state.completed, "#6560 local pack: script should complete: " + state.message);
+        expect(global_text(state, "nerr") != "0" && global_text(state, "nrows") == "1" && global_text(state, "cbottom") == "ALPHA",
+            "#6560 local pack: a reshaped target should fail catchably without truncating, got error " +
+                global_text(state, "nerr") + " / rows " + global_text(state, "nrows") + " / bottom " + global_text(state, "cbottom"));
+    }
+    // #6560 (Codex reproduction): the callback deletes the provisional candidate
+    // itself and PACKs; the pre-existing row is byte-identical to it. That row
+    // must survive -- the old byte-comparison rollback truncated it.
+    {
+        write_text(temp_root / "dup.csv", "NAME\nDUP\n");
+        const auto state = run_case("dup_pack", "APPEND FROM '" + (temp_root / "dup.csv").string() + "' TYPE CSV FOR DeleteCandidateThenPack()", {"DUP"});
+        expect(state.completed, "#6560 duplicate PACK: script should complete: " + state.message);
+        expect(global_text(state, "nrows") == "1" && global_text(state, "cbottom") == "DUP",
+            "#6560 duplicate PACK: preserve the pre-existing byte-identical row; got error " + global_text(state, "nerr") +
+                " / rows " + global_text(state, "nrows") + " / bottom " + global_text(state, "cbottom"));
+        expect(global_text(state, "nerr") != "0",
+            "#6560 duplicate PACK: an unprovable candidate identity should fail catchably, got error " + global_text(state, "nerr"));
+    }
+    // #6561 review: the callback overwrites the open target through a raw file
+    // copy (bypassing the tracked DBF writers) with a table that happens to have
+    // the same record count as the provisional candidate. The file snapshot
+    // must detect it, so nothing is truncated from the replacement.
+    {
+        write_simple_dbf(temp_root / "replacement.dbf", {"X", "Y"});
+        const fs::path dst = temp_root / "raw_copy_dst.dbf";
+        const auto state = run_case(
+            "raw_copy",
+            "APPEND FROM '" + (temp_root / "src.csv").string() + "' TYPE CSV FOR RawOverwriteTarget('" +
+                (temp_root / "replacement.dbf").string() + "', '" + dst.string() + "')");
+        expect(state.completed, "#6561 raw copy: script should complete: " + state.message);
+        expect(global_text(state, "nerr") != "0",
+            "#6561 raw copy: an out-of-band overwrite of the target should fail catchably, got error " + global_text(state, "nerr"));
+        // The failed command's undo guard may restore the pre-command table
+        // ("ONE"), or the callback's replacement ("X","Y") may stand; what must
+        // never happen is the replacement truncated to "X" -- the pre-#6561
+        // rollback removed the replacement's last real row.
+        const auto on_disk = copperfin::vfp::parse_dbf_table_from_file(dst.string(), 10U);
+        std::vector<std::string> names;
+        if (on_disk.ok)
+        {
+            for (const auto &record : on_disk.table.records)
+            {
+                std::string name = record.values.empty() ? std::string{} : record.values[0].display_value;
+                name.erase(name.find_last_not_of(' ') + 1U);
+                names.push_back(name);
+            }
+        }
+        const bool restored = names == std::vector<std::string>{"ONE"};
+        const bool replacement_intact = names == std::vector<std::string>{"X", "Y"};
+        std::string joined;
+        for (const auto &name : names) joined += name + ";";
+        expect(on_disk.ok && (restored || replacement_intact),
+            "#6561 raw copy: the target must be either restored or the intact replacement, never a truncated hybrid, got " +
+                joined);
     }
 
     // #6553 review: if the callback appends after the candidate and then

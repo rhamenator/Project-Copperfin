@@ -629,6 +629,7 @@
                     output_fields.push_back(make_total_output_field(*field));
                 }
                 const auto create_result = vfp::create_dbf_table_file(target_path, output_fields, {});
+                note_dbf_row_set_change(target_path);
                 if (!create_result.ok)
                 {
                     error_message = create_result.error;
@@ -696,6 +697,7 @@
 
             const std::string target_path = value_as_string(evaluate_expression(plan.target_expression, frame));
             const auto create_result = vfp::create_dbf_table_file(target_path, output_fields, output_records);
+            note_dbf_row_set_change(target_path);
             if (!create_result.ok)
             {
                 error_message = create_result.error;

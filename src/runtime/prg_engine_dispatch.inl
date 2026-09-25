@@ -7325,6 +7325,7 @@
 
                 const auto create_result = vfp::create_dbf_table_file(
                     copperfin::platform::path_to_utf8_string(table_path), fields, {});
+                note_dbf_row_set_change(copperfin::platform::path_to_utf8_string(table_path));
                 if (!create_result.ok)
                 {
                     last_error_message = create_result.error;
@@ -7468,6 +7469,7 @@
 
                         const auto create_result = vfp::create_dbf_table_file(
                             copperfin::platform::path_to_utf8_string(table_path), fields, {});
+                        note_dbf_row_set_change(copperfin::platform::path_to_utf8_string(table_path));
                         if (!create_result.ok)
                         {
                             last_error_message = create_result.error;
@@ -7586,12 +7588,14 @@
                         add_result = action == "add"
                                          ? vfp::add_dbf_table_field(copperfin::platform::path_to_utf8_string(table_path), field_descriptor)
                                          : vfp::alter_dbf_table_field(copperfin::platform::path_to_utf8_string(table_path), field_descriptor);
+                        note_dbf_row_set_change(copperfin::platform::path_to_utf8_string(table_path));
                     }
                     else
                     {
                         affected_field = unquote_identifier(affected_field);
                         add_result = vfp::drop_dbf_table_field(
                             copperfin::platform::path_to_utf8_string(table_path), affected_field);
+                        note_dbf_row_set_change(copperfin::platform::path_to_utf8_string(table_path));
                     }
                     if (!add_result.ok)
                     {
@@ -8482,6 +8486,7 @@
 
                     const auto write_result = vfp::create_dbf_table_file(
                         copperfin::platform::path_to_utf8_string(dest_path), structure_fields, structure_rows);
+                    note_dbf_row_set_change(copperfin::platform::path_to_utf8_string(dest_path));
                     if (!write_result.ok)
                     {
                         last_error_message = runtime_text(
@@ -8823,6 +8828,7 @@
 
                 const auto write_result = vfp::create_dbf_table_file(
                     copperfin::platform::path_to_utf8_string(dest_path), physical_out_fields, out_rows);
+                note_dbf_row_set_change(copperfin::platform::path_to_utf8_string(dest_path));
                 if (!write_result.ok)
                 {
                     last_error_message = runtime_text(
@@ -9306,6 +9312,7 @@
                         for (std::size_t row = 1U; row <= num_rows; ++row)
                         {
                             const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
+                            note_dbf_row_set_change(cursor->source_path);
                             if (!blank_result.ok)
                             {
                                 last_error_message = runtime_text(
@@ -9631,9 +9638,22 @@
                     source.opened_here = true;
                     return true;
                 };
-                // Local text sources: a DBF record has no hidden identity, so the
-                // provisional record's raw bytes are captured before FOR runs.
-                // Reading one record is O(1): header, then a single seek.
+                // Local text sources: a DBF record has no identity of its own, so a
+                // rejected provisional record may only be truncated when the target
+                // is provably untouched since the candidate was written. Equal
+                // bytes alone are not identity (#6560), and the row-set serial only
+                // sees Copperfin's own DBF writers -- a callback can also overwrite
+                // the file through COPY FILE, STRTOFILE, or FWRITE (#6561 review).
+                // So the snapshot below records the serial, the file's size and
+                // modification time, and the candidate's bytes; any difference at
+                // all -- including a REPLACE on the candidate -- fails closed.
+                struct ProvisionalRecordSnapshot
+                {
+                    std::uint64_t row_set_serial = 0U;
+                    std::optional<std::uintmax_t> file_size;
+                    std::optional<std::filesystem::file_time_type> modified;
+                    std::optional<std::string> record_bytes;
+                };
                 const auto read_local_record_bytes = [&](std::size_t recno) -> std::optional<std::string>
                 {
                     const auto header_only = vfp::parse_dbf_table_from_file(cursor->source_path, 0U);
@@ -9655,33 +9675,40 @@
                     }
                     return bytes;
                 };
-                // Remove a rejected provisional record. It is still the last record
-                // when the record count is unchanged (a REPLACE on it does not move
-                // it), or when earlier rows were deleted and PACKed away and the last
-                // record still carries the candidate's bytes. Any other reshaping
-                // (the callback appended rows, or removed the candidate itself)
-                // cannot be resolved without guessing, so the command fails
-                // catchably instead (#6553 review).
-                const auto reject_local_provisional_record =
-                    [&](std::size_t provisional_recno, const std::optional<std::string> &provisional_bytes) -> bool
+                const auto snapshot_provisional_record = [&](std::size_t recno) -> ProvisionalRecordSnapshot
                 {
-                    std::size_t candidate_recno = 0U;
-                    if (cursor->record_count == provisional_recno)
+                    ProvisionalRecordSnapshot snapshot;
+                    snapshot.row_set_serial = dbf_row_set_serial(cursor->source_path);
+                    const auto path = copperfin::platform::path_from_utf8_string(cursor->source_path);
+                    std::error_code error;
+                    if (const auto size = std::filesystem::file_size(path, error); !error)
                     {
-                        candidate_recno = provisional_recno;
+                        snapshot.file_size = size;
                     }
-                    else if (cursor->record_count > 0U && cursor->record_count < provisional_recno &&
-                             provisional_bytes.has_value() &&
-                             read_local_record_bytes(cursor->record_count) == provisional_bytes)
+                    error.clear();
+                    if (const auto modified = std::filesystem::last_write_time(path, error); !error)
                     {
-                        candidate_recno = cursor->record_count;
+                        snapshot.modified = modified;
                     }
-                    if (candidate_recno == 0U)
+                    snapshot.record_bytes = read_local_record_bytes(recno);
+                    return snapshot;
+                };
+                const auto reject_local_provisional_record =
+                    [&](std::size_t provisional_recno, const ProvisionalRecordSnapshot &before) -> bool
+                {
+                    const ProvisionalRecordSnapshot after = snapshot_provisional_record(provisional_recno);
+                    const bool untouched = cursor->record_count == provisional_recno &&
+                        after.row_set_serial == before.row_set_serial &&
+                        before.file_size.has_value() && after.file_size == before.file_size &&
+                        before.modified.has_value() && after.modified == before.modified &&
+                        before.record_bytes.has_value() && after.record_bytes == before.record_bytes;
+                    if (!untouched)
                     {
                         last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.AppendFromTargetReshapedDuringFor");
                         return false;
                     }
-                    const auto truncated = vfp::truncate_dbf_table_file(cursor->source_path, candidate_recno - 1U);
+                    const auto truncated = vfp::truncate_dbf_table_file(cursor->source_path, provisional_recno - 1U);
+                    note_dbf_row_set_change(cursor->source_path);
                     if (!truncated.ok)
                     {
                         last_error_message = runtime_text(
@@ -10297,6 +10324,7 @@
                     for (const std::string &line : split_sdf_lines(buffer))
                     {
                         const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
+                        note_dbf_row_set_change(cursor->source_path);
                         if (!blank_result.ok)
                         {
                             last_error_message = runtime_text(
@@ -10343,9 +10371,9 @@
                             // #6551: text sources evaluate FOR on the row just
                             // appended to the target, and remove it if rejected (VFP9).
                             const std::size_t provisional_recno = cursor->recno;
-                            const std::optional<std::string> provisional_bytes = append_for_expression.empty()
-                                ? std::nullopt
-                                : read_local_record_bytes(provisional_recno);
+                            const ProvisionalRecordSnapshot provisional_snapshot = append_for_expression.empty()
+                                ? ProvisionalRecordSnapshot{}
+                                : snapshot_provisional_record(provisional_recno);
                             const AppendForOutcome row_outcome = evaluate_append_for_on_target();
                             if (row_outcome == AppendForOutcome::target_lost)
                             {
@@ -10353,7 +10381,7 @@
                             }
                             if (row_outcome == AppendForOutcome::rejected)
                             {
-                                if (!reject_local_provisional_record(provisional_recno, provisional_bytes))
+                                if (!reject_local_provisional_record(provisional_recno, provisional_snapshot))
                                 {
                                     last_fault_location = statement.location;
                                     last_fault_statement = statement.text;
@@ -10422,6 +10450,7 @@
                     for (const auto &row : json_rows)
                     {
                         const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
+                        note_dbf_row_set_change(cursor->source_path);
                         if (!blank_result.ok)
                         {
                             last_error_message = runtime_text(
@@ -10468,9 +10497,9 @@
                             // #6551: text sources evaluate FOR on the row just
                             // appended to the target, and remove it if rejected (VFP9).
                             const std::size_t provisional_recno = cursor->recno;
-                            const std::optional<std::string> provisional_bytes = append_for_expression.empty()
-                                ? std::nullopt
-                                : read_local_record_bytes(provisional_recno);
+                            const ProvisionalRecordSnapshot provisional_snapshot = append_for_expression.empty()
+                                ? ProvisionalRecordSnapshot{}
+                                : snapshot_provisional_record(provisional_recno);
                             const AppendForOutcome row_outcome = evaluate_append_for_on_target();
                             if (row_outcome == AppendForOutcome::target_lost)
                             {
@@ -10478,7 +10507,7 @@
                             }
                             if (row_outcome == AppendForOutcome::rejected)
                             {
-                                if (!reject_local_provisional_record(provisional_recno, provisional_bytes))
+                                if (!reject_local_provisional_record(provisional_recno, provisional_snapshot))
                                 {
                                     last_fault_location = statement.location;
                                     last_fault_statement = statement.text;
@@ -10564,6 +10593,7 @@
                     for (const auto &row : dif_rows)
                     {
                         const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
+                        note_dbf_row_set_change(cursor->source_path);
                         if (!blank_result.ok)
                         {
                             last_error_message = runtime_text(
@@ -10605,9 +10635,9 @@
                             // #6551: text sources evaluate FOR on the row just
                             // appended to the target, and remove it if rejected (VFP9).
                             const std::size_t provisional_recno = cursor->recno;
-                            const std::optional<std::string> provisional_bytes = append_for_expression.empty()
-                                ? std::nullopt
-                                : read_local_record_bytes(provisional_recno);
+                            const ProvisionalRecordSnapshot provisional_snapshot = append_for_expression.empty()
+                                ? ProvisionalRecordSnapshot{}
+                                : snapshot_provisional_record(provisional_recno);
                             const AppendForOutcome row_outcome = evaluate_append_for_on_target();
                             if (row_outcome == AppendForOutcome::target_lost)
                             {
@@ -10615,7 +10645,7 @@
                             }
                             if (row_outcome == AppendForOutcome::rejected)
                             {
-                                if (!reject_local_provisional_record(provisional_recno, provisional_bytes))
+                                if (!reject_local_provisional_record(provisional_recno, provisional_snapshot))
                                 {
                                     last_fault_location = statement.location;
                                     last_fault_statement = statement.text;
@@ -10701,6 +10731,7 @@
                     for (const auto &row : sylk_rows)
                     {
                         const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
+                        note_dbf_row_set_change(cursor->source_path);
                         if (!blank_result.ok)
                         {
                             last_error_message = runtime_text(
@@ -10742,9 +10773,9 @@
                             // #6551: text sources evaluate FOR on the row just
                             // appended to the target, and remove it if rejected (VFP9).
                             const std::size_t provisional_recno = cursor->recno;
-                            const std::optional<std::string> provisional_bytes = append_for_expression.empty()
-                                ? std::nullopt
-                                : read_local_record_bytes(provisional_recno);
+                            const ProvisionalRecordSnapshot provisional_snapshot = append_for_expression.empty()
+                                ? ProvisionalRecordSnapshot{}
+                                : snapshot_provisional_record(provisional_recno);
                             const AppendForOutcome row_outcome = evaluate_append_for_on_target();
                             if (row_outcome == AppendForOutcome::target_lost)
                             {
@@ -10752,7 +10783,7 @@
                             }
                             if (row_outcome == AppendForOutcome::rejected)
                             {
-                                if (!reject_local_provisional_record(provisional_recno, provisional_bytes))
+                                if (!reject_local_provisional_record(provisional_recno, provisional_snapshot))
                                 {
                                     last_fault_location = statement.location;
                                     last_fault_statement = statement.text;
@@ -10838,6 +10869,7 @@
                     for (const auto &row : workbook_rows)
                     {
                         const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
+                        note_dbf_row_set_change(cursor->source_path);
                         if (!blank_result.ok)
                         {
                             last_error_message = runtime_text(
@@ -10879,9 +10911,9 @@
                             // #6551: text sources evaluate FOR on the row just
                             // appended to the target, and remove it if rejected (VFP9).
                             const std::size_t provisional_recno = cursor->recno;
-                            const std::optional<std::string> provisional_bytes = append_for_expression.empty()
-                                ? std::nullopt
-                                : read_local_record_bytes(provisional_recno);
+                            const ProvisionalRecordSnapshot provisional_snapshot = append_for_expression.empty()
+                                ? ProvisionalRecordSnapshot{}
+                                : snapshot_provisional_record(provisional_recno);
                             const AppendForOutcome row_outcome = evaluate_append_for_on_target();
                             if (row_outcome == AppendForOutcome::target_lost)
                             {
@@ -10889,7 +10921,7 @@
                             }
                             if (row_outcome == AppendForOutcome::rejected)
                             {
-                                if (!reject_local_provisional_record(provisional_recno, provisional_bytes))
+                                if (!reject_local_provisional_record(provisional_recno, provisional_snapshot))
                                 {
                                     last_fault_location = statement.location;
                                     last_fault_statement = statement.text;
@@ -10982,6 +11014,7 @@
                         }
                         first_delimited_line = false;
                         const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
+                        note_dbf_row_set_change(cursor->source_path);
                         if (!blank_result.ok)
                         {
                             last_error_message = runtime_text(
@@ -11023,9 +11056,9 @@
                             // #6551: text sources evaluate FOR on the row just
                             // appended to the target, and remove it if rejected (VFP9).
                             const std::size_t provisional_recno = cursor->recno;
-                            const std::optional<std::string> provisional_bytes = append_for_expression.empty()
-                                ? std::nullopt
-                                : read_local_record_bytes(provisional_recno);
+                            const ProvisionalRecordSnapshot provisional_snapshot = append_for_expression.empty()
+                                ? ProvisionalRecordSnapshot{}
+                                : snapshot_provisional_record(provisional_recno);
                             const AppendForOutcome row_outcome = evaluate_append_for_on_target();
                             if (row_outcome == AppendForOutcome::target_lost)
                             {
@@ -11033,7 +11066,7 @@
                             }
                             if (row_outcome == AppendForOutcome::rejected)
                             {
-                                if (!reject_local_provisional_record(provisional_recno, provisional_bytes))
+                                if (!reject_local_provisional_record(provisional_recno, provisional_snapshot))
                                 {
                                     last_fault_location = statement.location;
                                     last_fault_statement = statement.text;
@@ -11179,6 +11212,7 @@
                     }
                     // Append a blank record and then replace matching fields by name
                     const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
+                    note_dbf_row_set_change(cursor->source_path);
                     if (!blank_result.ok)
                     {
                         last_error_message = runtime_text(
