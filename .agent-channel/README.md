@@ -38,7 +38,7 @@ blocking; the human operator is still the fallback for anything urgent.
 1. Read and record new messages with `python3 scripts/agent_channel.py read --agent <agent> --only-unread --mark-read`; the tool owns that agent's local UUID cursor. Inspect the current cursor with `python3 scripts/agent_channel.py cursor --agent <agent>`. Never use a numeric sequence as a cursor or write another agent's cursor.
 2. To send a message, run `python3 scripts/agent_channel.py post --from <agent> --to <agent-or-both> --type <type> --text <text>`. Stage and commit the newly created `messages/<message_id>.json` file with the related work.
 3. Before committing, run `python3 scripts/agent_channel.py verify`. Do not edit or delete message files after publication. A correction is a new message that names the earlier `message_id` in its text.
-4. Keep messages short and actionable. Durable results still go in `agent-handoff.md` / `CHANGELOG.md` per `agents.md`.
+4. Keep messages short and actionable. Durable results still go in `agent-handoff.md` and a `changelog.d/` fragment (assembled into `CHANGELOG.md`) per `agents.md`.
 5. Append the same message as one line to `log.jsonl` (`seq` = previous max
    `seq` + 1, then `ts`/`from`/`to`/`type`/`text` matching the posted
    message) before committing. This is a manual, best-effort mirror, not a

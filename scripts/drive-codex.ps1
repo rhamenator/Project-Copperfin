@@ -117,7 +117,16 @@ function Get-TrackedText {
     $phaseBreakdown = Get-Content -LiteralPath (Join-Path $RepoRoot "docs\23-phase-a-dependency-breakdown.md") -Raw
     $coverage = Get-Content -LiteralPath (Join-Path $RepoRoot "docs\22-vfp-language-reference-coverage.md") -Raw
     $changelog = Get-Content -LiteralPath (Join-Path $RepoRoot "CHANGELOG.md") -Raw
-    return "$handoff`n$phaseBreakdown`n$coverage`n$changelog"
+    # #6554: unassembled changelog fragments are part of the latest history.
+    $fragmentDirectory = Join-Path $RepoRoot "changelog.d"
+    $fragments = ""
+    if (Test-Path -LiteralPath $fragmentDirectory) {
+        $fragments = (Get-ChildItem -LiteralPath $fragmentDirectory -Filter "*.md" |
+            Where-Object { $_.Name -ne "README.md" } |
+            Sort-Object Name -Descending |
+            ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw }) -join "`n"
+    }
+    return "$handoff`n$phaseBreakdown`n$coverage`n$fragments`n$changelog"
 }
 
 function Get-OpenRelatedIssues {

@@ -161,7 +161,7 @@ Apply these rules whenever a change touches operator-facing or procedure-definin
 
 - `agent-handoff.md` is the canonical continuation brief and should stay compact.
 - Update `agent-handoff.md` only when a shipped slice changes the last shipped slice, selected workstream, or next action, except for the explicit in-progress continuity record required by Steering Continuity below.
-- Update `CHANGELOG.md` whenever a turn ships lasting repo changes or materially updates tracked documentation.
+- Record a changelog entry whenever a turn ships lasting repo changes or materially updates tracked documentation, by adding one fragment file under `changelog.d/` (see `changelog.d/README.md`). Do not edit the top of `CHANGELOG.md` directly: concurrent pull requests all conflicting on its first line is what fragments avoid (#6554). Fragments are folded into `CHANGELOG.md` with `scripts/assemble_changelog.py` at release/RC time, so the latest history is `CHANGELOG.md` plus `changelog.d/`.
 - Do not create extra prompt files unless explicitly requested.
 - If a temporary planning note is created, fold any lasting guidance back into tracked docs and delete the throwaway note.
 - Remove a slice's scratch build/verification directory (e.g. a per-slice temp checkout or build tree) once its pull request merges or closes. These accumulate silently outside the repo and have previously exhausted the host's `/tmp` quota; do not rely on another agent or a human to notice and clean up after you.
@@ -201,4 +201,4 @@ or `gh pr checks --watch`, not model-turn polling. See
 
 ## Live Agent Channel
 
-When Claude Code is also active on this repo (e.g. covering after a weekly/session limit handoff), check current `.agent-channel/messages/` through `scripts/agent_channel.py` at the start of a turn and before picking new work, per `.agent-channel/README.md`. This is a live scratch channel for coordination, not a substitute for `agent-handoff.md` or `CHANGELOG.md`.
+When Claude Code is also active on this repo (e.g. covering after a weekly/session limit handoff), check current `.agent-channel/messages/` through `scripts/agent_channel.py` at the start of a turn and before picking new work, per `.agent-channel/README.md`. This is a live scratch channel for coordination, not a substitute for `agent-handoff.md` or the changelog (`changelog.d/` fragments, assembled into `CHANGELOG.md`).

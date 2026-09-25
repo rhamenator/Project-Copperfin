@@ -49,7 +49,7 @@ Use these sources in order:
 4. Add or update focused regression tests.
 5. Run focused validation for the selected slice plus `git diff --check`.
 6. Update durable docs only when behavior or active guidance changes.
-7. Update `CHANGELOG.md` for lasting repo changes or material tracked-documentation changes.
+7. Add a `changelog.d/` fragment (not a direct `CHANGELOG.md` edit; see `changelog.d/README.md`) for lasting repo changes or material tracked-documentation changes.
 8. Update `agent-handoff.md` only when the last shipped slice, selected workstream, or next action changes.
 
 ## Safety Documentation Standard

@@ -824,6 +824,34 @@ function(copperfin_configure_native_test_isolation)
         )
     endif()
 
+    # #6554: the assembler self-test works in its own temporary directory;
+    # the fragment check only reads the checked-in changelog.d/ files.
+    if(TEST test_changelog_fragment_assembler)
+        copperfin_set_test_isolation(test_changelog_fragment_assembler
+            PARALLEL_SAFE
+            FILESYSTEM process-owned
+            ENVIRONMENT none
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM configured
+            AUDIT complete
+        )
+    endif()
+
+    if(TEST test_changelog_fragments_valid)
+        copperfin_set_test_isolation(test_changelog_fragments_valid
+            PARALLEL_SAFE
+            FILESYSTEM read-only
+            ENVIRONMENT none
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM configured
+            AUDIT complete
+        )
+    endif()
+
     copperfin_set_test_isolation(test_github_actions_contract
         FILESYSTEM read-only
         ENVIRONMENT none

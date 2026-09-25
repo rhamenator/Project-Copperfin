@@ -1524,5 +1524,5 @@ macOS/Linux host ports remain open.
   compatibility rules; they should remain issue-neutral where possible.
 - `agent-handoff.md` and progress documents record current evidence and may
   reference specific issues, commits, tests, and hosted runs.
-- `CHANGELOG.md` records shipped behavior and durable constraints.
+- `CHANGELOG.md` records shipped behavior and durable constraints; entries not yet assembled live as fragments in `changelog.d/` (#6554).
 - `remaining-work.md` is deprecated and must not become a second roadmap.
