@@ -9469,6 +9469,233 @@
                 const std::string fields_clause = statement.tertiary_expression;
                 const std::vector<std::string> field_filter = parse_field_filter_clause(fields_clause);
 
+                // #6551: VFP9 APPEND FROM ... FOR semantics (probed on a real VFP
+                // 9.0 SP2 install):
+                //  1. FOR is evaluated once up front against the target's current
+                //     record; a non-logical result raises error 1127 before any
+                //     source row is read.
+                //  2. DBF sources: FOR is evaluated with the source table selected
+                //     (ALIAS()/RECNO()/RECCOUNT()/fields are the source row's).
+                //  3. Text sources (CSV/DELIMITED/SDF/DIF/SYLK/XLS, and the JSON
+                //     extension): the candidate is appended to the target first,
+                //     FOR is evaluated on that new record, and a rejected row is
+                //     removed again.
+                // Every evaluation can run user code, so cursors are re-resolved
+                // by generation identity afterwards (#6321/#6322).
+                const std::string append_for_expression = trim_copy(statement.quaternary_expression);
+                const auto append_target_lost_result = [&]() -> ExecutionOutcome
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", "APPEND FROM"}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                };
+                if (!append_for_expression.empty())
+                {
+                    const CursorGenerationReference validation_reference = capture_cursor_generation_reference(cursor);
+                    const PrgValue validation_value = evaluate_expression(append_for_expression, frame, cursor);
+                    cursor = resolve_cursor_generation_reference(validation_reference);
+                    if (cursor == nullptr || current_data_session != validation_reference.data_session)
+                    {
+                        return append_target_lost_result();
+                    }
+                    if (validation_value.kind != PrgValueKind::boolean || validation_value.is_null)
+                    {
+                        throw PrgCompatibilityError(
+                            runtime_text("Runtime.Prg.Dispatch.Error.ForClauseRequiresLogicalExpression"),
+                            1127);
+                    }
+                }
+
+                enum class AppendForOutcome
+                {
+                    accepted,
+                    rejected,
+                    target_lost
+                };
+                // Text sources: the candidate row is already the target's current
+                // record when this runs.
+                const auto evaluate_append_for_on_target = [&]() -> AppendForOutcome
+                {
+                    if (append_for_expression.empty())
+                    {
+                        return AppendForOutcome::accepted;
+                    }
+                    const CursorGenerationReference target_reference = capture_cursor_generation_reference(cursor);
+                    const bool matches = evaluate_visibility_expression(append_for_expression, frame, cursor);
+                    cursor = resolve_cursor_generation_reference(target_reference);
+                    if (cursor == nullptr || current_data_session != target_reference.data_session)
+                    {
+                        return AppendForOutcome::target_lost;
+                    }
+                    return matches ? AppendForOutcome::accepted : AppendForOutcome::rejected;
+                };
+                // DBF sources: position the source cursor on `source_recno`,
+                // select its work area for the evaluation (so ALIAS() and
+                // unqualified fields are the source's), then restore selection.
+                const auto evaluate_append_for_on_source =
+                    [&](const CursorGenerationReference &source_reference, std::size_t source_recno) -> AppendForOutcome
+                {
+                    if (append_for_expression.empty())
+                    {
+                        return AppendForOutcome::accepted;
+                    }
+                    CursorState *source_cursor = resolve_cursor_generation_reference(source_reference);
+                    if (source_cursor == nullptr)
+                    {
+                        return AppendForOutcome::target_lost;
+                    }
+                    const CursorGenerationReference target_reference = capture_cursor_generation_reference(cursor);
+                    move_cursor_to(*source_cursor, static_cast<long long>(source_recno));
+                    const int data_session = current_data_session;
+                    const int previously_selected = current_selected_work_area();
+                    current_session_state().selected_work_area = source_cursor->work_area;
+                    struct SelectionRestore
+                    {
+                        Impl &runtime;
+                        int data_session;
+                        int area;
+                        ~SelectionRestore()
+                        {
+                            if (runtime.current_data_session == data_session)
+                            {
+                                runtime.current_session_state().selected_work_area = area;
+                            }
+                        }
+                    } selection_restore{*this, data_session, previously_selected};
+                    const bool matches = evaluate_visibility_expression(append_for_expression, frame, source_cursor);
+                    cursor = resolve_cursor_generation_reference(target_reference);
+                    if (cursor == nullptr || resolve_cursor_generation_reference(source_reference) == nullptr ||
+                        current_data_session != target_reference.data_session)
+                    {
+                        return AppendForOutcome::target_lost;
+                    }
+                    return matches ? AppendForOutcome::accepted : AppendForOutcome::rejected;
+                };
+                // DBF sources need a work area for the source table. Reuse one
+                // that is already open on the same file, otherwise open it
+                // temporarily (AGAIN, shared) and close it when the command ends.
+                struct TemporaryAppendSource
+                {
+                    Impl &runtime;
+                    std::optional<CursorGenerationReference> reference;
+                    bool opened_here = false;
+                    ~TemporaryAppendSource()
+                    {
+                        if (opened_here && reference.has_value())
+                        {
+                            if (CursorState *source = runtime.resolve_cursor_generation_reference(*reference);
+                                source != nullptr)
+                            {
+                                runtime.close_cursor(std::to_string(source->work_area));
+                            }
+                        }
+                    }
+                };
+                const auto open_append_source = [&](TemporaryAppendSource &source, const std::string &source_path_text) -> bool
+                {
+                    const std::string normalized = normalize_path(source_path_text);
+                    for (auto &[_, candidate] : current_session_state().cursors)
+                    {
+                        if (&candidate != cursor && !candidate.remote && normalize_path(candidate.source_path) == normalized)
+                        {
+                            source.reference = capture_cursor_generation_reference(&candidate);
+                            return true;
+                        }
+                    }
+                    const CursorGenerationReference target_reference = capture_cursor_generation_reference(cursor);
+                    const int previously_selected = current_selected_work_area();
+                    std::string alias = uppercase_copy(
+                        copperfin::platform::path_to_utf8_string(
+                            copperfin::platform::path_from_utf8_string(source_path_text).stem()));
+                    bool opened = open_table_cursor(source_path_text, alias, "0", true, false, 0, {}, 0U, {}, false);
+                    if (!opened)
+                    {
+                        alias = "APPENDFROMSOURCE";
+                        opened = open_table_cursor(source_path_text, alias, "0", true, false, 0, {}, 0U, {}, false);
+                    }
+                    current_session_state().selected_work_area = previously_selected;
+                    cursor = resolve_cursor_generation_reference(target_reference);
+                    if (!opened || cursor == nullptr)
+                    {
+                        return false;
+                    }
+                    CursorState *opened_cursor = resolve_cursor_target(alias);
+                    if (opened_cursor == nullptr)
+                    {
+                        return false;
+                    }
+                    source.reference = capture_cursor_generation_reference(opened_cursor);
+                    source.opened_here = true;
+                    return true;
+                };
+                // Local text sources: a DBF record has no hidden identity, so the
+                // provisional record's raw bytes are captured before FOR runs.
+                // Reading one record is O(1): header, then a single seek.
+                const auto read_local_record_bytes = [&](std::size_t recno) -> std::optional<std::string>
+                {
+                    const auto header_only = vfp::parse_dbf_table_from_file(cursor->source_path, 0U);
+                    if (!header_only.ok || recno == 0U || recno > header_only.table.header.record_count)
+                    {
+                        return std::nullopt;
+                    }
+                    const auto &header = header_only.table.header;
+                    std::ifstream table_file(
+                        copperfin::platform::path_from_utf8_string(cursor->source_path), std::ios::binary);
+                    table_file.seekg(static_cast<std::streamoff>(header.header_length) +
+                                     static_cast<std::streamoff>(recno - 1U) *
+                                         static_cast<std::streamoff>(header.record_length));
+                    std::string bytes(header.record_length, '\0');
+                    table_file.read(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+                    if (!table_file)
+                    {
+                        return std::nullopt;
+                    }
+                    return bytes;
+                };
+                // Remove a rejected provisional record. It is still the last record
+                // when the record count is unchanged (a REPLACE on it does not move
+                // it), or when earlier rows were deleted and PACKed away and the last
+                // record still carries the candidate's bytes. Any other reshaping
+                // (the callback appended rows, or removed the candidate itself)
+                // cannot be resolved without guessing, so the command fails
+                // catchably instead (#6553 review).
+                const auto reject_local_provisional_record =
+                    [&](std::size_t provisional_recno, const std::optional<std::string> &provisional_bytes) -> bool
+                {
+                    std::size_t candidate_recno = 0U;
+                    if (cursor->record_count == provisional_recno)
+                    {
+                        candidate_recno = provisional_recno;
+                    }
+                    else if (cursor->record_count > 0U && cursor->record_count < provisional_recno &&
+                             provisional_bytes.has_value() &&
+                             read_local_record_bytes(cursor->record_count) == provisional_bytes)
+                    {
+                        candidate_recno = cursor->record_count;
+                    }
+                    if (candidate_recno == 0U)
+                    {
+                        last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.AppendFromTargetReshapedDuringFor");
+                        return false;
+                    }
+                    const auto truncated = vfp::truncate_dbf_table_file(cursor->source_path, candidate_recno - 1U);
+                    if (!truncated.ok)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromFailed",
+                            {{"errorMessage", truncated.error}});
+                        return false;
+                    }
+                    cursor->record_count = truncated.record_count;
+                    cursor->recno = cursor->record_count;
+                    cursor->eof = cursor->record_count == 0U;
+                    cursor->bof = cursor->record_count == 0U;
+                    return true;
+                };
+
                 if (cursor->remote && cursor->source_path.empty())
                 {
                     // #6322: the FOR predicate below can execute arbitrary VFP
@@ -9491,44 +9718,96 @@
                     };
                     const CursorGenerationReference remote_target_reference =
                         capture_cursor_generation_reference(cursor);
+                    // #6551: text sources append the candidate first and evaluate
+                    // FOR on it (VFP9); DBF sources are evaluated on the source row
+                    // by the caller and arrive here already accepted.
                     const auto append_remote_row =
-                        [&](vfp::DbfRecord appended_record, const std::string &for_expr) -> RemoteAppendRowOutcome
+                        [&](vfp::DbfRecord appended_record, bool evaluate_on_target) -> RemoteAppendRowOutcome
                     {
                         appended_record.record_index = cursor->remote_records.size();
-                        if (!trim_copy(for_expr).empty())
-                        {
-                            record_evaluation_overrides.push_back(RecordEvaluationOverride{
-                                .cursor_binding_identity = remote_target_reference.binding_identity,
-                                .record = appended_record});
-                            bool matches = false;
-                            try
-                            {
-                                matches = current_record_matches_visibility(*cursor, frame, for_expr);
-                            }
-                            catch (...)
-                            {
-                                record_evaluation_overrides.pop_back();
-                                throw;
-                            }
-                            record_evaluation_overrides.pop_back();
-
-                            cursor = resolve_cursor_generation_reference(remote_target_reference);
-                            if (cursor == nullptr || current_data_session != remote_target_reference.data_session)
-                            {
-                                return RemoteAppendRowOutcome::target_lost;
-                            }
-                            if (!matches)
-                            {
-                                return RemoteAppendRowOutcome::rejected;
-                            }
-                            appended_record.record_index = cursor->remote_records.size();
-                        }
-
+                        const bool evaluate = evaluate_on_target && !append_for_expression.empty();
+                        // The FOR callback can REPLACE the provisional row or reshape
+                        // the target (append, DELETE+PACK, ZAP), so the row carries a
+                        // unique transient token that survives all of those.
+                        static std::atomic<std::uint64_t> next_row_token{1U};
+                        const std::uint64_t row_token = evaluate ? next_row_token.fetch_add(1U) : 0U;
+                        appended_record.transient_row_token = row_token;
                         cursor->remote_records.push_back(std::move(appended_record));
                         cursor->record_count = cursor->remote_records.size();
                         cursor->recno = cursor->record_count;
                         cursor->eof = false;
                         cursor->bof = false;
+                        if (!evaluate)
+                        {
+                            return RemoteAppendRowOutcome::appended;
+                        }
+
+                        const auto find_provisional_row = [&]() -> std::optional<std::size_t>
+                        {
+                            auto &rows = cursor->remote_records;
+                            for (std::size_t index = rows.size(); index > 0U; --index)
+                            {
+                                if (rows[index - 1U].transient_row_token == row_token)
+                                {
+                                    return index - 1U;
+                                }
+                            }
+                            return std::nullopt;
+                        };
+                        const auto roll_back_provisional_row = [&]()
+                        {
+                            auto &rows = cursor->remote_records;
+                            if (const auto found = find_provisional_row(); found.has_value())
+                            {
+                                rows.erase(rows.begin() + static_cast<std::ptrdiff_t>(*found));
+                                for (std::size_t index = *found; index < rows.size(); ++index)
+                                {
+                                    rows[index].record_index = index;
+                                }
+                            }
+                            cursor->record_count = rows.size();
+                            cursor->recno = cursor->record_count;
+                            cursor->eof = cursor->record_count == 0U;
+                            cursor->bof = cursor->record_count == 0U;
+                        };
+
+                        AppendForOutcome outcome = AppendForOutcome::accepted;
+                        try
+                        {
+                            outcome = evaluate_append_for_on_target();
+                        }
+                        catch (...)
+                        {
+                            // A FOR error unwinds the command; don't leave the
+                            // provisional row in a surviving target.
+                            cursor = resolve_cursor_generation_reference(remote_target_reference);
+                            if (cursor != nullptr)
+                            {
+                                roll_back_provisional_row();
+                            }
+                            throw;
+                        }
+                        if (outcome == AppendForOutcome::target_lost ||
+                            current_data_session != remote_target_reference.data_session)
+                        {
+                            // A session switch leaves the target alive in its own
+                            // session: remove the provisional row there too.
+                            cursor = resolve_cursor_generation_reference(remote_target_reference);
+                            if (cursor != nullptr)
+                            {
+                                roll_back_provisional_row();
+                            }
+                            return RemoteAppendRowOutcome::target_lost;
+                        }
+                        if (outcome == AppendForOutcome::rejected)
+                        {
+                            roll_back_provisional_row();
+                            return RemoteAppendRowOutcome::rejected;
+                        }
+                        if (const auto found = find_provisional_row(); found.has_value())
+                        {
+                            cursor->remote_records[*found].transient_row_token = 0U;
+                        }
                         return RemoteAppendRowOutcome::appended;
                     };
                     const auto remote_target_lost_result = [&]() -> ExecutionOutcome
@@ -9606,7 +9885,7 @@
                                 appended_record.values.push_back(std::move(value));
                             }
 
-                            const RemoteAppendRowOutcome row_outcome = append_remote_row(std::move(appended_record), for_expr);
+                            const RemoteAppendRowOutcome row_outcome = append_remote_row(std::move(appended_record), true);
                             if (row_outcome == RemoteAppendRowOutcome::target_lost)
                             {
                                 return remote_target_lost_result();
@@ -9734,7 +10013,7 @@
                                 appended_record.values.push_back(std::move(value));
                             }
 
-                            const RemoteAppendRowOutcome row_outcome = append_remote_row(std::move(appended_record), for_expr);
+                            const RemoteAppendRowOutcome row_outcome = append_remote_row(std::move(appended_record), true);
                             if (row_outcome == RemoteAppendRowOutcome::target_lost)
                             {
                                 return remote_target_lost_result();
@@ -9802,12 +10081,48 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    std::size_t appended_count = 0U;
-                    for (const auto &source_record : source_result.table.records)
+                    TemporaryAppendSource append_source{*this};
+                    if (!append_for_expression.empty() &&
+                        !open_append_source(append_source, copperfin::platform::path_to_utf8_string(src_path)))
                     {
+                        if (cursor == nullptr)
+                        {
+                            return remote_target_lost_result();
+                        }
+                        if (last_error_message.empty())
+                        {
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.AppendFromFailed",
+                                {{"errorMessage", copperfin::platform::path_to_utf8_string(src_path)}});
+                        }
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    std::size_t appended_count = 0U;
+                    for (std::size_t source_index = 0U; source_index < source_result.table.records.size(); ++source_index)
+                    {
+                        const vfp::DbfRecord &source_record = source_result.table.records[source_index];
                         if (source_record.deleted)
                         {
                             continue;
+                        }
+                        // #6551: DBF sources evaluate FOR on the source row, with the
+                        // source selected (VFP9).
+                        if (!append_for_expression.empty())
+                        {
+                            const AppendForOutcome source_outcome =
+                                evaluate_append_for_on_source(*append_source.reference, source_index + 1U);
+                            if (source_outcome == AppendForOutcome::target_lost ||
+                                current_data_session != remote_target_reference.data_session)
+                            {
+                                return remote_target_lost_result();
+                            }
+                            if (source_outcome == AppendForOutcome::rejected)
+                            {
+                                continue;
+                            }
                         }
 
                         vfp::DbfRecord appended_record;
@@ -9842,7 +10157,7 @@
                             appended_record.values.push_back(std::move(value));
                         }
 
-                        const RemoteAppendRowOutcome row_outcome = append_remote_row(std::move(appended_record), for_expr);
+                        const RemoteAppendRowOutcome row_outcome = append_remote_row(std::move(appended_record), false);
                         if (row_outcome == RemoteAppendRowOutcome::target_lost)
                         {
                             return remote_target_lost_result();
@@ -10024,6 +10339,29 @@
                             }
                             cursor->record_count = rep_result.record_count;
                         }
+                        {
+                            // #6551: text sources evaluate FOR on the row just
+                            // appended to the target, and remove it if rejected (VFP9).
+                            const std::size_t provisional_recno = cursor->recno;
+                            const std::optional<std::string> provisional_bytes = append_for_expression.empty()
+                                ? std::nullopt
+                                : read_local_record_bytes(provisional_recno);
+                            const AppendForOutcome row_outcome = evaluate_append_for_on_target();
+                            if (row_outcome == AppendForOutcome::target_lost)
+                            {
+                                return append_target_lost_result();
+                            }
+                            if (row_outcome == AppendForOutcome::rejected)
+                            {
+                                if (!reject_local_provisional_record(provisional_recno, provisional_bytes))
+                                {
+                                    last_fault_location = statement.location;
+                                    last_fault_statement = statement.text;
+                                    return {.ok = false, .message = last_error_message};
+                                }
+                                continue;
+                            }
+                        }
                         ++appended_count;
                     }
 
@@ -10125,6 +10463,29 @@
                                 return {.ok = false, .message = last_error_message};
                             }
                             cursor->record_count = rep_result.record_count;
+                        }
+                        {
+                            // #6551: text sources evaluate FOR on the row just
+                            // appended to the target, and remove it if rejected (VFP9).
+                            const std::size_t provisional_recno = cursor->recno;
+                            const std::optional<std::string> provisional_bytes = append_for_expression.empty()
+                                ? std::nullopt
+                                : read_local_record_bytes(provisional_recno);
+                            const AppendForOutcome row_outcome = evaluate_append_for_on_target();
+                            if (row_outcome == AppendForOutcome::target_lost)
+                            {
+                                return append_target_lost_result();
+                            }
+                            if (row_outcome == AppendForOutcome::rejected)
+                            {
+                                if (!reject_local_provisional_record(provisional_recno, provisional_bytes))
+                                {
+                                    last_fault_location = statement.location;
+                                    last_fault_statement = statement.text;
+                                    return {.ok = false, .message = last_error_message};
+                                }
+                                continue;
+                            }
                         }
                         ++appended_count;
                     }
@@ -10240,6 +10601,29 @@
                             }
                             cursor->record_count = rep_result.record_count;
                         }
+                        {
+                            // #6551: text sources evaluate FOR on the row just
+                            // appended to the target, and remove it if rejected (VFP9).
+                            const std::size_t provisional_recno = cursor->recno;
+                            const std::optional<std::string> provisional_bytes = append_for_expression.empty()
+                                ? std::nullopt
+                                : read_local_record_bytes(provisional_recno);
+                            const AppendForOutcome row_outcome = evaluate_append_for_on_target();
+                            if (row_outcome == AppendForOutcome::target_lost)
+                            {
+                                return append_target_lost_result();
+                            }
+                            if (row_outcome == AppendForOutcome::rejected)
+                            {
+                                if (!reject_local_provisional_record(provisional_recno, provisional_bytes))
+                                {
+                                    last_fault_location = statement.location;
+                                    last_fault_statement = statement.text;
+                                    return {.ok = false, .message = last_error_message};
+                                }
+                                continue;
+                            }
+                        }
                         ++appended_count;
                     }
 
@@ -10354,6 +10738,29 @@
                             }
                             cursor->record_count = rep_result.record_count;
                         }
+                        {
+                            // #6551: text sources evaluate FOR on the row just
+                            // appended to the target, and remove it if rejected (VFP9).
+                            const std::size_t provisional_recno = cursor->recno;
+                            const std::optional<std::string> provisional_bytes = append_for_expression.empty()
+                                ? std::nullopt
+                                : read_local_record_bytes(provisional_recno);
+                            const AppendForOutcome row_outcome = evaluate_append_for_on_target();
+                            if (row_outcome == AppendForOutcome::target_lost)
+                            {
+                                return append_target_lost_result();
+                            }
+                            if (row_outcome == AppendForOutcome::rejected)
+                            {
+                                if (!reject_local_provisional_record(provisional_recno, provisional_bytes))
+                                {
+                                    last_fault_location = statement.location;
+                                    last_fault_statement = statement.text;
+                                    return {.ok = false, .message = last_error_message};
+                                }
+                                continue;
+                            }
+                        }
                         ++appended_count;
                     }
 
@@ -10467,6 +10874,29 @@
                                 return {.ok = false, .message = last_error_message};
                             }
                             cursor->record_count = rep_result.record_count;
+                        }
+                        {
+                            // #6551: text sources evaluate FOR on the row just
+                            // appended to the target, and remove it if rejected (VFP9).
+                            const std::size_t provisional_recno = cursor->recno;
+                            const std::optional<std::string> provisional_bytes = append_for_expression.empty()
+                                ? std::nullopt
+                                : read_local_record_bytes(provisional_recno);
+                            const AppendForOutcome row_outcome = evaluate_append_for_on_target();
+                            if (row_outcome == AppendForOutcome::target_lost)
+                            {
+                                return append_target_lost_result();
+                            }
+                            if (row_outcome == AppendForOutcome::rejected)
+                            {
+                                if (!reject_local_provisional_record(provisional_recno, provisional_bytes))
+                                {
+                                    last_fault_location = statement.location;
+                                    last_fault_statement = statement.text;
+                                    return {.ok = false, .message = last_error_message};
+                                }
+                                continue;
+                            }
                         }
                         ++appended_count;
                     }
@@ -10589,6 +11019,29 @@
                             }
                             cursor->record_count = rep_result.record_count;
                         }
+                        {
+                            // #6551: text sources evaluate FOR on the row just
+                            // appended to the target, and remove it if rejected (VFP9).
+                            const std::size_t provisional_recno = cursor->recno;
+                            const std::optional<std::string> provisional_bytes = append_for_expression.empty()
+                                ? std::nullopt
+                                : read_local_record_bytes(provisional_recno);
+                            const AppendForOutcome row_outcome = evaluate_append_for_on_target();
+                            if (row_outcome == AppendForOutcome::target_lost)
+                            {
+                                return append_target_lost_result();
+                            }
+                            if (row_outcome == AppendForOutcome::rejected)
+                            {
+                                if (!reject_local_provisional_record(provisional_recno, provisional_bytes))
+                                {
+                                    last_fault_location = statement.location;
+                                    last_fault_statement = statement.text;
+                                    return {.ok = false, .message = last_error_message};
+                                }
+                                continue;
+                            }
+                        }
                         ++appended_count;
                     }
 
@@ -10646,6 +11099,24 @@
                 // per-iteration revalidation the source side already needs.
                 const CursorGenerationReference destination_cursor_reference =
                     capture_cursor_generation_reference(cursor);
+                TemporaryAppendSource append_source{*this};
+                if (!append_for_expression.empty() &&
+                    !open_append_source(append_source, copperfin::platform::path_to_utf8_string(src_path)))
+                {
+                    if (cursor == nullptr)
+                    {
+                        return append_target_lost_result();
+                    }
+                    if (last_error_message.empty())
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromFailed",
+                            {{"errorMessage", copperfin::platform::path_to_utf8_string(src_path)}});
+                    }
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
                 std::size_t appended_count = 0U;
                 const std::vector<vfp::DbfFieldDescriptor> destination_fields =
                     cursor_field_descriptors(*cursor);
@@ -10687,6 +11158,21 @@
                             return {.ok = false, .message = last_error_message};
                         }
                         if (!filter_matches)
+                        {
+                            continue;
+                        }
+                    }
+                    // #6551: DBF sources evaluate FOR on the source row, with the
+                    // source selected (VFP9).
+                    if (!append_for_expression.empty())
+                    {
+                        const AppendForOutcome source_outcome =
+                            evaluate_append_for_on_source(*append_source.reference, source_record_index + 1U);
+                        if (source_outcome == AppendForOutcome::target_lost)
+                        {
+                            return append_target_lost_result();
+                        }
+                        if (source_outcome == AppendForOutcome::rejected)
                         {
                             continue;
                         }

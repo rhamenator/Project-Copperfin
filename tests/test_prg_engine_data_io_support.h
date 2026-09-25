@@ -93,6 +93,7 @@ void test_copy_structure_extended_reports_nullable_field_flag();
 void test_copy_to_from_empty_table_produces_valid_empty_dbf();
 void test_append_from_copies_records_into_current_table();
 void test_append_from_honors_open_source_cursor_filter();
+void test_append_from_for_follows_vfp9_semantics_on_local_targets();
 void test_append_from_source_filter_closing_destination_fails_catchably();
 void test_append_from_source_filter_closing_source_fails_catchably();
 void test_append_from_source_filter_switching_data_session_journals_to_origin_session();

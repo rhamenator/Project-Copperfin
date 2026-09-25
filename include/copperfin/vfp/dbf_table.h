@@ -38,6 +38,10 @@ struct DbfRecord {
     std::size_t record_index = 0;
     bool deleted = false;
     std::vector<DbfRecordValue> values;
+    // Runtime-only identity for an in-memory row while user code runs against
+    // it (e.g. a provisional APPEND FROM row, #6551). Survives REPLACE, PACK,
+    // and record_index renumbering; zero when unused. Never persisted.
+    std::uint64_t transient_row_token = 0;
 };
 
 struct DbfTable {

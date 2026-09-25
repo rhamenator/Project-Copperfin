@@ -1,3 +1,10 @@
+- 2026-09-24: `APPEND FROM ... FOR` now follows VFP9 on every target
+  (#6551). FOR was previously ignored entirely on local tables. FOR is
+  evaluated once up front on the target's current record (error 1127 if
+  it isn't logical), then per row: DBF sources with the source table
+  selected, and text sources (CSV/SDF/DIF/SYLK/XLS/JSON) on the row
+  provisionally appended to the target, which is removed again if
+  rejected. `RQ-CF-PRG-APPEND-FROM-FOR-001`.
 - 2026-09-24: An object released in the middle of a call that uses it (a
   `BINDEVENT` handler, an `_Access` method, or the method itself) now stays
   alive until that call finishes, and the call completes and returns its

@@ -37,6 +37,7 @@ int main()
     test_remote_append_from_for_predicate_closing_target_fails_catchably();
     test_remote_append_from_for_predicate_error_leaves_no_provisional_row();
     test_remote_append_from_for_predicate_packing_target_keeps_rows_consistent();
+    test_remote_append_from_for_follows_vfp9_semantics();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";
