@@ -1,1 +1,1 @@
-Fixed CSV and DELIMITED import/export so quoted character fields preserve leading and trailing spaces and tabs (#6592, #6594).
+- 2026-09-25: Fixed CSV and DELIMITED import/export so quoted character fields preserve leading spaces and tab characters (#6592, #6594).
