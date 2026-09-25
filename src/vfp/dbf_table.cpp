@@ -148,6 +148,19 @@ std::string trim_dbf_text_terminator(std::string text) {
     return trim_right(std::move(text));
 }
 
+std::string trim_dbf_character_padding(std::string text) {
+    if (const auto nul = std::find(text.begin(), text.end(), '\0'); nul != text.end()) {
+        text.erase(nul, text.end());
+    }
+    // Fixed-width Character fields use ASCII space for padding.  Other
+    // whitespace bytes, including tabs, are stored field content and must
+    // survive a DBF-to-text export or a text round trip.
+    while (!text.empty() && text.back() == ' ') {
+        text.pop_back();
+    }
+    return text;
+}
+
 std::string trim_both(std::string text) {
     text = trim_right(std::move(text));
     const auto first = std::find_if(text.begin(), text.end(), [](unsigned char ch) {
@@ -1180,7 +1193,7 @@ DbfWriteResult write_field_bytes(
         case 'C': {
             const DbfTextConversionResult encoded = encode_dbf_text(
                 header.code_page_mark,
-                trim_right(value));
+                trim_dbf_character_padding(value));
             if (!encoded.ok) {
                 return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TextEncodingConversionFailed"), .record_count = header.record_count};
             }
@@ -1790,7 +1803,7 @@ DecodedDbfValue decode_value(
             std::string value(raw.begin(), raw.end());
             const DbfTextConversionResult decoded = decode_dbf_text(
                 code_page_mark,
-                trim_dbf_text_terminator(std::move(value)));
+                trim_dbf_character_padding(std::move(value)));
             return decoded.ok
                 ? DecodedDbfValue(std::move(decoded.text))
                 : DecodedDbfValue(format_binary_bytes(raw));

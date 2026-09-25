@@ -415,10 +415,13 @@
             const DelimitedTextOptions &options)
         {
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
-            const std::string value = trim_copy(raw_value);
             const bool quote_value = options.quote_character_fields &&
                                      !(field_type == 'N' || field_type == 'F' || field_type == 'I' || field_type == 'B' ||
                                        field_type == 'Y' || field_type == 'L');
+            // Character fields are enclosed specifically so their text is
+            // transported verbatim. Trimming here changes significant
+            // leading/trailing spaces and tabs before the enclosure is written.
+            const std::string value = quote_value ? raw_value : trim_copy(raw_value);
             if (!quote_value)
             {
                 return value;
@@ -444,6 +447,7 @@
             std::vector<std::string> values;
             std::string current;
             bool in_quotes = false;
+            bool current_field_was_quoted = false;
             for (std::size_t index = 0U; index < line.size(); ++index)
             {
                 const char ch = line[index];
@@ -457,18 +461,20 @@
                     else
                     {
                         in_quotes = !in_quotes;
+                        current_field_was_quoted = true;
                     }
                     continue;
                 }
                 if (!in_quotes && ch == options.delimiter)
                 {
-                    values.push_back(trim_copy(current));
+                    values.push_back(current_field_was_quoted ? current : trim_copy(current));
                     current.clear();
+                    current_field_was_quoted = false;
                     continue;
                 }
                 current.push_back(ch);
             }
-            values.push_back(trim_copy(current));
+            values.push_back(current_field_was_quoted ? current : trim_copy(current));
             return values;
         }
 
