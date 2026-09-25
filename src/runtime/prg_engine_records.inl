@@ -2289,6 +2289,7 @@
                 // what this admission step needs to preserve.
                 const auto append_result = vfp::append_blank_record_to_file_full_rewrite(
                     copperfin::platform::path_to_utf8_string(*staged_table_path));
+                note_dbf_row_set_change(copperfin::platform::path_to_utf8_string(*staged_table_path));
                 if (!append_result.ok || append_result.record_count == 0U)
                 {
                     return fail(append_result.error);
@@ -3324,6 +3325,7 @@
             else if (!live_cursor->source_path.empty())
             {
                 const auto rollback_result = vfp::truncate_dbf_table_file(live_cursor->source_path, original_record_count);
+                note_dbf_row_set_change(live_cursor->source_path);
                 if (rollback_result.ok)
                 {
                     live_cursor->record_count = rollback_result.record_count;
@@ -3422,6 +3424,7 @@
             const auto result = use_full_rewrite
                 ? vfp::append_blank_record_to_file_full_rewrite(cursor.source_path)
                 : vfp::append_blank_record_to_file(cursor.source_path);
+            note_dbf_row_set_change(cursor.source_path);
             if (!result.ok)
             {
                 last_error_message = result.error;
@@ -3694,6 +3697,7 @@
             }
 
             const auto result = vfp::pack_dbf_table_file(cursor.source_path);
+            note_dbf_row_set_change(cursor.source_path);
             if (!result.ok)
             {
                 last_error_message = result.error;
@@ -3734,6 +3738,7 @@
             }
 
             const auto result = vfp::zap_dbf_table_file(cursor.source_path);
+            note_dbf_row_set_change(cursor.source_path);
             if (!result.ok)
             {
                 last_error_message = result.error;

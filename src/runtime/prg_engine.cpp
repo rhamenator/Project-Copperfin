@@ -1047,6 +1047,23 @@ namespace copperfin::runtime
         std::map<int, std::size_t> memowidth_by_session;
         std::map<int, std::map<int, RuntimeSqlConnectionState>> sql_connections_by_session;
         std::map<int, RuntimeOleObjectState> ole_objects;
+        // #6560: per-table serial bumped (via note_dbf_row_set_change) by every
+        // runtime call that can add, remove, reorder, or rewrite a table's rows
+        // (append, truncate, PACK, ZAP, table (re)creation, field add/drop/alter).
+        // APPEND FROM uses it to prove its provisional row is still the last
+        // record after user code ran; byte equality cannot establish identity.
+        std::map<std::string, std::uint64_t> dbf_row_set_serial_by_path;
+
+        void note_dbf_row_set_change(const std::string &path)
+        {
+            ++dbf_row_set_serial_by_path[normalize_path(path)];
+        }
+
+        std::uint64_t dbf_row_set_serial(const std::string &path)
+        {
+            const auto found = dbf_row_set_serial_by_path.find(normalize_path(path));
+            return found == dbf_row_set_serial_by_path.end() ? 0U : found->second;
+        }
         // #6550: a released object is extracted (not erased) so any C++
         // reference an in-flight property read or method call still holds
         // stays valid -- VFP9 keeps the object alive until that call ends.
@@ -2810,6 +2827,7 @@ namespace copperfin::runtime
                         return std::nullopt;
                     }
                     const auto truncate_result = vfp::truncate_dbf_table_file(existing->source_path, 0U);
+                    note_dbf_row_set_change(existing->source_path);
                     if (!truncate_result.ok)
                     {
                         return std::nullopt;
@@ -2822,6 +2840,7 @@ namespace copperfin::runtime
                     for (const auto &row : snapshot.rows)
                     {
                         const auto append_result = vfp::append_blank_record_to_file(existing->source_path);
+                        note_dbf_row_set_change(existing->source_path);
                         if (!append_result.ok)
                         {
                             return std::nullopt;
@@ -2916,6 +2935,7 @@ namespace copperfin::runtime
 
                 const auto create_result = vfp::create_dbf_table_file(
                     copperfin::platform::path_to_utf8_string(table_path), descriptors, rows);
+                note_dbf_row_set_change(copperfin::platform::path_to_utf8_string(table_path));
                 if (!create_result.ok)
                 {
                     return std::nullopt;

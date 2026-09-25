@@ -3410,9 +3410,10 @@ void test_append_from_for_follows_vfp9_semantics_on_local_targets() {
         std::transform(text.begin(), text.end(), text.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
         return text;
     };
-    const auto run_case = [&](const std::string &label, const std::string &append_statement) {
+    const auto run_case = [&](const std::string &label, const std::string &append_statement,
+                              const std::vector<std::string> &initial_rows = {"ONE"}) {
         const fs::path dst = temp_root / (label + "_dst.dbf");
-        write_simple_dbf(dst, {"ONE"});
+        write_simple_dbf(dst, initial_rows);
         const fs::path main_path = temp_root / (label + ".prg");
         write_text(
             main_path,
@@ -3453,6 +3454,15 @@ void test_append_from_for_follows_vfp9_semantics_on_local_targets() {
             "    IF nCalls = 2\n"
             "        APPEND BLANK IN Dst\n"
             "    ENDIF\n"
+            "    RETURN .F.\n"
+            "ENDFUNC\n"
+            "FUNCTION DeleteCandidateThenPack\n"
+            "    nCalls = nCalls + 1\n"
+            "    IF nCalls = 1\n"
+            "        RETURN .T.\n"
+            "    ENDIF\n"
+            "    DELETE\n"
+            "    PACK\n"
             "    RETURN .F.\n"
             "ENDFUNC\n"
             "FUNCTION PackTarget\n"
@@ -3508,16 +3518,30 @@ void test_append_from_for_follows_vfp9_semantics_on_local_targets() {
             "#6553 local session switch: a per-row DATASESSION switch should fail catchably and leave the target unchanged, got error " +
                 global_text(state, "nerr") + " / rows " + global_text(state, "nrows"));
     }
-    // #6553 review: a FOR callback that DELETE+PACKs an earlier target row and
-    // rejects the candidate must still have the (shifted) candidate removed.
-    // As in VFP9, the callback's own PACK stands, and every row is rejected,
-    // so the table ends empty.
+    // #6553/#6560: a FOR callback that DELETE+PACKs an earlier target row and
+    // rejects the candidate reshapes the target, so the candidate can no longer
+    // be identified safely (byte equality is not identity). The command fails
+    // catchably and truncates nothing: the callback's PACK stands and the
+    // candidate is left in place rather than guessing which row to remove.
     {
         const auto state = run_case("pack", "APPEND FROM '" + (temp_root / "src.csv").string() + "' TYPE CSV FOR PackTarget()");
-        expect(state.completed, "#6553 local pack: script should complete: " + state.message);
-        expect(global_text(state, "nerr") == "0" && global_text(state, "nrows") == "0",
-            "#6553 local pack: the shifted rejected candidate should be removed after the callback's PACK, got error " +
-                global_text(state, "nerr") + " / rows " + global_text(state, "nrows"));
+        expect(state.completed, "#6560 local pack: script should complete: " + state.message);
+        expect(global_text(state, "nerr") != "0" && global_text(state, "nrows") == "1" && global_text(state, "cbottom") == "ALPHA",
+            "#6560 local pack: a reshaped target should fail catchably without truncating, got error " +
+                global_text(state, "nerr") + " / rows " + global_text(state, "nrows") + " / bottom " + global_text(state, "cbottom"));
+    }
+    // #6560 (Codex reproduction): the callback deletes the provisional candidate
+    // itself and PACKs; the pre-existing row is byte-identical to it. That row
+    // must survive -- the old byte-comparison rollback truncated it.
+    {
+        write_text(temp_root / "dup.csv", "NAME\nDUP\n");
+        const auto state = run_case("dup_pack", "APPEND FROM '" + (temp_root / "dup.csv").string() + "' TYPE CSV FOR DeleteCandidateThenPack()", {"DUP"});
+        expect(state.completed, "#6560 duplicate PACK: script should complete: " + state.message);
+        expect(global_text(state, "nrows") == "1" && global_text(state, "cbottom") == "DUP",
+            "#6560 duplicate PACK: preserve the pre-existing byte-identical row; got error " + global_text(state, "nerr") +
+                " / rows " + global_text(state, "nrows") + " / bottom " + global_text(state, "cbottom"));
+        expect(global_text(state, "nerr") != "0",
+            "#6560 duplicate PACK: an unprovable candidate identity should fail catchably, got error " + global_text(state, "nerr"));
     }
 
     // #6553 review: if the callback appends after the candidate and then
