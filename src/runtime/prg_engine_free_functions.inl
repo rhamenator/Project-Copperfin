@@ -445,9 +445,21 @@
         std::vector<std::string> parse_delimited_text_line(const std::string &line, const DelimitedTextOptions &options)
         {
             std::vector<std::string> values;
-            std::string current;
+            std::string outside_before_quotes;
+            std::string quoted_content;
+            std::string outside_after_quotes;
             bool in_quotes = false;
             bool current_field_was_quoted = false;
+            bool current_field_closed_quote = false;
+            const auto finish_current_field = [&]() {
+                if (!current_field_was_quoted)
+                {
+                    return trim_copy(outside_before_quotes);
+                }
+                // Whitespace outside an enclosure is field padding, while the
+                // enclosed span is character data. Keep the latter verbatim.
+                return trim_copy(outside_before_quotes) + quoted_content + trim_copy(outside_after_quotes);
+            };
             for (std::size_t index = 0U; index < line.size(); ++index)
             {
                 const char ch = line[index];
@@ -455,26 +467,44 @@
                 {
                     if (in_quotes && index + 1U < line.size() && line[index + 1U] == options.quote)
                     {
-                        current.push_back(options.quote);
+                        quoted_content.push_back(options.quote);
                         ++index;
                     }
                     else
                     {
                         in_quotes = !in_quotes;
                         current_field_was_quoted = true;
+                        if (!in_quotes)
+                        {
+                            current_field_closed_quote = true;
+                        }
                     }
                     continue;
                 }
                 if (!in_quotes && ch == options.delimiter)
                 {
-                    values.push_back(current_field_was_quoted ? current : trim_copy(current));
-                    current.clear();
+                    values.push_back(finish_current_field());
+                    outside_before_quotes.clear();
+                    quoted_content.clear();
+                    outside_after_quotes.clear();
                     current_field_was_quoted = false;
+                    current_field_closed_quote = false;
                     continue;
                 }
-                current.push_back(ch);
+                if (in_quotes)
+                {
+                    quoted_content.push_back(ch);
+                }
+                else if (current_field_closed_quote)
+                {
+                    outside_after_quotes.push_back(ch);
+                }
+                else
+                {
+                    outside_before_quotes.push_back(ch);
+                }
             }
-            values.push_back(current_field_was_quoted ? current : trim_copy(current));
+            values.push_back(finish_current_field());
             return values;
         }
 

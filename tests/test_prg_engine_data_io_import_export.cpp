@@ -1236,7 +1236,7 @@ void test_append_from_type_csv_imports_delimited_rows() {
     fs::create_directories(temp_root);
 
     write_people_dbf(temp_root / "dest.dbf", {});
-    write_text(temp_root / "people.csv", "NAME,AGE\r\n\"  Ivy, Jr\t\",9\r\n\"Max\",44\r\n");
+    write_text(temp_root / "people.csv", "NAME,AGE\r\n\"  Ivy, Jr\t\",9\r\n\"Max\",44\r\n  \"Outer\"\t,55\r\n");
     write_text(temp_root / "people_pipe.txt", "\"  Nia\t\"|12\r\n");
     write_text(temp_root / "people_custom.txt", "_  Ora\t_;15\r\n");
 
@@ -1258,9 +1258,9 @@ void test_append_from_type_csv_imports_delimited_rows() {
     const auto result = copperfin::vfp::parse_dbf_table_from_file(
         (temp_root / "dest.dbf").string(), 100U);
     expect(result.ok, "APPEND FROM TYPE CSV destination DBF should be readable");
-    expect(result.table.records.size() == 4U,
-        "APPEND FROM TYPE CSV/DELIMITED should append four rows");
-    if (result.table.records.size() >= 4U) {
+    expect(result.table.records.size() == 5U,
+        "APPEND FROM TYPE CSV/DELIMITED should append five rows");
+    if (result.table.records.size() >= 5U) {
         expect(result.table.records[0U].values[0U].display_value == "  Ivy, Jr\t",
             "#6592: first CSV row should preserve quoted character whitespace exactly");
         expect(result.table.records[0U].values[1U].display_value == "9",
@@ -1269,13 +1269,17 @@ void test_append_from_type_csv_imports_delimited_rows() {
             "second CSV row should import NAME");
         expect(result.table.records[1U].values[1U].display_value == "44",
             "second CSV row should import AGE");
-        expect(result.table.records[2U].values[0U].display_value == "  Nia\t",
+        expect(result.table.records[2U].values[0U].display_value == "Outer",
+            "#6592: whitespace outside a CSV enclosure should remain field padding");
+        expect(result.table.records[2U].values[1U].display_value == "55",
+            "CSV row with outside enclosure padding should import AGE");
+        expect(result.table.records[3U].values[0U].display_value == "  Nia\t",
             "#6592: DELIMITED WITH CHARACTER row should preserve quoted character whitespace");
-        expect(result.table.records[2U].values[1U].display_value == "12",
+        expect(result.table.records[3U].values[1U].display_value == "12",
             "DELIMITED WITH CHARACTER row should import AGE");
-        expect(result.table.records[3U].values[0U].display_value == "  Ora\t",
+        expect(result.table.records[4U].values[0U].display_value == "  Ora\t",
             "#6592: DELIMITED custom enclosure row should preserve quoted character whitespace");
-        expect(result.table.records[3U].values[1U].display_value == "15",
+        expect(result.table.records[4U].values[1U].display_value == "15",
             "DELIMITED custom enclosure row should import AGE");
     }
 
