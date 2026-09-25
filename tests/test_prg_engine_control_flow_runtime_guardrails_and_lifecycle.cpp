@@ -514,38 +514,45 @@ void test_close_all_preserves_live_form_lifetime() {
 
 void test_close_databases_preserves_low_level_file_handles() {
     namespace fs = std::filesystem;
-    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_close_databases_file_handles_6196";
-    std::error_code ignored;
-    fs::remove_all(temp_root, ignored);
-    fs::create_directories(temp_root);
-
     const auto global_text = [](const auto& state, const std::string& name) -> std::string {
         const auto found = state.globals.find(name);
         return found == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(found->second);
     };
 
-    const fs::path main_path = temp_root / "close_databases_file_handles.prg";
-    write_text(
-        main_path,
-        "nHandle = FCREATE('held.dat')\n"
-        "CLOSE DATABASES\n"
-        "nWrite = FWRITE(nHandle, 'abc')\n"
-        "nClose = FCLOSE(nHandle)\n"
-        "RETURN\n");
+    const auto run_scenario = [&](const std::string& close_spelling, const std::string& label) {
+        const fs::path temp_root = fs::temp_directory_path() /
+            ("copperfin_prg_engine_close_databases_file_handles_6196_" + label);
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
 
-    copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
-    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed, "#6196: CLOSE DATABASES file-handle script should complete: " + state.message);
-    expect(global_text(state, "nwrite") == "3",
-           "#6196: CLOSE DATABASES must not close a low-level FOPEN/FCREATE handle");
-    expect(global_text(state, "nclose") == "0",
-           "#6196: the preserved handle must still close normally afterward");
+        const fs::path main_path = temp_root / "close_databases_file_handles.prg";
+        write_text(
+            main_path,
+            "nHandle = FCREATE('held.dat')\n"
+            + close_spelling + "\n" +
+            "nWrite = FWRITE(nHandle, 'abc')\n"
+            "nClose = FCLOSE(nHandle)\n"
+            "RETURN\n");
 
-    const auto written = read_text(temp_root / "held.dat");
-    expect(written == "abc", "#6196: the write after CLOSE DATABASES must actually reach the file");
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6196: " + close_spelling + " file-handle script should complete: " + state.message);
+        expect(global_text(state, "nwrite") == "3",
+               "#6196: " + close_spelling + " must not close a low-level FOPEN/FCREATE handle");
+        expect(global_text(state, "nclose") == "0",
+               "#6196: the preserved handle must still close normally after " + close_spelling);
 
-    fs::remove_all(temp_root, ignored);
+        const auto written = read_text(temp_root / "held.dat");
+        expect(written == "abc", "#6196: the write after " + close_spelling + " must actually reach the file");
+
+        fs::remove_all(temp_root, ignored);
+    };
+
+    run_scenario("CLOSE DATABASE", "database");
+    run_scenario("CLOSE DATABASES", "databases");
+    run_scenario("CLOSE DATABASES ALL", "databases_all");
 }
 
 void test_close_databases_and_close_all_preserve_foxtools_registrations() {

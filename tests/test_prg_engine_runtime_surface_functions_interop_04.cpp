@@ -1141,7 +1141,9 @@ namespace copperfin::runtime_surface_tests
             "CATCH TO oErr\n"
             "    nErrSelfTag = oErr.ErrorNo\n"
             "ENDTRY\n"
-            "* 8 (#6552 review): the before-handler runs CLOSE ALL\n"
+            "* 8 (#6552 review; since #6195, CLOSE ALL no longer touches the\n"
+            "*   source at all, so this now guards that a before-handler\n"
+            "*   running CLOSE ALL neither crashes nor loses the source)\n"
             "nPings = 0\n"
             "oSource = CREATEOBJECT('SourceThing')\n"
             "nBind8 = BINDEVENT(oSource, 'Ping', oHandler, 'CloseAllHandler', 0)\n"
@@ -1247,7 +1249,7 @@ namespace copperfin::runtime_surface_tests
                    global_text(state, "xselftag") + " / error " + global_text(state, "nerrselftag"));
         expect(global_text(state, "nerrcloseall") == "0" && global_text(state, "xcloseall") == "pong" &&
                    global_text(state, "npingsaftercloseall") == "1",
-               "#6552: a before-handler running CLOSE ALL still lets the body run safely, got: " +
+               "#6552/#6195: a before-handler running CLOSE ALL neither crashes nor releases the source, got: " +
                    global_text(state, "xcloseall") + " / error " + global_text(state, "nerrcloseall") + " / pings " +
                    global_text(state, "npingsaftercloseall"));
 
