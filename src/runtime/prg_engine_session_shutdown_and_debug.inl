@@ -36,6 +36,10 @@
 
         void cleanup_runtime_resources_for_shutdown()
         {
+            // #6263: roll back every still-open transaction before any of
+            // its tracked cursors/locks are discarded below.
+            rollback_all_pending_transaction_journals();
+
             // Release open work areas/cursors across all data sessions.
             for (auto &[_, session] : data_sessions)
             {

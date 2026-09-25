@@ -408,9 +408,13 @@ void test_transaction_rollback_leaves_table_unchanged() {
     fs::remove_all(temp_root, ignored);
 }
 
-void test_startup_replays_pending_transaction_journal() {
+void test_session_destruction_rolls_back_open_transaction() {
+    // #6263: a clean session destruction after RETURN, with no
+    // END TRANSACTION/ROLLBACK, must restore the backed-up bytes itself --
+    // it must not depend on some later, unrelated session happening to
+    // scan the same temp directory at its own startup.
     namespace fs = std::filesystem;
-    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_transaction_replay";
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_transaction_destructor_rollback_6263";
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
@@ -427,12 +431,92 @@ void test_startup_replays_pending_transaction_journal() {
         "REPLACE NAME WITH 'BROKEN', AGE WITH 777\n"
         "APPEND BLANK\n"
         "REPLACE NAME WITH 'PENDING', AGE WITH 1\n"
+        "nLevelAtReturn = TXNLEVEL()\n"
         "RETURN\n");
 
+    int level_at_return = -1;
     {
         copperfin::runtime::PrgRuntimeSession writer = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(writer_path.string(), temp_root.string()));
         const auto writer_state = writer.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(writer_state.completed, "transaction writer script should complete");
+        const auto level = writer_state.globals.find("nlevelatreturn");
+        if (level != writer_state.globals.end()) {
+            level_at_return = static_cast<int>(level->second.number_value);
+        }
+        // writer is destroyed here without END TRANSACTION/ROLLBACK.
+    }
+    expect(level_at_return == 1, "#6263: the writer should return with an open transaction (TXNLEVEL()==1)");
+
+    expect(find_generated_transaction_journal(temp_root, ignored).empty(),
+           "#6263: destroying the session must not leave a pending transaction journal behind");
+
+    const fs::path reader_path = temp_root / "reader.prg";
+    write_text(
+        reader_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO 1\n"
+        "cFirst = NAME\n"
+        "nFirstAge = AGE\n"
+        "nCount = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession reader = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(reader_path.string(), temp_root.string()));
+    const auto state = reader.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "reader script after destructor rollback should complete");
+
+    const auto first = state.globals.find("cfirst");
+    const auto first_age = state.globals.find("nfirstage");
+    const auto count = state.globals.find("ncount");
+    expect(first != state.globals.end(), "reader script should capture first record name");
+    expect(first_age != state.globals.end(), "reader script should capture first record age");
+    expect(count != state.globals.end(), "reader script should capture record count");
+    if (first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first->second) == "ALPHA",
+               "#6263: destroying the writer session should have already restored NAME");
+    }
+    if (first_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first_age->second) == "10",
+               "#6263: destroying the writer session should have already restored AGE");
+    }
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "2",
+               "#6263: destroying the writer session should have already removed the uncommitted appended row");
+    }
+
+    // Nothing was left for this reader session to recover: it should not
+    // report a transaction replay of its own.
+    expect(std::none_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.transaction.replay";
+    }), "#6263: the reader session should have nothing left to replay -- the writer's own destruction already rolled back");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_startup_replays_pending_transaction_journal() {
+    // This exercises replay_pending_transaction_journals()'s own crash
+    // recovery in isolation: a hand-crafted journal directory simulates
+    // what a real process crash (bypassing every destructor, unlike an
+    // ordinary C++ scope exit) would leave behind, which #6263's fix does
+    // not and cannot address -- there is no destructor to run.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_transaction_replay";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path journal_dir = temp_root / "runtime-temp" / "transactions" / "txn_fake";
+    fs::create_directories(journal_dir, ignored);
+
+    const fs::path backup_path = journal_dir / "backup_0.dbf";
+    write_people_dbf(table_path, {{"BROKEN", 777}, {"BRAVO", 20}, {"PENDING", 1}});
+    write_people_dbf(backup_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    {
+        std::ofstream journal(journal_dir / "journal.log", std::ios::binary);
+        journal << "VERSION\t1\n";
+        journal << "LEVEL\t1\n";
+        journal << "FILE\t" << table_path.string() << "\t1\t" << backup_path.string() << "\n";
     }
 
     const fs::path reader_path = temp_root / "reader.prg";
@@ -492,21 +576,28 @@ void test_transaction_journal_serializes_grouped_levels_invariantly() {
 
     const std::locale grouping_locale(std::locale::classic(), new grouped_transaction_numpunct());
     {
-        transaction_global_locale_guard locale_guard(grouping_locale);
+        // #6263: the writer's own destruction now rolls back its still-open
+        // transaction, which deletes the journal directory this test needs
+        // to inspect -- so the session (and the journal file it created)
+        // must stay alive until after that inspection, not be destroyed
+        // right after run() the way an earlier version of this test did.
         copperfin::runtime::PrgRuntimeSession writer = copperfin::runtime::PrgRuntimeSession::create(
             make_runtime_session_options(writer_path.string(), temp_root.string()));
-        const auto writer_state = writer.run(copperfin::runtime::DebugResumeAction::continue_run);
-        expect(writer_state.completed, "grouped-locale transaction writer should complete");
-    }
+        {
+            transaction_global_locale_guard locale_guard(grouping_locale);
+            const auto writer_state = writer.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(writer_state.completed, "grouped-locale transaction writer should complete");
+        }
 
-    const fs::path journal_path = find_generated_transaction_journal(temp_root, ignored);
-    expect(!journal_path.empty(), "grouped-locale transaction journal should exist");
-    if (!journal_path.empty()) {
-        const std::string journal_text = read_text(journal_path);
-        expect(journal_text.find("LEVEL\t1234\n") != std::string::npos,
-               "transaction journal level should use invariant ungrouped digits");
-        expect(journal_text.find("LEVEL\t1.234\n") == std::string::npos,
-               "transaction journal level must reject host digit grouping at serialization");
+        const fs::path journal_path = find_generated_transaction_journal(temp_root, ignored);
+        expect(!journal_path.empty(), "grouped-locale transaction journal should exist");
+        if (!journal_path.empty()) {
+            const std::string journal_text = read_text(journal_path);
+            expect(journal_text.find("LEVEL\t1234\n") != std::string::npos,
+                   "transaction journal level should use invariant ungrouped digits");
+            expect(journal_text.find("LEVEL\t1.234\n") == std::string::npos,
+                   "transaction journal level must reject host digit grouping at serialization");
+        }
     }
 
     fs::remove_all(temp_root, ignored);
@@ -546,54 +637,58 @@ void test_startup_rejects_malformed_transaction_journal_scalars() {
             "GO 1\n"
             "REPLACE NAME WITH 'BROKEN', AGE WITH 777\n"
             "RETURN\n");
-        {
+        // #6263: a writer session's own destruction now rolls back its still-
+        // open transaction, deleting the journal directory this test needs
+        // to corrupt and hand to a reader session. Both sessions must stay
+        // alive for the whole scenario, destructing only when run_case()
+        // returns -- before the fs::remove_all below, not racing it.
+        const auto run_case = [&]() {
             copperfin::runtime::PrgRuntimeSession writer = copperfin::runtime::PrgRuntimeSession::create(
                 make_runtime_session_options(writer_path.string(), temp_root.string()));
             const auto writer_state = writer.run(copperfin::runtime::DebugResumeAction::continue_run);
             expect(writer_state.completed, test_case.name + ": transaction writer should complete");
-        }
 
-        const std::string modified_bytes = read_text(table_path);
-        expect(modified_bytes != original_bytes,
-               test_case.name + ": transaction writer should modify the live DBF before recovery");
+            const std::string modified_bytes = read_text(table_path);
+            expect(modified_bytes != original_bytes,
+                   test_case.name + ": transaction writer should modify the live DBF before recovery");
 
-        const fs::path journal_path = find_generated_transaction_journal(temp_root, ignored);
-        expect(!journal_path.empty(), test_case.name + ": generated pending journal should exist");
-        if (journal_path.empty()) {
-            fs::remove_all(temp_root, ignored);
-            continue;
-        }
+            const fs::path journal_path = find_generated_transaction_journal(temp_root, ignored);
+            expect(!journal_path.empty(), test_case.name + ": generated pending journal should exist");
+            if (journal_path.empty()) {
+                return;
+            }
 
-        std::string journal_text = read_text(journal_path);
-        const std::string valid_token = test_case.name == "malformed_exists"
-            ? "FILE\t" + table_path.string() + "\t1\t"
-            : test_case.valid_token;
-        const std::string malformed_token = test_case.name == "malformed_exists"
-            ? "FILE\t" + table_path.string() + "\t1garbage\t"
-            : test_case.malformed_token;
-        const std::size_t token_position = journal_text.find(valid_token);
-        expect(token_position != std::string::npos,
-               test_case.name + ": generated journal should contain the scalar token under test");
-        if (token_position == std::string::npos) {
-            fs::remove_all(temp_root, ignored);
-            continue;
-        }
-        journal_text.replace(token_position, valid_token.size(), malformed_token);
-        write_text(journal_path, journal_text);
+            std::string journal_text = read_text(journal_path);
+            const std::string valid_token = test_case.name == "malformed_exists"
+                ? "FILE\t" + table_path.string() + "\t1\t"
+                : test_case.valid_token;
+            const std::string malformed_token = test_case.name == "malformed_exists"
+                ? "FILE\t" + table_path.string() + "\t1garbage\t"
+                : test_case.malformed_token;
+            const std::size_t token_position = journal_text.find(valid_token);
+            expect(token_position != std::string::npos,
+                   test_case.name + ": generated journal should contain the scalar token under test");
+            if (token_position == std::string::npos) {
+                return;
+            }
+            journal_text.replace(token_position, valid_token.size(), malformed_token);
+            write_text(journal_path, journal_text);
 
-        const fs::path reader_path = temp_root / "reader.prg";
-        write_text(reader_path, "RETURN\n");
-        copperfin::runtime::PrgRuntimeSession reader = copperfin::runtime::PrgRuntimeSession::create(
-            make_runtime_session_options(reader_path.string(), temp_root.string()));
-        const auto reader_state = reader.run(copperfin::runtime::DebugResumeAction::continue_run);
-        expect(reader_state.completed, test_case.name + ": startup should fail closed without a runtime fault");
-        expect(fs::is_regular_file(table_path),
-               test_case.name + ": malformed journal must not delete the live DBF");
-        expect(read_text(table_path) == modified_bytes,
-               test_case.name + ": malformed journal must not overwrite or partially replay the live DBF");
-        expect(std::none_of(reader_state.events.begin(), reader_state.events.end(), [](const auto& event) {
-            return event.category == "runtime.transaction.replay";
-        }), test_case.name + ": malformed journal must not emit a successful replay event");
+            const fs::path reader_path = temp_root / "reader.prg";
+            write_text(reader_path, "RETURN\n");
+            copperfin::runtime::PrgRuntimeSession reader = copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(reader_path.string(), temp_root.string()));
+            const auto reader_state = reader.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(reader_state.completed, test_case.name + ": startup should fail closed without a runtime fault");
+            expect(fs::is_regular_file(table_path),
+                   test_case.name + ": malformed journal must not delete the live DBF");
+            expect(read_text(table_path) == modified_bytes,
+                   test_case.name + ": malformed journal must not overwrite or partially replay the live DBF");
+            expect(std::none_of(reader_state.events.begin(), reader_state.events.end(), [](const auto& event) {
+                return event.category == "runtime.transaction.replay";
+            }), test_case.name + ": malformed journal must not emit a successful replay event");
+        };
+        run_case();
 
         fs::remove_all(temp_root, ignored);
     }

@@ -1385,12 +1385,21 @@ namespace copperfin::runtime
 
         ~Impl()
         {
-            while (!com_eventhandler_bindings.empty())
+            // #6263: ordinary completion followed by host destruction never
+            // ran perform_quit()'s cleanup, so an open transaction's backup
+            // files, cursors, locks, and other session resources leaked past
+            // the runtime boundary. Route through the same shutdown cleanup
+            // every other destruction path uses instead of a hand-duplicated
+            // partial subset of it. A destructor must not propagate an
+            // exception; this is a best-effort last resort.
+            try
             {
-                retire_com_eventhandler_binding(com_eventhandler_bindings.front().ordinal);
+                cleanup_runtime_resources_for_shutdown();
+            }
+            catch (...)
+            {
             }
             external_event_tokens.reset();
-            release_declared_dll_functions();
             for (const auto &path : owned_xasset_bootstrap_paths)
             {
                 std::error_code ignored;
