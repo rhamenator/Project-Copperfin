@@ -5328,15 +5328,33 @@
                 UseCommandContinuation &continuation = *frame.use_command_continuation;
                 if (!continuation.target_value.has_value())
                 {
-                    const auto target_value = resumed_use_target_value.has_value()
-                                                  ? resumed_use_target_value
-                                                  : evaluate_resumable_expression(frame, statement);
-                    if (!target_value.has_value())
+                    // #6557: VFP9 treats a bare, unparenthesized USE target as a
+                    // literal file/table name, never as an expression -- only
+                    // USE (expr) and a macro (&name) are evaluated.
+                    const std::string raw_target = trim_copy(statement.expression);
+                    const bool is_parenthesized_expression = raw_target.size() >= 2U &&
+                        raw_target.front() == '(' && raw_target.back() == ')';
+                    const bool is_macro_expression = !raw_target.empty() && raw_target.front() == '&';
+                    const bool is_quoted_literal = raw_target.size() >= 2U &&
+                        ((raw_target.front() == '\'' && raw_target.back() == '\'') ||
+                         (raw_target.front() == '"' && raw_target.back() == '"'));
+                    if (!raw_target.empty() && !is_parenthesized_expression && !is_macro_expression &&
+                        !is_quoted_literal)
                     {
-                        return {};
+                        continuation.target_value = make_string_value(raw_target);
                     }
-                    continuation.target_value = *target_value;
-                    resumed_use_target_value.reset();
+                    else
+                    {
+                        const auto target_value = resumed_use_target_value.has_value()
+                                                      ? resumed_use_target_value
+                                                      : evaluate_resumable_expression(frame, statement);
+                        if (!target_value.has_value())
+                        {
+                            return {};
+                        }
+                        continuation.target_value = *target_value;
+                        resumed_use_target_value.reset();
+                    }
                 }
                 const std::string target = value_as_string(*continuation.target_value);
                 std::string alias;
