@@ -43,24 +43,16 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-VFP9-parity follow-ups from the cluster-1 review (decisions with the owner,
-2026-09-24, backed by real VFP 9.0 SP2 probes in
-`~/temp/vfp9-probes/cf-review/`):
-- #6193 (QueryUnload `RETURN .F.` must not veto; only `NODEFAULT`): merged
-  (PR #6549).
-- #6550 (objects released mid-call stay alive until the call ends, like
-  VFP9; replaces the #6415/#6420 error 1924): current PR. Released objects
-  are parked (`ole_objects.extract`) and cleared at the next top-level
-  statement. `SET COMPATIBLE` is deliberately not involved (#6223); a
-  stricter mode belongs to #6194.
-- #6551 (next): `APPEND FROM ... FOR` is ignored entirely on local targets
-  and evaluated in the wrong context on remote ones. VFP9: one up-front
-  validation call on the target's current record (error 1127 if FOR is not
-  logical), then DBF sources evaluate with the source row selected, and
-  CSV/JSON sources evaluate on a provisionally appended target row.
-- Filed, awaiting `agent-approved`: #6547 (BINDEVENT nFlags before/after
-  inverted; #3688's premise was backwards) and #6548 (property bindings
-  fire on reads; VFP9 fires only on assignment).
+Issue #6546: `CHRTRANC()` incorrectly folded ASCII case, despite installed
+VFP9 SP2 and the language reference showing the same byte-sensitive behavior
+as `CHRTRAN()` for the supported single-byte lane. Branch
+`codex/fix-6546-chrtranc-case` removes the case-folding path and adds focused
+coverage for case-sensitive hits and misses, numeric text, duplicate search
+bytes, a shorter replacement string, and embedded NUL bytes. DBCS/code-page
+semantics remain the separate #5705 lane. Next steps: finish focused
+validation, commit and push the signed change, open the PR against
+`v1-development`, address review, and merge after required checks pass and
+all review conversations are resolved.
 
 ## Workspace preservation
 

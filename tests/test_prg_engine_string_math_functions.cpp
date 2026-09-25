@@ -284,6 +284,13 @@ namespace
             "chrtran_value = CHRTRAN('a1b2c3', '123', 'xyz')\n"
             "chrtranc_value = CHRTRANC('aAbBcc', 'AB', 'xy')\n"
             "chrtranc_delete = CHRTRANC('Alpha Beta', 'AE', 'x')\n"
+            "chrtranc_case_pair = CHRTRANC('aA', 'A', 'X')\n"
+            "chrtranc_lower_miss = CHRTRANC('a', 'A', 'X')\n"
+            "chrtranc_upper_hit = CHRTRANC('A', 'A', 'X')\n"
+            "chrtranc_numeric = CHRTRANC('123', '12', 'xy')\n"
+            "chrtranc_duplicate = CHRTRANC('Aa', 'AA', 'xy')\n"
+            "chrtranc_short = CHRTRANC('ABa', 'AB', 'x')\n"
+            "chrtranc_nul = CHRTRANC('A' + CHR(0) + 'a', CHR(0) + 'A', 'XY')\n"
             "strtran_start = STRTRAN('abcabcabc', 'abc', 'X', 2)\n"
             "strtran_count = STRTRAN('abcabcabc', 'abc', 'X', 2, 1)\n"
             "strtran_none = STRTRAN('abcabcabc', 'abc', 'X', 5, 1)\n"
@@ -563,8 +570,15 @@ namespace
         check("atline_second", "3");
         check("ratline_hit", "3");
         check("chrtran_value", "axbycz");
-        check("chrtranc_value", "xxyycc");
-        check("chrtranc_delete", "xlphx Btx");
+        check("chrtranc_value", "axbycc");
+        check("chrtranc_delete", "xlpha Beta");
+        check("chrtranc_case_pair", "aX");
+        check("chrtranc_lower_miss", "a");
+        check("chrtranc_upper_hit", "X");
+        check("chrtranc_numeric", "xy3");
+        check("chrtranc_duplicate", "xa");
+        check("chrtranc_short", "xa");
+        check("chrtranc_nul", "YXa");
         check("strtran_start", "abcXX");
         check("strtran_count", "abcXabc");
         check("strtran_none", "abcabcabc");
