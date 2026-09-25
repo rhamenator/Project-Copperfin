@@ -7506,7 +7506,7 @@ namespace copperfin::runtime
             {
                 for (const NativeEventBinding &binding : bindings)
                 {
-                    const bool binding_after_source_member = (binding.flags & 1) == 0;
+                    const bool binding_after_source_member = (binding.flags & 1) != 0;
                     if (binding_after_source_member == after_source_member)
                     {
                         (void)invoke_native_event_delegate(

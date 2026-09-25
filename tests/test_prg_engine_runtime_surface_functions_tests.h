@@ -605,6 +605,7 @@ namespace copperfin::runtime_surface_tests
     void test_property_read_handler_releasing_source_fails_catchably();
     void test_method_before_handler_releasing_source_fails_catchably();
     void test_bindevent_flag_timing_matches_vfp9();
+    void test_bindevent_flag_timing_matches_vfp9_property_write();
     void test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
     void test_native_assigner_same_property_write_uses_raw_storage();
     void test_native_accessor_backed_properties_reflect_through_getpem_pemstatus_and_amembers();
