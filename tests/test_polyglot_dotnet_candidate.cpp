@@ -100,8 +100,12 @@ PolyglotRuntimeHostConfiguration configuration(
         .protocol_version = protocol_version,
         .arguments_json = {}};
     candidate.policy = {
-        .timeout_ms = 5000U,
-        .latency_budget_ms = 4500U,
+        // #6559: a cold .NET runtime start under a loaded CI runner
+        // (observed on macOS) can exceed a tight deadline even though the
+        // dispatch itself is correct; a generous deadline avoids flaking
+        // without weakening the benchmark's own failure/parity assertions.
+        .timeout_ms = 20000U,
+        .latency_budget_ms = 19000U,
         .cancellation = PolyglotCancellationPolicy::propagate,
         .fallback = PolyglotFallbackPolicy::fail_fast,
         .max_attempts = 1U};
@@ -136,8 +140,9 @@ PolyglotArtifactInvocationRequest candidate_request(
         .protocol_version = protocol_version,
         .arguments_json = invocation.workload->arguments_json};
     request.policy = {
-        .timeout_ms = 5000U,
-        .latency_budget_ms = 5000U,
+        // #6559: see the matching comment in configuration() above.
+        .timeout_ms = 20000U,
+        .latency_budget_ms = 20000U,
         .cancellation = PolyglotCancellationPolicy::propagate,
         .fallback = PolyglotFallbackPolicy::fail_fast,
         .max_attempts = 1U};
@@ -281,7 +286,8 @@ void test_representative_benchmark(
             .working_directory = utf8_path(published.root),
             .environment = candidate.environment,
             .standard_input = serialized.document,
-            .timeout_ms = 5000U,
+            // #6559: see the matching comment in configuration() above.
+            .timeout_ms = 20000U,
             .poll_interval_ms = 1U,
             .stdin_limit_bytes = 64U * 1024U,
             .stdout_limit_bytes = 64U * 1024U,
