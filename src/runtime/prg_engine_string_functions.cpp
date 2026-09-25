@@ -644,16 +644,13 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(std::move(src));
     }
     if ((function == "chrtran" || function == "chrtranc") && arguments.size() >= 3U) {
-        const bool case_insensitive = function == "chrtranc";
         const std::string src = value_as_string(arguments[0]);
         const std::string from_chars = value_as_string(arguments[1]);
         const std::string to_chars = value_as_string(arguments[2]);
-        const std::string from_lookup = case_insensitive ? uppercase_copy(from_chars) : from_chars;
         std::string result;
         result.reserve(src.size());
         for (const char c : src) {
-            const char lookup = case_insensitive ? static_cast<char>(std::toupper(static_cast<unsigned char>(c))) : c;
-            const auto pos = from_lookup.find(lookup);
+            const auto pos = from_chars.find(c);
             if (pos == std::string::npos) {
                 result += c;
             } else if (pos < to_chars.size()) {
