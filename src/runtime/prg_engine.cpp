@@ -1054,14 +1054,26 @@ namespace copperfin::runtime
         // record after user code ran; byte equality cannot establish identity.
         std::map<std::string, std::uint64_t> dbf_row_set_serial_by_path;
 
+        // #6561 review: key by the same identity paths_equal_for_platform()
+        // uses for tables -- case-insensitive on Windows -- so a mutation through
+        // another spelling of the same DBF bumps the same serial.
+        static std::string dbf_row_set_key(const std::string &path)
+        {
+#if defined(_WIN32)
+            return lowercase_copy(normalize_path(path));
+#else
+            return normalize_path(path);
+#endif
+        }
+
         void note_dbf_row_set_change(const std::string &path)
         {
-            ++dbf_row_set_serial_by_path[normalize_path(path)];
+            ++dbf_row_set_serial_by_path[dbf_row_set_key(path)];
         }
 
         std::uint64_t dbf_row_set_serial(const std::string &path)
         {
-            const auto found = dbf_row_set_serial_by_path.find(normalize_path(path));
+            const auto found = dbf_row_set_serial_by_path.find(dbf_row_set_key(path));
             return found == dbf_row_set_serial_by_path.end() ? 0U : found->second;
         }
         // #6550: a released object is extracted (not erased) so any C++

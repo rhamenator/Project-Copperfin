@@ -3456,6 +3456,15 @@ void test_append_from_for_follows_vfp9_semantics_on_local_targets() {
             "    ENDIF\n"
             "    RETURN .F.\n"
             "ENDFUNC\n"
+            "FUNCTION RawOverwriteTarget\n"
+            "    LPARAMETERS cReplacement, cTarget\n"
+            "    nCalls = nCalls + 1\n"
+            "    IF nCalls = 1\n"
+            "        RETURN .T.\n"
+            "    ENDIF\n"
+            "    COPY FILE (cReplacement) TO (cTarget)\n"
+            "    RETURN .F.\n"
+            "ENDFUNC\n"
             "FUNCTION DeleteCandidateThenPack\n"
             "    nCalls = nCalls + 1\n"
             "    IF nCalls = 1\n"
@@ -3542,6 +3551,43 @@ void test_append_from_for_follows_vfp9_semantics_on_local_targets() {
                 " / rows " + global_text(state, "nrows") + " / bottom " + global_text(state, "cbottom"));
         expect(global_text(state, "nerr") != "0",
             "#6560 duplicate PACK: an unprovable candidate identity should fail catchably, got error " + global_text(state, "nerr"));
+    }
+    // #6561 review: the callback overwrites the open target through a raw file
+    // copy (bypassing the tracked DBF writers) with a table that happens to have
+    // the same record count as the provisional candidate. The file snapshot
+    // must detect it, so nothing is truncated from the replacement.
+    {
+        write_simple_dbf(temp_root / "replacement.dbf", {"X", "Y"});
+        const fs::path dst = temp_root / "raw_copy_dst.dbf";
+        const auto state = run_case(
+            "raw_copy",
+            "APPEND FROM '" + (temp_root / "src.csv").string() + "' TYPE CSV FOR RawOverwriteTarget('" +
+                (temp_root / "replacement.dbf").string() + "', '" + dst.string() + "')");
+        expect(state.completed, "#6561 raw copy: script should complete: " + state.message);
+        expect(global_text(state, "nerr") != "0",
+            "#6561 raw copy: an out-of-band overwrite of the target should fail catchably, got error " + global_text(state, "nerr"));
+        // The failed command's undo guard may restore the pre-command table
+        // ("ONE"), or the callback's replacement ("X","Y") may stand; what must
+        // never happen is the replacement truncated to "X" -- the pre-#6561
+        // rollback removed the replacement's last real row.
+        const auto on_disk = copperfin::vfp::parse_dbf_table_from_file(dst.string(), 10U);
+        std::vector<std::string> names;
+        if (on_disk.ok)
+        {
+            for (const auto &record : on_disk.table.records)
+            {
+                std::string name = record.values.empty() ? std::string{} : record.values[0].display_value;
+                name.erase(name.find_last_not_of(' ') + 1U);
+                names.push_back(name);
+            }
+        }
+        const bool restored = names == std::vector<std::string>{"ONE"};
+        const bool replacement_intact = names == std::vector<std::string>{"X", "Y"};
+        std::string joined;
+        for (const auto &name : names) joined += name + ";";
+        expect(on_disk.ok && (restored || replacement_intact),
+            "#6561 raw copy: the target must be either restored or the intact replacement, never a truncated hybrid, got " +
+                joined);
     }
 
     // #6553 review: if the callback appends after the candidate and then
