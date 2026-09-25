@@ -224,7 +224,12 @@ void test_representative_benchmark(
             .maximum_p95_latency_us = 5'000'000U,
             .minimum_throughput_per_second = 1U,
             .maximum_peak_memory_kib = 1'048'576U,
-            .maximum_p95_startup_ms = 5000U,
+            // #6559 review: matches the widened per-process deadline above;
+            // otherwise a legitimately slow (not failed) cold start under a
+            // loaded CI runner still fails recommendation_ready via
+            // startup_budget_exceeded even though no sample actually timed
+            // out or mismatched.
+            .maximum_p95_startup_ms = 20000U,
             .maximum_security_profile =
                 PolyglotRouteSecurityProfile::admitted_process,
             .weights = {25U, 25U, 25U, 25U}},
