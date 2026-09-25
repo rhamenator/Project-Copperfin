@@ -150,6 +150,7 @@ void test_spawn_read_events_is_rejected_catchably();
 void test_spawn_task_supervision_observes_status_result_and_output_without_consuming_task();
 void test_spawn_task_supervision_serializes_same_handle_completion_publication();
 void test_spawn_task_supervision_requests_cooperative_cancellation();
+void test_session_destruction_cancels_and_awaits_unawaited_spawn_worker();
 void test_spawn_arguments_use_heap_backed_frame_continuations();
 void test_spawn_rejects_by_reference_argument();
 void test_spawn_failed_handle_assignment_does_not_leave_orphan_task();

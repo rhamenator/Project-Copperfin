@@ -4,6 +4,8 @@
 
 #include "test_prg_engine_control_flow_support.h"
 
+#include <thread>
+
 namespace cf_test_prg_engine_control_flow {
 void test_sleep_command_emits_runtime_sleep_event() {
     namespace fs = std::filesystem;
@@ -485,6 +487,79 @@ void test_spawn_task_supervision_requests_cooperative_cancellation() {
     expect(std::none_of(state.events.begin(), state.events.end(), [](const auto &event) {
         return event.category == "runtime.critical.blocking_violation";
     }), "nonblocking CFTASK supervision should remain allowed inside a critical section");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_session_destruction_cancels_and_awaits_unawaited_spawn_worker() {
+    // #6183: destroying a PrgRuntimeSession while an unawaited SPAWN worker
+    // is still running (parent returns without AWAIT or CANCEL) must
+    // request cancellation and wait for it to actually stop, not leave it
+    // running past the runtime boundary. Scope note: cancellation is only
+    // checked at existing cooperative checkpoints (SLEEP, lock-retry
+    // waits) -- this worker uses SLEEP, matching
+    // test_spawn_task_supervision_requests_cooperative_cancellation's own
+    // pattern. A tight loop with no such checkpoint (e.g. a bare
+    // DO WHILE .T./DOEVENTS spin with no SLEEP, the issue's own literal
+    // repro) has no place to observe cancellation at all; making the
+    // general per-statement loop itself cancellation-aware is a larger,
+    // separate change, not attempted here.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_teardown_6183";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // Heartbeat pattern: the worker writes its loop counter to disk every
+    // iteration, regardless of cancellation outcome. Cancellation aborts
+    // the whole routine (SLEEP's cancellation path returns an error
+    // outcome that unwinds the frame, it does not resume the next
+    // statement), so once cancelled the heartbeat simply stops advancing.
+    // If the worker were never cancelled it would keep advancing for the
+    // ~30s total sleep budget below, so a heartbeat that has already gone
+    // stale within ~1s of destruction is proof cancellation reached it.
+    const fs::path heartbeat_path = temp_root / "worker_heartbeat.txt";
+    const fs::path main_path = temp_root / "spawn_teardown.prg";
+    write_text(
+        main_path,
+        "PROCEDURE worker\n"
+        "    nCount = 0\n"
+        "    DO WHILE nCount < 1500\n"
+        "        SLEEP 20\n"
+        "        nCount = nCount + 1\n"
+        "        STRTOFILE(LTRIM(STR(nCount)), '" + heartbeat_path.string() + "')\n"
+        "    ENDDO\n"
+        "    RETURN\n"
+        "ENDPROC\n"
+        "SPAWN worker TO nTask\n"
+        "RETURN\n");
+
+    {
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6183: parent script with an unawaited SPAWN worker should complete: " + state.message);
+        // session is destroyed here without AWAIT or CANCEL.
+    }
+
+    const auto read_heartbeat = [&]() -> std::string {
+        std::error_code read_error;
+        if (!fs::exists(heartbeat_path, read_error)) {
+            return {};
+        }
+        return read_text(heartbeat_path);
+    };
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    const std::string first_reading = read_heartbeat();
+    std::this_thread::sleep_for(std::chrono::milliseconds(800));
+    const std::string second_reading = read_heartbeat();
+
+    expect(!first_reading.empty(), "#6183: the worker must have started and taken at least one heartbeat");
+    expect(first_reading == second_reading,
+           "#6183: destroying the session must request cancellation and wait for the unawaited SPAWN worker to "
+           "actually stop -- its heartbeat kept advancing after destruction (first=" + first_reading +
+               " second=" + second_reading + "), meaning it kept running past the runtime boundary");
 
     fs::remove_all(temp_root, ignored);
 }

@@ -1385,6 +1385,21 @@ namespace copperfin::runtime
 
         ~Impl()
         {
+            // #6183: an unawaited SPAWN worker survived session destruction
+            // (the parent's own completion/RETURN never requests
+            // cancellation or waits for it). Request cancellation and give
+            // every task across every data session a bounded window to stop
+            // before anything else in this destructor runs. Gated to the
+            // root session only (!is_spawned_child): concurrency_state --
+            // and its async_tasks_by_session -- is shared with every
+            // spawned child via Impl's copy constructor, and a CHILD's own
+            // ~Impl() also runs (on the worker thread, once its async
+            // lambda's captured shared_ptr<Impl> is the last reference)
+            // when its own task naturally completes; unconditionally
+            // clearing the shared registry there wiped out sibling tasks
+            // the parent still owned mid-flight, before it ever got to
+            // AWAIT/CFTASKSTATUS them.
+            //
             // #6263: ordinary completion followed by host destruction never
             // rolled back an open transaction's backup files, so they leaked
             // past the runtime boundary. cleanup_runtime_resources_for_shutdown()
@@ -1395,7 +1410,17 @@ namespace copperfin::runtime
             // different, still-live session's FOPEN/FCREATE handles whenever
             // two sessions coexist in one process. Only the transaction
             // rollback is destructor-safe to share; a destructor must not
-            // propagate an exception, hence the catch-all.
+            // propagate an exception, hence the catch-alls.
+            if (!is_spawned_child)
+            {
+                try
+                {
+                    request_cancel_and_await_async_tasks_for_shutdown();
+                }
+                catch (...)
+                {
+                }
+            }
             try
             {
                 rollback_all_pending_transaction_journals();
