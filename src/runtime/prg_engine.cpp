@@ -1385,6 +1385,24 @@ namespace copperfin::runtime
 
         ~Impl()
         {
+            // #6263: ordinary completion followed by host destruction never
+            // rolled back an open transaction's backup files, so they leaked
+            // past the runtime boundary. cleanup_runtime_resources_for_shutdown()
+            // itself is not used here: close_all_file_io_handles() clears the
+            // process-global open-file-handle registry (PR #6584 review), so
+            // calling it from every session's destructor -- an ordinary,
+            // frequent lifecycle event, unlike QUIT -- would close a
+            // different, still-live session's FOPEN/FCREATE handles whenever
+            // two sessions coexist in one process. Only the transaction
+            // rollback is destructor-safe to share; a destructor must not
+            // propagate an exception, hence the catch-all.
+            try
+            {
+                rollback_all_pending_transaction_journals();
+            }
+            catch (...)
+            {
+            }
             while (!com_eventhandler_bindings.empty())
             {
                 retire_com_eventhandler_binding(com_eventhandler_bindings.front().ordinal);

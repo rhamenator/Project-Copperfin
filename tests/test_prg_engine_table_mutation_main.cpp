@@ -89,6 +89,8 @@ int main()
     test_rollback_transaction_prunes_stale_alter_table_field_rules();
     test_rollback_transaction_removes_created_table_cursor();
     test_transaction_rollback_leaves_table_unchanged();
+    test_session_destruction_rolls_back_open_transaction();
+    test_session_destruction_rolls_back_transactions_in_every_data_session();
     test_startup_replays_pending_transaction_journal();
     test_transaction_journal_serializes_grouped_levels_invariantly();
     test_startup_rejects_malformed_transaction_journal_scalars();

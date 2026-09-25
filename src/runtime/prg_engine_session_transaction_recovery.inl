@@ -582,6 +582,29 @@
             return true;
         }
 
+        // #6263: an uncommitted BEGIN TRANSACTION must not leave its backed-up
+        // rows live on disk when the session ends without END TRANSACTION or
+        // ROLLBACK, across every data session, not just the currently
+        // selected one. Cursor refresh is skipped here (unlike
+        // rollback_active_transaction_journal()): every cursor is discarded
+        // by this same shutdown pass right after, so there is nothing left
+        // to reparse against the restored bytes. A failed replay leaves the
+        // physical journal/backups in place -- replay_transaction_journal_state's
+        // own contract -- so a future session that happens to scan this temp
+        // directory can still recover it via replay_pending_transaction_journals().
+        void rollback_all_pending_transaction_journals()
+        {
+            for (auto it = transaction_journal_by_session.begin(); it != transaction_journal_by_session.end();)
+            {
+                TransactionJournalState state = std::move(it->second);
+                it = transaction_journal_by_session.erase(it);
+                if (replay_transaction_journal_state(state))
+                {
+                    restore_verified_file_byte_overrides(state);
+                }
+            }
+        }
+
         void commit_active_transaction_journal()
         {
             auto found = transaction_journal_by_session.find(current_data_session);

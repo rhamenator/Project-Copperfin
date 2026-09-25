@@ -83,6 +83,8 @@ namespace copperfin::table_mutation_tests
     void test_rollback_transaction_prunes_stale_alter_table_field_rules();
     void test_rollback_transaction_removes_created_table_cursor();
     void test_transaction_rollback_leaves_table_unchanged();
+    void test_session_destruction_rolls_back_open_transaction();
+    void test_session_destruction_rolls_back_transactions_in_every_data_session();
     void test_startup_replays_pending_transaction_journal();
     void test_transaction_journal_serializes_grouped_levels_invariantly();
     void test_startup_rejects_malformed_transaction_journal_scalars();
