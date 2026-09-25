@@ -2968,7 +2968,7 @@ Program parse_program_impl(
             if (starts_with_insensitive(body, "IN ")) {
                 statement.secondary_expression = trim_copy(body.substr(3U));
             } else if (!body.empty()) {
-                statement.expression = take_first_token(body);
+                statement.expression = take_first_command_target_token(body);
                 statement.identifier = take_keyword_value(body, "ALIAS");
                 statement.secondary_expression = take_keyword_value(body, "IN");
                 statement.tertiary_expression = has_keyword(body, "AGAIN") ? "again" : std::string{};

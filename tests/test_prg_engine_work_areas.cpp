@@ -1622,6 +1622,65 @@ void test_use_bare_target_name_resolves_as_literal_filename() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_use_bracket_literal_and_spaced_parenthesized_target_resolve_correctly() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_prg_engine_use_bracket_paren_target_6557";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "people.dbf", {"ALPHA", "BRAVO"});
+
+    const fs::path main_path = temp_root / "use_bracket_paren_target.prg";
+    write_text(
+        main_path,
+        "USE [people.dbf]\n"
+        "cAlias1 = ALIAS()\n"
+        "nCount1 = RECCOUNT()\n"
+        "USE\n"
+        "cStem = 'people'\n"
+        "USE (cStem + '.dbf')\n"
+        "cAlias2 = ALIAS()\n"
+        "nCount2 = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6557 review: bracket-literal and spaced-parenthesized USE target script should complete: " +
+               state.message);
+
+    const auto alias1 = state.globals.find("calias1");
+    const auto count1 = state.globals.find("ncount1");
+    const auto alias2 = state.globals.find("calias2");
+    const auto count2 = state.globals.find("ncount2");
+    expect(alias1 != state.globals.end(), "#6557 review: USE [people.dbf] should open and select an alias");
+    expect(count1 != state.globals.end(), "#6557 review: USE [people.dbf] should expose RECCOUNT()");
+    expect(alias2 != state.globals.end(),
+           "#6557 review: USE (cStem + '.dbf') should open and select an alias");
+    expect(count2 != state.globals.end(), "#6557 review: USE (cStem + '.dbf') should expose RECCOUNT()");
+    if (alias1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias1->second) == "people",
+               "#6557 review: USE [people.dbf] should evaluate the bracket literal, not pass the brackets through as a literal filename");
+    }
+    if (count1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count1->second) == "2",
+               "#6557 review: USE [people.dbf] should open people.dbf");
+    }
+    if (alias2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias2->second) == "people",
+               "#6557 review: USE (cStem + '.dbf') should evaluate the full parenthesized expression, not truncate it at the first space");
+    }
+    if (count2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count2->second) == "2",
+               "#6557 review: USE (cStem + '.dbf') should open people.dbf");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_cursor_identity_functions_for_local_tables() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_cursor_identity_local";
@@ -2086,6 +2145,7 @@ int main() {
     test_unlock_record_expression_uses_heap_backed_frame_continuations();
     test_use_target_expression_uses_heap_backed_frame_continuations();
     test_use_bare_target_name_resolves_as_literal_filename();
+    test_use_bracket_literal_and_spaced_parenthesized_target_resolve_correctly();
     test_cursor_identity_functions_for_local_tables();
     test_local_use_auto_allocation_tracks_session_selection_flow();
     test_local_selected_empty_area_reuses_after_datasession_round_trip();

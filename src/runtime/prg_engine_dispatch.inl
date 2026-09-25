@@ -5330,14 +5330,16 @@
                 {
                     // #6557: VFP9 treats a bare, unparenthesized USE target as a
                     // literal file/table name, never as an expression -- only
-                    // USE (expr) and a macro (&name) are evaluated.
+                    // USE (expr), a macro (&name), a quoted literal, or a
+                    // bracket literal ([...], #6557 review) are evaluated.
                     const std::string raw_target = trim_copy(statement.expression);
                     const bool is_parenthesized_expression = raw_target.size() >= 2U &&
                         raw_target.front() == '(' && raw_target.back() == ')';
                     const bool is_macro_expression = !raw_target.empty() && raw_target.front() == '&';
                     const bool is_quoted_literal = raw_target.size() >= 2U &&
                         ((raw_target.front() == '\'' && raw_target.back() == '\'') ||
-                         (raw_target.front() == '"' && raw_target.back() == '"'));
+                         (raw_target.front() == '"' && raw_target.back() == '"') ||
+                         (raw_target.front() == '[' && raw_target.back() == ']'));
                     if (!raw_target.empty() && !is_parenthesized_expression && !is_macro_expression &&
                         !is_quoted_literal)
                     {
