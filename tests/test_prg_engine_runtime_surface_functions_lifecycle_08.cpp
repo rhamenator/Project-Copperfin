@@ -102,7 +102,7 @@ namespace copperfin::runtime_surface_tests
             "oSelfForm = CREATEOBJECT('SelfRemovingForm')\n"
             "oSelfChild = oSelfForm.child\n"
             "oSelfSink = CREATEOBJECT('SelfRemovalSink')\n"
-            "lSelfBound = BINDEVENT(oSelfChild, 'Ping', oSelfSink, 'OnPing')\n"
+            "lSelfBound = BINDEVENT(oSelfChild, 'Ping', oSelfSink, 'OnPing', 1)\n"
             "=oSelfChild.Ping()\n"
             "lSelfChildStillObject = VARTYPE(oSelfChild) == 'O'\n"
             "nSelfRemovalDelegateCount = gnSelfRemovalDelegateCount\n"

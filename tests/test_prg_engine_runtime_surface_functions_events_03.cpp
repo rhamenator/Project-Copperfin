@@ -28,10 +28,10 @@ namespace copperfin::runtime_surface_tests
             "oPlain.Extra = 'plain'\n"
             "lDictSet = SETPEM(oDict, 'comparemode', 29)\n"
             "nDictCompare = GETPEM(oDict, 'comparemode')\n"
-            "nBind1 = BINDEVENT(oSource, 'Ping', oHandler, 'HandleBefore', 1)\n"
-            "nBind2 = BINDEVENT(oSource, 'Ping', 'HandlePing')\n"
-            "nBind3 = BINDEVENT(oSource, 'AfterPing', oHandler, 'HandleAfter')\n"
-            "nBind4 = BINDEVENT(oSource, 'NoSimple', oHandler, 'HandleNoSimple', 2)\n"
+            "nBind1 = BINDEVENT(oSource, 'Ping', oHandler, 'HandleBefore', 0)\n"
+            "nBind2 = BINDEVENT(oSource, 'Ping', 'HandlePing', 1)\n"
+            "nBind3 = BINDEVENT(oSource, 'AfterPing', oHandler, 'HandleAfter', 1)\n"
+            "nBind4 = BINDEVENT(oSource, 'NoSimple', oHandler, 'HandleNoSimple', 3)\n"
             "cDirectPing = oSource.Ping(41)\n"
             "lRaisedAfter = RAISEEVENT(oSource, 'AfterPing', 7)\n"
             "cDirectNoSimple = oSource.NoSimple(5)\n"
@@ -167,6 +167,136 @@ namespace copperfin::runtime_surface_tests
         expect(has_delegate_event,
                "native event dispatch should emit delegate invocation events");
 
+        fs::remove_all(temp_root, ignored);
+    }
+
+
+    // #6547: BINDEVENT nFlags timing must match VFP9 (VFP 9 help table and a
+    // real VFP 9.0 SP2 probe): bit 0 clear = delegate BEFORE the event code,
+    // bit 0 set = delegate AFTER it; bit 1 set = a simple method call does not
+    // trigger the delegate (RAISEEVENT still does). #3688 had this inverted.
+    void test_bindevent_flag_timing_matches_vfp9()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_bindevent_flag_timing_6547";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+        const auto global_text = [](const auto &state, const std::string &name) -> std::string {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(found->second);
+        };
+        const fs::path main_path = temp_root / "bindevent_flag_timing.prg";
+        write_text(
+            main_path,
+            "PUBLIC cLog\n"
+            "oHandler = CREATEOBJECT('HandlerThing')\n"
+            "DIMENSION aSimple[4], aRaised[4]\n"
+            "FOR nFlags = 0 TO 3\n"
+            "    oSource = CREATEOBJECT('SourceThing')\n"
+            "    BINDEVENT(oSource, 'Ping', oHandler, 'LogHandler', nFlags)\n"
+            "    cLog = ''\n"
+            "    oSource.Ping()\n"
+            "    aSimple[nFlags + 1] = cLog\n"
+            "    cLog = ''\n"
+            "    RAISEEVENT(oSource, 'Ping')\n"
+            "    aRaised[nFlags + 1] = cLog\n"
+            "ENDFOR\n"
+            "cSimple0 = aSimple[1]\n"
+            "cSimple1 = aSimple[2]\n"
+            "cSimple2 = aSimple[3]\n"
+            "cSimple3 = aSimple[4]\n"
+            "cRaised0 = aRaised[1]\n"
+            "cRaised1 = aRaised[2]\n"
+            "cRaised2 = aRaised[3]\n"
+            "cRaised3 = aRaised[4]\n"
+            "RETURN\n"
+            "DEFINE CLASS SourceThing AS Custom\n"
+            "    PROCEDURE Ping\n"
+            "        cLog = cLog + 'body;'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS HandlerThing AS Custom\n"
+            "    PROCEDURE LogHandler\n"
+            "        cLog = cLog + 'handler;'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6547: flag timing script should complete: " + state.message);
+        const std::vector<std::pair<std::string, std::string>> expected = {
+            {"csimple0", "handler;body;"},   // 0: delegate before
+            {"csimple1", "body;handler;"},   // 1: delegate after
+            {"csimple2", "body;"},           // 2: simple call does not trigger
+            {"csimple3", "body;"},           // 3: simple call does not trigger
+            {"craised0", "handler;body;"},
+            {"craised1", "body;handler;"},
+            {"craised2", "handler;body;"},   // 2: RAISEEVENT triggers, delegate before
+            {"craised3", "body;handler;"},   // 3: RAISEEVENT triggers, delegate after
+        };
+        for (const auto &[name, value] : expected)
+        {
+            expect(global_text(state, name) == value,
+                   "#6547: " + name + " expected '" + value + "' got '" + global_text(state, name) + "'");
+        }
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_bindevent_flag_timing_matches_vfp9_property_write()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root =
+            fs::temp_directory_path() / "copperfin_bindevent_flag_timing_property_write_6547";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+        const auto global_text = [](const auto &state, const std::string &name) -> std::string {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(found->second);
+        };
+        const fs::path main_path = temp_root / "bindevent_flag_timing_property_write.prg";
+        write_text(
+            main_path,
+            "PUBLIC cLog, oSource\n"
+            "oHandler = CREATEOBJECT('HandlerThing')\n"
+            "DIMENSION aWrite[4]\n"
+            "FOR nFlags = 0 TO 3\n"
+            "    oSource = CREATEOBJECT('SourceThing')\n"
+            "    BINDEVENT(oSource, 'Caption', oHandler, 'LogHandler', nFlags)\n"
+            "    cLog = ''\n"
+            "    oSource.Caption = 'new'\n"
+            "    aWrite[nFlags + 1] = cLog\n"
+            "ENDFOR\n"
+            "cWrite0 = aWrite[1]\n"
+            "cWrite1 = aWrite[2]\n"
+            "cWrite2 = aWrite[3]\n"
+            "cWrite3 = aWrite[4]\n"
+            "RETURN\n"
+            "DEFINE CLASS SourceThing AS Custom\n"
+            "    Caption = 'orig'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS HandlerThing AS Custom\n"
+            "    PROCEDURE LogHandler\n"
+            "        LPARAMETERS tValue\n"
+            "        cLog = cLog + oSource.Caption + ';'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6547: property-write flag timing script should complete: " + state.message);
+        const std::vector<std::pair<std::string, std::string>> expected = {
+            {"cwrite0", "orig;"},  // 0: delegate before the write, Caption still old
+            {"cwrite1", "new;"},   // 1: delegate after the write, Caption already new
+            {"cwrite2", ""},       // 2: bit 1 set, delegate never fires for a property write
+            {"cwrite3", ""},       // 3: bit 1 set, delegate never fires for a property write
+        };
+        for (const auto &[name, value] : expected)
+        {
+            expect(global_text(state, name) == value,
+                   "#6547: " + name + " expected '" + value + "' got '" + global_text(state, name) + "'");
+        }
         fs::remove_all(temp_root, ignored);
     }
 
