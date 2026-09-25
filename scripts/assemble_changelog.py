@@ -20,6 +20,8 @@ Fragment rules:
 from __future__ import annotations
 
 import argparse
+import datetime
+import os
 import re
 import sys
 import tempfile
@@ -51,7 +53,15 @@ def read_fragment(path: Path) -> str:
     if match is None:
         raise FragmentError(f"{path.name}: name must be YYYY-MM-DD-<issue-or-slug>.md (lowercase, digits, dashes)")
     date = match.group(1)
-    text = path.read_text(encoding="utf-8").replace("\r\n", "\n").rstrip("\n")
+    try:
+        datetime.date.fromisoformat(date)
+    except ValueError:
+        raise FragmentError(f"{path.name}: {date} is not a real calendar date") from None
+    text = path.read_text(encoding="utf-8").replace("\r\n", "\n")
+    # Allow exactly one final line terminator; any further trailing newline
+    # is a blank line, which the format forbids.
+    if text.endswith("\n"):
+        text = text[:-1]
     lines = text.split("\n")
     if not lines or not lines[0].startswith(f"- {date}:"):
         raise FragmentError(f"{path.name}: first line must start with '- {date}:'")
@@ -71,15 +81,25 @@ def check(root: Path) -> list[Path]:
 
 
 def assemble(root: Path) -> int:
+    """Fold fragments into CHANGELOG.md and delete them; safe to rerun.
+
+    CHANGELOG.md is replaced atomically, and a fragment whose text is already
+    present in it (a previous run was interrupted before deleting it) is not
+    added again -- it is only deleted.
+    """
     paths = check(root)
     if not paths:
         return 0
     changelog = root / "CHANGELOG.md"
     existing = changelog.read_text(encoding="utf-8") if changelog.exists() else ""
-    changelog.write_text("".join(read_fragment(path) for path in paths) + existing, encoding="utf-8")
+    new_entries = [text for text in (read_fragment(path) for path in paths) if text not in existing]
+    if new_entries:
+        staged = changelog.with_name(changelog.name + ".assembling")
+        staged.write_text("".join(new_entries) + existing, encoding="utf-8")
+        os.replace(staged, changelog)
     for path in paths:
         path.unlink()
-    return len(paths)
+    return len(new_entries)
 
 
 def self_test() -> None:
@@ -106,12 +126,26 @@ def self_test() -> None:
         if assemble(root) != 0:
             raise AssertionError("assembling with no fragments should be a no-op")
 
+        # Restart safety: a fragment that is already in CHANGELOG.md (an earlier
+        # run stopped before deleting it) is deleted, not added a second time.
+        (fragments / "2026-09-24-6551-append-for.md").write_text(
+            "- 2026-09-24: Newer entry\n  continued.\n", encoding="utf-8")
+        if assemble(root) != 0:
+            raise AssertionError("an already-assembled fragment must not be added again")
+        if (root / "CHANGELOG.md").read_text(encoding="utf-8") != expected:
+            raise AssertionError("rerunning assembly after an interruption duplicated an entry")
+        if [path.name for path in fragments.iterdir()] != ["README.md"]:
+            raise AssertionError("the already-assembled fragment should still be deleted")
+
         bad_cases = {
             "notes.md": "- 2026-09-24: x\n",
             "2026-09-24-Bad_Name.md": "- 2026-09-24: x\n",
             "2026-09-24-wrong-date.md": "- 2026-09-25: x\n",
             "2026-09-24-blank-line.md": "- 2026-09-24: x\n\n  y\n",
             "2026-09-24-unindented.md": "- 2026-09-24: x\ny\n",
+            "2026-99-99-impossible-date.md": "- 2026-99-99: x\n",
+            "2026-02-30-no-such-day.md": "- 2026-02-30: x\n",
+            "2026-09-24-trailing-blank.md": "- 2026-09-24: x\n\n",
         }
         for name, content in bad_cases.items():
             path = fragments / name

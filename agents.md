@@ -201,4 +201,4 @@ or `gh pr checks --watch`, not model-turn polling. See
 
 ## Live Agent Channel
 
-When Claude Code is also active on this repo (e.g. covering after a weekly/session limit handoff), check current `.agent-channel/messages/` through `scripts/agent_channel.py` at the start of a turn and before picking new work, per `.agent-channel/README.md`. This is a live scratch channel for coordination, not a substitute for `agent-handoff.md` or `CHANGELOG.md`.
+When Claude Code is also active on this repo (e.g. covering after a weekly/session limit handoff), check current `.agent-channel/messages/` through `scripts/agent_channel.py` at the start of a turn and before picking new work, per `.agent-channel/README.md`. This is a live scratch channel for coordination, not a substitute for `agent-handoff.md` or the changelog (`changelog.d/` fragments, assembled into `CHANGELOG.md`).

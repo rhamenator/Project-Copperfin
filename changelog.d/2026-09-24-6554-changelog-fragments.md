@@ -2,6 +2,8 @@
   (one per pull request) instead of the top of `CHANGELOG.md`, so
   concurrent pull requests no longer conflict on it (#6554).
   `scripts/assemble_changelog.py` validates fragments (`--check`, also run by
-  ctest) and folds them into `CHANGELOG.md` at release time. `agents.md`,
-  the PR templates, the Copilot agent profile, `CLAUDE.md`,
+  ctest) and folds them into `CHANGELOG.md` at release time, atomically and
+  safely rerunnable. `agents.md`, `.agent-channel/README.md`, the PR
+  templates, the Copilot agent profile, `CLAUDE.md`,
   `scripts/drive-codex.ps1`, and the roadmap docs now point at both.
+  `RQ-CF-REL-CHANGELOG-001`.
