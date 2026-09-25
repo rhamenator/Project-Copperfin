@@ -4,6 +4,8 @@
 
 #include "test_prg_engine_control_flow_support.h"
 
+#include <thread>
+
 namespace cf_test_prg_engine_control_flow {
 void test_sleep_command_emits_runtime_sleep_event() {
     namespace fs = std::filesystem;
@@ -485,6 +487,177 @@ void test_spawn_task_supervision_requests_cooperative_cancellation() {
     expect(std::none_of(state.events.begin(), state.events.end(), [](const auto &event) {
         return event.category == "runtime.critical.blocking_violation";
     }), "nonblocking CFTASK supervision should remain allowed inside a critical section");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_session_destruction_cancels_and_awaits_unawaited_spawn_worker() {
+    // #6183: destroying a PrgRuntimeSession while an unawaited SPAWN worker
+    // is still running (parent returns without AWAIT or CANCEL) must
+    // request cancellation and wait for it to actually stop, not leave it
+    // running past the runtime boundary. This worker uses SLEEP, matching
+    // test_spawn_task_supervision_requests_cooperative_cancellation's own
+    // pattern; see the companion DOEVENTS-spin test below for the
+    // general-loop checkpoint that also covers a worker with no SLEEP.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_teardown_6183";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // Heartbeat pattern: the worker writes its loop counter to disk every
+    // iteration, regardless of cancellation outcome. Cancellation aborts
+    // the whole routine (SLEEP's cancellation path returns an error
+    // outcome that unwinds the frame, it does not resume the next
+    // statement), so once cancelled the heartbeat simply stops advancing.
+    // If the worker were never cancelled it would keep advancing for the
+    // ~30s total sleep budget below, so a heartbeat that has already gone
+    // stale within ~1s of destruction is proof cancellation reached it.
+    const fs::path heartbeat_path = temp_root / "worker_heartbeat.txt";
+    const fs::path main_path = temp_root / "spawn_teardown.prg";
+    write_text(
+        main_path,
+        "PROCEDURE worker\n"
+        "    nCount = 0\n"
+        "    DO WHILE nCount < 1500\n"
+        "        SLEEP 20\n"
+        "        nCount = nCount + 1\n"
+        "        STRTOFILE(LTRIM(STR(nCount)), '" + heartbeat_path.string() + "')\n"
+        "    ENDDO\n"
+        "    RETURN\n"
+        "ENDPROC\n"
+        "SPAWN worker TO nTask\n"
+        // A brief head start so the worker has a chance to write at least
+        // one heartbeat before the parent returns and the session is
+        // destroyed. Without this, a fast (correctly working) cancellation
+        // can race the worker's very first SLEEP and stop it before it
+        // ever reaches STRTOFILE even once -- a false failure that
+        // punishes the fix for working quickly, not a real problem. The
+        // parent still never AWAITs or CANCELs the task itself.
+        "SLEEP 150\n"
+        "RETURN\n");
+
+    {
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6183: parent script with an unawaited SPAWN worker should complete: " + state.message);
+        // session is destroyed here without AWAIT or CANCEL.
+    }
+
+    const auto read_heartbeat = [&]() -> std::string {
+        std::error_code read_error;
+        if (!fs::exists(heartbeat_path, read_error)) {
+            return {};
+        }
+        return read_text(heartbeat_path);
+    };
+
+    // Poll (rather than a fixed short wait) for the first heartbeat: under
+    // heavy host contention, thread scheduling alone can take longer than
+    // a fixed few hundred ms, which is unrelated to whether cancellation
+    // itself works and must not make this test flaky.
+    std::string first_reading;
+    for (int attempt = 0; attempt < 100 && first_reading.empty(); ++attempt) {
+        first_reading = read_heartbeat();
+        if (first_reading.empty()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(800));
+    const std::string second_reading = read_heartbeat();
+
+    expect(!first_reading.empty(), "#6183: the worker must have started and taken at least one heartbeat");
+    expect(first_reading == second_reading,
+           "#6183: destroying the session must request cancellation and wait for the unawaited SPAWN worker to "
+           "actually stop -- its heartbeat kept advancing after destruction (first=" + first_reading +
+               " second=" + second_reading + "), meaning it kept running past the runtime boundary");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_session_destruction_cancels_unawaited_spawn_worker_in_tight_doevents_loop() {
+    // #6183: the issue's own literal repro is a bare DO WHILE .T. / DOEVENTS
+    // spin with no SLEEP at all. A general per-statement cancellation
+    // checkpoint already existed in the main run() loop (independent of
+    // this fix) covering every statement except SLEEP (which has its own
+    // more specific handling) -- but nothing ever set the cancellation
+    // token for a SPAWN worker at session-destruction time before this
+    // fix, so that checkpoint had nothing to observe. This test proves the
+    // combination actually stops a worker with no SLEEP at all, not just
+    // one that happens to call SLEEP.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_teardown_doevents_6183";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // The loop bound and statement budget are both set far higher than
+    // this loop could plausibly reach within the test's ~1.1s observation
+    // window below, on any build (including a slow ASan/sanitizer one),
+    // so the *only* thing that can plausibly stop the worker that fast is
+    // genuine cancellation -- not the loop's own bound, and not the
+    // default 500,000 executed-statement budget (this loop body alone is
+    // 3-4 statements/iteration, so the default budget would otherwise be
+    // an unrelated, much-too-early stopping mechanism that would make
+    // this test pass regardless of whether cancellation worked at all).
+    const fs::path heartbeat_path = temp_root / "worker_heartbeat.txt";
+    const fs::path main_path = temp_root / "spawn_teardown_doevents.prg";
+    write_text(
+        main_path,
+        "PROCEDURE worker\n"
+        "    nCount = 0\n"
+        "    DO WHILE nCount < 200000000\n"
+        "        DOEVENTS\n"
+        "        nCount = nCount + 1\n"
+        "        STRTOFILE(LTRIM(STR(nCount)), '" + heartbeat_path.string() + "')\n"
+        "    ENDDO\n"
+        "    RETURN\n"
+        "ENDPROC\n"
+        "SPAWN worker TO nTask\n"
+        // See the sibling SLEEP-based test above: a brief head start avoids
+        // racing a fast, correctly-working cancellation against the
+        // worker's very first heartbeat write.
+        "SLEEP 150\n"
+        "RETURN\n");
+
+    {
+        auto options = make_runtime_session_options(main_path.string(), temp_root.string(), false);
+        options.max_executed_statements = 800000000ULL;
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(options);
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6183: parent script with an unawaited DOEVENTS-spin SPAWN worker should complete: " + state.message);
+        // session is destroyed here without AWAIT or CANCEL.
+    }
+
+    const auto read_heartbeat = [&]() -> std::string {
+        std::error_code read_error;
+        if (!fs::exists(heartbeat_path, read_error)) {
+            return {};
+        }
+        return read_text(heartbeat_path);
+    };
+
+    // Poll (rather than a fixed short wait) for the first heartbeat: under
+    // heavy host contention, thread scheduling alone can take longer than
+    // a fixed few hundred ms, which is unrelated to whether cancellation
+    // itself works and must not make this test flaky.
+    std::string first_reading;
+    for (int attempt = 0; attempt < 100 && first_reading.empty(); ++attempt) {
+        first_reading = read_heartbeat();
+        if (first_reading.empty()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(800));
+    const std::string second_reading = read_heartbeat();
+
+    expect(!first_reading.empty(), "#6183: the DOEVENTS-spin worker must have started and taken at least one heartbeat");
+    expect(first_reading == second_reading,
+           "#6183: destroying the session must stop a tight DOEVENTS-spin SPAWN worker with no SLEEP, not just one "
+           "that happens to call SLEEP -- its heartbeat kept advancing after destruction (first=" + first_reading +
+               " second=" + second_reading + ")");
 
     fs::remove_all(temp_root, ignored);
 }

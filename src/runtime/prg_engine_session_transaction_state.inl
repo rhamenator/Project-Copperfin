@@ -570,6 +570,101 @@
             }
         }
 
+        // #6183: an unawaited SPAWN worker must not outlive session
+        // destruction. Requests cooperative cancellation for every task
+        // across every data session (not just current_data_session, unlike
+        // cancel_all_async_tasks()), then gives each a bounded window to
+        // actually stop before this session's own bookkeeping is dropped.
+        // An unbounded wait here would hang the destructor forever on a
+        // worker that never checks its cancellation token (e.g. one stuck
+        // in a non-cooperative external/blocking call) -- that case is not
+        // solved here, only bounded so it cannot deadlock teardown; the
+        // worker's own std::async task keeps running to completion on its
+        // own thread regardless of whether this function's local
+        // shared_ptr<AsyncTaskState> is later dropped, since it holds no
+        // reference that std::async's own internal shared future state
+        // depends on.
+        // #6590 review: releasing the last std::shared_future produced by
+        // std::async(std::launch::async, ...) blocks in its own destructor
+        // until that thread finishes -- the same special rule documented
+        // for std::future's destructor applies to the last shared_future
+        // reference too. A task whose wait_until() below times out (a
+        // genuinely non-cooperative worker, e.g. blocked in a native/OS
+        // call with no PRG-level checkpoint) must not have its
+        // shared_ptr<AsyncTaskState> destroyed on this thread, or the very
+        // bound this function exists to enforce is defeated. Handing it to
+        // this process-lifetime list instead means the thread is
+        // abandoned (fire-and-forget, consistent with the disclosed
+        // "OS-thread-level joining/reaping not addressed" limitation) but
+        // never joined here.
+        static std::mutex &abandoned_async_tasks_mutex()
+        {
+            static std::mutex mutex;
+            return mutex;
+        }
+        static std::vector<std::shared_ptr<AsyncTaskState>> &abandoned_async_tasks()
+        {
+            static std::vector<std::shared_ptr<AsyncTaskState>> tasks;
+            return tasks;
+        }
+
+        void request_cancel_and_await_async_tasks_for_shutdown()
+        {
+            const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(2000);
+            // Looped rather than a single pass: a task that was mid-SPAWN
+            // when the first pass took its snapshot (#6590 review) can
+            // register a new nested task immediately afterward. Draining
+            // repeatedly until the registry is empty (or the shared
+            // deadline above is reached, so this can never itself hang)
+            // catches that straggler on the next iteration instead of
+            // leaving it permanently uncancelled.
+            for (;;)
+            {
+                std::vector<std::shared_ptr<AsyncTaskState>> tasks;
+                {
+                    std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+                    if (concurrency_state->async_tasks_by_session.empty())
+                    {
+                        break;
+                    }
+                    for (auto &[_, session_tasks] : concurrency_state->async_tasks_by_session)
+                    {
+                        for (auto &[__, task] : session_tasks)
+                        {
+                            if (task == nullptr)
+                            {
+                                continue;
+                            }
+                            tasks.push_back(task);
+                            if (task->cancel_requested != nullptr)
+                            {
+                                task->cancel_requested->store(true, std::memory_order_relaxed);
+                            }
+                        }
+                    }
+                    concurrency_state->async_tasks_by_session.clear();
+                    concurrency_state->next_async_task_handle_by_session.clear();
+                }
+
+                for (const auto &task : tasks)
+                {
+                    // One shared deadline across every task (#6590 review),
+                    // not a fresh 2-second budget per task: N non-cooperative
+                    // workers must not turn teardown into an N*2s wait.
+                    if (task->future.wait_until(deadline) != std::future_status::ready)
+                    {
+                        std::lock_guard<std::mutex> abandoned_lock(abandoned_async_tasks_mutex());
+                        abandoned_async_tasks().push_back(task);
+                    }
+                }
+
+                if (std::chrono::steady_clock::now() >= deadline)
+                {
+                    break;
+                }
+            }
+        }
+
         bool refresh_async_task_completion(const std::shared_ptr<AsyncTaskState> &task)
         {
             if (task == nullptr)

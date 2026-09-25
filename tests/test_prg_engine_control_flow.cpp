@@ -219,6 +219,8 @@ int main() {
     test_spawn_task_supervision_observes_status_result_and_output_without_consuming_task();
     test_spawn_task_supervision_serializes_same_handle_completion_publication();
     test_spawn_task_supervision_requests_cooperative_cancellation();
+    test_session_destruction_cancels_and_awaits_unawaited_spawn_worker();
+    test_session_destruction_cancels_unawaited_spawn_worker_in_tight_doevents_loop();
     test_spawn_arguments_use_heap_backed_frame_continuations();
     test_spawn_rejects_by_reference_argument();
     test_spawn_failed_handle_assignment_does_not_leave_orphan_task();
