@@ -87,7 +87,7 @@ namespace copperfin::runtime_surface_tests
             "lVirtual = EVENTHANDLER(oVirtual, oHandler)\n"
             "lRemote = EVENTHANDLER(oRemote, oHandler)\n"
             "lUnbind = EVENTHANDLER(oVirtual, oHandler, .T.)\n"
-            "nNativeBind = BINDEVENT(oNative, 'Ping', oHandler, 'HandlePing')\n"
+            "nNativeBind = BINDEVENT(oNative, 'Ping', oHandler, 'HandlePing', 1)\n"
             "lNativeRaised = RAISEEVENT(oNative, 'Ping')\n"
             "RETURN\n"
             "DEFINE CLASS NativeSource AS Custom\n"

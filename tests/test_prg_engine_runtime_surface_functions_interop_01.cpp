@@ -19,7 +19,7 @@ namespace copperfin::runtime_surface_tests
             "nHandlerCalls = 0\n"
             "nSourceCalls = 0\n"
             "oSource = CREATEOBJECT('SourceThing')\n"
-            "nBind = BINDEVENT(oSource, 'Ping', 'HandlePing')\n"
+            "nBind = BINDEVENT(oSource, 'Ping', 'HandlePing', 1)\n"
             "lCaught = .F.\n"
             "TRY\n"
             "    lFirstRaised = RAISEEVENT(oSource, 'Ping', 1)\n"
@@ -96,7 +96,7 @@ namespace copperfin::runtime_surface_tests
             "nHandlerCalls = 0\n"
             "nSourceCalls = 0\n"
             "oSource = CREATEOBJECT('SourceThing')\n"
-            "nBind = BINDEVENT(oSource, 'Ping', 'HandlePing', 1)\n"
+            "nBind = BINDEVENT(oSource, 'Ping', 'HandlePing', 0)\n"
             "lCaught = .F.\n"
             "TRY\n"
             "    cFirstDirect = oSource.Ping(1)\n"
@@ -172,10 +172,10 @@ namespace copperfin::runtime_surface_tests
             "oSource = CREATEOBJECT('SourceThing')\n"
             "oHandler = CREATEOBJECT('HandlerThing')\n"
             "oPlain = CREATEOBJECT('Empty')\n"
-            "nBind1 = BINDEVENT(oSource, 'Ping', oHandler, 'HandleBefore')\n"
-            "nBind2 = BINDEVENT(oSource, 'Ping', 'HandlePing')\n"
-            "nBind3 = BINDEVENT(oSource, 'AfterPing', oHandler, 'HandleAfter', 1)\n"
-            "nBind4 = BINDEVENT(oSource, 'NoSimple', oHandler, 'HandleNoSimple', 2)\n"
+            "nBind1 = BINDEVENT(oSource, 'Ping', oHandler, 'HandleBefore', 1)\n"
+            "nBind2 = BINDEVENT(oSource, 'Ping', 'HandlePing', 1)\n"
+            "nBind3 = BINDEVENT(oSource, 'AfterPing', oHandler, 'HandleAfter', 0)\n"
+            "nBind4 = BINDEVENT(oSource, 'NoSimple', oHandler, 'HandleNoSimple', 3)\n"
             "nSourceRows = AEVENTS(aSourceEvents, oSource)\n"
             "nSourceCols = ALEN(aSourceEvents, 2)\n"
             "lSourceRow1HasHandler = COMPOBJ(aSourceEvents[1,2], oHandler)\n"
@@ -262,8 +262,8 @@ namespace copperfin::runtime_surface_tests
         check("csourcerow2targettype", "U");
         check("csourcerow2event", "ping");
         check("csourcerow2delegate", "HandlePing");
-        check("nsourcerow3flags", "1");
-        check("nsourcerow4flags", "2");
+        check("nsourcerow3flags", "0");
+        check("nsourcerow4flags", "3");
         check("nhandlerrows", "3");
         check("nhandlercols", "5");
         check("lhandlerrow1issource", "true");
@@ -318,8 +318,8 @@ namespace copperfin::runtime_surface_tests
             "cLog = ''\n"
             "oSource = CREATEOBJECT('SourceThing')\n"
             "oHandler = CREATEOBJECT('HandlerThing')\n"
-            "nBindPing = BINDEVENT(oSource, 'Ping', oHandler, 'CaptureCurrent')\n"
-            "nBindRaiseOnly = BINDEVENT(oSource, 'RaiseOnly', oHandler, 'CaptureCurrent')\n"
+            "nBindPing = BINDEVENT(oSource, 'Ping', oHandler, 'CaptureCurrent', 1)\n"
+            "nBindRaiseOnly = BINDEVENT(oSource, 'RaiseOnly', oHandler, 'CaptureCurrent', 1)\n"
             "cDirect = oSource.Ping(12)\n"
             "lRaised = RAISEEVENT(oSource, 'RaiseOnly', 34)\n"
             "DIMENSION aExisting[1]\n"
@@ -858,8 +858,8 @@ namespace copperfin::runtime_surface_tests
             "oBridge = CREATEOBJECT('BridgeThing')\n"
             "oTarget = CREATEOBJECT('TargetThing')\n"
             "oHandler = CREATEOBJECT('HandlerThing')\n"
-            "nBindSource = BINDEVENT(oSource, 'Ping', oBridge, 'ForwardPing')\n"
-            "nBindTarget = BINDEVENT(oTarget, 'Pong', oHandler, 'HandlePong')\n"
+            "nBindSource = BINDEVENT(oSource, 'Ping', oBridge, 'ForwardPing', 1)\n"
+            "nBindTarget = BINDEVENT(oTarget, 'Pong', oHandler, 'HandlePong', 1)\n"
             "lCaught = .F.\n"
             "TRY\n"
             "    lFirst = RAISEEVENT(oSource, 'Ping', 7)\n"

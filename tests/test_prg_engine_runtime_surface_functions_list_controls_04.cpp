@@ -797,7 +797,7 @@ namespace copperfin::runtime_surface_tests
             "oBound.AddItem('One')\n"
             "oBound.AddItem('Two')\n"
             "oSink = CREATEOBJECT('MoveSink')\n"
-            "nBind = BINDEVENT(oBound, 'OnMoveItem', oSink, 'HandleMove')\n"
+            "nBind = BINDEVENT(oBound, 'OnMoveItem', oSink, 'HandleMove', 1)\n"
             "oBound.MoveItem(2, -1)\n"
             "cBoundFirst = oBound.List(1)\n"
             "nBoundCalls = oSink.nCalls\n"
