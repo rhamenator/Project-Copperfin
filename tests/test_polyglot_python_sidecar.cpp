@@ -113,8 +113,13 @@ PolyglotArtifactInvocationRequest invocation(
         .protocol_version = "1.0.0",
         .arguments_json = std::move(arguments_json)};
     request.policy = {
-        .timeout_ms = 5000U,
-        .latency_budget_ms = 4500U,
+        // #6559: a cold Python interpreter start under a loaded CI runner
+        // (observed on Windows) can exceed a tight deadline even though the
+        // dispatch itself is correct; this test exercises ordinary control
+        // flow, not timeout/cancellation, so a generous deadline avoids
+        // flaking without weakening any assertion.
+        .timeout_ms = 20000U,
+        .latency_budget_ms = 19000U,
         .cancellation = PolyglotCancellationPolicy::propagate,
         .fallback = PolyglotFallbackPolicy::fail_fast,
         .max_attempts = 1U};

@@ -4907,7 +4907,10 @@ if(COPPERFIN_PYTHON3_EXECUTABLE)
         COPPERFIN_POLYGLOT_PYTHON_SIDECAR_PATH="${CMAKE_SOURCE_DIR}/samples/polyglot-python-sidecar/candidate.py"
         COPPERFIN_ENABLE_POLYGLOT_SUPPORTING_ARTIFACT_ADMISSION_TEST_HOOKS=1
     )
-    set_tests_properties(test_polyglot_python_sidecar PROPERTIES TIMEOUT 30)
+    # #6559: two per-process deadlines widened to 20s each to absorb a cold
+    # interpreter start under a loaded CI runner; this outer limit must
+    # cover both launches plus setup, not just one.
+    set_tests_properties(test_polyglot_python_sidecar PROPERTIES TIMEOUT 90)
 endif()
 
 if(COPPERFIN_RSCRIPT_EXECUTABLE)
@@ -5010,7 +5013,12 @@ if(NOT COPPERFIN_POLYGLOT_DOTNET_RID STREQUAL "")
     target_compile_definitions(test_polyglot_dotnet_candidate PRIVATE
         COPPERFIN_POLYGLOT_DOTNET_CANDIDATE_PATH="${COPPERFIN_POLYGLOT_DOTNET_CANDIDATE_PATH}"
     )
-    set_tests_properties(test_polyglot_dotnet_candidate PROPERTIES TIMEOUT 30)
+    # #6559: this benchmark sequentially spawns up to 24 external processes
+    # (warmup + measured samples across two process-based route layers),
+    # each with a widened 20s per-process deadline to absorb a cold .NET
+    # runtime start under a loaded CI runner; this outer limit must cover
+    # the whole sequence, not just one launch.
+    set_tests_properties(test_polyglot_dotnet_candidate PROPERTIES TIMEOUT 300)
 endif()
 
 copperfin_add_test(test_polyglot_interop_envelope cf_platform_profile
