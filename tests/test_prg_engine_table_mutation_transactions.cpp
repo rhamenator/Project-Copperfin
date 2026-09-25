@@ -492,6 +492,83 @@ void test_session_destruction_rolls_back_open_transaction() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_session_destruction_rolls_back_transactions_in_every_data_session() {
+    // #6263 review: rollback_all_pending_transaction_journals() claims to
+    // cover every data session, not just the one selected at destruction
+    // time; prove it with two data sessions, each with its own open
+    // transaction on its own table.
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_prg_engine_transaction_destructor_rollback_multi_session_6263";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_one_path = temp_root / "one.dbf";
+    const fs::path table_two_path = temp_root / "two.dbf";
+    write_people_dbf(table_one_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+    write_people_dbf(table_two_path, {{"CHARLIE", 30}, {"DELTA", 40}});
+
+    const fs::path writer_path = temp_root / "writer.prg";
+    write_text(
+        writer_path,
+        "PUBLIC nDs1Level, nDs2Level\n"
+        "USE '" + table_one_path.string() + "' ALIAS One IN 0\n"
+        "BEGIN TRANSACTION\n"
+        "GO 1\n"
+        "REPLACE NAME WITH 'CHANGED1'\n"
+        "nDs1Level = TXNLEVEL()\n"
+        "SET DATASESSION TO 2\n"
+        "USE '" + table_two_path.string() + "' ALIAS Two IN 0\n"
+        "BEGIN TRANSACTION\n"
+        "GO 1\n"
+        "REPLACE NAME WITH 'CHANGED2'\n"
+        "nDs2Level = TXNLEVEL()\n"
+        "SET DATASESSION TO 1\n"
+        "RETURN\n");
+
+    {
+        copperfin::runtime::PrgRuntimeSession writer = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(writer_path.string(), temp_root.string()));
+        const auto writer_state = writer.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(writer_state.completed, "#6263: multi-data-session writer script should complete: " + writer_state.message);
+        const auto level_one = writer_state.globals.find("nds1level");
+        const auto level_two = writer_state.globals.find("nds2level");
+        expect(level_one != writer_state.globals.end() && level_one->second.number_value == 1.0,
+               "#6263: data session 1 should return with an open transaction");
+        expect(level_two != writer_state.globals.end() && level_two->second.number_value == 1.0,
+               "#6263: data session 2 should return with an open transaction");
+        // writer is destroyed here without END TRANSACTION/ROLLBACK in
+        // either data session.
+    }
+
+    expect(find_generated_transaction_journal(temp_root, ignored).empty(),
+           "#6263: destroying the session must not leave any data session's pending transaction journal behind");
+
+    const fs::path reader_path = temp_root / "reader.prg";
+    write_text(
+        reader_path,
+        "USE '" + table_one_path.string() + "' ALIAS One IN 0\n"
+        "GO 1\n"
+        "cOne = NAME\n"
+        "USE '" + table_two_path.string() + "' ALIAS Two IN 0\n"
+        "GO 1\n"
+        "cTwo = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession reader = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(reader_path.string(), temp_root.string()));
+    const auto state = reader.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6263: multi-data-session reader script should complete: " + state.message);
+
+    const auto one = state.globals.find("cone");
+    const auto two = state.globals.find("ctwo");
+    expect(one != state.globals.end() && copperfin::runtime::format_value(one->second) == "ALPHA",
+           "#6263: destroying the writer should have restored data session 1's table");
+    expect(two != state.globals.end() && copperfin::runtime::format_value(two->second) == "CHARLIE",
+           "#6263: destroying the writer should have restored data session 2's table");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_startup_replays_pending_transaction_journal() {
     // This exercises replay_pending_transaction_journals()'s own crash
     // recovery in isolation: a hand-crafted journal directory simulates

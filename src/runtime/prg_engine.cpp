@@ -1386,20 +1386,29 @@ namespace copperfin::runtime
         ~Impl()
         {
             // #6263: ordinary completion followed by host destruction never
-            // ran perform_quit()'s cleanup, so an open transaction's backup
-            // files, cursors, locks, and other session resources leaked past
-            // the runtime boundary. Route through the same shutdown cleanup
-            // every other destruction path uses instead of a hand-duplicated
-            // partial subset of it. A destructor must not propagate an
-            // exception; this is a best-effort last resort.
+            // rolled back an open transaction's backup files, so they leaked
+            // past the runtime boundary. cleanup_runtime_resources_for_shutdown()
+            // itself is not used here: close_all_file_io_handles() clears the
+            // process-global open-file-handle registry (PR #6584 review), so
+            // calling it from every session's destructor -- an ordinary,
+            // frequent lifecycle event, unlike QUIT -- would close a
+            // different, still-live session's FOPEN/FCREATE handles whenever
+            // two sessions coexist in one process. Only the transaction
+            // rollback is destructor-safe to share; a destructor must not
+            // propagate an exception, hence the catch-all.
             try
             {
-                cleanup_runtime_resources_for_shutdown();
+                rollback_all_pending_transaction_journals();
             }
             catch (...)
             {
             }
+            while (!com_eventhandler_bindings.empty())
+            {
+                retire_com_eventhandler_binding(com_eventhandler_bindings.front().ordinal);
+            }
             external_event_tokens.reset();
+            release_declared_dll_functions();
             for (const auto &path : owned_xasset_bootstrap_paths)
             {
                 std::error_code ignored;
