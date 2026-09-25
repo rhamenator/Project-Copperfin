@@ -224,6 +224,49 @@ std::string take_first_asset_path_token(std::string value) {
     return take_first_token(std::move(value));
 }
 
+// #6557 review: like take_first_token(), but keeps a bracket literal
+// ([...]) or a parenthesized expression ((...), balanced across nested
+// parens and any '...'/"..." literals inside it) intact even when it
+// contains spaces, instead of truncating at the first one. Used for
+// command targets (USE) that accept a quoted/bracketed literal or a
+// parenthesized expression alongside a bare, unquoted filename.
+std::string take_first_command_target_token(std::string value) {
+    value = trim_copy(std::move(value));
+    if (value.empty()) {
+        return value;
+    }
+    if (value.front() == '[') {
+        const auto closing = value.find(']', 1U);
+        return closing == std::string::npos ? value : value.substr(0U, closing + 1U);
+    }
+    if (value.front() == '(') {
+        std::size_t depth = 0U;
+        for (std::size_t index = 0U; index < value.size(); ++index) {
+            const char ch = value[index];
+            if (ch == '\'' || ch == '"') {
+                const auto closing = value.find(ch, index + 1U);
+                if (closing == std::string::npos) {
+                    return value;
+                }
+                index = closing;
+                continue;
+            }
+            if (ch == '(') {
+                ++depth;
+                continue;
+            }
+            if (ch == ')') {
+                --depth;
+                if (depth == 0U) {
+                    return value.substr(0U, index + 1U);
+                }
+            }
+        }
+        return value;
+    }
+    return take_first_token(std::move(value));
+}
+
 std::string unquote_asset_path_token(std::string value) {
     value = trim_copy(std::move(value));
     if (value.size() >= 2U &&

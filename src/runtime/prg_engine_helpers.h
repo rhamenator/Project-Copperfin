@@ -40,6 +40,7 @@ std::string unquote_string(std::string value);
 std::string take_first_token(std::string value);
 std::string unquote_asset_path_token(std::string value);
 std::string take_first_asset_path_token(std::string value);
+std::string take_first_command_target_token(std::string value);
 std::pair<std::string, std::string> split_first_word(std::string value);
 std::string take_keyword_value(const std::string& text, const std::string& keyword);
 std::string runtime_error_parameter(const std::string& message);

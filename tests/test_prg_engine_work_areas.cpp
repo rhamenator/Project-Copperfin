@@ -1487,7 +1487,7 @@ void test_use_target_expression_uses_heap_backed_frame_continuations() {
     const fs::path deep_path = temp_root / "use_deep.prg";
     write_text(
         deep_path,
-        "USE use_target(2048) ALIAS People IN 0\n"
+        "USE (use_target(2048)) ALIAS People IN 0\n"
         "RETURN\n"
         "FUNCTION use_target\n"
         "LPARAMETERS nDepth\n"
@@ -1510,7 +1510,7 @@ void test_use_target_expression_uses_heap_backed_frame_continuations() {
         side_effect_path,
         "nCalls = 0\n"
         "nAliasCalls = 0\n"
-        "USE use_target() ALIAS alias_target('People') IN 0\n"
+        "USE (use_target()) ALIAS alias_target('People') IN 0\n"
         "cAlias = ALIAS()\n"
         "RETURN\n"
         "FUNCTION use_target\n"
@@ -1545,6 +1545,137 @@ void test_use_target_expression_uses_heap_backed_frame_continuations() {
     if (alias != side_effect_state.globals.end())
     {
         expect(copperfin::runtime::format_value(alias->second) == "People", "resumed USE should preserve the explicit alias");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_use_bare_target_name_resolves_as_literal_filename() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_use_bare_target_6557";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "people.dbf", {"ALPHA", "BRAVO"});
+    write_simple_dbf(temp_root / "cities.dbf", {"OSLO", "ROME", "PARIS"});
+
+    const fs::path main_path = temp_root / "use_bare_target.prg";
+    write_text(
+        main_path,
+        "people = 'not a filename'\n"
+        "USE people\n"
+        "cAlias1 = ALIAS()\n"
+        "nCount1 = RECCOUNT()\n"
+        "USE\n"
+        "USE people.dbf ALIAS PeopleTwo\n"
+        "cAlias2 = ALIAS()\n"
+        "nCount2 = RECCOUNT()\n"
+        "USE\n"
+        "USE cities IN 0\n"
+        "cAlias3 = ALIAS()\n"
+        "nCount3 = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6557: bare USE target script should complete: " + state.message);
+
+    const auto alias1 = state.globals.find("calias1");
+    const auto count1 = state.globals.find("ncount1");
+    const auto alias2 = state.globals.find("calias2");
+    const auto count2 = state.globals.find("ncount2");
+    const auto alias3 = state.globals.find("calias3");
+    const auto count3 = state.globals.find("ncount3");
+    expect(alias1 != state.globals.end(), "#6557: USE people should open and select an alias");
+    expect(count1 != state.globals.end(), "#6557: USE people should expose RECCOUNT()");
+    expect(alias2 != state.globals.end(), "#6557: USE people.dbf ALIAS PeopleTwo should open and select an alias");
+    expect(count2 != state.globals.end(), "#6557: USE people.dbf should expose RECCOUNT()");
+    expect(alias3 != state.globals.end(), "#6557: USE cities IN 0 should open and select an alias");
+    expect(count3 != state.globals.end(), "#6557: USE cities should expose RECCOUNT()");
+    if (alias1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias1->second) == "people",
+               "#6557: USE people should default the alias to the bare table name, not evaluate it as an expression");
+    }
+    if (count1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count1->second) == "2",
+               "#6557: USE people should open people.dbf (a preexisting PUBLIC variable of the same name must not shadow it)");
+    }
+    if (alias2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias2->second) == "PeopleTwo",
+               "#6557: USE people.dbf ALIAS PeopleTwo should honor the explicit alias");
+    }
+    if (count2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count2->second) == "2",
+               "#6557: USE people.dbf should treat the bare '.dbf'-suffixed token as a literal filename, not a property read");
+    }
+    if (alias3 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias3->second) == "cities",
+               "#6557: USE cities IN 0 should default the alias to the bare table name");
+    }
+    if (count3 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count3->second) == "3",
+               "#6557: USE cities IN 0 should open cities.dbf");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_use_bracket_literal_and_spaced_parenthesized_target_resolve_correctly() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_prg_engine_use_bracket_paren_target_6557";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "people.dbf", {"ALPHA", "BRAVO"});
+
+    const fs::path main_path = temp_root / "use_bracket_paren_target.prg";
+    write_text(
+        main_path,
+        "USE [people.dbf]\n"
+        "cAlias1 = ALIAS()\n"
+        "nCount1 = RECCOUNT()\n"
+        "USE\n"
+        "cStem = 'people'\n"
+        "USE (cStem + '.dbf')\n"
+        "cAlias2 = ALIAS()\n"
+        "nCount2 = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6557 review: bracket-literal and spaced-parenthesized USE target script should complete: " +
+               state.message);
+
+    const auto alias1 = state.globals.find("calias1");
+    const auto count1 = state.globals.find("ncount1");
+    const auto alias2 = state.globals.find("calias2");
+    const auto count2 = state.globals.find("ncount2");
+    expect(alias1 != state.globals.end(), "#6557 review: USE [people.dbf] should open and select an alias");
+    expect(count1 != state.globals.end(), "#6557 review: USE [people.dbf] should expose RECCOUNT()");
+    expect(alias2 != state.globals.end(),
+           "#6557 review: USE (cStem + '.dbf') should open and select an alias");
+    expect(count2 != state.globals.end(), "#6557 review: USE (cStem + '.dbf') should expose RECCOUNT()");
+    if (alias1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias1->second) == "people",
+               "#6557 review: USE [people.dbf] should evaluate the bracket literal, not pass the brackets through as a literal filename");
+    }
+    if (count1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count1->second) == "2",
+               "#6557 review: USE [people.dbf] should open people.dbf");
+    }
+    if (alias2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias2->second) == "people",
+               "#6557 review: USE (cStem + '.dbf') should evaluate the full parenthesized expression, not truncate it at the first space");
+    }
+    if (count2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count2->second) == "2",
+               "#6557 review: USE (cStem + '.dbf') should open people.dbf");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -2013,6 +2144,8 @@ int main() {
     test_go_record_expression_uses_heap_backed_frame_continuations();
     test_unlock_record_expression_uses_heap_backed_frame_continuations();
     test_use_target_expression_uses_heap_backed_frame_continuations();
+    test_use_bare_target_name_resolves_as_literal_filename();
+    test_use_bracket_literal_and_spaced_parenthesized_target_resolve_correctly();
     test_cursor_identity_functions_for_local_tables();
     test_local_use_auto_allocation_tracks_session_selection_flow();
     test_local_selected_empty_area_reuses_after_datasession_round_trip();
