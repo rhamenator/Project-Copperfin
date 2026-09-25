@@ -282,6 +282,7 @@ namespace
             "atline_second = ATLINE('fox', line_text, 2)\n"
             "ratline_hit = RATLINE('fox', line_text)\n"
             "chrtran_value = CHRTRAN('a1b2c3', '123', 'xyz')\n"
+            "chrtran_case_pair = CHRTRAN('aA', 'A', 'X')\n"
             "chrtranc_value = CHRTRANC('aAbBcc', 'AB', 'xy')\n"
             "chrtranc_delete = CHRTRANC('Alpha Beta', 'AE', 'x')\n"
             "chrtranc_case_pair = CHRTRANC('aA', 'A', 'X')\n"
@@ -570,6 +571,7 @@ namespace
         check("atline_second", "3");
         check("ratline_hit", "3");
         check("chrtran_value", "axbycz");
+        check("chrtran_case_pair", "aX");
         check("chrtranc_value", "axbycc");
         check("chrtranc_delete", "xlpha Beta");
         check("chrtranc_case_pair", "aX");

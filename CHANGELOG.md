@@ -1,8 +1,3 @@
-- 2026-09-25: `CHRTRANC()` now matches VFP9's single-byte `CHRTRAN()`
-  behavior instead of folding ASCII case (#6546). Search characters are
-  matched byte-for-byte, duplicate search characters use the first match,
-  a missing replacement deletes the matched byte, and embedded NUL bytes
-  remain supported. `RQ-CF-PRG-060`.
 - 2026-09-24: `APPEND FROM ... FOR` now follows VFP9 on every target
   (#6551). FOR was previously ignored entirely on local tables. FOR is
   evaluated once up front on the target's current record (error 1127 if
