@@ -1258,6 +1258,52 @@ void test_sdf_omits_binary_object_fields_from_interchange_layout() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_delimited_export_omits_general_picture_fields() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_delimited_omitted_binary_objects";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "GENERAL", .type = 'G', .length = 4U},
+        {.name = "PICTURE", .type = 'P', .length = 4U},
+        {.name = "CODE", .type = 'C', .length = 2U},
+    };
+    const fs::path source_path = temp_root / "source.dbf";
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        source_path.string(), fields, {{"", "", "OK"}});
+    expect(create_result.ok, "#6624: General/Picture delimited-export fixture should be created");
+
+    const fs::path general_csv = temp_root / "general.csv";
+    const fs::path picture_csv = temp_root / "picture.csv";
+    const fs::path object_only_csv = temp_root / "objects.csv";
+    const fs::path general_tab = temp_root / "general.txt";
+    const fs::path main_path = temp_root / "copy_to_delimited_omitted_binary_objects.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO '" + general_csv.string() + "' TYPE CSV FIELDS GENERAL, CODE\n"
+        "COPY TO '" + picture_csv.string() + "' TYPE CSV FIELDS PICTURE, CODE\n"
+        "COPY TO '" + object_only_csv.string() + "' TYPE CSV FIELDS GENERAL, PICTURE\n"
+        "COPY TO '" + general_tab.string() + "' TYPE DELIMITED WITH TAB FIELDS GENERAL, CODE\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6624: COPY TO CSV/DELIMITED object-field scripts should complete: " + state.message);
+    expect(read_text(general_csv) == ",CODE\r\n\"OK\"\r\n",
+           "#6624: General before Character must retain VFP's empty CSV header cell but no data cell");
+    expect(read_text(picture_csv) == ",CODE\r\n\"OK\"\r\n",
+           "#6624: Picture before Character must retain VFP's empty CSV header cell but no data cell");
+    expect(read_text(object_only_csv) == "\r\n\r\n",
+           "#6624: object-only CSV selection must retain VFP's empty header and data records");
+    expect(read_text(general_tab) == "\"OK\"\r\n",
+           "#6624: DELIMITED data rows must omit a leading General column altogether");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_type_sdf_imports_fixed_width_text_rows() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_sdf";
