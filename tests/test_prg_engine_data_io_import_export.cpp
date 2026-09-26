@@ -1277,6 +1277,8 @@ void test_delimited_export_omits_general_picture_fields() {
 
     const fs::path general_csv = temp_root / "general.csv";
     const fs::path picture_csv = temp_root / "picture.csv";
+    const fs::path trailing_general_csv = temp_root / "trailing-general.csv";
+    const fs::path trailing_picture_csv = temp_root / "trailing-picture.csv";
     const fs::path object_only_csv = temp_root / "objects.csv";
     const fs::path general_tab = temp_root / "general.txt";
     const fs::path main_path = temp_root / "copy_to_delimited_omitted_binary_objects.prg";
@@ -1285,6 +1287,8 @@ void test_delimited_export_omits_general_picture_fields() {
         "USE '" + source_path.string() + "'\n"
         "COPY TO '" + general_csv.string() + "' TYPE CSV FIELDS GENERAL, CODE\n"
         "COPY TO '" + picture_csv.string() + "' TYPE CSV FIELDS PICTURE, CODE\n"
+        "COPY TO '" + trailing_general_csv.string() + "' TYPE CSV FIELDS CODE, GENERAL\n"
+        "COPY TO '" + trailing_picture_csv.string() + "' TYPE CSV FIELDS CODE, PICTURE\n"
         "COPY TO '" + object_only_csv.string() + "' TYPE CSV FIELDS GENERAL, PICTURE\n"
         "COPY TO '" + general_tab.string() + "' TYPE DELIMITED WITH TAB FIELDS GENERAL, CODE\n"
         "RETURN\n");
@@ -1296,6 +1300,10 @@ void test_delimited_export_omits_general_picture_fields() {
            "#6624: General before Character must retain VFP's empty CSV header cell but no data cell");
     expect(read_text(picture_csv) == ",CODE\r\n\"OK\"\r\n",
            "#6624: Picture before Character must retain VFP's empty CSV header cell but no data cell");
+    expect(read_text(trailing_general_csv) == "CODE\r\n\"OK\",\r\n",
+           "#6624: General after Character must retain VFP's terminal empty CSV data cell");
+    expect(read_text(trailing_picture_csv) == "CODE\r\n\"OK\",\r\n",
+           "#6624: Picture after Character must retain VFP's terminal empty CSV data cell");
     expect(read_text(object_only_csv) == "\r\n\r\n",
            "#6624: object-only CSV selection must retain VFP's empty header and data records");
     expect(read_text(general_tab) == "\"OK\"\r\n",

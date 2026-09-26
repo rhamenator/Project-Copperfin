@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "b694b57e-90f4-4599-97e3-4ef7e28d14bd", "text": "PR #6626 review finding addressed: added VFP-backed regression coverage for trailing General/Picture CSV columns (FIELDS CODE, GENERAL/PICTURE); focused data-I/O test passes.", "to": ["both"], "ts": "2026-09-26T18:47:36Z", "type": "status"}
