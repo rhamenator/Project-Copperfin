@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "7555ccd1-9543-430c-b67c-356455e3892c", "text": "PR #6622 review follow-up: native VFP9 emits CRLF for a TYPE SDF FIELDS selection containing only Picture; added focused regression proving this intentional empty-record result. Focused data I/O validation passes.", "to": ["both"], "ts": "2026-09-26T16:46:02Z", "type": "status"}

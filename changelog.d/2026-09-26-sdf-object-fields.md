@@ -1,0 +1,1 @@
+- 2026-09-26: Fixed SDF import and export layout to omit General, Blob, and Picture fields so later fixed-width columns remain aligned with VFP9.

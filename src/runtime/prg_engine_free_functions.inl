@@ -244,6 +244,16 @@
             return field.length;
         }
 
+        bool sdf_omits_binary_object_field(const vfp::DbfFieldDescriptor &field)
+        {
+            // VFP9's SDF interchange has no physical column for General,
+            // Blob, or Picture values.  Memo has a separate compatibility
+            // policy (#6607/#6609): its import behavior must remain available
+            // to Copperfin's extension mode until that policy is implemented.
+            const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
+            return field_type == 'G' || field_type == 'W' || field_type == 'P';
+        }
+
         std::string normalize_sdf_field_value_for_storage(
             const vfp::DbfFieldDescriptor &field,
             std::string value)

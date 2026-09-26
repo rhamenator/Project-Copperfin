@@ -8462,6 +8462,14 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
+                if (copy_as_sdf)
+                {
+                    // VFP SDF rows do not reserve placeholder bytes for G/W/P.
+                    // Do this after the caller's FIELDS selection so the
+                    // surviving columns preserve that selection's order.
+                    std::erase_if(out_fields, sdf_omits_binary_object_field);
+                }
+
                 if (is_structure_extended)
                 {
                     const std::vector<vfp::DbfFieldDescriptor> structure_fields{
@@ -10348,6 +10356,7 @@
 
                     std::vector<vfp::DbfFieldDescriptor> target_fields =
                         filter_field_descriptors(dest_result.table.fields, field_filter, true);
+                    std::erase_if(target_fields, sdf_omits_binary_object_field);
                     if (target_fields.empty())
                     {
                         last_error_message = runtime_text(
