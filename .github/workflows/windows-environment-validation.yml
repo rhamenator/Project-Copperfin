@@ -61,7 +61,7 @@ jobs:
             exit 0
           fi
 
-          mapfile -t changed_files < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          mapfile -t changed_files < <(git diff --no-renames --name-only "$BASE_SHA" "$HEAD_SHA")
           if (( ${#changed_files[@]} == 0 )); then
             echo "docs_only=false" >> "$GITHUB_OUTPUT"
             exit 0
@@ -69,7 +69,7 @@ jobs:
 
           for changed_file in "${changed_files[@]}"; do
             case "$changed_file" in
-              docs/**|changelog.d/**|.agent-channel/**|*.md|*.txt) ;;
+              docs/**|changelog.d/**|.agent-channel/**|*.md) ;;
               *)
                 echo "docs_only=false" >> "$GITHUB_OUTPUT"
                 exit 0
@@ -80,29 +80,48 @@ jobs:
 
   windows-environment-paths:
     needs: change-scope
-    # Documentation-only pull requests retain this required context as a skipped success.
-    if: ${{ needs.change-scope.outputs.docs_only != 'true' }}
-    runs-on: windows-latest
+    # Always instantiate every required context. Documentation-only pull
+    # requests run only the lightweight report step below; a failed classifier
+    # makes this context fail rather than suppressing validation.
+    if: ${{ always() }}
+    runs-on: ${{ needs.change-scope.outputs.docs_only == 'true' && 'ubuntu-latest' || 'windows-latest' }}
     timeout-minutes: 30
 
     steps:
+      - name: Fail closed when change classification fails
+        if: ${{ needs.change-scope.result != 'success' }}
+        shell: bash
+        run: exit 1
+
+      - name: Report documentation-only validation
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only == 'true' }}
+        shell: bash
+        run: echo "Documentation-only pull request; full validation is not required."
+
       - name: Check out source
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Validate focused workflow path filters
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: cmake -P cmake/validate_focused_workflow_path_filters.cmake
 
       - name: Configure native build
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: cmake -S . -B "$env:RUNNER_TEMP/copperfin-environment-build" -DCOPPERFIN_BUILD_TESTS=ON
 
       - name: Build environment and executable path regressions
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: cmake --build "$env:RUNNER_TEMP/copperfin-environment-build" --config Release --parallel 2 --target test_platform_path test_platform_environment test_localization test_licensing_status test_build_host_output test_runtime_host_implicit_path_launch test_tool_license_path_launch test_studio_host_shell_command test_studio_host_report_section_selection_diagnostics test_windows_pe_image test_windows_com_event_adapter test_workspace_agent_process_containment
 
       - name: Run environment and executable path regressions
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: ctest --test-dir "$env:RUNNER_TEMP/copperfin-environment-build" -C Release --output-on-failure --timeout 180 -R "^(test_platform_path|test_platform_path_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_localization|test_licensing_status|test_build_host_output|test_runtime_host_implicit_path_launch|test_tool_license_path_launch|test_studio_host_shell_command|test_studio_host_report_section_selection_diagnostics|test_windows_pe_image|test_windows_pe_image_boundary_contract|test_windows_com_event_adapter|test_workspace_agent_process_containment)$"
 
       - name: Build private workspace-agent and parser-authority regressions
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: cmake --build "$env:RUNNER_TEMP/copperfin-environment-build" --config Release --parallel 2 --target test_platform_private_directory test_workspace_agent_session test_workspace_agent_process_parser test_workspace_agent_isolated_environment
 
       - name: Run private workspace-agent and parser-authority regressions
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: ctest --test-dir "$env:RUNNER_TEMP/copperfin-environment-build" -C Release --output-on-failure -R "^(test_platform_private_directory|test_platform_private_directory_boundary_contract|test_workspace_agent_process_image_materialization_contract|test_workspace_agent_session|test_workspace_agent_process_parser|test_workspace_agent_process_parser_boundary_contract|test_workspace_agent_isolated_environment)$"

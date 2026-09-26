@@ -97,7 +97,7 @@ jobs:
             exit 0
           fi
 
-          mapfile -t changed_files < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          mapfile -t changed_files < <(git diff --no-renames --name-only "$BASE_SHA" "$HEAD_SHA")
           if (( ${#changed_files[@]} == 0 )); then
             echo "docs_only=false" >> "$GITHUB_OUTPUT"
             exit 0
@@ -105,7 +105,7 @@ jobs:
 
           for changed_file in "${changed_files[@]}"; do
             case "$changed_file" in
-              docs/**|changelog.d/**|.agent-channel/**|*.md|*.txt) ;;
+              docs/**|changelog.d/**|.agent-channel/**|*.md) ;;
               *)
                 echo "docs_only=false" >> "$GITHUB_OUTPUT"
                 exit 0
@@ -116,27 +116,43 @@ jobs:
 
   windows-generated-launcher:
     needs: change-scope
-    # Documentation-only pull requests retain this required context as a skipped success.
-    if: ${{ needs.change-scope.outputs.docs_only != 'true' }}
+    # Always instantiate every required context. Documentation-only pull
+    # requests run only the lightweight report step below; a failed classifier
+    # makes this context fail rather than suppressing validation.
+    if: ${{ always() }}
     name: Windows generated launcher process
-    runs-on: windows-latest
+    runs-on: ${{ needs.change-scope.outputs.docs_only == 'true' && 'ubuntu-latest' || 'windows-latest' }}
     timeout-minutes: 45
 
     steps:
+      - name: Fail closed when change classification fails
+        if: ${{ needs.change-scope.result != 'success' }}
+        shell: bash
+        run: exit 1
+
+      - name: Report documentation-only validation
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only == 'true' }}
+        shell: bash
+        run: echo "Documentation-only pull request; full validation is not required."
+
       - name: Check out source
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup .NET SDK
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
         with:
           dotnet-version: 10.0.x
 
       - name: Setup Python 3.13
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.13"
 
       - name: Setup R 4.6.1
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         uses: r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2
         with:
           r-version: "4.6.1"
@@ -144,12 +160,15 @@ jobs:
           use-public-rspm: "false"
 
       - name: Configure native build
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON -DCOPPERFIN_REQUIRE_SQLITE_CONNECTOR=ON
 
       - name: Build generated-launcher, portable-platform, polyglot, MCP, and SQLite federation targets
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: cmake --build build --config Release --target test_generated_launcher_process test_platform_path test_platform_disk_space test_platform_exclusive_file test_platform_file_stream test_platform_font_directories test_platform_environment test_prg_engine_arrays test_prg_engine_file_io_functions test_prg_engine_verified_dbf_security test_prg_engine_locale_code_page test_polyglot_dotnet_candidate test_polyglot_python_sidecar test_polyglot_r_sidecar test_mcp_host copperfin_mcp_host copperfin_build_host test_sqlite_federation_connector test_runtime_host_sqlite_federation --parallel 2
 
       - name: Exclude launcher test temp directory from Windows Defender scanning
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         shell: pwsh
         run: |
           # test_generated_launcher_process (run in the next step) publishes
@@ -177,10 +196,11 @@ jobs:
           }
 
       - name: Run generated-launcher, portable-platform, polyglot, MCP, and SQLite federation tests
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: ctest --test-dir build -C Release --output-on-failure -R "^(test_generated_launcher_process|test_platform_path|test_platform_path_boundary_contract|test_platform_disk_space|test_platform_disk_space_boundary_contract|test_platform_exclusive_file|test_platform_exclusive_file_boundary_contract|test_platform_file_stream|test_platform_file_stream_boundary_contract|test_platform_font_directories|test_platform_font_directories_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_platform_file_version_boundary_contract|test_platform_code_page_boundary_contract|test_platform_sqlite_api_boundary_contract|test_portable_clr_host_boundary_contract|test_native_declared_library_boundary_contract|test_native_declared_call_boundary_contract|test_printer_shell_boundary_contract|test_prg_engine_arrays|test_prg_engine_file_io_functions|test_prg_engine_verified_dbf_security|test_prg_engine_locale_code_page|test_native_platform_workflow_contract|test_github_actions_contract|test_polyglot_dotnet_candidate|test_polyglot_python_sidecar|test_polyglot_r_sidecar|test_mcp_host|test_mcp_host_stdio|test_sqlite_federation_connector|test_runtime_host_sqlite_federation)$"
 
       - name: Remove launcher test temp directory Windows Defender exclusion
-        if: always()
+        if: ${{ always() && needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         shell: pwsh
         run: |
           try {
@@ -192,17 +212,21 @@ jobs:
           }
 
       - name: Build private workspace-agent and parser-authority regressions
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: cmake --build build --config Release --target test_platform_private_directory test_workspace_agent_session test_workspace_agent_process_parser test_workspace_agent_isolated_environment --parallel 2
 
       - name: Run private workspace-agent and parser-authority regressions
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: ctest --test-dir build -C Release --output-on-failure -R "^(test_platform_private_directory|test_platform_private_directory_boundary_contract|test_workspace_agent_process_image_materialization_contract|test_workspace_agent_session|test_workspace_agent_process_parser|test_workspace_agent_process_parser_boundary_contract|test_workspace_agent_isolated_environment)$"
 
   posix-generated-launcher:
     needs: change-scope
-    # Documentation-only pull requests retain this required context as a skipped success.
-    if: ${{ needs.change-scope.outputs.docs_only != 'true' }}
+    # Always instantiate every required context. Documentation-only pull
+    # requests run only the lightweight report step below; a failed classifier
+    # makes this context fail rather than suppressing validation.
+    if: ${{ always() }}
     name: ${{ matrix.os }} generated launcher process
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ needs.change-scope.outputs.docs_only == 'true' && 'ubuntu-latest' || matrix.os }}
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -210,20 +234,34 @@ jobs:
         os: [ubuntu-latest, macos-latest]
 
     steps:
+      - name: Fail closed when change classification fails
+        if: ${{ needs.change-scope.result != 'success' }}
+        shell: bash
+        run: exit 1
+
+      - name: Report documentation-only validation
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only == 'true' }}
+        shell: bash
+        run: echo "Documentation-only pull request; full validation is not required."
+
       - name: Check out source
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup .NET SDK
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
         with:
           dotnet-version: 10.0.x
 
       - name: Setup Python 3.13
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.13"
 
       - name: Setup R 4.6.1
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         uses: r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2
         with:
           r-version: "4.6.1"
@@ -231,16 +269,21 @@ jobs:
           use-public-rspm: "false"
 
       - name: Configure native build
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON -DCOPPERFIN_REQUIRE_SQLITE_CONNECTOR=ON
 
       - name: Build POSIX generated-launcher, portable-platform, polyglot, MCP, and SQLite federation targets
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: cmake --build build --config Release --target test_generated_launcher_posix_process test_platform_path test_platform_disk_space test_platform_exclusive_file test_platform_file_stream test_platform_font_directories test_platform_environment test_prg_engine_arrays test_prg_engine_file_io_functions test_prg_engine_verified_dbf_security test_prg_engine_locale_code_page test_polyglot_dotnet_candidate test_polyglot_python_sidecar test_polyglot_r_sidecar test_mcp_host copperfin_mcp_host test_sqlite_federation_connector test_runtime_host_sqlite_federation --parallel 2
 
       - name: Run POSIX generated-launcher, portable-platform, polyglot, MCP, and SQLite federation tests
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: ctest --test-dir build -C Release --output-on-failure -R "^(test_generated_launcher_posix_process|test_platform_path|test_platform_path_boundary_contract|test_platform_disk_space|test_platform_disk_space_boundary_contract|test_platform_exclusive_file|test_platform_exclusive_file_boundary_contract|test_platform_file_stream|test_platform_file_stream_boundary_contract|test_platform_font_directories|test_platform_font_directories_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_platform_file_version_boundary_contract|test_platform_code_page_boundary_contract|test_platform_sqlite_api_boundary_contract|test_portable_clr_host_boundary_contract|test_native_declared_library_boundary_contract|test_native_declared_call_boundary_contract|test_printer_shell_boundary_contract|test_prg_engine_arrays|test_prg_engine_file_io_functions|test_prg_engine_verified_dbf_security|test_prg_engine_locale_code_page|test_native_platform_workflow_contract|test_github_actions_contract|test_polyglot_dotnet_candidate|test_polyglot_python_sidecar|test_polyglot_r_sidecar|test_mcp_host|test_mcp_host_stdio|test_sqlite_federation_connector|test_runtime_host_sqlite_federation)$"
 
       - name: Build private workspace-agent and parser-authority regressions
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: cmake --build build --config Release --target test_platform_private_directory test_workspace_agent_session test_workspace_agent_process_parser test_workspace_agent_isolated_environment --parallel 2
 
       - name: Run private workspace-agent and parser-authority regressions
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: ctest --test-dir build -C Release --output-on-failure -R "^(test_platform_private_directory|test_platform_private_directory_boundary_contract|test_workspace_agent_process_image_materialization_contract|test_workspace_agent_session|test_workspace_agent_process_parser|test_workspace_agent_process_parser_boundary_contract|test_workspace_agent_isolated_environment)$"

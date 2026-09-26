@@ -110,12 +110,20 @@ set(required_context_workflows
 foreach(workflow_name IN LISTS required_context_workflows)
     require_workflow_text(
         "${workflow_name}"
-        "docs/**|changelog.d/**|.agent-channel/**|*.md|*.txt)"
+        "docs/**|changelog.d/**|.agent-channel/**|*.md)"
         "the fail-closed documentation-only change classifier")
     require_workflow_text(
         "${workflow_name}"
-        "if: \${{ needs.change-scope.outputs.docs_only != 'true' }}"
-        "the documentation-only full-validation gate")
+        "git diff --no-renames --name-only"
+        "the fail-closed rename-aware documentation-only inventory")
+    require_workflow_text(
+        "${workflow_name}"
+        "if: \${{ always() }}"
+        "the always-instantiated required context")
+    require_workflow_text(
+        "${workflow_name}"
+        "Fail closed when change classification fails"
+        "the classifier failure gate")
 endforeach()
 
 require_workflow_text(
