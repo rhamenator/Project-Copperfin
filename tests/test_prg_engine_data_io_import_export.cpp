@@ -1258,6 +1258,66 @@ void test_sdf_omits_binary_object_fields_from_interchange_layout() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_dif_sylk_omit_blob_fields() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_dif_sylk_omitted_blob";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // The public fixture writer cannot declare W directly. Reclassifying an
+    // equal-width Character descriptor provides the on-disk Blob layout this
+    // interchange projection needs to inspect.
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "GENERAL", .type = 'G', .length = 4U},
+        {.name = "PICTURE", .type = 'P', .length = 4U},
+        {.name = "BLOB", .type = 'C', .length = 4U},
+        {.name = "CODE", .type = 'C', .length = 2U},
+    };
+    const auto mark_blob_field = [](const fs::path &path) {
+        std::fstream table(path, std::ios::in | std::ios::out | std::ios::binary);
+        table.seekp(32 + 2 * 32 + 11);
+        table.put('W');
+        return table.good();
+    };
+    const fs::path source_path = temp_root / "source.dbf";
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        source_path.string(), fields, {{"", "", "", "OK"}});
+    expect(create_result.ok, "#6627/#6631: DIF/SYLK object fixture should be created");
+    expect(mark_blob_field(source_path), "#6631: DIF/SYLK fixture should expose a Blob descriptor");
+
+    const fs::path dif_path = temp_root / "objects.dif";
+    const fs::path sylk_path = temp_root / "objects.slk";
+    const fs::path main_path = temp_root / "copy_to_dif_sylk_omitted_blob.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO '" + dif_path.string() + "' TYPE DIF\n"
+        "COPY TO '" + sylk_path.string() + "' TYPE SYLK\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6627/#6631: COPY TO TYPE DIF/SYLK should omit object columns: " + state.message);
+
+    const std::string dif = read_text(dif_path);
+    const std::string sylk = read_text(sylk_path);
+    expect(dif.find("VECTORS\n0,1") != std::string::npos,
+           "#6631: DIF must declare one surviving vector after Blob omission");
+    expect(dif.find("\"CODE\"") != std::string::npos &&
+               dif.find("GENERAL") == std::string::npos && dif.find("PICTURE") == std::string::npos &&
+               dif.find("BLOB") == std::string::npos,
+           "#6627/#6631: DIF must retain CODE but omit object headers/values");
+    expect(sylk.find("B;Y2;X1") != std::string::npos,
+           "#6631: SYLK must declare one surviving column after Blob omission");
+    expect(sylk.find("\"CODE\"") != std::string::npos &&
+               sylk.find("GENERAL") == std::string::npos && sylk.find("PICTURE") == std::string::npos &&
+               sylk.find("BLOB") == std::string::npos,
+           "#6627/#6631: SYLK must retain CODE but omit object headers/values");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_delimited_export_omits_general_picture_fields() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_delimited_omitted_binary_objects";

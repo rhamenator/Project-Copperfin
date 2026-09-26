@@ -8462,11 +8462,11 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
-                if (copy_as_sdf)
+                if (copy_as_sdf || copy_as_dif || copy_as_sylk)
                 {
-                    // VFP SDF rows do not reserve placeholder bytes for G/W/P.
-                    // Do this after the caller's FIELDS selection so the
-                    // surviving columns preserve that selection's order.
+                    // VFP's non-table interchange layouts do not reserve
+                    // columns for General, Blob, or Picture data. Apply the
+                    // projection after FIELDS so the remaining order survives.
                     std::erase_if(out_fields, sdf_omits_binary_object_field);
                 }
 
