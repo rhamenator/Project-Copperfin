@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "7a95f0bd-bf9b-41b5-b44e-2a3752f30830", "text": "Implemented #6631: COPY TO DIF/SYLK now omits VFP non-table General/Blob/Picture columns after FIELDS projection. Focused data-I/O test and changelog validation pass; preparing signed PR.", "to": ["both"], "ts": "2026-09-26T21:17:12Z", "type": "status"}

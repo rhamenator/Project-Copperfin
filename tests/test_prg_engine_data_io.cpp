@@ -76,6 +76,7 @@ int main() {
     test_copy_to_type_sdf_writes_fixed_width_text_rows();
     test_copy_to_type_sdf_preserves_character_whitespace();
     test_sdf_omits_binary_object_fields_from_interchange_layout();
+    test_dif_sylk_omit_blob_fields();
     test_delimited_export_omits_general_picture_fields();
     test_append_from_type_sdf_imports_fixed_width_text_rows();
     test_append_from_type_sdf_uses_vfp_logical_tokens();

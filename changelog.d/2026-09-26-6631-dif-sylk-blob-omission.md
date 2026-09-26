@@ -1,0 +1,1 @@
+- 2026-09-26: Fixed `COPY TO TYPE DIF` and `TYPE SYLK` to omit General, Blob, and Picture fields from non-table interchange columns, matching Visual FoxPro 9 behavior (#6631).

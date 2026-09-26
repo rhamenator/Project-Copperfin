@@ -1258,6 +1258,102 @@ void test_sdf_omits_binary_object_fields_from_interchange_layout() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_dif_sylk_omit_blob_fields() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_dif_sylk_omitted_blob";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // The public fixture writer cannot declare W directly. Reclassifying an
+    // equal-width Character descriptor provides the on-disk Blob layout this
+    // interchange projection needs to inspect.
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "GENERAL", .type = 'G', .length = 4U},
+        {.name = "PICTURE", .type = 'P', .length = 4U},
+        {.name = "BLOB", .type = 'C', .length = 4U},
+        {.name = "CODE", .type = 'C', .length = 2U},
+    };
+    const auto mark_blob_field = [](const fs::path &path) {
+        std::fstream table(path, std::ios::in | std::ios::out | std::ios::binary);
+        table.seekp(32 + 2 * 32 + 11);
+        table.put('W');
+        return table.good();
+    };
+    const fs::path source_path = temp_root / "source.dbf";
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        source_path.string(), fields, {{"", "", "", "OK"}});
+    expect(create_result.ok, "#6627/#6631: DIF/SYLK object fixture should be created");
+    expect(mark_blob_field(source_path), "#6631: DIF/SYLK fixture should expose a Blob descriptor");
+
+    const fs::path dif_path = temp_root / "objects.dif";
+    const fs::path dif_filtered_path = temp_root / "objects-filtered.dif";
+    const fs::path sylk_path = temp_root / "objects.slk";
+    const fs::path sylk_filtered_path = temp_root / "objects-filtered.slk";
+    const fs::path dif_destination_path = temp_root / "dif-destination.dbf";
+    const fs::path dif_filtered_destination_path = temp_root / "dif-filtered-destination.dbf";
+    const fs::path sylk_destination_path = temp_root / "sylk-destination.dbf";
+    const fs::path sylk_filtered_destination_path = temp_root / "sylk-filtered-destination.dbf";
+    for (const fs::path &destination_path : {dif_destination_path, dif_filtered_destination_path,
+                                              sylk_destination_path, sylk_filtered_destination_path})
+    {
+        const auto destination_create = copperfin::vfp::create_dbf_table_file(destination_path.string(), fields, {});
+        expect(destination_create.ok, "#6627/#6631: DIF/SYLK destination fixture should be created");
+        expect(mark_blob_field(destination_path), "#6631: DIF/SYLK destination should expose a Blob descriptor");
+    }
+    const fs::path main_path = temp_root / "copy_to_dif_sylk_omitted_blob.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO '" + dif_path.string() + "' TYPE DIF\n"
+        "COPY TO '" + dif_filtered_path.string() + "' TYPE DIF FIELDS PICTURE, CODE\n"
+        "COPY TO '" + sylk_path.string() + "' TYPE SYLK\n"
+        "COPY TO '" + sylk_filtered_path.string() + "' TYPE SYLK FIELDS PICTURE, CODE\n"
+        "USE '" + dif_destination_path.string() + "'\n"
+        "APPEND FROM '" + dif_path.string() + "' TYPE DIF\n"
+        "USE '" + dif_filtered_destination_path.string() + "'\n"
+        "APPEND FROM '" + dif_filtered_path.string() + "' TYPE DIF FIELDS PICTURE, CODE\n"
+        "USE '" + sylk_destination_path.string() + "'\n"
+        "APPEND FROM '" + sylk_path.string() + "' TYPE SYLK\n"
+        "USE '" + sylk_filtered_destination_path.string() + "'\n"
+        "APPEND FROM '" + sylk_filtered_path.string() + "' TYPE SYLK FIELDS PICTURE, CODE\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6627/#6631: COPY TO TYPE DIF/SYLK should omit object columns: " + state.message);
+
+    const std::string dif = read_text(dif_path);
+    const std::string sylk = read_text(sylk_path);
+    expect(dif.find("VECTORS\n0,1") != std::string::npos,
+           "#6631: DIF must declare one surviving vector after Blob omission");
+    expect(dif.find("\"CODE\"") != std::string::npos &&
+               dif.find("GENERAL") == std::string::npos && dif.find("PICTURE") == std::string::npos &&
+               dif.find("BLOB") == std::string::npos,
+           "#6627/#6631: DIF must retain CODE but omit object headers/values");
+    expect(sylk.find("B;Y2;X1") != std::string::npos,
+           "#6631: SYLK must declare one surviving column after Blob omission");
+    expect(sylk.find("\"CODE\"") != std::string::npos &&
+               sylk.find("GENERAL") == std::string::npos && sylk.find("PICTURE") == std::string::npos &&
+               sylk.find("BLOB") == std::string::npos,
+           "#6627/#6631: SYLK must retain CODE but omit object headers/values");
+
+    for (const fs::path &destination_path : {dif_destination_path, dif_filtered_destination_path,
+                                              sylk_destination_path, sylk_filtered_destination_path})
+    {
+        const auto result = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 10U);
+        expect(result.ok && result.table.records.size() == 1U,
+               "#6627/#6631: projected DIF/SYLK import should append exactly one record");
+        if (result.ok && result.table.records.size() == 1U && result.table.records[0U].values.size() >= 4U)
+        {
+            expect(result.table.records[0U].values[3U].display_value == "OK",
+                   "#6627/#6631: projected DIF/SYLK import must keep CODE in its trailing field");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_delimited_export_omits_general_picture_fields() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_delimited_omitted_binary_objects";
