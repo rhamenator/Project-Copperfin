@@ -1209,12 +1209,14 @@ void test_sdf_omits_binary_object_fields_from_interchange_layout() {
 
     const fs::path export_path = temp_root / "objects.sdf";
     const fs::path export_filtered_path = temp_root / "objects_filtered.sdf";
+    const fs::path export_omitted_only_path = temp_root / "objects_omitted_only.sdf";
     const fs::path export_main_path = temp_root / "copy_to_sdf_omitted_binary_objects.prg";
     write_text(
         export_main_path,
         "USE '" + source_path.string() + "'\n"
         "COPY TO '" + export_path.string() + "' TYPE SDF\n"
         "COPY TO '" + export_filtered_path.string() + "' TYPE SDF FIELDS PICTURE, CODE\n"
+        "COPY TO '" + export_omitted_only_path.string() + "' TYPE SDF FIELDS PICTURE\n"
         "RETURN\n");
     copperfin::runtime::PrgRuntimeSession export_session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(export_main_path.string(), temp_root.string(), false));
@@ -1224,6 +1226,10 @@ void test_sdf_omits_binary_object_fields_from_interchange_layout() {
            "#6619: SDF output must contain only the trailing Character bytes after omitted object fields");
     expect(read_text(export_filtered_path) == "OK\r\n",
            "#6619: SDF FIELDS selection must retain its surviving Character column after an omitted Picture field");
+    // Native VFP9 COPY TO TYPE SDF FIELDS p (Picture) emits a record
+    // terminator with no field bytes, rather than rejecting the selection.
+    expect(read_text(export_omitted_only_path) == "\r\n",
+           "#6619: an SDF selection containing only omitted object fields must retain the empty VFP record");
 
     const fs::path destination_path = temp_root / "destination.dbf";
     const auto destination_create = copperfin::vfp::create_dbf_table_file(destination_path.string(), fields, {});
