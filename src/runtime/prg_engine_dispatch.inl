@@ -8803,23 +8803,47 @@
                         return {.ok = false, .message = last_error_message};
                     }
                     const DelimitedTextOptions delimited_options = parse_delimited_text_options(copy_type, with_clause);
+                    std::vector<std::size_t> delimited_field_indexes;
+                    delimited_field_indexes.reserve(out_fields.size());
+                    for (std::size_t index = 0U; index < out_fields.size(); ++index)
+                    {
+                        if (!text_export_omits_general_picture_field(out_fields[index]))
+                        {
+                            delimited_field_indexes.push_back(index);
+                        }
+                    }
+                    const bool writes_terminal_omitted_object_column =
+                        !delimited_field_indexes.empty() &&
+                        text_export_omits_general_picture_field(out_fields.back());
                     if (copy_type == "csv")
                     {
-                        for (std::size_t index = 0U; index < out_fields.size(); ++index)
+                        // VFP suppresses General/Picture names. If the
+                        // selection starts with either one, its CSV header
+                        // retains the leading empty header cell; data rows
+                        // still omit the value altogether.
+                        bool wrote_header_cell = false;
+                        if (!delimited_field_indexes.empty() &&
+                            text_export_omits_general_picture_field(out_fields.front()))
                         {
-                            if (index != 0U)
+                            output << delimited_options.delimiter;
+                        }
+                        for (const std::size_t index : delimited_field_indexes)
+                        {
+                            if (wrote_header_cell)
                             {
                                 output << delimited_options.delimiter;
                             }
                             output << out_fields[index].name;
+                            wrote_header_cell = true;
                         }
                         output << "\r\n";
                     }
                     for (const auto &row : out_rows)
                     {
-                        for (std::size_t index = 0U; index < out_fields.size(); ++index)
+                        bool wrote_value = false;
+                        for (const std::size_t index : delimited_field_indexes)
                         {
-                            if (index != 0U)
+                            if (wrote_value)
                             {
                                 output << delimited_options.delimiter;
                             }
@@ -8827,6 +8851,11 @@
                                 out_fields[index],
                                 index < row.size() ? row[index] : std::string{},
                                 delimited_options);
+                            wrote_value = true;
+                        }
+                        if (writes_terminal_omitted_object_column)
+                        {
+                            output << delimited_options.delimiter;
                         }
                         output << "\r\n";
                     }

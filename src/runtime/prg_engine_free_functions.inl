@@ -254,6 +254,12 @@
             return field_type == 'G' || field_type == 'W' || field_type == 'P';
         }
 
+        bool text_export_omits_general_picture_field(const vfp::DbfFieldDescriptor &field)
+        {
+            const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
+            return field_type == 'G' || field_type == 'P';
+        }
+
         std::string normalize_sdf_field_value_for_storage(
             const vfp::DbfFieldDescriptor &field,
             std::string value)
