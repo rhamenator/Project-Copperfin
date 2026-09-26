@@ -10639,6 +10639,9 @@
 
                     std::vector<vfp::DbfFieldDescriptor> target_fields =
                         filter_field_descriptors(dest_result.table.fields, field_filter, true);
+                    // COPY TO DIF omits these fields entirely, so APPEND FROM
+                    // must project them before interpreting file columns.
+                    std::erase_if(target_fields, sdf_omits_binary_object_field);
                     if (target_fields.empty())
                     {
                         last_error_message = runtime_text(
@@ -10777,6 +10780,9 @@
 
                     std::vector<vfp::DbfFieldDescriptor> target_fields =
                         filter_field_descriptors(dest_result.table.fields, field_filter, true);
+                    // COPY TO SYLK omits these fields entirely, so APPEND FROM
+                    // must project them before interpreting file columns.
+                    std::erase_if(target_fields, sdf_omits_binary_object_field);
                     if (target_fields.empty())
                     {
                         last_error_message = runtime_text(
