@@ -249,6 +249,14 @@
             std::string value)
         {
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
+            if (field_type == 'L')
+            {
+                // SDF uses a narrower token contract than the DBF writer:
+                // VFP accepts only uppercase T/Y as true and treats every
+                // other fixed-width byte, including ?, as false.
+                const std::string token = trim_copy(value);
+                return token == "T" || token == "Y" ? "true" : "false";
+            }
             if (field_type != 'T')
             {
                 return value;

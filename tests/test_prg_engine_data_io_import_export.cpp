@@ -1216,6 +1216,56 @@ void test_append_from_type_sdf_imports_fixed_width_text_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+
+void test_append_from_type_sdf_uses_vfp_logical_tokens() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sdf_logical_tokens";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path destination_path = temp_root / "dest.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "REQUIRED", .type = 'L', .length = 1U},
+        {.name = "OPTIONAL", .type = 'L', .length = 1U, .nullable = true},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(destination_path.string(), fields, {});
+    expect(create_result.ok, "#6617: SDF logical destination fixture should be created");
+
+    const fs::path source_path = temp_root / "input.txt";
+    // VFP9 accepts uppercase T/Y only. Lowercase, ?, arbitrary bytes, and
+    // blank fixed-width cells all become false, including nullable targets.
+    write_text(source_path, "TT\r\nYY\r\ntt\r\n11\r\n??\r\nXX\r\n  \r\n");
+    const fs::path main_path = temp_root / "append_from_sdf_logical_tokens.prg";
+    write_text(
+        main_path,
+        "USE '" + destination_path.string() + "'\n"
+        "APPEND FROM '" + source_path.string() + "' TYPE SDF\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6617: SDF logical import should complete: " + state.message);
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 20U);
+    expect(result.ok && result.table.records.size() == 7U,
+           "#6617: each VFP-shaped logical SDF row should append");
+    if (result.ok && result.table.records.size() == 7U) {
+        for (std::size_t index = 0U; index < result.table.records.size(); ++index) {
+            const auto &values = result.table.records[index].values;
+            const bool expected_true = index < 2U;
+            expect(values.size() >= 2U && values[0U].display_value == (expected_true ? "true" : "false") &&
+                       values[1U].display_value == (expected_true ? "true" : "false") &&
+                       !values[1U].is_null,
+                   "#6617: VFP SDF logical token row " + std::to_string(index) +
+                       " must retain false rather than NULL or lowercase true");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_type_sdf_uses_printable_binary_numeric_widths() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_sdf_binary_numeric_widths";
