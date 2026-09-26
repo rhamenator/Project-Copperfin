@@ -265,7 +265,12 @@
                 // An SDF Date cell is the eight-byte VFP printable form.
                 // Invalid and blank cells append as a blank Date, rather
                 // than becoming invalid DBF date bytes.
-                return parse_runtime_date_string(value, year, month, day)
+                const std::string token = trim_copy(value);
+                const bool is_printable_sdf_date = token.size() == 8U &&
+                    std::all_of(token.begin(), token.end(), [](unsigned char ch) {
+                        return std::isdigit(ch) != 0;
+                    });
+                return is_printable_sdf_date && parse_runtime_date_string(token, year, month, day)
                     ? format_runtime_date_storage_string(year, month, day)
                     : std::string{};
             }

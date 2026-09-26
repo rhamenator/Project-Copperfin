@@ -1478,7 +1478,7 @@ void test_append_from_type_sdf_blanks_invalid_date_cells() {
     expect(create_result.ok, "#6618: SDF Date destination fixture should be created");
 
     const fs::path source_path = temp_root / "input.txt";
-    write_text(source_path, "20250102END\r\n00000000BAD\r\n20250230XXX\r\nABCDEFGHZZZ\r\n        NIL\r\n");
+    write_text(source_path, "20250102END\r\n00000000BAD\r\n20250230XXX\r\nABCDEFGHZZZ\r\n1/2/2025SLH\r\n        NIL\r\n");
     const fs::path main_path = temp_root / "append_from_sdf_invalid_dates.prg";
     write_text(
         main_path,
@@ -1492,11 +1492,11 @@ void test_append_from_type_sdf_blanks_invalid_date_cells() {
     expect(state.completed, "#6618: SDF Date import should complete: " + state.message);
 
     const auto result = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 10U);
-    expect(result.ok && result.table.records.size() == 5U,
+    expect(result.ok && result.table.records.size() == 6U,
            "#6618: valid and invalid SDF Date rows should all append");
-    if (result.ok && result.table.records.size() == 5U) {
-        const std::array<std::string, 5U> expected_dates{"2025-01-02", "", "", "", ""};
-        const std::array<std::string, 5U> expected_tails{"END", "BAD", "XXX", "ZZZ", "NIL"};
+    if (result.ok && result.table.records.size() == 6U) {
+        const std::array<std::string, 6U> expected_dates{"2025-01-02", "", "", "", "", ""};
+        const std::array<std::string, 6U> expected_tails{"END", "BAD", "XXX", "ZZZ", "SLH", "NIL"};
         for (std::size_t index = 0U; index < result.table.records.size(); ++index) {
             const auto &values = result.table.records[index].values;
             expect(values.size() >= 2U && values[0U].display_value == expected_dates[index] &&

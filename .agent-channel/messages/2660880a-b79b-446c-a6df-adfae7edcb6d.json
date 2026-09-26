@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "2660880a-b79b-446c-a6df-adfae7edcb6d", "text": "Addressed PR #6621 review: SDF Date import now requires exactly eight YYYYMMDD digits before parsing, so slash-form 1/2/2025 also blanks. Focused SDF data-I/O test passes.", "to": ["both"], "ts": "2026-09-26T15:18:20Z", "type": "status"}
