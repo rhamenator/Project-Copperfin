@@ -1,0 +1,1 @@
+- 2026-09-26: Validation: Documentation-only pull requests now retain required status contexts through lightweight no-op jobs, while any source, workflow, rename, classifier failure, or non-documentation change runs the full native and launcher matrices.

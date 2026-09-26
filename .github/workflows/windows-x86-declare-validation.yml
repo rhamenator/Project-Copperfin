@@ -14,7 +14,8 @@ on:
       - "src/**"
       - "tests/**"
   # v1-development requires both matrix job contexts on every pull request.
-  # Preserve the focused inventory; the catch-all avoids skipped check names.
+  # The catch-all lets change-scope report a skipped success for a
+  # documentation-only pull request; source changes run the full matrix.
   pull_request:
     paths:
       - ".github/workflows/windows-x86-declare-validation.yml"
@@ -30,9 +31,55 @@ permissions:
   contents: read
 
 jobs:
+  change-scope:
+    runs-on: ubuntu-latest
+    outputs:
+      docs_only: ${{ steps.classify.outputs.docs_only }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - id: classify
+        name: Classify pull-request changes
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" != "pull_request" ]]; then
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          mapfile -t changed_files < <(git diff --no-renames --name-only "$BASE_SHA" "$HEAD_SHA")
+          if (( ${#changed_files[@]} == 0 )); then
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          for changed_file in "${changed_files[@]}"; do
+            case "$changed_file" in
+              docs/**|changelog.d/**|.agent-channel/**|*.md) ;;
+              *)
+                echo "docs_only=false" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+            esac
+          done
+          echo "docs_only=true" >> "$GITHUB_OUTPUT"
+
   windows-declare-validation:
+    needs: change-scope
+    # Always instantiate every required context. Documentation-only pull
+    # requests run only the lightweight report step below; a failed classifier
+    # makes this context fail rather than suppressing validation.
+    if: ${{ always() }}
     name: Windows ${{ matrix.platform }} DECLARE
-    runs-on: windows-latest
+    runs-on: ${{ needs.change-scope.outputs.docs_only == 'true' && 'ubuntu-latest' || 'windows-latest' }}
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -42,20 +89,36 @@ jobs:
           - x64
 
     steps:
+      - name: Fail closed when change classification fails
+        if: ${{ needs.change-scope.result != 'success' }}
+        shell: bash
+        run: exit 1
+
+      - name: Report documentation-only validation
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only == 'true' }}
+        shell: bash
+        run: echo "Documentation-only pull request; full validation is not required."
+
       - name: Check out source
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Validate focused workflow path filters
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: cmake -P cmake/validate_focused_workflow_path_filters.cmake
 
       - name: Configure native build
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: cmake -S . -B build-${{ matrix.platform }} -A ${{ matrix.platform }} -DCOPPERFIN_BUILD_TESTS=ON
 
       - name: Build DECLARE regression target
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: cmake --build build-${{ matrix.platform }} --config Release --parallel 2 --target test_prg_engine_seek_index test_prg_engine_dotnet_dispatch test_prg_engine_parser_classes test_localization
 
       - name: Run managed DECLARE regression target
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: ctest --test-dir build-${{ matrix.platform }} -C Release --verbose --timeout 180 -R "^(test_prg_engine_dotnet_dispatch|test_portable_clr_host_boundary_contract|test_native_declared_library_boundary_contract|test_native_declared_call_boundary_contract|test_native_platform_workflow_contract)$"
 
       - name: Run adjacent DECLARE regression targets
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: ctest --test-dir build-${{ matrix.platform }} -C Release --output-on-failure -R "^(test_prg_engine_seek_index|test_prg_engine_parser_classes|test_localization)$"

@@ -15,8 +15,8 @@ on:
       - "src/**"
       - "tests/**"
   # v1-development requires both matrix job contexts on every pull request.
-  # Keep the focused paths for auditability, with a final catch-all so a
-  # skipped required context cannot block documentation-only work indefinitely.
+  # The catch-all lets change-scope report a skipped success for a
+  # documentation-only pull request; source changes run the full matrix.
   pull_request:
     paths:
       - ".github/workflows/executable-path-validation.yml"
@@ -35,7 +35,53 @@ permissions:
   contents: read
 
 jobs:
+  change-scope:
+    runs-on: ubuntu-latest
+    outputs:
+      docs_only: ${{ steps.classify.outputs.docs_only }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - id: classify
+        name: Classify pull-request changes
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" != "pull_request" ]]; then
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          mapfile -t changed_files < <(git diff --no-renames --name-only "$BASE_SHA" "$HEAD_SHA")
+          if (( ${#changed_files[@]} == 0 )); then
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          for changed_file in "${changed_files[@]}"; do
+            case "$changed_file" in
+              docs/**|changelog.d/**|.agent-channel/**|*.md) ;;
+              *)
+                echo "docs_only=false" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+            esac
+          done
+          echo "docs_only=true" >> "$GITHUB_OUTPUT"
+
   executable-paths:
+    needs: change-scope
+    # Always instantiate every required context. Documentation-only pull
+    # requests run only the lightweight report step below; a failed classifier
+    # makes this context fail rather than suppressing validation.
+    if: ${{ always() }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -50,13 +96,26 @@ jobs:
 
     name: executable-paths-${{ matrix.name }}
     steps:
+      - name: Fail closed when change classification fails
+        if: ${{ needs.change-scope.result != 'success' }}
+        shell: bash
+        run: exit 1
+
+      - name: Report documentation-only validation
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only == 'true' }}
+        shell: bash
+        run: echo "Documentation-only pull request; full validation is not required."
+
       - name: Check out source
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Validate focused workflow path filters
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: cmake -P cmake/validate_focused_workflow_path_filters.cmake
 
       - name: Configure focused build
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: >-
           cmake -S . -B build
           -DCOPPERFIN_BUILD_TESTS=ON
@@ -65,6 +124,7 @@ jobs:
           -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
 
       - name: Build executable path regressions
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: >-
           cmake --build build --parallel 2 --target
           test_platform_environment
@@ -75,6 +135,7 @@ jobs:
           test_tool_license_path_launch
 
       - name: Run executable path regressions
+        if: ${{ needs.change-scope.result == 'success' && needs.change-scope.outputs.docs_only != 'true' }}
         run: >-
           ctest --test-dir build --output-on-failure
           -R "^(test_platform_environment|test_localization|test_licensing_status|test_build_host_output|test_runtime_host_implicit_path_launch|test_tool_license_path_launch)$"
