@@ -1319,6 +1319,99 @@ void test_append_from_type_sdf_uses_printable_binary_numeric_widths() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sdf_datetime_layout_round_trips_and_blanks_non_vfp_values() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sdf_datetime_layout";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> source_fields{
+        {.name = "STAMP", .type = 'T', .length = 8U},
+        {.name = "DAY", .type = 'D', .length = 8U},
+        {.name = "AMOUNT", .type = 'N', .length = 8U, .decimal_count = 2U},
+        {.name = "READY", .type = 'L', .length = 1U},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(
+        (temp_root / "source.dbf").string(),
+        source_fields,
+        {{"julian:2459976 millis:11045000", "2025-01-02", "12.30", "T"}});
+    expect(source_create.ok, "#6603/#6611: SDF temporal source fixture should be created");
+
+    const fs::path sdf_path = temp_root / "temporal.sdf";
+    const fs::path copy_main_path = temp_root / "copy_to_sdf_temporal.prg";
+    write_text(
+        copy_main_path,
+        "USE '" + (temp_root / "source.dbf").string() + "'\n"
+        "COPY TO '" + sdf_path.string() + "' TYPE SDF\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession copy_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(copy_main_path.string(), temp_root.string(), false));
+    const auto copy_state = copy_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(copy_state.completed, "#6603: COPY TO SDF should serialize temporal values: " + copy_state.message);
+    if (fs::exists(sdf_path)) {
+        const std::string sdf_contents = read_text(sdf_path);
+        // #6604 separately tracks the lower-case Logical token; keep that
+        // known defect explicit while asserting every byte covered by this
+        // temporal-layout contract.
+        expect(sdf_contents == "01/02/2025 03:04:05" "20250102" "   12.30" "t\r\n",
+               "#6603: COPY TO SDF must preserve the complete VFP-shaped temporal row layout: " + sdf_contents);
+    } else {
+        expect(false, "#6603: COPY TO SDF should create the temporal destination");
+    }
+
+    const fs::path import_path = temp_root / "datetime.sdf";
+    write_text(import_path, "01/02/2025 03:04:05END\r\n");
+    const fs::path destination_path = temp_root / "dest.dbf";
+    const auto destination_create = copperfin::vfp::create_dbf_table_file(
+        destination_path.string(),
+        {{.name = "STAMP", .type = 'T', .length = 8U}, {.name = "TAIL", .type = 'C', .length = 3U}},
+        {});
+    expect(destination_create.ok, "#6611: SDF DateTime import fixture should be created");
+
+    const fs::path append_main_path = temp_root / "append_from_sdf_datetime.prg";
+    write_text(
+        append_main_path,
+        "USE '" + destination_path.string() + "'\n"
+        "APPEND FROM '" + import_path.string() + "' TYPE SDF\n"
+        "cStamp = TTOC(STAMP, 1)\n"
+        "cTail = TAIL\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession append_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(append_main_path.string(), temp_root.string(), false));
+    const auto append_state = append_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(append_state.completed, "#6611: VFP-shaped SDF DateTime import should complete: " + append_state.message);
+    const auto stamp = append_state.globals.find("cstamp");
+    const auto tail = append_state.globals.find("ctail");
+    expect(stamp != append_state.globals.end() && copperfin::runtime::format_value(stamp->second) == "20250102030405",
+           "#6611: SDF DateTime must consume all 19 printable bytes");
+    expect(tail != append_state.globals.end() && copperfin::runtime::format_value(tail->second) == "END",
+           "#6611: SDF DateTime import must leave the following field aligned");
+
+    const fs::path invalid_path = temp_root / "invalid_datetime.sdf";
+    write_text(invalid_path, "20250102           BAD\r\n");
+    const fs::path invalid_main_path = temp_root / "append_from_invalid_sdf_datetime.prg";
+    write_text(
+        invalid_main_path,
+        "USE '" + destination_path.string() + "'\n"
+        "APPEND FROM '" + invalid_path.string() + "' TYPE SDF\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession invalid_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(invalid_main_path.string(), temp_root.string(), false));
+    const auto invalid_state = invalid_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(invalid_state.completed, "#6611: non-VFP SDF DateTime text should append a blank DateTime");
+    const auto blank_result = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 5U);
+    expect(blank_result.ok && blank_result.table.records.size() == 2U,
+           "#6611: non-VFP SDF DateTime text should retain its appended row");
+    if (blank_result.ok && blank_result.table.records.size() == 2U && blank_result.table.records[1U].values.size() == 2U) {
+        expect(blank_result.table.records[1U].values[0U].display_value == "julian:0 millis:0" &&
+                   blank_result.table.records[1U].values[1U].display_value == "BAD",
+               "#6611: compact YYYYMMDD SDF DateTime text must become blank without shifting following fields");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_to_type_csv_and_delimited_text_rows() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_csv";

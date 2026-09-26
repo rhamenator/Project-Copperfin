@@ -1,0 +1,1 @@
+- 2026-09-26: Fixed VFP SDF Date and DateTime serialization and DateTime import alignment (#6603, #6611), including atomic rejection of malformed DateTime text.
