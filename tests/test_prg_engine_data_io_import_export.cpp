@@ -1242,6 +1242,7 @@ void test_append_from_type_csv_imports_delimited_rows() {
     write_people_dbf(temp_root / "multiline_source.dbf", {});
     write_people_dbf(temp_root / "multiline_dest.dbf", {});
     write_people_dbf(temp_root / "nul_dest.dbf", {});
+    const fs::path nul_csv_path = temp_root / "nul.csv";
 
     const fs::path main_path = temp_root / "append_from_csv.prg";
     write_text(
@@ -1260,6 +1261,7 @@ void test_append_from_type_csv_imports_delimited_rows() {
         "USE '" + (temp_root / "nul_dest.dbf").string() + "'\n"
         "APPEND BLANK\n"
         "REPLACE NAME WITH 'A' + CHR(0) + 'B'\n"
+        "COPY TO '" + nul_csv_path.string() + "' TYPE CSV FIELDS NAME\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -1308,9 +1310,15 @@ void test_append_from_type_csv_imports_delimited_rows() {
             "#6579: quoted CRLF CSV record should retain following fields");
     }
 
-    const std::string nul_bytes = read_text(temp_root / "nul_dest.dbf");
-    expect(nul_bytes.find(std::string{"A\0B", 3U}) != std::string::npos,
-        "Character writes should retain embedded NUL bytes instead of applying read-side terminator handling");
+    const auto nul_result = copperfin::vfp::parse_dbf_table_from_file(
+        (temp_root / "nul_dest.dbf").string(), 10U);
+    expect(nul_result.ok, "embedded-NUL Character DBF should be readable");
+    if (nul_result.table.records.size() == 1U) {
+        expect(nul_result.table.records[0U].values[0U].display_value == std::string{"A\0B", 3U},
+            "Character decoding should retain embedded NUL bytes instead of applying terminator handling");
+    }
+    expect(read_text(nul_csv_path) == std::string{"NAME\r\n\"A\0B\"\r\n", 13U},
+        "COPY TO TYPE CSV should retain an embedded NUL from a Character field");
 
     fs::remove_all(temp_root, ignored);
 }

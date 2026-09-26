@@ -149,12 +149,9 @@ std::string trim_dbf_text_terminator(std::string text) {
 }
 
 std::string trim_dbf_character_padding(std::string text) {
-    if (const auto nul = std::find(text.begin(), text.end(), '\0'); nul != text.end()) {
-        text.erase(nul, text.end());
-    }
     // Fixed-width Character fields use ASCII space for padding.  Other
-    // whitespace bytes, including tabs, are stored field content and must
-    // survive a DBF-to-text export or a text round trip.
+    // bytes, including tabs and embedded NULs, are stored field content and
+    // must survive a DBF-to-text export or a text round trip.
     while (!text.empty() && text.back() == ' ') {
         text.pop_back();
     }
