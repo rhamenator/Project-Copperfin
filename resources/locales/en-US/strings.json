@@ -3080,5 +3080,7 @@
   "Studio.WorkspaceAgent.Capability.UseNetwork": "Use the network",
   "Studio.WorkspaceAgent.Capability.ElevatePrivileges": "Elevate privileges",
   "Studio.WorkspaceAgent.Warning": "Required unrestricted-mode warning",
-  "Studio.WorkspaceAgent.Close": "Close"
+  "Studio.WorkspaceAgent.Close": "Close",
+  "Runtime.Prg.FileIo.Error.FileDoesNotExist": "File does not exist.",
+  "Runtime.Prg.FileIo.Error.FileAccessDenied": "File access is denied"
 }

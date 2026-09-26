@@ -465,6 +465,73 @@ void test_fwrite_fputs_negative_count_writes_everything()
     fs::remove_all(temp_root, ignored);
 }
 
+void test_filetostr_reports_missing_and_non_file_inputs()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_filetostr_errors";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "input-directory");
+    write_text(temp_root / "empty.bin", "");
+
+    const fs::path main_path = temp_root / "filetostr_errors.prg";
+    write_text(
+        main_path,
+        "cEmpty = FILETOSTR('empty.bin')\n"
+        "nEmptyFError = FERROR()\n"
+        "lMissingCaught = .F.\n"
+        "lMissingCallReturned = .F.\n"
+        "TRY\n"
+        "  cMissing = FILETOSTR('missing.bin')\n"
+        "  lMissingCallReturned = .T.\n"
+        "CATCH TO oMissing\n"
+        "  lMissingCaught = .T.\n"
+        "  nMissingError = oMissing.ErrorNo\n"
+        "  cMissingMessage = oMissing.Message\n"
+        "  nMissingFError = FERROR()\n"
+        "ENDTRY\n"
+        "lAfterMissing = .T.\n"
+        "lDirectoryCaught = .F.\n"
+        "TRY\n"
+        "  cDirectory = FILETOSTR('input-directory')\n"
+        "CATCH TO oDirectory\n"
+        "  lDirectoryCaught = .T.\n"
+        "  nDirectoryError = oDirectory.ErrorNo\n"
+        "  cDirectoryMessage = oDirectory.Message\n"
+        "ENDTRY\n"
+        "lAfterDirectory = .T.\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "FILETOSTR error script should complete through TRY/CATCH: " + state.message);
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " variable should be present for FILETOSTR error test");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("cempty", "");
+    check("nemptyferror", "0");
+    check("lmissingcaught", "true");
+    check("lmissingcallreturned", "false");
+    check("nmissingerror", "1");
+    check("cmissingmessage", "File does not exist.");
+    check("nmissingferror", "0");
+    check("laftermissing", "true");
+    check("ldirectorycaught", "true");
+    check("ndirectoryerror", "1705");
+    check("cdirectorymessage", "File access is denied");
+    check("lafterdirectory", "true");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 } // namespace
 
 int main()
@@ -474,6 +541,7 @@ int main()
     test_fcreate_runtime_function();
     test_unicode_paths_survive_prg_file_io_and_includes();
     test_fwrite_fputs_negative_count_writes_everything();
+    test_filetostr_reports_missing_and_non_file_inputs();
 
     if (test_failures() != 0)
     {

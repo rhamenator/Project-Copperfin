@@ -3080,5 +3080,7 @@
   "Studio.WorkspaceAgent.Capability.UseNetwork": "Usar a rede",
   "Studio.WorkspaceAgent.Capability.ElevatePrivileges": "Elevar privil\u00E9gios",
   "Studio.WorkspaceAgent.Warning": "Aviso obrigat\u00F3rio do modo irrestrito",
-  "Studio.WorkspaceAgent.Close": "Fechar"
+  "Studio.WorkspaceAgent.Close": "Fechar",
+  "Runtime.Prg.FileIo.Error.FileDoesNotExist": "O arquivo n\u00E3o existe.",
+  "Runtime.Prg.FileIo.Error.FileAccessDenied": "O acesso ao arquivo foi negado"
 }

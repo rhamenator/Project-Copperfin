@@ -9,6 +9,8 @@
 #include "copperfin/platform/path.h"
 #include "prg_engine_date_time_functions.h"
 #include "prg_engine_helpers.h"
+#include "localized_text.h"
+#include "prg_compatibility_error.h"
 
 #include <algorithm>
 #include <cerrno>
@@ -739,10 +741,30 @@ std::optional<PrgValue> evaluate_file_io_function(
             return make_string_value(*verified);
         }
 
+        // VFP9 distinguishes a missing ordinary file (error 1) from an
+        // existing non-file input such as a directory (error 1705).  An
+        // empty readable file remains a successful empty string.
+        std::error_code status_error;
+        const bool exists = std::filesystem::exists(path, status_error);
+        if (!exists && !status_error) {
+            clear_file_error();
+            throw PrgCompatibilityError(
+                runtime_text("Runtime.Prg.FileIo.Error.FileDoesNotExist"),
+                1);
+        }
+        if (status_error || !std::filesystem::is_regular_file(path, status_error)) {
+            clear_file_error();
+            throw PrgCompatibilityError(
+                runtime_text("Runtime.Prg.FileIo.Error.FileAccessDenied"),
+                1705);
+        }
+
         std::ifstream input(path, std::ios::binary);
         if (!input.good()) {
-            set_file_error_from_errno();
-            return make_string_value(std::string{});
+            clear_file_error();
+            throw PrgCompatibilityError(
+                runtime_text("Runtime.Prg.FileIo.Error.FileAccessDenied"),
+                1705);
         }
 
         std::string content((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
