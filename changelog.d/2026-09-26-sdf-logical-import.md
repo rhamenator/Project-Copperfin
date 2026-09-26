@@ -1,0 +1,1 @@
+- 2026-09-26: Fixed `APPEND FROM ... TYPE SDF` so only VFP uppercase `T` and `Y` logical tokens import as true; lowercase, nullable-marker, arbitrary, and blank tokens import as false.
