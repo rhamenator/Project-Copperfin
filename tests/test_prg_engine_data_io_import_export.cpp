@@ -1239,6 +1239,9 @@ void test_append_from_type_csv_imports_delimited_rows() {
     write_text(temp_root / "people.csv", "NAME,AGE\r\n\"  Ivy, Jr\t\",9\r\n\"Max\",44\r\n  \"Outer\"\t,55\r\n");
     write_text(temp_root / "people_pipe.txt", "\"  Nia\t\"|12\r\n");
     write_text(temp_root / "people_custom.txt", "_  Ora\t_;15\r\n");
+    write_people_dbf(temp_root / "multiline_source.dbf", {});
+    write_people_dbf(temp_root / "multiline_dest.dbf", {});
+    write_people_dbf(temp_root / "nul_dest.dbf", {});
 
     const fs::path main_path = temp_root / "append_from_csv.prg";
     write_text(
@@ -1247,6 +1250,16 @@ void test_append_from_type_csv_imports_delimited_rows() {
         "APPEND FROM '" + (temp_root / "people.csv").string() + "' TYPE CSV FIELDS NAME, AGE\n"
         "APPEND FROM '" + (temp_root / "people_pipe.txt").string() + "' DELIMITED WITH CHARACTER '|' FIELDS NAME, AGE\n"
         "APPEND FROM '" + (temp_root / "people_custom.txt").string() + "' DELIMITED WITH '_' WITH CHARACTER ';' FIELDS NAME, AGE\n"
+        "USE '" + (temp_root / "multiline_source.dbf").string() + "'\n"
+        "APPEND BLANK\n"
+        "REPLACE NAME WITH 'A' + CHR(13) + CHR(10) + 'B'\n"
+        "REPLACE AGE WITH 77\n"
+        "COPY TO '" + (temp_root / "multiline.csv").string() + "' TYPE CSV FIELDS NAME, AGE\n"
+        "USE '" + (temp_root / "multiline_dest.dbf").string() + "'\n"
+        "APPEND FROM '" + (temp_root / "multiline.csv").string() + "' TYPE CSV FIELDS NAME, AGE\n"
+        "USE '" + (temp_root / "nul_dest.dbf").string() + "'\n"
+        "APPEND BLANK\n"
+        "REPLACE NAME WITH 'A' + CHR(0) + 'B'\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -1282,6 +1295,22 @@ void test_append_from_type_csv_imports_delimited_rows() {
         expect(result.table.records[4U].values[1U].display_value == "15",
             "DELIMITED custom enclosure row should import AGE");
     }
+
+    const auto multiline_result = copperfin::vfp::parse_dbf_table_from_file(
+        (temp_root / "multiline_dest.dbf").string(), 10U);
+    expect(multiline_result.ok, "CSV multiline destination DBF should be readable");
+    expect(multiline_result.table.records.size() == 1U,
+        "#6579: quoted CRLF should remain within one CSV logical record");
+    if (multiline_result.table.records.size() == 1U) {
+        expect(multiline_result.table.records[0U].values[0U].display_value == "A\r\nB",
+            "#6579: COPY TO/APPEND FROM CSV should preserve a quoted CRLF character value");
+        expect(multiline_result.table.records[0U].values[1U].display_value == "77",
+            "#6579: quoted CRLF CSV record should retain following fields");
+    }
+
+    const std::string nul_bytes = read_text(temp_root / "nul_dest.dbf");
+    expect(nul_bytes.find(std::string{"A\0B", 3U}) != std::string::npos,
+        "Character writes should retain embedded NUL bytes instead of applying read-side terminator handling");
 
     fs::remove_all(temp_root, ignored);
 }

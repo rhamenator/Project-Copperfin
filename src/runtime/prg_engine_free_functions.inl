@@ -508,6 +508,48 @@
             return values;
         }
 
+        std::vector<std::string> split_delimited_text_records(
+            const std::string &contents,
+            const DelimitedTextOptions &options)
+        {
+            std::vector<std::string> records;
+            std::string current;
+            bool in_quotes = false;
+            for (std::size_t index = 0U; index < contents.size(); ++index)
+            {
+                const char ch = contents[index];
+                if (ch == options.quote)
+                {
+                    current.push_back(ch);
+                    if (in_quotes && index + 1U < contents.size() && contents[index + 1U] == options.quote)
+                    {
+                        current.push_back(contents[++index]);
+                    }
+                    else
+                    {
+                        in_quotes = !in_quotes;
+                    }
+                    continue;
+                }
+                if (!in_quotes && (ch == '\r' || ch == '\n'))
+                {
+                    records.push_back(std::move(current));
+                    current.clear();
+                    if (ch == '\r' && index + 1U < contents.size() && contents[index + 1U] == '\n')
+                    {
+                        ++index;
+                    }
+                    continue;
+                }
+                current.push_back(ch);
+            }
+            if (!current.empty() || (!contents.empty() && contents.back() != '\r' && contents.back() != '\n'))
+            {
+                records.push_back(std::move(current));
+            }
+            return records;
+        }
+
         std::string dif_escape_string(std::string value)
         {
             std::string escaped;

@@ -161,6 +161,16 @@ std::string trim_dbf_character_padding(std::string text) {
     return text;
 }
 
+std::string trim_dbf_character_write_padding(std::string text) {
+    // Padding is assigned by the fixed-width writer below.  Do not apply the
+    // read-side NUL terminator rule here: embedded NUL bytes are valid stored
+    // Character content and must remain part of the write payload.
+    while (!text.empty() && text.back() == ' ') {
+        text.pop_back();
+    }
+    return text;
+}
+
 std::string trim_both(std::string text) {
     text = trim_right(std::move(text));
     const auto first = std::find_if(text.begin(), text.end(), [](unsigned char ch) {
@@ -1193,7 +1203,7 @@ DbfWriteResult write_field_bytes(
         case 'C': {
             const DbfTextConversionResult encoded = encode_dbf_text(
                 header.code_page_mark,
-                trim_dbf_character_padding(value));
+                trim_dbf_character_write_padding(value));
             if (!encoded.ok) {
                 return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TextEncodingConversionFailed"), .record_count = header.record_count};
             }
