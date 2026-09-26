@@ -77,7 +77,7 @@ int main() {
     test_copy_to_type_sdf_preserves_character_whitespace();
     test_append_from_type_sdf_imports_fixed_width_text_rows();
     test_append_from_type_sdf_uses_printable_binary_numeric_widths();
-    test_sdf_datetime_layout_round_trips_and_rejects_malformed_values();
+    test_sdf_datetime_layout_round_trips_and_blanks_non_vfp_values();
     test_copy_to_type_csv_and_delimited_text_rows();
     test_append_from_type_csv_imports_delimited_rows();
     test_append_from_type_sdf_and_delimited_preserve_explicit_fields_order();

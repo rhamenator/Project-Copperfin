@@ -1319,7 +1319,7 @@ void test_append_from_type_sdf_uses_printable_binary_numeric_widths() {
     fs::remove_all(temp_root, ignored);
 }
 
-void test_sdf_datetime_layout_round_trips_and_rejects_malformed_values() {
+void test_sdf_datetime_layout_round_trips_and_blanks_non_vfp_values() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sdf_datetime_layout";
     std::error_code ignored;
@@ -1389,7 +1389,7 @@ void test_sdf_datetime_layout_round_trips_and_rejects_malformed_values() {
            "#6611: SDF DateTime import must leave the following field aligned");
 
     const fs::path invalid_path = temp_root / "invalid_datetime.sdf";
-    write_text(invalid_path, "01/02/2025 25:04:05BAD\r\n");
+    write_text(invalid_path, "20250102           BAD\r\n");
     const fs::path invalid_main_path = temp_root / "append_from_invalid_sdf_datetime.prg";
     write_text(
         invalid_main_path,
@@ -1399,15 +1399,14 @@ void test_sdf_datetime_layout_round_trips_and_rejects_malformed_values() {
     copperfin::runtime::PrgRuntimeSession invalid_session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(invalid_main_path.string(), temp_root.string(), false));
     const auto invalid_state = invalid_session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(!invalid_state.completed, "#6611: malformed SDF DateTime text should fail");
-    expect(invalid_state.message.find("DateTime") != std::string::npos,
-           "#6611: malformed SDF DateTime text should use the localized DateTime diagnostic");
-    const auto rollback_result = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 5U);
-    expect(rollback_result.ok && rollback_result.table.records.size() == 1U,
-           "#6611: malformed SDF DateTime text must roll back its provisional row");
-    if (rollback_result.ok && rollback_result.table.records.size() == 1U && rollback_result.table.records[0U].values.size() == 2U) {
-        expect(rollback_result.table.records[0U].values[1U].display_value == "END",
-               "#6611: malformed SDF DateTime text must preserve the existing row");
+    expect(invalid_state.completed, "#6611: non-VFP SDF DateTime text should append a blank DateTime");
+    const auto blank_result = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 5U);
+    expect(blank_result.ok && blank_result.table.records.size() == 2U,
+           "#6611: non-VFP SDF DateTime text should retain its appended row");
+    if (blank_result.ok && blank_result.table.records.size() == 2U && blank_result.table.records[1U].values.size() == 2U) {
+        expect(blank_result.table.records[1U].values[0U].display_value == "julian:0 millis:0" &&
+                   blank_result.table.records[1U].values[1U].display_value == "BAD",
+               "#6611: compact YYYYMMDD SDF DateTime text must become blank without shifting following fields");
     }
 
     fs::remove_all(temp_root, ignored);

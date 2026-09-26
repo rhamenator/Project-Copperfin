@@ -260,11 +260,18 @@
             int hour = 0;
             int minute = 0;
             int second = 0;
-            if (parse_runtime_datetime_string(value, year, month, day, hour, minute, second))
+            // VFP's printable SDF DateTime form is slash-delimited. The
+            // broader runtime parser also accepts compact YYYYMMDD, which VFP
+            // instead imports from a DateTime SDF column as blank.
+            if (value.find('/') != std::string::npos &&
+                parse_runtime_datetime_string(value, year, month, day, hour, minute, second))
             {
                 return format_runtime_datetime_storage_string(year, month, day, hour, minute, second);
             }
-            return value;
+            // VFP SDF import treats a non-printable DateTime column as a
+            // blank DateTime, rather than sending its text through the
+            // general DBF storage writer.
+            return {};
         }
 
         std::optional<std::string> format_sdf_field_value(const vfp::DbfFieldDescriptor &field, std::string value)
