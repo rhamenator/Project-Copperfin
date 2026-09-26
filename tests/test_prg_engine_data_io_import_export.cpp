@@ -1178,6 +1178,80 @@ void test_copy_to_type_sdf_preserves_character_whitespace() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sdf_omits_binary_object_fields_from_interchange_layout() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sdf_omitted_binary_objects";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "GENERAL", .type = 'G', .length = 4U},
+        // The public fixture writer deliberately does not create Blob (W)
+        // fields yet. Start from an equal-width Character descriptor and
+        // change its on-disk descriptor type, which is sufficient for this
+        // SDF layout test and retains the empty four-byte payload.
+        {.name = "BLOB", .type = 'C', .length = 4U},
+        {.name = "PICTURE", .type = 'P', .length = 4U},
+        {.name = "CODE", .type = 'C', .length = 2U},
+    };
+    const auto mark_blob_field = [](const fs::path &path) {
+        std::fstream table(path, std::ios::in | std::ios::out | std::ios::binary);
+        table.seekp(32 + 32 + 11);
+        table.put('W');
+        return table.good();
+    };
+    const fs::path source_path = temp_root / "source.dbf";
+    const auto source_create = copperfin::vfp::create_dbf_table_file(
+        source_path.string(), fields, {{"", "", "", "OK"}});
+    expect(source_create.ok, "#6619: SDF General/Blob/Picture source fixture should be created");
+    expect(mark_blob_field(source_path), "#6619: SDF source fixture should expose an on-disk Blob descriptor");
+
+    const fs::path export_path = temp_root / "objects.sdf";
+    const fs::path export_filtered_path = temp_root / "objects_filtered.sdf";
+    const fs::path export_main_path = temp_root / "copy_to_sdf_omitted_binary_objects.prg";
+    write_text(
+        export_main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO '" + export_path.string() + "' TYPE SDF\n"
+        "COPY TO '" + export_filtered_path.string() + "' TYPE SDF FIELDS PICTURE, CODE\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession export_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(export_main_path.string(), temp_root.string(), false));
+    const auto export_state = export_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(export_state.completed, "#6619: COPY TO TYPE SDF should omit General/Blob/Picture fields: " + export_state.message);
+    expect(read_text(export_path) == "OK\r\n",
+           "#6619: SDF output must contain only the trailing Character bytes after omitted object fields");
+    expect(read_text(export_filtered_path) == "OK\r\n",
+           "#6619: SDF FIELDS selection must retain its surviving Character column after an omitted Picture field");
+
+    const fs::path destination_path = temp_root / "destination.dbf";
+    const auto destination_create = copperfin::vfp::create_dbf_table_file(destination_path.string(), fields, {});
+    expect(destination_create.ok, "#6619: SDF General/Blob/Picture destination fixture should be created");
+    expect(mark_blob_field(destination_path), "#6619: SDF destination fixture should expose an on-disk Blob descriptor");
+    const fs::path import_path = temp_root / "objects_input.sdf";
+    write_text(import_path, "OK\r\n");
+    const fs::path import_main_path = temp_root / "append_from_sdf_omitted_binary_objects.prg";
+    write_text(
+        import_main_path,
+        "USE '" + destination_path.string() + "'\n"
+        "APPEND FROM '" + import_path.string() + "' TYPE SDF FIELDS PICTURE, CODE\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession import_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(import_main_path.string(), temp_root.string(), false));
+    const auto import_state = import_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(import_state.completed, "#6619: APPEND FROM TYPE SDF should not consume bytes for Picture fields: " + import_state.message);
+    const auto import_result = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 10U);
+    expect(import_result.ok && import_result.table.records.size() == 1U,
+           "#6619: SDF import should append one row after omitting object fields");
+    if (import_result.ok && import_result.table.records.size() == 1U && import_result.table.records[0U].values.size() >= 4U) {
+        expect(import_result.table.records[0U].values[3U].display_value == "OK",
+               "#6619: SDF import must start CODE at byte zero after omitted object fields");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_type_sdf_imports_fixed_width_text_rows() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_sdf";
