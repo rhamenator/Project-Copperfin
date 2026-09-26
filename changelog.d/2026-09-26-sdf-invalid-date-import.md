@@ -1,0 +1,1 @@
+- 2026-09-26: Fixed SDF Date import to blank invalid, zero, nonnumeric, and empty Date cells while retaining the row and following fixed-width fields.

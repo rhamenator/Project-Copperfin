@@ -257,6 +257,18 @@
                 const std::string token = trim_copy(value);
                 return token == "T" || token == "Y" ? "true" : "false";
             }
+            if (field_type == 'D')
+            {
+                int year = 0;
+                int month = 0;
+                int day = 0;
+                // An SDF Date cell is the eight-byte VFP printable form.
+                // Invalid and blank cells append as a blank Date, rather
+                // than becoming invalid DBF date bytes.
+                return parse_runtime_date_string(value, year, month, day)
+                    ? format_runtime_date_storage_string(year, month, day)
+                    : std::string{};
+            }
             if (field_type != 'T')
             {
                 return value;

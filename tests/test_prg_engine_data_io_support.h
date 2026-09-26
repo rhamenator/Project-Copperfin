@@ -107,6 +107,7 @@ void test_append_from_type_sdf_imports_fixed_width_text_rows();
 void test_append_from_type_sdf_uses_vfp_logical_tokens();
 void test_append_from_type_sdf_uses_printable_binary_numeric_widths();
 void test_sdf_datetime_layout_round_trips_and_blanks_non_vfp_values();
+void test_append_from_type_sdf_blanks_invalid_date_cells();
 void test_copy_to_type_csv_and_delimited_text_rows();
 void test_append_from_type_csv_imports_delimited_rows();
 void test_append_from_type_sdf_and_delimited_preserve_explicit_fields_order();

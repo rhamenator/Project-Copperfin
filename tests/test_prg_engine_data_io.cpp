@@ -79,6 +79,7 @@ int main() {
     test_append_from_type_sdf_uses_vfp_logical_tokens();
     test_append_from_type_sdf_uses_printable_binary_numeric_widths();
     test_sdf_datetime_layout_round_trips_and_blanks_non_vfp_values();
+    test_append_from_type_sdf_blanks_invalid_date_cells();
     test_copy_to_type_csv_and_delimited_text_rows();
     test_append_from_type_csv_imports_delimited_rows();
     test_append_from_type_sdf_and_delimited_preserve_explicit_fields_order();
