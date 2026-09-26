@@ -1216,6 +1216,51 @@ void test_append_from_type_sdf_imports_fixed_width_text_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_type_sdf_uses_printable_binary_numeric_widths() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_sdf_binary_numeric_widths";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "I", .type = 'I', .length = 4U},
+        {.name = "Y", .type = 'Y', .length = 8U},
+        {.name = "B", .type = 'B', .length = 8U},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(create_result.ok, "#6608: binary-numeric SDF destination fixture should be created");
+
+    // VFP9 COPY TO TYPE SDF output for I=12, Y=12.3, B=1.25: the source
+    // columns are 11, 21, and 21 printable characters, not 4/8/8 DBF bytes.
+    const fs::path source_path = temp_root / "input.txt";
+    write_text(source_path, "         12              12.3000                 1.25\r\n");
+    const fs::path main_path = temp_root / "append_from_sdf_binary_numeric_widths.prg";
+    write_text(
+        main_path,
+        "USE '" + dest_path.string() + "'\n"
+        "APPEND FROM '" + source_path.string() + "' TYPE SDF\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6608: APPEND FROM SDF binary-numeric layout should complete: " + state.message);
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 5U);
+    expect(result.ok, "#6608: binary-numeric SDF destination should remain readable");
+    expect(result.table.records.size() == 1U, "#6608: binary-numeric SDF import should append one record");
+    if (result.ok && result.table.records.size() == 1U && result.table.records[0U].values.size() >= 3U) {
+        const auto &values = result.table.records[0U].values;
+        expect(values[0U].display_value == "12", "#6608: Integer must consume its 11-character SDF column");
+        expect(values[1U].display_value == "12.3000", "#6608: Currency must consume its 21-character SDF column");
+        expect(values[2U].display_value == "1.25", "#6608: Double must consume its 21-character SDF column");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_to_type_csv_and_delimited_text_rows() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_csv";

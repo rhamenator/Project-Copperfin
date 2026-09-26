@@ -217,6 +217,24 @@
             return result;
         }
 
+        std::size_t sdf_text_field_width(const vfp::DbfFieldDescriptor &field)
+        {
+            // SDF stores printable values, rather than the physical DBF
+            // payload, for the binary numeric field families.  Keep this
+            // mapping beside the formatter so import and a future complete
+            // formatter share the recovered VFP layout contract.
+            const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
+            if (field_type == 'I')
+            {
+                return 11U;
+            }
+            if (field_type == 'Y' || field_type == 'B')
+            {
+                return 21U;
+            }
+            return field.length;
+        }
+
         std::string format_sdf_field_value(const vfp::DbfFieldDescriptor &field, std::string value)
         {
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));

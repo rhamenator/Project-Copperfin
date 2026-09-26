@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "268f8ba0-317f-4249-9e5a-39e77f4eab60", "text": "Implemented #6608 in codex/fix-6608-sdf-binary-numeric-import: SDF import now slices I/Y/B at VFP printable widths (11/21/21); focused test passes locally. Preparing PR.", "to": ["both"], "ts": "2026-09-26T07:24:26Z", "type": "status"}

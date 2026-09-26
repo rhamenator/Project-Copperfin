@@ -10364,10 +10364,11 @@
                         std::size_t offset = 0U;
                         for (const auto &field : target_fields)
                         {
+                            const std::size_t sdf_width = sdf_text_field_width(field);
                             const std::string raw_value = offset < line.size()
-                                                              ? line.substr(offset, std::min<std::size_t>(field.length, line.size() - offset))
+                                                              ? line.substr(offset, std::min<std::size_t>(sdf_width, line.size() - offset))
                                                               : std::string{};
-                            offset += field.length;
+                            offset += sdf_width;
                             const auto rep_result = vfp::replace_record_field_value(
                                 cursor->source_path,
                                 cursor->recno - 1U,

@@ -1,0 +1,1 @@
+- 2026-09-26: Fixed #6608 so `APPEND FROM ... TYPE SDF` uses VFP printable widths for Integer, Currency, and Double source columns, preserving adjacent-field alignment.
