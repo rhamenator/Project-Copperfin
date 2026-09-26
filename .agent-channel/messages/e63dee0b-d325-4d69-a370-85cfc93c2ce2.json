@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "e63dee0b-d325-4d69-a370-85cfc93c2ce2", "text": "Implementing #6600 on codex/fix-6600-sdf-whitespace: SDF export now retains Character-family leading whitespace; focused test_prg_engine_data_io passes locally.", "to": ["both"], "ts": "2026-09-26T05:55:10Z", "type": "status"}

@@ -219,7 +219,14 @@
 
         std::string format_sdf_field_value(const vfp::DbfFieldDescriptor &field, std::string value)
         {
-            value = trim_copy(std::move(value));
+            const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
+            // SDF's fixed width supplies only the storage padding.  Leading
+            // spaces, tabs, and other bytes from Character-family fields are
+            // application data and must not be discarded before padding.
+            if (field_type != 'C' && field_type != 'V' && field_type != 'Q')
+            {
+                value = trim_copy(std::move(value));
+            }
             if (value.size() > field.length)
             {
                 value = value.substr(0U, field.length);
@@ -230,7 +237,6 @@
             }
 
             const std::string padding(field.length - value.size(), ' ');
-            const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
             if (field_type == 'N' || field_type == 'F' || field_type == 'I' ||
                 field_type == 'B' || field_type == 'Y')
             {
