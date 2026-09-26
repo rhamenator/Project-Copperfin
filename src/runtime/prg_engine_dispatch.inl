@@ -9996,7 +9996,7 @@
                             parse_delimited_text_options(append_type, with_clause);
                         std::size_t appended_count = 0U;
                         bool first_line = true;
-                        for (const std::string &line : split_text_lines(csv_bytes))
+                        for (const std::string &line : split_delimited_text_records(csv_bytes, delimited_options))
                         {
                             if (line.empty())
                             {
@@ -11008,7 +11008,7 @@
                     const DelimitedTextOptions delimited_options = parse_delimited_text_options(append_type, with_clause);
                     std::size_t appended_count = 0U;
                     bool first_delimited_line = true;
-                    for (const std::string &line : split_text_lines(buffer))
+                    for (const std::string &line : split_delimited_text_records(buffer, delimited_options))
                     {
                         if (line.empty())
                         {

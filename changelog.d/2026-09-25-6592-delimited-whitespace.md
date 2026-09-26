@@ -1,0 +1,1 @@
+- 2026-09-25: Fixed CSV and DELIMITED import/export so quoted character fields preserve leading spaces, tab characters, and enclosed CR/LF content (#6592, #6594, #6579). Character writes also retain embedded NUL bytes while removing only fixed-width ASCII-space padding.
