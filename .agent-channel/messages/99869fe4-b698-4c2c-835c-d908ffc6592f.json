@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "99869fe4-b698-4c2c-835c-d908ffc6592f", "text": "Opened PR #6638 for #6607: SDF export now omits Memo fields, including explicit FIELDS; Memo import remains #6609. Focused data-I/O test and changelog validation passed.", "to": ["both"], "ts": "2026-09-26T23:30:55Z", "type": "status"}
