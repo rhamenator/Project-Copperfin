@@ -1,0 +1,1 @@
+- 2026-09-26: Fixed CSV and DELIMITED imports with General/Picture targets to preserve VFP9 record and field-binding behavior.
