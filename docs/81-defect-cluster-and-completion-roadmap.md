@@ -58,13 +58,14 @@ but their cited ranges were representative rather than a membership registry.
 The live refresh below assigns the previously unassigned operational issues to
 existing clusters where the root cause fits, adds clusters 31–33 for three
 coherent new seams, and records intentional multi-cluster membership. The
-remaining unclustered open records are the lettered-lane and product umbrellas
-(#1–#57, #98–#114, #137–#141), plus #4905's owner-policy decision; they are
-not prompt-sized defect work.
+remaining unclustered open records are top-level lane and product umbrellas
+(#1–#57, #108–#114, #137–#141), plus #4905's owner-policy decision; they are
+not prompt-sized defect work. Their execution children are assigned below.
 
-`#98`/`#105`/`#106`/`#271` now belong to cluster 9 (`SET` state); the
-`#222`–`#235` malformed-input coverage issues belong to cluster 4 and the
-#6498 evidence umbrella. This means the roadmap no longer treats active
+`#98`/`#105`/`#106`/`#107`/`#271` now belong to cluster 9 (`SET` state).
+`#223`, `#227`, and `#232`–`#235` are malformed-DBF work in cluster 4;
+#222 remains solely in the #6498 disk-I/O failure-injection evidence lane.
+This means the roadmap no longer treats active
 operational work as an undifferentiated long tail merely because it arrived
 after the 2026-09-23 sweep.
 
@@ -609,11 +610,13 @@ Newly-scoped children:
 - #6495 (concurrency state-sequence hunt) — `DONE`, PR #6500, merged
   `bac49af30`. Surfaced #6499 (filed, not fixed, see cluster 1 above).
 - #6496 (migration fidelity: NULL, deleted rows, memos, multi-file
-  recovery) — `NOT STARTED`, next up. Its bounded campaign already hit
-  three prerequisite defects (#5631, #5567, #6047), all now fixed and
-  merged, so it can proceed on a corrected baseline.
-- #6497 (release-lifecycle coverage) — `NOT STARTED`, queued behind
-  #6496.
+  recovery) — `DONE`, PR #6516 merged 2026-09-24. Its bounded campaign
+  measured peak RSS and surfaced prerequisite defects #5631, #5567, and
+  #6047, all merged separately.
+- #6497 (release-lifecycle coverage) — `DONE`, PR #6517 merged
+  2026-09-24. The bounded campaign closed its package-lifecycle slice; the
+  remaining macOS/Linux and VSIX lifecycle evidence is tracked by #6527 and
+  #6530 in cluster 26.
 
 Pre-existing linked issues (all confirmed `OPEN` as of 2026-09-23, not
 otherwise clustered above):
@@ -639,11 +642,10 @@ otherwise clustered above):
   VM verification for several behaviors before implementing (see the
   issue body for the specific open questions).
 - #6492 (`PREVIEW` inside a quoted REPORT/LABEL `TO FILE` path incorrectly
-  enters preview mode) — reproduced, not fixed. No production fix
-  committed yet; a temporary regression test was removed after the
-  reproduction.
-- #5680 (staged-import authority) — open, partial. Not otherwise
-  clustered; revisit scope when picked up.
+  enters preview mode) — reproduced, not fixed, and assigned to cluster 6
+  because it is a REPORT/LABEL output-command parser defect.
+- #5680 (staged-import authority) — open, partial, and assigned to cluster
+  13 because it governs migration/import publication authority.
 
 ## Recommended order
 
@@ -652,10 +654,13 @@ otherwise clustered above):
    formatter seams it exposes.
 2. Return to cluster 1's reopened generation/cancellation siblings (#6576–
    #6578 and #6499), then cluster 2's four shutdown residues.
-3. Read cluster 24 with #6506 before choosing a typed-NULL implementation;
+3. Use cluster 32 for the shared file-command operand/parser seam and
+   cluster 33 for malformed PRG source admission before treating either set as
+   isolated command defects.
+4. Read cluster 24 with #6506 before choosing a typed-NULL implementation;
    work clusters 4, 13, and 18 where their DBF/DBC/migration invariants share
    evidence.
-4. Treat clusters 14–15 as cross-cutting safety work, cluster 17 by function
+5. Treat clusters 14–15 as cross-cutting safety work, cluster 17 by function
    family, clusters 7–8 as larger feature work, and cluster 26
    opportunistically when build reliability blocks validation.
 
