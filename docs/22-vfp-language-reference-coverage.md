@@ -476,6 +476,13 @@ product commit. Remaining release-matrix evidence is separate.
   and runtime-surface tests pass `3/3` on POSIX. Exact-head hosted Windows
   validation of the correction remains separate.
 
+- `FILETOSTR()` read-failure note (2026-09-26, #6542/#6569): a missing
+  ordinary file raises catchable VFP error 1 (`File does not exist.`), while
+  an existing directory or another non-regular input raises error 1705
+  (`File access is denied`). A readable empty file still returns an empty
+  string. Focused file-I/O CTest covers `TRY/CATCH`, post-call execution, and
+  `FERROR()`; mid-read failure behavior remains #6543.
+
 - Native `CommandButton` keyboard-action note (2026-07-28, #4771 under #3217):
   the modeled `WM_KEYDOWN` path now selects the owning Form's deterministic
   `Default = .T.` button for ENTER or `Cancel = .T.` button for ESC after
