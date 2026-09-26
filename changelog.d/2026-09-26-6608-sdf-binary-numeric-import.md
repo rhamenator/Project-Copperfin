@@ -1,0 +1,1 @@
+- 2026-09-26: Fixed #6606 and #6608 so `COPY TO` and `APPEND FROM ... TYPE SDF` use VFP printable widths for Integer, Currency, and Double columns, preserving round trips and field-aware rollback diagnostics. SDF export now rejects an overwide Double before creating output rather than silently truncating its lossless numeric text.

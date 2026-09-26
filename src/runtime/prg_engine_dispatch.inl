@@ -8576,6 +8576,32 @@
 
                 if (copy_as_sdf)
                 {
+                    std::vector<std::vector<std::string>> formatted_sdf_rows;
+                    formatted_sdf_rows.reserve(out_rows.size());
+                    for (const auto &row : out_rows)
+                    {
+                        std::vector<std::string> formatted_row;
+                        formatted_row.reserve(out_fields.size());
+                        for (std::size_t index = 0U; index < out_fields.size(); ++index)
+                        {
+                            const auto formatted_value = format_sdf_field_value(
+                                out_fields[index], index < row.size() ? row[index] : std::string{});
+                            if (!formatted_value.has_value())
+                            {
+                                last_error_message = runtime_text(
+                                    "Runtime.Prg.Dispatch.Error.CopyToSdfFieldValueTooWide",
+                                    {
+                                        {"fieldName", out_fields[index].name},
+                                        {"fieldWidth", std::to_string(sdf_text_field_width(out_fields[index]))},
+                                    });
+                                last_fault_location = statement.location;
+                                last_fault_statement = statement.text;
+                                return {.ok = false, .message = last_error_message};
+                            }
+                            formatted_row.push_back(*formatted_value);
+                        }
+                        formatted_sdf_rows.push_back(std::move(formatted_row));
+                    }
                     if (!dest_path.parent_path().empty())
                     {
                         std::error_code ignored;
@@ -8591,11 +8617,11 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    for (const auto &row : out_rows)
+                    for (const auto &row : formatted_sdf_rows)
                     {
-                        for (std::size_t index = 0U; index < out_fields.size(); ++index)
+                        for (const auto &value : row)
                         {
-                            output << format_sdf_field_value(out_fields[index], index < row.size() ? row[index] : std::string{});
+                            output << value;
                         }
                         output << "\r\n";
                     }
@@ -10364,10 +10390,11 @@
                         std::size_t offset = 0U;
                         for (const auto &field : target_fields)
                         {
+                            const std::size_t sdf_width = sdf_text_field_width(field);
                             const std::string raw_value = offset < line.size()
-                                                              ? line.substr(offset, std::min<std::size_t>(field.length, line.size() - offset))
+                                                              ? line.substr(offset, std::min<std::size_t>(sdf_width, line.size() - offset))
                                                               : std::string{};
-                            offset += field.length;
+                            offset += sdf_width;
                             const auto rep_result = vfp::replace_record_field_value(
                                 cursor->source_path,
                                 cursor->recno - 1U,
@@ -10376,9 +10403,10 @@
                             if (!rep_result.ok)
                             {
                                 last_error_message = runtime_text(
-                                    "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                                    "Runtime.Prg.Dispatch.Error.AppendFromSdfFieldWriteFailed",
                                     {
-                                        {"type", "SDF"},
+                                        {"fieldName", field.name},
+                                        {"fieldWidth", std::to_string(sdf_width)},
                                         {"errorMessage", rep_result.error},
                                     });
                                 last_fault_location = statement.location;

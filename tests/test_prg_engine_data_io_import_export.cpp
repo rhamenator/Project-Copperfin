@@ -1216,6 +1216,109 @@ void test_append_from_type_sdf_imports_fixed_width_text_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_type_sdf_uses_printable_binary_numeric_widths() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_sdf_binary_numeric_widths";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "I", .type = 'I', .length = 4U},
+        {.name = "Y", .type = 'Y', .length = 8U},
+        {.name = "B", .type = 'B', .length = 8U},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(create_result.ok, "#6608: binary-numeric SDF destination fixture should be created");
+
+    // VFP9 COPY TO TYPE SDF output for I=12, Y=12.3, B=1.25: the source
+    // columns are 11, 21, and 21 printable characters, not 4/8/8 DBF bytes.
+    const fs::path source_path = temp_root / "input.txt";
+    const std::string vfp_sdf_row = "         12              12.3000                 1.25\r\n";
+    write_text(source_path, vfp_sdf_row);
+    const fs::path round_trip_path = temp_root / "round-trip.txt";
+    const fs::path main_path = temp_root / "append_from_sdf_binary_numeric_widths.prg";
+    write_text(
+        main_path,
+        "USE '" + dest_path.string() + "'\n"
+        "APPEND FROM '" + source_path.string() + "' TYPE SDF\n"
+        "COPY TO '" + round_trip_path.string() + "' TYPE SDF\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6608: APPEND FROM SDF binary-numeric layout should complete: " + state.message);
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 5U);
+    expect(result.ok, "#6608: binary-numeric SDF destination should remain readable");
+    expect(result.table.records.size() == 1U, "#6608: binary-numeric SDF import should append one record");
+    if (result.ok && result.table.records.size() == 1U && result.table.records[0U].values.size() >= 3U) {
+        const auto &values = result.table.records[0U].values;
+        expect(values[0U].display_value == "12", "#6608: Integer must consume its 11-character SDF column");
+        expect(values[1U].display_value == "12.3000", "#6608: Currency must consume its 21-character SDF column");
+        expect(values[2U].display_value == "1.25", "#6608: Double must consume its 21-character SDF column");
+    }
+    expect(read_text(round_trip_path) == vfp_sdf_row,
+           "#6606/#6608: SDF binary-numeric export must retain VFP printable widths for a round trip");
+
+    const fs::path rollback_path = temp_root / "rollback.dbf";
+    const auto rollback_create = copperfin::vfp::create_dbf_table_file(
+        rollback_path.string(), fields, {{"7", "1.0000", "2.5"}});
+    expect(rollback_create.ok, "#6608: rollback fixture should be created");
+    const fs::path invalid_source_path = temp_root / "invalid.txt";
+    write_text(invalid_source_path, "         12                 nope                 1.25\r\n");
+    const fs::path invalid_main_path = temp_root / "append_from_sdf_binary_numeric_invalid.prg";
+    write_text(
+        invalid_main_path,
+        "USE '" + rollback_path.string() + "'\n"
+        "APPEND FROM '" + invalid_source_path.string() + "' TYPE SDF\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession invalid_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(invalid_main_path.string(), temp_root.string(), false));
+    const auto invalid_state = invalid_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!invalid_state.completed, "#6608: invalid Currency text should fail the SDF import");
+    expect(invalid_state.message.find("Y") != std::string::npos &&
+               invalid_state.message.find("Convert or round") != std::string::npos,
+           "#6608: invalid SDF text must identify the target field and fitting guidance: " + invalid_state.message);
+    const auto rollback_result = copperfin::vfp::parse_dbf_table_from_file(rollback_path.string(), 5U);
+    expect(rollback_result.ok && rollback_result.table.records.size() == 1U,
+           "#6608: invalid SDF text must roll back the provisional record");
+    if (rollback_result.ok && rollback_result.table.records.size() == 1U && rollback_result.table.records[0U].values.size() >= 3U) {
+        expect(rollback_result.table.records[0U].values[0U].display_value == "7" &&
+                   rollback_result.table.records[0U].values[1U].display_value == "1.0000" &&
+                   rollback_result.table.records[0U].values[2U].display_value == "2.5",
+               "#6608: invalid SDF text must retain each pre-existing binary numeric value");
+    }
+
+    // VFP9 writes 21 asterisks for this value.  Copperfin must stop before
+    // writing instead of truncating the IEEE-754 text into a different value.
+    const fs::path overflow_path = temp_root / "overflow.dbf";
+    const auto overflow_create = copperfin::vfp::create_dbf_table_file(
+        overflow_path.string(), {{.name = "B", .type = 'B', .length = 8U}}, {{"1.7976931348623157e+308"}});
+    expect(overflow_create.ok, "#6606: Double-overflow SDF fixture should be created");
+    const fs::path overflow_sdf_path = temp_root / "overflow.txt";
+    const fs::path overflow_main_path = temp_root / "copy_to_sdf_binary_double_overflow.prg";
+    write_text(
+        overflow_main_path,
+        "USE '" + overflow_path.string() + "'\n"
+        "COPY TO '" + overflow_sdf_path.string() + "' TYPE SDF\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession overflow_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(overflow_main_path.string(), temp_root.string(), false));
+    const auto overflow_state = overflow_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!overflow_state.completed, "#6606: Double text wider than the VFP SDF column must fail rather than truncate");
+    expect(overflow_state.message.find("B") != std::string::npos &&
+               overflow_state.message.find("21") != std::string::npos &&
+               overflow_state.message.find("Convert") != std::string::npos,
+           "#6606: Double-overflow error must identify the field, SDF width, and conversion remedy: " + overflow_state.message);
+    expect(!fs::exists(overflow_sdf_path),
+           "#6606: Double-overflow validation must fail before creating a partial SDF output file");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_to_type_csv_and_delimited_text_rows() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_csv";

@@ -217,7 +217,25 @@
             return result;
         }
 
-        std::string format_sdf_field_value(const vfp::DbfFieldDescriptor &field, std::string value)
+        std::size_t sdf_text_field_width(const vfp::DbfFieldDescriptor &field)
+        {
+            // SDF stores printable values, rather than the physical DBF
+            // payload, for the binary numeric field families.  Keep this
+            // mapping beside the formatter so import and a future complete
+            // formatter share the recovered VFP layout contract.
+            const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
+            if (field_type == 'I')
+            {
+                return 11U;
+            }
+            if (field_type == 'Y' || field_type == 'B')
+            {
+                return 21U;
+            }
+            return field.length;
+        }
+
+        std::optional<std::string> format_sdf_field_value(const vfp::DbfFieldDescriptor &field, std::string value)
         {
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
             // SDF's fixed width supplies only the storage padding.  Leading
@@ -227,16 +245,26 @@
             {
                 value = trim_copy(std::move(value));
             }
-            if (value.size() > field.length)
+            const std::size_t sdf_width = sdf_text_field_width(field);
+            if (value.size() > sdf_width)
             {
-                value = value.substr(0U, field.length);
+                // VFP writes asterisks when a Double cannot be represented in
+                // its 21-column SDF field.  Do not silently turn that into a
+                // different number by truncating its decimal text.  The COPY
+                // TO caller reports a conversion remedy before opening the
+                // destination, so the command cannot leave a partial file.
+                if (field_type == 'B')
+                {
+                    return std::nullopt;
+                }
+                value = value.substr(0U, sdf_width);
             }
-            if (value.size() >= field.length)
+            if (value.size() >= sdf_width)
             {
                 return value;
             }
 
-            const std::string padding(field.length - value.size(), ' ');
+            const std::string padding(sdf_width - value.size(), ' ');
             if (field_type == 'N' || field_type == 'F' || field_type == 'I' ||
                 field_type == 'B' || field_type == 'Y')
             {
