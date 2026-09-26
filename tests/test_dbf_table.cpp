@@ -825,6 +825,10 @@ std::vector<std::uint8_t> make_synthetic_dbase_iii_fixture(
     bytes[64U] = 0x0DU;
     bytes.back() = 0x1AU;
     bytes[65U] = static_cast<std::uint8_t>(' ');
+    // dBASE Character fields use ASCII-space padding.  Keep the synthetic
+    // fixture faithful to that layout so its unused bytes are not mistaken
+    // for embedded Character NUL data.
+    std::fill(bytes.begin() + 66U, bytes.begin() + 66U + field_length, static_cast<std::uint8_t>(' '));
     write_ascii(bytes, 66U, field_value);
     return bytes;
 }
@@ -1858,7 +1862,7 @@ void test_string_fields_store_literal_null_text() {
     fs::remove_all(temp_dir, ignored);
 }
 
-void test_character_fields_stop_at_nul_padding() {
+void test_character_fields_preserve_embedded_nuls() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
         ("copperfin_dbf_table_nul_padding_tests_" + std::to_string(_getpid()));
@@ -1874,10 +1878,10 @@ void test_character_fields_stop_at_nul_padding() {
         table_path.string(),
         fields,
         {{" path.scx"}});
-    expect(create_result.ok, "setup should create a character field for NUL-padding coverage");
+    expect(create_result.ok, "setup should create a Character field for embedded-NUL coverage");
 
     auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
-    expect(parse_result.ok, "NUL-padded character table should initially be readable");
+    expect(parse_result.ok, "embedded-NUL Character table should initially be readable");
     if (!parse_result.ok || parse_result.table.records.empty() || parse_result.table.fields.empty()) {
         fs::remove_all(temp_dir, ignored);
         return;
@@ -1889,7 +1893,7 @@ void test_character_fields_stop_at_nul_padding() {
         [](const copperfin::vfp::DbfFieldDescriptor& candidate) {
             return candidate.name == "NAME";
         });
-    expect(field != parse_result.table.fields.end(), "NUL-padding fixture should expose the NAME field");
+    expect(field != parse_result.table.fields.end(), "embedded-NUL fixture should expose the NAME field");
     if (field == parse_result.table.fields.end()) {
         fs::remove_all(temp_dir, ignored);
         return;
@@ -1898,20 +1902,20 @@ void test_character_fields_stop_at_nul_padding() {
     auto bytes = read_binary_file(table_path);
     const std::size_t field_offset =
         parse_result.table.header.header_length + field->offset;
-    expect(field_offset + field->length <= bytes.size(), "NUL-padding fixture should contain the complete NAME field");
+    expect(field_offset + field->length <= bytes.size(), "embedded-NUL fixture should contain the complete NAME field");
     if (field_offset + field->length <= bytes.size()) {
         std::fill(
             bytes.begin() + static_cast<std::ptrdiff_t>(field_offset + 9U),
             bytes.begin() + static_cast<std::ptrdiff_t>(field_offset + field->length),
             static_cast<std::uint8_t>(0U));
-        expect(write_binary_file(table_path, bytes), "NUL-padding fixture should be writable");
+        expect(write_binary_file(table_path, bytes), "embedded-NUL fixture should be writable");
     }
 
     parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
-    expect(parse_result.ok, "NUL-padded character table should remain readable");
+    expect(parse_result.ok, "embedded-NUL Character table should remain readable");
     if (parse_result.ok && !parse_result.table.records.empty() && !parse_result.table.records[0].values.empty()) {
-        expect(parse_result.table.records[0].values[0].display_value == " path.scx",
-               "character decoding should stop at NUL padding while preserving leading spaces");
+        expect(parse_result.table.records[0].values[0].display_value == std::string{" path.scx\0\0\0", 12U},
+               "Character decoding should preserve embedded NUL bytes while removing only ASCII-space padding");
     }
 
     fs::remove_all(temp_dir, ignored);
@@ -3947,7 +3951,7 @@ int main(int argc, char* argv[]) {
     test_stamp_dbf_last_update_date_writes_real_dbase_two_digit_year_convention();
     test_character_and_varchar_fields_preserve_leading_whitespace_on_write();
     test_string_fields_store_literal_null_text();
-    test_character_fields_stop_at_nul_padding();
+    test_character_fields_preserve_embedded_nuls();
     test_create_dbf_table_file_rejects_duplicate_field_names();
     test_dbf_schema_writes_enforce_field_name_boundaries();
     test_record_field_updates_match_descriptor_names_case_insensitively();
