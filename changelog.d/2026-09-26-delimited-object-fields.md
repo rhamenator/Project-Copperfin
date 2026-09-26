@@ -1,0 +1,1 @@
+- 2026-09-26: Fixed CSV and DELIMITED export layout for General and Picture fields to match VFP9 text records.
