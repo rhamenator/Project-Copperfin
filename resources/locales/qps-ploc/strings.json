@@ -1883,7 +1883,7 @@
   "Vfp.DbfTable.Error.CreateUnsupportedFieldType": "Table creation is not implemented for one or more field types yet.",
   "Vfp.DbfTable.Error.CurrencyValueInvalid": "Currency fields only accept signed decimal values with up to four fractional digits.",
   "Vfp.DbfTable.Error.DateFieldWidthInvalid": "Date fields require a width of exactly 8 bytes.",
-  "Vfp.DbfTable.Error.DateTimeValueInvalid": "[!! ÐåţëTïmë fïëłðš åççëpţ våłüëš fõrmåţţëð åš 'julian:<day> millis:<milliseconds>' õr 'MM/DD/YYYY HH:MM:SS'. !!]",
+  "Vfp.DbfTable.Error.DateTimeValueInvalid": "DateTime fields currently accept values formatted as 'julian:<day> millis:<milliseconds>'.",
   "Vfp.DbfTable.Error.DateValueInvalid": "Date values must be empty or formatted as YYYYMMDD/YYYY-MM-DD.",
   "Vfp.DbfTable.Error.DoubleFieldWidthInvalid": "Double fields require a width of exactly 8 bytes.",
   "Vfp.DbfTable.Error.DoubleValueInvalid": "Double fields only accept numeric values.",

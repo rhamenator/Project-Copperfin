@@ -1351,9 +1351,11 @@ void test_sdf_datetime_layout_round_trips_and_rejects_malformed_values() {
     expect(copy_state.completed, "#6603: COPY TO SDF should serialize temporal values: " + copy_state.message);
     if (fs::exists(sdf_path)) {
         const std::string sdf_contents = read_text(sdf_path);
-        expect(sdf_contents.size() >= 27U && sdf_contents.substr(0U, 19U) == "01/02/2025 03:04:05" &&
-                   sdf_contents.substr(19U, 8U) == "20250102",
-               "#6603: COPY TO SDF must use VFP Date and DateTime printable columns: " + sdf_contents);
+        // #6604 separately tracks the lower-case Logical token; keep that
+        // known defect explicit while asserting every byte covered by this
+        // temporal-layout contract.
+        expect(sdf_contents == "01/02/2025 03:04:05" "20250102" "   12.30" "t\r\n",
+               "#6603: COPY TO SDF must preserve the complete VFP-shaped temporal row layout: " + sdf_contents);
     } else {
         expect(false, "#6603: COPY TO SDF should create the temporal destination");
     }
