@@ -1462,6 +1462,53 @@ void test_sdf_datetime_layout_round_trips_and_blanks_non_vfp_values() {
     fs::remove_all(temp_root, ignored);
 }
 
+
+void test_append_from_type_sdf_blanks_invalid_date_cells() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sdf_invalid_dates";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path destination_path = temp_root / "dest.dbf";
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        destination_path.string(),
+        {{.name = "DAY", .type = 'D', .length = 8U}, {.name = "TAIL", .type = 'C', .length = 3U}},
+        {});
+    expect(create_result.ok, "#6618: SDF Date destination fixture should be created");
+
+    const fs::path source_path = temp_root / "input.txt";
+    write_text(source_path, "20250102END\r\n00000000BAD\r\n20250230XXX\r\nABCDEFGHZZZ\r\n1/2/2025SLH\r\n        NIL\r\n");
+    const fs::path main_path = temp_root / "append_from_sdf_invalid_dates.prg";
+    write_text(
+        main_path,
+        "USE '" + destination_path.string() + "'\n"
+        "APPEND FROM '" + source_path.string() + "' TYPE SDF\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6618: SDF Date import should complete: " + state.message);
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 10U);
+    expect(result.ok && result.table.records.size() == 6U,
+           "#6618: valid and invalid SDF Date rows should all append");
+    if (result.ok && result.table.records.size() == 6U) {
+        const std::array<std::string, 6U> expected_dates{"2025-01-02", "", "", "", "", ""};
+        const std::array<std::string, 6U> expected_tails{"END", "BAD", "XXX", "ZZZ", "SLH", "NIL"};
+        for (std::size_t index = 0U; index < result.table.records.size(); ++index) {
+            const auto &values = result.table.records[index].values;
+            expect(values.size() >= 2U && values[0U].display_value == expected_dates[index] &&
+                       values[1U].display_value == expected_tails[index],
+                   "#6618: SDF Date row " + std::to_string(index) +
+                       " must blank only its invalid Date cell without shifting TAIL");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_to_type_csv_and_delimited_text_rows() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_csv";
