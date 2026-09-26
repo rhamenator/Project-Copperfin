@@ -1,0 +1,1 @@
+- 2026-09-26: Refreshed the defect-cluster roadmap against the live 970-issue backlog, corrected completed/in-progress status, and assigned the prior operational long tail to existing or new text-interchange, file-command, and PRG-parser clusters.

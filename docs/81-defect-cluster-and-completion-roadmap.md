@@ -12,8 +12,9 @@ this repo, neither of which tracks the other:
   below — deliberately without citing individual issue numbers. It answers
   "what does v1 completion look like."
 - **The micro layer** — this document — tracks the actual open,
-  `agent-approved` bug/gap backlog (**934 open issues** as of 2026-09-23,
-  up from ~280 when this tracking started 2026-09-19) as thematic
+  `agent-approved` bug/gap backlog (**971 open issues, 970 carrying
+  `agent-approved`, as of 2026-09-26; up from ~280 when this tracking
+  started 2026-09-19**) as thematic
   *clusters*, since most bugs in this backlog share a root cause with
   several siblings, and fixing the shared cause or a shared helper often
   closes multiple issues for the cost of one. It answers "which issue to
@@ -36,10 +37,7 @@ precisely what each Lane-A/C cluster below represents.
 
 **How to use this:** when picking "next work" with no other explicit
 instruction, follow [Recommended order](#recommended-order) below, not a
-blind "next `NOT STARTED` cluster in listed order" scan — the two
-diverge (e.g. the recommended order finishes in-progress cluster 1 and
-reads cluster 27 before touching cluster 2, even though cluster 2 is
-listed earlier and is itself `NOT STARTED`). First revalidate the chosen
+blind "next `NOT STARTED` cluster in listed order" scan. First revalidate the chosen
 issue's current state, author, and `agent-approved` label live via
 `gh issue view`, per the
 fail-closed Agent Issue Intake Boundary in `agents.md`; this document is a
@@ -53,20 +51,23 @@ going forward.
 
 ## Scale reality
 
-**Updated 2026-09-23** after a full categorization sweep of the backlog.
-The 30 clusters below, plus the umbrella/singleton groups, now account
-for roughly **740 of the 934 open issues** (185 from the original 12
-clusters' cited numbers/ranges plus backfills, ~530 more from the 18
-clusters added in the sweep — both figures approximate, since clusters
-are cited as representative ranges, not exhaustively verified
-issue-by-issue). The residual ~190 uncategorized issues are a genuine
-long tail of scattered one-offs (documentation-only fixes, single
-CI/tooling issues, single backlog-grooming issues) not worth forcing into
-named clusters; a handful of small groups worth noting without full
-cluster status: `#98`/`#105`/`#106`/`#271` (Lane A `SET()`-state-isolation
-residual slices under umbrella `#8`), `#222`-`#235` (`[gap-XX]`-labeled
-malformed-input test-coverage tracking, overlaps cluster 4's theme but is
-itself about coverage gaps, not the underlying defects).
+**Refreshed 2026-09-26** against the live GitHub backlog: 971 issues are
+open, 970 carry `agent-approved`, and only #4905 is intentionally outside the
+implementation intake. The prior 30 clusters still describe the broad backlog,
+but their cited ranges were representative rather than a membership registry.
+The live refresh below assigns the previously unassigned operational issues to
+existing clusters where the root cause fits, adds clusters 31–33 for three
+coherent new seams, and records intentional multi-cluster membership. The
+remaining unclustered open records are top-level lane and product umbrellas
+(#1–#57, #108–#114, #137–#141), plus #4905's owner-policy decision; they are
+not prompt-sized defect work. Their execution children are assigned below.
+
+`#98`/`#105`/`#106`/`#107`/`#271` now belong to cluster 9 (`SET` state).
+`#223`, `#227`, and `#232`–`#235` are malformed-DBF work in cluster 4;
+#222 remains solely in the #6498 disk-I/O failure-injection evidence lane.
+This means the roadmap no longer treats active
+operational work as an undifferentiated long tail merely because it arrived
+after the 2026-09-23 sweep.
 
 As clusters get exhausted, or periodically regardless, re-run
 `gh issue list --label agent-approved --state open --limit 1000
@@ -82,11 +83,9 @@ excluded from the counts above since they're long-lived umbrellas, not
 closeable bugs. Use that table, not a guessed issue range, as the
 categorization axis for any future sweep.
 
-Only 3 open issues currently lack `agent-approved` (out of 937 total open):
-`#4905` (owner-policy, unrelated to bug work) and `#6499`/`#6506` (both
-self-filed this session, pending owner review — expected, not a backlog
-gap). The Agent Issue Intake Boundary is not currently a meaningful
-bottleneck; the backlog is effectively fully intake-cleared.
+Only #4905, the owner-policy revenue-sharing issue, currently lacks
+`agent-approved`. The Agent Issue Intake Boundary is therefore not a backlog
+bottleneck; the implementation and evidence backlog is intake-cleared.
 
 ## Lane Status
 
@@ -121,7 +120,7 @@ work lands; when a cluster's last issue closes, move a one-line summary
 into `agent-handoff.md`'s history rather than leaving a stale `DONE`
 marker with no context here.
 
-### 1. Reentrant-cursor-closure use-after-free — `DONE`
+### 1. Reentrant-cursor-closure use-after-free — `IN PROGRESS`
 
 Started 2026-09-18. Root cause: several PRG runtime code paths retain a
 raw `CursorState*`/reference across evaluation of an expression that can
@@ -156,29 +155,28 @@ releasing their source, PR #6540), #6192 (QueryUnload self-release, this
 change). These use the never-reused object handle as the stable identity
 and re-check `ole_objects` after each user callback.
 
+**Live refresh (2026-09-26):** The core set above is complete, but the same
+invariant has newly confirmed open siblings: #6576 (`SCAN`), #6577
+(`LOCATE`), #6578 (`GOTO TOP`), and #6499 (cancellation during explicit
+`FLOCK()`/`RLOCK()` retry). They keep this cluster `IN PROGRESS`; each must
+use a stable generation or cancellation identity after user-code evaluation
+rather than relying on the earlier command-specific repairs.
+
 **Disclosed, not yet fixed, needs a different mechanism:**
 `aggregate_function_value()`'s bare-call form (`? SUM(field FOR cond)` as
 opposed to the `SUM ... TO var` command form) and `evaluate_group_aggregate()`'s
 `GROUP BY` analogue — both need error propagation through expression
 evaluation rather than statement dispatch.
 
-**Related, self-filed this session:** #6499 (cancellation inside an
-explicit `FLOCK()`/`RLOCK()` retry loop is silently swallowed instead of
-halting) — not `agent-approved` yet, pending owner review.
+### 2. Session/task shutdown-cleanup — `IN PROGRESS`
 
-### 2. Session/task shutdown-cleanup — `NOT STARTED`
-
-10 open (#6192, QueryUnload self-release UAF, was shared with cluster 1
-and closed there by PR #6545): #6183 (unawaited SPAWN workers survive
-session destruction), #6193 (QueryUnload `RETURN .F.` incorrectly vetoes QUIT), #6194
-(architecture: selectable VFP9/Copperfin shutdown modes), #6195 (CLOSE
-ALL invalidates live objects without releasing), #6196 (CLOSE DATABASES
-prematurely closes file handles), #6197 (scoped CLOSE discards unrelated
-cursors), #6198 (CLOSE revokes Foxtools handles), #6199 (ON SHUTDOWN
-ignores non-DO commands), #6263 (session destruction leaves uncommitted
-transaction changes live), #6454 (Destroy-during-QUIT bypasses shutdown
-cleanup). Directly adjacent to the #6453 (`cleanup_runtime_resources_for_shutdown()`/
-`perform_quit()`) work already done.
+The original ten-item set has six closed slices (#6183, #6193, #6195,
+#6196, #6198, and #6263) plus #6192, which closed with cluster 1. Four
+issues remain open: #6194 (selectable VFP9/Copperfin shutdown modes), #6197
+(scoped `CLOSE`), #6199 (`ON SHUTDOWN`), and #6454 (objects created by
+`Destroy` during `QUIT`). Directly adjacent to the #6453
+`cleanup_runtime_resources_for_shutdown()`/`perform_quit()` work already
+done.
 
 ### 3. SQL Federation / cross-backend translation — `NOT STARTED`
 
@@ -542,6 +540,61 @@ work at all). Predates cluster 3 (SQL federation, which is about
 *translating* VFP SQL to other backends) — this is the *native* VFP SQL
 engine's own foundational gaps.
 
+## Live assignment refresh (2026-09-26)
+
+The following assignments close the operational gap left by the
+representative-range sweep. An issue can appear in more than one cluster when
+one verified defect crosses a format boundary and a runtime invariant; this is
+intentional and does not create duplicate work.
+
+### 31. Text-file interchange: CSV, DELIMITED, and SDF — `IN PROGRESS`
+
+Twenty newly filed or previously ungrouped issues share the text interchange
+boundary between `COPY TO` and `APPEND FROM`: #6511, #6512, #6515, #6519,
+#6522, #6528, #6572, #6573, #6579, #6591, #6593, #6598, #6599, #6602,
+#6603, #6604, #6607, #6609, #6611, #6612, and #6614. They cover CSV headers
+and quotes, blank records, numeric rounding/overflow, SDF record terminators
+and field widths, Date/DateTime/Logical serialization, Varchar/Varbinary SDF
+layout, omitted Memo-family fields, and the explicit Copperfin text-to-Memo
+compatibility policy.
+
+This cluster overlaps cluster 6 for `COPY TO` durability/correctness, cluster
+13 for external interchange fidelity, cluster 17 for numeric/date conversion,
+and cluster 25 for numeric precision. It is a coherent active execution lane:
+finish shared parser/formatter invariants before treating its individual issue
+numbers as unrelated.
+
+### 32. File-command operand and path lexical semantics — `NOT STARTED`
+
+#6562, #6563, #6565, #6567, #6568, #6582, #6583, #6585, #6586, #6587, and
+#6589 all expose the same command-parser seam: documented bare operands or
+wildcards are evaluated, ignored, or treated as expressions instead of being
+resolved as filesystem designators. They overlap cluster 6 when the command is
+`COPY TO`/`COPY STRUCTURE`, and cluster 17 for the `JUST*()` function cases
+#6580, #6581, and #6595, but should be investigated through the shared
+command-operand parser and path resolver.
+
+### 33. PRG lexical admission and recovery — `NOT STARTED`
+
+#6509 (unterminated literals executing), #5729 (missing include ignored),
+#5730 (unterminated header conditional removing a parent PRG), and #5731
+(unbounded PRG source loading) form a parser-admission and recovery cluster.
+They also retain their cluster-15 resource-bound overlap where applicable.
+The invariant is that malformed or unbounded PRG source must fail before it
+changes execution or compilation state.
+
+### Reassigned existing long-tail issues
+
+- #6499 and #6576–#6578 → cluster 1; #6548 and #391 → cluster 23; #6558 →
+  clusters 3 and 30.
+- #223, #227, #232–#235 → cluster 4 and coverage umbrella #6498; #98,
+  #105, #106, and #271 → cluster 9.
+- #6537, #6539, and #6541 → clusters 6 and/or 13; #6506 and #6525 →
+  cluster 24, with #6525 also in cluster 13 and #6498.
+- #6531, #6533, #6535, #6543, #6544, #6504, #6580, #6581, #6595 → cluster
+  17; #6518, #6527, #6530 → cluster 26; #6523, #6532, #6543, #6567, and
+  #6568 → coverage umbrella #6498.
+
 ## Umbrella and singleton tracking (outside the 12 clusters)
 
 ### Coverage-hunt umbrella #6498 — `IN PROGRESS`
@@ -558,11 +611,13 @@ Newly-scoped children:
 - #6495 (concurrency state-sequence hunt) — `DONE`, PR #6500, merged
   `bac49af30`. Surfaced #6499 (filed, not fixed, see cluster 1 above).
 - #6496 (migration fidelity: NULL, deleted rows, memos, multi-file
-  recovery) — `NOT STARTED`, next up. Its bounded campaign already hit
-  three prerequisite defects (#5631, #5567, #6047), all now fixed and
-  merged, so it can proceed on a corrected baseline.
-- #6497 (release-lifecycle coverage) — `NOT STARTED`, queued behind
-  #6496.
+  recovery) — `DONE`, PR #6516 merged 2026-09-24. Its bounded campaign
+  measured peak RSS and surfaced prerequisite defects #5631, #5567, and
+  #6047, all merged separately.
+- #6497 (release-lifecycle coverage) — `DONE`, PR #6517 merged
+  2026-09-24. The bounded campaign closed its package-lifecycle slice; the
+  remaining macOS/Linux and VSIX lifecycle evidence is tracked by #6527 and
+  #6530 in cluster 26.
 
 Pre-existing linked issues (all confirmed `OPEN` as of 2026-09-23, not
 otherwise clustered above):
@@ -580,63 +635,35 @@ otherwise clustered above):
 
 ### Singleton follow-ups
 
-- #6499 (FLOCK/RLOCK cancellation swallowed in retry loop) — filed, not
-  fixed, not yet `agent-approved`. Belongs to cluster 1's pattern but
-  needs its own fix.
+- #6499 (FLOCK/RLOCK cancellation swallowed in retry loop) — open,
+  `agent-approved`, and assigned to cluster 1.
 - #6506 (`PrgValue`/`VARTYPE()`/`EMPTY()`/`NVL()`/`EVL()`/aggregate-on-NULL
-  semantics redesign) — filed, not started, not yet `agent-approved`.
+  semantics redesign) — open, `agent-approved`, and assigned to cluster 24.
   Deliberately deferred out of #6047's storage-layer scope; needs VFP9
   VM verification for several behaviors before implementing (see the
   issue body for the specific open questions).
 - #6492 (`PREVIEW` inside a quoted REPORT/LABEL `TO FILE` path incorrectly
-  enters preview mode) — reproduced, not fixed. No production fix
-  committed yet; a temporary regression test was removed after the
-  reproduction.
-- #5680 (staged-import authority) — open, partial. Not otherwise
-  clustered; revisit scope when picked up.
+  enters preview mode) — reproduced, not fixed, and assigned to cluster 6
+  because it is a REPORT/LABEL output-command parser defect.
+- #5680 (staged-import authority) — open, partial, and assigned to cluster
+  13 because it governs migration/import publication authority.
 
 ## Recommended order
 
-1. Finish #6496 then #6497 (already "next" per `agent-handoff.md`, warm
-   context from #6047/#5567/#5631) — this does not close umbrella #6498
-   by itself, since 5 pre-existing linked issues (#5800, #5804, #222,
-   #5802, #4403) also gate its closure; picking those up is a separate,
-   later decision.
-2. Return to cluster 1's remaining 10 issues to close it out entirely —
-   warm context, well-understood fix pattern, closest cluster to `DONE`
-   (grew from 7 to 10 after the sweep found #6240/#6241/#6242 belong
-   here too).
-3. Cluster 27 (`[Architecture]` proposals) — read-only, small (9 issues),
-   and several of its proposals directly inform how to approach clusters
-   1, 2, 14, and 19; cheap to read now before committing to a fix
-   pattern in those larger clusters.
-4. Cluster 4 (malformed-DBF-input) and/or cluster 13 (EXPORT/IMPORT
-   DATABASE fidelity) — DBF/DBC byte-format and migration context is
-   warm from #6047/cluster-1 work; cluster 13 is the largest
-   single-root-cause-coherent new cluster (~70 issues) and directly
-   adjacent to #6496's own migration-fidelity coverage hunt, so doing
-   them back-to-back has real shared-context leverage.
-5. Cluster 18 (DBC command surface) — unusually coherent and
-   self-contained (~25 issues) for its size; good candidate for a single
-   focused pass once a shared DBC-dispatch entry point is confirmed.
-6. Cluster 2 (session/shutdown) — adjacent to recently-closed #6453 work.
-7. Cluster 24 (NULL/type-coercion) — read alongside singleton #6506
-   before starting either, since they likely share a fix.
-8. Clusters 14, 15 (shared-temp/symlink races; resource-exhaustion DoS)
-   — both cross-cutting `safety`/`security` hardening passes, worth
-   doing together since a shared helper may close much of both at once.
-9. Clusters 3, 5, 6, 9, 10, 11, 12, 16, 19, 20, 21, 22, 23, 25, 28, 29,
-   30 in roughly listed order — no strong sequencing dependency between
-   them; pick by whichever has the most current context or owner
-   interest at the time. Cluster 17 (built-in function correctness) is
-   the largest of all (~150+ issues) but explicitly needs sub-splitting
-   by function family before picking it up — don't take it as one slice.
-10. Clusters 7, 8 (Menu/Popup, legacy interactive I/O) last — these are
-    feature-gap areas (large implementation lifts), not bug clusters,
-    and benefit from being tackled with more design headroom than a
-    between-other-things slice affords.
-11. Cluster 26 (CI/build/test infra) — lowest priority; doesn't affect
-    shipped product behavior, pick up opportunistically.
+1. Finish the active cluster-31 text-interchange slices, beginning with the
+   current #6611 DateTime SDF work and then the shared SDF/CSV parser and
+   formatter seams it exposes.
+2. Return to cluster 1's reopened generation/cancellation siblings (#6576–
+   #6578 and #6499), then cluster 2's four shutdown residues.
+3. Use cluster 32 for the shared file-command operand/parser seam and
+   cluster 33 for malformed PRG source admission before treating either set as
+   isolated command defects.
+4. Read cluster 24 with #6506 before choosing a typed-NULL implementation;
+   work clusters 4, 13, and 18 where their DBF/DBC/migration invariants share
+   evidence.
+5. Treat clusters 14–15 as cross-cutting safety work, cluster 17 by function
+   family, clusters 7–8 as larger feature work, and cluster 26
+   opportunistically when build reliability blocks validation.
 
 Re-survey the full backlog periodically (see [Scale reality](#scale-reality)
 for the exact command) — this categorization will itself go stale the
