@@ -12,7 +12,7 @@ this repo, neither of which tracks the other:
   below — deliberately without citing individual issue numbers. It answers
   "what does v1 completion look like."
 - **The micro layer** — this document — tracks the actual open,
-  `agent-approved` bug/gap backlog (**970 open issues, 969 carrying
+  `agent-approved` bug/gap backlog (**971 open issues, 970 carrying
   `agent-approved`, as of 2026-09-26; up from ~280 when this tracking
   started 2026-09-19**) as thematic
   *clusters*, since most bugs in this backlog share a root cause with
@@ -51,8 +51,8 @@ going forward.
 
 ## Scale reality
 
-**Refreshed 2026-09-26** against the live GitHub backlog: 970 issues are
-open, 969 carry `agent-approved`, and only #4905 is intentionally outside the
+**Refreshed 2026-09-26** against the live GitHub backlog: 971 issues are
+open, 970 carry `agent-approved`, and only #4905 is intentionally outside the
 implementation intake. The prior 30 clusters still describe the broad backlog,
 but their cited ranges were representative rather than a membership registry.
 The live refresh below assigns the previously unassigned operational issues to
@@ -552,10 +552,11 @@ intentional and does not create duplicate work.
 Twenty newly filed or previously ungrouped issues share the text interchange
 boundary between `COPY TO` and `APPEND FROM`: #6511, #6512, #6515, #6519,
 #6522, #6528, #6572, #6573, #6579, #6591, #6593, #6598, #6599, #6602,
-#6603, #6604, #6607, #6609, #6611, and #6612. They cover CSV headers and
-quotes, blank records, numeric rounding/overflow, SDF record terminators and
-field widths, Date/DateTime/Logical serialization, omitted Memo-family fields,
-and the explicit Copperfin text-to-Memo compatibility policy.
+#6603, #6604, #6607, #6609, #6611, #6612, and #6614. They cover CSV headers
+and quotes, blank records, numeric rounding/overflow, SDF record terminators
+and field widths, Date/DateTime/Logical serialization, Varchar/Varbinary SDF
+layout, omitted Memo-family fields, and the explicit Copperfin text-to-Memo
+compatibility policy.
 
 This cluster overlaps cluster 6 for `COPY TO` durability/correctness, cluster
 13 for external interchange fidelity, cluster 17 for numeric/date conversion,
