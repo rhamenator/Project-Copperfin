@@ -245,16 +245,17 @@
             {
                 value = trim_copy(std::move(value));
             }
-            if (value.size() > field.length)
+            const std::size_t sdf_width = sdf_text_field_width(field);
+            if (value.size() > sdf_width)
             {
-                value = value.substr(0U, field.length);
+                value = value.substr(0U, sdf_width);
             }
-            if (value.size() >= field.length)
+            if (value.size() >= sdf_width)
             {
                 return value;
             }
 
-            const std::string padding(field.length - value.size(), ' ');
+            const std::string padding(sdf_width - value.size(), ' ');
             if (field_type == 'N' || field_type == 'F' || field_type == 'I' ||
                 field_type == 'B' || field_type == 'Y')
             {

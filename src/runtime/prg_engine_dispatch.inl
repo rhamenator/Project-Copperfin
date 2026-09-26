@@ -10377,9 +10377,10 @@
                             if (!rep_result.ok)
                             {
                                 last_error_message = runtime_text(
-                                    "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                                    "Runtime.Prg.Dispatch.Error.AppendFromSdfFieldWriteFailed",
                                     {
-                                        {"type", "SDF"},
+                                        {"fieldName", field.name},
+                                        {"fieldWidth", std::to_string(sdf_width)},
                                         {"errorMessage", rep_result.error},
                                     });
                                 last_fault_location = statement.location;
