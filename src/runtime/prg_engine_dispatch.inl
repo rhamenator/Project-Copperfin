@@ -11063,6 +11063,9 @@
                     // the first remaining target field.
                     if (append_type == "csv" && has_general_or_picture_target)
                     {
+                        // The zero-record CSV result is a successful command;
+                        // retain it rather than restoring the undo snapshot.
+                        append_from_command_undo_guard.committed = true;
                         events.push_back({.category = "runtime.append_from",
                                           .detail = src_raw + " (0 records, TYPE CSV)",
                                           .location = statement.location});
