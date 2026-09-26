@@ -21,7 +21,7 @@ void test_dbf_table_record_value_errors_resolve_through_localization_catalog() {
         "#2381: DBF table character overflow error should resolve through the en-US catalog");
     expect(
         english_catalog.translate("Vfp.DbfTable.Error.DateTimeValueInvalid") ==
-            "DateTime fields currently accept values formatted as 'julian:<day> millis:<milliseconds>'.",
+            "DateTime fields accept values formatted as 'julian:<day> millis:<milliseconds>' or 'MM/DD/YYYY HH:MM:SS'.",
         "#2381: DBF table datetime validation error should resolve through the en-US catalog");
     expect(
         spanish_catalog.translate("Vfp.DbfTable.Error.CharacterValueTooLarge") ==
@@ -30,7 +30,7 @@ void test_dbf_table_record_value_errors_resolve_through_localization_catalog() {
         "#2602: DBF table character overflow error should resolve through the es-419 catalog");
     expect(
         portuguese_catalog.translate("Vfp.DbfTable.Error.DateTimeValueInvalid") ==
-            "Campos DateTime atualmente aceitam valores formatados como 'julian:<day> millis:<milliseconds>'.",
+            "Campos DateTime aceitam valores formatados como 'julian:<day> millis:<milliseconds>' ou 'MM/DD/YYYY HH:MM:SS'.",
         "#2602: DBF table datetime validation error should resolve through the pt-BR catalog");
     expect(
         pseudo_catalog.translate("Vfp.DbfTable.Error.CharacterValueTooLarge") !=
