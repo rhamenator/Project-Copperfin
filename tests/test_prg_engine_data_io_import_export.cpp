@@ -1141,6 +1141,43 @@ void test_copy_to_type_sdf_writes_fixed_width_text_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_copy_to_type_sdf_preserves_character_whitespace() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_sdf_character_whitespace";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 6U},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        source_path.string(), fields, {{std::string{"  A\t"}}});
+    expect(create_result.ok, "#6600: SDF Character whitespace fixture should be created");
+
+    const fs::path dest_path = temp_root / "people.sdf";
+    const fs::path main_path = temp_root / "copy_to_sdf_character_whitespace.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO '" + dest_path.string() + "' TYPE SDF\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6600: COPY TO TYPE SDF Character-whitespace script should complete: " + state.message);
+    if (fs::exists(dest_path)) {
+        expect(read_text(dest_path) == "  A\t  \r\n",
+               "#6600: SDF must retain leading spaces and tabs before fixed-width padding");
+    } else {
+        expect(false, "#6600: COPY TO TYPE SDF should create the Character-whitespace destination");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_type_sdf_imports_fixed_width_text_rows() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_sdf";

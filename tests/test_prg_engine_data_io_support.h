@@ -102,6 +102,7 @@ void test_append_from_rolls_back_matched_field_write_failure();
 void test_append_from_is_reverted_by_undo();
 void test_append_from_transaction_rollback_restores_destination();
 void test_copy_to_type_sdf_writes_fixed_width_text_rows();
+void test_copy_to_type_sdf_preserves_character_whitespace();
 void test_append_from_type_sdf_imports_fixed_width_text_rows();
 void test_copy_to_type_csv_and_delimited_text_rows();
 void test_append_from_type_csv_imports_delimited_rows();

@@ -74,6 +74,7 @@ int main() {
     test_append_from_is_reverted_by_undo();
     test_append_from_transaction_rollback_restores_destination();
     test_copy_to_type_sdf_writes_fixed_width_text_rows();
+    test_copy_to_type_sdf_preserves_character_whitespace();
     test_append_from_type_sdf_imports_fixed_width_text_rows();
     test_copy_to_type_csv_and_delimited_text_rows();
     test_append_from_type_csv_imports_delimited_rows();

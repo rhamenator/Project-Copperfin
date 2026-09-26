@@ -1,0 +1,1 @@
+- 2026-09-26: `COPY TO ... TYPE SDF` now preserves leading Character-field spaces and tabs before fixed-width padding (#6600). `RQ-CF-PRG-SDF-WHITESPACE-001`.
