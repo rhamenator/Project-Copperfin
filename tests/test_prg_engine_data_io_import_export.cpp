@@ -1193,6 +1193,7 @@ void test_sdf_omits_binary_object_fields_from_interchange_layout() {
         // SDF layout test and retains the empty four-byte payload.
         {.name = "BLOB", .type = 'C', .length = 4U},
         {.name = "PICTURE", .type = 'P', .length = 4U},
+        {.name = "NOTES", .type = 'M', .length = 4U},
         {.name = "CODE", .type = 'C', .length = 2U},
     };
     const auto mark_blob_field = [](const fs::path &path) {
@@ -1203,13 +1204,15 @@ void test_sdf_omits_binary_object_fields_from_interchange_layout() {
     };
     const fs::path source_path = temp_root / "source.dbf";
     const auto source_create = copperfin::vfp::create_dbf_table_file(
-        source_path.string(), fields, {{"", "", "", "OK"}});
-    expect(source_create.ok, "#6619: SDF General/Blob/Picture source fixture should be created");
+        source_path.string(), fields, {{"", "", "", "memo-text", "OK"}});
+    expect(source_create.ok, "#6607/#6619: SDF object/Memo source fixture should be created");
     expect(mark_blob_field(source_path), "#6619: SDF source fixture should expose an on-disk Blob descriptor");
 
     const fs::path export_path = temp_root / "objects.sdf";
     const fs::path export_filtered_path = temp_root / "objects_filtered.sdf";
     const fs::path export_omitted_only_path = temp_root / "objects_omitted_only.sdf";
+    const fs::path export_memo_filtered_path = temp_root / "memo_filtered.sdf";
+    const fs::path export_memo_only_path = temp_root / "memo_only.sdf";
     const fs::path export_main_path = temp_root / "copy_to_sdf_omitted_binary_objects.prg";
     write_text(
         export_main_path,
@@ -1217,6 +1220,8 @@ void test_sdf_omits_binary_object_fields_from_interchange_layout() {
         "COPY TO '" + export_path.string() + "' TYPE SDF\n"
         "COPY TO '" + export_filtered_path.string() + "' TYPE SDF FIELDS PICTURE, CODE\n"
         "COPY TO '" + export_omitted_only_path.string() + "' TYPE SDF FIELDS PICTURE\n"
+        "COPY TO '" + export_memo_filtered_path.string() + "' TYPE SDF FIELDS NOTES, CODE\n"
+        "COPY TO '" + export_memo_only_path.string() + "' TYPE SDF FIELDS NOTES\n"
         "RETURN\n");
     copperfin::runtime::PrgRuntimeSession export_session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(export_main_path.string(), temp_root.string(), false));
@@ -1230,6 +1235,10 @@ void test_sdf_omits_binary_object_fields_from_interchange_layout() {
     // terminator with no field bytes, rather than rejecting the selection.
     expect(read_text(export_omitted_only_path) == "\r\n",
            "#6619: an SDF selection containing only omitted object fields must retain the empty VFP record");
+    expect(read_text(export_memo_filtered_path) == "OK\r\n",
+           "#6607: SDF FIELDS selection must omit a Memo field before the surviving Character column");
+    expect(read_text(export_memo_only_path) == "\r\n",
+           "#6607: SDF selection containing only a Memo field must retain VFP's empty physical record");
 
     const fs::path destination_path = temp_root / "destination.dbf";
     const auto destination_create = copperfin::vfp::create_dbf_table_file(destination_path.string(), fields, {});
@@ -1250,8 +1259,8 @@ void test_sdf_omits_binary_object_fields_from_interchange_layout() {
     const auto import_result = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 10U);
     expect(import_result.ok && import_result.table.records.size() == 1U,
            "#6619: SDF import should append one row after omitting object fields");
-    if (import_result.ok && import_result.table.records.size() == 1U && import_result.table.records[0U].values.size() >= 4U) {
-        expect(import_result.table.records[0U].values[3U].display_value == "OK",
+    if (import_result.ok && import_result.table.records.size() == 1U && import_result.table.records[0U].values.size() >= 5U) {
+        expect(import_result.table.records[0U].values[4U].display_value == "OK",
                "#6619: SDF import must start CODE at byte zero after omitted object fields");
     }
 

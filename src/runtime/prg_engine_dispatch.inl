@@ -8462,7 +8462,13 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
-                if (copy_as_sdf || copy_as_dif || copy_as_sylk)
+                if (copy_as_sdf)
+                {
+                    // SDF omits all non-table object payload columns, including
+                    // Memo. Its import policy remains intentionally separate.
+                    std::erase_if(out_fields, sdf_omits_export_field);
+                }
+                else if (copy_as_dif || copy_as_sylk)
                 {
                     // VFP's non-table interchange layouts do not reserve
                     // columns for General, Blob, or Picture data. Apply the
