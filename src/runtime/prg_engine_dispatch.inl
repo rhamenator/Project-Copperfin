@@ -11053,6 +11053,28 @@
 
                     std::vector<vfp::DbfFieldDescriptor> target_fields =
                         filter_field_descriptors(dest_result.table.fields, field_filter, true);
+                    const bool has_general_or_picture_target = std::any_of(
+                        target_fields.begin(), target_fields.end(),
+                        text_export_omits_general_picture_field);
+                    // VFP gives its two text-import syntaxes distinct object
+                    // field contracts. TYPE CSV makes no record mutation when
+                    // a selected General/Picture field is present. DELIMITED
+                    // removes those targets so the first input cell binds to
+                    // the first remaining target field.
+                    if (append_type == "csv" && has_general_or_picture_target)
+                    {
+                        // The zero-record CSV result is a successful command;
+                        // retain it rather than restoring the undo snapshot.
+                        append_from_command_undo_guard.committed = true;
+                        events.push_back({.category = "runtime.append_from",
+                                          .detail = src_raw + " (0 records, TYPE CSV)",
+                                          .location = statement.location});
+                        return {};
+                    }
+                    if (append_type != "csv")
+                    {
+                        std::erase_if(target_fields, text_export_omits_general_picture_field);
+                    }
                     if (target_fields.empty())
                     {
                         last_error_message = runtime_text(

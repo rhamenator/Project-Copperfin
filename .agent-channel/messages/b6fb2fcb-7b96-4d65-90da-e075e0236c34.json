@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "b6fb2fcb-7b96-4d65-90da-e075e0236c34", "text": "#6625: implemented VFP9 General/Picture text-import behavior: CSV makes no record mutation, while DELIMITED omits object targets before binding cells. Native differential coverage, focused data-I/O test, and changelog validation pass.", "to": ["both"], "ts": "2026-09-26T19:32:30Z", "type": "status"}

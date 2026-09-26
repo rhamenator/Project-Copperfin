@@ -1787,6 +1787,78 @@ void test_append_from_type_csv_imports_delimited_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_delimited_general_picture_targets_match_vfp() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_prg_engine_append_from_delimited_object_fields";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "GENERAL", .type = 'G', .length = 4U},
+        {.name = "PICTURE", .type = 'P', .length = 4U},
+        {.name = "CODE", .type = 'C', .length = 2U},
+    };
+    const fs::path csv_general_path = temp_root / "csv-general.dbf";
+    const fs::path csv_picture_path = temp_root / "csv-picture.dbf";
+    const fs::path delimited_general_path = temp_root / "delimited-general.dbf";
+    const fs::path delimited_picture_path = temp_root / "delimited-picture.dbf";
+    for (const fs::path &path : {csv_general_path, csv_picture_path, delimited_general_path, delimited_picture_path})
+    {
+        const auto create_result = copperfin::vfp::create_dbf_table_file(path.string(), fields, {});
+        expect(create_result.ok, "#6625: object-field delimited import fixture should be created");
+    }
+
+    const fs::path csv_path = temp_root / "input.csv";
+    const fs::path delimited_path = temp_root / "input.txt";
+    write_text(csv_path, "\"OK\"\r\n");
+    write_text(delimited_path, "\"OK\",\"CC\"\r\n");
+    const fs::path main_path = temp_root / "append_from_delimited_object_fields.prg";
+    write_text(
+        main_path,
+        "USE '" + csv_general_path.string() + "'\n"
+        "APPEND FROM '" + csv_path.string() + "' TYPE CSV FIELDS GENERAL, CODE\n"
+        "USE '" + csv_picture_path.string() + "'\n"
+        "APPEND FROM '" + csv_path.string() + "' TYPE CSV FIELDS PICTURE, CODE\n"
+        "USE '" + delimited_general_path.string() + "'\n"
+        "APPEND FROM '" + delimited_path.string() + "' DELIMITED WITH CHARACTER ',' FIELDS GENERAL, CODE\n"
+        "USE '" + delimited_picture_path.string() + "'\n"
+        "APPEND FROM '" + delimited_path.string() + "' DELIMITED WITH CHARACTER ',' FIELDS PICTURE, CODE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6625: General/Picture CSV and DELIMITED imports should complete: " + state.message);
+
+    const auto csv_general = copperfin::vfp::parse_dbf_table_from_file(csv_general_path.string(), 5U);
+    const auto csv_picture = copperfin::vfp::parse_dbf_table_from_file(csv_picture_path.string(), 5U);
+    expect(csv_general.ok && csv_general.table.records.empty(),
+           "#6625: CSV General target must make no VFP-incompatible record mutation");
+    expect(csv_picture.ok && csv_picture.table.records.empty(),
+           "#6625: CSV Picture target must make no VFP-incompatible record mutation");
+
+    const auto check_delimited = [&](const fs::path &path, const std::string &object_name)
+    {
+        const auto result = copperfin::vfp::parse_dbf_table_from_file(path.string(), 5U);
+        expect(result.ok && result.table.records.size() == 1U,
+               "#6625: DELIMITED " + object_name + " target should append one VFP-shaped row");
+        if (result.ok && result.table.records.size() == 1U && result.table.records[0U].values.size() >= 3U)
+        {
+            expect(result.table.records[0U].values[0U].display_value.empty() &&
+                       result.table.records[0U].values[1U].display_value.empty(),
+                   "#6625: DELIMITED " + object_name + " target must remain blank");
+            expect(result.table.records[0U].values[2U].display_value == "OK",
+                   "#6625: DELIMITED must shift the first text cell into CODE after omitting " + object_name);
+        }
+    };
+    check_delimited(delimited_general_path, "General");
+    check_delimited(delimited_picture_path, "Picture");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_type_sdf_and_delimited_preserve_explicit_fields_order() {
     namespace fs = std::filesystem;
     const fs::path temp_root =
