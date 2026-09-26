@@ -1466,6 +1466,7 @@
   "Runtime.Prg.Dispatch.Error.CopyToNoCurrentWorkArea": "COPY TO: no hay un area de trabajo actual",
   "Runtime.Prg.Dispatch.Error.CopyToNoFieldsMatchFieldsClause": "COPY TO: ningun campo coincide con la clausula FIELDS",
   "Runtime.Prg.Dispatch.Error.CopyToSourceCursorSchemaUnavailable": "COPY TO: el esquema del cursor de origen no esta disponible",
+  "Runtime.Prg.Dispatch.Error.CopyToSdfFieldValueTooWide": "COPY TO TYPE SDF campo {fieldName} excede su columna de salida de {fieldWidth} caracteres. Convierta el valor de origen a texto o a un valor numerico mas pequeno antes de exportar.",
   "Runtime.Prg.Dispatch.Error.CopyToTypeOpenOutputFailed": "COPY TO TYPE {type}: no pudo abrir el archivo de salida",
   "Runtime.Prg.Dispatch.Error.CopyToTypeWriteOutputFailed": "COPY TO TYPE {type}: no pudo escribir el archivo de salida",
   "Runtime.Prg.Dispatch.Error.CopyToWriteFailed": "COPY TO: {errorMessage}",

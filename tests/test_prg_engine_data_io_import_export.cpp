@@ -1292,6 +1292,30 @@ void test_append_from_type_sdf_uses_printable_binary_numeric_widths() {
                "#6608: invalid SDF text must retain each pre-existing binary numeric value");
     }
 
+    // VFP9 writes 21 asterisks for this value.  Copperfin must stop before
+    // writing instead of truncating the IEEE-754 text into a different value.
+    const fs::path overflow_path = temp_root / "overflow.dbf";
+    const auto overflow_create = copperfin::vfp::create_dbf_table_file(
+        overflow_path.string(), {{.name = "B", .type = 'B', .length = 8U}}, {{"1.7976931348623157e+308"}});
+    expect(overflow_create.ok, "#6606: Double-overflow SDF fixture should be created");
+    const fs::path overflow_sdf_path = temp_root / "overflow.txt";
+    const fs::path overflow_main_path = temp_root / "copy_to_sdf_binary_double_overflow.prg";
+    write_text(
+        overflow_main_path,
+        "USE '" + overflow_path.string() + "'\n"
+        "COPY TO '" + overflow_sdf_path.string() + "' TYPE SDF\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession overflow_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(overflow_main_path.string(), temp_root.string(), false));
+    const auto overflow_state = overflow_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!overflow_state.completed, "#6606: Double text wider than the VFP SDF column must fail rather than truncate");
+    expect(overflow_state.message.find("B") != std::string::npos &&
+               overflow_state.message.find("21") != std::string::npos &&
+               overflow_state.message.find("Convert") != std::string::npos,
+           "#6606: Double-overflow error must identify the field, SDF width, and conversion remedy: " + overflow_state.message);
+    expect(!fs::exists(overflow_sdf_path),
+           "#6606: Double-overflow validation must fail before creating a partial SDF output file");
+
     fs::remove_all(temp_root, ignored);
 }
 

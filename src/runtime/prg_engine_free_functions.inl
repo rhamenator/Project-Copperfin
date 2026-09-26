@@ -235,7 +235,7 @@
             return field.length;
         }
 
-        std::string format_sdf_field_value(const vfp::DbfFieldDescriptor &field, std::string value)
+        std::optional<std::string> format_sdf_field_value(const vfp::DbfFieldDescriptor &field, std::string value)
         {
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
             // SDF's fixed width supplies only the storage padding.  Leading
@@ -248,6 +248,15 @@
             const std::size_t sdf_width = sdf_text_field_width(field);
             if (value.size() > sdf_width)
             {
+                // VFP writes asterisks when a Double cannot be represented in
+                // its 21-column SDF field.  Do not silently turn that into a
+                // different number by truncating its decimal text.  The COPY
+                // TO caller reports a conversion remedy before opening the
+                // destination, so the command cannot leave a partial file.
+                if (field_type == 'B')
+                {
+                    return std::nullopt;
+                }
                 value = value.substr(0U, sdf_width);
             }
             if (value.size() >= sdf_width)

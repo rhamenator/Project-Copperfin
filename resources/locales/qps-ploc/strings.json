@@ -1466,6 +1466,7 @@
   "Runtime.Prg.Dispatch.Error.CopyToNoCurrentWorkArea": "COPY TO: no current work area",
   "Runtime.Prg.Dispatch.Error.CopyToNoFieldsMatchFieldsClause": "COPY TO: no fields match the FIELDS clause",
   "Runtime.Prg.Dispatch.Error.CopyToSourceCursorSchemaUnavailable": "COPY TO: source cursor schema is unavailable",
+  "Runtime.Prg.Dispatch.Error.CopyToSdfFieldValueTooWide": "[!! ÇÖPY TÖ TYPË SÐF fïëłð {fieldName} ëxçëëðš ïtš {fieldWidth}-çhåråçtër öütpüt çöłümñ. Çöñvërt thë šöürçë våłüë tö tëxt ör å šmåłłër ñümërïç våłüë bëførë ëxpörtïñg. !!]",
   "Runtime.Prg.Dispatch.Error.CopyToTypeOpenOutputFailed": "COPY TO TYPE {type}: unable to open output file",
   "Runtime.Prg.Dispatch.Error.CopyToTypeWriteOutputFailed": "COPY TO TYPE {type}: unable to write output file",
   "Runtime.Prg.Dispatch.Error.CopyToWriteFailed": "COPY TO: {errorMessage}",

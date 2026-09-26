@@ -1122,6 +1122,7 @@
   "Runtime.Prg.Dispatch.Error.CopyToNoCurrentWorkArea": "COPY TO: no current work area",
   "Runtime.Prg.Dispatch.Error.CopyToNoFieldsMatchFieldsClause": "COPY TO: no fields match the FIELDS clause",
   "Runtime.Prg.Dispatch.Error.CopyToSourceCursorSchemaUnavailable": "COPY TO: source cursor schema is unavailable",
+  "Runtime.Prg.Dispatch.Error.CopyToSdfFieldValueTooWide": "COPY TO TYPE SDF field {fieldName} exceeds its {fieldWidth}-character output column. Convert the source value to text or a smaller numeric value before exporting.",
   "Runtime.Prg.Dispatch.Error.CopyToTypeOpenOutputFailed": "COPY TO TYPE {type}: unable to open output file",
   "Runtime.Prg.Dispatch.Error.CopyToTypeWriteOutputFailed": "COPY TO TYPE {type}: unable to write output file",
   "Runtime.Prg.Dispatch.Error.CopyToWriteFailed": "COPY TO: {errorMessage}",
