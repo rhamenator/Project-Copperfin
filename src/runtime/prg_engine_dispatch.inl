@@ -10399,7 +10399,7 @@
                                 cursor->source_path,
                                 cursor->recno - 1U,
                                 field.name,
-                                raw_value);
+                                normalize_sdf_field_value_for_storage(field, raw_value));
                             if (!rep_result.ok)
                             {
                                 last_error_message = runtime_text(

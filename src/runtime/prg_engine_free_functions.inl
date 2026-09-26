@@ -217,6 +217,11 @@
             return result;
         }
 
+        bool parse_datetime_storage_contract(const std::string &raw, int &julian_day, int &millis);
+        bool parse_runtime_or_storage_date_string(const std::string &raw, int &year, int &month, int &day);
+        std::string format_runtime_date_storage_string(int year, int month, int day);
+        std::string format_runtime_datetime_storage_string(int year, int month, int day, int hour, int minute, int second);
+
         std::size_t sdf_text_field_width(const vfp::DbfFieldDescriptor &field)
         {
             // SDF stores printable values, rather than the physical DBF
@@ -232,12 +237,79 @@
             {
                 return 21U;
             }
+            if (field_type == 'T')
+            {
+                return 19U;
+            }
             return field.length;
+        }
+
+        std::string normalize_sdf_field_value_for_storage(
+            const vfp::DbfFieldDescriptor &field,
+            std::string value)
+        {
+            const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
+            if (field_type != 'T')
+            {
+                return value;
+            }
+
+            int year = 0;
+            int month = 0;
+            int day = 0;
+            int hour = 0;
+            int minute = 0;
+            int second = 0;
+            if (parse_runtime_datetime_string(value, year, month, day, hour, minute, second))
+            {
+                return format_runtime_datetime_storage_string(year, month, day, hour, minute, second);
+            }
+            return value;
         }
 
         std::optional<std::string> format_sdf_field_value(const vfp::DbfFieldDescriptor &field, std::string value)
         {
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
+            if (field_type == 'D')
+            {
+                int year = 0;
+                int month = 0;
+                int day = 0;
+                if (parse_runtime_or_storage_date_string(value, year, month, day))
+                {
+                    value = format_runtime_date_storage_string(year, month, day);
+                }
+            }
+            else if (field_type == 'T')
+            {
+                int julian_day = 0;
+                int millis = 0;
+                if (parse_datetime_storage_contract(value, julian_day, millis))
+                {
+                    if (julian_day == 0 && millis == 0)
+                    {
+                        value.clear();
+                    }
+                    else
+                    {
+                        int year = 0;
+                        int month = 0;
+                        int day = 0;
+                        if (julian_to_runtime_date(julian_day, year, month, day) &&
+                            millis >= 0 && millis < 24 * 60 * 60 * 1000)
+                        {
+                            const int total_seconds = millis / 1000;
+                            value = format_runtime_datetime_string(
+                                year,
+                                month,
+                                day,
+                                total_seconds / 3600,
+                                (total_seconds / 60) % 60,
+                                total_seconds % 60);
+                        }
+                    }
+                }
+            }
             // SDF's fixed width supplies only the storage padding.  Leading
             // spaces, tabs, and other bytes from Character-family fields are
             // application data and must not be discarded before padding.
