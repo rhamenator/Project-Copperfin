@@ -99,6 +99,25 @@ require_path_filter_contract("executable-path-validation.yml" ${executable_path_
 require_path_filter_contract("windows-x86-declare-validation.yml" ${declare_abi_inputs})
 require_path_filter_contract("audit-containment-validation.yml" ${audit_containment_inputs})
 
+# The v1-development ruleset requires these contexts.  Documentation-only pull
+# requests must still emit them as skipped successes, while every source or
+# workflow change runs the full corresponding validation.
+set(required_context_workflows
+    "executable-path-validation.yml"
+    "generated-launcher-validation.yml"
+    "windows-x86-declare-validation.yml"
+    "windows-environment-validation.yml")
+foreach(workflow_name IN LISTS required_context_workflows)
+    require_workflow_text(
+        "${workflow_name}"
+        "docs/**|changelog.d/**|.agent-channel/**|*.md|*.txt)"
+        "the fail-closed documentation-only change classifier")
+    require_workflow_text(
+        "${workflow_name}"
+        "if: \${{ needs.change-scope.outputs.docs_only != 'true' }}"
+        "the documentation-only full-validation gate")
+endforeach()
+
 require_workflow_text(
     "audit-containment-validation.yml"
     "--target copperfin_runtime_host test_runtime_host_debug_output_formatting test_runtime_host_audit_stream test_runtime_host_audit_containment test_security_controls --parallel 2"

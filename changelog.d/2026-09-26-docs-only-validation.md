@@ -1,0 +1,1 @@
+- 2026-09-26: Validation: Documentation-only pull requests now retain the required status contexts without running native and launcher build matrices; source and workflow changes still run their full validation lanes.
