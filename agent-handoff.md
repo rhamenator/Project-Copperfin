@@ -68,9 +68,11 @@ Issue #6614: match VFP9 SDF Varchar/Varbinary printable widths and hexadecimal
 Varbinary representation. Branch `codex/implement-6614-sdf-varchar-varbinary`
 uses payload rather than physical descriptor widths, adds uppercase-hex
 export and validated hex import, and preserves command-level rollback on bad
-input. Focused data-I/O and localization verification pass. Next steps are a
-hosted review and CI for signed/sign-off head `69875bd49`, open as PR #6660
-against `v1-development`, followed by any verified review response and merge.
+input. Focused data-I/O and localization verification pass. PR #6660 is open
+against `v1-development`; hosted review requested that the shared invalid-hex
+diagnostic explicitly describe both character validity and even length. That
+localized wording and its focused assertion are being updated before the
+conversation is resolved, followed by another hosted CI cycle and merge.
 
 ## Workspace preservation
 

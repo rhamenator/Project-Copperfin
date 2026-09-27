@@ -1512,7 +1512,7 @@
   "Runtime.Prg.Dispatch.Error.AppendFromSelectedSqlResultCursorUnsupportedSourceType": "APPEND FROM: el cursor SQL/de resultados seleccionado no admite este tipo de origen",
   "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed": "APPEND FROM TYPE {type}: {errorMessage}",
   "Runtime.Prg.Dispatch.Error.AppendFromSdfFieldWriteFailed": "APPEND FROM TYPE SDF campo {fieldName} (columna de {fieldWidth} caracteres): {errorMessage}. Convierta o redondee el valor de origen para que se ajuste al campo de destino.",
-  "Runtime.Prg.Dispatch.Error.AppendFromSdfVarbinaryInvalid": "El campo {fieldName} de APPEND FROM TYPE SDF (columna de {fieldWidth} caracteres) debe contener una cantidad par de dígitos hexadecimales después de quitar el relleno derecho; se encontraron {valueLength} caracteres.",
+  "Runtime.Prg.Dispatch.Error.AppendFromSdfVarbinaryInvalid": "El campo {fieldName} de APPEND FROM TYPE SDF (columna de {fieldWidth} caracteres) debe contener solo caracteres hexadecimales y tener una longitud par después de quitar el relleno derecho; se encontraron {valueLength} caracteres.",
   "Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause": "APPEND FROM TYPE {type}: ningun campo coincide con la clausula FIELDS",
   "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed": "APPEND FROM TYPE {type}: no pudo abrir el archivo de origen",
   "Runtime.Prg.Dispatch.Error.ArrayNameRequired": "{command}: se requiere un nombre de arreglo",

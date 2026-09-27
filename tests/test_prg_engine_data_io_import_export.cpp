@@ -1254,7 +1254,8 @@ void test_sdf_varchar_varbinary_layout_and_import_validation() {
             make_runtime_session_options(invalid_main.string(), temp_root.string(), false));
         const auto invalid_state = invalid_session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(!invalid_state.completed && invalid_state.message.find("BIN") != std::string::npos &&
-                   invalid_state.message.find("hexadecimal") != std::string::npos,
+                   invalid_state.message.find("only hexadecimal characters") != std::string::npos &&
+                   invalid_state.message.find("even length") != std::string::npos,
                "#6614: invalid SDF Varbinary text should fail with a field-specific diagnostic: " +
                    invalid_state.message);
         const auto after_failure = copperfin::vfp::parse_dbf_table_from_file(invalid_destination.string(), 10U);
