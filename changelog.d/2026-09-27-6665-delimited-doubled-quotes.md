@@ -1,0 +1,1 @@
+- 2026-09-27: Fixed enclosed doubled-quote parsing for `APPEND FROM TYPE DELIMITED` to match VFP9 (#6665). `RQ-CF-PRG-DELIMITED-ENCLOSED-QUOTE-001`

@@ -3190,6 +3190,50 @@ void test_append_from_type_csv_imports_delimited_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_type_delimited_truncates_enclosed_doubled_quote_pair() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_prg_engine_append_from_delimited_doubled_quote";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path destination_path = temp_root / "destination.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 8U},
+    };
+    expect(copperfin::vfp::create_dbf_table_file(destination_path.string(), fields, {}).ok,
+           "#6665: local DELIMITED destination fixture should be created");
+
+    const fs::path source_path = temp_root / "source.txt";
+    const std::string source_bytes = "\"ab\"\"cd\"\r\n";
+    write_text(source_path, source_bytes);
+    expect(read_text(source_path) == source_bytes,
+           "#6665: local DELIMITED source must retain the exact doubled-quote bytes");
+
+    const fs::path main_path = temp_root / "append_from_delimited_doubled_quote.prg";
+    write_text(
+        main_path,
+        "USE '" + destination_path.string() + "'\n"
+        "APPEND FROM '" + source_path.string() + "' TYPE DELIMITED FIELDS NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6665: local DELIMITED doubled-quote import should complete: " + state.message);
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 10U);
+    expect(result.ok && result.table.records.size() == 1U,
+           "#6665: local DELIMITED doubled-quote import should append one row");
+    if (result.ok && result.table.records.size() == 1U) {
+        expect(result.table.records[0U].values[0U].display_value == "ab",
+               "#6665: enclosed doubled quotes in DELIMITED must truncate the value to ab");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_delimited_general_picture_targets_match_vfp() {
     namespace fs = std::filesystem;
     const fs::path temp_root =
