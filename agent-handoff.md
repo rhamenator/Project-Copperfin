@@ -69,7 +69,8 @@ Varbinary representation. Branch `codex/implement-6614-sdf-varchar-varbinary`
 uses payload rather than physical descriptor widths, adds uppercase-hex
 export and validated hex import, and preserves command-level rollback on bad
 input. Focused data-I/O and localization verification pass. Next steps are a
-signed/sign-off commit, push, PR, review response, hosted CI, and merge.
+hosted review and CI for signed/sign-off head `69875bd49`, open as PR #6660
+against `v1-development`, followed by any verified review response and merge.
 
 ## Workspace preservation
 
