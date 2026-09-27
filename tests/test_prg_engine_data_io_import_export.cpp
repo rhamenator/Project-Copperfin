@@ -3231,6 +3231,56 @@ void test_append_from_type_delimited_truncates_enclosed_doubled_quote_pair() {
                "#6665: enclosed doubled quotes in DELIMITED must truncate the value to ab");
     }
 
+    const fs::path unquoted_destination_path = temp_root / "unquoted-destination.dbf";
+    expect(copperfin::vfp::create_dbf_table_file(unquoted_destination_path.string(), fields, {}).ok,
+           "#6665 review: unquoted DELIMITED destination fixture should be created");
+    const fs::path unquoted_source_path = temp_root / "unquoted-source.txt";
+    const std::string unquoted_source_bytes = "ab\"\"\"\"cd\r\n";
+    write_text(unquoted_source_path, unquoted_source_bytes);
+    const fs::path unquoted_main_path = temp_root / "append_unquoted_delimited_quotes.prg";
+    write_text(
+        unquoted_main_path,
+        "USE '" + unquoted_destination_path.string() + "'\n"
+        "APPEND FROM '" + unquoted_source_path.string() + "' TYPE DELIMITED FIELDS NAME\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession unquoted_session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(unquoted_main_path.string(), temp_root.string(), false));
+    const auto unquoted_state = unquoted_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(unquoted_state.completed,
+           "#6665 review: unquoted DELIMITED quote import should retain its prior behavior: " + unquoted_state.message);
+    const auto unquoted_result =
+        copperfin::vfp::parse_dbf_table_from_file(unquoted_destination_path.string(), 10U);
+    expect(unquoted_result.ok && unquoted_result.table.records.size() == 1U &&
+               unquoted_result.table.records[0U].values[0U].display_value == "ab\"cd",
+           "#6665 review: truncation must not apply when the field does not start with an enclosure");
+
+    const fs::path tab_source_path = temp_root / "tab-source.dbf";
+    const fs::path tab_destination_path = temp_root / "tab-destination.dbf";
+    expect(copperfin::vfp::create_dbf_table_file(tab_source_path.string(), fields, {{"ab\"cd"}}).ok &&
+               copperfin::vfp::create_dbf_table_file(tab_destination_path.string(), fields, {}).ok,
+           "#6665 review: TAB round-trip fixtures should be created");
+    const fs::path tab_text_path = temp_root / "round-trip.tab";
+    const fs::path tab_main_path = temp_root / "tab_quote_round_trip.prg";
+    write_text(
+        tab_main_path,
+        "USE '" + tab_source_path.string() + "'\n"
+        "COPY TO '" + tab_text_path.string() + "' TYPE TAB FIELDS NAME\n"
+        "USE '" + tab_destination_path.string() + "'\n"
+        "APPEND FROM '" + tab_text_path.string() + "' TYPE TAB FIELDS NAME\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession tab_session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(tab_main_path.string(), temp_root.string(), false));
+    const auto tab_state = tab_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(tab_state.completed, "#6665 review: TAB doubled-quote round trip should complete: " + tab_state.message);
+    expect(read_text(tab_text_path) == "\"ab\"\"cd\"\r\n",
+           "#6665 review: TAB export should retain its doubled-quote enclosure bytes");
+    const auto tab_result = copperfin::vfp::parse_dbf_table_from_file(tab_destination_path.string(), 10U);
+    expect(tab_result.ok && tab_result.table.records.size() == 1U &&
+               tab_result.table.records[0U].values[0U].display_value == "ab\"cd",
+           "#6665 review: TAB import must keep its pre-existing doubled-quote collapse behavior");
+
     fs::remove_all(temp_root, ignored);
 }
 

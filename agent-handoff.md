@@ -101,8 +101,9 @@ after review found a macOS clone destination-identity gap.
 Issue #6665: make `APPEND FROM ... TYPE DELIMITED` match VFP9 when an enclosed
 Character value contains a doubled quote pair, without applying CSV's separate
 quote rule. Branch `codex/implement-6665-delimited-doubled-quotes` contains the
-focused parser and local/remote byte-level regression work; local verification
-is in progress before opening the PR.
+focused parser and local/remote byte-level regression work. PR #6667 is open
+against `v1-development`; focused verification passes, and review fixes are in
+progress while hosted validation completes.
 
 ## Workspace preservation
 

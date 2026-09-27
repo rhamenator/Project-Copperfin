@@ -750,14 +750,14 @@
             char delimiter = ',';
             char quote = '"';
             bool quote_character_fields = true;
-            bool collapse_enclosed_doubled_quotes = false;
+            bool truncate_enclosed_doubled_quotes = false;
         };
 
         DelimitedTextOptions parse_delimited_text_options(const std::string &type, const std::string &with_clause)
         {
             DelimitedTextOptions options;
             const std::string normalized_type = normalize_identifier(type);
-            options.collapse_enclosed_doubled_quotes = normalized_type == "csv";
+            options.truncate_enclosed_doubled_quotes = normalized_type == "delimited";
             if (normalized_type == "tab")
             {
                 options.delimiter = '\t';
@@ -878,6 +878,7 @@
             bool in_quotes = false;
             bool current_field_was_quoted = false;
             bool current_field_closed_quote = false;
+            bool current_field_started_with_enclosure = false;
             bool discard_after_delimited_doubled_quote = false;
             const auto finish_current_field = [&]() {
                 if (!current_field_was_quoted)
@@ -901,6 +902,7 @@
                         outside_after_quotes.clear();
                         current_field_was_quoted = false;
                         current_field_closed_quote = false;
+                        current_field_started_with_enclosure = false;
                         discard_after_delimited_doubled_quote = false;
                     }
                     continue;
@@ -909,7 +911,7 @@
                 {
                     if (in_quotes && index + 1U < line.size() && line[index + 1U] == options.quote)
                     {
-                        if (options.collapse_enclosed_doubled_quotes)
+                        if (!options.truncate_enclosed_doubled_quotes || !current_field_started_with_enclosure)
                         {
                             quoted_content.push_back(options.quote);
                         }
@@ -928,6 +930,10 @@
                     {
                         in_quotes = !in_quotes;
                         current_field_was_quoted = true;
+                        if (in_quotes && trim_copy(outside_before_quotes).empty())
+                        {
+                            current_field_started_with_enclosure = true;
+                        }
                         if (!in_quotes)
                         {
                             current_field_closed_quote = true;
@@ -943,6 +949,7 @@
                     outside_after_quotes.clear();
                     current_field_was_quoted = false;
                     current_field_closed_quote = false;
+                    current_field_started_with_enclosure = false;
                     continue;
                 }
                 if (in_quotes)
