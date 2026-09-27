@@ -1,0 +1,1 @@
+- 2026-09-27: Fixed SDF Autoincrement export/import to use VFP9's 11-character numeric column without shifting following fields (#6612). `RQ-CF-PRG-SDF-AUTOINCREMENT-001`.

@@ -1371,7 +1371,13 @@ DbfWriteResult write_field_bytes(
             table_bytes[field_offset + field.length - 1U] = static_cast<std::uint8_t>(text.size());
             break;
         }
-        case 'I': {
+        case 'I':
+        case '+': {
+            // VFP-native Autoincrement uses the same little-endian signed
+            // 32-bit record representation as Integer. dBASE Level 7 tables
+            // are rejected by the mutation entry points before reaching this
+            // writer and retain their distinct big-endian sign/magnitude
+            // interpretation on the read-only path.
             if (is_null_token) {
                 write_le_u32(table_bytes, field_offset, 0U);
                 break;

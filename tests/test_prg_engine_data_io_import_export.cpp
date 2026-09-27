@@ -2437,6 +2437,94 @@ void test_append_from_type_sdf_uses_printable_binary_numeric_widths() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sdf_autoincrement_uses_vfp_printable_width() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sdf_autoincrement";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> storage_fields{
+        {.name = "ID", .type = 'I', .length = 4U},
+        {.name = "TAIL", .type = 'C', .length = 3U},
+    };
+    expect(!copperfin::vfp::create_dbf_table_file(
+                (temp_root / "unsupported-created-plus.dbf").string(),
+                {{.name = "ID", .type = '+', .length = 4U}},
+                {}).ok,
+           "#6612: generic schema creation must not advertise Autoincrement without 0x31 metadata support");
+    const auto patch_vfp_autoincrement = [&](const fs::path &path, const std::uint32_t next_value) {
+        std::fstream table(path, std::ios::binary | std::ios::in | std::ios::out);
+        expect(table.good(), "#6612: VFP Autoincrement fixture should open for metadata patching");
+        const char version = static_cast<char>(0x31U);
+        table.seekp(0);
+        table.write(&version, 1);
+        const char field_type = '+';
+        table.seekp(32 + 11);
+        table.write(&field_type, 1);
+        const std::array<char, 5U> autoincrement_metadata{
+            static_cast<char>(next_value & 0xffU),
+            static_cast<char>((next_value >> 8U) & 0xffU),
+            static_cast<char>((next_value >> 16U) & 0xffU),
+            static_cast<char>((next_value >> 24U) & 0xffU),
+            static_cast<char>(1U),
+        };
+        table.seekp(32 + 19);
+        table.write(autoincrement_metadata.data(), static_cast<std::streamsize>(autoincrement_metadata.size()));
+        table.flush();
+        expect(table.good(), "#6612: VFP Autoincrement fixture metadata patch should succeed");
+    };
+    const fs::path source_path = temp_root / "source.dbf";
+    expect(copperfin::vfp::create_dbf_table_file(source_path.string(), storage_fields, {{"1", "END"}}).ok,
+           "#6612: VFP Autoincrement SDF source storage fixture should be created");
+    patch_vfp_autoincrement(source_path, 2U);
+
+    const fs::path sdf_path = temp_root / "data.txt";
+    const fs::path export_main = temp_root / "export.prg";
+    write_text(export_main,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO '" + sdf_path.string() + "' TYPE SDF\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession export_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(export_main.string(), temp_root.string(), false));
+    const auto export_state = export_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(export_state.completed, "#6612: SDF Autoincrement export should complete: " + export_state.message);
+    const std::string vfp_sdf_row = "          1END\r\n";
+    expect(read_text(sdf_path) == vfp_sdf_row,
+           "#6612: SDF must use an 11-character left-padded Autoincrement column");
+
+    const fs::path destination_path = temp_root / "destination.dbf";
+    expect(copperfin::vfp::create_dbf_table_file(destination_path.string(), storage_fields, {}).ok,
+           "#6612: VFP Autoincrement SDF destination storage fixture should be created");
+    patch_vfp_autoincrement(destination_path, 1U);
+    const fs::path import_main = temp_root / "import.prg";
+    write_text(import_main,
+        "USE '" + destination_path.string() + "'\n"
+        "APPEND FROM '" + sdf_path.string() + "' TYPE SDF\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession import_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(import_main.string(), temp_root.string(), false));
+    const auto import_state = import_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(import_state.completed, "#6612: SDF Autoincrement import should complete: " + import_state.message);
+    const auto imported = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 5U);
+    expect(imported.ok && imported.table.records.size() == 1U,
+           "#6612: SDF Autoincrement import should append one record");
+    if (imported.ok && imported.table.records.size() == 1U) {
+        const auto &values = imported.table.records[0U].values;
+        expect(values.size() >= 2U && values[0U].display_value == "1" && values[1U].display_value == "END",
+               "#6612: SDF import must consume the 11-character Autoincrement column before Character data");
+    }
+    std::ifstream imported_bytes(destination_path, std::ios::binary);
+    imported_bytes.seekg(97 + 1);
+    std::array<unsigned char, 4U> raw_id{};
+    imported_bytes.read(reinterpret_cast<char *>(raw_id.data()), static_cast<std::streamsize>(raw_id.size()));
+    expect(imported_bytes.gcount() == static_cast<std::streamsize>(raw_id.size()) &&
+               raw_id == std::array<unsigned char, 4U>{0x01U, 0x00U, 0x00U, 0x00U},
+           "#6612: SDF import must write VFP Autoincrement data as little-endian signed 32-bit bytes");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sdf_datetime_layout_round_trips_and_blanks_non_vfp_values() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sdf_datetime_layout";

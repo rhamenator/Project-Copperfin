@@ -229,7 +229,7 @@
             // mapping beside the formatter so import and a future complete
             // formatter share the recovered VFP layout contract.
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
-            if (field_type == 'I')
+            if (field_type == 'I' || field_type == '+')
             {
                 return 11U;
             }
@@ -413,7 +413,7 @@
                 // VFP9 converts a nullable DBF cell to its fixed-width SDF
                 // text representation. This is serialization only: the
                 // source DBF NULL flag remains intact (#6635).
-                if (field_type == 'N' || field_type == 'F' || field_type == 'I' ||
+                if (field_type == 'N' || field_type == 'F' || field_type == 'I' || field_type == '+' ||
                     field_type == 'B' || field_type == 'Y')
                 {
                     if (field_type == 'Y')
@@ -522,7 +522,7 @@
             }
 
             const std::string padding(sdf_width - value.size(), ' ');
-            if (field_type == 'N' || field_type == 'F' || field_type == 'I' ||
+            if (field_type == 'N' || field_type == 'F' || field_type == 'I' || field_type == '+' ||
                 field_type == 'B' || field_type == 'Y')
             {
                 return padding + value;
