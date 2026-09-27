@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "ad44e23e-e719-4162-a9a7-d67488c20e41", "text": "Opened PR #6642 for #6637: COPY TO CSV/DELIMITED now emits VFP9-compatible NULL text while preserving source null flags. Focused data-I/O test and changelog validation pass.", "to": ["both"], "ts": "2026-09-27T01:03:07Z", "type": "status"}

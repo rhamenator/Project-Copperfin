@@ -1,0 +1,1 @@
+- 2026-09-27: `COPY TO ... TYPE CSV` and `TYPE DELIMITED` now serialize nullable DBF values with VFP9-compatible zero, false, empty-character, and blank-temporal text while preserving source NULL flags (#6637).

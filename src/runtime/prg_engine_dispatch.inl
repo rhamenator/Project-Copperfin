@@ -8856,8 +8856,9 @@
                         }
                         output << "\r\n";
                     }
-                    for (const auto &row : out_rows)
+                    for (std::size_t row_index = 0U; row_index < out_rows.size(); ++row_index)
                     {
+                        const auto &row = out_rows[row_index];
                         bool wrote_value = false;
                         for (const std::size_t index : delimited_field_indexes)
                         {
@@ -8868,7 +8869,9 @@
                             output << format_delimited_field_value(
                                 out_fields[index],
                                 index < row.size() ? row[index] : std::string{},
-                                delimited_options);
+                                delimited_options,
+                                row_index < out_row_nulls.size() && index < out_row_nulls[row_index].size() &&
+                                    out_row_nulls[row_index][index]);
                             wrote_value = true;
                         }
                         if (writes_terminal_omitted_object_column)

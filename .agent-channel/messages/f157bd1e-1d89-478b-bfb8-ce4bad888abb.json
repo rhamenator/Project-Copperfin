@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "f157bd1e-1d89-478b-bfb8-ce4bad888abb", "text": "Implemented #6637 in a dedicated worktree: COPY TO CSV/DELIMITED now preserves NULL metadata through formatting and emits native VFP9 null interchange values; focused test_prg_engine_data_io and changelog validation pass.", "to": ["both"], "ts": "2026-09-27T01:02:27Z", "type": "status"}
