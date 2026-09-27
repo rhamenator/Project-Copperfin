@@ -2,6 +2,15 @@
 
 ## Last shipped slice
 
+Issue #6654 (PR #6656, merge `c0a003b43`) finished 2026-09-27:
+native CR-delimited DIF/SYLK imports with Varbinary targets now append the
+VFP9 field-name/data rows instead of succeeding with zero rows, accept CR/LF/
+CRLF records without splitting quoted carriage returns, map physical Q cells
+to blank Q, and roll back the command on a later field-write failure. Review
+also moved record splitting to zero-copy views and centralized the Varbinary
+target policy. Focused data-I/O, DCO, sanitizer, fuzz, stress, migration, and
+cross-platform path/launcher checks passed; all conversations were resolved.
+
 Reentrant-cursor-closure cluster 1 (`docs/81`), cursor-lifetime part,
 finished 2026-09-24: #6321 (PR #6521), #6322 (PR #6524), #6331 (PR #6526),
 #6242 (PR #6529), #6241 (PR #6534), and #6240 (PR #6536, which also carries
@@ -43,16 +52,15 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Issue #6546: `CHRTRANC()` incorrectly folded ASCII case, despite installed
-VFP9 SP2 and the language reference showing the same byte-sensitive behavior
-as `CHRTRAN()` for the supported single-byte lane. Branch
-`codex/fix-6546-chrtranc-case` removes the case-folding path and adds focused
-coverage for case-sensitive hits and misses, numeric text, duplicate search
-bytes, a shorter replacement string, and embedded NUL bytes. DBCS/code-page
-semantics remain the separate #5705 lane. Next steps: finish focused
-validation, commit and push the signed change, open the PR against
-`v1-development`, address review, and merge after required checks pass and
-all review conversations are resolved.
+Issue #6640: emit one localized, non-blocking `runtime.warning` after a
+successful `COPY TO` interchange export intentionally omits selected fields.
+Branch `codex/implement-6640-copy-omission-warning` adds stable structured
+metadata for output type and ordered field name/type pairs without payload
+disclosure, covering SDF, DIF, SYLK, CSV, TAB, and DELIMITED projections.
+Focused data-I/O, localization, and changelog validation pass. Next steps:
+commit and push the signed change, open the PR against `v1-development`,
+address review, and merge after required checks pass and every review
+conversation is resolved.
 
 ## Workspace preservation
 

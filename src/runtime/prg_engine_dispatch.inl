@@ -8472,10 +8472,20 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
+                std::vector<vfp::DbfFieldDescriptor> omitted_export_fields;
+                const auto retain_omitted_fields = [&](const auto &predicate)
+                {
+                    std::copy_if(
+                        out_fields.begin(),
+                        out_fields.end(),
+                        std::back_inserter(omitted_export_fields),
+                        predicate);
+                };
                 if (copy_as_sdf)
                 {
                     // SDF omits all non-table object payload columns, including
                     // Memo. Its import policy remains intentionally separate.
+                    retain_omitted_fields(sdf_omits_export_field);
                     std::erase_if(out_fields, sdf_omits_export_field);
                 }
                 else if (copy_as_dif || copy_as_sylk)
@@ -8483,8 +8493,59 @@
                     // VFP's non-table interchange layouts do not reserve
                     // columns for Memo, General, Blob, or Picture data. Apply
                     // the projection after FIELDS so the remaining order survives.
+                    retain_omitted_fields(dif_sylk_omits_export_field);
                     std::erase_if(out_fields, dif_sylk_omits_export_field);
                 }
+                else if (copy_as_delimited)
+                {
+                    // Delimited serializers retain the selected schema until
+                    // emission because CSV has format-specific empty-header
+                    // behavior. Record the fields that serializer will omit.
+                    retain_omitted_fields(text_export_omits_delimited_field);
+                }
+
+                const std::string omission_output_type =
+                    copy_as_sdf ? "SDF" :
+                    copy_as_dif ? "DIF" :
+                    copy_as_sylk ? "SYLK" :
+                    copy_type == "csv" ? "CSV" :
+                    copy_as_tab ? "TAB" : "DELIMITED";
+                const auto emit_omitted_fields_warning = [&]()
+                {
+                    if (omitted_export_fields.empty())
+                    {
+                        return;
+                    }
+
+                    std::string omitted_summary;
+                    std::map<std::string, std::string> metadata{
+                        {"warning_id", "copy_to.omitted_fields.v1"},
+                        {"operation", "COPY TO"},
+                        {"output_type", omission_output_type},
+                        {"omitted_field_count", std::to_string(omitted_export_fields.size())},
+                    };
+                    for (std::size_t index = 0U; index < omitted_export_fields.size(); ++index)
+                    {
+                        const auto &field = omitted_export_fields[index];
+                        const std::string field_type(1U, static_cast<char>(
+                            std::toupper(static_cast<unsigned char>(field.type))));
+                        if (!omitted_summary.empty())
+                        {
+                            omitted_summary += ", ";
+                        }
+                        omitted_summary += field.name + " (" + field_type + ")";
+                        const std::string prefix = "omitted_field." + std::to_string(index) + ".";
+                        metadata[prefix + "name"] = field.name;
+                        metadata[prefix + "type"] = field_type;
+                    }
+                    events.push_back({
+                        .category = "runtime.warning",
+                        .detail = runtime_text(
+                            "Runtime.Prg.Dispatch.Warning.CopyToOmittedFields",
+                            {{"outputType", omission_output_type}, {"omittedFields", omitted_summary}}),
+                        .location = statement.location,
+                        .metadata = std::move(metadata)});
+                };
 
                 if (is_structure_extended)
                 {
@@ -8679,6 +8740,7 @@
                     events.push_back({.category = "runtime.copy_to",
                                       .detail = copperfin::platform::path_to_utf8_string(dest_path),
                                       .location = statement.location});
+                    emit_omitted_fields_warning();
                     return {};
                 }
 
@@ -8763,6 +8825,7 @@
                     events.push_back({.category = "runtime.copy_to",
                                       .detail = copperfin::platform::path_to_utf8_string(dest_path),
                                       .location = statement.location});
+                    emit_omitted_fields_warning();
                     return {};
                 }
 
@@ -8813,6 +8876,7 @@
                     events.push_back({.category = "runtime.copy_to",
                                       .detail = copperfin::platform::path_to_utf8_string(dest_path),
                                       .location = statement.location});
+                    emit_omitted_fields_warning();
                     return {};
                 }
 
@@ -8940,6 +9004,7 @@
                     events.push_back({.category = "runtime.copy_to",
                                       .detail = copperfin::platform::path_to_utf8_string(dest_path),
                                       .location = statement.location});
+                    emit_omitted_fields_warning();
                     return {};
                 }
 

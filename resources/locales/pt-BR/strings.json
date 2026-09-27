@@ -1471,6 +1471,7 @@
   "Runtime.Prg.Dispatch.Error.CopyToTypeOpenOutputFailed": "COPY TO TYPE {type}: nao conseguiu abrir o arquivo de saida",
   "Runtime.Prg.Dispatch.Error.CopyToTypeWriteOutputFailed": "COPY TO TYPE {type}: nao conseguiu gravar o arquivo de saida",
   "Runtime.Prg.Dispatch.Error.CopyToWriteFailed": "COPY TO: {errorMessage}",
+  "Runtime.Prg.Dispatch.Warning.CopyToOmittedFields": "COPY TO TYPE {outputType} foi concluido, mas omitiu estes campos: {omittedFields}",
   "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonSyntax": "EXPORT DATABASE requer uma fonte DBC, um destino de saida e TYPE JSON, TYPE SQL, TYPE ACCESS, TYPE POSTGRESQL, TYPE SQLITE, TYPE SQLSERVER, TYPE ORACLE ou TYPE MYSQL",
   "Runtime.Prg.Dispatch.Error.ExportDatabaseDestinationAliasesSource": "O destino de EXPORT DATABASE resolve para o mesmo arquivo da origem; a origem nao foi sobrescrita",
   "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonFailed": "EXPORT DATABASE TYPE JSON: {errorMessage}",

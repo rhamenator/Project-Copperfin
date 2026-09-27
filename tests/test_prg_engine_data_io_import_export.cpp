@@ -1335,6 +1335,7 @@ void test_sdf_omits_binary_object_fields_from_interchange_layout() {
     const fs::path export_omitted_only_path = temp_root / "objects_omitted_only.sdf";
     const fs::path export_memo_filtered_path = temp_root / "memo_filtered.sdf";
     const fs::path export_memo_only_path = temp_root / "memo_only.sdf";
+    const fs::path export_code_only_path = temp_root / "code_only.sdf";
     const fs::path export_main_path = temp_root / "copy_to_sdf_omitted_binary_objects.prg";
     write_text(
         export_main_path,
@@ -1344,6 +1345,7 @@ void test_sdf_omits_binary_object_fields_from_interchange_layout() {
         "COPY TO '" + export_omitted_only_path.string() + "' TYPE SDF FIELDS PICTURE\n"
         "COPY TO '" + export_memo_filtered_path.string() + "' TYPE SDF FIELDS NOTES, CODE\n"
         "COPY TO '" + export_memo_only_path.string() + "' TYPE SDF FIELDS NOTES\n"
+        "COPY TO '" + export_code_only_path.string() + "' TYPE SDF FIELDS CODE\n"
         "RETURN\n");
     copperfin::runtime::PrgRuntimeSession export_session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(export_main_path.string(), temp_root.string(), false));
@@ -1361,6 +1363,47 @@ void test_sdf_omits_binary_object_fields_from_interchange_layout() {
            "#6607: SDF FIELDS selection must omit a Memo field before the surviving Character column");
     expect(read_text(export_memo_only_path) == "\r\n",
            "#6607: SDF selection containing only a Memo field must retain VFP's empty physical record");
+    expect(read_text(export_code_only_path) == "OK\r\n",
+           "#6640: an SDF export without omitted fields must preserve its output bytes");
+
+    std::vector<const copperfin::runtime::RuntimeEvent *> omission_warnings;
+    for (const auto &event : export_state.events)
+    {
+        const auto identity = event.metadata.find("warning_id");
+        if (event.category == "runtime.warning" && identity != event.metadata.end() &&
+            identity->second == "copy_to.omitted_fields.v1")
+        {
+            omission_warnings.push_back(&event);
+        }
+    }
+    expect(omission_warnings.size() == 5U,
+           "#6640: each lossy SDF COPY TO should emit exactly one warning and the CODE-only export none");
+    const auto full_warning = std::find_if(
+        omission_warnings.begin(), omission_warnings.end(),
+        [](const copperfin::runtime::RuntimeEvent *event)
+        {
+            const auto count = event->metadata.find("omitted_field_count");
+            return count != event->metadata.end() && count->second == "4";
+        });
+    if (full_warning != omission_warnings.end())
+    {
+        const auto &metadata = (*full_warning)->metadata;
+        expect(metadata.at("output_type") == "SDF" &&
+                   metadata.at("omitted_field.0.name") == "GENERAL" && metadata.at("omitted_field.0.type") == "G" &&
+                   metadata.at("omitted_field.1.name") == "BLOB" && metadata.at("omitted_field.1.type") == "W" &&
+                   metadata.at("omitted_field.2.name") == "PICTURE" && metadata.at("omitted_field.2.type") == "P" &&
+                   metadata.at("omitted_field.3.name") == "NOTES" && metadata.at("omitted_field.3.type") == "M",
+               "#6640: omission warning metadata should preserve selected field ordering and field types");
+        expect((*full_warning)->detail.find("SDF") != std::string::npos &&
+                   (*full_warning)->detail.find("GENERAL (G), BLOB (W), PICTURE (P), NOTES (M)") != std::string::npos,
+               "#6640: localized warning text should name the output type and omitted field summary");
+        expect((*full_warning)->detail.find("memo-text") == std::string::npos,
+               "#6640: omission warnings must not disclose omitted field payloads");
+    }
+    else
+    {
+        expect(false, "#6640: full SDF export should expose structured metadata for all omitted fields");
+    }
 
     const fs::path destination_path = temp_root / "destination.dbf";
     const auto destination_create = copperfin::vfp::create_dbf_table_file(destination_path.string(), fields, {});
@@ -1453,6 +1496,23 @@ void test_dif_sylk_omit_blob_fields() {
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "#6627/#6631: COPY TO TYPE DIF/SYLK should omit object columns: " + state.message);
+
+    std::size_t dif_warning_count = 0U;
+    std::size_t sylk_warning_count = 0U;
+    for (const auto &event : state.events)
+    {
+        const auto identity = event.metadata.find("warning_id");
+        const auto output_type = event.metadata.find("output_type");
+        if (event.category != "runtime.warning" || identity == event.metadata.end() ||
+            identity->second != "copy_to.omitted_fields.v1" || output_type == event.metadata.end())
+        {
+            continue;
+        }
+        dif_warning_count += output_type->second == "DIF" ? 1U : 0U;
+        sylk_warning_count += output_type->second == "SYLK" ? 1U : 0U;
+    }
+    expect(dif_warning_count == 2U && sylk_warning_count == 2U,
+           "#6640: every lossy DIF/SYLK COPY TO should emit exactly one typed omission warning");
 
     const std::string dif = read_text(dif_path);
     const std::string sylk = read_text(sylk_path);
@@ -1975,6 +2035,22 @@ void test_delimited_export_omits_general_picture_fields() {
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "#6624: COPY TO CSV/DELIMITED object-field scripts should complete: " + state.message);
+    std::size_t csv_warning_count = 0U;
+    std::size_t delimited_warning_count = 0U;
+    for (const auto &event : state.events)
+    {
+        const auto identity = event.metadata.find("warning_id");
+        const auto output_type = event.metadata.find("output_type");
+        if (event.category != "runtime.warning" || identity == event.metadata.end() ||
+            identity->second != "copy_to.omitted_fields.v1" || output_type == event.metadata.end())
+        {
+            continue;
+        }
+        csv_warning_count += output_type->second == "CSV" ? 1U : 0U;
+        delimited_warning_count += output_type->second == "DELIMITED" ? 1U : 0U;
+    }
+    expect(csv_warning_count == 5U && delimited_warning_count == 1U,
+           "#6640: every lossy CSV/DELIMITED COPY TO should emit exactly one typed omission warning");
     expect(read_text(general_csv) == ",CODE\r\n\"OK\"\r\n",
            "#6624: General before Character must retain VFP's empty CSV header cell but no data cell");
     expect(read_text(picture_csv) == ",CODE\r\n\"OK\"\r\n",
