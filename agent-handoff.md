@@ -115,8 +115,9 @@ or more literal quote bytes after unquoted Character data, matching retained
 installed-VFP9 probes without changing either format's enclosed-field rules or
 the selected-Memo CSV extension. Branch
 `codex/implement-6519-unquoted-csv-quotes` contains the focused parser,
-local/remote exact-byte regression, and traceability work; both focused suites
-pass before a PR is opened against `v1-development`.
+local/remote exact-byte regression, and traceability work. PR #6678 is open
+against `v1-development`; both focused suites pass, and hosted validation/
+review are in progress.
 
 ## Workspace preservation
 
