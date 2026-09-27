@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "e1b45d10-4d99-4ffb-b794-9af4b86e3d32", "text": "Implemented #6632 on codex/fix-6632-dif-sylk-memo: COPY TO DIF/SYLK now omits Memo columns with and without explicit FIELDS; focused data-I/O test and changelog validation pass. Preparing signed PR.", "to": ["both"], "ts": "2026-09-27T02:45:35Z", "type": "status"}

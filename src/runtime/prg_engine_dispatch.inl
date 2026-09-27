@@ -8471,9 +8471,9 @@
                 else if (copy_as_dif || copy_as_sylk)
                 {
                     // VFP's non-table interchange layouts do not reserve
-                    // columns for General, Blob, or Picture data. Apply the
-                    // projection after FIELDS so the remaining order survives.
-                    std::erase_if(out_fields, sdf_omits_binary_object_field);
+                    // columns for Memo, General, Blob, or Picture data. Apply
+                    // the projection after FIELDS so the remaining order survives.
+                    std::erase_if(out_fields, dif_sylk_omits_export_field);
                 }
 
                 if (is_structure_extended)

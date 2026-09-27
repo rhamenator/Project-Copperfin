@@ -1485,6 +1485,61 @@ void test_dif_sylk_omit_blob_fields() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_dif_sylk_omit_memo_fields() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_dif_sylk_omitted_memo";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "MEMO", .type = 'M', .length = 4U},
+        {.name = "CODE", .type = 'C', .length = 2U},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, {{"MEMO", "OK"}});
+    expect(create_result.ok, "#6632: DIF/SYLK Memo fixture should be created");
+
+    const fs::path dif_path = temp_root / "memo.dif";
+    const fs::path dif_filtered_path = temp_root / "memo-filtered.dif";
+    const fs::path sylk_path = temp_root / "memo.slk";
+    const fs::path sylk_filtered_path = temp_root / "memo-filtered.slk";
+    const fs::path main_path = temp_root / "copy_to_dif_sylk_omitted_memo.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO '" + dif_path.string() + "' TYPE DIF\n"
+        "COPY TO '" + dif_filtered_path.string() + "' TYPE DIF FIELDS MEMO, CODE\n"
+        "COPY TO '" + sylk_path.string() + "' TYPE SYLK\n"
+        "COPY TO '" + sylk_filtered_path.string() + "' TYPE SYLK FIELDS MEMO, CODE\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6632: COPY TO TYPE DIF/SYLK should omit Memo columns: " + state.message);
+
+    for (const fs::path &path : {dif_path, dif_filtered_path})
+    {
+        const std::string dif = read_text(path);
+        expect(dif.find("VECTORS\n0,1") != std::string::npos,
+               "#6632: DIF must declare one surviving vector after Memo omission");
+        expect(dif.find("\"CODE\"") != std::string::npos &&
+                   dif.find("MEMO") == std::string::npos && dif.find("\"OK\"") != std::string::npos,
+               "#6632: DIF must retain only the CODE header and value");
+    }
+    for (const fs::path &path : {sylk_path, sylk_filtered_path})
+    {
+        const std::string sylk = read_text(path);
+        expect(sylk.find("B;Y2;X1") != std::string::npos,
+               "#6632: SYLK must declare one surviving column after Memo omission");
+        expect(sylk.find("\"CODE\"") != std::string::npos &&
+                   sylk.find("MEMO") == std::string::npos && sylk.find("\"OK\"") != std::string::npos,
+               "#6632: SYLK must retain only the CODE header and value");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_delimited_export_omits_general_picture_fields() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_delimited_omitted_binary_objects";
