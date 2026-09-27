@@ -1,0 +1,1 @@
+- 2026-09-27: Fixed DIF/SYLK export and import round trips to preserve significant Character-field whitespace (#6646).

@@ -80,6 +80,7 @@ int main() {
     test_sdf_omits_binary_object_fields_from_interchange_layout();
     test_dif_sylk_omit_blob_fields();
     test_dif_sylk_omit_memo_fields();
+    test_dif_sylk_preserve_character_whitespace();
     test_delimited_export_omits_general_picture_fields();
     test_delimited_export_omits_memo_fields();
     test_append_from_type_sdf_imports_fixed_width_text_rows();
