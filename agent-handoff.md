@@ -2,10 +2,17 @@
 
 ## Last shipped slice
 
-Issue #6665 (PR #6667, merge `d99c78ac2`) finished 2026-09-27: enclosed
-doubled quotes in `APPEND FROM TYPE DELIMITED` now follow VFP9's format-specific
-truncation rule without changing TAB or unquoted-field handling. Focused and
-hosted checks passed; all review conversations were resolved.
+Issue #6522 (PR #6670, merge `b3c1ed73d`) finished 2026-09-27: enclosed doubled
+quotes in `APPEND FROM TYPE CSV` now preserve both VFP9-observed quote bytes for
+fixed-width Character targets without changing DELIMITED, TAB, unquoted,
+Varchar, or Memo behavior. Focused and hosted checks passed; review completed
+without actionable conversations.
+
+Earlier: issue #6665 (PR #6667, merge `d99c78ac2`) finished 2026-09-27:
+enclosed doubled quotes in `APPEND FROM TYPE DELIMITED` now follow VFP9's
+format-specific truncation rule without changing TAB or unquoted-field
+handling. Focused and hosted checks passed; all review conversations were
+resolved.
 
 Earlier: issue #6604 (PR #6666, merge `780d6ac12`) finished 2026-09-27: SDF
 Logical export now emits VFP-compatible uppercase `T`/`F` bytes while
@@ -103,12 +110,13 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Issue #6522: make `APPEND FROM ... TYPE CSV` preserve both quote bytes inside an
-enclosed Character field, matching the retained installed-VFP9 byte probe while
-leaving DELIMITED, TAB, and unquoted-field rules unchanged. Branch
-`codex/implement-6522-csv-doubled-quotes` contains focused parser and local/
-remote exact-byte regression work. PR #6670 is open against `v1-development`;
-both focused suites pass, and hosted validation/review are in progress.
+Issue #6519: make `APPEND FROM ... TYPE CSV` and `TYPE DELIMITED` preserve one
+or more literal quote bytes after unquoted Character data, matching retained
+installed-VFP9 probes without changing either format's enclosed-field rules or
+the selected-Memo CSV extension. Branch
+`codex/implement-6519-unquoted-csv-quotes` contains the focused parser,
+local/remote exact-byte regression, and traceability work; both focused suites
+pass before a PR is opened against `v1-development`.
 
 ## Workspace preservation
 

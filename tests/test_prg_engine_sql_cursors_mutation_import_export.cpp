@@ -469,10 +469,11 @@ void test_append_from_csv_mutates_selected_sql_result_cursor() {
         "ID,NAME,AMOUNT\r\n"
         "901,HOTEL,11.00\r\n"
         "902,INDIA,12.50\r\n"
-        "903,\"ab\"\"cd\",13.75\r\n";
+        "903,\"ab\"\"cd\",13.75\r\n"
+        "904,ab\"\"cd,14.25\r\n";
     write_text(csv_path.string(), source_bytes);
     expect(read_text(csv_path.string()) == source_bytes,
-        "#6522: SQL-result CSV source must retain the exact enclosed doubled-quote bytes");
+        "#6519/#6522: SQL-result CSV source must retain exact enclosed and unquoted quote bytes");
 
     write_text(
         main_path,
@@ -510,16 +511,16 @@ void test_append_from_csv_mutates_selected_sql_result_cursor() {
             "selected SQL result cursor should start with seeded row count before APPEND FROM CSV");
     }
     if (rows_after != state.globals.end()) {
-        expect(copperfin::runtime::format_value(rows_after->second) == "6",
-            "APPEND FROM TYPE CSV should add 3 rows to the selected SQL/result cursor");
+        expect(copperfin::runtime::format_value(rows_after->second) == "7",
+            "APPEND FROM TYPE CSV should add 4 rows to the selected SQL/result cursor");
     }
     if (bottom_id != state.globals.end()) {
-        expect(copperfin::runtime::format_value(bottom_id->second) == "903",
+        expect(copperfin::runtime::format_value(bottom_id->second) == "904",
             "APPEND FROM TYPE CSV should set last row ID in selected SQL/result cursor");
     }
     if (bottom_name != state.globals.end()) {
         expect(copperfin::runtime::format_value(bottom_name->second) == "ab\"\"cd",
-            "#6522: APPEND FROM TYPE CSV should preserve both doubled-quote bytes in the selected SQL/result cursor");
+            "#6519: APPEND FROM TYPE CSV should preserve adjacent quote bytes in an unquoted selected SQL/result field");
     }
     if (disc != state.globals.end()) {
         expect(copperfin::runtime::format_value(disc->second) == "1",
