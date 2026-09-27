@@ -2,7 +2,12 @@
 
 ## Last shipped slice
 
-Issue #6614 (PR #6660, merge `cf2b95187`) finished 2026-09-27: SDF now uses
+Issue #6612 (PR #6661, merge `9b028f5eb`) finished 2026-09-27: SDF
+Autoincrement fields now use VFP's 11-character printable layout while
+preserving genuine `0x31` metadata and raw bytes. Focused and hosted checks
+passed; all review conversations were resolved.
+
+Earlier: issue #6614 (PR #6660, merge `cf2b95187`) finished 2026-09-27: SDF now uses
 Varchar/Varbinary payload widths, uppercase hexadecimal Varbinary text, and
 validated case-insensitive hex import with command-atomic rejection of bad
 input. Focused and hosted checks passed; the review diagnostic fix was
@@ -70,14 +75,13 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Issue #6612: match VFP9's 11-character numeric SDF layout for Autoincrement
-(`+`) fields in both export and import. Branch
-`codex/implement-6612-sdf-autoincrement` extends the recovered binary-numeric
-layout contract without conflating VFP-native storage with dBASE Level 7.
-PR #6661 is open against `v1-development`. Review correctly rejected generic
-`+` schema construction/blank-record handling because the writer does not yet
-emit `0x31` next-value/step metadata. The fix is being narrowed to existing
-genuine VFP Autoincrement tables with byte-level fixture and import evidence.
+Issue #6609: add a session-scoped VFP-vs-Copperfin compatibility switch for
+SDF/CSV imports into selected Memo targets. Branch
+`codex/implement-6609-text-memo-policy` adds pre-mutation VFP rejection,
+newline-safe Copperfin extension rules, localized diagnostics, and focused
+DBF/FPT atomicity coverage. PR #6662 is open against `v1-development`; hosted
+review found preflight-order, empty/CR-only SDF-record, localization-assertion,
+and documentation gaps, and the focused review fix is in progress.
 
 ## Workspace preservation
 

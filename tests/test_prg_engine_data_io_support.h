@@ -123,6 +123,7 @@ void test_sdf_datetime_layout_round_trips_and_blanks_non_vfp_values();
 void test_append_from_type_sdf_blanks_invalid_date_cells();
 void test_copy_to_type_csv_and_delimited_text_rows();
 void test_append_from_type_csv_imports_delimited_rows();
+void test_append_from_text_memo_compatibility_modes();
 void test_append_from_delimited_general_picture_targets_match_vfp();
 void test_append_from_type_sdf_and_delimited_preserve_explicit_fields_order();
 void test_copy_to_type_tab_and_append_from_type_tab_round_trip();

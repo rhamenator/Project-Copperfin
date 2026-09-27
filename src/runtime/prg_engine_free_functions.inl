@@ -555,6 +555,30 @@
             return lines;
         }
 
+        std::vector<std::string> split_sdf_memo_records(const std::string &contents)
+        {
+            std::vector<std::string> records;
+            std::size_t start = 0U;
+            for (std::size_t index = 0U; index < contents.size(); ++index)
+            {
+                if (contents[index] != '\r' && contents[index] != '\n')
+                {
+                    continue;
+                }
+                records.push_back(contents.substr(start, index - start));
+                if (contents[index] == '\r' && index + 1U < contents.size() && contents[index + 1U] == '\n')
+                {
+                    ++index;
+                }
+                start = index + 1U;
+            }
+            if (start < contents.size())
+            {
+                records.push_back(contents.substr(start));
+            }
+            return records;
+        }
+
         std::vector<std::string_view> split_dif_sylk_records(const std::string &contents)
         {
             // Copperfin emits LF records, while native VFP9 emits CR records.
@@ -934,6 +958,90 @@
                 records.push_back(std::move(current));
             }
             return records;
+        }
+
+        bool delimited_text_has_valid_enclosures(
+            const std::string &contents,
+            const DelimitedTextOptions &options)
+        {
+            enum class FieldState
+            {
+                leading,
+                unquoted,
+                quoted,
+                after_quote,
+            };
+
+            FieldState state = FieldState::leading;
+            for (std::size_t index = 0U; index < contents.size(); ++index)
+            {
+                const char ch = contents[index];
+                const bool record_boundary = ch == '\r' || ch == '\n';
+                if (state == FieldState::quoted)
+                {
+                    if (ch != options.quote)
+                    {
+                        continue;
+                    }
+                    if (index + 1U < contents.size() && contents[index + 1U] == options.quote)
+                    {
+                        ++index;
+                    }
+                    else
+                    {
+                        state = FieldState::after_quote;
+                    }
+                    continue;
+                }
+                if (state == FieldState::after_quote)
+                {
+                    if (ch == options.delimiter || record_boundary)
+                    {
+                        state = FieldState::leading;
+                        if (ch == '\r' && index + 1U < contents.size() && contents[index + 1U] == '\n')
+                        {
+                            ++index;
+                        }
+                    }
+                    else if (!std::isspace(static_cast<unsigned char>(ch)))
+                    {
+                        return false;
+                    }
+                    continue;
+                }
+                if (state == FieldState::leading)
+                {
+                    if (ch == options.quote)
+                    {
+                        state = FieldState::quoted;
+                    }
+                    else if (ch == options.delimiter || record_boundary)
+                    {
+                        if (ch == '\r' && index + 1U < contents.size() && contents[index + 1U] == '\n')
+                        {
+                            ++index;
+                        }
+                    }
+                    else if (!std::isspace(static_cast<unsigned char>(ch)))
+                    {
+                        state = FieldState::unquoted;
+                    }
+                    continue;
+                }
+                if (ch == options.quote)
+                {
+                    return false;
+                }
+                if (ch == options.delimiter || record_boundary)
+                {
+                    state = FieldState::leading;
+                    if (ch == '\r' && index + 1U < contents.size() && contents[index + 1U] == '\n')
+                    {
+                        ++index;
+                    }
+                }
+            }
+            return state != FieldState::quoted;
         }
 
         std::string dif_escape_string(std::string value)

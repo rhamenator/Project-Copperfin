@@ -1,0 +1,1 @@
+- 2026-09-27: Added an explicit session compatibility mode for `APPEND FROM TYPE SDF` and `TYPE CSV` into Memo fields: VFP mode rejects before table mutation, while Copperfin's default extension safely imports complete SDF physical records and strictly quoted, newline-bearing CSV Memo values (#6609). `RQ-CF-PRG-TEXT-MEMO-IMPORT-001`.

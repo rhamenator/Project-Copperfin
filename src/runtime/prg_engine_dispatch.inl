@@ -10204,6 +10204,31 @@
 
                         const DelimitedTextOptions delimited_options =
                             parse_delimited_text_options(append_type, with_clause);
+                        const bool has_memo_target = std::any_of(
+                            filtered_target_fields.begin(), filtered_target_fields.end(),
+                            [](const vfp::DbfFieldDescriptor &field)
+                            {
+                                return std::toupper(static_cast<unsigned char>(field.type)) == 'M';
+                            });
+                        if (append_type == "csv" && has_memo_target &&
+                            options.text_memo_import_compatibility == RuntimeTextMemoImportCompatibility::vfp)
+                        {
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.AppendFromTextMemoVfpIncompatible",
+                                {{"type", "CSV"}});
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        if (append_type == "csv" && has_memo_target &&
+                            !delimited_text_has_valid_enclosures(csv_bytes, delimited_options))
+                        {
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.AppendFromTextMemoCsvMalformed");
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
                         std::size_t appended_count = 0U;
                         bool first_line = true;
                         for (const std::string &line : split_delimited_text_records(csv_bytes, delimited_options))
@@ -10544,6 +10569,30 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
+                    const bool has_memo_target = std::any_of(
+                        target_fields.begin(), target_fields.end(),
+                        [](const vfp::DbfFieldDescriptor &field)
+                        {
+                            return std::toupper(static_cast<unsigned char>(field.type)) == 'M';
+                        });
+                    if (has_memo_target &&
+                        options.text_memo_import_compatibility == RuntimeTextMemoImportCompatibility::vfp)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTextMemoVfpIncompatible",
+                            {{"type", "SDF"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    if (has_memo_target && target_fields.size() != 1U)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromSdfMemoMixedTargets");
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
                     if (!ensure_transaction_backup_for_table(cursor->source_path))
                     {
                         last_fault_location = statement.location;
@@ -10551,8 +10600,11 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
+                    const std::vector<std::string> sdf_records = has_memo_target
+                                                                     ? split_sdf_memo_records(buffer)
+                                                                     : split_sdf_lines(buffer);
                     std::size_t appended_count = 0U;
-                    for (const std::string &line : split_sdf_lines(buffer))
+                    for (const std::string &line : sdf_records)
                     {
                         const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
                         note_dbf_row_set_change(cursor->source_path);
@@ -10575,14 +10627,18 @@
                         std::size_t offset = 0U;
                         for (const auto &field : target_fields)
                         {
-                            const std::size_t sdf_width = sdf_text_field_width(field);
-                            const std::string raw_value = offset < line.size()
+                            const char field_type = static_cast<char>(
+                                std::toupper(static_cast<unsigned char>(field.type)));
+                            const std::size_t sdf_width = field_type == 'M'
+                                                              ? line.size()
+                                                              : sdf_text_field_width(field);
+                            const std::string raw_value = field_type == 'M'
+                                                              ? line
+                                                              : offset < line.size()
                                                               ? line.substr(offset, std::min<std::size_t>(sdf_width, line.size() - offset))
                                                               : std::string{};
                             offset += sdf_width;
                             std::string storage_value;
-                            const char field_type = static_cast<char>(
-                                std::toupper(static_cast<unsigned char>(field.type)));
                             if (field_type == 'Q')
                             {
                                 const auto decoded = decode_sdf_varbinary_value(raw_value);
@@ -11235,9 +11291,35 @@
 
                     std::vector<vfp::DbfFieldDescriptor> target_fields =
                         filter_field_descriptors(dest_result.table.fields, field_filter, true);
+                    const DelimitedTextOptions delimited_options = parse_delimited_text_options(append_type, with_clause);
                     const bool has_object_target = std::any_of(
                         target_fields.begin(), target_fields.end(),
                         text_export_omits_object_field);
+                    const bool has_memo_target = std::any_of(
+                        target_fields.begin(), target_fields.end(),
+                        [](const vfp::DbfFieldDescriptor &field)
+                        {
+                            return std::toupper(static_cast<unsigned char>(field.type)) == 'M';
+                        });
+                    if (append_type == "csv" && has_memo_target &&
+                        options.text_memo_import_compatibility == RuntimeTextMemoImportCompatibility::vfp)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTextMemoVfpIncompatible",
+                            {{"type", "CSV"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    if (append_type == "csv" && has_memo_target &&
+                        !delimited_text_has_valid_enclosures(buffer, delimited_options))
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTextMemoCsvMalformed");
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
                     // VFP gives its two text-import syntaxes distinct object
                     // field contracts. TYPE CSV makes no record mutation when
                     // a selected General/Picture/Blob field is present. DELIMITED
@@ -11274,8 +11356,6 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-
-                    const DelimitedTextOptions delimited_options = parse_delimited_text_options(append_type, with_clause);
                     std::size_t appended_count = 0U;
                     bool first_delimited_line = true;
                     for (const std::string &line : split_delimited_text_records(buffer, delimited_options))
