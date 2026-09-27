@@ -837,10 +837,11 @@
             bool header_row)
         {
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
-            if (!header_row && field_type == 'C')
+            if (!header_row && (field_type == 'C' || field_type == 'V'))
             {
-                // VFP removes fixed-width Character padding from DIF without
-                // stripping significant leading whitespace (#6646).
+                // VFP removes fixed-width Character padding and significant
+                // Varchar trailing spaces from DIF without stripping leading
+                // whitespace (#6646/#6650).
                 while (!value.empty() && value.back() == ' ')
                 {
                     value.pop_back();
@@ -1090,6 +1091,12 @@
                 {
                     value.append(field.length - source_width, ' ');
                 }
+                return value;
+            }
+            if (!header_row && field_type == 'V')
+            {
+                // Unlike fixed-width Character fields, Varchar cells use the
+                // stored payload length and retain all payload bytes in SYLK.
                 return value;
             }
             return trim_copy(value);

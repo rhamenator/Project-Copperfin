@@ -1641,6 +1641,44 @@ void test_dif_sylk_preserve_character_whitespace() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_dif_sylk_preserve_varchar_whitespace() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_dif_sylk_varchar_whitespace";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "TXT", .type = 'V', .length = 9U},
+    };
+    expect(copperfin::vfp::create_dbf_table_file(source_path.string(), fields, {{"  A  "}}).ok,
+           "#6650: Varchar whitespace source fixture should be created");
+
+    const fs::path dif_path = temp_root / "spaces.dif";
+    const fs::path sylk_path = temp_root / "spaces.slk";
+    const fs::path main_path = temp_root / "copy_to_dif_sylk_varchar_whitespace.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO '" + dif_path.string() + "' TYPE DIF\n"
+        "COPY TO '" + sylk_path.string() + "' TYPE SYLK\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6650: DIF/SYLK Varchar export should complete: " + state.message);
+
+    expect(read_text(dif_path).find("1,0\n\"  A\"\n") != std::string::npos,
+           "#6650: DIF must preserve leading Varchar whitespace while removing trailing spaces");
+    expect(read_text(sylk_path).find("C;Y2;X1;K\"  A  \"\n") != std::string::npos,
+           "#6650: SYLK must preserve the complete stored Varchar payload");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_delimited_export_omits_general_picture_fields() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_delimited_omitted_binary_objects";

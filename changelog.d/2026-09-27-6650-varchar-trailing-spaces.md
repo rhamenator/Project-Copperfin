@@ -1,0 +1,1 @@
+- 2026-09-27: Preserve significant trailing spaces in DBF Varchar fields during create, replacement, and read, while matching VFP9's format-specific whitespace behavior for DIF and SYLK exports (#6650).
