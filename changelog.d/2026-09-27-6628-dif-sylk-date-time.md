@@ -1,1 +1,1 @@
-- 2026-09-27: Fixed DIF and SYLK export of Date and DateTime fields to emit VFP9-compatible temporal cells instead of Copperfin's internal storage diagnostics (#6628).
+- 2026-09-27: Fixed DIF and SYLK export of Date and DateTime fields to emit VFP9-compatible temporal cells instead of Copperfin's internal storage diagnostics, including blank DateTimes and the Excel-1900 leap-day discontinuity (#6628).

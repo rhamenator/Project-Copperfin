@@ -3372,7 +3372,9 @@ void test_copy_to_dif_sylk_date_datetime_cells() {
     };
     expect(copperfin::vfp::create_dbf_table_file(
                source_path.string(), fields,
-               {{"20240229", "julian:2459668 millis:47655000"}}).ok,
+               {{"20240229", "julian:2459668 millis:47655000"},
+                {"", "julian:0 millis:0"},
+                {"19000101", "julian:2414319 millis:0"}}).ok,
            "#6628: leap-day Date/DateTime source fixture should be created");
 
     const fs::path dif_path = temp_root / "temporal.dif";
@@ -3398,6 +3400,8 @@ void test_copy_to_dif_sylk_date_datetime_cells() {
            "#6628: DIF DateTime should use VFP's printable SET DATE YMD representation (got '" + dif + "')");
     expect(dif.find("julian:") == std::string::npos,
            "#6628: DIF must not expose internal DateTime storage diagnostics");
+    expect(dif.find("1,0\n\"\"\n") != std::string::npos,
+           "#6628 review: DIF must serialize the zero DateTime sentinel as a blank cell");
 
     const std::string sylk = read_text(sylk_path);
     expect(sylk.find(";K\"20240229\"\n") != std::string::npos,
@@ -3406,6 +3410,10 @@ void test_copy_to_dif_sylk_date_datetime_cells() {
            "#6628: SYLK DateTime should use the legacy Excel serial payload (got '" + sylk + "')");
     expect(sylk.find("julian:") == std::string::npos,
            "#6628: SYLK must not expose internal DateTime storage diagnostics");
+    expect(sylk.find("C;Y3;X2;K\"\"\n") != std::string::npos,
+           "#6628 review: SYLK must serialize the zero DateTime sentinel as a blank cell");
+    expect(sylk.find("C;Y4;X2;K1\n") != std::string::npos,
+           "#6628 review: SYLK must map 1900-01-01 to Excel serial 1 without the later leap-day adjustment");
 
     fs::remove_all(temp_root, ignored);
 }

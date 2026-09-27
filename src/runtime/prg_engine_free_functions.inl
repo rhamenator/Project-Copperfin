@@ -994,6 +994,14 @@
             return formatted.str();
         }
 
+        bool is_blank_dif_sylk_datetime(const std::string &value)
+        {
+            // The DBF decoder exposes VFP's all-zero DateTime storage as this
+            // canonical diagnostic token.  It is a blank value, never text to
+            // expose in an interchange artifact.
+            return trim_copy(value) == "julian:0 millis:0";
+        }
+
         std::string format_sylk_datetime_serial(const std::string &value)
         {
             int year = 0;
@@ -1006,10 +1014,15 @@
             {
                 return value;
             }
-            // SYLK uses Excel's 1900 date system.  The 1899-12-30 epoch
-            // includes Excel's compatibility-only 1900-02-29 serial.
-            const double serial = static_cast<double>(date_to_julian(year, month, day) -
-                                                       date_to_julian(1899, 12, 30)) +
+            // SYLK uses Excel's 1900 date system.  Excel reserves serial 60
+            // for its compatibility-only 1900-02-29, so real dates from
+            // 1900-03-01 onward need the extra day while earlier ones do not.
+            int serial_day = date_to_julian(year, month, day) - date_to_julian(1899, 12, 31);
+            if (date_to_julian(year, month, day) >= date_to_julian(1900, 3, 1))
+            {
+                ++serial_day;
+            }
+            const double serial = static_cast<double>(serial_day) +
                                   static_cast<double>(((hour * 60) + minute) * 60 + second) / 86400.0;
             std::ostringstream formatted;
             formatted.imbue(std::locale::classic());
@@ -1103,6 +1116,11 @@
                     }
                     if (!header_row && !is_null && field_type == 'T' && !value.empty())
                     {
+                        if (is_blank_dif_sylk_datetime(value))
+                        {
+                            dif << "1,0\n\"\"\n";
+                            continue;
+                        }
                         dif << "1,0\n\"" << dif_escape_string(format_dif_datetime(value)) << "\"\n";
                         continue;
                     }
@@ -1395,6 +1413,11 @@
                     }
                     if (!header_row && !is_null && field_type == 'T' && !value.empty())
                     {
+                        if (is_blank_dif_sylk_datetime(value))
+                        {
+                            sylk << "\"\"\n";
+                            continue;
+                        }
                         sylk << format_sylk_datetime_serial(value) << "\n";
                         continue;
                     }
