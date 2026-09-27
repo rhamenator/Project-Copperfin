@@ -255,6 +255,14 @@ enum class RuntimePolyglotDispatchSelection {
     candidate,
 };
 
+// Text APPEND FROM sources cannot represent DBF Memo fields with VFP's fixed
+// width SDF contract. Hosts choose whether to preserve VFP rejection semantics
+// or opt into Copperfin's newline-safe SDF/CSV Memo extension per session.
+enum class RuntimeTextMemoImportCompatibility {
+    copperfin_extension,
+    vfp,
+};
+
 struct RuntimePolyglotDispatchRequest {
     std::string capability_id;
     std::string arguments_json;
@@ -306,6 +314,10 @@ struct RuntimeSessionOptions {
     // Windows is the only modeled OptionGroup keyboard contract. DOS remains
     // explicit and unsupported until its distinct navigation semantics land.
     RuntimeKeyboardCompatibility keyboard_compatibility = RuntimeKeyboardCompatibility::windows;
+    // Preserve Copperfin's established text-to-Memo import profile unless a
+    // host explicitly requests VFP-compatible rejection for this session.
+    RuntimeTextMemoImportCompatibility text_memo_import_compatibility =
+        RuntimeTextMemoImportCompatibility::copperfin_extension;
     RushmorePlanningOptions rushmore_planning{};
     // Optional host-owned bridge for CFPOLYGLOTDISPATCH(). The runtime invokes
     // it synchronously on the current PRG task with immutable request data.

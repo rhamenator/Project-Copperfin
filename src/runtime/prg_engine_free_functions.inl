@@ -936,6 +936,90 @@
             return records;
         }
 
+        bool delimited_text_has_valid_enclosures(
+            const std::string &contents,
+            const DelimitedTextOptions &options)
+        {
+            enum class FieldState
+            {
+                leading,
+                unquoted,
+                quoted,
+                after_quote,
+            };
+
+            FieldState state = FieldState::leading;
+            for (std::size_t index = 0U; index < contents.size(); ++index)
+            {
+                const char ch = contents[index];
+                const bool record_boundary = ch == '\r' || ch == '\n';
+                if (state == FieldState::quoted)
+                {
+                    if (ch != options.quote)
+                    {
+                        continue;
+                    }
+                    if (index + 1U < contents.size() && contents[index + 1U] == options.quote)
+                    {
+                        ++index;
+                    }
+                    else
+                    {
+                        state = FieldState::after_quote;
+                    }
+                    continue;
+                }
+                if (state == FieldState::after_quote)
+                {
+                    if (ch == options.delimiter || record_boundary)
+                    {
+                        state = FieldState::leading;
+                        if (ch == '\r' && index + 1U < contents.size() && contents[index + 1U] == '\n')
+                        {
+                            ++index;
+                        }
+                    }
+                    else if (!std::isspace(static_cast<unsigned char>(ch)))
+                    {
+                        return false;
+                    }
+                    continue;
+                }
+                if (state == FieldState::leading)
+                {
+                    if (ch == options.quote)
+                    {
+                        state = FieldState::quoted;
+                    }
+                    else if (ch == options.delimiter || record_boundary)
+                    {
+                        if (ch == '\r' && index + 1U < contents.size() && contents[index + 1U] == '\n')
+                        {
+                            ++index;
+                        }
+                    }
+                    else if (!std::isspace(static_cast<unsigned char>(ch)))
+                    {
+                        state = FieldState::unquoted;
+                    }
+                    continue;
+                }
+                if (ch == options.quote)
+                {
+                    return false;
+                }
+                if (ch == options.delimiter || record_boundary)
+                {
+                    state = FieldState::leading;
+                    if (ch == '\r' && index + 1U < contents.size() && contents[index + 1U] == '\n')
+                    {
+                        ++index;
+                    }
+                }
+            }
+            return state != FieldState::quoted;
+        }
+
         std::string dif_escape_string(std::string value)
         {
             std::string escaped;

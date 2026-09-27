@@ -2334,6 +2334,132 @@ void test_append_from_type_sdf_uses_vfp_logical_tokens() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_text_memo_compatibility_modes() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_text_memo_import_modes";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> memo_fields{
+        {.name = "NOTES", .type = 'M', .length = 4U},
+    };
+    expect(copperfin::runtime::RuntimeSessionOptions{}.text_memo_import_compatibility ==
+               copperfin::runtime::RuntimeTextMemoImportCompatibility::copperfin_extension,
+           "#6609: the documented default must preserve Copperfin's established Memo import extension");
+    const auto run_import = [&](const std::string &name,
+                                const std::string &type,
+                                const std::string &source_text,
+                                copperfin::runtime::RuntimeTextMemoImportCompatibility compatibility) {
+        const fs::path destination_path = temp_root / (name + ".dbf");
+        const fs::path source_path = temp_root / (name + ".txt");
+        const fs::path script_path = temp_root / (name + ".prg");
+        expect(copperfin::vfp::create_dbf_table_file(destination_path.string(), memo_fields, {}).ok,
+               "#6609: Memo import destination fixture should be created");
+        write_text(source_path, source_text);
+        write_text(
+            script_path,
+            "USE '" + destination_path.string() + "'\n"
+            "APPEND FROM '" + source_path.string() + "' TYPE " + type + " FIELDS NOTES\n"
+            "RETURN\n");
+        auto options = make_runtime_session_options(script_path.string(), temp_root.string(), false);
+        options.text_memo_import_compatibility = compatibility;
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(options);
+        return std::pair{session.run(copperfin::runtime::DebugResumeAction::continue_run), destination_path};
+    };
+
+    for (const std::string type : {"SDF", "CSV"}) {
+        const std::string name = "vfp_" + type;
+        const fs::path expected_dbf = temp_root / (name + ".dbf");
+        const fs::path expected_fpt = temp_root / (name + ".fpt");
+        expect(copperfin::vfp::create_dbf_table_file(expected_dbf.string(), memo_fields, {}).ok,
+               "#6609: VFP rejection fixture should be created");
+        const std::string dbf_before = read_text(expected_dbf);
+        const std::string fpt_before = read_text(expected_fpt);
+        fs::remove(expected_dbf, ignored);
+        fs::remove(expected_fpt, ignored);
+
+        const auto [state, destination_path] = run_import(
+            name,
+            type,
+            type == "CSV" ? "NOTES\r\n\"blocked\"\r\n" : "blocked\r\n",
+            copperfin::runtime::RuntimeTextMemoImportCompatibility::vfp);
+        expect(!state.completed && state.message.find("VFP-compatible") != std::string::npos,
+               "#6609: VFP-compatible " + type + " Memo import should fail catchably before mutation: " + state.message);
+        fs::path destination_fpt = destination_path;
+        destination_fpt.replace_extension(".fpt");
+        expect(read_text(destination_path) == dbf_before && read_text(destination_fpt) == fpt_before,
+               "#6609: VFP-compatible " + type + " Memo rejection must preserve exact DBF/FPT bytes");
+    }
+
+    const auto [sdf_state, sdf_path] = run_import(
+        "extension_sdf",
+        "SDF",
+        "the complete memo value\r\n",
+        copperfin::runtime::RuntimeTextMemoImportCompatibility::copperfin_extension);
+    expect(sdf_state.completed, "#6609: Copperfin SDF Memo extension should complete: " + sdf_state.message);
+    const auto sdf_result = copperfin::vfp::parse_dbf_table_from_file(sdf_path.string(), 5U);
+    expect(sdf_result.ok && sdf_result.table.records.size() == 1U &&
+               sdf_result.table.records[0U].values[0U].display_value == "the complete memo value",
+           "#6609: SDF Memo extension should store the full physical record, not the four-byte pointer width");
+
+    const std::string quoted_memo = "line one \"quoted\"\r\nline two";
+    const auto [csv_state, csv_path] = run_import(
+        "extension_csv",
+        "CSV",
+        "NOTES\r\n\"line one \"\"quoted\"\"\r\nline two\"\r\n",
+        copperfin::runtime::RuntimeTextMemoImportCompatibility::copperfin_extension);
+    expect(csv_state.completed, "#6609: Copperfin CSV Memo extension should complete: " + csv_state.message);
+    const auto csv_result = copperfin::vfp::parse_dbf_table_from_file(csv_path.string(), 5U);
+    expect(csv_result.ok && csv_result.table.records.size() == 1U &&
+               csv_result.table.records[0U].values[0U].display_value == quoted_memo,
+           "#6609: quoted CSV Memo should preserve doubled quotes and embedded CRLF in one record");
+
+    const auto [bad_state, bad_path] = run_import(
+        "malformed_csv",
+        "CSV",
+        "NOTES\r\n\"valid\"\r\n\"unterminated\r\n",
+        copperfin::runtime::RuntimeTextMemoImportCompatibility::copperfin_extension);
+    expect(!bad_state.completed && bad_state.message.find("malformed quoted Memo") != std::string::npos,
+           "#6609: malformed quoted CSV Memo input should report the dedicated catchable diagnostic");
+    const auto bad_result = copperfin::vfp::parse_dbf_table_from_file(bad_path.string(), 5U);
+    expect(bad_result.ok && bad_result.table.records.empty(),
+           "#6609: malformed CSV Memo input must reject atomically before appending its valid prefix");
+
+    const auto [placement_state, placement_path] = run_import(
+        "invalid_quote_placement_csv",
+        "CSV",
+        "NOTES\r\nunquoted\"quote\r\n",
+        copperfin::runtime::RuntimeTextMemoImportCompatibility::copperfin_extension);
+    expect(!placement_state.completed && placement_state.message.find("malformed quoted Memo") != std::string::npos,
+           "#6609: a quote inside an unquoted CSV Memo field should report the dedicated diagnostic");
+    const auto placement_result = copperfin::vfp::parse_dbf_table_from_file(placement_path.string(), 5U);
+    expect(placement_result.ok && placement_result.table.records.empty(),
+           "#6609: invalid quote placement must reject before DBF/FPT mutation");
+
+    const fs::path character_path = temp_root / "vfp_character.dbf";
+    expect(copperfin::vfp::create_dbf_table_file(
+               character_path.string(), {{.name = "NAME", .type = 'C', .length = 12U}}, {}).ok,
+           "#6609: unrelated Character import fixture should be created");
+    const fs::path character_source = temp_root / "vfp_character.txt";
+    const fs::path character_script = temp_root / "vfp_character.prg";
+    write_text(character_source, "still works \r\n");
+    write_text(character_script,
+               "USE '" + character_path.string() + "'\nAPPEND FROM '" + character_source.string() +
+                   "' TYPE SDF\nRETURN\n");
+    auto character_options = make_runtime_session_options(character_script.string(), temp_root.string(), false);
+    character_options.text_memo_import_compatibility =
+        copperfin::runtime::RuntimeTextMemoImportCompatibility::vfp;
+    auto character_session = copperfin::runtime::PrgRuntimeSession::create(character_options);
+    const auto character_state = character_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    const auto character_result = copperfin::vfp::parse_dbf_table_from_file(character_path.string(), 5U);
+    expect(character_state.completed && character_result.ok && character_result.table.records.size() == 1U,
+           "#6609: the session policy must not affect text imports without selected Memo targets");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_type_sdf_uses_printable_binary_numeric_widths() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_sdf_binary_numeric_widths";
