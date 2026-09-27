@@ -2444,13 +2444,40 @@ void test_sdf_autoincrement_uses_vfp_printable_width() {
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "ID", .type = '+', .length = 4U},
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> storage_fields{
+        {.name = "ID", .type = 'I', .length = 4U},
         {.name = "TAIL", .type = 'C', .length = 3U},
     };
+    expect(!copperfin::vfp::create_dbf_table_file(
+                (temp_root / "unsupported-created-plus.dbf").string(),
+                {{.name = "ID", .type = '+', .length = 4U}},
+                {}).ok,
+           "#6612: generic schema creation must not advertise Autoincrement without 0x31 metadata support");
+    const auto patch_vfp_autoincrement = [&](const fs::path &path, const std::uint32_t next_value) {
+        std::fstream table(path, std::ios::binary | std::ios::in | std::ios::out);
+        expect(table.good(), "#6612: VFP Autoincrement fixture should open for metadata patching");
+        const char version = static_cast<char>(0x31U);
+        table.seekp(0);
+        table.write(&version, 1);
+        const char field_type = '+';
+        table.seekp(32 + 11);
+        table.write(&field_type, 1);
+        const std::array<char, 5U> autoincrement_metadata{
+            static_cast<char>(next_value & 0xffU),
+            static_cast<char>((next_value >> 8U) & 0xffU),
+            static_cast<char>((next_value >> 16U) & 0xffU),
+            static_cast<char>((next_value >> 24U) & 0xffU),
+            static_cast<char>(1U),
+        };
+        table.seekp(32 + 19);
+        table.write(autoincrement_metadata.data(), static_cast<std::streamsize>(autoincrement_metadata.size()));
+        table.flush();
+        expect(table.good(), "#6612: VFP Autoincrement fixture metadata patch should succeed");
+    };
     const fs::path source_path = temp_root / "source.dbf";
-    expect(copperfin::vfp::create_dbf_table_file(source_path.string(), fields, {{"1", "END"}}).ok,
-           "#6612: VFP Autoincrement SDF source fixture should be created");
+    expect(copperfin::vfp::create_dbf_table_file(source_path.string(), storage_fields, {{"1", "END"}}).ok,
+           "#6612: VFP Autoincrement SDF source storage fixture should be created");
+    patch_vfp_autoincrement(source_path, 2U);
 
     const fs::path sdf_path = temp_root / "data.txt";
     const fs::path export_main = temp_root / "export.prg";
@@ -2467,8 +2494,9 @@ void test_sdf_autoincrement_uses_vfp_printable_width() {
            "#6612: SDF must use an 11-character left-padded Autoincrement column");
 
     const fs::path destination_path = temp_root / "destination.dbf";
-    expect(copperfin::vfp::create_dbf_table_file(destination_path.string(), fields, {}).ok,
-           "#6612: VFP Autoincrement SDF destination fixture should be created");
+    expect(copperfin::vfp::create_dbf_table_file(destination_path.string(), storage_fields, {}).ok,
+           "#6612: VFP Autoincrement SDF destination storage fixture should be created");
+    patch_vfp_autoincrement(destination_path, 1U);
     const fs::path import_main = temp_root / "import.prg";
     write_text(import_main,
         "USE '" + destination_path.string() + "'\n"
@@ -2486,6 +2514,13 @@ void test_sdf_autoincrement_uses_vfp_printable_width() {
         expect(values.size() >= 2U && values[0U].display_value == "1" && values[1U].display_value == "END",
                "#6612: SDF import must consume the 11-character Autoincrement column before Character data");
     }
+    std::ifstream imported_bytes(destination_path, std::ios::binary);
+    imported_bytes.seekg(97 + 1);
+    std::array<unsigned char, 4U> raw_id{};
+    imported_bytes.read(reinterpret_cast<char *>(raw_id.data()), static_cast<std::streamsize>(raw_id.size()));
+    expect(imported_bytes.gcount() == static_cast<std::streamsize>(raw_id.size()) &&
+               raw_id == std::array<unsigned char, 4U>{0x01U, 0x00U, 0x00U, 0x00U},
+           "#6612: SDF import must write VFP Autoincrement data as little-endian signed 32-bit bytes");
 
     fs::remove_all(temp_root, ignored);
 }

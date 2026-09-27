@@ -799,7 +799,7 @@ void apply_null_flag_bit(
 
 bool supports_direct_field_writes(char field_type) {
     return field_type == 'C' || field_type == 'N' || field_type == 'F' || field_type == 'L' || field_type == 'D' || field_type == 'B' || field_type == 'I' ||
-           field_type == '+' || field_type == 'Y' || field_type == 'T' || field_type == 'V' || field_type == 'Q';
+           field_type == 'Y' || field_type == 'T' || field_type == 'V' || field_type == 'Q';
 }
 
 bool is_memo_pointer_field(char field_type) {
@@ -1487,7 +1487,6 @@ DbfWriteResult fill_blank_record_fields(
                 break;
             case 'B':
             case 'I':
-            case '+':
             case 'Y':
             case 'T':
             case 'M':
@@ -2144,7 +2143,7 @@ bool is_dbf_table_field_storage_layout_writable(char type, std::uint8_t length) 
     if (type == 'B') {
         return length == 8U;
     }
-    if (type == 'I' || type == '+') {
+    if (type == 'I') {
         return length == 4U;
     }
     if (type == 'Y' || type == 'T') {
