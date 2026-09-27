@@ -2,11 +2,16 @@
 
 ## Last shipped slice
 
-Issue #6636 (PR #6663, merge `21ba05355`) finished 2026-09-27: nullable DIF
-numeric, Character, and Logical cells now match VFP9, while SYLK emits blank
-`K` cells without shifting later fields. Review added explicit stale-physical-
-byte protection for nullable Character/Varchar fields. Focused and hosted
-checks passed; all review conversations were resolved.
+Issue #6623 (PR #6664, merge `91c0f7165`) finished 2026-09-27: blank SDF
+Numeric/Float cells now import as non-NULL zero at the target field's scale,
+including nullable Numeric targets, without shifting later fields. Focused and
+hosted checks passed; all review conversations were resolved.
+
+Earlier: issue #6636 (PR #6663, merge `21ba05355`) finished 2026-09-27:
+nullable DIF numeric, Character, and Logical cells now match VFP9, while SYLK
+emits blank `K` cells without shifting later fields. Review added explicit
+stale-physical-byte protection for nullable Character/Varchar fields. Focused
+and hosted checks passed; all review conversations were resolved.
 
 Earlier: issue #6609 (PR #6662, merge `c3e62e4e7`) finished 2026-09-27:
 text-to-Memo SDF/CSV imports now use an explicit session-scoped VFP/Copperfin
@@ -87,12 +92,12 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Issue #6623: make blank fixed-width SDF Numeric/Float source cells import as
-non-NULL zero, including nullable Numeric targets, without shifting following
-fields. Branch `codex/implement-6623-sdf-blank-numeric` contains the focused
-normalization, regression, and traceability work. PR #6664 is open against
-`v1-development`; focused checks pass, and review fixes for Float scale
-preservation and handoff status are in progress.
+Issue #6604: make SDF export emit VFP-compatible uppercase `T`/`F` bytes for
+Logical values while preserving adjacent Numeric formatting. Branch
+`codex/implement-6604-sdf-logical-tokens` contains the focused serializer,
+byte-level regression, and traceability work. PR #6666 is open against
+`v1-development`; focused verification passes, and review fixes are in
+progress while hosted validation completes.
 
 ## Workspace preservation
 

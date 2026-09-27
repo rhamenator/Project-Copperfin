@@ -1141,6 +1141,40 @@ void test_copy_to_type_sdf_writes_fixed_width_text_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_copy_to_type_sdf_uses_uppercase_logical_tokens() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_sdf_logical_tokens";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "l", .type = 'L', .length = 1U},
+        {.name = "n", .type = 'N', .length = 4U},
+    };
+    expect(copperfin::vfp::create_dbf_table_file(
+               source_path.string(), fields, {{"true", "12"}, {"false", "34"}}).ok,
+           "#6604: SDF Logical export source fixture should be created");
+
+    const fs::path destination_path = temp_root / "logical.sdf";
+    const fs::path main_path = temp_root / "copy_to_sdf_logical_tokens.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO '" + destination_path.string() + "' TYPE SDF\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6604: SDF Logical export should complete: " + state.message);
+    expect(fs::exists(destination_path) && read_text(destination_path) == "T  12\r\nF  34\r\n",
+           "#6604: SDF must emit uppercase T/F while retaining Numeric field formatting");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_to_type_sdf_preserves_character_whitespace() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_sdf_character_whitespace";
@@ -2905,10 +2939,9 @@ void test_sdf_datetime_layout_round_trips_and_blanks_non_vfp_values() {
     expect(copy_state.completed, "#6603: COPY TO SDF should serialize temporal values: " + copy_state.message);
     if (fs::exists(sdf_path)) {
         const std::string sdf_contents = read_text(sdf_path);
-        // #6604 separately tracks the lower-case Logical token; keep that
-        // known defect explicit while asserting every byte covered by this
-        // temporal-layout contract.
-        expect(sdf_contents == "01/02/2025 03:04:05" "20250102" "   12.30" "t\r\n",
+        // #6604 requires the uppercase Logical token alongside the temporal
+        // and Numeric bytes covered by this complete row-layout contract.
+        expect(sdf_contents == "01/02/2025 03:04:05" "20250102" "   12.30" "T\r\n",
                "#6603: COPY TO SDF must preserve the complete VFP-shaped temporal row layout: " + sdf_contents);
     } else {
         expect(false, "#6603: COPY TO SDF should create the temporal destination");
