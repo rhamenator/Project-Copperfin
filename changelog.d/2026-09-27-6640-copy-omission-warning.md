@@ -1,0 +1,1 @@
+- 2026-09-27: `COPY TO` interchange exports now emit one localized, structured `runtime.warning` after a successful export that intentionally omits selected fields, identifying the output type and omitted field names/types without disclosing payloads (#6640).

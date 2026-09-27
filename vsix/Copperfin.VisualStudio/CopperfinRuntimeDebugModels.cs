@@ -72,6 +72,7 @@ internal sealed class CopperfinRuntimeEvent
     public string Category { get; set; } = string.Empty;
     public string Detail { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
+    public Dictionary<string, string> Metadata { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }
 
 internal sealed class CopperfinRuntimeWatch

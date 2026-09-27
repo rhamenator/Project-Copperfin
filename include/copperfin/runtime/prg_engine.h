@@ -88,6 +88,7 @@ struct RuntimeEvent {
     std::string category;
     std::string detail;
     SourceLocation location{};
+    std::map<std::string, std::string> metadata{};
 };
 
 enum class DiagnosticSeverity {

@@ -2378,9 +2378,14 @@ void print_pause_state(
     }
     for (std::size_t index = 0; index < state.events.size(); ++index) {
         const auto& event = state.events[index];
-        std::cout << "debug.event[" << index << "].category: " << event.category << "\n";
-        std::cout << "debug.event[" << index << "].detail: " << event.detail << "\n";
-        std::cout << "debug.event[" << index << "].location: " << event.location.file_path << ":" << event.location.line << "\n";
+        std::cout << "debug.event[" << index << "].category: " << escape_debug_line_value(event.category) << "\n";
+        std::cout << "debug.event[" << index << "].detail: " << escape_debug_line_value(event.detail) << "\n";
+        std::cout << "debug.event[" << index << "].location: "
+                  << escape_debug_line_value(event.location.file_path) << ":" << event.location.line << "\n";
+        for (const auto& [key, value] : event.metadata) {
+            std::cout << "debug.event[" << index << "].metadata." << key << ": "
+                      << escape_debug_line_value(value) << "\n";
+        }
     }
 }
 
@@ -4523,6 +4528,17 @@ int run_runtime_host_main_impl(int argc, char** argv) {
         std::cout << "runtime.waiting_for_events: " << (state.waiting_for_events ? "true" : "false") << "\n";
         std::cout << "runtime.reason: " << copperfin::runtime::debug_pause_reason_name(state.reason) << "\n";
         std::cout << "runtime.executed.statements: " << state.executed_statement_count << "\n";
+        for (std::size_t index = 0; index < state.events.size(); ++index) {
+            const auto& event = state.events[index];
+            std::cout << "runtime.event[" << index << "].category: " << escape_debug_line_value(event.category) << "\n";
+            std::cout << "runtime.event[" << index << "].detail: " << escape_debug_line_value(event.detail) << "\n";
+            std::cout << "runtime.event[" << index << "].location: "
+                      << escape_debug_line_value(event.location.file_path) << ":" << event.location.line << "\n";
+            for (const auto& [key, value] : event.metadata) {
+                std::cout << "runtime.event[" << index << "].metadata." << key << ": "
+                          << escape_debug_line_value(value) << "\n";
+            }
+        }
     }
 
     if (security_enabled && !audit_log_path.empty()) {
