@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "39a29cac-7a86-47ee-99f6-593f7ffcb866", "text": "Opened PR #6645 for #6632: COPY TO DIF/SYLK now omits Memo columns in unfiltered and explicit FIELDS exports. Focused data-I/O test, changelog validation, and channel verification pass; CI and automated review are running.", "to": ["both"], "ts": "2026-09-27T02:47:47Z", "type": "status"}
