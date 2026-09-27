@@ -63,8 +63,9 @@ Issue #6628: match VFP9 Date/DateTime cells in DIF and SYLK export. Branch
 `codex/implement-6628-dif-sylk-date-time` converts Date to each format's
 native `YYYYMMDD` cell and DateTime to printable DIF text or an Excel-1900
 SYLK serial, preventing leakage of Copperfin's internal storage diagnostics.
-Focused data-I/O verification is in progress; next steps are commit, push,
-open the PR, and complete hosted review/CI.
+Focused data-I/O verification passes. Signed head `5f152059c` is open as PR
+#6659 against `v1-development`; next steps are hosted review/CI, any verified
+review response, and merge once every required check and conversation clears.
 
 ## Workspace preservation
 
