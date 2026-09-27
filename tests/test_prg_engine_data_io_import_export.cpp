@@ -2347,6 +2347,9 @@ void test_append_from_text_memo_compatibility_modes() {
     expect(copperfin::runtime::RuntimeSessionOptions{}.text_memo_import_compatibility ==
                copperfin::runtime::RuntimeTextMemoImportCompatibility::copperfin_extension,
            "#6609: the documented default must preserve Copperfin's established Memo import extension");
+    const auto active_catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        copperfin::localization::select_locale());
     const auto run_import = [&](const std::string &name,
                                 const std::string &type,
                                 const std::string &source_text,
@@ -2385,13 +2388,51 @@ void test_append_from_text_memo_compatibility_modes() {
             type,
             type == "CSV" ? "NOTES\r\n\"blocked\"\r\n" : "blocked\r\n",
             copperfin::runtime::RuntimeTextMemoImportCompatibility::vfp);
-        expect(!state.completed && state.message.find("VFP-compatible") != std::string::npos,
+        const std::string expected_message = active_catalog.translate(
+            "Runtime.Prg.Dispatch.Error.AppendFromTextMemoVfpIncompatible", {{"type", type}});
+        expect(!state.completed && state.message == expected_message,
                "#6609: VFP-compatible " + type + " Memo import should fail catchably before mutation: " + state.message);
         fs::path destination_fpt = destination_path;
         destination_fpt.replace_extension(".fpt");
         expect(read_text(destination_path) == dbf_before && read_text(destination_fpt) == fpt_before,
                "#6609: VFP-compatible " + type + " Memo rejection must preserve exact DBF/FPT bytes");
     }
+
+    const auto run_memo_object_csv = [&](const std::string &name,
+                                         const std::string &source_text,
+                                         copperfin::runtime::RuntimeTextMemoImportCompatibility compatibility) {
+        const fs::path destination_path = temp_root / (name + ".dbf");
+        const fs::path source_path = temp_root / (name + ".csv");
+        const fs::path script_path = temp_root / (name + ".prg");
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "NOTES", .type = 'M', .length = 4U},
+            {.name = "OBJECT", .type = 'G', .length = 4U},
+        };
+        expect(copperfin::vfp::create_dbf_table_file(destination_path.string(), fields, {}).ok,
+               "#6609 review: Memo/General CSV destination fixture should be created");
+        write_text(source_path, source_text);
+        write_text(script_path,
+                   "USE '" + destination_path.string() + "'\nAPPEND FROM '" + source_path.string() +
+                       "' TYPE CSV FIELDS NOTES, OBJECT\nRETURN\n");
+        auto options = make_runtime_session_options(script_path.string(), temp_root.string(), false);
+        options.text_memo_import_compatibility = compatibility;
+        auto session = copperfin::runtime::PrgRuntimeSession::create(options);
+        return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    };
+    const auto object_vfp_state = run_memo_object_csv(
+        "vfp_memo_object_csv",
+        "NOTES,OBJECT\r\n\"blocked\",\"\"\r\n",
+        copperfin::runtime::RuntimeTextMemoImportCompatibility::vfp);
+    expect(object_vfp_state.message == active_catalog.translate(
+               "Runtime.Prg.Dispatch.Error.AppendFromTextMemoVfpIncompatible", {{"type", "CSV"}}),
+           "#6609 review: Memo policy must run before the native CSV object-target no-op");
+    const auto object_malformed_state = run_memo_object_csv(
+        "malformed_memo_object_csv",
+        "NOTES,OBJECT\r\n\"unterminated,\"\"\r\n",
+        copperfin::runtime::RuntimeTextMemoImportCompatibility::copperfin_extension);
+    expect(object_malformed_state.message == active_catalog.translate(
+               "Runtime.Prg.Dispatch.Error.AppendFromTextMemoCsvMalformed"),
+           "#6609 review: malformed Memo CSV preflight must run before the object-target no-op");
 
     const auto [sdf_state, sdf_path] = run_import(
         "extension_sdf",
@@ -2403,6 +2444,47 @@ void test_append_from_text_memo_compatibility_modes() {
     expect(sdf_result.ok && sdf_result.table.records.size() == 1U &&
                sdf_result.table.records[0U].values[0U].display_value == "the complete memo value",
            "#6609: SDF Memo extension should store the full physical record, not the four-byte pointer width");
+
+    const auto [empty_sdf_state, empty_sdf_path] = run_import(
+        "extension_empty_sdf",
+        "SDF",
+        "\r\n",
+        copperfin::runtime::RuntimeTextMemoImportCompatibility::copperfin_extension);
+    const auto empty_sdf_result = copperfin::vfp::parse_dbf_table_from_file(empty_sdf_path.string(), 5U);
+    expect(empty_sdf_state.completed && empty_sdf_result.ok && empty_sdf_result.table.records.size() == 1U &&
+               empty_sdf_result.table.records[0U].values[0U].display_value.empty(),
+           "#6609: an empty SDF physical record should append one record with an empty Memo value");
+
+    const auto [cr_sdf_state, cr_sdf_path] = run_import(
+        "extension_cr_sdf",
+        "SDF",
+        "first\rsecond\r",
+        copperfin::runtime::RuntimeTextMemoImportCompatibility::copperfin_extension);
+    const auto cr_sdf_result = copperfin::vfp::parse_dbf_table_from_file(cr_sdf_path.string(), 5U);
+    expect(cr_sdf_state.completed && cr_sdf_result.ok && cr_sdf_result.table.records.size() == 2U &&
+               cr_sdf_result.table.records[0U].values[0U].display_value == "first" &&
+               cr_sdf_result.table.records[1U].values[0U].display_value == "second",
+           "#6609: lone CR must delimit SDF Memo records instead of entering either Memo payload");
+
+    const fs::path mixed_sdf_path = temp_root / "mixed_sdf.dbf";
+    const fs::path mixed_sdf_source = temp_root / "mixed_sdf.txt";
+    const fs::path mixed_sdf_script = temp_root / "mixed_sdf.prg";
+    expect(copperfin::vfp::create_dbf_table_file(
+               mixed_sdf_path.string(),
+               {{.name = "NOTES", .type = 'M', .length = 4U},
+                {.name = "CODE", .type = 'C', .length = 2U}},
+               {}).ok,
+           "#6609: mixed SDF Memo target fixture should be created");
+    write_text(mixed_sdf_source, "unsafe boundary\r\n");
+    write_text(mixed_sdf_script,
+               "USE '" + mixed_sdf_path.string() + "'\nAPPEND FROM '" + mixed_sdf_source.string() +
+                   "' TYPE SDF\nRETURN\n");
+    auto mixed_sdf_options = make_runtime_session_options(mixed_sdf_script.string(), temp_root.string(), false);
+    auto mixed_sdf_session = copperfin::runtime::PrgRuntimeSession::create(mixed_sdf_options);
+    const auto mixed_sdf_state = mixed_sdf_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(mixed_sdf_state.message == active_catalog.translate(
+               "Runtime.Prg.Dispatch.Error.AppendFromSdfMemoMixedTargets"),
+           "#6609: mixed SDF Memo rejection should use the active catalog's dedicated diagnostic");
 
     const std::string quoted_memo = "line one \"quoted\"\r\nline two";
     const auto [csv_state, csv_path] = run_import(
@@ -2421,7 +2503,9 @@ void test_append_from_text_memo_compatibility_modes() {
         "CSV",
         "NOTES\r\n\"valid\"\r\n\"unterminated\r\n",
         copperfin::runtime::RuntimeTextMemoImportCompatibility::copperfin_extension);
-    expect(!bad_state.completed && bad_state.message.find("malformed quoted Memo") != std::string::npos,
+    const std::string expected_malformed_message = active_catalog.translate(
+        "Runtime.Prg.Dispatch.Error.AppendFromTextMemoCsvMalformed");
+    expect(!bad_state.completed && bad_state.message == expected_malformed_message,
            "#6609: malformed quoted CSV Memo input should report the dedicated catchable diagnostic");
     const auto bad_result = copperfin::vfp::parse_dbf_table_from_file(bad_path.string(), 5U);
     expect(bad_result.ok && bad_result.table.records.empty(),
@@ -2432,7 +2516,7 @@ void test_append_from_text_memo_compatibility_modes() {
         "CSV",
         "NOTES\r\nunquoted\"quote\r\n",
         copperfin::runtime::RuntimeTextMemoImportCompatibility::copperfin_extension);
-    expect(!placement_state.completed && placement_state.message.find("malformed quoted Memo") != std::string::npos,
+    expect(!placement_state.completed && placement_state.message == expected_malformed_message,
            "#6609: a quote inside an unquoted CSV Memo field should report the dedicated diagnostic");
     const auto placement_result = copperfin::vfp::parse_dbf_table_from_file(placement_path.string(), 5U);
     expect(placement_result.ok && placement_result.table.records.empty(),

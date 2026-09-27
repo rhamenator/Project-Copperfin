@@ -10600,8 +10600,11 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
+                    const std::vector<std::string> sdf_records = has_memo_target
+                                                                     ? split_sdf_memo_records(buffer)
+                                                                     : split_sdf_lines(buffer);
                     std::size_t appended_count = 0U;
-                    for (const std::string &line : split_sdf_lines(buffer))
+                    for (const std::string &line : sdf_records)
                     {
                         const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
                         note_dbf_row_set_change(cursor->source_path);
@@ -11288,9 +11291,35 @@
 
                     std::vector<vfp::DbfFieldDescriptor> target_fields =
                         filter_field_descriptors(dest_result.table.fields, field_filter, true);
+                    const DelimitedTextOptions delimited_options = parse_delimited_text_options(append_type, with_clause);
                     const bool has_object_target = std::any_of(
                         target_fields.begin(), target_fields.end(),
                         text_export_omits_object_field);
+                    const bool has_memo_target = std::any_of(
+                        target_fields.begin(), target_fields.end(),
+                        [](const vfp::DbfFieldDescriptor &field)
+                        {
+                            return std::toupper(static_cast<unsigned char>(field.type)) == 'M';
+                        });
+                    if (append_type == "csv" && has_memo_target &&
+                        options.text_memo_import_compatibility == RuntimeTextMemoImportCompatibility::vfp)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTextMemoVfpIncompatible",
+                            {{"type", "CSV"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    if (append_type == "csv" && has_memo_target &&
+                        !delimited_text_has_valid_enclosures(buffer, delimited_options))
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTextMemoCsvMalformed");
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
                     // VFP gives its two text-import syntaxes distinct object
                     // field contracts. TYPE CSV makes no record mutation when
                     // a selected General/Picture/Blob field is present. DELIMITED
@@ -11317,32 +11346,6 @@
                             {
                                 {"type", "DELIMITED"},
                             });
-                        last_fault_location = statement.location;
-                        last_fault_statement = statement.text;
-                        return {.ok = false, .message = last_error_message};
-                    }
-                    const DelimitedTextOptions delimited_options = parse_delimited_text_options(append_type, with_clause);
-                    const bool has_memo_target = std::any_of(
-                        target_fields.begin(), target_fields.end(),
-                        [](const vfp::DbfFieldDescriptor &field)
-                        {
-                            return std::toupper(static_cast<unsigned char>(field.type)) == 'M';
-                        });
-                    if (append_type == "csv" && has_memo_target &&
-                        options.text_memo_import_compatibility == RuntimeTextMemoImportCompatibility::vfp)
-                    {
-                        last_error_message = runtime_text(
-                            "Runtime.Prg.Dispatch.Error.AppendFromTextMemoVfpIncompatible",
-                            {{"type", "CSV"}});
-                        last_fault_location = statement.location;
-                        last_fault_statement = statement.text;
-                        return {.ok = false, .message = last_error_message};
-                    }
-                    if (append_type == "csv" && has_memo_target &&
-                        !delimited_text_has_valid_enclosures(buffer, delimited_options))
-                    {
-                        last_error_message = runtime_text(
-                            "Runtime.Prg.Dispatch.Error.AppendFromTextMemoCsvMalformed");
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};

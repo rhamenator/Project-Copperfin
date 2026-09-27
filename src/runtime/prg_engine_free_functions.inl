@@ -555,6 +555,30 @@
             return lines;
         }
 
+        std::vector<std::string> split_sdf_memo_records(const std::string &contents)
+        {
+            std::vector<std::string> records;
+            std::size_t start = 0U;
+            for (std::size_t index = 0U; index < contents.size(); ++index)
+            {
+                if (contents[index] != '\r' && contents[index] != '\n')
+                {
+                    continue;
+                }
+                records.push_back(contents.substr(start, index - start));
+                if (contents[index] == '\r' && index + 1U < contents.size() && contents[index + 1U] == '\n')
+                {
+                    ++index;
+                }
+                start = index + 1U;
+            }
+            if (start < contents.size())
+            {
+                records.push_back(contents.substr(start));
+            }
+            return records;
+        }
+
         std::vector<std::string_view> split_dif_sylk_records(const std::string &contents)
         {
             // Copperfin emits LF records, while native VFP9 emits CR records.

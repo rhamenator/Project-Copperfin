@@ -257,7 +257,8 @@ enum class RuntimePolyglotDispatchSelection {
 
 // Text APPEND FROM sources cannot represent DBF Memo fields with VFP's fixed
 // width SDF contract. Hosts choose whether to preserve VFP rejection semantics
-// or opt into Copperfin's newline-safe SDF/CSV Memo extension per session.
+// or opt into Copperfin's extension per session: SDF admits one physical line
+// per Memo value, while quoted CSV safely admits embedded newlines.
 enum class RuntimeTextMemoImportCompatibility {
     copperfin_extension,
     vfp,

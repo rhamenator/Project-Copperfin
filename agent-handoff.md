@@ -79,7 +79,9 @@ Issue #6609: add a session-scoped VFP-vs-Copperfin compatibility switch for
 SDF/CSV imports into selected Memo targets. Branch
 `codex/implement-6609-text-memo-policy` adds pre-mutation VFP rejection,
 newline-safe Copperfin extension rules, localized diagnostics, and focused
-DBF/FPT atomicity coverage. No PR has been opened yet.
+DBF/FPT atomicity coverage. PR #6662 is open against `v1-development`; hosted
+review found preflight-order, empty/CR-only SDF-record, localization-assertion,
+and documentation gaps, and the focused review fix is in progress.
 
 ## Workspace preservation
 
