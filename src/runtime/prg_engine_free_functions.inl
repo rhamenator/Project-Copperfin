@@ -612,13 +612,38 @@
 
         std::string format_delimited_field_value(
             const vfp::DbfFieldDescriptor &field,
-            const std::string &raw_value,
-            const DelimitedTextOptions &options)
+            std::string raw_value,
+            const DelimitedTextOptions &options,
+            const bool is_null = false)
         {
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
+            if (is_null)
+            {
+                // VFP9's delimited interchange values are type conversions,
+                // not the decoded DBF NULL sentinels.  Date and DateTime use
+                // the unquoted blank temporal placeholder (/  /); character
+                // remains an empty enclosure (#6637).
+                if (field_type == 'N' || field_type == 'F' || field_type == 'I' || field_type == 'B' || field_type == 'Y')
+                {
+                    raw_value = (field_type == 'Y') ? "0.0000" : (field_type == 'B' ? "0.00" : "0");
+                }
+                else if (field_type == 'L')
+                {
+                    raw_value = "F";
+                }
+                else if (field_type == 'D' || field_type == 'T')
+                {
+                    raw_value = "/  /";
+                }
+                else
+                {
+                    raw_value.clear();
+                }
+            }
             const bool quote_value = options.quote_character_fields &&
                                      !(field_type == 'N' || field_type == 'F' || field_type == 'I' || field_type == 'B' ||
-                                       field_type == 'Y' || field_type == 'L');
+                                       field_type == 'Y' || field_type == 'L' ||
+                                       (is_null && (field_type == 'D' || field_type == 'T')));
             // Character fields are enclosed specifically so their text is
             // transported verbatim. Trimming here changes significant
             // leading/trailing spaces and tabs before the enclosure is written.

@@ -1236,6 +1236,70 @@ void test_copy_to_type_sdf_converts_nullable_values() {
     fs::remove_all(temp_root, ignored);
 }
 
+
+void test_copy_to_delimited_converts_nullable_values() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_delimited_nullable_values";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const fs::path csv_path = temp_root / "nullable.csv";
+    const fs::path pipe_path = temp_root / "nullable.txt";
+    const fs::path main_path = temp_root / "copy_to_delimited_nullable_values.prg";
+    write_text(
+        main_path,
+        "CREATE TABLE '" + source_path.string() + "' (n N(4) NULL, c C(2) NULL, l L NULL, d D NULL, t T NULL)\n"
+        "USE '" + source_path.string() + "' EXCLUSIVE\n"
+        "APPEND BLANK\n"
+        "REPLACE n WITH .NULL., c WITH .NULL., l WITH .NULL., d WITH .NULL., t WITH .NULL.\n"
+        "COPY TO '" + csv_path.string() + "' TYPE CSV\n"
+        "COPY TO '" + pipe_path.string() + "' DELIMITED WITH CHARACTER '|'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6637: COPY TO CSV/DELIMITED nullable-value script should complete: " + state.message);
+
+    const auto source_result = copperfin::vfp::parse_dbf_table_from_file(source_path.string(), 2U);
+    expect(source_result.ok && source_result.table.records.size() == 1U,
+           "#6637: nullable delimited fixture must retain its source row");
+    if (source_result.ok && source_result.table.records.size() == 1U)
+    {
+        for (const auto &value : source_result.table.records.front().values)
+        {
+            if (value.field_name != "_NullFlags")
+            {
+                expect(value.is_null, "#6637: COPY TO CSV/DELIMITED must preserve each source DBF NULL flag");
+            }
+        }
+    }
+
+    const std::string row = "0,\"\",F,/  /,/  /\r\n";
+    if (fs::exists(csv_path))
+    {
+        expect(read_text(csv_path) == "n,c,l,d,t\r\n" + row,
+               "#6637: CSV must use VFP9 NULL numeric, character, logical, and temporal text");
+    }
+    else
+    {
+        expect(false, "#6637: COPY TO CSV should create the nullable-value destination");
+    }
+    if (fs::exists(pipe_path))
+    {
+        expect(read_text(pipe_path) == "0|\"\"|F|/  /|/  /\r\n",
+               "#6637: custom-delimiter output must convert NULL values before delimiter serialization");
+    }
+    else
+    {
+        expect(false, "#6637: COPY TO DELIMITED should create the nullable-value destination");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sdf_omits_binary_object_fields_from_interchange_layout() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sdf_omitted_binary_objects";
