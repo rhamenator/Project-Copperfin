@@ -10087,6 +10087,20 @@
                         const std::string for_expr = statement.quaternary_expression;
                         std::vector<vfp::DbfFieldDescriptor> filtered_target_fields =
                             filter_field_descriptors(target_fields, field_filter, true);
+                        const bool has_object_target = std::any_of(
+                            filtered_target_fields.begin(), filtered_target_fields.end(),
+                            text_export_omits_object_field);
+                        if (append_type == "csv" && has_object_target)
+                        {
+                            events.push_back({.category = "runtime.append_from",
+                                              .detail = src_raw + " (0 records, TYPE CSV)",
+                                              .location = statement.location});
+                            return {};
+                        }
+                        if (append_type != "csv")
+                        {
+                            std::erase_if(filtered_target_fields, text_export_omits_object_field);
+                        }
                         if (filtered_target_fields.empty())
                         {
                             last_error_message = runtime_text(

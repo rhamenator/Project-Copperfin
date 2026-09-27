@@ -58,9 +58,9 @@ Issue #6630: match VFP9 Blob (`W`) projection in CSV and DELIMITED export and
 import. Branch `codex/implement-6630-blob-text-projection` extends the shared
 object-field predicate to Blob, so exports omit its payload, CSV import makes
 no mutation, and DELIMITED import removes Blob before source-cell binding.
-Focused data-I/O coverage passes. Next steps: finish validation, create signed
-commits, push, open the PR against `v1-development`, address review, and merge
-after required checks pass and every review conversation is resolved.
+Focused data-I/O coverage passes. PR #6658 is open against `v1-development`;
+next steps are to finish review response, wait for required hosted checks, and
+merge after every check passes and every review conversation is resolved.
 
 ## Workspace preservation
 
