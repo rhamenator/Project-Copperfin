@@ -117,6 +117,7 @@ void test_append_from_native_dif_sylk_varbinary_cells();
 void test_delimited_export_omits_general_picture_fields();
 void test_delimited_export_omits_memo_fields();
 void test_append_from_type_sdf_imports_fixed_width_text_rows();
+void test_append_from_type_sdf_converts_blank_numeric_cells_to_zero();
 void test_append_from_type_sdf_uses_vfp_logical_tokens();
 void test_append_from_type_sdf_uses_printable_binary_numeric_widths();
 void test_sdf_autoincrement_uses_vfp_printable_width();

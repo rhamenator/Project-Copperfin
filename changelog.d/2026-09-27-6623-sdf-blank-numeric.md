@@ -1,0 +1,1 @@
+- 2026-09-27: Fixed blank SDF Numeric and Float cells to import as non-NULL zero without shifting later fields (#6623). `RQ-CF-PRG-SDF-BLANK-NUMERIC-001`

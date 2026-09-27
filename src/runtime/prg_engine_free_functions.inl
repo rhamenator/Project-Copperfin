@@ -317,6 +317,12 @@
                 const std::string token = trim_copy(value);
                 return token == "T" || token == "Y" ? "true" : "false";
             }
+            if ((field_type == 'N' || field_type == 'F') && trim_copy(value).empty())
+            {
+                // VFP imports a blank printable Numeric/Float SDF cell as a
+                // real zero, including for nullable targets (#6623).
+                return "0";
+            }
             if (field_type == 'D')
             {
                 int year = 0;

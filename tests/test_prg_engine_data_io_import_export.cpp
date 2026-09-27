@@ -2371,6 +2371,52 @@ void test_append_from_type_sdf_imports_fixed_width_text_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_type_sdf_converts_blank_numeric_cells_to_zero() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sdf_blank_numeric_cells";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path destination_path = temp_root / "target.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "n", .type = 'N', .length = 4U},
+        {.name = "f", .type = 'F', .length = 6U, .decimal_count = 2U},
+        {.name = "nn", .type = 'N', .length = 4U, .nullable = true},
+        {.name = "c", .type = 'C', .length = 2U},
+    };
+    expect(copperfin::vfp::create_dbf_table_file(destination_path.string(), fields, {}).ok,
+           "#6623: blank-numeric SDF destination fixture should be created");
+
+    const fs::path source_path = temp_root / "input.sdf";
+    write_text(source_path, std::string(14U, ' ') + "ZZ\r\n");
+    const fs::path main_path = temp_root / "append_blank_numeric_sdf.prg";
+    write_text(
+        main_path,
+        "USE '" + destination_path.string() + "'\n"
+        "APPEND FROM '" + source_path.string() + "' TYPE SDF\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6623: blank-numeric SDF import should complete: " + state.message);
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 2U);
+    expect(result.ok && result.table.records.size() == 1U,
+           "#6623: blank-numeric SDF import should append one row");
+    if (result.ok && result.table.records.size() == 1U)
+    {
+        const auto &values = result.table.records.front().values;
+        expect(values.size() >= 4U && values[0].display_value == "0" &&
+                   values[1].display_value == "0" && values[2].display_value == "0" &&
+                   !values[2].is_null && values[3].display_value == "ZZ",
+               "#6623: blank N/F/nullable-N cells must become non-NULL zero without shifting Character data");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 
 void test_append_from_type_sdf_uses_vfp_logical_tokens() {
     namespace fs = std::filesystem;
