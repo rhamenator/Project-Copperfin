@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "83298287-b281-45ba-ad89-e199c12743c0", "text": "Working #6635: native VFP9 confirmed SDF NULL text is scale/type-specific (N/F zero at scale, I 0, Y 0.0000, B 0.00, L F, C/D/T blank); implementation and focused regression pass locally.", "to": ["both"], "ts": "2026-09-27T00:17:00Z", "type": "status"}
