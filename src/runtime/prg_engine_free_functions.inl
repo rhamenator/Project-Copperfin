@@ -750,6 +750,7 @@
             char delimiter = ',';
             char quote = '"';
             bool quote_character_fields = true;
+            bool preserve_enclosed_doubled_quotes = false;
             bool truncate_enclosed_doubled_quotes = false;
         };
 
@@ -757,6 +758,7 @@
         {
             DelimitedTextOptions options;
             const std::string normalized_type = normalize_identifier(type);
+            options.preserve_enclosed_doubled_quotes = normalized_type == "csv";
             options.truncate_enclosed_doubled_quotes = normalized_type == "delimited";
             if (normalized_type == "tab")
             {
@@ -869,7 +871,10 @@
             return escaped;
         }
 
-        std::vector<std::string> parse_delimited_text_line(const std::string &line, const DelimitedTextOptions &options)
+        std::vector<std::string> parse_delimited_text_line(
+            const std::string &line,
+            const DelimitedTextOptions &options,
+            const std::vector<vfp::DbfFieldDescriptor> *target_fields = nullptr)
         {
             std::vector<std::string> values;
             std::string outside_before_quotes;
@@ -911,11 +916,7 @@
                 {
                     if (in_quotes && index + 1U < line.size() && line[index + 1U] == options.quote)
                     {
-                        if (!options.truncate_enclosed_doubled_quotes || !current_field_started_with_enclosure)
-                        {
-                            quoted_content.push_back(options.quote);
-                        }
-                        else
+                        if (options.truncate_enclosed_doubled_quotes && current_field_started_with_enclosure)
                         {
                             // VFP DELIMITED treats the pair as the end of the
                             // enclosed value and ignores the remaining bytes in
@@ -923,6 +924,23 @@
                             in_quotes = false;
                             current_field_closed_quote = true;
                             discard_after_delimited_doubled_quote = true;
+                        }
+                        else
+                        {
+                            quoted_content.push_back(options.quote);
+                            const bool character_target_preserves_pair =
+                                options.preserve_enclosed_doubled_quotes &&
+                                target_fields != nullptr &&
+                                values.size() < target_fields->size() &&
+                                std::toupper(static_cast<unsigned char>((*target_fields)[values.size()].type)) == 'C';
+                            if (character_target_preserves_pair && current_field_started_with_enclosure)
+                            {
+                                // VFP CSV retains both quote bytes inside an
+                                // enclosed Character value. Other target types,
+                                // TAB, and unquoted fields retain their
+                                // established collapse rule.
+                                quoted_content.push_back(options.quote);
+                            }
                         }
                         ++index;
                     }

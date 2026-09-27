@@ -465,10 +465,14 @@ void test_append_from_csv_mutates_selected_sql_result_cursor() {
     const fs::path csv_path = temp_root / "new_rows.csv";
     const fs::path main_path = temp_root / "sql_append_from_csv.prg";
 
-    write_text(csv_path.string(),
-        "ID,NAME,AMOUNT\n"
-        "901,HOTEL,11.00\n"
-        "902,INDIA,12.50\n");
+    const std::string source_bytes =
+        "ID,NAME,AMOUNT\r\n"
+        "901,HOTEL,11.00\r\n"
+        "902,INDIA,12.50\r\n"
+        "903,\"ab\"\"cd\",13.75\r\n";
+    write_text(csv_path.string(), source_bytes);
+    expect(read_text(csv_path.string()) == source_bytes,
+        "#6522: SQL-result CSV source must retain the exact enclosed doubled-quote bytes");
 
     write_text(
         main_path,
@@ -506,16 +510,16 @@ void test_append_from_csv_mutates_selected_sql_result_cursor() {
             "selected SQL result cursor should start with seeded row count before APPEND FROM CSV");
     }
     if (rows_after != state.globals.end()) {
-        expect(copperfin::runtime::format_value(rows_after->second) == "5",
-            "APPEND FROM TYPE CSV should add 2 rows to the selected SQL/result cursor");
+        expect(copperfin::runtime::format_value(rows_after->second) == "6",
+            "APPEND FROM TYPE CSV should add 3 rows to the selected SQL/result cursor");
     }
     if (bottom_id != state.globals.end()) {
-        expect(copperfin::runtime::format_value(bottom_id->second) == "902",
+        expect(copperfin::runtime::format_value(bottom_id->second) == "903",
             "APPEND FROM TYPE CSV should set last row ID in selected SQL/result cursor");
     }
     if (bottom_name != state.globals.end()) {
-        expect(copperfin::runtime::format_value(bottom_name->second) == "INDIA",
-            "APPEND FROM TYPE CSV should set last row NAME in selected SQL/result cursor");
+        expect(copperfin::runtime::format_value(bottom_name->second) == "ab\"\"cd",
+            "#6522: APPEND FROM TYPE CSV should preserve both doubled-quote bytes in the selected SQL/result cursor");
     }
     if (disc != state.globals.end()) {
         expect(copperfin::runtime::format_value(disc->second) == "1",

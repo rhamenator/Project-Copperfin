@@ -2,11 +2,16 @@
 
 ## Last shipped slice
 
-Issue #6604 (PR #6666, merge `780d6ac12`) finished 2026-09-27: SDF Logical
-export now emits VFP-compatible uppercase `T`/`F` bytes while preserving
-adjacent fixed-width Numeric formatting. Focused and hosted checks passed; the
-two review documentation mismatches were fixed and their conversations
-resolved.
+Issue #6665 (PR #6667, merge `d99c78ac2`) finished 2026-09-27: enclosed
+doubled quotes in `APPEND FROM TYPE DELIMITED` now follow VFP9's format-specific
+truncation rule without changing TAB or unquoted-field handling. Focused and
+hosted checks passed; all review conversations were resolved.
+
+Earlier: issue #6604 (PR #6666, merge `780d6ac12`) finished 2026-09-27: SDF
+Logical export now emits VFP-compatible uppercase `T`/`F` bytes while
+preserving adjacent fixed-width Numeric formatting. Focused and hosted checks
+passed; the two review documentation mismatches were fixed and their
+conversations resolved.
 
 Earlier: issue #6623 (PR #6664, merge `91c0f7165`) finished 2026-09-27: blank SDF
 Numeric/Float cells now import as non-NULL zero at the target field's scale,
@@ -98,12 +103,12 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Issue #6665: make `APPEND FROM ... TYPE DELIMITED` match VFP9 when an enclosed
-Character value contains a doubled quote pair, without applying CSV's separate
-quote rule. Branch `codex/implement-6665-delimited-doubled-quotes` contains the
-focused parser and local/remote byte-level regression work. PR #6667 is open
-against `v1-development`; focused verification passes, and review fixes are in
-progress while hosted validation completes.
+Issue #6522: make `APPEND FROM ... TYPE CSV` preserve both quote bytes inside an
+enclosed Character field, matching the retained installed-VFP9 byte probe while
+leaving DELIMITED, TAB, and unquoted-field rules unchanged. Branch
+`codex/implement-6522-csv-doubled-quotes` contains focused parser and local/
+remote exact-byte regression work; both focused suites pass before a PR is
+opened against `v1-development`.
 
 ## Workspace preservation
 
