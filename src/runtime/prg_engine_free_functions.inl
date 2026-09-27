@@ -241,6 +241,14 @@
             {
                 return 19U;
             }
+            if (field_type == 'V')
+            {
+                return field.length > 0U ? field.length - 1U : 0U;
+            }
+            if (field_type == 'Q')
+            {
+                return field.length > 0U ? (field.length - 1U) * 2U : 0U;
+            }
             return field.length;
         }
 
@@ -351,6 +359,49 @@
             return {};
         }
 
+        std::optional<std::string> decode_sdf_varbinary_value(std::string value)
+        {
+            while (!value.empty() && value.back() == ' ')
+            {
+                value.pop_back();
+            }
+            if (value.size() % 2U != 0U)
+            {
+                return std::nullopt;
+            }
+
+            const auto hex_nibble = [](const unsigned char ch) -> std::optional<unsigned char>
+            {
+                if (ch >= '0' && ch <= '9')
+                {
+                    return static_cast<unsigned char>(ch - '0');
+                }
+                if (ch >= 'A' && ch <= 'F')
+                {
+                    return static_cast<unsigned char>(ch - 'A' + 10U);
+                }
+                if (ch >= 'a' && ch <= 'f')
+                {
+                    return static_cast<unsigned char>(ch - 'a' + 10U);
+                }
+                return std::nullopt;
+            };
+
+            std::string decoded;
+            decoded.reserve(value.size() / 2U);
+            for (std::size_t index = 0U; index < value.size(); index += 2U)
+            {
+                const auto high = hex_nibble(static_cast<unsigned char>(value[index]));
+                const auto low = hex_nibble(static_cast<unsigned char>(value[index + 1U]));
+                if (!high.has_value() || !low.has_value())
+                {
+                    return std::nullopt;
+                }
+                decoded.push_back(static_cast<char>((*high << 4U) | *low));
+            }
+            return decoded;
+        }
+
         std::optional<std::string> format_sdf_field_value(
             const vfp::DbfFieldDescriptor &field,
             std::string value,
@@ -401,6 +452,18 @@
                 {
                     value = format_runtime_date_storage_string(year, month, day);
                 }
+            }
+            else if (field_type == 'Q')
+            {
+                static constexpr char hex_digits[] = "0123456789ABCDEF";
+                std::string encoded;
+                encoded.reserve(value.size() * 2U);
+                for (const unsigned char byte : value)
+                {
+                    encoded.push_back(hex_digits[byte >> 4U]);
+                    encoded.push_back(hex_digits[byte & 0x0fU]);
+                }
+                value = std::move(encoded);
             }
             else if (field_type == 'T')
             {

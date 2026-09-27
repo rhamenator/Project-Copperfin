@@ -2,7 +2,12 @@
 
 ## Last shipped slice
 
-Issue #6630 (PR #6658, merge `0b2a52244`) finished 2026-09-27: CSV and
+Issue #6628 (PR #6659, merge `59fe248ed`) finished 2026-09-27: DIF/SYLK
+Date and DateTime export now uses VFP-compatible typed cells, including blank
+DateTime handling and the Excel-1900 leap-day discontinuity. Focused and
+hosted checks passed; all review conversations were resolved.
+
+Earlier: issue #6630 (PR #6658, merge `0b2a52244`) finished 2026-09-27: CSV and
 DELIMITED export/import now project Blob (`W`) fields with the same native
 rules as General/Picture, including the parallel SQL-result import path.
 Focused and hosted checks passed; the review conversation was resolved.
@@ -59,16 +64,12 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Issue #6628: match VFP9 Date/DateTime cells in DIF and SYLK export. Branch
-`codex/implement-6628-dif-sylk-date-time` converts Date to each format's
-native `YYYYMMDD` cell and DateTime to printable DIF text or an Excel-1900
-SYLK serial, preventing leakage of Copperfin's internal storage diagnostics.
-Focused data-I/O verification passes. PR #6659 is open against
-`v1-development`; signed/sign-off code head `24a5fcbc8` addresses review by
-emitting blank cells for the zero DateTime sentinel and applying Excel's fake
-leap-day offset only from 1900-03-01 onward. All commits pass the local DCO
-contract. Next steps are exact-change verification, conversation resolution,
-hosted CI/review, and merge once every required check clears.
+Issue #6614: match VFP9 SDF Varchar/Varbinary printable widths and hexadecimal
+Varbinary representation. Branch `codex/implement-6614-sdf-varchar-varbinary`
+uses payload rather than physical descriptor widths, adds uppercase-hex
+export and validated hex import, and preserves command-level rollback on bad
+input. Focused data-I/O and localization verification pass. Next steps are a
+signed/sign-off commit, push, PR, review response, hosted CI, and merge.
 
 ## Workspace preservation
 

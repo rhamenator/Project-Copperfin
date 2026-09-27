@@ -1,0 +1,1 @@
+- 2026-09-27: Fixed SDF Varchar and Varbinary column widths, added uppercase hexadecimal Varbinary export/import, and made invalid hexadecimal imports fail atomically with a field-specific diagnostic (#6614).
