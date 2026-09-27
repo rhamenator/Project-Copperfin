@@ -2,14 +2,16 @@
 
 ## Last shipped slice
 
-Issue #6654 (PR #6656, merge `c0a003b43`) finished 2026-09-27:
-native CR-delimited DIF/SYLK imports with Varbinary targets now append the
-VFP9 field-name/data rows instead of succeeding with zero rows, accept CR/LF/
-CRLF records without splitting quoted carriage returns, map physical Q cells
-to blank Q, and roll back the command on a later field-write failure. Review
-also moved record splitting to zero-copy views and centralized the Varbinary
-target policy. Focused data-I/O, DCO, sanitizer, fuzz, stress, migration, and
-cross-platform path/launcher checks passed; all conversations were resolved.
+Issue #6640 (PR #6657, merge `e3b765653`) finished 2026-09-27:
+successful lossy `COPY TO` interchange projections now emit one localized,
+non-blocking warning with stable structured output-type and ordered omitted-
+field metadata, without disclosing payloads or changing output bytes. Review
+extended the event metadata through debugger, Visual Studio, and headless host
+protocols and added actual `TYPE TAB` coverage. Focused and hosted checks
+passed; all conversations were resolved.
+
+Earlier: issue #6654 (PR #6656, merge `c0a003b43`) finished native
+CR-delimited DIF/SYLK imports with Varbinary targets and atomic rollback.
 
 Reentrant-cursor-closure cluster 1 (`docs/81`), cursor-lifetime part,
 finished 2026-09-24: #6321 (PR #6521), #6322 (PR #6524), #6331 (PR #6526),
@@ -52,15 +54,13 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Issue #6640: emit one localized, non-blocking `runtime.warning` after a
-successful `COPY TO` interchange export intentionally omits selected fields.
-Branch `codex/implement-6640-copy-omission-warning` adds stable structured
-metadata for output type and ordered field name/type pairs without payload
-disclosure, covering SDF, DIF, SYLK, CSV, TAB, and DELIMITED projections.
-Focused data-I/O, localization, and changelog validation pass. Next steps:
-commit and push the signed change, open the PR against `v1-development`,
-address review, and merge after required checks pass and every review
-conversation is resolved.
+Issue #6630: match VFP9 Blob (`W`) projection in CSV and DELIMITED export and
+import. Branch `codex/implement-6630-blob-text-projection` extends the shared
+object-field predicate to Blob, so exports omit its payload, CSV import makes
+no mutation, and DELIMITED import removes Blob before source-cell binding.
+Focused data-I/O coverage passes. PR #6658 is open against `v1-development`;
+next steps are to finish review response, wait for required hosted checks, and
+merge after every check passes and every review conversation is resolved.
 
 ## Workspace preservation
 

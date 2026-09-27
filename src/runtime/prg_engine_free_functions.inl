@@ -281,19 +281,19 @@
                 });
         }
 
-        bool text_export_omits_general_picture_field(const vfp::DbfFieldDescriptor &field)
+        bool text_export_omits_object_field(const vfp::DbfFieldDescriptor &field)
         {
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
-            return field_type == 'G' || field_type == 'P';
+            return field_type == 'G' || field_type == 'P' || field_type == 'W';
         }
 
         bool text_export_omits_delimited_field(const vfp::DbfFieldDescriptor &field)
         {
             // VFP excludes Memo from non-table text output, while its import
-            // contract remains separate (#6609). General/Picture retain their
+            // contract remains separate (#6609). Object fields retain their
             // existing format-specific handling.
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
-            return text_export_omits_general_picture_field(field) || field_type == 'M';
+            return text_export_omits_object_field(field) || field_type == 'M';
         }
 
         std::string normalize_sdf_field_value_for_storage(

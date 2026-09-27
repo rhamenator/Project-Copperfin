@@ -1,0 +1,1 @@
+- 2026-09-27: Match VFP9 CSV and DELIMITED projection rules for Blob fields during `COPY TO` and `APPEND FROM`, preventing binary payload serialization or misbinding into text cells (#6630).
