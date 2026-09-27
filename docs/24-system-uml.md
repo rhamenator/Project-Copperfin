@@ -17,208 +17,139 @@ A third diagram, the [Runtime Subsystem UML](diagrams/uml-runtime-subsystem.md),
 
 ## Ground-Truth Class Diagram
 
-This mirrors the real native library graph and the six native executables (`copperfin_inspect`, `copperfin_mcp_host`, `copperfin_studio_host`, `copperfin_runtime_host`, `copperfin_build_host`, `copperfin_launcher_guard`), plus the managed VSIX/Studio layer that talks to them over the JSON design/runtime contract (`copperfin_studio_managed` is an `IMPORTED` CMake handle for that separately-built managed executable, not a seventh native target). Class members name real files/concepts, not aspirational APIs. Refreshed 2026-07-24 to add `cf_platform_support`, `cf_licensing`, `cf_package_trust`, and `copperfin_launcher_guard` (the sixth executable), which were added to `CMakeLists.txt` after this diagram was first drawn.
+This mirrors the real native library graph in subsystem-level detail, the six native executables (`copperfin_inspect`, `copperfin_mcp_host`, `copperfin_studio_host`, `copperfin_runtime_host`, `copperfin_build_host`, `copperfin_launcher_guard`), plus the managed VSIX/Studio layer that talks to them over the JSON design/runtime contract (`copperfin_studio_managed` is an `IMPORTED` CMake handle for that separately-built managed executable, not a seventh native target). Class members name real files/concepts, not aspirational APIs. Refreshed 2026-09-26 from `CMakeLists.txt`: the diagram separates the major source families within each target, includes `cf_migration` and `cf_mcp_host`, and makes private admission and platform boundaries visible without claiming that the diagram represents every C++ type.
 
 ```mermaid
 classDiagram
     direction TB
 
     class cf_platform_support {
-        +environment()
-        +path_conversion()
-        +executable_search_default()
-        +executable_path()
+        +process_and_environment
+        +path_and_executable_resolution
+        +file_stream_and_exclusive_file
+        +json_codepage_numeric_utilities
+        +windows_pe_and_font_inspection
     }
-
-    class cf_localization {
-        +translate()
-        +resolve_catalog_root()
-        +select_locale()
-        +load_catalogs()
-    }
-
+    class cf_localization { +catalog_loading +locale_selection +translation }
     class cf_security {
-        +authorization
-        +audit_stream
+        +authorization_and_audit
         +external_process_policy
-        +process_hardening
-        +secret_provider
-        +sha256
+        +path_containment_and_hardening
+        +workspace_agent_session_policy
+        +crypto_secret_hash_utilities
     }
-
-    class cf_licensing {
-        +base64
-        +canonical_payload_serializer
-        +ed25519_verify
-        +license_classifier
-        +license_payload_parser
-        +license_status
-    }
-
-    class cf_package_trust {
-        +launcher_inventory_trust
-    }
+    class cf_licensing { +license_payload_and_status +ed25519_verify }
+    class cf_package_trust { +launcher_inventory_trust }
 
     class cf_platform_profile {
-        +database_model
-        +query_translator
+        +database_model_and_query_translation
         +federation_execution
-        +extensibility_model
+        +polyglot_admission_routes_telemetry
+        +printer_and_extensibility_model
     }
-
-    class cf_sqlite_connector {
-        +read_only_plan_execution
-        -private_native_sqlite_api
-    }
-
-    class cf_mcp_host {
-        +dual_era_stdio_protocol
-        +read_only_dbf_header_tool
-    }
-
+    class cf_sqlite_connector { +read_only_plan_execution +availability_fallback }
     class cf_vfp_assets {
-        +dbf_header_and_dbf_table
-        +cdx_header_and_index_probe
-        +asset_inspector
-        +visual_asset_editor_appearance
-        +visual_asset_editor_behavior
-        +visual_asset_editor_data
+        +dbf_header_table_import_encoding
+        +cdx_probe_and_writer
+        +access_container_long_value_queries
+        +visual_asset_editor_and_undo
+        +staged_import_publish
     }
+    class cf_migration { +project_inventory }
+    class cf_mcp_host { +stdio_protocol +read_only_dbf_header_tool }
 
-    class cf_runtime_text {
-        +runtime_scoped_localized_text
-    }
-
-    class cf_prg_analysis {
-        +prg_engine_static_analysis()
-    }
-
-    class cf_design_model {
-        +document_model_and_project_workspace
-        +report_layout
-        +designer_dispatch_and_designer_context
-        +builder_registry_and_toolbox_palette
-        +vs_launch_contract_approx_25_files
-    }
-
+    class cf_runtime_text { +runtime_scoped_localized_text }
+    class cf_prg_analysis { +static_analysis }
     class cf_xbase_runtime {
-        +prg_engine_dispatch_flow_expression_records_cursor_arrays_variables_session_sql_aggregate_dll
-        +portable_scalar_contract_to_private_windows_clr_host
-        +portable_typed_contract_to_private_windows_native_call
-        +index_seek_optimizer
-        +xasset_methods
-        +vfp_builtin_function_families
+        +parser_and_expression
+        +dispatch_flow_and_error_recovery
+        +cursor_records_sessions_and_relations
+        +arrays_variables_and_aggregates
+        +sql_index_and_table_commands
+        +builtins_file_path_date_numeric_string_type
+        +native_objects_ole_com_dll_and_polyglot
     }
-
     class cf_runtime_pipeline {
-        +file_io_and_classification
-        +ast_ir_manifest
-        +fxp_and_archive_manifest
-        +library_export_manifest
-        +csharp_and_launcher
-        +public_api
+        +source_classification_and_ast_manifest
+        +fxp_archive_and_library_export
+        +host_auth_process_and_response
+        +csharp_launcher_and_package_transaction
+    }
+    class cf_design_model {
+        +document_workspace_and_context_actions
+        +builder_designer_and_editor_dispatch
+        +report_layout_and_toolbox
+        +vs_launch_contract_validation
     }
 
-    class copperfin_inspect {
-        <<executable>>
-        +low_level_dbf_index_inspector
-    }
+    class copperfin_inspect { <<executable>> +dbf_and_index_inspection }
+    class copperfin_mcp_host { <<executable>> +local_stdio_server }
+    class copperfin_studio_host { <<executable>> +design_snapshot_and_toolbox_host }
+    class copperfin_runtime_host { <<executable>> +runtime_debug_and_federation_host }
+    class copperfin_build_host { <<executable>> +project_package_build_host }
+    class copperfin_launcher_guard { <<windows_executable>> +prelaunch_trust_validation }
+    class Copperfin_VisualStudio { <<managed_VSIX>> +editor_designer_debug_clients }
+    class Copperfin_Studio { <<managed_WinForms>> +standalone_designer_shell }
 
-    class copperfin_mcp_host {
-        <<executable>>
-        +bounded_local_stdio_server
-    }
+    cf_localization --> cf_platform_support : platform services
+    cf_security --> cf_localization : localized diagnostics
+    cf_security --> cf_platform_support : containment/process primitives
+    cf_licensing --> cf_platform_support : encoding and environment
+    cf_package_trust --> cf_licensing : verify-only primitive
+    cf_platform_profile --> cf_localization : user-facing model text
+    cf_platform_profile --> cf_security : route admission
+    cf_sqlite_connector --> cf_platform_profile : federation model
+    cf_sqlite_connector --> cf_security : private admission
+    cf_vfp_assets --> cf_localization : parse diagnostics
+    cf_vfp_assets --> cf_security : external export admission
+    cf_vfp_assets --> cf_platform_profile : supporting artifact admission
+    cf_vfp_assets --> cf_platform_support : files and encoding
+    cf_mcp_host --> cf_platform_support : stdio/json
+    cf_mcp_host --> cf_vfp_assets : DBF header parser
 
-    class copperfin_studio_host {
-        <<executable>>
-        +design_time_json_snapshot_host
-    }
-
-    class copperfin_runtime_host {
-        <<executable>>
-        +runtime_and_debugger_host
-    }
-
-    class copperfin_build_host {
-        <<executable>>
-        +pjx_pjt_packaging_pipeline
-    }
-
-    class copperfin_launcher_guard {
-        <<executable_windows_only>>
-        +prelaunch_trust_check
-    }
-
-    class Copperfin_VisualStudio {
-        <<managed_VSIX>>
-        +designer_document_shell_and_language_service
-    }
-
-    class Copperfin_Studio {
-        <<managed_WinForms>>
-        +standalone_tabbed_shell
-    }
-
-    cf_localization --> cf_platform_support
-    cf_package_trust --> cf_licensing
-
-    cf_security --> cf_localization
-    cf_platform_profile --> cf_localization
-    cf_sqlite_connector --> cf_platform_profile
-    cf_sqlite_connector --> cf_security : private
-    cf_vfp_assets --> cf_localization
-    cf_mcp_host --> cf_platform_support
-    cf_mcp_host --> cf_vfp_assets
-    cf_runtime_text --> cf_localization
-    cf_prg_analysis --> cf_runtime_text
-
-    cf_design_model --> cf_vfp_assets
-    cf_design_model --> cf_prg_analysis
-    cf_design_model --> cf_localization
-
-    cf_xbase_runtime --> cf_prg_analysis
-    cf_xbase_runtime --> cf_runtime_text
-    cf_xbase_runtime --> cf_design_model : public
-    cf_xbase_runtime --> cf_localization : private
-
-    cf_runtime_pipeline --> cf_design_model
-    cf_runtime_pipeline --> cf_security
-    cf_runtime_pipeline --> cf_platform_profile
-    cf_runtime_pipeline --> cf_xbase_runtime
-    cf_runtime_pipeline --> cf_licensing
+    cf_prg_analysis --> cf_runtime_text : diagnostics
+    cf_design_model --> cf_vfp_assets : asset documents
+    cf_design_model --> cf_prg_analysis : parsed PRG insight
+    cf_design_model --> cf_localization : UI contract text
+    cf_xbase_runtime --> cf_prg_analysis : parsed programs
+    cf_xbase_runtime --> cf_runtime_text : runtime diagnostics
+    cf_xbase_runtime --> cf_design_model : xAsset execution model
+    cf_xbase_runtime --> cf_vfp_assets : tables/indexes/assets
+    cf_xbase_runtime --> cf_platform_profile : federation and polyglot
+    cf_xbase_runtime --> cf_security : declared-call/process guards
+    cf_runtime_pipeline --> cf_design_model : project model
+    cf_runtime_pipeline --> cf_xbase_runtime : compilation/runtime metadata
+    cf_runtime_pipeline --> cf_platform_profile : polyglot bridge plans
+    cf_runtime_pipeline --> cf_security : host admission
+    cf_runtime_pipeline --> cf_licensing : package metadata
+    cf_runtime_pipeline --> cf_platform_support : package filesystem
 
     copperfin_inspect --> cf_vfp_assets
     copperfin_inspect --> cf_security
     copperfin_inspect --> cf_licensing
     copperfin_inspect --> cf_localization
-
     copperfin_mcp_host --> cf_mcp_host
     copperfin_mcp_host --> cf_security
-
     copperfin_studio_host --> cf_design_model
     copperfin_studio_host --> cf_security
     copperfin_studio_host --> cf_platform_profile
     copperfin_studio_host --> cf_licensing
-
     copperfin_runtime_host --> cf_xbase_runtime
+    copperfin_runtime_host --> cf_sqlite_connector
     copperfin_runtime_host --> cf_security
     copperfin_runtime_host --> cf_platform_profile
-    copperfin_runtime_host --> cf_sqlite_connector
     copperfin_runtime_host --> cf_licensing
     copperfin_runtime_host --> cf_localization
-
     copperfin_build_host --> cf_runtime_pipeline
     copperfin_build_host --> cf_localization
-    copperfin_build_host --> copperfin_launcher_guard : stages at build time
-
+    copperfin_build_host --> copperfin_launcher_guard : stages
     copperfin_launcher_guard --> cf_security
     copperfin_launcher_guard --> cf_localization
     copperfin_launcher_guard --> cf_platform_support
     copperfin_launcher_guard --> cf_package_trust
-
-    Copperfin_VisualStudio --> copperfin_studio_host : JSON contract
+    Copperfin_VisualStudio --> copperfin_studio_host : design JSON
     Copperfin_VisualStudio --> copperfin_runtime_host : debug protocol
-    Copperfin_Studio --> copperfin_studio_host : JSON contract
+    Copperfin_Studio --> copperfin_studio_host : design JSON
     Copperfin_Studio --> copperfin_runtime_host : debug protocol
 ```
 
