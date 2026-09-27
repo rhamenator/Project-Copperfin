@@ -1494,10 +1494,11 @@ void test_dif_sylk_omit_memo_fields() {
 
     const fs::path source_path = temp_root / "source.dbf";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "BEFORE", .type = 'C', .length = 2U},
         {.name = "MEMO", .type = 'M', .length = 4U},
-        {.name = "CODE", .type = 'C', .length = 2U},
+        {.name = "AFTER", .type = 'C', .length = 2U},
     };
-    const auto create_result = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, {{"MEMO", "OK"}});
+    const auto create_result = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, {{"AA", "MEMO", "ZZ"}});
     expect(create_result.ok, "#6632: DIF/SYLK Memo fixture should be created");
 
     const fs::path dif_path = temp_root / "memo.dif";
@@ -1509,33 +1510,40 @@ void test_dif_sylk_omit_memo_fields() {
         main_path,
         "USE '" + source_path.string() + "'\n"
         "COPY TO '" + dif_path.string() + "' TYPE DIF\n"
-        "COPY TO '" + dif_filtered_path.string() + "' TYPE DIF FIELDS MEMO, CODE\n"
+        "COPY TO '" + dif_filtered_path.string() + "' TYPE DIF FIELDS AFTER, MEMO, BEFORE\n"
         "COPY TO '" + sylk_path.string() + "' TYPE SYLK\n"
-        "COPY TO '" + sylk_filtered_path.string() + "' TYPE SYLK FIELDS MEMO, CODE\n"
+        "COPY TO '" + sylk_filtered_path.string() + "' TYPE SYLK FIELDS AFTER, MEMO, BEFORE\n"
         "RETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "#6632: COPY TO TYPE DIF/SYLK should omit Memo columns: " + state.message);
 
-    for (const fs::path &path : {dif_path, dif_filtered_path})
-    {
-        const std::string dif = read_text(path);
-        expect(dif.find("VECTORS\n0,1") != std::string::npos,
-               "#6632: DIF must declare one surviving vector after Memo omission");
-        expect(dif.find("\"CODE\"") != std::string::npos &&
-                   dif.find("MEMO") == std::string::npos && dif.find("\"OK\"") != std::string::npos,
-               "#6632: DIF must retain only the CODE header and value");
-    }
-    for (const fs::path &path : {sylk_path, sylk_filtered_path})
-    {
-        const std::string sylk = read_text(path);
-        expect(sylk.find("B;Y2;X1") != std::string::npos,
-               "#6632: SYLK must declare one surviving column after Memo omission");
-        expect(sylk.find("\"CODE\"") != std::string::npos &&
-                   sylk.find("MEMO") == std::string::npos && sylk.find("\"OK\"") != std::string::npos,
-               "#6632: SYLK must retain only the CODE header and value");
-    }
+    const std::string dif = read_text(dif_path);
+    expect(dif.find("VECTORS\n0,2") != std::string::npos && dif.find("MEMO") == std::string::npos,
+           "#6632: unfiltered DIF must declare two surviving vectors after Memo omission");
+    expect(dif.find("1,0\n\"BEFORE\"\n1,0\n\"AFTER\"") != std::string::npos &&
+               dif.find("1,0\n\"AA\"\n1,0\n\"ZZ\"") != std::string::npos,
+           "#6632: unfiltered DIF must preserve retained fields around an omitted Memo");
+    const std::string filtered_dif = read_text(dif_filtered_path);
+    expect(filtered_dif.find("VECTORS\n0,2") != std::string::npos && filtered_dif.find("MEMO") == std::string::npos,
+           "#6632: filtered DIF must declare two surviving vectors after Memo omission");
+    expect(filtered_dif.find("1,0\n\"AFTER\"\n1,0\n\"BEFORE\"") != std::string::npos &&
+               filtered_dif.find("1,0\n\"ZZ\"\n1,0\n\"AA\"") != std::string::npos,
+           "#6632: filtered DIF must preserve explicit retained-field order around an omitted Memo");
+
+    const std::string sylk = read_text(sylk_path);
+    expect(sylk.find("B;Y2;X2") != std::string::npos && sylk.find("MEMO") == std::string::npos,
+           "#6632: unfiltered SYLK must declare two surviving columns after Memo omission");
+    expect(sylk.find("C;Y1;X1;K\"BEFORE\"\nC;Y1;X2;K\"AFTER\"") != std::string::npos &&
+               sylk.find("C;Y2;X1;K\"AA\"\nC;Y2;X2;K\"ZZ\"") != std::string::npos,
+           "#6632: unfiltered SYLK must preserve retained fields around an omitted Memo");
+    const std::string filtered_sylk = read_text(sylk_filtered_path);
+    expect(filtered_sylk.find("B;Y2;X2") != std::string::npos && filtered_sylk.find("MEMO") == std::string::npos,
+           "#6632: filtered SYLK must declare two surviving columns after Memo omission");
+    expect(filtered_sylk.find("C;Y1;X1;K\"AFTER\"\nC;Y1;X2;K\"BEFORE\"") != std::string::npos &&
+               filtered_sylk.find("C;Y2;X1;K\"ZZ\"\nC;Y2;X2;K\"AA\"") != std::string::npos,
+           "#6632: filtered SYLK must preserve explicit retained-field order around an omitted Memo");
 
     fs::remove_all(temp_root, ignored);
 }
