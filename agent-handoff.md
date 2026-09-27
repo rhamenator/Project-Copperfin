@@ -84,7 +84,9 @@ after review found a macOS clone destination-identity gap.
 Issue #6636: make DIF/SYLK nullable export match retained VFP9 evidence.
 Branch `codex/implement-6636-dif-sylk-null` adds explicit DIF numeric/Character/
 Logical NULL cells, blank SYLK `K` cells, complete-file regression fixtures,
-and traceability. Local verification is in progress before opening the PR.
+and traceability. PR #6663 is open against `v1-development`; focused checks
+pass, and review fixes for stale nullable Character storage and handoff status
+are in progress.
 
 ## Workspace preservation
 

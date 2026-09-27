@@ -1277,6 +1277,11 @@
                             dif << "0,\nV\n";
                             continue;
                         }
+                        if (field_type == 'C' || field_type == 'V')
+                        {
+                            dif << "1,0\n\"\"\n";
+                            continue;
+                        }
                     }
                     if (!header_row && !is_null && field_type == 'L')
                     {

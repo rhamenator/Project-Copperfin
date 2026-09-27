@@ -1401,12 +1401,31 @@ void test_copy_to_dif_sylk_converts_nullable_values() {
     const fs::path dif_path = temp_root / "nullable.dif";
     const fs::path sylk_path = temp_root / "nullable.slk";
     const fs::path main_path = temp_root / "copy_to_dif_sylk_nullable_values.prg";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "n", .type = 'N', .length = 4U, .nullable = true},
+        {.name = "c", .type = 'C', .length = 2U, .nullable = true},
+        {.name = "l", .type = 'L', .length = 1U, .nullable = true},
+        {.name = "tail", .type = 'C', .length = 2U},
+    };
+    expect(copperfin::vfp::create_dbf_table_file(
+               source_path.string(), fields, {{"12", "ZZ", "T", "OK"}}).ok,
+           "#6636: nullable DIF/SYLK source fixture should be created");
+    const auto header = copperfin::vfp::parse_dbf_header_from_file(source_path.string());
+    expect(header.ok, "#6636: nullable DIF/SYLK source header should be readable");
+    if (header.ok)
+    {
+        std::fstream source(source_path, std::ios::binary | std::ios::in | std::ios::out);
+        expect(source.good(), "#6636: nullable DIF/SYLK source fixture should open for patching");
+        // Preserve nonblank physical field bytes while marking N/C/L NULL,
+        // as an external DBF writer may: delete flag + 4 + 2 + 1 + 2 bytes.
+        source.seekp(static_cast<std::streamoff>(header.header.header_length + 10U), std::ios::beg);
+        source.put(static_cast<char>(0x07));
+        source.flush();
+        expect(source.good(), "#6636: nullable DIF/SYLK source NULL bitmap patch should succeed");
+    }
     write_text(
         main_path,
-        "CREATE TABLE '" + source_path.string() + "' (n N(4) NULL, c C(2) NULL, l L NULL, tail C(2))\n"
         "USE '" + source_path.string() + "' EXCLUSIVE\n"
-        "APPEND BLANK\n"
-        "REPLACE n WITH .NULL., c WITH .NULL., l WITH .NULL., tail WITH 'OK'\n"
         "COPY TO '" + dif_path.string() + "' TYPE DIF\n"
         "COPY TO '" + sylk_path.string() + "' TYPE SYLK\n"
         "RETURN\n");
@@ -1434,7 +1453,7 @@ void test_copy_to_dif_sylk_converts_nullable_values() {
     if (fs::exists(dif_path))
     {
         expect(read_text(dif_path) == expected_dif,
-               "#6636: DIF must use native numeric NULL, empty character, false logical, and stable trailing cells");
+               "#6636: DIF must ignore stale physical bytes and use native numeric NULL, empty character, false logical, and stable trailing cells");
     }
     else
     {
