@@ -1,0 +1,1 @@
+- 2026-09-27: Fixed SDF Logical export to emit VFP-compatible uppercase `T` and `F` tokens (#6604). `RQ-CF-PRG-SDF-LOGICAL-EXPORT-001`

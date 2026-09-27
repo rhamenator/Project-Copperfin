@@ -462,6 +462,11 @@
                     value = format_runtime_date_storage_string(year, month, day);
                 }
             }
+            else if (field_type == 'L')
+            {
+                const std::string normalized = normalize_identifier(value);
+                value = normalized == "true" || normalized == "t" || normalized == "y" ? "T" : "F";
+            }
             else if (field_type == 'Q')
             {
                 static constexpr char hex_digits[] = "0123456789ABCDEF";
