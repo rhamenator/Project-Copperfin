@@ -270,6 +270,17 @@
             return sdf_omits_export_field(field);
         }
 
+        bool has_varbinary_field(const std::vector<vfp::DbfFieldDescriptor> &fields)
+        {
+            return std::any_of(
+                fields.begin(),
+                fields.end(),
+                [](const vfp::DbfFieldDescriptor &field)
+                {
+                    return static_cast<char>(std::toupper(static_cast<unsigned char>(field.type))) == 'Q';
+                });
+        }
+
         bool text_export_omits_general_picture_field(const vfp::DbfFieldDescriptor &field)
         {
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
@@ -479,6 +490,76 @@
                 start = end + 1U;
             }
             return lines;
+        }
+
+        std::vector<std::string_view> split_dif_sylk_records(const std::string &contents)
+        {
+            // Copperfin emits LF records, while native VFP9 emits CR records.
+            // When LF is present, only LF (and its optional preceding CR) is a
+            // delimiter so a lone CR inside a quoted value remains data. For
+            // CR-only input, quoted payloads may themselves contain CR, so
+            // delimit only while outside a quoted token.
+            char delimiter = '\n';
+            bool in_quotes = false;
+            for (std::size_t index = 0U; index < contents.size(); ++index)
+            {
+                const char ch = contents[index];
+                if (ch == '"')
+                {
+                    if (in_quotes && index + 1U < contents.size() && contents[index + 1U] == '"')
+                    {
+                        ++index;
+                    }
+                    else
+                    {
+                        in_quotes = !in_quotes;
+                    }
+                    continue;
+                }
+                if (!in_quotes && (ch == '\r' || ch == '\n'))
+                {
+                    delimiter = ch == '\r' && index + 1U < contents.size() && contents[index + 1U] == '\n'
+                        ? '\n'
+                        : ch;
+                    break;
+                }
+            }
+
+            std::vector<std::string_view> records;
+            std::size_t record_start = 0U;
+            in_quotes = false;
+            for (std::size_t index = 0U; index < contents.size(); ++index)
+            {
+                const char ch = contents[index];
+                if (delimiter == '\r' && ch == '"')
+                {
+                    if (in_quotes && index + 1U < contents.size() && contents[index + 1U] == '"')
+                    {
+                        ++index;
+                    }
+                    else
+                    {
+                        in_quotes = !in_quotes;
+                    }
+                    continue;
+                }
+                if (ch != delimiter || (delimiter == '\r' && in_quotes))
+                {
+                    continue;
+                }
+                std::size_t record_end = index;
+                if (delimiter == '\n' && record_end > record_start && contents[record_end - 1U] == '\r')
+                {
+                    --record_end;
+                }
+                records.emplace_back(contents.data() + record_start, record_end - record_start);
+                record_start = index + 1U;
+            }
+            if (record_start < contents.size())
+            {
+                records.emplace_back(contents.data() + record_start, contents.size() - record_start);
+            }
+            return records;
         }
 
         bool wildcard_match_insensitive(const std::string &pattern, const std::string &text)
@@ -944,14 +1025,10 @@
             bool in_data_section = false;
             bool in_row = false;
 
-            std::istringstream input(contents);
-            std::string line;
-            while (std::getline(input, line))
+            const std::vector<std::string_view> lines = split_dif_sylk_records(contents);
+            for (std::size_t line_index = 0U; line_index < lines.size(); ++line_index)
             {
-                if (!line.empty() && line.back() == '\r')
-                {
-                    line.pop_back();
-                }
+                const std::string_view line = lines[line_index];
                 if (line == "DATA")
                 {
                     in_data_section = true;
@@ -978,16 +1055,12 @@
                     continue;
                 }
 
-                const std::string type_token = trim_copy(line.substr(0U, comma));
-                std::string payload_line;
-                if (!std::getline(input, payload_line))
+                const std::string type_token = trim_copy(std::string{line.substr(0U, comma)});
+                if (line_index + 1U >= lines.size())
                 {
                     break;
                 }
-                if (!payload_line.empty() && payload_line.back() == '\r')
-                {
-                    payload_line.pop_back();
-                }
+                const std::string_view payload_line = lines[++line_index];
 
                 if (type_token == "-1")
                 {
@@ -1015,7 +1088,7 @@
                 std::string value;
                 if (type_token == "1")
                 {
-                    value = trim_copy(payload_line);
+                    value = trim_copy(std::string{payload_line});
                     if (value.size() >= 2U && value.front() == '"' && value.back() == '"')
                     {
                         value = value.substr(1U, value.size() - 2U);
@@ -1028,9 +1101,19 @@
                     const char field_type = column_index < fields.size()
                         ? static_cast<char>(std::toupper(static_cast<unsigned char>(fields[column_index].type)))
                         : '\0';
-                    value = field_type == 'L'
-                        ? trim_copy(payload_line)
-                        : trim_copy(line.substr(comma + 1U));
+                    if (field_type == 'Q')
+                    {
+                        // Native VFP writes the physical Q field bytes in a
+                        // numeric DIF cell. APPEND FROM accepts the row but
+                        // imports that non-text cell as a blank Varbinary.
+                        value.clear();
+                    }
+                    else
+                    {
+                        value = field_type == 'L'
+                            ? trim_copy(std::string{payload_line})
+                            : trim_copy(std::string{line.substr(comma + 1U)});
+                    }
                 }
                 current_row.push_back(std::move(value));
                 if (expected_columns != 0U && current_row.size() == expected_columns)
@@ -1205,17 +1288,15 @@
             return sylk.str();
         }
 
-        std::vector<std::vector<std::string>> parse_sylk_table(const std::string &contents, std::size_t expected_columns)
+        std::vector<std::vector<std::string>> parse_sylk_table(
+            const std::string &contents,
+            const std::vector<vfp::DbfFieldDescriptor> &fields)
         {
+            const std::size_t expected_columns = fields.size();
             std::map<std::size_t, std::vector<std::string>> rows_by_index;
-            std::istringstream input(contents);
-            std::string line;
-            while (std::getline(input, line))
+            for (const std::string_view line_view : split_dif_sylk_records(contents))
             {
-                if (!line.empty() && line.back() == '\r')
-                {
-                    line.pop_back();
-                }
+                const std::string line{line_view};
                 if (!starts_with_insensitive(line, "C;"))
                 {
                     continue;
@@ -1267,7 +1348,18 @@
                 }
 
                 std::string value = trim_copy(value_token);
-                if (value.size() >= 2U && value.front() == '"' && value.back() == '"')
+                const bool quoted_value = value.size() >= 2U &&
+                    value.front() == '"' && value.back() == '"';
+                const char field_type = column_index <= fields.size()
+                    ? static_cast<char>(std::toupper(static_cast<unsigned char>(fields[column_index - 1U].type)))
+                    : '\0';
+                if (field_type == 'Q' && !quoted_value)
+                {
+                    // Native physical Q cells are unquoted. VFP accepts the
+                    // row but imports the binary cell as a blank Varbinary.
+                    value.clear();
+                }
+                else if (quoted_value)
                 {
                     value = sylk_unescape_string(value.substr(1U, value.size() - 2U));
                 }

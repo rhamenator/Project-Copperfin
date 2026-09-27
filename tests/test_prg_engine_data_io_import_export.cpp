@@ -1781,6 +1781,162 @@ void test_dif_sylk_preserve_varbinary_storage_bytes() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_native_dif_sylk_varbinary_cells() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_native_dif_sylk_varbinary_import";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "Q", .type = 'Q', .length = 8U},
+        {.name = "C", .type = 'C', .length = 3U},
+    };
+    const std::string physical_q{"\0 A\0   \x04", 8U};
+    const auto make_dif = [&](const std::string &character_value)
+    {
+        std::string fixture =
+            "TABLE\r0,1\r\"Visual FoxPro\"\r"
+            "VECTORS\r0,2\r\"\"\r"
+            "TUPLES\r0,2\r\"\"\r"
+            "DATA\r0,0\r\"\"\r"
+            "-1,0\rBOT\r1,0\r\"q\"\r1,0\r\"c\"\r"
+            "-1,0\rBOT\r0,";
+        fixture.append(physical_q);
+        fixture.append("\rV\r1,0\r\"");
+        fixture.append(character_value);
+        fixture.append("\"\r-1,0\rEOD\r");
+        return fixture;
+    };
+    const auto make_sylk = [&](const std::string &character_value)
+    {
+        std::string fixture =
+            "ID;PVisual FoxPro\r"
+            "B;Y2;X2\r"
+            "C;Y1;X1;K\"q\"\r"
+            "C;Y1;X2;K\"c\"\r"
+            "C;Y2;X1;K";
+        fixture.append(physical_q);
+        fixture.append("\rC;Y2;X2;K\"");
+        fixture.append(character_value);
+        fixture.append("\"\rE\r");
+        return fixture;
+    };
+
+    const auto verify_successful_import = [&](const std::string &type, const std::string &fixture)
+    {
+        const std::string lower_type = lowercase_copy(type);
+        const fs::path source_path = temp_root / ("native." + (type == "DIF" ? std::string{"dif"} : std::string{"slk"}));
+        const fs::path target_path = temp_root / ("target_" + lower_type + ".dbf");
+        const fs::path main_path = temp_root / ("append_" + lower_type + ".prg");
+        write_text(source_path, fixture);
+        expect(copperfin::vfp::create_dbf_table_file(target_path.string(), fields, {}).ok,
+               "#6654: native " + type + " target should be created");
+        write_text(
+            main_path,
+            "USE '" + target_path.string() + "'\n"
+            "APPEND FROM '" + source_path.string() + "' TYPE " + type + "\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6654: native " + type + " Varbinary import should complete: " + state.message);
+
+        const auto parsed = copperfin::vfp::parse_dbf_table_from_file(target_path.string(), 5U);
+        expect(parsed.ok && parsed.table.records.size() == 2U,
+               "#6654: native " + type + " import should append the field-name and data rows");
+        if (parsed.ok && parsed.table.records.size() == 2U)
+        {
+            expect(parsed.table.records[0].values[0].display_value == "q" &&
+                       parsed.table.records[0].values[1].display_value == "c",
+                   "#6654: native " + type + " field-name row should remain data for a Varbinary target");
+            expect(parsed.table.records[1].values[0].display_value.empty() &&
+                       parsed.table.records[1].values[1].display_value == "XYZ",
+                   "#6654: native " + type + " physical Varbinary cell should import blank without dropping its row");
+        }
+    };
+
+    verify_successful_import("DIF", make_dif("XYZ"));
+    verify_successful_import("SYLK", make_sylk("XYZ"));
+
+    const auto verify_lf_quoted_carriage_return = [&](const std::string &type, const std::string &fixture)
+    {
+        const std::string lower_type = lowercase_copy(type);
+        const fs::path source_path = temp_root / ("embedded_cr." + (type == "DIF" ? std::string{"dif"} : std::string{"slk"}));
+        const fs::path target_path = temp_root / ("embedded_cr_" + lower_type + ".dbf");
+        const fs::path main_path = temp_root / ("embedded_cr_" + lower_type + ".prg");
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> text_fields{
+            {.name = "C", .type = 'C', .length = 8U},
+        };
+        write_text(source_path, fixture);
+        expect(copperfin::vfp::create_dbf_table_file(target_path.string(), text_fields, {}).ok,
+               "#6654 review: " + type + " embedded-CR target should be created");
+        write_text(
+            main_path,
+            "USE '" + target_path.string() + "'\n"
+            "APPEND FROM '" + source_path.string() + "' TYPE " + type + "\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6654 review: " + type + " quoted embedded CR should import: " + state.message);
+        const auto parsed = copperfin::vfp::parse_dbf_table_from_file(target_path.string(), 5U);
+        expect(parsed.ok && parsed.table.records.size() == 1U &&
+                   parsed.table.records[0].values[0].display_value == "A\rB",
+               "#6654 review: " + type + " LF records should preserve a lone CR inside a quoted value");
+    };
+
+    verify_lf_quoted_carriage_return(
+        "DIF",
+        "TABLE\n0,1\n\"Copperfin\"\nVECTORS\n0,1\n\"\"\nTUPLES\n0,2\n\"\"\n"
+        "DATA\n0,0\n\"\"\n-1,0\nBOT\n1,0\n\"C\"\n-1,0\nBOT\n1,0\n\"A\rB\"\n-1,0\nEOD\n");
+    verify_lf_quoted_carriage_return(
+        "SYLK",
+        "ID;P\"First\rRecord\"\nB;Y2;X1\nC;Y1;X1;K\"C\"\nC;Y2;X1;K\"A\rB\"\nE\n");
+
+    const auto verify_rollback = [&](const std::string &type, const std::string &fixture)
+    {
+        const std::string lower_type = lowercase_copy(type);
+        const fs::path source_path = temp_root / ("invalid." + (type == "DIF" ? std::string{"dif"} : std::string{"slk"}));
+        const fs::path target_path = temp_root / ("rollback_" + lower_type + ".dbf");
+        const fs::path main_path = temp_root / ("rollback_" + lower_type + ".prg");
+        write_text(source_path, fixture);
+        expect(copperfin::vfp::create_dbf_table_file(target_path.string(), fields, {{"KEEP", "ONE"}}).ok,
+               "#6654: " + type + " rollback target should be created");
+        write_text(
+            main_path,
+            "USE '" + target_path.string() + "'\n"
+            "APPEND FROM '" + source_path.string() + "' TYPE " + type + "\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+               "#6654: " + type + " later-field write failure should pause with an error");
+
+        const auto parsed = copperfin::vfp::parse_dbf_table_from_file(target_path.string(), 5U);
+        expect(parsed.ok && parsed.table.records.size() == 1U,
+               "#6654: " + type + " later-field write failure should roll back every provisional row");
+        if (parsed.ok && parsed.table.records.size() == 1U)
+        {
+            expect(parsed.table.records[0].values[0].display_value == "KEEP" &&
+                       parsed.table.records[0].values[1].display_value == "ONE",
+                   "#6654: " + type + " rollback should preserve the original target row");
+        }
+    };
+
+    verify_rollback("DIF", make_dif("TOO-LONG"));
+    verify_rollback("SYLK", make_sylk("TOO-LONG"));
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_delimited_export_omits_general_picture_fields() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_delimited_omitted_binary_objects";
