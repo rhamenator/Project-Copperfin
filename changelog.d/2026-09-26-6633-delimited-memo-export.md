@@ -1,0 +1,1 @@
+- 2026-09-26: Fixed `COPY TO ... TYPE CSV` and `TYPE DELIMITED` to omit Memo fields with VFP9-compatible column layout (#6633).

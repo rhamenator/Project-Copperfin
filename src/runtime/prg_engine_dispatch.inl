@@ -8825,7 +8825,7 @@
                     delimited_field_indexes.reserve(out_fields.size());
                     for (std::size_t index = 0U; index < out_fields.size(); ++index)
                     {
-                        if (!text_export_omits_general_picture_field(out_fields[index]))
+                        if (!text_export_omits_delimited_field(out_fields[index]))
                         {
                             delimited_field_indexes.push_back(index);
                         }
@@ -8835,13 +8835,13 @@
                         text_export_omits_general_picture_field(out_fields.back());
                     if (copy_type == "csv")
                     {
-                        // VFP suppresses General/Picture names. If the
+                        // VFP suppresses Memo, General, and Picture names. If the
                         // selection starts with either one, its CSV header
                         // retains the leading empty header cell; data rows
                         // still omit the value altogether.
                         bool wrote_header_cell = false;
                         if (!delimited_field_indexes.empty() &&
-                            text_export_omits_general_picture_field(out_fields.front()))
+                            text_export_omits_delimited_field(out_fields.front()))
                         {
                             output << delimited_options.delimiter;
                         }

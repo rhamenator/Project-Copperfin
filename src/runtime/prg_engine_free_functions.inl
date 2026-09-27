@@ -269,6 +269,15 @@
             return field_type == 'G' || field_type == 'P';
         }
 
+        bool text_export_omits_delimited_field(const vfp::DbfFieldDescriptor &field)
+        {
+            // VFP excludes Memo from non-table text output, while its import
+            // contract remains separate (#6609). General/Picture retain their
+            // existing format-specific handling.
+            const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
+            return text_export_omits_general_picture_field(field) || field_type == 'M';
+        }
+
         std::string normalize_sdf_field_value_for_storage(
             const vfp::DbfFieldDescriptor &field,
             std::string value)

@@ -1539,6 +1539,58 @@ void test_delimited_export_omits_general_picture_fields() {
     fs::remove_all(temp_root, ignored);
 }
 
+
+void test_delimited_export_omits_memo_fields() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_delimited_omitted_memo";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "MEMO", .type = 'M', .length = 4U},
+        {.name = "CODE", .type = 'C', .length = 2U},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, {{"MEMO", "OK"}});
+    expect(create_result.ok, "#6633: Memo delimited-export fixture should be created");
+
+    const fs::path csv_path = temp_root / "memo.csv";
+    const fs::path tab_path = temp_root / "memo.txt";
+    const fs::path main_path = temp_root / "copy_to_delimited_omitted_memo.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO '" + csv_path.string() + "' TYPE CSV FIELDS MEMO, CODE\n"
+        "COPY TO '" + tab_path.string() + "' TYPE DELIMITED WITH TAB FIELDS MEMO, CODE\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6633: COPY TO CSV/DELIMITED Memo script should complete: " + state.message);
+
+    if (fs::exists(csv_path))
+    {
+        expect(read_text(csv_path) == ",CODE\r\n\"OK\"\r\n",
+               "#6633: CSV must retain the leading empty Memo header cell but omit its payload");
+    }
+    else
+    {
+        expect(false, "#6633: COPY TO CSV should create the Memo destination");
+    }
+    if (fs::exists(tab_path))
+    {
+        expect(read_text(tab_path) == "\"OK\"\r\n",
+               "#6633: TAB DELIMITED must omit the Memo column without a placeholder cell");
+    }
+    else
+    {
+        expect(false, "#6633: COPY TO DELIMITED should create the Memo destination");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_type_sdf_imports_fixed_width_text_rows() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_sdf";
