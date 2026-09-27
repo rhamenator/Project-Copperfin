@@ -14,8 +14,11 @@ carries `agent-approved` on GitHub. Refresh its input with:
 
 ```sh
 gh issue list --repo rhamenator/Project-Copperfin --state open \
-  --label agent-approved --limit 1000 --json number,title,labels,createdAt,url
+  --label agent-approved --limit 1000 --json number,title,labels,author,createdAt,url
 ```
+
+The live query is a candidate list only: inspect each item’s `author.login` and
+state before admitting it to unattended work.
 
 ## Snapshot and completion rule
 
@@ -54,6 +57,7 @@ this page avoids repeating closed tickets.
 | Cluster | Remaining outcome |
 | --- | --- |
 | Session/task shutdown cleanup | Finish scoped cursor handling, non-`DO` `ON SHUTDOWN`, Destroy-during-QUIT cleanup, and the selectable compatibility architecture (#6194, #6197, #6199, #6454). |
+| Reentrant cursor replacement and cancellation | Prove cursor replacement is safe when filters, predicates, or traversal state reenter work (#6576, #6577, #6578), then close the cancellation/lock sibling (#6499). |
 | SQL federation and foundational SELECT/buffering | Correct cross-backend translation, NULL/date/coercion behavior, joins, and buffering semantics. |
 | DBF, memo, and index integrity | Fail closed for malformed DBF/FPT/index input; preserve field-type and concurrent-mutation integrity. |
 | Native objects, COM/OLE, events, and reflection | Complete object semantics, release/reentrancy safety, event order, and Automation lifecycle. |
@@ -72,7 +76,7 @@ open item could otherwise be mis-scoped or reintroduce a regression.
 
 | Completed work | Open work it constrains |
 | --- | --- |
-| Reentrant cursor-closure UAF cluster | Do not reopen the closed command slices. Continue only the independently open cancellation/lock behavior (#6499) or a newly evidenced bypass. |
+| Reentrant cursor-closure UAF cluster | Do not reopen the closed command slices. Continue the independently open cursor-replacement edges (#6576, #6577, #6578) and cancellation/lock behavior (#6499), or a newly evidenced bypass. |
 | #6644 and #6645 Memo omission exports | They cover non-table Memo omission only. They do not decide text-to-Memo import compatibility (#6609), Blob handling (#6630), or the user-visible loss policy (#6639/#6640). |
 | #6646 Character whitespace | It establishes `C` behavior for DIF/SYLK. Varchar #6650 and Varbinary #6651 have different on-disk length and byte contracts. |
 | #6647 merge / #6649 active PR | The Character change is complete. Keep Logical type-cell work isolated to #6648 and nullable values to #6636. |
