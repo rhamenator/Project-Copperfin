@@ -799,7 +799,7 @@ void apply_null_flag_bit(
 
 bool supports_direct_field_writes(char field_type) {
     return field_type == 'C' || field_type == 'N' || field_type == 'F' || field_type == 'L' || field_type == 'D' || field_type == 'B' || field_type == 'I' ||
-           field_type == 'Y' || field_type == 'T' || field_type == 'V' || field_type == 'Q';
+           field_type == '+' || field_type == 'Y' || field_type == 'T' || field_type == 'V' || field_type == 'Q';
 }
 
 bool is_memo_pointer_field(char field_type) {
@@ -1371,7 +1371,13 @@ DbfWriteResult write_field_bytes(
             table_bytes[field_offset + field.length - 1U] = static_cast<std::uint8_t>(text.size());
             break;
         }
-        case 'I': {
+        case 'I':
+        case '+': {
+            // VFP-native Autoincrement uses the same little-endian signed
+            // 32-bit record representation as Integer. dBASE Level 7 tables
+            // are rejected by the mutation entry points before reaching this
+            // writer and retain their distinct big-endian sign/magnitude
+            // interpretation on the read-only path.
             if (is_null_token) {
                 write_le_u32(table_bytes, field_offset, 0U);
                 break;
@@ -1481,6 +1487,7 @@ DbfWriteResult fill_blank_record_fields(
                 break;
             case 'B':
             case 'I':
+            case '+':
             case 'Y':
             case 'T':
             case 'M':
@@ -2137,7 +2144,7 @@ bool is_dbf_table_field_storage_layout_writable(char type, std::uint8_t length) 
     if (type == 'B') {
         return length == 8U;
     }
-    if (type == 'I') {
+    if (type == 'I' || type == '+') {
         return length == 4U;
     }
     if (type == 'Y' || type == 'T') {

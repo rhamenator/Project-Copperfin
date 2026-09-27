@@ -2,10 +2,16 @@
 
 ## Last shipped slice
 
-Issue #6628 (PR #6659, merge `59fe248ed`) finished 2026-09-27: DIF/SYLK
-Date and DateTime export now uses VFP-compatible typed cells, including blank
-DateTime handling and the Excel-1900 leap-day discontinuity. Focused and
-hosted checks passed; all review conversations were resolved.
+Issue #6614 (PR #6660, merge `cf2b95187`) finished 2026-09-27: SDF now uses
+Varchar/Varbinary payload widths, uppercase hexadecimal Varbinary text, and
+validated case-insensitive hex import with command-atomic rejection of bad
+input. Focused and hosted checks passed; the review diagnostic fix was
+verified and its conversation resolved.
+
+Earlier: issue #6628 (PR #6659, merge `59fe248ed`) finished 2026-09-27:
+DIF/SYLK Date and DateTime export now uses VFP-compatible typed cells,
+including blank DateTime handling and the Excel-1900 leap-day discontinuity.
+Focused and hosted checks passed; all review conversations were resolved.
 
 Earlier: issue #6630 (PR #6658, merge `0b2a52244`) finished 2026-09-27: CSV and
 DELIMITED export/import now project Blob (`W`) fields with the same native
@@ -64,15 +70,12 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Issue #6614: match VFP9 SDF Varchar/Varbinary printable widths and hexadecimal
-Varbinary representation. Branch `codex/implement-6614-sdf-varchar-varbinary`
-uses payload rather than physical descriptor widths, adds uppercase-hex
-export and validated hex import, and preserves command-level rollback on bad
-input. Focused data-I/O and localization verification pass. PR #6660 is open
-against `v1-development`; hosted review requested that the shared invalid-hex
-diagnostic explicitly describe both character validity and even length. That
-localized wording and its focused assertion are being updated before the
-conversation is resolved, followed by another hosted CI cycle and merge.
+Issue #6612: match VFP9's 11-character numeric SDF layout for Autoincrement
+(`+`) fields in both export and import. Branch
+`codex/implement-6612-sdf-autoincrement` extends the recovered binary-numeric
+layout contract without conflating VFP-native storage with dBASE Level 7.
+Implementation, focused verification, traceability, signed commit, and review
+remain in progress.
 
 ## Workspace preservation
 
