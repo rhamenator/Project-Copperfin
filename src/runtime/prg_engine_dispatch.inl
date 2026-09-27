@@ -8540,6 +8540,10 @@
                 // Collect qualifying rows (skip for COPY STRUCTURE TO)
                 const std::string for_expr = statement.quaternary_expression;
                 std::vector<std::vector<std::string>> out_rows;
+                // Keep nullness parallel to the display text. Formatting a
+                // fixed-width export needs the distinction even when the
+                // decoded textual form is blank or uses a sentinel.
+                std::vector<std::vector<bool>> out_row_nulls;
                 if (!is_structure)
                 {
                     const CursorPositionSnapshot saved = capture_cursor_snapshot(*cursor);
@@ -8572,7 +8576,9 @@
                             continue;
                         }
                         std::vector<std::string> row;
+                        std::vector<bool> row_nulls;
                         row.reserve(out_fields.size());
+                        row_nulls.reserve(out_fields.size());
                         for (const auto &desc : out_fields)
                         {
                             const auto it = std::find_if(
@@ -8582,8 +8588,10 @@
                                     return collapse_identifier(rv.field_name) == collapse_identifier(desc.name);
                                 });
                             row.push_back(it != rec->values.end() ? it->display_value : std::string{});
+                            row_nulls.push_back(it != rec->values.end() && it->is_null);
                         }
                         out_rows.push_back(std::move(row));
+                        out_row_nulls.push_back(std::move(row_nulls));
                     }
                     restore_cursor_snapshot(*cursor, saved);
                 }
@@ -8592,14 +8600,18 @@
                 {
                     std::vector<std::vector<std::string>> formatted_sdf_rows;
                     formatted_sdf_rows.reserve(out_rows.size());
-                    for (const auto &row : out_rows)
+                    for (std::size_t row_index = 0U; row_index < out_rows.size(); ++row_index)
                     {
+                        const auto &row = out_rows[row_index];
                         std::vector<std::string> formatted_row;
                         formatted_row.reserve(out_fields.size());
                         for (std::size_t index = 0U; index < out_fields.size(); ++index)
                         {
                             const auto formatted_value = format_sdf_field_value(
-                                out_fields[index], index < row.size() ? row[index] : std::string{});
+                                out_fields[index],
+                                index < row.size() ? row[index] : std::string{},
+                                row_index < out_row_nulls.size() && index < out_row_nulls[row_index].size() &&
+                                    out_row_nulls[row_index][index]);
                             if (!formatted_value.has_value())
                             {
                                 last_error_message = runtime_text(

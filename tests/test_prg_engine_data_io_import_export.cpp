@@ -1178,6 +1178,64 @@ void test_copy_to_type_sdf_preserves_character_whitespace() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_copy_to_type_sdf_converts_nullable_values() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_sdf_nullable_values";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const fs::path destination_path = temp_root / "nullable.sdf";
+    const fs::path main_path = temp_root / "copy_to_sdf_nullable_values.prg";
+    write_text(
+        main_path,
+        "CREATE TABLE '" + source_path.string() +
+            "' (n N(4) NULL, n2 N(6,2) NULL, f F(6,2) NULL, i I NULL, y Y NULL, b B NULL, "
+            "c C(2) NULL, l L NULL, d D NULL, t T NULL)\n"
+        "USE '" + source_path.string() + "' EXCLUSIVE\n"
+        "APPEND BLANK\n"
+        "REPLACE n WITH .NULL., n2 WITH .NULL., f WITH .NULL., i WITH .NULL., y WITH .NULL., "
+            "b WITH .NULL., c WITH .NULL., l WITH .NULL., d WITH .NULL., t WITH .NULL.\n"
+        "COPY TO '" + destination_path.string() + "' TYPE SDF\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6635: COPY TO SDF nullable-value script should complete: " + state.message);
+
+    const auto source_result = copperfin::vfp::parse_dbf_table_from_file(source_path.string(), 2U);
+    expect(source_result.ok && source_result.table.records.size() == 1U,
+           "#6635: nullable SDF fixture must retain its source row");
+    if (source_result.ok && source_result.table.records.size() == 1U)
+    {
+        for (const auto &value : source_result.table.records.front().values)
+        {
+            if (value.field_name != "_NullFlags")
+            {
+                expect(value.is_null, "#6635: COPY TO SDF must read each fixture value as DBF NULL");
+            }
+        }
+    }
+
+    const std::string expected =
+        "   0" + std::string{"  0.00"} + "  0.00" + std::string(10U, ' ') + "0" +
+        std::string(15U, ' ') + "0.0000" + std::string(17U, ' ') + "0.00" +
+        std::string(2U, ' ') + "F" + std::string(8U, ' ') + std::string(19U, ' ') + "\r\n";
+    if (fs::exists(destination_path))
+    {
+        expect(read_text(destination_path) == expected,
+               "#6635: SDF must use VFP9 NULL text for Numeric/Float/Integer/Currency/Double/Logical and blanks for Character/temporal values");
+    }
+    else
+    {
+        expect(false, "#6635: COPY TO SDF should create the nullable-value destination");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sdf_omits_binary_object_fields_from_interchange_layout() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sdf_omitted_binary_objects";

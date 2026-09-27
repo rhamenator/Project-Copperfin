@@ -1,0 +1,1 @@
+- 2026-09-27: Fixed `COPY TO ... TYPE SDF` serialization of nullable DBF values: numeric families now use VFP9-compatible zero text, Logical uses `F`, and Character/Date/DateTime use blank fixed-width cells (#6635).

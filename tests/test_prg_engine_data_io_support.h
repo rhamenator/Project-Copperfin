@@ -103,6 +103,7 @@ void test_append_from_is_reverted_by_undo();
 void test_append_from_transaction_rollback_restores_destination();
 void test_copy_to_type_sdf_writes_fixed_width_text_rows();
 void test_copy_to_type_sdf_preserves_character_whitespace();
+void test_copy_to_type_sdf_converts_nullable_values();
 void test_sdf_omits_binary_object_fields_from_interchange_layout();
 void test_dif_sylk_omit_blob_fields();
 void test_delimited_export_omits_general_picture_fields();

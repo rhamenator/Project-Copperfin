@@ -324,10 +324,48 @@
             return {};
         }
 
-        std::optional<std::string> format_sdf_field_value(const vfp::DbfFieldDescriptor &field, std::string value)
+        std::optional<std::string> format_sdf_field_value(
+            const vfp::DbfFieldDescriptor &field,
+            std::string value,
+            const bool is_null = false)
         {
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
-            if (field_type == 'D')
+            if (is_null)
+            {
+                // VFP9 converts a nullable DBF cell to its fixed-width SDF
+                // text representation. This is serialization only: the
+                // source DBF NULL flag remains intact (#6635).
+                if (field_type == 'N' || field_type == 'F' || field_type == 'I' ||
+                    field_type == 'B' || field_type == 'Y')
+                {
+                    if (field_type == 'Y')
+                    {
+                        value = "0.0000";
+                    }
+                    else if (field_type == 'B')
+                    {
+                        value = "0.00";
+                    }
+                    else if ((field_type == 'N' || field_type == 'F') && field.decimal_count > 0U)
+                    {
+                        value = "0." + std::string(field.decimal_count, '0');
+                    }
+                    else
+                    {
+                        value = "0";
+                    }
+                }
+                else if (field_type == 'L')
+                {
+                    value = "F";
+                }
+                else
+                {
+                    // Character and temporal NULL values are blank in SDF.
+                    value.clear();
+                }
+            }
+            else if (field_type == 'D')
             {
                 int year = 0;
                 int month = 0;
