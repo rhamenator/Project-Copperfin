@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "b3d3d8de-e9cf-46e3-a85a-2f6c23257bbc", "text": "PR #6647 review fix pushed: signed 97adf816f now measures SYLK Character padding in source DBF code-page bytes; CP1252 C(2) regression passes. Review thread resolved after verification; CI rerunning.", "to": ["both"], "ts": "2026-09-27T03:52:20Z", "type": "status"}
