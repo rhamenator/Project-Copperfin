@@ -1679,6 +1679,108 @@ void test_dif_sylk_preserve_varchar_whitespace() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_dif_sylk_preserve_varbinary_storage_bytes() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_dif_sylk_varbinary_bytes";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "BIN", .type = 'Q', .length = 8U},
+    };
+    const std::string payload{"\0 A\0", 4U};
+    expect(copperfin::vfp::create_dbf_table_file(source_path.string(), fields, {{payload}}).ok,
+           "#6651: Varbinary source fixture should be created");
+
+    const auto header = copperfin::vfp::parse_dbf_header_from_file(source_path.string());
+    expect(header.ok, "#6651: Varbinary source header should be readable");
+    const std::string physical_bytes{"\0 A\0   \x04", 8U};
+    if (header.ok)
+    {
+        std::fstream source(source_path, std::ios::binary | std::ios::in | std::ios::out);
+        source.seekp(static_cast<std::streamoff>(header.header.header_length + 1U), std::ios::beg);
+        source.write(physical_bytes.data(), static_cast<std::streamsize>(physical_bytes.size()));
+        source.flush();
+        expect(source.good(), "#6651: native-layout Varbinary bytes should be writable");
+    }
+
+    const fs::path dif_path = temp_root / "binary.dif";
+    const fs::path sylk_path = temp_root / "binary.slk";
+    const fs::path main_path = temp_root / "copy_to_dif_sylk_varbinary.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO '" + dif_path.string() + "' TYPE DIF\n"
+        "COPY TO '" + sylk_path.string() + "' TYPE SYLK\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6651: DIF/SYLK Varbinary export should complete: " + state.message);
+
+    std::string expected_dif =
+        "TABLE\n"
+        "0,1\n"
+        "\"Copperfin\"\n"
+        "VECTORS\n"
+        "0,1\n"
+        "\"\"\n"
+        "TUPLES\n"
+        "0,2\n"
+        "\"\"\n"
+        "DATA\n"
+        "0,0\n"
+        "\"\"\n"
+        "-1,0\n"
+        "BOT\n"
+        "1,0\n"
+        "\"BIN\"\n"
+        "-1,0\n"
+        "BOT\n"
+        "0,";
+    expected_dif.append(physical_bytes);
+    expected_dif.append("\nV\n-1,0\nEOD\n");
+    expect(read_text(dif_path) == expected_dif,
+           "#6651: DIF must emit the complete physical Varbinary field bytes without text quoting");
+
+    std::string expected_sylk =
+        "ID;PCopperfin\n"
+        "B;Y2;X1\n"
+        "C;Y1;X1;K\"BIN\"\n"
+        "C;Y2;X1;K";
+    expected_sylk.append(physical_bytes);
+    expected_sylk.append("\nE\n");
+    expect(read_text(sylk_path) == expected_sylk,
+           "#6651: SYLK must emit the complete physical Varbinary field bytes without text quoting");
+
+    const fs::path unavailable_path = temp_root / "unavailable.dif";
+    const fs::path unavailable_main_path = temp_root / "copy_to_dif_varbinary_unavailable.prg";
+    write_text(
+        unavailable_main_path,
+        "SET MULTILOCKS ON\n"
+        "USE '" + source_path.string() + "' ALIAS source\n"
+        "=CURSORSETPROP('Buffering', 5, 'source')\n"
+        "REPLACE BIN WITH BIN\n"
+        "COPY TO '" + unavailable_path.string() + "' TYPE DIF\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession unavailable_session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(unavailable_main_path.string(), temp_root.string(), false));
+    const auto unavailable_state =
+        unavailable_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!unavailable_state.completed &&
+               unavailable_state.message.find("raw bytes for binary field BIN are unavailable") != std::string::npos,
+           "#6651: DIF must fail deterministically when a buffered Varbinary cell has no authoritative raw bytes");
+    expect(!fs::exists(unavailable_path),
+           "#6651: unavailable Varbinary bytes must fail before the DIF output is created");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_delimited_export_omits_general_picture_fields() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_delimited_omitted_binary_objects";

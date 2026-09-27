@@ -82,6 +82,7 @@ int main() {
     test_dif_sylk_omit_memo_fields();
     test_dif_sylk_preserve_character_whitespace();
     test_dif_sylk_preserve_varchar_whitespace();
+    test_dif_sylk_preserve_varbinary_storage_bytes();
     test_delimited_export_omits_general_picture_fields();
     test_delimited_export_omits_memo_fields();
     test_append_from_type_sdf_imports_fixed_width_text_rows();

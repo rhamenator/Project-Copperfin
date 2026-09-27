@@ -854,7 +854,8 @@
         std::string serialize_dif_table(
             const std::vector<vfp::DbfFieldDescriptor> &fields,
             const std::vector<std::vector<std::string>> &rows,
-            const std::vector<std::vector<bool>> &row_nulls)
+            const std::vector<std::vector<bool>> &row_nulls,
+            const std::vector<std::vector<std::string>> &row_raw_values)
         {
             std::ostringstream dif;
             dif.imbue(std::locale::classic());
@@ -873,17 +874,26 @@
 
             const auto write_row = [&](const std::vector<std::string> &row_values,
                                        const std::vector<bool> *nulls,
+                                       const std::vector<std::string> *raw_values,
                                        bool header_row)
             {
                 dif << "-1,0\n";
                 dif << "BOT\n";
                 for (std::size_t index = 0U; index < fields.size(); ++index)
                 {
+                    const char field_type = static_cast<char>(
+                        std::toupper(static_cast<unsigned char>(fields[index].type)));
+                    if (!header_row && field_type == 'Q')
+                    {
+                        const std::string &raw = (*raw_values)[index];
+                        dif << "0,";
+                        dif.write(raw.data(), static_cast<std::streamsize>(raw.size()));
+                        dif << "\nV\n";
+                        continue;
+                    }
                     const std::string value = index < row_values.size()
                                                   ? format_dif_cell_value(fields[index], row_values[index], header_row)
                                                   : std::string{};
-                    const char field_type = static_cast<char>(
-                        std::toupper(static_cast<unsigned char>(fields[index].type)));
                     const bool is_null = nulls != nullptr && index < nulls->size() && (*nulls)[index];
                     if (!header_row && !is_null && field_type == 'L')
                     {
@@ -910,11 +920,12 @@
             {
                 header_row.push_back(field.name);
             }
-            write_row(header_row, nullptr, true);
+            write_row(header_row, nullptr, nullptr, true);
             for (std::size_t row_index = 0U; row_index < rows.size(); ++row_index)
             {
                 const std::vector<bool> *nulls = row_index < row_nulls.size() ? &row_nulls[row_index] : nullptr;
-                write_row(rows[row_index], nulls, false);
+                const std::vector<std::string> *raw_values = &row_raw_values[row_index];
+                write_row(rows[row_index], nulls, raw_values, false);
             }
 
             dif << "-1,0\n";
@@ -1124,6 +1135,7 @@
             const std::vector<vfp::DbfFieldDescriptor> &fields,
             const std::vector<std::vector<std::string>> &rows,
             const std::vector<std::vector<bool>> &row_nulls,
+            const std::vector<std::vector<std::string>> &row_raw_values,
             std::uint8_t source_code_page_mark)
         {
             std::ostringstream sylk;
@@ -1134,10 +1146,21 @@
             const auto write_row = [&](std::size_t row_index,
                                        const std::vector<std::string> &row_values,
                                        const std::vector<bool> *nulls,
+                                       const std::vector<std::string> *raw_values,
                                        bool header_row)
             {
                 for (std::size_t column_index = 0U; column_index < fields.size(); ++column_index)
                 {
+                    sylk << "C;Y" << row_index << ";X" << (column_index + 1U) << ";K";
+                    const char field_type = static_cast<char>(
+                        std::toupper(static_cast<unsigned char>(fields[column_index].type)));
+                    if (!header_row && field_type == 'Q')
+                    {
+                        const std::string &raw = (*raw_values)[column_index];
+                        sylk.write(raw.data(), static_cast<std::streamsize>(raw.size()));
+                        sylk << "\n";
+                        continue;
+                    }
                     const std::string value = column_index < row_values.size()
                                                   ? format_sylk_cell_value(
                                                         fields[column_index],
@@ -1145,9 +1168,6 @@
                                                         header_row,
                                                         source_code_page_mark)
                                                   : std::string{};
-                    sylk << "C;Y" << row_index << ";X" << (column_index + 1U) << ";K";
-                    const char field_type = static_cast<char>(
-                        std::toupper(static_cast<unsigned char>(fields[column_index].type)));
                     const bool is_null = nulls != nullptr && column_index < nulls->size() && (*nulls)[column_index];
                     if (!header_row && !is_null && field_type == 'L')
                     {
@@ -1174,11 +1194,12 @@
             {
                 header_row.push_back(field.name);
             }
-            write_row(1U, header_row, nullptr, true);
+            write_row(1U, header_row, nullptr, nullptr, true);
             for (std::size_t row_index = 0U; row_index < rows.size(); ++row_index)
             {
                 const std::vector<bool> *nulls = row_index < row_nulls.size() ? &row_nulls[row_index] : nullptr;
-                write_row(row_index + 2U, rows[row_index], nulls, false);
+                const std::vector<std::string> *raw_values = &row_raw_values[row_index];
+                write_row(row_index + 2U, rows[row_index], nulls, raw_values, false);
             }
             sylk << "E\n";
             return sylk.str();
