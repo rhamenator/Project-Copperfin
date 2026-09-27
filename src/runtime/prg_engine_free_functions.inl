@@ -750,12 +750,15 @@
             char delimiter = ',';
             char quote = '"';
             bool quote_character_fields = true;
+            bool truncate_enclosed_doubled_quotes = false;
         };
 
         DelimitedTextOptions parse_delimited_text_options(const std::string &type, const std::string &with_clause)
         {
             DelimitedTextOptions options;
-            if (normalize_identifier(type) == "tab")
+            const std::string normalized_type = normalize_identifier(type);
+            options.truncate_enclosed_doubled_quotes = normalized_type == "delimited";
+            if (normalized_type == "tab")
             {
                 options.delimiter = '\t';
             }
@@ -875,6 +878,8 @@
             bool in_quotes = false;
             bool current_field_was_quoted = false;
             bool current_field_closed_quote = false;
+            bool current_field_started_with_enclosure = false;
+            bool discard_after_delimited_doubled_quote = false;
             const auto finish_current_field = [&]() {
                 if (!current_field_was_quoted)
                 {
@@ -887,17 +892,48 @@
             for (std::size_t index = 0U; index < line.size(); ++index)
             {
                 const char ch = line[index];
+                if (discard_after_delimited_doubled_quote)
+                {
+                    if (ch == options.delimiter)
+                    {
+                        values.push_back(finish_current_field());
+                        outside_before_quotes.clear();
+                        quoted_content.clear();
+                        outside_after_quotes.clear();
+                        current_field_was_quoted = false;
+                        current_field_closed_quote = false;
+                        current_field_started_with_enclosure = false;
+                        discard_after_delimited_doubled_quote = false;
+                    }
+                    continue;
+                }
                 if (ch == options.quote)
                 {
                     if (in_quotes && index + 1U < line.size() && line[index + 1U] == options.quote)
                     {
-                        quoted_content.push_back(options.quote);
+                        if (!options.truncate_enclosed_doubled_quotes || !current_field_started_with_enclosure)
+                        {
+                            quoted_content.push_back(options.quote);
+                        }
+                        else
+                        {
+                            // VFP DELIMITED treats the pair as the end of the
+                            // enclosed value and ignores the remaining bytes in
+                            // that field; CSV follows its separate quote rule.
+                            in_quotes = false;
+                            current_field_closed_quote = true;
+                            discard_after_delimited_doubled_quote = true;
+                        }
                         ++index;
                     }
                     else
                     {
                         in_quotes = !in_quotes;
                         current_field_was_quoted = true;
+                        if (in_quotes && trim_copy(outside_before_quotes).empty())
+                        {
+                            current_field_started_with_enclosure = true;
+                        }
                         if (!in_quotes)
                         {
                             current_field_closed_quote = true;
@@ -913,6 +949,7 @@
                     outside_after_quotes.clear();
                     current_field_was_quoted = false;
                     current_field_closed_quote = false;
+                    current_field_started_with_enclosure = false;
                     continue;
                 }
                 if (in_quotes)

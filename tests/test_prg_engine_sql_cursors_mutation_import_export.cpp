@@ -538,7 +538,11 @@ void test_append_from_delimited_fields_clause_preserves_typed_order_for_selected
 
     write_text(delimited_path.string(),
         "\"HOTEL\",11.00,901\n"
-        "\"INDIA\",12.50,902\n");
+        "\"INDIA\",12.50,902\n"
+        "\"ab\"\"cd\",13.75,903\r\n");
+    expect(read_text(delimited_path.string()) ==
+               "\"HOTEL\",11.00,901\n\"INDIA\",12.50,902\n\"ab\"\"cd\",13.75,903\r\n",
+           "#6665: remote DELIMITED source must retain the exact doubled-quote bytes");
 
     write_text(
         main_path,
@@ -589,19 +593,19 @@ void test_append_from_delimited_fields_clause_preserves_typed_order_for_selected
                "#3692: selected SQL/result cursor should start with seeded row count before reordered-fields APPEND FROM");
     }
     if (rows_after != state.globals.end()) {
-        expect(copperfin::runtime::format_value(rows_after->second) == "5",
-               "#3692: reordered-fields APPEND FROM should add two rows to the selected SQL/result cursor");
+        expect(copperfin::runtime::format_value(rows_after->second) == "6",
+               "#6665: reordered-fields APPEND FROM should add all three rows to the selected SQL/result cursor");
     }
     if (bottom_id != state.globals.end()) {
-        expect(copperfin::runtime::format_value(bottom_id->second) == "902",
-               "#3692: reordered-fields APPEND FROM should map the third source column into ID");
+        expect(copperfin::runtime::format_value(bottom_id->second) == "903",
+               "#6665: reordered-fields APPEND FROM should map the third source column into ID");
     }
     if (bottom_name != state.globals.end()) {
-        expect(copperfin::runtime::format_value(bottom_name->second) == "INDIA",
-               "#3692: reordered-fields APPEND FROM should map the first source column into NAME");
+        expect(copperfin::runtime::format_value(bottom_name->second) == "ab",
+               "#6665: remote DELIMITED doubled quotes must truncate the first source column to ab");
     }
     if (bottom_amount != state.globals.end()) {
-        expect(copperfin::runtime::format_value(bottom_amount->second) == "12.5",
+        expect(copperfin::runtime::format_value(bottom_amount->second) == "13.75",
                "#3692: reordered-fields APPEND FROM should map the second source column into AMOUNT");
     }
     if (disc != state.globals.end()) {
@@ -1232,4 +1236,3 @@ void test_remote_append_from_for_follows_vfp9_semantics() {
 }
 
 }  // namespace copperfin::sql_cursor_mutation_tests
-
