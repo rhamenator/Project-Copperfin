@@ -2,10 +2,16 @@
 
 ## Last shipped slice
 
-Issue #6609 (PR #6662, merge `c3e62e4e7`) finished 2026-09-27: text-to-Memo
-SDF/CSV imports now use an explicit session-scoped VFP/Copperfin policy,
-strict CSV enclosure preflight, localized pre-mutation diagnostics, and
-focused DBF/FPT atomicity coverage. Focused and hosted checks passed; all
+Issue #6636 (PR #6663, merge `21ba05355`) finished 2026-09-27: nullable DIF
+numeric, Character, and Logical cells now match VFP9, while SYLK emits blank
+`K` cells without shifting later fields. Review added explicit stale-physical-
+byte protection for nullable Character/Varchar fields. Focused and hosted
+checks passed; all review conversations were resolved.
+
+Earlier: issue #6609 (PR #6662, merge `c3e62e4e7`) finished 2026-09-27:
+text-to-Memo SDF/CSV imports now use an explicit session-scoped VFP/Copperfin
+policy, strict CSV enclosure preflight, localized pre-mutation diagnostics,
+and focused DBF/FPT atomicity coverage. Focused and hosted checks passed; all
 review conversations were resolved.
 
 Earlier: issue #6612 (PR #6661, merge `9b028f5eb`) finished 2026-09-27: SDF
@@ -81,12 +87,12 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Issue #6636: make DIF/SYLK nullable export match retained VFP9 evidence.
-Branch `codex/implement-6636-dif-sylk-null` adds explicit DIF numeric/Character/
-Logical NULL cells, blank SYLK `K` cells, complete-file regression fixtures,
-and traceability. PR #6663 is open against `v1-development`; focused checks
-pass, and review fixes for stale nullable Character storage and handoff status
-are in progress.
+Issue #6623: make blank fixed-width SDF Numeric/Float source cells import as
+non-NULL zero, including nullable Numeric targets, without shifting following
+fields. Branch `codex/implement-6623-sdf-blank-numeric` contains the focused
+normalization, regression, and traceability work. PR #6664 is open against
+`v1-development`; focused checks pass, and review fixes for Float scale
+preservation and handoff status are in progress.
 
 ## Workspace preservation
 

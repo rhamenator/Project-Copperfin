@@ -89,6 +89,7 @@ int main() {
     test_delimited_export_omits_general_picture_fields();
     test_delimited_export_omits_memo_fields();
     test_append_from_type_sdf_imports_fixed_width_text_rows();
+    test_append_from_type_sdf_converts_blank_numeric_cells_to_zero();
     test_append_from_type_sdf_uses_vfp_logical_tokens();
     test_append_from_type_sdf_uses_printable_binary_numeric_widths();
     test_sdf_autoincrement_uses_vfp_printable_width();

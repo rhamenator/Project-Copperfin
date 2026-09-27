@@ -304,6 +304,24 @@
             return text_export_omits_object_field(field) || field_type == 'M';
         }
 
+        std::string sdf_numeric_zero_text(const vfp::DbfFieldDescriptor &field)
+        {
+            const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
+            if (field_type == 'Y')
+            {
+                return "0.0000";
+            }
+            if (field_type == 'B')
+            {
+                return "0.00";
+            }
+            if ((field_type == 'N' || field_type == 'F') && field.decimal_count > 0U)
+            {
+                return "0." + std::string(field.decimal_count, '0');
+            }
+            return "0";
+        }
+
         std::string normalize_sdf_field_value_for_storage(
             const vfp::DbfFieldDescriptor &field,
             std::string value)
@@ -316,6 +334,12 @@
                 // other fixed-width byte, including ?, as false.
                 const std::string token = trim_copy(value);
                 return token == "T" || token == "Y" ? "true" : "false";
+            }
+            if ((field_type == 'N' || field_type == 'F') && trim_copy(value).empty())
+            {
+                // VFP imports a blank printable Numeric/Float SDF cell as a
+                // real zero, including for nullable targets (#6623).
+                return sdf_numeric_zero_text(field);
             }
             if (field_type == 'D')
             {
@@ -416,22 +440,7 @@
                 if (field_type == 'N' || field_type == 'F' || field_type == 'I' || field_type == '+' ||
                     field_type == 'B' || field_type == 'Y')
                 {
-                    if (field_type == 'Y')
-                    {
-                        value = "0.0000";
-                    }
-                    else if (field_type == 'B')
-                    {
-                        value = "0.00";
-                    }
-                    else if ((field_type == 'N' || field_type == 'F') && field.decimal_count > 0U)
-                    {
-                        value = "0." + std::string(field.decimal_count, '0');
-                    }
-                    else
-                    {
-                        value = "0";
-                    }
+                    value = sdf_numeric_zero_text(field);
                 }
                 else if (field_type == 'L')
                 {
