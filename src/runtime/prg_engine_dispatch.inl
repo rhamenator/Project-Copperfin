@@ -8728,7 +8728,7 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    output << serialize_dif_table(out_fields, out_rows);
+                    output << serialize_dif_table(out_fields, out_rows, out_row_nulls);
                     output.close();
                     if (!output.good())
                     {
@@ -8762,7 +8762,7 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    output << serialize_sylk_table(out_fields, out_rows, source_code_page_mark);
+                    output << serialize_sylk_table(out_fields, out_rows, out_row_nulls, source_code_page_mark);
                     output.close();
                     if (!output.good())
                     {
@@ -10691,7 +10691,7 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    std::vector<std::vector<std::string>> dif_rows = parse_dif_table(buffer, target_fields.size());
+                    std::vector<std::vector<std::string>> dif_rows = parse_dif_table(buffer, target_fields);
                     if (!dif_rows.empty() && dif_rows.front().size() >= target_fields.size())
                     {
                         bool matches_header = true;
