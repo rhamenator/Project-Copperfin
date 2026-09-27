@@ -247,11 +247,20 @@
         bool sdf_omits_binary_object_field(const vfp::DbfFieldDescriptor &field)
         {
             // VFP9's SDF interchange has no physical column for General,
-            // Blob, or Picture values.  Memo has a separate compatibility
-            // policy (#6607/#6609): its import behavior must remain available
-            // to Copperfin's extension mode until that policy is implemented.
+            // Blob, or Picture values. Memo import has a separate
+            // compatibility policy (#6609), so it remains intentionally
+            // outside this shared import/export projection.
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
             return field_type == 'G' || field_type == 'W' || field_type == 'P';
+        }
+
+        bool sdf_omits_export_field(const vfp::DbfFieldDescriptor &field)
+        {
+            // VFP9 documents that non-table COPY TO targets omit Memo fields,
+            // including an explicitly selected Memo field (#6607). SDF's
+            // importer deliberately keeps Memo handling separate (#6609).
+            const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
+            return sdf_omits_binary_object_field(field) || field_type == 'M';
         }
 
         bool text_export_omits_general_picture_field(const vfp::DbfFieldDescriptor &field)

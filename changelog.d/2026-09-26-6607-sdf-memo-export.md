@@ -1,0 +1,1 @@
+- 2026-09-26: Fixed `COPY TO ... TYPE SDF` to omit Memo fields in VFP-compatible non-table exports (#6607). `RQ-CF-PRG-SDF-MEMO-EXPORT-001`.
