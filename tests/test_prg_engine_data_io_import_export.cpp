@@ -1591,6 +1591,41 @@ void test_dif_sylk_preserve_character_whitespace() {
     expect(read_text(sylk_path).find("C;Y2;X1;K\"  A     \"\n") != std::string::npos,
            "#6646: SYLK must preserve the complete fixed-width Character cell");
 
+    const fs::path cp1252_source_path = temp_root / "cp1252-source.dbf";
+    const fs::path cp1252_sylk_path = temp_root / "cp1252-spaces.slk";
+    const fs::path cp1252_main_path = temp_root / "copy_to_sylk_cp1252_character_width.prg";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> cp1252_fields{
+        {.name = "TXT", .type = 'C', .length = 2U},
+    };
+    expect(copperfin::vfp::create_dbf_table_file(cp1252_source_path.string(), cp1252_fields, {{"A"}}).ok,
+           "#6646: CP1252 source fixture should be created");
+    const auto cp1252_header = copperfin::vfp::parse_dbf_header_from_file(cp1252_source_path.string());
+    expect(cp1252_header.ok, "#6646: CP1252 source header should be readable");
+    if (cp1252_header.ok)
+    {
+        std::fstream cp1252_source(cp1252_source_path, std::ios::binary | std::ios::in | std::ios::out);
+        expect(cp1252_source.good(), "#6646: CP1252 source fixture should open for patching");
+        cp1252_source.seekp(29, std::ios::beg);
+        cp1252_source.put(static_cast<char>(0x03));
+        cp1252_source.seekp(static_cast<std::streamoff>(cp1252_header.header.header_length + 1U), std::ios::beg);
+        cp1252_source.put(static_cast<char>(0xE9));
+        cp1252_source.put(' ');
+        cp1252_source.flush();
+        expect(cp1252_source.good(), "#6646: CP1252 source fixture patch should succeed");
+    }
+    write_text(
+        cp1252_main_path,
+        "USE '" + cp1252_source_path.string() + "'\n"
+        "COPY TO '" + cp1252_sylk_path.string() + "' TYPE SYLK\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession cp1252_session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(cp1252_main_path.string(), temp_root.string(), false));
+    const auto cp1252_state = cp1252_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(cp1252_state.completed, "#6646: CP1252 SYLK export should complete: " + cp1252_state.message);
+    expect(read_text(cp1252_sylk_path).find("C;Y2;X1;K\"é \"\n") != std::string::npos,
+           "#6646: SYLK padding must use the marked source encoding width, not decoded UTF-8 width");
+
     for (const fs::path &destination_path : {dif_destination_path, sylk_destination_path})
     {
         const auto result = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 10U);

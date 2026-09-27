@@ -8399,6 +8399,16 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
+                std::uint8_t source_code_page_mark = 0U;
+                if (copy_as_sylk && !cursor->remote && !cursor->source_path.empty())
+                {
+                    const vfp::DbfParseResult source_header = parse_cursor_table_header(*cursor);
+                    if (source_header.ok)
+                    {
+                        source_code_page_mark = source_header.header.code_page_mark;
+                    }
+                }
+
                 namespace fs = std::filesystem;
                 fs::path dest_path(dest_raw);
                 if (dest_path.extension().empty())
@@ -8752,7 +8762,7 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    output << serialize_sylk_table(out_fields, out_rows);
+                    output << serialize_sylk_table(out_fields, out_rows, source_code_page_mark);
                     output.close();
                     if (!output.good())
                     {

@@ -1049,16 +1049,22 @@
         std::string format_sylk_cell_value(
             const vfp::DbfFieldDescriptor &field,
             std::string value,
-            bool header_row)
+            bool header_row,
+            std::uint8_t source_code_page_mark)
         {
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
             if (!header_row && field_type == 'C')
             {
                 // VFP emits the complete fixed-width Character cell in SYLK,
                 // including leading whitespace and DBF space padding (#6646).
-                if (value.size() < field.length)
+                // The field width is measured in source DBF bytes, not in the
+                // UTF-8 bytes used by the decoded runtime string.
+                const vfp::DbfTextConversionResult encoded =
+                    vfp::encode_dbf_text(source_code_page_mark, value);
+                const std::size_t source_width = encoded.ok ? encoded.text.size() : value.size();
+                if (source_width < field.length)
                 {
-                    value.append(field.length - value.size(), ' ');
+                    value.append(field.length - source_width, ' ');
                 }
                 return value;
             }
@@ -1085,7 +1091,8 @@
 
         std::string serialize_sylk_table(
             const std::vector<vfp::DbfFieldDescriptor> &fields,
-            const std::vector<std::vector<std::string>> &rows)
+            const std::vector<std::vector<std::string>> &rows,
+            std::uint8_t source_code_page_mark)
         {
             std::ostringstream sylk;
             sylk.imbue(std::locale::classic());
@@ -1097,7 +1104,11 @@
                 for (std::size_t column_index = 0U; column_index < fields.size(); ++column_index)
                 {
                     const std::string value = column_index < row_values.size()
-                                                  ? format_sylk_cell_value(fields[column_index], row_values[column_index], header_row)
+                                                  ? format_sylk_cell_value(
+                                                        fields[column_index],
+                                                        row_values[column_index],
+                                                        header_row,
+                                                        source_code_page_mark)
                                                   : std::string{};
                     sylk << "C;Y" << row_index << ";X" << (column_index + 1U) << ";K";
                     if (!header_row && sylk_field_prefers_numeric(fields[column_index]) && !value.empty())
