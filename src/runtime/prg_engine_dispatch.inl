@@ -10237,7 +10237,8 @@
                             {
                                 continue;
                             }
-                            const std::vector<std::string> values = parse_delimited_text_line(line, delimited_options);
+                            const std::vector<std::string> values =
+                                parse_delimited_text_line(line, delimited_options, &filtered_target_fields);
                             if (append_type == "csv" && first_line && values.size() >= filtered_target_fields.size())
                             {
                                 bool matches_header = true;
@@ -11364,7 +11365,8 @@
                         {
                             continue;
                         }
-                        const std::vector<std::string> values = parse_delimited_text_line(line, delimited_options);
+                        const std::vector<std::string> values =
+                            parse_delimited_text_line(line, delimited_options, &target_fields);
                         if (append_type == "csv" && first_delimited_line && values.size() >= target_fields.size())
                         {
                             bool matches_header = true;

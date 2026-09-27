@@ -1,0 +1,1 @@
+- 2026-09-27: Preserved both quote bytes when `APPEND FROM TYPE CSV` imports doubled quotes inside an enclosed Character field, matching VFP9 (#6522). `RQ-CF-PRG-CSV-ENCLOSED-QUOTE-001`

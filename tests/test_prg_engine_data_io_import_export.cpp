@@ -3190,6 +3190,55 @@ void test_append_from_type_csv_imports_delimited_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_type_csv_preserves_enclosed_doubled_quotes() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_prg_engine_append_from_csv_doubled_quote";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path destination_path = temp_root / "destination.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 8U},
+    };
+    expect(copperfin::vfp::create_dbf_table_file(destination_path.string(), fields, {}).ok,
+           "#6522: local CSV destination fixture should be created");
+
+    const fs::path source_path = temp_root / "source.csv";
+    const std::string source_bytes = "NAME\r\n\"ab\"\"cd\"\r\n";
+    write_text(source_path, source_bytes);
+    expect(read_text(source_path) == source_bytes,
+           "#6522: local CSV source must retain the exact enclosed doubled-quote bytes");
+
+    const fs::path main_path = temp_root / "append_from_csv_doubled_quote.prg";
+    write_text(
+        main_path,
+        "USE '" + destination_path.string() + "'\n"
+        "APPEND FROM '" + source_path.string() + "' TYPE CSV FIELDS NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6522: local CSV doubled-quote import should complete: " + state.message);
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 10U);
+    expect(result.ok && result.table.records.size() == 1U,
+           "#6522: local CSV doubled-quote import should append one row");
+    if (result.ok && result.table.records.size() == 1U) {
+        const std::string imported_value = result.table.records[0U].values[0U].display_value;
+        expect(imported_value == "ab\"\"cd",
+               "#6522: enclosed doubled quotes in CSV must preserve both quote bytes");
+        expect(std::vector<unsigned char>(imported_value.begin(), imported_value.end()) ==
+                   std::vector<unsigned char>({97U, 98U, 34U, 34U, 99U, 100U}),
+               "#6522: imported CSV Character bytes must match the installed-VFP9 observation");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_type_delimited_truncates_enclosed_doubled_quote_pair() {
     namespace fs = std::filesystem;
     const fs::path temp_root =
