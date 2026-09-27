@@ -64,10 +64,11 @@ Issue #6628: match VFP9 Date/DateTime cells in DIF and SYLK export. Branch
 native `YYYYMMDD` cell and DateTime to printable DIF text or an Excel-1900
 SYLK serial, preventing leakage of Copperfin's internal storage diagnostics.
 Focused data-I/O verification passes. PR #6659 is open against
-`v1-development`; review requested blank-DateTime and pre-March-1900 serial
-coverage, and DCO requires sign-off trailers. The fixes are in progress; next
-steps are focused re-verification, signed/sign-off commit repair, push, thread
-resolution, and merge once every required check and conversation clears.
+`v1-development`; signed/sign-off code head `24a5fcbc8` addresses review by
+emitting blank cells for the zero DateTime sentinel and applying Excel's fake
+leap-day offset only from 1900-03-01 onward. All commits pass the local DCO
+contract. Next steps are exact-change verification, conversation resolution,
+hosted CI/review, and merge once every required check clears.
 
 ## Workspace preservation
 
