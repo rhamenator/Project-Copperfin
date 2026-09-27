@@ -90,8 +90,9 @@ after review found a macOS clone destination-identity gap.
 Issue #6623: make blank fixed-width SDF Numeric/Float source cells import as
 non-NULL zero, including nullable Numeric targets, without shifting following
 fields. Branch `codex/implement-6623-sdf-blank-numeric` contains the focused
-normalization, regression, and traceability work; local verification is in
-progress before opening the PR.
+normalization, regression, and traceability work. PR #6664 is open against
+`v1-development`; focused checks pass, and review fixes for Float scale
+preservation and handoff status are in progress.
 
 ## Workspace preservation
 

@@ -2389,12 +2389,14 @@ void test_append_from_type_sdf_converts_blank_numeric_cells_to_zero() {
            "#6623: blank-numeric SDF destination fixture should be created");
 
     const fs::path source_path = temp_root / "input.sdf";
+    const fs::path round_trip_path = temp_root / "round-trip.sdf";
     write_text(source_path, std::string(14U, ' ') + "ZZ\r\n");
     const fs::path main_path = temp_root / "append_blank_numeric_sdf.prg";
     write_text(
         main_path,
         "USE '" + destination_path.string() + "'\n"
         "APPEND FROM '" + source_path.string() + "' TYPE SDF\n"
+        "COPY TO '" + round_trip_path.string() + "' TYPE SDF\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -2409,10 +2411,13 @@ void test_append_from_type_sdf_converts_blank_numeric_cells_to_zero() {
     {
         const auto &values = result.table.records.front().values;
         expect(values.size() >= 4U && values[0].display_value == "0" &&
-                   values[1].display_value == "0" && values[2].display_value == "0" &&
+                   values[1].display_value == "0.00" && values[2].display_value == "0" &&
                    !values[2].is_null && values[3].display_value == "ZZ",
                "#6623: blank N/F/nullable-N cells must become non-NULL zero without shifting Character data");
     }
+    expect(fs::exists(round_trip_path) &&
+               read_text(round_trip_path) == "   0  0.00   0ZZ\r\n",
+           "#6623: re-exported blank numeric cells must retain target scale and fixed-width alignment");
 
     fs::remove_all(temp_root, ignored);
 }
