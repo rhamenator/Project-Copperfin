@@ -74,8 +74,9 @@ Issue #6612: match VFP9's 11-character numeric SDF layout for Autoincrement
 (`+`) fields in both export and import. Branch
 `codex/implement-6612-sdf-autoincrement` extends the recovered binary-numeric
 layout contract without conflating VFP-native storage with dBASE Level 7.
-Implementation, focused verification, traceability, signed commit, and review
-remain in progress.
+Focused data-I/O/DBF verification and traceability pass at signed/sign-off head
+`7dc9eb964`, open as PR #6661 against `v1-development`. Hosted review and CI,
+followed by any verified response and merge, remain in progress.
 
 ## Workspace preservation
 
