@@ -2829,6 +2829,80 @@ void test_copy_to_type_sylk_and_append_from_type_sylk_round_trip() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_copy_to_dif_sylk_non_null_logical_cells() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_dif_sylk_logical_cells";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "FLAG", .type = 'L', .length = 1U},
+    };
+    expect(copperfin::vfp::create_dbf_table_file(
+               source_path.string(), fields, {{"true"}, {"false"}}).ok,
+           "#6648: non-null Logical source fixture should be created");
+
+    const fs::path dif_path = temp_root / "logical.dif";
+    const fs::path sylk_path = temp_root / "logical.slk";
+    const fs::path main_path = temp_root / "copy_to_dif_sylk_logical.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO '" + dif_path.string() + "' TYPE DIF\n"
+        "COPY TO '" + sylk_path.string() + "' TYPE SYLK\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6648: DIF/SYLK Logical export should complete: " + state.message);
+
+    const std::string expected_dif =
+        "TABLE\n"
+        "0,1\n"
+        "\"Copperfin\"\n"
+        "VECTORS\n"
+        "0,1\n"
+        "\"\"\n"
+        "TUPLES\n"
+        "0,3\n"
+        "\"\"\n"
+        "DATA\n"
+        "0,0\n"
+        "\"\"\n"
+        "-1,0\n"
+        "BOT\n"
+        "1,0\n"
+        "\"FLAG\"\n"
+        "-1,0\n"
+        "BOT\n"
+        "0,1\n"
+        "TRUE\n"
+        "-1,0\n"
+        "BOT\n"
+        "0,0\n"
+        "FALSE\n"
+        "-1,0\n"
+        "EOD\n";
+    expect(read_text(dif_path) == expected_dif,
+           "#6648: DIF must emit complete VFP-compatible numeric Logical cells");
+
+    const std::string expected_sylk =
+        "ID;PCopperfin\n"
+        "B;Y3;X1\n"
+        "C;Y1;X1;K\"FLAG\"\n"
+        "C;Y2;X1;K\"T\"\n"
+        "C;Y3;X1;K\"F\"\n"
+        "E\n";
+    expect(read_text(sylk_path) == expected_sylk,
+           "#6648: SYLK must emit complete VFP-compatible quoted Logical tokens");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_to_type_json_and_append_from_type_json_round_trip() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_json_round_trip";

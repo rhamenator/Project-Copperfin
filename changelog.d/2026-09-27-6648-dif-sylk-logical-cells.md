@@ -1,0 +1,1 @@
+- 2026-09-27: Fixed DIF and SYLK export of non-null Logical fields to emit VFP9-compatible numeric cells and quoted `T`/`F` tokens, while retaining DIF round-trip import compatibility (#6648).
