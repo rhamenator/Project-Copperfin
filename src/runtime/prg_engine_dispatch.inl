@@ -10729,7 +10729,14 @@
                     }
 
                     std::vector<std::vector<std::string>> dif_rows = parse_dif_table(buffer, target_fields);
-                    if (!dif_rows.empty() && dif_rows.front().size() >= target_fields.size())
+                    const bool has_varbinary_target = std::any_of(
+                        target_fields.begin(),
+                        target_fields.end(),
+                        [](const vfp::DbfFieldDescriptor &field)
+                        {
+                            return static_cast<char>(std::toupper(static_cast<unsigned char>(field.type))) == 'Q';
+                        });
+                    if (!has_varbinary_target && !dif_rows.empty() && dif_rows.front().size() >= target_fields.size())
                     {
                         bool matches_header = true;
                         for (std::size_t index = 0U; index < target_fields.size(); ++index)
@@ -10869,8 +10876,15 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    std::vector<std::vector<std::string>> sylk_rows = parse_sylk_table(buffer, target_fields.size());
-                    if (!sylk_rows.empty() && sylk_rows.front().size() >= target_fields.size())
+                    std::vector<std::vector<std::string>> sylk_rows = parse_sylk_table(buffer, target_fields);
+                    const bool has_varbinary_target = std::any_of(
+                        target_fields.begin(),
+                        target_fields.end(),
+                        [](const vfp::DbfFieldDescriptor &field)
+                        {
+                            return static_cast<char>(std::toupper(static_cast<unsigned char>(field.type))) == 'Q';
+                        });
+                    if (!has_varbinary_target && !sylk_rows.empty() && sylk_rows.front().size() >= target_fields.size())
                     {
                         bool matches_header = true;
                         for (std::size_t index = 0U; index < target_fields.size(); ++index)

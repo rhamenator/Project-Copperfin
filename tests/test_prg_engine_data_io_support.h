@@ -111,6 +111,7 @@ void test_dif_sylk_omit_memo_fields();
 void test_dif_sylk_preserve_character_whitespace();
 void test_dif_sylk_preserve_varchar_whitespace();
 void test_dif_sylk_preserve_varbinary_storage_bytes();
+void test_append_from_native_dif_sylk_varbinary_cells();
 void test_delimited_export_omits_general_picture_fields();
 void test_delimited_export_omits_memo_fields();
 void test_append_from_type_sdf_imports_fixed_width_text_rows();

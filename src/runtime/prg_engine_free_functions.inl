@@ -944,14 +944,10 @@
             bool in_data_section = false;
             bool in_row = false;
 
-            std::istringstream input(contents);
-            std::string line;
-            while (std::getline(input, line))
+            const std::vector<std::string> lines = split_text_lines(contents);
+            for (std::size_t line_index = 0U; line_index < lines.size(); ++line_index)
             {
-                if (!line.empty() && line.back() == '\r')
-                {
-                    line.pop_back();
-                }
+                const std::string &line = lines[line_index];
                 if (line == "DATA")
                 {
                     in_data_section = true;
@@ -979,15 +975,11 @@
                 }
 
                 const std::string type_token = trim_copy(line.substr(0U, comma));
-                std::string payload_line;
-                if (!std::getline(input, payload_line))
+                if (line_index + 1U >= lines.size())
                 {
                     break;
                 }
-                if (!payload_line.empty() && payload_line.back() == '\r')
-                {
-                    payload_line.pop_back();
-                }
+                const std::string &payload_line = lines[++line_index];
 
                 if (type_token == "-1")
                 {
@@ -1028,9 +1020,19 @@
                     const char field_type = column_index < fields.size()
                         ? static_cast<char>(std::toupper(static_cast<unsigned char>(fields[column_index].type)))
                         : '\0';
-                    value = field_type == 'L'
-                        ? trim_copy(payload_line)
-                        : trim_copy(line.substr(comma + 1U));
+                    if (field_type == 'Q')
+                    {
+                        // Native VFP writes the physical Q field bytes in a
+                        // numeric DIF cell. APPEND FROM accepts the row but
+                        // imports that non-text cell as a blank Varbinary.
+                        value.clear();
+                    }
+                    else
+                    {
+                        value = field_type == 'L'
+                            ? trim_copy(payload_line)
+                            : trim_copy(line.substr(comma + 1U));
+                    }
                 }
                 current_row.push_back(std::move(value));
                 if (expected_columns != 0U && current_row.size() == expected_columns)
@@ -1205,17 +1207,14 @@
             return sylk.str();
         }
 
-        std::vector<std::vector<std::string>> parse_sylk_table(const std::string &contents, std::size_t expected_columns)
+        std::vector<std::vector<std::string>> parse_sylk_table(
+            const std::string &contents,
+            const std::vector<vfp::DbfFieldDescriptor> &fields)
         {
+            const std::size_t expected_columns = fields.size();
             std::map<std::size_t, std::vector<std::string>> rows_by_index;
-            std::istringstream input(contents);
-            std::string line;
-            while (std::getline(input, line))
+            for (const std::string &line : split_text_lines(contents))
             {
-                if (!line.empty() && line.back() == '\r')
-                {
-                    line.pop_back();
-                }
                 if (!starts_with_insensitive(line, "C;"))
                 {
                     continue;
@@ -1267,7 +1266,18 @@
                 }
 
                 std::string value = trim_copy(value_token);
-                if (value.size() >= 2U && value.front() == '"' && value.back() == '"')
+                const bool quoted_value = value.size() >= 2U &&
+                    value.front() == '"' && value.back() == '"';
+                const char field_type = column_index <= fields.size()
+                    ? static_cast<char>(std::toupper(static_cast<unsigned char>(fields[column_index - 1U].type)))
+                    : '\0';
+                if (field_type == 'Q' && !quoted_value)
+                {
+                    // Native physical Q cells are unquoted. VFP accepts the
+                    // row but imports the binary cell as a blank Varbinary.
+                    value.clear();
+                }
+                else if (quoted_value)
                 {
                     value = sylk_unescape_string(value.substr(1U, value.size() - 2U));
                 }

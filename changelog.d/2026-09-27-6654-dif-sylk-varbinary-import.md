@@ -1,0 +1,1 @@
+- 2026-09-27: Import native DIF and SYLK Varbinary cells without silently dropping rows, matching VFP9's field-name-row and blank-Q outcomes with command rollback on later write failures (#6654).
