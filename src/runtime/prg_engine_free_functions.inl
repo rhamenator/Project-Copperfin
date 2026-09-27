@@ -1011,6 +1011,7 @@
             std::vector<std::string> records;
             std::string current;
             bool in_quotes = false;
+            bool field_was_quoted = false;
             bool field_has_unquoted_data = false;
             std::size_t field_index = 0U;
             for (std::size_t index = 0U; index < contents.size(); ++index)
@@ -1024,7 +1025,7 @@
                         field_index < target_fields->size() &&
                         std::toupper(static_cast<unsigned char>((*target_fields)[field_index].type)) == 'C';
                     if (options.preserve_unquoted_quote_bytes && character_target &&
-                        !in_quotes && field_has_unquoted_data)
+                        !in_quotes && !field_was_quoted && field_has_unquoted_data)
                     {
                         continue;
                     }
@@ -1035,6 +1036,7 @@
                     else
                     {
                         in_quotes = !in_quotes;
+                        field_was_quoted = true;
                     }
                     continue;
                 }
@@ -1042,6 +1044,7 @@
                 {
                     records.push_back(std::move(current));
                     current.clear();
+                    field_was_quoted = false;
                     field_has_unquoted_data = false;
                     field_index = 0U;
                     if (ch == '\r' && index + 1U < contents.size() && contents[index + 1U] == '\n')
@@ -1052,6 +1055,7 @@
                 }
                 if (!in_quotes && ch == options.delimiter)
                 {
+                    field_was_quoted = false;
                     field_has_unquoted_data = false;
                     ++field_index;
                 }
