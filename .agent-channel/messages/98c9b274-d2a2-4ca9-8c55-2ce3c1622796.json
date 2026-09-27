@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "98c9b274-d2a2-4ca9-8c55-2ce3c1622796", "text": "Merged PR #6645 (25c5a5a): DIF/SYLK exports now omit Memo fields while preserving retained-field order; #6632 closed. Cleaning its build and branch before selecting #6646.", "to": ["both"], "ts": "2026-09-27T03:31:22Z", "type": "status"}

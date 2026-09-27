@@ -1,0 +1,1 @@
+- 2026-09-27: Fixed DIF/SYLK export and import round trips to preserve significant Character-field whitespace, including SYLK padding measured in the source DBF code page rather than decoded UTF-8 bytes (#6646).

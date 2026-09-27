@@ -33,6 +33,7 @@
 #include "copperfin/studio/report_layout.h"
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "copperfin/vfp/dbf_text_encoding.h"
 #include "copperfin/vfp/index_probe.h"
 #include "copperfin/vfp/sidecar_path.h"
 

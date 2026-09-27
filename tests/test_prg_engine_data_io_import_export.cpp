@@ -1548,6 +1548,99 @@ void test_dif_sylk_omit_memo_fields() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_dif_sylk_preserve_character_whitespace() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_dif_sylk_character_whitespace";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "TXT", .type = 'C', .length = 8U},
+    };
+    const fs::path source_path = temp_root / "source.dbf";
+    const fs::path dif_destination_path = temp_root / "dif-destination.dbf";
+    const fs::path sylk_destination_path = temp_root / "sylk-destination.dbf";
+    expect(copperfin::vfp::create_dbf_table_file(source_path.string(), fields, {{"  A  "}}).ok,
+           "#6646: whitespace source fixture should be created");
+    expect(copperfin::vfp::create_dbf_table_file(dif_destination_path.string(), fields, {}).ok,
+           "#6646: DIF destination fixture should be created");
+    expect(copperfin::vfp::create_dbf_table_file(sylk_destination_path.string(), fields, {}).ok,
+           "#6646: SYLK destination fixture should be created");
+
+    const fs::path dif_path = temp_root / "spaces.dif";
+    const fs::path sylk_path = temp_root / "spaces.slk";
+    const fs::path main_path = temp_root / "copy_to_dif_sylk_character_whitespace.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO '" + dif_path.string() + "' TYPE DIF\n"
+        "COPY TO '" + sylk_path.string() + "' TYPE SYLK\n"
+        "USE '" + dif_destination_path.string() + "'\n"
+        "APPEND FROM '" + dif_path.string() + "' TYPE DIF\n"
+        "USE '" + sylk_destination_path.string() + "'\n"
+        "APPEND FROM '" + sylk_path.string() + "' TYPE SYLK\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6646: DIF/SYLK whitespace round-trip should complete: " + state.message);
+
+    expect(read_text(dif_path).find("1,0\n\"  A\"\n") != std::string::npos,
+           "#6646: DIF must preserve leading Character whitespace and omit only right padding");
+    expect(read_text(sylk_path).find("C;Y2;X1;K\"  A     \"\n") != std::string::npos,
+           "#6646: SYLK must preserve the complete fixed-width Character cell");
+
+    const fs::path cp1252_source_path = temp_root / "cp1252-source.dbf";
+    const fs::path cp1252_sylk_path = temp_root / "cp1252-spaces.slk";
+    const fs::path cp1252_main_path = temp_root / "copy_to_sylk_cp1252_character_width.prg";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> cp1252_fields{
+        {.name = "TXT", .type = 'C', .length = 2U},
+    };
+    expect(copperfin::vfp::create_dbf_table_file(cp1252_source_path.string(), cp1252_fields, {{"A"}}).ok,
+           "#6646: CP1252 source fixture should be created");
+    const auto cp1252_header = copperfin::vfp::parse_dbf_header_from_file(cp1252_source_path.string());
+    expect(cp1252_header.ok, "#6646: CP1252 source header should be readable");
+    if (cp1252_header.ok)
+    {
+        std::fstream cp1252_source(cp1252_source_path, std::ios::binary | std::ios::in | std::ios::out);
+        expect(cp1252_source.good(), "#6646: CP1252 source fixture should open for patching");
+        cp1252_source.seekp(29, std::ios::beg);
+        cp1252_source.put(static_cast<char>(0x03));
+        cp1252_source.seekp(static_cast<std::streamoff>(cp1252_header.header.header_length + 1U), std::ios::beg);
+        cp1252_source.put(static_cast<char>(0xE9));
+        cp1252_source.put(' ');
+        cp1252_source.flush();
+        expect(cp1252_source.good(), "#6646: CP1252 source fixture patch should succeed");
+    }
+    write_text(
+        cp1252_main_path,
+        "USE '" + cp1252_source_path.string() + "'\n"
+        "COPY TO '" + cp1252_sylk_path.string() + "' TYPE SYLK\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession cp1252_session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(cp1252_main_path.string(), temp_root.string(), false));
+    const auto cp1252_state = cp1252_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(cp1252_state.completed, "#6646: CP1252 SYLK export should complete: " + cp1252_state.message);
+    expect(read_text(cp1252_sylk_path).find("C;Y2;X1;K\"é \"\n") != std::string::npos,
+           "#6646: SYLK padding must use the marked source encoding width, not decoded UTF-8 width");
+
+    for (const fs::path &destination_path : {dif_destination_path, sylk_destination_path})
+    {
+        const auto result = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 10U);
+        expect(result.ok && result.table.records.size() == 1U,
+               "#6646: compatible DIF/SYLK import should append one record");
+        if (result.ok && result.table.records.size() == 1U && !result.table.records[0U].values.empty())
+        {
+            expect(result.table.records[0U].values[0U].display_value == "  A",
+                   "#6646: quoted Character payload must round-trip without trimming leading whitespace");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_delimited_export_omits_general_picture_fields() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_delimited_omitted_binary_objects";
@@ -2649,8 +2742,8 @@ void test_copy_to_type_sylk_and_append_from_type_sylk_round_trip() {
         const std::string sylk_text = read_text(sylk_path);
         expect(sylk_text.find("ID;P") != std::string::npos &&
                sylk_text.find("B;Y1001;X3") != std::string::npos &&
-               sylk_text.find("C;Y1000;X1;K\"Row999\"") != std::string::npos &&
-               sylk_text.find("C;Y1001;X1;K\"Row1000\"") != std::string::npos &&
+               sylk_text.find("C;Y1000;X1;K\"Row999      \"") != std::string::npos &&
+               sylk_text.find("C;Y1001;X1;K\"Row1000     \"") != std::string::npos &&
                sylk_text.find("\nE\n") != std::string::npos,
             "#4843: COPY TO TYPE SYLK should emit invariant dimensions and boundary coordinates (prefix: '" +
                 sylk_text.substr(0U, std::min<std::size_t>(sylk_text.size(), 80U)) + "')");
