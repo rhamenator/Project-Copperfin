@@ -10580,11 +10580,38 @@
                                                               ? line.substr(offset, std::min<std::size_t>(sdf_width, line.size() - offset))
                                                               : std::string{};
                             offset += sdf_width;
+                            std::string storage_value;
+                            const char field_type = static_cast<char>(
+                                std::toupper(static_cast<unsigned char>(field.type)));
+                            if (field_type == 'Q')
+                            {
+                                const auto decoded = decode_sdf_varbinary_value(raw_value);
+                                if (!decoded.has_value())
+                                {
+                                    last_error_message = runtime_text(
+                                        "Runtime.Prg.Dispatch.Error.AppendFromSdfVarbinaryInvalid",
+                                        {
+                                            {"fieldName", field.name},
+                                            {"fieldWidth", std::to_string(sdf_width)},
+                                            {"valueLength", std::to_string(raw_value.find_last_not_of(' ') == std::string::npos
+                                                ? 0U
+                                                : raw_value.find_last_not_of(' ') + 1U)},
+                                        });
+                                    last_fault_location = statement.location;
+                                    last_fault_statement = statement.text;
+                                    return {.ok = false, .message = last_error_message};
+                                }
+                                storage_value = *decoded;
+                            }
+                            else
+                            {
+                                storage_value = normalize_sdf_field_value_for_storage(field, raw_value);
+                            }
                             const auto rep_result = vfp::replace_record_field_value(
                                 cursor->source_path,
                                 cursor->recno - 1U,
                                 field.name,
-                                normalize_sdf_field_value_for_storage(field, raw_value));
+                                storage_value);
                             if (!rep_result.ok)
                             {
                                 last_error_message = runtime_text(

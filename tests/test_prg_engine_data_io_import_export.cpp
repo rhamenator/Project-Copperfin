@@ -1178,6 +1178,96 @@ void test_copy_to_type_sdf_preserves_character_whitespace() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sdf_varchar_varbinary_layout_and_import_validation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sdf_varchar_varbinary";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // V/Q descriptors include one terminal payload-length byte, so a declared
+    // Varchar(5)/Varbinary(5) has a physical DBF width of 6.
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "TXT", .type = 'V', .length = 6U},
+        {.name = "BIN", .type = 'Q', .length = 6U},
+        {.name = "TAIL", .type = 'C', .length = 3U},
+    };
+    const fs::path source_path = temp_root / "source.dbf";
+    expect(copperfin::vfp::create_dbf_table_file(
+               source_path.string(), fields, {{"AB", "AB", "END"}}).ok,
+           "#6614: SDF Varchar/Varbinary source fixture should be created");
+
+    const fs::path sdf_path = temp_root / "data.txt";
+    const fs::path export_main = temp_root / "export.prg";
+    write_text(export_main,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO '" + sdf_path.string() + "' TYPE SDF\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession export_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(export_main.string(), temp_root.string(), false));
+    const auto export_state = export_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(export_state.completed, "#6614: SDF Varchar/Varbinary export should complete: " + export_state.message);
+    expect(read_text(sdf_path) == "AB   4142      END\r\n",
+           "#6614: SDF must use payload-width Varchar and doubled uppercase-hex Varbinary columns");
+
+    const fs::path destination_path = temp_root / "destination.dbf";
+    expect(copperfin::vfp::create_dbf_table_file(destination_path.string(), fields, {}).ok,
+           "#6614: SDF Varchar/Varbinary destination fixture should be created");
+    const fs::path import_main = temp_root / "import.prg";
+    write_text(import_main,
+        "USE '" + destination_path.string() + "'\n"
+        "APPEND FROM '" + sdf_path.string() + "' TYPE SDF\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession import_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(import_main.string(), temp_root.string(), false));
+    const auto import_state = import_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(import_state.completed, "#6614: SDF Varchar/Varbinary import should complete: " + import_state.message);
+    const auto imported = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 10U);
+    expect(imported.ok && imported.table.records.size() == 1U,
+           "#6614: SDF Varchar/Varbinary import should append one row");
+    if (imported.ok && imported.table.records.size() == 1U)
+    {
+        const auto &values = imported.table.records[0U].values;
+        expect(values[0U].display_value == "AB   ",
+               "#6614: SDF Varchar import should consume its five-character payload column");
+        expect(values[1U].display_value == "AB",
+               "#6614: SDF Varbinary import should decode hexadecimal text");
+        expect(values[2U].display_value == "END",
+               "#6614: SDF import should keep the following Character column aligned");
+    }
+
+    const auto verify_invalid = [&](const std::string &label, const std::string &invalid_hex)
+    {
+        const fs::path invalid_destination = temp_root / (label + ".dbf");
+        expect(copperfin::vfp::create_dbf_table_file(invalid_destination.string(), fields, {}).ok,
+               "#6614: invalid-hex destination fixture should be created");
+        const fs::path invalid_source = temp_root / (label + ".txt");
+        write_text(invalid_source,
+            "AB   4142      END\r\n"
+            "AB   " + invalid_hex + "END\r\n");
+        const fs::path invalid_main = temp_root / (label + ".prg");
+        write_text(invalid_main,
+            "USE '" + invalid_destination.string() + "'\n"
+            "APPEND FROM '" + invalid_source.string() + "' TYPE SDF\n"
+            "RETURN\n");
+        copperfin::runtime::PrgRuntimeSession invalid_session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(invalid_main.string(), temp_root.string(), false));
+        const auto invalid_state = invalid_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(!invalid_state.completed && invalid_state.message.find("BIN") != std::string::npos &&
+                   invalid_state.message.find("only hexadecimal characters") != std::string::npos &&
+                   invalid_state.message.find("even length") != std::string::npos,
+               "#6614: invalid SDF Varbinary text should fail with a field-specific diagnostic: " +
+                   invalid_state.message);
+        const auto after_failure = copperfin::vfp::parse_dbf_table_from_file(invalid_destination.string(), 10U);
+        expect(after_failure.ok && after_failure.table.records.empty(),
+               "#6614: invalid SDF Varbinary text must atomically roll back earlier appended rows");
+    };
+    verify_invalid("odd_hex", "414       ");
+    verify_invalid("non_hex", "41G2      ");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_to_type_sdf_converts_nullable_values() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_sdf_nullable_values";
