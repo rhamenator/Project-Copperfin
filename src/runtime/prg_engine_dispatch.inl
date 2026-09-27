@@ -8554,6 +8554,7 @@
                 // fixed-width export needs the distinction even when the
                 // decoded textual form is blank or uses a sentinel.
                 std::vector<std::vector<bool>> out_row_nulls;
+                std::vector<std::vector<std::string>> out_row_raw_values;
                 if (!is_structure)
                 {
                     const CursorPositionSnapshot saved = capture_cursor_snapshot(*cursor);
@@ -8587,8 +8588,10 @@
                         }
                         std::vector<std::string> row;
                         std::vector<bool> row_nulls;
+                        std::vector<std::string> row_raw_values;
                         row.reserve(out_fields.size());
                         row_nulls.reserve(out_fields.size());
+                        row_raw_values.reserve(out_fields.size());
                         for (const auto &desc : out_fields)
                         {
                             const auto it = std::find_if(
@@ -8599,9 +8602,11 @@
                                 });
                             row.push_back(it != rec->values.end() ? it->display_value : std::string{});
                             row_nulls.push_back(it != rec->values.end() && it->is_null);
+                            row_raw_values.push_back(it != rec->values.end() ? it->raw_value : std::string{});
                         }
                         out_rows.push_back(std::move(row));
                         out_row_nulls.push_back(std::move(row_nulls));
+                        out_row_raw_values.push_back(std::move(row_raw_values));
                     }
                     restore_cursor_snapshot(*cursor, saved);
                 }
@@ -8713,6 +8718,22 @@
 
                 if (copy_as_dif)
                 {
+                    for (std::size_t row_index = 0U; row_index < out_row_raw_values.size(); ++row_index)
+                    {
+                        for (std::size_t field_index = 0U; field_index < out_fields.size(); ++field_index)
+                        {
+                            if (static_cast<char>(std::toupper(static_cast<unsigned char>(out_fields[field_index].type))) == 'Q' &&
+                                out_row_raw_values[row_index][field_index].size() != out_fields[field_index].length)
+                            {
+                                last_error_message = runtime_text(
+                                    "Runtime.Prg.Dispatch.Error.CopyToBinaryFieldBytesUnavailable",
+                                    {{"type", "DIF"}, {"fieldName", out_fields[field_index].name}});
+                                last_fault_location = statement.location;
+                                last_fault_statement = statement.text;
+                                return {.ok = false, .message = last_error_message};
+                            }
+                        }
+                    }
                     if (!dest_path.parent_path().empty())
                     {
                         std::error_code ignored;
@@ -8728,7 +8749,7 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    output << serialize_dif_table(out_fields, out_rows, out_row_nulls);
+                    output << serialize_dif_table(out_fields, out_rows, out_row_nulls, out_row_raw_values);
                     output.close();
                     if (!output.good())
                     {
@@ -8747,6 +8768,22 @@
 
                 if (copy_as_sylk)
                 {
+                    for (std::size_t row_index = 0U; row_index < out_row_raw_values.size(); ++row_index)
+                    {
+                        for (std::size_t field_index = 0U; field_index < out_fields.size(); ++field_index)
+                        {
+                            if (static_cast<char>(std::toupper(static_cast<unsigned char>(out_fields[field_index].type))) == 'Q' &&
+                                out_row_raw_values[row_index][field_index].size() != out_fields[field_index].length)
+                            {
+                                last_error_message = runtime_text(
+                                    "Runtime.Prg.Dispatch.Error.CopyToBinaryFieldBytesUnavailable",
+                                    {{"type", "SYLK"}, {"fieldName", out_fields[field_index].name}});
+                                last_fault_location = statement.location;
+                                last_fault_statement = statement.text;
+                                return {.ok = false, .message = last_error_message};
+                            }
+                        }
+                    }
                     if (!dest_path.parent_path().empty())
                     {
                         std::error_code ignored;
@@ -8762,7 +8799,7 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    output << serialize_sylk_table(out_fields, out_rows, out_row_nulls, source_code_page_mark);
+                    output << serialize_sylk_table(out_fields, out_rows, out_row_nulls, out_row_raw_values, source_code_page_mark);
                     output.close();
                     if (!output.good())
                     {

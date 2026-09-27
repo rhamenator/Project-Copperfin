@@ -1587,6 +1587,7 @@
                         return false;
                     }
                     field->display_value = assignment.serialized_value;
+                    field->raw_value.clear();
                 }
                 if (!synchronize_relations_or_fail(cursor))
                 {
@@ -1715,10 +1716,12 @@
                     if (assignment.additive && field->field_type == 'M')
                     {
                         field->display_value += assignment.serialized_value;
+                        field->raw_value.clear();
                     }
                     else
                     {
                         field->display_value = assignment.serialized_value;
+                        field->raw_value.clear();
                     }
                     // #6047: this previously hardcoded false unconditionally,
                     // discarding a buffered REPLACE ... WITH .NULL. before

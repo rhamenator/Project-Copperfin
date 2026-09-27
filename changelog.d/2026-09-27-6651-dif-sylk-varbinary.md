@@ -1,0 +1,1 @@
+- 2026-09-27: Preserve complete physical Varbinary field bytes, including embedded NULs and stored length, in DIF and SYLK exports and fail before output when authoritative bytes are unavailable (#6651).

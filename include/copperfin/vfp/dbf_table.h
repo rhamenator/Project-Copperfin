@@ -32,6 +32,9 @@ struct DbfRecordValue {
     bool is_null = false;
     std::string display_value;
     std::uint32_t memo_block_number = 0;
+    // Exact physical field bytes retained for byte-oriented interchange.
+    // Text/runtime consumers continue to use display_value.
+    std::string raw_value{};
 };
 
 struct DbfRecord {

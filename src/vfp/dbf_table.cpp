@@ -2392,7 +2392,8 @@ DbfTableParseResult parse_dbf_table_from_file(
                 .field_type = field.type,
                 .is_null = is_null,
                 .display_value = decoded_value.display_value,
-                .memo_block_number = memo_block_number
+                .memo_block_number = memo_block_number,
+                .raw_value = std::string(raw.begin(), raw.end())
             });
         }
 
