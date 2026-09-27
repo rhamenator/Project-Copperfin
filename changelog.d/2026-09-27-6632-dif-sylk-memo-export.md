@@ -1,0 +1,1 @@
+- 2026-09-27: Fixed `COPY TO ... TYPE DIF` and `TYPE SYLK` to omit Memo fields from interchange layouts (#6632).

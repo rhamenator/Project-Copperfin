@@ -263,6 +263,13 @@
             return sdf_omits_binary_object_field(field) || field_type == 'M';
         }
 
+        bool dif_sylk_omits_export_field(const vfp::DbfFieldDescriptor &field)
+        {
+            // DIF and SYLK use the same non-table export omission rule as
+            // SDF. Import-to-Memo policy remains separate (#6609).
+            return sdf_omits_export_field(field);
+        }
+
         bool text_export_omits_general_picture_field(const vfp::DbfFieldDescriptor &field)
         {
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
