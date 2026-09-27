@@ -765,6 +765,14 @@ internal static class CopperfinRuntimeDebugClient
         {
             state.Events[eventIndex].Location = value;
         }
+        else if (propertyName.StartsWith("metadata.", StringComparison.OrdinalIgnoreCase))
+        {
+            var metadataName = propertyName.Substring("metadata.".Length);
+            if (!string.IsNullOrEmpty(metadataName))
+            {
+                state.Events[eventIndex].Metadata[metadataName] = value;
+            }
+        }
 
         return true;
     }

@@ -19,6 +19,17 @@ internal static partial class Program
                parsedWindowsBreakpoint.Breakpoints[0].Line == 27,
             "breakpoint parsing should preserve Windows drive-letter paths");
 
+        var parsedWarning = CopperfinRuntimeDebugClient.ParsePauseState(
+            "debug.event[0].category: runtime.warning\n" +
+            "debug.event[0].metadata.warning_id: copy_to.omitted_fields.v1\n" +
+            "debug.event[0].metadata.omitted_field.0.name: GENERAL\n");
+        Expect(parsedWarning.Events.Count == 1 &&
+               parsedWarning.Events[0].Metadata.TryGetValue("warning_id", out var warningId) &&
+               warningId == "copy_to.omitted_fields.v1" &&
+               parsedWarning.Events[0].Metadata.TryGetValue("omitted_field.0.name", out var omittedName) &&
+               omittedName == "GENERAL",
+            "runtime event parsing should preserve structured metadata names and values");
+
         using var control = new CopperfinAssetEditorControl(new CopperfinLocalization("qps-ploc"));
         control.SuppressDebuggerDialogs = true;
         var session = new CopperfinRuntimeDebugSession

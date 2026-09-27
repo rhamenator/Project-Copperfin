@@ -2020,6 +2020,7 @@ void test_delimited_export_omits_general_picture_fields() {
     const fs::path trailing_picture_csv = temp_root / "trailing-picture.csv";
     const fs::path object_only_csv = temp_root / "objects.csv";
     const fs::path general_tab = temp_root / "general.txt";
+    const fs::path general_type_tab = temp_root / "general-type-tab.txt";
     const fs::path main_path = temp_root / "copy_to_delimited_omitted_binary_objects.prg";
     write_text(
         main_path,
@@ -2030,6 +2031,7 @@ void test_delimited_export_omits_general_picture_fields() {
         "COPY TO '" + trailing_picture_csv.string() + "' TYPE CSV FIELDS CODE, PICTURE\n"
         "COPY TO '" + object_only_csv.string() + "' TYPE CSV FIELDS GENERAL, PICTURE\n"
         "COPY TO '" + general_tab.string() + "' TYPE DELIMITED WITH TAB FIELDS GENERAL, CODE\n"
+        "COPY TO '" + general_type_tab.string() + "' TYPE TAB FIELDS GENERAL, CODE\n"
         "RETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
@@ -2037,6 +2039,7 @@ void test_delimited_export_omits_general_picture_fields() {
     expect(state.completed, "#6624: COPY TO CSV/DELIMITED object-field scripts should complete: " + state.message);
     std::size_t csv_warning_count = 0U;
     std::size_t delimited_warning_count = 0U;
+    std::size_t tab_warning_count = 0U;
     for (const auto &event : state.events)
     {
         const auto identity = event.metadata.find("warning_id");
@@ -2048,9 +2051,17 @@ void test_delimited_export_omits_general_picture_fields() {
         }
         csv_warning_count += output_type->second == "CSV" ? 1U : 0U;
         delimited_warning_count += output_type->second == "DELIMITED" ? 1U : 0U;
+        if (output_type->second == "TAB")
+        {
+            ++tab_warning_count;
+            expect(event.metadata.at("omitted_field_count") == "1" &&
+                       event.metadata.at("omitted_field.0.name") == "GENERAL" &&
+                       event.metadata.at("omitted_field.0.type") == "G",
+                   "#6640: TYPE TAB warning metadata should identify the omitted General field");
+        }
     }
-    expect(csv_warning_count == 5U && delimited_warning_count == 1U,
-           "#6640: every lossy CSV/DELIMITED COPY TO should emit exactly one typed omission warning");
+    expect(csv_warning_count == 5U && delimited_warning_count == 1U && tab_warning_count == 1U,
+           "#6640: every lossy CSV/DELIMITED/TAB COPY TO should emit exactly one typed omission warning");
     expect(read_text(general_csv) == ",CODE\r\n\"OK\"\r\n",
            "#6624: General before Character must retain VFP's empty CSV header cell but no data cell");
     expect(read_text(picture_csv) == ",CODE\r\n\"OK\"\r\n",
@@ -2063,6 +2074,8 @@ void test_delimited_export_omits_general_picture_fields() {
            "#6624: object-only CSV selection must retain VFP's empty header and data records");
     expect(read_text(general_tab) == "\"OK\"\r\n",
            "#6624: DELIMITED data rows must omit a leading General column altogether");
+    expect(read_text(general_type_tab) == "\"OK\"\r\n",
+           "#6640: TYPE TAB data rows must omit a leading General column altogether");
 
     fs::remove_all(temp_root, ignored);
 }

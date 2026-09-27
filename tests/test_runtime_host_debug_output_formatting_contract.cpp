@@ -4,6 +4,72 @@
 
 #include "test_runtime_host_debug_output_support.h"
 
+void test_runtime_host_surfaces_copy_omission_warning_metadata(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() /
+        "copperfin_runtime_host_copy_omission_warning_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "copy_warning.prg";
+    const fs::path table_path = temp_root / "source.dbf";
+    const fs::path output_path = temp_root / "output.txt";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    const fs::path locale_root = temp_root / "locales";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "GENERAL", .type = 'G', .length = 4U},
+        {.name = "CODE", .type = 'C', .length = 2U},
+    };
+    const auto created = copperfin::vfp::create_dbf_table_file(
+        table_path.string(), fields, {{"", "OK"}});
+    expect(created.ok, "runtime-host COPY warning fixture should be created");
+    write_text(
+        source_path,
+        "USE '" + table_path.string() + "'\n"
+        "COPY TO '" + output_path.string() + "' TYPE TAB FIELDS GENERAL, CODE\n"
+        "RETURN\n");
+    write_runtime_host_usage_catalogs(locale_root);
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=CopyWarningMetadata\n"
+        "startup_item=copy_warning.prg\n"
+        "startup_source=" + source_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
+    ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+    const auto debug_process = run_process_capture(
+        runtime_host_path, {"--manifest", manifest_path.string(), "--debug"}, temp_root);
+    expect(debug_process.exit_code == 0, "runtime-host debug COPY warning should complete");
+    expect(debug_process.stdout_text.find(
+               "].metadata.warning_id: copy_to.omitted_fields.v1") != std::string::npos &&
+           debug_process.stdout_text.find(
+               "].metadata.output_type: TAB") != std::string::npos &&
+           debug_process.stdout_text.find(
+               "].metadata.omitted_field.0.name: GENERAL") != std::string::npos,
+           "runtime-host debug protocol should expose structured COPY omission metadata");
+
+    const auto cli_process = run_process_capture(
+        runtime_host_path, {"--manifest", manifest_path.string()}, temp_root);
+    expect(cli_process.exit_code == 0, "runtime-host headless COPY warning should complete");
+    expect(cli_process.stdout_text.find(
+               "].metadata.warning_id: copy_to.omitted_fields.v1") != std::string::npos &&
+           cli_process.stdout_text.find(
+               "].metadata.output_type: TAB") != std::string::npos,
+           "runtime-host headless protocol should expose structured COPY omission metadata");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_runtime_host_preserves_debug_state_across_prg_fault(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
