@@ -2,7 +2,13 @@
 
 ## Last shipped slice
 
-Issue #6612 (PR #6661, merge `9b028f5eb`) finished 2026-09-27: SDF
+Issue #6609 (PR #6662, merge `c3e62e4e7`) finished 2026-09-27: text-to-Memo
+SDF/CSV imports now use an explicit session-scoped VFP/Copperfin policy,
+strict CSV enclosure preflight, localized pre-mutation diagnostics, and
+focused DBF/FPT atomicity coverage. Focused and hosted checks passed; all
+review conversations were resolved.
+
+Earlier: issue #6612 (PR #6661, merge `9b028f5eb`) finished 2026-09-27: SDF
 Autoincrement fields now use VFP's 11-character printable layout while
 preserving genuine `0x31` metadata and raw bytes. Focused and hosted checks
 passed; all review conversations were resolved.
@@ -75,13 +81,10 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Issue #6609: add a session-scoped VFP-vs-Copperfin compatibility switch for
-SDF/CSV imports into selected Memo targets. Branch
-`codex/implement-6609-text-memo-policy` adds pre-mutation VFP rejection,
-newline-safe Copperfin extension rules, localized diagnostics, and focused
-DBF/FPT atomicity coverage. PR #6662 is open against `v1-development`; hosted
-review found preflight-order, empty/CR-only SDF-record, localization-assertion,
-and documentation gaps, and the focused review fix is in progress.
+Issue #6636: make DIF/SYLK nullable export match retained VFP9 evidence.
+Branch `codex/implement-6636-dif-sylk-null` adds explicit DIF numeric/Character/
+Logical NULL cells, blank SYLK `K` cells, complete-file regression fixtures,
+and traceability. Local verification is in progress before opening the PR.
 
 ## Workspace preservation
 
