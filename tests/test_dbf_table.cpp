@@ -2864,6 +2864,51 @@ void test_varchar_and_varbinary_field_round_trip() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_varchar_write_uses_dbf_code_page() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_varchar_code_page_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "cp1252-varchar.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "VCOL", .type = 'V', .length = 3U}
+    };
+    expect(copperfin::vfp::create_dbf_table_file(table_path.string(), fields, {{"A"}}).ok,
+           "#6650: CP1252 Varchar fixture should be created");
+
+    const auto header = copperfin::vfp::parse_dbf_header_from_file(table_path.string());
+    expect(header.ok, "#6650: CP1252 Varchar fixture header should be readable");
+    if (header.ok) {
+        std::fstream table(table_path, std::ios::binary | std::ios::in | std::ios::out);
+        table.seekp(29, std::ios::beg);
+        table.put(static_cast<char>(0x03));
+        table.flush();
+        expect(table.good(), "#6650: CP1252 code-page mark should be writable");
+
+        expect(copperfin::vfp::replace_record_field_value(
+                   table_path.string(), 0U, "VCOL", "\xC3\xA9 ").ok,
+               "#6650: Varchar replacement should encode text using the DBF code page");
+
+        const std::vector<std::uint8_t> bytes = read_binary_file(table_path);
+        const std::size_t value_offset = header.header.header_length + 1U;
+        expect(bytes.size() > value_offset + 2U &&
+                   bytes[value_offset] == 0xE9U &&
+                   bytes[value_offset + 1U] == static_cast<std::uint8_t>(' ') &&
+                   bytes[value_offset + 2U] == 2U,
+               "#6650: CP1252 Varchar storage should contain E9, the trailing space, and length 2");
+
+        const auto parsed = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+        expect(parsed.ok && !parsed.table.records.empty() &&
+                   parsed.table.records[0U].values[0U].display_value == "\xC3\xA9 ",
+               "#6650: CP1252 Varchar should decode with its significant trailing space intact");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_dbf_header_record_count_exceeds_file_size_is_rejected() {
     // GAP-02: a DBF file whose header claims more records than the file
     // can physically contain must be rejected or clamped — not cause an
@@ -3980,6 +4025,7 @@ int main(int argc, char* argv[]) {
     test_memo_replace_recovers_directory_sidecar_path();
     test_replace_field_value_accepts_null_token_for_nonstring_types();
     test_varchar_and_varbinary_field_round_trip();
+    test_varchar_write_uses_dbf_code_page();
     test_dbf_header_record_count_exceeds_file_size_is_rejected();
     test_dbf_append_rejects_record_count_at_uint32_max();
     test_dbf_field_descriptor_count_exceeds_header_size_is_rejected();

@@ -1335,7 +1335,16 @@ DbfWriteResult write_field_bytes(
                 break;
             }
 
-            std::string text = value;
+            std::string text;
+            if (field.type == 'V') {
+                const DbfTextConversionResult encoded = encode_dbf_text(header.code_page_mark, value);
+                if (!encoded.ok) {
+                    return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TextEncodingConversionFailed"), .record_count = header.record_count};
+                }
+                text = std::move(encoded.text);
+            } else {
+                text = value;
+            }
 
             const std::size_t payload_capacity = static_cast<std::size_t>(field.length - 1U);
             if (text.size() > payload_capacity) {
