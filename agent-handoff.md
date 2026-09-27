@@ -107,8 +107,8 @@ Issue #6522: make `APPEND FROM ... TYPE CSV` preserve both quote bytes inside an
 enclosed Character field, matching the retained installed-VFP9 byte probe while
 leaving DELIMITED, TAB, and unquoted-field rules unchanged. Branch
 `codex/implement-6522-csv-doubled-quotes` contains focused parser and local/
-remote exact-byte regression work; both focused suites pass before a PR is
-opened against `v1-development`.
+remote exact-byte regression work. PR #6670 is open against `v1-development`;
+both focused suites pass, and hosted validation/review are in progress.
 
 ## Workspace preservation
 
