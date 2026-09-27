@@ -881,12 +881,8 @@
                 dif << "BOT\n";
                 for (std::size_t index = 0U; index < fields.size(); ++index)
                 {
-                    const std::string value = index < row_values.size()
-                                                  ? format_dif_cell_value(fields[index], row_values[index], header_row)
-                                                  : std::string{};
                     const char field_type = static_cast<char>(
                         std::toupper(static_cast<unsigned char>(fields[index].type)));
-                    const bool is_null = nulls != nullptr && index < nulls->size() && (*nulls)[index];
                     if (!header_row && field_type == 'Q')
                     {
                         const std::string &raw = (*raw_values)[index];
@@ -895,6 +891,10 @@
                         dif << "\nV\n";
                         continue;
                     }
+                    const std::string value = index < row_values.size()
+                                                  ? format_dif_cell_value(fields[index], row_values[index], header_row)
+                                                  : std::string{};
+                    const bool is_null = nulls != nullptr && index < nulls->size() && (*nulls)[index];
                     if (!header_row && !is_null && field_type == 'L')
                     {
                         const std::string normalized = normalize_identifier(value);
@@ -1151,17 +1151,9 @@
             {
                 for (std::size_t column_index = 0U; column_index < fields.size(); ++column_index)
                 {
-                    const std::string value = column_index < row_values.size()
-                                                  ? format_sylk_cell_value(
-                                                        fields[column_index],
-                                                        row_values[column_index],
-                                                        header_row,
-                                                        source_code_page_mark)
-                                                  : std::string{};
                     sylk << "C;Y" << row_index << ";X" << (column_index + 1U) << ";K";
                     const char field_type = static_cast<char>(
                         std::toupper(static_cast<unsigned char>(fields[column_index].type)));
-                    const bool is_null = nulls != nullptr && column_index < nulls->size() && (*nulls)[column_index];
                     if (!header_row && field_type == 'Q')
                     {
                         const std::string &raw = (*raw_values)[column_index];
@@ -1169,6 +1161,14 @@
                         sylk << "\n";
                         continue;
                     }
+                    const std::string value = column_index < row_values.size()
+                                                  ? format_sylk_cell_value(
+                                                        fields[column_index],
+                                                        row_values[column_index],
+                                                        header_row,
+                                                        source_code_page_mark)
+                                                  : std::string{};
+                    const bool is_null = nulls != nullptr && column_index < nulls->size() && (*nulls)[column_index];
                     if (!header_row && !is_null && field_type == 'L')
                     {
                         const std::string normalized = normalize_identifier(value);

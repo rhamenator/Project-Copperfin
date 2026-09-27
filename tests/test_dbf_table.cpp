@@ -2840,6 +2840,11 @@ void test_varchar_and_varbinary_field_round_trip() {
         expect(parse_result.table.records[0].values[1].display_value == "  A  ",
                "#6650: created V fields should preserve significant leading and trailing spaces");
         expect(parse_result.table.records[1].values[2].display_value == "Q_TWO", "created Q fields should round-trip");
+        expect(parse_result.table.records[0].values[0].raw_value.empty() &&
+                   parse_result.table.records[0].values[1].raw_value.empty(),
+               "#6651: parsing should not retain duplicate raw bytes for non-Varbinary fields");
+        expect(parse_result.table.records[0].values[2].raw_value.size() == fields[2].length,
+               "#6651: parsing should retain the complete physical Varbinary field bytes");
     }
 
     expect(copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "VCOL", " B  ").ok,

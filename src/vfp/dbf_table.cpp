@@ -2393,7 +2393,9 @@ DbfTableParseResult parse_dbf_table_from_file(
                 .is_null = is_null,
                 .display_value = decoded_value.display_value,
                 .memo_block_number = memo_block_number,
-                .raw_value = std::string(raw.begin(), raw.end())
+                .raw_value = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type))) == 'Q'
+                                 ? std::string(raw.begin(), raw.end())
+                                 : std::string{}
             });
         }
 
