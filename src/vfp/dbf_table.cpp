@@ -1336,9 +1336,6 @@ DbfWriteResult write_field_bytes(
             }
 
             std::string text = value;
-            if (field.type == 'V') {
-                text = trim_right(std::move(text));
-            }
 
             const std::size_t payload_capacity = static_cast<std::size_t>(field.length - 1U);
             if (text.size() > payload_capacity) {
@@ -1919,7 +1916,7 @@ DecodedDbfValue decode_value(
             const std::size_t payload_length = std::min<std::size_t>(payload_capacity, raw.back());
             std::string value(raw.begin(), raw.begin() + static_cast<std::ptrdiff_t>(payload_length));
             if (field_type == 'V') {
-                const DbfTextConversionResult decoded = decode_dbf_text(code_page_mark, trim_right(std::move(value)));
+                const DbfTextConversionResult decoded = decode_dbf_text(code_page_mark, value);
                 return decoded.ok
                     ? DecodedDbfValue(std::move(decoded.text))
                     : DecodedDbfValue(format_binary_bytes(

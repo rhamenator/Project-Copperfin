@@ -2827,7 +2827,7 @@ void test_varchar_and_varbinary_field_round_trip() {
         {.name = "QCOL", .type = 'Q', .length = 9U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"ALPHA", "V-ONE", "Q_ONE"},
+        {"ALPHA", "  A  ", "Q_ONE"},
         {"BRAVO", "V-TWO", "Q_TWO"}
     };
 
@@ -2837,11 +2837,13 @@ void test_varchar_and_varbinary_field_round_trip() {
     auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
     expect(parse_result.ok, "V/Q-backed DBFs should remain readable after creation");
     if (parse_result.ok && parse_result.table.records.size() == 2U && parse_result.table.records[0].values.size() >= 3U) {
-        expect(parse_result.table.records[0].values[1].display_value == "V-ONE", "created V fields should round-trip");
+        expect(parse_result.table.records[0].values[1].display_value == "  A  ",
+               "#6650: created V fields should preserve significant leading and trailing spaces");
         expect(parse_result.table.records[1].values[2].display_value == "Q_TWO", "created Q fields should round-trip");
     }
 
-    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "VCOL", "V-THREE").ok, "replace_record_field_value should support V fields");
+    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "VCOL", " B  ").ok,
+           "#6650: replace_record_field_value should preserve Varchar trailing spaces");
     expect(copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "QCOL", "Q_THREE").ok, "replace_record_field_value should support Q fields");
 
     const auto append_result = copperfin::vfp::append_blank_record_to_file(table_path.string());
@@ -2852,7 +2854,8 @@ void test_varchar_and_varbinary_field_round_trip() {
     expect(parse_result.ok, "V/Q-backed DBFs should remain readable after mutation");
     expect(parse_result.table.records.size() == 3U, "V/Q-backed DBFs should expose appended rows");
     if (parse_result.table.records.size() == 3U && parse_result.table.records[1].values.size() >= 3U) {
-        expect(parse_result.table.records[1].values[1].display_value == "V-THREE", "V field replacements should persist");
+        expect(parse_result.table.records[1].values[1].display_value == " B  ",
+               "#6650: V field replacements should preserve significant trailing spaces");
         expect(parse_result.table.records[1].values[2].display_value == "Q_THREE", "Q field replacements should persist");
         expect(parse_result.table.records[2].values[1].display_value.empty(), "blank appended V fields should initialize empty");
         expect(parse_result.table.records[2].values[2].display_value.empty(), "blank appended Q fields should initialize empty");
