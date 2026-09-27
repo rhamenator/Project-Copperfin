@@ -1,0 +1,1 @@
+- 2026-09-27: Documentation: add an active-only completion roadmap that separates unfinished work from completed dependency context.
