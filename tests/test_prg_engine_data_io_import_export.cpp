@@ -2013,13 +2013,29 @@ void test_delimited_export_omits_general_picture_fields() {
     const auto create_result = copperfin::vfp::create_dbf_table_file(
         source_path.string(), fields, {{"", "", "OK"}});
     expect(create_result.ok, "#6624: General/Picture delimited-export fixture should be created");
+    const fs::path blob_source_path = temp_root / "blob-source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "BLOB", .type = 'C', .length = 4U},
+        {.name = "CODE", .type = 'C', .length = 2U},
+    };
+    const auto blob_create_result = copperfin::vfp::create_dbf_table_file(
+        blob_source_path.string(), blob_fields, {{"AB", "OK"}});
+    expect(blob_create_result.ok, "#6630: Blob delimited-export fixture should be created");
+    {
+        std::fstream table(blob_source_path, std::ios::in | std::ios::out | std::ios::binary);
+        table.seekp(32 + 11);
+        table.put('W');
+        expect(table.good(), "#6630: Blob export fixture descriptor should be marked as type W");
+    }
 
     const fs::path general_csv = temp_root / "general.csv";
     const fs::path picture_csv = temp_root / "picture.csv";
     const fs::path trailing_general_csv = temp_root / "trailing-general.csv";
     const fs::path trailing_picture_csv = temp_root / "trailing-picture.csv";
     const fs::path object_only_csv = temp_root / "objects.csv";
+    const fs::path blob_csv = temp_root / "blob.csv";
     const fs::path general_tab = temp_root / "general.txt";
+    const fs::path blob_delimited = temp_root / "blob.txt";
     const fs::path general_type_tab = temp_root / "general-type-tab.txt";
     const fs::path main_path = temp_root / "copy_to_delimited_omitted_binary_objects.prg";
     write_text(
@@ -2031,6 +2047,10 @@ void test_delimited_export_omits_general_picture_fields() {
         "COPY TO '" + trailing_picture_csv.string() + "' TYPE CSV FIELDS CODE, PICTURE\n"
         "COPY TO '" + object_only_csv.string() + "' TYPE CSV FIELDS GENERAL, PICTURE\n"
         "COPY TO '" + general_tab.string() + "' TYPE DELIMITED WITH TAB FIELDS GENERAL, CODE\n"
+        "USE '" + blob_source_path.string() + "'\n"
+        "COPY TO '" + blob_csv.string() + "' TYPE CSV FIELDS BLOB, CODE\n"
+        "COPY TO '" + blob_delimited.string() + "' DELIMITED WITH CHARACTER ',' FIELDS BLOB, CODE\n"
+        "USE '" + source_path.string() + "'\n"
         "COPY TO '" + general_type_tab.string() + "' TYPE TAB FIELDS GENERAL, CODE\n"
         "RETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
@@ -2060,7 +2080,7 @@ void test_delimited_export_omits_general_picture_fields() {
                    "#6640: TYPE TAB warning metadata should identify the omitted General field");
         }
     }
-    expect(csv_warning_count == 5U && delimited_warning_count == 1U && tab_warning_count == 1U,
+    expect(csv_warning_count == 6U && delimited_warning_count == 2U && tab_warning_count == 1U,
            "#6640: every lossy CSV/DELIMITED/TAB COPY TO should emit exactly one typed omission warning");
     expect(read_text(general_csv) == ",CODE\r\n\"OK\"\r\n",
            "#6624: General before Character must retain VFP's empty CSV header cell but no data cell");
@@ -2072,8 +2092,12 @@ void test_delimited_export_omits_general_picture_fields() {
            "#6624: Picture after Character must retain VFP's terminal empty CSV data cell");
     expect(read_text(object_only_csv) == "\r\n\r\n",
            "#6624: object-only CSV selection must retain VFP's empty header and data records");
+    expect(read_text(blob_csv) == ",CODE\r\n\"OK\"\r\n",
+           "#6630: CSV must omit Blob payloads while retaining the leading empty header cell");
     expect(read_text(general_tab) == "\"OK\"\r\n",
            "#6624: DELIMITED data rows must omit a leading General column altogether");
+    expect(read_text(blob_delimited) == "\"OK\"\r\n",
+           "#6630: DELIMITED data rows must omit a leading Blob column altogether");
     expect(read_text(general_type_tab) == "\"OK\"\r\n",
            "#6640: TYPE TAB data rows must omit a leading General column altogether");
 
@@ -2624,11 +2648,28 @@ void test_append_from_delimited_general_picture_targets_match_vfp() {
     const fs::path csv_picture_path = temp_root / "csv-picture.dbf";
     const fs::path delimited_general_path = temp_root / "delimited-general.dbf";
     const fs::path delimited_picture_path = temp_root / "delimited-picture.dbf";
-    for (const fs::path &path : {csv_general_path, csv_picture_path, delimited_general_path, delimited_picture_path})
+    const fs::path csv_blob_path = temp_root / "csv-blob.dbf";
+    const fs::path delimited_blob_path = temp_root / "delimited-blob.dbf";
+    for (const fs::path &path : {csv_general_path, csv_picture_path,
+                                 delimited_general_path, delimited_picture_path})
     {
         const auto create_result = copperfin::vfp::create_dbf_table_file(path.string(), fields, {});
         expect(create_result.ok, "#6625: object-field delimited import fixture should be created");
     }
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "BLOB", .type = 'C', .length = 4U},
+        {.name = "CODE", .type = 'C', .length = 2U},
+    };
+    for (const fs::path &path : {csv_blob_path, delimited_blob_path})
+    {
+        const auto create_result = copperfin::vfp::create_dbf_table_file(path.string(), blob_fields, {});
+        expect(create_result.ok, "#6630: Blob delimited import fixture should be created");
+        std::fstream table(path, std::ios::in | std::ios::out | std::ios::binary);
+        table.seekp(32 + 11);
+        table.put('W');
+        expect(table.good(), "#6630: Blob import fixture descriptor should be marked as type W");
+    }
+    const std::string csv_blob_before = read_text(csv_blob_path);
 
     const fs::path csv_path = temp_root / "input.csv";
     const fs::path delimited_path = temp_root / "input.txt";
@@ -2641,10 +2682,14 @@ void test_append_from_delimited_general_picture_targets_match_vfp() {
         "APPEND FROM '" + csv_path.string() + "' TYPE CSV FIELDS GENERAL, CODE\n"
         "USE '" + csv_picture_path.string() + "'\n"
         "APPEND FROM '" + csv_path.string() + "' TYPE CSV FIELDS PICTURE, CODE\n"
+        "USE '" + csv_blob_path.string() + "'\n"
+        "APPEND FROM '" + csv_path.string() + "' TYPE CSV FIELDS BLOB, CODE\n"
         "USE '" + delimited_general_path.string() + "'\n"
         "APPEND FROM '" + delimited_path.string() + "' DELIMITED WITH CHARACTER ',' FIELDS GENERAL, CODE\n"
         "USE '" + delimited_picture_path.string() + "'\n"
         "APPEND FROM '" + delimited_path.string() + "' DELIMITED WITH CHARACTER ',' FIELDS PICTURE, CODE\n"
+        "USE '" + delimited_blob_path.string() + "'\n"
+        "APPEND FROM '" + delimited_path.string() + "' DELIMITED WITH CHARACTER ',' FIELDS BLOB, CODE\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -2654,10 +2699,16 @@ void test_append_from_delimited_general_picture_targets_match_vfp() {
 
     const auto csv_general = copperfin::vfp::parse_dbf_table_from_file(csv_general_path.string(), 5U);
     const auto csv_picture = copperfin::vfp::parse_dbf_table_from_file(csv_picture_path.string(), 5U);
+    const auto csv_blob = copperfin::vfp::parse_dbf_table_from_file(csv_blob_path.string(), 5U);
     expect(csv_general.ok && csv_general.table.records.empty(),
            "#6625: CSV General target must make no VFP-incompatible record mutation");
     expect(csv_picture.ok && csv_picture.table.records.empty(),
            "#6625: CSV Picture target must make no VFP-incompatible record mutation");
+    expect(csv_blob.ok && csv_blob.table.records.empty(),
+           "#6630: CSV Blob target must make no VFP-incompatible DBF/FPT record mutation");
+    expect(read_text(csv_blob_path) == csv_blob_before &&
+               !fs::exists(csv_blob_path.parent_path() / (csv_blob_path.stem().string() + ".fpt")),
+           "#6630: CSV Blob import must leave DBF bytes unchanged and create no FPT sidecar");
 
     const auto check_delimited = [&](const fs::path &path, const std::string &object_name)
     {
@@ -2675,6 +2726,25 @@ void test_append_from_delimited_general_picture_targets_match_vfp() {
     };
     check_delimited(delimited_general_path, "General");
     check_delimited(delimited_picture_path, "Picture");
+    const auto delimited_blob = copperfin::vfp::parse_dbf_table_from_file(delimited_blob_path.string(), 5U);
+    expect(delimited_blob.ok && delimited_blob.table.records.size() == 1U,
+           "#6630: DELIMITED Blob target should append one VFP-shaped row");
+    if (delimited_blob.ok && delimited_blob.table.records.size() == 1U &&
+        delimited_blob.table.records[0U].values.size() >= 2U)
+    {
+        expect(delimited_blob.table.records[0U].values[1U].display_value == "OK",
+               "#6630: DELIMITED must shift the first text cell into CODE after omitting Blob");
+        const std::string table_bytes = read_text(delimited_blob_path);
+        const std::size_t header_length = table_bytes.size() >= 10U
+            ? static_cast<std::size_t>(static_cast<unsigned char>(table_bytes[8])) |
+                (static_cast<std::size_t>(static_cast<unsigned char>(table_bytes[9])) << 8U)
+            : 0U;
+        expect(header_length + 5U <= table_bytes.size() &&
+                   std::all_of(table_bytes.begin() + static_cast<std::ptrdiff_t>(header_length + 1U),
+                               table_bytes.begin() + static_cast<std::ptrdiff_t>(header_length + 5U),
+                               [](char byte) { return byte == '\0'; }),
+               "#6630: DELIMITED Blob target must retain its blank physical bytes");
+    }
 
     fs::remove_all(temp_root, ignored);
 }
