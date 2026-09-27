@@ -1861,6 +1861,43 @@ void test_append_from_native_dif_sylk_varbinary_cells() {
     verify_successful_import("DIF", make_dif("XYZ"));
     verify_successful_import("SYLK", make_sylk("XYZ"));
 
+    const auto verify_lf_quoted_carriage_return = [&](const std::string &type, const std::string &fixture)
+    {
+        const std::string lower_type = lowercase_copy(type);
+        const fs::path source_path = temp_root / ("embedded_cr." + (type == "DIF" ? std::string{"dif"} : std::string{"slk"}));
+        const fs::path target_path = temp_root / ("embedded_cr_" + lower_type + ".dbf");
+        const fs::path main_path = temp_root / ("embedded_cr_" + lower_type + ".prg");
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> text_fields{
+            {.name = "C", .type = 'C', .length = 8U},
+        };
+        write_text(source_path, fixture);
+        expect(copperfin::vfp::create_dbf_table_file(target_path.string(), text_fields, {}).ok,
+               "#6654 review: " + type + " embedded-CR target should be created");
+        write_text(
+            main_path,
+            "USE '" + target_path.string() + "'\n"
+            "APPEND FROM '" + source_path.string() + "' TYPE " + type + "\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6654 review: " + type + " quoted embedded CR should import: " + state.message);
+        const auto parsed = copperfin::vfp::parse_dbf_table_from_file(target_path.string(), 5U);
+        expect(parsed.ok && parsed.table.records.size() == 1U &&
+                   parsed.table.records[0].values[0].display_value == "A\rB",
+               "#6654 review: " + type + " LF records should preserve a lone CR inside a quoted value");
+    };
+
+    verify_lf_quoted_carriage_return(
+        "DIF",
+        "TABLE\n0,1\n\"Copperfin\"\nVECTORS\n0,1\n\"\"\nTUPLES\n0,2\n\"\"\n"
+        "DATA\n0,0\n\"\"\n-1,0\nBOT\n1,0\n\"C\"\n-1,0\nBOT\n1,0\n\"A\rB\"\n-1,0\nEOD\n");
+    verify_lf_quoted_carriage_return(
+        "SYLK",
+        "ID;PCopperfin\nB;Y2;X1\nC;Y1;X1;K\"C\"\nC;Y2;X1;K\"A\rB\"\nE\n");
+
     const auto verify_rollback = [&](const std::string &type, const std::string &fixture)
     {
         const std::string lower_type = lowercase_copy(type);

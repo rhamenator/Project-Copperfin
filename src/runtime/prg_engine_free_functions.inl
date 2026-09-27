@@ -481,6 +481,55 @@
             return lines;
         }
 
+        std::vector<std::string> split_dif_sylk_records(const std::string &contents)
+        {
+            // Copperfin emits LF records, while native VFP9 emits CR records.
+            // When LF is present, only LF (and its optional preceding CR) is a
+            // delimiter so a lone CR inside a quoted value remains data. For
+            // CR-only input, quoted payloads may themselves contain CR, so
+            // delimit only while outside a quoted token.
+            const std::size_t first_cr = contents.find('\r');
+            const std::size_t first_lf = contents.find('\n');
+            const bool lf_delimited = first_lf != std::string::npos &&
+                (first_cr == std::string::npos || first_lf < first_cr || first_cr + 1U == first_lf);
+            std::vector<std::string> records;
+            std::string current;
+            bool in_quotes = false;
+            for (std::size_t index = 0U; index < contents.size(); ++index)
+            {
+                const char ch = contents[index];
+                if (!lf_delimited && ch == '"')
+                {
+                    current.push_back(ch);
+                    if (in_quotes && index + 1U < contents.size() && contents[index + 1U] == '"')
+                    {
+                        current.push_back(contents[++index]);
+                    }
+                    else
+                    {
+                        in_quotes = !in_quotes;
+                    }
+                    continue;
+                }
+                if ((lf_delimited && ch == '\n') || (!lf_delimited && ch == '\r' && !in_quotes))
+                {
+                    if (lf_delimited && !current.empty() && current.back() == '\r')
+                    {
+                        current.pop_back();
+                    }
+                    records.push_back(std::move(current));
+                    current.clear();
+                    continue;
+                }
+                current.push_back(ch);
+            }
+            if (!current.empty())
+            {
+                records.push_back(std::move(current));
+            }
+            return records;
+        }
+
         bool wildcard_match_insensitive(const std::string &pattern, const std::string &text)
         {
             const std::string p = lowercase_copy(pattern);
@@ -944,7 +993,7 @@
             bool in_data_section = false;
             bool in_row = false;
 
-            const std::vector<std::string> lines = split_text_lines(contents);
+            const std::vector<std::string> lines = split_dif_sylk_records(contents);
             for (std::size_t line_index = 0U; line_index < lines.size(); ++line_index)
             {
                 const std::string &line = lines[line_index];
@@ -1213,7 +1262,7 @@
         {
             const std::size_t expected_columns = fields.size();
             std::map<std::size_t, std::vector<std::string>> rows_by_index;
-            for (const std::string &line : split_text_lines(contents))
+            for (const std::string &line : split_dif_sylk_records(contents))
             {
                 if (!starts_with_insensitive(line, "C;"))
                 {
