@@ -2939,9 +2939,8 @@ void test_sdf_datetime_layout_round_trips_and_blanks_non_vfp_values() {
     expect(copy_state.completed, "#6603: COPY TO SDF should serialize temporal values: " + copy_state.message);
     if (fs::exists(sdf_path)) {
         const std::string sdf_contents = read_text(sdf_path);
-        // #6604 separately tracks the lower-case Logical token; keep that
-        // known defect explicit while asserting every byte covered by this
-        // temporal-layout contract.
+        // #6604 requires the uppercase Logical token alongside the temporal
+        // and Numeric bytes covered by this complete row-layout contract.
         expect(sdf_contents == "01/02/2025 03:04:05" "20250102" "   12.30" "T\r\n",
                "#6603: COPY TO SDF must preserve the complete VFP-shaped temporal row layout: " + sdf_contents);
     } else {

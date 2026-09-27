@@ -95,8 +95,9 @@ after review found a macOS clone destination-identity gap.
 Issue #6604: make SDF export emit VFP-compatible uppercase `T`/`F` bytes for
 Logical values while preserving adjacent Numeric formatting. Branch
 `codex/implement-6604-sdf-logical-tokens` contains the focused serializer,
-byte-level regression, and traceability work; local verification is in
-progress before opening the PR.
+byte-level regression, and traceability work. PR #6666 is open against
+`v1-development`; focused verification passes, and review fixes are in
+progress while hosted validation completes.
 
 ## Workspace preservation
 
