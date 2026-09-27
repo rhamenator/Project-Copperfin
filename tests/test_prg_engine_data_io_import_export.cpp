@@ -1896,7 +1896,7 @@ void test_append_from_native_dif_sylk_varbinary_cells() {
         "DATA\n0,0\n\"\"\n-1,0\nBOT\n1,0\n\"C\"\n-1,0\nBOT\n1,0\n\"A\rB\"\n-1,0\nEOD\n");
     verify_lf_quoted_carriage_return(
         "SYLK",
-        "ID;PCopperfin\nB;Y2;X1\nC;Y1;X1;K\"C\"\nC;Y2;X1;K\"A\rB\"\nE\n");
+        "ID;P\"First\rRecord\"\nB;Y2;X1\nC;Y1;X1;K\"C\"\nC;Y2;X1;K\"A\rB\"\nE\n");
 
     const auto verify_rollback = [&](const std::string &type, const std::string &fixture)
     {

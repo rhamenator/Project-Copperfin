@@ -270,6 +270,17 @@
             return sdf_omits_export_field(field);
         }
 
+        bool has_varbinary_field(const std::vector<vfp::DbfFieldDescriptor> &fields)
+        {
+            return std::any_of(
+                fields.begin(),
+                fields.end(),
+                [](const vfp::DbfFieldDescriptor &field)
+                {
+                    return static_cast<char>(std::toupper(static_cast<unsigned char>(field.type))) == 'Q';
+                });
+        }
+
         bool text_export_omits_general_picture_field(const vfp::DbfFieldDescriptor &field)
         {
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
@@ -481,29 +492,23 @@
             return lines;
         }
 
-        std::vector<std::string> split_dif_sylk_records(const std::string &contents)
+        std::vector<std::string_view> split_dif_sylk_records(const std::string &contents)
         {
             // Copperfin emits LF records, while native VFP9 emits CR records.
             // When LF is present, only LF (and its optional preceding CR) is a
             // delimiter so a lone CR inside a quoted value remains data. For
             // CR-only input, quoted payloads may themselves contain CR, so
             // delimit only while outside a quoted token.
-            const std::size_t first_cr = contents.find('\r');
-            const std::size_t first_lf = contents.find('\n');
-            const bool lf_delimited = first_lf != std::string::npos &&
-                (first_cr == std::string::npos || first_lf < first_cr || first_cr + 1U == first_lf);
-            std::vector<std::string> records;
-            std::string current;
+            char delimiter = '\n';
             bool in_quotes = false;
             for (std::size_t index = 0U; index < contents.size(); ++index)
             {
                 const char ch = contents[index];
-                if (!lf_delimited && ch == '"')
+                if (ch == '"')
                 {
-                    current.push_back(ch);
                     if (in_quotes && index + 1U < contents.size() && contents[index + 1U] == '"')
                     {
-                        current.push_back(contents[++index]);
+                        ++index;
                     }
                     else
                     {
@@ -511,21 +516,48 @@
                     }
                     continue;
                 }
-                if ((lf_delimited && ch == '\n') || (!lf_delimited && ch == '\r' && !in_quotes))
+                if (!in_quotes && (ch == '\r' || ch == '\n'))
                 {
-                    if (lf_delimited && !current.empty() && current.back() == '\r')
+                    delimiter = ch == '\r' && index + 1U < contents.size() && contents[index + 1U] == '\n'
+                        ? '\n'
+                        : ch;
+                    break;
+                }
+            }
+
+            std::vector<std::string_view> records;
+            std::size_t record_start = 0U;
+            in_quotes = false;
+            for (std::size_t index = 0U; index < contents.size(); ++index)
+            {
+                const char ch = contents[index];
+                if (delimiter == '\r' && ch == '"')
+                {
+                    if (in_quotes && index + 1U < contents.size() && contents[index + 1U] == '"')
                     {
-                        current.pop_back();
+                        ++index;
                     }
-                    records.push_back(std::move(current));
-                    current.clear();
+                    else
+                    {
+                        in_quotes = !in_quotes;
+                    }
                     continue;
                 }
-                current.push_back(ch);
+                if (ch != delimiter || (delimiter == '\r' && in_quotes))
+                {
+                    continue;
+                }
+                std::size_t record_end = index;
+                if (delimiter == '\n' && record_end > record_start && contents[record_end - 1U] == '\r')
+                {
+                    --record_end;
+                }
+                records.emplace_back(contents.data() + record_start, record_end - record_start);
+                record_start = index + 1U;
             }
-            if (!current.empty())
+            if (record_start < contents.size())
             {
-                records.push_back(std::move(current));
+                records.emplace_back(contents.data() + record_start, contents.size() - record_start);
             }
             return records;
         }
@@ -993,10 +1025,10 @@
             bool in_data_section = false;
             bool in_row = false;
 
-            const std::vector<std::string> lines = split_dif_sylk_records(contents);
+            const std::vector<std::string_view> lines = split_dif_sylk_records(contents);
             for (std::size_t line_index = 0U; line_index < lines.size(); ++line_index)
             {
-                const std::string &line = lines[line_index];
+                const std::string_view line = lines[line_index];
                 if (line == "DATA")
                 {
                     in_data_section = true;
@@ -1023,12 +1055,12 @@
                     continue;
                 }
 
-                const std::string type_token = trim_copy(line.substr(0U, comma));
+                const std::string type_token = trim_copy(std::string{line.substr(0U, comma)});
                 if (line_index + 1U >= lines.size())
                 {
                     break;
                 }
-                const std::string &payload_line = lines[++line_index];
+                const std::string_view payload_line = lines[++line_index];
 
                 if (type_token == "-1")
                 {
@@ -1056,7 +1088,7 @@
                 std::string value;
                 if (type_token == "1")
                 {
-                    value = trim_copy(payload_line);
+                    value = trim_copy(std::string{payload_line});
                     if (value.size() >= 2U && value.front() == '"' && value.back() == '"')
                     {
                         value = value.substr(1U, value.size() - 2U);
@@ -1079,8 +1111,8 @@
                     else
                     {
                         value = field_type == 'L'
-                            ? trim_copy(payload_line)
-                            : trim_copy(line.substr(comma + 1U));
+                            ? trim_copy(std::string{payload_line})
+                            : trim_copy(std::string{line.substr(comma + 1U)});
                     }
                 }
                 current_row.push_back(std::move(value));
@@ -1262,8 +1294,9 @@
         {
             const std::size_t expected_columns = fields.size();
             std::map<std::size_t, std::vector<std::string>> rows_by_index;
-            for (const std::string &line : split_dif_sylk_records(contents))
+            for (const std::string_view line_view : split_dif_sylk_records(contents))
             {
+                const std::string line{line_view};
                 if (!starts_with_insensitive(line, "C;"))
                 {
                     continue;
