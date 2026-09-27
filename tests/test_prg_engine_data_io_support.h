@@ -128,6 +128,7 @@ void test_copy_to_type_xls_and_append_from_type_xls_round_trip();
 void test_copy_to_type_dif_and_append_from_type_dif_round_trip();
 void test_copy_to_type_sylk_and_append_from_type_sylk_round_trip();
 void test_copy_to_dif_sylk_non_null_logical_cells();
+void test_copy_to_dif_sylk_date_datetime_cells();
 void test_copy_to_type_json_and_append_from_type_json_round_trip();
 void test_export_database_type_json_writes_catalog_snapshot();
 void test_export_database_type_sql_writes_ddl_and_inserts();

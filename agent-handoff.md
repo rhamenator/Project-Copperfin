@@ -2,7 +2,12 @@
 
 ## Last shipped slice
 
-Issue #6640 (PR #6657, merge `e3b765653`) finished 2026-09-27:
+Issue #6630 (PR #6658, merge `0b2a52244`) finished 2026-09-27: CSV and
+DELIMITED export/import now project Blob (`W`) fields with the same native
+rules as General/Picture, including the parallel SQL-result import path.
+Focused and hosted checks passed; the review conversation was resolved.
+
+Earlier: issue #6640 (PR #6657, merge `e3b765653`) finished 2026-09-27:
 successful lossy `COPY TO` interchange projections now emit one localized,
 non-blocking warning with stable structured output-type and ordered omitted-
 field metadata, without disclosing payloads or changing output bytes. Review
@@ -54,13 +59,12 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Issue #6630: match VFP9 Blob (`W`) projection in CSV and DELIMITED export and
-import. Branch `codex/implement-6630-blob-text-projection` extends the shared
-object-field predicate to Blob, so exports omit its payload, CSV import makes
-no mutation, and DELIMITED import removes Blob before source-cell binding.
-Focused data-I/O coverage passes. PR #6658 is open against `v1-development`;
-next steps are to finish review response, wait for required hosted checks, and
-merge after every check passes and every review conversation is resolved.
+Issue #6628: match VFP9 Date/DateTime cells in DIF and SYLK export. Branch
+`codex/implement-6628-dif-sylk-date-time` converts Date to each format's
+native `YYYYMMDD` cell and DateTime to printable DIF text or an Excel-1900
+SYLK serial, preventing leakage of Copperfin's internal storage diagnostics.
+Focused data-I/O verification is in progress; next steps are commit, push,
+open the PR, and complete hosted review/CI.
 
 ## Workspace preservation
 

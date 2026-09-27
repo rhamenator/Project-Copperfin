@@ -3358,6 +3358,58 @@ void test_copy_to_dif_sylk_non_null_logical_cells() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_copy_to_dif_sylk_date_datetime_cells() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_dif_sylk_date_time_cells";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "D", .type = 'D', .length = 8U},
+        {.name = "T", .type = 'T', .length = 8U},
+    };
+    expect(copperfin::vfp::create_dbf_table_file(
+               source_path.string(), fields,
+               {{"20240229", "julian:2459668 millis:47655000"}}).ok,
+           "#6628: leap-day Date/DateTime source fixture should be created");
+
+    const fs::path dif_path = temp_root / "temporal.dif";
+    const fs::path sylk_path = temp_root / "temporal.slk";
+    const fs::path main_path = temp_root / "copy_to_dif_sylk_date_time.prg";
+    write_text(main_path,
+        "SET DATE YMD\n"
+        "SET CENTURY ON\n"
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO '" + dif_path.string() + "' TYPE DIF\n"
+        "COPY TO '" + sylk_path.string() + "' TYPE SYLK\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6628: DIF/SYLK temporal export should complete: " + state.message);
+
+    const std::string dif = read_text(dif_path);
+    expect(dif.find("0,20240229\nV\n") != std::string::npos,
+           "#6628: DIF Date should use VFP's typed YYYYMMDD numeric cell");
+    expect(dif.find("1,0\n\"2024/02/29 01:14:15 PM\"\n") != std::string::npos,
+           "#6628: DIF DateTime should use VFP's printable SET DATE YMD representation (got '" + dif + "')");
+    expect(dif.find("julian:") == std::string::npos,
+           "#6628: DIF must not expose internal DateTime storage diagnostics");
+
+    const std::string sylk = read_text(sylk_path);
+    expect(sylk.find(";K\"20240229\"\n") != std::string::npos,
+           "#6628: SYLK Date should use VFP's quoted YYYYMMDD token");
+    expect(sylk.find(";K45351.5515625\n") != std::string::npos,
+           "#6628: SYLK DateTime should use the legacy Excel serial payload (got '" + sylk + "')");
+    expect(sylk.find("julian:") == std::string::npos,
+           "#6628: SYLK must not expose internal DateTime storage diagnostics");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_to_type_json_and_append_from_type_json_round_trip() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_json_round_trip";
