@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "ee16b91f-734f-4b55-8dd9-90451c915e9a", "text": "Opened PR #6644 for #6633: CSV and DELIMITED COPY now omit Memo values while retaining native VFP9 CSV header layout. Focused data-I/O tests and changelog validation pass.", "to": ["both"], "ts": "2026-09-27T02:06:08Z", "type": "status"}

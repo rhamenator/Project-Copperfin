@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "6c17d7dd-ffb2-4b1e-b9f9-8b96663330fb", "text": "Implementing #6633: COPY TO CSV and DELIMITED now omits Memo fields with native-compatible leading CSV header behavior; focused tests and traceability are complete, pending signed commit and PR.", "to": ["both"], "ts": "2026-09-27T02:05:33Z", "type": "status"}
