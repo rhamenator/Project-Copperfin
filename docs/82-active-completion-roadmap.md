@@ -14,10 +14,12 @@ carries `agent-approved` on GitHub. Refresh its input with:
 
 ```sh
 gh issue list --repo rhamenator/Project-Copperfin --state open \
-  --label agent-approved --limit 1000 --json number,title,labels,author,createdAt,url
+  --label agent-approved --author rhamenator --limit 1000 \
+  --json number,title,labels,author,createdAt,url
 ```
 
-The live query is a candidate list only: inspect each item’s `author.login` and
+The owner filter prevents outside titles from entering this planning list. The
+live query remains a candidate list: inspect each item’s `author.login` and
 state before admitting it to unattended work.
 
 ## Snapshot and completion rule
