@@ -912,6 +912,124 @@
             return field_type == 'N' || field_type == 'F' || field_type == 'I' || field_type == 'B' || field_type == 'Y';
         }
 
+        bool parse_dif_sylk_date(const std::string &value, int &year, int &month, int &day)
+        {
+            std::string digits;
+            digits.reserve(8U);
+            for (const char ch : trim_copy(value))
+            {
+                if (std::isdigit(static_cast<unsigned char>(ch)) != 0)
+                {
+                    digits.push_back(ch);
+                }
+            }
+            if (digits.size() != 8U)
+            {
+                return false;
+            }
+            year = std::stoi(digits.substr(0U, 4U));
+            month = std::stoi(digits.substr(4U, 2U));
+            day = std::stoi(digits.substr(6U, 2U));
+            return year > 0 && month >= 1 && month <= 12 &&
+                   day >= 1 && day <= days_in_month(year, month);
+        }
+
+        bool parse_dif_sylk_datetime(
+            const std::string &value,
+            int &year,
+            int &month,
+            int &day,
+            int &hour,
+            int &minute,
+            int &second)
+        {
+            const std::string text = trim_copy(value);
+            constexpr std::string_view julian_prefix = "julian:";
+            constexpr std::string_view millis_prefix = "millis:";
+            const std::size_t millis_pos = text.find(millis_prefix);
+            if (text.rfind(julian_prefix, 0U) != 0U || millis_pos == std::string::npos)
+            {
+                return false;
+            }
+            int julian_day = 0;
+            int millis = 0;
+            const std::string julian_text = trim_copy(text.substr(julian_prefix.size(), millis_pos - julian_prefix.size()));
+            const std::string millis_text = trim_copy(text.substr(millis_pos + millis_prefix.size()));
+            const auto julian_result = std::from_chars(
+                julian_text.data(), julian_text.data() + julian_text.size(), julian_day, 10);
+            const auto millis_result = std::from_chars(
+                millis_text.data(), millis_text.data() + millis_text.size(), millis, 10);
+            if (julian_result.ec != std::errc{} || julian_result.ptr != julian_text.data() + julian_text.size() ||
+                millis_result.ec != std::errc{} || millis_result.ptr != millis_text.data() + millis_text.size() ||
+                !julian_to_runtime_date(julian_day, year, month, day) ||
+                millis < 0 || millis >= 24 * 60 * 60 * 1000)
+            {
+                return false;
+            }
+            hour = millis / (60 * 60 * 1000);
+            minute = (millis / (60 * 1000)) % 60;
+            second = (millis / 1000) % 60;
+            return true;
+        }
+
+        std::string format_dif_datetime(const std::string &value)
+        {
+            int year = 0;
+            int month = 0;
+            int day = 0;
+            int hour = 0;
+            int minute = 0;
+            int second = 0;
+            if (!parse_dif_sylk_datetime(value, year, month, day, hour, minute, second))
+            {
+                return value;
+            }
+            const bool afternoon = hour >= 12;
+            const int twelve_hour = hour % 12 == 0 ? 12 : hour % 12;
+            std::ostringstream formatted;
+            formatted << std::setfill('0') << std::setw(4) << year << '/'
+                      << std::setw(2) << month << '/' << std::setw(2) << day << ' '
+                      << std::setw(2) << twelve_hour << ':' << std::setw(2) << minute << ':'
+                      << std::setw(2) << second << (afternoon ? " PM" : " AM");
+            return formatted.str();
+        }
+
+        bool is_blank_dif_sylk_datetime(const std::string &value)
+        {
+            // The DBF decoder exposes VFP's all-zero DateTime storage as this
+            // canonical diagnostic token.  It is a blank value, never text to
+            // expose in an interchange artifact.
+            return trim_copy(value) == "julian:0 millis:0";
+        }
+
+        std::string format_sylk_datetime_serial(const std::string &value)
+        {
+            int year = 0;
+            int month = 0;
+            int day = 0;
+            int hour = 0;
+            int minute = 0;
+            int second = 0;
+            if (!parse_dif_sylk_datetime(value, year, month, day, hour, minute, second))
+            {
+                return value;
+            }
+            // SYLK uses Excel's 1900 date system.  Excel reserves serial 60
+            // for its compatibility-only 1900-02-29, so real dates from
+            // 1900-03-01 onward need the extra day while earlier ones do not.
+            int serial_day = date_to_julian(year, month, day) - date_to_julian(1899, 12, 31);
+            if (date_to_julian(year, month, day) >= date_to_julian(1900, 3, 1))
+            {
+                ++serial_day;
+            }
+            const double serial = static_cast<double>(serial_day) +
+                                  static_cast<double>(((hour * 60) + minute) * 60 + second) / 86400.0;
+            std::ostringstream formatted;
+            formatted.imbue(std::locale::classic());
+            formatted << std::setprecision(15) << serial;
+            return formatted.str();
+        }
+
         std::string format_dif_cell_value(
             const vfp::DbfFieldDescriptor &field,
             std::string value,
@@ -982,6 +1100,28 @@
                         const bool logical_true = normalized == "true" || normalized == "t" || normalized == "y";
                         dif << "0," << (logical_true ? "1" : "0") << "\n";
                         dif << (logical_true ? "TRUE" : "FALSE") << "\n";
+                        continue;
+                    }
+                    if (!header_row && !is_null && field_type == 'D' && !value.empty())
+                    {
+                        int year = 0;
+                        int month = 0;
+                        int day = 0;
+                        if (parse_dif_sylk_date(value, year, month, day))
+                        {
+                            dif << "0," << std::setfill('0') << std::setw(4) << year
+                                << std::setw(2) << month << std::setw(2) << day << "\nV\n";
+                            continue;
+                        }
+                    }
+                    if (!header_row && !is_null && field_type == 'T' && !value.empty())
+                    {
+                        if (is_blank_dif_sylk_datetime(value))
+                        {
+                            dif << "1,0\n\"\"\n";
+                            continue;
+                        }
+                        dif << "1,0\n\"" << dif_escape_string(format_dif_datetime(value)) << "\"\n";
                         continue;
                     }
                     if (!header_row && dif_field_prefers_numeric(fields[index]) && !value.empty())
@@ -1257,6 +1397,28 @@
                         const std::string normalized = normalize_identifier(value);
                         const bool logical_true = normalized == "true" || normalized == "t" || normalized == "y";
                         sylk << "\"" << (logical_true ? "T" : "F") << "\"\n";
+                        continue;
+                    }
+                    if (!header_row && !is_null && field_type == 'D' && !value.empty())
+                    {
+                        int year = 0;
+                        int month = 0;
+                        int day = 0;
+                        if (parse_dif_sylk_date(value, year, month, day))
+                        {
+                            sylk << "\"" << std::setfill('0') << std::setw(4) << year
+                                 << std::setw(2) << month << std::setw(2) << day << "\"\n";
+                            continue;
+                        }
+                    }
+                    if (!header_row && !is_null && field_type == 'T' && !value.empty())
+                    {
+                        if (is_blank_dif_sylk_datetime(value))
+                        {
+                            sylk << "\"\"\n";
+                            continue;
+                        }
+                        sylk << format_sylk_datetime_serial(value) << "\n";
                         continue;
                     }
                     if (!header_row && sylk_field_prefers_numeric(fields[column_index]) && !value.empty())
