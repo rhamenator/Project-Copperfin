@@ -78,6 +78,7 @@ int main() {
     test_sdf_varchar_varbinary_layout_and_import_validation();
     test_copy_to_type_sdf_converts_nullable_values();
     test_copy_to_delimited_converts_nullable_values();
+    test_copy_to_dif_sylk_converts_nullable_values();
     test_sdf_omits_binary_object_fields_from_interchange_layout();
     test_dif_sylk_omit_blob_fields();
     test_dif_sylk_omit_memo_fields();

@@ -1265,6 +1265,24 @@
                                                   ? format_dif_cell_value(fields[index], row_values[index], header_row)
                                                   : std::string{};
                     const bool is_null = nulls != nullptr && index < nulls->size() && (*nulls)[index];
+                    if (!header_row && is_null)
+                    {
+                        if (field_type == 'L')
+                        {
+                            dif << "0,0\nFALSE\n";
+                            continue;
+                        }
+                        if (dif_field_prefers_numeric(fields[index]))
+                        {
+                            dif << "0,\nV\n";
+                            continue;
+                        }
+                        if (field_type == 'C' || field_type == 'V')
+                        {
+                            dif << "1,0\n\"\"\n";
+                            continue;
+                        }
+                    }
                     if (!header_row && !is_null && field_type == 'L')
                     {
                         const std::string normalized = normalize_identifier(value);
@@ -1563,6 +1581,11 @@
                                                         source_code_page_mark)
                                                   : std::string{};
                     const bool is_null = nulls != nullptr && column_index < nulls->size() && (*nulls)[column_index];
+                    if (!header_row && is_null)
+                    {
+                        sylk << "\n";
+                        continue;
+                    }
                     if (!header_row && !is_null && field_type == 'L')
                     {
                         const std::string normalized = normalize_identifier(value);

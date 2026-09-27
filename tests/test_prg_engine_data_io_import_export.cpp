@@ -1390,6 +1390,93 @@ void test_copy_to_delimited_converts_nullable_values() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_copy_to_dif_sylk_converts_nullable_values() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_dif_sylk_nullable_values";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const fs::path dif_path = temp_root / "nullable.dif";
+    const fs::path sylk_path = temp_root / "nullable.slk";
+    const fs::path main_path = temp_root / "copy_to_dif_sylk_nullable_values.prg";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "n", .type = 'N', .length = 4U, .nullable = true},
+        {.name = "c", .type = 'C', .length = 2U, .nullable = true},
+        {.name = "l", .type = 'L', .length = 1U, .nullable = true},
+        {.name = "tail", .type = 'C', .length = 2U},
+    };
+    expect(copperfin::vfp::create_dbf_table_file(
+               source_path.string(), fields, {{"12", "ZZ", "T", "OK"}}).ok,
+           "#6636: nullable DIF/SYLK source fixture should be created");
+    const auto header = copperfin::vfp::parse_dbf_header_from_file(source_path.string());
+    expect(header.ok, "#6636: nullable DIF/SYLK source header should be readable");
+    if (header.ok)
+    {
+        std::fstream source(source_path, std::ios::binary | std::ios::in | std::ios::out);
+        expect(source.good(), "#6636: nullable DIF/SYLK source fixture should open for patching");
+        // Preserve nonblank physical field bytes while marking N/C/L NULL,
+        // as an external DBF writer may: delete flag + 4 + 2 + 1 + 2 bytes.
+        source.seekp(static_cast<std::streamoff>(header.header.header_length + 10U), std::ios::beg);
+        source.put(static_cast<char>(0x07));
+        source.flush();
+        expect(source.good(), "#6636: nullable DIF/SYLK source NULL bitmap patch should succeed");
+    }
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "' EXCLUSIVE\n"
+        "COPY TO '" + dif_path.string() + "' TYPE DIF\n"
+        "COPY TO '" + sylk_path.string() + "' TYPE SYLK\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6636: COPY TO DIF/SYLK nullable-value script should complete: " + state.message);
+
+    const auto source_result = copperfin::vfp::parse_dbf_table_from_file(source_path.string(), 2U);
+    expect(source_result.ok && source_result.table.records.size() == 1U,
+           "#6636: nullable DIF/SYLK fixture must retain its source row");
+    if (source_result.ok && source_result.table.records.size() == 1U)
+    {
+        const auto &values = source_result.table.records.front().values;
+        expect(values.size() >= 4U && values[0].is_null && values[1].is_null && values[2].is_null &&
+                   !values[3].is_null,
+               "#6636: COPY TO DIF/SYLK must preserve source NULL flags and the trailing non-null field");
+    }
+
+    const std::string expected_dif =
+        "TABLE\n0,1\n\"Copperfin\"\nVECTORS\n0,4\n\"\"\nTUPLES\n0,2\n\"\"\nDATA\n0,0\n\"\"\n"
+        "-1,0\nBOT\n1,0\n\"n\"\n1,0\n\"c\"\n1,0\n\"l\"\n1,0\n\"tail\"\n"
+        "-1,0\nBOT\n0,\nV\n1,0\n\"\"\n0,0\nFALSE\n1,0\n\"OK\"\n-1,0\nEOD\n";
+    if (fs::exists(dif_path))
+    {
+        expect(read_text(dif_path) == expected_dif,
+               "#6636: DIF must ignore stale physical bytes and use native numeric NULL, empty character, false logical, and stable trailing cells");
+    }
+    else
+    {
+        expect(false, "#6636: COPY TO DIF should create the nullable-value destination");
+    }
+
+    const std::string expected_sylk =
+        "ID;PCopperfin\nB;Y2;X4\n"
+        "C;Y1;X1;K\"n\"\nC;Y1;X2;K\"c\"\nC;Y1;X3;K\"l\"\nC;Y1;X4;K\"tail\"\n"
+        "C;Y2;X1;K\nC;Y2;X2;K\nC;Y2;X3;K\nC;Y2;X4;K\"OK\"\nE\n";
+    if (fs::exists(sylk_path))
+    {
+        expect(read_text(sylk_path) == expected_sylk,
+               "#6636: SYLK must use blank K cells for NULLs without shifting the trailing field");
+    }
+    else
+    {
+        expect(false, "#6636: COPY TO SYLK should create the nullable-value destination");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sdf_omits_binary_object_fields_from_interchange_layout() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sdf_omitted_binary_objects";
