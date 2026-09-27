@@ -13,133 +13,172 @@ This diagram is kept in its own file because GitHub's Mermaid renderer only
 reliably renders the first diagram on a page; a page with several diagrams
 tends to render only the first and leave the rest blank.
 
-Refreshed 2026-07-24 to add `cf_platform_support`, `cf_licensing`,
-`cf_package_trust`, and `copperfin_launcher_guard`, which were added to
-`CMakeLists.txt` after this diagram was first drawn — see
-[24-system-uml.md](../24-system-uml.md) and
-[28-repository-ontology.md](../28-repository-ontology.md) for the same
-correction at the UML and prose-ontology level.
+Refreshed 2026-09-26 from `CMakeLists.txt`. The map now separates foundation,
+data/interop, runtime/build, host, and managed-client dependencies; includes
+`cf_migration` and `cf_mcp_host`; and preserves the target-state taxonomy as
+dashed relationships. See [24-system-uml.md](../24-system-uml.md) and
+[28-repository-ontology.md](../28-repository-ontology.md) for the companion
+UML and source-backed ontology.
 
 ```mermaid
 flowchart TB
-    classDef real fill:#2f7a52,stroke:#1e5136,color:#ffffff,stroke-width:1px;
-    classDef seed fill:#a8790c,stroke:#6e4f07,color:#ffffff,stroke-width:1px;
-    classDef none fill:#8a3a3a,stroke:#5c2626,color:#ffffff,stroke-width:1px;
-    classDef ground fill:#33475b,stroke:#1f2c38,color:#ffffff,stroke-width:1px;
-    classDef exe fill:#4b5563,stroke:#2f353b,color:#ffffff,stroke-width:1px;
-    classDef lane fill:#f2e0cf,stroke:#a85a2a,color:#1b2024,stroke-width:1px;
+    classDef foundation fill:#33475b,stroke:#1f2c38,color:#fff;
+    classDef data fill:#0f766e,stroke:#115e59,color:#fff;
+    classDef runtime fill:#7c3aed,stroke:#5b21b6,color:#fff;
+    classDef studio fill:#a85a2a,stroke:#7c2d12,color:#fff;
+    classDef security fill:#991b1b,stroke:#7f1d1d,color:#fff;
+    classDef executable fill:#4b5563,stroke:#2f353b,color:#fff;
+    classDef managed fill:#1d4ed8,stroke:#1e3a8a,color:#fff;
+    classDef aspirational fill:#a8790c,stroke:#6e4f07,color:#fff;
 
-    subgraph CORE["Ground Truth Native Libraries (cf_*)"]
-      direction TB
-      L1["cf_localization"]
-      L2["cf_security"]
-      L3["cf_platform_profile"]
-      L4["cf_vfp_assets"]
-      L5["cf_runtime_text"]
-      L6["cf_prg_analysis"]
-      L7["cf_design_model"]
-      L8["cf_xbase_runtime"]
-      L9["cf_runtime_pipeline"]
-      L10["cf_platform_support"]
-      L11["cf_licensing"]
-      L12["cf_package_trust"]
+    subgraph FOUNDATION[Foundation Libraries]
+      direction LR
+      PS["cf_platform_support<br/>process, paths, files, JSON, encoding, PE"]
+      LOC["cf_localization<br/>catalogs, locale, translation"]
+      LIC["cf_licensing<br/>payload, status, Ed25519"]
+      TRUST["cf_package_trust<br/>launcher inventory trust"]
+      SEC["cf_security<br/>authorization, audit, containment,<br/>external-process and workspace-agent policy"]
     end
 
-    subgraph EXEC["Ground Truth Executables + Managed Hosts"]
-      direction TB
-      X1["copperfin_inspect"]
-      X2["copperfin_studio_host"]
-      X3["copperfin_runtime_host"]
-      X4["copperfin_build_host"]
-      X5["Copperfin.VisualStudio (VSIX)"]
-      X6["Copperfin.Studio (WinForms)"]
-      X7["copperfin_launcher_guard (Windows-only)"]
+    subgraph DATA[Data, Interop, and Migration]
+      direction LR
+      VFP["cf_vfp_assets<br/>DBF/FPT, CDX, Access, xAsset,<br/>staged import, editor/undo"]
+      PROFILE["cf_platform_profile<br/>database model, federation, query translation,<br/>polyglot routes, telemetry"]
+      SQLITE["cf_sqlite_connector<br/>read-only plan execution / fallback"]
+      MCP["cf_mcp_host<br/>stdio protocol + read-only DBF header"]
+      MIG["cf_migration<br/>project inventory"]
     end
 
-    subgraph ASPIRATIONAL["Aspirational copperfin-* Modules (docs/02 Top-Level Product Map)"]
-      direction TB
-      A1["copperfin-core - NOT extracted"]
-      A2["copperfin-data - NOT extracted"]
-      A3["copperfin-connectors - PARTIAL SEED"]
-      A4["copperfin-runtime - NOT extracted"]
-      A5["copperfin-designer - NOT extracted"]
-      A6["copperfin-reports - NOT extracted"]
-      A7["copperfin-migrator - NO CODE"]
-      A8["copperfin-dotnet - PARTIAL SEED"]
-      A9["copperfin-gateway - NO CODE"]
-      A10["copperfin-shield - PARTIAL SEED"]
-      A11["copperfin-cli - INFORMAL ONLY"]
-      A12["copperfin-vsix - ALREADY REAL (label stale)"]
+    subgraph EXECUTION[Runtime and Build]
+      direction LR
+      RTEXT["cf_runtime_text<br/>runtime localized diagnostics"]
+      ANALYSIS["cf_prg_analysis<br/>static PRG analysis"]
+      DESIGN["cf_design_model<br/>workspace, designers, builders, reports,<br/>toolbox, VS launch contract"]
+      XBASE["cf_xbase_runtime<br/>parser/expression, dispatch/flow,<br/>cursor/session, commands, builtins,<br/>SQL/index, objects/COM/DLL/polyglot"]
+      PIPE["cf_runtime_pipeline<br/>classification, manifests, library export,<br/>host bridge, C# launcher, packaging"]
     end
 
-    L1 --> L10
-    L2 --> L1
-    L3 --> L1
-    L4 --> L1
-    L5 --> L1
-    L6 --> L5
-    L7 --> L4
-    L7 --> L6
-    L7 --> L1
-    L8 --> L6
-    L8 --> L5
-    L8 --> L7
-    L9 --> L7
-    L9 --> L2
-    L9 --> L3
-    L9 --> L8
-    L9 --> L11
-    L12 --> L11
+    subgraph HOSTS[Native Hosts]
+      direction LR
+      INSPECT["copperfin_inspect"]
+      MCPX["copperfin_mcp_host"]
+      STUDIOH["copperfin_studio_host"]
+      RUNTIMEH["copperfin_runtime_host"]
+      BUILDH["copperfin_build_host"]
+      GUARD["copperfin_launcher_guard<br/>Windows only"]
+    end
 
-    X1 --> L4
-    X1 --> L2
-    X1 --> L11
-    X2 --> L7
-    X2 --> L2
-    X2 --> L3
-    X2 --> L11
-    X3 --> L8
-    X3 --> L2
-    X3 --> L3
-    X3 --> L11
-    X4 --> L9
-    X4 --> X7
-    X5 --> X2
-    X5 --> X3
-    X6 --> X2
-    X6 --> X3
-    X7 --> L2
-    X7 --> L1
-    X7 --> L10
-    X7 --> L12
+    subgraph MANAGED[Managed Clients]
+      direction LR
+      VSIX["Copperfin.VisualStudio<br/>editor, IntelliSense, design/debug clients"]
+      WINFORMS["Copperfin.Studio<br/>standalone designer shell"]
+    end
 
-    A1 -.extract from.-> L1
-    A2 -.extract from.-> L4
-    A2 -.requires.-> A1
-    A3 -.deepen: live backend exec.-> L3
-    A3 -.requires.-> A2
-    A4 -.extract/rename from.-> L8
-    A4 -.requires.-> A2
-    A5 -.extract from.-> L7
-    A5 -.requires.-> A2
-    A6 -.new render/export module.-> L7
-    A6 -.requires.-> A4
-    A7 -.new code entirely.-> L4
-    A7 -.requires.-> A5
-    A8 -.deepen: real CLR host.-> L9
-    A8 -.requires.-> A4
-    A9 -.new code entirely.-> L2
-    A9 -.requires.-> A8
-    A10 -.deepen: policy-profile depth.-> L2
-    A10 -.deepen: policy-profile depth.-> L12
-    A11 -.unify existing hosts.-> L9
-    A12 -.already implemented as.-> X5
+    subgraph TARGET[Target-State Module Taxonomy]
+      direction LR
+      CORE["copperfin-core"]
+      CDATA["copperfin-data"]
+      CONN["copperfin-connectors"]
+      CRUNTIME["copperfin-runtime"]
+      CDESIGN["copperfin-designer"]
+      CREPORTS["copperfin-reports"]
+      CMIG["copperfin-migrator"]
+      CDOTNET["copperfin-dotnet"]
+      CGATEWAY["copperfin-gateway"]
+      CSHIELD["copperfin-shield"]
+      CCLI["copperfin-cli"]
+      CVSIX["copperfin-vsix"]
+    end
 
-    class L1,L2,L3,L4,L5,L6,L7,L8,L9,L10,L11,L12 ground;
-    class X1,X2,X3,X4,X5,X6,X7 exe;
-    class A1,A2,A4,A5,A6,A11 none;
-    class A3,A8,A10 seed;
-    class A7,A9 none;
-    class A12 real;
-    class CORE,EXEC,ASPIRATIONAL lane;
+    LOC --> PS
+    LIC --> PS
+    SEC --> LOC
+    SEC --> PS
+    TRUST --> LIC
+    PROFILE --> LOC
+    PROFILE --> SEC
+    SQLITE --> PROFILE
+    SQLITE --> SEC
+    VFP --> LOC
+    VFP --> PS
+    VFP --> SEC
+    VFP --> PROFILE
+    MCP --> PS
+    MCP --> VFP
+
+    RTEXT --> LOC
+    ANALYSIS --> RTEXT
+    DESIGN --> VFP
+    DESIGN --> ANALYSIS
+    DESIGN --> LOC
+    XBASE --> ANALYSIS
+    XBASE --> RTEXT
+    XBASE --> DESIGN
+    XBASE --> VFP
+    XBASE --> PROFILE
+    XBASE --> SEC
+    PIPE --> DESIGN
+    PIPE --> XBASE
+    PIPE --> PROFILE
+    PIPE --> SEC
+    PIPE --> LIC
+    PIPE --> PS
+
+    INSPECT --> VFP
+    INSPECT --> SEC
+    INSPECT --> LIC
+    INSPECT --> LOC
+    MCPX --> MCP
+    MCPX --> SEC
+    STUDIOH --> DESIGN
+    STUDIOH --> PROFILE
+    STUDIOH --> SEC
+    STUDIOH --> LIC
+    RUNTIMEH --> XBASE
+    RUNTIMEH --> SQLITE
+    RUNTIMEH --> PROFILE
+    RUNTIMEH --> SEC
+    RUNTIMEH --> LIC
+    RUNTIMEH --> LOC
+    BUILDH --> PIPE
+    BUILDH --> LOC
+    BUILDH -.stages.-> GUARD
+    GUARD --> TRUST
+    GUARD --> SEC
+    GUARD --> LOC
+    GUARD --> PS
+    VSIX -.design JSON.-> STUDIOH
+    VSIX -.debug protocol.-> RUNTIMEH
+    WINFORMS -.design JSON.-> STUDIOH
+    WINFORMS -.debug protocol.-> RUNTIMEH
+
+    CORE -.extracts foundation.-> LOC
+    CDATA -.extracts format layer.-> VFP
+    CONN -.deepens federation.-> PROFILE
+    CRUNTIME -.extracts runtime.-> XBASE
+    CDESIGN -.extracts design model.-> DESIGN
+    CREPORTS -.new render/export layer.-> DESIGN
+    CMIG -.new migration layer.-> VFP
+    CDOTNET -.deepens bridge.-> PIPE
+    CGATEWAY -.new gateway.-> SEC
+    CSHIELD -.deepens policy.-> SEC
+    CCLI -.unifies hosts.-> PIPE
+    CVSIX -.implemented by.-> VSIX
+    CDATA -.requires.-> CORE
+    CONN -.requires.-> CDATA
+    CRUNTIME -.requires.-> CDATA
+    CDESIGN -.requires.-> CDATA
+    CREPORTS -.requires.-> CRUNTIME
+    CMIG -.requires.-> CDESIGN
+    CDOTNET -.requires.-> CRUNTIME
+    CGATEWAY -.requires.-> CDOTNET
+
+    class PS,LOC,LIC foundation;
+    class SEC,TRUST security;
+    class VFP,PROFILE,SQLITE,MCP,MIG data;
+    class RTEXT,ANALYSIS,XBASE,PIPE runtime;
+    class DESIGN studio;
+    class INSPECT,MCPX,STUDIOH,RUNTIMEH,BUILDH,GUARD executable;
+    class VSIX,WINFORMS managed;
+    class CORE,CDATA,CONN,CRUNTIME,CDESIGN,CREPORTS,CMIG,CDOTNET,CGATEWAY,CSHIELD,CCLI,CVSIX aspirational;
 ```

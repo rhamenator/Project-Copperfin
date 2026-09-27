@@ -1,0 +1,1 @@
+- 2026-09-26: Expanded the ground-truth system UML and whole-system Mermaid dependency map with source-family, host, managed-client, security, data/interop, and target-state relationships.
