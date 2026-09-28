@@ -118,9 +118,9 @@ after review found a macOS clone destination-identity gap.
 Issue #6602: make `APPEND FROM ... TYPE SDF` recognize CR-only physical records
 alongside CRLF and LF without changing blank-record or Memo-target behavior.
 Branch `codex/implement-6602-sdf-cr-records` contains the focused splitter,
-portable delimiter regression, and traceability work. The focused
-`test_prg_engine_data_io` suite passes; signed commit, push, PR, hosted
-validation, and review remain.
+portable delimiter regression, and traceability work. PR #6680 is open against
+`v1-development`; the focused `test_prg_engine_data_io` suite passes, and
+hosted validation/review are in progress.
 
 ## Workspace preservation
 
