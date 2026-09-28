@@ -131,7 +131,9 @@ containing the selected target field names in a different order, while keeping
 subsequent data positional and leaving #6591's BOM case separate. Branch
 `codex/implement-6593-csv-reordered-header` contains focused local-DBF and
 selected SQL/result-cursor regressions plus a shared unordered-name matcher
-used by both dispatch paths.
+used by both dispatch paths. PR #6683 is open against `v1-development`; both
+focused suites and local metadata validation pass, and hosted validation/review
+are in progress.
 
 ## Workspace preservation
 
