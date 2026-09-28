@@ -2414,6 +2414,7 @@ void test_append_from_type_sdf_imports_fixed_width_text_rows() {
     verify_delimiter("cr", "A   \r\rB   \r", "A", "B");
     verify_delimiter("crlf", "C   \r\n\r\nD   \r\n", "C", "D");
     verify_delimiter("lf", "E   \n\nF   \n", "E", "F");
+    verify_delimiter("unterminated", "G   \rH   ", "G", "H");
 
     fs::remove_all(temp_root, ignored);
 }
