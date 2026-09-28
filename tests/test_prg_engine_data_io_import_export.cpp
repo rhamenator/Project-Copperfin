@@ -3190,6 +3190,70 @@ void test_append_from_type_csv_imports_delimited_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_csv_and_delimited_preserves_quotes_in_unquoted_fields() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_prg_engine_append_from_unquoted_quotes";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+    };
+    const fs::path csv_destination_path = temp_root / "csv-destination.dbf";
+    const fs::path delimited_destination_path = temp_root / "delimited-destination.dbf";
+    expect(copperfin::vfp::create_dbf_table_file(csv_destination_path.string(), fields, {}).ok &&
+               copperfin::vfp::create_dbf_table_file(delimited_destination_path.string(), fields, {}).ok,
+           "#6519: unquoted-quote destination fixtures should be created");
+
+    const fs::path csv_source_path = temp_root / "source.csv";
+    const fs::path delimited_source_path = temp_root / "source.txt";
+    const std::string csv_source_bytes = "NAME\r\nab\"cd\r\nab\"\"cd\r\n";
+    const std::string delimited_source_bytes = "ab\"cd\r\nab\"\"cd\r\n";
+    write_text(csv_source_path, csv_source_bytes);
+    write_text(delimited_source_path, delimited_source_bytes);
+    expect(read_text(csv_source_path) == csv_source_bytes &&
+               read_text(delimited_source_path) == delimited_source_bytes,
+           "#6519: CSV and DELIMITED sources must retain exact unquoted quote bytes");
+
+    const fs::path main_path = temp_root / "append_from_unquoted_quotes.prg";
+    write_text(
+        main_path,
+        "USE '" + csv_destination_path.string() + "'\n"
+        "APPEND FROM '" + csv_source_path.string() + "' TYPE CSV FIELDS NAME\n"
+        "USE '" + delimited_destination_path.string() + "'\n"
+        "APPEND FROM '" + delimited_source_path.string() + "' TYPE DELIMITED FIELDS NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6519: unquoted-quote imports should complete: " + state.message);
+
+    for (const fs::path &destination_path : {csv_destination_path, delimited_destination_path}) {
+        const auto result = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 10U);
+        expect(result.ok && result.table.records.size() == 2U,
+               "#6519: each unquoted-quote import should append two rows");
+        if (result.ok && result.table.records.size() == 2U) {
+            const std::string single_quote_value = result.table.records[0U].values[0U].display_value;
+            const std::string adjacent_quote_value = result.table.records[1U].values[0U].display_value;
+            expect(single_quote_value == "ab\"cd",
+                   "#6519: a single quote inside an unquoted field must remain literal");
+            expect(adjacent_quote_value == "ab\"\"cd",
+                   "#6519: adjacent quotes inside an unquoted field must both remain literal");
+            expect(std::vector<unsigned char>(single_quote_value.begin(), single_quote_value.end()) ==
+                       std::vector<unsigned char>({97U, 98U, 34U, 99U, 100U}) &&
+                       std::vector<unsigned char>(adjacent_quote_value.begin(), adjacent_quote_value.end()) ==
+                           std::vector<unsigned char>({97U, 98U, 34U, 34U, 99U, 100U}),
+                   "#6519: imported unquoted Character bytes must match installed VFP9");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_type_csv_preserves_enclosed_doubled_quotes() {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -3301,8 +3365,8 @@ void test_append_from_type_delimited_truncates_enclosed_doubled_quote_pair() {
     const auto unquoted_result =
         copperfin::vfp::parse_dbf_table_from_file(unquoted_destination_path.string(), 10U);
     expect(unquoted_result.ok && unquoted_result.table.records.size() == 1U &&
-               unquoted_result.table.records[0U].values[0U].display_value == "ab\"cd",
-           "#6665 review: truncation must not apply when the field does not start with an enclosure");
+               unquoted_result.table.records[0U].values[0U].display_value == "ab\"\"\"\"cd",
+           "#6519: all quote bytes must remain literal when a DELIMITED field does not start with an enclosure");
 
     const fs::path tab_source_path = temp_root / "tab-source.dbf";
     const fs::path tab_destination_path = temp_root / "tab-destination.dbf";

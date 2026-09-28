@@ -1,0 +1,1 @@
+- 2026-09-27: Preserved literal quote bytes inside unquoted `APPEND FROM TYPE CSV` and `TYPE DELIMITED` Character fields, matching VFP9 (#6519). `RQ-CF-PRG-DELIMITED-UNQUOTED-QUOTE-001`

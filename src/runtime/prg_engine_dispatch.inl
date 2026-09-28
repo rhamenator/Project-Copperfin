@@ -10231,7 +10231,8 @@
                         }
                         std::size_t appended_count = 0U;
                         bool first_line = true;
-                        for (const std::string &line : split_delimited_text_records(csv_bytes, delimited_options))
+                        for (const std::string &line :
+                             split_delimited_text_records(csv_bytes, delimited_options, &filtered_target_fields))
                         {
                             if (line.empty())
                             {
@@ -11359,7 +11360,8 @@
                     }
                     std::size_t appended_count = 0U;
                     bool first_delimited_line = true;
-                    for (const std::string &line : split_delimited_text_records(buffer, delimited_options))
+                    for (const std::string &line :
+                         split_delimited_text_records(buffer, delimited_options, &target_fields))
                     {
                         if (line.empty())
                         {

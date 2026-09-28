@@ -469,10 +469,11 @@ void test_append_from_csv_mutates_selected_sql_result_cursor() {
         "ID,NAME,AMOUNT\r\n"
         "901,HOTEL,11.00\r\n"
         "902,INDIA,12.50\r\n"
-        "903,\"ab\"\"cd\",13.75\r\n";
+        "903,\"ab\"\"cd\",13.75\r\n"
+        "904,ab\"\"cd,14.25\r\n";
     write_text(csv_path.string(), source_bytes);
     expect(read_text(csv_path.string()) == source_bytes,
-        "#6522: SQL-result CSV source must retain the exact enclosed doubled-quote bytes");
+        "#6519/#6522: SQL-result CSV source must retain exact enclosed and unquoted quote bytes");
 
     write_text(
         main_path,
@@ -485,6 +486,9 @@ void test_append_from_csv_mutates_selected_sql_result_cursor() {
         "GO BOTTOM\n"
         "nBottomId = ID\n"
         "cBottomName = NAME\n"
+        "SKIP -1\n"
+        "nPreviousId = ID\n"
+        "cPreviousName = NAME\n"
         "lDisc = SQLDISCONNECT(nConn)\n"
         "RETURN\n");
 
@@ -497,12 +501,16 @@ void test_append_from_csv_mutates_selected_sql_result_cursor() {
     const auto rows_after = state.globals.find("nrowsafter");
     const auto bottom_id = state.globals.find("nbottomid");
     const auto bottom_name = state.globals.find("cbottomname");
+    const auto previous_id = state.globals.find("npreviousid");
+    const auto previous_name = state.globals.find("cpreviousname");
     const auto disc = state.globals.find("ldisc");
 
     expect(rows_before != state.globals.end(), "SQL cursor row count before APPEND FROM CSV should be captured");
     expect(rows_after != state.globals.end(), "SQL cursor row count after APPEND FROM CSV should be captured");
     expect(bottom_id != state.globals.end(), "SQL cursor bottom ID after APPEND FROM CSV should be captured");
     expect(bottom_name != state.globals.end(), "SQL cursor bottom NAME after APPEND FROM CSV should be captured");
+    expect(previous_id != state.globals.end(), "SQL cursor preceding ID after APPEND FROM CSV should be captured");
+    expect(previous_name != state.globals.end(), "SQL cursor preceding NAME after APPEND FROM CSV should be captured");
     expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured after APPEND FROM CSV checks");
 
     if (rows_before != state.globals.end()) {
@@ -510,16 +518,24 @@ void test_append_from_csv_mutates_selected_sql_result_cursor() {
             "selected SQL result cursor should start with seeded row count before APPEND FROM CSV");
     }
     if (rows_after != state.globals.end()) {
-        expect(copperfin::runtime::format_value(rows_after->second) == "6",
-            "APPEND FROM TYPE CSV should add 3 rows to the selected SQL/result cursor");
+        expect(copperfin::runtime::format_value(rows_after->second) == "7",
+            "APPEND FROM TYPE CSV should add 4 rows to the selected SQL/result cursor");
     }
     if (bottom_id != state.globals.end()) {
-        expect(copperfin::runtime::format_value(bottom_id->second) == "903",
+        expect(copperfin::runtime::format_value(bottom_id->second) == "904",
             "APPEND FROM TYPE CSV should set last row ID in selected SQL/result cursor");
     }
     if (bottom_name != state.globals.end()) {
         expect(copperfin::runtime::format_value(bottom_name->second) == "ab\"\"cd",
-            "#6522: APPEND FROM TYPE CSV should preserve both doubled-quote bytes in the selected SQL/result cursor");
+            "#6519: APPEND FROM TYPE CSV should preserve adjacent quote bytes in an unquoted selected SQL/result field");
+    }
+    if (previous_id != state.globals.end()) {
+        expect(copperfin::runtime::format_value(previous_id->second) == "903",
+            "#6522: the enclosed doubled-quote SQL-result row should remain adjacent to the new unquoted row");
+    }
+    if (previous_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(previous_name->second) == "ab\"\"cd",
+            "#6522: APPEND FROM TYPE CSV should still preserve enclosed doubled-quote bytes in the SQL/result cursor");
     }
     if (disc != state.globals.end()) {
         expect(copperfin::runtime::format_value(disc->second) == "1",

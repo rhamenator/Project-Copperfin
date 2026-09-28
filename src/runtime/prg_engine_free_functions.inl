@@ -750,6 +750,7 @@
             char delimiter = ',';
             char quote = '"';
             bool quote_character_fields = true;
+            bool preserve_unquoted_quote_bytes = false;
             bool preserve_enclosed_doubled_quotes = false;
             bool truncate_enclosed_doubled_quotes = false;
         };
@@ -758,6 +759,8 @@
         {
             DelimitedTextOptions options;
             const std::string normalized_type = normalize_identifier(type);
+            options.preserve_unquoted_quote_bytes =
+                normalized_type == "csv" || normalized_type == "delimited";
             options.preserve_enclosed_doubled_quotes = normalized_type == "csv";
             options.truncate_enclosed_doubled_quotes = normalized_type == "delimited";
             if (normalized_type == "tab")
@@ -914,6 +917,19 @@
                 }
                 if (ch == options.quote)
                 {
+                    const bool character_target =
+                        target_fields != nullptr &&
+                        values.size() < target_fields->size() &&
+                        std::toupper(static_cast<unsigned char>((*target_fields)[values.size()].type)) == 'C';
+                    if (options.preserve_unquoted_quote_bytes && character_target &&
+                        !in_quotes && !current_field_was_quoted &&
+                        !trim_copy(outside_before_quotes).empty())
+                    {
+                        // VFP treats quotes after unquoted field data as
+                        // literal bytes for both CSV and DELIMITED imports.
+                        outside_before_quotes.push_back(ch);
+                        continue;
+                    }
                     if (in_quotes && index + 1U < line.size() && line[index + 1U] == options.quote)
                     {
                         if (options.truncate_enclosed_doubled_quotes && current_field_started_with_enclosure)
@@ -989,17 +1005,30 @@
 
         std::vector<std::string> split_delimited_text_records(
             const std::string &contents,
-            const DelimitedTextOptions &options)
+            const DelimitedTextOptions &options,
+            const std::vector<vfp::DbfFieldDescriptor> *target_fields = nullptr)
         {
             std::vector<std::string> records;
             std::string current;
             bool in_quotes = false;
+            bool field_was_quoted = false;
+            bool field_has_unquoted_data = false;
+            std::size_t field_index = 0U;
             for (std::size_t index = 0U; index < contents.size(); ++index)
             {
                 const char ch = contents[index];
                 if (ch == options.quote)
                 {
                     current.push_back(ch);
+                    const bool character_target =
+                        target_fields != nullptr &&
+                        field_index < target_fields->size() &&
+                        std::toupper(static_cast<unsigned char>((*target_fields)[field_index].type)) == 'C';
+                    if (options.preserve_unquoted_quote_bytes && character_target &&
+                        !in_quotes && !field_was_quoted && field_has_unquoted_data)
+                    {
+                        continue;
+                    }
                     if (in_quotes && index + 1U < contents.size() && contents[index + 1U] == options.quote)
                     {
                         current.push_back(contents[++index]);
@@ -1007,6 +1036,7 @@
                     else
                     {
                         in_quotes = !in_quotes;
+                        field_was_quoted = true;
                     }
                     continue;
                 }
@@ -1014,11 +1044,24 @@
                 {
                     records.push_back(std::move(current));
                     current.clear();
+                    field_was_quoted = false;
+                    field_has_unquoted_data = false;
+                    field_index = 0U;
                     if (ch == '\r' && index + 1U < contents.size() && contents[index + 1U] == '\n')
                     {
                         ++index;
                     }
                     continue;
+                }
+                if (!in_quotes && ch == options.delimiter)
+                {
+                    field_was_quoted = false;
+                    field_has_unquoted_data = false;
+                    ++field_index;
+                }
+                else if (!in_quotes && !std::isspace(static_cast<unsigned char>(ch)))
+                {
+                    field_has_unquoted_data = true;
                 }
                 current.push_back(ch);
             }

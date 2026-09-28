@@ -98,6 +98,7 @@ int main() {
     test_append_from_type_sdf_blanks_invalid_date_cells();
     test_copy_to_type_csv_and_delimited_text_rows();
     test_append_from_type_csv_imports_delimited_rows();
+    test_append_from_csv_and_delimited_preserves_quotes_in_unquoted_fields();
     test_append_from_type_csv_preserves_enclosed_doubled_quotes();
     test_append_from_type_delimited_truncates_enclosed_doubled_quote_pair();
     test_append_from_text_memo_compatibility_modes();
