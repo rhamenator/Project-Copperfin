@@ -2,6 +2,12 @@
 
 ## Last shipped slice
 
+Issue #6593 (PR #6683, merge `fe91230ea`) finished 2026-09-27: `APPEND FROM
+... TYPE CSV` now discards BOM-free field-name rows when selected target names
+appear in a different order, while subsequent values remain positional in both
+local DBF and selected SQL/result cursor paths. Focused and hosted checks
+passed; review completed without actionable conversations.
+
 Issue #6598 (PR #6681, merge `af0a22dd3`) finished 2026-09-27: `APPEND FROM
 ... TYPE CSV` now appends blank physical data records after the header in both
 local DBF and selected SQL/result cursor paths, while header-only sources
@@ -126,14 +132,9 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Issue #6593: make `APPEND FROM ... TYPE CSV` discard a BOM-free first record
-containing the selected target field names in a different order, while keeping
-subsequent data positional and leaving #6591's BOM case separate. Branch
-`codex/implement-6593-csv-reordered-header` contains focused local-DBF and
-selected SQL/result-cursor regressions plus a shared unordered-name matcher
-used by both dispatch paths. PR #6683 is open against `v1-development`; both
-focused suites and local metadata validation pass, and hosted validation/review
-are in progress.
+No active implementation slice. The September 27 implementation-loop cutoff
+has passed; do not select another issue unless the repository owner starts or
+extends the workstream.
 
 ## Workspace preservation
 
