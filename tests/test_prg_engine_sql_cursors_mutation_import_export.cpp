@@ -466,7 +466,7 @@ void test_append_from_csv_mutates_selected_sql_result_cursor() {
     const fs::path main_path = temp_root / "sql_append_from_csv.prg";
 
     const std::string source_bytes =
-        "ID,NAME,AMOUNT\r\n"
+        "NAME,AMOUNT,ID\r\n"
         "\r\n"
         "901,HOTEL,11.00\r\n"
         "902,INDIA,12.50\r\n"
