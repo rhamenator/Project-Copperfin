@@ -548,23 +548,25 @@
         {
             std::vector<std::string> lines;
             std::size_t start = 0U;
-            while (start < contents.size())
+            for (std::size_t index = 0U; index < contents.size(); ++index)
             {
-                std::size_t end = contents.find('\n', start);
-                if (end == std::string::npos)
+                if (contents[index] != '\r' && contents[index] != '\n')
                 {
-                    end = contents.size();
+                    continue;
                 }
-                std::string line = contents.substr(start, end - start);
-                if (!line.empty() && line.back() == '\r')
+                if (index != start)
                 {
-                    line.pop_back();
+                    lines.push_back(contents.substr(start, index - start));
                 }
-                if (!line.empty())
+                if (contents[index] == '\r' && index + 1U < contents.size() && contents[index + 1U] == '\n')
                 {
-                    lines.push_back(std::move(line));
+                    ++index;
                 }
-                start = end + 1U;
+                start = index + 1U;
+            }
+            if (start < contents.size())
+            {
+                lines.push_back(contents.substr(start));
             }
             return lines;
         }

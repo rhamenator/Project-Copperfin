@@ -2,6 +2,11 @@
 
 ## Last shipped slice
 
+Issue #6519 (PR #6678, merge `37a77a193`) finished 2026-09-27: unquoted
+Character data in CSV and DELIMITED imports now preserves following literal
+quote bytes while retaining each format's enclosed-field rules. Focused and
+hosted checks passed; both review conversations were fixed and resolved.
+
 Issue #6522 (PR #6670, merge `b3c1ed73d`) finished 2026-09-27: enclosed doubled
 quotes in `APPEND FROM TYPE CSV` now preserve both VFP9-observed quote bytes for
 fixed-width Character targets without changing DELIMITED, TAB, unquoted,
@@ -110,14 +115,12 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Issue #6519: make `APPEND FROM ... TYPE CSV` and `TYPE DELIMITED` preserve one
-or more literal quote bytes after unquoted Character data, matching retained
-installed-VFP9 probes without changing either format's enclosed-field rules or
-the selected-Memo CSV extension. Branch
-`codex/implement-6519-unquoted-csv-quotes` contains the focused parser,
-local/remote exact-byte regression, and traceability work. PR #6678 is open
-against `v1-development`; both focused suites pass, and hosted validation/
-review are in progress.
+Issue #6602: make `APPEND FROM ... TYPE SDF` recognize CR-only physical records
+alongside CRLF and LF without changing blank-record or Memo-target behavior.
+Branch `codex/implement-6602-sdf-cr-records` contains the focused splitter,
+portable delimiter regression, and traceability work. The focused
+`test_prg_engine_data_io` suite passes; signed commit, push, PR, hosted
+validation, and review remain.
 
 ## Workspace preservation
 

@@ -2374,33 +2374,46 @@ void test_append_from_type_sdf_imports_fixed_width_text_rows() {
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
-    write_simple_dbf(temp_root / "dest.dbf", {});
-    write_text(temp_root / "people.sdf", "Dora      \r\nEvan      \r\n");
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "name", .type = 'C', .length = 4U},
+    };
+    const auto verify_delimiter = [&](const std::string &label,
+                                      const std::string &contents,
+                                      const std::string &first,
+                                      const std::string &second)
+    {
+        const fs::path destination_path = temp_root / (label + ".dbf");
+        const fs::path source_path = temp_root / (label + ".sdf");
+        const fs::path main_path = temp_root / (label + ".prg");
+        expect(copperfin::vfp::create_dbf_table_file(destination_path.string(), fields, {}).ok,
+               "#6602: SDF delimiter destination fixture should be created");
+        write_text(source_path, contents);
+        write_text(
+            main_path,
+            "USE '" + destination_path.string() + "'\n"
+            "APPEND FROM '" + source_path.string() + "' TYPE SDF\n"
+            "RETURN\n");
 
-    const fs::path main_path = temp_root / "append_from_sdf.prg";
-    write_text(
-        main_path,
-        "USE '" + (temp_root / "dest.dbf").string() + "'\n"
-        "APPEND FROM '" + (temp_root / "people.sdf").string() + "' TYPE SDF\n"
-        "RETURN\n");
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6602: APPEND FROM TYPE SDF delimiter script should complete: " + state.message);
 
-    copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        const auto result = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 3U);
+        expect(result.ok && result.table.records.size() == 2U,
+               "#6602: SDF should import two nonblank physical records for " + label);
+        if (result.ok && result.table.records.size() == 2U)
+        {
+            expect(result.table.records[0U].values[0U].display_value == first,
+                   "#6602: first SDF record should retain its fixed-width value for " + label);
+            expect(result.table.records[1U].values[0U].display_value == second,
+                   "#6602: second SDF record should retain its fixed-width value for " + label);
+        }
+    };
 
-    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed, "APPEND FROM TYPE SDF script should complete");
-
-    const auto result = copperfin::vfp::parse_dbf_table_from_file(
-        (temp_root / "dest.dbf").string(), 100U);
-    expect(result.ok, "APPEND FROM TYPE SDF destination DBF should be readable");
-    expect(result.table.records.size() == 2U,
-        "APPEND FROM TYPE SDF should append two rows");
-    if (result.table.records.size() >= 2U) {
-        expect(result.table.records[0U].values[0U].display_value == "Dora",
-            "first SDF row should import into the first DBF record");
-        expect(result.table.records[1U].values[0U].display_value == "Evan",
-            "second SDF row should import into the second DBF record");
-    }
+    verify_delimiter("cr", "A   \r\rB   \r", "A", "B");
+    verify_delimiter("crlf", "C   \r\n\r\nD   \r\n", "C", "D");
+    verify_delimiter("lf", "E   \n\nF   \n", "E", "F");
 
     fs::remove_all(temp_root, ignored);
 }
