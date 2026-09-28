@@ -10234,7 +10234,7 @@
                         for (const std::string &line :
                              split_delimited_text_records(csv_bytes, delimited_options, &filtered_target_fields))
                         {
-                            if (line.empty())
+                            if (line.empty() && append_type != "csv")
                             {
                                 continue;
                             }
@@ -11363,7 +11363,7 @@
                     for (const std::string &line :
                          split_delimited_text_records(buffer, delimited_options, &target_fields))
                     {
-                        if (line.empty())
+                        if (line.empty() && append_type != "csv")
                         {
                             continue;
                         }

@@ -467,6 +467,7 @@ void test_append_from_csv_mutates_selected_sql_result_cursor() {
 
     const std::string source_bytes =
         "ID,NAME,AMOUNT\r\n"
+        "\r\n"
         "901,HOTEL,11.00\r\n"
         "902,INDIA,12.50\r\n"
         "903,\"ab\"\"cd\",13.75\r\n"
@@ -483,6 +484,8 @@ void test_append_from_csv_mutates_selected_sql_result_cursor() {
         "nRowsBefore = RECCOUNT()\n"
         "APPEND FROM '" + csv_path.string() + "' TYPE CSV\n"
         "nRowsAfter = RECCOUNT()\n"
+        "GO 4\n"
+        "cBlankName = NAME\n"
         "GO BOTTOM\n"
         "nBottomId = ID\n"
         "cBottomName = NAME\n"
@@ -499,6 +502,7 @@ void test_append_from_csv_mutates_selected_sql_result_cursor() {
 
     const auto rows_before = state.globals.find("nrowsbefore");
     const auto rows_after = state.globals.find("nrowsafter");
+    const auto blank_name = state.globals.find("cblankname");
     const auto bottom_id = state.globals.find("nbottomid");
     const auto bottom_name = state.globals.find("cbottomname");
     const auto previous_id = state.globals.find("npreviousid");
@@ -507,6 +511,7 @@ void test_append_from_csv_mutates_selected_sql_result_cursor() {
 
     expect(rows_before != state.globals.end(), "SQL cursor row count before APPEND FROM CSV should be captured");
     expect(rows_after != state.globals.end(), "SQL cursor row count after APPEND FROM CSV should be captured");
+    expect(blank_name != state.globals.end(), "blank physical CSV row should be captured in the selected SQL result cursor");
     expect(bottom_id != state.globals.end(), "SQL cursor bottom ID after APPEND FROM CSV should be captured");
     expect(bottom_name != state.globals.end(), "SQL cursor bottom NAME after APPEND FROM CSV should be captured");
     expect(previous_id != state.globals.end(), "SQL cursor preceding ID after APPEND FROM CSV should be captured");
@@ -518,8 +523,12 @@ void test_append_from_csv_mutates_selected_sql_result_cursor() {
             "selected SQL result cursor should start with seeded row count before APPEND FROM CSV");
     }
     if (rows_after != state.globals.end()) {
-        expect(copperfin::runtime::format_value(rows_after->second) == "7",
-            "APPEND FROM TYPE CSV should add 4 rows to the selected SQL/result cursor");
+        expect(copperfin::runtime::format_value(rows_after->second) == "8",
+            "#6598: APPEND FROM TYPE CSV should add the blank physical row and four populated rows");
+    }
+    if (blank_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(blank_name->second).empty(),
+            "#6598: the blank physical CSV row should remain blank in the selected SQL/result cursor");
     }
     if (bottom_id != state.globals.end()) {
         expect(copperfin::runtime::format_value(bottom_id->second) == "904",

@@ -2,6 +2,11 @@
 
 ## Last shipped slice
 
+Issue #6602 (PR #6680, merge `2bcc34c6c`) finished 2026-09-27: `APPEND FROM
+... TYPE SDF` now recognizes CR-only physical records alongside CRLF and LF
+without changing blank-record or Memo-target behavior. Focused and hosted
+checks passed; review completed without actionable conversations.
+
 Issue #6519 (PR #6678, merge `37a77a193`) finished 2026-09-27: unquoted
 Character data in CSV and DELIMITED imports now preserves following literal
 quote bytes while retaining each format's enclosed-field rules. Focused and
@@ -115,12 +120,13 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Issue #6602: make `APPEND FROM ... TYPE SDF` recognize CR-only physical records
-alongside CRLF and LF without changing blank-record or Memo-target behavior.
-Branch `codex/implement-6602-sdf-cr-records` contains the focused splitter,
-portable delimiter regression, and traceability work. PR #6680 is open against
-`v1-development`; the focused `test_prg_engine_data_io` suite passes, and
-hosted validation/review are in progress.
+Issue #6598: make `APPEND FROM ... TYPE CSV` append a blank target record for a
+blank physical data record after the header while retaining a zero-row result
+for a header-only source and leaving `TYPE DELIMITED` unchanged. Branch
+`codex/implement-6598-csv-blank-records` contains focused local-DBF and selected
+SQL/result-cursor regressions plus the matching local/remote dispatch fix. PR
+#6681 is open against `v1-development`; both focused suites and local metadata
+validation pass, and hosted validation/review are in progress.
 
 ## Workspace preservation
 
