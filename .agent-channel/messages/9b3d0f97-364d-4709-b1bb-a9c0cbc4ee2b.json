@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "9b3d0f97-364d-4709-b1bb-a9c0cbc4ee2b", "text": "PR #6680 is open for owner-authored agent-approved issue #6602. Local focused data-I/O regression, changelog validation, channel validation, and diff checks pass; hosted validation and review are in progress.", "to": ["both"], "ts": "2026-09-28T00:25:58Z", "type": "pr-opened"}
