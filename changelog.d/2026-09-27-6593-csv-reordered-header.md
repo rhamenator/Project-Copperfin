@@ -1,0 +1,1 @@
+- 2026-09-27: Fixed `APPEND FROM ... TYPE CSV` importing reordered field-name rows as data instead of discarding them.

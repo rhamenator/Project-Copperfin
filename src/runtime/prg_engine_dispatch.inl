@@ -10240,22 +10240,11 @@
                             }
                             const std::vector<std::string> values =
                                 parse_delimited_text_line(line, delimited_options, &filtered_target_fields);
-                            if (append_type == "csv" && first_line && values.size() >= filtered_target_fields.size())
+                            if (append_type == "csv" && first_line &&
+                                delimited_values_match_field_names(values, filtered_target_fields))
                             {
-                                bool matches_header = true;
-                                for (std::size_t idx = 0U; idx < filtered_target_fields.size(); ++idx)
-                                {
-                                    if (collapse_identifier(values[idx]) != collapse_identifier(filtered_target_fields[idx].name))
-                                    {
-                                        matches_header = false;
-                                        break;
-                                    }
-                                }
-                                if (matches_header)
-                                {
-                                    first_line = false;
-                                    continue;
-                                }
+                                first_line = false;
+                                continue;
                             }
                             first_line = false;
 
@@ -11369,22 +11358,11 @@
                         }
                         const std::vector<std::string> values =
                             parse_delimited_text_line(line, delimited_options, &target_fields);
-                        if (append_type == "csv" && first_delimited_line && values.size() >= target_fields.size())
+                        if (append_type == "csv" && first_delimited_line &&
+                            delimited_values_match_field_names(values, target_fields))
                         {
-                            bool matches_header = true;
-                            for (std::size_t index = 0U; index < target_fields.size(); ++index)
-                            {
-                                if (collapse_identifier(values[index]) != collapse_identifier(target_fields[index].name))
-                                {
-                                    matches_header = false;
-                                    break;
-                                }
-                            }
-                            if (matches_header)
-                            {
-                                first_delimited_line = false;
-                                continue;
-                            }
+                            first_delimited_line = false;
+                            continue;
                         }
                         first_delimited_line = false;
                         const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);

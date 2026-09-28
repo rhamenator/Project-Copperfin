@@ -3117,7 +3117,7 @@ void test_append_from_type_csv_imports_delimited_rows() {
     fs::create_directories(temp_root);
 
     write_people_dbf(temp_root / "dest.dbf", {});
-    write_text(temp_root / "people.csv", "NAME,AGE\r\n\"  Ivy, Jr\t\",9\r\n\"Max\",44\r\n  \"Outer\"\t,55\r\n");
+    write_text(temp_root / "people.csv", "AGE,NAME\r\n\"  Ivy, Jr\t\",9\r\n\"Max\",44\r\n  \"Outer\"\t,55\r\n");
     write_text(temp_root / "people_pipe.txt", "\"  Nia\t\"|12\r\n");
     write_text(temp_root / "people_custom.txt", "_  Ora\t_;15\r\n");
     write_people_dbf(temp_root / "multiline_source.dbf", {});
@@ -3164,7 +3164,7 @@ void test_append_from_type_csv_imports_delimited_rows() {
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed, "APPEND FROM TYPE CSV/DELIMITED script should complete");
+    expect(state.completed, "#6593: APPEND FROM TYPE CSV should ignore a reordered field-name row: " + state.message);
 
     const auto result = copperfin::vfp::parse_dbf_table_from_file(
         (temp_root / "dest.dbf").string(), 100U);

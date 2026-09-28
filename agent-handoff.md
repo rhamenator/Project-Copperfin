@@ -2,6 +2,12 @@
 
 ## Last shipped slice
 
+Issue #6598 (PR #6681, merge `af0a22dd3`) finished 2026-09-27: `APPEND FROM
+... TYPE CSV` now appends blank physical data records after the header in both
+local DBF and selected SQL/result cursor paths, while header-only sources
+remain zero-row and DELIMITED behavior is unchanged. Focused and hosted checks
+passed; the channel-mirror review finding was fixed and resolved.
+
 Issue #6602 (PR #6680, merge `2bcc34c6c`) finished 2026-09-27: `APPEND FROM
 ... TYPE SDF` now recognizes CR-only physical records alongside CRLF and LF
 without changing blank-record or Memo-target behavior. Focused and hosted
@@ -120,13 +126,12 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Issue #6598: make `APPEND FROM ... TYPE CSV` append a blank target record for a
-blank physical data record after the header while retaining a zero-row result
-for a header-only source and leaving `TYPE DELIMITED` unchanged. Branch
-`codex/implement-6598-csv-blank-records` contains focused local-DBF and selected
-SQL/result-cursor regressions plus the matching local/remote dispatch fix. PR
-#6681 is open against `v1-development`; both focused suites and local metadata
-validation pass, and hosted validation/review are in progress.
+Issue #6593: make `APPEND FROM ... TYPE CSV` discard a BOM-free first record
+containing the selected target field names in a different order, while keeping
+subsequent data positional and leaving #6591's BOM case separate. Branch
+`codex/implement-6593-csv-reordered-header` contains focused local-DBF and
+selected SQL/result-cursor regressions plus a shared unordered-name matcher
+used by both dispatch paths.
 
 ## Workspace preservation
 

@@ -1005,6 +1005,38 @@
             return values;
         }
 
+        bool delimited_values_match_field_names(
+            const std::vector<std::string> &values,
+            const std::vector<vfp::DbfFieldDescriptor> &fields)
+        {
+            if (values.size() < fields.size())
+            {
+                return false;
+            }
+
+            std::vector<bool> matched(fields.size(), false);
+            for (std::size_t value_index = 0U; value_index < fields.size(); ++value_index)
+            {
+                const std::string normalized_value = collapse_identifier(values[value_index]);
+                bool found = false;
+                for (std::size_t field_index = 0U; field_index < fields.size(); ++field_index)
+                {
+                    if (!matched[field_index] &&
+                        normalized_value == collapse_identifier(fields[field_index].name))
+                    {
+                        matched[field_index] = true;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         std::vector<std::string> split_delimited_text_records(
             const std::string &contents,
             const DelimitedTextOptions &options,
