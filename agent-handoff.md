@@ -124,7 +124,9 @@ Issue #6598: make `APPEND FROM ... TYPE CSV` append a blank target record for a
 blank physical data record after the header while retaining a zero-row result
 for a header-only source and leaving `TYPE DELIMITED` unchanged. Branch
 `codex/implement-6598-csv-blank-records` contains focused local-DBF and selected
-SQL/result-cursor regressions plus the matching local/remote dispatch fix.
+SQL/result-cursor regressions plus the matching local/remote dispatch fix. PR
+#6681 is open against `v1-development`; both focused suites and local metadata
+validation pass, and hosted validation/review are in progress.
 
 ## Workspace preservation
 
