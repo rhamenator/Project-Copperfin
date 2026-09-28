@@ -1,0 +1,1 @@
+- 2026-09-27: Fixed `APPEND FROM ... TYPE CSV` silently skipping blank physical data records after the header.

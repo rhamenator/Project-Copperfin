@@ -3123,7 +3123,18 @@ void test_append_from_type_csv_imports_delimited_rows() {
     write_people_dbf(temp_root / "multiline_source.dbf", {});
     write_people_dbf(temp_root / "multiline_dest.dbf", {});
     write_people_dbf(temp_root / "nul_dest.dbf", {});
+    write_people_dbf(temp_root / "blank_dest.dbf", {});
+    write_people_dbf(temp_root / "header_only_dest.dbf", {});
     const fs::path nul_csv_path = temp_root / "nul.csv";
+    const fs::path blank_csv_path = temp_root / "blank.csv";
+    const fs::path header_only_csv_path = temp_root / "header-only.csv";
+    const std::string blank_csv_bytes = "NAME\r\n\r\n";
+    const std::string header_only_csv_bytes = "NAME\r\n";
+    write_text(blank_csv_path, blank_csv_bytes);
+    write_text(header_only_csv_path, header_only_csv_bytes);
+    expect(read_text(blank_csv_path) == blank_csv_bytes &&
+               read_text(header_only_csv_path) == header_only_csv_bytes,
+           "#6598: blank-record CSV fixtures should retain their exact physical bytes");
 
     const fs::path main_path = temp_root / "append_from_csv.prg";
     write_text(
@@ -3143,6 +3154,10 @@ void test_append_from_type_csv_imports_delimited_rows() {
         "APPEND BLANK\n"
         "REPLACE NAME WITH 'A' + CHR(0) + 'B'\n"
         "COPY TO '" + nul_csv_path.string() + "' TYPE CSV FIELDS NAME\n"
+        "USE '" + (temp_root / "blank_dest.dbf").string() + "'\n"
+        "APPEND FROM '" + blank_csv_path.string() + "' TYPE CSV FIELDS NAME\n"
+        "USE '" + (temp_root / "header_only_dest.dbf").string() + "'\n"
+        "APPEND FROM '" + header_only_csv_path.string() + "' TYPE CSV FIELDS NAME\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -3200,6 +3215,16 @@ void test_append_from_type_csv_imports_delimited_rows() {
     }
     expect(read_text(nul_csv_path) == std::string{"NAME\r\n\"A\0B\"\r\n", 13U},
         "COPY TO TYPE CSV should retain an embedded NUL from a Character field");
+
+    const auto blank_result = copperfin::vfp::parse_dbf_table_from_file(
+        (temp_root / "blank_dest.dbf").string(), 2U);
+    expect(blank_result.ok && blank_result.table.records.size() == 1U &&
+               blank_result.table.records[0U].values[0U].display_value.empty(),
+           "#6598: a blank physical CSV record after the header should append one blank target record");
+    const auto header_only_result = copperfin::vfp::parse_dbf_table_from_file(
+        (temp_root / "header_only_dest.dbf").string(), 2U);
+    expect(header_only_result.ok && header_only_result.table.records.empty(),
+           "#6598: a header-only CSV source should append no target records");
 
     fs::remove_all(temp_root, ignored);
 }
