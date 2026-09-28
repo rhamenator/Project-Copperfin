@@ -1,0 +1,1 @@
+- 2026-09-27: Recorded completion of the reordered CSV header compatibility slice and the implementation-loop cutoff state.
