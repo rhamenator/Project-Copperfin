@@ -1,0 +1,1 @@
+- 2026-09-30: Recorded the owner-approved fast-forward of `main` to `v1-development` (`docs/main-fast-forward-2026-09-30.md`): method (existing owner bypass on ruleset 20356131, no ruleset change), alternatives considered, and verification steps. No product or runtime behavior changed.
