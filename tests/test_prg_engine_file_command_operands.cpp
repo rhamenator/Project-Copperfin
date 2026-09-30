@@ -282,12 +282,61 @@ void test_copy_file_and_rename_operand_forms() {
     fs::remove_all(temp_root, ignored);
 }
 
+// Payload bytes (embedded NUL, CR/LF, high bytes) survive COPY FILE and RENAME untouched.
+void test_copy_file_and_rename_preserve_binary_payload() {
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_file_command_operands_binary";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "work");
+    fs::create_directories(temp_root / "script");
+    const std::string payload("A\0BC\r\n\xFF\x80Z", 9);
+    write_text(temp_root / "work" / "src.bin", payload);
+    const fs::path script_path = temp_root / "script" / "binary.prg";
+    write_text(script_path, "COPY FILE src.bin TO copy.bin\nRENAME src.bin TO moved.bin\nlAfter = .T.\nRETURN\n");
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(script_path.string(), (temp_root / "work").string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6583 binary payload: script should complete: " + state.message);
+    expect(read_text(temp_root / "work" / "copy.bin") == payload, "#6583 binary payload: COPY FILE must keep exact bytes");
+    expect(read_text(temp_root / "work" / "moved.bin") == payload, "#6583 binary payload: RENAME must keep exact bytes");
+    expect(!fs::exists(temp_root / "work" / "src.bin"), "#6583 binary payload: RENAME must remove the source");
+    fs::remove_all(temp_root, ignored);
+}
+
+#if !defined(_WIN32)
+// A POSIX file name that is not valid UTF-8 keeps its exact bytes when a wildcard capture
+// is carried into the destination (captures are byte slices, not re-encoded code points).
+void test_wildcard_capture_preserves_invalid_utf8_bytes() {
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_file_command_operands_invalid_utf8";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "work");
+    fs::create_directories(temp_root / "script");
+    const std::string odd = "\xFF" "a.bin";
+    write_text(temp_root / "work" / odd, "payload");
+    const fs::path script_path = temp_root / "script" / "invalid_utf8.prg";
+    write_text(script_path, "COPY FILE ?a.bin TO ?a.bak\nRENAME ?a.bin TO ?a.old\nlAfter = .T.\nRETURN\n");
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(script_path.string(), (temp_root / "work").string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6583 invalid UTF-8: script should complete: " + state.message);
+    expect(fs::exists(temp_root / "work" / (std::string("\xFF") + "a.bak")),
+        "#6583 invalid UTF-8: COPY FILE destination must keep the 0xFF byte");
+    expect(fs::exists(temp_root / "work" / (std::string("\xFF") + "a.old")),
+        "#6583 invalid UTF-8: RENAME destination must keep the 0xFF byte");
+    expect(!fs::exists(temp_root / "work" / odd), "#6583 invalid UTF-8: RENAME must remove the source");
+    fs::remove_all(temp_root, ignored);
+}
+#endif
+
 }  // namespace
 
 int main() {
     test_erase_and_delete_file_operand_forms();
     test_copy_file_and_rename_operand_forms();
+    test_copy_file_and_rename_preserve_binary_payload();
 #if !defined(_WIN32)
+    test_wildcard_capture_preserves_invalid_utf8_bytes();
     test_erase_wildcard_does_not_remove_symlinks();
 #endif
     if (const int failures = test_failures(); failures != 0) {
