@@ -1095,6 +1095,95 @@
             return false;
         }
 
+        // Like file_wildcard_matches, but also records what each `*`/`?` matched, in order, so
+        // COPY FILE and RENAME can carry those segments into a destination pattern
+        // (`*.bin TO *.bak` maps one.bin to one.bak; `?ne.bin TO ?ne.bak` maps the `?`).
+        // `*` takes the longest run that lets the rest match, so `*.*` splits at the last dot.
+        bool file_wildcard_captures(const std::string &pattern,
+                                    const std::string &name,
+                                    std::vector<std::string> &captures)
+        {
+            const auto fold = [](const char ch) { return static_cast<char>(std::tolower(static_cast<unsigned char>(ch))); };
+            const std::function<bool(std::size_t, std::size_t, std::vector<std::string> &)> match =
+                [&](std::size_t p, std::size_t n, std::vector<std::string> &found) -> bool
+            {
+                while (p < pattern.size())
+                {
+                    const char pc = pattern[p];
+                    if (pc == '*')
+                    {
+                        while (p + 1U < pattern.size() && pattern[p + 1U] == '*')
+                        {
+                            ++p;
+                        }
+                        for (std::size_t end = name.size() + 1U; end-- > n;)
+                        {
+                            std::vector<std::string> tail = found;
+                            tail.push_back(name.substr(n, end - n));
+                            if (match(p + 1U, end, tail))
+                            {
+                                found = std::move(tail);
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                    if (n >= name.size())
+                    {
+                        return false;
+                    }
+                    if (pc == '?')
+                    {
+                        found.push_back(std::string(1U, name[n]));
+                    }
+                    else if (fold(pc) != fold(name[n]))
+                    {
+                        return false;
+                    }
+                    ++p;
+                    ++n;
+                }
+                return n == name.size();
+            };
+            captures.clear();
+            std::vector<std::string> found;
+            if (match(0U, 0U, found))
+            {
+                captures = std::move(found);
+                return true;
+            }
+            if (pattern.size() >= 2U && pattern.compare(pattern.size() - 2U, 2U, ".*") == 0 &&
+                name.find('.') == std::string::npos &&
+                file_wildcard_captures(pattern.substr(0U, pattern.size() - 2U), name, captures))
+            {
+                captures.push_back({});
+                return true;
+            }
+            return false;
+        }
+
+        // Substitute each wildcard in `destination_pattern` with the next captured segment
+        // (an exhausted capture list contributes nothing); other characters are kept.
+        std::string map_wildcard_destination(const std::string &destination_pattern,
+                                             const std::vector<std::string> &captures)
+        {
+            std::string result;
+            std::size_t next_capture = 0U;
+            for (const char ch : destination_pattern)
+            {
+                if (ch == '*' || ch == '?')
+                {
+                    if (next_capture < captures.size())
+                    {
+                        result += captures[next_capture++];
+                    }
+                    continue;
+                }
+                result.push_back(ch);
+            }
+            return result;
+        }
+
         // Regular files in the pattern's directory whose name matches its filename part,
         // sorted by name. Wildcards are expanded in the filename only. A missing directory
         // or no match yields an empty list, never an error.
