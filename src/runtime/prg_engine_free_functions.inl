@@ -1041,125 +1041,173 @@
             return filename.find_first_of("*?") != std::string::npos;
         }
 
-        // Case-insensitive DOS-style wildcard match: `*` matches any run, `?` matches one
-        // character, and, as on Windows, a trailing `.*` also matches names without a dot.
-        bool file_wildcard_matches(const std::string &pattern, const std::string &name)
+        // File-name characters are compared as decoded UTF-8 code points (an invalid byte counts as
+        // one character), so `?` matches one character rather than one byte.
+        std::vector<char32_t> decode_file_name_code_points(const std::string &text)
         {
-            const auto fold = [](const char ch) { return static_cast<char>(std::tolower(static_cast<unsigned char>(ch))); };
-            const std::function<bool(std::size_t, std::size_t)> match = [&](std::size_t p, std::size_t n) -> bool
+            std::vector<char32_t> code_points;
+            code_points.reserve(text.size());
+            for (std::size_t index = 0U; index < text.size();)
             {
-                while (p < pattern.size())
+                const unsigned char lead = static_cast<unsigned char>(text[index]);
+                std::size_t length = 1U;
+                char32_t value = lead;
+                if (lead >= 0xF0U && lead < 0xF8U) { length = 4U; value = lead & 0x07U; }
+                else if (lead >= 0xE0U) { length = lead < 0xF0U ? 3U : 1U; value = lead & 0x0FU; }
+                else if (lead >= 0xC0U) { length = 2U; value = lead & 0x1FU; }
+                if (length > 1U && index + length <= text.size())
                 {
-                    const char pc = pattern[p];
-                    if (pc == '*')
+                    bool valid = true;
+                    for (std::size_t k = 1U; k < length; ++k)
                     {
-                        while (p < pattern.size() && pattern[p] == '*')
+                        const unsigned char continuation = static_cast<unsigned char>(text[index + k]);
+                        if ((continuation & 0xC0U) != 0x80U)
                         {
-                            ++p;
+                            valid = false;
+                            break;
                         }
-                        if (p == pattern.size())
-                        {
-                            return true;
-                        }
-                        for (std::size_t skip = n; skip <= name.size(); ++skip)
-                        {
-                            if (match(p, skip))
-                            {
-                                return true;
-                            }
-                        }
-                        return false;
+                        value = (value << 6U) | (continuation & 0x3FU);
                     }
-                    if (n >= name.size())
+                    if (valid)
                     {
-                        return false;
+                        code_points.push_back(value);
+                        index += length;
+                        continue;
                     }
-                    if (pc != '?' && fold(pc) != fold(name[n]))
-                    {
-                        return false;
-                    }
-                    ++p;
-                    ++n;
                 }
-                return n == name.size();
-            };
-            if (match(0U, 0U))
-            {
-                return true;
+                code_points.push_back(lead);
+                ++index;
             }
-            if (pattern.size() >= 2U && pattern.compare(pattern.size() - 2U, 2U, ".*") == 0 &&
-                name.find('.') == std::string::npos)
-            {
-                return file_wildcard_matches(pattern.substr(0U, pattern.size() - 2U), name);
-            }
-            return false;
+            return code_points;
         }
 
-        // Like file_wildcard_matches, but also records what each `*`/`?` matched, in order, so
-        // COPY FILE and RENAME can carry those segments into a destination pattern
-        // (`*.bin TO *.bak` maps one.bin to one.bak; `?ne.bin TO ?ne.bak` maps the `?`).
-        // `*` takes the longest run that lets the rest match, so `*.*` splits at the last dot.
+        std::string encode_file_name_code_points(const std::vector<char32_t> &code_points, std::size_t begin, std::size_t end)
+        {
+            std::string text;
+            for (std::size_t index = begin; index < end; ++index)
+            {
+                const char32_t cp = code_points[index];
+                if (cp < 0x80U) { text.push_back(static_cast<char>(cp)); }
+                else if (cp < 0x800U)
+                {
+                    text.push_back(static_cast<char>(0xC0U | (cp >> 6U)));
+                    text.push_back(static_cast<char>(0x80U | (cp & 0x3FU)));
+                }
+                else if (cp < 0x10000U)
+                {
+                    text.push_back(static_cast<char>(0xE0U | (cp >> 12U)));
+                    text.push_back(static_cast<char>(0x80U | ((cp >> 6U) & 0x3FU)));
+                    text.push_back(static_cast<char>(0x80U | (cp & 0x3FU)));
+                }
+                else
+                {
+                    text.push_back(static_cast<char>(0xF0U | (cp >> 18U)));
+                    text.push_back(static_cast<char>(0x80U | ((cp >> 12U) & 0x3FU)));
+                    text.push_back(static_cast<char>(0x80U | ((cp >> 6U) & 0x3FU)));
+                    text.push_back(static_cast<char>(0x80U | (cp & 0x3FU)));
+                }
+            }
+            return text;
+        }
+
+        // Simple case folding for file-name matching: ASCII, Latin-1 Supplement, basic Greek and
+        // basic Cyrillic. Other scripts compare exactly (no locale-dependent tolower).
+        char32_t fold_file_name_code_point(char32_t cp)
+        {
+            if (cp >= U'A' && cp <= U'Z') { return cp + 0x20U; }
+            if (cp >= 0xC0U && cp <= 0xDEU && cp != 0xD7U) { return cp + 0x20U; }
+            if (cp >= 0x391U && cp <= 0x3A9U && cp != 0x3A2U) { return cp + 0x20U; }
+            if (cp >= 0x410U && cp <= 0x42FU) { return cp + 0x20U; }
+            if (cp >= 0x400U && cp <= 0x40FU) { return cp + 0x50U; }
+            return cp;
+        }
+
+        // Case-insensitive DOS-style wildcard match that also records what each `*`/`?` matched, in
+        // order, so COPY FILE and RENAME can carry those segments into a destination pattern
+        // (`*.bin TO *.bak` maps one.bin to one.bak; `?ne.bin TO ?ne.bak` maps the `?`). `*` takes the
+        // longest run that lets the rest match, so `*.*` splits at the last dot, and, as on Windows, a
+        // trailing `.*` also matches names without a dot. Runs in O(pattern x name) time, so a hostile
+        // mask cannot make expansion slow.
         bool file_wildcard_captures(const std::string &pattern,
                                     const std::string &name,
                                     std::vector<std::string> &captures)
         {
-            const auto fold = [](const char ch) { return static_cast<char>(std::tolower(static_cast<unsigned char>(ch))); };
-            const std::function<bool(std::size_t, std::size_t, std::vector<std::string> &)> match =
-                [&](std::size_t p, std::size_t n, std::vector<std::string> &found) -> bool
-            {
-                while (p < pattern.size())
-                {
-                    const char pc = pattern[p];
-                    if (pc == '*')
-                    {
-                        while (p + 1U < pattern.size() && pattern[p + 1U] == '*')
-                        {
-                            ++p;
-                        }
-                        for (std::size_t end = name.size() + 1U; end-- > n;)
-                        {
-                            std::vector<std::string> tail = found;
-                            tail.push_back(name.substr(n, end - n));
-                            if (match(p + 1U, end, tail))
-                            {
-                                found = std::move(tail);
-                                return true;
-                            }
-                        }
-                        return false;
-                    }
-                    if (n >= name.size())
-                    {
-                        return false;
-                    }
-                    if (pc == '?')
-                    {
-                        found.push_back(std::string(1U, name[n]));
-                    }
-                    else if (fold(pc) != fold(name[n]))
-                    {
-                        return false;
-                    }
-                    ++p;
-                    ++n;
-                }
-                return n == name.size();
-            };
             captures.clear();
-            std::vector<std::string> found;
-            if (match(0U, 0U, found))
+            const std::vector<char32_t> pat = decode_file_name_code_points(pattern);
+            const std::vector<char32_t> txt = decode_file_name_code_points(name);
+            const auto solve = [&](const std::vector<char32_t> &pp, std::vector<std::string> &out) -> bool
             {
-                captures = std::move(found);
+                std::vector<std::vector<char>> can(pp.size() + 1U, std::vector<char>(txt.size() + 1U, 0));
+                can[pp.size()][txt.size()] = 1;
+                for (std::size_t i = pp.size(); i-- > 0U;)
+                {
+                    for (std::size_t j = txt.size() + 1U; j-- > 0U;)
+                    {
+                        if (pp[i] == U'*')
+                        {
+                            can[i][j] = can[i + 1U][j] || (j < txt.size() && can[i][j + 1U]) ? 1 : 0;
+                        }
+                        else if (j < txt.size() &&
+                                 (pp[i] == U'?' || fold_file_name_code_point(pp[i]) == fold_file_name_code_point(txt[j])))
+                        {
+                            can[i][j] = can[i + 1U][j + 1U];
+                        }
+                    }
+                }
+                if (!can[0][0])
+                {
+                    return false;
+                }
+                std::size_t i = 0U;
+                std::size_t j = 0U;
+                while (i < pp.size())
+                {
+                    if (pp[i] == U'*')
+                    {
+                        std::size_t end = txt.size();
+                        while (end > j && !can[i + 1U][end])
+                        {
+                            --end;
+                        }
+                        out.push_back(encode_file_name_code_points(txt, j, end));
+                        j = end;
+                        ++i;
+                    }
+                    else
+                    {
+                        if (pp[i] == U'?')
+                        {
+                            out.push_back(encode_file_name_code_points(txt, j, j + 1U));
+                        }
+                        ++i;
+                        ++j;
+                    }
+                }
+                return true;
+            };
+            if (solve(pat, captures))
+            {
                 return true;
             }
-            if (pattern.size() >= 2U && pattern.compare(pattern.size() - 2U, 2U, ".*") == 0 &&
-                name.find('.') == std::string::npos &&
-                file_wildcard_captures(pattern.substr(0U, pattern.size() - 2U), name, captures))
+            captures.clear();
+            if (pat.size() >= 2U && pat[pat.size() - 2U] == U'.' && pat.back() == U'*' &&
+                std::find(txt.begin(), txt.end(), U'.') == txt.end())
             {
-                captures.push_back({});
-                return true;
+                const std::vector<char32_t> without_extension(pat.begin(), pat.end() - 2);
+                if (solve(without_extension, captures))
+                {
+                    captures.push_back({});
+                    return true;
+                }
+                captures.clear();
             }
             return false;
+        }
+
+        bool file_wildcard_matches(const std::string &pattern, const std::string &name)
+        {
+            std::vector<std::string> captures;
+            return file_wildcard_captures(pattern, name, captures);
         }
 
         // Substitute each wildcard in `destination_pattern` with the next captured segment
@@ -1184,6 +1232,29 @@
             return result;
         }
 
+        // Path for a file-command operand. A VFP-style relative operand separates with backslashes,
+        // which are not separators on POSIX hosts, so they are normalized there (a Windows drive or
+        // UNC path is left alone). A relative result is anchored at the default directory.
+        std::filesystem::path file_command_path_from_operand(const std::string &raw, const std::string &default_directory)
+        {
+            std::string text = raw;
+#if !defined(_WIN32)
+            const bool drive_path = text.size() >= 3U && std::isalpha(static_cast<unsigned char>(text[0])) != 0 &&
+                                    text[1] == ':' && (text[2] == '\\' || text[2] == '/');
+            const bool unc_path = text.size() >= 2U && text[0] == '\\' && text[1] == '\\';
+            if (!drive_path && !unc_path)
+            {
+                std::replace(text.begin(), text.end(), '\\', '/');
+            }
+#endif
+            std::filesystem::path path = copperfin::platform::path_from_utf8_string(text);
+            if (path.is_relative())
+            {
+                path = copperfin::platform::path_from_utf8_string(default_directory) / path;
+            }
+            return path;
+        }
+
         // Regular files in the pattern's directory whose name matches its filename part,
         // sorted by name. Wildcards are expanded in the filename only. A missing directory
         // or no match yields an empty list, never an error.
@@ -1204,7 +1275,7 @@
                     break;
                 }
                 std::error_code status_ec;
-                if (!iterator->is_regular_file(status_ec))
+                if (iterator->symlink_status(status_ec).type() != std::filesystem::file_type::regular)
                 {
                     continue;
                 }

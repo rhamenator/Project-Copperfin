@@ -873,6 +873,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_runtime_surface_functions_buffering
             test_prg_engine_scope_declarations
             test_prg_engine_transform_numeric_pictures
+            test_prg_engine_unterminated_literals
             test_prg_engine_verified_dbf_security)
         copperfin_set_test_isolation(${test_name}
             FILESYSTEM process-owned

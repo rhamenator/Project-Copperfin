@@ -7069,11 +7069,7 @@
                     return {};
                 }
                 const std::string raw_path = unquote_string(trim_copy(value_as_string(*path_value)));
-                std::filesystem::path fpath = copperfin::platform::path_from_utf8_string(raw_path);
-                if (fpath.is_relative())
-                {
-                    fpath = copperfin::platform::path_from_utf8_string(current_default_directory()) / fpath;
-                }
+                const std::filesystem::path fpath = file_command_path_from_operand(raw_path, current_default_directory());
                 if (file_pattern_has_wildcard(copperfin::platform::path_to_utf8_string(fpath.filename())))
                 {
                     std::error_code first_error;
@@ -7081,7 +7077,7 @@
                     for (const std::filesystem::path &match : expand_file_wildcard(fpath))
                     {
                         std::error_code remove_ec;
-                        std::filesystem::remove(match, remove_ec);
+                        const bool removed_match = std::filesystem::remove(match, remove_ec);
                         if (remove_ec)
                         {
                             if (!first_error)
@@ -7091,9 +7087,13 @@
                             }
                             continue;
                         }
-                        events.push_back({.category = "runtime.erase",
-                                          .detail = copperfin::platform::path_to_utf8_string(match),
-                                          .location = statement.location});
+                        // A match that vanished between enumeration and removal erased nothing.
+                        if (removed_match)
+                        {
+                            events.push_back({.category = "runtime.erase",
+                                              .detail = copperfin::platform::path_to_utf8_string(match),
+                                              .location = statement.location});
+                        }
                     }
                     if (first_error)
                     {
@@ -7176,14 +7176,10 @@
                     value_as_string(*destination_value)));
                 frame.copy_file_continuation.reset();
                 resumed_copy_destination_value.reset();
+                // Backslashes in a relative operand are normalized on POSIX hosts (#6702 review).
                 auto make_abs = [&](const std::string &raw)
                 {
-                    std::filesystem::path p = copperfin::platform::path_from_utf8_string(raw);
-                    if (p.is_relative())
-                    {
-                        p = copperfin::platform::path_from_utf8_string(current_default_directory()) / p;
-                    }
-                    return p;
+                    return file_command_path_from_operand(raw, current_default_directory());
                 };
                 const std::filesystem::path src = make_abs(src_raw);
                 const std::filesystem::path dst = make_abs(dst_raw);
@@ -7321,14 +7317,10 @@
                     value_as_string(*destination_value)));
                 frame.rename_file_continuation.reset();
                 resumed_rename_destination_value.reset();
+                // Backslashes in a relative operand are normalized on POSIX hosts (#6702 review).
                 auto make_abs = [&](const std::string &raw)
                 {
-                    std::filesystem::path p = copperfin::platform::path_from_utf8_string(raw);
-                    if (p.is_relative())
-                    {
-                        p = copperfin::platform::path_from_utf8_string(current_default_directory()) / p;
-                    }
-                    return p;
+                    return file_command_path_from_operand(raw, current_default_directory());
                 };
                 const std::filesystem::path old_path = make_abs(old_raw);
                 const std::filesystem::path new_path = make_abs(new_raw);
