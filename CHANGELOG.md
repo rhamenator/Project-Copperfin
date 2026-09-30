@@ -8134,6 +8134,20 @@
   compilation, two boundary mutations, and an ASan/UBSan runtime-host build;
   direct Windows loader execution remains supplied by hosted Win32/x64 CI.
 
+- 2026-08-11: Added contributor-facing templates ahead of external recruitment.
+  The single `pull_request_template.md` is now two selectable templates under
+  `.github/PULL_REQUEST_TEMPLATE/`: `requirements_recovery.md` (the prior
+  content, unchanged, for `RQ-*`/`VR-*`/`DQ-*`/`DV-*`/`HZ-*` traceability and
+  safety-relevant work) and `general_contribution.md` (new, shorter — summary,
+  testing, the same mandatory licensing/DCO/provenance checklist, and a light
+  checklist, for ordinary bug-fix/feature/docs contributions). Also added
+  `.github/DISCUSSION_TEMPLATE/q-a.yml` and `ideas.yml` structured forms for
+  the existing Q&A and Ideas Discussion categories; General, Show and tell,
+  Polls, and Announcements remain freeform. The repository-community contract
+  now requires both selectable PR templates and both Discussion forms and
+  validates their critical provenance, localization, title, and prompt fields.
+  No product or runtime behavior changed.
+
 - 2026-08-11: Continued v1 portability lane J1 with a portable public
   process-environment boundary. The broadly consumed
   `copperfin/platform/environment.h` interface now contains only standard C++
@@ -8647,6 +8661,25 @@
   Native `31297811846` at `325/325`, Windows Native `31297811822` at `324/324`,
   and `test_platform_models` on all three; macOS also passes the four-locale
   SET POINT matrix at `8/8`, and all eight protected checks pass.
+
+- 2026-08-08: Produced and independently inspected the corrected private
+  evaluation candidate `v0.1.0-rc.2` under #4907. The protected annotated tag
+  peels exactly to reviewed commit `fd6bd94f8`; all exact-main native, package,
+  IDE, managed-UI, path, ABI, security, and permissive safety lanes passed.
+  Exact-tag run `31244558839` then passed 12/12 jobs and uploaded artifact
+  `9018695984`, `copperfin-v0.1.0-rc.2-evaluation-bundle`, with GitHub digest
+  `sha256:501ba26642af4fb58c69e3c69ca0f29b7eb5e242a4980ea31770e83bd84605df`
+  and 90-day retention. Downloaded verification passed all 18 checksums, all
+  17 validation-manifest file records, the complete 19-file payload inventory,
+  1,404 exact Corresponding Source Git blobs, installer/VSIX/SBOM/license
+  structures, and symlink/private-key/secret-name boundaries. No GitHub Release
+  was created. Long-lived `v1-development` begins exactly at the peeled RC2
+  commit and has active no-bypass deletion/non-fast-forward protection, keeping
+  v1 feature work separate from immutable RC stabilization. Human RC2 testing
+  and the documented signing, launcher-trust, localization-review, and official
+  release gates remain open. No runtime, VFP9, localization catalog,
+  package/debug schema, xAsset, report/label, IDE, stack, or platform product
+  behavior changed.
 
 - 2026-08-08: Added deterministic Polyglot Invocation Request v1 serialization
   under #4920/#91/#4700. The portable API validates invariant capability and
