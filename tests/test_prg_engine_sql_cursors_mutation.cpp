@@ -29,6 +29,7 @@ int main()
     test_sql_result_cursor_sql_style_mutation_parity();
     test_sql_result_cursor_mutation_in_target_parity();
     test_append_from_json_mutates_selected_sql_result_cursor();
+    test_append_from_csv_discards_first_line_in_selected_sql_result_cursor();
     test_append_from_csv_mutates_selected_sql_result_cursor();
     test_append_from_delimited_fields_clause_preserves_typed_order_for_selected_sql_result_cursor();
     test_append_from_selected_sql_result_cursor_runtime_errors_localize();

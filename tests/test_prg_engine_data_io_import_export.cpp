@@ -3109,6 +3109,94 @@ void test_copy_to_type_csv_and_delimited_text_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_type_csv_discards_first_line_unconditionally() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_csv_first_line";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // #6511/#6591: installed VFP9 (09.00.0000.7423) discards the first CSV line
+    // whatever it contains -- a matching header, a mismatched or BOM-prefixed
+    // header, a blank line, or even a data row -- before mapping fields by
+    // position. Expected rows below are the VFP9 COM results for the same bytes.
+    struct Case {
+        std::string name;
+        std::string bytes;
+        std::string fields;
+        std::vector<std::pair<std::string, std::string>> expected;  // NAME, AGE display values
+    };
+    // An AGE that FIELDS leaves unselected stays a blank numeric field, which VFP9
+    // reads back as 0 and the DBF reader reports as an empty display value.
+    const std::string bom = "\xEF\xBB\xBF";
+    const std::vector<Case> cases = {
+        {"bom_header", bom + "NAME,AGE\r\nALICE,9\r\n", "NAME, AGE", {{"ALICE", "9"}}},
+        {"bom_quoted_header", bom + "\"NAME\",\"AGE\"\r\nALICE,9\r\n", "NAME, AGE", {{"ALICE", "9"}}},
+        {"bom_lf_header", bom + "NAME,AGE\nALICE,9\n", "NAME, AGE", {{"ALICE", "9"}}},
+        {"bom_cr_header", bom + "NAME,AGE\rALICE,9\r", "NAME, AGE", {{"ALICE", "9"}}},
+        {"mismatched_header", "Other,Thing\r\nALICE,9\r\n", "NAME, AGE", {{"ALICE", "9"}}},
+        {"single_column_mismatch", "Other\r\nALICE\r\n", "NAME", {{"ALICE", ""}}},
+        {"no_header_first_row_lost", "ALICE,9\r\nBOB,10\r\n", "NAME, AGE", {{"BOB", "10"}}},
+        {"blank_first_line", "\r\nALICE,9\r\n", "NAME, AGE", {{"ALICE", "9"}}},
+        {"bom_without_header", bom + "ALICE,9\r\n", "NAME, AGE", {}},
+        {"header_only_crlf", "NAME,AGE\r\n", "NAME, AGE", {}},
+        {"header_only_no_eol", "NAME,AGE", "NAME, AGE", {}},
+        {"fields_subset_reordered_header", "AGE,NAME\r\n9,ALICE\r\n", "NAME", {{"9", ""}}},
+        {"bom_fields_subset_header", bom + "AGE,NAME\r\n9,ALICE\r\n", "NAME", {{"9", ""}}},
+    };
+
+    std::string script;
+    for (const Case &c : cases) {
+        write_people_dbf(temp_root / (c.name + ".dbf"), {});
+        write_text(temp_root / (c.name + ".csv"), c.bytes);
+        expect(read_text(temp_root / (c.name + ".csv")) == c.bytes,
+            "#6511/#6591: fixture " + c.name + " must retain its exact bytes");
+        script += "USE '" + (temp_root / (c.name + ".dbf")).string() + "'\n";
+        script += "APPEND FROM '" + (temp_root / (c.name + ".csv")).string() + "' TYPE CSV FIELDS " + c.fields + "\n";
+    }
+    script += "RETURN\n";
+    const fs::path main_path = temp_root / "append_from_csv_first_line.prg";
+    write_text(main_path, script);
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6511/#6591: CSV first-line script should complete: " + state.message);
+
+    std::vector<std::string> append_details;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.append_from") {
+            append_details.push_back(event.detail);
+        }
+    }
+    expect(append_details.size() == cases.size(),
+        "#6511/#6591: every APPEND FROM TYPE CSV, including zero-row results, should emit a success event");
+
+    for (std::size_t index = 0U; index < cases.size(); ++index) {
+        const Case &c = cases[index];
+        const auto result = copperfin::vfp::parse_dbf_table_from_file((temp_root / (c.name + ".dbf")).string(), 10U);
+        expect(result.ok, "#6511/#6591: " + c.name + " destination DBF should be readable");
+        expect(result.table.records.size() == c.expected.size(),
+            "#6511/#6591: " + c.name + " should import exactly the rows VFP9 imports");
+        if (result.table.records.size() == c.expected.size()) {
+            for (std::size_t row = 0U; row < c.expected.size(); ++row) {
+                expect(result.table.records[row].values[0U].display_value == c.expected[row].first,
+                    "#6511/#6591: " + c.name + " row NAME should match VFP9 (got '" +
+                        result.table.records[row].values[0U].display_value + "')");
+                expect(result.table.records[row].values[1U].display_value == c.expected[row].second,
+                    "#6511/#6591: " + c.name + " row AGE should match VFP9 (got '" +
+                        result.table.records[row].values[1U].display_value + "')");
+            }
+        }
+        if (index < append_details.size()) {
+            expect(append_details[index].find("(" + std::to_string(c.expected.size()) + " records,") != std::string::npos,
+                "#6511/#6591: " + c.name + " success event should report the imported row count: " + append_details[index]);
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_type_csv_imports_delimited_rows() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_csv";
