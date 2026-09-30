@@ -1125,6 +1125,57 @@
             return cp;
         }
 
+        // Lower-case a DBF field name for a CSV header the way installed VFP9 does (#6528): the name is
+        // raw code-page bytes, so a non-ASCII letter is decoded through the table's code page,
+        // folded (Latin-1, Greek and Cyrillic; other scripts are left as they are) and encoded back
+        // (CP1252 0xC9 -> 0xE9). If the conversion is unavailable, only ASCII letters change.
+        std::string lowercase_dbf_field_name(const std::string &name, const std::uint8_t code_page_mark)
+        {
+            std::string ascii_lowered = name;
+            std::transform(ascii_lowered.begin(), ascii_lowered.end(), ascii_lowered.begin(),
+                           [](const unsigned char ch) { return static_cast<char>(ch < 0x80U ? std::tolower(ch) : ch); });
+            const bool has_non_ascii = std::any_of(name.begin(), name.end(),
+                                                   [](const unsigned char ch) { return ch >= 0x80U; });
+            if (!has_non_ascii || code_page_mark == 0U)
+            {
+                return ascii_lowered;
+            }
+            const vfp::DbfTextConversionResult decoded = vfp::decode_dbf_text(code_page_mark, name);
+            if (!decoded.ok)
+            {
+                return ascii_lowered;
+            }
+            std::string utf8;
+            for (const char32_t code_point : decode_file_name_code_points(decoded.text))
+            {
+                const char32_t folded = fold_file_name_code_point(code_point);
+                if (folded < 0x80U)
+                {
+                    utf8.push_back(static_cast<char>(folded));
+                }
+                else if (folded < 0x800U)
+                {
+                    utf8.push_back(static_cast<char>(0xC0U | (folded >> 6U)));
+                    utf8.push_back(static_cast<char>(0x80U | (folded & 0x3FU)));
+                }
+                else if (folded < 0x10000U)
+                {
+                    utf8.push_back(static_cast<char>(0xE0U | (folded >> 12U)));
+                    utf8.push_back(static_cast<char>(0x80U | ((folded >> 6U) & 0x3FU)));
+                    utf8.push_back(static_cast<char>(0x80U | (folded & 0x3FU)));
+                }
+                else
+                {
+                    utf8.push_back(static_cast<char>(0xF0U | (folded >> 18U)));
+                    utf8.push_back(static_cast<char>(0x80U | ((folded >> 12U) & 0x3FU)));
+                    utf8.push_back(static_cast<char>(0x80U | ((folded >> 6U) & 0x3FU)));
+                    utf8.push_back(static_cast<char>(0x80U | (folded & 0x3FU)));
+                }
+            }
+            const vfp::DbfTextConversionResult encoded = vfp::encode_dbf_text(code_page_mark, utf8);
+            return encoded.ok ? encoded.text : ascii_lowered;
+        }
+
         // Case-insensitive DOS-style wildcard match that also records what each `*`/`?` matched, in
         // order, so COPY FILE and RENAME can carry those segments into a destination pattern
         // (`*.bin TO *.bak` maps one.bin to one.bak; `?ne.bin TO ?ne.bak` maps the `?`). `*` takes the

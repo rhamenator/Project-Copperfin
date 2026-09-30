@@ -8527,7 +8527,7 @@
                 }
 
                 std::uint8_t source_code_page_mark = 0U;
-                if (copy_as_sylk && !cursor->remote && !cursor->source_path.empty())
+                if ((copy_as_sylk || copy_type == "csv") && !cursor->remote && !cursor->source_path.empty())
                 {
                     const vfp::DbfParseResult source_header = parse_cursor_table_header(*cursor);
                     if (source_header.ok)
@@ -9091,10 +9091,7 @@
                             }
                             // Installed VFP9 writes CSV header names in lower case whatever the
                             // descriptor's spelling (`NAME` -> `name`, `MiXeD` -> `mixed`) (#6528).
-                            std::string header_name = out_fields[index].name;
-                            std::transform(header_name.begin(), header_name.end(), header_name.begin(),
-                                           [](const unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
-                            output << header_name;
+                            output << lowercase_dbf_field_name(out_fields[index].name, source_code_page_mark);
                             wrote_header_cell = true;
                         }
                         output << "\r\n";

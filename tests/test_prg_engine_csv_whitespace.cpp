@@ -3,9 +3,11 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/vfp/dbf_table.h"
 #include "prg_engine_test_support.h"
 
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <system_error>
@@ -139,11 +141,52 @@ void test_export_whitespace_matches_vfp9() {
     fs::remove_all(root, ignored);
 }
 
+// CSV header spelling (#6528): installed VFP9 (probe retained at
+// /home/rich/temp/vfp9-probes/csv-whitespace-6512/vfp9-result-case.txt) writes every field name in
+// lower case, `MiXeD` -> `mixed`, and folds a code-page letter through the table's code page
+// (CP1252 `CAF\xC9` -> bytes 63-61-66-E9). The DBF below is created with raw descriptor bytes and
+// a CP1252 code-page mark, the shape a VFP9-written table has.
+void test_csv_header_is_lower_cased_through_the_table_code_page() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_csv_header_case";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir / "script");
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields = {
+        {.name = "MiXeD", .type = 'C', .length = 5U},
+        {.name = std::string("CAF\xC9"), .type = 'C', .length = 5U},
+        {.name = "UPPER", .type = 'C', .length = 5U},
+    };
+    const auto created = copperfin::vfp::create_dbf_table_file((dir / "names.dbf").string(), fields, {{"a", "b", "c"}});
+    expect(created.ok, "#6528: fixture DBF should be created: " + created.error);
+    {
+        // Byte 29 of the DBF header is the code-page mark: 0x03 is Windows ANSI (CP1252).
+        std::fstream file(dir / "names.dbf", std::ios::in | std::ios::out | std::ios::binary);
+        file.seekp(29);
+        const char cp1252 = 0x03;
+        file.write(&cp1252, 1);
+    }
+    write_text(dir / "script" / "names.prg",
+        "USE names.dbf\n"
+        "COPY TO out.csv TYPE CSV\n"
+        "COPY TO picked.csv TYPE CSV FIELDS MiXeD, UPPER\n"
+        "RETURN\n");
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((dir / "script" / "names.prg").string(), dir.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6528: script should complete: " + state.message);
+    expect(read_text(dir / "out.csv") == "mixed,caf\xE9,upper\r\n\"a\",\"b\",\"c\"\r\n",
+        "#6528: mixed-case and code-page names should be lower-cased, got [" + read_text(dir / "out.csv") + "]");
+    expect(read_text(dir / "picked.csv") == "mixed,upper\r\n\"a\",\"c\"\r\n",
+        "#6528: a FIELDS selection should use the same lower-case names, got [" + read_text(dir / "picked.csv") + "]");
+    fs::remove_all(dir, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_import_whitespace_matches_vfp9();
     test_export_whitespace_matches_vfp9();
+    test_csv_header_is_lower_cased_through_the_table_code_page();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;
