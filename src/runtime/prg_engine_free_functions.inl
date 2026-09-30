@@ -1005,6 +1005,289 @@
             return values;
         }
 
+        // RQ-CF-PRG-FILE-COMMAND-OPERANDS-001 (#6582, #6589): installed VFP9 treats an
+        // unquoted, unparenthesized file-command operand as a literal filename (`ERASE cF`
+        // erases the file named "cF", not the file named by variable cF), while a
+        // parenthesized name expression, a function call, a macro, a quoted or bracketed
+        // string, or any compound expression is still evaluated.
+        bool is_bare_file_command_operand(const std::string &operand)
+        {
+            const std::string text = trim_copy(operand);
+            if (text.empty() || text == "?")
+            {
+                return false;
+            }
+            for (const unsigned char ch : text)
+            {
+                if (ch >= 0x80U || std::isalnum(ch) != 0)
+                {
+                    continue;
+                }
+                switch (ch)
+                {
+                case '_': case '.': case '-': case '\\': case '/': case ':':
+                case '*': case '?': case '$': case '~': case '#': case '@':
+                case '%': case '!':
+                    break;
+                default:
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        bool file_pattern_has_wildcard(const std::string &filename)
+        {
+            return filename.find_first_of("*?") != std::string::npos;
+        }
+
+        // File-name characters are compared as decoded UTF-8 code points (an invalid byte counts as
+        // one character), so `?` matches one character rather than one byte.
+        std::vector<char32_t> decode_file_name_code_points(const std::string &text)
+        {
+            std::vector<char32_t> code_points;
+            code_points.reserve(text.size());
+            for (std::size_t index = 0U; index < text.size();)
+            {
+                const unsigned char lead = static_cast<unsigned char>(text[index]);
+                std::size_t length = 1U;
+                char32_t value = lead;
+                if (lead >= 0xF0U && lead < 0xF8U) { length = 4U; value = lead & 0x07U; }
+                else if (lead >= 0xE0U) { length = lead < 0xF0U ? 3U : 1U; value = lead & 0x0FU; }
+                else if (lead >= 0xC0U) { length = 2U; value = lead & 0x1FU; }
+                if (length > 1U && index + length <= text.size())
+                {
+                    bool valid = true;
+                    for (std::size_t k = 1U; k < length; ++k)
+                    {
+                        const unsigned char continuation = static_cast<unsigned char>(text[index + k]);
+                        if ((continuation & 0xC0U) != 0x80U)
+                        {
+                            valid = false;
+                            break;
+                        }
+                        value = (value << 6U) | (continuation & 0x3FU);
+                    }
+                    if (valid)
+                    {
+                        code_points.push_back(value);
+                        index += length;
+                        continue;
+                    }
+                }
+                code_points.push_back(lead);
+                ++index;
+            }
+            return code_points;
+        }
+
+        std::string encode_file_name_code_points(const std::vector<char32_t> &code_points, std::size_t begin, std::size_t end)
+        {
+            std::string text;
+            for (std::size_t index = begin; index < end; ++index)
+            {
+                const char32_t cp = code_points[index];
+                if (cp < 0x80U) { text.push_back(static_cast<char>(cp)); }
+                else if (cp < 0x800U)
+                {
+                    text.push_back(static_cast<char>(0xC0U | (cp >> 6U)));
+                    text.push_back(static_cast<char>(0x80U | (cp & 0x3FU)));
+                }
+                else if (cp < 0x10000U)
+                {
+                    text.push_back(static_cast<char>(0xE0U | (cp >> 12U)));
+                    text.push_back(static_cast<char>(0x80U | ((cp >> 6U) & 0x3FU)));
+                    text.push_back(static_cast<char>(0x80U | (cp & 0x3FU)));
+                }
+                else
+                {
+                    text.push_back(static_cast<char>(0xF0U | (cp >> 18U)));
+                    text.push_back(static_cast<char>(0x80U | ((cp >> 12U) & 0x3FU)));
+                    text.push_back(static_cast<char>(0x80U | ((cp >> 6U) & 0x3FU)));
+                    text.push_back(static_cast<char>(0x80U | (cp & 0x3FU)));
+                }
+            }
+            return text;
+        }
+
+        // Simple case folding for file-name matching: ASCII, Latin-1 Supplement, basic Greek and
+        // basic Cyrillic. Other scripts compare exactly (no locale-dependent tolower).
+        char32_t fold_file_name_code_point(char32_t cp)
+        {
+            if (cp >= U'A' && cp <= U'Z') { return cp + 0x20U; }
+            if (cp >= 0xC0U && cp <= 0xDEU && cp != 0xD7U) { return cp + 0x20U; }
+            if (cp >= 0x391U && cp <= 0x3A9U && cp != 0x3A2U) { return cp + 0x20U; }
+            if (cp >= 0x410U && cp <= 0x42FU) { return cp + 0x20U; }
+            if (cp >= 0x400U && cp <= 0x40FU) { return cp + 0x50U; }
+            return cp;
+        }
+
+        // Case-insensitive DOS-style wildcard match that also records what each `*`/`?` matched, in
+        // order, so COPY FILE and RENAME can carry those segments into a destination pattern
+        // (`*.bin TO *.bak` maps one.bin to one.bak; `?ne.bin TO ?ne.bak` maps the `?`). `*` takes the
+        // longest run that lets the rest match, so `*.*` splits at the last dot, and, as on Windows, a
+        // trailing `.*` also matches names without a dot. Runs in O(pattern x name) time, so a hostile
+        // mask cannot make expansion slow.
+        bool file_wildcard_captures(const std::string &pattern,
+                                    const std::string &name,
+                                    std::vector<std::string> &captures)
+        {
+            captures.clear();
+            const std::vector<char32_t> pat = decode_file_name_code_points(pattern);
+            const std::vector<char32_t> txt = decode_file_name_code_points(name);
+            const auto solve = [&](const std::vector<char32_t> &pp, std::vector<std::string> &out) -> bool
+            {
+                std::vector<std::vector<char>> can(pp.size() + 1U, std::vector<char>(txt.size() + 1U, 0));
+                can[pp.size()][txt.size()] = 1;
+                for (std::size_t i = pp.size(); i-- > 0U;)
+                {
+                    for (std::size_t j = txt.size() + 1U; j-- > 0U;)
+                    {
+                        if (pp[i] == U'*')
+                        {
+                            can[i][j] = can[i + 1U][j] || (j < txt.size() && can[i][j + 1U]) ? 1 : 0;
+                        }
+                        else if (j < txt.size() &&
+                                 (pp[i] == U'?' || fold_file_name_code_point(pp[i]) == fold_file_name_code_point(txt[j])))
+                        {
+                            can[i][j] = can[i + 1U][j + 1U];
+                        }
+                    }
+                }
+                if (!can[0][0])
+                {
+                    return false;
+                }
+                std::size_t i = 0U;
+                std::size_t j = 0U;
+                while (i < pp.size())
+                {
+                    if (pp[i] == U'*')
+                    {
+                        std::size_t end = txt.size();
+                        while (end > j && !can[i + 1U][end])
+                        {
+                            --end;
+                        }
+                        out.push_back(encode_file_name_code_points(txt, j, end));
+                        j = end;
+                        ++i;
+                    }
+                    else
+                    {
+                        if (pp[i] == U'?')
+                        {
+                            out.push_back(encode_file_name_code_points(txt, j, j + 1U));
+                        }
+                        ++i;
+                        ++j;
+                    }
+                }
+                return true;
+            };
+            if (solve(pat, captures))
+            {
+                return true;
+            }
+            captures.clear();
+            if (pat.size() >= 2U && pat[pat.size() - 2U] == U'.' && pat.back() == U'*' &&
+                std::find(txt.begin(), txt.end(), U'.') == txt.end())
+            {
+                const std::vector<char32_t> without_extension(pat.begin(), pat.end() - 2);
+                if (solve(without_extension, captures))
+                {
+                    captures.push_back({});
+                    return true;
+                }
+                captures.clear();
+            }
+            return false;
+        }
+
+        bool file_wildcard_matches(const std::string &pattern, const std::string &name)
+        {
+            std::vector<std::string> captures;
+            return file_wildcard_captures(pattern, name, captures);
+        }
+
+        // Substitute each wildcard in `destination_pattern` with the next captured segment
+        // (an exhausted capture list contributes nothing); other characters are kept.
+        std::string map_wildcard_destination(const std::string &destination_pattern,
+                                             const std::vector<std::string> &captures)
+        {
+            std::string result;
+            std::size_t next_capture = 0U;
+            for (const char ch : destination_pattern)
+            {
+                if (ch == '*' || ch == '?')
+                {
+                    if (next_capture < captures.size())
+                    {
+                        result += captures[next_capture++];
+                    }
+                    continue;
+                }
+                result.push_back(ch);
+            }
+            return result;
+        }
+
+        // Path for a file-command operand. A VFP-style relative operand separates with backslashes,
+        // which are not separators on POSIX hosts, so they are normalized there (a Windows drive or
+        // UNC path is left alone). A relative result is anchored at the default directory.
+        std::filesystem::path file_command_path_from_operand(const std::string &raw, const std::string &default_directory)
+        {
+            std::string text = raw;
+#if !defined(_WIN32)
+            const bool drive_path = text.size() >= 3U && std::isalpha(static_cast<unsigned char>(text[0])) != 0 &&
+                                    text[1] == ':' && (text[2] == '\\' || text[2] == '/');
+            const bool unc_path = text.size() >= 2U && text[0] == '\\' && text[1] == '\\';
+            if (!drive_path && !unc_path)
+            {
+                std::replace(text.begin(), text.end(), '\\', '/');
+            }
+#endif
+            std::filesystem::path path = copperfin::platform::path_from_utf8_string(text);
+            if (path.is_relative())
+            {
+                path = copperfin::platform::path_from_utf8_string(default_directory) / path;
+            }
+            return path;
+        }
+
+        // Regular files in the pattern's directory whose name matches its filename part,
+        // sorted by name. Wildcards are expanded in the filename only. A missing directory
+        // or no match yields an empty list, never an error.
+        std::vector<std::filesystem::path> expand_file_wildcard(const std::filesystem::path &pattern_path)
+        {
+            std::vector<std::filesystem::path> matches;
+            const std::string pattern = copperfin::platform::path_to_utf8_string(pattern_path.filename());
+            std::error_code ec;
+            std::filesystem::directory_iterator iterator(pattern_path.parent_path(), ec);
+            if (ec)
+            {
+                return matches;
+            }
+            for (const std::filesystem::directory_iterator end; iterator != end; iterator.increment(ec))
+            {
+                if (ec)
+                {
+                    break;
+                }
+                std::error_code status_ec;
+                if (iterator->symlink_status(status_ec).type() != std::filesystem::file_type::regular)
+                {
+                    continue;
+                }
+                if (file_wildcard_matches(pattern, copperfin::platform::path_to_utf8_string(iterator->path().filename())))
+                {
+                    matches.push_back(iterator->path());
+                }
+            }
+            std::sort(matches.begin(), matches.end());
+            return matches;
+        }
+
         std::vector<std::string> split_delimited_text_records(
             const std::string &contents,
             const DelimitedTextOptions &options,

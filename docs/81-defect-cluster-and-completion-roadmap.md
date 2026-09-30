@@ -566,7 +566,13 @@ and cluster 25 for numeric precision. It is a coherent active execution lane:
 finish shared parser/formatter invariants before treating its individual issue
 numbers as unrelated.
 
-### 32. File-command operand and path lexical semantics — `NOT STARTED`
+### 32. File-command operand and path lexical semantics — `IN PROGRESS`
+
+**Started 2026-09-30:** `ERASE`/`DELETE FILE` bare filenames and wildcards
+(#6582, #6589, `RQ-CF-PRG-FILE-COMMAND-OPERANDS-001`; the shared helpers
+`is_bare_file_command_operand` and `expand_file_wildcard` are reusable). Still
+open in this cluster: `COPY FILE` (#6583, #6587), `RENAME` (#6585, #6586),
+#6562, #6563, #6565, #6567, #6568 and the `JUST*()` cases.
 
 #6562, #6563, #6565, #6567, #6568, #6582, #6583, #6585, #6586, #6587, and
 #6589 all expose the same command-parser seam: documented bare operands or

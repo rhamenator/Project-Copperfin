@@ -2623,7 +2623,10 @@ Program parse_program_impl(
                     statement.tertiary_expression = "select";
                 }
             }
-        } else if (upper == "DELETE" || starts_with_insensitive(line, "DELETE ")) {
+        } else if (upper == "DELETE" ||
+                   (starts_with_insensitive(line, "DELETE ") && !starts_with_insensitive(line, "DELETE FILE "))) {
+            // `DELETE FILE <name>` is the file-erase synonym for ERASE, handled by
+            // parse_file_storage_statement(); it is not a record DELETE (#6582).
             statement.kind = StatementKind::delete_command;
             const std::string body = upper == "DELETE" ? std::string{} : trim_copy(line.substr(7U));
             const std::size_t clause_position = find_first_keyword_top_level(body, {"FOR", "WHILE", "IN"});
