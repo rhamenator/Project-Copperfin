@@ -2983,6 +2983,7 @@
                 }
                 const std::size_t start = position_;
                 std::size_t depth = 0U;
+                bool closed = false;
                 while (position_ < text_.size())
                 {
                     const char ch = text_[position_++];
@@ -3013,14 +3014,22 @@
                     {
                         if (depth == 0U)
                         {
+                            closed = true;
                             break;
                         }
                         --depth;
                         if (depth == 0U)
                         {
+                            closed = true;
                             break;
                         }
                     }
+                }
+                // RQ-CF-PRG-LITERAL-TERMINATION-001 (#6509): end of input with the braces
+                // still open is a syntax error, not a complete literal.
+                if (!closed)
+                {
+                    throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.UnterminatedBraceLiteral"));
                 }
                 return text_.substr(start, position_ - start);
             }
@@ -3356,6 +3365,7 @@
                     return result;
                 }
                 ++position_;
+                bool closed = false;
                 while (position_ < text_.size())
                 {
                     const char ch = text_[position_++];
@@ -3367,9 +3377,16 @@
                             ++position_;
                             continue;
                         }
+                        closed = true;
                         break;
                     }
                     result.push_back(ch);
+                }
+                // RQ-CF-PRG-LITERAL-TERMINATION-001 (#6509): an unclosed string literal is a
+                // syntax error; returning the accumulated text made it look complete.
+                if (!closed)
+                {
+                    throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.UnterminatedStringLiteral"));
                 }
                 return result;
             }
@@ -3383,6 +3400,7 @@
                     return result;
                 }
                 ++position_;
+                bool closed = false;
                 while (position_ < text_.size())
                 {
                     const char ch = text_[position_++];
@@ -3394,9 +3412,15 @@
                             ++position_;
                             continue;
                         }
+                        closed = true;
                         break;
                     }
                     result.push_back(ch);
+                }
+                // RQ-CF-PRG-LITERAL-TERMINATION-001 (#6509): see parse_string().
+                if (!closed)
+                {
+                    throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.UnterminatedBracketLiteral"));
                 }
                 return result;
             }
