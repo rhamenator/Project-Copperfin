@@ -111,4 +111,9 @@ foreach(issue_form IN LISTS issue_forms)
     endif()
 endforeach()
 
+require_community_text(".github/DISCUSSION_TEMPLATE/ideas.yml" "title: \"[idea] <short summary>\"")
+require_community_text(".github/DISCUSSION_TEMPLATE/ideas.yml" "label: Proposed idea")
+require_community_text(".github/DISCUSSION_TEMPLATE/q-a.yml" "title: \"[question] <short summary>\"")
+require_community_text(".github/DISCUSSION_TEMPLATE/q-a.yml" "label: Your question")
+
 message(STATUS "Repository community-health contract passed")
