@@ -1,0 +1,1 @@
+- 2026-09-29: Archived 16 agent-channel messages (2026-09-25) from the abandoned local branch `fix/6251-select-query-reentrant-cursor-uaf` with their `log.jsonl` mirror entries (seq 1959-1974).
