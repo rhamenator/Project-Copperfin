@@ -137,6 +137,52 @@ void test_save_to_and_restore_from_bare_filename() {
     fs::remove_all(dir, ignored);
 }
 
+// VFP-style backslash separators in a bare relative operand reach the right subdirectory on
+// every host (POSIX does not treat a backslash as a separator).
+void test_bare_operands_accept_backslash_subdirectories() {
+    const fs::path dir = fresh_dir("backslash");
+    fs::create_directories(dir / "sub");
+    write_simple_dbf(dir / "sub" / "source.dbf", {"ONE"});
+    write_text(dir / "sub" / "rows.csv", "NAME\nTWO\n");
+    const auto result = run_script(
+        dir,
+        "USE 'sub/source.dbf'\n"
+        "APPEND FROM sub\\rows.csv TYPE CSV\n"
+        "STRTOFILE(TRANSFORM(RECCOUNT()), 'sub/count.txt')\n"
+        "COPY TO sub\\out.csv TYPE CSV\n"
+        "COPY STRUCTURE TO sub\\structure\n"
+        "PUBLIC probeValue\n"
+        "probeValue = 7\n"
+        "SAVE TO sub\\state.mem\n"
+        "RELEASE probeValue\n"
+        "RESTORE FROM sub\\state.mem\n"
+        "STRTOFILE(TRANSFORM(probeValue), 'sub/restored.txt')\n");
+    expect(result.completed, "#6562-#6568 backslash: script should complete: " + result.message);
+    expect(trimmed(read_text(dir / "sub" / "count.txt")) == "2", "backslash: APPEND FROM sub\\rows.csv should append");
+    expect(fs::exists(dir / "sub" / "out.csv"), "backslash: COPY TO sub\\out.csv should write into sub");
+    expect(fs::exists(dir / "sub" / "structure.dbf"), "backslash: COPY STRUCTURE TO sub\\structure should write into sub");
+    expect(fs::exists(dir / "sub" / "state.mem"), "backslash: SAVE TO sub\\state.mem should write into sub");
+    expect(trimmed(read_text(dir / "sub" / "restored.txt")) == "7", "backslash: RESTORE FROM sub\\state.mem should restore 7");
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+}
+
+// COPY STRUCTURE EXTENDED TO keeps evaluating its operand: this slice does not change it.
+void test_copy_structure_extended_still_evaluates_operand() {
+    const fs::path dir = fresh_dir("structure_extended");
+    write_simple_dbf(dir / "source.dbf", {"row1"});
+    const auto result = run_script(
+        dir,
+        "USE source.dbf\n"
+        "cOut = 'metadata.dbf'\n"
+        "COPY STRUCTURE EXTENDED TO cOut\n");
+    expect(result.completed, "COPY STRUCTURE EXTENDED: script should complete: " + result.message);
+    expect(fs::exists(dir / "metadata.dbf"), "COPY STRUCTURE EXTENDED TO cOut must still evaluate the variable");
+    expect(!fs::exists(dir / "cOut.dbf"), "COPY STRUCTURE EXTENDED TO cOut must not treat cOut as a literal name");
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -144,6 +190,8 @@ int main() {
     test_copy_to_bare_filename();
     test_copy_structure_to_bare_table_name();
     test_save_to_and_restore_from_bare_filename();
+    test_bare_operands_accept_backslash_subdirectories();
+    test_copy_structure_extended_still_evaluates_operand();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;
