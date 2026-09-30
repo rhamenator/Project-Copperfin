@@ -5,6 +5,7 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/localization/localization.h"
 #include "../src/runtime/prg_compatibility_error.h"
+#include "../src/runtime/prg_engine_helpers.h"
 #include "../src/runtime/prg_engine_path_functions.h"
 #include "prg_engine_test_support.h"
 
@@ -911,6 +912,239 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    // #5916: leading-dot, trailing-dot, dot-only, double-dot and multiple-dot file names.
+    // Every expected value below is the output of installed VFP9 09.00.0000.7423 (Windows VM COM,
+    // retained at /home/rich/temp/vfp9-probes/path-funcs-6580/vfp9-result-dots.txt): a cross
+    // product of 21 names and 6 extension arguments, plus JUSTSTEM/JUSTEXT/JUSTFNAME/JUSTPATH and
+    // FORCEPATH per name.
+    void test_dot_edge_file_names_match_vfp9()
+    {
+        const auto call = [](const std::string& function, const std::string& first, const std::string& second = {},
+                             bool has_second = false) {
+            std::vector<copperfin::runtime::PrgValue> arguments;
+            copperfin::runtime::PrgValue value;
+            value.kind = copperfin::runtime::PrgValueKind::string;
+            value.string_value = first;
+            arguments.push_back(value);
+            if (has_second) {
+                value.string_value = second;
+                arguments.push_back(value);
+            }
+            const auto result = copperfin::runtime::evaluate_path_function(function, arguments, {});
+            return result.has_value() ? result->string_value : std::string{"<no result>"};
+        };
+
+        struct NameRow { const char* name; const char* stem; const char* ext; const char* fname; const char* path; };
+        const std::vector<NameRow> names = {
+        {".profile", "", "profile", ".profile", ""},
+        {"a.", "a", "", "a.", ""},
+        {"a", "a", "", "a", ""},
+        {".", "", "", ".", ""},
+        {"..", ".", "", "..", ""},
+        {"...", "..", "", "...", ""},
+        {"a.b.c", "a.b", "c", "a.b.c", ""},
+        {".a.b", ".a", "b", ".a.b", ""},
+        {"a..b", "a.", "b", "a..b", ""},
+        {"a.b.", "a.b", "", "a.b.", ""},
+        {"..a", ".", "a", "..a", ""},
+        {"dir\\.profile", "", "profile", ".profile", "dir"},
+        {"dir/.profile", "", "profile", ".profile", "dir"},
+        {"dir\\a.", "a", "", "a.", "dir"},
+        {"C:.profile", "", "profile", ".profile", ""},
+        {"C:a.", "a", "", "a.", ""},
+        {"C:folder\\.profile", "", "profile", ".profile", "C:folder"},
+        {"x\\.", "", "", ".", "x"},
+        {"x\\..", ".", "", "..", "x"},
+        {".a.", ".a", "", ".a.", ""},
+        {"a.b.c.", "a.b.c", "", "a.b.c.", ""}
+        };
+        for (const NameRow& row : names) {
+            const std::string label = std::string("#5916 ") + row.name + ": ";
+            expect(call("juststem", row.name) == row.stem, label + "JUSTSTEM, got [" + call("juststem", row.name) + "]");
+            expect(call("justext", row.name) == row.ext, label + "JUSTEXT, got [" + call("justext", row.name) + "]");
+            expect(call("justfname", row.name) == row.fname, label + "JUSTFNAME, got [" + call("justfname", row.name) + "]");
+            expect(call("justpath", row.name) == row.path, label + "JUSTPATH, got [" + call("justpath", row.name) + "]");
+        }
+
+        struct ExtRow { const char* name; const char* extension; const char* forced; const char* defaulted; };
+        const std::vector<ExtRow> extension_rows = {
+        {".profile", "", "", ".profile"},
+        {".profile", ".bak", "", ".profile"},
+        {".profile", "bak", "", ".profile"},
+        {".profile", "b.k", "", ".profile"},
+        {".profile", ".", "", ".profile"},
+        {".profile", "bak.", "", ".profile"},
+        {"a.", "", "a", "a."},
+        {"a.", ".bak", "a.bak", "a."},
+        {"a.", "bak", "a.bak", "a."},
+        {"a.", "b.k", "a.b.k", "a."},
+        {"a.", ".", "a.", "a."},
+        {"a.", "bak.", "a.bak.", "a."},
+        {"a", "", "a", "a"},
+        {"a", ".bak", "a.bak", "a.bak"},
+        {"a", "bak", "a.bak", "a.bak"},
+        {"a", "b.k", "a.b.k", "a.b.k"},
+        {"a", ".", "a.", "a."},
+        {"a", "bak.", "a.bak.", "a.bak."},
+        {".", "", "", "."},
+        {".", ".bak", "", "."},
+        {".", "bak", "", "."},
+        {".", "b.k", "", "."},
+        {".", ".", "", "."},
+        {".", "bak.", "", "."},
+        {"..", "", ".", ".."},
+        {"..", ".bak", "..bak", ".."},
+        {"..", "bak", "..bak", ".."},
+        {"..", "b.k", "..b.k", ".."},
+        {"..", ".", "..", ".."},
+        {"..", "bak.", "..bak.", ".."},
+        {"...", "", "..", "..."},
+        {"...", ".bak", "...bak", "..."},
+        {"...", "bak", "...bak", "..."},
+        {"...", "b.k", "...b.k", "..."},
+        {"...", ".", "...", "..."},
+        {"...", "bak.", "...bak.", "..."},
+        {"a.b.c", "", "a.b", "a.b.c"},
+        {"a.b.c", ".bak", "a.b.bak", "a.b.c"},
+        {"a.b.c", "bak", "a.b.bak", "a.b.c"},
+        {"a.b.c", "b.k", "a.b.b.k", "a.b.c"},
+        {"a.b.c", ".", "a.b.", "a.b.c"},
+        {"a.b.c", "bak.", "a.b.bak.", "a.b.c"},
+        {".a.b", "", ".a", ".a.b"},
+        {".a.b", ".bak", ".a.bak", ".a.b"},
+        {".a.b", "bak", ".a.bak", ".a.b"},
+        {".a.b", "b.k", ".a.b.k", ".a.b"},
+        {".a.b", ".", ".a.", ".a.b"},
+        {".a.b", "bak.", ".a.bak.", ".a.b"},
+        {"a..b", "", "a.", "a..b"},
+        {"a..b", ".bak", "a..bak", "a..b"},
+        {"a..b", "bak", "a..bak", "a..b"},
+        {"a..b", "b.k", "a..b.k", "a..b"},
+        {"a..b", ".", "a..", "a..b"},
+        {"a..b", "bak.", "a..bak.", "a..b"},
+        {"a.b.", "", "a.b", "a.b."},
+        {"a.b.", ".bak", "a.b.bak", "a.b."},
+        {"a.b.", "bak", "a.b.bak", "a.b."},
+        {"a.b.", "b.k", "a.b.b.k", "a.b."},
+        {"a.b.", ".", "a.b.", "a.b."},
+        {"a.b.", "bak.", "a.b.bak.", "a.b."},
+        {"..a", "", ".", "..a"},
+        {"..a", ".bak", "..bak", "..a"},
+        {"..a", "bak", "..bak", "..a"},
+        {"..a", "b.k", "..b.k", "..a"},
+        {"..a", ".", "..", "..a"},
+        {"..a", "bak.", "..bak.", "..a"},
+        {"dir\\.profile", "", "", "dir\\.profile"},
+        {"dir\\.profile", ".bak", "", "dir\\.profile"},
+        {"dir\\.profile", "bak", "", "dir\\.profile"},
+        {"dir\\.profile", "b.k", "", "dir\\.profile"},
+        {"dir\\.profile", ".", "", "dir\\.profile"},
+        {"dir\\.profile", "bak.", "", "dir\\.profile"},
+        {"dir/.profile", "", "", "dir/.profile"},
+        {"dir/.profile", ".bak", "", "dir/.profile"},
+        {"dir/.profile", "bak", "", "dir/.profile"},
+        {"dir/.profile", "b.k", "", "dir/.profile"},
+        {"dir/.profile", ".", "", "dir/.profile"},
+        {"dir/.profile", "bak.", "", "dir/.profile"},
+        {"dir\\a.", "", "dir\\a", "dir\\a."},
+        {"dir\\a.", ".bak", "dir\\a.bak", "dir\\a."},
+        {"dir\\a.", "bak", "dir\\a.bak", "dir\\a."},
+        {"dir\\a.", "b.k", "dir\\a.b.k", "dir\\a."},
+        {"dir\\a.", ".", "dir\\a.", "dir\\a."},
+        {"dir\\a.", "bak.", "dir\\a.bak.", "dir\\a."},
+        {"C:.profile", "", "", "C:.profile"},
+        {"C:.profile", ".bak", "", "C:.profile"},
+        {"C:.profile", "bak", "", "C:.profile"},
+        {"C:.profile", "b.k", "", "C:.profile"},
+        {"C:.profile", ".", "", "C:.profile"},
+        {"C:.profile", "bak.", "", "C:.profile"},
+        {"C:a.", "", "C:a", "C:a."},
+        {"C:a.", ".bak", "C:a.bak", "C:a."},
+        {"C:a.", "bak", "C:a.bak", "C:a."},
+        {"C:a.", "b.k", "C:a.b.k", "C:a."},
+        {"C:a.", ".", "C:a.", "C:a."},
+        {"C:a.", "bak.", "C:a.bak.", "C:a."},
+        {"C:folder\\.profile", "", "", "C:folder\\.profile"},
+        {"C:folder\\.profile", ".bak", "", "C:folder\\.profile"},
+        {"C:folder\\.profile", "bak", "", "C:folder\\.profile"},
+        {"C:folder\\.profile", "b.k", "", "C:folder\\.profile"},
+        {"C:folder\\.profile", ".", "", "C:folder\\.profile"},
+        {"C:folder\\.profile", "bak.", "", "C:folder\\.profile"},
+        {"x\\.", "", "", "x\\."},
+        {"x\\.", ".bak", "", "x\\."},
+        {"x\\.", "bak", "", "x\\."},
+        {"x\\.", "b.k", "", "x\\."},
+        {"x\\.", ".", "", "x\\."},
+        {"x\\.", "bak.", "", "x\\."},
+        {"x\\..", "", "x\\.", "x\\.."},
+        {"x\\..", ".bak", "x\\..bak", "x\\.."},
+        {"x\\..", "bak", "x\\..bak", "x\\.."},
+        {"x\\..", "b.k", "x\\..b.k", "x\\.."},
+        {"x\\..", ".", "x\\..", "x\\.."},
+        {"x\\..", "bak.", "x\\..bak.", "x\\.."},
+        {".a.", "", ".a", ".a."},
+        {".a.", ".bak", ".a.bak", ".a."},
+        {".a.", "bak", ".a.bak", ".a."},
+        {".a.", "b.k", ".a.b.k", ".a."},
+        {".a.", ".", ".a.", ".a."},
+        {".a.", "bak.", ".a.bak.", ".a."},
+        {"a.b.c.", "", "a.b.c", "a.b.c."},
+        {"a.b.c.", ".bak", "a.b.c.bak", "a.b.c."},
+        {"a.b.c.", "bak", "a.b.c.bak", "a.b.c."},
+        {"a.b.c.", "b.k", "a.b.c.b.k", "a.b.c."},
+        {"a.b.c.", ".", "a.b.c.", "a.b.c."},
+        {"a.b.c.", "bak.", "a.b.c.bak.", "a.b.c."}
+        };
+        for (const ExtRow& row : extension_rows) {
+            const std::string label = std::string("#5916 ") + row.name + " + '" + row.extension + "': ";
+            expect(call("forceext", row.name, row.extension, true) == row.forced,
+                   label + "FORCEEXT, got [" + call("forceext", row.name, row.extension, true) + "]");
+            expect(call("defaultext", row.name, row.extension, true) == row.defaulted,
+                   label + "DEFAULTEXT, got [" + call("defaultext", row.name, row.extension, true) + "]");
+        }
+
+        struct ForcePathRow { const char* name; const char* expected; };
+        const std::vector<ForcePathRow> force_path_rows = {
+        {".profile", "D:\\x\\.profile"},
+        {"a.", "D:\\x\\a."},
+        {"a", "D:\\x\\a"},
+        {".", "D:\\x\\."},
+        {"..", "D:\\x\\.."},
+        {"...", "D:\\x\\..."},
+        {"a.b.c", "D:\\x\\a.b.c"},
+        {".a.b", "D:\\x\\.a.b"},
+        {"a..b", "D:\\x\\a..b"},
+        {"a.b.", "D:\\x\\a.b."},
+        {"..a", "D:\\x\\..a"},
+        {"dir\\.profile", "D:\\x\\.profile"},
+        {"dir/.profile", "D:\\x\\.profile"},
+        {"dir\\a.", "D:\\x\\a."},
+        {"C:.profile", "D:\\x\\.profile"},
+        {"C:a.", "D:\\x\\a."},
+        {"C:folder\\.profile", "D:\\x\\.profile"},
+        {"x\\.", "D:\\x\\."},
+        {"x\\..", "D:\\x\\.."},
+        {".a.", "D:\\x\\.a."},
+        {"a.b.c.", "D:\\x\\a.b.c."}
+        };
+        for (const ForcePathRow& row : force_path_rows) {
+            expect(call("forcepath", row.name, "D:\\x", true) == row.expected,
+                   std::string("#5916 FORCEPATH(") + row.name + ") keeps dot-edge names intact");
+        }
+    }
+
+    // Audit result for #5916: the shared portable_path_stem() helper is also used to match database
+    // designators, where an empty stem for a hidden-style name would let unrelated databases match
+    // each other. The PRG functions therefore use their own VFP-exact splitting and the designator
+    // helper is unchanged.
+    void test_shared_stem_helper_used_for_database_designators_is_unchanged()
+    {
+        expect(copperfin::runtime::portable_path_stem(".profile") == ".profile",
+               "#5916: the shared stem helper keeps a leading-dot name intact for designator matching");
+        expect(copperfin::runtime::portable_path_stem("sales.dbc") == "sales", "#5916: ordinary stems are unchanged");
+        expect(copperfin::runtime::portable_path_stem("C:\\data\\sales.dbc") == "sales", "#5916: directory stems are unchanged");
+    }
+
 } // namespace
 
 int main()
@@ -922,6 +1156,8 @@ int main()
     test_addbs_matches_vfp9_trailing_separator_contract();
     test_drive_relative_names_and_the_259_byte_path_limit();
     test_path_limit_error_is_catchable_with_error_202();
+    test_dot_edge_file_names_match_vfp9();
+    test_shared_stem_helper_used_for_database_designators_is_unchanged();
 
     if (test_failures() != 0)
     {

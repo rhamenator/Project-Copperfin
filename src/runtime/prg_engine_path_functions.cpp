@@ -199,6 +199,60 @@ std::string without_drive_designator(const std::string& path) {
     return drive_relative ? path.substr(2U) : path;
 }
 
+// Byte offset where the file name begins: after the last separator, or after the drive
+// designator of a separator-less drive-relative path.
+std::size_t file_name_start(const std::string& path) {
+    const std::size_t separator = portable_path_separator_position(path);
+    if (separator != std::string::npos) {
+        return separator + 1U;
+    }
+    const bool drive_relative =
+        path.size() >= 2U && std::isalpha(static_cast<unsigned char>(path[0])) != 0 && path[1] == ':';
+    return drive_relative ? 2U : 0U;
+}
+
+// Installed VFP9 (Windows VM COM probes 2026-09-30, retained under
+// /home/rich/temp/vfp9-probes/path-funcs-6580/vfp9-result-dots.txt) splits a file name at its last
+// dot with no special case for a leading dot: JUSTSTEM('.profile') is '' and JUSTEXT('.profile') is
+// 'profile', JUSTSTEM('..') is '.', JUSTEXT('a.') is '' (#5916).
+std::string vfp_just_stem(const std::string& path) {
+    const std::string name = path.substr(file_name_start(path));
+    const std::size_t dot = name.find_last_of('.');
+    return dot == std::string::npos ? name : name.substr(0U, dot);
+}
+
+std::string vfp_just_extension(const std::string& path) {
+    const std::string name = path.substr(file_name_start(path));
+    const std::size_t dot = name.find_last_of('.');
+    return dot == std::string::npos ? std::string{} : name.substr(dot + 1U);
+}
+
+// FORCEEXT: replace everything after the last dot of the file name with the new extension (one
+// leading dot is dropped; an empty extension removes the dot too, while '.' keeps a bare one). A
+// name whose stem is empty ('.profile', '.', 'dir\.profile', 'C:.txt') yields '' in VFP9.
+// `only_when_no_dot` is DEFAULTEXT: a file name that already contains any dot, even a trailing
+// one, is returned unchanged.
+std::string vfp_force_extension(const std::string& path, std::string extension, bool only_when_no_dot) {
+    const std::size_t start = file_name_start(path);
+    const std::string name = path.substr(start);
+    const std::size_t dot = name.find_last_of('.');
+    if (only_when_no_dot && dot != std::string::npos) {
+        return path;
+    }
+    if (dot == 0U) {
+        return {};
+    }
+    if (!extension.empty() && extension.front() == '.') {
+        extension.erase(extension.begin());
+        if (extension.empty()) {
+            // ext '.' keeps a bare trailing dot, unlike an empty extension.
+            return path.substr(0U, start) + (dot == std::string::npos ? name : name.substr(0U, dot)) + ".";
+        }
+    }
+    const std::string stem_path = path.substr(0U, start) + (dot == std::string::npos ? name : name.substr(0U, dot));
+    return extension.empty() ? stem_path : stem_path + "." + extension;
+}
+
 const std::string& checked_path_argument(const std::vector<PrgValue>& arguments, std::string& storage) {
     storage = value_as_string(arguments[0]);
     if (storage.size() > kMaximumPathFunctionBytes) {
@@ -227,26 +281,23 @@ std::optional<PrgValue> evaluate_path_function(
         return make_string_value(portable_path_parent(checked_path_argument(arguments, checked_path)));
     }
     if (function == "juststem" && !arguments.empty()) {
-        return make_string_value(portable_path_stem(without_drive_designator(checked_path_argument(arguments, checked_path))));
+        return make_string_value(vfp_just_stem(checked_path_argument(arguments, checked_path)));
     }
     if (function == "justext" && !arguments.empty()) {
-        return make_string_value(portable_path_extension(checked_path_argument(arguments, checked_path)));
+        return make_string_value(vfp_just_extension(checked_path_argument(arguments, checked_path)));
     }
     if (function == "justdrive" && !arguments.empty()) {
         return make_string_value(portable_path_drive(checked_path_argument(arguments, checked_path)));
     }
     if (function == "forceext" && arguments.size() >= 2U) {
-        return make_string_value(portable_force_extension(checked_path_argument(arguments, checked_path), value_as_string(arguments[1])));
+        return make_string_value(vfp_force_extension(checked_path_argument(arguments, checked_path), value_as_string(arguments[1]), false));
     }
     if (function == "forcepath" && arguments.size() >= 2U) {
         return make_string_value(portable_force_path(without_drive_designator(checked_path_argument(arguments, checked_path)), value_as_string(arguments[1])));
     }
     if (function == "defaultext" && arguments.size() >= 2U) {
         const std::string path = checked_path_argument(arguments, checked_path);
-        if (!portable_path_extension(path).empty()) {
-            return make_string_value(path);
-        }
-        return make_string_value(portable_force_extension(path, value_as_string(arguments[1])));
+        return make_string_value(vfp_force_extension(path, value_as_string(arguments[1]), true));
     }
     if (function == "addbs" && !arguments.empty()) {
         // #5910: real VFP9 SP2's ADDBS() adds a backslash unless the
