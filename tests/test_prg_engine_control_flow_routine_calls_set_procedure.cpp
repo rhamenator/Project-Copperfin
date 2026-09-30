@@ -1352,9 +1352,27 @@ void test_objects_created_by_destroy_during_quit_are_released() {
                                     state.message);
         expect(count_events(state, "runtime.shutdown.object_release_limit") == 1U,
             "#6454 loop: hitting the bounded release limit should be reported exactly once");
-        const std::string loops = global_text(state, "nloops");
-        expect(loops != "<missing>" && std::stod(loops) >= 100.0 && std::stod(loops) <= 8192.0,
-            "#6454 loop: the chain should run to the bound and no further, got nLoops=" + loops);
+        // Every root release counts toward the bound, including the built-in roots
+        // (_SCREEN, Collection) that every QUIT releases, and the next root after 1024 is
+        // refused. So chain releases plus the other roots released must be exactly 1024,
+        // independent of how many built-in roots exist.
+        const auto other_roots = std::count_if(
+            state.events.begin(), state.events.end(),
+            [](const copperfin::runtime::RuntimeEvent &event) {
+                return event.category == "prg.object.release" && event.detail != "LoopObject";
+            });
+        expect(global_text(state, "nloops") != "<missing>" &&
+                   static_cast<long long>(std::stod(global_text(state, "nloops"))) + other_roots == 1024,
+            "#6454 loop: chain releases + other roots must equal exactly the 1024-root bound, got nLoops=" +
+                global_text(state, "nloops") + " and " + std::to_string(other_roots) + " other roots");
+        const auto limit_event = std::find_if(
+            state.events.begin(), state.events.end(),
+            [](const copperfin::runtime::RuntimeEvent &event) {
+                return event.category == "runtime.shutdown.object_release_limit";
+            });
+        expect(limit_event != state.events.end() &&
+                   limit_event->detail == "root_releases limit=1024",
+            "#6454 loop: the limit event should name the root-release bound");
     }
 
     fs::remove_all(temp_root, ignored);

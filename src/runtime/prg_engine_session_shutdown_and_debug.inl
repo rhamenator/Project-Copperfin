@@ -281,11 +281,14 @@
         // repeatedly until none that has not been attempted remains, so nothing is left
         // for cleanup_runtime_resources_for_shutdown() to discard without its lifecycle.
         // Object handles are never reused, so `attempted` also guarantees a root whose
-        // release fails cannot be retried forever. An adversarial chain where every
-        // Destroy creates another object stops at a fixed bound and reports why.
+        // release fails cannot be retried forever. The bound is on ROOT releases: one
+        // release_native_object() call dispatches a whole owned subtree, so it is a limit
+        // on how many times shutdown will start a new root, not on individual objects. An
+        // adversarial chain where every Destroy creates another root stops at that bound
+        // and reports why.
         void release_native_objects_for_shutdown()
         {
-            constexpr std::size_t kMaxShutdownObjectReleases = 1024U;
+            constexpr std::size_t kMaxShutdownRootReleases = 1024U;
             std::set<int> attempted;
             std::size_t released = 0U;
             for (;;)
@@ -302,10 +305,10 @@
                     {
                         continue;
                     }
-                    if (released >= kMaxShutdownObjectReleases)
+                    if (released >= kMaxShutdownRootReleases)
                     {
                         events.push_back({.category = "runtime.shutdown.object_release_limit",
-                                          .detail = "limit=" + std::to_string(kMaxShutdownObjectReleases),
+                                          .detail = "root_releases limit=" + std::to_string(kMaxShutdownRootReleases),
                                           .location = {}});
                         return;
                     }
