@@ -1255,11 +1255,38 @@
             return true;
         }
 
+        // `cancelled`, when supplied, is set when this call returned false because the
+        // task was cancelled rather than because the lock policy forbids waiting.
         bool pause_for_lock_retry(const std::string &detail,
                                   const SourceLocation &location,
-                                  std::size_t attempt_number)
+                                  std::size_t attempt_number,
+                                  bool *cancelled = nullptr)
         {
             if (!ensure_non_blocking_critical_section_policy("LOCK RETRY", location, detail))
+            {
+                return false;
+            }
+
+            const auto observe_cancellation = [&]() -> bool
+            {
+                if (task_cancel_requested == nullptr || !task_cancel_requested->load(std::memory_order_relaxed))
+                {
+                    return false;
+                }
+                (void)handle_async_runtime_cancellation(
+                    location,
+                    current_statement() == nullptr ? std::string{} : current_statement()->text,
+                    runtime_text("Runtime.Prg.Records.Error.LockRetryCancelled"));
+                if (cancelled != nullptr)
+                {
+                    *cancelled = true;
+                }
+                return true;
+            };
+
+            // #6499: a cancelled task stops retrying immediately, whether the scheduler
+            // waits between attempts or only yields.
+            if (observe_cancellation())
             {
                 return false;
             }
@@ -1284,12 +1311,8 @@
 
             for (std::size_t elapsed = 0U; elapsed < sleep_duration_ms; ++elapsed)
             {
-                if (task_cancel_requested != nullptr && task_cancel_requested->load(std::memory_order_relaxed))
+                if (observe_cancellation())
                 {
-                    (void)handle_async_runtime_cancellation(
-                        location,
-                        current_statement() == nullptr ? std::string{} : current_statement()->text,
-                        runtime_text("Runtime.Prg.Records.Error.LockRetryCancelled"));
                     return false;
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(1U));
@@ -1360,8 +1383,18 @@
                     return false;
                 }
 
-                if (!pause_for_lock_retry(context + " reprocess=" + policy.display_value, location, attempt + 1U))
+                bool retry_cancelled = false;
+                if (!pause_for_lock_retry(context + " reprocess=" + policy.display_value, location, attempt + 1U,
+                                          &retry_cancelled))
                 {
+                    if (retry_cancelled && explicit_lock_command)
+                    {
+                        // #6499: FLOCK()/RLOCK() return .F. for ordinary contention, but a
+                        // cancellation is not contention: fault the statement so the task
+                        // halts (the cancellation bookkeeping already ran and recorded the
+                        // message) instead of continuing as if the lock were merely busy.
+                        throw PrgPropagatedRuntimeError(last_error_message);
+                    }
                     return false;
                 }
             }
@@ -1425,11 +1458,18 @@
                     return false;
                 }
 
+                bool retry_cancelled = false;
                 if (!pause_for_lock_retry(context + " recno=" + std::to_string(recno) +
                                           " reprocess=" + policy.display_value,
                                           location,
-                                          attempt + 1U))
+                                          attempt + 1U,
+                                          &retry_cancelled))
                 {
+                    if (retry_cancelled && explicit_lock_command)
+                    {
+                        // #6499: see acquire_table_lock().
+                        throw PrgPropagatedRuntimeError(last_error_message);
+                    }
                     return false;
                 }
             }

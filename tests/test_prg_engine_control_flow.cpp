@@ -231,6 +231,7 @@ int main() {
     test_request_cancel_rolls_back_active_transaction_and_resets_txnlevel();
     test_state_sequence_await_retry_after_cancellation_reuses_still_registered_task();
     test_state_sequence_cancellation_during_widened_lock_retry_leaves_no_residual_lock_ownership();
+    test_cancellation_during_explicit_rlock_retry_halts_the_task();
     test_state_sequence_retry_after_caught_rollback_succeeds_cleanly();
     test_state_sequence_record_lock_handoff_across_rollback_and_child_quit_leaves_no_residue();
     test_spawn_critical_section_serializes_workers();
