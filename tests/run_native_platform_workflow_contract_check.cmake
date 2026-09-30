@@ -368,6 +368,12 @@ require_text("scripts/install-pinned-nsis.ps1"
     "-UserAgent $pinnedArchiveUserAgent"
     "portable NSIS download must send a non-browser User-Agent (#6518)")
 require_text("scripts/install-pinned-nsis.ps1"
+    "$pinnedArchiveUserAgent = \"curl/8.5.0\""
+    "portable NSIS download User-Agent must stay non-browser-like (#6518)")
+require_text("scripts/install-pinned-nsis.ps1"
+    "$signatureStream.Read($leadingBytes, 0, 2)"
+    "NSIS mismatch diagnostics must read only the ZIP signature bytes")
+require_text("scripts/install-pinned-nsis.ps1"
     "pinnedVersion = \"3.12\""
     "pinned NSIS version single source of truth")
 require_text("scripts/install-pinned-nsis.ps1"

@@ -104,8 +104,16 @@ if ($pinnedArchiveDownloaded) {
     if ($archiveHash -ne $pinnedArchiveSha256) {
         # Say what was actually received: an HTML page (a mirror interstitial) is a very
         # different situation from a real archive with the wrong bytes. Both stay fatal.
-        $leadingBytes = [System.IO.File]::ReadAllBytes($fallbackArchive) | Select-Object -First 2
-        $isZip = ($leadingBytes.Count -eq 2 -and $leadingBytes[0] -eq 0x50 -and $leadingBytes[1] -eq 0x4B)
+        # Read only the two signature bytes; the payload is untrusted and may be large.
+        $leadingBytes = New-Object byte[] 2
+        $signatureStream = [System.IO.File]::OpenRead($fallbackArchive)
+        try {
+            $bytesRead = $signatureStream.Read($leadingBytes, 0, 2)
+        }
+        finally {
+            $signatureStream.Dispose()
+        }
+        $isZip = ($bytesRead -eq 2 -and $leadingBytes[0] -eq 0x50 -and $leadingBytes[1] -eq 0x4B)
         $received = if ($isZip) { "a ZIP archive with unexpected contents" } else { "a non-ZIP payload (likely an HTML page)" }
         throw "NSIS archive SHA-256 mismatch: expected $pinnedArchiveSha256, got $archiveHash ($received). " +
             "Refusing to fall back to an unverified source for what looks like a tampered or " +
