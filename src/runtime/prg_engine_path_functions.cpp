@@ -5,11 +5,13 @@
 #include "prg_engine_path_functions.h"
 
 #include "copperfin/platform/path.h"
+#include "localized_text.h"
 #include "prg_engine_helpers.h"
 
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -184,12 +186,26 @@ std::string portable_full_path(const std::string& raw_path, const std::string& d
     return copperfin::platform::path_to_utf8_string(absolute_path.lexically_normal());
 }
 
+// Installed VFP9 SP2 documents 259 bytes as the longest path these functions accept and raises
+// error 202 "Invalid path or file name." for anything longer (#6580, #6595). The limit counts
+// bytes of the first argument, not characters.
+constexpr std::size_t kMaximumPathFunctionBytes = 259U;
+
+const std::string& checked_path_argument(const std::vector<PrgValue>& arguments, std::string& storage) {
+    storage = value_as_string(arguments[0]);
+    if (storage.size() > kMaximumPathFunctionBytes) {
+        throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.InvalidPathOrFileName"));
+    }
+    return storage;
+}
+
 }  // namespace
 
 std::optional<PrgValue> evaluate_path_function(
     const std::string& function,
     const std::vector<PrgValue>& arguments,
     const std::string& default_directory) {
+    std::string checked_path;
     if (function == "fullpath" && !arguments.empty()) {
         return make_string_value(portable_full_path(value_as_string(arguments[0]), default_directory));
     }
@@ -197,28 +213,28 @@ std::optional<PrgValue> evaluate_path_function(
         return make_string_value(default_directory);
     }
     if (function == "justfname" && !arguments.empty()) {
-        return make_string_value(portable_path_filename(value_as_string(arguments[0])));
+        return make_string_value(portable_path_filename(checked_path_argument(arguments, checked_path)));
     }
     if (function == "justpath" && !arguments.empty()) {
-        return make_string_value(portable_path_parent(value_as_string(arguments[0])));
+        return make_string_value(portable_path_parent(checked_path_argument(arguments, checked_path)));
     }
     if (function == "juststem" && !arguments.empty()) {
-        return make_string_value(portable_path_stem(value_as_string(arguments[0])));
+        return make_string_value(portable_path_stem(checked_path_argument(arguments, checked_path)));
     }
     if (function == "justext" && !arguments.empty()) {
-        return make_string_value(portable_path_extension(value_as_string(arguments[0])));
+        return make_string_value(portable_path_extension(checked_path_argument(arguments, checked_path)));
     }
     if (function == "justdrive" && !arguments.empty()) {
-        return make_string_value(portable_path_drive(value_as_string(arguments[0])));
+        return make_string_value(portable_path_drive(checked_path_argument(arguments, checked_path)));
     }
     if (function == "forceext" && arguments.size() >= 2U) {
-        return make_string_value(portable_force_extension(value_as_string(arguments[0]), value_as_string(arguments[1])));
+        return make_string_value(portable_force_extension(checked_path_argument(arguments, checked_path), value_as_string(arguments[1])));
     }
     if (function == "forcepath" && arguments.size() >= 2U) {
-        return make_string_value(portable_force_path(value_as_string(arguments[0]), value_as_string(arguments[1])));
+        return make_string_value(portable_force_path(checked_path_argument(arguments, checked_path), value_as_string(arguments[1])));
     }
     if (function == "defaultext" && arguments.size() >= 2U) {
-        const std::string path = value_as_string(arguments[0]);
+        const std::string path = checked_path_argument(arguments, checked_path);
         if (!portable_path_extension(path).empty()) {
             return make_string_value(path);
         }

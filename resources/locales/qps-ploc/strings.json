@@ -1656,6 +1656,7 @@
   "Runtime.Prg.Expression.Error.UnterminatedStringLiteral": "Unterminated string literal: a closing quote is missing",
   "Runtime.Prg.Expression.Error.UnterminatedBracketLiteral": "Unterminated bracket literal: a closing ] is missing",
   "Runtime.Prg.Expression.Error.UnterminatedBraceLiteral": "Unterminated brace literal: a closing } is missing",
+  "Runtime.Prg.Expression.Error.InvalidPathOrFileName": "Invalid path or file name.",
   "Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch": "[!! Øpëřåţøř/øpëřåñð ţÿpë mïšmåţçħ. !!]",
   "Runtime.Prg.Expression.Error.UserRoutineAbortedExecution": "[!! Üšëř-ðëƒïñëð řøüţïñë çåļļ åßøřţëð ţħë çüřřëñţ ëxëçüţïøñ šţåçķ ðüřïñğ ëxpřëššïøñ ëvåļüåţïøñ !!]",
   "Runtime.Prg.Expression.Error.UserRoutineEnteredEventLoop": "[!! Üšëř-ðëƒïñëð řøüţïñë çåļļ çåññøţ ëñţëř ŘËÅÐ ËVËÑŢŠ ðüřïñğ ëxpřëššïøñ ëvåļüåţïøñ !!]",

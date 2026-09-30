@@ -2941,6 +2941,12 @@
             {
                 return 1526;
             }
+            // VFP error 202 (#6580, #6595): compared against the current catalog's own text.
+            if (normalized.find(normalize_identifier(runtime_text("Runtime.Prg.Expression.Error.InvalidPathOrFileName"))) !=
+                std::string::npos)
+            {
+                return 202;
+            }
             if (normalized.find("ole object") != std::string::npos ||
                 normalized.find("ole member") != std::string::npos ||
                 normalized.find("automation") != std::string::npos)
