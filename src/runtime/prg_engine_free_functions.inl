@@ -876,6 +876,100 @@
             return escaped;
         }
 
+        // Round plain decimal text ([+-]digits[.digits]) half away from zero to `scale` fractional digits
+        // using the digits themselves, never binary floating point, so 1.005 -> 1.01 and -1.235 -> -1.24
+        // exactly as installed VFP9 does on APPEND FROM (#6573). Text that is not plain decimal text, or
+        // that already has no more than `scale` fractional digits, is returned unchanged. A result that
+        // rounds to zero carries no sign (VFP9: -0.004 -> 0).
+        std::string round_decimal_text_to_scale(const std::string &text, const std::size_t scale)
+        {
+            const auto is_digit = [](const char ch) { return ch >= '0' && ch <= '9'; };
+            std::size_t pos = 0U;
+            bool negative = false;
+            if (pos < text.size() && (text[pos] == '+' || text[pos] == '-')) {
+                negative = text[pos] == '-';
+                ++pos;
+            }
+            const std::size_t integer_start = pos;
+            while (pos < text.size() && is_digit(text[pos])) {
+                ++pos;
+            }
+            const std::string integer_digits = text.substr(integer_start, pos - integer_start);
+            std::string fraction_digits;
+            if (pos < text.size() && text[pos] == '.') {
+                ++pos;
+                const std::size_t fraction_start = pos;
+                while (pos < text.size() && is_digit(text[pos])) {
+                    ++pos;
+                }
+                fraction_digits = text.substr(fraction_start, pos - fraction_start);
+            }
+            if (pos != text.size() || (integer_digits.empty() && fraction_digits.empty()) || fraction_digits.size() <= scale) {
+                return text;
+            }
+
+            const bool round_up = fraction_digits[scale] >= '5';
+            fraction_digits.resize(scale);
+            std::string digits = integer_digits + fraction_digits;
+            if (digits.size() < scale + 1U) {
+                digits.insert(0U, (scale + 1U) - digits.size(), '0');
+            }
+            if (round_up) {
+                bool carried = true;
+                for (std::size_t index = digits.size(); index > 0U && carried; --index) {
+                    char& digit = digits[index - 1U];
+                    if (digit == '9') {
+                        digit = '0';
+                    } else {
+                        ++digit;
+                        carried = false;
+                    }
+                }
+                if (carried) {
+                    digits.insert(digits.begin(), '1');
+                }
+            }
+            std::string integer_part = digits.substr(0U, digits.size() - scale);
+            const std::string fraction_part = digits.substr(digits.size() - scale);
+            const std::size_t first_nonzero = integer_part.find_first_not_of('0');
+            integer_part = first_nonzero == std::string::npos ? std::string{"0"} : integer_part.substr(first_nonzero);
+            const bool is_zero = integer_part == "0" && fraction_part.find_first_not_of('0') == std::string::npos;
+            std::string result = (negative && !is_zero) ? "-" : "";
+            result += integer_part;
+            if (scale > 0U) {
+                result += '.';
+                result += fraction_part;
+            }
+            return result;
+        }
+
+        // A numeric target takes imported text rounded to the field scale, as installed VFP9 does for
+        // APPEND FROM TYPE CSV/DELIMITED (#6573); every other field type keeps the text as parsed.
+        std::string text_import_value_for_field(const vfp::DbfFieldDescriptor &field, const std::string &text)
+        {
+            const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
+            if (field_type != 'N' && field_type != 'F')
+            {
+                return text;
+            }
+            std::string rounded = round_decimal_text_to_scale(trim_copy(text), field.decimal_count);
+            // A DBF numeric field drops the leading zero of a fraction when that is what makes it
+            // fit: installed VFP9 stores 0.125 in N(3,2) as .13 and 0.05 as .05, so the zero must not
+            // turn a representable value into a false overflow (N(20,19) 0.1234... as well).
+            if (rounded.size() > field.length)
+            {
+                if (rounded.rfind("0.", 0U) == 0U)
+                {
+                    rounded.erase(0U, 1U);
+                }
+                else if (rounded.rfind("-0.", 0U) == 0U)
+                {
+                    rounded.erase(1U, 1U);
+                }
+            }
+            return rounded;
+        }
+
         std::vector<std::string> parse_delimited_text_line(
             const std::string &line,
             const DelimitedTextOptions &options,

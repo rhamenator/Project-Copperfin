@@ -11527,7 +11527,7 @@
                                 cursor->source_path,
                                 cursor->recno - 1U,
                                 target_fields[index].name,
-                                values[index]);
+                                text_import_value_for_field(target_fields[index], values[index]));
                             if (!rep_result.ok)
                             {
                                 last_error_message = runtime_text(

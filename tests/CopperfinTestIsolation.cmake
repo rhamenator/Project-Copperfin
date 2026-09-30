@@ -867,6 +867,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_report_security
             test_prg_engine_file_command_operands
             test_prg_engine_csv_whitespace
+            test_prg_engine_csv_numeric_scale
             test_prg_engine_bare_table_file_operands
             test_prg_engine_macro_expressions
             test_prg_engine_native_focus_move_events
