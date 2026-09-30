@@ -566,6 +566,11 @@ and cluster 25 for numeric precision. It is a coherent active execution lane:
 finish shared parser/formatter invariants before treating its individual issue
 numbers as unrelated.
 
+**2026-09-30:** #6512, #6515 and #6528 (CSV/DELIMITED leading whitespace and
+lower-case header) follow `RQ-CF-PRG-TEXT-INTERCHANGE-WHITESPACE-001`. Still open
+here: #6572 (numeric overflow policy, owner decision) and #6573 (rounding into
+the field scale).
+
 ### 32. File-command operand and path lexical semantics — `IN PROGRESS`
 
 **Started 2026-09-30:** `ERASE`/`DELETE FILE` (#6582, #6589), `COPY FILE`

@@ -2293,17 +2293,17 @@ void test_delimited_export_omits_general_picture_fields() {
     }
     expect(csv_warning_count == 6U && delimited_warning_count == 2U && tab_warning_count == 1U,
            "#6640: every lossy CSV/DELIMITED/TAB COPY TO should emit exactly one typed omission warning");
-    expect(read_text(general_csv) == ",CODE\r\n\"OK\"\r\n",
+    expect(read_text(general_csv) == ",code\r\n\"OK\"\r\n",
            "#6624: General before Character must retain VFP's empty CSV header cell but no data cell");
-    expect(read_text(picture_csv) == ",CODE\r\n\"OK\"\r\n",
+    expect(read_text(picture_csv) == ",code\r\n\"OK\"\r\n",
            "#6624: Picture before Character must retain VFP's empty CSV header cell but no data cell");
-    expect(read_text(trailing_general_csv) == "CODE\r\n\"OK\",\r\n",
+    expect(read_text(trailing_general_csv) == "code\r\n\"OK\",\r\n",
            "#6624: General after Character must retain VFP's terminal empty CSV data cell");
-    expect(read_text(trailing_picture_csv) == "CODE\r\n\"OK\",\r\n",
+    expect(read_text(trailing_picture_csv) == "code\r\n\"OK\",\r\n",
            "#6624: Picture after Character must retain VFP's terminal empty CSV data cell");
     expect(read_text(object_only_csv) == "\r\n\r\n",
            "#6624: object-only CSV selection must retain VFP's empty header and data records");
-    expect(read_text(blob_csv) == ",CODE\r\n\"OK\"\r\n",
+    expect(read_text(blob_csv) == ",code\r\n\"OK\"\r\n",
            "#6630: CSV must omit Blob payloads while retaining the leading empty header cell");
     expect(read_text(general_tab) == "\"OK\"\r\n",
            "#6624: DELIMITED data rows must omit a leading General column altogether");
@@ -2347,7 +2347,7 @@ void test_delimited_export_omits_memo_fields() {
 
     if (fs::exists(csv_path))
     {
-        expect(read_text(csv_path) == ",CODE\r\n\"OK\"\r\n",
+        expect(read_text(csv_path) == ",code\r\n\"OK\"\r\n",
                "#6633: CSV must retain the leading empty Memo header cell but omit its payload");
     }
     else
@@ -3092,7 +3092,7 @@ void test_copy_to_type_csv_and_delimited_text_rows() {
 
     if (fs::exists(csv_path)) {
         const std::string contents = read_text(csv_path);
-        expect(contents == "NAME,AGE\r\n\"Ann,Lee\",7\r\n\"  Bob\t\",42\r\n",
+        expect(contents == "name,age\r\n\"Ann,Lee\",7\r\n\"  Bob\t\",42\r\n",
             "#6594: COPY TO TYPE CSV should preserve quoted character whitespace exactly");
     }
     if (fs::exists(pipe_path)) {
@@ -3311,7 +3311,7 @@ void test_append_from_type_csv_imports_delimited_rows() {
         expect(nul_result.table.records[0U].values[0U].display_value == std::string{"A\0B", 3U},
             "Character decoding should retain embedded NUL bytes instead of applying terminator handling");
     }
-    expect(read_text(nul_csv_path) == std::string{"NAME\r\n\"A\0B\"\r\n", 13U},
+    expect(read_text(nul_csv_path) == std::string{"name\r\n\"A\0B\"\r\n", 13U},
         "COPY TO TYPE CSV should retain an embedded NUL from a Character field");
 
     const auto blank_result = copperfin::vfp::parse_dbf_table_from_file(
