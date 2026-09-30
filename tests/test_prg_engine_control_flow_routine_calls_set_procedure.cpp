@@ -1693,6 +1693,180 @@ void test_scan_does_not_resume_on_cursor_reusing_its_work_area() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #6576/#6577/#6578: a predicate (SCAN FOR, LOCATE FOR, or an active SET FILTER
+// reached by GO TOP) that closes the cursor it is iterating and reopens a
+// different table under the SAME alias in the SAME work area must not let the
+// command continue on the replacement cursor. Installed VFP9 aborts with error
+// 1099 "Procedure canceled" at the USE IN performed by the predicate; Copperfin
+// raises the catchable "target work area not found" error before touching the
+// replacement table.
+void test_predicate_reopening_the_target_alias_does_not_retarget_the_command() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_predicate_alias_reopen_6576";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "original.dbf", {"ORIGINAL"});
+    write_simple_dbf(temp_root / "replacement.dbf", {"REPLACED1", "REPLACED2"});
+
+    const auto run_script = [&](const std::string &name, const std::string &body) {
+        const fs::path script_path = temp_root / (name + ".prg");
+        write_text(script_path, body);
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(script_path.string(), temp_root.string(), false));
+        return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    };
+    const auto global_text = [](const auto &state, const std::string &name) -> std::string {
+        const auto found = state.globals.find(name);
+        return found == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(found->second);
+    };
+    const std::string original = (temp_root / "original.dbf").string();
+    const std::string replacement = (temp_root / "replacement.dbf").string();
+    const std::string swap_function =
+        "FUNCTION SwapCursor\n"
+        "nCalls = nCalls + 1\n"
+        "IF lArmed AND !lSwapped\n"
+        "    lSwapped = .T.\n"
+        "    USE IN People\n"
+        "    USE '" + replacement + "' ALIAS People IN 1\n"
+        "ENDIF\n"
+        "RETURN .T.\n"
+        "ENDFUNC\n";
+    const std::string prologue =
+        "PUBLIC lArmed, lSwapped, nCalls\n"
+        "lArmed = .T.\n"
+        "lSwapped = .F.\n"
+        "nCalls = 0\n"
+        "nHits = 0\n"
+        "cNames = ''\n"
+        "lErr = .F.\n"
+        "cErrMsg = ''\n"
+        "USE '" + original + "' ALIAS People IN 1\n";
+    const auto active_catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        copperfin::localization::select_locale());
+    const auto lost_target_message = [&](const std::string &command) {
+        return active_catalog.translate(
+            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", {{"command", command}});
+    };
+    // Caught variant: the loss surfaces as an ordinary catchable error.
+    const auto expect_contained = [&](const std::string &label, const std::string &command, const auto &state) {
+        expect(state.completed, label + ": script should complete without a runtime fault: " + state.message);
+        expect(global_text(state, "lerr") == "true",
+            label + ": losing the target cursor must raise a catchable error, not continue");
+        expect(global_text(state, "nhits") == "0" && global_text(state, "cnames").empty(),
+            label + ": the command must never expose replacement rows, got: " + global_text(state, "cnames"));
+        expect(global_text(state, "cerrmsg").find(lost_target_message(command)) != std::string::npos,
+            label + ": error should report the lost " + command + " target, got: " + global_text(state, "cerrmsg"));
+    };
+    // Uncaught variant (the exact scripts from the issues, without TRY): execution
+    // pauses safely on the same error -- no out-of-memory fault, no replacement rows.
+    const auto expect_paused = [&](const std::string &label, const std::string &command, const auto &state) {
+        expect(!state.completed, label + ": an uncaught lost-target error should pause, not complete");
+        expect(state.message.find(lost_target_message(command)) != std::string::npos,
+            label + ": pause message should report the lost " + command + " target, got: " + state.message);
+        expect(state.message.find("out of memory") == std::string::npos,
+            label + ": the loss must not surface as a runtime resource fault, got: " + state.message);
+        expect(global_text(state, "nhits") == "0" && global_text(state, "cnames").empty(),
+            label + ": the command must never expose replacement rows, got: " + global_text(state, "cnames"));
+    };
+
+    // #6576: SCAN FOR predicate.
+    {
+        const auto state = run_script("scan_alias_reopen",
+            prologue +
+            "TRY\n"
+            "    SCAN FOR SwapCursor() IN People\n"
+            "        nHits = nHits + 1\n"
+            "        cNames = cNames + ALLTRIM(People.NAME) + '|'\n"
+            "    ENDSCAN\n"
+            "CATCH TO oErr\n"
+            "    lErr = .T.\n"
+            "    cErrMsg = oErr.Message\n"
+            "ENDTRY\n"
+            "lAfter = .T.\n"
+            "RETURN\n" + swap_function);
+        expect_contained("#6576 SCAN", "SCAN", state);
+        expect(global_text(state, "lafter") == "true", "#6576 SCAN: execution should continue after the caught error");
+    }
+
+    // #6577: LOCATE FOR predicate.
+    {
+        const auto state = run_script("locate_alias_reopen",
+            prologue +
+            "TRY\n"
+            "    LOCATE FOR SwapCursor() IN People\n"
+            "    nHits = nHits + 1\n"
+            "    cNames = cNames + ALLTRIM(People.NAME) + '|'\n"
+            "CATCH TO oErr\n"
+            "    lErr = .T.\n"
+            "    cErrMsg = oErr.Message\n"
+            "ENDTRY\n"
+            "lAfter = .T.\n"
+            "RETURN\n" + swap_function);
+        expect_contained("#6577 LOCATE", "LOCATE", state);
+        expect(global_text(state, "lafter") == "true", "#6577 LOCATE: execution should continue after the caught error");
+    }
+
+    // #6578: GO TOP through an active SET FILTER whose callback swaps the cursor.
+    {
+        const auto state = run_script("goto_filter_alias_reopen",
+            prologue +
+            "lArmed = .F.\n"
+            "SET FILTER TO SwapCursor() IN People\n"
+            "lArmed = .T.\n"
+            "TRY\n"
+            "    GO TOP IN People\n"
+            "    nHits = nHits + 1\n"
+            "    cNames = cNames + ALLTRIM(People.NAME) + '|'\n"
+            "CATCH TO oErr\n"
+            "    lErr = .T.\n"
+            "    cErrMsg = oErr.Message\n"
+            "ENDTRY\n"
+            "lAfter = .T.\n"
+            "RETURN\n" + swap_function);
+        expect_contained("#6578 GO TOP", "GO", state);
+        expect(global_text(state, "lafter") == "true", "#6578 GO TOP: execution should continue after the caught error");
+    }
+
+
+    // The same three scenarios without TRY/CATCH, as filed in the issues.
+    {
+        const auto state = run_script("scan_alias_reopen_uncaught",
+            prologue +
+            "SCAN FOR SwapCursor() IN People\n"
+            "    nHits = nHits + 1\n"
+            "    cNames = cNames + ALLTRIM(People.NAME) + '|'\n"
+            "ENDSCAN\n"
+            "RETURN\n" + swap_function);
+        expect_paused("#6576 SCAN uncaught", "SCAN", state);
+    }
+    {
+        const auto state = run_script("locate_alias_reopen_uncaught",
+            prologue +
+            "LOCATE FOR SwapCursor() IN People\n"
+            "nHits = nHits + 1\n"
+            "cNames = cNames + ALLTRIM(People.NAME) + '|'\n"
+            "RETURN\n" + swap_function);
+        expect_paused("#6577 LOCATE uncaught", "LOCATE", state);
+    }
+    {
+        const auto state = run_script("goto_filter_alias_reopen_uncaught",
+            prologue +
+            "lArmed = .F.\n"
+            "SET FILTER TO SwapCursor() IN People\n"
+            "lArmed = .T.\n"
+            "GO TOP IN People\n"
+            "nHits = nHits + 1\n"
+            "cNames = cNames + ALLTRIM(People.NAME) + '|'\n"
+            "RETURN\n" + swap_function);
+        expect_paused("#6578 GO TOP uncaught", "GO", state);
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 // #6242: LOCATE/CONTINUE (and SCAN's direct search) share
 // locate_next_matching_record(), which kept writing FOUND()/position state
 // through a cursor its own FOR/WHILE/index-key evaluation had just closed.
