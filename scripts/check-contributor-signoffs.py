@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -17,6 +18,7 @@ from pathlib import Path
 
 FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
 IDENTITY = re.compile(r"^(.+?)\s+<([^<>\s]+@[^<>\s]+)>$")
+ATTESTATION_PATH = ".github/dco-historical-attestations.json"
 
 
 class SignoffError(RuntimeError):
@@ -57,11 +59,79 @@ def parsed_trailers(message: str, cwd: Path | None = None) -> list[tuple[str, st
     return trailers
 
 
-def check_commit(commit: str, cwd: Path | None = None) -> None:
+def git_succeeds(*args: str, cwd: Path | None = None) -> bool:
+    result = subprocess.run(
+        ["git", *args],
+        cwd=cwd,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    return result.returncode == 0
+
+
+class Attestations:
+    """Owner attestation for specific historical commits that predate the gate.
+
+    Only exact, immutable commit IDs qualify. Each must also be an ancestor of a
+    recorded boundary commit and be authored by a recorded owner identity, so an
+    attestation can never cover new work or another contributor's commits.
+    """
+
+    def __init__(self, commits: set[str], authors: set[str], boundaries: list[str]) -> None:
+        self.commits = commits
+        self.authors = authors
+        self.boundaries = boundaries
+
+
+def load_attestations(head: str, cwd: Path | None = None) -> Attestations | None:
+    if not git_succeeds("cat-file", "-e", f"{head}:{ATTESTATION_PATH}", cwd=cwd):
+        return None
+    try:
+        data = json.loads(run_git("show", f"{head}:{ATTESTATION_PATH}", cwd=cwd))
+    except json.JSONDecodeError as error:
+        raise SignoffError(f"{ATTESTATION_PATH} is not valid JSON: {error}") from error
+    if not isinstance(data, dict) or data.get("version") != 1:
+        raise SignoffError(f"{ATTESTATION_PATH} must be a version 1 object")
+    commits = data.get("commits")
+    boundaries = data.get("boundaries")
+    authors = data.get("attested_authors")
+    for label, values in (("commits", commits), ("boundaries", boundaries)):
+        if not isinstance(values, list) or not values:
+            raise SignoffError(f"{ATTESTATION_PATH} {label} must be a non-empty list")
+        for value in values:
+            if not isinstance(value, str) or not FULL_SHA.fullmatch(value):
+                raise SignoffError(f"{ATTESTATION_PATH} {label} entries must be lowercase full commit IDs")
+    if len(set(commits)) != len(commits):
+        raise SignoffError(f"{ATTESTATION_PATH} lists a commit more than once")
+    if not isinstance(authors, list) or not authors:
+        raise SignoffError(f"{ATTESTATION_PATH} attested_authors must be a non-empty list")
+    for boundary in boundaries:
+        run_git("cat-file", "-e", f"{boundary}^{{commit}}", cwd=cwd)
+    return Attestations(
+        set(commits), {normalize_identity(author) for author in authors}, list(boundaries)
+    )
+
+
+def is_attested(commit: str, attestations: Attestations | None, author: str, cwd: Path | None = None) -> bool:
+    if attestations is None or commit not in attestations.commits:
+        return False
+    if author not in attestations.authors:
+        return False
+    return any(
+        git_succeeds("merge-base", "--is-ancestor", commit, boundary, cwd=cwd)
+        for boundary in attestations.boundaries
+    )
+
+
+def check_commit(commit: str, cwd: Path | None = None, attestations: Attestations | None = None) -> None:
     author_fields = run_git("show", "-s", "--format=%an%x00%ae", commit, cwd=cwd).rstrip("\n").split("\0")
     if len(author_fields) != 2:
         raise SignoffError(f"cannot resolve author identity for {commit}")
-    required = {normalize_identity(f"{author_fields[0]} <{author_fields[1]}>")}
+    author = normalize_identity(f"{author_fields[0]} <{author_fields[1]}>")
+    if is_attested(commit, attestations, author, cwd=cwd):
+        return
+    required = {author}
 
     message = run_git("show", "-s", "--format=%B", commit, cwd=cwd)
     trailers = parsed_trailers(message, cwd=cwd)
@@ -88,8 +158,9 @@ def check_range(base: str, head: str, cwd: Path | None = None) -> int:
     commits = [line for line in run_git("rev-list", "--reverse", f"{base}..{head}", cwd=cwd).splitlines() if line]
     if not commits:
         raise SignoffError("contribution range contains no commits")
+    attestations = load_attestations(head, cwd=cwd)
     for commit in commits:
-        check_commit(commit, cwd=cwd)
+        check_commit(commit, cwd=cwd, attestations=attestations)
     return len(commits)
 
 
@@ -118,8 +189,60 @@ def self_test() -> None:
         try:
             check_range(good, bad, cwd=root)
         except SignoffError:
-            return
-        raise SignoffError("unsigned self-test commit was accepted")
+            pass
+        else:
+            raise SignoffError("unsigned self-test commit was accepted")
+
+        def commit_attestation(commits: list[str], authors: list[str], boundaries: list[str]) -> str:
+            manifest = root / ATTESTATION_PATH
+            manifest.parent.mkdir(parents=True, exist_ok=True)
+            manifest.write_text(
+                json.dumps(
+                    {
+                        "version": 1,
+                        "attested_authors": authors,
+                        "boundaries": boundaries,
+                        "commits": commits,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            run_git("add", ATTESTATION_PATH, cwd=root)
+            run_git(
+                "commit",
+                "-m",
+                "attest\n\nSigned-off-by: Contributor <contributor@example.invalid>",
+                cwd=root,
+            )
+            return run_git("rev-parse", "HEAD", cwd=root).strip()
+
+        def rejected(head: str, message: str) -> None:
+            try:
+                check_range(good, head, cwd=root)
+            except SignoffError:
+                return
+            raise SignoffError(message)
+
+        owner = ["Contributor <contributor@example.invalid>"]
+        attested = commit_attestation([bad], owner, [bad])
+        if check_range(good, attested, cwd=root) != 2:
+            raise SignoffError("attested historical commit was not accepted")
+
+        # The commit after the attestation is new work and is never covered.
+        run_git("commit", "--allow-empty", "-m", "new unsigned work", cwd=root)
+        new_unsigned = run_git("rev-parse", "HEAD", cwd=root).strip()
+        rejected(new_unsigned, "unsigned commit newer than the attestation boundary was accepted")
+
+        run_git("reset", "--hard", bad, cwd=root)
+        rejected(
+            commit_attestation([bad], owner, [good]),
+            "attestation outside every recorded boundary was accepted",
+        )
+        run_git("reset", "--hard", bad, cwd=root)
+        rejected(
+            commit_attestation([bad], ["Someone Else <else@example.invalid>"], [bad]),
+            "attestation for a commit by an unrecorded author was accepted",
+        )
 
 
 def main() -> int:
