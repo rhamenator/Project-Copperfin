@@ -62,7 +62,20 @@ were affected. All 710 are authored under the owner's identities.
 ```sh
 python3 scripts/check-contributor-signoffs.py --self-test
 python3 scripts/check-contributor-signoffs.py --base <base-sha> --head <head-sha>   # manifest read from <base-sha>
-git log --format=%H <boundary> | grep -c -F -f <(python3 -c "import json;print('\n'.join(json.load(open('.github/dco-historical-attestations.json'))['commits']))")
+python3 - <<'PY'
+# Every attested commit must be unique, authored by a recorded identity, and an
+# ancestor of at least one recorded boundary.
+import json, subprocess
+m = json.load(open(".github/dco-historical-attestations.json"))
+git = lambda *a: subprocess.run(["git", *a], capture_output=True, text=True)
+assert len(set(m["commits"])) == len(m["commits"]), "duplicate commit IDs"
+authors = set(m["attested_authors"])
+for c in m["commits"]:
+    who = git("show", "-s", "--format=%an <%ae>", c).stdout.strip()
+    assert who in authors, (c, who)
+    assert any(git("merge-base", "--is-ancestor", c, b).returncode == 0 for b in m["boundaries"]), c
+print(f"{len(m['commits'])} attested commits verified against {len(m['boundaries'])} boundaries")
+PY
 ```
 
 Any change to the manifest is visible in review and is subject to the same
