@@ -5816,6 +5816,11 @@ copperfin_add_test(test_prg_engine_csv_whitespace cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
+copperfin_add_test(test_prg_engine_csv_numeric_scale cf_xbase_runtime
+    test_prg_engine_csv_numeric_scale.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_prg_engine_unterminated_literals cf_xbase_runtime
     test_prg_engine_unterminated_literals.cpp
     prg_engine_test_support.cpp
