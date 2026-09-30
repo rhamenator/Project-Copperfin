@@ -171,10 +171,12 @@ evaluation rather than statement dispatch.
 ### 2. Session/task shutdown-cleanup — `IN PROGRESS`
 
 The original ten-item set has six closed slices (#6183, #6193, #6195,
-#6196, #6198, and #6263) plus #6192, which closed with cluster 1. Four
-issues remain open: #6194 (selectable VFP9/Copperfin shutdown modes), #6197
-(scoped `CLOSE`), #6199 (`ON SHUTDOWN`), and #6454 (objects created by
-`Destroy` during `QUIT`). Directly adjacent to the #6453
+#6196, #6198, and #6263) plus #6192, which closed with cluster 1, and
+#6454 (objects created by `Destroy` during `QUIT` are now released to a fixed
+point, as installed VFP9 does; `RQ-CF-PRG-QUIT-DESTROY-OBJECTS-001`) and #6197
+(scoped `CLOSE`, closed on GitHub). Two issues remain open: #6194 (selectable
+VFP9/Copperfin shutdown modes) and #6199 (`ON SHUTDOWN`). Directly adjacent
+to the #6453
 `cleanup_runtime_resources_for_shutdown()`/`perform_quit()` work already
 done.
 
