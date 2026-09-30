@@ -582,7 +582,15 @@ resolved as filesystem designators. They overlap cluster 6 when the command is
 #6580, #6581, and #6595, but should be investigated through the shared
 command-operand parser and path resolver.
 
-### 33. PRG lexical admission and recovery — `NOT STARTED`
+### 33. PRG lexical admission and recovery — `IN PROGRESS`
+
+**Started 2026-09-30:** the runtime expression parser now rejects unterminated
+string, bracket and brace literals with a localized, catchable error before the
+statement executes (#6509, `RQ-CF-PRG-LITERAL-TERMINATION-001`; installed VFP9
+rejects all four forms). #6509 stays open for its remaining acceptance
+criterion: the static-analysis / package source-validation lane does not yet
+flag an unterminated literal, and doing so needs a lexer that honors comments,
+`TEXT` blocks and line continuations.
 
 #6509 (unterminated literals executing), #5729 (missing include ignored),
 #5730 (unterminated header conditional removing a parent PRG), and #5731
