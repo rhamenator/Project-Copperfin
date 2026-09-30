@@ -1231,6 +1231,7 @@
   "Runtime.Prg.Expression.Error.UnterminatedStringLiteral": "Unterminated string literal: a closing quote is missing",
   "Runtime.Prg.Expression.Error.UnterminatedBracketLiteral": "Unterminated bracket literal: a closing ] is missing",
   "Runtime.Prg.Expression.Error.UnterminatedBraceLiteral": "Unterminated brace literal: a closing } is missing",
+  "Runtime.Prg.Expression.Error.InvalidPathOrFileName": "Invalid path or file name.",
   "Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch": "Operator/operand type mismatch.",
   "Runtime.Prg.Expression.Error.UserRoutineAbortedExecution": "User-defined routine call aborted the current execution stack during expression evaluation",
   "Runtime.Prg.Expression.Error.UserRoutineEnteredEventLoop": "User-defined routine call cannot enter READ EVENTS during expression evaluation",

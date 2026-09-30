@@ -3,6 +3,8 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/localization/localization.h"
+#include "../src/runtime/prg_compatibility_error.h"
 #include "../src/runtime/prg_engine_path_functions.h"
 #include "prg_engine_test_support.h"
 
@@ -10,6 +12,9 @@
 #include <filesystem>
 #include <iostream>
 #include <optional>
+#include <stdexcept>
+#include <string>
+#include <vector>
 #include <system_error>
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -777,6 +782,135 @@ namespace
                "ADDBS() on a UNC path ending in a forward slash should still append a backslash");
     }
 
+    // Installed VFP9 SP2 (Windows VM COM probes 2026-09-30, retained under
+    // /home/rich/temp/vfp9-probes/path-funcs-6580/): a drive-relative path with no separator
+    // drops its drive designator from the file name (#6581), and a path longer than 259 bytes
+    // raises error 202 "Invalid path or file name." for the JUST*, FORCEEXT, DEFAULTEXT and
+    // FORCEPATH functions but not ADDBS (#6580, #6595).
+    void test_drive_relative_names_and_the_259_byte_path_limit()
+    {
+        const auto call = [](const std::string& function, const std::string& first, const std::string& second = {}) {
+            std::vector<copperfin::runtime::PrgValue> arguments;
+            copperfin::runtime::PrgValue value;
+            value.kind = copperfin::runtime::PrgValueKind::string;
+            value.string_value = first;
+            arguments.push_back(value);
+            if (!second.empty()) {
+                value.string_value = second;
+                arguments.push_back(value);
+            }
+            const auto result = copperfin::runtime::evaluate_path_function(function, arguments, {});
+            return result.has_value() ? result->string_value : std::string{"<no result>"};
+        };
+
+        // Drive-relative: JUSTFNAME/JUSTSTEM no longer leak the drive; controls are unchanged.
+        expect(call("justfname", "C:foo.txt") == "foo.txt", "#6581: JUSTFNAME('C:foo.txt')");
+        expect(call("juststem", "C:foo.txt") == "foo", "#6581: JUSTSTEM('C:foo.txt')");
+        expect(call("justfname", "c:foo.txt") == "foo.txt", "#6581: JUSTFNAME with a lowercase drive");
+        expect(call("juststem", "c:foo.txt") == "foo", "#6581: JUSTSTEM with a lowercase drive");
+        expect(call("justfname", "C:foo") == "foo", "#6581: JUSTFNAME without an extension");
+        expect(call("juststem", "C:foo") == "foo", "#6581: JUSTSTEM without an extension");
+        expect(call("justfname", "C:folder\\foo.txt") == "foo.txt", "#6581: JUSTFNAME control with a folder");
+        expect(call("juststem", "C:folder\\foo.txt") == "foo", "#6581: JUSTSTEM control with a folder");
+        expect(call("justdrive", "C:foo.txt") == "C:", "#6581: JUSTDRIVE control");
+        expect(call("justpath", "C:foo.txt").empty(), "#6581: JUSTPATH control");
+        expect(call("justext", "C:foo.txt") == "txt", "#6581: JUSTEXT control");
+        expect(call("justext", "C:.profile") == "profile",
+               "#6581: drive stripping stays local to JUSTFNAME/JUSTSTEM/FORCEPATH (leading dots are #5916)");
+        expect(call("justfname", "C:").empty(), "#6581: JUSTFNAME('C:') is empty");
+        expect(call("justfname", "foo.txt") == "foo.txt", "#6581: a plain name is unchanged");
+        expect(call("forcepath", "C:foo.txt", "D:\\x") == "D:\\x\\foo.txt", "#6581: FORCEPATH drops the drive of a drive-relative name");
+        expect(call("forceext", "C:foo.txt", "bak") == "C:foo.bak", "#6581: FORCEEXT keeps the drive designator");
+
+        // 259 bytes is accepted; 260 is error 202, counted in bytes.
+        const auto path_of_length = [](std::size_t length) {
+            const std::string tail = "xxxxxxxx.txt";
+            std::string path = "C:\\" + std::string(length - 3U - 1U - 1U - tail.size() - 40U, 'a') + "\\" + std::string(40U, 'b') + "\\" + tail;
+            return path;
+        };
+        const std::string at_limit = path_of_length(259U);
+        const std::string over_limit = path_of_length(260U);
+        expect(at_limit.size() == 259U && over_limit.size() == 260U, "#6580: fixture lengths");
+        // The error carries VFP number 202 directly; its prose is localized, so it is not compared.
+        const auto throws_invalid_path = [&](const std::string& function, const std::string& path, const std::string& second = {}) {
+            try {
+                (void)call(function, path, second);
+            } catch (const copperfin::runtime::PrgCompatibilityError& error) {
+                return error.error_code() == 202;
+            }
+            return false;
+        };
+        for (const std::string function : {"justext", "justpath", "justfname", "juststem", "justdrive"}) {
+            expect(call(function, at_limit) != "<no result>" && !throws_invalid_path(function, at_limit),
+                   "#6580/#6595: " + function + " accepts a 259-byte path");
+            expect(throws_invalid_path(function, over_limit), "#6580/#6595: " + function + " rejects a 260-byte path");
+        }
+        expect(call("justext", at_limit) == "txt", "#6580: JUSTEXT result at 259 bytes");
+        expect(call("justpath", at_limit).size() == 246U, "#6595: JUSTPATH result at 259 bytes");
+        for (const std::string function : {"forceext", "defaultext", "forcepath"}) {
+            const std::string second = function == "forcepath" ? "D:\\x" : "bak";
+            expect(!throws_invalid_path(function, at_limit, second), "#6580: " + function + " accepts a 259-byte path");
+            expect(throws_invalid_path(function, over_limit, second), "#6580: " + function + " rejects a 260-byte path");
+        }
+        expect(call("addbs", over_limit).size() == 261U, "#6580: ADDBS has no path-length limit in VFP9");
+
+        // Bytes, not characters: 130 two-byte UTF-8 characters are 260 bytes.
+        std::string multibyte = "C:\\";
+        for (int index = 0; index < 120; ++index) {
+            multibyte += "\xC3\xA9";
+        }
+        multibyte += ".txt";  // 3 + 240 + 4 = 247 bytes: accepted
+        expect(!throws_invalid_path("justext", multibyte), "#6580: a 247-byte multibyte path is accepted");
+        for (int index = 0; index < 7; ++index) {
+            multibyte += "\xC3\xA9";
+        }
+        multibyte += "xxx";  // 264 bytes but only 137 characters (127 two-byte + 10 ASCII)
+        expect(throws_invalid_path("justext", multibyte), "#6580: the limit counts bytes, not characters");
+    }
+
+    // The 259-byte violation is a catchable runtime error with VFP error number 202.
+    void test_path_limit_error_is_catchable_with_error_202()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_path_limit_error_6580";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+        const fs::path script_path = temp_root / "limit.prg";
+        write_text(
+            script_path,
+            "cPath = 'C:\\' + REPLICATE('a',120) + '\\' + REPLICATE('b',123) + '\\' + 'xxxxxxxx.txt'\n"
+            "nLen = LEN(cPath)\n"
+            "nCode = 0\n"
+            "TRY\n"
+            "cExt = JUSTEXT(cPath)\n"
+            "CATCH TO oErr\n"
+            "nCode = oErr.ErrorNo\n"
+            "cMessage = oErr.Message\n"
+            "ENDTRY\n"
+            "lAfter = .T.\n"
+            "RETURN\n");
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(script_path.string(), temp_root.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6580: the script should finish after catching the error: " + state.message);
+        const auto len = state.globals.find("nlen");
+        const auto code = state.globals.find("ncode");
+        expect(len != state.globals.end() && copperfin::runtime::format_value(len->second) == "260",
+               "#6580: the fixture path is 260 bytes");
+        expect(code != state.globals.end() && copperfin::runtime::format_value(code->second) == "202",
+               "#6580: JUSTEXT over 259 bytes should raise error 202");
+        const auto catalog = copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+        const auto message = state.globals.find("cmessage");
+        expect(message != state.globals.end() &&
+                   copperfin::runtime::format_value(message->second) ==
+                       catalog.translate("Runtime.Prg.Expression.Error.InvalidPathOrFileName"),
+               "#6580: the error text should be the active locale's message");
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
@@ -786,6 +920,8 @@ int main()
     test_fullpath_handles_unavailable_current_directory();
 #endif
     test_addbs_matches_vfp9_trailing_separator_contract();
+    test_drive_relative_names_and_the_259_byte_path_limit();
+    test_path_limit_error_is_catchable_with_error_202();
 
     if (test_failures() != 0)
     {

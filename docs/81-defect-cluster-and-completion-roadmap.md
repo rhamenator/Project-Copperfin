@@ -575,7 +575,9 @@ numbers as unrelated.
 `map_wildcard_destination` are reusable). `APPEND FROM` (#6562), `COPY TO`
 (#6563), `COPY STRUCTURE TO` (#6565), `SAVE TO` (#6567) and `RESTORE FROM`
 (#6568) bare filenames follow in `RQ-CF-PRG-BARE-TABLE-FILE-OPERANDS-001`. Still
-open in this cluster: the `JUST*()` cases.
+open in this cluster: the leading- and trailing-dot cases in #5916. The
+`JUST*()` drive-relative and 259-byte limits (#6580, #6581, #6595) are covered by
+`RQ-CF-PRG-PATH-FUNCTION-LIMITS-001`.
 
 #6562, #6563, #6565, #6567, #6568, #6582, #6583, #6585, #6586, #6587, and
 #6589 all expose the same command-parser seam: documented bare operands or

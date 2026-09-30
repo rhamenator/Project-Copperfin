@@ -1656,6 +1656,7 @@
   "Runtime.Prg.Expression.Error.UnterminatedStringLiteral": "Literal de cadena sin terminar: falta la comilla de cierre",
   "Runtime.Prg.Expression.Error.UnterminatedBracketLiteral": "Literal entre corchetes sin terminar: falta el ] de cierre",
   "Runtime.Prg.Expression.Error.UnterminatedBraceLiteral": "Literal entre llaves sin terminar: falta el } de cierre",
+  "Runtime.Prg.Expression.Error.InvalidPathOrFileName": "Ruta o nombre de archivo no valido.",
   "Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch": "Incompatibilidad de tipo entre operador y operando.",
   "Runtime.Prg.Expression.Error.UserRoutineAbortedExecution": "La llamada a la rutina definida por el usuario aborto la pila de ejecucion actual durante la evaluacion de la expresion",
   "Runtime.Prg.Expression.Error.UserRoutineEnteredEventLoop": "La llamada a la rutina definida por el usuario no puede entrar en READ EVENTS durante la evaluacion de la expresion",
