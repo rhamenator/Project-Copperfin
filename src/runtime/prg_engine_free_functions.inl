@@ -952,7 +952,22 @@
             {
                 return text;
             }
-            return round_decimal_text_to_scale(trim_copy(text), field.decimal_count);
+            std::string rounded = round_decimal_text_to_scale(trim_copy(text), field.decimal_count);
+            // A DBF numeric field drops the leading zero of a fraction when that is what makes it
+            // fit: installed VFP9 stores 0.125 in N(3,2) as .13 and 0.05 as .05, so the zero must not
+            // turn a representable value into a false overflow (N(20,19) 0.1234... as well).
+            if (rounded.size() > field.length)
+            {
+                if (rounded.rfind("0.", 0U) == 0U)
+                {
+                    rounded.erase(0U, 1U);
+                }
+                else if (rounded.rfind("-0.", 0U) == 0U)
+                {
+                    rounded.erase(1U, 1U);
+                }
+            }
+            return rounded;
         }
 
         std::vector<std::string> parse_delimited_text_line(
