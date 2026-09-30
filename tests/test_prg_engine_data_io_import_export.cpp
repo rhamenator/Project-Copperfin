@@ -3146,6 +3146,7 @@ void test_append_from_type_csv_discards_first_line_unconditionally() {
     };
 
     std::string script;
+    std::size_t case_number = 0U;
     for (const Case &c : cases) {
         write_people_dbf(temp_root / (c.name + ".dbf"), {});
         write_text(temp_root / (c.name + ".csv"), c.bytes);
@@ -3153,6 +3154,7 @@ void test_append_from_type_csv_discards_first_line_unconditionally() {
             "#6511/#6591: fixture " + c.name + " must retain its exact bytes");
         script += "USE '" + (temp_root / (c.name + ".dbf")).string() + "'\n";
         script += "APPEND FROM '" + (temp_root / (c.name + ".csv")).string() + "' TYPE CSV FIELDS " + c.fields + "\n";
+        script += "nTally" + std::to_string(case_number++) + " = _TALLY\n";
     }
     script += "RETURN\n";
     const fs::path main_path = temp_root / "append_from_csv_first_line.prg";
@@ -3187,6 +3189,14 @@ void test_append_from_type_csv_discards_first_line_unconditionally() {
                     "#6511/#6591: " + c.name + " row AGE should match VFP9 (got '" +
                         result.table.records[row].values[1U].display_value + "')");
             }
+        }
+        {
+            // VFP9 sets _TALLY to the number of records APPEND FROM added.
+            const auto tally = state.globals.find("ntally" + std::to_string(index));
+            expect(tally != state.globals.end() &&
+                       copperfin::runtime::format_value(tally->second) == std::to_string(c.expected.size()),
+                "#6511/#6591: " + c.name + " should set _TALLY to the appended row count, got " +
+                    (tally == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(tally->second)));
         }
         if (index < append_details.size()) {
             expect(append_details[index].find("(" + std::to_string(c.expected.size()) + " records,") != std::string::npos,

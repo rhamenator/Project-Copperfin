@@ -10317,6 +10317,9 @@
                             cursor->bof = false;
                         }
 
+                        // VFP9 sets _TALLY to the number of records APPEND FROM added
+                        // (0 for a header-only CSV), for CSV/DELIMITED/TAB alike (#6511).
+                        globals["_tally"] = make_number_value(static_cast<double>(appended_count));
                         events.push_back({.category = "runtime.append_from",
                                           .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE DELIMITED)",
                                           .location = statement.location});
@@ -11435,6 +11438,7 @@
                     }
 
                     append_from_command_undo_guard.committed = true;
+                    globals["_tally"] = make_number_value(static_cast<double>(appended_count));
                     events.push_back({.category = "runtime.append_from",
                                       .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE DELIMITED)",
                                       .location = statement.location});

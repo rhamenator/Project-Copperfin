@@ -494,6 +494,7 @@ void test_append_from_csv_discards_first_line_in_selected_sql_result_cursor() {
         script += "SELECT sqlcase" + k + "\n";
         script += "nBefore" + k + " = RECCOUNT()\n";
         script += "APPEND FROM '" + csv_path.string() + "' TYPE CSV\n";
+        script += "nTally" + k + " = _TALLY\n";
         script += "nAfter" + k + " = RECCOUNT()\n";
         script += "GO BOTTOM\n";
         script += "nLastId" + k + " = ID\n";
@@ -529,6 +530,11 @@ void test_append_from_csv_discards_first_line_in_selected_sql_result_cursor() {
         const std::size_t after_rows = static_cast<std::size_t>(std::stoul(copperfin::runtime::format_value(after->second)));
         expect(after_rows - before_rows == cases[index].added_rows,
             "#6511/#6591: " + cases[index].name + " should add exactly the rows VFP9 adds to the SQL/result cursor");
+        const auto tally = state.globals.find("ntally" + k);
+        expect(tally != state.globals.end() &&
+                   copperfin::runtime::format_value(tally->second) == std::to_string(cases[index].added_rows),
+            "#6511/#6591: " + cases[index].name + " should set _TALLY to the appended row count, got " +
+                (tally == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(tally->second)));
         if (cases[index].added_rows > 0U) {
             const auto last_id = state.globals.find("nlastid" + k);
             const auto last_name = state.globals.find("clastname" + k);
