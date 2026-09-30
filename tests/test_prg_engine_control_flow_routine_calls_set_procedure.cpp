@@ -1252,6 +1252,7 @@ void test_cancel_releases_frame_owned_private_native_objects() {
     fs::remove_all(temp_root, ignored);
 }
 
+// Governing requirement: RQ-CF-PRG-QUIT-DESTROY-OBJECTS-001.
 // #6454: an object created by another object's Destroy during QUIT used to be
 // bulk-discarded by cleanup_runtime_resources_for_shutdown() without its own
 // lifecycle, because release_native_objects_for_shutdown() released only the

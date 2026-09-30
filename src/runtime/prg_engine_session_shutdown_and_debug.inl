@@ -276,7 +276,7 @@
             return dispatch_query_unload_for_objects(collect_native_shutdown_order(), location);
         }
 
-        // #6454: a Destroy running during shutdown may create new objects (installed VFP9
+        // RQ-CF-PRG-QUIT-DESTROY-OBJECTS-001 (#6454): a Destroy running during shutdown may create new objects (installed VFP9
         // 09.00.0000.7423 runs Destroy for each of them, chained). Release the roots
         // repeatedly until none that has not been attempted remains, so nothing is left
         // for cleanup_runtime_resources_for_shutdown() to discard without its lifecycle.
