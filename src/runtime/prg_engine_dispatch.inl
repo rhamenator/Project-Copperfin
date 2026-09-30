@@ -10238,15 +10238,18 @@
                             {
                                 continue;
                             }
-                            const std::vector<std::string> values =
-                                parse_delimited_text_line(line, delimited_options, &filtered_target_fields);
-                            if (append_type == "csv" && first_line &&
-                                delimited_values_match_field_names(values, filtered_target_fields))
+                            // #6511/#6591: VFP9 discards the first CSV line unconditionally --
+                            // whether it matches the target field names, is mismatched,
+                            // reordered, BOM-prefixed, blank, or even a data row -- and maps
+                            // the remaining lines to fields by position.
+                            if (append_type == "csv" && first_line)
                             {
                                 first_line = false;
                                 continue;
                             }
                             first_line = false;
+                            const std::vector<std::string> values =
+                                parse_delimited_text_line(line, delimited_options, &filtered_target_fields);
 
                             vfp::DbfRecord appended_record;
                             appended_record.deleted = false;
@@ -10314,6 +10317,9 @@
                             cursor->bof = false;
                         }
 
+                        // VFP9 sets _TALLY to the number of records APPEND FROM added
+                        // (0 for a header-only CSV), for CSV/DELIMITED/TAB alike (#6511).
+                        globals["_tally"] = make_number_value(static_cast<double>(appended_count));
                         events.push_back({.category = "runtime.append_from",
                                           .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE DELIMITED)",
                                           .location = statement.location});
@@ -11356,15 +11362,16 @@
                         {
                             continue;
                         }
-                        const std::vector<std::string> values =
-                            parse_delimited_text_line(line, delimited_options, &target_fields);
-                        if (append_type == "csv" && first_delimited_line &&
-                            delimited_values_match_field_names(values, target_fields))
+                        // #6511/#6591: same rule as local tables; the first CSV line is
+                        // discarded unconditionally, as VFP9 does.
+                        if (append_type == "csv" && first_delimited_line)
                         {
                             first_delimited_line = false;
                             continue;
                         }
                         first_delimited_line = false;
+                        const std::vector<std::string> values =
+                            parse_delimited_text_line(line, delimited_options, &target_fields);
                         const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
                         note_dbf_row_set_change(cursor->source_path);
                         if (!blank_result.ok)
@@ -11431,6 +11438,7 @@
                     }
 
                     append_from_command_undo_guard.committed = true;
+                    globals["_tally"] = make_number_value(static_cast<double>(appended_count));
                     events.push_back({.category = "runtime.append_from",
                                       .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE DELIMITED)",
                                       .location = statement.location});
