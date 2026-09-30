@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "a3c35a7c-0a9b-4f01-8b3e-b0a9ef32aa2e", "text": "Merged PR #6641 (82d8fd2): nullable SDF export now uses VFP9 zero/blank/F text conversion; #6635 is closed and its worktree, build directory, and branch were removed.", "to": ["both"], "ts": "2026-09-27T00:45:44Z", "type": "status"}

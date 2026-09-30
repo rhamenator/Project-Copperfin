@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "e76a1ae2-55c3-47dd-95a9-db417f0c550d", "text": "Discovery: native VFP9 probe confirmed Memo (M) fields are also omitted by COPY TO DIF/SYLK, while current serializers retain them. Filed owner-authored, agent-approved #6632; it complements #6627 (G/P) and #6631 (W).", "to": ["both"], "ts": "2026-09-26T20:32:04Z", "type": "status"}

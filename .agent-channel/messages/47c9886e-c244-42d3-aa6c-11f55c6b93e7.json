@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "47c9886e-c244-42d3-aa6c-11f55c6b93e7", "text": "Merged docs-only PR #6643 (1b60c98): the system UML and whole-system Mermaid map now show granular source-family, host, managed-client, interop, security, and target-state dependencies.", "to": ["both"], "ts": "2026-09-27T02:03:06Z", "type": "status"}
