@@ -968,6 +968,7 @@
                 }
             }
             return rounded;
+        }
 
         // Wipes the value text a buffered record holds before the record is dropped. Table buffering keeps
         // the pre-edit and pending copies of a row in memory, so a value superseded by REPLACE ... WITH
