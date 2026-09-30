@@ -21,6 +21,11 @@ $pinnedVersion = "3.12"
 $pinnedArchiveName = "nsis-$pinnedVersion.zip"
 $pinnedArchiveUri = "https://downloads.sourceforge.net/nsis/$pinnedArchiveName"
 $pinnedArchiveSha256 = "56581f90db321581c5381193d796fffcf2d24b2f8fed2160a6c6a3baa67f2c4f"
+# SourceForge serves its HTML mirror-picker page (not the archive) to browser-like
+# User-Agents, and Invoke-WebRequest's default "Mozilla/5.0 (...) PowerShell/x"
+# counts as one. A non-browser agent gets the archive directly. The pinned SHA-256
+# below is still what decides whether the download is trusted. See issue #6518.
+$pinnedArchiveUserAgent = "curl/8.5.0"
 $pinnedArchiveRootName = "nsis-$pinnedVersion"
 
 $ambientRoot = "C:\Program Files (x86)\NSIS"
@@ -79,7 +84,8 @@ $pinnedArchiveAvailable = $false
 $pinnedArchiveDownloaded = $false
 try {
     Invoke-WithRetry -Description "Checksum-pinned portable NSIS download" -Action {
-        Invoke-WebRequest -Uri $pinnedArchiveUri -OutFile $fallbackArchive -MaximumRedirection 5
+        Invoke-WebRequest -Uri $pinnedArchiveUri -OutFile $fallbackArchive -MaximumRedirection 5 `
+            -UserAgent $pinnedArchiveUserAgent
     }
     $pinnedArchiveDownloaded = $true
 }
@@ -96,7 +102,12 @@ if ($pinnedArchiveDownloaded) {
     # ($ErrorActionPreference = 'Stop').
     $archiveHash = (Get-FileHash -LiteralPath $fallbackArchive -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($archiveHash -ne $pinnedArchiveSha256) {
-        throw "NSIS archive SHA-256 mismatch: expected $pinnedArchiveSha256, got $archiveHash. " +
+        # Say what was actually received: an HTML page (a mirror interstitial) is a very
+        # different situation from a real archive with the wrong bytes. Both stay fatal.
+        $leadingBytes = [System.IO.File]::ReadAllBytes($fallbackArchive) | Select-Object -First 2
+        $isZip = ($leadingBytes.Count -eq 2 -and $leadingBytes[0] -eq 0x50 -and $leadingBytes[1] -eq 0x4B)
+        $received = if ($isZip) { "a ZIP archive with unexpected contents" } else { "a non-ZIP payload (likely an HTML page)" }
+        throw "NSIS archive SHA-256 mismatch: expected $pinnedArchiveSha256, got $archiveHash ($received). " +
             "Refusing to fall back to an unverified source for what looks like a tampered or " +
             "corrupted download."
     }
