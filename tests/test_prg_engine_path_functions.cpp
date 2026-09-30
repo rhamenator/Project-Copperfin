@@ -3,6 +3,8 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/localization/localization.h"
+#include "../src/runtime/prg_compatibility_error.h"
 #include "../src/runtime/prg_engine_path_functions.h"
 #include "prg_engine_test_support.h"
 
@@ -813,6 +815,8 @@ namespace
         expect(call("justdrive", "C:foo.txt") == "C:", "#6581: JUSTDRIVE control");
         expect(call("justpath", "C:foo.txt").empty(), "#6581: JUSTPATH control");
         expect(call("justext", "C:foo.txt") == "txt", "#6581: JUSTEXT control");
+        expect(call("justext", "C:.profile") == "profile",
+               "#6581: drive stripping stays local to JUSTFNAME/JUSTSTEM/FORCEPATH (leading dots are #5916)");
         expect(call("justfname", "C:").empty(), "#6581: JUSTFNAME('C:') is empty");
         expect(call("justfname", "foo.txt") == "foo.txt", "#6581: a plain name is unchanged");
         expect(call("forcepath", "C:foo.txt", "D:\\x") == "D:\\x\\foo.txt", "#6581: FORCEPATH drops the drive of a drive-relative name");
@@ -827,11 +831,12 @@ namespace
         const std::string at_limit = path_of_length(259U);
         const std::string over_limit = path_of_length(260U);
         expect(at_limit.size() == 259U && over_limit.size() == 260U, "#6580: fixture lengths");
+        // The error carries VFP number 202 directly; its prose is localized, so it is not compared.
         const auto throws_invalid_path = [&](const std::string& function, const std::string& path, const std::string& second = {}) {
             try {
                 (void)call(function, path, second);
-            } catch (const std::runtime_error& error) {
-                return std::string(error.what()).find("Invalid path or file name") != std::string::npos;
+            } catch (const copperfin::runtime::PrgCompatibilityError& error) {
+                return error.error_code() == 202;
             }
             return false;
         };
@@ -859,7 +864,7 @@ namespace
         for (int index = 0; index < 7; ++index) {
             multibyte += "\xC3\xA9";
         }
-        multibyte += "xxx";  // 247 + 14 + 3 = 264 bytes but only 246 characters
+        multibyte += "xxx";  // 264 bytes but only 137 characters (127 two-byte + 10 ASCII)
         expect(throws_invalid_path("justext", multibyte), "#6580: the limit counts bytes, not characters");
     }
 
@@ -881,6 +886,7 @@ namespace
             "cExt = JUSTEXT(cPath)\n"
             "CATCH TO oErr\n"
             "nCode = oErr.ErrorNo\n"
+            "cMessage = oErr.Message\n"
             "ENDTRY\n"
             "lAfter = .T.\n"
             "RETURN\n");
@@ -894,6 +900,14 @@ namespace
                "#6580: the fixture path is 260 bytes");
         expect(code != state.globals.end() && copperfin::runtime::format_value(code->second) == "202",
                "#6580: JUSTEXT over 259 bytes should raise error 202");
+        const auto catalog = copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+        const auto message = state.globals.find("cmessage");
+        expect(message != state.globals.end() &&
+                   copperfin::runtime::format_value(message->second) ==
+                       catalog.translate("Runtime.Prg.Expression.Error.InvalidPathOrFileName"),
+               "#6580: the error text should be the active locale's message");
         fs::remove_all(temp_root, ignored);
     }
 

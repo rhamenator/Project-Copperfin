@@ -6,12 +6,12 @@
 
 #include "copperfin/platform/path.h"
 #include "localized_text.h"
+#include "prg_compatibility_error.h"
 #include "prg_engine_helpers.h"
 
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
-#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -191,10 +191,18 @@ std::string portable_full_path(const std::string& raw_path, const std::string& d
 // bytes of the first argument, not characters.
 constexpr std::size_t kMaximumPathFunctionBytes = 259U;
 
+// A drive-relative path with no separator ("C:foo.txt") carries its drive designator outside the
+// file name: JUSTFNAME, JUSTSTEM and FORCEPATH work on what follows it (#6581).
+std::string without_drive_designator(const std::string& path) {
+    const bool drive_relative =
+        path.size() >= 2U && std::isalpha(static_cast<unsigned char>(path[0])) != 0 && path[1] == ':';
+    return drive_relative ? path.substr(2U) : path;
+}
+
 const std::string& checked_path_argument(const std::vector<PrgValue>& arguments, std::string& storage) {
     storage = value_as_string(arguments[0]);
     if (storage.size() > kMaximumPathFunctionBytes) {
-        throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.InvalidPathOrFileName"));
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidPathOrFileName"), 202);
     }
     return storage;
 }
@@ -213,13 +221,13 @@ std::optional<PrgValue> evaluate_path_function(
         return make_string_value(default_directory);
     }
     if (function == "justfname" && !arguments.empty()) {
-        return make_string_value(portable_path_filename(checked_path_argument(arguments, checked_path)));
+        return make_string_value(portable_path_filename(without_drive_designator(checked_path_argument(arguments, checked_path))));
     }
     if (function == "justpath" && !arguments.empty()) {
         return make_string_value(portable_path_parent(checked_path_argument(arguments, checked_path)));
     }
     if (function == "juststem" && !arguments.empty()) {
-        return make_string_value(portable_path_stem(checked_path_argument(arguments, checked_path)));
+        return make_string_value(portable_path_stem(without_drive_designator(checked_path_argument(arguments, checked_path))));
     }
     if (function == "justext" && !arguments.empty()) {
         return make_string_value(portable_path_extension(checked_path_argument(arguments, checked_path)));
@@ -231,7 +239,7 @@ std::optional<PrgValue> evaluate_path_function(
         return make_string_value(portable_force_extension(checked_path_argument(arguments, checked_path), value_as_string(arguments[1])));
     }
     if (function == "forcepath" && arguments.size() >= 2U) {
-        return make_string_value(portable_force_path(checked_path_argument(arguments, checked_path), value_as_string(arguments[1])));
+        return make_string_value(portable_force_path(without_drive_designator(checked_path_argument(arguments, checked_path)), value_as_string(arguments[1])));
     }
     if (function == "defaultext" && arguments.size() >= 2U) {
         const std::string path = checked_path_argument(arguments, checked_path);

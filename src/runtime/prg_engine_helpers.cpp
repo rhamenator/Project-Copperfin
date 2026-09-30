@@ -1290,14 +1290,7 @@ std::string portable_path_parent(const std::string& path) {
 
 std::string portable_path_filename(const std::string& path) {
     const std::size_t separator = portable_path_separator_position(path);
-    if (separator == std::string::npos) {
-        // A drive-relative path with no separator ("C:foo.txt") carries its drive designator
-        // outside the file name (#6581).
-        const bool drive_relative =
-            path.size() >= 2U && std::isalpha(static_cast<unsigned char>(path[0])) != 0 && path[1] == ':';
-        return drive_relative ? path.substr(2U) : path;
-    }
-    return path.substr(separator + 1U);
+    return separator == std::string::npos ? path : path.substr(separator + 1U);
 }
 
 std::string portable_path_extension(const std::string& path) {
