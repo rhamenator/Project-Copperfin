@@ -119,6 +119,7 @@ int main() {
     test_copy_to_predicate_closing_source_under_on_error_resume();
     test_cancel_releases_frame_owned_native_objects();
     test_cancel_releases_frame_owned_private_native_objects();
+    test_objects_created_by_destroy_during_quit_are_released();
     test_retry_releases_frame_owned_native_objects();
     test_resume_releases_frame_owned_native_objects();
     test_elseif_predicate_resumption_review_gaps();
