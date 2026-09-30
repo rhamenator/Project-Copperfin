@@ -166,6 +166,11 @@ void test_numeric_text_rounds_to_the_field_scale() {
         cases.push_back({type, "F", "(3,0)", "1000", ""});
         cases.push_back({type, "F", "(5,2)", "999.99", ""});
     }
+    // #6572, the issue's exact fixture: one over-wide row in the middle rejects the WHOLE import and
+    // rolls it back, so not even the valid first row (999) is appended. VFP9 would silently store
+    // 999, 0, 0, 0, 0, 2; the owner decision (2026-09-30) is to keep rejecting instead.
+    cases.push_back({"CSV", "N", "(3,0)", "999\r\n1000\r\n-999\r\n-1000\r\n0\r\n1.9", ""});
+    cases.push_back({"DELIMITED", "N", "(3,0)", "999\r\n1000\r\n-999\r\n-1000\r\n0\r\n1.9", ""});
     run_cases(cases);
 }
 
