@@ -1005,6 +1005,129 @@
             return values;
         }
 
+        // RQ-CF-PRG-FILE-COMMAND-OPERANDS-001 (#6582, #6589): installed VFP9 treats an
+        // unquoted, unparenthesized file-command operand as a literal filename (`ERASE cF`
+        // erases the file named "cF", not the file named by variable cF), while a
+        // parenthesized name expression, a function call, a macro, a quoted or bracketed
+        // string, or any compound expression is still evaluated.
+        bool is_bare_file_command_operand(const std::string &operand)
+        {
+            const std::string text = trim_copy(operand);
+            if (text.empty() || text == "?")
+            {
+                return false;
+            }
+            for (const unsigned char ch : text)
+            {
+                if (ch >= 0x80U || std::isalnum(ch) != 0)
+                {
+                    continue;
+                }
+                switch (ch)
+                {
+                case '_': case '.': case '-': case '\\': case '/': case ':':
+                case '*': case '?': case '$': case '~': case '#': case '@':
+                case '%': case '!':
+                    break;
+                default:
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        bool file_pattern_has_wildcard(const std::string &filename)
+        {
+            return filename.find_first_of("*?") != std::string::npos;
+        }
+
+        // Case-insensitive DOS-style wildcard match: `*` matches any run, `?` matches one
+        // character, and, as on Windows, a trailing `.*` also matches names without a dot.
+        bool file_wildcard_matches(const std::string &pattern, const std::string &name)
+        {
+            const auto fold = [](const char ch) { return static_cast<char>(std::tolower(static_cast<unsigned char>(ch))); };
+            const std::function<bool(std::size_t, std::size_t)> match = [&](std::size_t p, std::size_t n) -> bool
+            {
+                while (p < pattern.size())
+                {
+                    const char pc = pattern[p];
+                    if (pc == '*')
+                    {
+                        while (p < pattern.size() && pattern[p] == '*')
+                        {
+                            ++p;
+                        }
+                        if (p == pattern.size())
+                        {
+                            return true;
+                        }
+                        for (std::size_t skip = n; skip <= name.size(); ++skip)
+                        {
+                            if (match(p, skip))
+                            {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                    if (n >= name.size())
+                    {
+                        return false;
+                    }
+                    if (pc != '?' && fold(pc) != fold(name[n]))
+                    {
+                        return false;
+                    }
+                    ++p;
+                    ++n;
+                }
+                return n == name.size();
+            };
+            if (match(0U, 0U))
+            {
+                return true;
+            }
+            if (pattern.size() >= 2U && pattern.compare(pattern.size() - 2U, 2U, ".*") == 0 &&
+                name.find('.') == std::string::npos)
+            {
+                return file_wildcard_matches(pattern.substr(0U, pattern.size() - 2U), name);
+            }
+            return false;
+        }
+
+        // Regular files in the pattern's directory whose name matches its filename part,
+        // sorted by name. Wildcards are expanded in the filename only. A missing directory
+        // or no match yields an empty list, never an error.
+        std::vector<std::filesystem::path> expand_file_wildcard(const std::filesystem::path &pattern_path)
+        {
+            std::vector<std::filesystem::path> matches;
+            const std::string pattern = copperfin::platform::path_to_utf8_string(pattern_path.filename());
+            std::error_code ec;
+            std::filesystem::directory_iterator iterator(pattern_path.parent_path(), ec);
+            if (ec)
+            {
+                return matches;
+            }
+            for (const std::filesystem::directory_iterator end; iterator != end; iterator.increment(ec))
+            {
+                if (ec)
+                {
+                    break;
+                }
+                std::error_code status_ec;
+                if (!iterator->is_regular_file(status_ec))
+                {
+                    continue;
+                }
+                if (file_wildcard_matches(pattern, copperfin::platform::path_to_utf8_string(iterator->path().filename())))
+                {
+                    matches.push_back(iterator->path());
+                }
+            }
+            std::sort(matches.begin(), matches.end());
+            return matches;
+        }
+
         std::vector<std::string> split_delimited_text_records(
             const std::string &contents,
             const DelimitedTextOptions &options,

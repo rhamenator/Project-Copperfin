@@ -5801,6 +5801,11 @@ copperfin_add_test(test_prg_engine_macro_expressions cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
+copperfin_add_test(test_prg_engine_file_command_operands cf_xbase_runtime
+    test_prg_engine_file_command_operands.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_prg_engine_json_facade cf_xbase_runtime
     test_prg_engine_json_facade.cpp
     prg_engine_test_support.cpp

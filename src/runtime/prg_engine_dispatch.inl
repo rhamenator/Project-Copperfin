@@ -7055,9 +7055,15 @@
             case StatementKind::erase_command:
             {
                 // ERASE <file> / DELETE FILE <file>
-                const auto path_value = resumed_erase_path_value.has_value()
-                                            ? resumed_erase_path_value
-                                            : evaluate_resumable_expression(frame, statement);
+                // RQ-CF-PRG-FILE-COMMAND-OPERANDS-001 (#6582, #6589): a bare operand is a literal
+                // filename, and * / ? in the filename expand to every matching file.
+                std::optional<PrgValue> path_value = resumed_erase_path_value;
+                if (!path_value.has_value())
+                {
+                    path_value = is_bare_file_command_operand(statement.expression)
+                                     ? std::optional<PrgValue>(make_string_value(trim_copy(statement.expression)))
+                                     : evaluate_resumable_expression(frame, statement);
+                }
                 if (!path_value.has_value())
                 {
                     return {};
@@ -7068,8 +7074,41 @@
                 {
                     fpath = copperfin::platform::path_from_utf8_string(current_default_directory()) / fpath;
                 }
+                if (file_pattern_has_wildcard(copperfin::platform::path_to_utf8_string(fpath.filename())))
+                {
+                    std::error_code first_error;
+                    std::filesystem::path first_error_path;
+                    for (const std::filesystem::path &match : expand_file_wildcard(fpath))
+                    {
+                        std::error_code remove_ec;
+                        std::filesystem::remove(match, remove_ec);
+                        if (remove_ec)
+                        {
+                            if (!first_error)
+                            {
+                                first_error = remove_ec;
+                                first_error_path = match;
+                            }
+                            continue;
+                        }
+                        events.push_back({.category = "runtime.erase",
+                                          .detail = copperfin::platform::path_to_utf8_string(match),
+                                          .location = statement.location});
+                    }
+                    if (first_error)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.EraseFailed",
+                            {{"errorMessage", first_error.message()},
+                             {"path", copperfin::platform::path_to_utf8_string(first_error_path)}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    return {};
+                }
                 std::error_code ec;
-                std::filesystem::remove(fpath, ec);
+                const bool removed = std::filesystem::remove(fpath, ec);
                 if (ec)
                 {
                     last_error_message = runtime_text(
@@ -7080,9 +7119,14 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                events.push_back({.category = "runtime.erase",
-                                  .detail = copperfin::platform::path_to_utf8_string(fpath),
-                                  .location = statement.location});
+                // Installed VFP9 does not treat a file that is not there as an error, and
+                // nothing was erased, so no erase is reported for it.
+                if (removed)
+                {
+                    events.push_back({.category = "runtime.erase",
+                                      .detail = copperfin::platform::path_to_utf8_string(fpath),
+                                      .location = statement.location});
+                }
                 return {};
             }
             case StatementKind::copy_file_command:
