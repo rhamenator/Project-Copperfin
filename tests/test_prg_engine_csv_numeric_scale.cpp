@@ -30,6 +30,7 @@ namespace fs = std::filesystem;
 struct Outcome {
     bool completed;
     std::string count;   // RECCOUNT() after the import, caught so a rejection can be observed
+    std::string rejected;   // "1" when APPEND FROM raised (and was caught), "0" when it succeeded
     std::string value;   // STR(N,12,4) of the first record when one exists
     std::string message;
 };
@@ -62,7 +63,7 @@ Outcome import_one(const fs::path &root, const std::string &name, const std::str
     const auto slurp = [&](const char *file) {
         return fs::exists(dir / file) ? read_text(dir / file) : std::string{};
     };
-    return {state.completed, slurp("count.txt"), slurp("result.txt"), state.message};
+    return {state.completed, slurp("count.txt"), slurp("rejected.txt"), slurp("result.txt"), state.message};
 }
 
 struct Case {
@@ -83,8 +84,11 @@ void run_cases(const std::vector<Case> &cases) {
         const std::string label = "#6573 " + c.type + " " + c.field_type + c.schema + " [" + c.text + "]: ";
         expect(outcome.completed, label + "the script should finish (a rejection is caught): " + outcome.message);
         if (c.expected.empty()) {
+            expect(outcome.rejected == "1",
+                label + "a value still too wide after rounding must be rejected with an error, not silently skipped, got [" + outcome.rejected + "]");
             expect(outcome.count == "0", label + "a value still too wide after rounding must roll back, leaving 0 records, got [" + outcome.count + "]");
         } else {
+            expect(outcome.rejected == "0", label + "the import must succeed without raising, got [" + outcome.rejected + "]");
             expect(outcome.count == "1", label + "the import should append one record, got [" + outcome.count + "]");
             expect(outcome.value == c.expected, label + "expected [" + c.expected + "], got [" + outcome.value + "]");
         }
