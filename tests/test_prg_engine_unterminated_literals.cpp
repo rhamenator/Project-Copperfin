@@ -121,6 +121,12 @@ void test_valid_literal_forms_still_evaluate() {
         "c7 = ''\n"
         "c8 = ''''\n"
         "n9 = LEN('a' + \"b\" + [c])\n"
+        "c10 = {}\n"
+        "c11 = {^2024-01-15}\n"
+        "c12 = {{}}\n"
+        "c13 = {'}'}\n"
+        "c14 = {\"}\"}\n"
+        "c15 = {a{b}c}\n"
         "RETURN\n");
     auto session = copperfin::runtime::PrgRuntimeSession::create(
         make_runtime_session_options(script_path.string(), temp_root.string(), false));
@@ -139,6 +145,14 @@ void test_valid_literal_forms_still_evaluate() {
     check("c7", "");
     check("c8", "'");
     check("n9", "3");
+    // Closed brace literals: simple, nested, and with a quoted brace inside. An
+    // implementation that rejected every brace literal would fail here.
+    check("c10", "{}");
+    check("c11", "{^2024-01-15}");
+    check("c12", "{{}}");
+    check("c13", "{'}'}");
+    check("c14", "{\"}\"}");
+    check("c15", "{a{b}c}");
 
     fs::remove_all(temp_root, ignored);
 }
