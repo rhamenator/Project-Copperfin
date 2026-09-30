@@ -1,4 +1,3 @@
-
 - 2026-09-24: `APPEND FROM ... FOR` now follows VFP9 on every target
   (#6551). FOR was previously ignored entirely on local tables. FOR is
   evaluated once up front on the target's current record (error 1127 if
