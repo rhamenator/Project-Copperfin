@@ -161,17 +161,19 @@ registered and exactly-once-consumable after a failed output assignment.
 proves a task cancelled while genuinely blocked mid explicit `FLOCK()` retry
 leaves no residual shared lock-owner entry, extending #6453's
 release-scoping invariant to the cancelled-while-waiting path -- and, in
-doing so, surfaced a real, newly filed, and *not yet fixed* defect (#6499):
-cancellation observed inside an explicit `FLOCK()`/`RLOCK()` retry loop is
-silently swallowed by `pause_for_lock_retry` (the cancellation bookkeeping
-runs and a `runtime.task.cancelled` event still fires, but the function
-returns `false` exactly like an ordinary retry-budget timeout, so the calling
-script's `RETURN FLOCK()` completes normally with `.F.` instead of halting).
-This differs from the correctly-halting per-statement dispatch loop and
-`SLEEP` cancellation checkpoints. The test documents today's actual behavior
-with an inline citation rather than asserting the not-yet-fixed halt
-semantics, per #6495's direction to file focused defects rather than hide or
-paper over them.
+doing so, surfaced a real defect (#6499, now fixed; governing requirement
+`RQ-CF-PRG-LOCK-RETRY-CANCEL-001`): cancellation observed inside an explicit
+`FLOCK()`/`RLOCK()` retry loop was folded into the ordinary `.F.` that
+contention returns (the cancellation bookkeeping ran and a
+`runtime.task.cancelled` event fired, but `pause_for_lock_retry` returned
+`false` exactly like a retry-budget timeout, so a worker whose last statement
+was `RETURN FLOCK()` completed normally). A cancelled explicit lock attempt now
+faults the statement, so the task ends with an error pause (`CFTASKSTATUS`
+reports `error`), matching the per-statement dispatch checkpoint and `SLEEP`;
+the cancel is observed before each retry, after each wait, on the
+scheduler-yield path, and at the retry-budget boundary. The test now requires
+that halted outcome, and `test_cancellation_during_explicit_rlock_retry_halts_the_task`
+covers `RLOCK()`.
 
 Two more extend the cursor-lock/transaction-state/caught-error/retry
 crossing: `test_state_sequence_retry_after_caught_rollback_succeeds_cleanly`
