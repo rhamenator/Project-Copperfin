@@ -7900,7 +7900,9 @@
 
                 const auto destination_value = resumed_save_memvars_path_value.has_value()
                                                    ? resumed_save_memvars_path_value
-                                                   : evaluate_resumable_expression(frame, statement);
+                                                   : (is_bare_file_command_operand(statement.expression)
+                                                          ? std::optional<PrgValue>(make_string_value(trim_copy(statement.expression)))
+                                                          : evaluate_resumable_expression(frame, statement));
                 if (!destination_value.has_value())
                 {
                     return {};
@@ -8152,7 +8154,9 @@
 
                 const auto source_value = resumed_restore_memvars_path_value.has_value()
                                               ? resumed_restore_memvars_path_value
-                                              : evaluate_resumable_expression(frame, statement);
+                                              : (is_bare_file_command_operand(statement.expression)
+                                                     ? std::optional<PrgValue>(make_string_value(trim_copy(statement.expression)))
+                                                     : evaluate_resumable_expression(frame, statement));
                 if (!source_value.has_value())
                 {
                     return {};
@@ -8492,7 +8496,9 @@
                 const bool is_structure = (statement.identifier == "structure") || is_structure_extended;
                 const auto destination_value = resumed_copy_to_destination_value.has_value()
                                                    ? resumed_copy_to_destination_value
-                                                   : evaluate_resumable_expression(frame, statement);
+                                                   : (is_bare_file_command_operand(statement.expression)
+                                                          ? std::optional<PrgValue>(make_string_value(trim_copy(statement.expression)))
+                                                          : evaluate_resumable_expression(frame, statement));
                 if (!destination_value.has_value())
                 {
                     return {};
@@ -9710,7 +9716,9 @@
                 // Field matching is by name; extra fields in source that do not exist in destination are silently skipped.
                 const auto source_value = resumed_append_from_source_value.has_value()
                                               ? resumed_append_from_source_value
-                                              : evaluate_resumable_expression(frame, statement);
+                                              : (is_bare_file_command_operand(statement.expression)
+                                                     ? std::optional<PrgValue>(make_string_value(trim_copy(statement.expression)))
+                                                     : evaluate_resumable_expression(frame, statement));
                 if (!source_value.has_value())
                 {
                     return {};

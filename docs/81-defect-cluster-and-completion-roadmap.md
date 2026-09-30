@@ -572,8 +572,10 @@ numbers as unrelated.
 (#6583, #6587) and `RENAME` (#6585, #6586) bare filenames and wildcards
 (`RQ-CF-PRG-FILE-COMMAND-OPERANDS-001`; the shared helpers
 `is_bare_file_command_operand`, `expand_file_wildcard` and
-`map_wildcard_destination` are reusable). Still open in this cluster: #6562,
-#6563, #6565, #6567, #6568 and the `JUST*()` cases.
+`map_wildcard_destination` are reusable). `APPEND FROM` (#6562), `COPY TO`
+(#6563), `COPY STRUCTURE TO` (#6565), `SAVE TO` (#6567) and `RESTORE FROM`
+(#6568) bare filenames follow in `RQ-CF-PRG-BARE-TABLE-FILE-OPERANDS-001`. Still
+open in this cluster: the `JUST*()` cases.
 
 #6562, #6563, #6565, #6567, #6568, #6582, #6583, #6585, #6586, #6587, and
 #6589 all expose the same command-parser seam: documented bare operands or
