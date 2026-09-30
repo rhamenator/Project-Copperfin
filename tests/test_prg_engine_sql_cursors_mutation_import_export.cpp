@@ -455,6 +455,103 @@ void test_append_from_json_mutates_selected_sql_result_cursor() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_csv_discards_first_line_in_selected_sql_result_cursor() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_append_from_csv_first_line";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // #6511/#6591: the SQL/result-cursor path must apply the same rule as local
+    // tables: the first CSV line is discarded whatever it contains (VFP9
+    // 09.00.0000.7423 COM results for the same bytes).
+    struct Case {
+        std::string name;
+        std::string bytes;
+        std::size_t added_rows;
+        std::string last_id;    // empty when no rows are added
+        std::string last_name;
+    };
+    const std::string bom = "\xEF\xBB\xBF";
+    const std::vector<Case> cases = {
+        {"bom_header", bom + "ID,NAME,AMOUNT\r\n901,HOTEL,11.00\r\n", 1U, "901", "HOTEL"},
+        {"bom_quoted_header", bom + "\"ID\",\"NAME\",\"AMOUNT\"\r\n901,HOTEL,11.00\r\n", 1U, "901", "HOTEL"},
+        {"mismatched_header", "X,Y,Z\r\n901,HOTEL,11.00\r\n", 1U, "901", "HOTEL"},
+        {"no_header_first_row_lost", "901,HOTEL,11.00\r\n902,INDIA,12.50\r\n", 1U, "902", "INDIA"},
+        {"blank_first_line", "\r\n901,HOTEL,11.00\r\n", 1U, "901", "HOTEL"},
+        {"header_only", "ID,NAME,AMOUNT\r\n", 0U, "", ""},
+        {"bom_without_header", bom + "901,HOTEL,11.00\r\n", 0U, "", ""},
+    };
+
+    std::string script = "nConn = SQLCONNECT('dsn=Northwind')\n";
+    for (std::size_t index = 0U; index < cases.size(); ++index) {
+        const fs::path csv_path = temp_root / (cases[index].name + ".csv");
+        write_text(csv_path.string(), cases[index].bytes);
+        expect(read_text(csv_path.string()) == cases[index].bytes,
+            "#6511/#6591: SQL-result fixture " + cases[index].name + " must retain its exact bytes");
+        const std::string k = std::to_string(index);
+        script += "nExec" + k + " = SQLEXEC(nConn, 'select * from customers', 'sqlcase" + k + "')\n";
+        script += "SELECT sqlcase" + k + "\n";
+        script += "nBefore" + k + " = RECCOUNT()\n";
+        script += "APPEND FROM '" + csv_path.string() + "' TYPE CSV\n";
+        script += "nTally" + k + " = _TALLY\n";
+        script += "nAfter" + k + " = RECCOUNT()\n";
+        script += "GO BOTTOM\n";
+        script += "nLastId" + k + " = ID\n";
+        script += "cLastName" + k + " = NAME\n";
+    }
+    script += "lDisc = SQLDISCONNECT(nConn)\nRETURN\n";
+    const fs::path main_path = temp_root / "sql_append_from_csv_first_line.prg";
+    write_text(main_path, script);
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6511/#6591: SQL-result CSV first-line script should complete: " + state.message);
+
+    std::size_t append_events = 0U;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.append_from") {
+            ++append_events;
+        }
+    }
+    expect(append_events == cases.size(),
+        "#6511/#6591: every SQL-result APPEND FROM TYPE CSV should emit a success event");
+
+    for (std::size_t index = 0U; index < cases.size(); ++index) {
+        const std::string k = std::to_string(index);
+        const auto before = state.globals.find("nbefore" + k);
+        const auto after = state.globals.find("nafter" + k);
+        expect(before != state.globals.end() && after != state.globals.end(),
+            "#6511/#6591: " + cases[index].name + " row counts should be captured");
+        if (before == state.globals.end() || after == state.globals.end()) {
+            continue;
+        }
+        const std::size_t before_rows = static_cast<std::size_t>(std::stoul(copperfin::runtime::format_value(before->second)));
+        const std::size_t after_rows = static_cast<std::size_t>(std::stoul(copperfin::runtime::format_value(after->second)));
+        expect(after_rows - before_rows == cases[index].added_rows,
+            "#6511/#6591: " + cases[index].name + " should add exactly the rows VFP9 adds to the SQL/result cursor");
+        const auto tally = state.globals.find("ntally" + k);
+        expect(tally != state.globals.end() &&
+                   copperfin::runtime::format_value(tally->second) == std::to_string(cases[index].added_rows),
+            "#6511/#6591: " + cases[index].name + " should set _TALLY to the appended row count, got " +
+                (tally == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(tally->second)));
+        if (cases[index].added_rows > 0U) {
+            const auto last_id = state.globals.find("nlastid" + k);
+            const auto last_name = state.globals.find("clastname" + k);
+            expect(last_id != state.globals.end() && last_name != state.globals.end(),
+                "#6511/#6591: " + cases[index].name + " last row values should be captured");
+            if (last_id != state.globals.end() && last_name != state.globals.end()) {
+                expect(copperfin::runtime::format_value(last_id->second) == cases[index].last_id,
+                    "#6511/#6591: " + cases[index].name + " last ID should match VFP9 positional import");
+                expect(copperfin::runtime::format_value(last_name->second) == cases[index].last_name,
+                    "#6511/#6591: " + cases[index].name + " last NAME should match VFP9 positional import");
+            }
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_csv_mutates_selected_sql_result_cursor() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_append_from_csv";

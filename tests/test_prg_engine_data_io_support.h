@@ -125,6 +125,7 @@ void test_sdf_autoincrement_uses_vfp_printable_width();
 void test_sdf_datetime_layout_round_trips_and_blanks_non_vfp_values();
 void test_append_from_type_sdf_blanks_invalid_date_cells();
 void test_copy_to_type_csv_and_delimited_text_rows();
+void test_append_from_type_csv_discards_first_line_unconditionally();
 void test_append_from_type_csv_imports_delimited_rows();
 void test_append_from_csv_and_delimited_preserves_quotes_in_unquoted_fields();
 void test_append_from_type_csv_preserves_enclosed_doubled_quotes();
