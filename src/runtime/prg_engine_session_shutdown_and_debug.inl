@@ -276,14 +276,46 @@
             return dispatch_query_unload_for_objects(collect_native_shutdown_order(), location);
         }
 
+        // #6454: a Destroy running during shutdown may create new objects (installed VFP9
+        // 09.00.0000.7423 runs Destroy for each of them, chained). Release the roots
+        // repeatedly until none that has not been attempted remains, so nothing is left
+        // for cleanup_runtime_resources_for_shutdown() to discard without its lifecycle.
+        // Object handles are never reused, so `attempted` also guarantees a root whose
+        // release fails cannot be retried forever. An adversarial chain where every
+        // Destroy creates another object stops at a fixed bound and reports why.
         void release_native_objects_for_shutdown()
         {
-            for (const int handle : collect_native_shutdown_roots())
+            constexpr std::size_t kMaxShutdownObjectReleases = 1024U;
+            std::set<int> attempted;
+            std::size_t released = 0U;
+            for (;;)
             {
-                const auto found = ole_objects.find(handle);
-                if (found != ole_objects.end())
+                bool attempted_any = false;
+                for (const int handle : collect_native_shutdown_roots())
                 {
+                    if (!attempted.insert(handle).second)
+                    {
+                        continue;
+                    }
+                    const auto found = ole_objects.find(handle);
+                    if (found == ole_objects.end())
+                    {
+                        continue;
+                    }
+                    if (released >= kMaxShutdownObjectReleases)
+                    {
+                        events.push_back({.category = "runtime.shutdown.object_release_limit",
+                                          .detail = "limit=" + std::to_string(kMaxShutdownObjectReleases),
+                                          .location = {}});
+                        return;
+                    }
+                    ++released;
+                    attempted_any = true;
                     (void)release_native_object(found->second, "QUIT");
+                }
+                if (!attempted_any)
+                {
+                    return;
                 }
             }
         }

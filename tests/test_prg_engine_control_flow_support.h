@@ -322,6 +322,7 @@ void test_copy_to_predicate_closing_source_fails_catchably();
 void test_copy_to_predicate_closing_source_under_on_error_resume();
 void test_cancel_releases_frame_owned_native_objects();
 void test_cancel_releases_frame_owned_private_native_objects();
+void test_objects_created_by_destroy_during_quit_are_released();
 void test_retry_releases_frame_owned_native_objects();
 void test_resume_releases_frame_owned_native_objects();
 void test_elseif_predicate_resumption_review_gaps();

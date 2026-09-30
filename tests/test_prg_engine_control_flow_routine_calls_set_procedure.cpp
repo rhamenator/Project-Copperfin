@@ -1252,6 +1252,113 @@ void test_cancel_releases_frame_owned_private_native_objects() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #6454: an object created by another object's Destroy during QUIT used to be
+// bulk-discarded by cleanup_runtime_resources_for_shutdown() without its own
+// lifecycle, because release_native_objects_for_shutdown() released only the
+// roots that existed at one snapshot. Installed VFP9 (09.00.0000.7423) instead
+// runs Destroy for every such object -- the whole chain Maker -> Late -> Late2
+// -- so shutdown must reach a fixed point.
+void test_objects_created_by_destroy_during_quit_are_released() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_quit_destroy_creates_objects_6454";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_script = [&](const std::string &name, const std::string &body) {
+        const fs::path script_path = temp_root / (name + ".prg");
+        write_text(script_path, body);
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(script_path.string(), temp_root.string(), false));
+        return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    };
+    const auto global_text = [](const auto &state, const std::string &name) -> std::string {
+        const auto found = state.globals.find(name);
+        return found == state.globals.end() ? std::string("<missing>") : copperfin::runtime::format_value(found->second);
+    };
+    const auto count_events = [](const auto &state, const std::string &category) {
+        return static_cast<std::size_t>(std::count_if(
+            state.events.begin(), state.events.end(),
+            [&](const copperfin::runtime::RuntimeEvent &event) { return event.category == category; }));
+    };
+
+    // The issue's scenario, extended into a chain (VFP9 result: MLX, each Destroy once).
+    {
+        const auto state = run_script("destroy_chain",
+            "PUBLIC cOrder, maker_destroy_called, late_destroy_called, oRoot, oLate, oLate2\n"
+            "cOrder = ''\n"
+            "maker_destroy_called = .F.\n"
+            "late_destroy_called = .F.\n"
+            "oRoot = CREATEOBJECT('Maker')\n"
+            "QUIT\n"
+            "DEFINE CLASS Maker AS Custom\n"
+            "PROCEDURE Destroy\n"
+            "maker_destroy_called = .T.\n"
+            "cOrder = cOrder + 'M'\n"
+            "oLate = CREATEOBJECT('LateObject')\n"
+            "ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS LateObject AS Custom\n"
+            "PROCEDURE Destroy\n"
+            "late_destroy_called = .T.\n"
+            "cOrder = cOrder + 'L'\n"
+            "oLate2 = CREATEOBJECT('Late2Object')\n"
+            "ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS Late2Object AS Custom\n"
+            "PROCEDURE Destroy\n"
+            "cOrder = cOrder + 'X'\n"
+            "ENDPROC\n"
+            "ENDDEFINE\n");
+        expect(state.completed, "#6454 chain: shutdown should complete cleanly: " + state.message);
+        expect(global_text(state, "maker_destroy_called") == "true", "#6454 chain: Maker.Destroy should run");
+        expect(global_text(state, "late_destroy_called") == "true",
+            "#6454 chain: an object created by Destroy during QUIT must have its own Destroy run");
+        expect(global_text(state, "corder") == "MLX",
+            "#6454 chain: every Destroy should run exactly once in creation order (VFP9: MLX), got: " +
+                global_text(state, "corder"));
+        expect(count_events(state, "prg.object.destroy") == 3U,
+            "#6454 chain: exactly three Destroy dispatches expected, got " +
+                std::to_string(count_events(state, "prg.object.destroy")));
+        for (const std::string &class_name : {std::string("Maker"), std::string("LateObject"), std::string("Late2Object")}) {
+            const auto releases = std::count_if(
+                state.events.begin(), state.events.end(),
+                [&](const copperfin::runtime::RuntimeEvent &event) {
+                    return event.category == "prg.object.release" && event.detail == class_name;
+                });
+            expect(releases == 1,
+                "#6454 chain: " + class_name + " should be released exactly once, got " + std::to_string(releases));
+        }
+        expect(count_events(state, "runtime.shutdown.object_release_limit") == 0U,
+            "#6454 chain: a short chain must not hit the release limit");
+    }
+
+    // Adversarial: every Destroy creates another object. Shutdown must still
+    // terminate deterministically and say why it stopped.
+    {
+        const auto state = run_script("destroy_loop",
+            "PUBLIC nLoops, oRoot, oNext\n"
+            "nLoops = 0\n"
+            "oRoot = CREATEOBJECT('LoopObject')\n"
+            "QUIT\n"
+            "DEFINE CLASS LoopObject AS Custom\n"
+            "PROCEDURE Destroy\n"
+            "nLoops = nLoops + 1\n"
+            "oNext = CREATEOBJECT('LoopObject')\n"
+            "ENDPROC\n"
+            "ENDDEFINE\n");
+        expect(state.completed, "#6454 loop: an unbounded Destroy creation chain must not hang or crash shutdown: " +
+                                    state.message);
+        expect(count_events(state, "runtime.shutdown.object_release_limit") == 1U,
+            "#6454 loop: hitting the bounded release limit should be reported exactly once");
+        const std::string loops = global_text(state, "nloops");
+        expect(loops != "<missing>" && std::stod(loops) >= 100.0 && std::stod(loops) <= 8192.0,
+            "#6454 loop: the chain should run to the bound and no further, got nLoops=" + loops);
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_retry_releases_frame_owned_native_objects() {
     // #6446: RETRY previously unwound intervening frames back to the
     // saved fault frame with a manual restore_private_declarations() +
