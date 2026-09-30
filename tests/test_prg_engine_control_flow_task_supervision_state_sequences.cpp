@@ -139,22 +139,19 @@ void test_state_sequence_await_retry_after_cancellation_reuses_still_registered_
 // (`pause_for_lock_retry`) to a ~820ms window so a `SLEEP 300` cancellation
 // trigger lands comfortably inside genuine contention instead of racing a
 // ~36ms default window.
-// Expected (CURRENT, documented) result: this sequence surfaced a real,
-// newly filed defect (#6499): cancellation observed inside an *explicit*
-// FLOCK()/RLOCK() retry loop is silently swallowed -- `pause_for_lock_retry`
-// runs the cancellation bookkeeping (a `runtime.task.cancelled` event still
-// fires) but returns `false` exactly like an ordinary retry-budget timeout,
-// so the calling script's `RETURN FLOCK()` completes *normally* with `.F.`
-// instead of halting with an error pause. This test therefore asserts
-// today's actual behavior (the worker's task reports AWAIT-completed, not
-// cancelled) rather than the not-yet-fixed halt semantics, per #6495's
-// direction to file focused defects rather than hide or paper over them.
-// The retry/no-timeout/no-residual-ownership assertions below remain
-// meaningful and correct regardless of #6499: they prove the worker
-// genuinely contended, that cancellation still preempted the C++-level
-// retry loop before natural exhaustion, and that -- because the swallowed
-// cancellation means the worker never actually acquired the lock -- no
-// stale ownership is left behind for a later intruder to trip over.
+// Governing requirement: RQ-CF-PRG-LOCK-RETRY-CANCEL-001.
+// Expected result: this sequence surfaced a real defect (#6499) that is now
+// fixed: cancellation observed inside an *explicit* FLOCK()/RLOCK() retry loop
+// used to be folded into the ordinary "could not acquire" `.F.`, so the calling
+// script's `RETURN FLOCK()` completed *normally* even though the cancellation
+// bookkeeping (a `runtime.task.cancelled` event) had fired. The cancelled
+// FLOCK() now faults, so the task ends with an error pause (CFTASKSTATUS
+// reports "error") exactly like the per-statement checkpoint and SLEEP.
+// The retry/no-timeout/no-residual-ownership assertions below prove the worker
+// genuinely contended, that cancellation preempted the C++-level retry loop
+// before natural exhaustion, and that -- because the cancelled worker never
+// acquired the lock -- no stale ownership is left behind for a later intruder
+// to trip over.
 void test_state_sequence_cancellation_during_widened_lock_retry_leaves_no_residual_lock_ownership() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_state_seq_cancel_during_lock_retry";
@@ -174,8 +171,9 @@ void test_state_sequence_cancellation_during_widened_lock_retry_leaves_no_residu
         "SPAWN worker TO nWorker\n"
         "SPAWN canceler TO nCancel\n"
         "AWAIT nCancel TO lCancelDone\n"
-        "DO WHILE CFTASKSTATUS(nWorker) == 'running'\n"
+        "DO WHILE CFTASKSTATUS(nWorker) == 'running' .OR. CFTASKSTATUS(nWorker) == 'cancel-requested'\n"
         "ENDDO\n"
+        "cWorkerStatus = CFTASKSTATUS(nWorker)\n"
         "AWAIT nWorker TO lWorkerDone\n"
         "UNLOCK\n"
         "SPAWN intruder TO nIntruder\n"
@@ -224,21 +222,26 @@ void test_state_sequence_cancellation_during_widened_lock_retry_leaves_no_residu
         state.events.begin(), state.events.end(),
         [](const auto &event) { return event.category == "runtime.task.cancelled"; });
     expect(cancelled_event != state.events.end(),
-           "#6495 V1b: the worker's cancellation bookkeeping should still run (see #6499) even though it does "
-           "not halt the calling script for an explicit FLOCK() wait");
+           "#6495 V1b: the worker's cancellation bookkeeping should run when the explicit FLOCK() wait is "
+           "cancelled");
 
-    const auto worker_done_it = state.globals.find("lworkerdone");
-    expect(worker_done_it != state.globals.end() && worker_done_it->second.boolean_value,
-           "#6495 V1b: documents #6499's current behavior -- a cancellation observed inside FLOCK()'s explicit "
-           "retry loop is swallowed, so the worker's task reports AWAIT-completed (not cancelled/error) with "
-           "FLOCK() simply evaluating to .F.; if this ever becomes false, #6499 has likely been fixed and this "
-           "assertion (and its comment) should be updated to require the halted/cancelled outcome instead");
+    // #6499: a cancellation observed while blocked in an explicit FLOCK() retry must
+    // halt the task (an error pause, exactly like the per-statement checkpoint and
+    // SLEEP), not be folded into FLOCK() evaluating to .F. and a normal completion.
+    const auto worker_status_it = state.globals.find("cworkerstatus");
+    expect(worker_status_it != state.globals.end() &&
+               copperfin::runtime::format_value(worker_status_it->second) == "error",
+           "#6499: a task cancelled inside an explicit FLOCK() retry must end with an error pause, not "
+           "'completed'; got status: " +
+               (worker_status_it == state.globals.end()
+                    ? std::string("<missing>")
+                    : copperfin::runtime::format_value(worker_status_it->second)));
 
     const auto intruder_it = state.globals.find("lintruderacquiredlock");
     expect(intruder_it != state.globals.end() && intruder_it->second.boolean_value,
            "#6495 V1b: once the parent explicitly UNLOCKs, a fresh intruder must be able to acquire the table "
-           "immediately -- a residual lock-owner entry left behind by the worker (which never actually acquired "
-           "the lock, per #6499) would make this fail or contend and time out");
+           "immediately -- a residual lock-owner entry left behind by the cancelled worker (which never "
+           "acquired the lock) would make this fail or contend and time out");
 
     const auto intruder_timeout_event = std::find_if(
         state.events.begin(), state.events.end(),
@@ -247,6 +250,73 @@ void test_state_sequence_cancellation_during_widened_lock_retry_leaves_no_residu
     expect(intruder_timeout_event == state.events.end(),
            "#6495 V1b: the intruder's post-release FLOCK() should succeed immediately with no residual "
            "contention from the cancelled worker");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+// Governing requirement: RQ-CF-PRG-LOCK-RETRY-CANCEL-001 (#6499): the same
+// cancellation-inside-retry halt for an explicit RLOCK().
+void test_cancellation_during_explicit_rlock_retry_halts_the_task() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_cancel_during_rlock_retry_6499";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "cancel_during_rlock_retry.prg";
+    write_text(
+        main_path,
+        "CREATE TABLE race (name C(12))\n"
+        "SELECT race\n"
+        "APPEND BLANK\n"
+        "REPLACE name WITH 'ORIGINAL1'\n"
+        "GO 1\n"
+        "SET REPROCESS TO 40\n"
+        "lParentLock = RLOCK()\n"
+        "SPAWN worker TO nWorker\n"
+        "SPAWN canceler TO nCancel\n"
+        "AWAIT nCancel TO lCancelDone\n"
+        "DO WHILE CFTASKSTATUS(nWorker) == 'running' .OR. CFTASKSTATUS(nWorker) == 'cancel-requested'\n"
+        "ENDDO\n"
+        "cWorkerStatus = CFTASKSTATUS(nWorker)\n"
+        "AWAIT nWorker TO lWorkerDone\n"
+        "RETURN\n"
+        "PROCEDURE worker\n"
+        "SELECT race\n"
+        "GO 1\n"
+        "RETURN RLOCK()\n"
+        "ENDPROC\n"
+        "PROCEDURE canceler\n"
+        "SLEEP 300\n"
+        "CANCEL\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6499 RLOCK: the parent script should complete: " + state.message);
+
+    const auto parent_lock_it = state.globals.find("lparentlock");
+    expect(parent_lock_it != state.globals.end() && parent_lock_it->second.boolean_value,
+           "#6499 RLOCK: the parent should acquire RLOCK() before spawning");
+    expect(std::any_of(state.events.begin(), state.events.end(),
+                       [](const auto &event) { return event.category == "runtime.lock_retry"; }),
+           "#6499 RLOCK: the worker's RLOCK() must genuinely contend and retry before the cancellation");
+    expect(std::none_of(state.events.begin(), state.events.end(),
+                        [](const auto &event) { return event.category == "runtime.lock_timeout"; }),
+           "#6499 RLOCK: cancellation should preempt the retry budget rather than exhaust it");
+    expect(std::any_of(state.events.begin(), state.events.end(),
+                       [](const auto &event) { return event.category == "runtime.task.cancelled"; }),
+           "#6499 RLOCK: the cancellation bookkeeping should run");
+
+    const auto worker_status_it = state.globals.find("cworkerstatus");
+    expect(worker_status_it != state.globals.end() &&
+               copperfin::runtime::format_value(worker_status_it->second) == "error",
+           "#6499 RLOCK: a task cancelled inside an explicit RLOCK() retry must end with an error pause, not "
+           "'completed'; got status: " +
+               (worker_status_it == state.globals.end()
+                    ? std::string("<missing>")
+                    : copperfin::runtime::format_value(worker_status_it->second)));
 
     fs::remove_all(temp_root, ignored);
 }

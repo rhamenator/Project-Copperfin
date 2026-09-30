@@ -156,11 +156,11 @@ change). These use the never-reused object handle as the stable identity
 and re-check `ole_objects` after each user callback.
 
 **Live refresh (2026-09-26):** The core set above is complete, but the same
-invariant has newly confirmed open siblings: #6576 (`SCAN`), #6577
-(`LOCATE`), #6578 (`GOTO TOP`), and #6499 (cancellation during explicit
-`FLOCK()`/`RLOCK()` retry). They keep this cluster `IN PROGRESS`; each must
-use a stable generation or cancellation identity after user-code evaluation
-rather than relying on the earlier command-specific repairs.
+invariant had newly filed siblings: #6576 (`SCAN`), #6577 (`LOCATE`), #6578
+(`GOTO TOP`), and #6499 (cancellation during explicit `FLOCK()`/`RLOCK()`
+retry). #6499 is now fixed. Each of the others must use a stable generation
+or cancellation identity after user-code evaluation rather than relying on the
+earlier command-specific repairs.
 
 **Disclosed, not yet fixed, needs a different mechanism:**
 `aggregate_function_value()`'s bare-call form (`? SUM(field FOR cond)` as
@@ -637,8 +637,10 @@ otherwise clustered above):
 
 ### Singleton follow-ups
 
-- #6499 (FLOCK/RLOCK cancellation swallowed in retry loop) — open,
-  `agent-approved`, and assigned to cluster 1.
+- #6499 (FLOCK/RLOCK cancellation swallowed in retry loop) — fixed by
+  the lock-retry cancellation change (`RQ-CF-PRG-LOCK-RETRY-CANCEL-001`); a
+  cancelled explicit lock attempt now halts the task. Formerly assigned to
+  cluster 1.
 - #6506 (`PrgValue`/`VARTYPE()`/`EMPTY()`/`NVL()`/`EVL()`/aggregate-on-NULL
   semantics redesign) — open, `agent-approved`, and assigned to cluster 24.
   Deliberately deferred out of #6047's storage-layer scope; needs VFP9
