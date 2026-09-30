@@ -893,6 +893,22 @@
             const auto finish_current_field = [&]() {
                 if (!current_field_was_quoted)
                 {
+                    // Installed VFP9 keeps the leading whitespace of an unquoted Character field
+                    // (" Alice" and a tab-led value import verbatim); trailing whitespace is
+                    // DBF padding and other target types parse their own text (#6512).
+                    const bool character_target =
+                        target_fields != nullptr &&
+                        values.size() < target_fields->size() &&
+                        std::toupper(static_cast<unsigned char>((*target_fields)[values.size()].type)) == 'C';
+                    if (character_target)
+                    {
+                        std::string kept = outside_before_quotes;
+                        while (!kept.empty() && std::isspace(static_cast<unsigned char>(kept.back())) != 0)
+                        {
+                            kept.pop_back();
+                        }
+                        return kept;
+                    }
                     return trim_copy(outside_before_quotes);
                 }
                 // Whitespace outside an enclosure is field padding, while the

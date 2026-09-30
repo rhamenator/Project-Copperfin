@@ -9089,7 +9089,12 @@
                             {
                                 output << delimited_options.delimiter;
                             }
-                            output << out_fields[index].name;
+                            // Installed VFP9 writes CSV header names in lower case whatever the
+                            // descriptor's spelling (`NAME` -> `name`, `MiXeD` -> `mixed`) (#6528).
+                            std::string header_name = out_fields[index].name;
+                            std::transform(header_name.begin(), header_name.end(), header_name.begin(),
+                                           [](const unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+                            output << header_name;
                             wrote_header_cell = true;
                         }
                         output << "\r\n";
