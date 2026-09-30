@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -17,6 +18,7 @@ from pathlib import Path
 
 FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
 IDENTITY = re.compile(r"^(.+?)\s+<([^<>\s]+@[^<>\s]+)>$")
+ATTESTATION_PATH = ".github/dco-historical-attestations.json"
 
 
 class SignoffError(RuntimeError):
@@ -57,11 +59,85 @@ def parsed_trailers(message: str, cwd: Path | None = None) -> list[tuple[str, st
     return trailers
 
 
-def check_commit(commit: str, cwd: Path | None = None) -> None:
+def git_succeeds(*args: str, cwd: Path | None = None) -> bool:
+    result = subprocess.run(
+        ["git", *args],
+        cwd=cwd,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    return result.returncode == 0
+
+
+class Attestations:
+    """Owner attestation for specific historical commits that predate the gate.
+
+    Only exact, immutable commit IDs qualify. Each must also be an ancestor of a
+    recorded boundary commit and be authored by a recorded owner identity, so an
+    attestation can never cover new work or another contributor's commits.
+    """
+
+    def __init__(self, commits: set[str], authors: set[str], boundaries: list[str]) -> None:
+        self.commits = commits
+        self.authors = authors
+        self.boundaries = boundaries
+
+
+def load_attestations(base: str, cwd: Path | None = None) -> Attestations | None:
+    """Read the manifest from the trusted base revision, never from the range under test.
+
+    A pull request must not be able to define its own exemptions, so the policy in
+    force is the one already merged into the base branch. A change to the manifest
+    takes effect only after it has been reviewed and merged.
+    """
+    if not git_succeeds("cat-file", "-e", f"{base}:{ATTESTATION_PATH}", cwd=cwd):
+        return None
+    try:
+        data = json.loads(run_git("show", f"{base}:{ATTESTATION_PATH}", cwd=cwd))
+    except json.JSONDecodeError as error:
+        raise SignoffError(f"{ATTESTATION_PATH} is not valid JSON: {error}") from error
+    if not isinstance(data, dict) or data.get("version") != 1:
+        raise SignoffError(f"{ATTESTATION_PATH} must be a version 1 object")
+    commits = data.get("commits")
+    boundaries = data.get("boundaries")
+    authors = data.get("attested_authors")
+    for label, values in (("commits", commits), ("boundaries", boundaries)):
+        if not isinstance(values, list) or not values:
+            raise SignoffError(f"{ATTESTATION_PATH} {label} must be a non-empty list")
+        for value in values:
+            if not isinstance(value, str) or not FULL_SHA.fullmatch(value):
+                raise SignoffError(f"{ATTESTATION_PATH} {label} entries must be lowercase full commit IDs")
+    if len(set(commits)) != len(commits):
+        raise SignoffError(f"{ATTESTATION_PATH} lists a commit more than once")
+    if not isinstance(authors, list) or not authors:
+        raise SignoffError(f"{ATTESTATION_PATH} attested_authors must be a non-empty list")
+    for boundary in boundaries:
+        run_git("cat-file", "-e", f"{boundary}^{{commit}}", cwd=cwd)
+    return Attestations(
+        set(commits), {normalize_identity(author) for author in authors}, list(boundaries)
+    )
+
+
+def is_attested(commit: str, attestations: Attestations | None, author: str, cwd: Path | None = None) -> bool:
+    if attestations is None or commit not in attestations.commits:
+        return False
+    if author not in attestations.authors:
+        return False
+    return any(
+        git_succeeds("merge-base", "--is-ancestor", commit, boundary, cwd=cwd)
+        for boundary in attestations.boundaries
+    )
+
+
+def check_commit(commit: str, cwd: Path | None = None, attestations: Attestations | None = None) -> None:
     author_fields = run_git("show", "-s", "--format=%an%x00%ae", commit, cwd=cwd).rstrip("\n").split("\0")
     if len(author_fields) != 2:
         raise SignoffError(f"cannot resolve author identity for {commit}")
-    required = {normalize_identity(f"{author_fields[0]} <{author_fields[1]}>")}
+    author = normalize_identity(f"{author_fields[0]} <{author_fields[1]}>")
+    if is_attested(commit, attestations, author, cwd=cwd):
+        return
+    required = {author}
 
     message = run_git("show", "-s", "--format=%B", commit, cwd=cwd)
     trailers = parsed_trailers(message, cwd=cwd)
@@ -88,8 +164,9 @@ def check_range(base: str, head: str, cwd: Path | None = None) -> int:
     commits = [line for line in run_git("rev-list", "--reverse", f"{base}..{head}", cwd=cwd).splitlines() if line]
     if not commits:
         raise SignoffError("contribution range contains no commits")
+    attestations = load_attestations(base, cwd=cwd)
     for commit in commits:
-        check_commit(commit, cwd=cwd)
+        check_commit(commit, cwd=cwd, attestations=attestations)
     return len(commits)
 
 
@@ -118,8 +195,78 @@ def self_test() -> None:
         try:
             check_range(good, bad, cwd=root)
         except SignoffError:
-            return
-        raise SignoffError("unsigned self-test commit was accepted")
+            pass
+        else:
+            raise SignoffError("unsigned self-test commit was accepted")
+
+        def commit_signed(message: str) -> str:
+            run_git(
+                "commit",
+                "--allow-empty",
+                "-m",
+                f"{message}\n\nSigned-off-by: Contributor <contributor@example.invalid>",
+                cwd=root,
+            )
+            return run_git("rev-parse", "HEAD", cwd=root).strip()
+
+        def write_manifest(commits: list[str], authors: list[str], boundaries: list[str]) -> None:
+            manifest = root / ATTESTATION_PATH
+            manifest.parent.mkdir(parents=True, exist_ok=True)
+            manifest.write_text(
+                json.dumps(
+                    {
+                        "version": 1,
+                        "attested_authors": authors,
+                        "boundaries": boundaries,
+                        "commits": commits,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            run_git("add", ATTESTATION_PATH, cwd=root)
+
+        def expect(base_rev: str, head_rev: str, ok: bool, message: str) -> None:
+            try:
+                check_range(base_rev, head_rev, cwd=root)
+                accepted = True
+            except SignoffError:
+                accepted = False
+            if accepted != ok:
+                raise SignoffError(message)
+
+        owner = ["Contributor <contributor@example.invalid>"]
+
+        # Trusted policy: the manifest is already merged in the base revision.
+        run_git("checkout", "--quiet", "-b", "policy", good, cwd=root)
+        write_manifest([bad], owner, [bad])
+        policy = commit_signed("policy attests bad")
+        run_git("checkout", "--quiet", "-b", "joined", policy, cwd=root)
+        run_git("merge", "--no-ff", "--no-edit", "-m", "join\n\nSigned-off-by: Contributor <contributor@example.invalid>", bad, cwd=root)
+        joined = run_git("rev-parse", "HEAD", cwd=root).strip()
+        expect(policy, joined, True, "attested historical commit in base policy was not accepted")
+
+        # New work after the boundary is never covered by the base policy.
+        run_git("commit", "--allow-empty", "-m", "new unsigned work", cwd=root)
+        new_unsigned = run_git("rev-parse", "HEAD", cwd=root).strip()
+        expect(policy, new_unsigned, False, "unsigned commit newer than the attestation boundary was accepted")
+
+        # A range cannot define its own exemption: the manifest edit is in the range
+        # under test, not in the base, so the unsigned commit is still rejected.
+        run_git("checkout", "--quiet", "-b", "self-attest", bad, cwd=root)
+        write_manifest([bad], owner, [bad])
+        self_attest = commit_signed("range edits the manifest to exempt bad")
+        expect(good, self_attest, False, "a range that edits the manifest exempted its own unsigned commit")
+
+        # The base policy must still match author and boundary.
+        for label, authors, boundaries in (
+            ("attestation outside every boundary", owner, [good]),
+            ("attestation for an unrecorded author", ["Someone Else <else@example.invalid>"], [bad]),
+        ):
+            run_git("checkout", "--quiet", "-B", "variant", good, cwd=root)
+            write_manifest([bad], authors, boundaries)
+            variant_policy = commit_signed(f"policy: {label}")
+            run_git("merge", "--no-ff", "--no-edit", "-m", "join\n\nSigned-off-by: Contributor <contributor@example.invalid>", bad, cwd=root)
+            expect(variant_policy, run_git("rev-parse", "HEAD", cwd=root).strip(), False, f"{label} was accepted")
 
 
 def main() -> int:
