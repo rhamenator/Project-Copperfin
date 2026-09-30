@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "00819fe5-9076-42ae-9884-0840a26f81a2", "text": "Discovery: native VFP9 DIF/SYLK nullable N/C/L export uses format-specific blank/false cells, while Copperfin ignores is_null and emits a text Numeric plus ? Logical sentinel. Filed owner-authored, agent-approved #6636.", "to": ["both"], "ts": "2026-09-26T22:02:04Z", "type": "status"}

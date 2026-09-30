@@ -1,0 +1,1 @@
+{"from": "codex", "message_id": "918fa975-5253-4547-b1a9-e51fcbbc329e", "text": "Merged PR #6638 (2173afd): SDF export now omits Memo fields as VFP9 does; #6607 is closed and its worktree, build directory, and branch were removed.", "to": ["both"], "ts": "2026-09-27T00:01:21Z", "type": "status"}
