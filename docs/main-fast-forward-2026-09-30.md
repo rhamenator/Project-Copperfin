@@ -80,8 +80,19 @@ gh api repos/rhamenator/Project-Copperfin/rulesets/20356131   # unchanged vs. sn
 gh run list --branch main                                # push-triggered workflows
 ```
 
+## Known exceptions carried onto `main`
+
+A fast-forward is a direct push, so the pull-request-only sign-off check does
+not run on it. The commits it brings are the ones already checked or attested,
+with three GitHub-generated "Merge pull request" commits that are in neither
+group: `a4520a6eb` (#6691), `5fa8714e1` (#6692), and the merge commit of the pull
+request that adds this record. They carry no `Signed-off-by` trailer and cannot
+be pre-listed in the attestation manifest (each merge creates another one). They
+are GitHub-authored merges of pull-request heads that did pass the sign-off check,
+and are disclosed here rather than attested.
+
 ## Afterwards
 
 `v1-development` keeps moving through pull requests, so `main` will trail it
 again until the next deliberate synchronization (planned at the release-
-candidate cut). This record's execution results are posted to issue #6676.
+candidate cut). This record's execution results are posted to issue #6694, the tracking issue for this move.
