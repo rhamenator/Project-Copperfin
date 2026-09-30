@@ -103,3 +103,43 @@ and `VARTYPE`/`EMPTY`/`NVL`/`EVL`/aggregate-semantics slices remain a
 separate, not-yet-scheduled follow-up (see that issue's own comments for
 the split rationale) and are out of scope for the requirement this
 document supports.
+
+## Stale data after `.NULL.` (security hardening)
+
+`REPLACE ... WITH .NULL.` sets the field's `_NullFlags` bit, and VFP9 (and Copperfin) also blank the
+field's slot in the record, so an inline value (`C`, `N`, `F`, `D`, `T`, `L`, `I`, `B`, `Y`, `V`, `Q`)
+does not stay in the `.dbf`. Memo (`M`), General (`G`), Picture (`P`) and Blob (`W`) fields are
+different: the record holds only a 4-byte block pointer, and the payload lives in the `.fpt`. VFP9
+appends a new block on every overwrite and leaves the superseded block's bytes in the file until
+`PACK MEMO`, so a nulled or overwritten memo stays recoverable from the sidecar.
+
+Copperfin closes the gaps it found (`RQ-CF-PRG-DBF-NULL-HARDENING-001`):
+
+| Surface | State |
+|---|---|
+| Inline record slot (`C N F D T L I B Y V Q`) | Already implemented (blank/zero), now pinned by tests |
+| `_NullFlags` bit for a memo-family field | Implemented (earlier builds ignored the null request for memo fields) |
+| FPT block of Memo, General, Picture, Blob | Implemented: zero-filled on null, overwrite and `ADDITIVE` append unless another record still references the block; `COPPERFIN_DBF_MEMO_SCRUB=0` restores VFP9's leave-in-place behavior |
+| Blob (`W`) | Null and pointer replacement reclaim the block; there is still no Blob payload reader or writer in the DBF layer |
+| Whole-table / memo / single-record working buffers of a NULL or FPT-owning replace | Implemented: wiped with a non-elidable clear (`secure_clear`) |
+| Table-buffering record caches | Implemented: wiped when erased or cleared |
+| Command-undo and transaction backup files | Implemented: overwritten with zeros and deleted on commit, rollback, `UNDO` and session end. A live session keeps its `UNDO` pre-image because `UNDO` needs it |
+| Admitted-byte copies held by a journal | Implemented: wiped when the journal is discarded |
+
+All wipes are best-effort defense in depth. They clear the buffers and files Copperfin itself holds; on
+copy-on-write or journaling filesystems, SSDs with wear levelling, and snapshotted or backed-up volumes an
+overwritten block can survive, and a value copied into a PRG variable or a string the allocator already
+freed is not reached.
+
+Remaining work, none of it done yet:
+
+- **Index keys.** An indexed field's key bytes in a `.cdx`/`.idx` may still hold the old value. A scratch
+  probe with `INDEX ON` produced no persisted index file, so this is unverified; it needs a fixture that
+  writes one.
+- **Deleted-but-not-packed records** keep every field value until `PACK` (VFP9 does too).
+- **A killed process** can leave a `command_undo` or `transactions` directory behind; nothing sweeps stale
+  ones at startup.
+- **Copies outside the wiped buffers:** PRG variables, result cursors, the memo reader's payload copies,
+  strings freed before a wipe, allocator free lists, swap and core dumps. Closing these needs a general
+  wipe-on-free policy for buffers that can hold field data, which is a separate design.
+- **Blob payloads** cannot be read or written by the DBF layer at all.

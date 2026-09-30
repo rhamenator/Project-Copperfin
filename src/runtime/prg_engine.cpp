@@ -34,6 +34,8 @@
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/dbf_text_encoding.h"
+#include "../security/secure_clear.h"
+#include "../security/secure_file_wipe.h"
 #include "copperfin/vfp/index_probe.h"
 #include "copperfin/vfp/sidecar_path.h"
 
@@ -755,6 +757,21 @@ namespace copperfin::runtime
             std::map<std::string, VerifiedFileByteOverrideSnapshot> verified_byte_overrides;
         };
 
+        // A journal's on-disk backups hold whole-table pre-images, and a verified-byte session also keeps
+        // admitted file bytes in memory; both can hold a value a REPLACE ... WITH .NULL. superseded.
+        // Best-effort wipe of both when a journal is finished with.
+        void secure_discard_journal_state(TransactionJournalState &state)
+        {
+            security::secure_remove_tree(state.root_path);
+            for (auto &entry : state.verified_byte_overrides)
+            {
+                if (entry.second.admitted_entry.has_value())
+                {
+                    security::secure_clear(entry.second.admitted_entry->second);
+                }
+            }
+        }
+
         struct AsyncTaskState
         {
             long long handle = 0;
@@ -1428,6 +1445,29 @@ namespace copperfin::runtime
             }
             catch (...)
             {
+            }
+            if (!is_spawned_child)
+            {
+                // Command UNDO keeps a whole-table pre-image (DBF and FPT) per command for as long as the
+                // session lives. Nothing removed those backups at session end, so the value a REPLACE ...
+                // WITH .NULL. superseded stayed readable in the temp directory indefinitely.
+                try
+                {
+                    for (auto &session_stack : command_undo_stack_by_session)
+                    {
+                        for (TransactionJournalState &state : session_stack.second)
+                        {
+                            secure_discard_journal_state(state);
+                        }
+                    }
+                    for (auto &session_journal : command_undo_journal_by_session)
+                    {
+                        secure_discard_journal_state(session_journal.second);
+                    }
+                }
+                catch (...)
+                {
+                }
             }
             while (!com_eventhandler_bindings.empty())
             {

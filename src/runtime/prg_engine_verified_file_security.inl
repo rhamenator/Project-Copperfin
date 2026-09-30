@@ -68,7 +68,7 @@
                     if (!cursor.remote && !cursor.source_path.empty() &&
                         verified_file_paths_equal(cursor.source_path, table_path))
                     {
-                        cursor.verified_committed_records.clear();
+                        secure_clear_record_map(cursor.verified_committed_records);
                     }
                 }
             }

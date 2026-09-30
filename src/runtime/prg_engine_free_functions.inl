@@ -968,6 +968,38 @@
                 }
             }
             return rounded;
+
+        // Wipes the value text a buffered record holds before the record is dropped. Table buffering keeps
+        // the pre-edit and pending copies of a row in memory, so a value superseded by REPLACE ... WITH
+        // .NULL. would otherwise sit in those strings until the allocator reuses them. Best-effort: it
+        // clears the strings a record owns, not copies taken elsewhere (PRG variables, result sets).
+        void secure_clear_record(vfp::DbfRecord &record)
+        {
+            for (vfp::DbfRecordValue &value : record.values)
+            {
+                security::secure_clear(value.display_value);
+                security::secure_clear(value.raw_value);
+            }
+        }
+
+        void secure_clear_record_map(std::map<std::size_t, vfp::DbfRecord> &records)
+        {
+            for (auto &entry : records)
+            {
+                secure_clear_record(entry.second);
+            }
+            records.clear();
+        }
+
+        void secure_erase_record(std::map<std::size_t, vfp::DbfRecord> &records, const std::size_t recno)
+        {
+            const auto found = records.find(recno);
+            if (found == records.end())
+            {
+                return;
+            }
+            secure_clear_record(found->second);
+            records.erase(found);
         }
 
         std::vector<std::string> parse_delimited_text_line(

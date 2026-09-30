@@ -6,6 +6,7 @@
 #include "copperfin/vfp/dbf_text_encoding.h"
 
 #include "dbf_table_raw_mutation.h"
+#include "../security/secure_clear.h"
 #include "../security/sha256_native.h"
 
 #include "copperfin/localization/localization.h"
@@ -804,6 +805,14 @@ bool supports_direct_field_writes(char field_type) {
 
 bool is_memo_pointer_field(char field_type) {
     return field_type == 'M' || field_type == 'G' || field_type == 'P';
+}
+
+// A Blob ('W') record field holds a 4-byte block pointer into the FPT like a memo does, but the DBF
+// layer has no Blob payload reader or writer (it treats the field as opaque bytes). It is not a
+// memo-pointer field for reading and value assignment, yet nulling or replacing it must still
+// reclaim the FPT block it pointed at, so the security scrub treats it as an FPT-block owner.
+bool owns_fpt_block(char field_type) {
+    return is_memo_pointer_field(field_type) || field_type == 'W';
 }
 
 template <typename FieldDescriptor>
@@ -4050,7 +4059,7 @@ std::optional<DbfWriteResult> replace_record_field_value_targeted(
     if (!field.has_value()) {
         return DbfWriteResult{.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TargetFieldNotFoundInTable"), .record_count = header.record_count};
     }
-    if (is_memo_pointer_field(field->type)) {
+    if (owns_fpt_block(field->type)) {
         return std::nullopt;
     }
 
@@ -4062,6 +4071,10 @@ std::optional<DbfWriteResult> replace_record_field_value_targeted(
     }
 
     std::vector<std::uint8_t> record_bytes(header.record_length, 0U);
+    // The buffer holds the record as read, including the value a NULL assignment supersedes.
+    security::SecureClearGuard secure_record_buffer;
+    secure_record_buffer.set_active(is_null);
+    secure_record_buffer.add(record_bytes);
     io.seekg(static_cast<std::streamoff>(record_offset));
     io.read(reinterpret_cast<char*>(record_bytes.data()), static_cast<std::streamsize>(record_bytes.size()));
     if (io.gcount() != static_cast<std::streamsize>(record_bytes.size())) {
@@ -4118,6 +4131,107 @@ std::optional<DbfWriteResult> replace_record_field_value_targeted(
     return DbfWriteResult{.ok = true, .error = {}, .record_count = header.record_count};
 }
 
+namespace {
+
+// Memo-block scrubbing (security hardening): a memo payload lives in the FPT sidecar, outside the
+// DBF record. Overwriting, nulling or appending to a memo field repoints the record at a new block
+// and, like VFP9, leaves the superseded block's bytes in the sidecar until PACK MEMO. That keeps
+// the previous text recoverable from the file, so Copperfin zero-fills the superseded payload
+// (keeping the 8-byte block header so the sidecar still walks) unless disabled with
+// COPPERFIN_DBF_MEMO_SCRUB=0|off|false|no. The scrub is skipped when any other pointer in the
+// table still references the block, so a shared block is never destroyed.
+bool memo_scrub_enabled() {
+    const std::string setting = lowercase_copy(platform::read_environment_variable_or_empty("COPPERFIN_DBF_MEMO_SCRUB"));
+    return !(setting == "0" || setting == "off" || setting == "false" || setting == "no");
+}
+
+// The FPT block scrub only understands the Visual FoxPro in-record pointer (a little-endian block
+// number in the first four bytes of a field that is at least four bytes wide) and FPT block layout.
+bool fpt_pointer_layout(const DbfHeader& header, const RawFieldDescriptor& field) {
+    return dbf_read_layout(header).memo_storage_format == DbfMemoStorageFormat::visual_foxpro &&
+           field.length >= 4U && owns_fpt_block(field.type);
+}
+
+std::uint32_t read_fpt_pointer(const std::vector<std::uint8_t>& table_bytes, const std::size_t field_offset) {
+    return field_offset + 4U <= table_bytes.size() ? read_le_u32(table_bytes, field_offset) : 0U;
+}
+
+// True when another record field still points at `old_block`, or any pointer (the target's own new
+// one included) lands inside the blocks the old payload claims to span. The span comes from the
+// untrusted FPT block header, so an inflated length must never let the scrub reach later blocks.
+bool memo_block_blocks_scrub(
+    const std::vector<std::uint8_t>& table_bytes,
+    const DbfHeader& header,
+    const std::vector<RawFieldDescriptor>& fields,
+    const std::uint32_t old_block,
+    const std::uint64_t span_blocks,
+    const std::size_t target_record_index,
+    const std::size_t target_field_offset) {
+    for (std::size_t record = 0U; record < header.record_count; ++record) {
+        const std::size_t record_offset = header.header_length + (record * header.record_length);
+        for (const RawFieldDescriptor& field : fields) {
+            if (!fpt_pointer_layout(header, field)) {
+                continue;
+            }
+            const std::size_t field_offset = record_offset + field.offset;
+            if (field_offset + 4U > table_bytes.size()) {
+                continue;
+            }
+            const std::uint32_t pointer = read_fpt_pointer(table_bytes, field_offset);
+            const bool is_target = record == target_record_index && field_offset == target_field_offset;
+            if (pointer == old_block && !is_target) {
+                return true;
+            }
+            if (pointer > old_block && static_cast<std::uint64_t>(pointer) < static_cast<std::uint64_t>(old_block) + span_blocks) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void scrub_superseded_memo_block(
+    const std::vector<std::uint8_t>& table_bytes,
+    const DbfHeader& header,
+    const std::vector<RawFieldDescriptor>& fields,
+    std::vector<std::uint8_t>& memo_bytes,
+    const std::uint32_t old_block,
+    const std::size_t target_record_index,
+    const std::size_t target_field_offset) {
+    if (old_block == 0U || memo_bytes.size() < 8U || !memo_scrub_enabled()) {
+        return;
+    }
+    const std::uint64_t block_size = read_be_u16(memo_bytes, 6U);
+    if (block_size == 0U) {
+        return;
+    }
+    const std::uint64_t block_offset = static_cast<std::uint64_t>(old_block) * block_size;
+    if (block_offset + 8U > memo_bytes.size()) {
+        return;
+    }
+    const std::uint64_t payload_length = read_be_u32(memo_bytes, static_cast<std::size_t>(block_offset) + 4U);
+    // A length that runs past the end of the sidecar is corrupt or hostile: scrub nothing rather than
+    // guess how far the block really extends.
+    if (block_offset + 8U + payload_length > memo_bytes.size()) {
+        return;
+    }
+    const std::uint64_t span_blocks = (8U + payload_length + block_size - 1U) / block_size;
+    const std::uint64_t end = block_offset + span_blocks * block_size;
+    const std::uint64_t scrub_end = std::min<std::uint64_t>(end, memo_bytes.size());
+    if (scrub_end <= block_offset + 8U) {
+        return;
+    }
+    if (memo_block_blocks_scrub(
+            table_bytes, header, fields, old_block, span_blocks, target_record_index, target_field_offset)) {
+        return;
+    }
+    security::secure_clear(
+        memo_bytes.data() + static_cast<std::size_t>(block_offset) + 8U,
+        static_cast<std::size_t>(scrub_end - (block_offset + 8U)));
+}
+
+}  // namespace
+
 static DbfWriteResult replace_record_field_value_impl(
     const std::string& path,
     std::size_t record_index,
@@ -4144,7 +4258,15 @@ static DbfWriteResult replace_record_field_value_impl(
         std::istreambuf_iterator<char>()
     };
     input.close();
-    const std::vector<std::uint8_t> original_table_bytes = bytes;
+    std::vector<std::uint8_t> original_table_bytes = bytes;
+    // Best-effort hygiene: a NULL or memo replace leaves whole-table copies in memory that held the
+    // superseded value. This guard is built as soon as the buffers exist, so every return below --
+    // including a validation failure -- wipes them; it is switched off again for an ordinary replace
+    // once the field type is known.
+    security::SecureClearGuard secure_table_buffers;
+    secure_table_buffers.set_active(is_null);
+    secure_table_buffers.add(bytes);
+    secure_table_buffers.add(original_table_bytes);
 
     const DbfParseResult header_result = parse_dbf_header(bytes);
     if (!header_result.ok) {
@@ -4167,11 +4289,19 @@ static DbfWriteResult replace_record_field_value_impl(
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordIndexOutOfRange"), .record_count = header_result.header.record_count};
     }
 
+    secure_table_buffers.set_active(is_null || owns_fpt_block(field->type));
+
     DbfWriteResult result;
     std::vector<std::uint8_t> memo_bytes;
     std::vector<std::uint8_t> original_memo_bytes;
     std::string memo_path;
     bool had_memo_file = false;
+    // The memo copies are declared after the guard above, so they need a guard of their own that is
+    // declared after them: a guard must run before any buffer it tracks is destroyed.
+    security::SecureClearGuard secure_memo_buffers;
+    secure_memo_buffers.set_active(is_null || owns_fpt_block(field->type));
+    secure_memo_buffers.add(memo_bytes);
+    secure_memo_buffers.add(original_memo_bytes);
     if (is_memo_pointer_field(field->type)) {
         if (memo_resolution.requested_path.empty()) {
             memo_resolution = resolve_memo_sidecar_path(path);
@@ -4194,7 +4324,15 @@ static DbfWriteResult replace_record_field_value_impl(
             header_result.header.header_length +
             (record_index * header_result.header.record_length) +
             field->offset;
-        if (additive && field->type == 'M') {
+        const bool scrubbable_pointer = fpt_pointer_layout(header_result.header, *field);
+        const std::uint32_t superseded_block = scrubbable_pointer ? read_fpt_pointer(bytes, field_offset) : 0U;
+        if (is_null && scrubbable_pointer) {
+            // REPLACE ... WITH .NULL. on a memo field: the pointer is cleared (no block), the field's
+            // _NullFlags bit is set below, and the superseded block is scrubbed below. Previously the
+            // null request was ignored for memo fields, so the null flag was never set.
+            write_le_u32(bytes, field_offset, 0U);
+            result = {.ok = true, .error = {}, .record_count = header_result.header.record_count};
+        } else if (additive && field->type == 'M') {
             if (field->length < 4U || field_offset + 4U > bytes.size()) {
                 return {
                     .ok = false,
@@ -4204,6 +4342,10 @@ static DbfWriteResult replace_record_field_value_impl(
             }
             const std::uint32_t block_number = read_le_u32(bytes, field_offset);
             std::vector<std::uint8_t> appended_payload;
+            // The appended payload is a working copy of the superseded memo text; wipe it on every
+            // exit from this block, including the early error returns below.
+            security::SecureClearGuard secure_appended_payload;
+            secure_appended_payload.add(appended_payload);
             if (block_number != 0U) {
                 const MemoReader memo_reader(memo_path);
                 const auto payload = memo_reader.read_block_raw(block_number);
@@ -4241,10 +4383,51 @@ static DbfWriteResult replace_record_field_value_impl(
                 value,
                 header_result.header.record_count);
         }
+        if (result.ok && scrubbable_pointer) {
+            // The record now points at a new block (or none): zero-fill the superseded payload.
+            if (is_null || read_fpt_pointer(bytes, field_offset) != superseded_block) {
+                scrub_superseded_memo_block(
+                    bytes, header_result.header, fields, memo_bytes, superseded_block, record_index, field_offset);
+            }
+            apply_null_flag_bit(bytes, header_result.header, record_index, fields, field_name, is_null);
+        }
+    } else if (field->type == 'W' && fpt_pointer_layout(header_result.header, *field)) {
+        // Blob: the record holds a block pointer into the FPT, but the DBF layer has no Blob payload
+        // reader or writer, so a non-null value keeps its existing opaque-bytes handling. NULL, and
+        // any assignment that repoints the field, must still reclaim the FPT block it pointed at.
+        if (memo_resolution.requested_path.empty()) {
+            memo_resolution = resolve_memo_sidecar_path(path);
+        }
+        if (!memo_resolution.ambiguous) {
+            memo_path = selected_sidecar_path(memo_resolution);
+        }
+        if (!memo_path.empty()) {
+            original_memo_bytes = read_binary_file(memo_path);
+            had_memo_file = !original_memo_bytes.empty();
+            memo_bytes = original_memo_bytes;
+        }
+        const std::size_t field_offset =
+            header_result.header.header_length +
+            (record_index * header_result.header.record_length) +
+            field->offset;
+        const std::uint32_t superseded_block = read_fpt_pointer(bytes, field_offset);
+        if (is_null) {
+            write_le_u32(bytes, field_offset, 0U);
+            result = {.ok = true, .error = {}, .record_count = header_result.header.record_count};
+        } else {
+            result = write_field_bytes(
+                bytes, header_result.header, record_index, *field, value, path, allow_truncation);
+        }
+        if (result.ok) {
+            if (is_null || read_fpt_pointer(bytes, field_offset) != superseded_block) {
+                scrub_superseded_memo_block(
+                    bytes, header_result.header, fields, memo_bytes, superseded_block, record_index, field_offset);
+            }
+            apply_null_flag_bit(bytes, header_result.header, record_index, fields, field_name, is_null);
+        }
     } else {
-        // #6047: memo-field NULL is intentionally not handled here (a
-        // separate, pointer-based storage mechanism, out of scope for this
-        // slice) -- is_null only affects the ordinary field-storage branch.
+        // #6047: ordinary (non-memo) fields blank their storage and flip the field's _NullFlags bit.
+        // Memo fields do the same through the pointer-based branch above.
         result = write_field_bytes(
             bytes, header_result.header, record_index, *field, is_null ? std::string{} : value, path,
             allow_truncation);
@@ -4258,7 +4441,9 @@ static DbfWriteResult replace_record_field_value_impl(
     if (!stamp_dbf_last_update_date(bytes) || !write_binary_file(path, bytes)) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = header_result.header.record_count};
     }
-    if (is_memo_pointer_field(field->type) && !write_binary_file(memo_path, memo_bytes)) {
+    const bool blob_sidecar_changed =
+        field->type == 'W' && !memo_path.empty() && memo_bytes != original_memo_bytes;
+    if ((is_memo_pointer_field(field->type) || blob_sidecar_changed) && !write_binary_file(memo_path, memo_bytes)) {
         write_binary_file(path, original_table_bytes);
         if (had_memo_file) {
             write_binary_file(memo_path, original_memo_bytes);
