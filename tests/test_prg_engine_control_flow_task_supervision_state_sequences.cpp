@@ -139,6 +139,7 @@ void test_state_sequence_await_retry_after_cancellation_reuses_still_registered_
 // (`pause_for_lock_retry`) to a ~820ms window so a `SLEEP 300` cancellation
 // trigger lands comfortably inside genuine contention instead of racing a
 // ~36ms default window.
+// Governing requirement: RQ-CF-PRG-LOCK-RETRY-CANCEL-001.
 // Expected result: this sequence surfaced a real defect (#6499) that is now
 // fixed: cancellation observed inside an *explicit* FLOCK()/RLOCK() retry loop
 // used to be folded into the ordinary "could not acquire" `.F.`, so the calling
@@ -253,7 +254,8 @@ void test_state_sequence_cancellation_during_widened_lock_retry_leaves_no_residu
     fs::remove_all(temp_root, ignored);
 }
 
-// #6499: the same cancellation-inside-retry halt for an explicit RLOCK().
+// Governing requirement: RQ-CF-PRG-LOCK-RETRY-CANCEL-001 (#6499): the same
+// cancellation-inside-retry halt for an explicit RLOCK().
 void test_cancellation_during_explicit_rlock_retry_halts_the_task() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_cancel_during_rlock_retry_6499";

@@ -1255,6 +1255,23 @@
             return true;
         }
 
+        // RQ-CF-PRG-LOCK-RETRY-CANCEL-001 (#6499): true when the task has been cancelled.
+        // Runs the cancellation bookkeeping (transaction rollback, the
+        // runtime.task.cancelled event, the recorded cancelled message) exactly as the
+        // per-statement checkpoint does; the callers then stop retrying.
+        bool observe_lock_retry_cancellation(const SourceLocation &location)
+        {
+            if (task_cancel_requested == nullptr || !task_cancel_requested->load(std::memory_order_relaxed))
+            {
+                return false;
+            }
+            (void)handle_async_runtime_cancellation(
+                location,
+                current_statement() == nullptr ? std::string{} : current_statement()->text,
+                runtime_text("Runtime.Prg.Records.Error.LockRetryCancelled"));
+            return true;
+        }
+
         // `cancelled`, when supplied, is set when this call returned false because the
         // task was cancelled rather than because the lock policy forbids waiting.
         bool pause_for_lock_retry(const std::string &detail,
@@ -1269,14 +1286,10 @@
 
             const auto observe_cancellation = [&]() -> bool
             {
-                if (task_cancel_requested == nullptr || !task_cancel_requested->load(std::memory_order_relaxed))
+                if (!observe_lock_retry_cancellation(location))
                 {
                     return false;
                 }
-                (void)handle_async_runtime_cancellation(
-                    location,
-                    current_statement() == nullptr ? std::string{} : current_statement()->text,
-                    runtime_text("Runtime.Prg.Records.Error.LockRetryCancelled"));
                 if (cancelled != nullptr)
                 {
                     *cancelled = true;
@@ -1284,8 +1297,10 @@
                 return true;
             };
 
-            // #6499: a cancelled task stops retrying immediately, whether the scheduler
-            // waits between attempts or only yields.
+            // RQ-CF-PRG-LOCK-RETRY-CANCEL-001 (#6499): a cancelled task stops retrying
+            // immediately, whether the scheduler waits between attempts or only yields,
+            // and the cancel is rechecked after the wait so the next acquisition attempt
+            // never runs on behalf of a cancelled task.
             if (observe_cancellation())
             {
                 return false;
@@ -1306,7 +1321,7 @@
             if (sleep_duration_ms == 0U)
             {
                 std::this_thread::yield();
-                return true;
+                return !observe_cancellation();
             }
 
             for (std::size_t elapsed = 0U; elapsed < sleep_duration_ms; ++elapsed)
@@ -1318,7 +1333,7 @@
                 std::this_thread::sleep_for(std::chrono::milliseconds(1U));
             }
 
-            return true;
+            return !observe_cancellation();
         }
 
         bool acquire_table_lock(CursorState &cursor,
@@ -1371,6 +1386,15 @@
 
                 if (attempt >= policy.retry_budget)
                 {
+                    // RQ-CF-PRG-LOCK-RETRY-CANCEL-001 (#6499): a pending cancel is not a timeout.
+                    if (observe_lock_retry_cancellation(location))
+                    {
+                        if (explicit_lock_command)
+                        {
+                            throw PrgPropagatedRuntimeError(last_error_message);
+                        }
+                        return false;
+                    }
                     events.push_back({.category = "runtime.lock_timeout",
                                       .detail = context + " timeout reprocess=" + policy.display_value,
                                       .location = location});
@@ -1389,7 +1413,7 @@
                 {
                     if (retry_cancelled && explicit_lock_command)
                     {
-                        // #6499: FLOCK()/RLOCK() return .F. for ordinary contention, but a
+                        // RQ-CF-PRG-LOCK-RETRY-CANCEL-001 (#6499): FLOCK()/RLOCK() return .F. for ordinary contention, but a
                         // cancellation is not contention: fault the statement so the task
                         // halts (the cancellation bookkeeping already ran and recorded the
                         // message) instead of continuing as if the lock were merely busy.
@@ -1445,6 +1469,15 @@
 
                 if (attempt >= policy.retry_budget)
                 {
+                    // RQ-CF-PRG-LOCK-RETRY-CANCEL-001 (#6499): a pending cancel is not a timeout.
+                    if (observe_lock_retry_cancellation(location))
+                    {
+                        if (explicit_lock_command)
+                        {
+                            throw PrgPropagatedRuntimeError(last_error_message);
+                        }
+                        return false;
+                    }
                     events.push_back({.category = "runtime.lock_timeout",
                                       .detail = context + " timeout recno=" + std::to_string(recno) +
                                                 " reprocess=" + policy.display_value,
@@ -1467,7 +1500,7 @@
                 {
                     if (retry_cancelled && explicit_lock_command)
                     {
-                        // #6499: see acquire_table_lock().
+                        // RQ-CF-PRG-LOCK-RETRY-CANCEL-001 (#6499): see acquire_table_lock().
                         throw PrgPropagatedRuntimeError(last_error_message);
                     }
                     return false;
