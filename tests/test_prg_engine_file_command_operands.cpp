@@ -162,11 +162,181 @@ void test_erase_wildcard_does_not_remove_symlinks() {
 }
 #endif
 
+// name=content listing (recursive, sorted, '/'-separated) used by the COPY FILE / RENAME cases.
+std::string content_listing(const fs::path &dir) {
+    std::set<std::string> entries;
+    for (const auto &entry : fs::recursive_directory_iterator(dir)) {
+        if (entry.is_regular_file()) {
+            entries.insert(fs::relative(entry.path(), dir).generic_string() + "=" + read_text(entry.path()));
+        }
+    }
+    std::string joined;
+    for (const auto &entry : entries) {
+        joined += (joined.empty() ? "" : "|") + entry;
+    }
+    return joined;
+}
+
+struct TransferCase {
+    std::string name;
+    std::vector<std::string> files;   // trailing '/' makes a directory; files contain their own name
+    std::string script_body;
+    std::string expected;             // content_listing afterwards
+    bool expect_completed;
+    std::string event_category;       // runtime.copy_file or runtime.rename
+    std::size_t expected_events;
+};
+
+// Governing requirement: RQ-CF-PRG-FILE-COMMAND-OPERANDS-001 (#6583, #6585, #6586, #6587).
+//
+// Installed VFP9 (Windows VM COM probes 2026-09-30): a bare token is a literal
+// filename and (expr) evaluates; * and ? in the source expand and map into the
+// destination (`*.bin TO *.bak` copies one.bin to one.bak, `?ne.bin TO ?ne.bak`
+// maps the ?), a directory destination receives the copies, a fixed destination
+// with several sources is overwritten by the last COPY FILE and hit by the second
+// RENAME (error 7), and, unlike ERASE, a missing source or a pattern that matches
+// nothing raises error 1.
+void test_copy_file_and_rename_operand_forms() {
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_file_command_operands_transfer";
+    std::error_code ignored;
+
+    const std::vector<TransferCase> cases = {
+        // ---- COPY FILE
+        {"cf_bare", {"a.bin"}, "COPY FILE a.bin TO b.bin\n", "a.bin=a.bin|b.bin=a.bin", true, "runtime.copy_file", 1U},
+        {"cf_bare_tokens_are_literal", {"xsrc", "a.bin"},
+            "xsrc = 'a.bin'\nxdst = 'z.bin'\nCOPY FILE xsrc TO xdst\n", "a.bin=a.bin|xdst=xsrc|xsrc=xsrc", true, "runtime.copy_file", 1U},
+        {"cf_parenthesized_expressions", {"a.bin"},
+            "xsrc = 'a.bin'\nxdst = 'z.bin'\nCOPY FILE (xsrc) TO (xdst)\n", "a.bin=a.bin|z.bin=a.bin", true, "runtime.copy_file", 1U},
+        {"cf_wildcard_maps_star", {"one.bin", "two.bin", "keep.txt"}, "COPY FILE *.bin TO *.bak\n",
+            "keep.txt=keep.txt|one.bak=one.bin|one.bin=one.bin|two.bak=two.bin|two.bin=two.bin", true, "runtime.copy_file", 2U},
+        {"cf_wildcard_into_directory", {"one.bin", "two.bin", "d/"}, "COPY FILE *.bin TO d\n",
+            "d/one.bin=one.bin|d/two.bin=two.bin|one.bin=one.bin|two.bin=two.bin", true, "runtime.copy_file", 2U},
+        {"cf_quoted_wildcards", {"one.bin", "two.bin", "keep.txt"}, "COPY FILE '*.bin' TO '*.bak'\n",
+            "keep.txt=keep.txt|one.bak=one.bin|one.bin=one.bin|two.bak=two.bin|two.bin=two.bin", true, "runtime.copy_file", 2U},
+        {"cf_overwrites_existing_destination", {"a.bin", "b.bin"}, "COPY FILE a.bin TO b.bin\n", "a.bin=a.bin|b.bin=a.bin", true, "runtime.copy_file", 1U},
+        {"cf_question_mark_maps_character", {"one.bin", "xne.bin", "two.bin"}, "COPY FILE ?ne.bin TO ?ne.bak\n",
+            "one.bak=one.bin|one.bin=one.bin|two.bin=two.bin|xne.bak=xne.bin|xne.bin=xne.bin", true, "runtime.copy_file", 2U},
+        {"cf_fixed_destination_last_copy_wins", {"one.bin", "two.bin"}, "COPY FILE *.bin TO fixed.bak\n",
+            "fixed.bak=two.bin|one.bin=one.bin|two.bin=two.bin", true, "runtime.copy_file", 2U},
+        // Review of #6702: VFP-style backslash separators in a relative operand, and a multibyte
+        // character captured by ? and carried into the destination.
+        {"cf_backslash_subdirectory_wildcard", {"sub/one.bin"}, "COPY FILE sub\\*.bin TO sub\\*.bak\n",
+            "sub/one.bak=sub/one.bin|sub/one.bin=sub/one.bin", true, "runtime.copy_file", 1U},
+        {"cf_multibyte_question_mark_capture", {"\xC3\xA9" "a.bin"}, "COPY FILE ?a.bin TO ?a.bak\n",
+            "\xC3\xA9" "a.bak=\xC3\xA9" "a.bin|\xC3\xA9" "a.bin=\xC3\xA9" "a.bin", true, "runtime.copy_file", 1U},
+        {"cf_missing_source_is_an_error", {"keep.txt"}, "COPY FILE nosuch.bin TO b.bin\n", "keep.txt=keep.txt", false, "runtime.copy_file", 0U},
+        {"cf_wildcard_without_match_is_an_error", {"keep.txt"}, "COPY FILE *.bin TO *.bak\n", "keep.txt=keep.txt", false, "runtime.copy_file", 0U},
+        // ---- RENAME
+        {"rn_bare", {"old.txt"}, "RENAME old.txt TO new.txt\n", "new.txt=old.txt", true, "runtime.rename", 1U},
+        {"rn_parenthesized_expressions", {"old.txt"},
+            "xsrc = 'old.txt'\nxdst = 'n.txt'\nRENAME (xsrc) TO (xdst)\n", "n.txt=old.txt", true, "runtime.rename", 1U},
+        {"rn_wildcard_maps_star", {"a.prg", "b.prg", "keep.txt"}, "RENAME *.prg TO *.bak\n",
+            "a.bak=a.prg|b.bak=b.prg|keep.txt=keep.txt", true, "runtime.rename", 2U},
+        {"rn_destination_exists_is_an_error", {"old.txt", "new.txt"}, "RENAME old.txt TO new.txt\n",
+            "new.txt=new.txt|old.txt=old.txt", false, "runtime.rename", 0U},
+        {"rn_backslash_subdirectory", {"sub/old.txt"}, "RENAME sub\\old.txt TO sub\\new.txt\n",
+            "sub/new.txt=sub/old.txt", true, "runtime.rename", 1U},
+        {"rn_missing_source_is_an_error", {"keep.txt"}, "RENAME nosuch.txt TO new.txt\n", "keep.txt=keep.txt", false, "runtime.rename", 0U},
+        {"rn_wildcard_without_match_is_an_error", {"keep.txt"}, "RENAME *.prg TO *.bak\n", "keep.txt=keep.txt", false, "runtime.rename", 0U},
+        {"rn_question_mark_maps_character", {"a.prg", "bb.prg"}, "RENAME ?.prg TO ?.bak\n", "a.bak=a.prg|bb.prg=bb.prg", true, "runtime.rename", 1U},
+        {"rn_quoted_wildcards", {"a.prg", "b.prg"}, "RENAME '*.prg' TO '*.bak'\n", "a.bak=a.prg|b.bak=b.prg", true, "runtime.rename", 2U},
+        {"rn_fixed_destination_second_rename_fails", {"a.prg", "b.prg"}, "RENAME *.prg TO fixed.bak\n",
+            "b.prg=b.prg|fixed.bak=a.prg", false, "runtime.rename", 1U},
+    };
+
+    for (const TransferCase &c : cases) {
+        const fs::path dir = temp_root / c.name;
+        const fs::path script_dir = temp_root / (c.name + "_script");
+        fs::remove_all(dir, ignored);
+        fs::remove_all(script_dir, ignored);
+        fs::create_directories(dir);
+        fs::create_directories(script_dir);
+        for (const std::string &file : c.files) {
+            if (!file.empty() && file.back() == '/') {
+                fs::create_directories(dir / file.substr(0U, file.size() - 1U));
+            } else {
+                fs::create_directories((dir / file).parent_path());
+                write_text(dir / file, file);
+            }
+        }
+        const fs::path script_path = script_dir / "transfer_case.prg";
+        write_text(script_path, c.script_body + "lAfter = .T.\nRETURN\n");
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(script_path.string(), dir.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+        expect(state.completed == c.expect_completed,
+            "#6583-#6587 " + c.name + ": expected completed=" + std::string(c.expect_completed ? "true" : "false") +
+                ", got message: " + state.message);
+        expect(content_listing(dir) == c.expected,
+            "#6583-#6587 " + c.name + ": expected [" + c.expected + "], got [" + content_listing(dir) + "]");
+        const auto events = std::count_if(
+            state.events.begin(), state.events.end(),
+            [&](const copperfin::runtime::RuntimeEvent &event) { return event.category == c.event_category; });
+        expect(static_cast<std::size_t>(events) == c.expected_events,
+            "#6583-#6587 " + c.name + ": expected " + std::to_string(c.expected_events) + " " + c.event_category +
+                " event(s), got " + std::to_string(events));
+        fs::remove_all(dir, ignored);
+        fs::remove_all(script_dir, ignored);
+    }
+    fs::remove_all(temp_root, ignored);
+}
+
+// Payload bytes (embedded NUL, CR/LF, high bytes) survive COPY FILE and RENAME untouched.
+void test_copy_file_and_rename_preserve_binary_payload() {
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_file_command_operands_binary";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "work");
+    fs::create_directories(temp_root / "script");
+    const std::string payload("A\0BC\r\n\xFF\x80Z", 9);
+    write_text(temp_root / "work" / "src.bin", payload);
+    const fs::path script_path = temp_root / "script" / "binary.prg";
+    write_text(script_path, "COPY FILE src.bin TO copy.bin\nRENAME src.bin TO moved.bin\nlAfter = .T.\nRETURN\n");
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(script_path.string(), (temp_root / "work").string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6583 binary payload: script should complete: " + state.message);
+    expect(read_text(temp_root / "work" / "copy.bin") == payload, "#6583 binary payload: COPY FILE must keep exact bytes");
+    expect(read_text(temp_root / "work" / "moved.bin") == payload, "#6583 binary payload: RENAME must keep exact bytes");
+    expect(!fs::exists(temp_root / "work" / "src.bin"), "#6583 binary payload: RENAME must remove the source");
+    fs::remove_all(temp_root, ignored);
+}
+
+#if !defined(_WIN32)
+// A POSIX file name that is not valid UTF-8 keeps its exact bytes when a wildcard capture
+// is carried into the destination (captures are byte slices, not re-encoded code points).
+void test_wildcard_capture_preserves_invalid_utf8_bytes() {
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_file_command_operands_invalid_utf8";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "work");
+    fs::create_directories(temp_root / "script");
+    const std::string odd = "\xFF" "a.bin";
+    write_text(temp_root / "work" / odd, "payload");
+    const fs::path script_path = temp_root / "script" / "invalid_utf8.prg";
+    write_text(script_path, "COPY FILE ?a.bin TO ?a.bak\nRENAME ?a.bin TO ?a.old\nlAfter = .T.\nRETURN\n");
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(script_path.string(), (temp_root / "work").string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6583 invalid UTF-8: script should complete: " + state.message);
+    expect(fs::exists(temp_root / "work" / (std::string("\xFF") + "a.bak")),
+        "#6583 invalid UTF-8: COPY FILE destination must keep the 0xFF byte");
+    expect(fs::exists(temp_root / "work" / (std::string("\xFF") + "a.old")),
+        "#6583 invalid UTF-8: RENAME destination must keep the 0xFF byte");
+    expect(!fs::exists(temp_root / "work" / odd), "#6583 invalid UTF-8: RENAME must remove the source");
+    fs::remove_all(temp_root, ignored);
+}
+#endif
+
 }  // namespace
 
 int main() {
     test_erase_and_delete_file_operand_forms();
+    test_copy_file_and_rename_operand_forms();
+    test_copy_file_and_rename_preserve_binary_payload();
 #if !defined(_WIN32)
+    test_wildcard_capture_preserves_invalid_utf8_bytes();
     test_erase_wildcard_does_not_remove_symlinks();
 #endif
     if (const int failures = test_failures(); failures != 0) {

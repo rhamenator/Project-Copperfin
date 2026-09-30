@@ -7143,9 +7143,12 @@
                 CopyFileContinuation &continuation = *frame.copy_file_continuation;
                 if (!continuation.source_value.has_value())
                 {
+                    // RQ-CF-PRG-FILE-COMMAND-OPERANDS-001 (#6583, #6587): a bare operand is a literal filename.
                     const auto source_value = resumed_copy_source_value.has_value()
                                                   ? resumed_copy_source_value
-                                                  : evaluate_resumable_expression(frame, statement);
+                                                  : (is_bare_file_command_operand(statement.expression)
+                                                         ? std::optional<PrgValue>(make_string_value(trim_copy(statement.expression)))
+                                                         : evaluate_resumable_expression(frame, statement));
                     if (!source_value.has_value())
                     {
                         return {};
@@ -7160,7 +7163,9 @@
                 continuation.pending_destination = true;
                 const auto destination_value = resumed_copy_destination_value.has_value()
                                                    ? resumed_copy_destination_value
-                                                   : evaluate_resumable_expression(frame, destination_statement);
+                                                   : (is_bare_file_command_operand(statement.secondary_expression)
+                                                          ? std::optional<PrgValue>(make_string_value(trim_copy(statement.secondary_expression)))
+                                                          : evaluate_resumable_expression(frame, destination_statement));
                 if (!destination_value.has_value())
                 {
                     return {};
@@ -7171,59 +7176,98 @@
                     value_as_string(*destination_value)));
                 frame.copy_file_continuation.reset();
                 resumed_copy_destination_value.reset();
+                // Backslashes in a relative operand are normalized on POSIX hosts (#6702 review).
                 auto make_abs = [&](const std::string &raw)
                 {
-                    std::filesystem::path p = copperfin::platform::path_from_utf8_string(raw);
-                    if (p.is_relative())
-                    {
-                        p = copperfin::platform::path_from_utf8_string(current_default_directory()) / p;
-                    }
-                    return p;
+                    return file_command_path_from_operand(raw, current_default_directory());
                 };
                 const std::filesystem::path src = make_abs(src_raw);
                 const std::filesystem::path dst = make_abs(dst_raw);
-                std::filesystem::path verified_snapshot_root;
-                const auto source_to_copy = materialize_verified_file_snapshot(
-                    src,
-                    verified_snapshot_root,
-                    "Runtime.Prg.Dispatch.Error.CopyFileVerifiedBytesUnavailable",
-                    false,
-                    true);
-                const auto cleanup_verified_snapshot = [&]()
+
+                // RQ-CF-PRG-FILE-COMMAND-OPERANDS-001 (#6583, #6587): * and ? in the source filename
+                // expand to every matching file, each mapped into the destination (a directory
+                // receives the copies, a destination pattern takes the captured segments, a fixed
+                // destination is overwritten by each copy in turn). Nothing matching falls through to
+                // the ordinary missing-source error, as in VFP9.
+                std::vector<std::pair<std::filesystem::path, std::filesystem::path>> transfers;
+                const std::string source_name = copperfin::platform::path_to_utf8_string(src.filename());
+                if (file_pattern_has_wildcard(source_name))
                 {
-                    if (!verified_snapshot_root.empty())
+                    const std::string destination_name = copperfin::platform::path_to_utf8_string(dst.filename());
+                    std::error_code directory_error;
+                    const bool destination_is_directory = std::filesystem::is_directory(dst, directory_error);
+                    for (const std::filesystem::path &match : expand_file_wildcard(src))
                     {
-                        std::error_code cleanup_error;
-                        std::filesystem::remove_all(verified_snapshot_root, cleanup_error);
-                        verified_snapshot_root.clear();
+                        std::vector<std::string> captures;
+                        (void)file_wildcard_captures(
+                            source_name, copperfin::platform::path_to_utf8_string(match.filename()), captures);
+                        if (destination_is_directory)
+                        {
+                            transfers.emplace_back(match, dst / match.filename());
+                        }
+                        else if (file_pattern_has_wildcard(destination_name))
+                        {
+                            transfers.emplace_back(
+                                match,
+                                dst.parent_path() / copperfin::platform::path_from_utf8_string(
+                                                        map_wildcard_destination(destination_name, captures)));
+                        }
+                        else
+                        {
+                            transfers.emplace_back(match, dst);
+                        }
                     }
-                };
-                if (!source_to_copy.has_value())
-                {
-                    last_fault_location = statement.location;
-                    last_fault_statement = statement.text;
-                    return {.ok = false, .message = last_error_message};
                 }
-                std::error_code ec;
-                std::filesystem::copy_file(
-                    *source_to_copy,
-                    dst,
-                    std::filesystem::copy_options::overwrite_existing,
-                    ec);
-                cleanup_verified_snapshot();
-                if (ec)
+                if (transfers.empty())
                 {
-                    last_error_message = runtime_text(
-                        "Runtime.Prg.Dispatch.Error.CopyFileFailed",
-                        {{"errorMessage", ec.message()}});
-                    last_fault_location = statement.location;
-                    last_fault_statement = statement.text;
-                    return {.ok = false, .message = last_error_message};
+                    transfers.emplace_back(src, dst);
                 }
-                events.push_back({.category = "runtime.copy_file",
-                                  .detail = copperfin::platform::path_to_utf8_string(src) + " -> " +
-                                      copperfin::platform::path_to_utf8_string(dst),
-                                  .location = statement.location});
+
+                for (const auto &[transfer_source, transfer_destination] : transfers)
+                {
+                    std::filesystem::path verified_snapshot_root;
+                    const auto source_to_copy = materialize_verified_file_snapshot(
+                        transfer_source,
+                        verified_snapshot_root,
+                        "Runtime.Prg.Dispatch.Error.CopyFileVerifiedBytesUnavailable",
+                        false,
+                        true);
+                    const auto cleanup_verified_snapshot = [&]()
+                    {
+                        if (!verified_snapshot_root.empty())
+                        {
+                            std::error_code cleanup_error;
+                            std::filesystem::remove_all(verified_snapshot_root, cleanup_error);
+                            verified_snapshot_root.clear();
+                        }
+                    };
+                    if (!source_to_copy.has_value())
+                    {
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    std::error_code ec;
+                    std::filesystem::copy_file(
+                        *source_to_copy,
+                        transfer_destination,
+                        std::filesystem::copy_options::overwrite_existing,
+                        ec);
+                    cleanup_verified_snapshot();
+                    if (ec)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CopyFileFailed",
+                            {{"errorMessage", ec.message()}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    events.push_back({.category = "runtime.copy_file",
+                                      .detail = copperfin::platform::path_to_utf8_string(transfer_source) + " -> " +
+                                          copperfin::platform::path_to_utf8_string(transfer_destination),
+                                      .location = statement.location});
+                }
                 return {};
             }
             case StatementKind::rename_file_command:
@@ -7240,9 +7284,12 @@
                 RenameFileContinuation &continuation = *frame.rename_file_continuation;
                 if (!continuation.source_value.has_value())
                 {
+                    // RQ-CF-PRG-FILE-COMMAND-OPERANDS-001 (#6585, #6586): a bare operand is a literal filename.
                     const auto source_value = resumed_rename_source_value.has_value()
                                                   ? resumed_rename_source_value
-                                                  : evaluate_resumable_expression(frame, statement);
+                                                  : (is_bare_file_command_operand(statement.expression)
+                                                         ? std::optional<PrgValue>(make_string_value(trim_copy(statement.expression)))
+                                                         : evaluate_resumable_expression(frame, statement));
                     if (!source_value.has_value())
                     {
                         return {};
@@ -7257,7 +7304,9 @@
                 continuation.pending_destination = true;
                 const auto destination_value = resumed_rename_destination_value.has_value()
                                                    ? resumed_rename_destination_value
-                                                   : evaluate_resumable_expression(frame, destination_statement);
+                                                   : (is_bare_file_command_operand(statement.secondary_expression)
+                                                          ? std::optional<PrgValue>(make_string_value(trim_copy(statement.secondary_expression)))
+                                                          : evaluate_resumable_expression(frame, destination_statement));
                 if (!destination_value.has_value())
                 {
                     return {};
@@ -7268,54 +7317,81 @@
                     value_as_string(*destination_value)));
                 frame.rename_file_continuation.reset();
                 resumed_rename_destination_value.reset();
+                // Backslashes in a relative operand are normalized on POSIX hosts (#6702 review).
                 auto make_abs = [&](const std::string &raw)
                 {
-                    std::filesystem::path p = copperfin::platform::path_from_utf8_string(raw);
-                    if (p.is_relative())
-                    {
-                        p = copperfin::platform::path_from_utf8_string(current_default_directory()) / p;
-                    }
-                    return p;
+                    return file_command_path_from_operand(raw, current_default_directory());
                 };
                 const std::filesystem::path old_path = make_abs(old_raw);
                 const std::filesystem::path new_path = make_abs(new_raw);
-                if (old_path.lexically_normal() != new_path.lexically_normal())
+
+                // RQ-CF-PRG-FILE-COMMAND-OPERANDS-001 (#6585, #6586): * and ? in the source filename
+                // rename every matching file, mapping the captured segments into the destination
+                // pattern. A fixed destination fails on the second match (error 7 in VFP9), and
+                // nothing matching falls through to the ordinary missing-source failure.
+                std::vector<std::pair<std::filesystem::path, std::filesystem::path>> renames;
+                const std::string old_name = copperfin::platform::path_to_utf8_string(old_path.filename());
+                if (file_pattern_has_wildcard(old_name))
                 {
-                    std::error_code exists_error;
-                    if (std::filesystem::exists(new_path, exists_error))
+                    const std::string new_name = copperfin::platform::path_to_utf8_string(new_path.filename());
+                    for (const std::filesystem::path &match : expand_file_wildcard(old_path))
                     {
-                        last_error_message = runtime_text(
-                            "Runtime.Prg.Dispatch.Error.RenameFileTargetExists",
-                            {{"path", copperfin::platform::path_to_utf8_string(new_path)}});
-                        last_fault_location = statement.location;
-                        last_fault_statement = statement.text;
-                        return {.ok = false, .message = last_error_message};
+                        std::vector<std::string> captures;
+                        (void)file_wildcard_captures(
+                            old_name, copperfin::platform::path_to_utf8_string(match.filename()), captures);
+                        renames.emplace_back(
+                            match,
+                            file_pattern_has_wildcard(new_name)
+                                ? new_path.parent_path() / copperfin::platform::path_from_utf8_string(
+                                                               map_wildcard_destination(new_name, captures))
+                                : new_path);
                     }
-                    if (exists_error)
+                }
+                if (renames.empty())
+                {
+                    renames.emplace_back(old_path, new_path);
+                }
+
+                for (const auto &[rename_source, rename_destination] : renames)
+                {
+                    if (rename_source.lexically_normal() != rename_destination.lexically_normal())
+                    {
+                        std::error_code exists_error;
+                        if (std::filesystem::exists(rename_destination, exists_error))
+                        {
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.RenameFileTargetExists",
+                                {{"path", copperfin::platform::path_to_utf8_string(rename_destination)}});
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        if (exists_error)
+                        {
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.RenameFileFailed",
+                                {{"errorMessage", exists_error.message()}});
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                    }
+                    std::error_code ec;
+                    std::filesystem::rename(rename_source, rename_destination, ec);
+                    if (ec)
                     {
                         last_error_message = runtime_text(
                             "Runtime.Prg.Dispatch.Error.RenameFileFailed",
-                            {{"errorMessage", exists_error.message()}});
+                            {{"errorMessage", ec.message()}});
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
+                    events.push_back({.category = "runtime.rename",
+                                      .detail = copperfin::platform::path_to_utf8_string(rename_source) + " -> " +
+                                          copperfin::platform::path_to_utf8_string(rename_destination),
+                                      .location = statement.location});
                 }
-                std::error_code ec;
-                std::filesystem::rename(old_path, new_path, ec);
-                if (ec)
-                {
-                    last_error_message = runtime_text(
-                        "Runtime.Prg.Dispatch.Error.RenameFileFailed",
-                        {{"errorMessage", ec.message()}});
-                    last_fault_location = statement.location;
-                    last_fault_statement = statement.text;
-                    return {.ok = false, .message = last_error_message};
-                }
-                events.push_back({.category = "runtime.rename",
-                                  .detail = copperfin::platform::path_to_utf8_string(old_path) + " -> " +
-                                      copperfin::platform::path_to_utf8_string(new_path),
-                                  .location = statement.location});
                 return {};
             }
             case StatementKind::print_command:

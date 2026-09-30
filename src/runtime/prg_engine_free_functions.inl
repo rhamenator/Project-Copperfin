@@ -1043,12 +1043,24 @@
 
         // File-name characters are compared as decoded UTF-8 code points (an invalid byte counts as
         // one character), so `?` matches one character rather than one byte.
-        std::vector<char32_t> decode_file_name_code_points(const std::string &text)
+        // When `offsets` is supplied it receives the byte offset of every code point plus the
+        // total size, so a run of characters can be copied back out byte for byte (a name that
+        // is not valid UTF-8 must not be re-encoded into different bytes).
+        std::vector<char32_t> decode_file_name_code_points(const std::string &text,
+                                                           std::vector<std::size_t> *offsets = nullptr)
         {
             std::vector<char32_t> code_points;
             code_points.reserve(text.size());
+            if (offsets != nullptr)
+            {
+                offsets->clear();
+            }
             for (std::size_t index = 0U; index < text.size();)
             {
+                if (offsets != nullptr)
+                {
+                    offsets->push_back(index);
+                }
                 const unsigned char lead = static_cast<unsigned char>(text[index]);
                 std::size_t length = 1U;
                 char32_t value = lead;
@@ -1078,36 +1090,11 @@
                 code_points.push_back(lead);
                 ++index;
             }
-            return code_points;
-        }
-
-        std::string encode_file_name_code_points(const std::vector<char32_t> &code_points, std::size_t begin, std::size_t end)
-        {
-            std::string text;
-            for (std::size_t index = begin; index < end; ++index)
+            if (offsets != nullptr)
             {
-                const char32_t cp = code_points[index];
-                if (cp < 0x80U) { text.push_back(static_cast<char>(cp)); }
-                else if (cp < 0x800U)
-                {
-                    text.push_back(static_cast<char>(0xC0U | (cp >> 6U)));
-                    text.push_back(static_cast<char>(0x80U | (cp & 0x3FU)));
-                }
-                else if (cp < 0x10000U)
-                {
-                    text.push_back(static_cast<char>(0xE0U | (cp >> 12U)));
-                    text.push_back(static_cast<char>(0x80U | ((cp >> 6U) & 0x3FU)));
-                    text.push_back(static_cast<char>(0x80U | (cp & 0x3FU)));
-                }
-                else
-                {
-                    text.push_back(static_cast<char>(0xF0U | (cp >> 18U)));
-                    text.push_back(static_cast<char>(0x80U | ((cp >> 12U) & 0x3FU)));
-                    text.push_back(static_cast<char>(0x80U | ((cp >> 6U) & 0x3FU)));
-                    text.push_back(static_cast<char>(0x80U | (cp & 0x3FU)));
-                }
+                offsets->push_back(text.size());
             }
-            return text;
+            return code_points;
         }
 
         // Simple case folding for file-name matching: ASCII, Latin-1 Supplement, basic Greek and
@@ -1134,7 +1121,12 @@
         {
             captures.clear();
             const std::vector<char32_t> pat = decode_file_name_code_points(pattern);
-            const std::vector<char32_t> txt = decode_file_name_code_points(name);
+            std::vector<std::size_t> txt_offsets;
+            const std::vector<char32_t> txt = decode_file_name_code_points(name, &txt_offsets);
+            const auto slice = [&](std::size_t begin, std::size_t end)
+            {
+                return name.substr(txt_offsets[begin], txt_offsets[end] - txt_offsets[begin]);
+            };
             const auto solve = [&](const std::vector<char32_t> &pp, std::vector<std::string> &out) -> bool
             {
                 std::vector<std::vector<char>> can(pp.size() + 1U, std::vector<char>(txt.size() + 1U, 0));
@@ -1169,7 +1161,7 @@
                         {
                             --end;
                         }
-                        out.push_back(encode_file_name_code_points(txt, j, end));
+                        out.push_back(slice(j, end));
                         j = end;
                         ++i;
                     }
@@ -1177,7 +1169,7 @@
                     {
                         if (pp[i] == U'?')
                         {
-                            out.push_back(encode_file_name_code_points(txt, j, j + 1U));
+                            out.push_back(slice(j, j + 1U));
                         }
                         ++i;
                         ++j;
