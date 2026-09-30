@@ -113,6 +113,7 @@ int main() {
     test_loop_predicates_and_bounds_use_heap_backed_expression_checkpoints();
     test_scan_predicate_preserves_rest_scope_and_exhaustion_state();
     test_scan_does_not_resume_on_cursor_reusing_its_work_area();
+    test_predicate_reopening_the_target_alias_does_not_retarget_the_command();
     test_locate_predicate_closing_cursor_fails_catchably();
     test_copy_to_predicate_closing_source_fails_catchably();
     test_copy_to_predicate_closing_source_under_on_error_resume();
