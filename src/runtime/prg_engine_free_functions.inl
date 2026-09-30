@@ -1224,12 +1224,10 @@
             return result;
         }
 
-        // Path for a file-command operand. A VFP-style relative operand separates with backslashes,
-        // which are not separators on POSIX hosts, so they are normalized there (a Windows drive or
-        // UNC path is left alone). A relative result is anchored at the default directory.
-        std::filesystem::path file_command_path_from_operand(const std::string &raw, const std::string &default_directory)
+        // A VFP-style relative operand separates with backslashes, which are not separators on
+        // POSIX hosts, so they are normalized there (a Windows drive or UNC path is left alone).
+        std::string normalize_file_operand_separators(std::string text)
         {
-            std::string text = raw;
 #if !defined(_WIN32)
             const bool drive_path = text.size() >= 3U && std::isalpha(static_cast<unsigned char>(text[0])) != 0 &&
                                     text[1] == ':' && (text[2] == '\\' || text[2] == '/');
@@ -1239,6 +1237,13 @@
                 std::replace(text.begin(), text.end(), '\\', '/');
             }
 #endif
+            return text;
+        }
+
+        // Path for a file-command operand; a relative result is anchored at the default directory.
+        std::filesystem::path file_command_path_from_operand(const std::string &raw, const std::string &default_directory)
+        {
+            const std::string text = normalize_file_operand_separators(raw);
             std::filesystem::path path = copperfin::platform::path_from_utf8_string(text);
             if (path.is_relative())
             {
