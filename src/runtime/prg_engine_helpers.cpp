@@ -1427,7 +1427,12 @@ int stored_millis_to_seconds_of_day(int& julian_day, const long long millis) {
     // VFP9 stores the time of day with a stray millisecond (03:04:05 is 11044999) and shows it rounded to the nearest
     // second, half up, carrying into the next day (86399999 is the next midnight; probe result15.txt, #6757).
     const long long total_seconds = (millis + 500LL) / 1000LL;
-    julian_day += static_cast<int>(total_seconds / 86400LL);
+    const long long carry = total_seconds / 86400LL;
+    // A corrupt table can hold the largest day number; saturate so the caller's date-range check rejects it instead of
+    // the addition overflowing.
+    julian_day = julian_day > std::numeric_limits<int>::max() - carry
+                     ? std::numeric_limits<int>::max()
+                     : julian_day + static_cast<int>(carry);
     return static_cast<int>(total_seconds % 86400LL);
 }
 

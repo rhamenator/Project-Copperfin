@@ -2657,7 +2657,11 @@ std::optional<std::string> sql_datetime_literal_from_storage(const std::string& 
     // VFP9 stores the time with a stray millisecond (03:04:05 is 11044999) and shows it rounded to the nearest
     // second, half up, carrying into the next day (#6757).
     const long long rounded_seconds = (static_cast<long long>(millis) + 500LL) / 1000LL;
-    julian_day += static_cast<int>(rounded_seconds / 86400LL);
+    const long long carried_day = static_cast<long long>(julian_day) + (rounded_seconds / 86400LL);
+    if (carried_day > std::numeric_limits<int>::max()) {
+        return std::nullopt;   // a corrupt day number, not a timestamp
+    }
+    julian_day = static_cast<int>(carried_day);
     millis = static_cast<int>(rounded_seconds % 86400LL) * 1000;
 
     int year = 0;

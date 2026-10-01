@@ -293,12 +293,51 @@ void test_copperfin_written_datetimes_use_vfp_julian_day_numbers() {
     fs::remove_all(dir, ignored);
 }
 
+// A corrupt table can hold the largest Julian day together with milliseconds that round past midnight; reading it must
+// not overflow the carried day, and the value is not a DateTime (#6759 review).
+void test_corrupt_julian_day_carry_is_rejected() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_datetime_corrupt_julian";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    std::string bytes(reinterpret_cast<const char *>(kVfpMillisecondTable), sizeof(kVfpMillisecondTable));
+    // Records 1 and 2 of ms.dbf: Julian day 2147483647 with 86400000 ms (rounds past midnight) and with 0 ms.
+    constexpr std::size_t kHeader = 488U;
+    constexpr std::size_t kRecord = 48U;
+    constexpr std::size_t kField = 9U;   // the T field offset within a record
+    const auto patch = [&](const std::size_t record, const std::uint32_t julian, const std::uint32_t millis) {
+        const std::size_t at = kHeader + (record * kRecord) + kField;
+        for (std::size_t index = 0U; index < 4U; ++index) {
+            bytes[at + index] = static_cast<char>((julian >> (8U * index)) & 0xFFU);
+            bytes[at + 4U + index] = static_cast<char>((millis >> (8U * index)) & 0xFFU);
+        }
+    };
+    patch(0U, 2147483647U, 86400000U);
+    patch(1U, 2147483647U, 0U);
+    {
+        std::ofstream out(dir / "ms.dbf", std::ios::binary);
+        out.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+    }
+    std::string message;
+    const bool completed = run(dir, "corrupt",
+        "LOCAL c\nc = ''\nUSE ms\nGO 1\nc = c + '[' + VARTYPE(t) + IIF(EMPTY(t), 'E', 'F') + ']'\n"
+        "GO 2\nc = c + '[' + VARTYPE(t) + IIF(EMPTY(t), 'E', 'F') + ']'\n"
+        "STRTOFILE(c, 'corrupt.txt')\nRETURN\n", message);
+    expect(completed, "corrupt Julian day: the script should complete: " + message);
+    const std::string output = read_file(dir / "corrupt.txt");
+    // Neither is a valid DateTime: the runtime keeps its raw storage text (a Character value), as it does for any
+    // unreadable DateTime, and the carried day never overflows.
+    expect(output == "[CF][CF]", "corrupt Julian day: both values should stay unreadable text, got " + output);
+    fs::remove_all(dir, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_vfp_written_datetimes_are_read_as_vfp_shows_them();
     test_stored_milliseconds_round_to_the_nearest_second();
     test_copperfin_written_datetimes_use_vfp_julian_day_numbers();
+    test_corrupt_julian_day_carry_is_rejected();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;
