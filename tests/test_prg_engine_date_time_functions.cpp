@@ -103,7 +103,6 @@ namespace
             "SET MARK TO '.'\n"
             "stod_dmy = STOD('20260418')\n"
             "jtod_dmy = JTOD(2460447)\n"
-            "dmy_dmy = DMY(18, 4, 2026)\n"
             "min_date_dmy = DTOC(MIN(DATE(2020, 12, 1), DATE(2021, 1, 15)), 1)\n"
             "max_date_dmy = DTOC(MAX(DATE(2020, 12, 1), DATE(2021, 1, 15)), 1)\n"
             "SET DATE TO MDY\n"
@@ -114,7 +113,6 @@ namespace
             "month_name = CMONTH(d)\n"
             "next_month = GOMONTH(CTOD('01/31/2026'), 1)\n"
             "prev_month = GOMONTH(CTOD('03/31/2026'), -1)\n"
-            "mdy_value = MDY(4, 18, 2026)\n"
             "dtot_value = DTOT(CTOD('04/18/2026'))\n"
             "ttod_value = TTOD(CTOT('04/18/2026 13:45:56'))\n"
             "ttod_compact_datetime = TTOD(CTOT('20260418134556'))\n"
@@ -182,8 +180,6 @@ namespace
             "dtoj_trailing_invalid = DTOJ(CTOD('04/18/2026junk'))\n"
             "jtod_value = JTOD(dtoj_value)\n"
             "jtod_invalid = JTOD(0)\n"
-            "dmy_value = DMY(18, 4, 2026)\n"
-            "dmy_invalid = DMY(31, 2, 2026)\n"
             "date_ctor_invalid_vartype = VARTYPE(DATE(2024, 2, 31))\n"
             "datetime_ctor_invalid_vartype = VARTYPE(DATETIME(2024, 2, 31, 0, 0, 0))\n"
             "stod_invalid_vartype = VARTYPE(STOD('2024-02-31'))\n"
@@ -193,8 +189,6 @@ namespace
             "ttod_invalid_vartype = VARTYPE(TTOD(CTOT('not-a-date')))\n"
             "jtot_invalid_vartype = VARTYPE(JTOT(0))\n"
             "jtod_invalid_vartype = VARTYPE(JTOD(0))\n"
-            "mdy_invalid_vartype = VARTYPE(MDY(2, 31, 2024))\n"
-            "dmy_invalid_vartype = VARTYPE(DMY(31, 2, 2024))\n"
             "gomonth_invalid = GOMONTH(CTOD('not-a-date'), 1)\n"
             "eomonth_invalid = EOMONTH(CTOD('not-a-date'))\n"
             "gomonth_invalid_vartype = VARTYPE(gomonth_invalid)\n"
@@ -250,7 +244,6 @@ namespace
             "date_set_ymd = SET('DATE')\n"
             "stod_ymd_century_off = STOD('20260418')\n"
             "jtod_ymd_century_off = JTOD(2460447)\n"
-            "dmy_ymd_century_off = DMY(18, 4, 2026)\n"
             "dtoc_ymd_century_off = DTOC(CTOD('2026/04/18'))\n"
             "ctot_ymd_century_off = CTOT('2026/04/18 13:45:56')\n"
             "SET CENTURY ON\n"
@@ -372,7 +365,6 @@ namespace
         check("month_name", "April");
         check("next_month", "02/28/2026");
         check("prev_month", "02/28/2026");
-        check("mdy_value", "04/18/2026");
         check("dtot_value", "04/18/2026 00:00:00");
         check("ttod_value", "04/18/2026");
         check("ttod_compact_datetime", "04/18/2026");
@@ -436,8 +428,6 @@ namespace
         check("dtoj_trailing_invalid", "0");
         check("jtod_value", "04/18/2026");
         check("jtod_invalid", "");
-        check("dmy_value", "04/18/2026");
-        check("dmy_invalid", "");
         check("date_ctor_invalid_vartype", "D");
         check("datetime_ctor_invalid_vartype", "T");
         check("stod_invalid_vartype", "D");
@@ -447,8 +437,6 @@ namespace
         check("ttod_invalid_vartype", "D");
         check("jtot_invalid_vartype", "T");
         check("jtod_invalid_vartype", "D");
-        check("mdy_invalid_vartype", "D");
-        check("dmy_invalid_vartype", "D");
         check("gomonth_invalid", "");
         check("eomonth_invalid", "");
         check("gomonth_invalid_vartype", "D");
@@ -462,7 +450,6 @@ namespace
         check("date_set_dmy", "DMY");
         check("stod_dmy", "18.04.2026");
         check("jtod_dmy", "18.04.2026");
-        check("dmy_dmy", "18.04.2026");
         check("ctod_dmy", "18/04/2026");
         check("date_arithmetic_dmy", "02/05/2026");
         check("dtoc_dmy", "18/04/2026");
@@ -502,7 +489,6 @@ namespace
         check("date_set_ymd", "YMD");
         check("stod_ymd_century_off", "26/04/18");
         check("jtod_ymd_century_off", "26/04/18");
-        check("dmy_ymd_century_off", "26/04/18");
         check("dtoc_ymd_century_off", "26/04/18");
         check("ctot_ymd_century_off", "26/04/18 13:45:56");
         check("century_on", "ON");

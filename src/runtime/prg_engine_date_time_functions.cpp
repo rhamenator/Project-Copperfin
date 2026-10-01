@@ -860,9 +860,9 @@ namespace {
 // ~/temp/vfp9-probes/datetime-types-c24/result.txt) raises error 11 for a Character, Numeric, Logical or Object
 // argument to every function below; DTOT takes only a Date and TTOD only a DateTime. A NULL argument has
 // already returned NULL before dispatch reaches here. GOMONTH, EOMONTH, DOW and WEEK also need a Numeric second
-// argument (WEEK also a Numeric third). QUARTER, EOMONTH and DTOJ are Copperfin extensions that follow their siblings. MDY and DMY are not
-// covered yet: Copperfin gives them an invented numeric (month, day, year) constructor that VFP9 does not have
-// (#5924), which must be replaced together with this rule.
+// argument (WEEK also a Numeric third). QUARTER, EOMONTH and DTOJ are Copperfin extensions that follow their
+// siblings. MDY and DMY take exactly one argument (none is error 1229 "Too few arguments.", more than one 1230
+// "Too many arguments.").
 bool is_date_or_datetime(const PrgValue& value) {
     const PrgOperandClass operand_class = classify_operand(value);
     return operand_class == PrgOperandClass::date || operand_class == PrgOperandClass::datetime;
@@ -871,11 +871,19 @@ bool is_date_or_datetime(const PrgValue& value) {
 void require_date_time_argument_types(const std::string& function, const std::vector<PrgValue>& arguments) {
     static const std::set<std::string> kDateOrDateTime = {
         "dow", "cdow", "cmonth", "year", "month", "day", "week", "dtos", "dtoc", "hour", "minute", "sec", "ttoc",
-        "gomonth", "quarter", "eomonth", "dtoj"};
+        "gomonth", "quarter", "eomonth", "dtoj", "mdy", "dmy"};
     // Numeric optional arguments, by function and zero-based position: GOMONTH, EOMONTH and DOW take a Numeric
     // second argument and WEEK a Numeric second and third (WEEK(d, 1, 'x') is error 11 in VFP9).
     static const std::map<std::string, std::vector<std::size_t>> kNumericOptionalArguments = {
         {"gomonth", {1U}}, {"eomonth", {1U}}, {"dow", {1U}}, {"week", {1U, 2U}}};
+    if (function == "mdy" || function == "dmy") {
+        if (arguments.empty()) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Dll.Error.TooFewArguments"), 1229);
+        }
+        if (arguments.size() >= 2U) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Dll.Error.TooManyArguments"), 1230);
+        }
+    }
     if (arguments.empty() || arguments.front().is_null) {
         return;
     }
@@ -979,14 +987,35 @@ std::optional<PrgValue> evaluate_date_time_function(
     if (function == "seconds") {
         return make_number_value(static_cast<double>(current_second_of_day()));
     }
-    if (function == "mdy" && arguments.size() >= 3U) {
-        const int month = static_cast<int>(std::llround(value_as_number(arguments[0])));
-        const int day = static_cast<int>(std::llround(value_as_number(arguments[1])));
-        const int year = static_cast<int>(std::llround(value_as_number(arguments[2])));
-        if (!valid_runtime_date(year, month, day)) {
-            return make_date_value(std::string{});
+    if ((function == "mdy" || function == "dmy") && arguments.size() == 1U) {
+        // #5924: MDY(d) is "April 18, 2026" and DMY(d) is "18 April 2026" (day always two digits; the year is
+        // two digits when SET CENTURY is OFF). An empty Date or DateTime is "*bad date*". Neither function
+        // depends on SET DATE or SET MARK. Installed VFP9 probe retained at
+        // ~/temp/vfp9-probes/datetime-types-c24/result-mdy.txt.
+        static constexpr std::array<const char*, 12U> kMonthNames = {
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"};
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (!parse_date_value_for_set(arguments[0], year, month, day, set_callback) || month < 1 || month > 12) {
+            return make_string_value("*bad date*");
         }
-        return make_date_value(format_runtime_date_for_set(year, month, day, set_callback), year, month, day);
+        std::ostringstream text;
+        text.imbue(std::locale::classic());   // a global digit-grouping locale must not print 2,026
+        const bool century = is_century_enabled(set_callback);
+        text << std::setfill('0');
+        if (function == "mdy") {
+            text << kMonthNames[static_cast<std::size_t>(month - 1)] << ' ' << std::setw(2) << day << ", ";
+        } else {
+            text << std::setw(2) << day << ' ' << kMonthNames[static_cast<std::size_t>(month - 1)] << ' ';
+        }
+        if (century) {
+            text << std::setw(4) << year;
+        } else {
+            text << std::setw(2) << (year % 100);
+        }
+        return make_string_value(text.str());
     }
     if (function == "dow" && !arguments.empty()) {
         int year = 0;
@@ -1433,15 +1462,6 @@ std::optional<PrgValue> evaluate_date_time_function(
                 0,
                 0,
                 0);
-        }
-        return make_date_value(format_runtime_date_for_set(year, month, day, set_callback), year, month, day);
-    }
-    if (function == "dmy" && arguments.size() >= 3U) {
-        int day = static_cast<int>(value_as_number(arguments[0]));
-        int month = static_cast<int>(value_as_number(arguments[1]));
-        int year = static_cast<int>(value_as_number(arguments[2]));
-        if (!valid_runtime_date(year, month, day)) {
-            return make_date_value(std::string{});
         }
         return make_date_value(format_runtime_date_for_set(year, month, day, set_callback), year, month, day);
     }
