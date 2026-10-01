@@ -209,19 +209,32 @@ struct PrgClassDefinition {
 
 struct Program {
     std::string path;
+    // Bytes of source actually read for this program (not including includes); the session sums these
+    // against its aggregate limit (#5731).
+    std::size_t source_bytes = 0;
     std::vector<std::string> source_lines;
     Routine main{};
     std::map<std::string, Routine> routines;
     std::map<std::string, PrgClassDefinition> classes;
 };
 
-Program parse_program(const std::string& path);
-Program parse_program_for_analysis(const std::string& path);
+// PRG source resource ceilings (#5731); the defaults mirror RuntimeSessionOptions.
+struct PrgSourceLimits {
+    std::size_t max_source_bytes = 64U * 1024U * 1024U;
+    std::size_t max_aggregate_source_bytes = 256U * 1024U * 1024U;
+    std::size_t max_logical_line_bytes = 1024U * 1024U;
+    std::size_t max_source_lines = 5000000U;
+    std::size_t max_include_files = 4096U;
+};
+
+Program parse_program(const std::string& path, const PrgSourceLimits& limits = {});
+Program parse_program_for_analysis(const std::string& path, const PrgSourceLimits& limits = {});
 Program parse_program_source(
     const std::string& logical_path,
     const std::string& source_text,
     const std::map<std::string, std::string>& source_text_overrides = {},
-    bool require_source_text_overrides = false);
+    bool require_source_text_overrides = false,
+    const PrgSourceLimits& limits = {});
 
 PrgValue canonicalize_native_olecontrol_doverb_argument(const PrgValue& verb);
 std::optional<PrgValue> read_native_olecontrol_objectverb_by_index(

@@ -607,8 +607,10 @@ flag an unterminated literal, and doing so needs a lexer that honors comments,
 
 **2026-09-30:** a missing active `#INCLUDE` (#5729) and unbalanced
 `#IF`/`#ELSE`/`#ENDIF` structure (#5730) now stop the program with a file-and-line
-diagnostic (`RQ-CF-PRG-PREPROCESSOR-STRUCTURE-001`). Still open here: #5731
-(unbounded source size) and the static-analysis lane of #6509.
+diagnostic (`RQ-CF-PRG-PREPROCESSOR-STRUCTURE-001`). PRG source loading is now
+bounded by configurable byte, aggregate, line and include ceilings (#5731,
+`RQ-CF-PRG-SOURCE-RESOURCE-LIMITS-001`; the redundant-copy reduction it lists is
+not done). Still open here: the static-analysis lane of #6509.
 
 #6509 (unterminated literals executing), #5729 (missing include ignored),
 #5730 (unterminated header conditional removing a parent PRG), and #5731

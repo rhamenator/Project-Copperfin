@@ -89,6 +89,47 @@
                     "Runtime.Prg.Parser.Error.VerifiedSourceUnavailable",
                     {{"path", normalized}}));
             }
+            // Resource ceilings (#5731): every program a session loads stays cached, so the sources
+            // it has parsed are bounded in total as well as one by one.
+            const PrgSourceLimits source_limits{
+                .max_source_bytes = options.max_source_bytes,
+                .max_aggregate_source_bytes = options.max_aggregate_source_bytes,
+                .max_logical_line_bytes = options.max_logical_line_bytes,
+                .max_source_lines = options.max_source_lines,
+                .max_include_files = options.max_include_files};
+            std::uint64_t incoming_source_bytes = 0U;
+            if (use_startup_source_text)
+            {
+                incoming_source_bytes = options.startup_source_text->size();
+            }
+            else if (source_override != options.source_text_overrides.end())
+            {
+                incoming_source_bytes = source_override->second.size();
+            }
+            else
+            {
+                std::error_code size_error;
+                const std::uintmax_t file_bytes = std::filesystem::file_size(
+                    copperfin::platform::path_from_utf8_string(normalized), size_error);
+                incoming_source_bytes = size_error ? 0U : static_cast<std::uint64_t>(file_bytes);
+            }
+            if (incoming_source_bytes > options.max_source_bytes)
+            {
+                // One file over the per-file limit is reported as that, not as an aggregate overflow.
+                throw PrgSourceDiagnostic(runtime_text(
+                    "Runtime.Prg.Parser.Error.SourceTooLarge",
+                    {{"path", normalized},
+                     {"bytes", std::to_string(incoming_source_bytes)},
+                     {"limit", std::to_string(options.max_source_bytes)}}));
+            }
+            if (loaded_source_bytes + incoming_source_bytes > options.max_aggregate_source_bytes)
+            {
+                throw PrgSourceDiagnostic(runtime_text(
+                    "Runtime.Prg.Parser.Error.AggregateSourceTooLarge",
+                    {{"path", normalized},
+                     {"bytes", std::to_string(loaded_source_bytes + incoming_source_bytes)},
+                     {"limit", std::to_string(options.max_aggregate_source_bytes)}}));
+            }
             auto [inserted, _] = programs.emplace(
                 normalized,
                 use_startup_source_text
@@ -96,14 +137,20 @@
                           normalized,
                           *options.startup_source_text,
                           options.source_text_overrides,
-                          options.require_source_text_overrides)
+                          options.require_source_text_overrides,
+                          source_limits)
                     : (source_override != options.source_text_overrides.end()
                            ? parse_program_source(
                                  normalized,
                                  source_override->second,
                                  options.source_text_overrides,
-                                 options.require_source_text_overrides)
-                           : parse_program(normalized)));
+                                 options.require_source_text_overrides,
+                                 source_limits)
+                           : parse_program(normalized, source_limits)));
+            // Count what was actually read, not the size seen before reading.
+            loaded_source_bytes += inserted->second.source_bytes != 0U
+                                       ? inserted->second.source_bytes
+                                       : static_cast<std::size_t>(incoming_source_bytes);
             return inserted->second;
         }
 

@@ -1186,6 +1186,8 @@ namespace copperfin::runtime
         std::size_t executed_statement_count = 0;
         std::size_t max_call_depth = 1024;
         std::size_t max_executed_statements = 500000;
+        // Total bytes of PRG source the session has parsed and cached (#5731).
+        std::size_t loaded_source_bytes = 0;
         std::size_t max_loop_iterations = 200000;
         std::filesystem::path runtime_temp_directory;
         std::uint64_t runtime_instance_id = 0;
