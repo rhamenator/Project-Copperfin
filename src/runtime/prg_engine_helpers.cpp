@@ -973,6 +973,30 @@ PrgValue make_empty_value() {
     return {};
 }
 
+PrgOperandClass classify_operand(const PrgValue& value) {
+    switch (value.kind) {
+        case PrgValueKind::string:
+            if (value.is_object_reference) {
+                // A runtime object is held as a string token; it is an Object to every operator.
+                return PrgOperandClass::object;
+            }
+            return value.string_flavor == PrgStringFlavor::date
+                       ? PrgOperandClass::date
+                       : (value.string_flavor == PrgStringFlavor::datetime ? PrgOperandClass::datetime
+                                                                           : PrgOperandClass::character);
+        case PrgValueKind::number:
+        case PrgValueKind::int64:
+        case PrgValueKind::uint64:
+            return PrgOperandClass::numeric;
+        case PrgValueKind::currency:
+            return PrgOperandClass::currency;
+        case PrgValueKind::boolean:
+            return PrgOperandClass::logical;
+        default:
+            return PrgOperandClass::empty;
+    }
+}
+
 PrgValue make_null_value() {
     PrgValue result;
     result.is_null = true;

@@ -665,8 +665,9 @@ namespace copperfin::runtime_surface_tests
             "lsetmethod = SETPEM(oa, 'add', 'MyAddProc')\n"
             "cgetmethodafterset = GETPEM(oa, 'add')\n"
             "cOpaque = ALLTRIM(oa)\n"
-            "cPartial = cOpaque + 'junk'\n"
-            "cGrouped = cOpaque + '.0'\n"
+            "cPartial = STRTRAN(cOpaque, '~', '~') + 'junk'\n"   // a plain string: object + 'junk' is error 107 in VFP9
+
+            "cGrouped = STRTRAN(cOpaque, '~', '~') + '.0'\n"
             "cWhitespace = STRTRAN(cOpaque, '#', '# ')\n"
             "cZero = 'object:Scripting.Dictionary#0'\n"
             "cNegative = 'object:Scripting.Dictionary#-1'\n"

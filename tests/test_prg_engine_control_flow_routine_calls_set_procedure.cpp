@@ -786,6 +786,7 @@ void test_loop_predicates_and_bounds_use_heap_backed_expression_checkpoints() {
     const fs::path loop_debugger_path = temp_root / "loop_debugger.prg";
     write_text(
         loop_debugger_path,
+        "loopDebuggerChildCalls = 0\n"   // an unset variable is error 12 in VFP9
         "DO WHILE loopDebuggerChild()\n"
         "    loopDebuggerBody = 1\n"
         "ENDDO\n"
@@ -932,6 +933,7 @@ void test_loop_predicates_and_bounds_use_heap_backed_expression_checkpoints() {
     write_text(
         scan_path,
         "USE '" + scan_table_path.string() + "' ALIAS ScanPeople IN 0\n"
+        "scanFilterCalls = 0\n"   // the filter runs at GO TOP, so its counter must exist first
         "SET FILTER TO scanCursorFilter()\n"
         "GO TOP IN ScanPeople\n"
         "scanFilterCalls = 0\n"

@@ -14,6 +14,7 @@ namespace copperfin::runtime_surface_tests
         write_text(
             main_path,
             "PUBLIC nKeyFormHwnd, nKeyPressCalls, nLastKeyCode, nLastShift, nAltShift\n"
+            "nKeyPressCalls = 0\n"   // PUBLIC starts as .F., and .F. + 1 is error 107 in VFP9
             "oForm = CREATEOBJECT('KeyForm')\n"
             "nKeyFormHwnd = oForm.hWnd\n"
             "READ EVENTS\n"

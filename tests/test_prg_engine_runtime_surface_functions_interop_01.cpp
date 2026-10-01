@@ -853,6 +853,7 @@ namespace copperfin::runtime_surface_tests
             "PUBLIC nBridgeCalls, nHandlerCalls, nBridgeRows, nHandlerRows, nBridgeAfterRows, nBridgeAfterType, nAfterFaultRows, nReentryCalls, lBridgeSource, lBridgeSourceAfter, lHandlerSource, lReentry, cBridgeAfterEvent, cLog\n"
             "nBridgeCalls = 0\n"
             "nHandlerCalls = 0\n"
+            "nReentryCalls = 0\n"   // a PUBLIC variable starts as .F., and .F. + 1 is error 107 in VFP9
             "cLog = ''\n"
             "oSource = CREATEOBJECT('SourceThing')\n"
             "oBridge = CREATEOBJECT('BridgeThing')\n"
