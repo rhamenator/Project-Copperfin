@@ -103,6 +103,26 @@ std::optional<RuntimeConfigFile> try_load_runtime_config_file(const std::filesys
             if (const auto parsed = parse_size_option(value)) {
                 config.max_loop_iterations = *parsed;
             }
+        } else if (key == "MAXSOURCEBYTES") {
+            if (const auto parsed = parse_size_option(value)) {
+                config.max_source_bytes = *parsed;
+            }
+        } else if (key == "MAXAGGREGATESOURCEBYTES") {
+            if (const auto parsed = parse_size_option(value)) {
+                config.max_aggregate_source_bytes = *parsed;
+            }
+        } else if (key == "MAXLOGICALLINEBYTES") {
+            if (const auto parsed = parse_size_option(value)) {
+                config.max_logical_line_bytes = *parsed;
+            }
+        } else if (key == "MAXSOURCELINES") {
+            if (const auto parsed = parse_size_option(value)) {
+                config.max_source_lines = *parsed;
+            }
+        } else if (key == "MAXINCLUDEFILES") {
+            if (const auto parsed = parse_size_option(value)) {
+                config.max_include_files = *parsed;
+            }
         } else if (key == "TMPFILES" || key == "TEMPDIRECTORY" || key == "TMPDIR") {
             if (!value.empty()) {
                 config.temp_directory = value;
@@ -162,6 +182,23 @@ void apply_runtime_config_defaults(RuntimeSessionOptions& options, const Runtime
     }
     if (options.max_loop_iterations == k_default_max_loop_iterations && config.max_loop_iterations.has_value()) {
         options.max_loop_iterations = *config.max_loop_iterations;
+    }
+    if (options.max_source_bytes == k_default_max_source_bytes && config.max_source_bytes.has_value()) {
+        options.max_source_bytes = *config.max_source_bytes;
+    }
+    if (options.max_aggregate_source_bytes == k_default_max_aggregate_source_bytes &&
+        config.max_aggregate_source_bytes.has_value()) {
+        options.max_aggregate_source_bytes = *config.max_aggregate_source_bytes;
+    }
+    if (options.max_logical_line_bytes == k_default_max_logical_line_bytes &&
+        config.max_logical_line_bytes.has_value()) {
+        options.max_logical_line_bytes = *config.max_logical_line_bytes;
+    }
+    if (options.max_source_lines == k_default_max_source_lines && config.max_source_lines.has_value()) {
+        options.max_source_lines = *config.max_source_lines;
+    }
+    if (options.max_include_files == k_default_max_include_files && config.max_include_files.has_value()) {
+        options.max_include_files = *config.max_include_files;
     }
     if (options.scheduler_yield_statement_interval == k_default_yield_statement_interval &&
         config.scheduler_yield_statement_interval.has_value()) {

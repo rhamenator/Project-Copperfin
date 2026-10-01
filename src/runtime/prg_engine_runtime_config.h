@@ -15,6 +15,11 @@ namespace copperfin::runtime {
 inline constexpr std::size_t k_default_max_call_depth = 1024U;
 inline constexpr std::size_t k_default_max_executed_statements = 500000U;
 inline constexpr std::size_t k_default_max_loop_iterations = 200000U;
+inline constexpr std::size_t k_default_max_source_bytes = 64U * 1024U * 1024U;
+inline constexpr std::size_t k_default_max_aggregate_source_bytes = 256U * 1024U * 1024U;
+inline constexpr std::size_t k_default_max_logical_line_bytes = 1024U * 1024U;
+inline constexpr std::size_t k_default_max_source_lines = 5000000U;
+inline constexpr std::size_t k_default_max_include_files = 4096U;
 inline constexpr std::size_t k_default_yield_statement_interval = 4096U;
 inline constexpr std::size_t k_default_yield_sleep_ms = 1U;
 
@@ -22,6 +27,11 @@ struct RuntimeConfigFile {
     std::optional<std::size_t> max_call_depth;
     std::optional<std::size_t> max_executed_statements;
     std::optional<std::size_t> max_loop_iterations;
+    std::optional<std::size_t> max_source_bytes;
+    std::optional<std::size_t> max_aggregate_source_bytes;
+    std::optional<std::size_t> max_logical_line_bytes;
+    std::optional<std::size_t> max_source_lines;
+    std::optional<std::size_t> max_include_files;
     std::optional<std::string> temp_directory;
     std::optional<std::size_t> scheduler_yield_statement_interval;
     std::optional<std::size_t> scheduler_yield_sleep_ms;

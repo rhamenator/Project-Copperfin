@@ -133,6 +133,55 @@ void test_runtime_host_rejects_missing_include_and_unbalanced_conditionals(const
     }
 }
 
+// #5731: an oversized startup source is refused from its size. The host reports `status: error`
+// and a non-zero exit instead of reading the file into memory. A sparse file keeps the fixture cheap.
+void test_runtime_host_refuses_an_oversized_startup_source(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_source_limit";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    const fs::path source_path = temp_root / "huge.prg";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    const fs::path locale_root = temp_root / "locales";
+    write_text(source_path, "STRTOFILE('ran', 'marker.txt')\nRETURN\n");
+    std::error_code resize_error;
+    fs::resize_file(source_path, 65ULL * 1024ULL * 1024ULL, resize_error);   // 1 MiB over the default limit
+    if (resize_error) {
+        fs::remove_all(temp_root, ignored);
+        return;   // the host filesystem cannot make sparse files; nothing to verify here
+    }
+    write_runtime_host_usage_catalogs(locale_root);
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=SourceLimit\n"
+        "startup_item=huge.prg\n"
+        "startup_source=" + source_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
+    ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+    const auto process = run_process_capture(runtime_host_path, {"--manifest", manifest_path.string()}, temp_root);
+    expect(process.exit_code != 0, "runtime-host oversized source: must exit non-zero");
+    expect(process.stdout_text.find("status: error") != std::string::npos,
+           "runtime-host oversized source: should report status: error");
+    // The host's own bounded startup read refuses the file before the session ever sees it.
+    expect(process.stdout_text.find("RuntimeHost.Error.SourceTooLarge") != std::string::npos,
+           "runtime-host oversized source: the diagnostic should be SourceTooLarge, got: " + process.stdout_text);
+    expect(process.stdout_text.find("runtime.completed: true") == std::string::npos,
+           "runtime-host oversized source: must not report runtime completion");
+    expect(!fs::exists(temp_root / "marker.txt"), "runtime-host oversized source: no statement may run");
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_runtime_host_preserves_debug_state_across_prg_fault(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 

@@ -54,7 +54,27 @@ struct PreprocessorState {
     // analysis parse a program without the project's trusted external include roots, which the
     // package planner resolves itself, so that parse keeps tolerating an unresolved include.
     bool missing_include_is_error = true;
+    // Resource ceilings (#5731) and what this preprocessing run has consumed so far.
+    PrgSourceLimits limits{};
+    std::size_t aggregate_source_bytes = 0U;
+    std::size_t include_files = 0U;
 };
+
+// Rejects a source before any of its bytes are read (a sparse or hostile file is refused by its size
+// alone, with no allocation). `label` is the normalized path the diagnostic names.
+void admit_source_size(const std::string& label, const std::uint64_t bytes, const PrgSourceLimits& limits) {
+    if (bytes > limits.max_source_bytes) {
+        throw std::runtime_error(runtime_text(
+            "Runtime.Prg.Parser.Error.SourceTooLarge",
+            {{"path", label}, {"bytes", std::to_string(bytes)}, {"limit", std::to_string(limits.max_source_bytes)}}));
+    }
+}
+
+std::uint64_t source_file_size(const std::filesystem::path& path) {
+    std::error_code error;
+    const std::uintmax_t size = std::filesystem::file_size(path, error);
+    return error ? 0U : static_cast<std::uint64_t>(size);
+}
 
 std::string strip_inline_comment(const std::string& line) {
     char quote_delimiter = '\0';
@@ -245,8 +265,26 @@ std::string extract_scatter_name_target_clause(const std::string& body) {
     return {};
 }
 
-std::vector<LogicalLine> load_logical_lines(std::istream& input) {
+std::vector<LogicalLine> load_logical_lines(
+    std::istream& input,
+    const PrgSourceLimits& limits,
+    const std::string& label) {
     std::vector<LogicalLine> lines;
+    const auto line_too_long = [&](const std::size_t line_number, const std::size_t bytes) {
+        return std::runtime_error(runtime_text(
+            "Runtime.Prg.Parser.Error.LogicalLineTooLong",
+            {{"path", label},
+             {"line", std::to_string(line_number)},
+             {"bytes", std::to_string(bytes)},
+             {"limit", std::to_string(limits.max_logical_line_bytes)}}));
+    };
+    const auto count_line = [&]() {
+        if (lines.size() >= limits.max_source_lines) {
+            throw std::runtime_error(runtime_text(
+                "Runtime.Prg.Parser.Error.TooManySourceLines",
+                {{"path", label}, {"limit", std::to_string(limits.max_source_lines)}}));
+        }
+    };
 
     std::string raw_line;
     std::size_t line_number = 0;
@@ -256,6 +294,9 @@ std::vector<LogicalLine> load_logical_lines(std::istream& input) {
 
     while (std::getline(input, raw_line)) {
         ++line_number;
+        if (raw_line.size() > limits.max_logical_line_bytes) {
+            throw line_too_long(line_number, raw_line.size());
+        }
         if (!raw_line.empty() && raw_line.back() == '\r') {
             raw_line.pop_back();
         }
@@ -300,6 +341,9 @@ std::vector<LogicalLine> load_logical_lines(std::istream& input) {
             current_text += " ";
         }
         current_text += trimmed;
+        if (current_text.size() > limits.max_logical_line_bytes) {
+            throw line_too_long(current_start, current_text.size());
+        }
 
         if (!trimmed.empty() && trimmed.back() == ';') {
             current_text.pop_back();
@@ -308,6 +352,7 @@ std::vector<LogicalLine> load_logical_lines(std::istream& input) {
         }
 
         continuing = false;
+        count_line();
         lines.push_back({
             .line_number = current_start,
             .text = trim_copy(current_text)
@@ -315,6 +360,7 @@ std::vector<LogicalLine> load_logical_lines(std::istream& input) {
     }
 
     if (continuing && !current_text.empty()) {
+        count_line();
         lines.push_back({
             .line_number = current_start,
             .text = trim_copy(current_text)
@@ -324,14 +370,20 @@ std::vector<LogicalLine> load_logical_lines(std::istream& input) {
     return lines;
 }
 
-std::vector<LogicalLine> load_logical_lines(const std::filesystem::path& path) {
+std::vector<LogicalLine> load_logical_lines(const std::filesystem::path& path, const PrgSourceLimits& limits) {
+    const std::string label = normalize_path(copperfin::platform::path_to_utf8_string(path));
+    admit_source_size(label, source_file_size(path), limits);
     std::ifstream input(path, std::ios::binary);
-    return input ? load_logical_lines(input) : std::vector<LogicalLine>{};
+    return input ? load_logical_lines(input, limits, label) : std::vector<LogicalLine>{};
 }
 
-std::vector<LogicalLine> load_logical_lines_from_text(const std::string& source_text) {
+std::vector<LogicalLine> load_logical_lines_from_text(
+    const std::string& source_text,
+    const PrgSourceLimits& limits,
+    const std::string& label) {
+    admit_source_size(label, source_text.size(), limits);
     std::istringstream input(source_text);
-    return load_logical_lines(input);
+    return load_logical_lines(input, limits, label);
 }
 
 std::vector<std::string> load_source_lines(std::istream& input) {
@@ -348,12 +400,18 @@ std::vector<std::string> load_source_lines(std::istream& input) {
     return lines;
 }
 
-std::vector<std::string> load_source_lines(const std::string& path) {
-    std::ifstream input(copperfin::platform::path_from_utf8_string(path), std::ios::binary);
+std::vector<std::string> load_source_lines(const std::string& path, const PrgSourceLimits& limits) {
+    const std::filesystem::path native_path = copperfin::platform::path_from_utf8_string(path);
+    admit_source_size(normalize_path(path), source_file_size(native_path), limits);
+    std::ifstream input(native_path, std::ios::binary);
     return input ? load_source_lines(input) : std::vector<std::string>{};
 }
 
-std::vector<std::string> load_source_lines_from_text(const std::string& source_text) {
+std::vector<std::string> load_source_lines_from_text(
+    const std::string& source_text,
+    const PrgSourceLimits& limits,
+    const std::string& label) {
+    admit_source_size(label, source_text.size(), limits);
     std::istringstream input(source_text);
     return load_source_lines(input);
 }
@@ -1039,13 +1097,25 @@ void append_preprocessed_logical_lines(
     const std::string* source_override = nullptr,
     const std::map<std::string, std::string>* source_text_overrides = nullptr,
     const bool require_source_text_overrides = false) {
+    const std::string source_label = normalize_path(copperfin::platform::path_to_utf8_string(path));
+    // Resource ceilings (#5731): one program's source plus every include it pulls in is bounded in
+    // total, checked from sizes before any further file is read.
+    const std::uint64_t source_bytes =
+        source_override == nullptr ? source_file_size(path) : static_cast<std::uint64_t>(source_override->size());
+    state.aggregate_source_bytes += static_cast<std::size_t>(source_bytes);
+    if (state.aggregate_source_bytes > state.limits.max_aggregate_source_bytes) {
+        throw std::runtime_error(runtime_text(
+            "Runtime.Prg.Parser.Error.AggregateSourceTooLarge",
+            {{"path", source_label},
+             {"bytes", std::to_string(state.aggregate_source_bytes)},
+             {"limit", std::to_string(state.limits.max_aggregate_source_bytes)}}));
+    }
     const std::vector<LogicalLine> source_lines = source_override == nullptr
-        ? load_logical_lines(path)
-        : load_logical_lines_from_text(*source_override);
+        ? load_logical_lines(path, state.limits)
+        : load_logical_lines_from_text(*source_override, state.limits, source_label);
     // Conditionals are scoped to the file that opens them (#5730): remember the depth this file was
     // entered with, and reject anything left open (or closed) across the boundary.
     const std::size_t conditional_floor = state.conditionals.size();
-    const std::string source_label = normalize_path(copperfin::platform::path_to_utf8_string(path));
     for (const auto& logical_line : source_lines) {
         const std::string trimmed = trim_copy(logical_line.text);
         if (trimmed.empty()) {
@@ -1135,6 +1205,13 @@ void append_preprocessed_logical_lines(
             }
             if (include_source != nullptr || (!require_source_text_overrides && include_exists)) {
                 if (state.include_stack.insert(include_key).second) {
+                    if (++state.include_files > state.limits.max_include_files) {
+                        throw std::runtime_error(runtime_text(
+                            "Runtime.Prg.Parser.Error.TooManyIncludeFiles",
+                            {{"path", source_label},
+                             {"line", std::to_string(logical_line.line_number)},
+                             {"limit", std::to_string(state.limits.max_include_files)}}));
+                    }
                     append_preprocessed_logical_lines(
                         include_path,
                         state,
@@ -1187,10 +1264,12 @@ void append_preprocessed_logical_lines(
 
 std::vector<LogicalLine> load_preprocessed_logical_lines(
     const std::string& path,
-    const bool missing_include_is_error = true) {
+    const bool missing_include_is_error = true,
+    const PrgSourceLimits& limits = {}) {
     std::vector<LogicalLine> output_lines;
     PreprocessorState state;
     state.missing_include_is_error = missing_include_is_error;
+    state.limits = limits;
     append_preprocessed_logical_lines(
         copperfin::platform::path_from_utf8_string(path), state, true, output_lines);
     return output_lines;
@@ -1200,9 +1279,11 @@ std::vector<LogicalLine> load_preprocessed_logical_lines_from_text(
     const std::string& path,
     const std::string& source_text,
     const std::map<std::string, std::string>& source_text_overrides,
-    const bool require_source_text_overrides) {
+    const bool require_source_text_overrides,
+    const PrgSourceLimits& limits = {}) {
     std::vector<LogicalLine> output_lines;
     PreprocessorState state;
+    state.limits = limits;
     append_preprocessed_logical_lines(
         copperfin::platform::path_from_utf8_string(path),
         state,
@@ -2011,12 +2092,13 @@ Program parse_program_impl(
     const std::string* source_override,
     const std::map<std::string, std::string>* source_text_overrides = nullptr,
     const bool require_source_text_overrides = false,
-    const bool missing_include_is_error = true) {
+    const bool missing_include_is_error = true,
+    const PrgSourceLimits& limits = {}) {
     Program program;
     program.path = normalize_path(path);
     program.source_lines = source_override == nullptr
-        ? load_source_lines(path)
-        : load_source_lines_from_text(*source_override);
+        ? load_source_lines(path, limits)
+        : load_source_lines_from_text(*source_override, limits, program.path);
     program.main.name = "main";
 
     Routine* current = &program.main;
@@ -2029,14 +2111,15 @@ Program parse_program_impl(
         }
     };
     const std::vector<LogicalLine> logical_lines = source_override == nullptr
-        ? load_preprocessed_logical_lines(path, missing_include_is_error)
+        ? load_preprocessed_logical_lines(path, missing_include_is_error, limits)
         : load_preprocessed_logical_lines_from_text(
               path,
               *source_override,
               source_text_overrides == nullptr
                   ? std::map<std::string, std::string>{}
                   : *source_text_overrides,
-              require_source_text_overrides);
+              require_source_text_overrides,
+              limits);
     for (const auto& logical_line : logical_lines) {
         const std::size_t line_number = logical_line.line_number;
         const std::string line = trim_copy(logical_line.text);
@@ -3273,27 +3356,30 @@ Program parse_program_impl(
     return program;
 }
 
-Program parse_program(const std::string& path) {
-    return parse_program_impl(path, nullptr, nullptr, false);
+Program parse_program(const std::string& path, const PrgSourceLimits& limits) {
+    return parse_program_impl(path, nullptr, nullptr, false, true, limits);
 }
 
 // For packaging and static analysis: a missing #INCLUDE is not an error here because the package
 // planner resolves includes itself (including trusted external include roots this parse does not
 // know about). Conditional-structure errors still apply.
-Program parse_program_for_analysis(const std::string& path) {
-    return parse_program_impl(path, nullptr, nullptr, false, false);
+Program parse_program_for_analysis(const std::string& path, const PrgSourceLimits& limits) {
+    return parse_program_impl(path, nullptr, nullptr, false, false, limits);
 }
 
 Program parse_program_source(
     const std::string& logical_path,
     const std::string& source_text,
     const std::map<std::string, std::string>& source_text_overrides,
-    const bool require_source_text_overrides) {
+    const bool require_source_text_overrides,
+    const PrgSourceLimits& limits) {
     return parse_program_impl(
         logical_path,
         &source_text,
         &source_text_overrides,
-        require_source_text_overrides);
+        require_source_text_overrides,
+        true,
+        limits);
 }
 
 }  // namespace copperfin::runtime

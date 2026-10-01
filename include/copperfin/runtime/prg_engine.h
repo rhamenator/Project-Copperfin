@@ -313,6 +313,16 @@ struct RuntimeSessionOptions {
     bool stop_on_entry = false;
     std::size_t max_call_depth = 1024;
     std::size_t max_executed_statements = 500000;
+    // PRG source resource ceilings (#5731). Every limit is checked before the memory it protects is
+    // allocated, and exceeding one stops the program with a localized diagnostic naming the source.
+    // Defaults are far above any hand-written or generated application; raise them in CONFIG.FPW
+    // (MAXSOURCEBYTES, MAXAGGREGATESOURCEBYTES, MAXLOGICALLINEBYTES, MAXSOURCELINES, MAXINCLUDEFILES)
+    // for an unusually large generated program.
+    std::size_t max_source_bytes = 64U * 1024U * 1024U;
+    std::size_t max_aggregate_source_bytes = 256U * 1024U * 1024U;
+    std::size_t max_logical_line_bytes = 1024U * 1024U;
+    std::size_t max_source_lines = 5000000U;
+    std::size_t max_include_files = 4096U;
     std::size_t max_loop_iterations = 200000;
     std::string temp_directory;
     std::size_t scheduler_yield_statement_interval = 4096;

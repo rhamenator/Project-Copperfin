@@ -1429,15 +1429,27 @@ bool physical_identity_has_multiple_links(
 // PR #5462's package-writable payload/asset gates are -- these 3 call
 // sites only ever read bytes, never write through the result (Copilot
 // review finding).
+// The PRG source byte ceiling (#5731). Source files are read through the bounded snapshot overload so
+// an oversized or sparse file is refused from its size before any file-sized buffer is allocated.
+// The session applies the same limit again (and any CONFIG.FPW override) when it parses the text.
+std::uint64_t host_source_byte_limit() {
+    return static_cast<std::uint64_t>(copperfin::runtime::RuntimeSessionOptions{}.max_source_bytes);
+}
+
 copperfin::security::PhysicalFileSnapshotResult read_verified_package_path_snapshot(
     const copperfin::security::PhysicalPathContainmentResult& stored,
-    const std::filesystem::path& manifest_directory) {
+    const std::filesystem::path& manifest_directory,
+    const std::uint64_t maximum_bytes = std::numeric_limits<std::uint64_t>::max()) {
     auto handle = copperfin::security::inspect_and_open_physically_contained_path(
         stored.canonical_path, manifest_directory);
     if (!handle.result().allowed ||
         handle.result().canonical_path != stored.canonical_path ||
         !handle.result().identity.content_equal(stored.identity)) {
         return copperfin::security::PhysicalFileSnapshotResult{};
+    }
+    if (maximum_bytes != std::numeric_limits<std::uint64_t>::max()) {
+        return copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+            handle, manifest_directory, maximum_bytes);
     }
     return copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
         handle, manifest_directory);
@@ -3694,8 +3706,11 @@ int run_runtime_host_main_impl(int argc, char** argv) {
         copperfin::security::PhysicalFileSnapshotResult startup_snapshot;
         if (verified == verified_package_paths.end()) {
             startup_snapshot =
-                copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
-                    current_handle, manifest_directory);
+                packaged_source_text_extension(startup_source)
+                    ? copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+                          current_handle, manifest_directory, host_source_byte_limit())
+                    : copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+                          current_handle, manifest_directory);
         } else {
             // verified->containment was captured potentially much earlier,
             // by verify_manifest_hashes(): re-verify and read via a fresh
@@ -3704,16 +3719,24 @@ int run_runtime_host_main_impl(int argc, char** argv) {
             // function's own, later, inspection above) or reopening by
             // path string.
             startup_snapshot = read_verified_package_path_snapshot(
-                verified->containment, manifest_directory);
+                verified->containment,
+                manifest_directory,
+                packaged_source_text_extension(startup_source)
+                    ? host_source_byte_limit()
+                    : std::numeric_limits<std::uint64_t>::max());
         }
         if (!startup_snapshot.ok) {
             std::cout << "status: error\n";
+            const bool too_large =
+                startup_snapshot.failure == copperfin::security::PhysicalPathContainmentFailure::size_limit_exceeded;
             print_error_line(
                 catalog,
                 localized_message(
                     catalog,
-                    "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-                    {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(startup_source).filename())}}));
+                    too_large ? "RuntimeHost.Error.SourceTooLarge"
+                              : "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
+                    {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(startup_source).filename())},
+                     {"limit", std::to_string(host_source_byte_limit())}}));
             return 4;
         }
         if (verified != verified_package_paths.end()) {
@@ -3758,8 +3781,10 @@ int run_runtime_host_main_impl(int argc, char** argv) {
                 // earlier, by verify_manifest_hashes(): re-verify and read
                 // via a fresh handle bound to that stored identity, never
                 // reopening by path string (issue #5409/#5420).
-                const auto source_snapshot =
-                    read_verified_package_path_snapshot(verified_path.containment, manifest_directory);
+                const auto source_snapshot = read_verified_package_path_snapshot(
+                    verified_path.containment,
+                    manifest_directory,
+                    source_text ? host_source_byte_limit() : std::numeric_limits<std::uint64_t>::max());
                 const auto source_digest = source_snapshot.ok
                     ? copperfin::security::sha256_hex_for_text(source_snapshot.bytes)
                     : copperfin::security::Sha256Result{};
@@ -3767,12 +3792,16 @@ int run_runtime_host_main_impl(int argc, char** argv) {
                     !source_digest.ok ||
                     lowercase_copy(source_digest.hex_digest) != verified_path.sha256) {
                     std::cout << "status: error\n";
+                    const bool too_large =
+                        source_snapshot.failure == copperfin::security::PhysicalPathContainmentFailure::size_limit_exceeded;
                     print_error_line(
                         catalog,
                         localized_message(
                             catalog,
-                            "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-                            {{"fileName", copperfin::platform::path_to_utf8_string(source_path.filename())}}));
+                            too_large ? "RuntimeHost.Error.SourceTooLarge"
+                                      : "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
+                            {{"fileName", copperfin::platform::path_to_utf8_string(source_path.filename())},
+                             {"limit", std::to_string(host_source_byte_limit())}}));
                     return 8;
                 }
                 if (source_text) {
