@@ -101,18 +101,29 @@ std::string read_source_file_bounded(
     }
     std::error_code status_error;
     const auto status = std::filesystem::status(path, status_error);
-    if (!status_error && !std::filesystem::exists(status)) {
+    namespace fs = std::filesystem;
+    // Only a source that is positively a FIFO, socket or device is refused: reading one could block or
+    // never end, and it has no size to bound in advance. Everything else keeps the previous behavior:
+    // a path that does not exist (whether or not the library also reports an error code for it, as for a
+    // path component that is a file) is simply a missing source, a directory or an entry that cannot
+    // be opened reads as empty, and a regular file is admitted by its declared size.
+    if (status.type() == fs::file_type::not_found) {
         return {};
     }
-    if (status_error || !std::filesystem::is_regular_file(status)) {
+    if (status.type() == fs::file_type::fifo || status.type() == fs::file_type::socket ||
+        status.type() == fs::file_type::character || status.type() == fs::file_type::block) {
         throw_source_size_unknown(label);
     }
-    std::error_code size_error;
-    const std::uintmax_t declared = std::filesystem::file_size(path, size_error);
-    if (size_error) {
-        throw_source_size_unknown(label);
+    std::uintmax_t declared = 0U;
+    if (!status_error && fs::is_regular_file(status)) {
+        std::error_code size_error;
+        declared = fs::file_size(path, size_error);
+        if (!size_error) {
+            admit_source_size(label, static_cast<std::uint64_t>(declared), limits);
+        } else {
+            declared = 0U;   // the bounded read below still enforces the limit
+        }
     }
-    admit_source_size(label, static_cast<std::uint64_t>(declared), limits);
     std::ifstream input(path, std::ios::binary);
     if (!input) {
         return {};

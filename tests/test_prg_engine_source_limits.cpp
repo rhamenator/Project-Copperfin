@@ -243,6 +243,32 @@ void test_a_source_without_a_determinable_size_is_refused_unopened() {
 }
 #endif
 
+// A name that does not exist (including one whose path runs through a regular file) is simply missing,
+// never "cannot be sized": some standard libraries report an error code for such a path as well as
+// not_found, and an ordinary lookup of a nonexistent program must not turn into a source-size failure.
+void test_a_nonexistent_source_is_missing_not_unsizeable() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_source_limits_missing";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    write_text(dir / "afile", "not a directory\n");
+    for (const char *target : {"nothing.prg", "afile/inner.prg", "no such name"}) {
+        write_text(dir / "main.prg", std::string("DO '") + target + "'\n" + kMarkerProgram);
+        auto options = make_runtime_session_options((dir / "main.prg").string(), dir.string(), false);
+        std::string message;
+        try {
+            auto session = copperfin::runtime::PrgRuntimeSession::create(options);
+            message = session.run(copperfin::runtime::DebugResumeAction::continue_run).message;
+        } catch (const std::exception &error) {
+            message = error.what();
+        }
+        expect(message.find("cannot be determined") == std::string::npos &&
+                   message.find("regular file") == std::string::npos,
+            std::string("#5731: a nonexistent source '") + target + "' must not be reported as unsizeable, got: " + message);
+    }
+    fs::remove_all(dir, ignored);
+}
+
 // Every program a session loads stays cached, so loaded sources are bounded in total too.
 void test_session_aggregate_limit_applies_across_loaded_programs() {
     const fs::path root = fs::temp_directory_path() / "copperfin_source_limits_session";
@@ -282,6 +308,7 @@ int main() {
 #if !defined(_WIN32)
     test_a_source_without_a_determinable_size_is_refused_unopened();
 #endif
+    test_a_nonexistent_source_is_missing_not_unsizeable();
     test_session_aggregate_limit_applies_across_loaded_programs();
     test_limits_are_configurable_from_config_fpw();
     if (const int failures = test_failures(); failures != 0) {
