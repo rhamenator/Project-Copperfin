@@ -931,14 +931,18 @@ int run_runtime_bridge_invocation(
     std::optional<copperfin::runtime::PrgRuntimeSession> created_session;
     try {
         created_session.emplace(copperfin::runtime::PrgRuntimeSession::create(session_options));
-    } catch (const std::exception&) {
+    } catch (const std::exception& error) {
         std::cout << "status: error\n";
-        print_error_line(
-            catalog,
-            localized_message(
+        if (!session_options.require_source_text_overrides && error.what() != nullptr && error.what()[0] != '\0') {
+            print_error_line(catalog, error.what());
+        } else {
+            print_error_line(
                 catalog,
-                "RuntimeHost.Error.VerifiedSourceUnavailable",
-                {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(startup_source).filename())}}));
+                localized_message(
+                    catalog,
+                    "RuntimeHost.Error.VerifiedSourceUnavailable",
+                    {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(startup_source).filename())}}));
+        }
         return 6;
     }
     auto& session = *created_session;
@@ -4092,14 +4096,20 @@ int run_runtime_host_main_impl(int argc, char** argv) {
     std::optional<copperfin::runtime::PrgRuntimeSession> created_session;
     try {
         created_session.emplace(copperfin::runtime::PrgRuntimeSession::create(session_options));
-    } catch (const std::exception&) {
+    } catch (const std::exception& error) {
         std::cout << "status: error\n";
-        print_error_line(
-            catalog,
-            localized_message(
+        // A source-structure failure (a missing #INCLUDE, an unbalanced #IF/#ENDIF) carries its own
+        // file-and-line message; only a verified-package failure keeps the generic diagnostic.
+        if (!session_options.require_source_text_overrides && error.what() != nullptr && error.what()[0] != '\0') {
+            print_error_line(catalog, error.what());
+        } else {
+            print_error_line(
                 catalog,
-                "RuntimeHost.Error.VerifiedSourceUnavailable",
-                {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(startup_source).filename())}}));
+                localized_message(
+                    catalog,
+                    "RuntimeHost.Error.VerifiedSourceUnavailable",
+                    {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(startup_source).filename())}}));
+        }
         return security_enabled ? 8 : 4;
     }
     auto& session = *created_session;

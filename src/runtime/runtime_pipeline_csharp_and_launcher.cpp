@@ -793,7 +793,7 @@ std::string build_csharp_transpilation_source(const RuntimePackagePlan& plan) {
                 copperfin::platform::path_from_utf8_string(asset.source_path).extension()))) != ".prg") {
             continue;
         }
-        const Program program = parse_program(asset.source_path);
+        const Program program = parse_program_for_analysis(asset.source_path);
         std::map<std::string, std::string> routine_name_map;
         for (const auto& routine_entry : program.routines) {
             routine_name_map.emplace(lowercase_copy(routine_entry.first),

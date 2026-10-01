@@ -70,6 +70,69 @@ void test_runtime_host_surfaces_copy_omission_warning_metadata(const std::string
     }
 }
 
+// #5729/#5730: a missing active #INCLUDE and an unbalanced conditional stop the program. The host
+// must report `status: error` with the diagnostic, exit non-zero, and run nothing. The host test's
+// minimal locale directory carries no runtime catalog, so the message shows as its localization key;
+// the file-and-line placeholders are verified by test_prg_engine_preprocessor_diagnostics.
+void test_runtime_host_rejects_missing_include_and_unbalanced_conditionals(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    struct Case {
+        std::string name;
+        std::string main_source;
+        std::string header_name;
+        std::string header_source;
+        std::string expected_text;
+    };
+    const std::vector<Case> cases = {
+        {"missing_include", "#INCLUDE \"absent-header.h\"\nSTRTOFILE('continued', 'marker.txt')\nRETURN\n", "", "",
+         "Runtime.Prg.Parser.Error.IncludeFileNotFound"},
+        {"cross_file_endif", "#INCLUDE \"bad.h\"\nSTRTOFILE('should-run', 'marker.txt')\nRETURN\n", "bad.h",
+         "#IFDEF NEVER_DEFINED\n", "Runtime.Prg.Parser.Error.UnterminatedConditional"},
+        {"stray_endif", "x = 1\n#ENDIF\nSTRTOFILE('no', 'marker.txt')\nRETURN\n", "", "", "Runtime.Prg.Parser.Error.MismatchedConditional"},
+    };
+    for (const Case& c : cases) {
+        const fs::path temp_root = fs::temp_directory_path() / ("copperfin_runtime_host_preprocessor_" + c.name);
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+        const fs::path source_path = temp_root / "main.prg";
+        const fs::path manifest_path = temp_root / "app.cfmanifest";
+        const fs::path locale_root = temp_root / "locales";
+        write_text(source_path, c.main_source);
+        if (!c.header_name.empty()) {
+            write_text(temp_root / c.header_name, c.header_source);
+        }
+        write_runtime_host_usage_catalogs(locale_root);
+        write_text(
+            manifest_path,
+            "manifest_version=1\n"
+            "project_title=PreprocessorStructure\n"
+            "startup_item=main.prg\n"
+            "startup_source=" + source_path.string() + "\n"
+            "working_directory=" + temp_root.string() + "\n"
+            "security_enabled=false\n"
+            "security_role=\n"
+            "security_mode=native\n"
+            "dotnet_story=none\n");
+
+        ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+        const auto process = run_process_capture(runtime_host_path, {"--manifest", manifest_path.string()}, temp_root);
+        expect(process.exit_code != 0, "runtime-host " + c.name + ": a structure error must exit non-zero");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "runtime-host " + c.name + ": should report status: error");
+        expect(process.stdout_text.find(c.expected_text) != std::string::npos,
+               "runtime-host " + c.name + ": the diagnostic should be " + c.expected_text + ", got: " + process.stdout_text);
+        expect(process.stdout_text.find("runtime.completed: true") == std::string::npos,
+               "runtime-host " + c.name + ": must not report runtime completion");
+        expect(!fs::exists(temp_root / "marker.txt"), "runtime-host " + c.name + ": no statement may run");
+        if (failures == 0) {
+            fs::remove_all(temp_root, ignored);
+        }
+    }
+}
+
 void test_runtime_host_preserves_debug_state_across_prg_fault(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 

@@ -43,6 +43,7 @@ void test_runtime_host_contains_executable_xasset_action_faults(const std::strin
 void test_runtime_host_contains_report_label_action_faults(const std::string& runtime_host_path);
 void test_runtime_host_contains_unexpected_process_fault(const std::string& runtime_host_path);
 void test_runtime_host_surfaces_copy_omission_warning_metadata(const std::string& runtime_host_path);
+void test_runtime_host_rejects_missing_include_and_unbalanced_conditionals(const std::string& runtime_host_path);
 
 void run_runtime_host_test(
     const char* name,
@@ -93,6 +94,7 @@ int main(int argc, char** argv) {
     run_runtime_host_test("watch localization", runtime_host_path, test_runtime_host_watch_errors_localize_without_changing_watch_fields);
     run_runtime_host_test("multiline debug values", runtime_host_path, test_runtime_host_escapes_multiline_debug_values);
     run_runtime_host_test("COPY omission warning metadata", runtime_host_path, test_runtime_host_surfaces_copy_omission_warning_metadata);
+    run_runtime_host_test("missing include and unbalanced conditionals", runtime_host_path, test_runtime_host_rejects_missing_include_and_unbalanced_conditionals);
     run_runtime_host_test("quit prompt localization", runtime_host_path, test_runtime_host_quit_prompt_localizes_without_changing_confirmation_tokens);
     run_runtime_host_test("PRG fault debugger recovery", runtime_host_path, test_runtime_host_preserves_debug_state_across_prg_fault);
     run_runtime_host_test("xAsset action fault containment", runtime_host_path, test_runtime_host_contains_executable_xasset_action_faults);
