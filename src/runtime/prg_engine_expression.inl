@@ -417,7 +417,11 @@
                             continue;
                         }
 
-                        if (value_as_bool(left))
+                        // Three-valued logic, as installed VFP9 (probe retained at
+                        // ~/temp/vfp9-probes/null-semantics-c24): a true operand decides the result
+                        // even next to NULL (.NULL. OR .T. is .T.), otherwise NULL on either side
+                        // makes it NULL (.NULL. OR .F. is NULL).
+                        if (!left.is_null && value_as_bool(left))
                         {
                             ScopedEvaluationSuppression suppress_rhs(*this);
                             (void)parse_and();
@@ -425,7 +429,19 @@
                             continue;
                         }
 
-                        left = make_boolean_value(value_as_bool(parse_and()));
+                        const PrgValue right = parse_and();
+                        if (right.is_null)
+                        {
+                            left = make_null_value();
+                        }
+                        else if (value_as_bool(right))
+                        {
+                            left = make_boolean_value(true);
+                        }
+                        else
+                        {
+                            left = left.is_null ? make_null_value() : make_boolean_value(false);
+                        }
                         continue;
                     }
 
@@ -447,7 +463,9 @@
                             continue;
                         }
 
-                        if (!value_as_bool(left))
+                        // A false operand decides the result even next to NULL (.NULL. AND .F. is
+                        // .F.); otherwise NULL on either side makes it NULL.
+                        if (!left.is_null && !value_as_bool(left))
                         {
                             ScopedEvaluationSuppression suppress_rhs(*this);
                             (void)parse_comparison();
@@ -455,7 +473,19 @@
                             continue;
                         }
 
-                        left = make_boolean_value(value_as_bool(parse_comparison()));
+                        const PrgValue right = parse_comparison();
+                        if (right.is_null)
+                        {
+                            left = make_null_value();
+                        }
+                        else if (!value_as_bool(right))
+                        {
+                            left = make_boolean_value(false);
+                        }
+                        else
+                        {
+                            left = left.is_null ? make_null_value() : make_boolean_value(true);
+                        }
                         continue;
                     }
 
@@ -476,6 +506,11 @@
                         {
                             left = make_boolean_value(false);
                         }
+                        else if (left.is_null || right.is_null)
+                        {
+                            // Any comparison with NULL is NULL, never a definite true or false.
+                            left = make_null_value();
+                        }
                         else
                         {
                             left = make_boolean_value(!values_equal(left, right));
@@ -487,6 +522,11 @@
                         if (suppress_evaluation_)
                         {
                             left = make_boolean_value(false);
+                        }
+                        else if (left.is_null || right.is_null)
+                        {
+                            // Any comparison with NULL is NULL, never a definite true or false.
+                            left = make_null_value();
                         }
                         else
                         {
@@ -500,6 +540,11 @@
                         {
                             left = make_boolean_value(false);
                         }
+                        else if (left.is_null || right.is_null)
+                        {
+                            // Any comparison with NULL is NULL, never a definite true or false.
+                            left = make_null_value();
+                        }
                         else
                         {
                             left = make_boolean_value(compare_ordered_values(left, right) >= 0);
@@ -512,6 +557,11 @@
                         {
                             left = make_boolean_value(false);
                         }
+                        else if (left.is_null || right.is_null)
+                        {
+                            // Any comparison with NULL is NULL, never a definite true or false.
+                            left = make_null_value();
+                        }
                         else
                         {
                             left = make_boolean_value(values_equal(left, right));
@@ -523,6 +573,11 @@
                         if (suppress_evaluation_)
                         {
                             left = make_boolean_value(false);
+                        }
+                        else if (left.is_null || right.is_null)
+                        {
+                            // Any comparison with NULL is NULL, never a definite true or false.
+                            left = make_null_value();
                         }
                         else
                         {
@@ -538,6 +593,11 @@
                         {
                             left = make_boolean_value(false);
                         }
+                        else if (left.is_null || right.is_null)
+                        {
+                            // Any comparison with NULL is NULL, never a definite true or false.
+                            left = make_null_value();
+                        }
                         else
                         {
                             left = make_boolean_value(compare_ordered_values(left, right) < 0);
@@ -549,6 +609,11 @@
                         if (suppress_evaluation_)
                         {
                             left = make_boolean_value(false);
+                        }
+                        else if (left.is_null || right.is_null)
+                        {
+                            // Any comparison with NULL is NULL, never a definite true or false.
+                            left = make_null_value();
                         }
                         else
                         {
@@ -574,6 +639,10 @@
                         if (suppress_evaluation_)
                         {
                             left = make_empty_value();
+                        }
+                        else if (left.is_null || right.is_null)
+                        {
+                            left = make_null_value();
                         }
                         else if (left.string_flavor != PrgStringFlavor::none ||
                                  right.string_flavor != PrgStringFlavor::none)
@@ -618,6 +687,10 @@
                         if (suppress_evaluation_)
                         {
                             left = make_empty_value();
+                        }
+                        else if (left.is_null || right.is_null)
+                        {
+                            left = make_null_value();
                         }
                         else if (left.string_flavor != PrgStringFlavor::none ||
                                  right.string_flavor != PrgStringFlavor::none)
@@ -685,6 +758,10 @@
                         {
                             left = make_empty_value();
                         }
+                        else if (left.is_null || right.is_null)
+                        {
+                            left = make_null_value();
+                        }
                         else if (left.kind == PrgValueKind::currency || right.kind == PrgValueKind::currency)
                         {
                             left = currency_arithmetic(left, right, '*');
@@ -707,6 +784,10 @@
                         if (suppress_evaluation_)
                         {
                             left = make_empty_value();
+                        }
+                        else if (left.is_null || right.is_null)
+                        {
+                            left = make_null_value();
                         }
                         else if (left.kind == PrgValueKind::currency || right.kind == PrgValueKind::currency)
                         {
@@ -733,6 +814,35 @@
                             left = make_number_value(value_as_number(left) / divisor);
                         }
                     }
+                    else if (match("%"))
+                    {
+                        // % is modulo with the precedence of * and / (installed VFP9: 7 % 3 is 1,
+                        // -7 % 3 is 2, 7 % -3 is -2, 2 * 7 % 3 is 2, 5 % 0 is error 1307). Like MOD(),
+                        // the result takes the sign of the divisor.
+                        PrgValue right = parse_unary();
+                        if (suppress_evaluation_)
+                        {
+                            left = make_empty_value();
+                        }
+                        else if (left.is_null || right.is_null)
+                        {
+                            left = make_null_value();
+                        }
+                        else
+                        {
+                            const double divisor = value_as_number(right);
+                            if (divisor == 0.0)
+                            {
+                                throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.DivisionByZero"));
+                            }
+                            double remainder = std::fmod(value_as_number(left), divisor);
+                            if (remainder != 0.0 && std::signbit(remainder) != std::signbit(divisor))
+                            {
+                                remainder += divisor;
+                            }
+                            left = make_number_value(remainder);
+                        }
+                    }
                     else
                     {
                         return left;
@@ -750,7 +860,15 @@
                         (void)parse_comparison();
                         return make_boolean_value(false);
                     }
-                    return make_boolean_value(!value_as_bool(parse_comparison()));
+                    const PrgValue operand = parse_comparison();
+                    return operand.is_null ? make_null_value() : make_boolean_value(!value_as_bool(operand));
+                }
+                if (match("+"))
+                {
+                    // Unary plus returns its operand unchanged, whatever its type (installed VFP9:
+                    // +5 is 5, +.NULL. is NULL, +'a' is 'a', +{^2026-01-01} is that date).
+                    PrgValue operand = parse_unary();
+                    return suppress_evaluation_ ? make_empty_value() : operand;
                 }
                 if (match("-"))
                 {
@@ -758,6 +876,10 @@
                     if (suppress_evaluation_)
                     {
                         return make_empty_value();
+                    }
+                    if (operand.is_null)
+                    {
+                        return make_null_value();
                     }
                     if (operand.kind == PrgValueKind::int64)
                     {
@@ -783,6 +905,10 @@
                     if (suppress_evaluation_)
                     {
                         return make_empty_value();
+                    }
+                    if (left.is_null || right.is_null)
+                    {
+                        return make_null_value();
                     }
                     return make_number_value(std::pow(value_as_number(left), value_as_number(right)));
                 }

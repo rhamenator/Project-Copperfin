@@ -158,7 +158,10 @@ namespace
             "evl_empty_text = EVL('', 'fallback')\n"
             "evl_zero = EVL(0, 17)\n"
             "evl_false = EVL(.F., .T.)\n"
+            // Installed VFP9: NULL is not empty, so EVL(.NULL., x) is NULL, not x (retained probe
+            // ~/temp/vfp9-probes/null-semantics-c24/vfp9-result.txt; #5934, #6506).
             "evl_null = EVL(.NULL., 'fallback-null')\n"
+            "evl_null_is_null = ISNULL(EVL(.NULL., 'fallback-null'))\n"
             "evl_text = EVL('value', 'fallback')\n"
             "isdigit_yes = ISDIGIT('5abc')\n"
             "isdigit_no = ISDIGIT('abc')\n"
@@ -231,7 +234,8 @@ namespace
         check("evl_empty_text", "fallback");
         check("evl_zero", "17");
         check("evl_false", "true");
-        check("evl_null", "fallback-null");
+        check("evl_null_is_null", "true");
+        check("evl_null", "");
         check("evl_text", "value");
         check("isdigit_yes", "true");
         check("isdigit_no", "false");

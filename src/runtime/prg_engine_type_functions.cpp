@@ -98,6 +98,10 @@ std::optional<PrgValue> evaluate_type_function(
     const std::function<std::string(const std::string&)>& set_callback) {
     if (function == "empty" && !arguments.empty()) {
         const PrgValue& value = arguments[0];
+        // NULL is not empty (installed VFP9: EMPTY(.NULL.) is .F., #5934); an unset/blank value still is.
+        if (value.is_null) {
+            return make_boolean_value(false);
+        }
         if (value.kind == PrgValueKind::empty) {
             return make_boolean_value(true);
         }
@@ -129,6 +133,10 @@ std::optional<PrgValue> evaluate_type_function(
     }
     if (function == "isblank" && !arguments.empty()) {
         const PrgValue& value = arguments[0];
+        // NULL is not blank (installed VFP9: ISBLANK(.NULL.) is .F., #6140).
+        if (value.is_null) {
+            return make_boolean_value(false);
+        }
         if (value.kind == PrgValueKind::empty) {
             return make_boolean_value(true);
         }
@@ -151,11 +159,16 @@ std::optional<PrgValue> evaluate_type_function(
         return value_as_bool(arguments[0]) ? arguments[1] : arguments[2];
     }
     if (function == "nvl" && arguments.size() >= 2U) {
-        return arguments[0].kind == PrgValueKind::empty ? arguments[1] : arguments[0];
+        // NVL substitutes for NULL only; a blank, unset or zero value is returned as it is.
+        return arguments[0].is_null ? arguments[1] : arguments[0];
     }
     if (function == "evl" && arguments.size() >= 2U) {
         const PrgValue& value = arguments[0];
         bool is_empty = false;
+        if (value.is_null) {
+            // NULL is not empty, so EVL(.NULL., x) is NULL (installed VFP9, #5934).
+            return value;
+        }
         if (value.kind == PrgValueKind::empty) {
             is_empty = true;
         } else if (value.kind == PrgValueKind::string) {
@@ -176,6 +189,32 @@ std::optional<PrgValue> evaluate_type_function(
         return is_empty ? arguments[1] : arguments[0];
     }
     if (function == "between" && arguments.size() >= 3U) {
+        // BETWEEN(x, a, b) is (x >= a) AND (x <= b) in three-valued logic (installed VFP9 probe, retained
+        // at ~/temp/vfp9-probes/null-semantics-c24): a NULL expression is NULL, and a NULL bound is NULL
+        // unless the other bound already excludes the value (BETWEEN(5, .NULL., 2) is .F.).
+        if (arguments[0].is_null || arguments[1].is_null || arguments[2].is_null) {
+            if (arguments[0].is_null) {
+                return make_null_value();
+            }
+            const bool lower_known = !arguments[1].is_null;
+            const bool upper_known = !arguments[2].is_null;
+            const auto below = [&](const PrgValue& bound) {
+                if (arguments[0].kind == PrgValueKind::string || bound.kind == PrgValueKind::string) {
+                    return value_as_string(arguments[0]) < value_as_string(bound);
+                }
+                return value_as_number(arguments[0]) < value_as_number(bound);
+            };
+            const auto above = [&](const PrgValue& bound) {
+                if (arguments[0].kind == PrgValueKind::string || bound.kind == PrgValueKind::string) {
+                    return value_as_string(arguments[0]) > value_as_string(bound);
+                }
+                return value_as_number(arguments[0]) > value_as_number(bound);
+            };
+            if ((lower_known && below(arguments[1])) || (upper_known && above(arguments[2]))) {
+                return make_boolean_value(false);
+            }
+            return make_null_value();
+        }
         if (arguments[0].kind == PrgValueKind::string ||
             arguments[1].kind == PrgValueKind::string ||
             arguments[2].kind == PrgValueKind::string) {

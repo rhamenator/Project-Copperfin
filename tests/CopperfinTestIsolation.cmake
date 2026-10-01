@@ -866,6 +866,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_dynamic_xasset_security
             test_prg_engine_report_security
             test_prg_engine_file_command_operands
+            test_prg_engine_null_semantics
             test_prg_engine_preprocessor_diagnostics
             test_prg_engine_source_limits
             test_prg_engine_csv_whitespace
