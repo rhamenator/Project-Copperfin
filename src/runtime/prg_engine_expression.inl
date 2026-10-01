@@ -1164,7 +1164,7 @@
                 }
                 if (peek() == '{')
                 {
-                    return make_string_value(parse_braced_literal());
+                    return braced_literal_value(parse_braced_literal());
                 }
                 if (peek() == '[')
                 {
@@ -3297,6 +3297,48 @@
                     break;
                 }
                 return result;
+            }
+
+            // A strict {^...} literal is a Date or DateTime and the empty forms are empty Date/DateTime values
+            // (#5920); every other braced text stays a Character value as before.
+            PrgValue braced_literal_value(const std::string &literal) const
+            {
+                const BracedLiteral parsed = parse_braced_date_time_literal(literal);
+                switch (parsed.kind)
+                {
+                case BracedLiteralKind::date:
+                    return make_date_value(
+                        format_runtime_date_for_set(parsed.year, parsed.month, parsed.day, set_callback_),
+                        parsed.year,
+                        parsed.month,
+                        parsed.day);
+                case BracedLiteralKind::datetime:
+                    return make_datetime_value(
+                        format_runtime_datetime_for_set(
+                            parsed.year, parsed.month, parsed.day, parsed.hour, parsed.minute, parsed.second, set_callback_),
+                        parsed.year,
+                        parsed.month,
+                        parsed.day,
+                        parsed.hour,
+                        parsed.minute,
+                        parsed.second);
+                case BracedLiteralKind::empty_date:
+                    return make_date_value(std::string{});
+                case BracedLiteralKind::empty_datetime:
+                    return make_datetime_value(std::string{});
+                case BracedLiteralKind::ambiguous:
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Expression.Error.AmbiguousDateConstant"), 2032);
+                case BracedLiteralKind::invalid:
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Expression.Error.InvalidDateValue"), 2034);
+                case BracedLiteralKind::illegal_characters:
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Expression.Error.DateIllegalCharacters"), 2035);
+                case BracedLiteralKind::not_strict:
+                    break;
+                }
+                return make_string_value(literal);
             }
 
             std::string parse_braced_literal()

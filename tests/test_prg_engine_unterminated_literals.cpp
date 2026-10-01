@@ -147,8 +147,10 @@ void test_valid_literal_forms_still_evaluate() {
     check("n9", "3");
     // Closed brace literals: simple, nested, and with a quoted brace inside. An
     // implementation that rejected every brace literal would fail here.
-    check("c10", "{}");
-    check("c11", "{^2024-01-15}");
+    // #5920: a braced literal is a Date, not Character text. {} is the empty Date (an empty display) and
+    // {^2024-01-15} is the Date 01/15/2024, as in VFP9.
+    check("c10", "");
+    check("c11", "01/15/2024");
     check("c12", "{{}}");
     check("c13", "{'}'}");
     check("c14", "{\"}\"}");

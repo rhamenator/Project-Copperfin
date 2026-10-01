@@ -467,6 +467,159 @@ std::optional<std::int64_t> date_time_ordering_key(
 
 }  // namespace
 
+BracedLiteral parse_braced_date_time_literal(const std::string& literal) {
+    BracedLiteral result;
+    if (literal.size() < 2U || literal.front() != '{' || literal.back() != '}') {
+        return result;
+    }
+    const std::string inner = literal.substr(1U, literal.size() - 2U);
+    if (inner.empty() || inner.front() != '^') {
+        // An empty literal is only blanks, slashes and colons (probed against installed VFP9, retained at
+        // ~/temp/vfp9-probes/datetime-types-c24/result-edge*.txt). More than two slashes, more than two
+        // colons, or a colon before a slash is error 2035 "Date/datetime contains illegal characters."; a
+        // colon with a slash or a leading blank is an empty DateTime ({ : }, {/ /: }, {//:}); everything else
+        // ({}, {  /  /  }, {//}, {:}, {: }) is an empty Date. Any other braced text is non-strict text.
+        if (inner.find_first_not_of(" /:") != std::string::npos) {
+            return result;
+        }
+        int slashes = 0;
+        int colons = 0;
+        bool colon_before_slash = false;
+        for (const char ch : inner) {
+            if (ch == '/') {
+                ++slashes;
+                colon_before_slash = colon_before_slash || colons > 0;
+            } else if (ch == ':') {
+                ++colons;
+            }
+        }
+        if (slashes > 2 || colons > 2 || colon_before_slash) {
+            result.kind = BracedLiteralKind::illegal_characters;
+            return result;
+        }
+        result.kind = (colons >= 1 && (slashes >= 1 || inner.front() == ' ')) ? BracedLiteralKind::empty_datetime
+                                                                             : BracedLiteralKind::empty_date;
+        return result;
+    }
+
+    const std::string body = inner.substr(1U);
+    std::size_t cursor = 0U;
+    const auto skip_blanks = [&] {
+        while (cursor < body.size() && (body[cursor] == ' ' || body[cursor] == '\t')) {
+            ++cursor;
+        }
+    };
+    const auto read_number = [&](const std::size_t min_digits, const std::size_t max_digits, int& out) {
+        const std::size_t start = cursor;
+        long long value = 0;
+        while (cursor < body.size() && std::isdigit(static_cast<unsigned char>(body[cursor])) != 0 &&
+               cursor - start < max_digits) {
+            value = (value * 10) + (body[cursor] - '0');
+            ++cursor;
+        }
+        if (cursor - start < min_digits) {
+            return false;
+        }
+        out = static_cast<int>(value);
+        return true;
+    };
+    const auto is_date_separator = [](const char ch) { return ch == '-' || ch == '/' || ch == '.'; };
+
+    result.kind = BracedLiteralKind::ambiguous;
+    skip_blanks();
+    int year = 0;
+    int month = 0;
+    int day = 0;
+    if (!read_number(4U, 4U, year) || cursor >= body.size() || !is_date_separator(body[cursor])) {
+        return result;
+    }
+    ++cursor;
+    if (!read_number(1U, 2U, month) || cursor >= body.size() || !is_date_separator(body[cursor])) {
+        return result;
+    }
+    ++cursor;
+    if (!read_number(1U, 2U, day)) {
+        return result;
+    }
+
+    bool has_time = false;
+    int hour = 0;
+    int minute = 0;
+    int second = 0;
+    bool has_meridiem = false;
+    bool pm = false;
+    std::size_t after_date = cursor;
+    skip_blanks();
+    if (cursor < body.size() && body[cursor] == ',') {
+        ++cursor;
+        skip_blanks();
+    }
+    if (cursor < body.size() && std::isdigit(static_cast<unsigned char>(body[cursor])) != 0 && cursor > after_date) {
+        has_time = true;
+        if (!read_number(1U, 2U, hour) || cursor >= body.size() || body[cursor] != ':') {
+            return result;
+        }
+        ++cursor;
+        if (!read_number(1U, 2U, minute)) {
+            return result;
+        }
+        if (cursor < body.size() && body[cursor] == ':') {
+            ++cursor;
+            if (!read_number(1U, 2U, second)) {
+                return result;
+            }
+        }
+        // VFP9 accepts a fractional part after the minutes or the seconds, with or without digits
+        // ({^2026-06-15 13:45:30.}, {^2026-06-15 13:45.5}); it is ignored.
+        if (cursor < body.size() && body[cursor] == '.') {
+            ++cursor;
+            while (cursor < body.size() && std::isdigit(static_cast<unsigned char>(body[cursor])) != 0) {
+                ++cursor;
+            }
+        }
+        skip_blanks();
+        if (cursor < body.size() && (body[cursor] == 'a' || body[cursor] == 'A' || body[cursor] == 'p' ||
+                                     body[cursor] == 'P')) {
+            has_meridiem = true;
+            pm = body[cursor] == 'p' || body[cursor] == 'P';
+            ++cursor;
+            if (cursor < body.size() && (body[cursor] == 'm' || body[cursor] == 'M')) {
+                ++cursor;
+            }
+        }
+    }
+    skip_blanks();
+    if (cursor != body.size()) {
+        return result;
+    }
+
+    result.kind = BracedLiteralKind::invalid;
+    if (year < 1 || month < 1 || month > 12 || day < 1 || day > days_in_month(year, month)) {
+        return result;
+    }
+    if (has_time) {
+        if (has_meridiem) {
+            if (hour < 1 || hour > 12) {
+                return result;
+            }
+            hour = (hour % 12) + (pm ? 12 : 0);
+        } else if (hour > 23) {
+            return result;
+        }
+        if (minute > 59 || second > 59) {
+            return result;
+        }
+    }
+    result.kind = has_time ? BracedLiteralKind::datetime : BracedLiteralKind::date;
+    result.year = year;
+    result.month = month;
+    result.day = day;
+    result.hour = hour;
+    result.minute = minute;
+    result.second = second;
+    return result;
+}
+
 std::string format_runtime_date_for_set(
     int year,
     int month,
