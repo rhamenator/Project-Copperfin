@@ -25,11 +25,14 @@ namespace fs = std::filesystem;
 // field: N(5,2) takes -1.235 as -1.24, 1.005 as 1.01, 2.675 as 2.68, 0.125 as 0.13, and -0.004 as
 // 0; N(3,0) takes 1.9 as 2, 0.5 as 1 and -2.5 as -3. A value that is still wider than the field
 // after rounding (VFP9 silently drops decimals or stores 0) keeps Copperfin's documented rejection
-// and rollback, which is the open owner decision in #6572.
+// and rollback: the import raises and no row is appended. That is the final #6572 decision (repository
+// owner, 2026-09-30): an intentional divergence from VFP9, because silently zeroing or shortening
+// imported numbers destroys data with no signal.
 
 struct Outcome {
     bool completed;
     std::string count;   // RECCOUNT() after the import, caught so a rejection can be observed
+    std::string rejected;   // "1" when APPEND FROM raised (and was caught), "0" when it succeeded
     std::string value;   // STR(N,12,4) of the first record when one exists
     std::string message;
 };
@@ -62,7 +65,7 @@ Outcome import_one(const fs::path &root, const std::string &name, const std::str
     const auto slurp = [&](const char *file) {
         return fs::exists(dir / file) ? read_text(dir / file) : std::string{};
     };
-    return {state.completed, slurp("count.txt"), slurp("result.txt"), state.message};
+    return {state.completed, slurp("count.txt"), slurp("rejected.txt"), slurp("result.txt"), state.message};
 }
 
 struct Case {
@@ -83,8 +86,11 @@ void run_cases(const std::vector<Case> &cases) {
         const std::string label = "#6573 " + c.type + " " + c.field_type + c.schema + " [" + c.text + "]: ";
         expect(outcome.completed, label + "the script should finish (a rejection is caught): " + outcome.message);
         if (c.expected.empty()) {
+            expect(outcome.rejected == "1",
+                label + "a value still too wide after rounding must be rejected with an error, not silently skipped, got [" + outcome.rejected + "]");
             expect(outcome.count == "0", label + "a value still too wide after rounding must roll back, leaving 0 records, got [" + outcome.count + "]");
         } else {
+            expect(outcome.rejected == "0", label + "the import must succeed without raising, got [" + outcome.rejected + "]");
             expect(outcome.count == "1", label + "the import should append one record, got [" + outcome.count + "]");
             expect(outcome.value == c.expected, label + "expected [" + c.expected + "], got [" + outcome.value + "]");
         }
@@ -166,6 +172,11 @@ void test_numeric_text_rounds_to_the_field_scale() {
         cases.push_back({type, "F", "(3,0)", "1000", ""});
         cases.push_back({type, "F", "(5,2)", "999.99", ""});
     }
+    // #6572, the issue's exact fixture: one over-wide row in the middle rejects the WHOLE import and
+    // rolls it back, so not even the valid first row (999) is appended. VFP9 would silently store
+    // 999, 0, 0, 0, 0, 2; the owner decision (2026-09-30) is to keep rejecting instead.
+    cases.push_back({"CSV", "N", "(3,0)", "999\r\n1000\r\n-999\r\n-1000\r\n0\r\n1.9", ""});
+    cases.push_back({"DELIMITED", "N", "(3,0)", "999\r\n1000\r\n-999\r\n-1000\r\n0\r\n1.9", ""});
     run_cases(cases);
 }
 
