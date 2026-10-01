@@ -493,6 +493,41 @@
                 bool previous_evaluate_resolved_text_;
             };
 
+            // A Currency result outside +-922337203685477.5807 is error 1988 "Currency value is out of range." and
+            // stops the statement (installed VFP9, probe ~/temp/vfp9-probes/currency-c25/result7.txt, #6037); it
+            // never widens to an inexact Number.
+            [[noreturn]] static void throw_currency_out_of_range()
+            {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.CurrencyOutOfRange"), 1988);
+            }
+
+            // Exact scaled-integer sum and difference that raise error 1988 only when the true result leaves the
+            // range, and never negate INT64_MIN (the stored Currency minimum): -922337203685477.5808 minus itself
+            // is zero and -0.0001 minus it is the maximum.
+            static std::int64_t checked_currency_add(const std::int64_t a, const std::int64_t b)
+            {
+                if ((b > 0 && a > std::numeric_limits<std::int64_t>::max() - b) ||
+                    (b < 0 && a < std::numeric_limits<std::int64_t>::min() - b))
+                {
+                    throw_currency_out_of_range();
+                }
+                return a + b;
+            }
+
+            static std::int64_t checked_currency_subtract(const std::int64_t a, const std::int64_t b)
+            {
+                if (b == std::numeric_limits<std::int64_t>::min())
+                {
+                    // a - INT64_MIN = a + 2^63, which fits only for a negative a.
+                    if (a >= 0)
+                    {
+                        throw_currency_out_of_range();
+                    }
+                    return (a + std::numeric_limits<std::int64_t>::max()) + 1;
+                }
+                return checked_currency_add(a, -b);
+            }
+
             static PrgValue currency_arithmetic(
                 const PrgValue &left,
                 const PrgValue &right,
@@ -502,26 +537,15 @@
                     right.kind == PrgValueKind::currency &&
                     (operation == '+' || operation == '-'))
                 {
-                    if (operation == '-' && right.currency_value == std::numeric_limits<std::int64_t>::min())
-                    {
-                        return make_number_value(value_as_number(left) - value_as_number(right));
-                    }
-                    const std::int64_t right_value = operation == '+'
-                                                         ? right.currency_value
-                                                         : -right.currency_value;
-                    if ((right_value > 0 && left.currency_value > std::numeric_limits<std::int64_t>::max() - right_value) ||
-                        (right_value < 0 && left.currency_value < std::numeric_limits<std::int64_t>::min() - right_value))
-                    {
-                        return make_number_value(value_as_number(left) +
-                                                 (operation == '+' ? value_as_number(right) : -value_as_number(right)));
-                    }
-                    return make_currency_value(left.currency_value + right_value);
+                    return make_currency_value(
+                        operation == '+' ? checked_currency_add(left.currency_value, right.currency_value)
+                                         : checked_currency_subtract(left.currency_value, right.currency_value));
                 }
 
                 // Every other arithmetic with a Currency operand is Currency (installed VFP9: $1.25+1, 1+$1.25,
                 // $1.25*$2, 2*$1.25, $10/$4 and 10/$4 are all Y), rounded to four decimals. Two Currency operands of
                 // * or / use their exact scaled integers; the others work on the values. A result outside the
-                // Currency range falls back to a Number (VFP9 raises error 1988; #6037).
+                // Currency range raises error 1988 (#6037).
                 const bool both_currency = left.kind == PrgValueKind::currency && right.kind == PrgValueKind::currency;
                 const long double left_value = value_as_number(left);
                 const long double right_value = value_as_number(right);
@@ -536,21 +560,13 @@
                     {
                         const std::int64_t currency_scaled = left_is_currency ? left.currency_value : right.currency_value;
                         const std::int64_t other = static_cast<std::int64_t>(other_scaled);
-                        // Currency +/- other, or other - Currency.
-                        const bool subtract_other = operation == '-' && left_is_currency;
-                        const bool negate_currency = operation == '-' && !left_is_currency;
-                        const std::int64_t addend = subtract_other ? -other : other;
-                        if (!(negate_currency && currency_scaled == std::numeric_limits<std::int64_t>::min()))
+                        // |other| < 9e18 < 2^63, so negating it is safe.
+                        if (operation == '+')
                         {
-                            const std::int64_t base = negate_currency ? -currency_scaled : currency_scaled;
-                            if ((addend > 0 && base > std::numeric_limits<std::int64_t>::max() - addend) ||
-                                (addend < 0 && base < std::numeric_limits<std::int64_t>::min() - addend))
-                            {
-                                return make_number_value(static_cast<double>(
-                                    operation == '+' ? left_value + right_value : left_value - right_value));
-                            }
-                            return make_currency_value(base + addend);
+                            return make_currency_value(checked_currency_add(currency_scaled, other));
                         }
+                        return make_currency_value(left_is_currency ? checked_currency_subtract(currency_scaled, other)
+                                                                    : checked_currency_subtract(other, currency_scaled));
                     }
                 }
                 long double scaled = 0.0L;
@@ -577,11 +593,7 @@
                 {
                     return make_currency_value(static_cast<std::int64_t>(scaled));
                 }
-                return make_number_value(static_cast<double>(
-                    operation == '+'   ? left_value + right_value
-                    : operation == '-' ? left_value - right_value
-                    : operation == '*' ? left_value * right_value
-                                       : left_value / right_value));
+                throw_currency_out_of_range();
             }
 
             PrgValue parse_expression()
@@ -1004,10 +1016,11 @@
                         else if (require_compatible_operands(OperatorTypeRule::division, left, right),
                                  left.kind == PrgValueKind::currency || right.kind == PrgValueKind::currency)
                         {
-                            const double divisor = value_as_number(right);
-                            if (divisor == 0.0)
+                            // Currency division by zero is error 1988 in installed VFP9 ($1/0, $0/0, $1/$0),
+                            // not the Numeric division-by-zero error.
+                            if (value_as_number(right) == 0.0)
                             {
-                                throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.DivisionByZero"));
+                                throw_currency_out_of_range();
                             }
                             left = currency_arithmetic(left, right, '/');
                         }
@@ -1111,9 +1124,12 @@
                     {
                         return make_int64_value(-operand.int64_value);
                     }
-                    if (operand.kind == PrgValueKind::currency &&
-                        operand.currency_value != std::numeric_limits<std::int64_t>::min())
+                    if (operand.kind == PrgValueKind::currency)
                     {
+                        if (operand.currency_value == std::numeric_limits<std::int64_t>::min())
+                        {
+                            throw_currency_out_of_range();
+                        }
                         return make_currency_value(-operand.currency_value);
                     }
                     return make_number_value(-value_as_number(operand));

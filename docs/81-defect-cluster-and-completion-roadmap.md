@@ -498,8 +498,9 @@ which `VARTYPE(x, .T.)` and `TYPE()` use; the other items its text raised (`EMPT
 
 **Started 2026-10-01:** Currency literals (#6036) and `Y` fields (#6061) follow
 `RQ-CF-PRG-CURRENCY-TYPING-001`, and the numeric functions on Currency (#6039) follow
-`RQ-CF-PRG-CURRENCY-FUNCTIONS-001`. Still open here: #6035, #6037, #6040, #6041 (overflow and
-aggregate behavior), #6168 and #6728; #6038 (Jet4 Unicode decoding) is an Access-migration
+`RQ-CF-PRG-CURRENCY-FUNCTIONS-001`, and Currency overflow (#6037) follows
+`RQ-CF-PRG-CURRENCY-OVERFLOW-001`. Still open here: #6035, #6040 and #6041 (aggregates), #6168,
+#6728 and #6742 (exact multiply and divide); #6038 (Jet4 Unicode decoding) is an Access-migration
 item.
 
 ~8 issues: #6035-#6041. `Currency` results from external functions and
