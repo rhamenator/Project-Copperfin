@@ -583,6 +583,7 @@ void test_scatter_gather_memvar_preserves_date_and_datetime_like_values() {
         "m.BIRTHDAY = '04/19/2026'\n"
         "m.STAMP = '04/19/2026 01:02:03'\n"
         "GATHER MEMVAR FIELDS BIRTHDAY, STAMP\n"
+        "RELEASE BIRTHDAY, STAMP\n"   // VFP9 reads the field for a bare name; Copperfin reads the memvar (#6734)
         "cAfterBirth = DTOC(BIRTHDAY, 1)\n"
         "cAfterStamp = TTOC(STAMP, 1)\n"
         "SCATTER MEMVAR BLANK\n"

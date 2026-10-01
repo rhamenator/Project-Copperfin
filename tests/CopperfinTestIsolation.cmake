@@ -869,6 +869,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_operator_types
             test_prg_engine_date_literals
             test_prg_engine_statement_conditions
+            test_prg_engine_date_function_types
             test_prg_engine_null_semantics
             test_prg_engine_null_builtins
             test_prg_engine_preprocessor_diagnostics

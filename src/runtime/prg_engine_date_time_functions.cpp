@@ -4,6 +4,9 @@
 
 #include "prg_engine_date_time_functions.h"
 
+#include "localized_text.h"
+#include "prg_compatibility_error.h"
+
 #include "prg_engine_helpers.h"
 
 #include <algorithm>
@@ -11,6 +14,7 @@
 #include <chrono>
 #include <cmath>
 #include <cctype>
+#include <set>
 #include <functional>
 #include <iomanip>
 #include <sstream>
@@ -848,10 +852,60 @@ std::optional<PrgValue> evaluate_date_time_additive(
         result_second);
 }
 
+namespace {
+
+// #6142: the date and time functions take a Date or DateTime, never a Character value that merely looks like one
+// (CTOD, CTOT and STOD are the conversion functions). Installed VFP9 (type matrix retained at
+// ~/temp/vfp9-probes/datetime-types-c24/result.txt) raises error 11 for a Character, Numeric, Logical or Object
+// argument to every function below; DTOT takes only a Date and TTOD only a DateTime. A NULL argument has
+// already returned NULL before dispatch reaches here. GOMONTH, EOMONTH, DOW and WEEK also need a Numeric second
+// argument. QUARTER, EOMONTH and DTOJ are Copperfin extensions that follow their siblings. MDY and DMY are not
+// covered yet: Copperfin gives them an invented numeric (month, day, year) constructor that VFP9 does not have
+// (#5924), which must be replaced together with this rule.
+bool is_date_or_datetime(const PrgValue& value) {
+    const PrgOperandClass operand_class = classify_operand(value);
+    return operand_class == PrgOperandClass::date || operand_class == PrgOperandClass::datetime;
+}
+
+void require_date_time_argument_types(const std::string& function, const std::vector<PrgValue>& arguments) {
+    static const std::set<std::string> kDateOrDateTime = {
+        "dow", "cdow", "cmonth", "year", "month", "day", "week", "dtos", "dtoc", "hour", "minute", "sec", "ttoc",
+        "gomonth", "quarter", "eomonth", "dtoj"};
+    static const std::set<std::string> kNumericSecondArgument = {"gomonth", "eomonth", "dow", "week"};
+    if (arguments.empty() || arguments.front().is_null) {
+        return;
+    }
+    const auto invalid = [] {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+    };
+    if (kDateOrDateTime.count(function) != 0U) {
+        if (!is_date_or_datetime(arguments.front())) {
+            invalid();
+        }
+        if (arguments.size() >= 2U && kNumericSecondArgument.count(function) != 0U && !arguments[1].is_null) {
+            const PrgOperandClass second = classify_operand(arguments[1]);
+            if (second != PrgOperandClass::numeric && second != PrgOperandClass::currency) {
+                invalid();
+            }
+        }
+    } else if (function == "dtot") {
+        if (classify_operand(arguments.front()) != PrgOperandClass::date) {
+            invalid();
+        }
+    } else if (function == "ttod") {
+        if (classify_operand(arguments.front()) != PrgOperandClass::datetime) {
+            invalid();
+        }
+    }
+}
+
+}  // namespace
+
 std::optional<PrgValue> evaluate_date_time_function(
     const std::string& function,
     const std::vector<PrgValue>& arguments,
     const std::function<std::string(const std::string&)>& set_callback) {
+    require_date_time_argument_types(function, arguments);
     if (function == "date") {
         if (arguments.size() >= 3U) {
             const int year = static_cast<int>(std::llround(value_as_number(arguments[0])));
