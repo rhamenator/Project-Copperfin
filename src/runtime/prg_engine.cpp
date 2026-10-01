@@ -5395,16 +5395,13 @@ namespace copperfin::runtime
                             {
                                 aggregate.arguments.clear();
                             }
-                            if (!plan.where_expression.empty())
-                            {
-                                aggregate.arguments.push_back(plan.where_expression);
-                            }
                             query_row.values.push_back(
                                 aggregate_function_value(
                                     aggregate.function,
                                     aggregate.arguments,
                                     frame,
-                                    &cursor));
+                                    &cursor,
+                                    plan.where_expression));
                             if (!cursor_alive() || !joined_cursor_alive())
                             {
                                 cursor_lost = true;
@@ -5606,12 +5603,13 @@ namespace copperfin::runtime
                     {
                         aggregate.arguments.clear();
                     }
-                    if (!plan.where_expression.empty())
-                    {
-                        aggregate.arguments.push_back(plan.where_expression);
-                    }
                     query_row.values.push_back(
-                        aggregate_function_value(aggregate.function, aggregate.arguments, frame, &cursor));
+                        aggregate_function_value(
+                            aggregate.function,
+                            aggregate.arguments,
+                            frame,
+                            &cursor,
+                            plan.where_expression));
                 }
                 materialized_rows.push_back(std::move(query_row));
             }

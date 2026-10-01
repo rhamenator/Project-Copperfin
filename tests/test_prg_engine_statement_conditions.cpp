@@ -54,6 +54,12 @@ const std::vector<Row> kRows = {
     {"LOCATE .T.", "LOCATE FOR .T.", "ok"},
     {"SQL WHERE 1", "SELECT * FROM t WHERE 1 INTO ARRAY aq", "ERR1833"},
     {"SQL WHERE field", "SELECT * FROM t WHERE ID INTO ARRAY aq", "ERR1833"},
+    {"SQL aggregate WHERE 1", "SELECT COUNT(*) FROM t WHERE 1 INTO ARRAY aq", "ERR1833"},
+    {"SQL aggregate WHERE string", "SELECT COUNT(*) FROM t WHERE 'x' INTO ARRAY aq", "ERR1833"},
+    {"SCAN FOR UDF returns 1", "SCAN FOR RowOne()\nENDSCAN", "ERR1127"},
+    {"SCAN WHILE UDF returns 1", "SCAN WHILE RowOne()\nENDSCAN", "ERR1127"},
+    {"SCAN FOR UDF returns .T.", "SCAN FOR RowTrue()\nENDSCAN", "ok"},
+    {"SET FILTER UDF returns 1", "SET FILTER TO RowOne()\nGO TOP\nSCAN\nENDSCAN", "ERR37"},
     {"SET FILTER 1", "SET FILTER TO 1\nGO TOP", "ERR37"},
     {"SET FILTER .T.", "SET FILTER TO .T.\nGO TOP", "ok"},
 };
@@ -69,7 +75,7 @@ std::string run_rows(const fs::path &dir) {
         body += "ENDTRY\n";
         body += "SET FILTER TO\nSELECT t\n";
     }
-    body += "STRTOFILE(cOut, 'results.txt')\nRETURN\n";
+    body += "STRTOFILE(cOut, 'results.txt')\nRETURN\nFUNCTION RowOne\nRETURN 1\nFUNCTION RowTrue\nRETURN .T.\n";
     fs::create_directories(dir / "script");
     write_text(dir / "script" / "rows.prg", body);
     auto session = copperfin::runtime::PrgRuntimeSession::create(

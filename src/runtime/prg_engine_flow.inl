@@ -1361,7 +1361,12 @@
 
                 if (completed_value.has_value())
                 {
-                    const bool predicate_value = value_as_bool(*completed_value);
+                    // The SCAN search stages are a cursor filter (SET FILTER, error 37) and the FOR and WHILE
+                    // clauses (error 1127); each must be Logical, as on the non-resumable path.
+                    const bool predicate_value = statement_condition_value(
+                        *completed_value,
+                        continuation.stage == ScanExpressionStage::cursor_filter ? StatementConditionKind::filter
+                                                                                 : StatementConditionKind::for_while);
                     completed_value.reset();
                     if (continuation.stage == ScanExpressionStage::while_predicate)
                     {

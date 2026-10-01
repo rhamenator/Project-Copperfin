@@ -333,7 +333,8 @@
             const Frame &frame,
             const std::string &extra_expression,
             bool honor_set_deleted = true,
-            bool honor_filter = true)
+            bool honor_filter = true,
+            const StatementConditionKind extra_kind = StatementConditionKind::for_while)
         {
             const auto record = current_record(cursor);
             if (!record.has_value())
@@ -362,7 +363,8 @@
                     return false;
                 }
             }
-            if (!extra_expression.empty() && !evaluate_visibility_expression(extra_expression, frame, &cursor))
+            if (!extra_expression.empty() &&
+                !evaluate_visibility_expression(extra_expression, frame, &cursor, extra_kind))
             {
                 return false;
             }
