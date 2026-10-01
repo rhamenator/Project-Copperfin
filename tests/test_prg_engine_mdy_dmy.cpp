@@ -7,6 +7,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <locale>
 #include <string>
 #include <system_error>
 #include <vector>
@@ -125,12 +126,12 @@ const std::vector<Row> kRows = {
     {"SET CENTURY OFF", "DMY(DATE(2026,10,5))", "C:05 October 26"},
     {"SET CENTURY OFF", "DMY(DATE(2026,11,5))", "C:05 November 26"},
     {"SET CENTURY OFF", "DMY(DATE(2026,12,5))", "C:05 December 26"},
-    {"SET CENTURY ON\\nSET DATE TO DMY", "MDY(DATE(2026,4,18))", "C:April 18, 2026"},
-    {"SET CENTURY ON\\nSET DATE TO DMY", "DMY(DATE(2026,4,18))", "C:18 April 2026"},
-    {"SET CENTURY ON\\nSET DATE TO YMD", "MDY(DATE(2026,4,18))", "C:April 18, 2026"},
-    {"SET CENTURY ON\\nSET DATE TO YMD", "DMY(DATE(2026,4,18))", "C:18 April 2026"},
-    {"SET CENTURY ON\\nSET MARK TO '-'", "MDY(DATE(2026,4,18))", "C:April 18, 2026"},
-    {"SET CENTURY ON\\nSET MARK TO '-'", "DMY(DATE(2026,4,18))", "C:18 April 2026"}
+    {"SET CENTURY ON\nSET DATE TO DMY", "MDY(DATE(2026,4,18))", "C:April 18, 2026"},
+    {"SET CENTURY ON\nSET DATE TO DMY", "DMY(DATE(2026,4,18))", "C:18 April 2026"},
+    {"SET CENTURY ON\nSET DATE TO YMD", "MDY(DATE(2026,4,18))", "C:April 18, 2026"},
+    {"SET CENTURY ON\nSET DATE TO YMD", "DMY(DATE(2026,4,18))", "C:18 April 2026"},
+    {"SET CENTURY ON\nSET MARK TO '-'", "MDY(DATE(2026,4,18))", "C:April 18, 2026"},
+    {"SET CENTURY ON\nSET MARK TO '-'", "DMY(DATE(2026,4,18))", "C:18 April 2026"}
 };
 
 std::string run_rows(const fs::path &dir) {
@@ -157,11 +158,19 @@ std::string run_rows(const fs::path &dir) {
     return read_text(dir / "results.txt");
 }
 
+// A global locale that groups digits (2,026): MDY and DMY must still print the year as 2026.
+struct GroupingNumpunct : std::numpunct<char> {
+    char do_thousands_sep() const override { return ','; }
+    std::string do_grouping() const override { return "\3"; }
+};
+
 void test_mdy_dmy_match_vfp9() {
     const fs::path dir = fs::temp_directory_path() / "copperfin_mdy_dmy";
     std::error_code ignored;
     fs::remove_all(dir, ignored);
+    const std::locale previous_locale = std::locale::global(std::locale(std::locale::classic(), new GroupingNumpunct));
     const std::string output = run_rows(dir);
+    std::locale::global(previous_locale);
     expect(output.rfind("<incomplete", 0U) != 0U, "MDY/DMY: the script should complete: " + output);
     std::vector<std::string> lines;
     for (std::size_t start = 0U; start < output.size();) {

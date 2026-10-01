@@ -1002,6 +1002,7 @@ std::optional<PrgValue> evaluate_date_time_function(
             return make_string_value("*bad date*");
         }
         std::ostringstream text;
+        text.imbue(std::locale::classic());   // a global digit-grouping locale must not print 2,026
         const bool century = is_century_enabled(set_callback);
         text << std::setfill('0');
         if (function == "mdy") {
