@@ -1694,6 +1694,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_data_io
             test_prg_engine_database_lifecycle
             test_prg_engine_date_time_functions
+            test_dbf_datetime_vfp_compat
             test_prg_engine_debugger
             test_prg_engine_file_io_functions
             test_prg_engine_functions

@@ -102,7 +102,7 @@ namespace
             "SET DATE TO DMY\n"
             "SET MARK TO '.'\n"
             "stod_dmy = STOD('20260418')\n"
-            "jtod_dmy = JTOD(2460447)\n"
+            "jtod_dmy = JTOD(2461149)\n"
             "min_date_dmy = DTOC(MIN(DATE(2020, 12, 1), DATE(2021, 1, 15)), 1)\n"
             "max_date_dmy = DTOC(MAX(DATE(2020, 12, 1), DATE(2021, 1, 15)), 1)\n"
             "SET DATE TO MDY\n"
@@ -243,7 +243,7 @@ namespace
             "SET DATE TO YMD\n"
             "date_set_ymd = SET('DATE')\n"
             "stod_ymd_century_off = STOD('20260418')\n"
-            "jtod_ymd_century_off = JTOD(2460447)\n"
+            "jtod_ymd_century_off = JTOD(2461149)\n"
             "dtoc_ymd_century_off = DTOC(CTOD('2026/04/18'))\n"
             "ctot_ymd_century_off = CTOT('2026/04/18 13:45:56')\n"
             "SET CENTURY ON\n"
@@ -418,12 +418,12 @@ namespace
         check("ctod_trailing_invalid", "");
         check("ctod_compact_trailing_invalid", "");
         check("ttoc_date", "04/18/2026 00:00:00");
-        check("ttoj_value", "2460447");
-        check("ttoj_datetime", "2460447");
+        check("ttoj_value", "2461149");
+        check("ttoj_datetime", "2461149");
         check("ttoj_invalid", "0");
         check("jtot_value", "04/18/2026 00:00:00");
         check("jtot_invalid", "");
-        check("dtoj_value", "2460447");
+        check("dtoj_value", "2461149");
         check("dtoj_invalid", "0");
         check("dtoj_trailing_invalid", "0");
         check("jtod_value", "04/18/2026");
@@ -461,11 +461,11 @@ namespace
         check("gomonth_dmy", "18/05/2026");
         check("eomonth_dmy", "30/04/2026");
         check("dtos_dmy", "20260418");
-        check("dtoj_dmy", "2460447");
+        check("dtoj_dmy", "2461149");
         check("hour_dmy", "13");
         check("minute_dmy", "45");
         check("sec_dmy", "56");
-        check("ttoj_dmy", "2460447");
+        check("ttoj_dmy", "2461149");
         check("ctod_dmy_ambiguous", "20240201");
         check("dtoc_dmy_ambiguous", "20240201");
         check("ttoc_dmy_ambiguous", "20240201134556");

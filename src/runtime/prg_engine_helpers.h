@@ -146,6 +146,9 @@ double value_as_number(const PrgValue& value);
 std::string value_as_string(const PrgValue& value);
 
 int date_to_julian(int year, int month, int day);
+// Seconds since midnight for VFP's stored milliseconds, rounded to the nearest second (half up); a rounding that
+// reaches a full day advances `julian_day` by one.
+int stored_millis_to_seconds_of_day(int& julian_day, long long millis);
 void julian_to_date(int julian, int& year, int& month, int& day);
 bool julian_to_runtime_date(int julian, int& year, int& month, int& day);
 std::size_t portable_path_separator_position(const std::string& path);

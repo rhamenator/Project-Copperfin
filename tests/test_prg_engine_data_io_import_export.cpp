@@ -2937,7 +2937,7 @@ void test_sdf_datetime_layout_round_trips_and_blanks_non_vfp_values() {
     const auto source_create = copperfin::vfp::create_dbf_table_file(
         (temp_root / "source.dbf").string(),
         source_fields,
-        {{"julian:2459976 millis:11045000", "2025-01-02", "12.30", "T"}});
+        {{"julian:2460678 millis:11045000", "2025-01-02", "12.30", "T"}});
     expect(source_create.ok, "#6603/#6611: SDF temporal source fixture should be created");
 
     const fs::path sdf_path = temp_root / "temporal.sdf";
@@ -4275,9 +4275,9 @@ void test_copy_to_dif_sylk_date_datetime_cells() {
     };
     expect(copperfin::vfp::create_dbf_table_file(
                source_path.string(), fields,
-               {{"20240229", "julian:2459668 millis:47655000"},
+               {{"20240229", "julian:2460370 millis:47655000"},
                 {"", "julian:0 millis:0"},
-                {"19000101", "julian:2414319 millis:0"}}).ok,
+                {"19000101", "julian:2415021 millis:0"}}).ok,
            "#6628: leap-day Date/DateTime source fixture should be created");
 
     const fs::path dif_path = temp_root / "temporal.dif";
@@ -5826,7 +5826,7 @@ void test_append_from_array_macro_source_preserves_date_and_datetime_fields() {
         {.name = "AGE", .type = 'N', .length = 3U},
     };
     const std::vector<std::vector<std::string>> source_records{
-        {"20240117", "julian:2459625 millis:37230000", "41"},
+        {"20240117", "julian:2460327 millis:37230000", "41"},
     };
     const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
     expect(source_create.ok, "APPEND FROM ARRAY date/datetime source fixture should be created");
@@ -5885,7 +5885,7 @@ void test_append_from_array_macro_source_preserves_date_and_datetime_fields() {
         expect(persisted.table.records[0].values[0].display_value == "2024-01-17",
             "APPEND FROM ARRAY should persist date storage strings through the DBF writer (got '" +
                 persisted.table.records[0].values[0].display_value + "')");
-        expect(persisted.table.records[0].values[1].display_value == "julian:2459625 millis:37230000",
+        expect(persisted.table.records[0].values[1].display_value == "julian:2460327 millis:37230000",
             "APPEND FROM ARRAY should persist datetime storage strings through the DBF writer");
     }
 
