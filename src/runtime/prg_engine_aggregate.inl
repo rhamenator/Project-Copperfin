@@ -163,7 +163,9 @@
             for (std::size_t recno = 1U; recno <= cursor->record_count; ++recno)
             {
                 move_cursor_to(*cursor, static_cast<long long>(recno));
-                if (!while_expression.empty() && !value_as_bool(evaluate_expression(while_expression, frame, cursor)))
+                if (!while_expression.empty() &&
+                    !statement_condition_value(
+                        evaluate_expression(while_expression, frame, cursor), StatementConditionKind::for_while))
                 {
                     break;
                 }
@@ -322,7 +324,8 @@
                 move_cursor_to(cursor, static_cast<long long>(recno));
                 if (!while_expression.empty())
                 {
-                    const bool while_result = value_as_bool(evaluate_expression(while_expression, frame, &cursor));
+                    const bool while_result = statement_condition_value(
+                        evaluate_expression(while_expression, frame, &cursor), StatementConditionKind::for_while);
                     if (!still_live())
                     {
                         return records;
@@ -772,6 +775,14 @@
                     {
                         raw_arguments[1] = "(" + raw_arguments[1] + ") AND (" + statement.secondary_expression + ")";
                     }
+                }
+                if (function == "count" && raw_arguments.empty() &&
+                    (!statement.tertiary_expression.empty() || !statement.quaternary_expression.empty()))
+                {
+                    // COUNT's argument slots are (FOR condition, IN target, WHILE condition). With no FOR
+                    // condition the IN target must not slide into the first slot, where it used to be
+                    // evaluated as a (truthy, non-empty string) FOR condition.
+                    raw_arguments.push_back(std::string{});
                 }
                 if (!statement.tertiary_expression.empty())
                 {

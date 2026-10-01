@@ -471,9 +471,10 @@ native/COM object lifetime rather than `CursorState`.
 `RQ-CF-PRG-NULL-OPERATOR-SEMANTICS-001`, built on a 73-row retained VFP9 probe
 (`~/temp/vfp9-probes/null-semantics-c24/`). Built-in function NULL propagation
 (#5936) follows `RQ-CF-PRG-NULL-BUILTIN-PROPAGATION-001`. The operators, `BETWEEN`, `NOT`, unary minus, `IIF` and `ICASE` of #5939, #5940 and
-#6141 follow `RQ-CF-PRG-OPERATOR-TYPE-RULES-001`. Still open here: the statement
-conditions of #5939, the date functions of #6142, the numeric-equality epsilon (#6034)
-and the typed null of #6506.
+#6141 follow `RQ-CF-PRG-OPERATOR-TYPE-RULES-001`, and the statement conditions of #5939
+(`IF`, `DO CASE`, `DO WHILE`, `FOR`/`WHILE` clauses, `SET FILTER`, SQL `WHERE`) follow
+`RQ-CF-PRG-STATEMENT-CONDITION-TYPES-001`. Still open here: the date functions of #6142,
+the numeric-equality epsilon (#6034) and the typed null of #6506.
 
 ~12 issues: #5934, #5936, #5939, #5940, #5942, #5979, #6034, #6140,
 #6141, #6142. `EMPTY()`/`ISBLANK()` report `NULL` as empty/blank instead

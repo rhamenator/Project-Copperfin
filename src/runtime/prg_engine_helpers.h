@@ -72,6 +72,15 @@ PrgValue make_null_value();
 // caller first, because NULL propagates before any type check.
 enum class PrgOperandClass { empty, character, numeric, currency, logical, date, datetime, object };
 PrgOperandClass classify_operand(const PrgValue& value);
+
+// The condition of a statement or clause. Installed VFP9 (probe retained at
+// ~/temp/vfp9-probes/null-semantics-c24/vfp9-result-flow-msgs.txt) accepts only a Logical value or NULL
+// (NULL is false) and raises a different error per statement: IF 9, DO CASE 10, a FOR or WHILE clause
+// (DO WHILE, LOCATE, COUNT, SCAN, REPLACE, DELETE, GATHER ...) 1127, SET FILTER 37, SQL WHERE 1833.
+// ELSEIF is the one exception (VFP accepts any value there), so it keeps value_as_bool. A condition with no
+// value at all (empty) stays false; only the operators report an unset value as error 12.
+enum class StatementConditionKind { if_statement, do_case, for_while, filter, sql_where };
+bool statement_condition_value(const PrgValue& value, StatementConditionKind kind);
 PrgValue make_boolean_value(bool value);
 PrgValue make_number_value(double value);
 PrgValue make_string_value(std::string value);

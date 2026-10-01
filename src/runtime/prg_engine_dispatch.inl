@@ -324,7 +324,10 @@
                 switch (continuation.stage)
                 {
                 case LoopExpressionStage::do_while_predicate:
-                    initialize_do_while(target, continuation.statement, value_as_bool(value));
+                    initialize_do_while(
+                        target,
+                        continuation.statement,
+                        statement_condition_value(value, StatementConditionKind::for_while));
                     target.loop_expression_continuation.reset();
                     return true;
                 case LoopExpressionStage::for_each_collection:
@@ -421,12 +424,14 @@
                     {
                         apply_conditional_predicate(
                             continued_statement.kind,
-                            value_as_bool(*expression_value));
+                            continued_statement.kind == StatementKind::if_statement
+                                ? statement_condition_value(*expression_value, StatementConditionKind::if_statement)
+                                : value_as_bool(*expression_value));
                         resumed_conditional_expression = true;
                     }
                     else if (continued_statement.kind == StatementKind::case_statement)
                     {
-                        apply_case_predicate(value_as_bool(*expression_value));
+                        apply_case_predicate(statement_condition_value(*expression_value, StatementConditionKind::do_case));
                         resumed_case_expression = true;
                     }
                     else if (continued_statement.kind == StatementKind::for_statement ||
@@ -3565,7 +3570,7 @@
                 {
                     return {};
                 }
-                apply_case_predicate(value_as_bool(*predicate_value));
+                apply_case_predicate(statement_condition_value(*predicate_value, StatementConditionKind::do_case));
                 return {};
             }
             case StatementKind::otherwise_statement:
@@ -3589,7 +3594,9 @@
                 {
                     return {};
                 }
-                apply_conditional_predicate(statement.kind, value_as_bool(*predicate_value));
+                apply_conditional_predicate(
+                    statement.kind,
+                    statement_condition_value(*predicate_value, StatementConditionKind::if_statement));
                 return {};
             }
             case StatementKind::else_statement:
@@ -12090,7 +12097,7 @@
                     {
                         return {.ok = false, .message = last_error_message};
                     }
-                    if (!value_as_bool(*predicate_value))
+                    if (!statement_condition_value(*predicate_value, StatementConditionKind::for_while))
                     {
                         std::string detail = "memvar skipped";
                         if (use_name_object)

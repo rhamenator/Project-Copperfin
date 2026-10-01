@@ -5199,7 +5199,9 @@ namespace copperfin::runtime
                     bool where_matches = true;
                     if (!plan.where_expression.empty())
                     {
-                        where_matches = value_as_bool(evaluate_expression(plan.where_expression, frame, &cursor));
+                        where_matches = statement_condition_value(
+                            evaluate_expression(plan.where_expression, frame, &cursor),
+                            StatementConditionKind::sql_where);
                         if (!cursor_alive() || !joined_cursor_alive())
                         {
                             cursor_lost = true;
@@ -5361,8 +5363,9 @@ namespace copperfin::runtime
                 {
                     if (!aggregate_query && !plan.where_expression.empty())
                     {
-                        const bool where_matches =
-                            value_as_bool(evaluate_expression(plan.where_expression, frame, &cursor));
+                        const bool where_matches = statement_condition_value(
+                            evaluate_expression(plan.where_expression, frame, &cursor),
+                            StatementConditionKind::sql_where);
                         if (!cursor_alive() || !joined_cursor_alive())
                         {
                             cursor_lost = true;
