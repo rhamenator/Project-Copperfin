@@ -931,18 +931,18 @@ int run_runtime_bridge_invocation(
     std::optional<copperfin::runtime::PrgRuntimeSession> created_session;
     try {
         created_session.emplace(copperfin::runtime::PrgRuntimeSession::create(session_options));
-    } catch (const std::exception& error) {
+    } catch (const copperfin::runtime::PrgSourceDiagnostic& diagnostic) {
         std::cout << "status: error\n";
-        if (!session_options.require_source_text_overrides && error.what() != nullptr && error.what()[0] != '\0') {
-            print_error_line(catalog, error.what());
-        } else {
-            print_error_line(
+        print_error_line(catalog, diagnostic.what());
+        return 6;
+    } catch (const std::exception&) {
+        std::cout << "status: error\n";
+        print_error_line(
+            catalog,
+            localized_message(
                 catalog,
-                localized_message(
-                    catalog,
-                    "RuntimeHost.Error.VerifiedSourceUnavailable",
-                    {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(startup_source).filename())}}));
-        }
+                "RuntimeHost.Error.VerifiedSourceUnavailable",
+                {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(startup_source).filename())}}));
         return 6;
     }
     auto& session = *created_session;
@@ -4096,20 +4096,20 @@ int run_runtime_host_main_impl(int argc, char** argv) {
     std::optional<copperfin::runtime::PrgRuntimeSession> created_session;
     try {
         created_session.emplace(copperfin::runtime::PrgRuntimeSession::create(session_options));
-    } catch (const std::exception& error) {
+    } catch (const copperfin::runtime::PrgSourceDiagnostic& diagnostic) {
+        // A missing #INCLUDE, an unbalanced #IF/#ENDIF or an exceeded source limit names its own
+        // file and line, in every mode including a verified package.
         std::cout << "status: error\n";
-        // A source-structure failure (a missing #INCLUDE, an unbalanced #IF/#ENDIF) carries its own
-        // file-and-line message; only a verified-package failure keeps the generic diagnostic.
-        if (!session_options.require_source_text_overrides && error.what() != nullptr && error.what()[0] != '\0') {
-            print_error_line(catalog, error.what());
-        } else {
-            print_error_line(
+        print_error_line(catalog, diagnostic.what());
+        return security_enabled ? 8 : 4;
+    } catch (const std::exception&) {
+        std::cout << "status: error\n";
+        print_error_line(
+            catalog,
+            localized_message(
                 catalog,
-                localized_message(
-                    catalog,
-                    "RuntimeHost.Error.VerifiedSourceUnavailable",
-                    {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(startup_source).filename())}}));
-        }
+                "RuntimeHost.Error.VerifiedSourceUnavailable",
+                {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(startup_source).filename())}}));
         return security_enabled ? 8 : 4;
     }
     auto& session = *created_session;

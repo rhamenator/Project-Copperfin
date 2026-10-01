@@ -13,6 +13,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -286,6 +287,14 @@ struct RuntimePolyglotDispatchResult {
     bool native_fallback_executed = false;
     // One complete bounded JSON value. Empty means JSON null.
     std::string payload_json;
+};
+
+// A PRG source failure the program's author can act on: a missing or unreadable #INCLUDE, an unbalanced
+// #IF/#ELSE/#ENDIF, or an exceeded source-size limit. Its message names the file and line, so a host
+// shows it as-is; any other exception thrown while loading a program keeps the host's generic message.
+class PrgSourceDiagnostic : public std::runtime_error {
+public:
+    using std::runtime_error::runtime_error;
 };
 
 struct RuntimeSessionOptions {

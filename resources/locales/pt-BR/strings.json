@@ -10,7 +10,7 @@
   "Runtime.Prg.Database.Error.ValidateUnsupported": "Este runtime nao oferece suporte a OPEN DATABASE VALIDATE.",
   "Runtime.Prg.Database.Error.VerifiedBytesUnavailable": "Os bytes verificados do pacote nao estao disponiveis para o componente do banco de dados: {path}",
   "Runtime.Prg.Parser.Error.VerifiedSourceUnavailable": "A origem verificada do pacote nao esta disponivel: {path}",
-  "Runtime.Prg.Parser.Error.VerifiedIncludeSourceUnavailable": "A origem INCLUDE verificada do pacote nao esta disponivel: {path}",
+  "Runtime.Prg.Parser.Error.VerifiedIncludeSourceUnavailable": "A origem INCLUDE verificada do pacote nao esta disponivel: {include} (incluido de {path}, linha {line})",
   "Runtime.Prg.Parser.Error.IncludeFileNotFound": "Arquivo #INCLUDE nao encontrado: {include} (incluido de {path}, linha {line})",
   "Runtime.Prg.Parser.Error.IncludeFileUnreadable": "Nao e possivel ler o arquivo #INCLUDE: {include} (incluido de {path}, linha {line})",
   "Runtime.Prg.Parser.Error.MismatchedConditional": "#IF/#ELSE/#ENDIF sem par: {directive} em {path}, linha {line} nao tem condicional aberto neste arquivo",

@@ -877,13 +877,13 @@ void handle_preprocessor_else(
     const std::string& file,
     const std::size_t line) {
     if (state.conditionals.size() <= conditional_floor) {
-        throw std::runtime_error(runtime_text(
+        throw PrgSourceDiagnostic(runtime_text(
             "Runtime.Prg.Parser.Error.MismatchedConditional",
             {{"directive", "#ELSE"}, {"path", file}, {"line", std::to_string(line)}}));
     }
     auto& frame = state.conditionals.back();
     if (frame.else_seen) {
-        throw std::runtime_error(runtime_text(
+        throw PrgSourceDiagnostic(runtime_text(
             "Runtime.Prg.Parser.Error.DuplicateElse",
             {{"path", file},
              {"line", std::to_string(line)},
@@ -902,7 +902,7 @@ void handle_preprocessor_endif(
     const std::string& file,
     const std::size_t line) {
     if (state.conditionals.size() <= conditional_floor) {
-        throw std::runtime_error(runtime_text(
+        throw PrgSourceDiagnostic(runtime_text(
             "Runtime.Prg.Parser.Error.MismatchedConditional",
             {{"directive", "#ENDIF"}, {"path", file}, {"line", std::to_string(line)}}));
     }
@@ -1111,20 +1111,24 @@ void append_preprocessed_logical_lines(
             const bool include_exists = fs::exists(include_path, exists_error);
             // An active #INCLUDE whose target cannot be found or read stops the program with a file
             // and line instead of being dropped (#5729). Includes inside an inactive branch never
-            // reach this point.
+            // reach this point. A metadata lookup that itself failed (for example permission denied)
+            // is "cannot be read", not "not found": absence is only reported when the lookup succeeded.
             if (include_source == nullptr && !require_source_text_overrides && state.missing_include_is_error) {
                 const auto include_error = [&](const char* key) {
-                    return std::runtime_error(runtime_text(
+                    return PrgSourceDiagnostic(runtime_text(
                         key,
                         {{"include", include_path_text},
                          {"path", source_label},
                          {"line", std::to_string(logical_line.line_number)}}));
                 };
+                if (exists_error) {
+                    throw include_error("Runtime.Prg.Parser.Error.IncludeFileUnreadable");
+                }
                 if (!include_exists) {
                     throw include_error("Runtime.Prg.Parser.Error.IncludeFileNotFound");
                 }
                 std::error_code regular_error;
-                if (!fs::is_regular_file(include_path, regular_error) ||
+                if (!fs::is_regular_file(include_path, regular_error) || regular_error ||
                     !std::ifstream(include_path, std::ios::binary)) {
                     throw include_error("Runtime.Prg.Parser.Error.IncludeFileUnreadable");
                 }
@@ -1142,9 +1146,13 @@ void append_preprocessed_logical_lines(
                     state.include_stack.erase(include_key);
                 }
             } else if (require_source_text_overrides) {
-                throw std::runtime_error(runtime_text(
+                // Fail closed on a verified package, with the same file-and-line location as an
+                // ordinary missing include.
+                throw PrgSourceDiagnostic(runtime_text(
                     "Runtime.Prg.Parser.Error.VerifiedIncludeSourceUnavailable",
-                    {{"path", include_key}}));
+                    {{"include", include_path_text},
+                     {"path", source_label},
+                     {"line", std::to_string(logical_line.line_number)}}));
             }
             continue;
         }
@@ -1169,7 +1177,7 @@ void append_preprocessed_logical_lines(
         // A header (or the program itself) ended with a conditional still open: without this the
         // rest of the caller silently stays inactive and the runtime reports a normal completion.
         const auto& open_frame = state.conditionals.back();
-        throw std::runtime_error(runtime_text(
+        throw PrgSourceDiagnostic(runtime_text(
             "Runtime.Prg.Parser.Error.UnterminatedConditional",
             {{"directive", open_frame.opened_directive},
              {"path", open_frame.opened_file},

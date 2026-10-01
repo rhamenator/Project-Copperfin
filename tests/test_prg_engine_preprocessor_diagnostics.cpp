@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
+#include "copperfin/localization/localization.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "prg_engine_test_support.h"
 
 #include <filesystem>
+#include <functional>
 #include <iostream>
 #include <string>
 #include <system_error>
@@ -33,12 +35,20 @@ struct Result {
     bool marker;
 };
 
-Result run(const fs::path &dir, const std::vector<std::pair<std::string, std::string>> &files) {
+// `setup` runs after the directory is recreated and the files are written, for fixtures a plain file
+// list cannot express (a directory where an include should be).
+Result run(
+    const fs::path &dir,
+    const std::vector<std::pair<std::string, std::string>> &files,
+    const std::function<void(const fs::path &)> &setup = nullptr) {
     std::error_code ignored;
     fs::remove_all(dir, ignored);
     fs::create_directories(dir);
     for (const auto &[name, text] : files) {
         write_text(dir / name, text);
+    }
+    if (setup) {
+        setup(dir);
     }
     // A source-structure error surfaces when the startup program is parsed, i.e. from create(); the
     // runtime host turns that exception into `status: error` and a non-zero exit code.
@@ -73,10 +83,48 @@ void test_missing_and_unreadable_includes_stop_the_program() {
         {"main.prg", "x = 1\n* comment\n#INCLUDE \"nope.h\"\nRETURN\n"}});
     expect(!r.completed && mentions(r.message, "nope.h", "3"), "#5729: the line of the #INCLUDE is reported, got: " + r.message);
 
-    // An include that exists but is not a readable file (a directory).
-    fs::create_directories(root / "dirinclude" / "header.h");
-    r = run(root / "dirinclude", {{"main.prg", "#INCLUDE \"header.h\"\nSTRTOFILE('x', 'marker.txt')\nRETURN\n"}});
+    // An include that exists but is not a readable file (a directory). The directory is created by the
+    // setup callback, after run() has recreated the folder, so the include really is a directory.
+    const auto catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        copperfin::localization::select_locale());
+    const auto message_prefix = [&](const std::string &key) {
+        const std::string text = catalog.translate(key);
+        return text.substr(0U, text.find('{'));
+    };
+    r = run(root / "dirinclude",
+        {{"main.prg", "#INCLUDE \"header.h\"\nSTRTOFILE('x', 'marker.txt')\nRETURN\n"}},
+        [](const fs::path &dir) { fs::create_directories(dir / "header.h"); });
     expect(!r.completed && !r.marker, "#5729: an include that is a directory is rejected, got: " + r.message);
+    expect(r.message.rfind(message_prefix("Runtime.Prg.Parser.Error.IncludeFileUnreadable"), 0U) == 0U &&
+               mentions(r.message, "header.h", "1"),
+        "#5729: a directory include reports the unreadable diagnostic, not 'not found', got: " + r.message);
+    expect(r.message.rfind(message_prefix("Runtime.Prg.Parser.Error.IncludeFileNotFound"), 0U) != 0U,
+        "#5729: an existing-but-unreadable include must not be reported as missing, got: " + r.message);
+
+    // A verified package fails closed on a missing include too, with the same file-and-line location.
+    {
+        const fs::path dir = root / "verified";
+        fs::remove_all(dir, ignored);
+        fs::create_directories(dir);
+        auto options = make_runtime_session_options((dir / "main.prg").string(), dir.string(), false);
+        options.startup_source_text = "x = 1\n#INCLUDE \"pkg-header.h\"\nRETURN\n";
+        options.require_source_text_overrides = true;
+        bool typed_diagnostic = false;
+        std::string verified_message;
+        try {
+            auto session = copperfin::runtime::PrgRuntimeSession::create(options);
+            (void)session;
+        } catch (const copperfin::runtime::PrgSourceDiagnostic &diagnostic) {
+            typed_diagnostic = true;
+            verified_message = diagnostic.what();
+        } catch (const std::exception &error) {
+            verified_message = error.what();
+        }
+        expect(typed_diagnostic, "#5729: a verified-package include failure is a PrgSourceDiagnostic, got: " + verified_message);
+        expect(mentions(verified_message, "pkg-header.h", "2"),
+            "#5729: the verified-package diagnostic names the include and its line, got: " + verified_message);
+    }
 
     // An include inside an inactive branch is never resolved.
     r = run(root / "inactive", {

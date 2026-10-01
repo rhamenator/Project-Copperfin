@@ -60,13 +60,15 @@ void test_verified_source_errors_are_localized()
            "strict missing main source should not leak the raw English implementation string");
 
     const std::string portuguese_include = run_missing_source_case("pt-BR", true);
-    const auto expected_include_path = (std::filesystem::temp_directory_path() /
-                                        "copperfin_verified_source_pt-BR" / "missing.h")
-                                           .lexically_normal()
-                                           .string();
-    expect(portuguese_include == "A origem INCLUDE verificada do pacote nao esta disponivel: " +
-               expected_include_path,
-           "strict missing include source should use the Portuguese catalog while preserving its path");
+    // The verified-package include failure now carries the same file-and-line location as an ordinary
+    // missing include (#5729): the include as written, the including program and the line.
+    const auto expected_including_path = (std::filesystem::temp_directory_path() /
+                                          "copperfin_verified_source_pt-BR" / "main.prg")
+                                             .lexically_normal()
+                                             .string();
+    expect(portuguese_include == "A origem INCLUDE verificada do pacote nao esta disponivel: missing.h (incluido de " +
+               expected_including_path + ", linha 1)",
+           "strict missing include source should use the Portuguese catalog while preserving its location");
     expect(portuguese_include.find("verified include source unavailable") == std::string::npos,
            "strict missing include source should not leak the raw English implementation string");
 }

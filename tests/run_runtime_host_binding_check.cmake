@@ -787,7 +787,7 @@ execute_process(
     ERROR_VARIABLE missing_include_digest_error
 )
 if(NOT missing_include_digest_result EQUAL 8 OR
-   NOT missing_include_digest_output MATCHES "Verified package source is unavailable: main\\.prg")
+   NOT missing_include_digest_output MATCHES "Verified package include source is unavailable: verified\\.h \\(included from .*main\\.prg, line 1\\)")
     message(FATAL_ERROR "Runtime host did not fail closed for an unverified packaged PRG include.\nstdout:\n${missing_include_digest_output}\nstderr:\n${missing_include_digest_error}")
 endif()
 file(WRITE "${deployed_root}/app.cfmanifest" "${manifest_text}")
