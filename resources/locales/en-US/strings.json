@@ -1251,6 +1251,7 @@
   "Runtime.Prg.Expression.Error.OperandVariableNotFound": "Variable is not found.",
   "Runtime.Prg.Expression.Error.AmbiguousDateConstant": "Ambiguous date/datetime constant. Use the format: {^yyyy-mm-dd[,][hh[:mm[:ss]] [a|p]]}",
   "Runtime.Prg.Expression.Error.InvalidDateValue": "Date/datetime evaluated to an invalid value.",
+  "Runtime.Prg.Expression.Error.DateIllegalCharacters": "Date/datetime contains illegal characters.",
   "Runtime.Prg.Expression.Error.UserRoutineAbortedExecution": "User-defined routine call aborted the current execution stack during expression evaluation",
   "Runtime.Prg.Expression.Error.UserRoutineEnteredEventLoop": "User-defined routine call cannot enter READ EVENTS during expression evaluation",
   "Runtime.Prg.Expression.Error.IntegerDivisionByZero": "Division by zero in integer expression",

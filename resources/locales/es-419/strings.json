@@ -1676,6 +1676,7 @@
   "Runtime.Prg.Expression.Error.OperandVariableNotFound": "No se encuentra la variable.",
   "Runtime.Prg.Expression.Error.AmbiguousDateConstant": "Constante de fecha/fecha y hora ambigua. Use el formato: {^yyyy-mm-dd[,][hh[:mm[:ss]] [a|p]]}",
   "Runtime.Prg.Expression.Error.InvalidDateValue": "La fecha/fecha y hora se evaluo a un valor no valido.",
+  "Runtime.Prg.Expression.Error.DateIllegalCharacters": "La fecha/fecha y hora contiene caracteres no validos.",
   "Runtime.Prg.Expression.Error.UserRoutineAbortedExecution": "La llamada a la rutina definida por el usuario aborto la pila de ejecucion actual durante la evaluacion de la expresion",
   "Runtime.Prg.Expression.Error.UserRoutineEnteredEventLoop": "La llamada a la rutina definida por el usuario no puede entrar en READ EVENTS durante la evaluacion de la expresion",
   "Runtime.Prg.Expression.Error.IntegerDivisionByZero": "Division por cero en expresion entera",

@@ -474,13 +474,31 @@ BracedLiteral parse_braced_date_time_literal(const std::string& literal) {
     }
     const std::string inner = literal.substr(1U, literal.size() - 2U);
     if (inner.empty() || inner.front() != '^') {
-        // {}, {  /  /  }, {//}: an empty Date; { : }, {/ /: }: an empty DateTime. Anything else without a
-        // caret is non-strict text.
-        const bool only_blanks = inner.find_first_not_of(" /:") == std::string::npos;
-        if (only_blanks) {
-            result.kind = inner.find(':') != std::string::npos ? BracedLiteralKind::empty_datetime
-                                                               : BracedLiteralKind::empty_date;
+        // An empty literal is only blanks, slashes and colons (probed against installed VFP9, retained at
+        // ~/temp/vfp9-probes/datetime-types-c24/result-edge*.txt). More than two slashes, more than two
+        // colons, or a colon before a slash is error 2035 "Date/datetime contains illegal characters."; a
+        // colon with a slash or a leading blank is an empty DateTime ({ : }, {/ /: }, {//:}); everything else
+        // ({}, {  /  /  }, {//}, {:}, {: }) is an empty Date. Any other braced text is non-strict text.
+        if (inner.find_first_not_of(" /:") != std::string::npos) {
+            return result;
         }
+        int slashes = 0;
+        int colons = 0;
+        bool colon_before_slash = false;
+        for (const char ch : inner) {
+            if (ch == '/') {
+                ++slashes;
+                colon_before_slash = colon_before_slash || colons > 0;
+            } else if (ch == ':') {
+                ++colons;
+            }
+        }
+        if (slashes > 2 || colons > 2 || colon_before_slash) {
+            result.kind = BracedLiteralKind::illegal_characters;
+            return result;
+        }
+        result.kind = (colons >= 1 && (slashes >= 1 || inner.front() == ' ')) ? BracedLiteralKind::empty_datetime
+                                                                             : BracedLiteralKind::empty_date;
         return result;
     }
 
@@ -550,11 +568,13 @@ BracedLiteral parse_braced_date_time_literal(const std::string& literal) {
             if (!read_number(1U, 2U, second)) {
                 return result;
             }
-            if (cursor < body.size() && body[cursor] == '.') {
+        }
+        // VFP9 accepts a fractional part after the minutes or the seconds, with or without digits
+        // ({^2026-06-15 13:45:30.}, {^2026-06-15 13:45.5}); it is ignored.
+        if (cursor < body.size() && body[cursor] == '.') {
+            ++cursor;
+            while (cursor < body.size() && std::isdigit(static_cast<unsigned char>(body[cursor])) != 0) {
                 ++cursor;
-                while (cursor < body.size() && std::isdigit(static_cast<unsigned char>(body[cursor])) != 0) {
-                    ++cursor;
-                }
             }
         }
         skip_blanks();

@@ -3332,6 +3332,9 @@
                 case BracedLiteralKind::invalid:
                     throw PrgCompatibilityError(
                         runtime_text("Runtime.Prg.Expression.Error.InvalidDateValue"), 2034);
+                case BracedLiteralKind::illegal_characters:
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Expression.Error.DateIllegalCharacters"), 2035);
                 case BracedLiteralKind::not_strict:
                     break;
                 }
