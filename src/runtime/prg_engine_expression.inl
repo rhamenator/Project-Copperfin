@@ -48,8 +48,8 @@
     // Operator operand-type rules, from the installed-VFP9 operator-by-type matrix retained at
     // ~/temp/vfp9-probes/null-semantics-c24/vfp9-result-types.txt (#5940, #5939). A pair that is not allowed
     // raises a catchable error whose number depends on the operator: 107 for + - and comparisons, 9 for
-    // * and /, 11 for ^. An operand whose class is `other` (an object, an array, an unset value) keeps its
-    // existing handling.
+    // * and /, 11 for ^. An object compares only with another object (= == <> < > <= >=) and is rejected
+    // by every other operator; an unset value (an unresolved identifier, error 12 in VFP) is rejected by all.
     enum class OperatorTypeRule { addition, subtraction, multiplication, division, power, comparison };
 
     inline bool is_numeric_class(const PrgOperandClass operand_class)
@@ -64,9 +64,9 @@
     {
         const PrgOperandClass l = classify_operand(left);
         const PrgOperandClass r = classify_operand(right);
-        if (l == PrgOperandClass::other || r == PrgOperandClass::other)
+        if (l == PrgOperandClass::empty || r == PrgOperandClass::empty)
         {
-            return true;
+            return false;
         }
         const auto date_like = [](const PrgOperandClass c)
         { return c == PrgOperandClass::date || c == PrgOperandClass::datetime; };
@@ -107,31 +107,39 @@
         }
     }
 
+    // An unset value (an unresolved identifier) is error 12 in every operator position, ahead of any type
+    // rule, as installed VFP9 reports it. NULL is not unset.
+    inline void require_set_operand(const PrgValue &value)
+    {
+        if (!value.is_null && classify_operand(value) == PrgOperandClass::empty)
+        {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.OperandVariableNotFound"), 12);
+        }
+    }
+
     inline void require_compatible_operands(
         const OperatorTypeRule rule,
         const PrgValue &left,
         const PrgValue &right)
     {
+        require_set_operand(left);
+        require_set_operand(right);
         if (!operator_operands_are_compatible(rule, left, right))
         {
             throw_operator_type_error(rule);
         }
     }
 
-    // A known non-Logical value in a logical position (AND, OR, IIF and ICASE conditions: error 11; NOT:
-    // error 9). NULL and `other` classes are not rejected here.
+    // A non-NULL value that is not Logical in a logical position (AND, OR, IIF and ICASE conditions: error
+    // 11; NOT: error 9). Objects and unset values are rejected like any other non-Logical type.
     inline bool is_known_non_logical(const PrgValue &value)
     {
-        if (value.is_null)
-        {
-            return false;
-        }
-        const PrgOperandClass c = classify_operand(value);
-        return c != PrgOperandClass::logical && c != PrgOperandClass::other;
+        return !value.is_null && classify_operand(value) != PrgOperandClass::logical;
     }
 
     inline void require_logical_operand(const PrgValue &value)
     {
+        require_set_operand(value);
         if (is_known_non_logical(value))
         {
             throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
@@ -729,10 +737,10 @@
                         else
                         {
                             // $ needs two Character operands (error 11 otherwise).
-                            if (classify_operand(left) != PrgOperandClass::other &&
-                                classify_operand(right) != PrgOperandClass::other &&
-                                (classify_operand(left) != PrgOperandClass::character ||
-                                 classify_operand(right) != PrgOperandClass::character))
+                            require_set_operand(left);
+                            require_set_operand(right);
+                            if (classify_operand(left) != PrgOperandClass::character ||
+                                classify_operand(right) != PrgOperandClass::character)
                             {
                                 throw PrgCompatibilityError(
                                     runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
@@ -1024,6 +1032,7 @@
                         return make_boolean_value(false);
                     }
                     const PrgValue operand = parse_comparison();
+                    require_set_operand(operand);
                     if (is_known_non_logical(operand))
                     {
                         // NOT of a non-Logical value is error 9 (installed VFP9), not truthiness.
@@ -1049,8 +1058,8 @@
                     {
                         return make_null_value();
                     }
-                    if (const PrgOperandClass operand_class = classify_operand(operand);
-                        operand_class != PrgOperandClass::other && !is_numeric_class(operand_class))
+                    require_set_operand(operand);
+                    if (!is_numeric_class(classify_operand(operand)))
                     {
                         // Only Numeric and Currency can be negated; anything else is error 11.
                         throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
@@ -3959,6 +3968,13 @@
 
             int compare_ordered_values(const PrgValue &left, const PrgValue &right) const
             {
+                if (left.is_object_reference && right.is_object_reference)
+                {
+                    // Installed VFP9 orders objects by identity only: the same object is equal to itself, and
+                    // two distinct objects are never less than each other and always greater, in both
+                    // directions (oX < oY and oY < oX are .F.; oX > oY and oY > oX are .T.).
+                    return value_as_string(left) == value_as_string(right) ? 0 : 1;
+                }
                 if (left.string_flavor != PrgStringFlavor::none ||
                     right.string_flavor != PrgStringFlavor::none)
                 {

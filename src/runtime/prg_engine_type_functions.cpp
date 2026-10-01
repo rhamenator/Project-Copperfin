@@ -209,7 +209,8 @@ std::optional<PrgValue> evaluate_type_function(
                     case PrgOperandClass::logical: return 3;
                     case PrgOperandClass::date:
                     case PrgOperandClass::datetime: return 4;
-                    default: return 0;
+                    case PrgOperandClass::object: return 5;
+                    default: return 0;   // an unset value matches nothing
                 }
             };
             int expected_group = 0;
@@ -217,17 +218,15 @@ std::optional<PrgValue> evaluate_type_function(
                 if (arguments[index].is_null) {
                     continue;
                 }
-                const int current = group(arguments[index]);
-                if (current == 0) {
-                    expected_group = -1;   // an object or other value: keep the existing handling
-                    break;
+                if (classify_operand(arguments[index]) == PrgOperandClass::empty) {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.OperandVariableNotFound"), 12);
                 }
-                if (expected_group == 0) {
-                    expected_group = current;
-                } else if (expected_group != current) {
+                const int current = group(arguments[index]);
+                if (current == 0 || (expected_group != 0 && expected_group != current)) {
                     throw PrgCompatibilityError(
                         runtime_text("Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch"), 107);
                 }
+                expected_group = current;
             }
         }
         if (arguments[1].is_null || arguments[2].is_null) {

@@ -4026,7 +4026,18 @@
                 return {};
             }
 
-            const std::string designator = evaluate_cursor_designator_expression(raw_argument, frame);
+            // A speculative probe: an argument that cannot be evaluated as a designator (a condition such as
+            // `RefType == 'S'` whose fields are not visible from the current work area raises a type or
+            // variable error under the operator type rules) is not a designator.
+            std::string designator;
+            try
+            {
+                designator = evaluate_cursor_designator_expression(raw_argument, frame);
+            }
+            catch (const PrgCompatibilityError &)
+            {
+                return {};
+            }
             return resolve_cursor_target(designator) == nullptr ? std::string{} : designator;
         }
 

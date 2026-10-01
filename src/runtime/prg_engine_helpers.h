@@ -67,10 +67,10 @@ PrgValue make_empty_value();
 PrgValue make_null_value();
 
 // The VFP data-type class an operator sees for a value: Character, Numeric (Number, Integer, Double),
-// Currency, Logical, Date, DateTime. `other` covers everything else (objects, arrays, unset or empty
-// values); operators keep their existing handling for it. A NULL value is classified by the caller
-// first, because NULL propagates before any type check.
-enum class PrgOperandClass { other, character, numeric, currency, logical, date, datetime };
+// Currency, Logical, Date, DateTime or Object. `empty` is a value with no type at all (an unresolved
+// identifier; VFP raises error 12 for that, so no operator accepts it). A NULL value is classified by the
+// caller first, because NULL propagates before any type check.
+enum class PrgOperandClass { empty, character, numeric, currency, logical, date, datetime, object };
 PrgOperandClass classify_operand(const PrgValue& value);
 PrgValue make_boolean_value(bool value);
 PrgValue make_number_value(double value);

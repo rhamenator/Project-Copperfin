@@ -1673,6 +1673,7 @@
   "Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch": "Incompatibilidade de tipo entre operador e operando.",
   "Runtime.Prg.Expression.Error.DataTypeMismatch": "Tipo de dados incompativel.",
   "Runtime.Prg.Expression.Error.InvalidArgument": "O valor, tipo ou numero de um argumento de funcao e invalido.",
+  "Runtime.Prg.Expression.Error.OperandVariableNotFound": "A variavel nao foi encontrada.",
   "Runtime.Prg.Expression.Error.UserRoutineAbortedExecution": "A chamada de rotina definida pelo usuario abortou a pilha de execucao atual durante a avaliacao da expressao",
   "Runtime.Prg.Expression.Error.UserRoutineEnteredEventLoop": "A chamada de rotina definida pelo usuario nao pode entrar em READ EVENTS durante a avaliacao da expressao",
   "Runtime.Prg.Expression.Error.IntegerDivisionByZero": "Divisao por zero em expressao inteira",

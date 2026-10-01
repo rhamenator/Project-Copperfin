@@ -625,11 +625,67 @@ const std::vector<Row> kRows = {
         {"IIF(.NULL.,1,2)", "N:2"},
         {"1 = .NULL.", "X:.NULL."},
         {"'a' = .NULL.", "X:.NULL."},
-        {".T. = .NULL.", "X:.NULL."}
+        {".T. = .NULL.", "X:.NULL."},
+        // Objects and unset values (vfp9-result-objects.txt): oX and oY are two distinct Custom objects, and
+        // undefinedvar is never assigned (error 12 in every operator position).
+        {"VARTYPE(oX)", "C:O"},
+        {"oX + 1", "ERR107"},
+        {"1 + oX", "ERR107"},
+        {"oX + 'a'", "ERR107"},
+        {"'a' + oX", "ERR107"},
+        {"oX - 1", "ERR107"},
+        {"oX * 2", "ERR9"},
+        {"2 / oX", "ERR9"},
+        {"oX ^ 2", "ERR11"},
+        {"-oX", "ERR11"},
+        {"NOT oX", "ERR9"},
+        {"oX AND .T.", "ERR11"},
+        {".T. AND oX", "ERR11"},
+        {".F. AND oX", "L:.F."},
+        {".T. OR oX", "L:.T."},
+        {"oX OR .F.", "ERR11"},
+        {"IIF(oX,1,2)", "ERR11"},
+        {"ICASE(oX,1,2)", "ERR11"},
+        {"oX = oX", "L:.T."},
+        {"oX = oY", "L:.F."},
+        {"oX == oX", "L:.T."},
+        {"oX <> oY", "L:.T."},
+        {"oX = 1", "ERR107"},
+        {"1 = oX", "ERR107"},
+        {"oX = 'a'", "ERR107"},
+        {"'a' $ oX", "ERR11"},
+        {"oX $ 'a'", "ERR11"},
+        {"oX < oY", "L:.F."},
+        {"oX = .NULL.", "X:.NULL."},
+        {"BETWEEN(oX,1,2)", "ERR107"},
+        {"BETWEEN(1,oX,2)", "ERR107"},
+        {"BETWEEN(oX,oX,oX)", "L:.T."},
+        {"oX + .NULL.", "X:.NULL."},
+        {".NULL. + oX", "X:.NULL."},
+        {"undefinedvar + 1", "ERR12"},
+        {"IIF(undefinedvar,1,2)", "ERR12"},
+        {"undefinedvar AND .T.", "ERR12"},
+        {"NOT undefinedvar", "ERR12"},
+        {"-undefinedvar", "ERR12"},
+        {"undefinedvar = 1", "ERR12"},
+        // Object ordering (vfp9-result-objects-order.txt): identical objects are equal, distinct objects are
+        // never less and always greater.
+        {"oY < oX", "L:.F."},
+        {"oX <= oY", "L:.F."},
+        {"oY <= oX", "L:.F."},
+        {"oX > oY", "L:.T."},
+        {"oY > oX", "L:.T."},
+        {"oX >= oY", "L:.T."},
+        {"oY >= oX", "L:.T."},
+        {"oX <= oX", "L:.T."},
+        {"oX > oX", "L:.F."},
+        {"oX >= oX", "L:.T."},
+        {"oX != oY", "L:.T."},
+        {"oX # oY", "L:.T."}
 };
 
 std::string evaluate_all(const fs::path &dir) {
-    std::string body = "LOCAL cOut, oEx, x\ncOut = ''\n";
+    std::string body = "LOCAL cOut, oEx, x\ncOut = ''\nPUBLIC oX, oY\noX = CREATEOBJECT('Custom')\noY = CREATEOBJECT('Custom')\n";
     for (std::size_t index = 0U; index < kRows.size(); ++index) {
         body += "TRY\n";
         body += "x = " + std::string(kRows[index].expression) + "\n";

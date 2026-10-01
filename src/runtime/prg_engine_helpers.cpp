@@ -976,6 +976,10 @@ PrgValue make_empty_value() {
 PrgOperandClass classify_operand(const PrgValue& value) {
     switch (value.kind) {
         case PrgValueKind::string:
+            if (value.is_object_reference) {
+                // A runtime object is held as a string token; it is an Object to every operator.
+                return PrgOperandClass::object;
+            }
             return value.string_flavor == PrgStringFlavor::date
                        ? PrgOperandClass::date
                        : (value.string_flavor == PrgStringFlavor::datetime ? PrgOperandClass::datetime
@@ -989,7 +993,7 @@ PrgOperandClass classify_operand(const PrgValue& value) {
         case PrgValueKind::boolean:
             return PrgOperandClass::logical;
         default:
-            return PrgOperandClass::other;
+            return PrgOperandClass::empty;
     }
 }
 
