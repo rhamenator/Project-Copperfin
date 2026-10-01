@@ -1079,6 +1079,29 @@ bool numeric_prg_values_equal(const PrgValue& left, const PrgValue& right) {
     return numeric_values_equal(value_as_number(left), value_as_number(right));
 }
 
+std::string aggregate_distinct_key(const PrgValue& value) {
+    switch (value.kind) {
+        case PrgValueKind::number: {
+            std::ostringstream stream;
+            stream.imbue(std::locale::classic());
+            stream << std::setprecision(17) << value.number_value;
+            return "n:" + stream.str();
+        }
+        case PrgValueKind::int64:
+            return "n:" + std::to_string(value.int64_value);
+        case PrgValueKind::uint64:
+            return "n:" + std::to_string(value.uint64_value);
+        case PrgValueKind::currency:
+            return "y:" + std::to_string(value.currency_value);
+        case PrgValueKind::boolean:
+            return value.boolean_value ? "l:t" : "l:f";
+        case PrgValueKind::string:
+            return "s:" + rtrim_space_copy(value.string_value);
+        default:
+            return "e:";
+    }
+}
+
 bool statement_condition_value(const PrgValue& value, const StatementConditionKind kind) {
     if (value.is_null) {
         return false;

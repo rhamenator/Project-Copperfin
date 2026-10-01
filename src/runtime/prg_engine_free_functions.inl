@@ -3000,7 +3000,9 @@
             const std::string text = trim_copy(field.display_value);
             if (field.is_null)
             {
-                return make_null_value();
+                PrgValue null_value = make_null_value();
+                null_value.null_declared_type = field_type;
+                return null_value;
             }
             if (field_type == 'L')
             {

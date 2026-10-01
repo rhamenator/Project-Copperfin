@@ -99,6 +99,12 @@ bool numeric_prg_values_equal(const PrgValue& left, const PrgValue& right);
 // digits, whichever is the first to round-trip. value_as_string() keeps six significant digits for display, so
 // it must not be used to store a number (REPLACE n WITH 123.456789 kept 123.457 and 1.0000005 became 1).
 std::string format_round_trip_decimal(double value);
+
+// A key for COUNT(DISTINCT expr): two non-NULL values share a key when installed VFP9 counts them once
+// (probe retained at ~/temp/vfp9-probes/typed-null-c24/result3.txt: COUNT(DISTINCT x) over 10, 10, 20, NULL is 2
+// and over '', 'x', NULL, '' is 2). Numbers use their value, Character values ignore trailing blanks.
+std::string aggregate_distinct_key(const PrgValue& value);
+
 PrgValue make_boolean_value(bool value);
 PrgValue make_number_value(double value);
 PrgValue make_string_value(std::string value);
