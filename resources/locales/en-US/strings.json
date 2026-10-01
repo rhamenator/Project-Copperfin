@@ -1250,6 +1250,8 @@
   "Runtime.Prg.Expression.Error.InvalidArgument": "Function argument value, type, or count is invalid.",
   "Runtime.Prg.Expression.Error.OperandVariableNotFound": "Variable is not found.",
   "Runtime.Prg.Expression.Error.CurrencyOutOfRange": "Currency value is out of range.",
+  "Runtime.Prg.Aggregate.Error.NotNumeric": "Not a numeric expression.",
+  "Runtime.Prg.Aggregate.Error.SqlNonNumeric": "SQL: Aggregate on non-numeric expression.",
   "Runtime.Prg.Expression.Error.FunctionNameMissing": "Function name is missing ).",
   "Runtime.Prg.Statement.Error.SyntaxError": "Syntax error.",
   "Runtime.Prg.Statement.Error.ForWhileLogicalRequired": "You must use a logical expression with a FOR or WHILE clause.",

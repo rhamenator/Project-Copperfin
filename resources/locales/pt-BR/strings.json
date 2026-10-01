@@ -1675,6 +1675,8 @@
   "Runtime.Prg.Expression.Error.InvalidArgument": "O valor, tipo ou numero de um argumento de funcao e invalido.",
   "Runtime.Prg.Expression.Error.OperandVariableNotFound": "A variavel nao foi encontrada.",
   "Runtime.Prg.Expression.Error.CurrencyOutOfRange": "O valor de moeda esta fora do intervalo.",
+  "Runtime.Prg.Aggregate.Error.NotNumeric": "Nao e uma expressao numerica.",
+  "Runtime.Prg.Aggregate.Error.SqlNonNumeric": "SQL: Agregado sobre uma expressao nao numerica.",
   "Runtime.Prg.Expression.Error.FunctionNameMissing": "Falta o nome da funcao ).",
   "Runtime.Prg.Statement.Error.SyntaxError": "Erro de sintaxe.",
   "Runtime.Prg.Statement.Error.ForWhileLogicalRequired": "Voce deve usar uma expressao logica com uma clausula FOR ou WHILE.",

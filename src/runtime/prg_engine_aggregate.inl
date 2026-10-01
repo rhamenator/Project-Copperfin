@@ -2,27 +2,6 @@
 // PrgRuntimeSession::Impl method group. Included inside Impl struct in prg_engine.cpp.
 // This file must not be compiled separately.
 
-        std::optional<double> try_parse_aggregate_numeric_value(const PrgValue &value)
-        {
-            if (value.kind == PrgValueKind::empty)
-            {
-                return std::nullopt;
-            }
-            if (value.kind == PrgValueKind::string && trim_copy(value.string_value).empty())
-            {
-                return std::nullopt;
-            }
-
-            try
-            {
-                return value_as_number(value);
-            }
-            catch (...)
-            {
-                return std::nullopt;
-            }
-        }
-
         PrgValue aggregate_function_value(
             const std::string &function,
             const std::vector<std::string> &input_arguments,
@@ -181,9 +160,7 @@
 
             const CursorGenerationReference count_cursor_reference = capture_cursor_generation_reference(cursor);
             const CursorPositionSnapshot original = capture_cursor_snapshot(*cursor);
-            double sum = 0.0;
-            double min_value = 0.0;
-            double max_value = 0.0;
+            AggregateAccumulator accumulator(sql_aggregate);
             std::size_t matched_count = 0U;
 
             for (std::size_t recno = 1U; recno <= cursor->record_count; ++recno)
@@ -232,24 +209,21 @@
                     continue;
                 }
 
-                const auto numeric_value = try_parse_aggregate_numeric_value(
-                    evaluate_expression(value_expression, frame, cursor));
-                if (!numeric_value.has_value())
+                try
                 {
-                    continue;
+                    accumulator.add(function, evaluate_expression(value_expression, frame, cursor));
                 }
-                if (matched_count == 0U)
+                catch (...)
                 {
-                    min_value = *numeric_value;
-                    max_value = *numeric_value;
+                    // A type error (27, 107, 1811) or a Currency overflow (1988) must leave the work area on the
+                    // caller's record, not the offending row (#6040 statement atomicity), unless the operand closed
+                    // the cursor.
+                    if (CursorState *live = resolve_cursor_generation_reference(count_cursor_reference))
+                    {
+                        restore_cursor_snapshot(*live, original);
+                    }
+                    throw;
                 }
-                else
-                {
-                    min_value = std::min(min_value, *numeric_value);
-                    max_value = std::max(max_value, *numeric_value);
-                }
-                sum += *numeric_value;
-                ++matched_count;
             }
 
             restore_cursor_snapshot(*cursor, original);
@@ -258,25 +232,10 @@
             {
                 return make_number_value(static_cast<double>(matched_count));
             }
-            if (matched_count == 0U)
+            if (function == "sum" || function == "avg" || function == "average" || function == "min" ||
+                function == "max")
             {
-                return make_number_value(0.0);
-            }
-            if (function == "sum")
-            {
-                return make_number_value(sum);
-            }
-            if (function == "avg" || function == "average")
-            {
-                return make_number_value(sum / static_cast<double>(matched_count));
-            }
-            if (function == "min")
-            {
-                return make_number_value(min_value);
-            }
-            if (function == "max")
-            {
-                return make_number_value(max_value);
+                return accumulator.result(function, make_number_value(0.0));
             }
             return make_number_value(0.0);
         }
@@ -436,10 +395,7 @@
 
             const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(&cursor);
             const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
-            double sum = 0.0;
-            double min_value = 0.0;
-            double max_value = 0.0;
-            std::size_t matched_count = 0U;
+            AggregateAccumulator accumulator(false);
 
             for (const std::size_t recno : records)
             {
@@ -449,52 +405,33 @@
                     return make_number_value(0.0);
                 }
                 move_cursor_to(cursor, static_cast<long long>(recno));
-                const auto numeric_value = try_parse_aggregate_numeric_value(
-                    evaluate_expression(value_expression, frame, &cursor));
+                const PrgValue aggregate_input = evaluate_expression(value_expression, frame, &cursor);
                 if (resolve_cursor_generation_reference(cursor_reference) == nullptr)
                 {
                     cursor_lost = true;
                     return make_number_value(0.0);
                 }
-                if (!numeric_value.has_value())
+                try
                 {
-                    continue;
+                    accumulator.add(function, aggregate_input);
                 }
-                if (matched_count == 0U)
+                catch (...)
                 {
-                    min_value = *numeric_value;
-                    max_value = *numeric_value;
+                    // See the matching handler in aggregate_function_value: restore the caller's record.
+                    if (CursorState *live = resolve_cursor_generation_reference(cursor_reference))
+                    {
+                        restore_cursor_snapshot(*live, original);
+                    }
+                    throw;
                 }
-                else
-                {
-                    min_value = std::min(min_value, *numeric_value);
-                    max_value = std::max(max_value, *numeric_value);
-                }
-                sum += *numeric_value;
-                ++matched_count;
             }
 
             restore_cursor_snapshot(cursor, original);
 
-            if (matched_count == 0U)
+            if (function == "sum" || function == "avg" || function == "average" || function == "min" ||
+                function == "max")
             {
-                return make_number_value(0.0);
-            }
-            if (function == "sum")
-            {
-                return make_number_value(sum);
-            }
-            if (function == "avg" || function == "average")
-            {
-                return make_number_value(sum / static_cast<double>(matched_count));
-            }
-            if (function == "min")
-            {
-                return make_number_value(min_value);
-            }
-            if (function == "max")
-            {
-                return make_number_value(max_value);
+                return accumulator.result(function, make_number_value(0.0));
             }
             return make_number_value(0.0);
         }

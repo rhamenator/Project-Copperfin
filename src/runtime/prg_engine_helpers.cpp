@@ -1079,6 +1079,135 @@ bool numeric_prg_values_equal(const PrgValue& left, const PrgValue& right) {
     return numeric_values_equal(value_as_number(left), value_as_number(right));
 }
 
+namespace {
+
+bool is_aggregate_numeric(const PrgValue& value) {
+    return value.kind == PrgValueKind::number || value.kind == PrgValueKind::int64 ||
+           value.kind == PrgValueKind::uint64 || value.kind == PrgValueKind::currency;
+}
+
+// Orders two values of one domain for MIN and MAX. A Date or DateTime compares by its timeline value (an empty one
+// is the lowest), a Currency pair by its scaled integers, a Logical false before true, other numbers by value and
+// Character values ignoring trailing blanks.
+int aggregate_compare_domain(const PrgValue& value) {
+    if (is_aggregate_numeric(value)) {
+        return 1;
+    }
+    if (value.kind == PrgValueKind::boolean) {
+        return 2;
+    }
+    if (value.kind == PrgValueKind::string && value.string_flavor != PrgStringFlavor::none) {
+        return 3;
+    }
+    return 4;   // Character (and anything else that compares as text)
+}
+
+int compare_aggregate_values(const PrgValue& left, const PrgValue& right) {
+    const bool left_temporal = left.kind == PrgValueKind::string && left.string_flavor != PrgStringFlavor::none;
+    const bool right_temporal = right.kind == PrgValueKind::string && right.string_flavor != PrgStringFlavor::none;
+    if (left_temporal && right_temporal) {
+        const std::int64_t a = left.string_value.empty() ? std::numeric_limits<std::int64_t>::min() : left.int64_value;
+        const std::int64_t b = right.string_value.empty() ? std::numeric_limits<std::int64_t>::min() : right.int64_value;
+        return a < b ? -1 : (a > b ? 1 : 0);
+    }
+    if (left.kind == PrgValueKind::boolean && right.kind == PrgValueKind::boolean) {
+        return static_cast<int>(left.boolean_value) - static_cast<int>(right.boolean_value);
+    }
+    if (left.kind == PrgValueKind::currency && right.kind == PrgValueKind::currency) {
+        return left.currency_value < right.currency_value ? -1 : (left.currency_value > right.currency_value ? 1 : 0);
+    }
+    if (is_aggregate_numeric(left) && is_aggregate_numeric(right)) {
+        const double a = value_as_number(left);
+        const double b = value_as_number(right);
+        return a < b ? -1 : (a > b ? 1 : 0);
+    }
+    const std::string a = rtrim_space_copy(value_as_string(left));
+    const std::string b = rtrim_space_copy(value_as_string(right));
+    return a < b ? -1 : (a > b ? 1 : 0);
+}
+
+}  // namespace
+
+AggregateAccumulator::AggregateAccumulator(const bool sql_semantics) : sql_semantics_(sql_semantics) {}
+
+void AggregateAccumulator::add(const std::string& function, const PrgValue& value) {
+    if (value.is_null || value.kind == PrgValueKind::empty) {
+        return;
+    }
+    if (value.unparsed_numeric_field) {
+        // A numeric DBF field that overflowed its width holds a run of asterisks; every aggregate skips it as they
+        // always have (test_aggregate_helpers_tolerate_non_numeric_field_text). Provenance, not the text: a Character
+        // value "***" is still a Character.
+        return;
+    }
+    if (function == "min" || function == "max") {
+        if (count_ == 0U) {
+            minimum_ = value;
+            maximum_ = value;
+            compare_domain_ = aggregate_compare_domain(value);
+        } else {
+            if (aggregate_compare_domain(value) != compare_domain_) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch"), 107);
+            }
+            if (compare_aggregate_values(value, minimum_) < 0) {
+                minimum_ = value;
+            }
+            if (compare_aggregate_values(value, maximum_) > 0) {
+                maximum_ = value;
+            }
+        }
+        ++count_;
+        return;
+    }
+    if (!is_aggregate_numeric(value)) {
+        if (sql_semantics_) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Aggregate.Error.SqlNonNumeric"), 1811);
+        }
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Aggregate.Error.NotNumeric"), 27);
+    }
+    double_sum_ += value_as_number(value);
+    if (value.kind != PrgValueKind::currency) {
+        currency_only_ = false;
+    } else if (currency_only_) {
+        const std::int64_t addend = value.currency_value;
+        if ((addend > 0 && currency_sum_ > std::numeric_limits<std::int64_t>::max() - addend) ||
+            (addend < 0 && currency_sum_ < std::numeric_limits<std::int64_t>::min() - addend)) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.CurrencyOutOfRange"), 1988);
+        }
+        currency_sum_ += addend;
+    }
+    ++count_;
+}
+
+PrgValue AggregateAccumulator::result(const std::string& function, const PrgValue& empty_result) const {
+    if (count_ == 0U) {
+        return empty_result;
+    }
+    if (function == "min") {
+        return minimum_;
+    }
+    if (function == "max") {
+        return maximum_;
+    }
+    if (function == "sum") {
+        return currency_only_ ? make_currency_value(currency_sum_) : make_number_value(double_sum_);
+    }
+    // avg / average
+    if (!currency_only_) {
+        return make_number_value(double_sum_ / static_cast<double>(count_));
+    }
+    const std::int64_t divisor = static_cast<std::int64_t>(count_);
+    std::int64_t quotient = currency_sum_ / divisor;
+    const std::int64_t remainder = currency_sum_ % divisor;
+    // CALCULATE AVG and the AVERAGE command truncate toward zero (installed VFP9: the average of $0.0001, $0.0002 and
+    // $0.0002 is $0.0001), while SQL AVG rounds half away from zero ($0.0002).
+    const std::int64_t magnitude = remainder < 0 ? -remainder : remainder;
+    if (sql_semantics_ && magnitude >= divisor - magnitude) {
+        quotient += currency_sum_ < 0 ? -1 : 1;
+    }
+    return make_currency_value(quotient);
+}
+
 std::string aggregate_distinct_key(const PrgValue& value) {
     switch (value.kind) {
         case PrgValueKind::number: {

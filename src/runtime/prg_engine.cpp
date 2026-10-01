@@ -4863,6 +4863,64 @@ namespace copperfin::runtime
                     session.aliases[joined_cursor->work_area] = plan.joined_source_alias;
                 }
             }
+            // The cursor positions and temporary aliases are restored once the rows are materialized (below). A
+            // runtime error raised while materializing (a type error in an aggregate, a Currency overflow, a failing
+            // expression) must restore them too, or a caught error would leak the last scanned record and the
+            // temporary alias into the following statements (#6040 review); the guard runs the same restoration only
+            // while an exception unwinds.
+            const auto restore_query_state = [&]()
+            {
+                if (cursor_alive())
+                {
+                    restore_cursor_snapshot(cursor, original);
+                }
+                if (joined_cursor != nullptr && joined_original.has_value() && joined_cursor_alive())
+                {
+                    restore_cursor_snapshot(*joined_cursor, *joined_original);
+                }
+                if (!plan.source_alias.empty() && cursor_alive())
+                {
+                    if (source_alias_before.has_value())
+                    {
+                        session.aliases[saved_cursor_work_area] = *source_alias_before;
+                    }
+                    else
+                    {
+                        session.aliases.erase(saved_cursor_work_area);
+                    }
+                }
+                if (joined_cursor != nullptr && !plan.joined_source_alias.empty() && joined_cursor_alive())
+                {
+                    if (joined_alias_before.has_value())
+                    {
+                        session.aliases[saved_joined_work_area] = *joined_alias_before;
+                    }
+                    else
+                    {
+                        session.aliases.erase(saved_joined_work_area);
+                    }
+                }
+            };
+            struct RestoreOnException
+            {
+                const std::function<void()> &restore;
+                int uncaught_at_construction = std::uncaught_exceptions();
+                ~RestoreOnException()
+                {
+                    if (std::uncaught_exceptions() > uncaught_at_construction)
+                    {
+                        try
+                        {
+                            restore();
+                        }
+                        catch (...)
+                        {
+                        }
+                    }
+                }
+            };
+            const std::function<void()> restore_query_state_function = restore_query_state;
+            const RestoreOnException restore_on_exception{restore_query_state_function};
             std::vector<MaterializedQueryRow> materialized_rows;
             materialized_rows.reserve(cursor.record_count);
             bool aggregate_materialized = false;
@@ -4975,9 +5033,7 @@ namespace copperfin::runtime
                 const std::string value_expression =
                     aggregate.arguments.empty() ? std::string{} : aggregate.arguments.front();
                 std::size_t matched_count = 0U;
-                double sum = 0.0;
-                double min_value = 0.0;
-                double max_value = 0.0;
+                AggregateAccumulator accumulator(true);
                 // COUNT(expr) counts the non-NULL values, blank strings included (installed VFP9, probe
                 // result3.txt), and COUNT(DISTINCT expr) counts each distinct non-NULL value once.
                 std::string counted_expression = trim_copy(value_expression);
@@ -5020,24 +5076,7 @@ namespace copperfin::runtime
                     {
                         continue;
                     }
-                    const auto numeric_value = try_parse_aggregate_numeric_value(
-                        evaluate_expression(value_expression, frame, &cursor));
-                    if (!numeric_value.has_value())
-                    {
-                        continue;
-                    }
-                    if (matched_count == 0U)
-                    {
-                        min_value = *numeric_value;
-                        max_value = *numeric_value;
-                    }
-                    else
-                    {
-                        min_value = std::min(min_value, *numeric_value);
-                        max_value = std::max(max_value, *numeric_value);
-                    }
-                    sum += *numeric_value;
-                    ++matched_count;
+                    accumulator.add(aggregate.function, evaluate_expression(value_expression, frame, &cursor));
                 }
                 restore_cursor_snapshot(cursor, group_original);
 
@@ -5045,25 +5084,10 @@ namespace copperfin::runtime
                 {
                     return make_number_value(static_cast<double>(matched_count));
                 }
-                if (matched_count == 0U)
+                if (aggregate.function == "sum" || aggregate.function == "avg" || aggregate.function == "average" ||
+                    aggregate.function == "min" || aggregate.function == "max")
                 {
-                    return make_number_value(0.0);
-                }
-                if (aggregate.function == "sum")
-                {
-                    return make_number_value(sum);
-                }
-                if (aggregate.function == "avg" || aggregate.function == "average")
-                {
-                    return make_number_value(sum / static_cast<double>(matched_count));
-                }
-                if (aggregate.function == "min")
-                {
-                    return make_number_value(min_value);
-                }
-                if (aggregate.function == "max")
-                {
-                    return make_number_value(max_value);
+                    return accumulator.result(aggregate.function, make_number_value(0.0));
                 }
                 return make_number_value(0.0);
             };
@@ -5666,36 +5690,7 @@ namespace copperfin::runtime
             // cursor. A closed work area's alias entry was already erased
             // by close_cursor() itself, so skipping the restore here is
             // correct, not just safe.
-            if (cursor_alive())
-            {
-                restore_cursor_snapshot(cursor, original);
-            }
-            if (joined_cursor != nullptr && joined_original.has_value() && joined_cursor_alive())
-            {
-                restore_cursor_snapshot(*joined_cursor, *joined_original);
-            }
-            if (!plan.source_alias.empty() && cursor_alive())
-            {
-                if (source_alias_before.has_value())
-                {
-                    session.aliases[saved_cursor_work_area] = *source_alias_before;
-                }
-                else
-                {
-                    session.aliases.erase(saved_cursor_work_area);
-                }
-            }
-            if (joined_cursor != nullptr && !plan.joined_source_alias.empty() && joined_cursor_alive())
-            {
-                if (joined_alias_before.has_value())
-                {
-                    session.aliases[saved_joined_work_area] = *joined_alias_before;
-                }
-                else
-                {
-                    session.aliases.erase(saved_joined_work_area);
-                }
-            }
+            restore_query_state();
 
             if (cursor_lost)
             {

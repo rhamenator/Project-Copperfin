@@ -53,6 +53,10 @@ struct PrgValue {
     // VARTYPE(x, .T.) and TYPE() can report the type a NULL field would have had (#6506). Zero for a NULL that has
     // no declared type (the .NULL. literal, or the result of an operation on a NULL).
     char null_declared_type = '\0';
+    // True for the text of a numeric (N, F, I, B) table field that could not be read as a number, such as the run of
+    // asterisks of a value that overflowed the field width. Aggregates skip it as they always have; a Character
+    // value that merely looks like one ("***") does not carry the flag and is still a Character.
+    bool unparsed_numeric_field = false;
 };
 
 struct SourceLocation {
