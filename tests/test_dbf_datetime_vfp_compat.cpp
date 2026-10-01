@@ -155,6 +155,10 @@ const unsigned char kVfpMillisecondTable[1113] = {
 
 std::string read_file(const fs::path &path) {
     std::ifstream in(path, std::ios::binary);
+    if (!in.is_open()) {
+        expect(false, "could not open " + path.string());
+        return {};
+    }
     return std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
 }
 
@@ -223,20 +227,24 @@ void test_stored_milliseconds_round_to_the_nearest_second() {
         "    c = c + TTOC(t, 1) + CHR(10)\n"
         "ENDSCAN\nSTRTOFILE(c, 'millis.txt')\nRETURN\n", message);
     expect(completed, "DateTime milliseconds: the script should complete: " + message);
-    // Record 10 (86399500 ms) is left out, see the comment on kVfpMillisecondTable.
-    const std::vector<std::string> expected = {
-        "20191231000000", "20191231000000", "20191231000000", "20191231000001", "20191231000001",
-        "20191231000001", "20191231000001", "20191231235959", "20191231235959", "",
-        "20200101000000", "20200101000000", "20200101000001"};
+    // Record 10 (86399500 ms) is not compared, see the comment on kVfpMillisecondTable.
+    struct Expected {
+        std::size_t record;   // 1-based
+        const char *text;
+    };
+    const std::vector<Expected> expected = {
+        {1U, "20191231000000"}, {2U, "20191231000000"}, {3U, "20191231000000"}, {4U, "20191231000001"},
+        {5U, "20191231000001"}, {6U, "20191231000001"}, {7U, "20191231000001"}, {8U, "20191231235959"},
+        {9U, "20191231235959"}, {11U, "20200101000000"}, {12U, "20200101000000"}, {13U, "20200101000001"}};
     const std::vector<std::string> lines = split_lines(read_file(dir / "millis.txt"));
-    expect(lines.size() >= expected.size(), "DateTime milliseconds: one result per record, got " + std::to_string(lines.size()));
-    for (std::size_t index = 0U; index < expected.size() && index < lines.size(); ++index) {
-        if (index == 9U) {
+    expect(lines.size() >= 13U, "DateTime milliseconds: one result per record, got " + std::to_string(lines.size()));
+    for (const Expected &entry : expected) {
+        if (entry.record > lines.size()) {
             continue;
         }
-        expect(lines[index] == expected[index],
-            "DateTime milliseconds: record " + std::to_string(index + 1U) + " expected [" + expected[index] +
-                "], got [" + lines[index] + "]");
+        expect(lines[entry.record - 1U] == entry.text,
+            "DateTime milliseconds: record " + std::to_string(entry.record) + " expected [" + entry.text +
+                "], got [" + lines[entry.record - 1U] + "]");
     }
     fs::remove_all(dir, ignored);
 }
