@@ -814,6 +814,35 @@
                             left = make_number_value(value_as_number(left) / divisor);
                         }
                     }
+                    else if (match("%"))
+                    {
+                        // % is modulo with the precedence of * and / (installed VFP9: 7 % 3 is 1,
+                        // -7 % 3 is 2, 7 % -3 is -2, 2 * 7 % 3 is 2, 5 % 0 is error 1307). Like MOD(),
+                        // the result takes the sign of the divisor.
+                        PrgValue right = parse_unary();
+                        if (suppress_evaluation_)
+                        {
+                            left = make_empty_value();
+                        }
+                        else if (left.is_null || right.is_null)
+                        {
+                            left = make_null_value();
+                        }
+                        else
+                        {
+                            const double divisor = value_as_number(right);
+                            if (divisor == 0.0)
+                            {
+                                throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.DivisionByZero"));
+                            }
+                            double remainder = std::fmod(value_as_number(left), divisor);
+                            if (remainder != 0.0 && std::signbit(remainder) != std::signbit(divisor))
+                            {
+                                remainder += divisor;
+                            }
+                            left = make_number_value(remainder);
+                        }
+                    }
                     else
                     {
                         return left;
@@ -833,6 +862,13 @@
                     }
                     const PrgValue operand = parse_comparison();
                     return operand.is_null ? make_null_value() : make_boolean_value(!value_as_bool(operand));
+                }
+                if (match("+"))
+                {
+                    // Unary plus returns its operand unchanged, whatever its type (installed VFP9:
+                    // +5 is 5, +.NULL. is NULL, +'a' is 'a', +{^2026-01-01} is that date).
+                    PrgValue operand = parse_unary();
+                    return suppress_evaluation_ ? make_empty_value() : operand;
                 }
                 if (match("-"))
                 {

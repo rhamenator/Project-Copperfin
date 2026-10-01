@@ -103,7 +103,29 @@ const std::vector<Row> kRows = {
         {"BETWEEN(1,.NULL.,2)", "X:.NULL."},
         {"BETWEEN(1,0,.NULL.)", "X:.NULL."},
         {"BETWEEN(5,.NULL.,2)", "L:.F."},
-        {"BETWEEN(0,1,.NULL.)", "L:.F."}
+        {"BETWEEN(0,1,.NULL.)", "L:.F."},
+        // % (modulo, the precedence of * and /) and unary +, retained at .../vfp9-result-pct.txt
+        {"7 % 3", "N:1"},
+        {"-7 % 3", "N:2"},
+        {"7 % -3", "N:-2"},
+        {"-7 % -3", "N:-1"},
+        {"7.5 % 2", "N:1.5"},
+        {"0 % 5", "N:0"},
+        {"7 % 3 % 2", "N:1"},
+        {"2 + 7 % 3", "N:3"},
+        {"2 * 7 % 3", "N:2"},
+        {"2 ^ 3 % 5", "N:3"},
+        {".NULL. % 2", "X:.NULL."},
+        {"2 % .NULL.", "X:.NULL."},
+        {"+5", "N:5"},
+        {"+(-5)", "N:-5"},
+        {"+.NULL.", "X:.NULL."},
+        {"+'a'", "C:a"},
+        {"+.T.", "L:.T."},
+        {"+ 5", "N:5"},
+        {"5 + +3", "N:8"},
+        {"5 * +3", "N:15"},
+        {"7 % 3.5", "N:0"}
 };
 
 std::string evaluate_all(const fs::path &dir) {
@@ -148,6 +170,21 @@ void test_operators_and_predicates_match_vfp9_three_valued_semantics() {
     fs::remove_all(dir, ignored);
 }
 
+// 5 % 0 raises (installed VFP9: error 1307, "Cannot divide by 0"); it is not NULL and not zero.
+void test_modulo_by_zero_raises() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_null_semantics_modzero";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir / "script");
+    write_text(dir / "script" / "mod.prg", "x = 5 % 0\nSTRTOFILE('ran', 'marker.txt')\nRETURN\n");
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((dir / "script" / "mod.prg").string(), dir.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!state.completed, "5 % 0 must raise, not complete");
+    expect(!fs::exists(dir / "marker.txt"), "nothing after a failed 5 % 0 may run");
+    fs::remove_all(dir, ignored);
+}
+
 // A NULL read from a nullable DBF field behaves the same way in commands that filter on it.
 void test_a_null_dbf_field_follows_the_same_rules() {
     const fs::path dir = fs::temp_directory_path() / "copperfin_null_semantics_dbf";
@@ -189,6 +226,7 @@ void test_a_null_dbf_field_follows_the_same_rules() {
 
 int main() {
     test_operators_and_predicates_match_vfp9_three_valued_semantics();
+    test_modulo_by_zero_raises();
     test_a_null_dbf_field_follows_the_same_rules();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
