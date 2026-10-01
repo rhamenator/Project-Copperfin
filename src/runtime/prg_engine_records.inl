@@ -262,7 +262,7 @@
                         }
                         if (is_numeric(left.kind) && is_numeric(right.kind))
                         {
-                            return std::abs(value_as_number(left) - value_as_number(right)) < 0.000001;
+                            return numeric_prg_values_equal(left, right);
                         }
                         return value_as_string(left) == value_as_string(right);
                     };
@@ -1574,6 +1574,14 @@
                     if (found != descriptors.end())
                     {
                         field.field_type = found->type;
+                        // A Numeric or Float field stores the value rounded half away from zero to its
+                        // scale, as VFP9 does; the full-precision text would otherwise be wider than the field.
+                        const char stored_type = static_cast<char>(std::toupper(static_cast<unsigned char>(found->type)));
+                        if ((stored_type == 'N' || stored_type == 'F') && value.kind == PrgValueKind::number &&
+                            !value.is_null)
+                        {
+                            return text_import_value_for_field(*found, serialize_prg_value_for_record_field(field, value));
+                        }
                     }
                 }
                 return serialize_prg_value_for_record_field(field, value);

@@ -15,6 +15,7 @@
 #include <cctype>
 #include <cmath>
 #include <ctime>
+#include <cstdio>
 #include <cstdlib>
 #include <filesystem>
 #include <functional>
@@ -998,6 +999,84 @@ PrgOperandClass classify_operand(const PrgValue& value) {
         default:
             return PrgOperandClass::empty;
     }
+}
+
+std::string format_round_trip_decimal(const double value) {
+    if (!std::isfinite(value)) {
+        return std::isnan(value) ? "nan" : (value < 0.0 ? "-inf" : "inf");
+    }
+    if (value == 0.0) {
+        return "0";
+    }
+    // Locale-independent in both directions: the classic locale always writes '.', and the invariant parser
+    // reads it back (snprintf/strtod follow the process LC_NUMERIC and would write a comma under de-DE).
+    std::string scientific;
+    for (int precision = 15; precision <= 17; ++precision) {
+        std::ostringstream stream;
+        stream.imbue(std::locale::classic());
+        stream << std::scientific << std::setprecision(precision - 1) << value;
+        scientific = stream.str();
+        const auto parsed = try_parse_invariant_double(scientific);
+        if (parsed.has_value() && *parsed == value) {
+            break;
+        }
+    }
+    // scientific is [-]d.ddddde[+-]xx: rebuild it as plain decimal.
+    const bool negative = scientific.front() == '-';
+    const std::size_t exponent_at = scientific.find('e');
+    std::string digits;
+    for (std::size_t index = negative ? 1U : 0U; index < exponent_at; ++index) {
+        if (scientific[index] != '.') {
+            digits.push_back(scientific[index]);
+        }
+    }
+    while (digits.size() > 1U && digits.back() == '0') {
+        digits.pop_back();
+    }
+    const int exponent = std::atoi(scientific.c_str() + exponent_at + 1U);
+    std::string text;
+    if (exponent >= 0) {
+        const std::size_t integer_digits = static_cast<std::size_t>(exponent) + 1U;
+        if (digits.size() <= integer_digits) {
+            text = digits + std::string(integer_digits - digits.size(), '0');
+        } else {
+            text = digits.substr(0U, integer_digits) + "." + digits.substr(integer_digits);
+        }
+    } else {
+        text = "0." + std::string(static_cast<std::size_t>(-exponent - 1), '0') + digits;
+    }
+    return negative ? "-" + text : text;
+}
+
+bool numeric_values_equal(const double left, const double right) {
+    if (left == right) {
+        return true;
+    }
+    if (!std::isfinite(left) || !std::isfinite(right)) {
+        return false;
+    }
+    const double magnitude = std::max(std::abs(left), std::abs(right));
+    return std::abs(left - right) <= std::numeric_limits<double>::epsilon() * magnitude;
+}
+
+bool numeric_prg_values_equal(const PrgValue& left, const PrgValue& right) {
+    const auto is_integer = [](const PrgValue& value) {
+        return value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
+    };
+    if (is_integer(left) && is_integer(right)) {
+        if (left.kind == PrgValueKind::int64) {
+            return right.kind == PrgValueKind::int64
+                       ? left.int64_value == right.int64_value
+                       : left.int64_value >= 0 && static_cast<std::uint64_t>(left.int64_value) == right.uint64_value;
+        }
+        return right.kind == PrgValueKind::uint64
+                   ? left.uint64_value == right.uint64_value
+                   : right.int64_value >= 0 && left.uint64_value == static_cast<std::uint64_t>(right.int64_value);
+    }
+    if (left.kind == PrgValueKind::currency && right.kind == PrgValueKind::currency) {
+        return left.currency_value == right.currency_value;
+    }
+    return numeric_values_equal(value_as_number(left), value_as_number(right));
 }
 
 bool statement_condition_value(const PrgValue& value, const StatementConditionKind kind) {

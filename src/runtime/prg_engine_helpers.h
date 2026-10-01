@@ -81,6 +81,24 @@ PrgOperandClass classify_operand(const PrgValue& value);
 // value at all (empty) stays false; only the operators report an unset value as error 12.
 enum class StatementConditionKind { if_statement, do_case, for_while, filter, sql_where };
 bool statement_condition_value(const PrgValue& value, StatementConditionKind kind);
+
+// Numeric equality as installed VFP9 behaves at its default settings (probes retained under
+// ~/temp/vfp9-probes/numeric-eq-c24/, #6034): two numbers are equal when they are the same double or differ by
+// about one unit in the last place, so a computed 0.1+0.2 equals 0.3 and 4.35*100 equals 435, while values that
+// differ in the 15th or 16th significant digit, or by the former absolute 0.000001, are distinct
+// (1.000000000000001 <> 1, 1.0000005 <> 1). The ordering operators use the same test, so a number that is equal
+// is neither less nor greater.
+bool numeric_values_equal(double left, double right);
+
+// Equality of two numeric PrgValues: Integer against Integer and Currency against Currency compare their exact
+// integer payloads (a conversion through double would merge adjacent integers above 2^53 and large scaled
+// Currency values); every other numeric pairing uses numeric_values_equal on the doubles.
+bool numeric_prg_values_equal(const PrgValue& left, const PrgValue& right);
+
+// The shortest plain-decimal text (no exponent) that reads back as exactly `value`: 15, 16 or 17 significant
+// digits, whichever is the first to round-trip. value_as_string() keeps six significant digits for display, so
+// it must not be used to store a number (REPLACE n WITH 123.456789 kept 123.457 and 1.0000005 became 1).
+std::string format_round_trip_decimal(double value);
 PrgValue make_boolean_value(bool value);
 PrgValue make_number_value(double value);
 PrgValue make_string_value(std::string value);

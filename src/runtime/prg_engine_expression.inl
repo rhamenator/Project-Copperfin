@@ -4049,7 +4049,11 @@
                 }
                 const double left_value = value_as_number(left);
                 const double right_value = value_as_number(right);
-                return left_value < right_value ? -1 : (left_value > right_value ? 1 : 0);
+                if (numeric_values_equal(left_value, right_value))
+                {
+                    return 0;
+                }
+                return left_value < right_value ? -1 : 1;
             }
 
             bool values_equal(const PrgValue &left, const PrgValue &right) const
@@ -4093,7 +4097,7 @@
                 {
                     return left.currency_value == right.currency_value;
                 }
-                return std::abs(value_as_number(left) - value_as_number(right)) < 0.000001;
+                return numeric_values_equal(value_as_number(left), value_as_number(right));
             }
 
             int current_work_area_ = 1;

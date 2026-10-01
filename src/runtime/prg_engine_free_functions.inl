@@ -2895,7 +2895,13 @@
         std::string serialize_prg_value_for_record_field(const vfp::DbfRecordValue &field, const PrgValue &value)
         {
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.field_type)));
-            const std::string text = value_as_string(value);
+            // A Numeric, Float or Double field stores the number itself: value_as_string() keeps only six
+            // significant digits (and turns anything within 0.000001 of an integer into that integer), so
+            // REPLACE n WITH 123.456789 stored 123.457 and 1.0000005 stored 1.
+            const std::string text =
+                (field_type == 'N' || field_type == 'F' || field_type == 'B') && value.kind == PrgValueKind::number
+                    ? format_round_trip_decimal(value.number_value)
+                    : value_as_string(value);
             const std::string trimmed = trim_copy(text);
             if (field_type == 'D')
             {
