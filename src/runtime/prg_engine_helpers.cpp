@@ -15,6 +15,7 @@
 #include <cctype>
 #include <cmath>
 #include <ctime>
+#include <cstdio>
 #include <cstdlib>
 #include <filesystem>
 #include <functional>
@@ -998,6 +999,63 @@ PrgOperandClass classify_operand(const PrgValue& value) {
         default:
             return PrgOperandClass::empty;
     }
+}
+
+std::string format_round_trip_decimal(const double value) {
+    if (!std::isfinite(value)) {
+        return std::isnan(value) ? "nan" : (value < 0.0 ? "-inf" : "inf");
+    }
+    if (value == 0.0) {
+        return "0";
+    }
+    char buffer[64];
+    int precision = 15;
+    for (; precision <= 17; ++precision) {
+        std::snprintf(buffer, sizeof(buffer), "%.*e", precision - 1, value);
+        if (std::strtod(buffer, nullptr) == value) {
+            break;
+        }
+    }
+    if (precision > 17) {
+        std::snprintf(buffer, sizeof(buffer), "%.16e", value);
+    }
+    // buffer is [-]d.ddddde[+-]xx: rebuild it as plain decimal.
+    const std::string scientific(buffer);
+    const bool negative = scientific.front() == '-';
+    const std::size_t exponent_at = scientific.find('e');
+    std::string digits;
+    for (std::size_t index = negative ? 1U : 0U; index < exponent_at; ++index) {
+        if (scientific[index] != '.') {
+            digits.push_back(scientific[index]);
+        }
+    }
+    while (digits.size() > 1U && digits.back() == '0') {
+        digits.pop_back();
+    }
+    const int exponent = std::atoi(scientific.c_str() + exponent_at + 1U);
+    std::string text;
+    if (exponent >= 0) {
+        const std::size_t integer_digits = static_cast<std::size_t>(exponent) + 1U;
+        if (digits.size() <= integer_digits) {
+            text = digits + std::string(integer_digits - digits.size(), '0');
+        } else {
+            text = digits.substr(0U, integer_digits) + "." + digits.substr(integer_digits);
+        }
+    } else {
+        text = "0." + std::string(static_cast<std::size_t>(-exponent - 1), '0') + digits;
+    }
+    return negative ? "-" + text : text;
+}
+
+bool numeric_values_equal(const double left, const double right) {
+    if (left == right) {
+        return true;
+    }
+    if (!std::isfinite(left) || !std::isfinite(right)) {
+        return false;
+    }
+    const double magnitude = std::max(std::abs(left), std::abs(right));
+    return std::abs(left - right) <= std::numeric_limits<double>::epsilon() * magnitude;
 }
 
 bool statement_condition_value(const PrgValue& value, const StatementConditionKind kind) {

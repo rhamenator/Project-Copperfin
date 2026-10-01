@@ -4720,7 +4720,7 @@ namespace copperfin::runtime
                                                 left_value.uint64_value ==
                                                     static_cast<std::uint64_t>(right_value.int64_value));
                     }
-                    return std::abs(value_as_number(left_value) - value_as_number(right_value)) < 0.000001;
+                    return numeric_values_equal(value_as_number(left_value), value_as_number(right_value));
                 };
 
                 if (left.size() != right.size())

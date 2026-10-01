@@ -245,7 +245,7 @@ bool expression_values_equal(const PrgValue& left, const PrgValue& right, bool e
     if (left.kind == PrgValueKind::currency && right.kind == PrgValueKind::currency) {
         return left.currency_value == right.currency_value;
     }
-    return std::abs(value_as_number(left) - value_as_number(right)) < 0.000001;
+    return numeric_values_equal(value_as_number(left), value_as_number(right));
 }
 
 std::optional<std::int64_t> parse_currency_scaled_value(const std::string& text) {
