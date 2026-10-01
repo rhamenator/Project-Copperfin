@@ -25,7 +25,9 @@ namespace fs = std::filesystem;
 // field: N(5,2) takes -1.235 as -1.24, 1.005 as 1.01, 2.675 as 2.68, 0.125 as 0.13, and -0.004 as
 // 0; N(3,0) takes 1.9 as 2, 0.5 as 1 and -2.5 as -3. A value that is still wider than the field
 // after rounding (VFP9 silently drops decimals or stores 0) keeps Copperfin's documented rejection
-// and rollback, which is the open owner decision in #6572.
+// and rollback: the import raises and no row is appended. That is the final #6572 decision (repository
+// owner, 2026-09-30): an intentional divergence from VFP9, because silently zeroing or shortening
+// imported numbers destroys data with no signal.
 
 struct Outcome {
     bool completed;
