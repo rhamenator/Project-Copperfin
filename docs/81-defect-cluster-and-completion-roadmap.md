@@ -469,9 +469,10 @@ native/COM object lifetime rather than `CursorState`.
 **Started 2026-10-01:** operator, `BETWEEN`, `INLIST`, `EMPTY`, `ISBLANK`, `NVL` and
 `EVL` NULL semantics (#5934, #6140, #5942, #5979) follow
 `RQ-CF-PRG-NULL-OPERATOR-SEMANTICS-001`, built on a 73-row retained VFP9 probe
-(`~/temp/vfp9-probes/null-semantics-c24/`). Still open here: built-in function
-propagation (#5936), operator/type strictness (#5939, #5940, #6141, #6142), the
-numeric-equality epsilon (#6034) and the typed null of #6506.
+(`~/temp/vfp9-probes/null-semantics-c24/`). Built-in function NULL propagation
+(#5936) follows `RQ-CF-PRG-NULL-BUILTIN-PROPAGATION-001`. Still open here: operator/type
+strictness (#5939, #5940, #6141, #6142), the numeric-equality epsilon (#6034) and the
+typed null of #6506.
 
 ~12 issues: #5934, #5936, #5939, #5940, #5942, #5979, #6034, #6140,
 #6141, #6142. `EMPTY()`/`ISBLANK()` report `NULL` as empty/blank instead

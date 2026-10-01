@@ -5836,6 +5836,11 @@ copperfin_add_test(test_prg_engine_source_limits cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
+copperfin_add_test(test_prg_engine_null_builtins cf_xbase_runtime
+    test_prg_engine_null_builtins.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_prg_engine_null_semantics cf_xbase_runtime
     test_prg_engine_null_semantics.cpp
     prg_engine_test_support.cpp
