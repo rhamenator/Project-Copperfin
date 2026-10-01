@@ -1141,7 +1141,20 @@ std::optional<PrgValue> evaluate_string_function(
         }
 
         if (transformed.empty() && !(picture_has_flag(picture, "@Z") && is_zeroish_transform_value(arguments[0]))) {
-            transformed = format_value_for_display(arguments[0], set_callback);
+            if (arguments[0].kind == PrgValueKind::currency && !arguments[0].is_null) {
+                // TRANSFORM(Y) shows the currency symbol, grouped digits and SET DECIMALS places (two by
+                // default), honoring SET POINT, SET SEPARATOR and SET CURRENCY (installed VFP9, probe
+                // ~/temp/vfp9-probes/currency-c25/result2.txt); SET CURRENCY RIGHT placement is not applied.
+                int decimals = 2;
+                try {
+                    decimals = std::clamp(std::stoi(trim_copy(set_callback("DECIMALS"))), 0, 18);
+                } catch (...) {
+                }
+                transformed = apply_numeric_picture_symbols(
+                    format_currency_decimal_text(arguments[0].currency_value, decimals), true, true, set_callback);
+            } else {
+                transformed = format_value_for_display(arguments[0], set_callback);
+            }
         }
         if (picture_has_flag(picture, "@B")) {
             transformed = left_justified_trim(std::move(transformed));

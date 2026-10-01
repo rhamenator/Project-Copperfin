@@ -1674,6 +1674,8 @@
   "Runtime.Prg.Expression.Error.DataTypeMismatch": "[!! Dåţå ţÿþë mïšmåţçħ. !!]",
   "Runtime.Prg.Expression.Error.InvalidArgument": "[!! Füñçţïøñ årĝümëñţ vålüë, ţÿþë, ør çøüñţ ïš ïñvålïð. !!]",
   "Runtime.Prg.Expression.Error.OperandVariableNotFound": "[!! Våřïåblë ïš ñøţ føüñð. !!]",
+  "Runtime.Prg.Expression.Error.CurrencyOutOfRange": "[!! Çüřřéñçÿ våľüé ïš øüţ øf řåñĝé. !!]",
+  "Runtime.Prg.Expression.Error.FunctionNameMissing": "[!! Füñçţïøñ ñåmé ïš mïššïñĝ ). !!]",
   "Runtime.Prg.Statement.Error.SyntaxError": "[!! Šÿñţåx éřřøř. !!]",
   "Runtime.Prg.Statement.Error.ForWhileLogicalRequired": "[!! Ÿøü müšţ üšë å løĝïçåľ éxþřéššïøñ wïţħ å FOR øř WHILE çľåüšë. !!]",
   "Runtime.Prg.Statement.Error.FilterLogicalRequired": "[!! Ÿøü müšţ üšë å løĝïçåľ éxþřéššïøñ wïţħ FILTER. !!]",

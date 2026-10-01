@@ -3009,8 +3009,22 @@
                 return make_boolean_value(normalize_identifier(text) == "true" || normalize_identifier(text) == "t" ||
                                           normalize_identifier(text) == "y" || text == ".T.");
             }
+            if (field_type == 'Y')
+            {
+                // A Currency field enters the runtime as an exact Currency value, not a double (#6061).
+                if (text.empty())
+                {
+                    return make_currency_value(0);
+                }
+                if (const CurrencyDecimal currency = parse_currency_decimal(text, true);
+                    currency.status == CurrencyDecimalStatus::ok)
+                {
+                    return make_currency_value(currency.scaled);
+                }
+                return make_string_value(field.display_value);
+            }
             if (field_type == 'N' || field_type == 'F' || field_type == 'I' ||
-                field_type == 'B' || field_type == 'Y')
+                field_type == 'B')
             {
                 if (text.empty())
                 {
@@ -3104,8 +3118,12 @@
             {
                 return make_boolean_value(false);
             }
+            if (field_type == 'Y')
+            {
+                return make_currency_value(0);
+            }
             if (field_type == 'N' || field_type == 'F' || field_type == 'I' ||
-                field_type == 'B' || field_type == 'Y')
+                field_type == 'B')
             {
                 return make_number_value(0.0);
             }

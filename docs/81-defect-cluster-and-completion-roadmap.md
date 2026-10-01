@@ -494,7 +494,12 @@ which `VARTYPE(x, .T.)` and `TYPE()` use; the other items its text raised (`EMPT
 `NVL`, `EVL`, aggregates on NULL) were verified against VFP9 and are covered by
 `RQ-CF-PRG-NULL-OPERATOR-SEMANTICS-001` and `RQ-CF-PRG-TYPED-NULL-001`.
 
-### 25. Currency/numeric-precision type fidelity — `NOT STARTED`
+### 25. Currency/numeric-precision type fidelity — `IN PROGRESS`
+
+**Started 2026-10-01:** Currency literals (#6036) and `Y` fields (#6061) follow
+`RQ-CF-PRG-CURRENCY-TYPING-001`. Still open here: #6035, #6037, #6039, #6040, #6041 (the
+function, aggregate and overflow behavior that builds on a real Currency value), #6168 and
+#6728; #6038 (Jet4 Unicode decoding) is an Access-migration item.
 
 ~8 issues: #6035-#6041. `Currency` results from external functions and
 aggregates lose fixed-point precision through `double` accumulators,
