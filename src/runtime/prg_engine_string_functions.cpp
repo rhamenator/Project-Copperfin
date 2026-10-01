@@ -712,12 +712,23 @@ std::optional<PrgValue> evaluate_string_function(
             value_as_string(arguments[1])));
     }
     if (function == "inlist" && arguments.size() >= 2U) {
+        // Three-valued, as installed VFP9 (retained probe ~/temp/vfp9-probes/null-semantics-c24, #5979):
+        // a NULL search value is NULL; otherwise any match is .T. even beside a NULL element, and
+        // with no match a NULL element makes the result NULL rather than .F.
+        if (arguments[0].is_null) {
+            return make_null_value();
+        }
+        bool saw_null = false;
         for (std::size_t index = 1U; index < arguments.size(); ++index) {
+            if (arguments[index].is_null) {
+                saw_null = true;
+                continue;
+            }
             if (expression_values_equal(arguments[0], arguments[index], exact_string_compare)) {
                 return make_boolean_value(true);
             }
         }
-        return make_boolean_value(false);
+        return saw_null ? make_null_value() : make_boolean_value(false);
     }
     if ((function == "getwordcount" || function == "getwordnum") && !arguments.empty()) {
         const std::string src = value_as_string(arguments[0]);
