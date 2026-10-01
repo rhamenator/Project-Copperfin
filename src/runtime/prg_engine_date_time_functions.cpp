@@ -4,6 +4,9 @@
 
 #include "prg_engine_date_time_functions.h"
 
+#include "localized_text.h"
+#include "prg_compatibility_error.h"
+
 #include "prg_engine_helpers.h"
 
 #include <algorithm>
@@ -11,8 +14,10 @@
 #include <chrono>
 #include <cmath>
 #include <cctype>
+#include <set>
 #include <functional>
 #include <iomanip>
+#include <map>
 #include <sstream>
 
 namespace copperfin::runtime {
@@ -848,10 +853,68 @@ std::optional<PrgValue> evaluate_date_time_additive(
         result_second);
 }
 
+namespace {
+
+// #6142: the date and time functions take a Date or DateTime, never a Character value that merely looks like one
+// (CTOD, CTOT and STOD are the conversion functions). Installed VFP9 (type matrix retained at
+// ~/temp/vfp9-probes/datetime-types-c24/result.txt) raises error 11 for a Character, Numeric, Logical or Object
+// argument to every function below; DTOT takes only a Date and TTOD only a DateTime. A NULL argument has
+// already returned NULL before dispatch reaches here. GOMONTH, EOMONTH, DOW and WEEK also need a Numeric second
+// argument (WEEK also a Numeric third). QUARTER, EOMONTH and DTOJ are Copperfin extensions that follow their siblings. MDY and DMY are not
+// covered yet: Copperfin gives them an invented numeric (month, day, year) constructor that VFP9 does not have
+// (#5924), which must be replaced together with this rule.
+bool is_date_or_datetime(const PrgValue& value) {
+    const PrgOperandClass operand_class = classify_operand(value);
+    return operand_class == PrgOperandClass::date || operand_class == PrgOperandClass::datetime;
+}
+
+void require_date_time_argument_types(const std::string& function, const std::vector<PrgValue>& arguments) {
+    static const std::set<std::string> kDateOrDateTime = {
+        "dow", "cdow", "cmonth", "year", "month", "day", "week", "dtos", "dtoc", "hour", "minute", "sec", "ttoc",
+        "gomonth", "quarter", "eomonth", "dtoj"};
+    // Numeric optional arguments, by function and zero-based position: GOMONTH, EOMONTH and DOW take a Numeric
+    // second argument and WEEK a Numeric second and third (WEEK(d, 1, 'x') is error 11 in VFP9).
+    static const std::map<std::string, std::vector<std::size_t>> kNumericOptionalArguments = {
+        {"gomonth", {1U}}, {"eomonth", {1U}}, {"dow", {1U}}, {"week", {1U, 2U}}};
+    if (arguments.empty() || arguments.front().is_null) {
+        return;
+    }
+    const auto invalid = [] {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+    };
+    if (kDateOrDateTime.count(function) != 0U) {
+        if (!is_date_or_datetime(arguments.front())) {
+            invalid();
+        }
+        if (const auto numeric = kNumericOptionalArguments.find(function); numeric != kNumericOptionalArguments.end()) {
+            for (const std::size_t position : numeric->second) {
+                if (position >= arguments.size() || arguments[position].is_null) {
+                    continue;
+                }
+                const PrgOperandClass operand_class = classify_operand(arguments[position]);
+                if (operand_class != PrgOperandClass::numeric && operand_class != PrgOperandClass::currency) {
+                    invalid();
+                }
+            }
+        }
+    } else if (function == "dtot") {
+        if (classify_operand(arguments.front()) != PrgOperandClass::date) {
+            invalid();
+        }
+    } else if (function == "ttod") {
+        if (classify_operand(arguments.front()) != PrgOperandClass::datetime) {
+            invalid();
+        }
+    }
+}
+
+}  // namespace
+
 std::optional<PrgValue> evaluate_date_time_function(
     const std::string& function,
     const std::vector<PrgValue>& arguments,
     const std::function<std::string(const std::string&)>& set_callback) {
+    require_date_time_argument_types(function, arguments);
     if (function == "date") {
         if (arguments.size() >= 3U) {
             const int year = static_cast<int>(std::llround(value_as_number(arguments[0])));
