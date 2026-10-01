@@ -193,7 +193,7 @@ std::optional<double> round_decimal_value(const double value, const int decimal_
 // CEILING rounds away from zero and FLOOR and INT truncate toward zero (CEILING($-12.3456) is $-13, FLOOR is $-12:
 // VFP9's Currency-specific behavior, the opposite of Numeric); ROUND is half away from zero at the requested place
 // (a negative place rounds to tens, hundreds, ...); MOD takes the sign of the divisor and is error 1307 for a
-// zero divisor. A result that cannot be held in a Currency falls back to a Number.
+// zero divisor. A result outside the Currency range is error 1988.
 constexpr std::int64_t kCurrencyUnit = 10000;
 
 bool is_currency_argument(const PrgValue& value) {
@@ -206,8 +206,11 @@ std::uint64_t currency_magnitude(const std::int64_t scaled) {
 
 PrgValue currency_from_magnitude(const std::uint64_t magnitude, const bool negative) {
     if (magnitude > static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())) {
-        const double value = static_cast<double>(magnitude) / static_cast<double>(kCurrencyUnit);
-        return make_number_value(negative ? -value : value);
+        // A result that cannot be held in a Currency is error 1988 (installed VFP9: ROUND($922337203685477.5807,0)).
+        // VFP9 over-reports it near the top of the range (ROUND of the maximum to 4 places, which changes nothing,
+        // is also 1988) and CEILING($922337203685477.5807) silently wraps to $-922337203685476; Copperfin raises
+        // the error only when the exact result is out of range.
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.CurrencyOutOfRange"), 1988);
     }
     const std::int64_t scaled = static_cast<std::int64_t>(magnitude);
     return make_currency_value(negative ? -scaled : scaled);
@@ -271,6 +274,12 @@ std::optional<PrgValue> evaluate_numeric_function(
                                              : static_cast<std::int64_t>(std::llround(value_as_number(arguments[1]) * 10000.0));
             if (divisor == 0) {
                 throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.DivisionByZero"), 1307);
+            }
+            if (divisor == -1) {
+                // Every value is a multiple of 0.0001 (a scaled -1): INT64_MIN % -1 would overflow the signed
+                // division, so answer the mathematically correct zero first (VFP9: MOD($922337203685477.5807,$-0.0001)
+                // is $0).
+                return make_currency_value(0);
             }
             std::int64_t remainder = scaled % divisor;
             if (remainder != 0 && (remainder < 0) != (divisor < 0)) {

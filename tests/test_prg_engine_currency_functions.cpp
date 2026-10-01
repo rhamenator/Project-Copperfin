@@ -6,6 +6,8 @@
 #include "prg_engine_test_support.h"
 
 #include <filesystem>
+#include <iterator>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <system_error>
@@ -234,12 +236,37 @@ const std::vector<Row> kRows = {
     {"INT(-3.9)", "N:-3.0000"}
 };
 
-std::string run_rows(const fs::path &dir) {
-    std::string body = "LOCAL cOut, oEx, x\ncOut = ''\n";
-    for (const Row &row : kRows) {
+// Rows at the boundary of the Currency range, compared exactly with TRANSFORM at SET DECIMALS 4 (STR() goes through a
+// double and loses the last digits).
+const std::vector<Row> kBoundaryRows = {
+    // Results that leave the Currency range are error 1988 (result8.txt: the rows where the exact result is out of range).
+    {"ROUND($922337203685477.5807,0)", "ERR1988"},
+    {"ROUND($922337203685477.5807,1)", "ERR1988"},
+    {"ROUND($922337203685477.5807,3)", "ERR1988"},
+    {"ROUND($-922337203685477.5807,0)", "ERR1988"},
+    {"ROUND($-922337203685477.5807,3)", "ERR1988"},
+    {"ROUND($922337203685477.5001,0)", "ERR1988"},
+    {"ROUND($922337203685476.5001,0)", "Y:$922,337,203,685,477.0000"},
+    {"MOD($922337203685477.5807,$-0.0001)", "Y:$0.0000"},
+    {"MOD($922337203685477.5807,$0.0001)", "Y:$0.0000"},
+    {"MOD($-922337203685477.5807,$-0.0001)", "Y:$0.0000"},
+    // Deliberate improvements over VFP9, which reports 1988 whenever a ROUND is near the top of the range even
+    // when the exact result fits (ROUND of the maximum to 4 places changes nothing): Copperfin raises it only when
+    // the exact result is out of range. CEILING at the very top overflows (VFP9 wraps to a wrong value).
+    {"ROUND($922337203685477.5807,4)", "Y:$922,337,203,685,477.5807"},
+    {"ROUND($922337203685477.5807,2)", "Y:$922,337,203,685,477.5800"},
+    {"ROUND($922337203685477.5804,3)", "Y:$922,337,203,685,477.5800"},
+    {"CEILING($922337203685477.5807)", "ERR1988"},
+    {"CEILING($-922337203685477.5807)", "ERR1988"},
+};
+
+std::string run_rows(const fs::path &dir, const std::vector<Row> &rows, const bool exact) {
+    std::string body = exact ? "LOCAL cOut, oEx, x\ncOut = ''\nSET DECIMALS TO 4\n" : "LOCAL cOut, oEx, x\ncOut = ''\n";
+    for (const Row &row : rows) {
         body += "TRY\n";
         body += "x = " + std::string(row.expression) + "\n";
-        body += "cOut = cOut + VARTYPE(x) + ':' + LTRIM(STR(x, 22, 4)) + CHR(10)\n";
+        body += exact ? "cOut = cOut + VARTYPE(x) + ':' + TRANSFORM(x) + CHR(10)\n"
+                      : "cOut = cOut + VARTYPE(x) + ':' + LTRIM(STR(x, 22, 4)) + CHR(10)\n";
         body += "CATCH TO oEx\n";
         body += "cOut = cOut + 'ERR' + ALLTRIM(STR(oEx.ErrorNo)) + CHR(10)\n";
         body += "ENDTRY\n";
@@ -256,12 +283,12 @@ std::string run_rows(const fs::path &dir) {
     return read_text(dir / "results.txt");
 }
 
-void test_currency_functions_match_vfp9() {
-    const fs::path dir = fs::temp_directory_path() / "copperfin_currency_functions";
+void check_rows(const std::vector<Row> &rows, const bool exact, const std::string &label) {
+    const fs::path dir = fs::temp_directory_path() / ("copperfin_currency_functions_" + label);
     std::error_code ignored;
     fs::remove_all(dir, ignored);
-    const std::string output = run_rows(dir);
-    expect(output.rfind("<incomplete", 0U) != 0U, "currency functions: the script should complete: " + output);
+    const std::string output = run_rows(dir, rows, exact);
+    expect(output.rfind("<incomplete", 0U) != 0U, "currency functions " + label + ": the script should complete: " + output);
     std::vector<std::string> lines;
     for (std::size_t start = 0U; start < output.size();) {
         const std::size_t end = output.find('\n', start);
@@ -271,12 +298,61 @@ void test_currency_functions_match_vfp9() {
         }
         start = end + 1U;
     }
-    expect(lines.size() >= kRows.size(), "currency functions: one result per row, got " + std::to_string(lines.size()));
-    for (std::size_t index = 0U; index < kRows.size() && index < lines.size(); ++index) {
-        expect(lines[index] == kRows[index].expected,
-            std::string("currency functions: ") + kRows[index].expression + " expected [" + kRows[index].expected +
+    expect(lines.size() >= rows.size(), "currency functions " + label + ": one result per row, got " + std::to_string(lines.size()));
+    for (std::size_t index = 0U; index < rows.size() && index < lines.size(); ++index) {
+        expect(lines[index] == rows[index].expected,
+            "currency functions " + label + ": " + rows[index].expression + " expected [" + rows[index].expected +
                 "], got [" + lines[index] + "]");
     }
+    fs::remove_all(dir, ignored);
+}
+
+void test_currency_functions_match_vfp9() {
+    check_rows(kRows, false, "values");
+    check_rows(kBoundaryRows, true, "boundary");
+}
+
+// MOD of the stored minimum by -0.0001 is INT64_MIN % -1, signed-division overflow (a SIGFPE on common targets). The
+// minimum cannot come from INSERT, so a Y table is written and its record is patched to INT64_MIN (#6039 review).
+void test_mod_of_stored_minimum_does_not_overflow() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_currency_mod_minimum";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    write_text(dir / "make.prg",
+        "CREATE TABLE cy (amount Y)\nINSERT INTO cy (amount) VALUES ($1)\nUSE\nRETURN\n");
+    {
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options((dir / "make.prg").string(), dir.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "currency MOD minimum: the table should be created: " + state.message);
+    }
+    std::string bytes;
+    {
+        std::ifstream in(dir / "cy.dbf", std::ios::binary);
+        bytes.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+    }
+    // The record is the last 9 bytes before the end-of-file marker: 1 deletion byte + 8 bytes of Currency.
+    const std::size_t record = bytes.size() - 1U - 8U;
+    for (std::size_t index = 0U; index < 7U; ++index) {
+        bytes[record + index] = '\0';
+    }
+    bytes[record + 7U] = static_cast<char>(0x80);
+    {
+        std::ofstream out(dir / "cy.dbf", std::ios::binary);
+        out.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+    }
+    write_text(dir / "mod.prg",
+        "LOCAL c\nSET DECIMALS TO 4\nUSE cy\n"
+        "c = TRANSFORM(amount) + ';' + TRANSFORM(MOD(amount, $-0.0001)) + ';' + TRANSFORM(MOD(amount, -0.0001)) + ';' + "
+        "TRANSFORM(MOD(amount, $0.0001))\n"
+        "STRTOFILE(c, 'mod.txt')\nRETURN\n");
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((dir / "mod.prg").string(), dir.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "currency MOD minimum: the script should complete: " + state.message);
+    expect(read_text(dir / "mod.txt") == "$-922,337,203,685,477.5808;$0.0000;$0.0000;$0.0000",
+        "currency MOD minimum: got [" + read_text(dir / "mod.txt") + "]");
     fs::remove_all(dir, ignored);
 }
 
@@ -284,6 +360,7 @@ void test_currency_functions_match_vfp9() {
 
 int main() {
     test_currency_functions_match_vfp9();
+    test_mod_of_stored_minimum_does_not_overflow();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;
