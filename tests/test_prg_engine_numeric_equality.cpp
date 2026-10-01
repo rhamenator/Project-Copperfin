@@ -157,7 +157,8 @@ void test_numeric_equality_matches_vfp9() {
 // REPLACE stores the number, not its six-digit display text: value_as_string() kept 123.457 for 123.456789 and 1
 // for 1.0000005. Every expectation is installed VFP9 (probe retained at
 // /home/rich/temp/vfp9-probes/numeric-eq-c24/result6.txt): the value is rounded half away from zero to the field's
-// scale. Columns: value, N(20,10), N(12,6), N(10,2), N(18,0), F(20,8).
+// scale. Columns: value, N(20,10), N(12,6), N(10,2), N(18,0), F(20,8), B(8) (a Double field, whose
+// serializer is a separate branch).
 struct StoreRow {
     const char *value;
     const char *n1;
@@ -165,22 +166,23 @@ struct StoreRow {
     const char *n3;
     const char *n4;
     const char *f1;
+    const char *b1;
 };
 
 const std::vector<StoreRow> kStoreRows = {
-    {"123.456789", "123.4567890000", "123.456789", "123.46", "123", "123.45678900"},
-    {"1.234567891", "1.2345678910", "1.234568", "1.23", "1", "1.23456789"},
-    {"0.1234567", "0.1234567000", "0.123457", "0.12", "0", "0.12345670"},
-    {"1.0000005", "1.0000005000", "1.000001", "1.00", "1", "1.00000050"},
-    {"1.000005", "1.0000050000", "1.000005", "1.00", "1", "1.00000500"},
-    {"12345.6789012", "12345.6789012000", "12345.678901", "12345.68", "12346", "12345.67890120"},
-    {"-2.5000005", "-2.5000005000", "-2.500001", "-2.50", "-3", "-2.50000050"},
-    {"0.000001234", "0.0000012340", "0.000001", "0.00", "0", "0.00000123"},
-    {"1E-7", "0.0000001000", "0.000000", "0.00", "0", "0.00000010"},
-    {"0.1+0.2", "0.3000000000", "0.300000", "0.30", "0", "0.30000000"},
-    {"1/3", "0.3333333333", "0.333333", "0.33", "0", "0.33333333"},
-    {"2/3", "0.6666666667", "0.666667", "0.67", "1", "0.66666667"},
-    {"100/7", "14.2857142857", "14.285714", "14.29", "14", "14.28571429"}
+    {"123.456789", "123.4567890000", "123.456789", "123.46", "123", "123.45678900", "123.45678900"},
+    {"1.234567891", "1.2345678910", "1.234568", "1.23", "1", "1.23456789", "1.23456789"},
+    {"0.1234567", "0.1234567000", "0.123457", "0.12", "0", "0.12345670", "0.12345670"},
+    {"1.0000005", "1.0000005000", "1.000001", "1.00", "1", "1.00000050", "1.00000050"},
+    {"1.000005", "1.0000050000", "1.000005", "1.00", "1", "1.00000500", "1.00000500"},
+    {"12345.6789012", "12345.6789012000", "12345.678901", "12345.68", "12346", "12345.67890120", "12345.67890120"},
+    {"-2.5000005", "-2.5000005000", "-2.500001", "-2.50", "-3", "-2.50000050", "-2.50000050"},
+    {"0.000001234", "0.0000012340", "0.000001", "0.00", "0", "0.00000123", "0.00000123"},
+    {"1E-7", "0.0000001000", "0.000000", "0.00", "0", "0.00000010", "0.00000010"},
+    {"0.1+0.2", "0.3000000000", "0.300000", "0.30", "0", "0.30000000", "0.30000000"},
+    {"1/3", "0.3333333333", "0.333333", "0.33", "0", "0.33333333", "0.33333333"},
+    {"2/3", "0.6666666667", "0.666667", "0.67", "1", "0.66666667", "0.66666667"},
+    {"100/7", "14.2857142857", "14.285714", "14.29", "14", "14.28571429", "14.28571429"}
 };
 
 void test_replace_keeps_numeric_digits() {
@@ -189,12 +191,12 @@ void test_replace_keeps_numeric_digits() {
     fs::remove_all(dir, ignored);
     fs::create_directories(dir);
     std::string body = "LOCAL cOut\ncOut = ''\n"
-                       "CREATE TABLE tn (n1 N(20,10), n2 N(12,6), n3 N(10,2), n4 N(18,0), f1 F(20,8))\nAPPEND BLANK\n";
+                       "CREATE TABLE tn (n1 N(20,10), n2 N(12,6), n3 N(10,2), n4 N(18,0), f1 F(20,8), b1 B(8))\nAPPEND BLANK\n";
     for (const StoreRow &row : kStoreRows) {
         body += std::string("REPLACE n1 WITH ") + row.value + ", n2 WITH " + row.value + ", n3 WITH " + row.value +
-                ", n4 WITH " + row.value + ", f1 WITH " + row.value + "\n";
+                ", n4 WITH " + row.value + ", f1 WITH " + row.value + ", b1 WITH " + row.value + "\n";
         body += "cOut = cOut + ALLTRIM(STR(n1,20,10)) + '|' + ALLTRIM(STR(n2,20,6)) + '|' + ALLTRIM(STR(n3,20,2)) + '|' + "
-                "ALLTRIM(STR(n4,20,0)) + '|' + ALLTRIM(STR(f1,20,8)) + CHR(10)\n";
+                "ALLTRIM(STR(n4,20,0)) + '|' + ALLTRIM(STR(f1,20,8)) + '|' + ALLTRIM(STR(b1,20,8)) + CHR(10)\n";
     }
     body += "STRTOFILE(cOut, 'store.txt')\nRETURN\n";
     write_text(dir / "store.prg", body);
@@ -215,7 +217,7 @@ void test_replace_keeps_numeric_digits() {
     expect(lines.size() >= kStoreRows.size(), "numeric store: one result per value, got " + std::to_string(lines.size()));
     for (std::size_t index = 0U; index < kStoreRows.size() && index < lines.size(); ++index) {
         const StoreRow &row = kStoreRows[index];
-        const std::string expected = std::string(row.n1) + "|" + row.n2 + "|" + row.n3 + "|" + row.n4 + "|" + row.f1;
+        const std::string expected = std::string(row.n1) + "|" + row.n2 + "|" + row.n3 + "|" + row.n4 + "|" + row.f1 + "|" + row.b1;
         expect(lines[index] == expected,
             std::string("numeric store: REPLACE WITH ") + row.value + " expected [" + expected + "], got [" + lines[index] + "]");
     }

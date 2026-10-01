@@ -223,7 +223,7 @@
                     {
                         return value_as_bool(left) == value_as_bool(right);
                     }
-                    return numeric_values_equal(value_as_number(left), value_as_number(right));
+                    return numeric_prg_values_equal(left, right);
                 };
                 auto parse_predicate_block = [](const std::string &text)
                 {

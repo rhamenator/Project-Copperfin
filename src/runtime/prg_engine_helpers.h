@@ -90,6 +90,11 @@ bool statement_condition_value(const PrgValue& value, StatementConditionKind kin
 // is neither less nor greater.
 bool numeric_values_equal(double left, double right);
 
+// Equality of two numeric PrgValues: Integer against Integer and Currency against Currency compare their exact
+// integer payloads (a conversion through double would merge adjacent integers above 2^53 and large scaled
+// Currency values); every other numeric pairing uses numeric_values_equal on the doubles.
+bool numeric_prg_values_equal(const PrgValue& left, const PrgValue& right);
+
 // The shortest plain-decimal text (no exponent) that reads back as exactly `value`: 15, 16 or 17 significant
 // digits, whichever is the first to round-trip. value_as_string() keeps six significant digits for display, so
 // it must not be used to store a number (REPLACE n WITH 123.456789 kept 123.457 and 1.0000005 became 1).

@@ -262,7 +262,7 @@
                         }
                         if (is_numeric(left.kind) && is_numeric(right.kind))
                         {
-                            return numeric_values_equal(value_as_number(left), value_as_number(right));
+                            return numeric_prg_values_equal(left, right);
                         }
                         return value_as_string(left) == value_as_string(right);
                     };

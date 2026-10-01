@@ -4720,7 +4720,8 @@ namespace copperfin::runtime
                                                 left_value.uint64_value ==
                                                     static_cast<std::uint64_t>(right_value.int64_value));
                     }
-                    return numeric_values_equal(value_as_number(left_value), value_as_number(right_value));
+                    // GROUP BY and SELECT DISTINCT share this comparator and keep their own tolerance (#5905).
+                    return std::abs(value_as_number(left_value) - value_as_number(right_value)) < 0.000001;
                 };
 
                 if (left.size() != right.size())

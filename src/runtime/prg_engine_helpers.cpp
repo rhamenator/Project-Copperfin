@@ -1008,19 +1008,20 @@ std::string format_round_trip_decimal(const double value) {
     if (value == 0.0) {
         return "0";
     }
-    char buffer[64];
-    int precision = 15;
-    for (; precision <= 17; ++precision) {
-        std::snprintf(buffer, sizeof(buffer), "%.*e", precision - 1, value);
-        if (std::strtod(buffer, nullptr) == value) {
+    // Locale-independent in both directions: the classic locale always writes '.', and the invariant parser
+    // reads it back (snprintf/strtod follow the process LC_NUMERIC and would write a comma under de-DE).
+    std::string scientific;
+    for (int precision = 15; precision <= 17; ++precision) {
+        std::ostringstream stream;
+        stream.imbue(std::locale::classic());
+        stream << std::scientific << std::setprecision(precision - 1) << value;
+        scientific = stream.str();
+        const auto parsed = try_parse_invariant_double(scientific);
+        if (parsed.has_value() && *parsed == value) {
             break;
         }
     }
-    if (precision > 17) {
-        std::snprintf(buffer, sizeof(buffer), "%.16e", value);
-    }
-    // buffer is [-]d.ddddde[+-]xx: rebuild it as plain decimal.
-    const std::string scientific(buffer);
+    // scientific is [-]d.ddddde[+-]xx: rebuild it as plain decimal.
     const bool negative = scientific.front() == '-';
     const std::size_t exponent_at = scientific.find('e');
     std::string digits;
@@ -1056,6 +1057,26 @@ bool numeric_values_equal(const double left, const double right) {
     }
     const double magnitude = std::max(std::abs(left), std::abs(right));
     return std::abs(left - right) <= std::numeric_limits<double>::epsilon() * magnitude;
+}
+
+bool numeric_prg_values_equal(const PrgValue& left, const PrgValue& right) {
+    const auto is_integer = [](const PrgValue& value) {
+        return value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
+    };
+    if (is_integer(left) && is_integer(right)) {
+        if (left.kind == PrgValueKind::int64) {
+            return right.kind == PrgValueKind::int64
+                       ? left.int64_value == right.int64_value
+                       : left.int64_value >= 0 && static_cast<std::uint64_t>(left.int64_value) == right.uint64_value;
+        }
+        return right.kind == PrgValueKind::uint64
+                   ? left.uint64_value == right.uint64_value
+                   : right.int64_value >= 0 && left.uint64_value == static_cast<std::uint64_t>(right.int64_value);
+    }
+    if (left.kind == PrgValueKind::currency && right.kind == PrgValueKind::currency) {
+        return left.currency_value == right.currency_value;
+    }
+    return numeric_values_equal(value_as_number(left), value_as_number(right));
 }
 
 bool statement_condition_value(const PrgValue& value, const StatementConditionKind kind) {
