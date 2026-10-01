@@ -6,8 +6,6 @@
 #include "prg_engine_test_support.h"
 
 #include <filesystem>
-#include <fstream>
-#include <iterator>
 #include <iostream>
 #include <string>
 #include <system_error>
@@ -63,7 +61,7 @@ const std::vector<Row> kRows = {
 };
 
 std::string run_rows(const fs::path &dir) {
-    std::string body = "LOCAL cOut, oEx, x\ncOut = ''\nSET DECIMALS TO 4\n";
+    std::string body = "LOCAL cOut, oEx, x\ncOut = ''\nSET DECIMALS TO 4\nSET CURRENCY TO '$'\nSET POINT TO '.'\nSET SEPARATOR TO ','\n";
     for (const Row &row : kRows) {
         body += "TRY\n";
         body += "x = " + std::string(row.expression) + "\n";
