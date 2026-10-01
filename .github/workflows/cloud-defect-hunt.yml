@@ -2,7 +2,7 @@ name: Cloud Defect Hunt
 
 on:
   pull_request:
-    branches: [main, v1-development]
+    branches: [main]
     paths:
       - '.github/workflows/cloud-defect-hunt.yml'
       - 'scripts/run-cloud-validation.py'

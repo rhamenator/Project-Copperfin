@@ -2,7 +2,7 @@ name: Generated Launcher Validation
 
 on:
   push:
-    branches: [main, v1-development]
+    branches: [main]
     paths:
       - ".github/workflows/generated-launcher-validation.yml"
       - "CMakeLists.txt"
@@ -62,7 +62,7 @@ on:
       - "tests/test_runtime_pipeline*.cpp"
       - "tests/test_runtime_pipeline*.h"
   pull_request:
-    branches: [main, v1-development]
+    branches: [main]
   workflow_dispatch:
 
 permissions:

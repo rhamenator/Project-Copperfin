@@ -99,7 +99,7 @@ require_path_filter_contract("executable-path-validation.yml" ${executable_path_
 require_path_filter_contract("windows-x86-declare-validation.yml" ${declare_abi_inputs})
 require_path_filter_contract("audit-containment-validation.yml" ${audit_containment_inputs})
 
-# The v1-development ruleset requires these contexts.  Documentation-only pull
+# The main ruleset requires these contexts.  Documentation-only pull
 # requests must still emit them as skipped successes, while every source or
 # workflow change runs the full corresponding validation.
 set(required_context_workflows

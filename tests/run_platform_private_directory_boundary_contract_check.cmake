@@ -231,7 +231,7 @@ foreach(path IN ITEMS
         "direct-push private-layout path-filter coverage")
 endforeach()
 require_text("${workflow_text}" [=[  pull_request:
-    branches: [main, v1-development]
+    branches: [main]
   workflow_dispatch:]=]
     "unconditional protected-branch pull-request private-layout coverage")
 

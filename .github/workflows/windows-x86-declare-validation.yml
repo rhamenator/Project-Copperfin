@@ -13,7 +13,7 @@ on:
       - "resources/locales/**"
       - "src/**"
       - "tests/**"
-  # v1-development requires both matrix job contexts on every pull request.
+  # main requires both matrix job contexts on every pull request.
   # The catch-all lets change-scope report a skipped success for a
   # documentation-only pull request; source changes run the full matrix.
   pull_request:

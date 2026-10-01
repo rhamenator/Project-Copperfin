@@ -16,7 +16,7 @@ on:
       - "resources/locales/**"
       - "src/**"
       - "tests/**"
-  # v1-development requires this context on every pull request. The catch-all
+  # main requires this context on every pull request. The catch-all
   # lets change-scope report a skipped success for documentation-only work.
   pull_request:
     paths:
