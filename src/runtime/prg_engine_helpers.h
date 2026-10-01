@@ -123,6 +123,22 @@ PrgValue make_datetime_value(
 PrgValue make_int64_value(std::int64_t value);
 PrgValue make_uint64_value(std::uint64_t value);
 PrgValue make_currency_value(std::int64_t scaled_value);
+
+// A plain decimal ([-]digits[.digits], at least one digit, optional surrounding blanks) as a Currency value scaled
+// by 10,000 and rounded half away from zero at the fifth decimal, for a `$` literal or a Y field's text. The range
+// is +-922337203685477.5807 (installed VFP9, probe retained at ~/temp/vfp9-probes/currency-c25/result.txt:
+// $922337203685477.5807 is valid, $922337203685477.5808 and $-922337203685477.5808 are error 1988).
+enum class CurrencyDecimalStatus { ok, malformed, out_of_range };
+struct CurrencyDecimal {
+    CurrencyDecimalStatus status = CurrencyDecimalStatus::malformed;
+    std::int64_t scaled = 0;
+};
+CurrencyDecimal parse_currency_decimal(const std::string& text);
+
+// A Currency value as plain decimal text ("-1234.57") with `decimals` places, rounded half away from zero from the
+// four stored (installed VFP9 shows two places by default and follows SET DECIMALS: 0 gives 1235, 4 gives 1234.5678
+// for $1234.5678). The caller applies the point, separator and currency symbol.
+std::string format_currency_decimal_text(std::int64_t scaled, int decimals);
 bool value_as_bool(const PrgValue& value);
 double value_as_number(const PrgValue& value);
 std::string value_as_string(const PrgValue& value);

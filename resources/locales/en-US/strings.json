@@ -1249,6 +1249,7 @@
   "Runtime.Prg.Expression.Error.DataTypeMismatch": "Data type mismatch.",
   "Runtime.Prg.Expression.Error.InvalidArgument": "Function argument value, type, or count is invalid.",
   "Runtime.Prg.Expression.Error.OperandVariableNotFound": "Variable is not found.",
+  "Runtime.Prg.Expression.Error.CurrencyOutOfRange": "Currency value is out of range.",
   "Runtime.Prg.Statement.Error.SyntaxError": "Syntax error.",
   "Runtime.Prg.Statement.Error.ForWhileLogicalRequired": "You must use a logical expression with a FOR or WHILE clause.",
   "Runtime.Prg.Statement.Error.FilterLogicalRequired": "You must use a logical expression with FILTER.",

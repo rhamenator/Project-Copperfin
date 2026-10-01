@@ -1674,6 +1674,7 @@
   "Runtime.Prg.Expression.Error.DataTypeMismatch": "Tipo de datos no coincidente.",
   "Runtime.Prg.Expression.Error.InvalidArgument": "El valor, tipo o numero de un argumento de funcion no es valido.",
   "Runtime.Prg.Expression.Error.OperandVariableNotFound": "No se encuentra la variable.",
+  "Runtime.Prg.Expression.Error.CurrencyOutOfRange": "El valor de moneda esta fuera del intervalo.",
   "Runtime.Prg.Statement.Error.SyntaxError": "Error de sintaxis.",
   "Runtime.Prg.Statement.Error.ForWhileLogicalRequired": "Debe usar una expresion logica con una clausula FOR o WHILE.",
   "Runtime.Prg.Statement.Error.FilterLogicalRequired": "Debe usar una expresion logica con FILTER.",

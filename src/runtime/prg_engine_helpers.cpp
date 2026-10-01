@@ -1219,6 +1219,84 @@ PrgValue make_datetime_value(
     return result;
 }
 
+CurrencyDecimal parse_currency_decimal(const std::string& text) {
+    CurrencyDecimal result;
+    std::size_t index = 0U;
+    const std::size_t end = text.find_last_not_of(" \t") == std::string::npos ? 0U : text.find_last_not_of(" \t") + 1U;
+    while (index < end && (text[index] == ' ' || text[index] == '\t')) {
+        ++index;
+    }
+    bool negative = false;
+    if (index < end && text[index] == '-') {
+        negative = true;
+        ++index;
+    }
+    std::string integer_digits;
+    while (index < end && std::isdigit(static_cast<unsigned char>(text[index])) != 0) {
+        integer_digits.push_back(text[index++]);
+    }
+    std::string fraction_digits;
+    if (index < end && text[index] == '.') {
+        ++index;
+        while (index < end && std::isdigit(static_cast<unsigned char>(text[index])) != 0) {
+            fraction_digits.push_back(text[index++]);
+        }
+    }
+    if (index != end || (integer_digits.empty() && fraction_digits.empty())) {
+        return result;   // malformed
+    }
+    const std::size_t first_significant = integer_digits.find_first_not_of('0');
+    integer_digits = first_significant == std::string::npos ? std::string{} : integer_digits.substr(first_significant);
+    result.status = CurrencyDecimalStatus::out_of_range;
+    if (integer_digits.size() > 15U) {
+        return result;
+    }
+    std::uint64_t whole = 0U;
+    for (const char digit : integer_digits) {
+        whole = (whole * 10U) + static_cast<std::uint64_t>(digit - '0');
+    }
+    std::uint64_t fraction = 0U;
+    for (std::size_t position = 0U; position < 4U; ++position) {
+        fraction = (fraction * 10U) + (position < fraction_digits.size()
+                                           ? static_cast<std::uint64_t>(fraction_digits[position] - '0')
+                                           : 0U);
+    }
+    const bool round_up = fraction_digits.size() > 4U && fraction_digits[4] >= '5';
+    const std::uint64_t magnitude = (whole * 10000U) + fraction + (round_up ? 1U : 0U);
+    if (magnitude > static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())) {
+        return result;
+    }
+    result.status = CurrencyDecimalStatus::ok;
+    result.scaled = negative ? -static_cast<std::int64_t>(magnitude) : static_cast<std::int64_t>(magnitude);
+    return result;
+}
+
+std::string format_currency_decimal_text(const std::int64_t scaled, const int decimals) {
+    const bool negative = scaled < 0;
+    const std::uint64_t magnitude = negative ? static_cast<std::uint64_t>(-(scaled + 1)) + 1U
+                                             : static_cast<std::uint64_t>(scaled);
+    const int places = std::clamp(decimals, 0, 4);
+    std::uint64_t divisor = 1U;
+    for (int step = 0; step < 4 - places; ++step) {
+        divisor *= 10U;
+    }
+    std::uint64_t unit = 1U;
+    for (int step = 0; step < places; ++step) {
+        unit *= 10U;
+    }
+    const std::uint64_t rounded = (magnitude + (divisor / 2U)) / divisor;
+    std::string text = std::string(negative ? "-" : "") + std::to_string(rounded / unit);
+    if (places > 0) {
+        std::string fraction = std::to_string(rounded % unit);
+        fraction.insert(0U, static_cast<std::size_t>(places) - fraction.size(), '0');
+        text += "." + fraction;
+    }
+    if (decimals > 4) {
+        text += std::string(static_cast<std::size_t>(decimals - 4), '0');
+    }
+    return text;
+}
+
 PrgValue make_int64_value(std::int64_t value) {
     PrgValue result;
     result.kind = PrgValueKind::int64;

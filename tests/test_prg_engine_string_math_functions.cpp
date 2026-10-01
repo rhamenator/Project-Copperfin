@@ -729,7 +729,9 @@ namespace
         // VFP9 output. This test previously asserted the fractional
         // digits survived, which baked in VAL()'s pre-fix bug of always
         // treating '.' as the decimal separator regardless of SET POINT.
-        check("currency_display_transform", "1.234,0000");
+        // A Currency TRANSFORM shows the configured currency symbol (here USD) with the point and separator set above,
+        // as installed VFP9 does (SET CURRENCY TO 'EUR' gives EUR1,234.57; probe currency-c25/result2.txt).
+        check("currency_display_transform", "USD 1.234,0000");
         check("point_reset", ".");
 
         for (const char *name : {"rand_seeded", "rand_next"})
