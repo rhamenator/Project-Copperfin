@@ -461,6 +461,7 @@ std::optional<PrgValue> evaluate_string_function(
         // double range) can be classified as overflow versus underflow
         // by combining it with the mantissa's own significant-digit
         // place value -- see the effective-exponent computation below.
+        const std::size_t mantissa_end = numeric_end;
         bool has_explicit_exponent = false;
         bool exponent_is_negative = false;
         std::size_t exponent_digits_start = 0;
@@ -502,11 +503,20 @@ std::optional<PrgValue> evaluate_string_function(
             // silent-overflow-to-zero pattern reported for the Double
             // path below, just for Currency's own (much narrower)
             // range. Wired to the same error instead.
-            const auto scaled = parse_currency_scaled_value(numeric_text);
-            if (!scaled.has_value()) {
-                throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.NumericOverflow"), 39);
+            //
+            // #6728: installed VFP9 (probe ~/temp/vfp9-probes/currency-c25/result12.txt) reports a dollar-prefixed
+            // VAL outside +-922337203685477.5807 as error 1988 "Currency value is out of range.", after rounding
+            // half away from zero to four decimals, and ignores an exponent ('$1E3' is $1). The exact decimal
+            // parser also refuses the stored minimum, which a source value may not use.
+            std::string mantissa_text = src.substr(numeric_start, mantissa_end - numeric_start);
+            if (const auto point = mantissa_text.find(decimal_point); decimal_point != '.' && point != std::string::npos) {
+                mantissa_text[point] = '.';
             }
-            return make_currency_value(*scaled);
+            const CurrencyDecimal parsed = parse_currency_decimal(mantissa_text);
+            if (parsed.status == CurrencyDecimalStatus::out_of_range) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.CurrencyOutOfRange"), 1988);
+            }
+            return make_currency_value(parsed.status == CurrencyDecimalStatus::ok ? parsed.scaled : 0);
         }
         // #6146: real VFP9 SP2 raises catchable error 39 ("Numeric
         // overflow.") for a VAL() input whose magnitude exceeds VFP9's
