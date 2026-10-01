@@ -3,7 +3,6 @@
 // This file is #included directly into prg_engine.cpp inside namespace copperfin::runtime.
 // It must not be compiled separately.
 
-<<<<<<< HEAD
     // Built-in functions that return NULL when any argument is NULL (#5936), with the argument counts each
     // accepts. Installed VFP9 returns a NULL (VARTYPE X) for all of these (probes retained under
     // ~/temp/vfp9-probes/null-semantics-c24/, vfp9-result.txt and vfp9-result-funcs.txt). The rule applies
@@ -44,7 +43,8 @@
         const auto found = kPropagating.find(function);
         return found != kPropagating.end() && argument_count >= found->second.minimum &&
                argument_count <= found->second.maximum;
-=======
+    }
+
     // Operator operand-type rules, from the installed-VFP9 operator-by-type matrix retained at
     // ~/temp/vfp9-probes/null-semantics-c24/vfp9-result-types.txt (#5940, #5939). A pair that is not allowed
     // raises a catchable error whose number depends on the operator: 107 for + - and comparisons, 9 for
@@ -136,7 +136,6 @@
         {
             throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
         }
->>>>>>> 50e3896e4 (fix(runtime): operators reject operand types VFP9 rejects (#5940, #6141, #5939))
     }
 
     std::optional<PrgValue> evaluate_date_time_function(
