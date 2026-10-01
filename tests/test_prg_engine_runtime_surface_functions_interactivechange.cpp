@@ -15,6 +15,7 @@ namespace copperfin::runtime_surface_tests
         write_text(
             main_path,
             "PUBLIC nListHwnd, nInteractiveCalls, nProgrammaticCalls\n"
+            "STORE 0 TO nInteractiveCalls, nProgrammaticCalls\n"   // PUBLIC starts as .F., and .F. + 1 is error 107 in VFP9
             "oList = CREATEOBJECT('InteractiveList')\n"
             "oList.AddItem('Alpha')\n"
             "oList.AddItem('Beta')\n"

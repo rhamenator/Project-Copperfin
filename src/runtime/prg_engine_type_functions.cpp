@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
+#include "localized_text.h"
+#include "prg_compatibility_error.h"
 #include "prg_engine_type_functions.h"
 
 #include "prg_engine_helpers.h"
@@ -192,10 +194,43 @@ std::optional<PrgValue> evaluate_type_function(
         // BETWEEN(x, a, b) is (x >= a) AND (x <= b) in three-valued logic (installed VFP9 probe, retained
         // at ~/temp/vfp9-probes/null-semantics-c24): a NULL expression is NULL, and a NULL bound is NULL
         // unless the other bound already excludes the value (BETWEEN(5, .NULL., 2) is .F.).
-        if (arguments[0].is_null || arguments[1].is_null || arguments[2].is_null) {
-            if (arguments[0].is_null) {
-                return make_null_value();
+        // A NULL expression is NULL before any type check; otherwise the non-NULL arguments must be of
+        // compatible types (installed VFP9: Numeric and Currency together, Date and DateTime together,
+        // Character with Character, Logical with Logical; anything else is error 107).
+        if (arguments[0].is_null) {
+            return make_null_value();
+        }
+        {
+            const auto group = [](const PrgValue& value) {
+                switch (classify_operand(value)) {
+                    case PrgOperandClass::character: return 1;
+                    case PrgOperandClass::numeric:
+                    case PrgOperandClass::currency: return 2;
+                    case PrgOperandClass::logical: return 3;
+                    case PrgOperandClass::date:
+                    case PrgOperandClass::datetime: return 4;
+                    default: return 0;
+                }
+            };
+            int expected_group = 0;
+            for (std::size_t index = 0U; index < 3U; ++index) {
+                if (arguments[index].is_null) {
+                    continue;
+                }
+                const int current = group(arguments[index]);
+                if (current == 0) {
+                    expected_group = -1;   // an object or other value: keep the existing handling
+                    break;
+                }
+                if (expected_group == 0) {
+                    expected_group = current;
+                } else if (expected_group != current) {
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch"), 107);
+                }
             }
+        }
+        if (arguments[1].is_null || arguments[2].is_null) {
             const bool lower_known = !arguments[1].is_null;
             const bool upper_known = !arguments[2].is_null;
             const auto below = [&](const PrgValue& bound) {

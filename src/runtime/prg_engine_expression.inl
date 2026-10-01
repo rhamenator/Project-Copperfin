@@ -3,6 +3,7 @@
 // This file is #included directly into prg_engine.cpp inside namespace copperfin::runtime.
 // It must not be compiled separately.
 
+<<<<<<< HEAD
     // Built-in functions that return NULL when any argument is NULL (#5936), with the argument counts each
     // accepts. Installed VFP9 returns a NULL (VARTYPE X) for all of these (probes retained under
     // ~/temp/vfp9-probes/null-semantics-c24/, vfp9-result.txt and vfp9-result-funcs.txt). The rule applies
@@ -43,6 +44,99 @@
         const auto found = kPropagating.find(function);
         return found != kPropagating.end() && argument_count >= found->second.minimum &&
                argument_count <= found->second.maximum;
+=======
+    // Operator operand-type rules, from the installed-VFP9 operator-by-type matrix retained at
+    // ~/temp/vfp9-probes/null-semantics-c24/vfp9-result-types.txt (#5940, #5939). A pair that is not allowed
+    // raises a catchable error whose number depends on the operator: 107 for + - and comparisons, 9 for
+    // * and /, 11 for ^. An operand whose class is `other` (an object, an array, an unset value) keeps its
+    // existing handling.
+    enum class OperatorTypeRule { addition, subtraction, multiplication, division, power, comparison };
+
+    inline bool is_numeric_class(const PrgOperandClass operand_class)
+    {
+        return operand_class == PrgOperandClass::numeric || operand_class == PrgOperandClass::currency;
+    }
+
+    inline bool operator_operands_are_compatible(
+        const OperatorTypeRule rule,
+        const PrgValue &left,
+        const PrgValue &right)
+    {
+        const PrgOperandClass l = classify_operand(left);
+        const PrgOperandClass r = classify_operand(right);
+        if (l == PrgOperandClass::other || r == PrgOperandClass::other)
+        {
+            return true;
+        }
+        const auto date_like = [](const PrgOperandClass c)
+        { return c == PrgOperandClass::date || c == PrgOperandClass::datetime; };
+        switch (rule)
+        {
+        case OperatorTypeRule::addition:
+            return (l == PrgOperandClass::character && r == PrgOperandClass::character) ||
+                   (is_numeric_class(l) && is_numeric_class(r)) ||
+                   (l == PrgOperandClass::numeric && date_like(r)) ||
+                   (date_like(l) && r == PrgOperandClass::numeric);
+        case OperatorTypeRule::subtraction:
+            return (l == PrgOperandClass::character && r == PrgOperandClass::character) ||
+                   (is_numeric_class(l) && is_numeric_class(r)) ||
+                   (date_like(l) && r == PrgOperandClass::numeric) ||
+                   (l == PrgOperandClass::date && r == PrgOperandClass::date) ||
+                   (l == PrgOperandClass::datetime && r == PrgOperandClass::datetime);
+        case OperatorTypeRule::multiplication:
+        case OperatorTypeRule::division:
+        case OperatorTypeRule::power:
+            return is_numeric_class(l) && is_numeric_class(r);
+        case OperatorTypeRule::comparison:
+            return l == r || (is_numeric_class(l) && is_numeric_class(r)) || (date_like(l) && date_like(r));
+        }
+        return true;
+    }
+
+    [[noreturn]] inline void throw_operator_type_error(const OperatorTypeRule rule)
+    {
+        switch (rule)
+        {
+        case OperatorTypeRule::multiplication:
+        case OperatorTypeRule::division:
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.DataTypeMismatch"), 9);
+        case OperatorTypeRule::power:
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        default:
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch"), 107);
+        }
+    }
+
+    inline void require_compatible_operands(
+        const OperatorTypeRule rule,
+        const PrgValue &left,
+        const PrgValue &right)
+    {
+        if (!operator_operands_are_compatible(rule, left, right))
+        {
+            throw_operator_type_error(rule);
+        }
+    }
+
+    // A known non-Logical value in a logical position (AND, OR, IIF and ICASE conditions: error 11; NOT:
+    // error 9). NULL and `other` classes are not rejected here.
+    inline bool is_known_non_logical(const PrgValue &value)
+    {
+        if (value.is_null)
+        {
+            return false;
+        }
+        const PrgOperandClass c = classify_operand(value);
+        return c != PrgOperandClass::logical && c != PrgOperandClass::other;
+    }
+
+    inline void require_logical_operand(const PrgValue &value)
+    {
+        if (is_known_non_logical(value))
+        {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+>>>>>>> 50e3896e4 (fix(runtime): operators reject operand types VFP9 rejects (#5940, #6141, #5939))
     }
 
     std::optional<PrgValue> evaluate_date_time_function(
@@ -463,6 +557,9 @@
                         // ~/temp/vfp9-probes/null-semantics-c24): a true operand decides the result
                         // even next to NULL (.NULL. OR .T. is .T.), otherwise NULL on either side
                         // makes it NULL (.NULL. OR .F. is NULL).
+                        // Operands must be Logical (error 11), checked only for the operands the
+                        // result needs (.T. OR 1 is .T.).
+                        require_logical_operand(left);
                         if (!left.is_null && value_as_bool(left))
                         {
                             ScopedEvaluationSuppression suppress_rhs(*this);
@@ -472,6 +569,7 @@
                         }
 
                         const PrgValue right = parse_and();
+                        require_logical_operand(right);
                         if (right.is_null)
                         {
                             left = make_null_value();
@@ -507,6 +605,9 @@
 
                         // A false operand decides the result even next to NULL (.NULL. AND .F. is
                         // .F.); otherwise NULL on either side makes it NULL.
+                        // Operands must be Logical (error 11), checked only for the operands the
+                        // result needs (.F. AND 1 is .F.).
+                        require_logical_operand(left);
                         if (!left.is_null && !value_as_bool(left))
                         {
                             ScopedEvaluationSuppression suppress_rhs(*this);
@@ -516,6 +617,7 @@
                         }
 
                         const PrgValue right = parse_comparison();
+                        require_logical_operand(right);
                         if (right.is_null)
                         {
                             left = make_null_value();
@@ -555,6 +657,7 @@
                         }
                         else
                         {
+                            require_compatible_operands(OperatorTypeRule::comparison, left, right);
                             left = make_boolean_value(!values_equal(left, right));
                         }
                     }
@@ -572,6 +675,7 @@
                         }
                         else
                         {
+                            require_compatible_operands(OperatorTypeRule::comparison, left, right);
                             left = make_boolean_value(compare_ordered_values(left, right) <= 0);
                         }
                     }
@@ -589,6 +693,7 @@
                         }
                         else
                         {
+                            require_compatible_operands(OperatorTypeRule::comparison, left, right);
                             left = make_boolean_value(compare_ordered_values(left, right) >= 0);
                         }
                     }
@@ -606,6 +711,7 @@
                         }
                         else
                         {
+                            require_compatible_operands(OperatorTypeRule::comparison, left, right);
                             left = make_boolean_value(values_equal(left, right));
                         }
                     }
@@ -623,6 +729,15 @@
                         }
                         else
                         {
+                            // $ needs two Character operands (error 11 otherwise).
+                            if (classify_operand(left) != PrgOperandClass::other &&
+                                classify_operand(right) != PrgOperandClass::other &&
+                                (classify_operand(left) != PrgOperandClass::character ||
+                                 classify_operand(right) != PrgOperandClass::character))
+                            {
+                                throw PrgCompatibilityError(
+                                    runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                            }
                             const std::string needle = value_as_string(left);
                             const std::string haystack = value_as_string(right);
                             left = make_boolean_value(haystack.find(needle) != std::string::npos);
@@ -642,6 +757,7 @@
                         }
                         else
                         {
+                            require_compatible_operands(OperatorTypeRule::comparison, left, right);
                             left = make_boolean_value(compare_ordered_values(left, right) < 0);
                         }
                     }
@@ -659,6 +775,7 @@
                         }
                         else
                         {
+                            require_compatible_operands(OperatorTypeRule::comparison, left, right);
                             left = make_boolean_value(compare_ordered_values(left, right) > 0);
                         }
                     }
@@ -686,7 +803,8 @@
                         {
                             left = make_null_value();
                         }
-                        else if (left.string_flavor != PrgStringFlavor::none ||
+                        else if (require_compatible_operands(OperatorTypeRule::addition, left, right),
+                                 left.string_flavor != PrgStringFlavor::none ||
                                  right.string_flavor != PrgStringFlavor::none)
                         {
                             const auto result = evaluate_date_time_additive(left, right, false, set_callback_);
@@ -734,7 +852,8 @@
                         {
                             left = make_null_value();
                         }
-                        else if (left.string_flavor != PrgStringFlavor::none ||
+                        else if (require_compatible_operands(OperatorTypeRule::subtraction, left, right),
+                                 left.string_flavor != PrgStringFlavor::none ||
                                  right.string_flavor != PrgStringFlavor::none)
                         {
                             const auto result = evaluate_date_time_additive(left, right, true, set_callback_);
@@ -804,7 +923,8 @@
                         {
                             left = make_null_value();
                         }
-                        else if (left.kind == PrgValueKind::currency || right.kind == PrgValueKind::currency)
+                        else if (require_compatible_operands(OperatorTypeRule::multiplication, left, right),
+                                 left.kind == PrgValueKind::currency || right.kind == PrgValueKind::currency)
                         {
                             left = currency_arithmetic(left, right, '*');
                         }
@@ -831,7 +951,8 @@
                         {
                             left = make_null_value();
                         }
-                        else if (left.kind == PrgValueKind::currency || right.kind == PrgValueKind::currency)
+                        else if (require_compatible_operands(OperatorTypeRule::division, left, right),
+                                 left.kind == PrgValueKind::currency || right.kind == PrgValueKind::currency)
                         {
                             const double divisor = value_as_number(right);
                             if (divisor == 0.0)
@@ -872,6 +993,7 @@
                         }
                         else
                         {
+                            require_compatible_operands(OperatorTypeRule::division, left, right);
                             const double divisor = value_as_number(right);
                             if (divisor == 0.0)
                             {
@@ -903,6 +1025,11 @@
                         return make_boolean_value(false);
                     }
                     const PrgValue operand = parse_comparison();
+                    if (is_known_non_logical(operand))
+                    {
+                        // NOT of a non-Logical value is error 9 (installed VFP9), not truthiness.
+                        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.DataTypeMismatch"), 9);
+                    }
                     return operand.is_null ? make_null_value() : make_boolean_value(!value_as_bool(operand));
                 }
                 if (match("+"))
@@ -922,6 +1049,12 @@
                     if (operand.is_null)
                     {
                         return make_null_value();
+                    }
+                    if (const PrgOperandClass operand_class = classify_operand(operand);
+                        operand_class != PrgOperandClass::other && !is_numeric_class(operand_class))
+                    {
+                        // Only Numeric and Currency can be negated; anything else is error 11.
+                        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
                     }
                     if (operand.kind == PrgValueKind::int64)
                     {
@@ -952,6 +1085,7 @@
                     {
                         return make_null_value();
                     }
+                    require_compatible_operands(OperatorTypeRule::power, left, right);
                     return make_number_value(std::pow(value_as_number(left), value_as_number(right)));
                 }
                 return left;
@@ -2868,6 +3002,8 @@
                     return make_empty_value();
                 }
 
+                // The condition must be Logical (installed VFP9: error 11 for any other type).
+                require_logical_operand(condition);
                 return value_as_bool(condition)
                            ? eval_expression_callback_(true_branch_text)
                            : eval_expression_callback_(false_branch_text);
@@ -2918,6 +3054,7 @@
                 for (std::size_t index = 0U; index < paired_argument_count; index += 2U)
                 {
                     const PrgValue condition = eval_expression_callback_(argument_texts[index]);
+                    require_logical_operand(condition);
                     if (value_as_bool(condition))
                     {
                         return eval_expression_callback_(argument_texts[index + 1U]);
