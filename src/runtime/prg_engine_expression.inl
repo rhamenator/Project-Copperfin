@@ -3,6 +3,30 @@
 // This file is #included directly into prg_engine.cpp inside namespace copperfin::runtime.
 // It must not be compiled separately.
 
+    // Built-in functions that return NULL when any argument is NULL (#5936). Installed VFP9 returns a NULL
+    // (VARTYPE X) for all of these (probes retained under ~/temp/vfp9-probes/null-semantics-c24/,
+    // vfp9-result.txt and vfp9-result-funcs.txt). The NULL-aware functions are deliberately absent:
+    // ISNULL, NVL, EVL, EMPTY, ISBLANK, VARTYPE, TYPE, TRANSFORM, IIF, INLIST and BETWEEN define their own
+    // NULL behavior, and ISALPHA/ISDIGIT/ISLOWER/ISUPPER return .F. for NULL. MIN and MAX propagate only in
+    // their scalar form; with one argument they are aggregates, which have their own semantics.
+    inline bool is_null_propagating_builtin(const std::string& function, const std::size_t argument_count)
+    {
+        static const std::set<std::string> kPropagating = {
+            "abs", "acos", "alltrim", "asc", "asin", "at", "at_c", "atan", "atc", "atcc", "atn2", "bitand", "bitclear",
+            "bitlshift", "bitnot", "bitor", "bitrshift", "bitset", "bittest", "bitxor", "cdow", "ceiling", "chr",
+            "chrtran", "chrtranc", "cmonth", "cos", "ctod", "ctot", "day", "difference", "dmy", "dow", "dtoc", "dtor",
+            "dtos", "dtot", "exp", "floor", "gomonth", "hour", "int", "left", "leftc", "len", "lenc", "like", "likec",
+            "log", "log10", "lower", "ltrim", "mdy", "minute", "mod", "month", "mton", "ntom", "occurs", "padc", "padl",
+            "padr", "proper", "rat", "ratc", "replicate", "right", "rightc", "round", "rtod", "rtrim", "sec", "sign",
+            "sin", "soundex", "space", "sqrt", "str", "strconv", "strextract", "strtran", "stuff", "stuffc", "substr",
+            "substrc", "tan", "trim", "ttoc", "ttod", "upper", "val", "week", "year"};
+        if (function == "min" || function == "max")
+        {
+            return argument_count >= 2U;
+        }
+        return kPropagating.contains(function);
+    }
+
     std::optional<PrgValue> evaluate_date_time_function(
         const std::string& function,
         const std::vector<PrgValue>& arguments,
@@ -1140,6 +1164,17 @@
                 std::size_t invocation_end)
             {
                 const std::string function = normalize_identifier(identifier);
+                // NULL in, NULL out for the built-ins VFP9 defines that way (#5936). Member calls such as
+                // oObj.Len(...) are not built-ins and are left to their own dispatch.
+                if (function.find('.') == std::string::npos &&
+                    is_null_propagating_builtin(function, arguments.size()) &&
+                    std::any_of(
+                        arguments.begin(),
+                        arguments.end(),
+                        [](const PrgValue &argument) { return argument.is_null; }))
+                {
+                    return make_null_value();
+                }
                 const auto is_selector_style_native_member_name =
                     [](const std::string &member_name) -> bool
                 {
