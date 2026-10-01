@@ -1219,7 +1219,7 @@ PrgValue make_datetime_value(
     return result;
 }
 
-CurrencyDecimal parse_currency_decimal(const std::string& text) {
+CurrencyDecimal parse_currency_decimal(const std::string& text, const bool allow_storage_minimum) {
     CurrencyDecimal result;
     std::size_t index = 0U;
     const std::size_t end = text.find_last_not_of(" \t") == std::string::npos ? 0U : text.find_last_not_of(" \t") + 1U;
@@ -1263,7 +1263,13 @@ CurrencyDecimal parse_currency_decimal(const std::string& text) {
     }
     const bool round_up = fraction_digits.size() > 4U && fraction_digits[4] >= '5';
     const std::uint64_t magnitude = (whole * 10000U) + fraction + (round_up ? 1U : 0U);
-    if (magnitude > static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())) {
+    const std::uint64_t storage_limit = static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max());
+    if (allow_storage_minimum && negative && magnitude == storage_limit + 1U) {
+        result.status = CurrencyDecimalStatus::ok;
+        result.scaled = std::numeric_limits<std::int64_t>::min();
+        return result;
+    }
+    if (magnitude > storage_limit) {
         return result;
     }
     result.status = CurrencyDecimalStatus::ok;

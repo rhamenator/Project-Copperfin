@@ -525,6 +525,34 @@
                 const bool both_currency = left.kind == PrgValueKind::currency && right.kind == PrgValueKind::currency;
                 const long double left_value = value_as_number(left);
                 const long double right_value = value_as_number(right);
+                if (!both_currency && (operation == '+' || operation == '-'))
+                {
+                    // Keep the Currency operand's exact scaled integer: only the other operand is rounded to
+                    // the four-decimal grid, then the two are added as integers (a Currency above 2^53 scaled
+                    // units would lose digits through a double).
+                    const bool left_is_currency = left.kind == PrgValueKind::currency;
+                    const long double other_scaled = std::round((left_is_currency ? right_value : left_value) * 10000.0L);
+                    if (std::isfinite(other_scaled) && std::fabs(other_scaled) < 9.0e18L)
+                    {
+                        const std::int64_t currency_scaled = left_is_currency ? left.currency_value : right.currency_value;
+                        const std::int64_t other = static_cast<std::int64_t>(other_scaled);
+                        // Currency +/- other, or other - Currency.
+                        const bool subtract_other = operation == '-' && left_is_currency;
+                        const bool negate_currency = operation == '-' && !left_is_currency;
+                        const std::int64_t addend = subtract_other ? -other : other;
+                        if (!(negate_currency && currency_scaled == std::numeric_limits<std::int64_t>::min()))
+                        {
+                            const std::int64_t base = negate_currency ? -currency_scaled : currency_scaled;
+                            if ((addend > 0 && base > std::numeric_limits<std::int64_t>::max() - addend) ||
+                                (addend < 0 && base < std::numeric_limits<std::int64_t>::min() - addend))
+                            {
+                                return make_number_value(static_cast<double>(
+                                    operation == '+' ? left_value + right_value : left_value - right_value));
+                            }
+                            return make_currency_value(base + addend);
+                        }
+                    }
+                }
                 long double scaled = 0.0L;
                 if (both_currency && operation == '*')
                 {
@@ -1157,12 +1185,19 @@
                         ++scan;
                     }
                     const std::size_t number_start = scan;
-                    if (scan < text_.size() && text_[scan] == '-')
+                    const bool minus_sign = scan < text_.size() && text_[scan] == '-';
+                    if (minus_sign)
                     {
                         ++scan;
                     }
                     const auto is_digit_at = [&](const std::size_t at)
                     { return at < text_.size() && std::isdigit(static_cast<unsigned char>(text_[at])) != 0; };
+                    // After the $ only a numeral can follow: in operand position there is no left operand for
+                    // the containment operator, so anything else ($, $., $+3, $a) is VFP9's error 1300.
+                    if (!minus_sign && !is_digit_at(scan) && !(scan < text_.size() && text_[scan] == '.' && is_digit_at(scan + 1U)))
+                    {
+                        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.FunctionNameMissing"), 1300);
+                    }
                     if (is_digit_at(scan) || (scan < text_.size() && text_[scan] == '.' && is_digit_at(scan + 1U)))
                     {
                         while (is_digit_at(scan))
@@ -1178,6 +1213,14 @@
                             }
                         }
                         const CurrencyDecimal literal = parse_currency_decimal(text_.substr(number_start, scan - number_start));
+                        // A second decimal point, an exponent or a trailing letter ($1.2.3, $1E3, $1a) is malformed.
+                        if (scan < text_.size() &&
+                            (text_[scan] == '.' || text_[scan] == 'e' || text_[scan] == 'E' ||
+                             std::isalpha(static_cast<unsigned char>(text_[scan])) != 0))
+                        {
+                            throw PrgCompatibilityError(
+                                runtime_text("Runtime.Prg.Expression.Error.FunctionNameMissing"), 1300);
+                        }
                         position_ = scan;
                         if (literal.status == CurrencyDecimalStatus::out_of_range)
                         {

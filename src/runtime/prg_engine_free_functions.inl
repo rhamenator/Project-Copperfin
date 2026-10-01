@@ -3016,7 +3016,7 @@
                 {
                     return make_currency_value(0);
                 }
-                if (const CurrencyDecimal currency = parse_currency_decimal(text);
+                if (const CurrencyDecimal currency = parse_currency_decimal(text, true);
                     currency.status == CurrencyDecimalStatus::ok)
                 {
                     return make_currency_value(currency.scaled);

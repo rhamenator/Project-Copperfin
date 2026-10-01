@@ -6,6 +6,7 @@
 #include "prg_engine_test_support.h"
 
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <system_error>
@@ -24,7 +25,7 @@ namespace fs = std::filesystem;
 // four decimals, a value outside +-922337203685477.5807 is error 1988, arithmetic with a Currency operand stays
 // Currency (^ is Numeric), and a Y field reads as Currency. The expected text is "<VARTYPE>:<TRANSFORM>" or
 // "ERR<number>". Not in this table, because they are separate issues or untouched: malformed literals
-// ($+3, $1E3, $1.2.3, $; VFP9 reports 1300 or 11), the Currency-preserving functions (ABS, ROUND, INT, CEILING,
+// ($1,000 is a function-argument error in VFP9), the Currency-preserving functions (ABS, ROUND, INT, CEILING,
 // FLOOR, MAX, MIN, MOD, MTON, NTOM; #6039), Currency overflow in arithmetic (error 1988; #6037), the display width
 // of a Numeric result such as $1.25^2 (VFP9 shows 1.5625), and the display of a value above 2^53 whole units (a VFP9
 // double-precision artifact).
@@ -35,6 +36,16 @@ struct Row {
 };
 
 const std::vector<Row> kRows = {
+    // A $ in operand position that is not followed by a numeral is VFP9's error 1300 ("Function name is missing )."),
+    // not a Logical true (result4.txt).
+    {"$1E3", "ERR1300"},
+    {"$1e3", "ERR1300"},
+    {"$1.2.3", "ERR1300"},
+    {"$+3", "ERR1300"},
+    {"$", "ERR1300"},
+    {"$.", "ERR1300"},
+    {"$a", "ERR1300"},
+    {"$1a", "ERR1300"},
     {"$1.25", "Y:$1.25"},
     {"$2.0001", "Y:$2.00"},
     {"$1", "Y:$1.00"},
@@ -189,9 +200,107 @@ void test_currency_transform_honors_settings() {
     fs::remove_all(dir, ignored);
 }
 
+// A real table written by VFP9 (09.00.0000.7423: CREATE TABLE cy (amount Y) and six INSERTs of $12.3456, $-12.3456,
+// $922337203685477.5807, $0, $0.0001 and $-0.0001; retained at ~/temp/vfp9-probes/currency-c25/cy.dbf). The fourth
+// record is patched to the stored minimum (INT64_MIN, -922337203685477.5808), which INSERT cannot produce, so the
+// full signed range is read straight from the bytes (#6061).
+const unsigned char kVfpCurrencyTable[383] = {
+    0x30, 0x1a, 0x0a, 0x01, 0x06, 0x00, 0x00, 0x00, 0x48, 0x01, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00,
+    0x41, 0x4d, 0x4f, 0x55, 0x4e, 0x54, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x01, 0x00, 0x00, 0x00,
+    0x08, 0x04, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x0d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x40, 0xe2, 0x01, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x20, 0xc0, 0x1d, 0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0x20, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0x7f, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x01, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x1a,
+};
+
+void test_vfp_written_currency_table_is_read_exactly() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_vfp_currency_table";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    std::string bytes(reinterpret_cast<const char *>(kVfpCurrencyTable), sizeof(kVfpCurrencyTable));
+    constexpr std::size_t kHeaderLength = 328U;   // the header length stored at offset 8
+    constexpr std::size_t kRecordLength = 9U;     // 1 deletion byte + 8 bytes of Currency
+    // Patch record 4 ($0) to INT64_MIN, little-endian.
+    const std::size_t record4 = kHeaderLength + (3U * kRecordLength) + 1U;
+    for (std::size_t index = 0U; index < 7U; ++index) {
+        bytes[record4 + index] = '\0';
+    }
+    bytes[record4 + 7U] = static_cast<char>(0x80);
+    {
+        std::ofstream out(dir / "cy.dbf", std::ios::binary);
+        out.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+    }
+    write_text(dir / "read.prg",
+        "LOCAL c\n"
+        "SET DECIMALS TO 4\n"
+        "USE cy\n"
+        "c = ''\n"
+        "SCAN\n"
+        "    c = c + VARTYPE(amount) + TRANSFORM(amount) + ';'\n"
+        "ENDSCAN\n"
+        "STRTOFILE(c, 'read.txt')\nRETURN\n");
+    auto options = make_runtime_session_options((dir / "read.prg").string(), dir.string(), false);
+    auto session = copperfin::runtime::PrgRuntimeSession::create(options);
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "VFP currency table: the script should complete: " + state.message);
+    const std::string expected =
+        "Y$12.3456;Y$-12.3456;Y$922,337,203,685,477.5807;Y$-922,337,203,685,477.5808;Y$0.0001;Y$-0.0001;";
+    expect(read_text(dir / "read.txt") == expected,
+        "VFP currency table: expected [" + expected + "], got [" + read_text(dir / "read.txt") + "]");
+    fs::remove_all(dir, ignored);
+}
+
+// A deliberate improvement, not a VFP9 row: VFP9 parses a $ literal through a double, so above about 900.7 billion
+// currency units (2^53 scaled units; the value carries no currency, so this is realistic for a low-value unit such as
+// the rial or dong) it loses the last digits ($900719925474.0003 reads back as ...0004 and $900719925474.0993 + 0 as ...0994, result6.txt).
+// Copperfin keeps the exact scaled integer and adds a Currency and a Number as integers.
+void test_large_currency_arithmetic_is_exact() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_currency_exact";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    write_text(dir / "exact.prg",
+        "LOCAL c\n"
+        "SET DECIMALS TO 4\n"
+        "c = TRANSFORM($900719925474.0003 + 0.0001) + ';' + TRANSFORM($900719925474.0993 + 0) + ';' + "
+        "TRANSFORM($900719925474.0003 - 0.0001) + ';' + TRANSFORM(0.0001 - $900719925474.0003) + ';' + "
+        "TRANSFORM($900719925474.0003 + $0.0001)\n"
+        "STRTOFILE(c, 'exact.txt')\nRETURN\n");
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((dir / "exact.prg").string(), dir.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "exact currency: the script should complete: " + state.message);
+    const std::string expected =
+        "$900,719,925,474.0004;$900,719,925,474.0993;$900,719,925,474.0002;$-900,719,925,474.0002;$900,719,925,474.0004";
+    expect(read_text(dir / "exact.txt") == expected,
+        "exact currency: expected [" + expected + "], got [" + read_text(dir / "exact.txt") + "]");
+    fs::remove_all(dir, ignored);
+}
+
 }  // namespace
 
 int main() {
+    test_vfp_written_currency_table_is_read_exactly();
+    test_large_currency_arithmetic_is_exact();
     test_currency_literals_match_vfp9();
     test_currency_field_is_currency();
     test_currency_transform_honors_settings();

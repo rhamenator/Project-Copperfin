@@ -133,7 +133,9 @@ struct CurrencyDecimal {
     CurrencyDecimalStatus status = CurrencyDecimalStatus::malformed;
     std::int64_t scaled = 0;
 };
-CurrencyDecimal parse_currency_decimal(const std::string& text);
+// `allow_storage_minimum` also accepts -922337203685477.5808, the stored INT64_MIN of a Y field, which a source
+// literal may not use.
+CurrencyDecimal parse_currency_decimal(const std::string& text, bool allow_storage_minimum = false);
 
 // A Currency value as plain decimal text ("-1234.57") with `decimals` places, rounded half away from zero from the
 // four stored (installed VFP9 shows two places by default and follows SET DECIMALS: 0 gives 1235, 4 gives 1234.5678
