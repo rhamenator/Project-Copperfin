@@ -1,5 +1,12 @@
 # Agent Handoff
 
+## Branching (changed 2026-10-01)
+
+Develop on `main`: branch from `origin/main` and open pull requests with
+`--base main`. `v1-development` is retired (see
+`docs/v1-development-retirement-2026-10-01.md`); older text below that says a
+slice "merged into `v1-development`" is historical.
+
 ## Last shipped slice
 
 Issue #6593 (PR #6683, merge `fe91230ea`) finished 2026-09-27: `APPEND FROM

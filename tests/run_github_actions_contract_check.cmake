@@ -128,7 +128,7 @@ file(READ
 string(REPLACE "\r\n" "\n" generated_launcher_workflow
     "${generated_launcher_workflow}")
 set(generated_launcher_pull_request_trigger [=[  pull_request:
-    branches: [main, v1-development]
+    branches: [main]
   workflow_dispatch:]=])
 string(FIND "${generated_launcher_workflow}"
     "${generated_launcher_pull_request_trigger}"
@@ -138,7 +138,7 @@ if(generated_launcher_pull_request_trigger_index EQUAL -1)
         "Generated-launcher validation must run for every pull request to a protected branch")
 endif()
 foreach(required_text IN ITEMS
-        "branches: [main, v1-development]"
+        "branches: [main]"
         "samples/polyglot-dotnet-candidate/**"
         "samples/polyglot-python-sidecar/**"
         "samples/polyglot-r-sidecar/**"
