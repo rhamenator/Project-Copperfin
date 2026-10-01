@@ -216,6 +216,7 @@ struct Program {
 };
 
 Program parse_program(const std::string& path);
+Program parse_program_for_analysis(const std::string& path);
 Program parse_program_source(
     const std::string& logical_path,
     const std::string& source_text,

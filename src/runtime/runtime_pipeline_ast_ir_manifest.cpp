@@ -344,7 +344,7 @@ std::string build_ast_manifest_source(const RuntimePackagePlan& plan) {
                 copperfin::platform::path_from_utf8_string(asset.source_path).extension()))) != ".prg") {
             continue;
         }
-        const Program program = parse_program(asset.source_path);
+        const Program program = parse_program_for_analysis(asset.source_path);
         if (!first_file) {
             stream << ",\n";
         }
@@ -411,7 +411,7 @@ std::string build_ir_manifest_source(const RuntimePackagePlan& plan) {
                 copperfin::platform::path_from_utf8_string(asset.source_path).extension()))) != ".prg") {
             continue;
         }
-        const Program program = parse_program(asset.source_path);
+        const Program program = parse_program_for_analysis(asset.source_path);
         if (!first_file) {
             stream << ",\n";
         }

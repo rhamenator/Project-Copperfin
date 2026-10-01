@@ -931,6 +931,10 @@ int run_runtime_bridge_invocation(
     std::optional<copperfin::runtime::PrgRuntimeSession> created_session;
     try {
         created_session.emplace(copperfin::runtime::PrgRuntimeSession::create(session_options));
+    } catch (const copperfin::runtime::PrgSourceDiagnostic& diagnostic) {
+        std::cout << "status: error\n";
+        print_error_line(catalog, diagnostic.what());
+        return 6;
     } catch (const std::exception&) {
         std::cout << "status: error\n";
         print_error_line(
@@ -4092,6 +4096,12 @@ int run_runtime_host_main_impl(int argc, char** argv) {
     std::optional<copperfin::runtime::PrgRuntimeSession> created_session;
     try {
         created_session.emplace(copperfin::runtime::PrgRuntimeSession::create(session_options));
+    } catch (const copperfin::runtime::PrgSourceDiagnostic& diagnostic) {
+        // A missing #INCLUDE, an unbalanced #IF/#ENDIF or an exceeded source limit names its own
+        // file and line, in every mode including a verified package.
+        std::cout << "status: error\n";
+        print_error_line(catalog, diagnostic.what());
+        return security_enabled ? 8 : 4;
     } catch (const std::exception&) {
         std::cout << "status: error\n";
         print_error_line(

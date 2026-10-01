@@ -135,7 +135,7 @@ std::string build_fxp_token_manifest_source(const RuntimePackagePlan& plan) {
                 copperfin::platform::path_from_utf8_string(asset.source_path).extension()))) != ".prg") {
             continue;
         }
-        const Program program = parse_program(asset.source_path);
+        const Program program = parse_program_for_analysis(asset.source_path);
         stream << "program=" << quote_manifest_value(asset.relative_path) << "\n";
         append_fxp_statement_lines(stream, "MAIN", program.main.statements);
         for (const auto& routine_entry : program.routines) {

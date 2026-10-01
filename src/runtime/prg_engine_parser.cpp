@@ -44,8 +44,16 @@ struct PreprocessorState {
         bool current_active = true;
         bool branch_taken = false;
         bool else_seen = false;
+        // Where the conditional was opened, for the unterminated/duplicate-#ELSE diagnostics.
+        std::string opened_file{};
+        std::size_t opened_line = 0U;
+        std::string opened_directive{};
     };
     std::vector<ConditionalFrame> conditionals;
+    // Runtime execution stops on an active #INCLUDE it cannot resolve (#5729). Packaging and
+    // analysis parse a program without the project's trusted external include roots, which the
+    // package planner resolves itself, so that parse keeps tolerating an unresolved include.
+    bool missing_include_is_error = true;
 };
 
 std::string strip_inline_comment(const std::string& line) {
@@ -842,24 +850,45 @@ bool is_endif_directive(const std::string& line) {
     return uppercase_copy(trim_copy(line)) == "#ENDIF";
 }
 
-void push_preprocessor_conditional(PreprocessorState& state, const bool condition_value) {
+void push_preprocessor_conditional(
+    PreprocessorState& state,
+    const bool condition_value,
+    const std::string& file,
+    const std::size_t line,
+    const std::string& directive) {
     const bool parent_active = is_preprocessor_active(state);
     state.conditionals.push_back({
         .parent_active = parent_active,
         .current_active = parent_active && condition_value,
         .branch_taken = condition_value,
-        .else_seen = false
+        .else_seen = false,
+        .opened_file = file,
+        .opened_line = line,
+        .opened_directive = directive
     });
 }
 
-void handle_preprocessor_else(PreprocessorState& state) {
-    if (state.conditionals.empty()) {
-        return;
+// Structure errors (#5730). A conditional belongs to the file that opened it: a stray #ELSE or
+// #ENDIF, including one in an included header that would close its caller's #IF, is rejected, and
+// so is a second #ELSE. `conditional_floor` is the conditional depth this file was entered with.
+void handle_preprocessor_else(
+    PreprocessorState& state,
+    const std::size_t conditional_floor,
+    const std::string& file,
+    const std::size_t line) {
+    if (state.conditionals.size() <= conditional_floor) {
+        throw PrgSourceDiagnostic(runtime_text(
+            "Runtime.Prg.Parser.Error.MismatchedConditional",
+            {{"directive", "#ELSE"}, {"path", file}, {"line", std::to_string(line)}}));
     }
     auto& frame = state.conditionals.back();
     if (frame.else_seen) {
-        frame.current_active = false;
-        return;
+        throw PrgSourceDiagnostic(runtime_text(
+            "Runtime.Prg.Parser.Error.DuplicateElse",
+            {{"path", file},
+             {"line", std::to_string(line)},
+             {"openedPath", frame.opened_file},
+             {"openedLine", std::to_string(frame.opened_line)}}));
     }
 
     frame.current_active = frame.parent_active && !frame.branch_taken;
@@ -867,10 +896,17 @@ void handle_preprocessor_else(PreprocessorState& state) {
     frame.else_seen = true;
 }
 
-void handle_preprocessor_endif(PreprocessorState& state) {
-    if (!state.conditionals.empty()) {
-        state.conditionals.pop_back();
+void handle_preprocessor_endif(
+    PreprocessorState& state,
+    const std::size_t conditional_floor,
+    const std::string& file,
+    const std::size_t line) {
+    if (state.conditionals.size() <= conditional_floor) {
+        throw PrgSourceDiagnostic(runtime_text(
+            "Runtime.Prg.Parser.Error.MismatchedConditional",
+            {{"directive", "#ENDIF"}, {"path", file}, {"line", std::to_string(line)}}));
     }
+    state.conditionals.pop_back();
 }
 
 bool try_parse_include_directive(const std::string& line, std::string& include_path_text) {
@@ -1006,6 +1042,10 @@ void append_preprocessed_logical_lines(
     const std::vector<LogicalLine> source_lines = source_override == nullptr
         ? load_logical_lines(path)
         : load_logical_lines_from_text(*source_override);
+    // Conditionals are scoped to the file that opens them (#5730): remember the depth this file was
+    // entered with, and reject anything left open (or closed) across the boundary.
+    const std::size_t conditional_floor = state.conditionals.size();
+    const std::string source_label = normalize_path(copperfin::platform::path_to_utf8_string(path));
     for (const auto& logical_line : source_lines) {
         const std::string trimmed = trim_copy(logical_line.text);
         if (trimmed.empty()) {
@@ -1019,28 +1059,37 @@ void append_preprocessed_logical_lines(
         if (try_parse_ifdef_directive(trimmed, conditional_identifier)) {
             push_preprocessor_conditional(
                 state,
-                state.defines.contains(normalize_identifier(conditional_identifier)));
+                state.defines.contains(normalize_identifier(conditional_identifier)),
+                source_label,
+                logical_line.line_number,
+                "#IFDEF");
             continue;
         }
         if (try_parse_ifndef_directive(trimmed, conditional_identifier)) {
             push_preprocessor_conditional(
                 state,
-                !state.defines.contains(normalize_identifier(conditional_identifier)));
+                !state.defines.contains(normalize_identifier(conditional_identifier)),
+                source_label,
+                logical_line.line_number,
+                "#IFNDEF");
             continue;
         }
         std::string conditional_expression;
         if (try_parse_if_directive(trimmed, conditional_expression)) {
             push_preprocessor_conditional(
                 state,
-                evaluate_preprocessor_condition_expression(conditional_expression, state.defines));
+                evaluate_preprocessor_condition_expression(conditional_expression, state.defines),
+                source_label,
+                logical_line.line_number,
+                "#IF");
             continue;
         }
         if (is_else_directive(trimmed)) {
-            handle_preprocessor_else(state);
+            handle_preprocessor_else(state, conditional_floor, source_label, logical_line.line_number);
             continue;
         }
         if (is_endif_directive(trimmed)) {
-            handle_preprocessor_endif(state);
+            handle_preprocessor_endif(state, conditional_floor, source_label, logical_line.line_number);
             continue;
         }
 
@@ -1060,6 +1109,30 @@ void append_preprocessed_logical_lines(
                 nullptr);
             std::error_code exists_error;
             const bool include_exists = fs::exists(include_path, exists_error);
+            // An active #INCLUDE whose target cannot be found or read stops the program with a file
+            // and line instead of being dropped (#5729). Includes inside an inactive branch never
+            // reach this point. A metadata lookup that itself failed (for example permission denied)
+            // is "cannot be read", not "not found": absence is only reported when the lookup succeeded.
+            if (include_source == nullptr && !require_source_text_overrides && state.missing_include_is_error) {
+                const auto include_error = [&](const char* key) {
+                    return PrgSourceDiagnostic(runtime_text(
+                        key,
+                        {{"include", include_path_text},
+                         {"path", source_label},
+                         {"line", std::to_string(logical_line.line_number)}}));
+                };
+                if (exists_error) {
+                    throw include_error("Runtime.Prg.Parser.Error.IncludeFileUnreadable");
+                }
+                if (!include_exists) {
+                    throw include_error("Runtime.Prg.Parser.Error.IncludeFileNotFound");
+                }
+                std::error_code regular_error;
+                if (!fs::is_regular_file(include_path, regular_error) || regular_error ||
+                    !std::ifstream(include_path, std::ios::binary)) {
+                    throw include_error("Runtime.Prg.Parser.Error.IncludeFileUnreadable");
+                }
+            }
             if (include_source != nullptr || (!require_source_text_overrides && include_exists)) {
                 if (state.include_stack.insert(include_key).second) {
                     append_preprocessed_logical_lines(
@@ -1073,9 +1146,13 @@ void append_preprocessed_logical_lines(
                     state.include_stack.erase(include_key);
                 }
             } else if (require_source_text_overrides) {
-                throw std::runtime_error(runtime_text(
+                // Fail closed on a verified package, with the same file-and-line location as an
+                // ordinary missing include.
+                throw PrgSourceDiagnostic(runtime_text(
                     "Runtime.Prg.Parser.Error.VerifiedIncludeSourceUnavailable",
-                    {{"path", include_key}}));
+                    {{"include", include_path_text},
+                     {"path", source_label},
+                     {"line", std::to_string(logical_line.line_number)}}));
             }
             continue;
         }
@@ -1096,11 +1173,24 @@ void append_preprocessed_logical_lines(
         expanded_line.text = expand_indirect_store_target_macros(expanded_line.text, state.defines);
         output_lines.push_back(std::move(expanded_line));
     }
+    if (state.conditionals.size() > conditional_floor) {
+        // A header (or the program itself) ended with a conditional still open: without this the
+        // rest of the caller silently stays inactive and the runtime reports a normal completion.
+        const auto& open_frame = state.conditionals.back();
+        throw PrgSourceDiagnostic(runtime_text(
+            "Runtime.Prg.Parser.Error.UnterminatedConditional",
+            {{"directive", open_frame.opened_directive},
+             {"path", open_frame.opened_file},
+             {"line", std::to_string(open_frame.opened_line)}}));
+    }
 }
 
-std::vector<LogicalLine> load_preprocessed_logical_lines(const std::string& path) {
+std::vector<LogicalLine> load_preprocessed_logical_lines(
+    const std::string& path,
+    const bool missing_include_is_error = true) {
     std::vector<LogicalLine> output_lines;
     PreprocessorState state;
+    state.missing_include_is_error = missing_include_is_error;
     append_preprocessed_logical_lines(
         copperfin::platform::path_from_utf8_string(path), state, true, output_lines);
     return output_lines;
@@ -1920,7 +2010,8 @@ Program parse_program_impl(
     const std::string& path,
     const std::string* source_override,
     const std::map<std::string, std::string>* source_text_overrides = nullptr,
-    const bool require_source_text_overrides = false) {
+    const bool require_source_text_overrides = false,
+    const bool missing_include_is_error = true) {
     Program program;
     program.path = normalize_path(path);
     program.source_lines = source_override == nullptr
@@ -1938,7 +2029,7 @@ Program parse_program_impl(
         }
     };
     const std::vector<LogicalLine> logical_lines = source_override == nullptr
-        ? load_preprocessed_logical_lines(path)
+        ? load_preprocessed_logical_lines(path, missing_include_is_error)
         : load_preprocessed_logical_lines_from_text(
               path,
               *source_override,
@@ -3184,6 +3275,13 @@ Program parse_program_impl(
 
 Program parse_program(const std::string& path) {
     return parse_program_impl(path, nullptr, nullptr, false);
+}
+
+// For packaging and static analysis: a missing #INCLUDE is not an error here because the package
+// planner resolves includes itself (including trusted external include roots this parse does not
+// know about). Conditional-structure errors still apply.
+Program parse_program_for_analysis(const std::string& path) {
+    return parse_program_impl(path, nullptr, nullptr, false, false);
 }
 
 Program parse_program_source(

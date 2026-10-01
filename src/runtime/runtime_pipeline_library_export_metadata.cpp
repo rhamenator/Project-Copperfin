@@ -24,7 +24,7 @@ std::vector<std::string> collect_library_exported_symbols(const RuntimePackagePl
             continue;
         }
 
-        const Program program = parse_program(asset.source_path);
+        const Program program = parse_program_for_analysis(asset.source_path);
         for (const auto& [_, routine] : program.routines) {
             const std::string export_name = normalize_export_symbol(routine.name);
             if (export_name.empty()) {
@@ -56,7 +56,7 @@ std::map<std::string, std::size_t> collect_library_export_parameter_counts(const
             continue;
         }
 
-        const Program program = parse_program(asset.source_path);
+        const Program program = parse_program_for_analysis(asset.source_path);
         for (const auto& [_, routine] : program.routines) {
             const std::string export_name = normalize_export_symbol(routine.name);
             if (export_name.empty()) {
@@ -112,7 +112,7 @@ std::map<std::string, std::vector<std::string>> collect_library_export_parameter
             continue;
         }
 
-        const Program program = parse_program(asset.source_path);
+        const Program program = parse_program_for_analysis(asset.source_path);
         for (const auto& [_, routine] : program.routines) {
             const std::string export_name = normalize_export_symbol(routine.name);
             if (export_name.empty()) {
@@ -161,7 +161,7 @@ std::map<std::string, std::string> collect_library_export_parameter_declaration_
             continue;
         }
 
-        const Program program = parse_program(asset.source_path);
+        const Program program = parse_program_for_analysis(asset.source_path);
         for (const auto& [_, routine] : program.routines) {
             const std::string export_name = normalize_export_symbol(routine.name);
             if (export_name.empty()) {
@@ -206,7 +206,7 @@ std::map<std::string, std::string> collect_library_export_routine_kinds(const Ru
             continue;
         }
 
-        const Program program = parse_program(asset.source_path);
+        const Program program = parse_program_for_analysis(asset.source_path);
         for (const auto& [_, routine] : program.routines) {
             const std::string export_name = normalize_export_symbol(routine.name);
             if (export_name.empty()) {
@@ -239,7 +239,7 @@ std::map<std::string, SourceLocation> collect_library_export_routine_locations(c
             continue;
         }
 
-        const Program program = parse_program(asset.source_path);
+        const Program program = parse_program_for_analysis(asset.source_path);
         for (const auto& [_, routine] : program.routines) {
             const std::string export_name = normalize_export_symbol(routine.name);
             if (export_name.empty()) {
