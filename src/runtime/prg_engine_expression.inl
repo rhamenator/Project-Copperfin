@@ -3,28 +3,46 @@
 // This file is #included directly into prg_engine.cpp inside namespace copperfin::runtime.
 // It must not be compiled separately.
 
-    // Built-in functions that return NULL when any argument is NULL (#5936). Installed VFP9 returns a NULL
-    // (VARTYPE X) for all of these (probes retained under ~/temp/vfp9-probes/null-semantics-c24/,
-    // vfp9-result.txt and vfp9-result-funcs.txt). The NULL-aware functions are deliberately absent:
-    // ISNULL, NVL, EVL, EMPTY, ISBLANK, VARTYPE, TYPE, TRANSFORM, IIF, INLIST and BETWEEN define their own
-    // NULL behavior, and ISALPHA/ISDIGIT/ISLOWER/ISUPPER return .F. for NULL. MIN and MAX propagate only in
-    // their scalar form; with one argument they are aggregates, which have their own semantics.
+    // Built-in functions that return NULL when any argument is NULL (#5936), with the argument counts each
+    // accepts. Installed VFP9 returns a NULL (VARTYPE X) for all of these (probes retained under
+    // ~/temp/vfp9-probes/null-semantics-c24/, vfp9-result.txt and vfp9-result-funcs.txt). The rule applies
+    // only when the call has a supported argument count, so a malformed call or a user routine that merely
+    // shares a built-in's name (a one-argument FUNCTION LEFT, say) still takes the normal dispatch path.
+    // The NULL-aware functions are deliberately absent: ISNULL, NVL, EVL, EMPTY, ISBLANK, VARTYPE, TYPE,
+    // TRANSFORM, IIF, INLIST and BETWEEN define their own NULL behavior, and ISALPHA/ISDIGIT/ISLOWER/ISUPPER
+    // return .F. for NULL. MIN and MAX propagate only in their scalar form; with one argument they are
+    // aggregates, which have their own semantics. The last group are date functions Copperfin implements
+    // that VFP9 does not have (the probe reports an error for them); they follow their siblings.
     inline bool is_null_propagating_builtin(const std::string& function, const std::size_t argument_count)
     {
-        static const std::set<std::string> kPropagating = {
-            "abs", "acos", "alltrim", "asc", "asin", "at", "at_c", "atan", "atc", "atcc", "atn2", "bitand", "bitclear",
-            "bitlshift", "bitnot", "bitor", "bitrshift", "bitset", "bittest", "bitxor", "cdow", "ceiling", "chr",
-            "chrtran", "chrtranc", "cmonth", "cos", "ctod", "ctot", "day", "difference", "dmy", "dow", "dtoc", "dtor",
-            "dtos", "dtot", "exp", "floor", "gomonth", "hour", "int", "left", "leftc", "len", "lenc", "like", "likec",
-            "log", "log10", "lower", "ltrim", "mdy", "minute", "mod", "month", "mton", "ntom", "occurs", "padc", "padl",
-            "padr", "proper", "rat", "ratc", "replicate", "right", "rightc", "round", "rtod", "rtrim", "sec", "sign",
-            "sin", "soundex", "space", "sqrt", "str", "strconv", "strextract", "strtran", "stuff", "stuffc", "substr",
-            "substrc", "tan", "trim", "ttoc", "ttod", "upper", "val", "week", "year"};
-        if (function == "min" || function == "max")
-        {
-            return argument_count >= 2U;
-        }
-        return kPropagating.contains(function);
+        struct Arity { std::size_t minimum; std::size_t maximum; };
+        static const std::map<std::string, Arity> kPropagating = {
+            {"abs", {1, 1}}, {"acos", {1, 1}}, {"alltrim", {1, 2}}, {"asc", {1, 1}}, {"asin", {1, 1}},
+            {"at", {2, 3}}, {"at_c", {2, 3}}, {"atan", {1, 1}}, {"atc", {2, 3}}, {"atcc", {2, 3}},
+            {"atn2", {2, 2}}, {"bitand", {2, 255}}, {"bitclear", {2, 3}}, {"bitlshift", {2, 2}},
+            {"bitnot", {1, 1}}, {"bitor", {2, 255}}, {"bitrshift", {2, 2}}, {"bitset", {2, 3}},
+            {"bittest", {2, 2}}, {"bitxor", {2, 255}}, {"cdow", {1, 1}}, {"ceiling", {1, 1}}, {"chr", {1, 1}},
+            {"chrtran", {3, 3}}, {"chrtranc", {3, 3}}, {"cmonth", {1, 1}}, {"cos", {1, 1}}, {"ctod", {1, 2}},
+            {"ctot", {1, 1}}, {"day", {1, 1}}, {"difference", {2, 2}}, {"dmy", {1, 1}}, {"dow", {1, 2}},
+            {"dtoc", {1, 2}}, {"dtor", {1, 1}}, {"dtos", {1, 1}}, {"dtot", {1, 1}}, {"exp", {1, 1}},
+            {"floor", {1, 1}}, {"gomonth", {2, 2}}, {"hour", {1, 1}}, {"int", {1, 1}}, {"left", {2, 2}},
+            {"leftc", {2, 2}}, {"len", {1, 1}}, {"lenc", {1, 1}}, {"like", {2, 2}}, {"likec", {2, 2}},
+            {"log", {1, 1}}, {"log10", {1, 1}}, {"lower", {1, 1}}, {"ltrim", {1, 2}}, {"mdy", {1, 1}},
+            {"minute", {1, 1}}, {"mod", {2, 2}}, {"month", {1, 1}}, {"mton", {1, 1}}, {"ntom", {1, 1}},
+            {"occurs", {2, 2}}, {"padc", {2, 3}}, {"padl", {2, 3}}, {"padr", {2, 3}}, {"proper", {1, 1}},
+            {"rat", {2, 3}}, {"ratc", {2, 3}}, {"replicate", {2, 2}}, {"right", {2, 2}}, {"rightc", {2, 2}},
+            {"round", {2, 2}}, {"rtod", {1, 1}}, {"rtrim", {1, 2}}, {"sec", {1, 1}}, {"sign", {1, 1}},
+            {"sin", {1, 1}}, {"soundex", {1, 1}}, {"space", {1, 1}}, {"sqrt", {1, 1}}, {"str", {1, 3}},
+            {"strconv", {2, 5}}, {"strextract", {3, 5}}, {"strtran", {2, 6}}, {"stuff", {4, 4}},
+            {"stuffc", {4, 4}}, {"substr", {2, 3}}, {"substrc", {2, 3}}, {"tan", {1, 1}}, {"trim", {1, 2}},
+            {"ttoc", {1, 2}}, {"ttod", {1, 1}}, {"upper", {1, 1}}, {"val", {1, 1}}, {"week", {1, 3}},
+            {"year", {1, 1}}, {"min", {2, 255}}, {"max", {2, 255}},
+            // Copperfin date extensions (not VFP9 functions).
+            {"quarter", {1, 1}}, {"eomonth", {1, 2}}, {"dtoj", {1, 1}}, {"ttoj", {1, 1}}, {"ttos", {1, 1}},
+            {"jtod", {1, 1}}, {"jtot", {1, 1}}, {"isleapyear", {1, 1}}, {"stod", {1, 1}}};
+        const auto found = kPropagating.find(function);
+        return found != kPropagating.end() && argument_count >= found->second.minimum &&
+               argument_count <= found->second.maximum;
     }
 
     std::optional<PrgValue> evaluate_date_time_function(
@@ -1164,17 +1182,6 @@
                 std::size_t invocation_end)
             {
                 const std::string function = normalize_identifier(identifier);
-                // NULL in, NULL out for the built-ins VFP9 defines that way (#5936). Member calls such as
-                // oObj.Len(...) are not built-ins and are left to their own dispatch.
-                if (function.find('.') == std::string::npos &&
-                    is_null_propagating_builtin(function, arguments.size()) &&
-                    std::any_of(
-                        arguments.begin(),
-                        arguments.end(),
-                        [](const PrgValue &argument) { return argument.is_null; }))
-                {
-                    return make_null_value();
-                }
                 const auto is_selector_style_native_member_name =
                     [](const std::string &member_name) -> bool
                 {
@@ -1253,6 +1260,18 @@
                         }
                     }
                     return ole_invoke_callback_(base_name, member_path, arguments, argument_references);
+                }
+                // NULL in, NULL out for the built-ins VFP9 defines that way (#5936). This runs after the
+                // member-call and native-collection handling above, so only a call that is going to use
+                // the built-in implementation (a supported argument count, no user routine in the way) is
+                // answered here.
+                if (is_null_propagating_builtin(function, arguments.size()) &&
+                    std::any_of(
+                        arguments.begin(),
+                        arguments.end(),
+                        [](const PrgValue &argument) { return argument.is_null; }))
+                {
+                    return make_null_value();
                 }
                 if ((function == "min" || function == "max") && arguments.size() >= 2U)
                 {

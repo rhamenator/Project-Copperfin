@@ -103,7 +103,13 @@ const std::vector<Row> kRows = {
         {"LEN('abc')", "N:3"},
         {"UPPER('abc')", "C:ABC"},
         {"ABS(-3)", "N:3"},
-        {"SUBSTR('abcdef',2,3)", "C:bcd"}
+        {"SUBSTR('abcdef',2,3)", "C:bcd"},
+        // Copperfin date extensions (not VFP9 functions, so these rows follow their VFP9 siblings and are not
+        // VFP-backed): NULL in, NULL out.
+        {"QUARTER(.NULL.)", "X:.NULL."},
+        {"EOMONTH(.NULL.)", "X:.NULL."},
+        {"DTOJ(.NULL.)", "X:.NULL."},
+        {"ISLEAPYEAR(.NULL.)", "X:.NULL."}
 };
 
 std::string evaluate_all(const fs::path &dir) {
@@ -175,11 +181,59 @@ void test_a_null_dbf_field_propagates_through_builtins() {
     fs::remove_all(dir, ignored);
 }
 
+// The rule applies only to a call the built-in would actually answer. A call with an unsupported argument
+// count is not turned into NULL (installed VFP9 reports an invalid argument count for these; Copperfin's
+// normal dispatch is unchanged), and a user routine that merely shares a built-in's name is still reached.
+void test_propagation_does_not_intercept_malformed_calls_or_user_routines() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_null_builtins_arity";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir / "script");
+    write_text(dir / "script" / "arity.prg",
+        "LOCAL cOut, oEx, x\n"
+        "cOut = ''\n"
+        "TRY\nx = ABS(.NULL., 1)\ncOut = cOut + 'abs2=' + VARTYPE(x) + CHR(10)\nCATCH TO oEx\ncOut = cOut + 'abs2=ERR' + CHR(10)\nENDTRY\n"
+        "TRY\nx = LEN(.NULL., 2)\ncOut = cOut + 'len2=' + VARTYPE(x) + CHR(10)\nCATCH TO oEx\ncOut = cOut + 'len2=ERR' + CHR(10)\nENDTRY\n"
+        "TRY\nx = LEFT(.NULL.)\ncOut = cOut + 'left1=' + VARTYPE(x) + CHR(10)\nCATCH TO oEx\ncOut = cOut + 'left1=ERR' + CHR(10)\nENDTRY\n"
+        "STRTOFILE(cOut, 'out.txt')\n"
+        "RETURN\n");
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((dir / "script" / "arity.prg").string(), dir.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "NULL builtins arity: the script should complete: " + state.message);
+    const std::string out = read_text(dir / "out.txt");
+    for (const char *name : {"abs2=", "len2=", "left1="}) {
+        const std::size_t at = out.find(name);
+        expect(at != std::string::npos, std::string("NULL builtins arity: missing ") + name);
+        if (at != std::string::npos) {
+            const std::string rest = out.substr(at + std::string(name).size(), 1U);
+            expect(rest != "X", std::string("NULL builtins arity: a malformed ") + name + " call must not become NULL, got [" + out + "]");
+        }
+    }
+
+    // A user routine named like a built-in is reached when the call is not a valid built-in call.
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir / "script");
+    write_text(dir / "script" / "udf.prg",
+        "x = LEFT(.NULL.)\n"
+        "STRTOFILE(VARTYPE(x) + ':' + IIF(ISNULL(x), 'NULL', x), 'udf.txt')\n"
+        "RETURN\n"
+        "FUNCTION LEFT\nLPARAMETERS pValue\nRETURN 'udf'\nENDFUNC\n");
+    auto udf_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((dir / "script" / "udf.prg").string(), dir.string(), false));
+    const auto udf_state = udf_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(udf_state.completed, "NULL builtins udf: the script should complete: " + udf_state.message);
+    expect(read_text(dir / "udf.txt") == "C:udf",
+        "NULL builtins udf: a one-argument user FUNCTION LEFT must be reached, got [" + read_text(dir / "udf.txt") + "]");
+    fs::remove_all(dir, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_builtins_return_null_for_a_null_argument_as_vfp9_does();
     test_a_null_dbf_field_propagates_through_builtins();
+    test_propagation_does_not_intercept_malformed_calls_or_user_routines();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;
