@@ -5,6 +5,7 @@
 #include "prg_engine_numeric_functions.h"
 
 #include "localized_text.h"
+#include "prg_compatibility_error.h"
 #include "prg_engine_helpers.h"
 
 #include <algorithm>
@@ -187,11 +188,97 @@ std::optional<double> round_decimal_value(const double value, const int decimal_
     return negative ? -*rounded_value : *rounded_value;
 }
 
+// Currency arguments keep their exact four-decimal scaled integer and their Currency type (#6039, installed VFP9,
+// probe retained at ~/temp/vfp9-probes/currency-c25/result3.txt). The scaled unit is 10,000. For a Currency
+// CEILING rounds away from zero and FLOOR and INT truncate toward zero (CEILING($-12.3456) is $-13, FLOOR is $-12:
+// VFP9's Currency-specific behavior, the opposite of Numeric); ROUND is half away from zero at the requested place
+// (a negative place rounds to tens, hundreds, ...); MOD takes the sign of the divisor and is error 1307 for a
+// zero divisor. A result that cannot be held in a Currency falls back to a Number.
+constexpr std::int64_t kCurrencyUnit = 10000;
+
+bool is_currency_argument(const PrgValue& value) {
+    return value.kind == PrgValueKind::currency && !value.is_null;
+}
+
+std::uint64_t currency_magnitude(const std::int64_t scaled) {
+    return scaled < 0 ? static_cast<std::uint64_t>(-(scaled + 1)) + 1U : static_cast<std::uint64_t>(scaled);
+}
+
+PrgValue currency_from_magnitude(const std::uint64_t magnitude, const bool negative) {
+    if (magnitude > static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())) {
+        const double value = static_cast<double>(magnitude) / static_cast<double>(kCurrencyUnit);
+        return make_number_value(negative ? -value : value);
+    }
+    const std::int64_t scaled = static_cast<std::int64_t>(magnitude);
+    return make_currency_value(negative ? -scaled : scaled);
+}
+
+PrgValue currency_whole_unit(const std::int64_t scaled, const bool away_from_zero) {
+    const std::uint64_t magnitude = currency_magnitude(scaled);
+    const std::uint64_t unit = static_cast<std::uint64_t>(kCurrencyUnit);
+    std::uint64_t whole = magnitude / unit;
+    if (away_from_zero && magnitude % unit != 0U) {
+        ++whole;
+    }
+    return currency_from_magnitude(whole * unit, scaled < 0);
+}
+
+PrgValue currency_round(const std::int64_t scaled, const int decimals) {
+    if (decimals >= 4) {
+        return make_currency_value(scaled);
+    }
+    const int power = 4 - decimals;   // how many scaled digits are dropped
+    if (power > 19) {
+        return make_currency_value(0);
+    }
+    std::uint64_t divisor = 1U;
+    for (int step = 0; step < power; ++step) {
+        divisor *= 10U;
+    }
+    const std::uint64_t magnitude = currency_magnitude(scaled);
+    const std::uint64_t rounded = ((magnitude + (divisor / 2U)) / divisor) * divisor;
+    return currency_from_magnitude(rounded, scaled < 0 && rounded != 0U);
+}
+
 }  // namespace
 
 std::optional<PrgValue> evaluate_numeric_function(
     const std::string& function,
     const std::vector<PrgValue>& arguments) {
+    if (!arguments.empty() && is_currency_argument(arguments[0])) {
+        const std::int64_t scaled = arguments[0].currency_value;
+        if (function == "int" || function == "floor") {
+            return currency_whole_unit(scaled, false);
+        }
+        if (function == "ceiling") {
+            return currency_whole_unit(scaled, true);
+        }
+        if (function == "abs" || function == "fabs") {
+            return currency_from_magnitude(currency_magnitude(scaled), false);
+        }
+        if (function == "round") {
+            const double requested = arguments.size() >= 2U ? value_as_number(arguments[1]) : 0.0;
+            const double truncated = std::trunc(requested);
+            const int decimals = !std::isfinite(truncated) ? 0
+                                 : truncated > 100.0       ? 100
+                                 : truncated < -100.0      ? -100
+                                                           : static_cast<int>(truncated);
+            return currency_round(scaled, decimals);
+        }
+        if (function == "mod" && arguments.size() >= 2U) {
+            const std::int64_t divisor = arguments[1].kind == PrgValueKind::currency
+                                             ? arguments[1].currency_value
+                                             : static_cast<std::int64_t>(std::llround(value_as_number(arguments[1]) * 10000.0));
+            if (divisor == 0) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.DivisionByZero"), 1307);
+            }
+            std::int64_t remainder = scaled % divisor;
+            if (remainder != 0 && (remainder < 0) != (divisor < 0)) {
+                remainder += divisor;
+            }
+            return make_currency_value(remainder);
+        }
+    }
     if (function == "int" && !arguments.empty()) {
         return make_number_value(std::trunc(value_as_number(arguments[0])));
     }

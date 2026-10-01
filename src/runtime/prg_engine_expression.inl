@@ -1552,6 +1552,16 @@
                             result = candidate;
                         }
                     }
+                    // MAX/MIN stay Currency only when every argument is Currency; a mix is Numeric (installed
+                    // VFP9: MAX($1,$2) is Y, MAX($1,2) and MAX(1,$2) are N).
+                    if (result.kind == PrgValueKind::currency &&
+                        std::any_of(
+                            arguments.begin(),
+                            arguments.end(),
+                            [](const PrgValue &argument) { return argument.kind != PrgValueKind::currency; }))
+                    {
+                        return make_number_value(value_as_number(result));
+                    }
                     return result;
                 }
                 if (function == "count" || function == "sum" || function == "avg" || function == "average" || function == "min" || function == "max")
