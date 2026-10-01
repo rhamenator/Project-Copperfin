@@ -872,6 +872,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_date_function_types
             test_prg_engine_numeric_equality
             test_prg_engine_mdy_dmy
+            test_prg_engine_typed_null
             test_prg_engine_null_semantics
             test_prg_engine_null_builtins
             test_prg_engine_preprocessor_diagnostics

@@ -4978,22 +4978,41 @@ namespace copperfin::runtime
                 double sum = 0.0;
                 double min_value = 0.0;
                 double max_value = 0.0;
+                // COUNT(expr) counts the non-NULL values, blank strings included (installed VFP9, probe
+                // result3.txt), and COUNT(DISTINCT expr) counts each distinct non-NULL value once.
+                std::string counted_expression = trim_copy(value_expression);
+                bool count_distinct = false;
+                std::set<std::string> distinct_values_seen;
+                if (counted_expression.size() > 9U && uppercase_copy(counted_expression.substr(0U, 9U)) == "DISTINCT ")
+                {
+                    count_distinct = true;
+                    counted_expression = trim_copy(counted_expression.substr(9U));
+                }
                 for (const std::size_t recno : record_numbers)
                 {
                     move_cursor_to(cursor, static_cast<long long>(recno));
                     if (aggregate.function == "count")
                     {
-                        if (value_expression.empty() || trim_copy(value_expression) == "*")
+                        if (counted_expression.empty() || counted_expression == "*")
                         {
                             ++matched_count;
                             continue;
                         }
-                        const PrgValue value = evaluate_expression(value_expression, frame, &cursor);
-                        if (!value.is_null && value.kind != PrgValueKind::empty &&
-                            !(value.kind == PrgValueKind::string && trim_copy(value.string_value).empty()))
+                        const PrgValue value = evaluate_expression(counted_expression, frame, &cursor);
+                        if (!cursor_alive())
                         {
-                            ++matched_count;
+                            // The operand closed the cursor: stop before touching it again.
+                            return make_empty_value();
                         }
+                        if (value.is_null)
+                        {
+                            continue;
+                        }
+                        if (count_distinct && !distinct_values_seen.insert(aggregate_distinct_key(value)).second)
+                        {
+                            continue;
+                        }
+                        ++matched_count;
                         continue;
                     }
 
@@ -5402,7 +5421,8 @@ namespace copperfin::runtime
                                     aggregate.arguments,
                                     frame,
                                     &cursor,
-                                    plan.where_expression));
+                                    plan.where_expression,
+                                    true));
                             if (!cursor_alive() || !joined_cursor_alive())
                             {
                                 cursor_lost = true;
@@ -5610,7 +5630,8 @@ namespace copperfin::runtime
                             aggregate.arguments,
                             frame,
                             &cursor,
-                            plan.where_expression));
+                            plan.where_expression,
+                            true));
                 }
                 materialized_rows.push_back(std::move(query_row));
             }

@@ -25,15 +25,35 @@
 
         PrgValue aggregate_function_value(
             const std::string &function,
-            const std::vector<std::string> &raw_arguments,
+            const std::vector<std::string> &input_arguments,
             const Frame &frame,
             CursorState *preferred_cursor = nullptr,
             // A SQL SELECT passes its WHERE expression here instead of appending it to the argument list,
             // where it could be taken for a work-area designator (the number 1) or a WHILE clause. It is a
             // plain row filter, and a non-Logical value is error 1833 as in VFP9.
-            const std::string &sql_where_expression = std::string{})
+            const std::string &sql_where_expression = std::string{},
+            // A SQL SELECT aggregate: COUNT(expr) counts the rows where expr is not NULL (installed VFP9: over
+            // 10, 20, NULL, NULL COUNT(*) is 4 and COUNT(field) is 2), not the rows where it is truthy.
+            const bool sql_aggregate = false)
         {
             const StatementConditionKind condition_kind = StatementConditionKind::for_while;
+            std::vector<std::string> raw_arguments = input_arguments;
+            std::string count_non_null_expression;
+            bool count_distinct = false;
+            std::set<std::string> distinct_values_seen;
+            if (sql_aggregate && function == "count" && raw_arguments.size() == 1U &&
+                trim_copy(raw_arguments.front()) != "*")
+            {
+                count_non_null_expression = trim_copy(raw_arguments.front());
+                // COUNT(DISTINCT expr) counts each distinct non-NULL value once.
+                if (count_non_null_expression.size() > 9U &&
+                    uppercase_copy(count_non_null_expression.substr(0U, 9U)) == "DISTINCT " )
+                {
+                    count_distinct = true;
+                    count_non_null_expression = trim_copy(count_non_null_expression.substr(9U));
+                }
+                raw_arguments.clear();
+            }
             const auto is_numeric_aggregate_field = [](char field_type)
             {
                 switch (field_type)
@@ -159,6 +179,7 @@
                 }
             }
 
+            const CursorGenerationReference count_cursor_reference = capture_cursor_generation_reference(cursor);
             const CursorPositionSnapshot original = capture_cursor_snapshot(*cursor);
             double sum = 0.0;
             double min_value = 0.0;
@@ -188,6 +209,25 @@
 
                 if (function == "count")
                 {
+                    if (!count_non_null_expression.empty())
+                    {
+                        const PrgValue counted_value = evaluate_expression(count_non_null_expression, frame, cursor);
+                        // The operand can run user code that closes this cursor: re-resolve it before any
+                        // further use instead of dereferencing the old pointer.
+                        cursor = resolve_cursor_generation_reference(count_cursor_reference);
+                        if (cursor == nullptr)
+                        {
+                            return make_empty_value();
+                        }
+                        if (counted_value.is_null)
+                        {
+                            continue;
+                        }
+                        if (count_distinct && !distinct_values_seen.insert(aggregate_distinct_key(counted_value)).second)
+                        {
+                            continue;
+                        }
+                    }
                     ++matched_count;
                     continue;
                 }
@@ -759,7 +799,13 @@
                     return false;
                 }
 
-                const std::string function = normalize_identifier(assignment.aggregate_expression.substr(0U, open_paren));
+                std::string function = normalize_identifier(assignment.aggregate_expression.substr(0U, open_paren));
+                if (function == "cnt")
+                {
+                    // CNT() is CALCULATE's name for the record count; it was treated as an unknown numeric
+                    // aggregate and returned 0.
+                    function = "count";
+                }
                 const std::string inner = trim_copy(assignment.aggregate_expression.substr(open_paren + 1U, close_paren - open_paren - 1U));
                 std::vector<std::string> raw_arguments;
                 if (!inner.empty())

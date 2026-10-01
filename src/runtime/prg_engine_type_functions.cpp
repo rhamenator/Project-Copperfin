@@ -58,8 +58,29 @@ std::string normalize_type_expression(std::string expression_text) {
     return expression_text;
 }
 
-std::string vartype_code(const PrgValue& value) {
+// The type letter of a NULL that came from a table field, as installed VFP9 reports it (probe retained at
+// ~/temp/vfp9-probes/typed-null-c24/result.txt): Integer, Double and Float are N, a Memo is C for VARTYPE(x, .T.)
+// but M for TYPE(), and every other field type keeps its own letter.
+std::string null_field_type_letter(const PrgValue& value, const bool memo_is_character) {
+    switch (value.null_declared_type) {
+        case 'I':
+        case 'B':
+        case 'F':
+            return "N";
+        case 'M':
+            return memo_is_character ? "C" : "M";
+        case 'V':
+            return "C";
+        default:
+            return std::string(1U, value.null_declared_type);
+    }
+}
+
+std::string vartype_code(const PrgValue& value, const bool type_if_null = false) {
     if (value.kind == PrgValueKind::empty) {
+        if (value.is_null && type_if_null && value.null_declared_type != '\0') {
+            return null_field_type_letter(value, true);
+        }
         return value.is_null ? "X" : "U";
     }
     if (value.kind == PrgValueKind::boolean) {
@@ -148,14 +169,28 @@ std::optional<PrgValue> evaluate_type_function(
         return make_boolean_value(false);
     }
     if (function == "vartype" && !arguments.empty()) {
-        return make_string_value(vartype_code(arguments[0]));
+        // VARTYPE(expr, .T.) reports the declared type of a NULL field instead of X. The second argument must be
+        // Logical (error 11 otherwise, NULL included: VARTYPE(x, .NULL.) is error 11, installed VFP9).
+        bool type_if_null = false;
+        if (arguments.size() >= 2U) {
+            if (classify_operand(arguments[1]) != PrgOperandClass::logical) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+            }
+            type_if_null = value_as_bool(arguments[1]);
+        }
+        return make_string_value(vartype_code(arguments[0], type_if_null));
     }
     if (function == "type" && !arguments.empty()) {
         const std::string expr = normalize_type_expression(value_as_string(arguments[0]));
         if (array_exists_callback(expr)) {
             return make_string_value("A");
         }
-        return make_string_value(vartype_code(eval_expression_callback(expr)));
+        const PrgValue evaluated = eval_expression_callback(expr);
+        if (evaluated.is_null && evaluated.null_declared_type != '\0') {
+            // TYPE() looks through a NULL to the field's type (a Memo stays M).
+            return make_string_value(null_field_type_letter(evaluated, false));
+        }
+        return make_string_value(vartype_code(evaluated));
     }
     if (function == "iif" && arguments.size() >= 3U) {
         return value_as_bool(arguments[0]) ? arguments[1] : arguments[2];

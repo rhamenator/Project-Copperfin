@@ -49,6 +49,10 @@ struct PrgValue {
     std::uint64_t uint64_value = 0;
     // VFP Currency is a signed 64-bit integer scaled by 10,000.
     std::int64_t currency_value = 0;
+    // For a NULL read from a table field: the field's declared type letter (N, C, D, T, L, I, Y, B, F, M ...), so
+    // VARTYPE(x, .T.) and TYPE() can report the type a NULL field would have had (#6506). Zero for a NULL that has
+    // no declared type (the .NULL. literal, or the result of an operation on a NULL).
+    char null_declared_type = '\0';
 };
 
 struct SourceLocation {

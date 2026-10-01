@@ -476,18 +476,23 @@ native/COM object lifetime rather than `CursorState`.
 `RQ-CF-PRG-STATEMENT-CONDITION-TYPES-001`. The date functions of #6142 follow
 `RQ-CF-PRG-DATE-FUNCTION-ARGUMENT-TYPES-001`. The numeric-equality epsilon of #6034
 follows `RQ-CF-PRG-NUMERIC-EQUALITY-001` (with `REPLACE` digit loss, #6736, under
-`RQ-CF-DBF-NUMERIC-FIELD-STORE-001`). Still open here: the typed null of #6506.
+`RQ-CF-DBF-NUMERIC-FIELD-STORE-001`). The typed null of #6506 follows
+`RQ-CF-PRG-TYPED-NULL-001`. Every issue listed for this cluster now has a fix merged or in
+review; what remains are the documented gaps in those rows (the NULL result of an
+operation and a variable assigned `.NULL.` stay untyped, VFP9's decimals-based rounding of
+computed results is not modelled, `SELECT DISTINCT`/`GROUP BY` keep their tolerance under
+#5905, and multi-expression `CALCULATE` is #6738).
 
 ~12 issues: #5934, #5936, #5939, #5940, #5942, #5979, #6034, #6140,
 #6141, #6142. `EMPTY()`/`ISBLANK()` report `NULL` as empty/blank instead
 of `.F.`, logical operators and arithmetic silently truth-test or
 coerce non-Logical/NULL operands, `INLIST` coerces null comparisons,
-numeric equality merges distinct values within an epsilon. **Directly
-overlaps issue #6506** (already tracked as a singleton follow-up above,
-filed from this session's #6047 work) — when #6506 is picked up, survey
-this cluster's issues first, since several may already be covered by
-whatever `PrgValue`/`is_null` representation change #6506 ends up
-choosing.
+numeric equality merges distinct values within an epsilon. Issue #6506
+overlapped this cluster and was handled with its design option 2: `PrgValue` keeps its
+kinds and gains `null_declared_type` (the declared type of a NULL read from a field),
+which `VARTYPE(x, .T.)` and `TYPE()` use; the other items its text raised (`EMPTY`,
+`NVL`, `EVL`, aggregates on NULL) were verified against VFP9 and are covered by
+`RQ-CF-PRG-NULL-OPERATOR-SEMANTICS-001` and `RQ-CF-PRG-TYPED-NULL-001`.
 
 ### 25. Currency/numeric-precision type fidelity — `NOT STARTED`
 
@@ -688,10 +693,9 @@ otherwise clustered above):
   cancelled explicit lock attempt now halts the task. Formerly assigned to
   cluster 1.
 - #6506 (`PrgValue`/`VARTYPE()`/`EMPTY()`/`NVL()`/`EVL()`/aggregate-on-NULL
-  semantics redesign) — open, `agent-approved`, and assigned to cluster 24.
-  Deliberately deferred out of #6047's storage-layer scope; needs VFP9
-  VM verification for several behaviors before implementing (see the
-  issue body for the specific open questions).
+  semantics redesign) — fixed by the typed-null change
+  (`RQ-CF-PRG-TYPED-NULL-001`); its open VFP9 questions were verified (aggregates
+  skip NULLs, unlike the issue's assumption). Assigned to cluster 24.
 - #6492 (`PREVIEW` inside a quoted REPORT/LABEL `TO FILE` path incorrectly
   enters preview mode) — reproduced, not fixed, and assigned to cluster 6
   because it is a REPORT/LABEL output-command parser defect.
@@ -708,8 +712,8 @@ otherwise clustered above):
 3. Use cluster 32 for the shared file-command operand/parser seam and
    cluster 33 for malformed PRG source admission before treating either set as
    isolated command defects.
-4. Read cluster 24 with #6506 before choosing a typed-NULL implementation;
-   work clusters 4, 13, and 18 where their DBF/DBC/migration invariants share
+4. Cluster 24 (with the typed-NULL design of #6506) is implemented apart from the gaps
+   its traceability rows list; work clusters 4, 13, and 18 where their DBF/DBC/migration invariants share
    evidence.
 5. Treat clusters 14–15 as cross-cutting safety work, cluster 17 by function
    family, clusters 7–8 as larger feature work, and cluster 26
