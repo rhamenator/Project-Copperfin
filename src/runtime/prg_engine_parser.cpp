@@ -11,10 +11,14 @@
 #include "prg_engine_helpers.h"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <istream>
+#include <streambuf>
+#include <functional>
 #include <locale>
 #include <optional>
 #include <sstream>
@@ -64,16 +68,102 @@ struct PreprocessorState {
 // alone, with no allocation). `label` is the normalized path the diagnostic names.
 void admit_source_size(const std::string& label, const std::uint64_t bytes, const PrgSourceLimits& limits) {
     if (bytes > limits.max_source_bytes) {
-        throw std::runtime_error(runtime_text(
+        throw PrgSourceDiagnostic(runtime_text(
             "Runtime.Prg.Parser.Error.SourceTooLarge",
             {{"path", label}, {"bytes", std::to_string(bytes)}, {"limit", std::to_string(limits.max_source_bytes)}}));
     }
 }
 
+// Size used only for the cheap early aggregate check; the real byte count comes from the bounded read.
 std::uint64_t source_file_size(const std::filesystem::path& path) {
     std::error_code error;
     const std::uintmax_t size = std::filesystem::file_size(path, error);
     return error ? 0U : static_cast<std::uint64_t>(size);
+}
+
+// An existing source whose size cannot be determined (a FIFO, a device, a failed stat) cannot be
+// bounded in advance, so it is refused rather than read.
+[[noreturn]] void throw_source_size_unknown(const std::string& label) {
+    throw PrgSourceDiagnostic(runtime_text("Runtime.Prg.Parser.Error.SourceSizeUnknown", {{"path", label}}));
+}
+
+// Reads a source file through one opened handle and never holds more than max_source_bytes + one
+// chunk: a regular file that grows after its size was checked is stopped as soon as it crosses the
+// limit, and the returned bytes are what was actually read (not a possibly stale size). A path that
+// does not exist yields an empty source, as before.
+std::string read_source_file_bounded(
+    const std::filesystem::path& path,
+    const std::string& label,
+    const PrgSourceLimits& limits,
+    bool* opened = nullptr) {
+    if (opened != nullptr) {
+        *opened = false;
+    }
+    std::error_code status_error;
+    const auto status = std::filesystem::status(path, status_error);
+    if (!status_error && !std::filesystem::exists(status)) {
+        return {};
+    }
+    if (status_error || !std::filesystem::is_regular_file(status)) {
+        throw_source_size_unknown(label);
+    }
+    std::error_code size_error;
+    const std::uintmax_t declared = std::filesystem::file_size(path, size_error);
+    if (size_error) {
+        throw_source_size_unknown(label);
+    }
+    admit_source_size(label, static_cast<std::uint64_t>(declared), limits);
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        return {};
+    }
+    if (opened != nullptr) {
+        *opened = true;
+    }
+    std::string bytes;
+    bytes.reserve(static_cast<std::size_t>(std::min<std::uintmax_t>(declared, limits.max_source_bytes)));
+    std::array<char, 65536> chunk{};
+    std::uint64_t total = 0U;
+    while (input.read(chunk.data(), static_cast<std::streamsize>(chunk.size())) || input.gcount() > 0) {
+        const auto count = static_cast<std::size_t>(input.gcount());
+        total += count;
+        admit_source_size(label, total, limits);
+        bytes.append(chunk.data(), count);
+    }
+    return bytes;
+}
+
+// A read-only stream over bytes the caller already owns, so parsing a bounded source does not copy it.
+class MemoryInputBuffer final : public std::streambuf {
+public:
+    explicit MemoryInputBuffer(const std::string& bytes) {
+        char* begin = const_cast<char*>(bytes.data());
+        setg(begin, begin, begin + bytes.size());
+    }
+};
+
+// std::getline grows its string to the whole line before any check can run, so one huge physical line
+// would be allocated in full. This reads at most `limit` bytes of a line and calls `too_long` (which
+// throws) as soon as a longer one is seen. Returns false at end of input with nothing read.
+bool read_bounded_line(
+    std::istream& input,
+    std::string& line,
+    const std::size_t limit,
+    const std::function<void(std::size_t)>& too_long) {
+    line.clear();
+    bool any = false;
+    char ch = '\0';
+    while (input.get(ch)) {
+        any = true;
+        if (ch == '\n') {
+            return true;
+        }
+        if (line.size() >= limit) {
+            too_long(line.size() + 1U);
+        }
+        line.push_back(ch);
+    }
+    return any;
 }
 
 std::string strip_inline_comment(const std::string& line) {
@@ -271,7 +361,7 @@ std::vector<LogicalLine> load_logical_lines(
     const std::string& label) {
     std::vector<LogicalLine> lines;
     const auto line_too_long = [&](const std::size_t line_number, const std::size_t bytes) {
-        return std::runtime_error(runtime_text(
+        return PrgSourceDiagnostic(runtime_text(
             "Runtime.Prg.Parser.Error.LogicalLineTooLong",
             {{"path", label},
              {"line", std::to_string(line_number)},
@@ -280,7 +370,7 @@ std::vector<LogicalLine> load_logical_lines(
     };
     const auto count_line = [&]() {
         if (lines.size() >= limits.max_source_lines) {
-            throw std::runtime_error(runtime_text(
+            throw PrgSourceDiagnostic(runtime_text(
                 "Runtime.Prg.Parser.Error.TooManySourceLines",
                 {{"path", label}, {"limit", std::to_string(limits.max_source_lines)}}));
         }
@@ -292,11 +382,13 @@ std::vector<LogicalLine> load_logical_lines(
     std::string current_text;
     bool continuing = false;
 
-    while (std::getline(input, raw_line)) {
+    const auto bounded_line = [&]() {
+        return read_bounded_line(input, raw_line, limits.max_logical_line_bytes, [&](const std::size_t bytes) {
+            throw line_too_long(line_number + 1U, bytes);
+        });
+    };
+    while (bounded_line()) {
         ++line_number;
-        if (raw_line.size() > limits.max_logical_line_bytes) {
-            throw line_too_long(line_number, raw_line.size());
-        }
         if (!raw_line.empty() && raw_line.back() == '\r') {
             raw_line.pop_back();
         }
@@ -305,7 +397,7 @@ std::vector<LogicalLine> load_logical_lines(
         if (!continuing && (uppercase_copy(text_probe) == "TEXT" || starts_with_insensitive(text_probe, "TEXT "))) {
             const std::size_t block_start = line_number;
             std::string block_text;
-            while (std::getline(input, raw_line)) {
+            while (bounded_line()) {
                 ++line_number;
                 if (!raw_line.empty() && raw_line.back() == '\r') {
                     raw_line.pop_back();
@@ -370,11 +462,18 @@ std::vector<LogicalLine> load_logical_lines(
     return lines;
 }
 
-std::vector<LogicalLine> load_logical_lines(const std::filesystem::path& path, const PrgSourceLimits& limits) {
+std::vector<LogicalLine> load_logical_lines(
+    const std::filesystem::path& path,
+    const PrgSourceLimits& limits,
+    std::size_t* bytes_read = nullptr) {
     const std::string label = normalize_path(copperfin::platform::path_to_utf8_string(path));
-    admit_source_size(label, source_file_size(path), limits);
-    std::ifstream input(path, std::ios::binary);
-    return input ? load_logical_lines(input, limits, label) : std::vector<LogicalLine>{};
+    const std::string bytes = read_source_file_bounded(path, label, limits);
+    if (bytes_read != nullptr) {
+        *bytes_read = bytes.size();
+    }
+    MemoryInputBuffer buffer(bytes);
+    std::istream input(&buffer);
+    return load_logical_lines(input, limits, label);
 }
 
 std::vector<LogicalLine> load_logical_lines_from_text(
@@ -382,15 +481,31 @@ std::vector<LogicalLine> load_logical_lines_from_text(
     const PrgSourceLimits& limits,
     const std::string& label) {
     admit_source_size(label, source_text.size(), limits);
-    std::istringstream input(source_text);
+    MemoryInputBuffer buffer(source_text);
+    std::istream input(&buffer);
     return load_logical_lines(input, limits, label);
 }
 
-std::vector<std::string> load_source_lines(std::istream& input) {
+std::vector<std::string> load_source_lines(
+    std::istream& input,
+    const PrgSourceLimits& limits,
+    const std::string& label) {
     std::vector<std::string> lines;
 
     std::string raw_line;
-    while (std::getline(input, raw_line)) {
+    std::size_t line_number = 0;
+    const auto bounded_line = [&]() {
+        return read_bounded_line(input, raw_line, limits.max_logical_line_bytes, [&](const std::size_t bytes) {
+            throw PrgSourceDiagnostic(runtime_text(
+                "Runtime.Prg.Parser.Error.LogicalLineTooLong",
+                {{"path", label},
+                 {"line", std::to_string(line_number + 1U)},
+                 {"bytes", std::to_string(bytes)},
+                 {"limit", std::to_string(limits.max_logical_line_bytes)}}));
+        });
+    };
+    while (bounded_line()) {
+        ++line_number;
         if (!raw_line.empty() && raw_line.back() == '\r') {
             raw_line.pop_back();
         }
@@ -400,11 +515,19 @@ std::vector<std::string> load_source_lines(std::istream& input) {
     return lines;
 }
 
-std::vector<std::string> load_source_lines(const std::string& path, const PrgSourceLimits& limits) {
+std::vector<std::string> load_source_lines(
+    const std::string& path,
+    const PrgSourceLimits& limits,
+    std::size_t* bytes_read = nullptr) {
     const std::filesystem::path native_path = copperfin::platform::path_from_utf8_string(path);
-    admit_source_size(normalize_path(path), source_file_size(native_path), limits);
-    std::ifstream input(native_path, std::ios::binary);
-    return input ? load_source_lines(input) : std::vector<std::string>{};
+    const std::string label = normalize_path(path);
+    const std::string bytes = read_source_file_bounded(native_path, label, limits);
+    if (bytes_read != nullptr) {
+        *bytes_read = bytes.size();
+    }
+    MemoryInputBuffer buffer(bytes);
+    std::istream input(&buffer);
+    return load_source_lines(input, limits, label);
 }
 
 std::vector<std::string> load_source_lines_from_text(
@@ -412,8 +535,9 @@ std::vector<std::string> load_source_lines_from_text(
     const PrgSourceLimits& limits,
     const std::string& label) {
     admit_source_size(label, source_text.size(), limits);
-    std::istringstream input(source_text);
-    return load_source_lines(input);
+    MemoryInputBuffer buffer(source_text);
+    std::istream input(&buffer);
+    return load_source_lines(input, limits, label);
 }
 
 bool is_preprocessor_identifier_start(const char ch) {
@@ -1100,19 +1224,25 @@ void append_preprocessed_logical_lines(
     const std::string source_label = normalize_path(copperfin::platform::path_to_utf8_string(path));
     // Resource ceilings (#5731): one program's source plus every include it pulls in is bounded in
     // total, checked from sizes before any further file is read.
-    const std::uint64_t source_bytes =
-        source_override == nullptr ? source_file_size(path) : static_cast<std::uint64_t>(source_override->size());
-    state.aggregate_source_bytes += static_cast<std::size_t>(source_bytes);
-    if (state.aggregate_source_bytes > state.limits.max_aggregate_source_bytes) {
-        throw std::runtime_error(runtime_text(
-            "Runtime.Prg.Parser.Error.AggregateSourceTooLarge",
-            {{"path", source_label},
-             {"bytes", std::to_string(state.aggregate_source_bytes)},
-             {"limit", std::to_string(state.limits.max_aggregate_source_bytes)}}));
-    }
+    const auto check_aggregate = [&](const std::uint64_t total) {
+        if (total > state.limits.max_aggregate_source_bytes) {
+            throw PrgSourceDiagnostic(runtime_text(
+                "Runtime.Prg.Parser.Error.AggregateSourceTooLarge",
+                {{"path", source_label},
+                 {"bytes", std::to_string(total)},
+                 {"limit", std::to_string(state.limits.max_aggregate_source_bytes)}}));
+        }
+    };
+    // A cheap early check from the declared size, then the real check against what was actually read.
+    check_aggregate(
+        state.aggregate_source_bytes +
+        (source_override == nullptr ? source_file_size(path) : static_cast<std::uint64_t>(source_override->size())));
+    std::size_t source_bytes = source_override == nullptr ? 0U : source_override->size();
     const std::vector<LogicalLine> source_lines = source_override == nullptr
-        ? load_logical_lines(path, state.limits)
+        ? load_logical_lines(path, state.limits, &source_bytes)
         : load_logical_lines_from_text(*source_override, state.limits, source_label);
+    state.aggregate_source_bytes += source_bytes;
+    check_aggregate(state.aggregate_source_bytes);
     // Conditionals are scoped to the file that opens them (#5730): remember the depth this file was
     // entered with, and reject anything left open (or closed) across the boundary.
     const std::size_t conditional_floor = state.conditionals.size();
@@ -1206,7 +1336,7 @@ void append_preprocessed_logical_lines(
             if (include_source != nullptr || (!require_source_text_overrides && include_exists)) {
                 if (state.include_stack.insert(include_key).second) {
                     if (++state.include_files > state.limits.max_include_files) {
-                        throw std::runtime_error(runtime_text(
+                        throw PrgSourceDiagnostic(runtime_text(
                             "Runtime.Prg.Parser.Error.TooManyIncludeFiles",
                             {{"path", source_label},
                              {"line", std::to_string(logical_line.line_number)},
@@ -2096,8 +2226,9 @@ Program parse_program_impl(
     const PrgSourceLimits& limits = {}) {
     Program program;
     program.path = normalize_path(path);
+    program.source_bytes = source_override == nullptr ? 0U : source_override->size();
     program.source_lines = source_override == nullptr
-        ? load_source_lines(path, limits)
+        ? load_source_lines(path, limits, &program.source_bytes)
         : load_source_lines_from_text(*source_override, limits, program.path);
     program.main.name = "main";
 

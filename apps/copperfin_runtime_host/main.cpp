@@ -3753,6 +3753,12 @@ int run_runtime_host_main_impl(int argc, char** argv) {
             }
         }
         verified_startup_bytes = startup_snapshot.bytes;
+        // Unique source bytes preloaded for a verified package, bounded in total before the session can
+        // apply its own aggregate limit (the preload keeps aliases of every source in memory).
+        std::uint64_t preloaded_source_bytes =
+            packaged_source_text_extension(startup_source) ? startup_snapshot.bytes.size() : 0U;
+        const std::uint64_t preload_aggregate_limit =
+            static_cast<std::uint64_t>(copperfin::runtime::RuntimeSessionOptions{}.max_aggregate_source_bytes);
         if (security_enabled && packaged_source_text_extension(startup_source)) {
             add_verified_deployment_bytes(
                 verified_source_texts,
@@ -3805,6 +3811,18 @@ int run_runtime_host_main_impl(int argc, char** argv) {
                     return 8;
                 }
                 if (source_text) {
+                    preloaded_source_bytes += source_snapshot.bytes.size();
+                    if (preloaded_source_bytes > preload_aggregate_limit) {
+                        std::cout << "status: error\n";
+                        print_error_line(
+                            catalog,
+                            localized_message(
+                                catalog,
+                                "RuntimeHost.Error.AggregateSourceTooLarge",
+                                {{"fileName", copperfin::platform::path_to_utf8_string(source_path.filename())},
+                                 {"limit", std::to_string(preload_aggregate_limit)}}));
+                        return 8;
+                    }
                     add_verified_deployment_bytes(
                         verified_source_texts,
                         source_path,

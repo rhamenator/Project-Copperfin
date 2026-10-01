@@ -12,6 +12,10 @@
 #include <system_error>
 #include <vector>
 
+#if !defined(_WIN32)
+#include <sys/stat.h>
+#endif
+
 namespace {
 
 using namespace copperfin::test_support;
@@ -29,6 +33,7 @@ struct Result {
     bool completed;
     std::string message;
     bool marker;
+    bool typed;   // the failure was a PrgSourceDiagnostic, which the runtime host shows as-is
 };
 
 using Files = std::vector<std::pair<std::string, std::string>>;
@@ -46,9 +51,11 @@ Result run(const fs::path &dir, const Files &files, const std::function<void(cop
     try {
         auto session = copperfin::runtime::PrgRuntimeSession::create(options);
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-        return {state.completed, state.message, fs::exists(dir / "marker.txt")};
+        return {state.completed, state.message, fs::exists(dir / "marker.txt"), false};
+    } catch (const copperfin::runtime::PrgSourceDiagnostic &error) {
+        return {false, error.what(), fs::exists(dir / "marker.txt"), true};
     } catch (const std::exception &error) {
-        return {false, error.what(), fs::exists(dir / "marker.txt")};
+        return {false, error.what(), fs::exists(dir / "marker.txt"), false};
     }
 }
 
@@ -72,6 +79,7 @@ void test_oversized_source_is_refused_from_its_size() {
     padded += "* " + std::string(2000U, 'x') + "\n";
     Result r = run(root / "over", {{"main.prg", padded}}, [](auto &options) { options.max_source_bytes = 1000U; });
     expect(!r.completed && !r.marker, "#5731: a source over the limit must not run: " + r.message);
+    expect(r.typed, "#5731: a source-limit failure is a PrgSourceDiagnostic so the host shows it as-is: " + r.message);
     expect(mentions(r.message, {"main.prg", std::to_string(padded.size()), "1000"}),
         "#5731: the diagnostic should name the file, its size and the limit, got: " + r.message);
 
@@ -137,6 +145,17 @@ void test_line_length_and_line_count_limits() {
         [](auto &options) { options.max_logical_line_bytes = 1024U; });
     expect(!r.completed && !r.marker && mentions(r.message, {"main.prg", "2", "1024"}),
         "#5731: a line over the logical-line limit is refused with its line number: " + r.message);
+    expect(r.typed, "#5731: a line-limit failure is a PrgSourceDiagnostic: " + r.message);
+
+    // One huge physical line: the reader stops after the limit instead of growing the whole line, so
+    // the reported size is the limit plus one byte, not the 2 MiB the file holds.
+    r = run(root / "one_huge_line",
+        {{"main.prg", std::string(2U * 1024U * 1024U, 'a')}},
+        [](auto &options) { options.max_logical_line_bytes = 1024U; });
+    expect(!r.completed && r.typed && mentions(r.message, {"main.prg", "1025", "1024"}),
+        "#5731: a single huge line is refused after reading about a limit's worth, not in full: " + r.message);
+    expect(r.message.find("2097152") == std::string::npos,
+        "#5731: the full line length must never be read into memory: " + r.message);
 
     // A continued statement is one logical line, bounded as a whole.
     std::string continued = "x = 'a' + ;\n";
@@ -175,8 +194,8 @@ void test_include_count_and_aggregate_limits() {
     main_source += kMarkerProgram;
     files.push_back({"main.prg", main_source});
     Result r = run(root / "count_over", files, [](auto &options) { options.max_include_files = 10U; });
-    expect(!r.completed && !r.marker && mentions(r.message, {"main.prg", "10"}),
-        "#5731: more includes than the limit are refused: " + r.message);
+    expect(!r.completed && !r.marker && mentions(r.message, {"main.prg", "10"}) && r.typed,
+        "#5731: more includes than the limit are refused with a typed diagnostic: " + r.message);
     r = run(root / "count_ok", files, [](auto &options) { options.max_include_files = 20U; });
     expect(r.completed && r.marker, "#5731: exactly the allowed number of includes runs: " + r.message);
 
@@ -185,10 +204,44 @@ void test_include_count_and_aggregate_limits() {
     r = run(root / "aggregate",
         {{"main.prg", "#INCLUDE \"a.h\"\n#INCLUDE \"b.h\"\n" + kMarkerProgram + filler}, {"a.h", filler}, {"b.h", filler}},
         [](auto &options) { options.max_source_bytes = 2000U; options.max_aggregate_source_bytes = 1200U; });
-    expect(!r.completed && !r.marker && mentions(r.message, {"1200"}),
-        "#5731: the program and its includes are bounded in total: " + r.message);
+    expect(!r.completed && !r.marker && mentions(r.message, {"1200"}) && r.typed,
+        "#5731: the program and its includes are bounded in total, with a typed diagnostic: " + r.message);
     fs::remove_all(root, ignored);
 }
+
+#if !defined(_WIN32)
+// A source whose size cannot be determined (a FIFO here) cannot be bounded in advance, so it is
+// refused without being opened: reading it could block or never end.
+void test_a_source_without_a_determinable_size_is_refused_unopened() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_source_limits_fifo";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    write_text(dir / "main.prg", "DO pipe.prg\n" + kMarkerProgram);
+    if (::mkfifo((dir / "pipe.prg").c_str(), 0600) != 0) {
+        fs::remove_all(dir, ignored);
+        return;   // the host filesystem cannot make a FIFO; nothing to verify here
+    }
+    auto options = make_runtime_session_options((dir / "main.prg").string(), dir.string(), false);
+    std::string message;
+    bool typed = false;
+    try {
+        auto session = copperfin::runtime::PrgRuntimeSession::create(options);
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        message = state.message;
+        expect(!state.completed, "#5731: DO of a FIFO source must not complete");
+    } catch (const copperfin::runtime::PrgSourceDiagnostic &error) {
+        typed = true;
+        message = error.what();
+    } catch (const std::exception &error) {
+        message = error.what();
+    }
+    expect(message.find("pipe.prg") != std::string::npos, "#5731: the diagnostic names the FIFO source, got: " + message);
+    expect(!fs::exists(dir / "marker.txt"), "#5731: nothing after the refused DO may run");
+    (void)typed;
+    fs::remove_all(dir, ignored);
+}
+#endif
 
 // Every program a session loads stays cached, so loaded sources are bounded in total too.
 void test_session_aggregate_limit_applies_across_loaded_programs() {
@@ -226,6 +279,9 @@ int main() {
     test_a_sparse_file_beyond_the_default_limit_is_refused_without_reading_it();
     test_line_length_and_line_count_limits();
     test_include_count_and_aggregate_limits();
+#if !defined(_WIN32)
+    test_a_source_without_a_determinable_size_is_refused_unopened();
+#endif
     test_session_aggregate_limit_applies_across_loaded_programs();
     test_limits_are_configurable_from_config_fpw();
     if (const int failures = test_failures(); failures != 0) {

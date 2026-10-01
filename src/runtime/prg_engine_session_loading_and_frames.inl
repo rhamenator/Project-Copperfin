@@ -116,7 +116,7 @@
             if (incoming_source_bytes > options.max_source_bytes)
             {
                 // One file over the per-file limit is reported as that, not as an aggregate overflow.
-                throw std::runtime_error(runtime_text(
+                throw PrgSourceDiagnostic(runtime_text(
                     "Runtime.Prg.Parser.Error.SourceTooLarge",
                     {{"path", normalized},
                      {"bytes", std::to_string(incoming_source_bytes)},
@@ -124,7 +124,7 @@
             }
             if (loaded_source_bytes + incoming_source_bytes > options.max_aggregate_source_bytes)
             {
-                throw std::runtime_error(runtime_text(
+                throw PrgSourceDiagnostic(runtime_text(
                     "Runtime.Prg.Parser.Error.AggregateSourceTooLarge",
                     {{"path", normalized},
                      {"bytes", std::to_string(loaded_source_bytes + incoming_source_bytes)},
@@ -147,7 +147,10 @@
                                  options.require_source_text_overrides,
                                  source_limits)
                            : parse_program(normalized, source_limits)));
-            loaded_source_bytes += static_cast<std::size_t>(incoming_source_bytes);
+            // Count what was actually read, not the size seen before reading.
+            loaded_source_bytes += inserted->second.source_bytes != 0U
+                                       ? inserted->second.source_bytes
+                                       : static_cast<std::size_t>(incoming_source_bytes);
             return inserted->second;
         }
 

@@ -209,6 +209,9 @@ struct PrgClassDefinition {
 
 struct Program {
     std::string path;
+    // Bytes of source actually read for this program (not including includes); the session sums these
+    // against its aggregate limit (#5731).
+    std::size_t source_bytes = 0;
     std::vector<std::string> source_lines;
     Routine main{};
     std::map<std::string, Routine> routines;
