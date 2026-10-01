@@ -106,8 +106,7 @@
             // journal remains the recovery authority for a later attempt.
             if (ok)
             {
-                std::error_code ignored;
-                std::filesystem::remove_all(state.root_path, ignored);
+                security::secure_remove_tree(state.root_path);
             }
             return ok;
         }
@@ -506,7 +505,7 @@
                 // A transaction replay restores the journaled admission view;
                 // cursor-private overlays must not reapply the rolled-back
                 // commit over that restored view.
-                cursor.verified_committed_records.clear();
+                secure_clear_record_map(cursor.verified_committed_records);
 
                 const auto table_result = parse_cursor_table(cursor, std::max<std::size_t>(cursor.record_count, 1U));
                 if (!table_result.ok)
@@ -624,7 +623,6 @@
                 }
             }
 
-            std::error_code ignored;
-            std::filesystem::remove_all(found->second.root_path, ignored);
+            secure_discard_journal_state(found->second);
             transaction_journal_by_session.erase(found);
         }

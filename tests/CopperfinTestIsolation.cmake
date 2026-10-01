@@ -1304,7 +1304,8 @@ function(copperfin_configure_native_test_isolation)
 
     foreach(test_name IN ITEMS
             test_dbf_table
-            test_dbf_table_active_locale)
+            test_dbf_table_active_locale
+            test_dbf_null_hardening)
         copperfin_set_test_isolation(${test_name}
             PARALLEL_SAFE
             FILESYSTEM process-owned

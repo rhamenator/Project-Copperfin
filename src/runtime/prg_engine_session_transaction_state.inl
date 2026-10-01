@@ -407,12 +407,11 @@
                 return;
             }
             restore_verified_file_byte_overrides(state);
-            std::error_code ignored;
             if (!state.tracked_files.empty())
             {
                 refresh_local_cursors_after_transaction_replay();
             }
-            std::filesystem::remove_all(state.root_path, ignored);
+            secure_discard_journal_state(state);
         }
 
         void commit_active_command_undo_journal()
@@ -425,8 +424,7 @@
 
             if (found->second.tracked_files.empty())
             {
-                std::error_code ignored;
-                std::filesystem::remove_all(found->second.root_path, ignored);
+                secure_discard_journal_state(found->second);
             }
             else
             {

@@ -2258,8 +2258,9 @@
             record_verified_buffered_commit(
                 cursor,
                 *admission_patch);
+            secure_clear_record(buffered->second);
             cursor.buffered_records.erase(buffered);
-            cursor.buffered_original_records.erase(recno);
+            secure_erase_record(cursor.buffered_original_records, recno);
             cursor.buffered_field_states.erase(recno);
             cursor.buffered_deletion_states.erase(recno);
             if ((cursor.buffering_mode == 2 || cursor.buffering_mode == 4) &&
@@ -3075,8 +3076,8 @@
                 {
                     if (cursor->recno != 0U && !cursor->eof)
                     {
-                        cursor->buffered_records.erase(cursor->recno);
-                        cursor->buffered_original_records.erase(cursor->recno);
+                        secure_erase_record(cursor->buffered_records, cursor->recno);
+                        secure_erase_record(cursor->buffered_original_records, cursor->recno);
                         cursor->buffered_field_states.erase(cursor->recno);
                         cursor->buffered_deletion_states.erase(cursor->recno);
                         if (cursor->buffered_record_locks.erase(cursor->recno) != 0U)
@@ -3096,8 +3097,8 @@
                 const std::size_t appended_count = cursor->buffered_appended_records.size();
                 const std::size_t persisted_record_count =
                     cursor->record_count >= appended_count ? cursor->record_count - appended_count : 0U;
-                cursor->buffered_records.clear();
-                cursor->buffered_original_records.clear();
+                secure_clear_record_map(cursor->buffered_records);
+                secure_clear_record_map(cursor->buffered_original_records);
                 cursor->buffered_field_states.clear();
                 cursor->buffered_deletion_states.clear();
                 cursor->buffered_appended_records.clear();
@@ -3227,8 +3228,8 @@
                     *cursor,
                     *admission_patch);
             }
-            cursor->buffered_records.clear();
-            cursor->buffered_original_records.clear();
+            secure_clear_record_map(cursor->buffered_records);
+            secure_clear_record_map(cursor->buffered_original_records);
             cursor->buffered_field_states.clear();
             cursor->buffered_deletion_states.clear();
             cursor->buffered_appended_records.clear();
@@ -3476,6 +3477,10 @@
                         .field_name = field.name,
                         .field_type = field.type,
                         .display_value = ""});
+                }
+                if (const auto superseded = cursor.buffered_records.find(recno); superseded != cursor.buffered_records.end())
+                {
+                    secure_clear_record(superseded->second);
                 }
                 cursor.buffered_records[recno] = std::move(pending_record);
                 cursor.buffered_appended_records.insert(recno);
@@ -3944,7 +3949,7 @@
                 for (auto &[_, held_cursor] : session.cursors)
                 {
                     release_shared_lock_ownership_for_cursor(held_cursor, session, current_data_session);
-                    held_cursor.buffered_original_records.clear();
+                    secure_clear_record_map(held_cursor.buffered_original_records);
                     held_cursor.buffered_record_locks.clear();
                 }
                 session.table_locks.clear();
@@ -3953,7 +3958,7 @@
             }
 
             release_shared_lock_ownership_for_cursor(*cursor, session, current_data_session);
-            cursor->buffered_original_records.clear();
+            secure_clear_record_map(cursor->buffered_original_records);
             cursor->buffered_record_locks.clear();
             session.table_locks.erase(cursor->work_area);
             session.record_locks.erase(cursor->work_area);
