@@ -17,6 +17,7 @@
 #include <set>
 #include <functional>
 #include <iomanip>
+#include <map>
 #include <sstream>
 
 namespace copperfin::runtime {
@@ -859,7 +860,7 @@ namespace {
 // ~/temp/vfp9-probes/datetime-types-c24/result.txt) raises error 11 for a Character, Numeric, Logical or Object
 // argument to every function below; DTOT takes only a Date and TTOD only a DateTime. A NULL argument has
 // already returned NULL before dispatch reaches here. GOMONTH, EOMONTH, DOW and WEEK also need a Numeric second
-// argument. QUARTER, EOMONTH and DTOJ are Copperfin extensions that follow their siblings. MDY and DMY are not
+// argument (WEEK also a Numeric third). QUARTER, EOMONTH and DTOJ are Copperfin extensions that follow their siblings. MDY and DMY are not
 // covered yet: Copperfin gives them an invented numeric (month, day, year) constructor that VFP9 does not have
 // (#5924), which must be replaced together with this rule.
 bool is_date_or_datetime(const PrgValue& value) {
@@ -871,7 +872,10 @@ void require_date_time_argument_types(const std::string& function, const std::ve
     static const std::set<std::string> kDateOrDateTime = {
         "dow", "cdow", "cmonth", "year", "month", "day", "week", "dtos", "dtoc", "hour", "minute", "sec", "ttoc",
         "gomonth", "quarter", "eomonth", "dtoj"};
-    static const std::set<std::string> kNumericSecondArgument = {"gomonth", "eomonth", "dow", "week"};
+    // Numeric optional arguments, by function and zero-based position: GOMONTH, EOMONTH and DOW take a Numeric
+    // second argument and WEEK a Numeric second and third (WEEK(d, 1, 'x') is error 11 in VFP9).
+    static const std::map<std::string, std::vector<std::size_t>> kNumericOptionalArguments = {
+        {"gomonth", {1U}}, {"eomonth", {1U}}, {"dow", {1U}}, {"week", {1U, 2U}}};
     if (arguments.empty() || arguments.front().is_null) {
         return;
     }
@@ -882,10 +886,15 @@ void require_date_time_argument_types(const std::string& function, const std::ve
         if (!is_date_or_datetime(arguments.front())) {
             invalid();
         }
-        if (arguments.size() >= 2U && kNumericSecondArgument.count(function) != 0U && !arguments[1].is_null) {
-            const PrgOperandClass second = classify_operand(arguments[1]);
-            if (second != PrgOperandClass::numeric && second != PrgOperandClass::currency) {
-                invalid();
+        if (const auto numeric = kNumericOptionalArguments.find(function); numeric != kNumericOptionalArguments.end()) {
+            for (const std::size_t position : numeric->second) {
+                if (position >= arguments.size() || arguments[position].is_null) {
+                    continue;
+                }
+                const PrgOperandClass operand_class = classify_operand(arguments[position]);
+                if (operand_class != PrgOperandClass::numeric && operand_class != PrgOperandClass::currency) {
+                    invalid();
+                }
             }
         }
     } else if (function == "dtot") {

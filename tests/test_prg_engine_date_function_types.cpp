@@ -175,7 +175,15 @@ const std::vector<Row> kRows = {
     {"DOW(DATE(2026,6,15),'13:45:30')", "ERR11"},
     {"DOW(DATE(2026,6,15),5)", "N:5"},
     {"DOW(DATE(2026,6,15),.T.)", "ERR11"},
-    {"DOW(DATE(2026,6,15),oX)", "ERR11"}
+    {"DOW(DATE(2026,6,15),oX)", "ERR11"},
+    // WEEK takes Numeric second and third arguments (result-week.txt).
+    {"WEEK(DATE(2026,6,15),1,1)", "N:25"},
+    {"WEEK(DATE(2026,6,15),1,3)", "N:24"},
+    {"WEEK(DATE(2026,6,15),'x')", "ERR11"},
+    {"WEEK(DATE(2026,6,15),.T.)", "ERR11"},
+    {"WEEK(DATE(2026,6,15),1,'x')", "ERR11"},
+    {"WEEK(DATE(2026,6,15),1,.T.)", "ERR11"},
+    {"WEEK(DATE(2026,6,15),1,DATE(2026,1,1))", "ERR11"}
 };
 
 std::string run_rows(const fs::path &dir) {
@@ -183,7 +191,13 @@ std::string run_rows(const fs::path &dir) {
     for (const Row &row : kRows) {
         body += "TRY\n";
         body += "x = " + std::string(row.expression) + "\n";
-        body += "cOut = cOut + VARTYPE(x) + ':' + IIF(ISNULL(x), '.NULL.', IIF(INLIST(VARTYPE(x), 'D', 'T') OR '" + std::string(row.expression).substr(0, 5) + "' = 'TTOC(', '', IIF(VARTYPE(x) = 'N', ALLTRIM(STR(x)), ALLTRIM(TRANSFORM(x))))) + CHR(10)\n";
+        // A Date/DateTime result, and any TTOC result (its display differs, #5998), is compared by type only.
+        const std::string expression = row.expression;
+        const std::string function = expression.substr(0U, expression.find('('));
+        const bool type_only = function == "TTOC";
+        body += std::string("cOut = cOut + VARTYPE(x) + ':' + IIF(ISNULL(x), '.NULL.', IIF(INLIST(VARTYPE(x), 'D', 'T')") +
+                (type_only ? " OR .T." : "") +
+                ", '', IIF(VARTYPE(x) = 'N', ALLTRIM(STR(x)), ALLTRIM(TRANSFORM(x))))) + CHR(10)\n";
         body += "CATCH TO oEx\n";
         body += "cOut = cOut + 'ERR' + ALLTRIM(STR(oEx.ErrorNo)) + CHR(10)\n";
         body += "ENDTRY\n";
