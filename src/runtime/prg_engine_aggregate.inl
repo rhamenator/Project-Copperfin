@@ -27,8 +27,13 @@
             const std::string &function,
             const std::vector<std::string> &raw_arguments,
             const Frame &frame,
-            CursorState *preferred_cursor = nullptr)
+            CursorState *preferred_cursor = nullptr,
+            // A SQL SELECT passes its WHERE expression here instead of appending it to the argument list,
+            // where it could be taken for a work-area designator (the number 1) or a WHILE clause. It is a
+            // plain row filter, and a non-Logical value is error 1833 as in VFP9.
+            const std::string &sql_where_expression = std::string{})
         {
+            const StatementConditionKind condition_kind = StatementConditionKind::for_while;
             const auto is_numeric_aggregate_field = [](char field_type)
             {
                 switch (field_type)
@@ -163,11 +168,20 @@
             for (std::size_t recno = 1U; recno <= cursor->record_count; ++recno)
             {
                 move_cursor_to(*cursor, static_cast<long long>(recno));
-                if (!while_expression.empty() && !value_as_bool(evaluate_expression(while_expression, frame, cursor)))
+                if (!while_expression.empty() &&
+                    !statement_condition_value(
+                        evaluate_expression(while_expression, frame, cursor), condition_kind))
                 {
                     break;
                 }
-                if (!current_record_matches_visibility(*cursor, frame, condition_expression))
+                if (!current_record_matches_visibility(
+                        *cursor, frame, condition_expression, true, true, condition_kind))
+                {
+                    continue;
+                }
+                if (!sql_where_expression.empty() &&
+                    !current_record_matches_visibility(
+                        *cursor, frame, sql_where_expression, true, true, StatementConditionKind::sql_where))
                 {
                     continue;
                 }
@@ -322,7 +336,8 @@
                 move_cursor_to(cursor, static_cast<long long>(recno));
                 if (!while_expression.empty())
                 {
-                    const bool while_result = value_as_bool(evaluate_expression(while_expression, frame, &cursor));
+                    const bool while_result = statement_condition_value(
+                        evaluate_expression(while_expression, frame, &cursor), StatementConditionKind::for_while);
                     if (!still_live())
                     {
                         return records;
@@ -772,6 +787,14 @@
                     {
                         raw_arguments[1] = "(" + raw_arguments[1] + ") AND (" + statement.secondary_expression + ")";
                     }
+                }
+                if (function == "count" && raw_arguments.empty() &&
+                    (!statement.tertiary_expression.empty() || !statement.quaternary_expression.empty()))
+                {
+                    // COUNT's argument slots are (FOR condition, IN target, WHILE condition). With no FOR
+                    // condition the IN target must not slide into the first slot, where it used to be
+                    // evaluated as a (truthy, non-empty string) FOR condition.
+                    raw_arguments.push_back(std::string{});
                 }
                 if (!statement.tertiary_expression.empty())
                 {

@@ -23,7 +23,11 @@
             restore_cursor_order_snapshot(cursor, snapshot);
         }
 
-        bool evaluate_visibility_expression(const std::string &expression, const Frame &frame, const CursorState *cursor)
+        bool evaluate_visibility_expression(
+            const std::string &expression,
+            const Frame &frame,
+            const CursorState *cursor,
+            const StatementConditionKind kind = StatementConditionKind::for_while)
         {
             const std::string trimmed_expression = trim_copy(expression);
             if (trimmed_expression.empty())
@@ -306,13 +310,14 @@
                             restore_fields();
                             return false;
                         }
-                        const bool result = value_as_bool(evaluate_expression(expanded_expression, frame, live_cursor));
+                        const bool result =
+                            statement_condition_value(evaluate_expression(expanded_expression, frame, live_cursor), kind);
                         restore_fields();
                         return result;
                     }
                 }
 
-                const bool result = value_as_bool(evaluated);
+                const bool result = statement_condition_value(evaluated, kind);
                 restore_fields();
                 return result;
             }
@@ -328,7 +333,8 @@
             const Frame &frame,
             const std::string &extra_expression,
             bool honor_set_deleted = true,
-            bool honor_filter = true)
+            bool honor_filter = true,
+            const StatementConditionKind extra_kind = StatementConditionKind::for_while)
         {
             const auto record = current_record(cursor);
             if (!record.has_value())
@@ -347,7 +353,8 @@
                 // expression below is never evaluated against a cursor the
                 // filter has already invalidated.
                 const CursorGenerationReference cursor_reference = capture_cursor_generation_reference(&cursor);
-                if (!evaluate_visibility_expression(cursor.filter_expression, frame, &cursor))
+                if (!evaluate_visibility_expression(
+                        cursor.filter_expression, frame, &cursor, StatementConditionKind::filter))
                 {
                     return false;
                 }
@@ -356,7 +363,8 @@
                     return false;
                 }
             }
-            if (!extra_expression.empty() && !evaluate_visibility_expression(extra_expression, frame, &cursor))
+            if (!extra_expression.empty() &&
+                !evaluate_visibility_expression(extra_expression, frame, &cursor, extra_kind))
             {
                 return false;
             }

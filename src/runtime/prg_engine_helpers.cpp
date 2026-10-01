@@ -4,6 +4,9 @@
 
 #include "prg_engine_helpers.h"
 
+#include "localized_text.h"
+#include "prg_compatibility_error.h"
+
 #include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/platform/path.h"
 
@@ -995,6 +998,35 @@ PrgOperandClass classify_operand(const PrgValue& value) {
         default:
             return PrgOperandClass::empty;
     }
+}
+
+bool statement_condition_value(const PrgValue& value, const StatementConditionKind kind) {
+    if (value.is_null) {
+        return false;
+    }
+    const PrgOperandClass operand_class = classify_operand(value);
+    if (operand_class == PrgOperandClass::logical) {
+        return value_as_bool(value);
+    }
+    if (operand_class == PrgOperandClass::empty) {
+        // A condition that produced no value at all: a predicate whose fault ON ERROR already handled, or an
+        // unresolved identifier (error 12 in VFP9, which an operator reports but a bare condition cannot be
+        // told apart from a handled fault). It stays false, as before.
+        return false;
+    }
+    switch (kind) {
+        case StatementConditionKind::if_statement:
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.DataTypeMismatch"), 9);
+        case StatementConditionKind::do_case:
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Statement.Error.SyntaxError"), 10);
+        case StatementConditionKind::filter:
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Statement.Error.FilterLogicalRequired"), 37);
+        case StatementConditionKind::sql_where:
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Statement.Error.SqlWhereInvalid"), 1833);
+        case StatementConditionKind::for_while:
+            break;
+    }
+    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Statement.Error.ForWhileLogicalRequired"), 1127);
 }
 
 PrgValue make_null_value() {
