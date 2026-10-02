@@ -106,11 +106,11 @@ require_text("${script}" "Exact CPack uninstall key with cleared values escaped 
     "sparse exact-key executable regression")
 require_text("${workflow}" "CopperfinPackageInstallRegistryKey.txt"
     "generated exact CPack uninstall-key input")
-require_text("${workflow}" "'-UninstallRegistryKeyName', $uninstallRegistryKeyName,"
+require_text("${workflow}" "UninstallRegistryKeyName = $uninstallRegistryKeyName"
     "exact CPack uninstall-key workflow handoff")
-require_text("${workflow}" "'-PackageVersion', $packageVersion"
+require_text("${workflow}" "PackageVersion           = $packageVersion"
     "current package-version workflow handoff")
-require_text("${workflow}" "'-PriorPackageVersion', $env:PRIOR_PACKAGE_VERSION"
+require_text("${workflow}" "$lifecycleArguments['PriorPackageVersion'] = $env:PRIOR_PACKAGE_VERSION"
     "prior package-version workflow handoff")
 require_text("CMakeLists.txt" "set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY \"\${CPACK_PACKAGE_NAME} \${CPACK_PACKAGE_VERSION}\")"
     "explicit version-bound CPack uninstall-key identity")
@@ -148,7 +148,9 @@ endif()
 require_text("${workflow}" "name: Exercise Windows installer lifecycle" "hosted lifecycle step")
 require_text("${workflow}" "workflow_dispatch:" "manual exact-head validation trigger")
 require_text("${workflow}" "copperfin-*-Windows.exe" "exact NSIS artifact selection")
-require_text("${workflow}" "'-InstallerPath', $installer[0].FullName," "selected-installer binding")
+require_text("${workflow}" "InstallerPath            = $installer[0].FullName" "selected-installer binding")
+forbid_text("${workflow}" "@lifecycleArguments = @(" "array splat binds the lifecycle parameters positionally (#6696)")
+require_text("${workflow}" "-DCOPPERFIN_PACKAGE_VERSION_OVERRIDE=0.0.1'" "quoted synthetic prior-version override (#6696)")
 require_text("${workflow}" "copperfin-installer-lifecycle-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
     "run-scoped installation root")
 require_text("${workflow}" "artifacts/windows-installer-lifecycle/windows-installer-lifecycle.json"
