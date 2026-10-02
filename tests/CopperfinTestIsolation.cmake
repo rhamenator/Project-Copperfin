@@ -872,6 +872,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_date_function_types
             test_prg_engine_numeric_equality
             test_prg_engine_currency_literals
+            test_prg_engine_transform_currency_picture
             test_prg_engine_currency_functions
             test_prg_engine_currency_overflow
             test_prg_engine_currency_val
