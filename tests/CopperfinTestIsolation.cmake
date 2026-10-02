@@ -251,6 +251,16 @@ function(copperfin_configure_native_test_isolation)
             AUDIT complete
         )
     endif()
+    copperfin_set_test_isolation(test_powershell_discovery_contract
+        PARALLEL_SAFE
+        FILESYSTEM process-owned
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
     copperfin_set_test_isolation(test_rscript_discovery_contract
         PARALLEL_SAFE
         FILESYSTEM process-owned
