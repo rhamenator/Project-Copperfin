@@ -152,8 +152,11 @@ after review found a macOS clone destination-identity gap.
 
 Owner-directed workstream, in this order:
 
-1. **#6776, the numeric-conversion group.** Slices 1 and 2 are merged (#6777,
-   #6778). The remaining work, by function, with the VFP9 behavior probed in
+1. **The numeric-conversion group.** Work authority is the open,
+   owner-authored, `agent-approved` umbrella #5611; #6776 is the design
+   reference and checklist (it was auto-closed when #6777 merged and has been
+   reopened, see the traps below). Slices 1 and 2 are merged (#6777, #6778). The
+   remaining work, by function, with the VFP9 behavior probed in
    `~/temp/vfp9-probes/numconv-6776/probe1.txt` (14 boundary values per
    expression; `probe1.out` is the UTF-16 original):
    - Arrays (#6030): `AELEMENT`, `ASUBSCRIPT`, `ADEL`, `AINS`, `ACOPY` raise
@@ -217,8 +220,10 @@ Owner-directed workstream, in this order:
 
 ### Merge and CI traps learned
 
-- `main` requires 11 checks (DCO, two Socket, two executable-paths, five
-  generated-launcher/DECLARE/environment-path lanes). `macOS Clang`, `Windows
+- `main` requires 11 checks: DCO (1), the two Socket checks (2), the two
+  executable-paths checks (2), and six lanes: the three generated-launcher
+  checks (Windows, Ubuntu, macOS), the two DECLARE checks (Win32 and x64), and
+  `windows-environment-paths`. `macOS Clang`, `Windows
   MSVC` and `windows-installer` are not required. After the fixes above,
   `macOS Clang` and `windows-installer` were green on #6778, and the full
   `Windows MSVC` native validation passed on #6774's own run (#6767); on #6778
@@ -231,7 +236,9 @@ Owner-directed workstream, in this order:
   Projects-classic deprecation, so patch PR bodies through the REST API; rebase,
   do not merge, to catch a branch up; every commit needs a `Signed-off-by` for
   each `Co-Authored-By` identity; only the first issue in a comma-separated
-  `Fixes` list auto-closes, so close the rest by hand.
+  `Fixes` list auto-closes, so close the rest by hand; and GitHub's closing
+  keywords ignore negation, so a PR note saying "does not close #N" still
+  closes #N (this closed #6776 early): write "relates to #N" instead.
 
 ## Workspace preservation
 
