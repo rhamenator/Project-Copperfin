@@ -9,6 +9,17 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
+2026-10-02 session (all merged into `main`): cluster 25 finished (#6035 via
+#6769, plus #6755 and #6760); installer lifecycle CI fixed (#6761, #6696);
+macOS lane made green (#6762 `VAL(-1E-308)`, #6764 PowerShell host discovery,
+#6768 invalid-UTF-8 fixture); Windows UTF-8 test fixtures fixed (#6774, #6767);
+string length bounds (#6775: #5595, #6003, #6004); `SET NUMERICBEHAVIOR` and the
+`LEFT`/`RIGHT` family (#6777); `STUFF`/`STUFFC`/`SUBSTR`/`SUBSTRC` start
+boundaries, `STR` decimals above 18, `GETWORDNUM`/`MLINE` index, and defined
+saturating conversions across the string functions (#6778, #3704). #5598 was
+fixed by #6769 and is pinned by script rows. Evidence for every VFP9 claim is
+retained under `~/temp/vfp9-probes/` (see Probing VFP9 below).
+
 Issue #6593 (PR #6683, merge `fe91230ea`) finished 2026-09-27: `APPEND FROM
 ... TYPE CSV` now discards BOM-free field-name rows when selected target names
 appear in a different order, while subsequent values remain positional in both
@@ -139,9 +150,88 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-No active implementation slice. The September 27 implementation-loop cutoff
-has passed; do not select another issue unless the repository owner starts or
-extends the workstream.
+Owner-directed workstream, in this order:
+
+1. **#6776, the numeric-conversion group.** Slices 1 and 2 are merged (#6777,
+   #6778). The remaining work, by function, with the VFP9 behavior probed in
+   `~/temp/vfp9-probes/numconv-6776/probe1.txt` (14 boundary values per
+   expression; `probe1.out` is the UTF-16 original):
+   - Arrays (#6030): `AELEMENT`, `ASUBSCRIPT`, `ADEL`, `AINS`, `ACOPY` raise
+     error 1234 for every out-of-range value, so that is the default in both
+     modes. `ASCAN` start and `ASORT` mode wrap like the `LEFT` family (a
+     quirk). `ASIZE` errored in the probe harness and needs a corrected probe.
+   - `BITLSHIFT`/`BITRSHIFT` (#5765): error 11 for many values, a no-op shift for
+     others; needs its own table.
+   - `GOMONTH`/`EOMONTH` (#5608), `CHR`, `SPACE`, `ROUND`: mixed error 11, 1903
+     and wraparound results (`SPACE` is already bounded by #6775).
+   - `AT`/`STRTRAN`/`GETWORDNUM` occurrence: VFP9 raises 11 for almost every
+     large value (consistent). `SUBSTR`/`SUBSTRC` with a huge positive start
+     return the last character in VFP9 (quirk, not yet emulated).
+   - DECLARE narrowing (#6050), `BINTOC`/`CTOBIN` (#5766), array dimensions
+     (#5594), and the ~150 `llround(value_as_number(...))` sites in other
+     modules (#5611 umbrella).
+   - Small follow-ups: `STR` with a negative decimals count is error 1908 in
+     VFP9 (Copperfin clamps to 0); the `STR` width cap is 255 with error 11 while
+     VFP9 accepts at least 100 and raises 1908 for 2147483647.
+2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`
+   #5740, `XMLTOCURSOR` #5767, `AGETFILEVERSION` #5686/#5759, project inventory
+   #5703, PRG include depth #5728, runtime PRG load #5731, directory
+   enumeration and array materialization #5741, `SPAWN` quota #5782, audit log
+   appends #5787, `RESTORE FROM` #5790, list control #5764, import buffering
+   #5642, CDX/DCX/MDX probing #5615. Follow the pattern in #6775: one shared
+   validator or bound, error numbers from VFP9 evidence, a script-rows test.
+
+### Rules decided by the owner (2026-10-02)
+
+- Inconsistent or quirky VFP9 behavior is emulated only under a per-area switch.
+  `SET COMPATIBLE` keeps its real FoxBASE+/dBASE meaning (#6223) and is not that
+  switch. The first per-area switch is `SET NUMERICBEHAVIOR TO COPPERFIN|VFP9`
+  (default `COPPERFIN`, reported by `SET('NUMERICBEHAVIOR')`; the spelling is
+  provisional). Design and rationale: #6776.
+- Default rule for every area: ask whether a *correct* legacy VFP program could
+  plausibly depend on the behavior. If yes (documented contract, error numbers,
+  limits such as the 16,777,184-byte Character string ceiling, `QUIT` with
+  `NODEFAULT`), the default is VFP9 behavior. If only a buggy program could
+  depend on it (for example `LEFT('abc', 1E20)` returning empty while
+  `SUBSTR('abc', 1E20)` returns the last character), the default is Copperfin's
+  own defined, consistent behavior and the VFP9 quirk sits behind the switch.
+- A VFP9 expectation in an issue or an old test is not authoritative until it
+  matches a fresh probe: three pinned tests were wrong this session
+  (`stuff_zero_start`, `stuff_negative_start`, `SUBSTRC`/`STUFFC` zero and
+  negative starts) and were corrected to the probed results.
+
+### Probing VFP9
+
+- Quick local probes: `~/bin/vfp9-probe /path/to/probe.prg` (Wine, about one
+  second, no GUI). The PRG prints with `?`; do **not** end it with `QUIT`, the
+  wrapper runs it inside its own harness. Use `--result <file>` for a PRG that
+  writes its own file with `STRTOFILE(..., 0)`. Wine VFP9 was repaired on
+  2026-10-02 (the missing piece was `VFP9ENU.DLL`).
+- Cross-check on the Windows VM `copperfin-access365-win11`: automate
+  `New-Object -ComObject VisualFoxPro.Application` from PowerShell and call
+  `$v.Eval(...)`; examples in `~/temp/vfp9-probes/numconv-6776/probe*.ps1`.
+  Launch long VM jobs with `Invoke-CimMethod Win32_Process Create` (a process
+  started from an SSH session dies at logout); `C:\src\vm-job.ps1` builds named
+  targets, checks free space and always cleans up. Keep the VM disk tidy: do not
+  resize it unless a real space constraint appears.
+
+### Merge and CI traps learned
+
+- `main` requires 11 checks (DCO, two Socket, two executable-paths, five
+  generated-launcher/DECLARE/environment-path lanes). `macOS Clang`, `Windows
+  MSVC` and `windows-installer` are not required. After the fixes above,
+  `macOS Clang` and `windows-installer` were green on #6778, and the full
+  `Windows MSVC` native validation passed on #6774's own run (#6767); on #6778
+  it was still running when that PR merged, so check the first `main` run.
+- Count the required checks that have reported. "Nothing pending" can mean the
+  jobs are not scheduled yet. `BLOCKED` with every required check green means an
+  unresolved review thread (bot threads included). `mergeStateStatus` becoming
+  `UNSTABLE` or `CLEAN` with zero unresolved threads is the reliable signal.
+- Two jobs can share a name (`Windows MSVC`); `gh pr edit` is broken by the
+  Projects-classic deprecation, so patch PR bodies through the REST API; rebase,
+  do not merge, to catch a branch up; every commit needs a `Signed-off-by` for
+  each `Co-Authored-By` identity; only the first issue in a comma-separated
+  `Fixes` list auto-closes, so close the rest by hand.
 
 ## Workspace preservation
 
