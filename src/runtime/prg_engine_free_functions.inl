@@ -3039,7 +3039,9 @@
                 {
                     return make_number_value(*parsed);
                 }
-                return make_string_value(field.display_value);
+                PrgValue unparsed = make_string_value(field.display_value);
+                unparsed.unparsed_numeric_field = true;
+                return unparsed;
             }
             if (field_type == 'D')
             {

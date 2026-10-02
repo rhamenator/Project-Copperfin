@@ -105,6 +105,37 @@ std::string format_round_trip_decimal(double value);
 // and over '', 'x', NULL, '' is 2). Numbers use their value, Character values ignore trailing blanks.
 std::string aggregate_distinct_key(const PrgValue& value);
 
+// The running state of SUM, AVG, MIN and MAX over the non-NULL values of an expression, shared by CALCULATE, the
+// SUM/AVERAGE commands and SQL SELECT (plain and grouped), each of which used to keep its own double accumulators
+// (#6040, #6041). Installed VFP9 (probes retained at ~/temp/vfp9-probes/currency-c25/result9.txt and result10.txt):
+// a NULL is skipped; SUM and AVG over Currency stay Currency, summed exactly in scaled integers (overflow is error
+// 1988) and averaged exactly (truncated toward zero in CALCULATE and the commands, rounded half away from zero in SQL); over Numeric, Integer, Double and Float they are Numeric;
+// SUM and AVG over any other type (Character, Date, DateTime, Logical) are error 27 "Not a numeric expression." in
+// CALCULATE and the commands and error 1811 in SQL; MIN and MAX compare Date, DateTime, Character, Logical and
+// numbers of one type and return the selected value with its own type.
+class AggregateAccumulator {
+public:
+    explicit AggregateAccumulator(bool sql_semantics);
+    // `function` is "sum", "avg"/"average", "min" or "max".
+    void add(const std::string& function, const PrgValue& value);
+    std::size_t count() const { return count_; }
+    // `empty_result` is returned when no value was added.
+    PrgValue result(const std::string& function, const PrgValue& empty_result) const;
+
+private:
+    bool sql_semantics_;
+    std::size_t count_ = 0U;
+    bool currency_only_ = true;
+    std::int64_t currency_sum_ = 0;
+    double double_sum_ = 0.0;
+    PrgValue minimum_;
+    PrgValue maximum_;
+    // The domain of the first value compared by MIN or MAX: numbers of any kind, Character, Date or DateTime, or
+    // Logical. A later value from another domain is error 107 (installed VFP9: MIN(IIF(RECNO()=1,1,'a')) is
+    // "Operator/operand type mismatch."); a Date next to a DateTime and a Numeric next to a Currency compare.
+    int compare_domain_ = 0;
+};
+
 PrgValue make_boolean_value(bool value);
 PrgValue make_number_value(double value);
 PrgValue make_string_value(std::string value);
