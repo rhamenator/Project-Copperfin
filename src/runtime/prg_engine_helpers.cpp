@@ -1231,6 +1231,17 @@ PrgValue negate_exact_integer(const PrgValue& value) {
     return exact_integer_result(negated, false);
 }
 
+std::optional<std::size_t> checked_character_string_length(const double requested) {
+    if (!std::isfinite(requested)) {
+        return std::nullopt;
+    }
+    const double truncated = std::trunc(std::max(0.0, requested));
+    if (truncated > kVfpMaxCharacterStringLength) {
+        return std::nullopt;
+    }
+    return static_cast<std::size_t>(truncated);
+}
+
 bool numeric_prg_values_equal(const PrgValue& left, const PrgValue& right) {
     if (const auto comparison = try_exact_integer_compare(left, right); comparison.has_value()) {
         return *comparison == 0;

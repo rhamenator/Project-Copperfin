@@ -8,11 +8,14 @@
 #include "prg_engine_test_support.h"
 
 #include <cstdint>
+#include <filesystem>
 #include <iostream>
 #include <limits>
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <system_error>
+#include <vector>
 
 namespace {
 
@@ -196,9 +199,94 @@ void test_unary_minus() {
     expect(negate(make_uint64_value(0U)) == i64(0), "#6035 -0 (uint64)");
 }
 
+// #5598 and #6035 end to end: CTOBIN() builds the exact 64-bit operands from bytes (INT64_MIN is 0x8000000000000000,
+// -1 is 0xFFFFFFFFFFFFFFFF), so the expression evaluator itself is exercised on every platform, not only on the
+// Windows DECLARE probes. `INT64_MIN / -1` used to raise SIGFPE and end the process; every overflow below must be a
+// catchable numeric overflow (error 39), and in-range exact results must survive. Expected text is "<VARTYPE>:<value>"
+// or "ERR<number>".
+struct ScriptRow {
+    const char *expression;
+    const char *expected;
+};
+
+const std::vector<ScriptRow> kScriptRows = {
+    {"nMin / nMinusOne", "ERR39"},
+    {"-nMin", "ERR39"},
+    {"nMax + 1", "ERR39"},
+    {"nMin - 1", "ERR39"},
+    {"nMax * 2", "ERR39"},
+    {"nMin * nMinusOne", "ERR39"},
+    {"nMin + nMax", "I:-1"},
+    {"-nMax", "I:-9223372036854775807"},
+    {"nMax - nMax", "I:0"},
+    {"nMin / 1", "N:-9223372036854775808"},
+    {"nMax / nMinusOne", "I:-9223372036854775807"},
+    {"nMin < nMax", "L:true"},
+    {"nMax > nMin", "L:true"},
+    {"nMin = nMax", "L:false"},
+    {"nMax - 1 < nMax", "L:true"},
+    {"nMax / 0", "ERR1"},
+    // A Numeric divisor keeps the Numeric (double) result, as documented for #6035: the exact path divides 64-bit by 64-bit.
+    {"nMax / nMax", "I:1"},
+};
+
+std::string run_script_rows(const std::filesystem::path &dir) {
+    namespace fs = std::filesystem;
+    std::string body =
+        "LOCAL cOut, oEx, x\ncOut = ''\n"
+        "nMin = CTOBIN(CHR(0)+CHR(0)+CHR(0)+CHR(0)+CHR(0)+CHR(0)+CHR(0)+CHR(128), 'N')\n"
+        "nMax = CTOBIN(CHR(255)+CHR(255)+CHR(255)+CHR(255)+CHR(255)+CHR(255)+CHR(255)+CHR(127), 'N')\n"
+        "nMinusOne = CTOBIN(CHR(255)+CHR(255)+CHR(255)+CHR(255)+CHR(255)+CHR(255)+CHR(255)+CHR(255), 'N')\n";
+    for (const ScriptRow &row : kScriptRows) {
+        body += "TRY\nx = " + std::string(row.expression) + "\n";
+        body += "cOut = cOut + VARTYPE(x) + ':' + IIF(VARTYPE(x) = 'N', ALLTRIM(STR(x, 25, 0)), TRANSFORM(x)) + CHR(10)\n";
+        body += "CATCH TO oEx\n";
+        body += "cOut = cOut + 'ERR' + ALLTRIM(STR(oEx.ErrorNo)) + CHR(10)\n";
+        body += "ENDTRY\n";
+    }
+    body += "STRTOFILE(cOut, 'results.txt')\nRETURN\n";
+    fs::create_directories(dir / "script");
+    write_text(dir / "script" / "rows.prg", body);
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((dir / "script" / "rows.prg").string(), dir.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    if (!state.completed) {
+        return "<incomplete: " + state.message + ">";
+    }
+    return read_text(dir / "results.txt");
+}
+
+void test_expression_evaluator_end_to_end() {
+    namespace fs = std::filesystem;
+    const fs::path dir = fs::temp_directory_path() / "copperfin_int64_exact_expression_script";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    const std::string output = run_script_rows(dir);
+    expect(output.rfind("<incomplete", 0U) != 0U, "#5598 script rows: the script should complete: " + output);
+    std::vector<std::string> lines;
+    for (std::size_t start = 0U; start < output.size();) {
+        const std::size_t end = output.find('\n', start);
+        if (end == std::string::npos) {
+            break;
+        }
+        lines.push_back(output.substr(start, end - start));
+        start = end + 1U;
+    }
+    expect(lines.size() == kScriptRows.size(),
+           "#5598 script rows: expected " + std::to_string(kScriptRows.size()) + " result lines, got " +
+               std::to_string(lines.size()) + " from [" + output + "]");
+    for (std::size_t index = 0U; index < kScriptRows.size() && index < lines.size(); ++index) {
+        expect(lines[index] == kScriptRows[index].expected,
+               std::string("#5598 script rows: ") + kScriptRows[index].expression + " expected [" +
+                   kScriptRows[index].expected + "], got [" + lines[index] + "]");
+    }
+    fs::remove_all(dir, ignored);
+}
+
 }  // namespace
 
 int main() {
+    test_expression_evaluator_end_to_end();
     test_exact_arithmetic();
     test_exact_ordering_and_equality();
     test_unary_minus();

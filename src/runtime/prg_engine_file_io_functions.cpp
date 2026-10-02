@@ -418,7 +418,13 @@ std::optional<PrgValue> evaluate_file_io_function(
             return make_string_value(std::string{});
         }
 
-        const std::size_t requested = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1])));
+        // #6004/#5611: installed VFP9 raises error 11 for a read length beyond the maximum Character string length;
+        // nonfinite and huge values are rejected before any std::size_t conversion or allocation.
+        const auto checked_requested = checked_character_string_length(value_as_number(arguments[1]));
+        if (!checked_requested.has_value()) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        const std::size_t requested = *checked_requested;
         if (opened->verified_read) {
             const std::size_t available = opened->verified_position < opened->verified_bytes.size()
                 ? opened->verified_bytes.size() - opened->verified_position
@@ -504,9 +510,16 @@ std::optional<PrgValue> evaluate_file_io_function(
             return make_string_value(std::string{});
         }
 
-        const std::size_t max_length = arguments.size() >= 2U
-                                           ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[1])))
-                                           : 4096U;
+        // #6004/#5611: same bound as FREAD(); a length below 1 still means 1, as before.
+        std::size_t max_length = 4096U;
+        if (arguments.size() >= 2U) {
+            const auto checked_max_length =
+                checked_character_string_length(std::max(1.0, value_as_number(arguments[1])));
+            if (!checked_max_length.has_value()) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+            }
+            max_length = *checked_max_length;
+        }
         if (opened->verified_read) {
             if (opened->verified_position >= opened->verified_bytes.size()) {
                 opened->verified_eof = true;
