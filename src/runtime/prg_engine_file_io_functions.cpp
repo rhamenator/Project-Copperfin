@@ -510,15 +510,16 @@ std::optional<PrgValue> evaluate_file_io_function(
             return make_string_value(std::string{});
         }
 
-        // #6004/#5611: same bound as FREAD(); a length below 1 still means 1, as before.
+        // #6004/#5611: same bound as FREAD(). The raw argument is validated first, so NaN and -/+Infinity are
+        // rejected (clamping to 1 before validating would hide negative infinity); only then does a length below
+        // 1 still mean 1, as before.
         std::size_t max_length = 4096U;
         if (arguments.size() >= 2U) {
-            const auto checked_max_length =
-                checked_character_string_length(std::max(1.0, value_as_number(arguments[1])));
+            const auto checked_max_length = checked_character_string_length(value_as_number(arguments[1]));
             if (!checked_max_length.has_value()) {
                 throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
             }
-            max_length = *checked_max_length;
+            max_length = std::max<std::size_t>(1U, *checked_max_length);
         }
         if (opened->verified_read) {
             if (opened->verified_position >= opened->verified_bytes.size()) {
