@@ -134,6 +134,13 @@ std::int64_t saturating_numeric_to_int64(double value);
 std::int64_t vfp9_numeric_to_int32(double value);
 // A signed count or length argument under `behavior`.
 std::int64_t numeric_count_argument(double value, NumericBehavior behavior);
+// #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the
+// value is out of range). A size or count: truncated toward zero, never below `minimum`, saturating at the largest
+// value size_t can hold (NaN gives `minimum`). A rounded int64 (llround semantics for in-range values; NaN is 0 and
+// out-of-range saturates). A truncated int clamped to [minimum, maximum].
+std::size_t saturating_size_argument(double value, std::size_t minimum = 0U);
+std::int64_t rounded_numeric_to_int64(double value);
+int saturating_int_argument(double value, int minimum, int maximum);
 
 // The shortest plain-decimal text (no exponent) that reads back as exactly `value`: 15, 16 or 17 significant
 // digits, whichever is the first to round-trip. value_as_string() keeps six significant digits for display, so

@@ -1265,6 +1265,30 @@ std::int64_t numeric_count_argument(const double value, const NumericBehavior be
     return behavior == NumericBehavior::vfp9 ? vfp9_numeric_to_int32(value) : saturating_numeric_to_int64(value);
 }
 
+std::size_t saturating_size_argument(const double value, const std::size_t minimum) {
+    const std::int64_t truncated = saturating_numeric_to_int64(value);
+    if (truncated <= 0 || static_cast<std::uint64_t>(truncated) < minimum) {
+        return minimum;
+    }
+    return static_cast<std::size_t>(std::min<std::uint64_t>(
+        static_cast<std::uint64_t>(truncated), std::numeric_limits<std::size_t>::max()));
+}
+
+std::int64_t rounded_numeric_to_int64(const double value) {
+    if (std::isnan(value)) {
+        return 0;
+    }
+    if (value >= 9223372036854775808.0 || value <= -9223372036854775808.0) {
+        return saturating_numeric_to_int64(value);
+    }
+    return static_cast<std::int64_t>(std::llround(value));
+}
+
+int saturating_int_argument(const double value, const int minimum, const int maximum) {
+    const std::int64_t truncated = saturating_numeric_to_int64(value);
+    return static_cast<int>(std::clamp<std::int64_t>(truncated, minimum, maximum));
+}
+
 std::optional<std::size_t> checked_character_string_length(const double requested) {
     if (!std::isfinite(requested)) {
         return std::nullopt;
