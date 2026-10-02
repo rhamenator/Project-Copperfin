@@ -6288,6 +6288,30 @@
                                                                   ? fallback
                                                                   : symbol_value;
                     }
+                    else if (normalized_name == "numericbehavior")
+                    {
+                        // #6776: SET NUMERICBEHAVIOR TO VFP9 | COPPERFIN. The mode is a bare word or a string literal in
+                        // single or double quotes (evaluated by the same helper SET COLLATE uses), and it is
+                        // required: an omitted or empty value, or anything but an exact mode name, is error 11 and never
+                        // silently resets the setting.
+                        const std::string candidate = trim_copy(strip_set_to_value(option_value));
+                        const bool quoted = !candidate.empty() &&
+                                            (candidate.front() == '\'' || candidate.front() == '"');
+                        const std::string requested =
+                            normalize_identifier(quoted ? evaluate_set_string_value(option_value, {}) : candidate);
+                        if (requested == "copperfin")
+                        {
+                            current_set_state()[normalized_name] = "COPPERFIN";
+                        }
+                        else if (requested == "vfp9")
+                        {
+                            current_set_state()[normalized_name] = "VFP9";
+                        }
+                        else
+                        {
+                            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                        }
+                    }
                     else if (normalized_name == "path" || normalized_name == "collate")
                     {
                         std::string string_value = evaluate_set_string_value(option_value, normalized_name == "collate" ? "MACHINE" : "");

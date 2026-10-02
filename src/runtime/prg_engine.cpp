@@ -2730,6 +2730,10 @@ namespace copperfin::runtime
                     {
                         return std::string("MACHINE");
                     }
+                    if (normalized_name == "numericbehavior")
+                    {
+                        return std::string("COPPERFIN");
+                    }
                     if (normalized_name == "point")
                     {
                         return std::string(".");
@@ -2754,6 +2758,7 @@ namespace copperfin::runtime
                     normalized_name == "reprocess" ||
                     normalized_name == "decimals" ||
                     normalized_name == "collate" ||
+                    normalized_name == "numericbehavior" ||
                     normalized_name == "point" ||
                     normalized_name == "separator" ||
                     normalized_name == "currency")
