@@ -243,6 +243,27 @@ std::vector<Row> build_rows() {
                     "ASORT(a,2147483648)", "ERR1234"});
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n" + array_setup,
                     "ASORT(a,2147483648)", "N:1"});
+    for (const char *value : {"1E20", "-1E20", "1E300", "4294967296", "9007199254740992", "0.5"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n" + array_setup,
+                        std::string("ASCAN(a,'b',") + value + ")", "ERR1234"});
+    }
+    for (const char *value : {"2147483647", "-2147483649", "1E10"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n" + array_setup,
+                        std::string("ASCAN(a,'b',") + value + ")", "N:0"});
+    }
+    for (const char *value : {"2147483648", "-2147483648", "4294967295", "2.9", "-2.9"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n" + array_setup,
+                        std::string("ASCAN(a,'b',") + value + ")", "N:2"});
+    }
+    for (const char *value : {"1E20", "-1E20", "1E300", "2147483647", "-2147483649",
+                              "4294967296", "9007199254740992", "1E10", "0.5"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n" + array_setup,
+                        std::string("ASORT(a,") + value + ")", "ERR1234"});
+    }
+    for (const char *value : {"2147483648", "-2147483648", "4294967295", "2.9", "-2.9"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n" + array_setup,
+                        std::string("ASORT(a,") + value + ")", "N:1"});
+    }
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN\n" + array_setup,
                     "ASORT(a,1,-1,1E20)", "ERR11"});
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n" + array_setup,
@@ -269,7 +290,12 @@ std::vector<Row> build_rows() {
         const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode + "\n";
         rows.push_back({set + matrix_setup, "ASCAN(a,'d',2,2,2)", "N:4"});
         rows.push_back({set + matrix_setup, "ASCAN(a,'d',2,3,2)", "ERR1234"});
+        rows.push_back({set + matrix_setup, "ASCAN(a,'d',1,-1,3)", "ERR1234"});
     }
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n" + matrix_setup,
+                    "ASCAN(a,'d',1,-1,4294967301)", "ERR1234"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n" + matrix_setup,
+                    "ASCAN(a,'d',1,-1,4294967297)", "N:0"});
     for (const char *mode : {"COPPERFIN", "VFP9"}) {
         const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode + "\n";
         rows.push_back({set + "DIMENSION oneColumn[3,1]\n", "ASUBSCRIPT(oneColumn,2,2)", "N:1"});

@@ -540,7 +540,7 @@
                     if (column > array->columns)
                     {
                         finish_predicate_scan();
-                        return make_number_value(0.0);
+                        throw_subscript_out_of_range();
                     }
                     const std::size_t start_row = start - 1U;
                     const std::size_t available_rows = array->rows > start_row ? array->rows - start_row : 0U;
