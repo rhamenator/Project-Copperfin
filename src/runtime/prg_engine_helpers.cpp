@@ -1059,19 +1059,174 @@ bool numeric_values_equal(const double left, const double right) {
     return std::abs(left - right) <= std::numeric_limits<double>::epsilon() * magnitude;
 }
 
-bool numeric_prg_values_equal(const PrgValue& left, const PrgValue& right) {
-    const auto is_integer = [](const PrgValue& value) {
-        return value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
-    };
-    if (is_integer(left) && is_integer(right)) {
-        if (left.kind == PrgValueKind::int64) {
-            return right.kind == PrgValueKind::int64
-                       ? left.int64_value == right.int64_value
-                       : left.int64_value >= 0 && static_cast<std::uint64_t>(left.int64_value) == right.uint64_value;
+namespace {
+// #6035: sign and magnitude of an exact 64-bit integer; zero is never negative.
+struct ExactInteger {
+    bool negative = false;
+    std::uint64_t magnitude = 0U;
+};
+
+bool is_wide_integer_kind(const PrgValue& value) {
+    return value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
+}
+
+std::optional<ExactInteger> exact_integer_operand(const PrgValue& value) {
+    if (value.kind == PrgValueKind::int64) {
+        const std::int64_t signed_value = value.int64_value;
+        if (signed_value < 0) {
+            return ExactInteger{true, std::uint64_t{0} - static_cast<std::uint64_t>(signed_value)};
         }
-        return right.kind == PrgValueKind::uint64
-                   ? left.uint64_value == right.uint64_value
-                   : right.int64_value >= 0 && left.uint64_value == static_cast<std::uint64_t>(right.int64_value);
+        return ExactInteger{false, static_cast<std::uint64_t>(signed_value)};
+    }
+    if (value.kind == PrgValueKind::uint64) {
+        return ExactInteger{false, value.uint64_value};
+    }
+    if (value.kind != PrgValueKind::number) {
+        return std::nullopt;
+    }
+    const double number = value.number_value;
+    if (!std::isfinite(number) || std::trunc(number) != number) {
+        return std::nullopt;
+    }
+    // -2^63 and 2^64 are exactly representable doubles.
+    if (number >= 18446744073709551616.0 || number < -9223372036854775808.0) {
+        return std::nullopt;
+    }
+    if (number < 0.0) {
+        return ExactInteger{true, static_cast<std::uint64_t>(-number)};
+    }
+    return ExactInteger{false, static_cast<std::uint64_t>(number)};
+}
+
+bool exact_integer_operands(const PrgValue& left, const PrgValue& right, ExactInteger& exact_left, ExactInteger& exact_right) {
+    if (!is_wide_integer_kind(left) && !is_wide_integer_kind(right)) {
+        return false;
+    }
+    const auto first = exact_integer_operand(left);
+    const auto second = exact_integer_operand(right);
+    if (!first.has_value() || !second.has_value()) {
+        return false;
+    }
+    exact_left = *first;
+    exact_right = *second;
+    return true;
+}
+
+[[noreturn]] void throw_exact_integer_overflow() {
+    throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.NumericOverflow"), 39);
+}
+
+ExactInteger exact_integer_add(const ExactInteger& left, const ExactInteger& right) {
+    if (left.negative == right.negative) {
+        const std::uint64_t sum = left.magnitude + right.magnitude;
+        if (sum < left.magnitude) {
+            throw_exact_integer_overflow();
+        }
+        return ExactInteger{left.negative && sum != 0U, sum};
+    }
+    if (left.magnitude == right.magnitude) {
+        return ExactInteger{};
+    }
+    return left.magnitude > right.magnitude
+               ? ExactInteger{left.negative, left.magnitude - right.magnitude}
+               : ExactInteger{right.negative, right.magnitude - left.magnitude};
+}
+
+ExactInteger exact_integer_multiply(const ExactInteger& left, const ExactInteger& right) {
+    if (left.magnitude == 0U || right.magnitude == 0U) {
+        return ExactInteger{};
+    }
+    if (left.magnitude > std::numeric_limits<std::uint64_t>::max() / right.magnitude) {
+        throw_exact_integer_overflow();
+    }
+    return ExactInteger{left.negative != right.negative, left.magnitude * right.magnitude};
+}
+
+PrgValue exact_integer_result(const ExactInteger& exact, const bool allow_unsigned) {
+    if (exact.negative) {
+        if (exact.magnitude > 9223372036854775808ULL) {
+            throw_exact_integer_overflow();
+        }
+        // Unsigned negation then conversion is modular: 2^63 becomes INT64_MIN.
+        return make_int64_value(static_cast<std::int64_t>(std::uint64_t{0} - exact.magnitude));
+    }
+    if (exact.magnitude <= static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())) {
+        return make_int64_value(static_cast<std::int64_t>(exact.magnitude));
+    }
+    if (allow_unsigned) {
+        return make_uint64_value(exact.magnitude);
+    }
+    throw_exact_integer_overflow();
+}
+
+int compare_exact_integers(const ExactInteger& left, const ExactInteger& right) {
+    if (left.negative != right.negative) {
+        return left.negative ? -1 : 1;
+    }
+    if (left.magnitude == right.magnitude) {
+        return 0;
+    }
+    const bool magnitude_less = left.magnitude < right.magnitude;
+    return (magnitude_less != left.negative) ? -1 : 1;
+}
+}  // namespace
+
+std::optional<PrgValue> try_exact_integer_arithmetic(const char operation, const PrgValue& left, const PrgValue& right) {
+    ExactInteger exact_left;
+    ExactInteger exact_right;
+    if (!exact_integer_operands(left, right, exact_left, exact_right)) {
+        return std::nullopt;
+    }
+    const bool allow_unsigned = left.kind == PrgValueKind::uint64 || right.kind == PrgValueKind::uint64;
+    switch (operation) {
+    case '+':
+        return exact_integer_result(exact_integer_add(exact_left, exact_right), allow_unsigned);
+    case '-': {
+        ExactInteger negated = exact_right;
+        negated.negative = !exact_right.negative && exact_right.magnitude != 0U;
+        return exact_integer_result(exact_integer_add(exact_left, negated), allow_unsigned);
+    }
+    case '*':
+        return exact_integer_result(exact_integer_multiply(exact_left, exact_right), allow_unsigned);
+    case '/': {
+        if (!is_wide_integer_kind(left) || !is_wide_integer_kind(right)) {
+            return std::nullopt;
+        }
+        if (exact_right.magnitude == 0U) {
+            throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.IntegerDivisionByZero"));
+        }
+        const std::uint64_t quotient = exact_left.magnitude / exact_right.magnitude;
+        return exact_integer_result(
+            ExactInteger{quotient != 0U && exact_left.negative != exact_right.negative, quotient}, allow_unsigned);
+    }
+    default:
+        return std::nullopt;
+    }
+}
+
+std::optional<int> try_exact_integer_compare(const PrgValue& left, const PrgValue& right) {
+    ExactInteger exact_left;
+    ExactInteger exact_right;
+    if (!exact_integer_operands(left, right, exact_left, exact_right)) {
+        return std::nullopt;
+    }
+    return compare_exact_integers(exact_left, exact_right);
+}
+
+PrgValue negate_exact_integer(const PrgValue& value) {
+    const auto exact = exact_integer_operand(value);
+    if (!exact.has_value() || !is_wide_integer_kind(value)) {
+        throw std::logic_error("negate_exact_integer requires an int64 or uint64 value");
+    }
+    ExactInteger negated = *exact;
+    negated.negative = !exact->negative && exact->magnitude != 0U;
+    // The negation of a uint64 may not become uint64: only int64 results are representable.
+    return exact_integer_result(negated, false);
+}
+
+bool numeric_prg_values_equal(const PrgValue& left, const PrgValue& right) {
+    if (const auto comparison = try_exact_integer_compare(left, right); comparison.has_value()) {
+        return *comparison == 0;
     }
     if (left.kind == PrgValueKind::currency && right.kind == PrgValueKind::currency) {
         return left.currency_value == right.currency_value;

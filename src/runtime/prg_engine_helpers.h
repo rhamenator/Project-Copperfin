@@ -95,6 +95,23 @@ bool numeric_values_equal(double left, double right);
 // Currency values); every other numeric pairing uses numeric_values_equal on the doubles.
 bool numeric_prg_values_equal(const PrgValue& left, const PrgValue& right);
 
+// #6035: exact arithmetic and ordering for the 64-bit integer kinds. An operand is "exact" when it is an int64 or
+// uint64 value, or a Numeric whose value is a finite integer in [-2^63, 2^64); the operations below apply when at
+// least one operand is a 64-bit kind and both operands are exact, and never round-trip through double.
+//   + - *   the exact result: int64 when it fits, uint64 only when an operand is uint64 and it exceeds INT64_MAX,
+//           otherwise numeric overflow (error 39) -- never signed overflow or an out-of-range conversion;
+//   /       truncating integer division, only when both operands are 64-bit kinds (a Numeric divisor keeps the
+//           Numeric result); division by zero is the existing integer-division-by-zero error;
+// std::nullopt means the operands are not eligible and the caller keeps its existing (double) handling.
+std::optional<PrgValue> try_exact_integer_arithmetic(char operation, const PrgValue& left, const PrgValue& right);
+
+// Exact three-way compare (-1, 0, 1) under the same eligibility rule; std::nullopt when not eligible.
+std::optional<int> try_exact_integer_compare(const PrgValue& left, const PrgValue& right);
+
+// Unary minus of an int64 or uint64: exact, with numeric overflow (error 39) for -INT64_MIN and for a uint64
+// above 2^63.
+PrgValue negate_exact_integer(const PrgValue& value);
+
 // The shortest plain-decimal text (no exponent) that reads back as exactly `value`: 15, 16 or 17 significant
 // digits, whichever is the first to round-trip. value_as_string() keeps six significant digits for display, so
 // it must not be used to store a number (REPLACE n WITH 123.456789 kept 123.457 and 1.0000005 became 1).

@@ -302,6 +302,12 @@ namespace
             "nExactInt64 = ManagedExactInt64()\n"
             "nEchoInt64 = ManagedPreserveInt64(nExactInt64)\n"
             "nExactUInt64 = ManagedExactUInt64()\n"
+            "nExactPlusOne = nExactInt64 + 1\n"
+            "nExactTwice = nExactInt64 * 2\n"
+            "nUnsignedPlusOne = nExactUInt64 + 1\n"
+            "nUnsignedMinusOne = nExactUInt64 - 1\n"
+            "lUnsignedOrdered = nExactUInt64 > nUnsignedMinusOne\n"
+            "lUnsignedEqual = (nExactUInt64 = nUnsignedMinusOne)\n"
             "nDouble = ManagedDouble(42)\n"
             "nSingle = ManagedSingle(42)\n"
             "cEcho = ManagedEcho('Copperfin')\n"
@@ -348,6 +354,28 @@ namespace
                    exact_uint64->second.kind == copperfin::runtime::PrgValueKind::uint64 &&
                    copperfin::runtime::format_value(exact_uint64->second) == "18014398509481985",
                "#3934: managed VT_UI8 returns should retain unsigned width and precision");
+        // #6035: arithmetic and ordering on exact 64-bit results must not round trip through double
+        // (18014398509481985 and 18014398509481984 are the same double).
+        const auto expect_exact_int64 = [&](const char *name, const char *expected, const char *what) {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end() && found->second.kind == copperfin::runtime::PrgValueKind::int64 &&
+                       copperfin::runtime::format_value(found->second) == expected,
+                   std::string("#6035: ") + what + " should stay an exact int64 (" + expected + ")");
+        };
+        expect_exact_int64("nexactplusone", "9007199254740994", "exact + 1");
+        expect_exact_int64("nexacttwice", "18014398509481986", "exact * 2");
+        expect_exact_int64("nunsignedplusone", "18014398509481986", "unsigned + 1");
+        expect_exact_int64("nunsignedminusone", "18014398509481984", "unsigned - 1");
+        const auto unsigned_ordered = state.globals.find("lunsignedordered");
+        expect(unsigned_ordered != state.globals.end() &&
+                   unsigned_ordered->second.kind == copperfin::runtime::PrgValueKind::boolean &&
+                   unsigned_ordered->second.boolean_value,
+               "#6035: 18014398509481985 must order above 18014398509481984");
+        const auto unsigned_equal = state.globals.find("lunsignedequal");
+        expect(unsigned_equal != state.globals.end() &&
+                   unsigned_equal->second.kind == copperfin::runtime::PrgValueKind::boolean &&
+                   !unsigned_equal->second.boolean_value,
+               "#6035: 18014398509481985 must not equal 18014398509481984");
         const auto widened_double = state.globals.find("ndouble");
         expect(widened_double != state.globals.end() &&
                    copperfin::runtime::format_value(widened_double->second) == "42.5",
