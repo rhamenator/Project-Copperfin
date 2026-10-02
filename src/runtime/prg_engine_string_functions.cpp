@@ -64,7 +64,7 @@ std::string trim_with_parse_characters(
     bool trim_right,
     const std::vector<PrgValue>& arguments) {
     const bool case_insensitive = arguments.size() >= 2U &&
-        static_cast<long long>(std::llround(value_as_number(arguments[1]))) == 1;
+        rounded_numeric_to_int64(value_as_number(arguments[1])) == 1;
     std::vector<std::string> parse_tokens;
     for (std::size_t index = 2U; index < arguments.size(); ++index) {
         std::string token = value_as_string(arguments[index]);
@@ -135,7 +135,7 @@ std::size_t require_valid_occurrence_argument(const PrgValue& argument) {
     // occurrence 1, matching this codebase's pre-existing documented
     // positive-fraction behavior; only reject actual nonpositive/non-finite
     // values above.
-    return static_cast<std::size_t>(std::max(1.0, requested_occurrence));
+    return saturating_size_argument(requested_occurrence, 1U);
 }
 
 }  // namespace
@@ -334,7 +334,7 @@ std::optional<PrgValue> evaluate_string_function(
             }
             start_occurrence = raw_start_occurrence < 0.0
                                     ? 1U
-                                    : static_cast<std::size_t>(std::max(1.0, raw_start_occurrence));
+                                    : saturating_size_argument(raw_start_occurrence, 1U);
         }
         std::size_t occurrence_limit = std::numeric_limits<std::size_t>::max();
         if (arguments.size() >= 5U) {
@@ -347,10 +347,10 @@ std::optional<PrgValue> evaluate_string_function(
             }
             occurrence_limit = raw_occurrence_limit < 0.0
                                    ? std::numeric_limits<std::size_t>::max()
-                                   : static_cast<std::size_t>(std::max(1.0, raw_occurrence_limit));
+                                   : saturating_size_argument(raw_occurrence_limit, 1U);
         }
         const std::size_t flags = arguments.size() >= 6U
-                                      ? static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[5])))
+                                      ? saturating_size_argument(value_as_number(arguments[5]))
                                       : 0U;
         const bool case_insensitive = (flags & 1U) != 0U;
         if (!find.empty()) {
@@ -382,15 +382,14 @@ std::optional<PrgValue> evaluate_string_function(
     }
     if (function == "stuff" && arguments.size() >= 4U) {
         std::string src = value_as_string(arguments[0]);
-        const double raw_start = value_as_number(arguments[1]);
-        const std::size_t start = static_cast<std::size_t>(std::max(1.0, raw_start)) - 1U;
-        const std::size_t length = raw_start <= 0.0
-                                       ? 0U
-                                       : static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[2])));
+        // #3704: installed VFP9 SP2 (probes ~/temp/vfp9-probes/stuff-boundaries-6145c and numconv-6776/probe2.txt)
+        // treats a start of 1 or less as 1 WITHOUT discarding the replacement count (STUFF('abcdef',0,2,'X') is
+        // 'Xcdef'), appends when the start is past the end (start 8 or 1E20 both give 'abcdefX'), and inserts when the
+        // count is 0 or less. The earlier "start <= 0 inserts only" rule came from documentation, not from VFP9.
+        const std::size_t start = std::min(saturating_size_argument(value_as_number(arguments[1]), 1U) - 1U, src.size());
+        const std::size_t length = saturating_size_argument(value_as_number(arguments[2]));
         const std::string replacement = value_as_string(arguments[3]);
-        if (start <= src.size()) {
-            src.replace(start, std::min(length, src.size() - start), replacement);
-        }
+        src.replace(start, std::min(length, src.size() - start), replacement);
         return make_string_value(std::move(src));
     }
     if (function == "asc" && !arguments.empty()) {
@@ -683,7 +682,9 @@ std::optional<PrgValue> evaluate_string_function(
     }
     if (function == "strconv" && arguments.size() >= 2U) {
         std::string src = value_as_string(arguments[0]);
-        const int mode = static_cast<int>(std::llround(value_as_number(arguments[1])));
+        const int mode = static_cast<int>(std::clamp<std::int64_t>(
+            rounded_numeric_to_int64(value_as_number(arguments[1])),
+            std::numeric_limits<int>::min(), std::numeric_limits<int>::max()));
         if (mode == 7) {
             std::transform(src.begin(), src.end(), src.begin(), [](unsigned char ch) {
                 return static_cast<char>(std::tolower(ch));
@@ -783,11 +784,12 @@ std::optional<PrgValue> evaluate_string_function(
         if (function == "getwordcount") {
             return make_number_value(static_cast<double>(words.size()));
         }
-        const double requested_index = value_as_number(arguments[1]);
-        if (requested_index <= 0.0) {
+        // The index is truncated toward zero; 0, a negative value and NaN are empty (VFP9 returns an empty string for
+        // GETWORDNUM('a b c', 0.5), which previously indexed words[SIZE_MAX]).
+        const std::size_t n = saturating_size_argument(value_as_number(arguments[1]));
+        if (n == 0U) {
             return make_string_value(std::string{});
         }
-        const std::size_t n = static_cast<std::size_t>(requested_index);
         return make_string_value(n <= words.size() ? words[n - 1U] : std::string{});
     }
     if (function == "memlines" && !arguments.empty()) {
@@ -802,12 +804,12 @@ std::optional<PrgValue> evaluate_string_function(
     }
     if (function == "mline" && arguments.size() >= 2U) {
         const std::string source = value_as_string(arguments[0]);
-        const double requested_line = value_as_number(arguments[1]);
-        if (requested_line <= 0.0) {
+        const std::size_t line_index = saturating_size_argument(value_as_number(arguments[1]));
+        if (line_index == 0U) {
             return make_string_value(std::string{});
         }
         const std::size_t start = arguments.size() >= 3U
-                                      ? static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[2])))
+                                      ? saturating_size_argument(value_as_number(arguments[2]))
                                       : 0U;
         if (start >= source.size()) {
             return make_string_value(std::string{});
@@ -819,8 +821,7 @@ std::optional<PrgValue> evaluate_string_function(
             memo_width,
             4U,
             5U);
-        const std::size_t line_index = static_cast<std::size_t>(requested_line);
-        return make_string_value(line_index >= 1U && line_index <= lines.size() ? lines[line_index - 1U] : std::string{});
+        return make_string_value(line_index <= lines.size() ? lines[line_index - 1U] : std::string{});
     }
     if ((function == "at_c" || function == "atc" || function == "atcc") && arguments.size() >= 2U) {
         const std::size_t occurrence = arguments.size() >= 3U
@@ -917,7 +918,7 @@ std::optional<PrgValue> evaluate_string_function(
         std::string needle = value_as_string(arguments[0]);
         std::vector<std::string> lines = split_text_lines(value_as_string(arguments[1]));
         const std::size_t occurrence = arguments.size() >= 3U
-                                           ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[2])))
+                                           ? saturating_size_argument(value_as_number(arguments[2]), 1U)
                                            : 1U;
         if (case_insensitive) {
             needle = uppercase_copy(std::move(needle));
@@ -954,29 +955,39 @@ std::optional<PrgValue> evaluate_string_function(
     }
     if (function == "substr" && arguments.size() >= 2U) {
         const std::string source = value_as_string(arguments[0]);
-        const std::size_t start = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1]) - 1.0));
+        // VFP9 returns an empty string for a start below 1 after truncation (SUBSTR('abcdef',0) and 0.5 are '', 1.9 is
+        // the whole string), which is what makes SUBSTR(s, AT(x, s), n) with no match harmless.
+        const double raw_start = value_as_number(arguments[1]);
+        if (saturating_numeric_to_int64(raw_start) < 1) {
+            return make_string_value(std::string{});
+        }
+        const std::size_t start = saturating_size_argument(raw_start) - 1U;
         const std::size_t length = arguments.size() >= 3U
-                                       ? static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[2])))
+                                       ? saturating_size_argument(value_as_number(arguments[2]))
                                        : std::string::npos;
         return make_string_value(start >= source.size() ? std::string{} : source.substr(start, length));
     }
     if (function == "substrc" && arguments.size() >= 2U) {
         const std::string source = value_as_string(arguments[0]);
         const double raw_start = value_as_number(arguments[1]);
-        const std::size_t start = static_cast<std::size_t>(std::max(1.0, raw_start));
+        if (saturating_numeric_to_int64(raw_start) < 1) {
+            return make_string_value(std::string{});  // as SUBSTR(): a start below 1 is empty in VFP9
+        }
+        const std::size_t start = saturating_size_argument(raw_start, 1U);
         const std::size_t length = arguments.size() >= 3U
-                                       ? static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[2])))
+                                       ? saturating_size_argument(value_as_number(arguments[2]))
                                        : std::numeric_limits<std::size_t>::max();
         return make_string_value(utf8_scalar_slice_local(source, start, length));
     }
     if (function == "stuffc" && arguments.size() >= 4U) {
-        const double raw_start = value_as_number(arguments[1]);
-        const std::size_t start = static_cast<std::size_t>(std::max(1.0, raw_start));
-        const std::size_t length = raw_start <= 0.0
-                                       ? 0U
-                                       : static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[2])));
-        return make_string_value(replace_utf8_scalars_local(
-            value_as_string(arguments[0]), start, length, value_as_string(arguments[3])));
+        // As STUFF() (#3704): VFP9 treats a start below 1 as 1 without dropping the count (probe
+        // numconv-6776/probe5.txt: STUFFC('abcdef',0,2,'X') is 'Xcdef'), appends past the end, and inserts when the
+        // count is 0 or less.
+        const std::string source = value_as_string(arguments[0]);
+        const std::size_t scalar_count = utf8_scalar_offsets_local(source).size() - 1U;
+        const std::size_t start = std::min(saturating_size_argument(value_as_number(arguments[1]), 1U), scalar_count + 1U);
+        const std::size_t length = saturating_size_argument(value_as_number(arguments[2]));
+        return make_string_value(replace_utf8_scalars_local(source, start, length, value_as_string(arguments[3])));
     }
     if (function == "alltrim" && !arguments.empty()) {
         std::string result;
@@ -1009,9 +1020,18 @@ std::optional<PrgValue> evaluate_string_function(
             std::string(1U, static_cast<char>(static_cast<unsigned char>(truncated_code))));
     }
     if (function == "str" && !arguments.empty()) {
-        const int decimals = arguments.size() >= 3U
-                                 ? static_cast<int>(std::max(0.0, value_as_number(arguments[2])))
-                                 : 0;
+        // VFP9 SP2 (probe ~/temp/vfp9-probes/numconv-6776/probe4.txt) accepts 0 to 18 decimals and raises error 1908
+        // ("Width or decimal place argument is invalid.") for anything larger, including 2147483647 and 1E20. Checking
+        // the truncated value before it reaches setprecision() bounds the work: saturating a huge count to INT_MAX
+        // and formatting that many digits would exhaust memory. A negative count keeps its existing clamp to 0.
+        int decimals = 0;
+        if (arguments.size() >= 3U) {
+            const double truncated_decimals = std::trunc(value_as_number(arguments[2]));
+            if (truncated_decimals > 18.0) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidStrWidth"), 1908);
+            }
+            decimals = saturating_int_argument(truncated_decimals, 0, 18);
+        }
         std::ostringstream stream;
         stream.imbue(std::locale::classic());
         stream << std::fixed << std::setprecision(decimals) << value_as_number(arguments[0]);
@@ -1180,9 +1200,12 @@ std::optional<PrgValue> evaluate_string_function(
         const std::string begin_delim = value_as_string(arguments[1]);
         const std::string end_delim = value_as_string(arguments[2]);
         const std::size_t occurrence = arguments.size() >= 4U
-                                           ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[3])))
+                                           ? saturating_size_argument(value_as_number(arguments[3]), 1U)
                                            : 1U;
-        const int flags = arguments.size() >= 5U ? static_cast<int>(value_as_number(arguments[4])) : 0;
+        const int flags = arguments.size() >= 5U
+                              ? saturating_int_argument(value_as_number(arguments[4]),
+                                                        std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
+                              : 0;
         const bool case_insensitive = (flags & 1) != 0;
         const bool end_delimiter_optional = (flags & 2) != 0;
         const bool include_delimiters = (flags & 4) != 0;

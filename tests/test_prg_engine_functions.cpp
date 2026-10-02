@@ -259,11 +259,14 @@ namespace
         check("n_at_c_missing", "0");
         check("n_ratc", "8");
         check("c_substrc", "é猫");
-        check("c_substrc_zero", "ca");
-        check("c_substrc_negative", "ca");
+        // #3704 follow-up: VFP9 SP2 returns an empty string for a start below 1 (probe numconv-6776/probe3.txt:
+        // SUBSTRC('abcde',0,2) and SUBSTRC('abcde',-2,2) are both []); the earlier "clamp to 1" pin was an assumption.
+        check("c_substrc_zero", "");
+        check("c_substrc_negative", "");
         check("c_stuffc", "cafX");
-        check("c_stuffc_zero", "Xcafé猫");
-        check("c_stuffc_negative", "Xcafé猫");
+        // VFP9 SP2 (probe numconv-6776/probe5.txt): a start below 1 acts as 1 and still replaces 2 characters.
+        check("c_stuffc_zero", "Xfé猫");
+        check("c_stuffc_negative", "Xfé猫");
 
         fs::remove_all(temp_root, ignored);
     }

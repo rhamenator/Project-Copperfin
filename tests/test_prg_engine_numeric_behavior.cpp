@@ -100,6 +100,105 @@ std::vector<Row> build_rows() {
     rows.push_back({"SET NUMERICBEHAVIOR TO 'vfp9x'", "SET('NUMERICBEHAVIOR')", "ERR11"});
     // After the rejected forms the setting still reads VFP9 (it is never reset).
     rows.push_back({"", "SET('NUMERICBEHAVIOR')", "C:VFP9"});
+    // Slice 2 (#6029): SUBSTR and STUFF. Values from probe1.txt; STUFF and the SUBSTR length saturate in VFP9 too, so
+    // those rows are identical in both modes. SUBSTR's start is probed below (VFP9 wraps; COPPERFIN saturates).
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        rows.push_back({set, "STUFF('abcdef',1E20,1,'X')", "C:abcdefX"});
+        rows.push_back({set, "STUFF('abcdef',-1E20,1,'X')", "C:Xbcdef"});
+        rows.push_back({set, "STUFF('abcdef',2,1E20,'X')", "C:aX"});
+        rows.push_back({set, "STUFF('abcdef',2,-1E20,'X')", "C:aXbcdef"});
+        rows.push_back({set, "STUFF('abcdef',2147483648,1,'X')", "C:abcdefX"});
+        rows.push_back({set, "STUFF('abcdef',4294967296,1,'X')", "C:abcdefX"});
+        rows.push_back({set, "STUFF('abcdef',2,4294967296,'X')", "C:aX"});
+        rows.push_back({set, "SUBSTR('abcdef',2,1E20)", "C:bcdef"});
+        rows.push_back({set, "SUBSTR('abcdef',2,1E300)", "C:bcdef"});
+        rows.push_back({set, "SUBSTR('abcdef',2,4294967296)", "C:bcdef"});
+        rows.push_back({set, "SUBSTR('abcdef',2,-1E20)", "C:"});
+        rows.push_back({set, "SUBSTR('abcdef',2,2.9)", "C:bc"});
+    }
+    // In-range start boundaries (#3704): consistent in VFP9 (probe2.txt, stuff-boundaries-6145c, substr-boundary-*,
+    // substr-start-fractions-*), so they are the default and do not depend on the switch.
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        for (const Row &row : std::vector<Row>{
+                 {"", "STUFF('abcdef',0,1,'X')", "C:Xbcdef"},
+                 {"", "STUFF('abcdef',-5,2,'X')", "C:Xcdef"},
+                 {"", "STUFF('abcdef',1,-1,'X')", "C:Xabcdef"},
+                 {"", "STUFF('abcdef',1,0,'X')", "C:Xabcdef"},
+                 {"", "STUFF('abcdef',0,0,'X')", "C:Xabcdef"},
+                 {"", "STUFF('abcdef',-1,100,'X')", "C:X"},
+                 {"", "STUFF('abcdef',6,2,'X')", "C:abcdeX"},
+                 {"", "STUFF('abcdef',7,2,'X')", "C:abcdefX"},
+                 {"", "STUFF('abcdef',8,2,'X')", "C:abcdefX"},
+                 {"", "STUFF('abcdef',99,0,'X')", "C:abcdefX"},
+                 {"", "STUFF('abcdef',1.9,2.9,'X')", "C:Xcdef"},
+                 {"", "STUFFC('abcdef',0,2,'X')", "C:Xcdef"},
+                 {"", "STUFFC('abcdef',-1,2,'X')", "C:Xcdef"},
+                 {"", "STUFFC('abcdef',1,-1,'X')", "C:Xabcdef"},
+                 {"", "STUFFC('abcdef',6,2,'X')", "C:abcdeX"},
+                 {"", "STUFFC('abcdef',7,2,'X')", "C:abcdefX"},
+                 {"", "STUFFC('abcdef',8,2,'X')", "C:abcdefX"},
+                 {"", "STUFFC('abcdef',99,0,'X')", "C:abcdefX"},
+                 {"", "STUFFC('abcdef',1.9,2.9,'X')", "C:Xcdef"},
+                 {"", "STUFFC('abcdef',1E20,1,'X')", "C:abcdefX"},
+                 {"", "STUFFC('abcdef',-1E20,1,'X')", "C:Xbcdef"},
+                 {"", "STUFFC('abcdef',2,1E20,'X')", "C:aX"},
+                 {"", "STUFFC('abcdef',2,-1E20,'X')", "C:aXbcdef"},
+                 {"", "GETWORDNUM('a b c',0.5)", "C:"},
+                 {"", "GETWORDNUM('a b c',1.9)", "C:a"},
+                 {"", "GETWORDNUM('a b c',1E20)", "C:"},
+                 {"", "GETWORDNUM('a b c',1E300)", "C:"},
+                 {"", "GETWORDNUM('a b c',0)", "C:"},
+                 {"", "GETWORDNUM('a b c',-1)", "C:"},
+                 {"", "GETWORDNUM('a b c',-1E20)", "C:"},
+                 {"", "GETWORDNUM('a b c',EXP(1000))", "C:"},
+                 {"", "MLINE('a'+CHR(13)+'b',0.5)", "C:"},
+                 {"", "MLINE('a'+CHR(13)+'b',1.9)", "C:a"},
+                 {"", "MLINE('a'+CHR(13)+'b',2)", "C:b"},
+                 {"", "MLINE('a'+CHR(13)+'b',1E20)", "C:"},
+                 {"", "MLINE('a'+CHR(13)+'b',EXP(1000))", "C:"},
+                 {"", "MLINE('a'+CHR(13)+'b',0)", "C:"},
+                 {"", "SUBSTR('abcdef',0)", "C:"},
+                 {"", "SUBSTR('abcdef',-1)", "C:"},
+                 {"", "SUBSTR('abcdef',0.5)", "C:"},
+                 {"", "SUBSTR('abcdef',0.9)", "C:"},
+                 {"", "SUBSTR('abcdef',1.5)", "C:abcdef"},
+                 {"", "SUBSTR('abcdef',1.9)", "C:abcdef"},
+                 {"", "SUBSTR('abcdef',2.9)", "C:bcdef"},
+                 {"", "SUBSTR('abcdef',0,100)", "C:"},
+                 {"", "SUBSTR('abcdef',1,0)", "C:"},
+                 {"", "SUBSTR('abcdef',1,-1)", "C:"},
+                 {"", "SUBSTR('abcdef',1,2)", "C:ab"},
+                 {"", "SUBSTR('abcdef',6,100)", "C:f"},
+                 {"", "SUBSTR('abcdef',7,100)", "C:"},
+                 {"", "SUBSTRC('abcdef',0)", "C:"},
+                 {"", "SUBSTRC('abcdef',-1)", "C:"},
+                 {"", "SUBSTRC('abcdef',0.5)", "C:"},
+                 {"", "SUBSTRC('abcdef',1.9)", "C:abcdef"},
+                 {"", "SUBSTRC('abcdef',2.9)", "C:bcdef"},
+             }) {
+            rows.push_back({set, row.expression, row.expected});
+        }
+    }
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SUBSTR('abcdef',1E20)", "C:"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SUBSTR('abcdef',2147483648)", "C:"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SUBSTR('abcdef',2147483647)", "C:"});
+    // STR decimals (review of slice 2): VFP9 accepts 0 to 18 and raises error 1908 above that (probe4.txt); a huge value
+    // must be rejected before setprecision(), not saturated to INT_MAX and formatted.
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        rows.push_back({set, "STR(1.5,25,2)", "C:                     1.50"});
+        rows.push_back({set, "STR(1.5,25,18)", "C:     1.500000000000000000"});
+        rows.push_back({set, "STR(1.5,25,19)", "ERR1908"});
+        rows.push_back({set, "STR(1.5,10,100)", "ERR1908"});
+        rows.push_back({set, "STR(1.5,10,2147483647)", "ERR1908"});
+        rows.push_back({set, "STR(1.5,10,2147483648)", "ERR1908"});
+        rows.push_back({set, "STR(1.5,10,1E20)", "ERR1908"});
+        rows.push_back({set, "STR(1.5,10,1E300)", "ERR1908"});
+        rows.push_back({set, "STR(1.5,10,EXP(1000))", "ERR1908"});
+        rows.push_back({set, "STR(1.5,10,2.9)", "C:      1.50"});
+    }
     // In-range counts are identical in both modes.
     for (const char *mode : {"COPPERFIN", "VFP9"}) {
         const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;

@@ -687,8 +687,8 @@ namespace
         check("strextract_missing_end_default", "");
         check("strextract_missing_end_allowed", "two");
         check("strextract_include_delims", "<id>42</id>");
-        check("stuff_zero_start", "XYabcdef");
-        check("stuff_negative_start", "XYabcdef");
+        check("stuff_zero_start", "XYcdef");
+        check("stuff_negative_start", "XYef");
         check("stuff_insert_only", "abXYcdef");
         check("stuff_clamped_length", "abcdXY");
         check("substr_basic", "ell");
