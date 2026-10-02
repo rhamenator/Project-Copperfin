@@ -190,7 +190,7 @@
                 if (arguments.size() >= 4U)
                 {
                     const double raw_count = value_as_number(arguments[3]);
-                    if (!std::isfinite(raw_count))
+                    if (!std::isfinite(raw_count) && array_numeric_behavior == NumericBehavior::copperfin)
                     {
                         throw_subscript_out_of_range();
                     }
@@ -699,7 +699,7 @@
             {
                 const double raw_start = arguments.size() >= 2U ? value_as_number(arguments[1]) : 1.0;
                 const double raw_count = arguments.size() >= 3U ? value_as_number(arguments[2]) : -1.0;
-                if (!std::isfinite(raw_count))
+                if (!std::isfinite(raw_count) && array_numeric_behavior == NumericBehavior::copperfin)
                 {
                     throw_subscript_out_of_range();
                 }
