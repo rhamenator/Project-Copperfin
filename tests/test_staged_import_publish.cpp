@@ -15,6 +15,8 @@
 #include <vector>
 #if !defined(_WIN32)
 #include <sys/stat.h>
+#else
+#include <windows.h>
 #endif
 
 namespace {
@@ -40,6 +42,29 @@ std::string read_file(const fs::path& path) {
     return std::string(
         std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
 }
+
+#if defined(_WIN32)
+// #6767: the staged identity handle is opened with DELETE access and FILE_SHARE_READ, and Windows checks sharing
+// in both directions, so a reader that does not itself share FILE_SHARE_DELETE (std::ifstream does not) is refused
+// with a sharing violation on the staged name while that handle is open. That refusal is not the property under
+// test; reading with full sharing observes the file's bytes without weakening anything.
+std::string read_file_sharing_delete(const fs::path& path) {
+    HANDLE handle = ::CreateFileW(
+        path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (handle == INVALID_HANDLE_VALUE) {
+        return {};
+    }
+    std::string contents;
+    char buffer[4096];
+    DWORD read = 0;
+    while (::ReadFile(handle, buffer, sizeof(buffer), &read, nullptr) != 0 && read != 0U) {
+        contents.append(buffer, read);
+    }
+    ::CloseHandle(handle);
+    return contents;
+}
+#endif
 
 fs::path make_scratch_dir(std::string_view name) {
     const fs::path dir = fs::temp_directory_path() / name;
@@ -225,10 +250,10 @@ void test_publish_fails_closed_when_staged_path_is_swapped_before_publish() {
     // attempted truncating write. The original must remain publishable.
     expect(static_cast<bool>(remove_error),
            "Windows must deny removal while the staged identity handle is open");
-    expect(read_file(staged) == "verified original bytes",
+    expect(read_file_sharing_delete(staged) == "verified original bytes",
            "Windows must deny the attempted replacement write");
     expect(published, "Windows should publish the protected original file");
-    expect(read_file(destination) == "verified original bytes",
+    expect(read_file_sharing_delete(destination) == "verified original bytes",
            "Windows must never publish attempted replacement bytes");
 #else
     expect(!published, "publish must fail closed once staged_path's identity no longer matches "
