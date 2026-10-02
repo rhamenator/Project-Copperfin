@@ -3902,7 +3902,7 @@ void test_export_database_as_sql_maps_currency_datetime_and_blank_numeric() {
     const auto table_create = copperfin::vfp::create_dbf_table_file(
         copperfin::platform::path_to_utf8_string(table_path),
         table_fields,
-        {{"123.45", "julian:2459625 millis:37230000", ""}});
+        {{"123.45", "julian:2460327 millis:37230000", ""}});
     expect(table_create.ok, "SQL value-mapping test: DBF fixture should be created");
 
     const auto result = copperfin::vfp::export_database_as_sql(
@@ -7794,7 +7794,7 @@ void test_export_database_as_access_sql_maps_currency_datetime_and_dates() {
     const auto table_create = copperfin::vfp::create_dbf_table_file(
         copperfin::platform::path_to_utf8_string(table_path),
         table_fields,
-        {{"123.45", "julian:2459625 millis:37230000", "20240117", "", "Jane"}});
+        {{"123.45", "julian:2460327 millis:37230000", "20240117", "", "Jane"}});
     expect(table_create.ok, "Access SQL value-mapping test: DBF fixture should be created");
 
     const auto result = copperfin::vfp::export_database_as_access_sql(

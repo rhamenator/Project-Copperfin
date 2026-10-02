@@ -567,7 +567,7 @@ void test_scatter_gather_memvar_preserves_date_and_datetime_like_values() {
         {.name = "STAMP", .type = 'T', .length = 8U},
     };
     const std::vector<std::vector<std::string>> records{
-        {"Alice", "20260418", "julian:2460447 millis:49556000"},
+        {"Alice", "20260418", "julian:2461149 millis:49556000"},
     };
     const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
     expect(create_result.ok, "date/datetime scatter-gather memvar fixture should be created");
@@ -679,7 +679,7 @@ void test_scatter_gather_array_preserves_date_and_datetime_like_values() {
         {.name = "STAMP", .type = 'T', .length = 8U},
     };
     const std::vector<std::vector<std::string>> records{
-        {"20260418", "julian:2460447 millis:49556000"},
+        {"20260418", "julian:2461149 millis:49556000"},
     };
     const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
     expect(create_result.ok, "date/datetime scatter-gather array fixture should be created");

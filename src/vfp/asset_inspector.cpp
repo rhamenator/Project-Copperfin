@@ -2588,14 +2588,14 @@ std::string sql_sanitize_comment_text(const std::string& text) {
 }
 
 // Mirrors src/runtime/prg_engine_helpers.cpp's julian_to_date() (Fliegel-Van
-// Flandern astronomical Julian day, minus 702 to match this codebase's
-// existing epoch convention) rather than depending on cf_xbase_runtime from
+// Flandern astronomical Julian Day Number, the value VFP9 stores in a DateTime
+// field) rather than depending on cf_xbase_runtime from
 // this lower-level library -- cf_xbase_runtime already depends on
 // cf_vfp_assets, so the reverse dependency isn't available. Verified to
 // reproduce the same year/month/day as the runtime for representative
 // fixture values (see the paired regression test).
 void sql_julian_day_to_date(int julian, int& year, int& month, int& day) {
-    int l = (julian + 702) + 68569;
+    int l = julian + 68569;
     const int n = (4 * l) / 146097;
     l = l - (146097 * n + 3) / 4;
     const int i = (4000 * (l + 1)) / 1461001;
@@ -2651,9 +2651,18 @@ std::optional<std::string> sql_datetime_literal_from_storage(const std::string& 
     } catch (...) {
         return std::nullopt;
     }
-    if (julian_day <= 0 || millis < 0 || millis >= 24 * 60 * 60 * 1000) {
+    if (julian_day <= 0 || millis < 0) {
         return std::nullopt;
     }
+    // VFP9 stores the time with a stray millisecond (03:04:05 is 11044999) and shows it rounded to the nearest
+    // second, half up, carrying into the next day (#6757).
+    const long long rounded_seconds = (static_cast<long long>(millis) + 500LL) / 1000LL;
+    const long long carried_day = static_cast<long long>(julian_day) + (rounded_seconds / 86400LL);
+    if (carried_day > std::numeric_limits<int>::max()) {
+        return std::nullopt;   // a corrupt day number, not a timestamp
+    }
+    julian_day = static_cast<int>(carried_day);
+    millis = static_cast<int>(rounded_seconds % 86400LL) * 1000;
 
     int year = 0;
     int month = 0;
@@ -5609,8 +5618,7 @@ std::optional<std::string> sql_datetime_storage_from_literal(const std::string& 
         return std::nullopt;
     }
     // Mirrors sql_julian_day_to_date()'s own inverse (Fliegel-Van Flandern
-    // astronomical Julian day, minus 702 to match this codebase's existing
-    // epoch convention) rather than depending on cf_xbase_runtime's
+    // astronomical Julian Day Number) rather than depending on cf_xbase_runtime's
     // date_to_julian(), for the same reason that function's own comment
     // gives: cf_xbase_runtime already depends on cf_vfp_assets, so the
     // reverse dependency isn't available.
@@ -5618,7 +5626,7 @@ std::optional<std::string> sql_datetime_storage_from_literal(const std::string& 
         ((1461 * (*year + 4800 + (*month - 14) / 12)) / 4 +
          (367 * (*month - 2 - 12 * ((*month - 14) / 12))) / 12 -
          (3 * ((*year + 4900 + (*month - 14) / 12) / 100)) / 4 +
-         *day - 32075) - 702;
+         *day - 32075);
     const int millis = ((*hour * 3600) + (*minute * 60) + *second) * 1000;
     return "julian:" + std::to_string(julian_day) + " millis:" + std::to_string(millis);
 }

@@ -494,10 +494,10 @@
                         int year = 0;
                         int month = 0;
                         int day = 0;
-                        if (julian_to_runtime_date(julian_day, year, month, day) &&
-                            millis >= 0 && millis < 24 * 60 * 60 * 1000)
+                        // Rounded to the nearest second as VFP9 shows the stored milliseconds (#6757).
+                        const int total_seconds = millis >= 0 ? stored_millis_to_seconds_of_day(julian_day, millis) : 0;
+                        if (julian_to_runtime_date(julian_day, year, month, day) && millis >= 0)
                         {
-                            const int total_seconds = millis / 1000;
                             value = format_runtime_datetime_string(
                                 year,
                                 month,
@@ -1720,14 +1720,19 @@
                 millis_text.data(), millis_text.data() + millis_text.size(), millis, 10);
             if (julian_result.ec != std::errc{} || julian_result.ptr != julian_text.data() + julian_text.size() ||
                 millis_result.ec != std::errc{} || millis_result.ptr != millis_text.data() + millis_text.size() ||
-                !julian_to_runtime_date(julian_day, year, month, day) ||
-                millis < 0 || millis >= 24 * 60 * 60 * 1000)
+                millis < 0)
             {
                 return false;
             }
-            hour = millis / (60 * 60 * 1000);
-            minute = (millis / (60 * 1000)) % 60;
-            second = (millis / 1000) % 60;
+            // Rounded to the nearest second as VFP9 shows the stored milliseconds (#6757).
+            const int total_seconds = stored_millis_to_seconds_of_day(julian_day, millis);
+            if (!julian_to_runtime_date(julian_day, year, month, day))
+            {
+                return false;
+            }
+            hour = total_seconds / 3600;
+            minute = (total_seconds / 60) % 60;
+            second = total_seconds % 60;
             return true;
         }
 
@@ -3070,9 +3075,10 @@
                     int year = 0;
                     int month = 0;
                     int day = 0;
+                    // The stored milliseconds are rounded to the nearest second as VFP9 shows them (#6757).
+                    const int total_seconds = stored_millis_to_seconds_of_day(julian_day, millis);
                     if (julian_to_runtime_date(julian_day, year, month, day))
                     {
-                        const int total_seconds = millis / 1000;
                         const int hour = total_seconds / 3600;
                         const int minute = (total_seconds / 60) % 60;
                         const int second = total_seconds % 60;

@@ -1414,15 +1414,30 @@ std::string value_as_string(const PrgValue& value) {
 }
 
 int date_to_julian(int year, int month, int day) {
-    // Astronomical Julian day (Fliegel-Van Flandern), minus 702 to match tests.
+    // Astronomical Julian Day Number (Fliegel-Van Flandern), the value a VFP DateTime field stores in the first four
+    // bytes of its eight (installed VFP9 stores {^2019-12-31} as 2458849, #6757). An earlier version subtracted 702
+    // "to match tests" and made DateTime columns 702 days off from VFP9 in both directions.
     return ((1461 * (year + 4800 + (month - 14) / 12)) / 4
          + (367 * (month - 2 - 12 * ((month - 14) / 12))) / 12
          - (3 * ((year + 4900 + (month - 14) / 12) / 100)) / 4
-         + day - 32075) - 702;
+         + day - 32075);
+}
+
+int stored_millis_to_seconds_of_day(int& julian_day, const long long millis) {
+    // VFP9 stores the time of day with a stray millisecond (03:04:05 is 11044999) and shows it rounded to the nearest
+    // second, half up, carrying into the next day (86399999 is the next midnight; probe result15.txt, #6757).
+    const long long total_seconds = (millis + 500LL) / 1000LL;
+    const long long carry = total_seconds / 86400LL;
+    // A corrupt table can hold the largest day number; saturate so the caller's date-range check rejects it instead of
+    // the addition overflowing.
+    julian_day = julian_day > std::numeric_limits<int>::max() - carry
+                     ? std::numeric_limits<int>::max()
+                     : julian_day + static_cast<int>(carry);
+    return static_cast<int>(total_seconds % 86400LL);
 }
 
 void julian_to_date(int julian, int& year, int& month, int& day) {
-    int l = (julian + 702) + 68569;
+    int l = julian + 68569;
     int n = (4 * l) / 146097;
     l = l - (146097 * n + 3) / 4;
     int i = (4000 * (l + 1)) / 1461001;
