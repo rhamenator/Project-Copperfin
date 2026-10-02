@@ -1019,9 +1019,18 @@ std::optional<PrgValue> evaluate_string_function(
             std::string(1U, static_cast<char>(static_cast<unsigned char>(truncated_code))));
     }
     if (function == "str" && !arguments.empty()) {
-        const int decimals = arguments.size() >= 3U
-                                 ? saturating_int_argument(value_as_number(arguments[2]), 0, std::numeric_limits<int>::max())
-                                 : 0;
+        // VFP9 SP2 (probe ~/temp/vfp9-probes/numconv-6776/probe4.txt) accepts 0 to 18 decimals and raises error 1908
+        // ("Width or decimal place argument is invalid.") for anything larger, including 2147483647 and 1E20. Checking
+        // the truncated value before it reaches setprecision() bounds the work: saturating a huge count to INT_MAX
+        // and formatting that many digits would exhaust memory. A negative count keeps its existing clamp to 0.
+        int decimals = 0;
+        if (arguments.size() >= 3U) {
+            const double truncated_decimals = std::trunc(value_as_number(arguments[2]));
+            if (truncated_decimals > 18.0) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidStrWidth"), 1908);
+            }
+            decimals = saturating_int_argument(truncated_decimals, 0, 18);
+        }
         std::ostringstream stream;
         stream.imbue(std::locale::classic());
         stream << std::fixed << std::setprecision(decimals) << value_as_number(arguments[0]);

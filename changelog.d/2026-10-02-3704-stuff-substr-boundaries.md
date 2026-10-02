@@ -7,3 +7,5 @@
   remaining unchecked double-to-integer conversion in the string functions is now a defined, saturating
   conversion; in-range results are unchanged. Pinned expectations for `STUFF` zero/negative start and `SUBSTRC`
   zero/negative start were corrected to the VFP9 results. Evidence is retained under `~/temp/vfp9-probes`.
+  `STR()` now raises error 1908 ("Width or decimal place argument is invalid.") for a decimals argument above 18, as
+  VFP9 does, instead of formatting an unbounded number of digits; a negative decimals count is still clamped to 0.

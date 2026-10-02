@@ -158,6 +158,21 @@ std::vector<Row> build_rows() {
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SUBSTR('abcdef',1E20)", "C:"});
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SUBSTR('abcdef',2147483648)", "C:"});
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SUBSTR('abcdef',2147483647)", "C:"});
+    // STR decimals (review of slice 2): VFP9 accepts 0 to 18 and raises error 1908 above that (probe4.txt); a huge value
+    // must be rejected before setprecision(), not saturated to INT_MAX and formatted.
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        rows.push_back({set, "STR(1.5,25,2)", "C:                     1.50"});
+        rows.push_back({set, "STR(1.5,25,18)", "C:     1.500000000000000000"});
+        rows.push_back({set, "STR(1.5,25,19)", "ERR1908"});
+        rows.push_back({set, "STR(1.5,10,100)", "ERR1908"});
+        rows.push_back({set, "STR(1.5,10,2147483647)", "ERR1908"});
+        rows.push_back({set, "STR(1.5,10,2147483648)", "ERR1908"});
+        rows.push_back({set, "STR(1.5,10,1E20)", "ERR1908"});
+        rows.push_back({set, "STR(1.5,10,1E300)", "ERR1908"});
+        rows.push_back({set, "STR(1.5,10,EXP(1000))", "ERR1908"});
+        rows.push_back({set, "STR(1.5,10,2.9)", "C:      1.50"});
+    }
     // In-range counts are identical in both modes.
     for (const char *mode : {"COPPERFIN", "VFP9"}) {
         const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
