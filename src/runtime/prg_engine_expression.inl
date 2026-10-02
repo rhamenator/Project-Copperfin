@@ -569,6 +569,21 @@
                                                                     : checked_currency_subtract(other, currency_scaled));
                     }
                 }
+                if (operation == '*' || operation == '/')
+                {
+                    // Exact 128-bit multiply and divide (#6742): the same digits on every platform, where a
+                    // long double is only 53 bits on MSVC and some ARM targets. A Number operand that has no
+                    // exact small decimal form falls through to the floating-point path below.
+                    const CurrencyArithmeticResult exact = currency_multiply_divide_exact(left, right, operation);
+                    if (exact.status == CurrencyArithmeticStatus::ok)
+                    {
+                        return make_currency_value(exact.scaled);
+                    }
+                    if (exact.status == CurrencyArithmeticStatus::out_of_range)
+                    {
+                        throw_currency_out_of_range();
+                    }
+                }
                 long double scaled = 0.0L;
                 if (both_currency && operation == '*')
                 {
