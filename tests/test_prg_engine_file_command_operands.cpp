@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
+#include "copperfin/platform/path.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "prg_engine_test_support.h"
 
@@ -29,11 +30,24 @@ using namespace copperfin::test_support;
 
 namespace fs = std::filesystem;
 
+// #6767: the fixtures and expectations carry UTF-8 file names. A narrow std::string joined onto a path is read in
+// the ANSI code page on Windows ("\xC3\xA9.tmp" would become the two characters "Ã©.tmp"), so names go through
+// the platform's UTF-8 helpers in both directions.
+fs::path utf8_path(const std::string &name) {
+    return copperfin::platform::path_from_utf8_string(name);
+}
+
+std::string utf8_relative_name(const fs::path &path, const fs::path &base) {
+    std::string name = copperfin::platform::path_to_utf8_string(fs::relative(path, base));
+    std::replace(name.begin(), name.end(), '\\', '/');
+    return name;
+}
+
 std::string listing(const fs::path &dir) {
     std::set<std::string> names;
     for (const auto &entry : fs::recursive_directory_iterator(dir)) {
         if (entry.is_regular_file()) {
-            names.insert(fs::relative(entry.path(), dir).generic_string());
+            names.insert(utf8_relative_name(entry.path(), dir));
         }
     }
     std::string joined;
@@ -100,8 +114,8 @@ void test_erase_and_delete_file_operand_forms() {
         fs::remove_all(dir, ignored);
         fs::create_directories(dir);
         for (const std::string &file : c.files) {
-            fs::create_directories((dir / file).parent_path());
-            write_text(dir / file, "x");
+            fs::create_directories((dir / utf8_path(file)).parent_path());
+            write_text(dir / utf8_path(file), "x");
         }
         const fs::path script_dir = temp_root / (c.name + "_script");
         fs::create_directories(script_dir);
@@ -167,7 +181,7 @@ std::string content_listing(const fs::path &dir) {
     std::set<std::string> entries;
     for (const auto &entry : fs::recursive_directory_iterator(dir)) {
         if (entry.is_regular_file()) {
-            entries.insert(fs::relative(entry.path(), dir).generic_string() + "=" + read_text(entry.path()));
+            entries.insert(utf8_relative_name(entry.path(), dir) + "=" + read_text(entry.path()));
         }
     }
     std::string joined;
@@ -253,10 +267,10 @@ void test_copy_file_and_rename_operand_forms() {
         fs::create_directories(script_dir);
         for (const std::string &file : c.files) {
             if (!file.empty() && file.back() == '/') {
-                fs::create_directories(dir / file.substr(0U, file.size() - 1U));
+                fs::create_directories(dir / utf8_path(file.substr(0U, file.size() - 1U)));
             } else {
-                fs::create_directories((dir / file).parent_path());
-                write_text(dir / file, file);
+                fs::create_directories((dir / utf8_path(file)).parent_path());
+                write_text(dir / utf8_path(file), file);
             }
         }
         const fs::path script_path = script_dir / "transfer_case.prg";

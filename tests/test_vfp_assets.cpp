@@ -5628,8 +5628,8 @@ void test_export_database_as_postgresql_sql_disambiguates_indexes_within_identif
 
     const std::string long_table_name(60U, 'A');
     const fs::path dbc_path = temp_dir / "container.dbc";
-    const fs::path table_path = temp_dir / (long_table_name + ".dbf");
-    const fs::path cdx_path = temp_dir / (long_table_name + ".cdx");
+    const fs::path table_path = temp_dir / copperfin::platform::path_from_utf8_string(long_table_name + ".dbf");
+    const fs::path cdx_path = temp_dir / copperfin::platform::path_from_utf8_string(long_table_name + ".cdx");
     const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
         {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
         {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
@@ -6076,8 +6076,8 @@ void test_export_database_as_sqlserver_sql_disambiguates_indexes_within_identifi
 
     const std::string long_table_name(125U, 'A');
     const fs::path dbc_path = temp_dir / "container.dbc";
-    const fs::path table_path = temp_dir / (long_table_name + ".dbf");
-    const fs::path cdx_path = temp_dir / (long_table_name + ".cdx");
+    const fs::path table_path = temp_dir / copperfin::platform::path_from_utf8_string(long_table_name + ".dbf");
+    const fs::path cdx_path = temp_dir / copperfin::platform::path_from_utf8_string(long_table_name + ".cdx");
     // OBJECTNAME must be wide enough to hold the 125-byte long_table_name
     // itself (unlike the postgres/sqlite 63-byte-limit sibling tests,
     // whose 60-byte table name fit the usual 64-byte OBJECTNAME field).
@@ -6273,8 +6273,8 @@ void test_export_database_as_sqlserver_sql_truncates_by_unicode_character_not_by
            "test fixture sanity: 120 2-byte characters should be exactly 240 bytes");
 
     const fs::path dbc_path = temp_dir / "container.dbc";
-    const fs::path table_path = temp_dir / (long_table_name + ".dbf");
-    const fs::path cdx_path = temp_dir / (long_table_name + ".cdx");
+    const fs::path table_path = temp_dir / copperfin::platform::path_from_utf8_string(long_table_name + ".dbf");
+    const fs::path cdx_path = temp_dir / copperfin::platform::path_from_utf8_string(long_table_name + ".cdx");
     const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
         {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
         {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 244U, .decimal_count = 0U},
@@ -6354,8 +6354,8 @@ void test_export_database_as_postgresql_sql_truncates_on_utf8_character_boundary
            "test fixture sanity: 40 2-byte characters should be exactly 80 bytes");
 
     const fs::path dbc_path = temp_dir / "container.dbc";
-    const fs::path table_path = temp_dir / (table_name + ".dbf");
-    const fs::path cdx_path = temp_dir / (table_name + ".cdx");
+    const fs::path table_path = temp_dir / copperfin::platform::path_from_utf8_string(table_name + ".dbf");
+    const fs::path cdx_path = temp_dir / copperfin::platform::path_from_utf8_string(table_name + ".cdx");
     const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
         {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
         {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 100U, .decimal_count = 0U},
@@ -6687,8 +6687,8 @@ void test_export_database_as_oracle_sql_disambiguates_indexes_within_identifier_
 
     const std::string long_table_name(125U, 'A');
     const fs::path dbc_path = temp_dir / "container.dbc";
-    const fs::path table_path = temp_dir / (long_table_name + ".dbf");
-    const fs::path cdx_path = temp_dir / (long_table_name + ".cdx");
+    const fs::path table_path = temp_dir / copperfin::platform::path_from_utf8_string(long_table_name + ".dbf");
+    const fs::path cdx_path = temp_dir / copperfin::platform::path_from_utf8_string(long_table_name + ".cdx");
     const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
         {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
         {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 150U, .decimal_count = 0U},
@@ -7426,8 +7426,8 @@ void test_export_database_as_mysql_sql_disambiguates_indexes_within_identifier_l
 
     const std::string long_table_name(61U, 'A');
     const fs::path dbc_path = temp_dir / "container.dbc";
-    const fs::path table_path = temp_dir / (long_table_name + ".dbf");
-    const fs::path cdx_path = temp_dir / (long_table_name + ".cdx");
+    const fs::path table_path = temp_dir / copperfin::platform::path_from_utf8_string(long_table_name + ".dbf");
+    const fs::path cdx_path = temp_dir / copperfin::platform::path_from_utf8_string(long_table_name + ".cdx");
     const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
         {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
         {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 150U, .decimal_count = 0U},
@@ -7721,7 +7721,7 @@ void test_export_database_as_mysql_sql_fails_closed_on_overlong_table_name() {
 
     const std::string long_table_name(65U, 'A');
     const fs::path dbc_path = temp_dir / "container.dbc";
-    const fs::path table_path = temp_dir / (long_table_name + ".dbf");
+    const fs::path table_path = temp_dir / copperfin::platform::path_from_utf8_string(long_table_name + ".dbf");
     // OBJECTNAME must be wide enough to hold the 65-character long_table_name
     // itself -- a real VFP table name can never be this long, but the DBC
     // catalog's own OBJECTNAME field is a plain sizable Character column a
@@ -7859,7 +7859,7 @@ void test_export_database_as_access_sql_escapes_bracket_in_identifier() {
     // by appending ".dbf" to the catalog's own object name, so the
     // on-disk fixture must be named to match the crafted name exactly,
     // not a plain "accounts.dbf" the catalog doesn't actually reference.
-    const fs::path table_path = temp_dir / (crafted_table_name + ".dbf");
+    const fs::path table_path = temp_dir / copperfin::platform::path_from_utf8_string(crafted_table_name + ".dbf");
     const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
         {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
         {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
