@@ -1231,6 +1231,40 @@ PrgValue negate_exact_integer(const PrgValue& value) {
     return exact_integer_result(negated, false);
 }
 
+NumericBehavior numeric_behavior(const std::function<std::string(const std::string&)>& set_callback) {
+    if (!set_callback) {
+        return NumericBehavior::copperfin;
+    }
+    return normalize_identifier(set_callback("NUMERICBEHAVIOR")) == "vfp9" ? NumericBehavior::vfp9
+                                                                           : NumericBehavior::copperfin;
+}
+
+std::int64_t saturating_numeric_to_int64(const double value) {
+    if (std::isnan(value)) {
+        return 0;
+    }
+    // 2^63 is exactly representable; every double at or above it is out of int64 range.
+    if (value >= 9223372036854775808.0) {
+        return std::numeric_limits<std::int64_t>::max();
+    }
+    if (value <= -9223372036854775808.0) {
+        return std::numeric_limits<std::int64_t>::min();
+    }
+    return static_cast<std::int64_t>(value);
+}
+
+std::int64_t vfp9_numeric_to_int32(const double value) {
+    if (!std::isfinite(value) || value >= 9223372036854775808.0 || value < -9223372036854775808.0) {
+        return 0;  // integer indefinite is 0x8000000000000000; its low 32 bits are 0
+    }
+    const auto low_bits = static_cast<std::uint32_t>(static_cast<std::uint64_t>(static_cast<std::int64_t>(value)));
+    return static_cast<std::int64_t>(static_cast<std::int32_t>(low_bits));
+}
+
+std::int64_t numeric_count_argument(const double value, const NumericBehavior behavior) {
+    return behavior == NumericBehavior::vfp9 ? vfp9_numeric_to_int32(value) : saturating_numeric_to_int64(value);
+}
+
 std::optional<std::size_t> checked_character_string_length(const double requested) {
     if (!std::isfinite(requested)) {
         return std::nullopt;

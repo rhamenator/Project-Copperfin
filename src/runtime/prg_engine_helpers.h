@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <ctime>
+#include <functional>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -118,6 +119,21 @@ PrgValue negate_exact_integer(const PrgValue& value);
 // double to std::size_t (undefined) or allocating without a bound.
 inline constexpr double kVfpMaxCharacterStringLength = 16'777'184.0;
 std::optional<std::size_t> checked_character_string_length(double requested);
+
+// #6776: how a Numeric argument that is out of range for the integer a function needs is handled. COPPERFIN (the
+// default, `SET NUMERICBEHAVIOR TO COPPERFIN`) is defined and consistent: the value is truncated toward zero and
+// saturates, so a huge count means "all" and a huge negative one means "none". VFP9 (`SET NUMERICBEHAVIOR TO VFP9`)
+// reproduces what installed VFP9 SP2 does for functions that convert through a 32-bit integer: the value is truncated
+// to int64 (anything NaN, infinite or outside int64 becomes the CPU's "integer indefinite", whose low 32 bits are 0)
+// and its low 32 bits are taken as a signed int. Probe evidence: ~/temp/vfp9-probes/numconv-6776/probe1.txt.
+enum class NumericBehavior { copperfin, vfp9 };
+NumericBehavior numeric_behavior(const std::function<std::string(const std::string&)>& set_callback);
+// Truncate toward zero; NaN is 0; saturate to [INT64_MIN, INT64_MAX].
+std::int64_t saturating_numeric_to_int64(double value);
+// VFP9's 32-bit conversion described above, widened back to int64 for the caller.
+std::int64_t vfp9_numeric_to_int32(double value);
+// A signed count or length argument under `behavior`.
+std::int64_t numeric_count_argument(double value, NumericBehavior behavior);
 
 // The shortest plain-decimal text (no exponent) that reads back as exactly `value`: 15, 16 or 17 significant
 // digits, whichever is the first to round-trip. value_as_string() keeps six significant digits for display, so

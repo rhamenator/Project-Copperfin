@@ -887,6 +887,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_currency_overflow
             test_prg_engine_currency_exact_muldiv
             test_prg_engine_string_length_bounds
+            test_prg_engine_numeric_behavior
             test_prg_engine_int64_exact_expression
             test_prg_engine_currency_val
             test_prg_engine_aggregate_types

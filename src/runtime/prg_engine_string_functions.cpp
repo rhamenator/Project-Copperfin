@@ -226,25 +226,24 @@ std::optional<PrgValue> evaluate_string_function(
     if (function == "lenc" && !arguments.empty()) {
         return make_number_value(static_cast<double>(utf8_scalar_offsets_local(value_as_string(arguments[0])).size() - 1U));
     }
-    if (function == "left" && arguments.size() >= 2U) {
+    if ((function == "left" || function == "right" || function == "leftc" || function == "rightc") &&
+        arguments.size() >= 2U) {
+        // #6776: the count is converted under SET NUMERICBEHAVIOR (Copperfin: saturating; VFP9: its 32-bit
+        // conversion, so e.g. LEFT('abc', 1E20) is '' there but 'abc' here). A count of zero or less is empty.
         const std::string src = value_as_string(arguments[0]);
-        const std::size_t n = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1])));
-        return make_string_value(src.substr(0U, std::min(n, src.size())));
-    }
-    if (function == "right" && arguments.size() >= 2U) {
-        const std::string src = value_as_string(arguments[0]);
-        const std::size_t n = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1])));
-        return make_string_value(n >= src.size() ? src : src.substr(src.size() - n));
-    }
-    if (function == "leftc" && arguments.size() >= 2U) {
-        return make_string_value(utf8_scalar_slice_local(
-            value_as_string(arguments[0]), 1U,
-            static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1])))));
-    }
-    if (function == "rightc" && arguments.size() >= 2U) {
-        const std::string src = value_as_string(arguments[0]);
+        const std::int64_t count = numeric_count_argument(value_as_number(arguments[1]), numeric_behavior(set_callback));
+        const std::uint64_t wanted = count <= 0 ? 0U : static_cast<std::uint64_t>(count);
+        if (function == "left") {
+            return make_string_value(src.substr(0U, static_cast<std::size_t>(std::min<std::uint64_t>(wanted, src.size()))));
+        }
+        if (function == "right") {
+            return make_string_value(wanted >= src.size() ? src : src.substr(src.size() - static_cast<std::size_t>(wanted)));
+        }
         const std::size_t scalar_count = utf8_scalar_offsets_local(src).size() - 1U;
-        const std::size_t n = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1])));
+        const std::size_t n = static_cast<std::size_t>(std::min<std::uint64_t>(wanted, scalar_count));
+        if (function == "leftc") {
+            return make_string_value(utf8_scalar_slice_local(src, 1U, n));
+        }
         return make_string_value(n >= scalar_count ? src : utf8_scalar_slice_local(src, scalar_count - n + 1U, n));
     }
     if (function == "upper" && !arguments.empty()) {
