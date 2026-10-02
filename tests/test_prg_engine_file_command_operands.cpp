@@ -314,6 +314,14 @@ void test_wildcard_capture_preserves_invalid_utf8_bytes() {
     fs::create_directories(temp_root / "script");
     const std::string odd = "\xFF" "a.bin";
     write_text(temp_root / "work" / odd, "payload");
+    if (!fs::exists(temp_root / "work" / odd)) {
+        // #6763: APFS and HFS+ reject a file name that is not valid UTF-8, so the fixture itself cannot
+        // exist there and the byte-preservation property is untestable on that filesystem. The skip is
+        // keyed on the fixture, not on the platform: every filesystem that can hold the name still runs it.
+        std::cout << "skipping #6583 invalid UTF-8 byte preservation: this filesystem rejects non-UTF-8 file names\n";
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
     const fs::path script_path = temp_root / "script" / "invalid_utf8.prg";
     write_text(script_path, "COPY FILE ?a.bin TO ?a.bak\nRENAME ?a.bin TO ?a.old\nlAfter = .T.\nRETURN\n");
     auto session = copperfin::runtime::PrgRuntimeSession::create(
