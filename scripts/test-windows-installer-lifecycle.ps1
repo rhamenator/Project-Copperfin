@@ -242,6 +242,34 @@ function Get-CopperfinUninstallEntryCount {
             -ExpectedRegistryKeyName $ExpectedRegistryKeyName).Count
 }
 
+# #6696: Get-CopperfinUninstallEntryCount deliberately matches by key name OR
+# install root OR uninstaller path so residue cannot hide. After an upgrade the
+# prior and current versions share one root, so that count attributes each
+# version's registration to both. Counting one version's own registration needs
+# an exact key-name match.
+function Get-CopperfinUninstallKeyCount {
+    param([Parameter(Mandatory = $true)][string]$ExpectedRegistryKeyName)
+
+    $registryBases = @(
+        'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall',
+        'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall',
+        'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
+    )
+    $count = 0
+    foreach ($registryBase in $registryBases) {
+        if (-not (Test-Path -LiteralPath $registryBase -ErrorAction Stop)) {
+            continue
+        }
+        foreach ($registryKey in @(Get-ChildItem -LiteralPath $registryBase -ErrorAction Stop)) {
+            if ([string]::Equals($registryKey.PSChildName, $ExpectedRegistryKeyName,
+                    [System.StringComparison]::OrdinalIgnoreCase)) {
+                $count++
+            }
+        }
+    }
+    return $count
+}
+
 # #6497 review: a review round found that invoking the installed CLI with
 # only `--help` proves nothing about the seeded external artifact -- the
 # help path returns before touching it. This actually inspects the
@@ -404,11 +432,9 @@ try {
         # registrations coexist) as a diagnostic rather than asserting an
         # unimplemented guarantee; the current version's own registration
         # must still be exactly one.
-        $priorRegistrationCountAfterUpgrade = Get-CopperfinUninstallEntryCount `
-            -ExpectedInstallRoot $resolvedInstallRoot `
+        $priorRegistrationCountAfterUpgrade = Get-CopperfinUninstallKeyCount `
             -ExpectedRegistryKeyName $PriorUninstallRegistryKeyName
-        $currentRegistrationCountAfterUpgrade = Get-CopperfinUninstallEntryCount `
-            -ExpectedInstallRoot $resolvedInstallRoot `
+        $currentRegistrationCountAfterUpgrade = Get-CopperfinUninstallKeyCount `
             -ExpectedRegistryKeyName $UninstallRegistryKeyName
         Assert-Condition ($currentRegistrationCountAfterUpgrade -eq 1) `
             ('Upgrade must create exactly one uninstall registration for the current version; ' +
