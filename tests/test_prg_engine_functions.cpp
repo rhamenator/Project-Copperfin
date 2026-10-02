@@ -264,8 +264,9 @@ namespace
         check("c_substrc_zero", "");
         check("c_substrc_negative", "");
         check("c_stuffc", "cafX");
-        check("c_stuffc_zero", "Xcafé猫");
-        check("c_stuffc_negative", "Xcafé猫");
+        // VFP9 SP2 (probe numconv-6776/probe5.txt): a start below 1 acts as 1 and still replaces 2 characters.
+        check("c_stuffc_zero", "Xfé猫");
+        check("c_stuffc_negative", "Xfé猫");
 
         fs::remove_all(temp_root, ignored);
     }

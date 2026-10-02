@@ -784,11 +784,12 @@ std::optional<PrgValue> evaluate_string_function(
         if (function == "getwordcount") {
             return make_number_value(static_cast<double>(words.size()));
         }
-        const double requested_index = value_as_number(arguments[1]);
-        if (requested_index <= 0.0) {
+        // The index is truncated toward zero; 0, a negative value and NaN are empty (VFP9 returns an empty string for
+        // GETWORDNUM('a b c', 0.5), which previously indexed words[SIZE_MAX]).
+        const std::size_t n = saturating_size_argument(value_as_number(arguments[1]));
+        if (n == 0U) {
             return make_string_value(std::string{});
         }
-        const std::size_t n = static_cast<std::size_t>(requested_index);
         return make_string_value(n <= words.size() ? words[n - 1U] : std::string{});
     }
     if (function == "memlines" && !arguments.empty()) {
@@ -803,8 +804,8 @@ std::optional<PrgValue> evaluate_string_function(
     }
     if (function == "mline" && arguments.size() >= 2U) {
         const std::string source = value_as_string(arguments[0]);
-        const double requested_line = value_as_number(arguments[1]);
-        if (requested_line <= 0.0) {
+        const std::size_t line_index = saturating_size_argument(value_as_number(arguments[1]));
+        if (line_index == 0U) {
             return make_string_value(std::string{});
         }
         const std::size_t start = arguments.size() >= 3U
@@ -820,8 +821,7 @@ std::optional<PrgValue> evaluate_string_function(
             memo_width,
             4U,
             5U);
-        const std::size_t line_index = static_cast<std::size_t>(requested_line);
-        return make_string_value(line_index >= 1U && line_index <= lines.size() ? lines[line_index - 1U] : std::string{});
+        return make_string_value(line_index <= lines.size() ? lines[line_index - 1U] : std::string{});
     }
     if ((function == "at_c" || function == "atc" || function == "atcc") && arguments.size() >= 2U) {
         const std::size_t occurrence = arguments.size() >= 3U
@@ -980,13 +980,14 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(utf8_scalar_slice_local(source, start, length));
     }
     if (function == "stuffc" && arguments.size() >= 4U) {
-        const double raw_start = value_as_number(arguments[1]);
-        const std::size_t start = saturating_size_argument(raw_start, 1U);
-        const std::size_t length = raw_start <= 0.0
-                                       ? 0U
-                                       : saturating_size_argument(value_as_number(arguments[2]));
-        return make_string_value(replace_utf8_scalars_local(
-            value_as_string(arguments[0]), start, length, value_as_string(arguments[3])));
+        // As STUFF() (#3704): VFP9 treats a start below 1 as 1 without dropping the count (probe
+        // numconv-6776/probe5.txt: STUFFC('abcdef',0,2,'X') is 'Xcdef'), appends past the end, and inserts when the
+        // count is 0 or less.
+        const std::string source = value_as_string(arguments[0]);
+        const std::size_t scalar_count = utf8_scalar_offsets_local(source).size() - 1U;
+        const std::size_t start = std::min(saturating_size_argument(value_as_number(arguments[1]), 1U), scalar_count + 1U);
+        const std::size_t length = saturating_size_argument(value_as_number(arguments[2]));
+        return make_string_value(replace_utf8_scalars_local(source, start, length, value_as_string(arguments[3])));
     }
     if (function == "alltrim" && !arguments.empty()) {
         std::string result;

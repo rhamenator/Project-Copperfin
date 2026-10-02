@@ -9,3 +9,6 @@
   zero/negative start were corrected to the VFP9 results. Evidence is retained under `~/temp/vfp9-probes`.
   `STR()` now raises error 1908 ("Width or decimal place argument is invalid.") for a decimals argument above 18, as
   VFP9 does, instead of formatting an unbounded number of digits; a negative decimals count is still clamped to 0.
+  `STUFFC` follows `STUFF` (start below 1 acts as 1 and still replaces, start past the end appends), and `GETWORDNUM`
+  and `MLINE` now truncate their index toward zero with 0, negatives, NaN and fractions below 1 empty;
+  `GETWORDNUM('a b c', 0.5)` previously indexed out of range. The `docs/22` SUBSTRC/STUFFC note is corrected.
