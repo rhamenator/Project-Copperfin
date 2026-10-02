@@ -270,6 +270,24 @@ function Get-CopperfinUninstallKeyCount {
     return $count
 }
 
+# #6696: with a prior version installed over the same root, its (stale)
+# registration also matches by root, so the current version is counted by its
+# exact key name; without one, keep the stricter key-or-root-or-uninstaller match.
+function Get-CurrentVersionRegistrationCount {
+    param(
+        [Parameter(Mandatory = $true)][string]$InstallRoot,
+        [Parameter(Mandatory = $true)][string]$RegistryKeyName,
+        [Parameter(Mandatory = $true)][bool]$PriorVersionShareRoot
+    )
+
+    if ($PriorVersionShareRoot) {
+        return Get-CopperfinUninstallKeyCount -ExpectedRegistryKeyName $RegistryKeyName
+    }
+    return Get-CopperfinUninstallEntryCount `
+        -ExpectedInstallRoot $InstallRoot `
+        -ExpectedRegistryKeyName $RegistryKeyName
+}
+
 # #6497 review: a review round found that invoking the installed CLI with
 # only `--help` proves nothing about the seeded external artifact -- the
 # help path returns before touching it. This actually inspects the
@@ -392,6 +410,38 @@ try {
         # upgrade (not a fresh install to a new location). Verifies the
         # upgrade preserves external user content and replaces (not
         # duplicates) the uninstall registration.
+        # #6696: this runs BEFORE the prior-version install. NSIS names the
+        # uninstall registration by version, not by install root, so uninstalling
+        # this second root would also delete the registration the upgraded main
+        # root relies on.
+        # #6497 review: the workflow always supplies prior-version
+        # arguments, so without this, the plain-fresh-install path below
+        # would never run in CI while `fresh_install` still unconditionally
+        # reported PASS. This exercises a real, independent fresh install
+        # of the CURRENT installer (no prior state) in its own root, so
+        # that claim is backed by an actual run every time.
+        $freshCheckRoot = "$resolvedInstallRoot-freshcheck"
+        Assert-Condition (-not (Test-Path -LiteralPath $freshCheckRoot)) `
+            "Dedicated fresh-install check root already exists: $freshCheckRoot"
+        Invoke-BoundedProcess -FilePath $resolvedInstaller -Arguments @('/S', "/D=$freshCheckRoot") `
+            -Name 'Copperfin silent dedicated fresh installation' | Out-Null
+        Assert-Condition (Test-Path -LiteralPath $freshCheckRoot -PathType Container) `
+            "Dedicated fresh-install check did not create its installation root: $freshCheckRoot"
+        Assert-Condition ((Get-CopperfinUninstallEntryCount `
+                -ExpectedInstallRoot $freshCheckRoot `
+                -ExpectedRegistryKeyName $UninstallRegistryKeyName) -eq 1) `
+            'Dedicated fresh-install check must create exactly one uninstall registration.'
+        $freshCheckUninstaller = Join-Path $freshCheckRoot 'Uninstall.exe'
+        Invoke-BoundedProcess -FilePath $freshCheckUninstaller -Arguments @('/S') `
+            -Name 'Copperfin silent dedicated fresh-install cleanup' | Out-Null
+        $freshCheckDeadline = [DateTime]::UtcNow.AddSeconds($ProcessTimeoutSeconds)
+        while ((Test-Path -LiteralPath $freshCheckRoot) -and [DateTime]::UtcNow -lt $freshCheckDeadline) {
+            Start-Sleep -Milliseconds 250
+        }
+        Assert-Condition (-not (Test-Path -LiteralPath $freshCheckRoot)) `
+            "Dedicated fresh-install check left installation-root residue: $freshCheckRoot"
+        $freshInstallResult = 'PASS'
+
         Invoke-BoundedProcess `
             -FilePath $resolvedPriorInstaller `
             -Arguments @('/S', "/D=$resolvedInstallRoot") `
@@ -449,34 +499,6 @@ try {
             -ArtifactPath $externalUserArtifact `
             -Name 'post-upgrade installed copperfin_inspect artifact smoke'
         $upgradeFromPreviousVersionResult = 'PASS'
-
-        # #6497 review: the workflow always supplies prior-version
-        # arguments, so without this, the plain-fresh-install path below
-        # would never run in CI while `fresh_install` still unconditionally
-        # reported PASS. This exercises a real, independent fresh install
-        # of the CURRENT installer (no prior state) in its own root, so
-        # that claim is backed by an actual run every time.
-        $freshCheckRoot = "$resolvedInstallRoot-freshcheck"
-        Assert-Condition (-not (Test-Path -LiteralPath $freshCheckRoot)) `
-            "Dedicated fresh-install check root already exists: $freshCheckRoot"
-        Invoke-BoundedProcess -FilePath $resolvedInstaller -Arguments @('/S', "/D=$freshCheckRoot") `
-            -Name 'Copperfin silent dedicated fresh installation' | Out-Null
-        Assert-Condition (Test-Path -LiteralPath $freshCheckRoot -PathType Container) `
-            "Dedicated fresh-install check did not create its installation root: $freshCheckRoot"
-        Assert-Condition ((Get-CopperfinUninstallEntryCount `
-                -ExpectedInstallRoot $freshCheckRoot `
-                -ExpectedRegistryKeyName $UninstallRegistryKeyName) -eq 1) `
-            'Dedicated fresh-install check must create exactly one uninstall registration.'
-        $freshCheckUninstaller = Join-Path $freshCheckRoot 'Uninstall.exe'
-        Invoke-BoundedProcess -FilePath $freshCheckUninstaller -Arguments @('/S') `
-            -Name 'Copperfin silent dedicated fresh-install cleanup' | Out-Null
-        $freshCheckDeadline = [DateTime]::UtcNow.AddSeconds($ProcessTimeoutSeconds)
-        while ((Test-Path -LiteralPath $freshCheckRoot) -and [DateTime]::UtcNow -lt $freshCheckDeadline) {
-            Start-Sleep -Milliseconds 250
-        }
-        Assert-Condition (-not (Test-Path -LiteralPath $freshCheckRoot)) `
-            "Dedicated fresh-install check left installation-root residue: $freshCheckRoot"
-        $freshInstallResult = 'PASS'
     }
     else {
         Invoke-BoundedProcess `
@@ -519,9 +541,10 @@ try {
         "Installed copperfin_inspect help wrote unexpected stderr: $($inspectResult.Stderr)"
     $inspectOutput = $inspectResult.Stdout
 
-    $uninstallRegistrationCount = Get-CopperfinUninstallEntryCount `
-        -ExpectedInstallRoot $resolvedInstallRoot `
-        -ExpectedRegistryKeyName $UninstallRegistryKeyName
+    $uninstallRegistrationCount = Get-CurrentVersionRegistrationCount `
+        -InstallRoot $resolvedInstallRoot `
+        -RegistryKeyName $UninstallRegistryKeyName `
+        -PriorVersionShareRoot $hasPriorVersion
     Assert-Condition ($uninstallRegistrationCount -eq 1) `
         "Fresh installation must create exactly one uninstall registration for its root; found $uninstallRegistrationCount."
 
@@ -535,9 +558,10 @@ try {
     $maintenanceSnapshot = Get-InstalledSnapshot -Root $resolvedInstallRoot
     Assert-Condition (($installedSnapshot | ConvertTo-Json -Compress) -ceq ($maintenanceSnapshot | ConvertTo-Json -Compress)) `
         'Same-version maintenance reinstall changed the installed file inventory or hashes.'
-    Assert-Condition ((Get-CopperfinUninstallEntryCount `
-            -ExpectedInstallRoot $resolvedInstallRoot `
-            -ExpectedRegistryKeyName $UninstallRegistryKeyName) -eq 1) `
+    Assert-Condition ((Get-CurrentVersionRegistrationCount `
+            -InstallRoot $resolvedInstallRoot `
+            -RegistryKeyName $UninstallRegistryKeyName `
+            -PriorVersionShareRoot $hasPriorVersion) -eq 1) `
         'Same-version maintenance reinstall did not preserve exactly one uninstall registration.'
 
     $uninstaller = Join-Path $resolvedInstallRoot 'Uninstall.exe'
@@ -554,10 +578,16 @@ try {
     }
     Assert-Condition (-not (Test-Path -LiteralPath $resolvedInstallRoot)) `
         "Silent uninstall left installation-root residue: $resolvedInstallRoot"
-    Assert-Condition ((Get-CopperfinUninstallEntryCount `
-            -ExpectedInstallRoot $resolvedInstallRoot `
-            -ExpectedRegistryKeyName $UninstallRegistryKeyName) -eq 0) `
+    Assert-Condition ((Get-CurrentVersionRegistrationCount `
+            -InstallRoot $resolvedInstallRoot `
+            -RegistryKeyName $UninstallRegistryKeyName `
+            -PriorVersionShareRoot $hasPriorVersion) -eq 0) `
         "Silent uninstall left an uninstall registration for: $resolvedInstallRoot"
+    # The prior version's registration is not removed by the current uninstaller
+    # (the documented stale-registration gap); record it rather than hide it.
+    $priorRegistrationCountAfterUninstall = if ($hasPriorVersion) {
+        Get-CopperfinUninstallKeyCount -ExpectedRegistryKeyName $PriorUninstallRegistryKeyName
+    } else { $null }
 
     $evidence = [ordered]@{
         schema_version = 1
@@ -574,6 +604,7 @@ try {
         prior_installer_sha256 = if ($hasPriorVersion) { (Get-FileHash -LiteralPath $resolvedPriorInstaller -Algorithm SHA256).Hash.ToLowerInvariant() } else { $null }
         prior_package_version = if ($hasPriorVersion) { $PriorPackageVersion } else { $null }
         stale_prior_uninstall_registration_after_upgrade_count = $priorRegistrationCountAfterUpgrade
+        stale_prior_uninstall_registration_after_uninstall_count = $priorRegistrationCountAfterUninstall
         silent_uninstall = 'PASS'
         install_root_residue = 'PASS'
         uninstall_registration_residue = 'PASS'
