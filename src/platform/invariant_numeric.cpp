@@ -60,7 +60,17 @@ std::optional<double> try_parse_invariant_double(std::string_view value, const b
     std::istringstream parser{std::string{begin, end}};
     parser.imbue(std::locale::classic());
     parser >> std::noskipws >> parsed;
-    if (parser.fail() || !parser.eof()) {
+    if (parser.fail()) {
+        // #6494: libc++ sets failbit when strtod reports ERANGE, which includes a
+        // representable subnormal such as 1E-308 (stored correctly in `parsed`).
+        // std::from_chars accepts those, so accept a finite, non-zero subnormal
+        // here; overflow (stored as +-max) and total underflow (0) stay failures.
+        const double magnitude = std::fabs(parsed);
+        const bool subnormal = magnitude > 0.0 && magnitude < std::numeric_limits<double>::min();
+        if (!subnormal || !parser.eof()) {
+            return std::nullopt;
+        }
+    } else if (!parser.eof()) {
         return std::nullopt;
     }
 #else
