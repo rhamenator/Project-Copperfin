@@ -647,6 +647,67 @@ std::string format_digit_only_numeric_picture(double value, const std::string& p
     return transformed;
 }
 
+// A currency-only numeric picture: a dollar sign followed by nothing but digit placeholders ('$999', '$99', '$#99').
+bool picture_is_dollar_digit_only(const std::string& mask) {
+    if (mask.size() < 2U || mask.front() != '$') {
+        return false;
+    }
+    return std::all_of(mask.begin() + 1, mask.end(), [](char ch) { return ch == '9' || ch == '#'; });
+}
+
+// #6168: installed VFP9 (probe ~/temp/vfp9-probes/currency-c25/result12.txt and result13.txt) truncates the value
+// toward zero, right-aligns it in the picture's width, and lets the dollar sign take the leftmost padding space
+// (TRANSFORM(5,'$999') is '$  5', TRANSFORM(12,'$999') is '$ 12'). A value that fills the whole width has no padding
+// to give, so the sign is dropped (TRANSFORM(999,'$999') is '$999' but TRANSFORM(1000,'$999') is '1000' and
+// TRANSFORM(-12,'$99') is '-12'); one wider than the picture is asterisks.
+//
+// The whole-unit text comes from the value's own representation so it stays exact: a Currency is truncated from its
+// scaled integer (TRANSFORM($900719925474.9999,'$99999999999999') is '$  900719925474', where a double would give
+// ...475), integers are printed as they are, and a Numeric is truncated and printed in full however wide the picture
+// allows (TRANSFORM(9.1E18,'$99999999999999999999') is '$ 9100000000000000000'); a non-finite Numeric is asterisks
+// (TRANSFORM(EXP(1000),'$999') is '****'). The sign stays a literal '$' whatever SET CURRENCY says (probe
+// result17.txt: SET CURRENCY TO 'EUR' and SET CURRENCY RIGHT leave TRANSFORM(5,'$999') as '$  5').
+std::string format_dollar_digit_only_picture(const PrgValue& value, const std::string& mask) {
+    const std::size_t width = mask.size();
+    std::string text;
+    switch (value.kind) {
+        case PrgValueKind::currency:
+            text = std::to_string(value.currency_value / 10000);   // truncates toward zero
+            break;
+        case PrgValueKind::int64:
+            text = std::to_string(value.int64_value);
+            break;
+        case PrgValueKind::uint64:
+            text = std::to_string(value.uint64_value);
+            break;
+        default: {
+            const double number = value_as_number(value);
+            if (!std::isfinite(number)) {
+                return std::string(width, '*');
+            }
+            const double truncated = std::trunc(number);
+            if (truncated == 0.0) {
+                text = "0";
+            } else {
+                std::ostringstream stream;
+                stream.imbue(std::locale::classic());
+                stream << std::fixed << std::setprecision(0) << truncated;
+                text = stream.str();
+            }
+            break;
+        }
+    }
+    if (text.size() > width) {
+        return std::string(width, '*');
+    }
+    std::string result(width - text.size(), ' ');
+    result += text;
+    if (!result.empty() && result.front() == ' ') {
+        result.front() = '$';
+    }
+    return result;
+}
+
 bool picture_has_flag(const std::string& picture, const std::string& flag) {
     return picture.find(flag) != std::string::npos;
 }

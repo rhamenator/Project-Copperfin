@@ -1100,6 +1100,12 @@ std::optional<PrgValue> evaluate_string_function(
                 transformed = apply_literal_picture_template(
                     value_as_string(arguments[0]),
                     picture_payload_after_flag(raw_picture, picture, "@R"));
+            } else if (picture_is_dollar_digit_only(numeric_picture_template_mask(picture)) &&
+                       (arguments[0].kind == PrgValueKind::number || arguments[0].kind == PrgValueKind::int64 ||
+                        arguments[0].kind == PrgValueKind::uint64 || arguments[0].kind == PrgValueKind::currency)) {
+                transformed = format_dollar_digit_only_picture(
+                    arguments[0],
+                    numeric_picture_template_mask(picture));
             } else {
                 const std::size_t decimal_pos = picture.find('.');
                 if (decimal_pos != std::string::npos ||
