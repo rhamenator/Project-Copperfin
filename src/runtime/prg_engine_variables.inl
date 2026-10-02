@@ -440,6 +440,7 @@
             columns = std::max<std::size_t>(1U, columns);
             RuntimeArray array;
             array.columns = columns;
+            array.is_two_dimensional = columns > 1U;
             array.rows = values.empty() ? 0U : ((values.size() + columns - 1U) / columns);
             array.values = std::move(values);
             array.values.resize(array.rows * array.columns);
@@ -481,6 +482,10 @@
 
             const std::vector<PrgValue> values = source->values;
             assign_array(target_name, values, source->columns);
+            if (RuntimeArray *target = find_array(target_name))
+            {
+                target->is_two_dimensional = source->is_two_dimensional;
+            }
             return true;
         }
 
@@ -489,7 +494,8 @@
             const Frame &frame,
             std::string &array_name,
             std::size_t &row,
-            std::size_t &column)
+            std::size_t &column,
+            bool *is_two_dimensional = nullptr)
         {
             const std::string trimmed = trim_copy(reference);
             if (trimmed.empty())
@@ -523,6 +529,10 @@
             {
                 return false;
             }
+            if (is_two_dimensional != nullptr)
+            {
+                *is_two_dimensional = parts.size() >= 2U;
+            }
             row = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(evaluate_expression(parts[0], frame))));
             column = parts.size() >= 2U
                          ? static_cast<std::size_t>(std::max<double>(0.0, value_as_number(evaluate_expression(parts[1], frame))))
@@ -535,7 +545,8 @@
             std::string array_name;
             std::size_t row = 0U;
             std::size_t column = 1U;
-            if (!parse_array_reference(reference, frame, array_name, row, column))
+            bool is_two_dimensional = false;
+            if (!parse_array_reference(reference, frame, array_name, row, column, &is_two_dimensional))
             {
                 return false;
             }
@@ -545,7 +556,9 @@
             {
                 const std::size_t new_rows = array == nullptr ? row : std::max(row, array->rows);
                 const std::size_t new_columns = array == nullptr ? column : std::max(column, array->columns);
-                resize_array(array_name, new_rows, new_columns);
+                const bool resized_is_two_dimensional =
+                    (array != nullptr && array->is_two_dimensional) || is_two_dimensional || new_columns > 1U;
+                resize_array(array_name, new_rows, new_columns, resized_is_two_dimensional);
                 array = find_array(array_name);
             }
             if (array == nullptr || row == 0U || column == 0U || row > array->rows || column > array->columns)
@@ -562,15 +575,20 @@
             std::string array_name;
             std::size_t rows = 0U;
             std::size_t columns = 1U;
-            if (!parse_array_reference(declaration, frame, array_name, rows, columns))
+            bool is_two_dimensional = false;
+            if (!parse_array_reference(declaration, frame, array_name, rows, columns, &is_two_dimensional))
             {
                 return false;
             }
-            resize_array(array_name, rows, columns);
+            resize_array(array_name, rows, columns, is_two_dimensional);
             return true;
         }
 
-        PrgValue resize_array(const std::string &name, std::size_t rows, std::size_t columns = 1U)
+        PrgValue resize_array(
+            const std::string &name,
+            std::size_t rows,
+            std::size_t columns = 1U,
+            std::optional<bool> is_two_dimensional = std::nullopt)
         {
             columns = std::max<std::size_t>(1U, columns);
             RuntimeArray *array = find_array(name);
@@ -582,6 +600,10 @@
             if (array == nullptr)
             {
                 return make_number_value(0.0);
+            }
+            if (is_two_dimensional.has_value())
+            {
+                array->is_two_dimensional = *is_two_dimensional;
             }
 
             // A row-major array whose column count is unchanged can grow or

@@ -190,6 +190,10 @@
                 if (arguments.size() >= 4U)
                 {
                     const double raw_count = value_as_number(arguments[3]);
+                    if (!std::isfinite(raw_count))
+                    {
+                        throw_subscript_out_of_range();
+                    }
                     const auto checked_count = checked_truncated_numeric_to_int64(raw_count);
                     const std::int64_t converted_count = numeric_count_argument(raw_count, array_numeric_behavior);
                     if (converted_count == 0)
@@ -270,7 +274,7 @@
             {
                 const std::size_t element = checked_array_position(value_as_number(arguments[1]), array->values.size());
                 const std::int64_t raw_dimension = checked_array_integer(value_as_number(arguments[2]), 1234);
-                const std::int64_t maximum_dimension = array->columns > 1U ? 2 : 1;
+                const std::int64_t maximum_dimension = array->is_two_dimensional ? 2 : 1;
                 if (raw_dimension < 1 || raw_dimension > maximum_dimension)
                 {
                     throw_subscript_out_of_range();
@@ -695,6 +699,10 @@
             {
                 const double raw_start = arguments.size() >= 2U ? value_as_number(arguments[1]) : 1.0;
                 const double raw_count = arguments.size() >= 3U ? value_as_number(arguments[2]) : -1.0;
+                if (!std::isfinite(raw_count))
+                {
+                    throw_subscript_out_of_range();
+                }
                 const std::int64_t sort_order = arguments.size() >= 4U
                                                     ? (array_numeric_behavior == NumericBehavior::vfp9
                                                            ? numeric_count_argument(

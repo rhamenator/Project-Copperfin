@@ -252,9 +252,11 @@ std::vector<Row> build_rows() {
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n" + copy_setup,
                     "ACOPY(a,b,1,1E20)", "N:0"});
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN\n" + array_setup,
-                    "ACOPY(a,b,1,2,2)+ALEN(b)", "N:5"});
+                    "ACOPY(a,bCopperfinNew,1,2,2)+ALEN(bCopperfinNew)+"
+                    "IIF(bCopperfinNew[2]=='a',1,0)+IIF(bCopperfinNew[3]=='b',1,0)", "N:7"});
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n" + array_setup,
-                    "ACOPY(a,b,1,2,2)+ALEN(b)", "N:5"});
+                    "ACOPY(a,bVfp9New,1,2,2)+ALEN(bVfp9New)+"
+                    "IIF(bVfp9New[2]=='a',1,0)+IIF(bVfp9New[3]=='b',1,0)", "N:7"});
     const std::string matrix_setup =
         "DIMENSION a[3,2]\n"
         "a[1,1] = 'a'\n"
@@ -267,6 +269,14 @@ std::vector<Row> build_rows() {
         const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode + "\n";
         rows.push_back({set + matrix_setup, "ASCAN(a,'d',2,2,2)", "N:4"});
         rows.push_back({set + matrix_setup, "ASCAN(a,'d',2,3,2)", "ERR1234"});
+    }
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode + "\n";
+        rows.push_back({set + "DIMENSION oneColumn[3,1]\n", "ASUBSCRIPT(oneColumn,2,2)", "N:1"});
+        rows.push_back({set + copy_setup, "ACOPY(a,b,1,EXP(1000))", "ERR1234"});
+        rows.push_back({"", "b[1]+b[2]+b[3]", "C:xyz"});
+        rows.push_back({set + array_setup, "ASORT(a,1,EXP(1000))", "ERR1234"});
+        rows.push_back({"", "a[1]+a[2]+a[3]", "C:abc"});
     }
     for (const char *mode : {"COPPERFIN", "VFP9"}) {
         const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode + "\n";

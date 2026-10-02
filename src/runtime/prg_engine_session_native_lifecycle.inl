@@ -235,7 +235,9 @@
                             std::string property_name;
                             std::size_t rows = 0U;
                             std::size_t columns = 1U;
-                            if (!parse_array_reference(declaration, frame, property_name, rows, columns) ||
+                            bool is_two_dimensional = false;
+                            if (!parse_array_reference(
+                                    declaration, frame, property_name, rows, columns, &is_two_dimensional) ||
                                 !is_bare_identifier_text(property_name))
                             {
                                 continue;
@@ -244,6 +246,7 @@
                             RuntimeArray array;
                             array.rows = rows;
                             array.columns = columns;
+                            array.is_two_dimensional = is_two_dimensional;
                             array.values.resize(rows * columns);
                             // RQ-CF-PRG-033: native-object arrays participate in
                             // the same reentrant ASCAN binding checks.
