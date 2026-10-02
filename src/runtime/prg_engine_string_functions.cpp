@@ -39,7 +39,7 @@ namespace {
 // and one above the limit). This is a data-type-level constraint on any
 // Character string, not specific to one function, so the same ceiling
 // applies to SPACE() and REPLICATE() alike.
-constexpr double kVfpMaxCharacterStringLength = 16'777'184.0;
+// kVfpMaxCharacterStringLength and checked_character_string_length() live in prg_engine_helpers.h.
 
 // #5928/#5956 PR review (chatgpt-codex-connector, P1): a first version of
 // this function treated every character across every cParseStringN
@@ -270,25 +270,13 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(rtrim_space_copy(value_as_string(arguments[0])));
     }
     if (function == "space" && !arguments.empty()) {
-        // #5946/#5968 PR review (chatgpt-codex-connector, P2): compare the
-        // ceiling against the same truncated-toward-zero value the
-        // subsequent std::size_t conversion actually produces, not the
-        // raw fractional double -- otherwise a value like 16777184.5
-        // (which truncates to exactly the permitted 16,777,184 bytes)
-        // was wrongly rejected. Still checked as a double, before ever
-        // narrowing to std::size_t, so a huge or nonfinite requested
-        // count remains undefined-behavior-free rather than merely an
-        // oversized allocation.
-        const double requested = value_as_number(arguments[0]);
-        if (!std::isfinite(requested)) {
+        // #5946/#5968: the ceiling is checked on the truncated-toward-zero value that the size_t conversion would
+        // produce (16777184.5 is allowed), before any narrowing, so a huge or nonfinite count stays defined.
+        const auto length = checked_character_string_length(value_as_number(arguments[0]));
+        if (!length.has_value()) {
             throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.StringTooLong"), 1903);
         }
-        const double truncated = std::trunc(std::max(0.0, requested));
-        if (truncated > kVfpMaxCharacterStringLength) {
-            throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.StringTooLong"), 1903);
-        }
-        const std::size_t n = static_cast<std::size_t>(truncated);
-        return make_string_value(std::string(n, ' '));
+        return make_string_value(std::string(*length, ' '));
     }
     if (function == "replicate" && arguments.size() >= 2U) {
         const std::string src = value_as_string(arguments[0]);
@@ -305,6 +293,11 @@ std::optional<PrgValue> evaluate_string_function(
         // wrapping to a small value that would then pass a
         // post-multiplication check.
         const double truncated_count = std::trunc(std::max(0.0, requested_count));
+        if (src.empty() || truncated_count == 0.0) {
+            // #5595: nothing to repeat, so do not iterate `count` times (REPLICATE('', 9007199254740992) used to
+            // spin for ~2^53 iterations) and do not reserve anything.
+            return make_string_value(std::string{});
+        }
         if (static_cast<double>(src.size()) * truncated_count > kVfpMaxCharacterStringLength) {
             throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.StringTooLong"), 1903);
         }
@@ -621,7 +614,13 @@ std::optional<PrgValue> evaluate_string_function(
     }
     if ((function == "padl" || function == "padr" || function == "padc") && arguments.size() >= 2U) {
         std::string src = value_as_string(arguments[0]);
-        const std::size_t width = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1])));
+        // #6003: installed VFP9 raises error 11 for a width beyond the maximum Character string length (PADL, PADR
+        // and PADC('x', 20000000) all give ERR11). A fractional width truncates, a negative one is 0.
+        const auto checked_width = checked_character_string_length(value_as_number(arguments[1]));
+        if (!checked_width.has_value()) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        const std::size_t width = *checked_width;
         const char pad_char = (arguments.size() >= 3U && !value_as_string(arguments[2]).empty())
                                   ? value_as_string(arguments[2])[0]
                                   : ' ';

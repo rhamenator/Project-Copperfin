@@ -112,6 +112,13 @@ std::optional<int> try_exact_integer_compare(const PrgValue& left, const PrgValu
 // above 2^63.
 PrgValue negate_exact_integer(const PrgValue& value);
 
+// #5595/#5611/#6003/#6004: the largest Character string VFP9 holds (16,777,184 bytes) and a validated length from a
+// Numeric argument. The value is truncated toward zero (a negative value becomes 0). std::nullopt means the value is
+// NaN, infinite or above the ceiling, so callers raise their compatibility error instead of converting an out-of-range
+// double to std::size_t (undefined) or allocating without a bound.
+inline constexpr double kVfpMaxCharacterStringLength = 16'777'184.0;
+std::optional<std::size_t> checked_character_string_length(double requested);
+
 // The shortest plain-decimal text (no exponent) that reads back as exactly `value`: 15, 16 or 17 significant
 // digits, whichever is the first to round-trip. value_as_string() keeps six significant digits for display, so
 // it must not be used to store a number (REPLACE n WITH 123.456789 kept 123.457 and 1.0000005 became 1).
