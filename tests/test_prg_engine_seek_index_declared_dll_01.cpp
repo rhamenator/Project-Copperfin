@@ -325,6 +325,11 @@ void test_declared_dll_double_arguments_follow_x64_abi() {
         "nInt64 = CopperfinDeclaredDllInt64()\n"
         "nExactInt64 = CopperfinDeclaredDllInt64BeyondDouble()\n"
         "nEchoInt64 = CopperfinDeclaredDllInt64Echo(nExactInt64)\n"
+        "nExactPlusOne = nExactInt64 + 1\n"
+        "nExactTwice = nExactInt64 * 2\n"
+        "nExactMinusOne = nExactInt64 - 1\n"
+        "lExactOrdered = nExactInt64 > nExactMinusOne\n"
+        "lExactEqual = (nExactInt64 = nExactMinusOne)\n"
         "nByRefInt64 = 0\n"
         "nByRefResult = CopperfinDeclaredDllInt64ByRef(@nByRefInt64)\n"
         "nOneSlot = CopperfinDeclaredDllOneSlot(1.0)\n"
@@ -345,6 +350,25 @@ void test_declared_dll_double_arguments_follow_x64_abi() {
         make_runtime_session_options(main_path.string(), temp_root.string()));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "declared DLL double-argument script should complete: " + state.message);
+
+    // #6035: arithmetic and ordering on the exact 64-bit result must not round trip through double.
+    const auto expect_exact_int64 = [&](const char *name, const char *expected, const char *what) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end() && found->second.kind == copperfin::runtime::PrgValueKind::int64 &&
+                   copperfin::runtime::format_value(found->second) == expected,
+               std::string("#6035: ") + what + " should stay an exact int64 (" + expected + ")");
+    };
+    expect_exact_int64("nexactplusone", "9007199254740994", "exact + 1");
+    expect_exact_int64("nexacttwice", "18014398509481986", "exact * 2");
+    expect_exact_int64("nexactminusone", "9007199254740992", "exact - 1");
+    const auto exact_ordered = state.globals.find("lexactordered");
+    expect(exact_ordered != state.globals.end() && exact_ordered->second.kind == copperfin::runtime::PrgValueKind::boolean &&
+               exact_ordered->second.boolean_value,
+           "#6035: 2^53+1 must order above 2^53");
+    const auto exact_equal = state.globals.find("lexactequal");
+    expect(exact_equal != state.globals.end() && exact_equal->second.kind == copperfin::runtime::PrgValueKind::boolean &&
+               !exact_equal->second.boolean_value,
+           "#6035: 2^53+1 must not equal 2^53");
 
     const auto constant = state.globals.find("nconstant");
     const auto text = state.globals.find("ctext");

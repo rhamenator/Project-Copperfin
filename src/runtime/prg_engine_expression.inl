@@ -905,13 +905,10 @@
                         {
                             left = currency_arithmetic(left, right, '+');
                         }
-                        else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
-                                 (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
+                        else if (const auto exact = try_exact_integer_arithmetic('+', left, right); exact.has_value())
                         {
-                            // Preserve integer arithmetic - use int64 as common type
-                            left = make_int64_value(
-                                static_cast<std::int64_t>(value_as_number(left)) +
-                                static_cast<std::int64_t>(value_as_number(right)));
+                            // #6035: exact 64-bit arithmetic, never through double.
+                            left = *exact;
                         }
                         else
                         {
@@ -964,12 +961,9 @@
                         {
                             left = currency_arithmetic(left, right, '-');
                         }
-                        else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
-                            (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
+                        else if (const auto exact = try_exact_integer_arithmetic('-', left, right); exact.has_value())
                         {
-                            left = make_int64_value(
-                                static_cast<std::int64_t>(value_as_number(left)) -
-                                static_cast<std::int64_t>(value_as_number(right)));
+                            left = *exact;
                         }
                         else
                         {
@@ -1005,12 +999,9 @@
                         {
                             left = currency_arithmetic(left, right, '*');
                         }
-                        else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
-                            (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
+                        else if (const auto exact = try_exact_integer_arithmetic('*', left, right); exact.has_value())
                         {
-                            left = make_int64_value(
-                                static_cast<std::int64_t>(value_as_number(left)) *
-                                static_cast<std::int64_t>(value_as_number(right)));
+                            left = *exact;
                         }
                         else
                         {
@@ -1039,13 +1030,9 @@
                             }
                             left = currency_arithmetic(left, right, '/');
                         }
-                        else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
-                            (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
+                        else if (const auto exact = try_exact_integer_arithmetic('/', left, right); exact.has_value())
                         {
-                            const std::int64_t divisor = static_cast<std::int64_t>(value_as_number(right));
-                            if (divisor == 0)
-                                throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.IntegerDivisionByZero"));
-                            left = make_int64_value(static_cast<std::int64_t>(value_as_number(left)) / divisor);
+                            left = *exact;
                         }
                         else
                         {
@@ -1132,12 +1119,13 @@
                     require_set_operand(operand);
                     if (!is_numeric_class(classify_operand(operand)))
                     {
-                        // Only Numeric and Currency can be negated; anything else is error 11.
+                        // Only Numeric, Currency and the 64-bit integer kinds can be negated; anything else is error 11.
                         throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
                     }
-                    if (operand.kind == PrgValueKind::int64)
+                    if (operand.kind == PrgValueKind::int64 || operand.kind == PrgValueKind::uint64)
                     {
-                        return make_int64_value(-operand.int64_value);
+                        // #6035: -INT64_MIN and a uint64 above 2^63 are numeric overflow, not C++ signed overflow.
+                        return negate_exact_integer(operand);
                     }
                     if (operand.kind == PrgValueKind::currency)
                     {
@@ -4173,12 +4161,10 @@
                     const std::string right_value = value_as_string(right);
                     return left_value < right_value ? -1 : (left_value > right_value ? 1 : 0);
                 }
-                if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
-                    (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
+                if (const auto exact = try_exact_integer_compare(left, right); exact.has_value())
                 {
-                    const std::int64_t left_value = static_cast<std::int64_t>(value_as_number(left));
-                    const std::int64_t right_value = static_cast<std::int64_t>(value_as_number(right));
-                    return left_value < right_value ? -1 : (left_value > right_value ? 1 : 0);
+                    // #6035: exact signed/unsigned 64-bit ordering, including values beyond 2^53 and above INT64_MAX.
+                    return *exact;
                 }
                 if (left.kind == PrgValueKind::currency && right.kind == PrgValueKind::currency)
                 {
@@ -4220,17 +4206,10 @@
                 {
                     return value_as_bool(left) == value_as_bool(right);
                 }
-                // Exact integer equality when both sides are integer kinds
-                if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
-                    (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
+                // Exact integer equality when a 64-bit kind meets another exact integer (#6035)
+                if (const auto exact = try_exact_integer_compare(left, right); exact.has_value())
                 {
-                    return left.kind == PrgValueKind::int64
-                               ? (right.kind == PrgValueKind::int64
-                                      ? left.int64_value == right.int64_value
-                                      : left.int64_value >= 0 && static_cast<std::uint64_t>(left.int64_value) == right.uint64_value)
-                               : (right.kind == PrgValueKind::uint64
-                                      ? left.uint64_value == right.uint64_value
-                                      : right.int64_value >= 0 && left.uint64_value == static_cast<std::uint64_t>(right.int64_value));
+                    return *exact == 0;
                 }
                 if (left.kind == PrgValueKind::currency && right.kind == PrgValueKind::currency)
                 {

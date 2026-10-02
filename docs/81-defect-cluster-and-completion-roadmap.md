@@ -494,12 +494,13 @@ which `VARTYPE(x, .T.)` and `TYPE()` use; the other items its text raised (`EMPT
 `NVL`, `EVL`, aggregates on NULL) were verified against VFP9 and are covered by
 `RQ-CF-PRG-NULL-OPERATOR-SEMANTICS-001` and `RQ-CF-PRG-TYPED-NULL-001`.
 
-### 25. Currency/numeric-precision type fidelity — `IN PROGRESS`
+### 25. Currency/numeric-precision type fidelity — `DONE`
 
 **Started 2026-10-01:** Currency literals (#6036) and `Y` fields (#6061) follow
 `RQ-CF-PRG-CURRENCY-TYPING-001`, and the numeric functions on Currency (#6039) follow
 `RQ-CF-PRG-CURRENCY-FUNCTIONS-001`, and Currency overflow (#6037) follows
-`RQ-CF-PRG-CURRENCY-OVERFLOW-001`. Still open here: #6035 only. Also in this cluster:
+`RQ-CF-PRG-CURRENCY-OVERFLOW-001`. Exact 64-bit integer arithmetic and ordering on external-function results (#6035) follows
+`RQ-CF-PRG-INT64-EXACT-EXPRESSION-001`. Nothing else is open here. Also in this cluster:
 exact Currency multiply and divide (#6742) follows `RQ-CF-PRG-CURRENCY-EXACT-MULDIV-001`; Currency `VAL()` (#6728, #5996) follows `RQ-CF-PRG-CURRENCY-VAL-001`; `TRANSFORM` with a currency-only picture (#6168) follows `RQ-CF-PRG-TRANSFORM-CURRENCY-PICTURE-001`; Aggregates keep their operand type (#6040, #6041) under `RQ-CF-PRG-AGGREGATE-TYPES-001`; #6038 (Jet4 Unicode decoding) is an Access-migration
 item.
 
