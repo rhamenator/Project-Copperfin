@@ -407,10 +407,13 @@ try {
         $priorRegistrationCountAfterUpgrade = Get-CopperfinUninstallEntryCount `
             -ExpectedInstallRoot $resolvedInstallRoot `
             -ExpectedRegistryKeyName $PriorUninstallRegistryKeyName
-        Assert-Condition ((Get-CopperfinUninstallEntryCount `
-                -ExpectedInstallRoot $resolvedInstallRoot `
-                -ExpectedRegistryKeyName $UninstallRegistryKeyName) -eq 1) `
-            'Upgrade must create exactly one uninstall registration for the current version.'
+        $currentRegistrationCountAfterUpgrade = Get-CopperfinUninstallEntryCount `
+            -ExpectedInstallRoot $resolvedInstallRoot `
+            -ExpectedRegistryKeyName $UninstallRegistryKeyName
+        Assert-Condition ($currentRegistrationCountAfterUpgrade -eq 1) `
+            ('Upgrade must create exactly one uninstall registration for the current version; ' +
+                "found $currentRegistrationCountAfterUpgrade for '$UninstallRegistryKeyName' " +
+                "(prior '$PriorUninstallRegistryKeyName' registrations: $priorRegistrationCountAfterUpgrade).")
         Assert-Condition (Test-Path -LiteralPath $externalUserArtifact -PathType Leaf) `
             'Upgrade must not remove a user''s external artifact outside the install root.'
         Assert-Condition ((Get-FileHash -LiteralPath $externalUserArtifact -Algorithm SHA256).Hash.ToLowerInvariant() -eq $externalUserArtifactHash) `
