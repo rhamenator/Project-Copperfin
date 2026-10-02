@@ -57,6 +57,18 @@ std::optional<double> try_parse_invariant_double(std::string_view value, const b
     // Apple libc++ may not provide floating-point std::from_chars. Preserve
     // its locale-independent, no-leading-whitespace, full-consumption
     // contract with a classic-locale stream on that platform/STL pair.
+    // #6494 review: libc++'s num_get can consume hexadecimal-digit letters while
+    // scanning, so a malformed token like "1e-308f" must be rejected up front, as
+    // std::from_chars rejects it.
+    for (const char* cursor = begin; cursor != end; ++cursor) {
+        const char character = *cursor;
+        const bool numeric_character =
+            (character >= '0' && character <= '9') || character == '+' || character == '-' ||
+            character == '.' || character == 'e' || character == 'E';
+        if (!numeric_character) {
+            return std::nullopt;
+        }
+    }
     std::istringstream parser{std::string{begin, end}};
     parser.imbue(std::locale::classic());
     parser >> std::noskipws >> parsed;
