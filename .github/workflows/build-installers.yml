@@ -111,7 +111,8 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          cmake -S . -B build -A x64 -DCOPPERFIN_BUILD_TESTS=OFF -DCOPPERFIN_REQUIRE_X64=ON -DCOPPERFIN_PACKAGE_VERSION_OVERRIDE=0.0.1
+          cmake -S . -B build -A x64 -DCOPPERFIN_BUILD_TESTS=OFF -DCOPPERFIN_REQUIRE_X64=ON '-DCOPPERFIN_PACKAGE_VERSION_OVERRIDE=0.0.1'
+          if ($LASTEXITCODE -ne 0) { throw "Synthetic prior-version configure failed ($LASTEXITCODE)." }
           cmake -E remove_directory build/package-prior
           cmake -E make_directory build/package-prior
           cpack --config build/CPackConfig.cmake -B build/package-prior -C Release -G NSIS
@@ -127,7 +128,8 @@ jobs:
           # Restore build/'s generated CPack version files to the real
           # project version before the lifecycle step below reads them for
           # the CURRENT installer's registry key and version.
-          cmake -S . -B build -A x64 -DCOPPERFIN_BUILD_TESTS=OFF -DCOPPERFIN_REQUIRE_X64=ON -DCOPPERFIN_PACKAGE_VERSION_OVERRIDE=
+          cmake -S . -B build -A x64 -DCOPPERFIN_BUILD_TESTS=OFF -DCOPPERFIN_REQUIRE_X64=ON '-DCOPPERFIN_PACKAGE_VERSION_OVERRIDE='
+          if ($LASTEXITCODE -ne 0) { throw "Restoring the real-version configure failed ($LASTEXITCODE)." }
 
       - name: Exercise Windows installer lifecycle
         shell: pwsh
@@ -140,20 +142,24 @@ jobs:
           $installRoot = Join-Path $env:RUNNER_TEMP "copperfin-installer-lifecycle-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
           $uninstallRegistryKeyName = (Get-Content -LiteralPath build/CopperfinPackageInstallRegistryKey.txt -Raw).Trim()
           $packageVersion = (Get-Content -LiteralPath build/CopperfinPackageVersion.txt -Raw).Trim()
-          $lifecycleArguments = @(
-            '-InstallerPath', $installer[0].FullName,
-            '-BinaryDirectory', (Join-Path $env:GITHUB_WORKSPACE 'build'),
-            '-InstallRoot', $installRoot,
-            '-UninstallRegistryKeyName', $uninstallRegistryKeyName,
-            '-PackageVersion', $packageVersion,
-            '-EvidenceDirectory', (Join-Path $env:GITHUB_WORKSPACE 'artifacts/windows-installer-lifecycle')
-          )
+          # #6696: splat a hashtable, not an array. Array splatting binds
+          # '-Name' strings positionally, so no named parameter was ever
+          # bound and parameter-set resolution failed.
+          $lifecycleArguments = @{
+            InstallerPath            = $installer[0].FullName
+            BinaryDirectory          = (Join-Path $env:GITHUB_WORKSPACE 'build')
+            InstallRoot              = $installRoot
+            UninstallRegistryKeyName = $uninstallRegistryKeyName
+            PackageVersion           = $packageVersion
+            EvidenceDirectory        = (Join-Path $env:GITHUB_WORKSPACE 'artifacts/windows-installer-lifecycle')
+          }
           if (-not [string]::IsNullOrEmpty($env:PRIOR_INSTALLER_PATH)) {
-            $lifecycleArguments += @(
-              '-PriorInstallerPath', $env:PRIOR_INSTALLER_PATH,
-              '-PriorUninstallRegistryKeyName', $env:PRIOR_UNINSTALL_REGISTRY_KEY,
-              '-PriorPackageVersion', $env:PRIOR_PACKAGE_VERSION
-            )
+            if ($env:PRIOR_PACKAGE_VERSION -eq $packageVersion -or $env:PRIOR_UNINSTALL_REGISTRY_KEY -eq $uninstallRegistryKeyName) {
+              throw "Synthetic prior installer must be differently versioned: prior $($env:PRIOR_PACKAGE_VERSION) / '$($env:PRIOR_UNINSTALL_REGISTRY_KEY)' vs current $packageVersion / '$uninstallRegistryKeyName'."
+            }
+            $lifecycleArguments['PriorInstallerPath'] = $env:PRIOR_INSTALLER_PATH
+            $lifecycleArguments['PriorUninstallRegistryKeyName'] = $env:PRIOR_UNINSTALL_REGISTRY_KEY
+            $lifecycleArguments['PriorPackageVersion'] = $env:PRIOR_PACKAGE_VERSION
           }
           & ./scripts/test-windows-installer-lifecycle.ps1 @lifecycleArguments
 
