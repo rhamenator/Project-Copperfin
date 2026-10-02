@@ -314,7 +314,11 @@ void test_wildcard_capture_preserves_invalid_utf8_bytes() {
     fs::create_directories(temp_root / "script");
     const std::string odd = "\xFF" "a.bin";
     write_text(temp_root / "work" / odd, "payload");
-    if (!fs::exists(temp_root / "work" / odd)) {
+    // The error_code overload: querying a non-UTF-8 name on such a filesystem can fail with EILSEQ/EINVAL, and the
+    // throwing overload would abort the test before it reaches the skip.
+    std::error_code probe_error;
+    const bool fixture_exists = fs::exists(temp_root / "work" / odd, probe_error) && !probe_error;
+    if (!fixture_exists) {
         // #6763: APFS and HFS+ reject a file name that is not valid UTF-8, so the fixture itself cannot
         // exist there and the byte-preservation property is untestable on that filesystem. The skip is
         // keyed on the fixture, not on the platform: every filesystem that can hold the name still runs it.
