@@ -1119,7 +1119,7 @@
                     require_set_operand(operand);
                     if (!is_numeric_class(classify_operand(operand)))
                     {
-                        // Only Numeric and Currency can be negated; anything else is error 11.
+                        // Only Numeric, Currency and the 64-bit integer kinds can be negated; anything else is error 11.
                         throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
                     }
                     if (operand.kind == PrgValueKind::int64 || operand.kind == PrgValueKind::uint64)

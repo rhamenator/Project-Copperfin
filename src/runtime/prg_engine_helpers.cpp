@@ -1066,6 +1066,11 @@ struct ExactInteger {
     std::uint64_t magnitude = 0U;
 };
 
+// Exactly representable double bounds of the exact-integer range [-2^63, 2^64), and the magnitude of INT64_MIN.
+constexpr double kNegTwoPow63 = -9223372036854775808.0;
+constexpr double kTwoPow64 = 18446744073709551616.0;
+constexpr std::uint64_t kInt64MinMagnitude = 9223372036854775808ULL;
+
 bool is_wide_integer_kind(const PrgValue& value) {
     return value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
 }
@@ -1088,8 +1093,7 @@ std::optional<ExactInteger> exact_integer_operand(const PrgValue& value) {
     if (!std::isfinite(number) || std::trunc(number) != number) {
         return std::nullopt;
     }
-    // -2^63 and 2^64 are exactly representable doubles.
-    if (number >= 18446744073709551616.0 || number < -9223372036854775808.0) {
+    if (number >= kTwoPow64 || number < kNegTwoPow63) {
         return std::nullopt;
     }
     if (number < 0.0) {
@@ -1144,11 +1148,14 @@ ExactInteger exact_integer_multiply(const ExactInteger& left, const ExactInteger
 
 PrgValue exact_integer_result(const ExactInteger& exact, const bool allow_unsigned) {
     if (exact.negative) {
-        if (exact.magnitude > 9223372036854775808ULL) {
+        if (exact.magnitude > kInt64MinMagnitude) {
             throw_exact_integer_overflow();
         }
-        // Unsigned negation then conversion is modular: 2^63 becomes INT64_MIN.
-        return make_int64_value(static_cast<std::int64_t>(std::uint64_t{0} - exact.magnitude));
+        if (exact.magnitude == kInt64MinMagnitude) {
+            // 2^63 has no positive int64 to negate.
+            return make_int64_value(std::numeric_limits<std::int64_t>::min());
+        }
+        return make_int64_value(-static_cast<std::int64_t>(exact.magnitude));
     }
     if (exact.magnitude <= static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())) {
         return make_int64_value(static_cast<std::int64_t>(exact.magnitude));
