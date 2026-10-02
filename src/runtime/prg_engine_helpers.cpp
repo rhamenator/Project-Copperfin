@@ -1348,6 +1348,235 @@ PrgValue make_datetime_value(
     return result;
 }
 
+namespace {
+
+// Unsigned 128-bit integer for the exact Currency multiply and divide; a plain pair of 64-bit words so it behaves the
+// same on every compiler (MSVC has no __int128).
+struct U128 {
+    std::uint64_t hi = 0U;
+    std::uint64_t lo = 0U;
+};
+
+U128 u128_multiply(const std::uint64_t a, const std::uint64_t b) {
+    const std::uint64_t a_lo = a & 0xFFFFFFFFULL;
+    const std::uint64_t a_hi = a >> 32U;
+    const std::uint64_t b_lo = b & 0xFFFFFFFFULL;
+    const std::uint64_t b_hi = b >> 32U;
+    const std::uint64_t ll = a_lo * b_lo;
+    const std::uint64_t lh = a_lo * b_hi;
+    const std::uint64_t hl = a_hi * b_lo;
+    const std::uint64_t hh = a_hi * b_hi;
+    const std::uint64_t carry = ((ll >> 32U) + (lh & 0xFFFFFFFFULL) + (hl & 0xFFFFFFFFULL)) >> 32U;
+    U128 result;
+    result.lo = a * b;
+    result.hi = hh + (lh >> 32U) + (hl >> 32U) + carry;
+    return result;
+}
+
+// a * b, or false if it does not fit in 128 bits.
+bool u128_multiply_by_u64(const U128& a, const std::uint64_t b, U128& out) {
+    const U128 low = u128_multiply(a.lo, b);
+    const U128 high = u128_multiply(a.hi, b);
+    if (high.hi != 0U) {
+        return false;
+    }
+    const std::uint64_t hi = low.hi + high.lo;
+    if (hi < low.hi) {
+        return false;
+    }
+    out.hi = hi;
+    out.lo = low.lo;
+    return true;
+}
+
+bool u128_less(const U128& a, const U128& b) {
+    return a.hi != b.hi ? a.hi < b.hi : a.lo < b.lo;
+}
+
+U128 u128_subtract(const U128& a, const U128& b) {
+    U128 result;
+    result.lo = a.lo - b.lo;
+    result.hi = a.hi - b.hi - (a.lo < b.lo ? 1U : 0U);
+    return result;
+}
+
+// Schoolbook shift-and-subtract division: 128 iterations, fine for a monetary operator.
+void u128_divide(const U128& numerator, const U128& denominator, U128& quotient, U128& remainder) {
+    quotient = U128{};
+    remainder = U128{};
+    for (int bit = 127; bit >= 0; --bit) {
+        remainder.hi = (remainder.hi << 1U) | (remainder.lo >> 63U);
+        remainder.lo <<= 1U;
+        const std::uint64_t word = bit >= 64 ? numerator.hi : numerator.lo;
+        remainder.lo |= (word >> static_cast<unsigned>(bit % 64)) & 1U;
+        if (!u128_less(remainder, denominator)) {
+            remainder = u128_subtract(remainder, denominator);
+            if (bit >= 64) {
+                quotient.hi |= 1ULL << static_cast<unsigned>(bit - 64);
+            } else {
+                quotient.lo |= 1ULL << static_cast<unsigned>(bit);
+            }
+        }
+    }
+}
+
+// numerator / denominator rounded half away from zero, as an unsigned magnitude; false if it needs more than 64 bits.
+bool u128_divide_round(const U128& numerator, const U128& denominator, std::uint64_t& magnitude) {
+    U128 quotient;
+    U128 remainder;
+    u128_divide(numerator, denominator, quotient, remainder);
+    if (quotient.hi != 0U) {
+        return false;
+    }
+    magnitude = quotient.lo;
+    // Round half away from zero: the remainder is at least half of the divisor.
+    if (!u128_less(remainder, u128_subtract(denominator, remainder))) {
+        if (magnitude == std::numeric_limits<std::uint64_t>::max()) {
+            return false;
+        }
+        ++magnitude;
+    }
+    return true;
+}
+
+bool u128_power_of_ten(const int exponent, U128& out) {
+    out = U128{0U, 1U};
+    for (int index = 0; index < exponent; ++index) {
+        if (!u128_multiply_by_u64(out, 10U, out)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// An operand as sign, magnitude and a decimal exponent: magnitude * 10^-scale.
+struct ExactOperand {
+    bool negative = false;
+    std::uint64_t magnitude = 0U;
+    int scale = 0;
+};
+
+bool exact_operand(const PrgValue& value, ExactOperand& out) {
+    switch (value.kind) {
+        case PrgValueKind::currency:
+            out.negative = value.currency_value < 0;
+            out.magnitude = out.negative ? 0ULL - static_cast<std::uint64_t>(value.currency_value)
+                                         : static_cast<std::uint64_t>(value.currency_value);
+            out.scale = 4;
+            return true;
+        case PrgValueKind::int64:
+            out.negative = value.int64_value < 0;
+            out.magnitude = out.negative ? 0ULL - static_cast<std::uint64_t>(value.int64_value)
+                                         : static_cast<std::uint64_t>(value.int64_value);
+            out.scale = 0;
+            return true;
+        case PrgValueKind::uint64:
+            out.negative = false;
+            out.magnitude = value.uint64_value;
+            out.scale = 0;
+            return true;
+        case PrgValueKind::number:
+            break;
+        default:
+            return false;
+    }
+    if (!std::isfinite(value.number_value)) {
+        return false;
+    }
+    const std::string text = format_round_trip_decimal(value.number_value);
+    std::size_t index = 0U;
+    out.negative = !text.empty() && text[0] == '-';
+    if (out.negative) {
+        index = 1U;
+    }
+    std::string digits;
+    int scale = 0;
+    bool after_point = false;
+    for (; index < text.size(); ++index) {
+        const char ch = text[index];
+        if (ch == '.') {
+            after_point = true;
+        } else if (ch >= '0' && ch <= '9') {
+            digits.push_back(ch);
+            if (after_point) {
+                ++scale;
+            }
+        } else {
+            return false;   // an exponent or anything else: not a plain decimal
+        }
+    }
+    const std::size_t first = digits.find_first_not_of('0');
+    digits = first == std::string::npos ? std::string("0") : digits.substr(first);
+    if (digits.size() > 19U || scale > 18) {
+        return false;
+    }
+    std::uint64_t magnitude = 0U;
+    for (const char ch : digits) {
+        const std::uint64_t digit = static_cast<std::uint64_t>(ch - '0');
+        if (magnitude > (std::numeric_limits<std::uint64_t>::max() - digit) / 10U) {
+            return false;
+        }
+        magnitude = magnitude * 10U + digit;
+    }
+    out.magnitude = magnitude;
+    out.scale = scale;
+    return true;
+}
+
+}  // namespace
+
+CurrencyArithmeticResult currency_multiply_divide_exact(const PrgValue& left, const PrgValue& right, const char operation) {
+    CurrencyArithmeticResult result;
+    ExactOperand a;
+    ExactOperand b;
+    if (!exact_operand(left, a) || !exact_operand(right, b)) {
+        return result;   // unsupported
+    }
+    std::uint64_t magnitude = 0U;
+    bool fits = false;
+    if (operation == '*') {
+        // (a / 10^sa) * (b / 10^sb) as a scaled Currency is a * b / 10^(sa + sb - 4).
+        const int shift = a.scale + b.scale - 4;
+        if (shift < 0) {
+            return result;
+        }
+        U128 divisor;
+        if (!u128_power_of_ten(shift, divisor)) {
+            return result;
+        }
+        fits = u128_divide_round(u128_multiply(a.magnitude, b.magnitude), divisor, magnitude);
+    } else {
+        // (a / 10^sa) / (b / 10^sb) as a scaled Currency is a * 10^(4 + sb - sa) / b.
+        const int shift = 4 + b.scale - a.scale;
+        U128 numerator{0U, a.magnitude};
+        U128 denominator{0U, b.magnitude};
+        U128 factor;
+        if (denominator.hi == 0U && denominator.lo == 0U) {
+            return result;
+        }
+        if (!u128_power_of_ten(shift >= 0 ? shift : -shift, factor)) {
+            return result;
+        }
+        if (shift >= 0) {
+            if (!u128_multiply_by_u64(factor, a.magnitude, numerator)) {
+                return result;
+            }
+        } else if (!u128_multiply_by_u64(factor, b.magnitude, denominator)) {
+            return result;
+        }
+        fits = u128_divide_round(numerator, denominator, magnitude);
+    }
+    const bool negative = (a.negative != b.negative) && magnitude != 0U;
+    constexpr std::uint64_t kMaxPositive = static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max());
+    if (!fits || (!negative && magnitude > kMaxPositive) || (negative && magnitude > kMaxPositive + 1U)) {
+        result.status = CurrencyArithmeticStatus::out_of_range;
+        return result;
+    }
+    result.status = CurrencyArithmeticStatus::ok;
+    result.scaled = negative ? static_cast<std::int64_t>(0ULL - magnitude) : static_cast<std::int64_t>(magnitude);
+    return result;
+}
+
 CurrencyDecimal parse_currency_decimal(const std::string& text, const bool allow_storage_minimum) {
     CurrencyDecimal result;
     std::size_t index = 0U;

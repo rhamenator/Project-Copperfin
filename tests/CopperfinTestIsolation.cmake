@@ -875,6 +875,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_transform_currency_picture
             test_prg_engine_currency_functions
             test_prg_engine_currency_overflow
+            test_prg_engine_currency_exact_muldiv
             test_prg_engine_currency_val
             test_prg_engine_aggregate_types
             test_prg_engine_mdy_dmy

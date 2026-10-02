@@ -168,6 +168,19 @@ struct CurrencyDecimal {
 // literal may not use.
 CurrencyDecimal parse_currency_decimal(const std::string& text, bool allow_storage_minimum = false);
 
+// Exact Currency multiply and divide (#6742). The result is rounded half away from zero at the fourth decimal and
+// computed in portable 128-bit integers, so it is the same on every platform and never loses digits above 2^53 scaled
+// units the way a double (or a 53-bit `long double` on MSVC and some ARM targets) does. A Number operand is read as its
+// shortest round-trip decimal text. `unsupported` means an operand has no exact small decimal form (not finite, more
+// than 18 fractional digits or 19 integer digits), and the caller falls back to floating point.
+enum class CurrencyArithmeticStatus { ok, out_of_range, unsupported };
+struct CurrencyArithmeticResult {
+    CurrencyArithmeticStatus status = CurrencyArithmeticStatus::unsupported;
+    std::int64_t scaled = 0;
+};
+// `operation` is '*' or '/'; at least one operand is a Currency. A zero divisor is the caller's to reject.
+CurrencyArithmeticResult currency_multiply_divide_exact(const PrgValue& left, const PrgValue& right, char operation);
+
 // A Currency value as plain decimal text ("-1234.57") with `decimals` places, rounded half away from zero from the
 // four stored (installed VFP9 shows two places by default and follows SET DECIMALS: 0 gives 1235, 4 gives 1234.5678
 // for $1234.5678). The caller applies the point, separator and currency symbol.
