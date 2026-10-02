@@ -361,6 +361,12 @@ if(COPPERFIN_POWERSHELL_EXECUTABLE AND COPPERFIN_POWERSHELL_EXECUTABLE MATCHES "
         list(GET COPPERFIN_SNAP_POWERSHELL_REAL_BINARY -1 COPPERFIN_POWERSHELL_EXECUTABLE)
     endif()
 endif()
+include(${CMAKE_CURRENT_SOURCE_DIR}/CopperfinPowerShellDiscovery.cmake)
+copperfin_select_powershell_executable(
+    "${COPPERFIN_POWERSHELL_EXECUTABLE}"
+    "${APPLE}"
+    COPPERFIN_POWERSHELL_EXECUTABLE
+)
 include(${CMAKE_CURRENT_SOURCE_DIR}/CopperfinRscriptDiscovery.cmake)
 copperfin_select_rscript_executable(
     "${COPPERFIN_RSCRIPT_EXECUTABLE}"
@@ -404,6 +410,14 @@ add_test(
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_launcher_trust_provisioning_contract_check.cmake
+)
+
+add_test(
+    NAME test_powershell_discovery_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DBINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -DDISCOVERY_MODULE=${CMAKE_CURRENT_SOURCE_DIR}/CopperfinPowerShellDiscovery.cmake
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_powershell_discovery_contract_check.cmake
 )
 
 add_test(
