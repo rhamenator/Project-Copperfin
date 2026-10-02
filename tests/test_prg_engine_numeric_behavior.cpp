@@ -207,6 +207,78 @@ std::vector<Row> build_rows() {
         rows.push_back({set, "LEFT('abcdef',0)", "C:"});
         rows.push_back({set, "RIGHT('abcdef',100)", "C:abcdef"});
     }
+
+    // Array conversions (#6030 under #5611/#6776). The primary position and dimension errors are stable VFP9
+    // contracts, so they apply in both modes. Only the observed 32-bit conversion quirks are mode-dependent.
+    const std::string array_setup =
+        "DIMENSION a[3]\n"
+        "a[1] = 'a'\n"
+        "a[2] = 'b'\n"
+        "a[3] = 'c'\n";
+    const std::string copy_setup =
+        array_setup +
+        "DIMENSION b[3]\n"
+        "b[1] = 'x'\n"
+        "b[2] = 'y'\n"
+        "b[3] = 'z'\n";
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode + "\n";
+        rows.push_back({set + array_setup, "AELEMENT(a,1E20)", "ERR1234"});
+        rows.push_back({set + array_setup, "AELEMENT(a,1,1E20)", "ERR230"});
+        rows.push_back({set + array_setup, "ASUBSCRIPT(a,1E20,1)", "ERR1234"});
+        rows.push_back({set + array_setup, "ASUBSCRIPT(a,1,1E20)", "ERR1234"});
+        rows.push_back({set + array_setup, "ASCAN(a,'b',1,1E20)", "ERR1234"});
+        rows.push_back({set + array_setup, "ASCAN(a,'b',1,-1,-1,1E20)", "ERR11"});
+        rows.push_back({set + copy_setup, "ACOPY(a,b,1E20)", "ERR1234"});
+        rows.push_back({set + copy_setup, "ACOPY(a,b,1,-1,1E20)", "ERR1234"});
+        rows.push_back({set + array_setup, "ADEL(a,1E20)", "ERR1234"});
+        rows.push_back({set + array_setup, "AINS(a,1E20)", "ERR1234"});
+        rows.push_back({set + array_setup, "ASORT(a,4294967296)", "ERR1234"});
+    }
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN\n" + array_setup,
+                    "ASCAN(a,'b',2147483648)", "N:0"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n" + array_setup,
+                    "ASCAN(a,'b',2147483648)", "N:2"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN\n" + array_setup,
+                    "ASORT(a,2147483648)", "ERR1234"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n" + array_setup,
+                    "ASORT(a,2147483648)", "N:1"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN\n" + array_setup,
+                    "ASORT(a,1,-1,1E20)", "ERR11"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n" + array_setup,
+                    "ASORT(a,1,-1,1E20)", "N:1"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN\n" + copy_setup,
+                    "ACOPY(a,b,1,1E20)", "N:3"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n" + copy_setup,
+                    "ACOPY(a,b,1,1E20)", "N:0"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN\n" + array_setup,
+                    "ACOPY(a,b,1,2,2)+ALEN(b)", "N:5"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n" + array_setup,
+                    "ACOPY(a,b,1,2,2)+ALEN(b)", "N:5"});
+    const std::string matrix_setup =
+        "DIMENSION a[3,2]\n"
+        "a[1,1] = 'a'\n"
+        "a[1,2] = 'b'\n"
+        "a[2,1] = 'c'\n"
+        "a[2,2] = 'd'\n"
+        "a[3,1] = 'e'\n"
+        "a[3,2] = 'f'\n";
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode + "\n";
+        rows.push_back({set + matrix_setup, "ASCAN(a,'d',2,2,2)", "N:4"});
+        rows.push_back({set + matrix_setup, "ASCAN(a,'d',2,3,2)", "ERR1234"});
+    }
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode + "\n";
+        rows.push_back({set + array_setup, "ADEL(a,1E20)", "ERR1234"});
+        rows.push_back({"", "a[1]+a[2]+a[3]", "C:abc"});
+        rows.push_back({set + array_setup, "AINS(a,1E20)", "ERR1234"});
+        rows.push_back({"", "a[1]+a[2]+a[3]", "C:abc"});
+        rows.push_back({set + array_setup, "ASORT(a,1E20)", "ERR1234"});
+        rows.push_back({"", "a[1]+a[2]+a[3]", "C:abc"});
+        rows.push_back({set + copy_setup, "ACOPY(a,b,1E20)", "ERR1234"});
+        rows.push_back({"", "b[1]+b[2]+b[3]", "C:xyz"});
+    }
     return rows;
 }
 
@@ -266,6 +338,7 @@ void test_numeric_behavior_script_rows() {
 void test_conversion_helpers() {
     using copperfin::runtime::NumericBehavior;
     using copperfin::runtime::numeric_count_argument;
+    using copperfin::runtime::checked_truncated_numeric_to_int64;
     constexpr std::int64_t kMax = std::numeric_limits<std::int64_t>::max();
     constexpr std::int64_t kMin = std::numeric_limits<std::int64_t>::min();
     const double inf = std::numeric_limits<double>::infinity();
@@ -293,6 +366,16 @@ void test_conversion_helpers() {
     expect(numeric_count_argument(nan, NumericBehavior::vfp9) == 0, "VFP9: NaN is the integer indefinite (0)");
     expect(numeric_count_argument(9007199254740992.0, NumericBehavior::vfp9) == 0, "VFP9: 2^53 has low 32 bits 0");
     expect(numeric_count_argument(-2.9, NumericBehavior::vfp9) == -2, "VFP9: truncates toward zero");
+
+    expect(checked_truncated_numeric_to_int64(2.9) == 2, "checked integer conversion truncates toward zero");
+    expect(checked_truncated_numeric_to_int64(-2.9) == -2, "checked negative conversion truncates toward zero");
+    expect(checked_truncated_numeric_to_int64(-9223372036854775808.0) == kMin,
+           "checked conversion accepts INT64_MIN");
+    expect(!checked_truncated_numeric_to_int64(9223372036854775808.0).has_value(),
+           "checked conversion rejects 2^63");
+    expect(!checked_truncated_numeric_to_int64(inf).has_value(), "checked conversion rejects infinity");
+    expect(!checked_truncated_numeric_to_int64(-inf).has_value(), "checked conversion rejects negative infinity");
+    expect(!checked_truncated_numeric_to_int64(nan).has_value(), "checked conversion rejects NaN");
 }
 
 }  // namespace

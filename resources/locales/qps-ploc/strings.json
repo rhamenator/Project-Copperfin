@@ -3087,6 +3087,8 @@
   "AssetEditor.Summary.LabelStrategy": "[Strategy]",
   "AssetEditor.Summary.LabelDeterministicFirst": "[Deterministic First]",
   "Runtime.Prg.Array.Error.PredicateMutatedSource": "[!! Fµñçţïøñ åŕğµmëñţ ṽålµë, ţ¥þë, øŕ çöµñţ ïš ïñṽålïð. !!]",
+  "Runtime.Prg.Array.Error.InvalidDimensions": "[!! Åŕŕå¥ ðïmëñšïøñš åŕë ïñṽålïð. !!]",
+  "Runtime.Prg.Array.Error.SubscriptOutOfRange": "[!! Šµþšçŕïþţ ïš øµţšïðë ðëƒïñëð ŕåñğë. !!]",
   "Runtime.Prg.Expression.Error.VariableNotFound": "[!! Ṽåŕïåþļë '{variableName}' ïš ñøţ ƒøµñð. !!]",
   "Runtime.Prg.String.Error.InvalidCharacterCode": "[!! Fµñçţïøñ åŕğµmëñţ ṽålµë, ţ¥þë, øŕ çöµñţ ïš ïñṽålïð. !!]",
   "Runtime.Prg.String.Error.InvalidOccurrence": "[!! Fµñçţïøñ åŕğµmëñţ ṽålµë, ţ¥þë, øŕ çöµñţ ïš ïñṽålïð. !!]",

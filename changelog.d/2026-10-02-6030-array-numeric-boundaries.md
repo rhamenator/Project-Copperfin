@@ -1,0 +1,1 @@
+- 2026-10-02: Array function positions, counts, dimensions, flags, and sort modes now reject invalid numeric conversions with catchable VFP-compatible errors before mutation, while `SET NUMERICBEHAVIOR TO VFP9` retains the probed legacy wraparound quirks.

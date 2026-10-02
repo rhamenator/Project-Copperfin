@@ -134,6 +134,9 @@ std::int64_t saturating_numeric_to_int64(double value);
 std::int64_t vfp9_numeric_to_int32(double value);
 // A signed count or length argument under `behavior`.
 std::int64_t numeric_count_argument(double value, NumericBehavior behavior);
+// Truncate toward zero only when `value` is finite and representable as int64. This is the fail-closed conversion for
+// array positions/selectors and other arguments where saturation would turn invalid input into an ordinary value.
+std::optional<std::int64_t> checked_truncated_numeric_to_int64(double value);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the
 // value is out of range). A size or count: truncated toward zero, never below `minimum`, saturating at the largest
 // value this build supports: INT64_MAX, or SIZE_MAX where size_t is narrower (NaN gives `minimum`). A rounded int64 (llround semantics for in-range values; NaN is 0 and

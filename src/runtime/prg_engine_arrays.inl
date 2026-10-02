@@ -63,6 +63,48 @@
             const std::string array_name = resolve_array_argument_name(0U);
             const std::string normalized_function = normalize_identifier(function);
             RuntimeArray *array = find_array(array_name);
+            const NumericBehavior array_numeric_behavior = numeric_behavior(
+                [&](const std::string &option_name) -> std::string
+                {
+                    const auto &set_state = current_set_state();
+                    const auto found = set_state.find(normalize_identifier(option_name));
+                    return found == set_state.end() ? std::string{} : found->second;
+                });
+            const auto throw_subscript_out_of_range = [&]() -> void
+            {
+                throw PrgCompatibilityError(
+                    runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"),
+                    1234);
+            };
+            const auto throw_invalid_array_dimensions = [&]() -> void
+            {
+                throw PrgCompatibilityError(
+                    runtime_text("Runtime.Prg.Array.Error.InvalidDimensions"),
+                    230);
+            };
+            const auto checked_array_position = [&](const double raw, const std::size_t upper) -> std::size_t
+            {
+                const auto converted = checked_truncated_numeric_to_int64(raw);
+                if (!converted.has_value() || *converted < 1 ||
+                    static_cast<std::uint64_t>(*converted) > upper)
+                {
+                    throw_subscript_out_of_range();
+                }
+                return static_cast<std::size_t>(*converted);
+            };
+            const auto checked_array_integer = [&](const double raw, const int error_code) -> std::int64_t
+            {
+                const auto converted = checked_truncated_numeric_to_int64(raw);
+                if (converted.has_value())
+                {
+                    return *converted;
+                }
+                if (error_code == 1234)
+                {
+                    throw_subscript_out_of_range();
+                }
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), error_code);
+            };
 
             if (normalized_function == "alines" && arguments.size() >= 2U)
             {
@@ -135,15 +177,71 @@
             if (normalized_function == "acopy" && raw_arguments.size() >= 2U)
             {
                 const std::string target_array_name = resolve_array_argument_name(1U);
+                if (array == nullptr || array->values.empty())
+                {
+                    return make_number_value(0.0);
+                }
                 const std::size_t source_start = arguments.size() >= 3U
-                                                     ? static_cast<std::size_t>(std::max<double>(1.0, value_as_number(arguments[2])))
+                                                     ? checked_array_position(
+                                                           value_as_number(arguments[2]), array->values.size())
                                                      : 1U;
-                const std::size_t count = arguments.size() >= 4U
-                                              ? static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[3])))
-                                              : 0U;
-                const std::size_t target_start = arguments.size() >= 5U
-                                                     ? static_cast<std::size_t>(std::max<double>(1.0, value_as_number(arguments[4])))
-                                                     : 1U;
+                const std::size_t available = array->values.size() - source_start + 1U;
+                std::size_t count = 0U;  // zero is copy_array_values()'s omitted/negative-count sentinel.
+                if (arguments.size() >= 4U)
+                {
+                    const double raw_count = value_as_number(arguments[3]);
+                    const auto checked_count = checked_truncated_numeric_to_int64(raw_count);
+                    const std::int64_t converted_count = numeric_count_argument(raw_count, array_numeric_behavior);
+                    if (converted_count == 0)
+                    {
+                        return make_number_value(0.0);
+                    }
+                    if (converted_count > 0)
+                    {
+                        // COPPERFIN defines an unrepresentably large positive count as "all". An ordinary positive
+                        // count beyond the source window is VFP error 1234; VFP9's wrapped positive values follow it.
+                        if (!checked_count.has_value() && array_numeric_behavior == NumericBehavior::copperfin)
+                        {
+                            count = available;
+                        }
+                        else if (static_cast<std::uint64_t>(converted_count) > available)
+                        {
+                            throw_subscript_out_of_range();
+                        }
+                        else
+                        {
+                            count = static_cast<std::size_t>(converted_count);
+                        }
+                    }
+                }
+                const RuntimeArray *target_array = find_array(target_array_name);
+                std::size_t target_start = 1U;
+                if (arguments.size() >= 5U)
+                {
+                    if (target_array != nullptr)
+                    {
+                        target_start = checked_array_position(
+                            value_as_number(arguments[4]), target_array->values.size());
+                    }
+                    else
+                    {
+                        const auto converted_target_start = checked_truncated_numeric_to_int64(
+                            value_as_number(arguments[4]));
+                        if (!converted_target_start.has_value() || *converted_target_start < 1 ||
+                            static_cast<std::uint64_t>(*converted_target_start) >
+                                std::numeric_limits<std::size_t>::max())
+                        {
+                            throw_subscript_out_of_range();
+                        }
+                        target_start = static_cast<std::size_t>(*converted_target_start);
+                        const std::size_t copy_count = count == 0U ? available : count;
+                        if (copy_count > 0U && target_start >
+                                                   std::numeric_limits<std::size_t>::max() - (copy_count - 1U))
+                        {
+                            throw_subscript_out_of_range();
+                        }
+                    }
+                }
                 return copy_array_values(array_name, target_array_name, source_start, count, target_start);
             }
 
@@ -153,29 +251,52 @@
             }
             if (normalized_function == "aelement" && arguments.size() >= 2U)
             {
-                const std::size_t index_or_row =
-                    static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[1])));
                 if (arguments.size() < 3U)
                 {
                     return make_number_value(static_cast<double>(
-                        index_or_row <= array->values.size() ? index_or_row : 0U));
+                        checked_array_position(value_as_number(arguments[1]), array->values.size())));
                 }
-                const std::size_t column =
-                    static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[2])));
-                return make_number_value(static_cast<double>(array_linear_index(*array, index_or_row, column)));
+                const std::size_t row = checked_array_position(value_as_number(arguments[1]), array->rows);
+                const auto raw_column = checked_truncated_numeric_to_int64(value_as_number(arguments[2]));
+                if (!raw_column.has_value() || *raw_column < 1 ||
+                    static_cast<std::uint64_t>(*raw_column) > array->columns)
+                {
+                    throw_invalid_array_dimensions();
+                }
+                return make_number_value(static_cast<double>(
+                    array_linear_index(*array, row, static_cast<std::size_t>(*raw_column))));
             }
             if (normalized_function == "asubscript" && arguments.size() >= 3U)
             {
-                const std::size_t element = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[1])));
-                const int dimension = static_cast<int>(std::llround(value_as_number(arguments[2])));
+                const std::size_t element = checked_array_position(value_as_number(arguments[1]), array->values.size());
+                const std::int64_t raw_dimension = checked_array_integer(value_as_number(arguments[2]), 1234);
+                const std::int64_t maximum_dimension = array->columns > 1U ? 2 : 1;
+                if (raw_dimension < 1 || raw_dimension > maximum_dimension)
+                {
+                    throw_subscript_out_of_range();
+                }
+                const int dimension = static_cast<int>(raw_dimension);
                 return make_number_value(static_cast<double>(array_subscript(*array, element, dimension)));
             }
             if (normalized_function == "ascan" && arguments.size() >= 2U)
             {
                 const double raw_start = arguments.size() >= 3U ? value_as_number(arguments[2]) : 1.0;
                 const double raw_count = arguments.size() >= 4U ? value_as_number(arguments[3]) : -1.0;
-                const int search_column = arguments.size() >= 5U ? static_cast<int>(std::llround(value_as_number(arguments[4]))) : -1;
-                const int flags = arguments.size() >= 6U ? static_cast<int>(std::llround(value_as_number(arguments[5]))) : 0;
+                std::int64_t search_column = -1;
+                if (arguments.size() >= 5U)
+                {
+                    search_column = array_numeric_behavior == NumericBehavior::vfp9
+                                        ? numeric_count_argument(value_as_number(arguments[4]), array_numeric_behavior)
+                                        : checked_array_integer(value_as_number(arguments[4]), 11);
+                }
+                const std::int64_t raw_flags = arguments.size() >= 6U
+                                                   ? checked_array_integer(value_as_number(arguments[5]), 11)
+                                                   : 0;
+                if (raw_flags < 0 || raw_flags > 31)
+                {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                }
+                const int flags = static_cast<int>(raw_flags);
                 const bool case_insensitive = (flags & 1) != 0;
                 const bool predicate_search = (flags & 16) != 0;
                 const bool exact_match = (flags & 4) != 0
@@ -380,18 +501,36 @@
                     array = current_array;
                     return matches;
                 };
-                const std::size_t start = raw_start <= 0.0
+                const std::int64_t converted_start = array_numeric_behavior == NumericBehavior::vfp9
+                                                         ? numeric_count_argument(raw_start, array_numeric_behavior)
+                                                         : checked_array_integer(raw_start, 1234);
+                if (converted_start == 0)
+                {
+                    finish_predicate_scan();
+                    throw_subscript_out_of_range();
+                }
+                const std::size_t start = converted_start < 0
                                               ? 1U
-                                              : static_cast<std::size_t>(raw_start);
-                const std::size_t count = raw_count <= 0.0
-                                              ? 0U
-                                              : static_cast<std::size_t>(raw_count);
-                if (start == 0U || start > array->values.size())
+                                              : static_cast<std::size_t>(converted_start);
+                if (start > array->values.size())
                 {
                     finish_predicate_scan();
                     return make_number_value(0.0);
                 }
-                if (search_column > 0 && array->columns > 1U)
+                const std::int64_t converted_count = checked_array_integer(raw_count, 1234);
+                const bool column_scan = search_column > 0 && array->columns > 1U;
+                const std::size_t maximum_count = column_scan
+                                                      ? (array->rows > start - 1U ? array->rows - (start - 1U) : 0U)
+                                                      : array->values.size() - start + 1U;
+                if (converted_count > 0 && static_cast<std::uint64_t>(converted_count) > maximum_count)
+                {
+                    finish_predicate_scan();
+                    throw_subscript_out_of_range();
+                }
+                const std::size_t count = converted_count <= 0
+                                              ? 0U
+                                              : static_cast<std::size_t>(converted_count);
+                if (column_scan)
                 {
                     const std::size_t column = static_cast<std::size_t>(search_column);
                     if (column > array->columns)
@@ -442,16 +581,21 @@
             }
             if (normalized_function == "adel" && arguments.size() >= 2U)
             {
-                const std::size_t position = static_cast<std::size_t>(std::max<double>(1.0, value_as_number(arguments[1])));
-                const int row_or_column = arguments.size() >= 3U ? static_cast<int>(std::llround(value_as_number(arguments[2]))) : 1;
+                const std::int64_t raw_row_or_column = arguments.size() >= 3U
+                                                           ? checked_array_integer(value_as_number(arguments[2]), 11)
+                                                           : 1;
+                if (raw_row_or_column < 1 || raw_row_or_column > 2)
+                {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                }
+                const int row_or_column = static_cast<int>(raw_row_or_column);
+                const std::size_t position = checked_array_position(
+                    value_as_number(arguments[1]),
+                    array->columns > 1U && row_or_column == 2 ? array->columns : array->rows);
                 if (array->columns > 1U)
                 {
                     if (row_or_column == 2)
                     {
-                        if (position == 0U || position > array->columns)
-                        {
-                            return make_number_value(0.0);
-                        }
                         for (std::size_t row = 0U; row < array->rows; ++row)
                         {
                             for (std::size_t column = position - 1U; column + 1U < array->columns; ++column)
@@ -464,10 +608,6 @@
                     }
                     else
                     {
-                        if (position == 0U || position > array->rows)
-                        {
-                            return make_number_value(0.0);
-                        }
                         for (std::size_t row = position - 1U; row + 1U < array->rows; ++row)
                         {
                             for (std::size_t column = 0U; column < array->columns; ++column)
@@ -485,10 +625,6 @@
                 }
                 else
                 {
-                    if (position == 0U || position > array->values.size())
-                    {
-                        return make_number_value(0.0);
-                    }
                     for (std::size_t index = position - 1U; index + 1U < array->values.size(); ++index)
                     {
                         array->values[index] = array->values[index + 1U];
@@ -503,16 +639,21 @@
             }
             if (normalized_function == "ains" && arguments.size() >= 2U)
             {
-                const std::size_t position = static_cast<std::size_t>(std::max<double>(1.0, value_as_number(arguments[1])));
-                const int row_or_column = arguments.size() >= 3U ? static_cast<int>(std::llround(value_as_number(arguments[2]))) : 1;
+                const std::int64_t raw_row_or_column = arguments.size() >= 3U
+                                                           ? checked_array_integer(value_as_number(arguments[2]), 11)
+                                                           : 1;
+                if (raw_row_or_column < 1 || raw_row_or_column > 2)
+                {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                }
+                const int row_or_column = static_cast<int>(raw_row_or_column);
+                const std::size_t position = checked_array_position(
+                    value_as_number(arguments[1]),
+                    array->columns > 1U && row_or_column == 2 ? array->columns : array->rows);
                 if (array->columns > 1U)
                 {
                     if (row_or_column == 2)
                     {
-                        if (position == 0U || position > array->columns)
-                        {
-                            return make_number_value(0.0);
-                        }
                         for (std::size_t row = 0U; row < array->rows; ++row)
                         {
                             for (std::size_t column = array->columns - 1U; column > position - 1U; --column)
@@ -525,10 +666,6 @@
                     }
                     else
                     {
-                        if (position == 0U || position > array->rows)
-                        {
-                            return make_number_value(0.0);
-                        }
                         for (std::size_t row = array->rows - 1U; row > position - 1U; --row)
                         {
                             for (std::size_t column = 0U; column < array->columns; ++column)
@@ -545,10 +682,6 @@
                 }
                 else
                 {
-                    if (position == 0U || position > array->values.size())
-                    {
-                        return make_number_value(0.0);
-                    }
                     for (std::size_t index = array->values.size() - 1U; index > position - 1U; --index)
                     {
                         array->values[index] = array->values[index - 1U];
@@ -562,9 +695,17 @@
             {
                 const double raw_start = arguments.size() >= 2U ? value_as_number(arguments[1]) : 1.0;
                 const double raw_count = arguments.size() >= 3U ? value_as_number(arguments[2]) : -1.0;
-                const int sort_order = arguments.size() >= 4U
-                                           ? static_cast<int>(std::llround(value_as_number(arguments[3])))
-                                           : 0;
+                const std::int64_t sort_order = arguments.size() >= 4U
+                                                    ? (array_numeric_behavior == NumericBehavior::vfp9
+                                                           ? numeric_count_argument(
+                                                                 value_as_number(arguments[3]), array_numeric_behavior)
+                                                           : checked_array_integer(value_as_number(arguments[3]), 11))
+                                                    : 0;
+                if (array_numeric_behavior == NumericBehavior::copperfin &&
+                    (sort_order < 0 || sort_order > 4))
+                {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                }
                 const bool descending = sort_order == 2 || sort_order == 4;
                 const bool case_insensitive = sort_order == 3 || sort_order == 4;
                 const auto is_numeric_array_value = [](const PrgValue &value)
@@ -591,20 +732,29 @@
                     const std::string right_key = sort_key(right);
                     return descending ? right_key < left_key : left_key < right_key;
                 };
-                const std::size_t start = raw_start <= 0.0
-                                              ? 1U
-                                              : static_cast<std::size_t>(raw_start);
-                if (start == 0U || start > array->values.size())
+                const std::int64_t converted_start = array_numeric_behavior == NumericBehavior::vfp9
+                                                         ? numeric_count_argument(raw_start, array_numeric_behavior)
+                                                         : checked_array_integer(raw_start, 1234);
+                if (converted_start == 0)
                 {
-                    return make_number_value(-1.0);
+                    throw_subscript_out_of_range();
                 }
+                const std::size_t start = converted_start < 0
+                                              ? 1U
+                                              : static_cast<std::size_t>(converted_start);
+                if (start > array->values.size())
+                {
+                    throw_subscript_out_of_range();
+                }
+                const std::int64_t converted_count = numeric_count_argument(raw_count, array_numeric_behavior);
                 if (array->columns <= 1U)
                 {
                     const std::size_t begin_index = start - 1U;
                     const std::size_t available = array->values.size() - begin_index;
-                    const std::size_t count = raw_count <= 0.0
+                    const std::size_t count = converted_count <= 0
                                                   ? available
-                                                  : std::min(static_cast<std::size_t>(raw_count), available);
+                                                  : static_cast<std::size_t>(std::min<std::uint64_t>(
+                                                        static_cast<std::uint64_t>(converted_count), available));
                     std::sort(array->values.begin() + static_cast<std::ptrdiff_t>(begin_index),
                               array->values.begin() + static_cast<std::ptrdiff_t>(begin_index + count),
                               value_less);
@@ -615,9 +765,10 @@
                 const std::size_t start_row = start_index / array->columns;
                 const std::size_t sort_column = start_index % array->columns;
                 const std::size_t available_rows = array->rows > start_row ? array->rows - start_row : 0U;
-                const std::size_t rows_to_sort = raw_count <= 0.0
+                const std::size_t rows_to_sort = converted_count <= 0
                                                      ? available_rows
-                                                     : std::min(static_cast<std::size_t>(raw_count), available_rows);
+                                                     : static_cast<std::size_t>(std::min<std::uint64_t>(
+                                                           static_cast<std::uint64_t>(converted_count), available_rows));
                 std::vector<std::vector<PrgValue>> rows;
                 rows.reserve(rows_to_sort);
                 for (std::size_t row = start_row; row < start_row + rows_to_sort; ++row)
