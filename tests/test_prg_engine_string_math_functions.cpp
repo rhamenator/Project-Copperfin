@@ -1981,6 +1981,29 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    // #6494: the Apple libc++ stream fallback rejected a representable subnormal because
+    // libc++ sets failbit when strtod reports ERANGE. Checked directly on the shared parser
+    // (including the negative boundary and malformed tails) so every platform runs it.
+    void test_invariant_double_parser_accepts_subnormals_and_rejects_malformed_tokens()
+    {
+        const auto parse = [](const char *text) { return copperfin::platform::try_parse_invariant_double(text); };
+        for (const auto &[text, expected] : {std::pair<const char *, double>{"1e-308", 1e-308},
+                                             {"-1e-308", -1e-308},
+                                             {"-1E-308", -1e-308},
+                                             {"5e-324", 4.9406564584124654e-324},
+                                             {"1e307", 1e307},
+                                             {"-2.5", -2.5}})
+        {
+            const auto value = parse(text);
+            expect(value.has_value() && *value == expected,
+                   std::string("#6494: invariant parser should accept ") + text);
+        }
+        for (const char *text : {"1e-999", "1e309", "-1e309", "1e-308f", "1e-308x", "abc", "1.5x", "0x1p-1030"})
+        {
+            expect(!parse(text).has_value(), std::string("#6494: invariant parser should reject ") + text);
+        }
+    }
+
     void test_val_raises_numeric_overflow_for_out_of_range_magnitudes()
     {
         // #6146: VAL() collapsed every std::from_chars range failure --
@@ -2465,6 +2488,7 @@ int main()
     test_at_family_accepts_positive_subunit_occurrence();
     test_val_accepts_leading_decimal_point();
     test_val_respects_set_point_decimal_separator();
+    test_invariant_double_parser_accepts_subnormals_and_rejects_malformed_tokens();
     test_val_raises_numeric_overflow_for_out_of_range_magnitudes();
     test_transform_and_str_render_numeric_overflow_as_asterisks();
     test_strtran_rejects_zero_occurrence_controls();
