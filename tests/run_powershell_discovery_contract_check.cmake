@@ -47,20 +47,35 @@ copperfin_select_powershell_executable("${duplicated}" FALSE selected)
 if(NOT "${selected}" STREQUAL "")
     message(FATAL_ERROR "the duplicated app-bundle path was admitted: ${selected}")
 endif()
-copperfin_select_powershell_executable("${duplicated}" TRUE selected)
-# On macOS a bundle binary may be substituted; whatever is chosen must be real.
-if(NOT "${selected}" STREQUAL "")
-    copperfin_powershell_resolves_to_file("${selected}" selected_usable)
-    if(NOT selected_usable)
-        message(FATAL_ERROR "macOS fallback chose an unusable PowerShell host: ${selected}")
-    endif()
+# On macOS the bundle launcher is selected when it is under an injected root, and
+# a real pwsh binary there is preferred over the launcher.
+set(launcher_glob "${fixture_root}/bundle/powershell*.app/Contents/MacOS/PowerShell.sh")
+copperfin_select_powershell_executable("${duplicated}" TRUE selected "${launcher_glob}")
+set(launcher "${fixture_root}/bundle/powershell.app/Contents/MacOS/PowerShell.sh")
+if(NOT "${selected}" STREQUAL "${launcher}")
+    message(FATAL_ERROR "the macOS bundle launcher was not selected: '${selected}'")
+endif()
+file(WRITE "${fixture_root}/bundle/powershell.app/Contents/MacOS/pwsh" "bundle binary fixture")
+set(binary_glob "${fixture_root}/bundle/powershell*.app/Contents/MacOS/pwsh")
+copperfin_select_powershell_executable("${duplicated}" TRUE selected "${binary_glob}" "${launcher_glob}")
+if(NOT "${selected}" STREQUAL "${fixture_root}/bundle/powershell.app/Contents/MacOS/pwsh")
+    message(FATAL_ERROR "a bundle binary was not preferred over the launcher: '${selected}'")
 endif()
 
-# Nothing discovered stays empty.
-copperfin_select_powershell_executable("pwsh-NOTFOUND" TRUE selected)
-if(NOT "${selected}" STREQUAL "" AND
-   NOT "${selected}" MATCHES "^/(Applications|usr/local|opt/homebrew)/")
-    message(FATAL_ERROR "an undiscovered PowerShell host produced a non-bundle result: ${selected}")
+# The bundle roots are ignored off macOS, and an empty injected set selects nothing.
+copperfin_select_powershell_executable("${duplicated}" FALSE selected "${launcher_glob}")
+if(NOT "${selected}" STREQUAL "")
+    message(FATAL_ERROR "bundle roots were consulted off macOS: '${selected}'")
+endif()
+copperfin_select_powershell_executable("${duplicated}" TRUE selected "${fixture_root}/nothing/*")
+if(NOT "${selected}" STREQUAL "")
+    message(FATAL_ERROR "an empty bundle root still selected a host: '${selected}'")
+endif()
+
+# Nothing discovered and nothing to fall back to stays empty.
+copperfin_select_powershell_executable("pwsh-NOTFOUND" TRUE selected "${fixture_root}/nothing/*")
+if(NOT "${selected}" STREQUAL "")
+    message(FATAL_ERROR "an undiscovered PowerShell host produced a result: '${selected}'")
 endif()
 
 file(REMOVE_RECURSE "${fixture_root}")

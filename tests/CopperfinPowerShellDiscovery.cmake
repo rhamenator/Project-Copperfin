@@ -27,6 +27,9 @@ function(copperfin_powershell_resolves_to_file candidate output_variable)
     endif()
 endfunction()
 
+# Optional trailing arguments replace the default macOS bundle/install glob list
+# (the contract test injects fixture roots this way). A real pwsh binary is
+# preferred over the PowerShell.sh bundle launcher.
 function(copperfin_select_powershell_executable
          discovered_executable apple_platform output_variable)
     copperfin_powershell_resolves_to_file("${discovered_executable}" discovered_usable)
@@ -36,22 +39,32 @@ function(copperfin_select_powershell_executable
     endif()
 
     if(apple_platform)
-        file(GLOB bundle_candidates
-            "/Applications/PowerShell*.app/Contents/MacOS/pwsh"
-            "/Applications/powershell*.app/Contents/MacOS/pwsh"
-            "/usr/local/microsoft/powershell/*/pwsh"
-            "/opt/homebrew/microsoft/powershell/*/pwsh")
-        foreach(bundle_candidate IN LISTS bundle_candidates)
-            copperfin_powershell_resolves_to_file("${bundle_candidate}" bundle_usable)
-            if(bundle_usable)
-                set(${output_variable} "${bundle_candidate}" PARENT_SCOPE)
-                return()
-            endif()
+        if(ARGN)
+            set(bundle_globs ${ARGN})
+        else()
+            set(bundle_globs
+                "/Applications/PowerShell*.app/Contents/MacOS/pwsh"
+                "/Applications/powershell*.app/Contents/MacOS/pwsh"
+                "/usr/local/microsoft/powershell/*/pwsh"
+                "/opt/homebrew/microsoft/powershell/*/pwsh"
+                "/Applications/PowerShell*.app/Contents/MacOS/PowerShell.sh"
+                "/Applications/powershell*.app/Contents/MacOS/PowerShell.sh")
+        endif()
+        foreach(bundle_glob IN LISTS bundle_globs)
+            file(GLOB bundle_candidates "${bundle_glob}")
+            foreach(bundle_candidate IN LISTS bundle_candidates)
+                copperfin_powershell_resolves_to_file("${bundle_candidate}" bundle_usable)
+                if(bundle_usable)
+                    set(${output_variable} "${bundle_candidate}" PARENT_SCOPE)
+                    return()
+                endif()
+            endforeach()
         endforeach()
     endif()
 
-    if(NOT "${discovered_executable}" STREQUAL "" AND
-       NOT "${discovered_executable}" MATCHES "-NOTFOUND$")
+    if("${discovered_executable}" STREQUAL "" OR "${discovered_executable}" MATCHES "-NOTFOUND$")
+        message(STATUS "No PowerShell host found; omitting the PowerShell-dependent tests")
+    else()
         message(STATUS
             "PowerShell host '${discovered_executable}' does not resolve to a regular file; "
             "omitting the PowerShell-dependent tests (#5809)")

@@ -295,7 +295,13 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_package_signer_contract_check.cmake
 )
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/CopperfinPowerShellDiscovery.cmake)
 find_program(POWERSHELL_EXECUTABLE NAMES pwsh pwsh.exe powershell powershell.exe)
+copperfin_select_powershell_executable(
+    "${POWERSHELL_EXECUTABLE}"
+    "${APPLE}"
+    POWERSHELL_EXECUTABLE
+)
 if(POWERSHELL_EXECUTABLE)
     add_test(
         NAME test_agent_issue_intake
@@ -361,7 +367,6 @@ if(COPPERFIN_POWERSHELL_EXECUTABLE AND COPPERFIN_POWERSHELL_EXECUTABLE MATCHES "
         list(GET COPPERFIN_SNAP_POWERSHELL_REAL_BINARY -1 COPPERFIN_POWERSHELL_EXECUTABLE)
     endif()
 endif()
-include(${CMAKE_CURRENT_SOURCE_DIR}/CopperfinPowerShellDiscovery.cmake)
 copperfin_select_powershell_executable(
     "${COPPERFIN_POWERSHELL_EXECUTABLE}"
     "${APPLE}"
