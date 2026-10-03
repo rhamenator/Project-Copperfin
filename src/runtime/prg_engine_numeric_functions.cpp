@@ -319,7 +319,8 @@ std::optional<PrgValue> evaluate_numeric_function(
             return make_number_value(value);
         }
         if (decimals < -308) {
-            return make_number_value(std::copysign(0.0, value));
+            return make_number_value(
+                std::isfinite(value) ? std::copysign(0.0, value) : value);
         }
         if (const auto rounded = round_decimal_value(value, decimals); rounded.has_value()) {
             return make_number_value(*rounded);

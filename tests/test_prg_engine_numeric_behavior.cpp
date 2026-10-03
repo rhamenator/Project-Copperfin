@@ -5,8 +5,10 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "../src/runtime/prg_engine_helpers.h"
+#include "../src/runtime/prg_engine_numeric_functions.h"
 #include "prg_engine_test_support.h"
 
+#include <cmath>
 #include <cstdint>
 #include <filesystem>
 #include <iostream>
@@ -599,6 +601,32 @@ void test_conversion_helpers() {
     expect(!checked_truncated_numeric_to_int64(inf).has_value(), "checked conversion rejects infinity");
     expect(!checked_truncated_numeric_to_int64(-inf).has_value(), "checked conversion rejects negative infinity");
     expect(!checked_truncated_numeric_to_int64(nan).has_value(), "checked conversion rejects NaN");
+
+    // Governing requirement: RQ-CF-PRG-ROUND-BOUNDARIES-001.
+    // Extreme negative decimal places collapse finite magnitudes to signed zero, but must not hide a non-finite
+    // first argument. Exercise NaN directly because no stable PRG expression produces it without raising first.
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const auto set_callback = [mode](const std::string& setting) {
+            return setting == "NUMERICBEHAVIOR" ? std::string(mode) : std::string{};
+        };
+        const auto positive_infinity = copperfin::runtime::evaluate_numeric_function(
+            "round", {copperfin::runtime::make_number_value(inf), copperfin::runtime::make_number_value(-309.0)},
+            set_callback);
+        const auto negative_infinity = copperfin::runtime::evaluate_numeric_function(
+            "round", {copperfin::runtime::make_number_value(-inf), copperfin::runtime::make_number_value(-309.0)},
+            set_callback);
+        const auto nan_result = copperfin::runtime::evaluate_numeric_function(
+            "round", {copperfin::runtime::make_number_value(nan), copperfin::runtime::make_number_value(-309.0)},
+            set_callback);
+        expect(positive_infinity.has_value() && std::isinf(positive_infinity->number_value) &&
+                   !std::signbit(positive_infinity->number_value),
+               std::string(mode) + ": ROUND must preserve positive infinity at extreme negative places");
+        expect(negative_infinity.has_value() && std::isinf(negative_infinity->number_value) &&
+                   std::signbit(negative_infinity->number_value),
+               std::string(mode) + ": ROUND must preserve negative infinity at extreme negative places");
+        expect(nan_result.has_value() && std::isnan(nan_result->number_value),
+               std::string(mode) + ": ROUND must preserve NaN at extreme negative places");
+    }
 }
 
 }  // namespace
