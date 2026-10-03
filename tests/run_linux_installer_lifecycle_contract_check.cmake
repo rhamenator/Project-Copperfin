@@ -128,6 +128,26 @@ require_text("scripts/assemble-rc-candidate.py" "require_linux_installer_lifecyc
     "fail-closed Linux lifecycle evidence admission")
 require_text("scripts/assemble-rc-candidate.py" "evidence/linux-installer-lifecycle.json"
     "Linux lifecycle evidence bundling")
+read_contract_file("scripts/assemble-rc-candidate.py" assembler_contents)
+string(FIND "${assembler_contents}"
+    "def require_linux_installer_lifecycle_evidence" linux_validator_start)
+string(FIND "${assembler_contents}"
+    "def require_windows_vsix_lifecycle_evidence" linux_validator_end)
+if(linux_validator_start EQUAL -1 OR linux_validator_end EQUAL -1 OR
+   linux_validator_end LESS_EQUAL linux_validator_start)
+    message(FATAL_ERROR "Linux lifecycle evidence validator boundaries are missing")
+endif()
+math(EXPR linux_validator_length "${linux_validator_end} - ${linux_validator_start}")
+string(SUBSTRING "${assembler_contents}" ${linux_validator_start}
+    ${linux_validator_length} linux_validator)
+string(FIND "${linux_validator}" "\"english_locale_catalog\""
+    english_locale_key_offset)
+string(FIND "${linux_validator}" "\"locale_catalog_contract\""
+    overbroad_locale_key_offset)
+if(english_locale_key_offset EQUAL -1 OR NOT overbroad_locale_key_offset EQUAL -1)
+    message(FATAL_ERROR
+        "Linux lifecycle evidence validator must use only english_locale_catalog")
+endif()
 require_text("docs/contracts/rc-validation-manifest-v3.schema.json"
     "\"linux_deb\": { \"const\": \"PASS\" }"
     "Linux DEB lifecycle PASS schema")
