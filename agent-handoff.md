@@ -33,13 +33,26 @@ now computes SHA-256 directly through the framework. Review timeout finding
 `a2e900e07` is fixed and resolved; the latest review's eager exit-code
 diagnostic finding is fixed by reading `ExitCode` only inside the observed-exit
 branch; #6911 owns the non-blocking inherited hosted-runner authority gap.
-Local focused checks
-pass. The latest review also requires a proven successful initial fixture load
-and post-Refresh asynchronous reload rather than treating a live process as
-success; the follow-up mutates the runner-owned PRG and waits for its changed
-size in the loaded document details. Re-run focused checks, push the current
-follow-up, resolve review conversations, then require a new exact hosted
-Windows lifecycle before merge.
+Local focused checks pass. The final review required a proven successful
+initial fixture load and post-Refresh asynchronous reload rather than treating
+a live process as success; the follow-up mutates the runner-owned PRG and waits
+for its changed exact size in the loaded document details. Hosted run
+`37127435107`, job `111215503606`, passed that complete Windows installer and
+installed-Studio UI lifecycle at exact implementation head `2806a4a31`. The
+retained result binds installer SHA-256
+`402a4dc2a399b92328ed768db8334590cefd34c7b174c62b761c62ef9d44763c`,
+installed Studio SHA-256
+`2d939edb402d31abd126322ed4567919be817dabbcc59b96ed31d8fb3a99b2f9`,
+and six semantic observations/actions including successful initial load,
+native Refresh, changed-size reload completion, and graceful window close.
+The UI and lifecycle JSON evidence SHA-256 values are respectively
+`b84cf182f70267742c675486b12dd829eb71f3bbc48c2c83c73bbd689f79886c`
+and `98bc35265ca3f74d5fa18d277fb5e88538166163f4536a865e919d2a21ede29b`;
+automated GUI and graceful exit are `PASS`, while human GUI remains `NOT_RUN`.
+All four review conversations are resolved and exact-head Codex review found
+no further issue. One unrelated macOS generated-launcher lane failed its
+pre-existing R-sidecar excessive-nesting test and should be rerun rather than
+expanded into this admitted slice.
 
 PR #6908 (`fix/macos-installer-lifecycle-6905`) merged into `main` as
 `ed9a12512761197f7214b638bf43f413d0917f56` on 2026-10-03. Hosted run
