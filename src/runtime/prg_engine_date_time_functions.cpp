@@ -868,6 +868,46 @@ bool is_date_or_datetime(const PrgValue& value) {
     return operand_class == PrgOperandClass::date || operand_class == PrgOperandClass::datetime;
 }
 
+std::int64_t checked_month_offset(
+    const PrgValue& value,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    const double raw = value_as_number(value);
+    if (numeric_behavior(set_callback) == NumericBehavior::vfp9) {
+        return vfp9_numeric_to_int32(raw);
+    }
+    const auto converted = checked_truncated_numeric_to_int64(raw);
+    if (!converted.has_value()) {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+    }
+    return *converted;
+}
+
+bool checked_shifted_month(
+    int year,
+    int month,
+    std::int64_t delta,
+    int& adjusted_year,
+    int& adjusted_month) {
+    constexpr int kMinimumYear = 1753;
+    constexpr int kMaximumYear = 9999;
+    constexpr std::int64_t kMonthsPerYear = 12;
+    constexpr std::int64_t kMinimumMonthIndex = static_cast<std::int64_t>(kMinimumYear) * kMonthsPerYear;
+    constexpr std::int64_t kMaximumMonthIndex =
+        static_cast<std::int64_t>(kMaximumYear) * kMonthsPerYear + (kMonthsPerYear - 1);
+
+    const std::int64_t source_month_index =
+        static_cast<std::int64_t>(year) * kMonthsPerYear + static_cast<std::int64_t>(month - 1);
+    if (delta < kMinimumMonthIndex - source_month_index ||
+        delta > kMaximumMonthIndex - source_month_index) {
+        return false;
+    }
+
+    const std::int64_t result_month_index = source_month_index + delta;
+    adjusted_year = static_cast<int>(result_month_index / kMonthsPerYear);
+    adjusted_month = static_cast<int>(result_month_index % kMonthsPerYear) + 1;
+    return true;
+}
+
 void require_date_time_argument_types(const std::string& function, const std::vector<PrgValue>& arguments) {
     static const std::set<std::string> kDateOrDateTime = {
         "dow", "cdow", "cmonth", "year", "month", "day", "week", "dtos", "dtoc", "hour", "minute", "sec", "ttoc",
@@ -1068,20 +1108,16 @@ std::optional<PrgValue> evaluate_date_time_function(
         if (!parse_date_value_for_set(arguments[0], year, month, day, set_callback)) {
             return make_date_value(std::string{});
         }
-        const long long delta = static_cast<long long>(std::llround(value_as_number(arguments[1])));
-        long long month_index = static_cast<long long>(year) * 12LL + static_cast<long long>(month - 1) + delta;
-        long long adjusted_year = month_index / 12LL;
-        long long adjusted_month_index = month_index % 12LL;
-        if (adjusted_month_index < 0LL) {
-            adjusted_month_index += 12LL;
-            --adjusted_year;
+        const std::int64_t delta = checked_month_offset(arguments[1], set_callback);
+        int adjusted_year = 0;
+        int adjusted_month = 0;
+        if (!checked_shifted_month(year, month, delta, adjusted_year, adjusted_month)) {
+            return make_date_value(std::string{});
         }
-        const int adjusted_month = static_cast<int>(adjusted_month_index + 1LL);
-        const int adjusted_day = std::min(day, days_in_month(static_cast<int>(adjusted_year), adjusted_month));
+        const int adjusted_day = std::min(day, days_in_month(adjusted_year, adjusted_month));
         return make_date_value(
-            format_runtime_date_for_set(
-                static_cast<int>(adjusted_year), adjusted_month, adjusted_day, set_callback),
-            static_cast<int>(adjusted_year),
+            format_runtime_date_for_set(adjusted_year, adjusted_month, adjusted_day, set_callback),
+            adjusted_year,
             adjusted_month,
             adjusted_day);
     }
@@ -1183,25 +1219,19 @@ std::optional<PrgValue> evaluate_date_time_function(
             return make_date_value(std::string{});
         }
 
-        long long delta = 0;
+        std::int64_t delta = 0;
         if (arguments.size() >= 2U) {
-            delta = static_cast<long long>(std::llround(value_as_number(arguments[1])));
+            delta = checked_month_offset(arguments[1], set_callback);
         }
-
-        long long month_index = static_cast<long long>(year) * 12LL + static_cast<long long>(month - 1) + delta;
-        long long adjusted_year = month_index / 12LL;
-        long long adjusted_month_index = month_index % 12LL;
-        if (adjusted_month_index < 0LL) {
-            adjusted_month_index += 12LL;
-            --adjusted_year;
+        int adjusted_year = 0;
+        int adjusted_month = 0;
+        if (!checked_shifted_month(year, month, delta, adjusted_year, adjusted_month)) {
+            return make_date_value(std::string{});
         }
-
-        const int adjusted_month = static_cast<int>(adjusted_month_index + 1LL);
-        const int adjusted_day = days_in_month(static_cast<int>(adjusted_year), adjusted_month);
+        const int adjusted_day = days_in_month(adjusted_year, adjusted_month);
         return make_date_value(
-            format_runtime_date_for_set(
-                static_cast<int>(adjusted_year), adjusted_month, adjusted_day, set_callback),
-            static_cast<int>(adjusted_year),
+            format_runtime_date_for_set(adjusted_year, adjusted_month, adjusted_day, set_callback),
+            adjusted_year,
             adjusted_month,
             adjusted_day);
     }

@@ -1,0 +1,1 @@
+- 2026-10-03: Fixed `GOMONTH()` and `EOMONTH()` numeric conversion and calendar boundaries so huge offsets cannot invoke undefined conversion or fabricate dates outside the supported 1753–9999 result range, with recovered VFP9 conversion quirks confined to `SET NUMERICBEHAVIOR TO VFP9`.

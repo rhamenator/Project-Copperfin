@@ -367,6 +367,47 @@ std::vector<Row> build_rows() {
         rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("BITLSHIFT(") + operand + ",1)", "I:0"});
         rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("BITRSHIFT(") + operand + ",1)", "I:0"});
     }
+
+    // GOMONTH/EOMONTH (#5608 under #5611/#6776). Both modes truncate ordinary fractional offsets and enforce
+    // VFP9's 1753..9999 result-year range. VFP9 mode additionally preserves its 32-bit conversion quirks.
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        rows.push_back({set, "DTOS(GOMONTH(DATE(2026,1,31),1.9))", "C:20260228"});
+        rows.push_back({set, "DTOS(GOMONTH(DATE(2026,1,31),-1.9))", "C:20251231"});
+        rows.push_back({set, "DTOS(GOMONTH(DATE(1752,12,31),1))", "C:17530131"});
+        rows.push_back({set, "DTOS(GOMONTH(DATE(1753,1,1),-1))", "C:"});
+        rows.push_back({set, "DTOS(GOMONTH(DATE(1753,1,1),98963))", "C:99991201"});
+        rows.push_back({set, "DTOS(GOMONTH(DATE(1753,1,1),98964))", "C:"});
+        rows.push_back({set, "DTOS(GOMONTH(DATE(9999,12,31),1))", "C:"});
+        rows.push_back({set, "DTOS(EOMONTH(DATE(2026,1,15),1.9))", "C:20260228"});
+        rows.push_back({set, "DTOS(EOMONTH(DATE(2026,1,15),-1.9))", "C:20251231"});
+        rows.push_back({set, "DTOS(EOMONTH(DATE(1752,12,31)))", "C:"});
+        rows.push_back({set, "DTOS(EOMONTH(DATE(1753,1,1),-1))", "C:"});
+        rows.push_back({set, "DTOS(EOMONTH(DATE(9999,12,1),0))", "C:99991231"});
+        rows.push_back({set, "DTOS(EOMONTH(DATE(9999,12,1),1))", "C:"});
+        rows.push_back({set, "DTOS(GOMONTH(DATE(2026,1,31),10000000000))", "C:"});
+        rows.push_back({set, "DTOS(EOMONTH(DATE(2026,1,15),10000000000))", "C:"});
+    }
+    for (const char *offset : {"EXP(1000)", "-EXP(1000)", "1E20", "-1E20", "1E300"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN",
+                        std::string("DTOS(GOMONTH(DATE(2026,1,31),") + offset + "))", "ERR11"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN",
+                        std::string("DTOS(EOMONTH(DATE(2026,1,15),") + offset + "))", "ERR11"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("DTOS(GOMONTH(DATE(2026,1,31),") + offset + "))", "C:20260131"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("DTOS(EOMONTH(DATE(2026,1,15),") + offset + "))", "C:20260131"});
+    }
+    for (const char *offset : {"-4294967297", "4294967295"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN",
+                        std::string("DTOS(GOMONTH(DATE(2026,1,31),") + offset + "))", "C:"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("DTOS(GOMONTH(DATE(2026,1,31),") + offset + "))", "C:20251231"});
+    }
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN",
+                    "DTOS(GOMONTH(DATE(2026,1,31),4294967296))", "C:"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                    "DTOS(GOMONTH(DATE(2026,1,31),4294967296))", "C:20260131"});
     return rows;
 }
 
