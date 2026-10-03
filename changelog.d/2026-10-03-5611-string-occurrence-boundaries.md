@@ -1,0 +1,1 @@
+- 2026-10-03: Validate `AT`-family and `STRTRAN` occurrence controls before integer conversion, returning VFP error 11 for sub-unit, invalid, non-finite, and oversized values; `GETWORDNUM` keeps its safe empty result, and VFP9's `STRTRAN(...,4294967295)` all-occurrences quirk is available only through `SET NUMERICBEHAVIOR TO VFP9` (#5611, #6776).

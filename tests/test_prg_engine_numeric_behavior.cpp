@@ -187,6 +187,40 @@ std::vector<Row> build_rows() {
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SUBSTR('abcdef',1E20)", "C:"});
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SUBSTR('abcdef',2147483648)", "C:"});
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SUBSTR('abcdef',2147483647)", "C:"});
+    // Occurrence controls are validated before conversion (#5611/#6776). Installed VFP9 raises error 11 for
+    // sub-unit, nonpositive, non-finite, and oversized AT/STRTRAN occurrence arguments. Copperfin keeps that
+    // stable fail-closed contract in both modes. The one observed VFP9 conversion quirk is STRTRAN's 2^32-1 ->
+    // -1 sentinel; it is available only in VFP9 mode, while COPPERFIN rejects the out-of-range value.
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        for (const char *value : {"0.5", "0", "-1.5", "-1.9", "-2.9", "16777185", "2147483647",
+                                  "2147483648", "1E10", "1E20", "1E300", "EXP(1000)"}) {
+            rows.push_back({set, std::string("AT('b','abcabc',") + value + ")", "ERR11"});
+            rows.push_back({set, std::string("STRTRAN('abcabc','b','x',") + value + ")", "ERR11"});
+            rows.push_back({set, std::string("STRTRAN('abcabc','b','x',1,") + value + ")", "ERR11"});
+        }
+        for (const char *function : {"ATC", "ATCC", "RAT", "RATC"}) {
+            rows.push_back({set, std::string(function) + "('b','abcabc',0.5)", "ERR11"});
+            rows.push_back({set, std::string(function) + "('b','abcabc',16777185)", "ERR11"});
+            rows.push_back({set, std::string(function) + "('b','abcabc',2147483647)", "ERR11"});
+        }
+        rows.push_back({set, "AT('b','abcabc',2.9)", "N:5"});
+        rows.push_back({set, "AT('b','abcabc',16777184)", "N:0"});
+        rows.push_back({set, "STRTRAN('abcabc','b','x',2.9)", "C:abcaxc"});
+        rows.push_back({set, "STRTRAN('abcabc','b','x',1,2.9)", "C:axcaxc"});
+        rows.push_back({set, "STRTRAN('abcabc','b','x',16777184)", "C:abcabc"});
+        rows.push_back({set, "STRTRAN('abcabc','b','x',1,16777184)", "C:axcaxc"});
+        rows.push_back({set, "STRTRAN('abcabc','b','x',-1)", "C:axcaxc"});
+        rows.push_back({set, "STRTRAN('abcabc','b','x',1,-1)", "C:axcaxc"});
+        for (const char *value : {"0.5", "-2.9", "2147483647", "2147483648", "4294967295", "4294967296",
+                                  "1E10", "1E20", "1E300", "EXP(1000)"}) {
+            rows.push_back({set, std::string("GETWORDNUM('a b c',") + value + ")", "C:"});
+        }
+    }
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "STRTRAN('abcabc','b','x',4294967295)", "ERR11"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "STRTRAN('abcabc','b','x',1,4294967295)", "ERR11"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "STRTRAN('abcabc','b','x',4294967295)", "C:axcaxc"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "STRTRAN('abcabc','b','x',1,4294967295)", "C:axcaxc"});
     // STR decimals (review of slice 2): VFP9 accepts 0 to 18 and raises error 1908 above that (probe4.txt); a huge value
     // must be rejected before setprecision(), not saturated to INT_MAX and formatted.
     for (const char *mode : {"COPPERFIN", "VFP9"}) {
