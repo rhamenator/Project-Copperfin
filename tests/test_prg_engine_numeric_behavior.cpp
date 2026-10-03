@@ -3,6 +3,7 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/vfp/dbf_table.h"
 #include "../src/runtime/prg_engine_helpers.h"
 #include "prg_engine_test_support.h"
 
@@ -368,6 +369,7 @@ std::vector<Row> build_rows() {
         rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("BITRSHIFT(") + operand + ",1)", "I:0"});
     }
 
+    // Governing requirement: RQ-CF-PRG-GOMONTH-BOUNDARIES-001.
     // GOMONTH/EOMONTH (#5608 under #5611/#6776). Both modes truncate ordinary fractional offsets and enforce
     // VFP9's 1753..9999 result-year range. VFP9 mode additionally preserves its 32-bit conversion quirks.
     for (const char *mode : {"COPPERFIN", "VFP9"}) {
@@ -463,6 +465,54 @@ void test_numeric_behavior_script_rows() {
     fs::remove_all(dir, ignored);
 }
 
+// Governing requirement: RQ-CF-PRG-GOMONTH-BOUNDARIES-001.
+// Empty out-of-calendar results must remain empty when persisted, including when a Date result is assigned to a
+// DateTime field. This checks the physical DBF representation after the runtime closes the table.
+void test_gomonth_out_of_range_dbf_round_trip() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_gomonth_out_of_range_dbf";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    const fs::path table_path = dir / "dates.dbf";
+    const fs::path script_path = dir / "round_trip.prg";
+    write_text(
+        script_path,
+        "CREATE TABLE '" + table_path.string() + "' (gd D, ed D, gt T, et T)\n"
+        "APPEND BLANK\n"
+        "REPLACE gd WITH GOMONTH(DATE(1753,1,1),-1), ;\n"
+        "        ed WITH EOMONTH(DATE(9999,12,1),1), ;\n"
+        "        gt WITH GOMONTH(DATE(1753,1,1),-1), ;\n"
+        "        et WITH EOMONTH(DATE(9999,12,1),1)\n"
+        "USE\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(script_path.string(), dir.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "GOMONTH DBF round trip should complete: " + state.message);
+
+    const auto parsed = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(parsed.ok && parsed.table.records.size() == 1U,
+           "GOMONTH DBF round trip should produce one readable record");
+    if (parsed.ok && parsed.table.records.size() == 1U) {
+        const auto& values = parsed.table.records.front().values;
+        expect(values.size() == 4U, "GOMONTH DBF round trip should retain four fields");
+        if (values.size() == 4U) {
+            expect(uppercase_ascii(values[0].field_name) == "GD" && values[0].display_value.empty(),
+                   "out-of-range GOMONTH must persist as an empty DBF Date");
+            expect(uppercase_ascii(values[1].field_name) == "ED" && values[1].display_value.empty(),
+                   "out-of-range EOMONTH must persist as an empty DBF Date");
+            expect(uppercase_ascii(values[2].field_name) == "GT" &&
+                       values[2].display_value == "julian:0 millis:0",
+                   "out-of-range GOMONTH must persist as an empty DBF DateTime");
+            expect(uppercase_ascii(values[3].field_name) == "ET" &&
+                       values[3].display_value == "julian:0 millis:0",
+                   "out-of-range EOMONTH must persist as an empty DBF DateTime");
+        }
+    }
+    fs::remove_all(dir, ignored);
+}
+
 // The conversion helpers directly, including the values a script cannot easily produce (NaN, infinity).
 void test_conversion_helpers() {
     using copperfin::runtime::NumericBehavior;
@@ -512,6 +562,7 @@ void test_conversion_helpers() {
 int main() {
     test_conversion_helpers();
     test_numeric_behavior_script_rows();
+    test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;

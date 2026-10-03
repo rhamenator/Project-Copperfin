@@ -868,6 +868,7 @@ bool is_date_or_datetime(const PrgValue& value) {
     return operand_class == PrgOperandClass::date || operand_class == PrgOperandClass::datetime;
 }
 
+// Governing requirement: RQ-CF-PRG-GOMONTH-BOUNDARIES-001.
 std::int64_t checked_month_offset(
     const PrgValue& value,
     const std::function<std::string(const std::string&)>& set_callback) {
