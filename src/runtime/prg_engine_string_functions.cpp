@@ -118,24 +118,45 @@ std::string trim_with_parse_characters(
     return source.substr(start, end - start);
 }
 
-// #5951: shared occurrence-argument validation for AT()/ATC()/ATCC()/
-// RAT()/RATC(), matching the validation AT_C() already applied to its own
-// occurrence argument. Real VFP9 SP2 raises error 11 for a zero,
-// negative, or non-finite occurrence argument rather than clamping it to
-// occurrence 1 (confirmed against actual VFP9 output, retained
-// differential evidence:
-// /home/rich/temp/vfp9-probes/at-occurrence-boundary-82.{prg,out} and
-// atcc-occurrence-boundary-83.{prg,out}).
+// #5951/#5611/#6776: shared occurrence-argument validation for
+// AT()/ATC()/ATCC()/RAT()/RATC(). Real VFP9 SP2 raises error 11 for a
+// sub-unit, nonpositive, non-finite, or oversized occurrence rather than
+// clamping or saturating it. The upper bound is exclusive: INT_MAX itself is
+// rejected. Retained differential evidence:
+// ~/temp/vfp9-probes/at-occurrence-boundary-82.{prg,out},
+// atcc-occurrence-boundary-83.{prg,out}, and numconv-6776/probe1.txt.
 std::size_t require_valid_occurrence_argument(const PrgValue& argument) {
     const double requested_occurrence = value_as_number(argument);
-    if (!std::isfinite(requested_occurrence) || requested_occurrence <= 0.0) {
+    const auto occurrence = checked_truncated_numeric_to_int64(requested_occurrence);
+    if (!occurrence.has_value() || *occurrence <= 0 ||
+        *occurrence >= static_cast<std::int64_t>(std::numeric_limits<int>::max())) {
         throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"), 11);
     }
-    // A positive sub-unit occurrence (0 < n < 1) is valid and maps to
-    // occurrence 1, matching this codebase's pre-existing documented
-    // positive-fraction behavior; only reject actual nonpositive/non-finite
-    // values above.
-    return saturating_size_argument(requested_occurrence, 1U);
+    return static_cast<std::size_t>(*occurrence);
+}
+
+// STRTRAN uses the same fail-closed range, with -1 as its documented
+// "all occurrences" sentinel. Installed VFP9 additionally converts
+// 2^32-1 (and equivalent low-32-bit values) to -1. That quirk is confined to
+// NUMERICBEHAVIOR VFP9; COPPERFIN rejects the out-of-range source value.
+std::int64_t require_valid_strtran_occurrence_argument(
+    const PrgValue& argument,
+    const NumericBehavior behavior) {
+    const double requested_occurrence = value_as_number(argument);
+    if (!std::isfinite(requested_occurrence)) {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"), 11);
+    }
+    if (behavior == NumericBehavior::vfp9 &&
+        requested_occurrence > static_cast<double>(std::numeric_limits<int>::max()) &&
+        vfp9_numeric_to_int32(requested_occurrence) == -1) {
+        return -1;
+    }
+    const auto occurrence = checked_truncated_numeric_to_int64(requested_occurrence);
+    if (!occurrence.has_value() || *occurrence == 0 || *occurrence < -1 ||
+        *occurrence >= static_cast<std::int64_t>(std::numeric_limits<int>::max())) {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"), 11);
+    }
+    return *occurrence;
 }
 
 }  // namespace
@@ -312,7 +333,7 @@ std::optional<PrgValue> evaluate_string_function(
         std::string src = value_as_string(arguments[0]);
         const std::string find = value_as_string(arguments[1]);
         const std::string repl = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
-        // #5952: STRTRAN()'s nStartOccurrence and nCount arguments both
+        // #5952/#5611/#6776: STRTRAN()'s nStartOccurrence and nCount arguments both
         // treat zero as invalid (real VFP9 SP2 raises catchable error 11
         // for STRTRAN('aaa','a','x',0) and STRTRAN('aaa','a','x',1,0)),
         // while a negative value is a distinct, valid sentinel meaning
@@ -320,34 +341,23 @@ std::optional<PrgValue> evaluate_string_function(
         // STRTRAN('aaa','a','x',1,-1) both succeed) -- confirmed against
         // actual VFP9 output (retained differential evidence:
         // /home/rich/temp/vfp9-probes/strtran-boundary-84.{prg,out}). A
-        // fractional/non-finite value follows this codebase's existing
-        // occurrence-argument convention: a non-finite value is rejected,
-        // and a positive value below 1 still maps to occurrence 1.
+        // Fresh installed-VFP9 boundary evidence additionally establishes
+        // that sub-unit, values below the -1 sentinel, non-finite, and
+        // oversized controls are error 11. The 2^32-1 -> -1 wrap is exposed
+        // only under NUMERICBEHAVIOR VFP9.
+        const NumericBehavior occurrence_behavior = numeric_behavior(set_callback);
         std::size_t start_occurrence = 1U;
         if (arguments.size() >= 4U) {
-            const double raw_start_occurrence = value_as_number(arguments[3]);
-            if (!std::isfinite(raw_start_occurrence)) {
-                throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"), 11);
-            }
-            if (raw_start_occurrence == 0.0) {
-                throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"), 11);
-            }
-            start_occurrence = raw_start_occurrence < 0.0
-                                    ? 1U
-                                    : saturating_size_argument(raw_start_occurrence, 1U);
+            const std::int64_t converted_start =
+                require_valid_strtran_occurrence_argument(arguments[3], occurrence_behavior);
+            start_occurrence = converted_start == -1 ? 1U : static_cast<std::size_t>(converted_start);
         }
         std::size_t occurrence_limit = std::numeric_limits<std::size_t>::max();
         if (arguments.size() >= 5U) {
-            const double raw_occurrence_limit = value_as_number(arguments[4]);
-            if (!std::isfinite(raw_occurrence_limit)) {
-                throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"), 11);
-            }
-            if (raw_occurrence_limit == 0.0) {
-                throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"), 11);
-            }
-            occurrence_limit = raw_occurrence_limit < 0.0
-                                   ? std::numeric_limits<std::size_t>::max()
-                                   : saturating_size_argument(raw_occurrence_limit, 1U);
+            const std::int64_t converted_limit =
+                require_valid_strtran_occurrence_argument(arguments[4], occurrence_behavior);
+            occurrence_limit = converted_limit == -1 ? std::numeric_limits<std::size_t>::max()
+                                                      : static_cast<std::size_t>(converted_limit);
         }
         const std::size_t flags = arguments.size() >= 6U
                                       ? saturating_size_argument(value_as_number(arguments[5]))

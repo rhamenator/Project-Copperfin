@@ -9,6 +9,14 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
+PR #6917 (`fix/installer-artifact-policy-6905`) merged into `main` as
+`6b64a176d680aab732e0772cd889a423ed3c993e` on 2026-10-03. Successful
+pull-request installer packages/evidence/source now retain for 7 days,
+successful non-pull-request outputs for 30 days, and exact failure packages
+plus available diagnostics for 14 days; the immutable RC bundle remains a
+separate 90-day artifact. All 36 checks passed, exact head `ca3bbd3cb` passed
+Codex review, and all four review conversations were resolved before merge.
+
 PR #6916 (`fix/linux-rpm-lifecycle-6905`) merged into `main` as
 `ec556e17214266274508c430529a9f3912805e19` on 2026-10-03. It completed the
 fourth #6905 installed-product slice with a distinct native RPM lifecycle in an
@@ -194,33 +202,30 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Issue #6905 is the directly owner-authorized installed-product and UI
-validation umbrella. The active fifth slice is branch
-`fix/installer-artifact-policy-6905` in
-`~/.codex/worktrees/installer-artifact-policy-6905/Project-Copperfin`, based on
-`origin/main` at `ec556e172`. Make installer artifacts useful without treating
-every pull-request package as a candidate: retain successful PR packages,
-machine-readable lifecycle evidence, and source for 7 days; retain successful
-non-pull-request outputs for 30 days; retain any exact package already
-produced plus available failure diagnostics for 14 days; and preserve the
-separate immutable RC bundle's 90-day policy. Add focused workflow contracts,
-requirements/safety traceability, evaluation guidance, and exact-head hosted
-verification before merge.
+Open owner-authored, `agent-approved` issue #5611 is the implementation
+umbrella and reopened #6776 is the design/checklist reference. The active
+bounded slice is branch `fix/numeric-occurrence-5611` in
+`~/.codex/worktrees/numeric-occurrence-5611/Project-Copperfin`, based on
+`origin/main` at `6b64a176d`. Validate the `AT` family and `STRTRAN`
+occurrence controls before integer conversion, preserve `GETWORDNUM`'s safe
+empty result for out-of-range indices, and confine VFP9's observed
+`STRTRAN(...,4294967295)` conversion to the VFP9 numeric-behavior mode. The
+focused fail-before evidence is retained in the current build tree; complete
+portable/sanitizer verification, traceability, signed commit, PR, exact-head
+review, green checks, and merge.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
 not installed-product evidence. Re-enter that slice when packaging exposes the
-managed Studio. After the artifact-policy slice, if no other actionable #6905
-gap remains, return to the retained owner-directed #5611/#6776
-numeric-conversion workstream.
+managed Studio.
 
-The owner-directed #6879 extended-table sequence and unfinished #5611/#6776
-numeric-conversion work remain retained and uncancelled.
+The owner-directed #6879 extended-table sequence remains retained and
+uncancelled after the current owner-directed numeric-conversion work.
 
-## Next owner-directed workstream: extended tables and indexes
+## Retained owner-directed workstream: extended tables and indexes
 
-After #6894 merges, direct owner assignment makes open owner-authored,
-`agent-approved` design #6879 and its 23 direct sub-issues the next workstream.
+After the current numeric-conversion work, open owner-authored,
+`agent-approved` design #6879 and its 23 direct sub-issues remain the next retained workstream.
 Their live metadata and all owner-authored comments were revalidated on
 2026-10-03. Work in this order:
 
@@ -262,9 +267,9 @@ Owner decisions for this workstream:
   changelog fragment, signed/DCO commits, green required checks and resolved
   review threads.
 
-The unfinished #5611/#6776 numeric-conversion work below is retained, not
-cancelled. Reconsider it after the owner-directed #6879 sequence unless the
-owner redirects again.
+The unfinished #5611/#6776 numeric-conversion work below is active under the
+latest owner-directed implementation-loop instruction. Continue bounded
+slices until redirected or the checklist is complete, then return to #6879.
 
 ## Retained workstreams
 
@@ -280,9 +285,9 @@ Owner-directed workstream order before the #6879 assignment was:
    - Completed bounded slices: arrays (#6030, PR #6865), `BITLSHIFT`/
      `BITRSHIFT` (#5765, PR #6867), `GOMONTH`/`EOMONTH` (#5608, PR #6869),
      `SPACE` (#6775), `ROUND` (PR #6878), and `CHR` (this continuation slice).
-   - `AT`/`STRTRAN`/`GETWORDNUM` occurrence: VFP9 raises 11 for almost every
-     large value (consistent). `SUBSTR`/`SUBSTRC` with a huge positive start
-     return the last character in VFP9 (quirk, not yet emulated).
+   - Active: `AT`/`STRTRAN` occurrence validation and `GETWORDNUM` boundary
+     coverage. `SUBSTR`/`SUBSTRC` with a huge positive start return the last
+     character in VFP9 (quirk, not yet emulated).
    - DECLARE narrowing (#6050), `BINTOC`/`CTOBIN` (#5766), array dimensions
      (#5594), and the ~150 `llround(value_as_number(...))` sites in other
      modules (#5611 umbrella).
