@@ -22,7 +22,7 @@ The follow-up uses those exact accessible names, invokes Refresh through
 richer product accessibility roles. Machine-readable evidence binds the
 installed Studio digest and semantic controls; failures retain supported
 patterns, a bounded UI tree, and a best-effort screenshot; human GUI remains
-`NOT_RUN`. Review timeout finding `a2e900e07` is fixed and resolved; #6912 owns
+`NOT_RUN`. Review timeout finding `a2e900e07` is fixed and resolved; #6911 owns
 the non-blocking inherited hosted-runner authority gap. Local focused checks
 pass. Push the current follow-up, resolve review conversations, then require a
 new exact hosted Windows lifecycle before merge.
