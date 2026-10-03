@@ -325,6 +325,48 @@ std::vector<Row> build_rows() {
         rows.push_back({set + copy_setup, "ACOPY(a,b,1E20)", "ERR1234"});
         rows.push_back({"", "b[1]+b[2]+b[3]", "C:xyz"});
     }
+
+    // BITLSHIFT/BITRSHIFT (#5765 under #5611/#6776). Both functions operate on 32-bit bit patterns and truncate
+    // ordinary fractional arguments. VFP9's out-of-range double conversion is selectable; COPPERFIN rejects it.
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        rows.push_back({set, "BITLSHIFT(1,-1)", "ERR11"});
+        rows.push_back({set, "BITRSHIFT(256,-1)", "ERR11"});
+        rows.push_back({set, "BITLSHIFT(1,-0.5)", "I:1"});
+        rows.push_back({set, "BITRSHIFT(256,0.5)", "I:256"});
+        rows.push_back({set, "BITLSHIFT(1,2.9)", "I:4"});
+        rows.push_back({set, "BITRSHIFT(256,2.9)", "I:64"});
+        rows.push_back({set, "BITLSHIFT(1,31)", "I:-2147483648"});
+        rows.push_back({set, "BITRSHIFT(256,31)", "I:0"});
+        rows.push_back({set, "BITLSHIFT(1,32)", "ERR11"});
+        rows.push_back({set, "BITRSHIFT(256,64)", "ERR11"});
+        rows.push_back({set, "BITLSHIFT(2147483647,1)", "I:-2"});
+        rows.push_back({set, "BITLSHIFT(-1,1)", "I:-2"});
+        rows.push_back({set, "BITLSHIFT(-0.5,1)", "I:0"});
+        rows.push_back({set, "BITLSHIFT(1.9,1)", "I:2"});
+        rows.push_back({set, "BITRSHIFT(-1,1)", "I:2147483647"});
+        rows.push_back({set, "BITRSHIFT(-2147483648,31)", "I:1"});
+        rows.push_back({set, "BITLSHIFT(4294967295,0)", "I:-1"});
+        rows.push_back({set, "BITRSHIFT(10000000000,1)", "I:705032704"});
+    }
+    for (const char *count : {"EXP(1000)", "-EXP(1000)", "1E20", "-1E20", "1E300",
+                              "4294967296", "9007199254740992"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", std::string("BITLSHIFT(1,") + count + ")", "ERR11"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", std::string("BITRSHIFT(256,") + count + ")", "ERR11"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("BITLSHIFT(1,") + count + ")", "I:1"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("BITRSHIFT(256,") + count + ")", "I:256"});
+    }
+    for (const char *count : {"2147483647", "2147483648", "-2147483648", "-2147483649",
+                              "4294967295", "10000000000"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("BITLSHIFT(1,") + count + ")", "ERR11"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("BITRSHIFT(256,") + count + ")", "ERR11"});
+    }
+    for (const char *operand : {"EXP(1000)", "-EXP(1000)", "1E20", "-1E20", "1E300"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", std::string("BITLSHIFT(") + operand + ",1)", "ERR11"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", std::string("BITRSHIFT(") + operand + ",1)", "ERR11"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("BITLSHIFT(") + operand + ",1)", "I:0"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("BITRSHIFT(") + operand + ",1)", "I:0"});
+    }
     return rows;
 }
 
