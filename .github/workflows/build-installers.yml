@@ -356,7 +356,7 @@ jobs:
           fi
           rpm_image='docker.io/library/fedora@sha256:99e203b80b1c3d8f7e161ec10a68fd02b081ef83a3963553e513c82846b97814'
           timeout --signal=KILL 300 docker pull --platform linux/amd64 "$rpm_image"
-          rpm_image_id=$(docker image inspect --format '{{.Id}}' "$rpm_image")
+          rpm_image_id=$(timeout --signal=KILL 60 docker image inspect --format '{{.Id}}' "$rpm_image")
           rpm_container_state=$(mktemp -d "$RUNNER_TEMP/copperfin-rpm-container.XXXXXX")
           rpm_container_cidfile="$rpm_container_state/container.cid"
           cleanup_rpm_container() {

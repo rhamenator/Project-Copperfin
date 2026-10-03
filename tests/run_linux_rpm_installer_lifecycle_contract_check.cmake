@@ -90,6 +90,8 @@ require_text("${workflow}"
     "exact admitted Fedora container digest")
 require_text("${workflow}" "--platform linux/amd64" "explicit package architecture")
 require_text("${workflow}" "--pull=never" "post-pull digest-only container execution")
+require_text("${workflow}" "timeout --signal=KILL 60 docker image inspect"
+    "bounded resolved-container identity lookup")
 require_text("${workflow}" "--cidfile" "daemon-owned container identity capture")
 require_text("${workflow}" "trap cleanup_rpm_container EXIT"
     "all-path daemon-container cleanup")
