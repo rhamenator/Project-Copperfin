@@ -317,7 +317,7 @@ def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) ->
         "install_root",
         "fresh_install",
         "installed_tree_contract",
-        "locale_catalog_contract",
+        "english_locale_catalog",
         "installed_cli_smoke",
         "same_version_maintenance_reinstall",
         "upgrade_from_previous_version",
@@ -336,7 +336,7 @@ def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) ->
     expected_pass_fields = (
         "fresh_install",
         "installed_tree_contract",
-        "locale_catalog_contract",
+        "english_locale_catalog",
         "installed_cli_smoke",
         "same_version_maintenance_reinstall",
         "silent_uninstall",
@@ -768,7 +768,7 @@ def self_test() -> None:
             "install_root": "C:\\hosted-runner\\copperfin-lifecycle",
             "fresh_install": "PASS",
             "installed_tree_contract": "PASS",
-            "locale_catalog_contract": "PASS",
+            "english_locale_catalog": "PASS",
             "installed_cli_smoke": "PASS",
             "same_version_maintenance_reinstall": "PASS",
             "upgrade_from_previous_version": "NOT_RUN",
@@ -1016,6 +1016,7 @@ def self_test() -> None:
         linux_lifecycle = json.loads(linux_lifecycle_path.read_text(encoding="utf-8"))
         linux_lifecycle_mutations = (
             ("false fresh-install status", "fresh_install", "NOT_RUN"),
+            ("unproved English locale catalog", "english_locale_catalog", "NOT_RUN"),
             ("wrong package digest", "package_sha256", "0" * 64),
             ("wrong package architecture", "package_architecture", "arm64"),
             ("missing installed file inventory", "installed_file_count", 0),

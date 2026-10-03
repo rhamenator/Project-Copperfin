@@ -709,6 +709,7 @@ function(copperfin_configure_native_test_isolation)
 
     foreach(test_name IN ITEMS
             test_native_platform_workflow_contract
+            test_linux_installer_lifecycle_contract
             test_windows_installer_lifecycle_contract
             test_windows_msvc_cache_workflow_contract
             test_agent_channel_contract

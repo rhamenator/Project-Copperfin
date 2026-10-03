@@ -9,12 +9,13 @@
 set -euo pipefail
 
 usage() {
-    printf 'Usage: %s --package <deb> --evidence-directory <directory> [--process-timeout-seconds <seconds>]\n' "$0" >&2
+    printf 'Usage: %s --package <deb> --evidence-directory <directory> --allow-system-mutation [--process-timeout-seconds <seconds>]\n' "$0" >&2
 }
 
 package_path=""
 evidence_directory=""
 process_timeout_seconds=180
+allow_system_mutation=0
 while (($# > 0)); do
     case "$1" in
         --package)
@@ -29,6 +30,10 @@ while (($# > 0)); do
             process_timeout_seconds=${2-}
             shift 2
             ;;
+        --allow-system-mutation)
+            allow_system_mutation=1
+            shift
+            ;;
         *)
             usage
             exit 2
@@ -36,9 +41,14 @@ while (($# > 0)); do
     esac
 done
 
-if [[ -z "$package_path" || -z "$evidence_directory" || ! "$process_timeout_seconds" =~ ^[1-9][0-9]*$ ]]; then
+if [[ -z "$package_path" || -z "$evidence_directory" || ! "$process_timeout_seconds" =~ ^[1-9][0-9]*$ \
+    || "$allow_system_mutation" != 1 ]]; then
     usage
     exit 2
+fi
+if [[ ${GITHUB_ACTIONS:-} != "true" || ${RUNNER_ENVIRONMENT:-} != "github-hosted" ]]; then
+    printf 'Linux installer lifecycle validation is restricted to a GitHub-hosted Actions runner.\n' >&2
+    exit 1
 fi
 if ((EUID != 0)); then
     printf 'Linux installer lifecycle validation must run as root.\n' >&2
@@ -82,8 +92,8 @@ if [[ "$package_name" != "copperfin" || -z "$package_version" || "$package_archi
         "$package_name" "$package_version" "$package_architecture" >&2
     exit 1
 fi
-if dpkg-query --show --showformat='${db:Status-Abbrev}' "$package_name" 2>/dev/null | grep -q '^ii'; then
-    printf 'Refusing to disturb a pre-existing installed %s package.\n' "$package_name" >&2
+if dpkg-query --show "$package_name" >/dev/null 2>&1; then
+    printf 'Refusing to disturb a pre-existing %s package database record.\n' "$package_name" >&2
     exit 1
 fi
 
@@ -95,7 +105,7 @@ expected_installed_files=(
     /usr/bin/copperfin_studio_host
     /usr/share/copperfin/locales/en-US/strings.json
 )
-for expected_path in "${expected_installed_files[@]}" /usr/share/copperfin; do
+for expected_path in "${expected_installed_files[@]}" /usr/share/copperfin /usr/share/doc/copperfin; do
     if [[ -e "$expected_path" || -L "$expected_path" ]]; then
         printf 'Refusing to overwrite a pre-existing package path: %s\n' "$expected_path" >&2
         exit 1
@@ -132,6 +142,7 @@ run_bounded() {
 
 package_sha256=$(sha256sum -- "$package_path" | awk '{print $1}')
 installed_paths="$fixture_root/installed-paths.txt"
+installed_directories="$fixture_root/installed-directories.txt"
 installed_inventory_before="$fixture_root/installed-inventory-before.txt"
 installed_inventory_after="$fixture_root/installed-inventory-after.txt"
 external_fixture="$fixture_root/external-fixture.prg"
@@ -165,9 +176,20 @@ dpkg-query --listfiles "$package_name" \
         fi
     done \
     | LC_ALL=C sort -u >"$installed_paths"
+dpkg-query --listfiles "$package_name" \
+    | while IFS= read -r installed_path; do
+        if [[ -d "$installed_path" && "$installed_path" == *copperfin* ]]; then
+            printf '%s\n' "$installed_path"
+        fi
+    done \
+    | LC_ALL=C sort -u >"$installed_directories"
 installed_file_count=$(wc -l <"$installed_paths")
 if ((installed_file_count < ${#expected_installed_files[@]})); then
     printf 'Installed file inventory is unexpectedly small: %s\n' "$installed_file_count" >&2
+    exit 1
+fi
+if [[ ! -s "$installed_directories" ]]; then
+    printf 'Installed package exposes no package-specific directory inventory.\n' >&2
     exit 1
 fi
 
@@ -197,6 +219,12 @@ if ! cmp -s "$installed_inventory_before" "$installed_inventory_after"; then
     printf 'Same-version reinstall changed the installed file inventory.\n' >&2
     exit 1
 fi
+while IFS= read -r installed_directory; do
+    if [[ ! -d "$installed_directory" || -L "$installed_directory" ]]; then
+        printf 'Same-version reinstall removed a package-specific directory: %s\n' "$installed_directory" >&2
+        exit 1
+    fi
+done <"$installed_directories"
 if [[ $(sha256sum -- "$external_fixture" | awk '{print $1}') != "$external_fixture_sha256" ]]; then
     printf 'Same-version reinstall changed the external fixture.\n' >&2
     exit 1
@@ -205,8 +233,8 @@ fi
 printf 'Purging %s and verifying package and filesystem residue.\n' "$package_name"
 run_bounded dpkg --purge "$package_name"
 package_installed=0
-if dpkg-query --show --showformat='${db:Status-Abbrev}' "$package_name" 2>/dev/null | grep -q '^ii'; then
-    printf 'Package database still reports %s as installed after purge.\n' "$package_name" >&2
+if dpkg-query --show "$package_name" >/dev/null 2>&1; then
+    printf 'Package database retains a %s record after purge.\n' "$package_name" >&2
     exit 1
 fi
 while IFS= read -r installed_path; do
@@ -215,10 +243,12 @@ while IFS= read -r installed_path; do
         exit 1
     fi
 done <"$installed_paths"
-if [[ -e /usr/share/copperfin || -L /usr/share/copperfin ]]; then
-    printf 'Package-owned resource tree remains after purge: /usr/share/copperfin\n' >&2
-    exit 1
-fi
+while IFS= read -r installed_directory; do
+    if [[ -e "$installed_directory" || -L "$installed_directory" ]]; then
+        printf 'Package-specific directory remains after purge: %s\n' "$installed_directory" >&2
+        exit 1
+    fi
+done <"$installed_directories"
 if [[ $(sha256sum -- "$external_fixture" | awk '{print $1}') != "$external_fixture_sha256" ]]; then
     printf 'Package purge changed the external fixture.\n' >&2
     exit 1
@@ -241,7 +271,7 @@ jq -n \
         package_architecture: $package_architecture,
         fresh_install: "PASS",
         installed_tree_contract: "PASS",
-        locale_catalog_contract: "PASS",
+        english_locale_catalog: "PASS",
         installed_cli_smoke: "PASS",
         installed_cli_stdout: $installed_cli_stdout,
         same_version_maintenance_reinstall: "PASS",

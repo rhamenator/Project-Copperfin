@@ -289,9 +289,14 @@ jobs:
             printf 'Linux installer lifecycle requires exactly one DEB package; found %s.\n' "${#installers[@]}" >&2
             exit 1
           fi
-          sudo env "RUNNER_TEMP=$RUNNER_TEMP" bash scripts/test-linux-installer-lifecycle.sh \
+          sudo env \
+            "GITHUB_ACTIONS=$GITHUB_ACTIONS" \
+            "RUNNER_ENVIRONMENT=$RUNNER_ENVIRONMENT" \
+            "RUNNER_TEMP=$RUNNER_TEMP" \
+            bash scripts/test-linux-installer-lifecycle.sh \
             --package "$PWD/${installers[0]}" \
             --evidence-directory "$PWD/artifacts/linux-installer-lifecycle" \
+            --allow-system-mutation \
             2>&1 | tee artifacts/linux-installer-lifecycle/linux-installer-lifecycle.log
 
       - name: Create exact Corresponding Source archive
