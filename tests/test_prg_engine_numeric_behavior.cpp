@@ -193,8 +193,8 @@ std::vector<Row> build_rows() {
     // -1 sentinel; it is available only in VFP9 mode, while COPPERFIN rejects the out-of-range value.
     for (const char *mode : {"COPPERFIN", "VFP9"}) {
         const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
-        for (const char *value : {"0.5", "0", "-2.9", "2147483647", "2147483648", "1E10", "1E20",
-                                  "1E300", "EXP(1000)"}) {
+        for (const char *value : {"0.5", "0", "-1.5", "-1.9", "-2.9", "2147483647", "2147483648",
+                                  "1E10", "1E20", "1E300", "EXP(1000)"}) {
             rows.push_back({set, std::string("AT('b','abcabc',") + value + ")", "ERR11"});
             rows.push_back({set, std::string("STRTRAN('abcabc','b','x',") + value + ")", "ERR11"});
             rows.push_back({set, std::string("STRTRAN('abcabc','b','x',1,") + value + ")", "ERR11"});

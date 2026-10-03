@@ -143,7 +143,7 @@ std::int64_t require_valid_strtran_occurrence_argument(
     const PrgValue& argument,
     const NumericBehavior behavior) {
     const double requested_occurrence = value_as_number(argument);
-    if (!std::isfinite(requested_occurrence)) {
+    if (!std::isfinite(requested_occurrence) || requested_occurrence < -1.0) {
         throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"), 11);
     }
     if (behavior == NumericBehavior::vfp9 &&
