@@ -438,6 +438,9 @@ std::vector<Row> build_rows() {
     }
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "CHR(-4294967295)", "ERR11"});
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "ASC(CHR(-4294967295))", "N:1"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "CHR(-4294967041)", "ERR11"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "ASC(CHR(-4294967041))", "N:255"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "CHR(-4294967040)", "ERR11"});
     for (const char *code : {"-4294967297", "-2147483649", "-2147483648", "-2147483647", "-256"}) {
         rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("CHR(") + code + ")", "ERR11"});
     }
