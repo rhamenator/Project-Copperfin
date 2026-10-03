@@ -9,11 +9,27 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
-PR #6894 merged into `main` as `5807fbedf` on 2026-10-03. It completed the
-`CHR()` numeric-boundary slice under #5611/#6776, including VFP9-mode modulo
-wrapping, Copperfin-mode out-of-range rejection, focused sanitizer coverage,
-and the review-requested additional wrap cases. All review conversations were
-resolved and all required checks passed.
+Active continuation: PR #6908 (`fix/macos-installer-lifecycle-6905`) is the
+second #6905 installed-product slice. Its first hosted run and review found
+that the outer productbuild distribution has no direct payload inventory; the
+review fix expands it and aggregates the exact Documentation and Unspecified
+nested component BOM inventories before installation. Hosted run `37112542106`,
+job `111173111329`, passed the exact lifecycle at head `354c35105`; the retained
+JSON binds PKG SHA-256 `4e8f9556d1fd2a333a572e674fd24d37ba2a0e7ad2ffa96def14f0456fe07f38`.
+Record that evidence, verify the final checks/conversations, and merge.
+
+Issue #6905's first installed-product slice (PR #6906, merge `3af2b9609`)
+finished 2026-10-03: the exact generated Linux DEB now undergoes a disposable
+hosted-runner fresh install, installed-tree/English-catalog/semantic CLI smoke,
+same-version reinstall, external-fixture survival, purge, and residue checks.
+Digest-bound evidence is admitted into the RC bundle; all six review threads
+were resolved and the exact lifecycle plus required checks passed.
+
+Earlier on 2026-10-03, PR #6894 merged into `main` as `5807fbedf`. It
+completed the `CHR()` numeric-boundary slice under #5611/#6776, including
+VFP9-mode modulo wrapping, Copperfin-mode out-of-range rejection, focused
+sanitizer coverage, and the review-requested additional wrap cases. All review
+conversations were resolved and all required checks passed.
 
 2026-10-02 session (all merged into `main`): cluster 25 finished (#6035 via
 #6769, plus #6755 and #6760); installer lifecycle CI fixed (#6761, #6696);
@@ -157,13 +173,17 @@ after review found a macOS clone destination-identity gap.
 ## Active slice
 
 Issue #6905 is the directly owner-authorized installed-product and UI
-validation umbrella. The active first slice is branch
-`fix/linux-installer-lifecycle-6905` in
-`~/.codex/worktrees/linux-installer-lifecycle-6905/Project-Copperfin`. It adds
-a real hosted Ubuntu DEB install/installed-command/reinstall/purge lifecycle,
-digest-bound evidence, and fail-closed RC-bundle admission. Finish focused
-checks, signed commit, PR, review resolution, exact hosted lifecycle evidence,
-and merge; then clean the slice worktree/build/branch.
+validation umbrella. The active second slice is branch
+`fix/macos-installer-lifecycle-6905` in
+`~/.codex/worktrees/macos-installer-lifecycle-6905/Project-Copperfin`. Add a
+real hosted macOS productbuild install with stable component identifiers,
+receipt/version and installed-resource verification, semantic installed CLI
+smoke, digest-bound evidence, fail-closed RC-bundle admission, and exact
+bounded cleanup on the disposable runner. Keep Developer ID/notarization,
+automated GUI, human GUI, and user-facing uninstall claims explicit as
+unperformed. Finish focused checks, signed commit, PR, review resolution,
+exact hosted lifecycle evidence, and merge; then clean the slice
+worktree/build/branch.
 
 The owner-directed #6879 extended-table sequence and unfinished #5611/#6776
 numeric-conversion work remain retained and uncancelled. Continue #6905's next

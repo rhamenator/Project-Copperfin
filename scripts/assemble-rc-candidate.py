@@ -13,7 +13,9 @@ HZ-data-corruption-01; HZ-doc-command-01; RQ-CF-REL-003;
 DQ-windows-vsix-lifecycle-scope; DV-windows-vsix-lifecycle-contract;
 RQ-CF-REL-004; DQ-rc-launcher-trust-exception;
 DV-rc-launcher-trust-exception-contract; RQ-CF-REL-006;
-DQ-linux-installer-lifecycle-scope; DV-linux-installer-lifecycle-contract.
+DQ-linux-installer-lifecycle-scope; DV-linux-installer-lifecycle-contract;
+RQ-CF-REL-007; DQ-macos-installer-lifecycle-scope;
+DV-macos-installer-lifecycle-contract.
 """
 
 from __future__ import annotations
@@ -448,6 +450,85 @@ def require_linux_installer_lifecycle_evidence(path: Path, package: Path) -> dic
     return evidence
 
 
+def require_macos_installer_lifecycle_evidence(path: Path, package: Path) -> dict:
+    try:
+        evidence = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise AssemblyError(
+            f"macOS installer lifecycle evidence is not valid JSON: {path}"
+        ) from error
+    expected_keys = {
+        "schema_version",
+        "kind",
+        "package_sha256",
+        "package_version",
+        "product_identifier",
+        "component_receipts",
+        "runner_architecture",
+        "fresh_install",
+        "component_receipt_contract",
+        "installed_tree_contract",
+        "english_locale_catalog",
+        "installed_cli_smoke",
+        "installed_cli_stdout",
+        "external_artifact_survived",
+        "bounded_runner_cleanup",
+        "package_receipt_residue",
+        "filesystem_residue",
+        "installed_file_count",
+        "developer_id_and_notarization",
+        "automated_gui",
+        "human_gui",
+    }
+    expected_pass_fields = (
+        "fresh_install",
+        "component_receipt_contract",
+        "installed_tree_contract",
+        "english_locale_catalog",
+        "installed_cli_smoke",
+        "external_artifact_survived",
+        "bounded_runner_cleanup",
+        "package_receipt_residue",
+        "filesystem_residue",
+    )
+    product_identifier = "com.Copperfin.copperfin"
+    if (
+        not isinstance(evidence, dict)
+        or set(evidence) != expected_keys
+        or evidence["schema_version"] != 1
+        or evidence["kind"] != "copperfin-macos-installer-lifecycle-result"
+        or evidence["package_sha256"] != sha256(package)
+        or not isinstance(evidence["package_version"], str)
+        or not evidence["package_version"]
+        or evidence["product_identifier"] != product_identifier
+        or evidence["component_receipts"]
+        != [
+            product_identifier + ".Documentation",
+            product_identifier + ".Unspecified",
+        ]
+        or evidence["runner_architecture"] not in ("arm64", "x86_64")
+        or any(evidence[field] != "PASS" for field in expected_pass_fields)
+        or any(
+            evidence[field] != "NOT_RUN"
+            for field in (
+                "developer_id_and_notarization",
+                "automated_gui",
+                "human_gui",
+            )
+        )
+        or not isinstance(evidence["installed_file_count"], int)
+        or isinstance(evidence["installed_file_count"], bool)
+        or evidence["installed_file_count"] < 1
+        or not isinstance(evidence["installed_cli_stdout"], str)
+        or "asset_family: program" not in evidence["installed_cli_stdout"]
+        or "status: ok" not in evidence["installed_cli_stdout"]
+    ):
+        raise AssemblyError(
+            "macOS installer lifecycle evidence does not prove the required bounded lifecycle"
+        )
+    return evidence
+
+
 def require_windows_vsix_lifecycle_evidence(path: Path, vsix: Path) -> None:
     try:
         evidence = json.loads(path.read_text(encoding="utf-8-sig"))
@@ -566,6 +647,21 @@ def assemble(args: argparse.Namespace) -> Path:
         "Windows installer lifecycle evidence",
     )
 
+    bundled_macos_pkg = require_one(
+        output_root / "installers/macos", "*.pkg", "bundled macOS productbuild package"
+    )
+    macos_lifecycle = require_one(
+        producer_roots["macos"],
+        "macos-installer-lifecycle.json",
+        "macOS installer lifecycle evidence",
+    )
+    require_macos_installer_lifecycle_evidence(macos_lifecycle, bundled_macos_pkg)
+    copy_verified(
+        macos_lifecycle,
+        output_root / "evidence/macos-installer-lifecycle.json",
+        "macOS installer lifecycle evidence",
+    )
+
     bundled_linux_deb = require_one(
         output_root / "installers/linux", "*.deb", "bundled Linux Debian package"
     )
@@ -675,7 +771,7 @@ def assemble(args: argparse.Namespace) -> Path:
                 "windows_upgrade_from_previous_version": windows_lifecycle_evidence["upgrade_from_previous_version"],
                 "windows_silent_uninstall": "PASS",
                 "windows_residue_checks": "PASS",
-                "macos_productbuild": "NOT_RUN",
+                "macos_productbuild": "PASS",
                 "linux_deb": "PASS",
                 "linux_rpm": "NOT_RUN",
             },
@@ -785,6 +881,36 @@ def self_test() -> None:
         (inputs / "copperfin-windows-installers/windows-installer-lifecycle.json").write_text(
             json.dumps(windows_lifecycle_fixture, sort_keys=True) + "\n", encoding="utf-8"
         )
+        macos_pkg_fixture = inputs / "copperfin-macos-installers/copperfin-0.1.0-Darwin.pkg"
+        macos_lifecycle_fixture = {
+            "schema_version": 1,
+            "kind": "copperfin-macos-installer-lifecycle-result",
+            "package_sha256": sha256(macos_pkg_fixture),
+            "package_version": "0.1.0",
+            "product_identifier": "com.Copperfin.copperfin",
+            "component_receipts": [
+                "com.Copperfin.copperfin.Documentation",
+                "com.Copperfin.copperfin.Unspecified",
+            ],
+            "runner_architecture": "arm64",
+            "fresh_install": "PASS",
+            "component_receipt_contract": "PASS",
+            "installed_tree_contract": "PASS",
+            "english_locale_catalog": "PASS",
+            "installed_cli_smoke": "PASS",
+            "installed_cli_stdout": "asset_family: program\nstatus: ok",
+            "external_artifact_survived": "PASS",
+            "bounded_runner_cleanup": "PASS",
+            "package_receipt_residue": "PASS",
+            "filesystem_residue": "PASS",
+            "installed_file_count": 6,
+            "developer_id_and_notarization": "NOT_RUN",
+            "automated_gui": "NOT_RUN",
+            "human_gui": "NOT_RUN",
+        }
+        (inputs / "copperfin-macos-installers/macos-installer-lifecycle.json").write_text(
+            json.dumps(macos_lifecycle_fixture, sort_keys=True) + "\n", encoding="utf-8"
+        )
         linux_deb_fixture = inputs / "copperfin-linux-installers/copperfin-0.1.0-Linux.deb"
         linux_lifecycle_fixture = {
             "schema_version": 1,
@@ -886,6 +1012,7 @@ def self_test() -> None:
             "RC-TESTER-README.md",
             "SHA256SUMS.txt",
             "evidence/linux-installer-lifecycle.json",
+            "evidence/macos-installer-lifecycle.json",
             "evidence/windows-installer-lifecycle.json",
             "evidence/windows-vsix-lifecycle.json",
             "ide/visual-studio/Copperfin.VisualStudio.vsix",
@@ -960,7 +1087,7 @@ def self_test() -> None:
                 "windows_upgrade_from_previous_version": "NOT_RUN",
                 "windows_silent_uninstall": "PASS",
                 "windows_residue_checks": "PASS",
-                "macos_productbuild": "NOT_RUN",
+                "macos_productbuild": "PASS",
                 "linux_deb": "PASS",
                 "linux_rpm": "NOT_RUN",
             },
@@ -1011,6 +1138,33 @@ def self_test() -> None:
             repository / "docs/contracts/rc-validation-manifest-v3.schema.json"
         ):
             raise AssemblyError("self-test validation manifest schema is not the exact repository schema")
+
+        macos_lifecycle_path = bundle / "evidence/macos-installer-lifecycle.json"
+        macos_lifecycle = json.loads(macos_lifecycle_path.read_text(encoding="utf-8"))
+        macos_lifecycle_mutations = (
+            ("false fresh-install status", "fresh_install", "NOT_RUN"),
+            ("wrong package digest", "package_sha256", "0" * 64),
+            ("wrong product identifier", "product_identifier", "com.example.copperfin"),
+            ("wrong component receipts", "component_receipts", []),
+            ("missing installed file inventory", "installed_file_count", 0),
+            ("unsupported automated-GUI claim", "automated_gui", "PASS"),
+            ("unsupported human-GUI claim", "human_gui", "PASS"),
+            ("missing semantic CLI result", "installed_cli_stdout", "status: ok"),
+        )
+        for description, field, replacement in macos_lifecycle_mutations:
+            mutated = dict(macos_lifecycle)
+            mutated[field] = replacement
+            mutation_path = root / f"bad-macos-lifecycle-{field}.json"
+            mutation_path.write_text(json.dumps(mutated) + "\n", encoding="utf-8")
+            try:
+                require_macos_installer_lifecycle_evidence(
+                    mutation_path,
+                    bundle / "installers/macos/copperfin-0.1.0-Darwin.pkg",
+                )
+            except AssemblyError:
+                pass
+            else:
+                raise AssemblyError(f"self-test accepted {description}")
 
         linux_lifecycle_path = bundle / "evidence/linux-installer-lifecycle.json"
         linux_lifecycle = json.loads(linux_lifecycle_path.read_text(encoding="utf-8"))

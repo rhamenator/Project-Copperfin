@@ -354,7 +354,9 @@ cleared. The corrected verifier terminates on read failure and admits the
 generated exact key independently of values; corrected exact-head Windows
 run `31702317708` passed, and independently downloaded evidence matches the
 retained NSIS SHA-256 `f77217c135ee223746f876b672b1a98366b1ba44ff38a94184e58f9fa408dcc6`.
-Prior-version Windows upgrade, macOS productbuild, and Linux DEB/RPM remain
+Prior-version Windows upgrade, macOS productbuild, and Linux DEB/RPM were
+initially `NOT_RUN`; the later #6905 installed-product workstream now supplies
+digest-bound Linux DEB and macOS productbuild evidence, while Linux RPM remains
 `NOT_RUN`. The Windows VSIX producer now directly installs the exact package
 into an ephemeral-runner Visual Studio instance, verifies identity/version,
 package load, a runner-owned PRG and registered command outside the checkout,
@@ -561,9 +563,13 @@ adds a hosted Ubuntu lifecycle for the exact generated DEB: fresh install,
 installed tree and locale catalog verification, semantic installed-command
 smoke, same-version maintenance reinstall, external-artifact survival, purge,
 and residue checks. The digest-bound result is admitted into the RC bundle as
-Linux DEB lifecycle evidence; RPM installation and macOS productbuild
-lifecycle remain explicit `NOT_RUN` gaps, as do human visual acceptance and
-any installed Linux GUI that is not yet shipped in the package.
+Linux DEB lifecycle evidence. The next bounded slice installs the exact macOS
+productbuild PKG on a disposable hosted runner, verifies stable component
+receipts, installed hosts/resources and semantic installed-command output,
+then performs exact bounded runner cleanup. Its evidence keeps Developer ID
+signing/notarization plus automated and human macOS GUI validation explicit as
+`NOT_RUN`. RPM installation also remains an explicit gap, as does any installed
+Linux GUI that is not yet shipped in the package.
 
 The MVP implementation subgoals are complete at final product/test heads
 `8d6c307d4`, `64e162fd4`, and `82b907cd5`. Exact synchronized test-head

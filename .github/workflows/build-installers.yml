@@ -3,6 +3,8 @@ name: Build Standalone Installers
 # Traceability: RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope;
 # DV-windows-installer-lifecycle-contract; RQ-CF-REL-006;
 # DQ-linux-installer-lifecycle-scope; DV-linux-installer-lifecycle-contract;
+# RQ-CF-REL-007; DQ-macos-installer-lifecycle-scope;
+# DV-macos-installer-lifecycle-contract;
 # HZ-system-failure-01; HZ-data-corruption-01; HZ-doc-command-01.
 
 on:
@@ -182,6 +184,7 @@ jobs:
 
   macos-installer:
     runs-on: macos-latest
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -219,18 +222,45 @@ jobs:
           -DCOPPERFIN_EXPECTED_ARTIFACT_SUFFIXES="Darwin.pkg;Darwin.tar.gz"
           -P tests/run_cpack_artifact_contract_check.cmake
 
+      - name: Exercise macOS productbuild installer lifecycle
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/macos-installer-lifecycle
+          shopt -s nullglob
+          installers=(build/package/copperfin-*-Darwin.pkg)
+          if ((${#installers[@]} != 1)); then
+            printf 'macOS installer lifecycle requires exactly one productbuild package; found %s.\n' "${#installers[@]}" >&2
+            exit 1
+          fi
+          package_version=$(tr -d '\r\n' < build/CopperfinPackageVersion.txt)
+          product_identifier=$(tr -d '\r\n' < build/CopperfinProductBuildIdentifier.txt)
+          sudo env \
+            "GITHUB_ACTIONS=$GITHUB_ACTIONS" \
+            "RUNNER_ENVIRONMENT=$RUNNER_ENVIRONMENT" \
+            "RUNNER_TEMP=$RUNNER_TEMP" \
+            bash scripts/test-macos-installer-lifecycle.sh \
+              --package "$PWD/${installers[0]}" \
+              --package-version "$package_version" \
+              --product-identifier "$product_identifier" \
+              --evidence-directory "$PWD/artifacts/macos-installer-lifecycle" \
+              --allow-system-mutation \
+            2>&1 | tee artifacts/macos-installer-lifecycle/macos-installer-lifecycle.log
+
       - name: Create exact Corresponding Source archive
         uses: ./.github/actions/create-release-source
         with:
           revision: ${{ github.sha }}
 
       - name: Upload macOS installer artifacts
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: copperfin-macos-installers
           path: |
             build/package/copperfin-*-Darwin.pkg
             build/package/copperfin-*-Darwin.tar.gz
+            artifacts/macos-installer-lifecycle/macos-installer-lifecycle.json
+            artifacts/macos-installer-lifecycle/macos-installer-lifecycle.log
             release-source/Project-Copperfin-source-${{ github.sha }}.zip
           if-no-files-found: error
 
