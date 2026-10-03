@@ -12,7 +12,8 @@ DV-windows-installer-lifecycle-contract; HZ-system-failure-01;
 HZ-data-corruption-01; HZ-doc-command-01; RQ-CF-REL-003;
 DQ-windows-vsix-lifecycle-scope; DV-windows-vsix-lifecycle-contract;
 RQ-CF-REL-004; DQ-rc-launcher-trust-exception;
-DV-rc-launcher-trust-exception-contract.
+DV-rc-launcher-trust-exception-contract; RQ-CF-REL-006;
+DQ-linux-installer-lifecycle-scope; DV-linux-installer-lifecycle-contract.
 """
 
 from __future__ import annotations
@@ -384,6 +385,69 @@ def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) ->
     return evidence
 
 
+def require_linux_installer_lifecycle_evidence(path: Path, package: Path) -> dict:
+    try:
+        evidence = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise AssemblyError(
+            f"Linux installer lifecycle evidence is not valid JSON: {path}"
+        ) from error
+    expected_keys = {
+        "schema_version",
+        "kind",
+        "package_sha256",
+        "package_name",
+        "package_version",
+        "package_architecture",
+        "fresh_install",
+        "installed_tree_contract",
+        "english_locale_catalog",
+        "installed_cli_smoke",
+        "installed_cli_stdout",
+        "same_version_maintenance_reinstall",
+        "external_artifact_survived",
+        "purge_uninstall",
+        "package_database_residue",
+        "filesystem_residue",
+        "installed_file_count",
+        "rpm_lifecycle",
+    }
+    expected_pass_fields = (
+        "fresh_install",
+        "installed_tree_contract",
+        "english_locale_catalog",
+        "installed_cli_smoke",
+        "same_version_maintenance_reinstall",
+        "external_artifact_survived",
+        "purge_uninstall",
+        "package_database_residue",
+        "filesystem_residue",
+    )
+    if (
+        not isinstance(evidence, dict)
+        or set(evidence) != expected_keys
+        or evidence["schema_version"] != 1
+        or evidence["kind"] != "copperfin-linux-installer-lifecycle-result"
+        or evidence["package_sha256"] != sha256(package)
+        or evidence["package_name"] != "copperfin"
+        or not isinstance(evidence["package_version"], str)
+        or not evidence["package_version"]
+        or evidence["package_architecture"] != "amd64"
+        or any(evidence[field] != "PASS" for field in expected_pass_fields)
+        or evidence["rpm_lifecycle"] != "NOT_RUN"
+        or not isinstance(evidence["installed_file_count"], int)
+        or isinstance(evidence["installed_file_count"], bool)
+        or evidence["installed_file_count"] < 1
+        or not isinstance(evidence["installed_cli_stdout"], str)
+        or "asset_family: program" not in evidence["installed_cli_stdout"]
+        or "status: ok" not in evidence["installed_cli_stdout"]
+    ):
+        raise AssemblyError(
+            "Linux installer lifecycle evidence does not prove the required bounded lifecycle"
+        )
+    return evidence
+
+
 def require_windows_vsix_lifecycle_evidence(path: Path, vsix: Path) -> None:
     try:
         evidence = json.loads(path.read_text(encoding="utf-8-sig"))
@@ -502,6 +566,21 @@ def assemble(args: argparse.Namespace) -> Path:
         "Windows installer lifecycle evidence",
     )
 
+    bundled_linux_deb = require_one(
+        output_root / "installers/linux", "*.deb", "bundled Linux Debian package"
+    )
+    linux_lifecycle = require_one(
+        producer_roots["linux"],
+        "linux-installer-lifecycle.json",
+        "Linux installer lifecycle evidence",
+    )
+    require_linux_installer_lifecycle_evidence(linux_lifecycle, bundled_linux_deb)
+    copy_verified(
+        linux_lifecycle,
+        output_root / "evidence/linux-installer-lifecycle.json",
+        "Linux installer lifecycle evidence",
+    )
+
     bundled_vsix = require_one(output_root / "ide/visual-studio", "*.vsix", "bundled Visual Studio VSIX")
     windows_vsix_lifecycle = require_one(
         producer_roots["vsix"],
@@ -597,7 +676,7 @@ def assemble(args: argparse.Namespace) -> Path:
                 "windows_silent_uninstall": "PASS",
                 "windows_residue_checks": "PASS",
                 "macos_productbuild": "NOT_RUN",
-                "linux_deb": "NOT_RUN",
+                "linux_deb": "PASS",
                 "linux_rpm": "NOT_RUN",
             },
             "visual_studio_vsix_build_and_static_checks": "PASS",
@@ -706,6 +785,30 @@ def self_test() -> None:
         (inputs / "copperfin-windows-installers/windows-installer-lifecycle.json").write_text(
             json.dumps(windows_lifecycle_fixture, sort_keys=True) + "\n", encoding="utf-8"
         )
+        linux_deb_fixture = inputs / "copperfin-linux-installers/copperfin-0.1.0-Linux.deb"
+        linux_lifecycle_fixture = {
+            "schema_version": 1,
+            "kind": "copperfin-linux-installer-lifecycle-result",
+            "package_sha256": sha256(linux_deb_fixture),
+            "package_name": "copperfin",
+            "package_version": "0.1.0",
+            "package_architecture": "amd64",
+            "fresh_install": "PASS",
+            "installed_tree_contract": "PASS",
+            "english_locale_catalog": "PASS",
+            "installed_cli_smoke": "PASS",
+            "installed_cli_stdout": "asset_family: program\nstatus: ok",
+            "same_version_maintenance_reinstall": "PASS",
+            "external_artifact_survived": "PASS",
+            "purge_uninstall": "PASS",
+            "package_database_residue": "PASS",
+            "filesystem_residue": "PASS",
+            "installed_file_count": 6,
+            "rpm_lifecycle": "NOT_RUN",
+        }
+        (inputs / "copperfin-linux-installers/linux-installer-lifecycle.json").write_text(
+            json.dumps(linux_lifecycle_fixture, sort_keys=True) + "\n", encoding="utf-8"
+        )
         vsix_fixture_path = inputs / "copperfin-visualstudio-vsix/Copperfin.VisualStudio.vsix"
         windows_vsix_lifecycle_fixture = {
             "schema_version": 1,
@@ -782,6 +885,7 @@ def self_test() -> None:
         expected_bundle_files = {
             "RC-TESTER-README.md",
             "SHA256SUMS.txt",
+            "evidence/linux-installer-lifecycle.json",
             "evidence/windows-installer-lifecycle.json",
             "evidence/windows-vsix-lifecycle.json",
             "ide/visual-studio/Copperfin.VisualStudio.vsix",
@@ -857,7 +961,7 @@ def self_test() -> None:
                 "windows_silent_uninstall": "PASS",
                 "windows_residue_checks": "PASS",
                 "macos_productbuild": "NOT_RUN",
-                "linux_deb": "NOT_RUN",
+                "linux_deb": "PASS",
                 "linux_rpm": "NOT_RUN",
             },
             "visual_studio_vsix_build_and_static_checks": "PASS",
@@ -907,6 +1011,32 @@ def self_test() -> None:
             repository / "docs/contracts/rc-validation-manifest-v3.schema.json"
         ):
             raise AssemblyError("self-test validation manifest schema is not the exact repository schema")
+
+        linux_lifecycle_path = bundle / "evidence/linux-installer-lifecycle.json"
+        linux_lifecycle = json.loads(linux_lifecycle_path.read_text(encoding="utf-8"))
+        linux_lifecycle_mutations = (
+            ("false fresh-install status", "fresh_install", "NOT_RUN"),
+            ("unproved English locale catalog", "english_locale_catalog", "NOT_RUN"),
+            ("wrong package digest", "package_sha256", "0" * 64),
+            ("wrong package architecture", "package_architecture", "arm64"),
+            ("missing installed file inventory", "installed_file_count", 0),
+            ("unsupported RPM lifecycle claim", "rpm_lifecycle", "PASS"),
+            ("missing semantic CLI result", "installed_cli_stdout", "status: ok"),
+        )
+        for description, field, replacement in linux_lifecycle_mutations:
+            mutated = dict(linux_lifecycle)
+            mutated[field] = replacement
+            mutation_path = root / f"bad-linux-lifecycle-{field}.json"
+            mutation_path.write_text(json.dumps(mutated) + "\n", encoding="utf-8")
+            try:
+                require_linux_installer_lifecycle_evidence(
+                    mutation_path,
+                    bundle / "installers/linux/copperfin-0.1.0-Linux.deb",
+                )
+            except AssemblyError:
+                pass
+            else:
+                raise AssemblyError(f"self-test accepted {description}")
 
         lifecycle_path = bundle / "evidence/windows-installer-lifecycle.json"
         lifecycle = json.loads(lifecycle_path.read_text(encoding="utf-8"))

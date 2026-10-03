@@ -1,0 +1,1 @@
+- 2026-10-03: Exercise the exact Linux DEB through bounded hosted install, semantic installed-command smoke, maintenance reinstall, purge, and residue checks, and bind the resulting evidence into release-candidate assembly.

@@ -12,6 +12,10 @@ the direct Windows installer lifecycle evidence and its fail-closed boundaries.
 lifecycle boundary. `RQ-CF-REL-004`, `DQ-rc-launcher-trust-exception`, and
 `DV-rc-launcher-trust-exception-contract` govern the explicit unsigned private
 RC launcher-trust exception.
+`RQ-CF-REL-006`, `DQ-linux-installer-lifecycle-scope`,
+`DV-linux-installer-lifecycle-contract`, `HZ-system-failure-01`,
+`HZ-data-corruption-01`, and `HZ-doc-command-01` govern the hosted Linux DEB
+install, installed-command, maintenance-reinstall, purge, and residue evidence.
 
 Each Project Copperfin `v0.1.0-rc.N` candidate is a private-evaluation release
 candidate. It is not an official Project Copperfin release and is not
@@ -33,9 +37,12 @@ next sequential RC number.
    construction/static checks from each platform's actual installer and VSIX
    lifecycle execution. The Windows NSIS fields distinguish fresh install,
    installed-command smoke, same-version maintenance reinstall, prior-version
-   upgrade, silent uninstall, and residue checks. `NOT_RUN` means the bundle
-   workflow did not perform that exact operation; it must not be read as a
-   failure or a pass.
+   upgrade, silent uninstall, and residue checks. The Linux DEB field is
+   admitted only from digest-bound evidence for fresh install, installed-file
+   and locale checks, installed-command semantic smoke, same-version reinstall,
+   purge, and residue checks. The Linux RPM and macOS productbuild lifecycle
+   fields remain separate. `NOT_RUN` means the bundle workflow did not perform
+   that exact operation; it must not be read as a failure or a pass.
    The signing, linguistic-review, and real-installed-VFP9 fields use the same
    vocabulary and describe only this exact candidate workflow. Evidence from a
    separate protected or human run must not be inferred into this manifest.
@@ -55,6 +62,11 @@ next sequential RC number.
 - `evidence/windows-installer-lifecycle.json` records the Windows NSIS
   lifecycle result and binds it to the installer's SHA-256 digest. A successful
   maintenance reinstall is not evidence of upgrade from an older version.
+- `evidence/linux-installer-lifecycle.json` records the hosted Linux DEB fresh
+  install, exact installed tree and locale catalog checks, semantic
+  `copperfin_inspect` smoke, same-version maintenance reinstall, external
+  artifact survival, purge, and residue results bound to the DEB SHA-256. It
+  records the distinct RPM lifecycle as `NOT_RUN` until directly exercised.
 - `evidence/windows-vsix-lifecycle.json` records exact-instance VSIX install,
   identity/version, package load, runner-owned PRG/command smoke, uninstall,
   and residue results bound to the VSIX SHA-256. It separately reports

@@ -555,6 +555,16 @@ only their producer jobs completed, not lifecycle validation. A later
 sequential RC must carry schema v3 and current lifecycle evidence before those
 claims can advance.
 
+The owner-directed installed-product validation workstream #6905 now treats
+package construction and package operation as distinct gates. Its first slice
+adds a hosted Ubuntu lifecycle for the exact generated DEB: fresh install,
+installed tree and locale catalog verification, semantic installed-command
+smoke, same-version maintenance reinstall, external-artifact survival, purge,
+and residue checks. The digest-bound result is admitted into the RC bundle as
+Linux DEB lifecycle evidence; RPM installation and macOS productbuild
+lifecycle remain explicit `NOT_RUN` gaps, as do human visual acceptance and
+any installed Linux GUI that is not yet shipped in the package.
+
 The MVP implementation subgoals are complete at final product/test heads
 `8d6c307d4`, `64e162fd4`, and `82b907cd5`. Exact synchronized test-head
 validation at `20ef3b3cb` is green: Native Release Readiness `30550948703`
