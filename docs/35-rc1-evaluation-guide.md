@@ -7,6 +7,9 @@ Traceability: `RQ-CF-REL-001`, `DQ-rc-evidence-v2-scope-separation`,
 this guide. `RQ-CF-REL-002`, `DQ-windows-installer-lifecycle-scope`,
 `DV-windows-installer-lifecycle-contract`, and `HZ-data-corruption-01` govern
 the direct Windows installer lifecycle evidence and its fail-closed boundaries.
+`RQ-CF-REL-008`, `DQ-windows-installed-ui-scope`, and
+`DV-windows-installed-ui-contract` govern the installed standalone Studio
+semantic UI lifecycle and its failure diagnostics.
 `RQ-CF-REL-003`, `DQ-windows-vsix-lifecycle-scope`, and
 `DV-windows-vsix-lifecycle-contract` govern the corresponding Windows VSIX
 lifecycle boundary. `RQ-CF-REL-004`, `DQ-rc-launcher-trust-exception`, and
@@ -40,8 +43,11 @@ next sequential RC number.
    `rc-validation-manifest.schema.json`. Schema version 3 separates package
    construction/static checks from each platform's actual installer and VSIX
    lifecycle execution. The Windows NSIS fields distinguish fresh install,
-   installed-command smoke, same-version maintenance reinstall, prior-version
-   upgrade, silent uninstall, and residue checks. The Linux DEB field is
+   installed-command smoke, installed standalone Studio semantic UI automation,
+   same-version maintenance reinstall, prior-version upgrade, silent uninstall,
+   and residue checks. The installed UI result is process-bound UI Automation
+   evidence for named tabs and menu commands plus a graceful semantic exit; it
+   is not human usability evidence. The Linux DEB field is
    admitted only from digest-bound evidence for fresh install, installed-file
    and locale checks, installed-command semantic smoke, same-version reinstall,
    purge, and residue checks. The macOS productbuild field is admitted only
@@ -69,8 +75,13 @@ next sequential RC number.
 - `installers/linux/` contains DEB, RPM, and portable TGZ packages.
 - `ide/visual-studio/` contains the Visual Studio VSIX.
 - `evidence/windows-installer-lifecycle.json` records the Windows NSIS
-  lifecycle result and binds it to the installer's SHA-256 digest. A successful
-  maintenance reinstall is not evidence of upgrade from an older version.
+  lifecycle result and binds it to the installer's SHA-256 digest. It also
+  records the exact installed Studio executable digest, named semantic controls
+  selected or invoked, automated GUI result, graceful exit, and an explicit
+  `human_gui: NOT_RUN` limitation. A failed hosted UI run retains a bounded UI
+  tree and best-effort screenshot in a short-lived diagnostic artifact. A
+  successful maintenance reinstall is not evidence of upgrade from an older
+  version.
 - `evidence/linux-installer-lifecycle.json` records the hosted Linux DEB fresh
   install, exact installed tree and locale catalog checks, semantic
   `copperfin_inspect` smoke, same-version maintenance reinstall, external
