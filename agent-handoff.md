@@ -9,16 +9,18 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
-Active continuation: `fix/linux-rpm-lifecycle-6905`, based on `origin/main` at
-`ce15bab04`, is the fourth #6905 installed-product slice. It adds a distinct
-native RPM lifecycle in an ephemeral digest-pinned Fedora `linux/amd64`
-container: exact package and container-image identity, fresh native install,
-installed tree/English catalog/semantic command smoke, `rpm --verify`,
-same-version reinstall, external-fixture preservation, erase, and RPM-database
-plus filesystem residue checks. The RC assembler admits `linux_rpm: PASS` only
-from separate digest-bound RPM evidence. Complete the focused contracts and
-self-tests, push a signed/DCO commit, open the PR, then require exact hosted
-container evidence before merge.
+Active continuation: PR #6916 (`fix/linux-rpm-lifecycle-6905`), based on
+`origin/main` at `ce15bab04`, is the fourth #6905 installed-product slice. It
+adds a distinct native RPM lifecycle in an ephemeral digest-pinned Fedora
+`linux/amd64` container: exact package and container-image identity, fresh
+native install, installed tree/English catalog/semantic command smoke,
+`rpm --verify`, same-version reinstall, external-fixture preservation, erase,
+and RPM-database plus filesystem residue checks. The RC assembler admits
+`linux_rpm: PASS` only from separate digest-bound RPM evidence. Focused local
+contracts and self-tests pass; review-driven daemon-container cleanup is
+separately bounded and keyed by `--cidfile`. Review conversations are resolved
+before waiting on the remaining exact-head hosted container evidence required
+for merge.
 
 PR #6910 (`fix/windows-installed-ui-6905`) merged into `main` as
 `ce15bab04fc14db26c81081b1dc5f067b7fc6c88` on 2026-10-03. Hosted run

@@ -90,6 +90,13 @@ require_text("${workflow}"
     "exact admitted Fedora container digest")
 require_text("${workflow}" "--platform linux/amd64" "explicit package architecture")
 require_text("${workflow}" "--pull=never" "post-pull digest-only container execution")
+require_text("${workflow}" "--cidfile" "daemon-owned container identity capture")
+require_text("${workflow}" "trap cleanup_rpm_container EXIT"
+    "all-path daemon-container cleanup")
+require_text("${workflow}" "docker rm --force"
+    "forced daemon-container cleanup after client timeout")
+require_text("${workflow}" "timeout --signal=KILL 60 docker rm --force"
+    "separately bounded daemon-container cleanup")
 require_text("${workflow}" "scripts/test-linux-rpm-installer-lifecycle.sh"
     "RPM lifecycle helper invocation")
 require_text("${workflow}" "--allow-container-mutation"
