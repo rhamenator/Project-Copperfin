@@ -5,8 +5,10 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "../src/runtime/prg_engine_helpers.h"
+#include "../src/runtime/prg_engine_numeric_functions.h"
 #include "prg_engine_test_support.h"
 
+#include <cmath>
 #include <cstdint>
 #include <filesystem>
 #include <iostream>
@@ -369,6 +371,50 @@ std::vector<Row> build_rows() {
         rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("BITRSHIFT(") + operand + ",1)", "I:0"});
     }
 
+    // Governing requirement: RQ-CF-PRG-ROUND-BOUNDARIES-001.
+    // ROUND truncates ordinary fractional decimal-place arguments. COPPERFIN saturates huge values consistently;
+    // VFP9 reproduces its recovered 32-bit conversion, including normalizing INT32_MIN to zero decimal places.
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        rows.push_back({set, "ROUND(1.5,2.9)", "N:1.5"});
+        rows.push_back({set, "ROUND(1.5,-1.9)", "N:0"});
+        rows.push_back({set, "ROUND($1.5,2.9)", "Y:$1.50"});
+        rows.push_back({set, "ROUND($1.5,-1.9)", "Y:$0.00"});
+    }
+    for (const char *places : {"EXP(1000)", "1E20", "1E300", "2147483648", "4294967296",
+                               "9007199254740992"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN",
+                        std::string("ROUND(1.5,") + places + ")", "N:1.5"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN",
+                        std::string("ROUND($1.5,") + places + ")", "Y:$1.50"});
+    }
+    for (const char *places : {"-EXP(1000)", "-1E20", "-9223372036854775808"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN",
+                        std::string("ROUND(1.5,") + places + ")", "N:0"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN",
+                        std::string("ROUND($1.5,") + places + ")", "Y:$0.00"});
+    }
+    for (const char *places : {"EXP(1000)", "-EXP(1000)", "1E20", "-1E20", "1E300",
+                               "-9223372036854775808", "-4294967296", "-2147483648", "2147483648",
+                               "4294967296", "9007199254740992"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("ROUND(1.5,") + places + ")", "N:2"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("ROUND($1.5,") + places + ")", "Y:$2.00"});
+    }
+    for (const char *places : {"-4294967297", "4294967295"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("ROUND(1.5,") + places + ")", "N:0"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("ROUND($1.5,") + places + ")", "Y:$0.00"});
+    }
+    for (const char *places : {"-4294967295", "-2147483649", "2147483647", "1E10"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("ROUND(1.5,") + places + ")", "N:1.5"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("ROUND($1.5,") + places + ")", "Y:$1.50"});
+    }
+
     // Governing requirement: RQ-CF-PRG-GOMONTH-BOUNDARIES-001.
     // GOMONTH/EOMONTH (#5608 under #5611/#6776). Both modes truncate ordinary fractional offsets and enforce
     // VFP9's 1753..9999 result-year range. VFP9 mode additionally preserves its 32-bit conversion quirks.
@@ -555,6 +601,32 @@ void test_conversion_helpers() {
     expect(!checked_truncated_numeric_to_int64(inf).has_value(), "checked conversion rejects infinity");
     expect(!checked_truncated_numeric_to_int64(-inf).has_value(), "checked conversion rejects negative infinity");
     expect(!checked_truncated_numeric_to_int64(nan).has_value(), "checked conversion rejects NaN");
+
+    // Governing requirement: RQ-CF-PRG-ROUND-BOUNDARIES-001.
+    // Extreme negative decimal places collapse finite magnitudes to signed zero, but must not hide a non-finite
+    // first argument. Exercise NaN directly because no stable PRG expression produces it without raising first.
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const auto set_callback = [mode](const std::string& setting) {
+            return setting == "NUMERICBEHAVIOR" ? std::string(mode) : std::string{};
+        };
+        const auto positive_infinity = copperfin::runtime::evaluate_numeric_function(
+            "round", {copperfin::runtime::make_number_value(inf), copperfin::runtime::make_number_value(-309.0)},
+            set_callback);
+        const auto negative_infinity = copperfin::runtime::evaluate_numeric_function(
+            "round", {copperfin::runtime::make_number_value(-inf), copperfin::runtime::make_number_value(-309.0)},
+            set_callback);
+        const auto nan_result = copperfin::runtime::evaluate_numeric_function(
+            "round", {copperfin::runtime::make_number_value(nan), copperfin::runtime::make_number_value(-309.0)},
+            set_callback);
+        expect(positive_infinity.has_value() && std::isinf(positive_infinity->number_value) &&
+                   !std::signbit(positive_infinity->number_value),
+               std::string(mode) + ": ROUND must preserve positive infinity at extreme negative places");
+        expect(negative_infinity.has_value() && std::isinf(negative_infinity->number_value) &&
+                   std::signbit(negative_infinity->number_value),
+               std::string(mode) + ": ROUND must preserve negative infinity at extreme negative places");
+        expect(nan_result.has_value() && std::isnan(nan_result->number_value),
+               std::string(mode) + ": ROUND must preserve NaN at extreme negative places");
+    }
 }
 
 }  // namespace

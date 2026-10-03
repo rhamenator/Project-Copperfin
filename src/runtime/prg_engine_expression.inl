@@ -173,7 +173,8 @@
         const std::function<std::string(const std::string&)>& set_callback);
     std::optional<PrgValue> evaluate_numeric_function(
         const std::string& function,
-        const std::vector<PrgValue>& arguments);
+        const std::vector<PrgValue>& arguments,
+        const std::function<std::string(const std::string&)>& set_callback);
     std::optional<PrgValue> evaluate_path_function(
         const std::string& function,
         const std::vector<PrgValue>& arguments,
@@ -2413,7 +2414,7 @@
                 {
                     return *type_result;
                 }
-                if (const auto numeric_result = evaluate_numeric_function(function, arguments))
+                if (const auto numeric_result = evaluate_numeric_function(function, arguments, set_callback_))
                 {
                     return *numeric_result;
                 }
