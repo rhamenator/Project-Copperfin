@@ -940,8 +940,9 @@ file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/resources/locales"
     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/resources")
 
 # Traceability: RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope;
-# DV-windows-installer-lifecycle-contract; HZ-system-failure-01;
-# HZ-data-corruption-01; HZ-doc-command-01.
+# DV-windows-installer-lifecycle-contract; RQ-CF-REL-007;
+# DQ-macos-installer-lifecycle-scope; DV-macos-installer-lifecycle-contract;
+# HZ-system-failure-01; HZ-data-corruption-01; HZ-doc-command-01.
 set(CPACK_PACKAGE_NAME "copperfin")
 set(CPACK_PACKAGE_VENDOR "Copperfin")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Copperfin standalone runtime and studio host tooling")
@@ -953,6 +954,7 @@ endif()
 set(CPACK_PACKAGE_CONTACT "maintainers@copperfin.local")
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}")
 set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION}")
+set(CPACK_PRODUCTBUILD_IDENTIFIER "com.Copperfin.copperfin")
 file(GENERATE
     OUTPUT "${CMAKE_BINARY_DIR}/CopperfinPackageVersion.txt"
     CONTENT "${CPACK_PACKAGE_VERSION}\n"
@@ -960,6 +962,10 @@ file(GENERATE
 file(GENERATE
     OUTPUT "${CMAKE_BINARY_DIR}/CopperfinPackageInstallRegistryKey.txt"
     CONTENT "${CPACK_PACKAGE_INSTALL_REGISTRY_KEY}\n"
+)
+file(GENERATE
+    OUTPUT "${CMAKE_BINARY_DIR}/CopperfinProductBuildIdentifier.txt"
+    CONTENT "${CPACK_PRODUCTBUILD_IDENTIFIER}\n"
 )
 
 if(WIN32)

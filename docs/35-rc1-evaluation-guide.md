@@ -16,6 +16,10 @@ RC launcher-trust exception.
 `DV-linux-installer-lifecycle-contract`, `HZ-system-failure-01`,
 `HZ-data-corruption-01`, and `HZ-doc-command-01` govern the hosted Linux DEB
 install, installed-command, maintenance-reinstall, purge, and residue evidence.
+`RQ-CF-REL-007`, `DQ-macos-installer-lifecycle-scope`, and
+`DV-macos-installer-lifecycle-contract` govern the hosted macOS productbuild
+install, receipt/resource, installed-command, and bounded runner-cleanup
+evidence.
 
 Each Project Copperfin `v0.1.0-rc.N` candidate is a private-evaluation release
 candidate. It is not an official Project Copperfin release and is not
@@ -40,8 +44,13 @@ next sequential RC number.
    upgrade, silent uninstall, and residue checks. The Linux DEB field is
    admitted only from digest-bound evidence for fresh install, installed-file
    and locale checks, installed-command semantic smoke, same-version reinstall,
-   purge, and residue checks. The Linux RPM and macOS productbuild lifecycle
-   fields remain separate. `NOT_RUN` means the bundle workflow did not perform
+   purge, and residue checks. The macOS productbuild field is admitted only
+   from digest-bound evidence for a fresh system-root install, exact component
+   receipts and versions, installed files and English catalog, semantic
+   installed-command smoke, external-fixture survival, and bounded runner
+   cleanup. It is not GUI, signing, notarization, or user-facing uninstaller
+   evidence. The Linux RPM lifecycle field remains separate. `NOT_RUN` means
+   the bundle workflow did not perform
    that exact operation; it must not be read as a failure or a pass.
    The signing, linguistic-review, and real-installed-VFP9 fields use the same
    vocabulary and describe only this exact candidate workflow. Evidence from a
@@ -67,6 +76,12 @@ next sequential RC number.
   `copperfin_inspect` smoke, same-version maintenance reinstall, external
   artifact survival, purge, and residue results bound to the DEB SHA-256. It
   records the distinct RPM lifecycle as `NOT_RUN` until directly exercised.
+- `evidence/macos-installer-lifecycle.json` records the hosted macOS
+  productbuild fresh install, exact component receipts, installed tree and
+  English locale checks, semantic `copperfin_inspect` smoke, external artifact
+  survival, and bounded disposable-runner cleanup bound to the PKG SHA-256. It
+  explicitly records Developer ID/notarization, automated GUI, and human GUI
+  evidence as `NOT_RUN`.
 - `evidence/windows-vsix-lifecycle.json` records exact-instance VSIX install,
   identity/version, package load, runner-owned PRG/command smoke, uninstall,
   and residue results bound to the VSIX SHA-256. It separately reports

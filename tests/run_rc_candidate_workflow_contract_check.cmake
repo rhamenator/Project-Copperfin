@@ -6,6 +6,8 @@
 # DQ-rc-launcher-trust-exception; DV-rc-launcher-trust-exception-contract;
 # RQ-CF-REL-006; DQ-linux-installer-lifecycle-scope;
 # DV-linux-installer-lifecycle-contract;
+# RQ-CF-REL-007; DQ-macos-installer-lifecycle-scope;
+# DV-macos-installer-lifecycle-contract;
 # HZ-system-failure-01; HZ-doc-command-01.
 
 cmake_minimum_required(VERSION 3.20)
@@ -85,6 +87,8 @@ require_manifest_schema_text("\"schema_version\": { \"const\": 3 }" "schema-v3 i
 require_manifest_schema_text("\"windows_installed_cli_smoke\"" "Windows installer lifecycle evidence")
 require_manifest_schema_text("\"linux_deb\": { \"const\": \"PASS\" }"
     "Linux Debian installer lifecycle evidence")
+require_manifest_schema_text("\"macos_productbuild\": { \"const\": \"PASS\" }"
+    "macOS productbuild installer lifecycle evidence")
 require_manifest_schema_text("\"windows_supported_prg_open_and_command\"" "Windows VSIX lifecycle evidence")
 require_manifest_schema_text("\"windows_launcher_release_trust\": { \"const\": \"RC_TEST_EXCEPTION\" }"
     "explicit non-release Windows launcher-trust exception")
@@ -123,6 +127,9 @@ foreach(traceability_file IN ITEMS
             RQ-CF-REL-006
             DQ-linux-installer-lifecycle-scope
             DV-linux-installer-lifecycle-contract
+            RQ-CF-REL-007
+            DQ-macos-installer-lifecycle-scope
+            DV-macos-installer-lifecycle-contract
             HZ-system-failure-01
             HZ-doc-command-01)
         string(FIND "${traceability_contents}" "${traceability_id}" traceability_offset)
