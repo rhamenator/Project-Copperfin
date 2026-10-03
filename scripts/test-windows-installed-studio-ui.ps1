@@ -67,6 +67,30 @@ Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
 Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName System.Windows.Forms
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+
+public static class CopperfinNativeUi
+{
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    public static extern int GetClassName(
+        IntPtr hWnd,
+        StringBuilder lpClassName,
+        int nMaxCount);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr SendMessageTimeout(
+        IntPtr hWnd,
+        uint Msg,
+        UIntPtr wParam,
+        IntPtr lParam,
+        uint fuFlags,
+        uint uTimeout,
+        out UIntPtr lpdwResult);
+}
+'@
 
 function Find-SemanticElement {
     param(
@@ -121,7 +145,7 @@ function Wait-SemanticElement {
     throw "Timed out waiting for $($ControlType.ProgrammaticName) '$ExpectedName'."
 }
 
-function Invoke-LegacyDefaultAction {
+function Invoke-NativeButtonAction {
     param(
         [Parameter(Mandatory = $true)]
         [System.Windows.Automation.AutomationElement]$Element,
@@ -129,16 +153,33 @@ function Invoke-LegacyDefaultAction {
         [string]$Description
     )
 
-    $patternObject = $null
-    Assert-Condition `
-        ($Element.TryGetCurrentPattern(
-            [System.Windows.Automation.LegacyIAccessiblePattern]::Pattern,
-            [ref]$patternObject)) `
-        "$Description does not expose LegacyIAccessiblePattern."
-    $pattern = [System.Windows.Automation.LegacyIAccessiblePattern]$patternObject
-    Assert-Condition (-not [string]::IsNullOrWhiteSpace($pattern.Current.DefaultAction)) `
-        "$Description does not expose a semantic default action."
-    $pattern.DoDefaultAction()
+    $nativeHandle = [IntPtr]::new($Element.Current.NativeWindowHandle)
+    Assert-Condition ($nativeHandle -ne [IntPtr]::Zero) `
+        "$Description does not expose a native window handle."
+
+    $className = [System.Text.StringBuilder]::new(256)
+    $classNameLength = [CopperfinNativeUi]::GetClassName(
+        $nativeHandle,
+        $className,
+        $className.Capacity)
+    Assert-Condition ($classNameLength -gt 0) `
+        "$Description native window class could not be read."
+    Assert-Condition ($className.ToString().IndexOf(
+            'BUTTON',
+            [System.StringComparison]::OrdinalIgnoreCase) -ge 0) `
+        "$Description exposed unexpected native window class '$($className.ToString())'."
+
+    $messageResult = [UIntPtr]::Zero
+    $sendResult = [CopperfinNativeUi]::SendMessageTimeout(
+        $nativeHandle,
+        0x00F5,
+        [UIntPtr]::Zero,
+        [IntPtr]::Zero,
+        0x0003,
+        5000,
+        [ref]$messageResult)
+    Assert-Condition ($sendResult -ne [IntPtr]::Zero) `
+        "$Description native button action timed out or failed."
 }
 
 function Get-UiTreeSnapshot {
@@ -289,14 +330,14 @@ try {
     $refreshControl = Wait-SemanticElement -Root $root `
         -ControlType ([System.Windows.Automation.ControlType]::Pane) `
         -ExpectedName 'Refresh' -Deadline $deadline
-    Invoke-LegacyDefaultAction -Element $refreshControl -Description 'Refresh control'
+    Invoke-NativeButtonAction -Element $refreshControl -Description 'Refresh control'
     Start-Sleep -Milliseconds 500
     Assert-Condition (-not $process.HasExited) `
         'Installed Copperfin Studio exited while invoking Refresh.'
     $semanticControls += [ordered]@{
         name = 'Refresh'
         control_type = 'ControlType.Pane'
-        action = 'LegacyIAccessible.DoDefaultAction'
+        action = 'NativeButton.BM_CLICK'
     }
 
     $windowObject = $null

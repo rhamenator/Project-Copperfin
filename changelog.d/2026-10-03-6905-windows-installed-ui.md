@@ -1,1 +1,1 @@
-- 2026-10-03: Exercise named installed Windows Studio surfaces and actions through process-bound UI Automation with bounded failure screenshots and UI-tree diagnostics.
+- 2026-10-03: Exercise named installed Windows Studio surfaces through process-bound UI Automation, invoke its validated native Refresh button without coordinates or keystrokes, and retain bounded failure screenshots and UI-tree diagnostics.

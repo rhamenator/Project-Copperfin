@@ -165,8 +165,10 @@ require_text("${ui_script}" "AutomationElement]::ProcessIdProperty"
     "exact installed-process UI Automation binding")
 require_text("${ui_script}" "[System.Windows.Automation.ControlType]::Pane"
     "currently exposed named Studio surfaces (#6913)")
-require_text("${ui_script}" "[System.Windows.Automation.LegacyIAccessiblePattern]::Pattern"
-    "semantic Refresh default action")
+require_text("${ui_script}" "SendMessageTimeout"
+    "bounded native Refresh button action")
+require_text("${ui_script}" "'BUTTON'"
+    "native Refresh button-class validation")
 require_text("${ui_script}" "[System.Windows.Automation.WindowPattern]::Pattern"
     "semantic window-close action")
 require_text("${ui_script}" "CopyFromScreen" "failure screenshot capture")

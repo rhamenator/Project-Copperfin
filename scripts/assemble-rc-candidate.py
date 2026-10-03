@@ -391,7 +391,7 @@ def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) ->
     }
     if (
         ("Copperfin Command", "ControlType.Pane", "Observe.SemanticName") not in semantic_identities
-        or ("Refresh", "ControlType.Pane", "LegacyIAccessible.DoDefaultAction") not in semantic_identities
+        or ("Refresh", "ControlType.Pane", "NativeButton.BM_CLICK") not in semantic_identities
         or not any(
             name.lower().endswith(".prg")
             and control_type == "ControlType.Pane"
@@ -931,7 +931,7 @@ def self_test() -> None:
                 {
                     "name": "Refresh",
                     "control_type": "ControlType.Pane",
-                    "action": "LegacyIAccessible.DoDefaultAction",
+                    "action": "NativeButton.BM_CLICK",
                 },
                 {
                     "name": "Copperfin Studio - Visual program",
