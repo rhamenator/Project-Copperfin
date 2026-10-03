@@ -121,7 +121,7 @@ function Wait-SemanticElement {
     throw "Timed out waiting for $($ControlType.ProgrammaticName) '$ExpectedName'."
 }
 
-function Select-SemanticTab {
+function Invoke-LegacyDefaultAction {
     param(
         [Parameter(Mandatory = $true)]
         [System.Windows.Automation.AutomationElement]$Element,
@@ -132,13 +132,13 @@ function Select-SemanticTab {
     $patternObject = $null
     Assert-Condition `
         ($Element.TryGetCurrentPattern(
-            [System.Windows.Automation.SelectionItemPattern]::Pattern,
+            [System.Windows.Automation.LegacyIAccessiblePattern]::Pattern,
             [ref]$patternObject)) `
-        "$Description does not expose SelectionItemPattern."
-    $pattern = [System.Windows.Automation.SelectionItemPattern]$patternObject
-    $pattern.Select()
-    Assert-Condition $pattern.Current.IsSelected `
-        "$Description did not become selected after semantic selection."
+        "$Description does not expose LegacyIAccessiblePattern."
+    $pattern = [System.Windows.Automation.LegacyIAccessiblePattern]$patternObject
+    Assert-Condition (-not [string]::IsNullOrWhiteSpace($pattern.Current.DefaultAction)) `
+        "$Description does not expose a semantic default action."
+    $pattern.DoDefaultAction()
 }
 
 function Get-UiTreeSnapshot {
@@ -164,6 +164,9 @@ function Get-UiTreeSnapshot {
                     control_type = [string]$element.Current.ControlType.ProgrammaticName
                     automation_id = [string]$element.Current.AutomationId
                     enabled = [bool]$element.Current.IsEnabled
+                    patterns = @($element.GetSupportedPatterns() | ForEach-Object {
+                        [string]$_.ProgrammaticName
+                    })
                 }
             }
             catch {
@@ -265,56 +268,48 @@ try {
     $observedWindowTitle = [string]$root.Current.Name
 
     $documentName = [System.IO.Path]::GetFileName($resolvedFixture)
-    $documentTab = Wait-SemanticElement -Root $root `
-        -ControlType ([System.Windows.Automation.ControlType]::TabItem) `
+    $documentSurface = Wait-SemanticElement -Root $root `
+        -ControlType ([System.Windows.Automation.ControlType]::Pane) `
         -ExpectedName $documentName -Deadline $deadline
-    Select-SemanticTab -Element $documentTab -Description "runner-owned document tab '$documentName'"
     $semanticControls += [ordered]@{
         name = $documentName
-        control_type = 'ControlType.TabItem'
-        action = 'SelectionItem.Select'
+        control_type = 'ControlType.Pane'
+        action = 'Observe.SemanticName'
     }
 
-    $commandTab = Wait-SemanticElement -Root $root `
-        -ControlType ([System.Windows.Automation.ControlType]::TabItem) `
+    $commandSurface = Wait-SemanticElement -Root $root `
+        -ControlType ([System.Windows.Automation.ControlType]::Pane) `
         -ExpectedName 'Copperfin Command' -Deadline $deadline
-    Select-SemanticTab -Element $commandTab -Description 'Copperfin Command tab'
     $semanticControls += [ordered]@{
         name = 'Copperfin Command'
-        control_type = 'ControlType.TabItem'
-        action = 'SelectionItem.Select'
+        control_type = 'ControlType.Pane'
+        action = 'Observe.SemanticName'
     }
 
-    $fileMenu = Wait-SemanticElement -Root $root `
-        -ControlType ([System.Windows.Automation.ControlType]::MenuItem) `
-        -ExpectedName 'File' -Deadline $deadline
-    $expandObject = $null
-    Assert-Condition `
-        ($fileMenu.TryGetCurrentPattern(
-            [System.Windows.Automation.ExpandCollapsePattern]::Pattern,
-            [ref]$expandObject)) `
-        'File menu does not expose ExpandCollapsePattern.'
-    ([System.Windows.Automation.ExpandCollapsePattern]$expandObject).Expand()
+    $refreshControl = Wait-SemanticElement -Root $root `
+        -ControlType ([System.Windows.Automation.ControlType]::Pane) `
+        -ExpectedName 'Refresh' -Deadline $deadline
+    Invoke-LegacyDefaultAction -Element $refreshControl -Description 'Refresh control'
+    Start-Sleep -Milliseconds 500
+    Assert-Condition (-not $process.HasExited) `
+        'Installed Copperfin Studio exited while invoking Refresh.'
     $semanticControls += [ordered]@{
-        name = 'File'
-        control_type = 'ControlType.MenuItem'
-        action = 'ExpandCollapse.Expand'
+        name = 'Refresh'
+        control_type = 'ControlType.Pane'
+        action = 'LegacyIAccessible.DoDefaultAction'
     }
 
-    $exitItem = Wait-SemanticElement -Root $root `
-        -ControlType ([System.Windows.Automation.ControlType]::MenuItem) `
-        -ExpectedName 'Exit' -Deadline $deadline
-    $invokeObject = $null
+    $windowObject = $null
     Assert-Condition `
-        ($exitItem.TryGetCurrentPattern(
-            [System.Windows.Automation.InvokePattern]::Pattern,
-            [ref]$invokeObject)) `
-        'Exit menu item does not expose InvokePattern.'
-    ([System.Windows.Automation.InvokePattern]$invokeObject).Invoke()
+        ($root.TryGetCurrentPattern(
+            [System.Windows.Automation.WindowPattern]::Pattern,
+            [ref]$windowObject)) `
+        'Installed Copperfin Studio window does not expose WindowPattern.'
+    ([System.Windows.Automation.WindowPattern]$windowObject).Close()
     $semanticControls += [ordered]@{
-        name = 'Exit'
-        control_type = 'ControlType.MenuItem'
-        action = 'Invoke.Invoke'
+        name = $observedWindowTitle
+        control_type = 'ControlType.Window'
+        action = 'Window.Close'
     }
 
     $remainingMilliseconds = [Math]::Max(

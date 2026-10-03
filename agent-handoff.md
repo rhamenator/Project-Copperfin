@@ -12,14 +12,20 @@ slice "merged into `v1-development`" is historical.
 Active continuation: PR #6910 (`fix/windows-installed-ui-6905`), based on
 `origin/main` at `ed9a12512`, is the third #6905 installed-product slice. It
 extends the exact Windows NSIS lifecycle to launch the installed managed
-Studio against a runner-owned PRG, bind UI Automation to that process, select
-the named document and Copperfin Command tabs, expand File, invoke Exit, and
-require a bounded clean exit. Machine-readable evidence binds the installed
-Studio digest and semantic controls; failures retain a bounded UI tree and
-best-effort screenshot; human GUI remains `NOT_RUN`. Signed implementation
-commit `c060afd76` is pushed; local focused checks pass. Resolve review
-conversations first, then require the exact hosted Windows lifecycle before
-merge.
+Studio against a runner-owned PRG and bind UI Automation to that process.
+Hosted run `37118536602`, job `111189940781`, proved that the installed window
+renders, the PRG loads, and failure diagnostics work, but also showed that the
+packaged WinForms surface currently exposes named document, Command, and
+Refresh controls as `ControlType.Pane`, not standard tab/menu/button roles.
+The follow-up uses those exact accessible names, invokes Refresh through
+`LegacyIAccessiblePattern`, and closes through `WindowPattern`; #6913 owns the
+richer product accessibility roles. Machine-readable evidence binds the
+installed Studio digest and semantic controls; failures retain supported
+patterns, a bounded UI tree, and a best-effort screenshot; human GUI remains
+`NOT_RUN`. Review timeout finding `a2e900e07` is fixed and resolved; #6912 owns
+the non-blocking inherited hosted-runner authority gap. Local focused checks
+pass. Push the current follow-up, resolve review conversations, then require a
+new exact hosted Windows lifecycle before merge.
 
 PR #6908 (`fix/macos-installer-lifecycle-6905`) merged into `main` as
 `ed9a12512761197f7214b638bf43f413d0917f56` on 2026-10-03. Hosted run

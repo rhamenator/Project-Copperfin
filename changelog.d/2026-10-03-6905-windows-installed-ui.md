@@ -1,1 +1,1 @@
-- 2026-10-03: Exercise the installed Windows Studio through process-bound semantic UI Automation with bounded failure screenshots and UI-tree diagnostics.
+- 2026-10-03: Exercise named installed Windows Studio surfaces and actions through process-bound UI Automation with bounded failure screenshots and UI-tree diagnostics.

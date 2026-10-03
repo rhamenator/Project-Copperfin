@@ -46,8 +46,9 @@ next sequential RC number.
    installed-command smoke, installed standalone Studio semantic UI automation,
    same-version maintenance reinstall, prior-version upgrade, silent uninstall,
    and residue checks. The installed UI result is process-bound UI Automation
-   evidence for named tabs and menu commands plus a graceful semantic exit; it
-   is not human usability evidence. The Linux DEB field is
+   evidence for the named document, Command, and Refresh surfaces, a semantic
+   Refresh default action, and a graceful `WindowPattern` close; it is not
+   human usability evidence. The Linux DEB field is
    admitted only from digest-bound evidence for fresh install, installed-file
    and locale checks, installed-command semantic smoke, same-version reinstall,
    purge, and residue checks. The macOS productbuild field is admitted only
@@ -77,11 +78,12 @@ next sequential RC number.
 - `evidence/windows-installer-lifecycle.json` records the Windows NSIS
   lifecycle result and binds it to the installer's SHA-256 digest. It also
   records the exact installed Studio executable digest, named semantic controls
-  selected or invoked, automated GUI result, graceful exit, and an explicit
+  observed or invoked, automated GUI result, graceful exit, and an explicit
   `human_gui: NOT_RUN` limitation. A failed hosted UI run retains a bounded UI
   tree and best-effort screenshot in a short-lived diagnostic artifact. A
   successful maintenance reinstall is not evidence of upgrade from an older
-  version.
+  version. The richer standard tab/menu/button accessibility roles remain a
+  separate follow-up (#6913).
 - `evidence/linux-installer-lifecycle.json` records the hosted Linux DEB fresh
   install, exact installed tree and locale catalog checks, semantic
   `copperfin_inspect` smoke, same-version maintenance reinstall, external

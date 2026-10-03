@@ -390,13 +390,18 @@ def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) ->
         for control in semantic_controls
     }
     if (
-        ("Copperfin Command", "ControlType.TabItem", "SelectionItem.Select") not in semantic_identities
-        or ("File", "ControlType.MenuItem", "ExpandCollapse.Expand") not in semantic_identities
-        or ("Exit", "ControlType.MenuItem", "Invoke.Invoke") not in semantic_identities
+        ("Copperfin Command", "ControlType.Pane", "Observe.SemanticName") not in semantic_identities
+        or ("Refresh", "ControlType.Pane", "LegacyIAccessible.DoDefaultAction") not in semantic_identities
         or not any(
             name.lower().endswith(".prg")
-            and control_type == "ControlType.TabItem"
-            and action == "SelectionItem.Select"
+            and control_type == "ControlType.Pane"
+            and action == "Observe.SemanticName"
+            for name, control_type, action in semantic_identities
+        )
+        or not any(
+            name.startswith("Copperfin Studio")
+            and control_type == "ControlType.Window"
+            and action == "Window.Close"
             for name, control_type, action in semantic_identities
         )
     ):
@@ -915,23 +920,23 @@ def self_test() -> None:
             "installed_studio_gui_semantic_controls": [
                 {
                     "name": "installed-ui.prg",
-                    "control_type": "ControlType.TabItem",
-                    "action": "SelectionItem.Select",
+                    "control_type": "ControlType.Pane",
+                    "action": "Observe.SemanticName",
                 },
                 {
                     "name": "Copperfin Command",
-                    "control_type": "ControlType.TabItem",
-                    "action": "SelectionItem.Select",
+                    "control_type": "ControlType.Pane",
+                    "action": "Observe.SemanticName",
                 },
                 {
-                    "name": "File",
-                    "control_type": "ControlType.MenuItem",
-                    "action": "ExpandCollapse.Expand",
+                    "name": "Refresh",
+                    "control_type": "ControlType.Pane",
+                    "action": "LegacyIAccessible.DoDefaultAction",
                 },
                 {
-                    "name": "Exit",
-                    "control_type": "ControlType.MenuItem",
-                    "action": "Invoke.Invoke",
+                    "name": "Copperfin Studio - Visual program",
+                    "control_type": "ControlType.Window",
+                    "action": "Window.Close",
                 },
             ],
             "human_gui": "NOT_RUN",
