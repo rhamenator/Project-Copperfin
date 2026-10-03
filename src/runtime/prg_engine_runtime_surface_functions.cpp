@@ -14,6 +14,7 @@
 #include "copperfin/security/payload_crypto.h"
 #include "prg_engine_file_io_functions.h"
 #include "prg_engine_helpers.h"
+#include "prg_compatibility_error.h"
 #include "prg_engine_locale_code_page.h"
 #include "localized_text.h"
 

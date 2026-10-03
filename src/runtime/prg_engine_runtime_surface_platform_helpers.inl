@@ -23,6 +23,43 @@ int bit_position(const PrgValue& value) {
     return position;
 }
 
+[[noreturn]] void throw_invalid_bit_shift_argument() {
+    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+}
+
+std::uint32_t bit_shift_operand(const PrgValue& value, NumericBehavior behavior) {
+    const double raw = value_as_number(value);
+    std::int64_t converted = 0;
+    if (behavior == NumericBehavior::vfp9) {
+        converted = vfp9_numeric_to_int32(raw);
+    } else {
+        const auto checked = checked_truncated_numeric_to_int64(raw);
+        if (!checked.has_value()) {
+            throw_invalid_bit_shift_argument();
+        }
+        converted = *checked;
+    }
+    return static_cast<std::uint32_t>(converted);
+}
+
+int bit_shift_count(const PrgValue& value, NumericBehavior behavior) {
+    const double raw = value_as_number(value);
+    std::int64_t converted = 0;
+    if (behavior == NumericBehavior::vfp9) {
+        converted = vfp9_numeric_to_int32(raw);
+    } else {
+        const auto checked = checked_truncated_numeric_to_int64(raw);
+        if (!checked.has_value()) {
+            throw_invalid_bit_shift_argument();
+        }
+        converted = *checked;
+    }
+    if (converted < 0 || converted > 31) {
+        throw_invalid_bit_shift_argument();
+    }
+    return static_cast<int>(converted);
+}
+
 std::string host_os_name() {
 #if defined(_WIN32)
     return "Windows";

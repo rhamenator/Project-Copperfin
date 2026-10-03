@@ -692,14 +692,16 @@
         return make_boolean_value((value & mask) != 0U);
     }
     if (function == "bitlshift" && arguments.size() >= 2U) {
-        const auto value = static_cast<std::int64_t>(value_as_number(arguments[0]));
-        const int count = static_cast<int>(value_as_number(arguments[1]));
-        return make_int64_value(value << count);
+        const NumericBehavior behavior = numeric_behavior(set_callback);
+        const std::uint32_t value = bit_shift_operand(arguments[0], behavior);
+        const int count = bit_shift_count(arguments[1], behavior);
+        return make_int64_value(signed_bitwise_result(value << count));
     }
     if (function == "bitrshift" && arguments.size() >= 2U) {
-        const auto value = static_cast<std::int64_t>(value_as_number(arguments[0]));
-        const int count = static_cast<int>(value_as_number(arguments[1]));
-        return make_int64_value(value >> count);
+        const NumericBehavior behavior = numeric_behavior(set_callback);
+        const std::uint32_t value = bit_shift_operand(arguments[0], behavior);
+        const int count = bit_shift_count(arguments[1], behavior);
+        return make_int64_value(signed_bitwise_result(value >> count));
     }
 
     if (function == "bintoc" && !arguments.empty()) {
