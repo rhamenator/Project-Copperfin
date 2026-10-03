@@ -24,8 +24,8 @@ The active bounded slice is `fix/numeric-substr-start-5611`, created from
 and saturating. Fail-before evidence and focused normal tests are complete;
 production, tests, traceability and changelog edits are present, and all three
 focused suites pass under AddressSanitizer, UndefinedBehaviorSanitizer and
-float-cast-overflow instrumentation. Signed commit, push, PR, review and CI
-remain pending.
+float-cast-overflow instrumentation. Signed implementation commit `8b96907a6`
+is pushed and PR #6919 is open against `main`; review and CI remain pending.
 
 PR #6917 (`fix/installer-artifact-policy-6905`) merged into `main` as
 `6b64a176d680aab732e0772cd889a423ed3c993e` on 2026-10-03. Successful
