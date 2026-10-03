@@ -74,7 +74,7 @@ if [[ ! "$product_identifier" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*$ ]]; then
     exit 1
 fi
 
-for command_name in awk dirname find grep installer mktemp pkgutil plutil python3 \
+for command_name in awk dirname find grep installer lsbom mktemp pkgutil plutil python3 \
     rmdir shasum sort tee uname; do
     if ! command -v "$command_name" >/dev/null 2>&1; then
         printf 'Required command is unavailable: %s\n' "$command_name" >&2
@@ -132,7 +132,7 @@ esac
 payload_paths_raw="$fixture_root/payload-paths.raw.txt"
 payload_paths="$fixture_root/payload-paths.txt"
 expanded_package="$fixture_root/package-expanded"
-component_packages="$fixture_root/component-packages.txt"
+component_boms="$fixture_root/component-boms.txt"
 created_directories="$fixture_root/created-directories.txt"
 receipt_paths="$fixture_root/receipt-paths.txt"
 inspect_stdout="$fixture_root/copperfin-inspect.stdout"
@@ -149,7 +149,7 @@ cleanup_fixture() {
 trap cleanup_fixture EXIT
 
 pkgutil --expand "$package_path" "$expanded_package"
-python3 - "$expanded_package" "$component_packages" <<'PY'
+python3 - "$expanded_package" "$component_boms" <<'PY'
 import os
 import pathlib
 import sys
@@ -164,14 +164,14 @@ for current, directories, files in os.walk(root, followlinks=False):
         candidate = current_path / name
         if candidate.is_symlink():
             raise SystemExit(f"Expanded productbuild archive contains a directory symlink: {candidate}")
+        if name.endswith(".pkg"):
+            packages.append(candidate.resolve(strict=True))
     for name in files:
         candidate = current_path / name
         if candidate.is_symlink():
             raise SystemExit(f"Expanded productbuild archive contains a file symlink: {candidate}")
         if name.endswith(".pkg"):
-            if "\n" in str(candidate) or "\r" in str(candidate):
-                raise SystemExit("Expanded component package path contains a line break")
-            packages.append(candidate.resolve(strict=True))
+            raise SystemExit(f"Expanded productbuild archive retained an unexpected flat package: {candidate}")
 
 if len(packages) != len(expected_suffixes):
     raise SystemExit(
@@ -183,17 +183,22 @@ for suffix in expected_suffixes:
         raise SystemExit(f"Expected exactly one nested component package ending in {suffix}")
 for package in packages:
     package.relative_to(root)
+    if "\n" in str(package) or "\r" in str(package):
+        raise SystemExit("Expanded component package path contains a line break")
+    bom = package / "Bom"
+    if bom.is_symlink() or not bom.is_file():
+        raise SystemExit(f"Expanded component package omits a regular BOM: {package}")
 
 destination.write_text(
-    "".join(str(path) + "\n" for path in sorted(packages)),
+    "".join(str(path / "Bom") + "\n" for path in sorted(packages)),
     encoding="utf-8",
 )
 PY
 
 : >"$payload_paths_raw"
-while IFS= read -r component_package; do
-    pkgutil --payload-files "$component_package" >>"$payload_paths_raw"
-done <"$component_packages"
+while IFS= read -r component_bom; do
+    lsbom -s "$component_bom" >>"$payload_paths_raw"
+done <"$component_boms"
 python3 - "$payload_paths_raw" "$payload_paths" <<'PY'
 from pathlib import PurePosixPath
 import sys

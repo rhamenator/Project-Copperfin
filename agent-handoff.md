@@ -13,7 +13,7 @@ Active continuation: PR #6908 (`fix/macos-installer-lifecycle-6905`) is the
 second #6905 installed-product slice. Its first hosted run and review found
 that the outer productbuild distribution has no direct payload inventory; the
 review fix expands it and aggregates the exact Documentation and Unspecified
-nested component payloads before installation. Re-run the hosted lifecycle,
+nested component BOM inventories before installation. Re-run the hosted lifecycle,
 verify the exact evidence, resolve the review conversation, and merge after
 required checks pass.
 
