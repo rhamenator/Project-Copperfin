@@ -1,7 +1,9 @@
 name: Build Standalone Installers
 
-# Traceability: RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope;
-# DV-windows-installer-lifecycle-contract; RQ-CF-REL-006;
+# Traceability: RQ-CF-REL-002; RQ-CF-REL-008;
+# DQ-windows-installer-lifecycle-scope; DQ-windows-installed-ui-scope;
+# DV-windows-installer-lifecycle-contract; DV-windows-installed-ui-contract;
+# RQ-CF-REL-006;
 # DQ-linux-installer-lifecycle-scope; DV-linux-installer-lifecycle-contract;
 # RQ-CF-REL-007; DQ-macos-installer-lifecycle-scope;
 # DV-macos-installer-lifecycle-contract;
@@ -166,6 +168,15 @@ jobs:
           }
           & ./scripts/test-windows-installer-lifecycle.ps1 @lifecycleArguments
 
+      - name: Upload Windows installed-UI failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: copperfin-windows-installed-ui-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/windows-installer-lifecycle/**
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Create exact Corresponding Source archive
         uses: ./.github/actions/create-release-source
         with:
@@ -179,6 +190,7 @@ jobs:
             build/package/copperfin-*-Windows.exe
             build/package/copperfin-*-Windows.zip
             artifacts/windows-installer-lifecycle/windows-installer-lifecycle.json
+            artifacts/windows-installer-lifecycle/windows-installed-studio-ui.json
             release-source/Project-Copperfin-source-${{ github.sha }}.zip
           if-no-files-found: error
 

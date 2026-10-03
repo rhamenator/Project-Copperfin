@@ -1,8 +1,10 @@
 # Copyright © 2026 Richard M. Hamilton.
 # SPDX-License-Identifier: GPL-3.0-only
 # Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
-# Traceability: RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope;
-# DV-windows-installer-lifecycle-contract; HZ-system-failure-01;
+# Traceability: RQ-CF-REL-002; RQ-CF-REL-008;
+# DQ-windows-installer-lifecycle-scope; DQ-windows-installed-ui-scope;
+# DV-windows-installer-lifecycle-contract; DV-windows-installed-ui-contract;
+# HZ-system-failure-01;
 # HZ-data-corruption-01; HZ-doc-command-01.
 
 if(NOT DEFINED SOURCE_DIR OR "${SOURCE_DIR}" STREQUAL "")
@@ -36,12 +38,14 @@ function(forbid_text relative_path forbidden_text description)
 endfunction()
 
 set(script "scripts/test-windows-installer-lifecycle.ps1")
+set(ui_script "scripts/test-windows-installed-studio-ui.ps1")
 set(workflow ".github/workflows/build-installers.yml")
 
 foreach(traceability_file IN ITEMS
         CMakeLists.txt
         scripts/assemble-rc-candidate.py
         scripts/test-windows-installer-lifecycle.ps1
+        scripts/test-windows-installed-studio-ui.ps1
         docs/contracts/rc-validation-manifest-v3.schema.json
         .github/workflows/build-installers.yml
         docs/35-rc1-evaluation-guide.md
@@ -58,8 +62,26 @@ foreach(traceability_file IN ITEMS
     endforeach()
 endforeach()
 
+foreach(traceability_file IN ITEMS
+        scripts/assemble-rc-candidate.py
+        scripts/test-windows-installer-lifecycle.ps1
+        scripts/test-windows-installed-studio-ui.ps1
+        docs/contracts/rc-validation-manifest-v3.schema.json
+        .github/workflows/build-installers.yml
+        docs/35-rc1-evaluation-guide.md
+        docs/32-recovered-requirements-traceability.md
+        tests/run_windows_installer_lifecycle_contract_check.cmake)
+    foreach(traceability_id IN ITEMS
+            RQ-CF-REL-008
+            DQ-windows-installed-ui-scope
+            DV-windows-installed-ui-contract)
+        require_text("${traceability_file}" "${traceability_id}"
+            "reverse traceability to ${traceability_id}")
+    endforeach()
+endforeach()
+
 require_text("${script}" "[ValidateRange(10, 600)]" "bounded process-timeout contract")
-require_text("${script}" "WaitForExit($ProcessTimeoutSeconds * 1000)" "bounded child-process wait")
+require_text("${script}" "WaitForExit($TimeoutSeconds * 1000)" "bounded child-process wait")
 require_text("${script}" "Kill($true)" "timed-out process-tree termination")
 require_text("${script}" "Fresh-install root already exists" "fresh-root precondition")
 require_text("${script}" "Installation root must be a direct child of RUNNER_TEMP" "runner-temporary-root boundary")
@@ -68,6 +90,19 @@ require_text("${script}" "@('/S', \"/D=$resolvedInstallRoot\")" "silent NSIS ins
 require_text("${script}" "run_studio_install_contract_check.cmake" "installed Studio tree verification")
 require_text("${script}" "run_locale_catalog_install_contract_check.cmake" "installed locale verification")
 require_text("${script}" "@('--locale', 'en-US', '--help')" "installed executable smoke")
+require_text("${script}" "bin\\studio\\Copperfin.Studio.exe" "installed managed Studio identity")
+require_text("${script}" "test-windows-installed-studio-ui.ps1" "installed Studio UI helper invocation")
+require_text("${script}" "'-NoLogo', '-NoProfile', '-NonInteractive', '-STA'"
+    "STA Windows PowerShell UI Automation host")
+require_text("${script}" "installed_studio_automated_gui = 'PASS'"
+    "installed Studio automated-GUI evidence")
+require_text("${script}" "human_gui = 'NOT_RUN'" "honest human-GUI limitation")
+require_text("${script}" "windows-installed-studio-ui.json"
+    "installed Studio semantic UI evidence handoff")
+require_text("${script}" "$installedStudioUiWrapperTimeoutSeconds = $installedStudioUiTimeoutSeconds + 30"
+    "installed UI diagnostic and cleanup headroom")
+require_text("${script}" "-TimeoutSeconds $installedStudioUiWrapperTimeoutSeconds"
+    "installed UI wrapper-specific timeout")
 require_text("${script}" "same-version maintenance reinstall" "maintenance reinstall execution")
 require_text("${script}" "$upgradeFromPreviousVersionResult = 'NOT_RUN'" "honest upgrade limitation default")
 require_text("${script}" "upgrade_from_previous_version = $upgradeFromPreviousVersionResult" "conditional upgrade-result evidence")
@@ -125,6 +160,38 @@ forbid_text("${script}" "Remove-Item" "unbounded direct deletion")
 forbid_text("${script}" "Remove-ItemProperty" "registry deletion")
 forbid_text("${script}" "Remove-Item -Recurse" "recursive cleanup masking installer residue")
 
+require_text("${ui_script}" "[ValidateRange(10, 300)]" "bounded UI timeout")
+require_text("${ui_script}" "AutomationElement]::ProcessIdProperty"
+    "exact installed-process UI Automation binding")
+require_text("${ui_script}" "if ($process.HasExited)"
+    "exit-code access guarded by observed process exit")
+require_text("${ui_script}" "Observe.InitialLoadCompleted"
+    "successful initial fixture-load observation")
+require_text("${ui_script}" "Refresh verification marker."
+    "runner-owned fixture mutation before Refresh")
+require_text("${ui_script}" "Observe.RefreshCompleted"
+    "post-Refresh fixture-length observation")
+require_text("${ui_script}" "[System.Windows.Automation.ControlType]::Pane"
+    "currently exposed named Studio surfaces (#6913)")
+require_text("${ui_script}" "SendMessageTimeout"
+    "bounded native Refresh button action")
+require_text("${ui_script}" "'BUTTON'"
+    "native Refresh button-class validation")
+require_text("${ui_script}" "[System.Security.Cryptography.SHA256]::Create()"
+    "Windows PowerShell-compatible evidence hashing")
+forbid_text("${ui_script}" "Get-FileHash"
+    "module-autoload-dependent evidence hashing")
+require_text("${ui_script}" "[System.Windows.Automation.WindowPattern]::Pattern"
+    "semantic window-close action")
+require_text("${ui_script}" "CopyFromScreen" "failure screenshot capture")
+require_text("${ui_script}" "windows-installed-studio-ui-diagnostic.json"
+    "failure UI-tree diagnostics")
+require_text("${ui_script}" "taskkill.exe\" /PID $process.Id /T /F"
+    "bounded failed-process-tree termination")
+require_text("${ui_script}" "human_gui = 'NOT_RUN'" "honest human-GUI limitation")
+forbid_text("${ui_script}" "SendKeys" "coordinate/keystroke-driven UI automation")
+forbid_text("${ui_script}" "mouse_event" "coordinate-driven mouse automation")
+
 find_program(POWERSHELL_EXECUTABLE NAMES pwsh)
 if(POWERSHELL_EXECUTABLE)
     execute_process(
@@ -155,5 +222,10 @@ require_text("${workflow}" "copperfin-installer-lifecycle-$env:GITHUB_RUN_ID-$en
     "run-scoped installation root")
 require_text("${workflow}" "artifacts/windows-installer-lifecycle/windows-installer-lifecycle.json"
     "retained lifecycle result upload")
+require_text("${workflow}" "name: Upload Windows installed-UI failure diagnostics"
+    "failure-only UI diagnostic upload")
+require_text("${workflow}" "if: failure()" "failure-only UI diagnostic retention")
+require_text("${workflow}" "artifacts/windows-installer-lifecycle/windows-installed-studio-ui.json"
+    "retained installed Studio UI result upload")
 
 message(STATUS "Windows installer lifecycle contract passed")

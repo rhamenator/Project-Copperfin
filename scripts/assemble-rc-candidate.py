@@ -7,8 +7,9 @@
 
 Traceability: RQ-CF-REL-001; DQ-rc-evidence-v2-scope-separation;
 DV-rc-evidence-v2-assembly-self-test; DV-rc-evidence-v2-schema-validation;
-RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope;
-DV-windows-installer-lifecycle-contract; HZ-system-failure-01;
+RQ-CF-REL-002; RQ-CF-REL-008; DQ-windows-installer-lifecycle-scope;
+DV-windows-installer-lifecycle-contract; DQ-windows-installed-ui-scope;
+DV-windows-installed-ui-contract; HZ-system-failure-01;
 HZ-data-corruption-01; HZ-doc-command-01; RQ-CF-REL-003;
 DQ-windows-vsix-lifecycle-scope; DV-windows-vsix-lifecycle-contract;
 RQ-CF-REL-004; DQ-rc-launcher-trust-exception;
@@ -321,11 +322,17 @@ def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) ->
         "installed_tree_contract",
         "locale_catalog_contract",
         "installed_cli_smoke",
+        "installed_studio_automated_gui",
+        "installed_studio_gui_graceful_exit",
+        "installed_studio_sha256",
+        "installed_studio_gui_semantic_controls",
+        "human_gui",
         "same_version_maintenance_reinstall",
         "upgrade_from_previous_version",
         "prior_installer_sha256",
         "prior_package_version",
         "stale_prior_uninstall_registration_after_upgrade_count",
+        "stale_prior_uninstall_registration_after_uninstall_count",
         "silent_uninstall",
         "install_root_residue",
         "uninstall_registration_residue",
@@ -340,13 +347,15 @@ def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) ->
         "installed_tree_contract",
         "locale_catalog_contract",
         "installed_cli_smoke",
+        "installed_studio_automated_gui",
+        "installed_studio_gui_graceful_exit",
         "same_version_maintenance_reinstall",
         "silent_uninstall",
         "install_root_residue",
         "uninstall_registration_residue",
     )
     if (
-        evidence["schema_version"] != 1
+        evidence["schema_version"] != 2
         or evidence["kind"] != "copperfin-windows-installer-lifecycle-result"
         or any(evidence[field] != "PASS" for field in expected_pass_fields)
         or evidence["upgrade_from_previous_version"] not in ("NOT_RUN", "PASS")
@@ -361,12 +370,60 @@ def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) ->
         or not evidence["install_root"]
         or not isinstance(evidence["installed_cli_stdout"], str)
         or "copperfin_inspect" not in evidence["installed_cli_stdout"]
+        or not isinstance(evidence["installed_studio_sha256"], str)
+        or re.fullmatch(r"[0-9a-f]{64}", evidence["installed_studio_sha256"]) is None
+        or evidence["human_gui"] != "NOT_RUN"
+        or not isinstance(evidence["installed_studio_gui_semantic_controls"], list)
+        or len(evidence["installed_studio_gui_semantic_controls"]) < 6
     ):
         raise AssemblyError("Windows installer lifecycle evidence does not prove the required bounded lifecycle")
+    semantic_controls = evidence["installed_studio_gui_semantic_controls"]
+    if any(
+        not isinstance(control, dict)
+        or set(control) != {"name", "control_type", "action"}
+        or not all(isinstance(control[field], str) and control[field] for field in control)
+        for control in semantic_controls
+    ):
+        raise AssemblyError("Windows installer lifecycle evidence has malformed semantic UI controls")
+    semantic_identities = {
+        (control["name"], control["control_type"], control["action"])
+        for control in semantic_controls
+    }
+    if (
+        ("Copperfin Command", "ControlType.Pane", "Observe.SemanticName") not in semantic_identities
+        or ("Refresh", "ControlType.Pane", "NativeButton.BM_CLICK") not in semantic_identities
+        or not any(
+            name.startswith("Snapshot loaded:")
+            and control_type == "ControlType.Pane"
+            and action == "Observe.InitialLoadCompleted"
+            for name, control_type, action in semantic_identities
+        )
+        or not any(
+            name.startswith("Size:")
+            and " bytes" in name
+            and control_type == "ControlType.Pane"
+            and action == "Observe.RefreshCompleted"
+            for name, control_type, action in semantic_identities
+        )
+        or not any(
+            name.lower().endswith(".prg")
+            and control_type == "ControlType.Pane"
+            and action == "Observe.SemanticName"
+            for name, control_type, action in semantic_identities
+        )
+        or not any(
+            name.startswith("Copperfin Studio")
+            and control_type == "ControlType.Window"
+            and action == "Window.Close"
+            for name, control_type, action in semantic_identities
+        )
+    ):
+        raise AssemblyError("Windows installer lifecycle evidence omits required semantic UI actions")
     prior_version_fields = (
         "prior_installer_sha256",
         "prior_package_version",
         "stale_prior_uninstall_registration_after_upgrade_count",
+        "stale_prior_uninstall_registration_after_uninstall_count",
     )
     if evidence["upgrade_from_previous_version"] == "NOT_RUN":
         if any(evidence[field] is not None for field in prior_version_fields):
@@ -381,6 +438,9 @@ def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) ->
         or not isinstance(evidence["stale_prior_uninstall_registration_after_upgrade_count"], int)
         or isinstance(evidence["stale_prior_uninstall_registration_after_upgrade_count"], bool)
         or evidence["stale_prior_uninstall_registration_after_upgrade_count"] < 0
+        or not isinstance(evidence["stale_prior_uninstall_registration_after_uninstall_count"], int)
+        or isinstance(evidence["stale_prior_uninstall_registration_after_uninstall_count"], bool)
+        or evidence["stale_prior_uninstall_registration_after_uninstall_count"] < 0
     ):
         raise AssemblyError(
             "Windows installer lifecycle evidence's upgrade result is not backed by valid prior-version fields")
@@ -762,6 +822,7 @@ def assemble(args: argparse.Namespace) -> Path:
             "installer_lifecycle": {
                 "windows_fresh_install": "PASS",
                 "windows_installed_cli_smoke": "PASS",
+                "windows_installed_studio_automated_gui": "PASS",
                 "windows_same_version_maintenance_reinstall": "PASS",
                 # #6497: reflects the actual, evidence-backed result instead
                 # of a hardcoded claim -- NOT_RUN when no prior installer
@@ -857,7 +918,7 @@ def self_test() -> None:
                 path.write_bytes(data)
         windows_installer_fixture = inputs / "copperfin-windows-installers/copperfin-0.1.0-Windows.exe"
         windows_lifecycle_fixture = {
-            "schema_version": 1,
+            "schema_version": 2,
             "kind": "copperfin-windows-installer-lifecycle-result",
             "installer_sha256": sha256(windows_installer_fixture),
             "package_version": "0.1.0",
@@ -866,11 +927,48 @@ def self_test() -> None:
             "installed_tree_contract": "PASS",
             "locale_catalog_contract": "PASS",
             "installed_cli_smoke": "PASS",
+            "installed_studio_automated_gui": "PASS",
+            "installed_studio_gui_graceful_exit": "PASS",
+            "installed_studio_sha256": "b" * 64,
+            "installed_studio_gui_semantic_controls": [
+                {
+                    "name": "installed-ui.prg",
+                    "control_type": "ControlType.Pane",
+                    "action": "Observe.SemanticName",
+                },
+                {
+                    "name": "Copperfin Command",
+                    "control_type": "ControlType.Pane",
+                    "action": "Observe.SemanticName",
+                },
+                {
+                    "name": "Refresh",
+                    "control_type": "ControlType.Pane",
+                    "action": "NativeButton.BM_CLICK",
+                },
+                {
+                    "name": "Snapshot loaded: 0 object rows, 0 fields, 0 companion indexes.",
+                    "control_type": "ControlType.Pane",
+                    "action": "Observe.InitialLoadCompleted",
+                },
+                {
+                    "name": "Size: 128 bytes   Last write: 10/03/2026 13:00:00   Extension: .prg",
+                    "control_type": "ControlType.Pane",
+                    "action": "Observe.RefreshCompleted",
+                },
+                {
+                    "name": "Copperfin Studio - Visual program",
+                    "control_type": "ControlType.Window",
+                    "action": "Window.Close",
+                },
+            ],
+            "human_gui": "NOT_RUN",
             "same_version_maintenance_reinstall": "PASS",
             "upgrade_from_previous_version": "NOT_RUN",
             "prior_installer_sha256": None,
             "prior_package_version": None,
             "stale_prior_uninstall_registration_after_upgrade_count": None,
+            "stale_prior_uninstall_registration_after_uninstall_count": None,
             "silent_uninstall": "PASS",
             "install_root_residue": "PASS",
             "uninstall_registration_residue": "PASS",
@@ -1083,6 +1181,7 @@ def self_test() -> None:
             "installer_lifecycle": {
                 "windows_fresh_install": "PASS",
                 "windows_installed_cli_smoke": "PASS",
+                "windows_installed_studio_automated_gui": "PASS",
                 "windows_same_version_maintenance_reinstall": "PASS",
                 "windows_upgrade_from_previous_version": "NOT_RUN",
                 "windows_silent_uninstall": "PASS",
@@ -1199,6 +1298,10 @@ def self_test() -> None:
             ("false previous-version upgrade", "upgrade_from_previous_version", "PASS"),
             ("wrong installer digest", "installer_sha256", "0" * 64),
             ("missing installed file inventory", "installed_file_count", 0),
+            ("false installed Studio automated GUI", "installed_studio_automated_gui", "NOT_RUN"),
+            ("unsupported human GUI claim", "human_gui", "PASS"),
+            ("missing semantic GUI actions", "installed_studio_gui_semantic_controls", []),
+            ("malformed installed Studio digest", "installed_studio_sha256", "not-a-digest"),
             ("prior fields populated without running the upgrade", "prior_installer_sha256", "a" * 64),
         )
         for description, field, replacement in lifecycle_mutations:
@@ -1225,6 +1328,7 @@ def self_test() -> None:
         valid_upgrade_lifecycle["prior_installer_sha256"] = "a" * 64
         valid_upgrade_lifecycle["prior_package_version"] = "0.0.1"
         valid_upgrade_lifecycle["stale_prior_uninstall_registration_after_upgrade_count"] = 1
+        valid_upgrade_lifecycle["stale_prior_uninstall_registration_after_uninstall_count"] = 1
         valid_upgrade_path = root / "good-lifecycle-upgrade.json"
         valid_upgrade_path.write_text(json.dumps(valid_upgrade_lifecycle) + "\n", encoding="utf-8")
         require_windows_installer_lifecycle_evidence(

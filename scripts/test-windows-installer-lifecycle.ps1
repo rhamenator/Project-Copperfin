@@ -1,8 +1,10 @@
 # Copyright © 2026 Richard M. Hamilton.
 # SPDX-License-Identifier: GPL-3.0-only
 # Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
-# Traceability: RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope;
-# DV-windows-installer-lifecycle-contract; HZ-system-failure-01;
+# Traceability: RQ-CF-REL-002; RQ-CF-REL-008;
+# DQ-windows-installer-lifecycle-scope; DQ-windows-installed-ui-scope;
+# DV-windows-installer-lifecycle-contract; DV-windows-installed-ui-contract;
+# HZ-system-failure-01;
 # HZ-data-corruption-01; HZ-doc-command-01.
 
 [CmdletBinding()]
@@ -82,7 +84,9 @@ function Invoke-BoundedProcess {
         [string[]]$Arguments = @(),
         [Parameter(Mandatory = $true)]
         [string]$Name,
-        [switch]$CaptureOutput
+        [switch]$CaptureOutput,
+        [ValidateRange(1, 660)]
+        [int]$TimeoutSeconds = $ProcessTimeoutSeconds
     )
 
     $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
@@ -101,9 +105,9 @@ function Invoke-BoundedProcess {
         Assert-Condition $process.Start() "$Name did not start."
         $stdoutTask = if ($CaptureOutput) { $process.StandardOutput.ReadToEndAsync() } else { $null }
         $stderrTask = if ($CaptureOutput) { $process.StandardError.ReadToEndAsync() } else { $null }
-        if (-not $process.WaitForExit($ProcessTimeoutSeconds * 1000)) {
+        if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
             try { $process.Kill($true) } catch { Write-Warning "$Name could not be terminated: $($_.Exception.Message)" }
-            throw "$Name exceeded the bounded $ProcessTimeoutSeconds-second timeout."
+            throw "$Name exceeded the bounded $TimeoutSeconds-second timeout."
         }
         $stdout = if ($CaptureOutput) { $stdoutTask.GetAwaiter().GetResult() } else { "" }
         $stderr = if ($CaptureOutput) { $stderrTask.GetAwaiter().GetResult() } else { "" }
@@ -344,6 +348,7 @@ if ($SelfTest) {
     Assert-Condition `
         (-not (Test-NormalizedPathEquals -Candidate (Join-Path $fixtureRoot 'Sibling.exe') -ExpectedPath $fixtureUninstaller)) `
         'Sibling uninstall path was accepted.'
+    & (Join-Path $PSScriptRoot 'test-windows-installed-studio-ui.ps1') -SelfTest
     Write-Host 'Windows installer lifecycle helper self-test passed.'
     return
 }
@@ -399,6 +404,9 @@ $externalUserArtifact = $null
 $externalUserArtifactHash = $null
 $freshCheckRoot = $null
 $priorRegistrationCountAfterUpgrade = $null
+$priorRegistrationCountAfterUninstall = $null
+$installedStudioUiFixture = $null
+$installedStudioUiEvidence = $null
 
 try {
     if ($hasPriorVersion) {
@@ -541,6 +549,48 @@ try {
         "Installed copperfin_inspect help wrote unexpected stderr: $($inspectResult.Stderr)"
     $inspectOutput = $inspectResult.Stdout
 
+    $installedStudioPath = Join-Path $resolvedInstallRoot 'bin\studio\Copperfin.Studio.exe'
+    Assert-Condition (Test-Path -LiteralPath $installedStudioPath -PathType Leaf) `
+        "Installed managed Studio is missing: $installedStudioPath"
+    $installedStudioUiFixture = Join-Path $resolvedRunnerTemporaryRoot `
+        "copperfin-installed-studio-ui-$([System.IO.Path]::GetFileName($resolvedInstallRoot)).prg"
+    Set-Content -LiteralPath $installedStudioUiFixture -Encoding utf8NoBOM -Value @(
+        '* Runner-owned installed Studio semantic UI fixture (#6905).',
+        '?"copperfin-installed-studio-ui"'
+    )
+    $windowsPowerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+    Assert-Condition (Test-Path -LiteralPath $windowsPowerShell -PathType Leaf) `
+        "Windows PowerShell UI Automation host is missing: $windowsPowerShell"
+    $installedStudioUiTimeoutSeconds = [Math]::Min($ProcessTimeoutSeconds, 120)
+    $installedStudioUiWrapperTimeoutSeconds = $installedStudioUiTimeoutSeconds + 30
+    Invoke-BoundedProcess `
+        -FilePath $windowsPowerShell `
+        -Arguments @(
+            '-NoLogo', '-NoProfile', '-NonInteractive', '-STA',
+            '-File', (Join-Path $PSScriptRoot 'test-windows-installed-studio-ui.ps1'),
+            '-StudioPath', $installedStudioPath,
+            '-FixturePath', $installedStudioUiFixture,
+            '-EvidenceDirectory', $resolvedEvidenceDirectory,
+            '-TimeoutSeconds', "$installedStudioUiTimeoutSeconds"
+        ) `
+        -Name 'installed Copperfin Studio semantic UI lifecycle' `
+        -TimeoutSeconds $installedStudioUiWrapperTimeoutSeconds | Out-Null
+    $installedStudioUiEvidencePath = Join-Path $resolvedEvidenceDirectory 'windows-installed-studio-ui.json'
+    Assert-Condition (Test-Path -LiteralPath $installedStudioUiEvidencePath -PathType Leaf) `
+        'Installed Studio UI lifecycle omitted its machine-readable evidence.'
+    $installedStudioUiEvidence = Get-Content -LiteralPath $installedStudioUiEvidencePath -Raw | ConvertFrom-Json
+    Assert-Condition ($installedStudioUiEvidence.automated_gui -ceq 'PASS') `
+        'Installed Studio UI lifecycle did not report automated GUI PASS.'
+    Assert-Condition ($installedStudioUiEvidence.graceful_exit -ceq 'PASS') `
+        'Installed Studio UI lifecycle did not report graceful semantic exit PASS.'
+    Assert-Condition ($installedStudioUiEvidence.human_gui -ceq 'NOT_RUN') `
+        'Installed Studio UI lifecycle must keep human GUI evidence explicit as NOT_RUN.'
+    Assert-Condition ($installedStudioUiEvidence.studio_sha256 -ceq `
+            (Get-FileHash -LiteralPath $installedStudioPath -Algorithm SHA256).Hash.ToLowerInvariant()) `
+        'Installed Studio UI evidence is not bound to the exact installed executable.'
+    Assert-Condition (@($installedStudioUiEvidence.semantic_controls).Count -ge 4) `
+        'Installed Studio UI lifecycle did not retain all required semantic controls.'
+
     $uninstallRegistrationCount = Get-CurrentVersionRegistrationCount `
         -InstallRoot $resolvedInstallRoot `
         -RegistryKeyName $UninstallRegistryKeyName `
@@ -590,7 +640,7 @@ try {
     } else { $null }
 
     $evidence = [ordered]@{
-        schema_version = 1
+        schema_version = 2
         kind = 'copperfin-windows-installer-lifecycle-result'
         installer_sha256 = (Get-FileHash -LiteralPath $resolvedInstaller -Algorithm SHA256).Hash.ToLowerInvariant()
         package_version = $PackageVersion
@@ -599,6 +649,11 @@ try {
         installed_tree_contract = 'PASS'
         locale_catalog_contract = 'PASS'
         installed_cli_smoke = 'PASS'
+        installed_studio_automated_gui = 'PASS'
+        installed_studio_gui_graceful_exit = 'PASS'
+        installed_studio_sha256 = $installedStudioUiEvidence.studio_sha256
+        installed_studio_gui_semantic_controls = @($installedStudioUiEvidence.semantic_controls)
+        human_gui = 'NOT_RUN'
         same_version_maintenance_reinstall = 'PASS'
         upgrade_from_previous_version = $upgradeFromPreviousVersionResult
         prior_installer_sha256 = if ($hasPriorVersion) { (Get-FileHash -LiteralPath $resolvedPriorInstaller -Algorithm SHA256).Hash.ToLowerInvariant() } else { $null }
@@ -646,6 +701,14 @@ finally {
         }
         catch {
             Write-Warning "Cleanup of the external user artifact fixture failed: $($_.Exception.Message)"
+        }
+    }
+    if ($null -ne $installedStudioUiFixture -and (Test-Path -LiteralPath $installedStudioUiFixture)) {
+        try {
+            [System.IO.File]::Delete($installedStudioUiFixture)
+        }
+        catch {
+            Write-Warning "Cleanup of the installed Studio UI fixture failed: $($_.Exception.Message)"
         }
     }
 }

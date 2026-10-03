@@ -85,6 +85,8 @@ require_text_count("uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a8
     1 "authoritative RC bundle upload")
 require_manifest_schema_text("\"schema_version\": { \"const\": 3 }" "schema-v3 identity")
 require_manifest_schema_text("\"windows_installed_cli_smoke\"" "Windows installer lifecycle evidence")
+require_manifest_schema_text("\"windows_installed_studio_automated_gui\""
+    "Windows installed Studio semantic UI evidence")
 require_manifest_schema_text("\"linux_deb\": { \"const\": \"PASS\" }"
     "Linux Debian installer lifecycle evidence")
 require_manifest_schema_text("\"macos_productbuild\": { \"const\": \"PASS\" }"

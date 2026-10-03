@@ -9,14 +9,58 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
-Active continuation: PR #6908 (`fix/macos-installer-lifecycle-6905`) is the
-second #6905 installed-product slice. Its first hosted run and review found
-that the outer productbuild distribution has no direct payload inventory; the
-review fix expands it and aggregates the exact Documentation and Unspecified
-nested component BOM inventories before installation. Hosted run `37112542106`,
-job `111173111329`, passed the exact lifecycle at head `354c35105`; the retained
-JSON binds PKG SHA-256 `4e8f9556d1fd2a333a572e674fd24d37ba2a0e7ad2ffa96def14f0456fe07f38`.
-Record that evidence, verify the final checks/conversations, and merge.
+Active continuation: PR #6910 (`fix/windows-installed-ui-6905`), based on
+`origin/main` at `ed9a12512`, is the third #6905 installed-product slice. It
+extends the exact Windows NSIS lifecycle to launch the installed managed
+Studio against a runner-owned PRG and bind UI Automation to that process.
+Hosted run `37118536602`, job `111189940781`, proved that the installed window
+renders, the PRG loads, and failure diagnostics work, but also showed that the
+packaged WinForms surface currently exposes named document, Command, and
+Refresh controls as `ControlType.Pane`, not standard tab/menu/button roles.
+Hosted run `37120085946`, job `111194344036`, then proved that the Refresh
+surface exposes no UI Automation patterns and that the Windows PowerShell 5.1
+host does not expose the legacy pattern type. The follow-up keeps the
+process-bound accessible-name lookup, validates the exact native button
+handle/class, dispatches a bounded `BM_CLICK`, and closes through
+`WindowPattern`; #6913 owns the
+richer product accessibility roles. Machine-readable evidence binds the
+installed Studio digest and semantic controls; failures retain supported
+patterns, a bounded UI tree, and a best-effort screenshot; human GUI remains
+`NOT_RUN`. Run `37122537317`, job `111201342603`, proved the full UI lifecycle
+and graceful exit, then exposed that the Windows PowerShell 5.1 child cannot
+autoload `Get-FileHash` from the inherited PowerShell 7 module path; the helper
+now computes SHA-256 directly through the framework. Review timeout finding
+`a2e900e07` is fixed and resolved; the latest review's eager exit-code
+diagnostic finding is fixed by reading `ExitCode` only inside the observed-exit
+branch; #6911 owns the non-blocking inherited hosted-runner authority gap.
+Local focused checks pass. The final review required a proven successful
+initial fixture load and post-Refresh asynchronous reload rather than treating
+a live process as success; the follow-up mutates the runner-owned PRG and waits
+for its changed exact size in the loaded document details. Hosted run
+`37127435107`, job `111215503606`, passed that complete Windows installer and
+installed-Studio UI lifecycle at exact implementation head `2806a4a31`. The
+retained result binds installer SHA-256
+`402a4dc2a399b92328ed768db8334590cefd34c7b174c62b761c62ef9d44763c`,
+installed Studio SHA-256
+`2d939edb402d31abd126322ed4567919be817dabbcc59b96ed31d8fb3a99b2f9`,
+and six semantic observations/actions including successful initial load,
+native Refresh, changed-size reload completion, and graceful window close.
+The UI and lifecycle JSON evidence SHA-256 values are respectively
+`b84cf182f70267742c675486b12dd829eb71f3bbc48c2c83c73bbd689f79886c`
+and `98bc35265ca3f74d5fa18d277fb5e88538166163f4536a865e919d2a21ede29b`;
+automated GUI and graceful exit are `PASS`, while human GUI remains `NOT_RUN`.
+All four review conversations are resolved and exact-head Codex review found
+no further issue. One unrelated macOS generated-launcher lane failed its
+pre-existing R-sidecar excessive-nesting test and should be rerun rather than
+expanded into this admitted slice.
+
+PR #6908 (`fix/macos-installer-lifecycle-6905`) merged into `main` as
+`ed9a12512761197f7214b638bf43f413d0917f56` on 2026-10-03. Hosted run
+`37112542106`, job `111173111329`, passed the exact lifecycle at implementation
+head `354c35105`; retained evidence binds PKG SHA-256
+`4e8f9556d1fd2a333a572e674fd24d37ba2a0e7ad2ffa96def14f0456fe07f38`.
+Final docs-only head run `37114247412` also passed all installers; all review
+conversations were resolved before merge.
 
 Issue #6905's first installed-product slice (PR #6906, merge `3af2b9609`)
 finished 2026-10-03: the exact generated Linux DEB now undergoes a disposable

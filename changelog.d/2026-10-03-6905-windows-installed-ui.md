@@ -1,0 +1,1 @@
+- 2026-10-03: Exercise named installed Windows Studio surfaces through process-bound UI Automation, prove initial and post-Refresh fixture loading, invoke its validated native Refresh button without coordinates or keystrokes, and retain bounded failure screenshots and UI-tree diagnostics.
