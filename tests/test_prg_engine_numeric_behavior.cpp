@@ -415,6 +415,40 @@ std::vector<Row> build_rows() {
                         std::string("ROUND($1.5,") + places + ")", "Y:$1.50"});
     }
 
+    // Governing requirement: RQ-CF-PRG-CHR-BOUNDARIES-001.
+    // CHR truncates ordinary fractions and accepts only a resulting byte. COPPERFIN rejects every raw value outside
+    // that range. VFP9 preserves its asymmetric 32-bit conversion quirk for negative values: wrapped byte values and
+    // the integer-indefinite zero are accepted, while positive values above 255 are rejected before conversion.
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        rows.push_back({set, "ASC(CHR(-0.9))", "N:0"});
+        rows.push_back({set, "ASC(CHR(0.9))", "N:0"});
+        rows.push_back({set, "ASC(CHR(65.9))", "N:65"});
+        rows.push_back({set, "ASC(CHR(255.9))", "N:255"});
+        rows.push_back({set, "CHR(-1)", "ERR11"});
+        rows.push_back({set, "CHR(256)", "ERR11"});
+        rows.push_back({set, "CHR(2147483648)", "ERR11"});
+        rows.push_back({set, "CHR(4294967296)", "ERR11"});
+        rows.push_back({set, "CHR(EXP(1000))", "ERR11"});
+    }
+    for (const char *code : {"-EXP(1000)", "-1E300", "-1E20", "-9223372036854775808",
+                             "-8589934592", "-4294967296"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", std::string("CHR(") + code + ")", "ERR11"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("ASC(CHR(") + code + "))", "N:0"});
+    }
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "CHR(-4294967295)", "ERR11"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "ASC(CHR(-4294967295))", "N:1"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "CHR(-4294967294)", "ERR11"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "ASC(CHR(-4294967294))", "N:2"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "CHR(-4294967041)", "ERR11"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "ASC(CHR(-4294967041))", "N:255"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "CHR(-4294967040)", "ERR11"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "CHR(-17179869184)", "ERR11"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "ASC(CHR(-17179869184))", "N:0"});
+    for (const char *code : {"-4294967297", "-2147483649", "-2147483648", "-2147483647", "-256"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("CHR(") + code + ")", "ERR11"});
+    }
+
     // Governing requirement: RQ-CF-PRG-GOMONTH-BOUNDARIES-001.
     // GOMONTH/EOMONTH (#5608 under #5611/#6776). Both modes truncate ordinary fractional offsets and enforce
     // VFP9's 1753..9999 result-year range. VFP9 mode additionally preserves its 32-bit conversion quirks.
