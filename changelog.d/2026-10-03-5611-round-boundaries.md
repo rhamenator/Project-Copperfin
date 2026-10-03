@@ -1,0 +1,1 @@
+- 2026-10-03: Made `ROUND()` decimal-place conversion defined for huge and non-finite Numeric arguments, with consistent saturating behavior by default and fresh-VFP9 32-bit conversion quirks available through `SET NUMERICBEHAVIOR TO VFP9` for both Numeric and Currency inputs.

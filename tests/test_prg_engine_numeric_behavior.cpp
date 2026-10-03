@@ -369,6 +369,50 @@ std::vector<Row> build_rows() {
         rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("BITRSHIFT(") + operand + ",1)", "I:0"});
     }
 
+    // Governing requirement: RQ-CF-PRG-ROUND-BOUNDARIES-001.
+    // ROUND truncates ordinary fractional decimal-place arguments. COPPERFIN saturates huge values consistently;
+    // VFP9 reproduces its recovered 32-bit conversion, including normalizing INT32_MIN to zero decimal places.
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        rows.push_back({set, "ROUND(1.5,2.9)", "N:1.5"});
+        rows.push_back({set, "ROUND(1.5,-1.9)", "N:0"});
+        rows.push_back({set, "ROUND($1.5,2.9)", "Y:$1.50"});
+        rows.push_back({set, "ROUND($1.5,-1.9)", "Y:$0.00"});
+    }
+    for (const char *places : {"EXP(1000)", "1E20", "1E300", "2147483648", "4294967296",
+                               "9007199254740992"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN",
+                        std::string("ROUND(1.5,") + places + ")", "N:1.5"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN",
+                        std::string("ROUND($1.5,") + places + ")", "Y:$1.50"});
+    }
+    for (const char *places : {"-EXP(1000)", "-1E20", "-9223372036854775808"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN",
+                        std::string("ROUND(1.5,") + places + ")", "N:0"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN",
+                        std::string("ROUND($1.5,") + places + ")", "Y:$0.00"});
+    }
+    for (const char *places : {"EXP(1000)", "-EXP(1000)", "1E20", "-1E20", "1E300",
+                               "-9223372036854775808", "-4294967296", "-2147483648", "2147483648",
+                               "4294967296", "9007199254740992"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("ROUND(1.5,") + places + ")", "N:2"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("ROUND($1.5,") + places + ")", "Y:$2.00"});
+    }
+    for (const char *places : {"-4294967297", "4294967295"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("ROUND(1.5,") + places + ")", "N:0"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("ROUND($1.5,") + places + ")", "Y:$0.00"});
+    }
+    for (const char *places : {"-4294967295", "-2147483649", "2147483647", "1E10"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("ROUND(1.5,") + places + ")", "N:1.5"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("ROUND($1.5,") + places + ")", "Y:$1.50"});
+    }
+
     // Governing requirement: RQ-CF-PRG-GOMONTH-BOUNDARIES-001.
     // GOMONTH/EOMONTH (#5608 under #5611/#6776). Both modes truncate ordinary fractional offsets and enforce
     // VFP9's 1753..9999 result-year range. VFP9 mode additionally preserves its 32-bit conversion quirks.

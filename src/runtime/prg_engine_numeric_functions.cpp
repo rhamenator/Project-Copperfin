@@ -188,6 +188,22 @@ std::optional<double> round_decimal_value(const double value, const int decimal_
     return negative ? -*rounded_value : *rounded_value;
 }
 
+// Governing requirement: RQ-CF-PRG-ROUND-BOUNDARIES-001.
+int round_decimal_places(
+    const double requested,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    if (numeric_behavior(set_callback) == NumericBehavior::vfp9) {
+        const std::int64_t converted = vfp9_numeric_to_int32(requested);
+        // Installed VFP9 treats the integer-indefinite sentinel as zero decimal places in ROUND(), including the
+        // exact/wrapped +/-2^31 cases. Other negative results retain their recovered 32-bit wraparound behavior.
+        return converted == std::numeric_limits<std::int32_t>::min() ? 0 : static_cast<int>(converted);
+    }
+    return saturating_int_argument(
+        requested,
+        std::numeric_limits<int>::min(),
+        std::numeric_limits<int>::max());
+}
+
 // Currency arguments keep their exact four-decimal scaled integer and their Currency type (#6039, installed VFP9,
 // probe retained at ~/temp/vfp9-probes/currency-c25/result3.txt). The scaled unit is 10,000. For a Currency
 // CEILING rounds away from zero and FLOOR and INT truncate toward zero (CEILING($-12.3456) is $-13, FLOOR is $-12:
@@ -230,10 +246,10 @@ PrgValue currency_round(const std::int64_t scaled, const int decimals) {
     if (decimals >= 4) {
         return make_currency_value(scaled);
     }
-    const int power = 4 - decimals;   // how many scaled digits are dropped
-    if (power > 19) {
+    if (decimals < -15) {
         return make_currency_value(0);
     }
+    const int power = 4 - decimals;   // how many scaled digits are dropped
     std::uint64_t divisor = 1U;
     for (int step = 0; step < power; ++step) {
         divisor *= 10U;
@@ -247,7 +263,8 @@ PrgValue currency_round(const std::int64_t scaled, const int decimals) {
 
 std::optional<PrgValue> evaluate_numeric_function(
     const std::string& function,
-    const std::vector<PrgValue>& arguments) {
+    const std::vector<PrgValue>& arguments,
+    const std::function<std::string(const std::string&)>& set_callback) {
     if (!arguments.empty() && is_currency_argument(arguments[0])) {
         const std::int64_t scaled = arguments[0].currency_value;
         if (function == "int" || function == "floor") {
@@ -261,11 +278,7 @@ std::optional<PrgValue> evaluate_numeric_function(
         }
         if (function == "round") {
             const double requested = arguments.size() >= 2U ? value_as_number(arguments[1]) : 0.0;
-            const double truncated = std::trunc(requested);
-            const int decimals = !std::isfinite(truncated) ? 0
-                                 : truncated > 100.0       ? 100
-                                 : truncated < -100.0      ? -100
-                                                           : static_cast<int>(truncated);
+            const int decimals = round_decimal_places(requested, set_callback);
             return currency_round(scaled, decimals);
         }
         if (function == "mod" && arguments.size() >= 2U) {
@@ -301,14 +314,13 @@ std::optional<PrgValue> evaluate_numeric_function(
         // both act as 0; 2.4 and 2.6 both act as 2), not std::round()'s
         // round-to-nearest -- confirmed against real VFP9 output for all
         // four differential vectors below.
-        const double truncated_decimals = std::trunc(requested_decimals);
-        const int decimals = !std::isfinite(truncated_decimals)
-                                 ? 0
-                                 : truncated_decimals > static_cast<double>(std::numeric_limits<int>::max())
-                                       ? std::numeric_limits<int>::max()
-                                       : truncated_decimals < static_cast<double>(std::numeric_limits<int>::min())
-                                             ? std::numeric_limits<int>::min()
-                                             : static_cast<int>(truncated_decimals);
+        const int decimals = round_decimal_places(requested_decimals, set_callback);
+        if (decimals > 308) {
+            return make_number_value(value);
+        }
+        if (decimals < -308) {
+            return make_number_value(std::copysign(0.0, value));
+        }
         if (const auto rounded = round_decimal_value(value, decimals); rounded.has_value()) {
             return make_number_value(*rounded);
         }
