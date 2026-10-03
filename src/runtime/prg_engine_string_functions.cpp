@@ -121,15 +121,16 @@ std::string trim_with_parse_characters(
 // #5951/#5611/#6776: shared occurrence-argument validation for
 // AT()/ATC()/ATCC()/RAT()/RATC(). Real VFP9 SP2 raises error 11 for a
 // sub-unit, nonpositive, non-finite, or oversized occurrence rather than
-// clamping or saturating it. The upper bound is exclusive: INT_MAX itself is
-// rejected. Retained differential evidence:
+// clamping or saturating it. The upper bound is the inclusive VFP Character
+// string ceiling, 16,777,184. Retained differential evidence:
 // ~/temp/vfp9-probes/at-occurrence-boundary-82.{prg,out},
-// atcc-occurrence-boundary-83.{prg,out}, and numconv-6776/probe1.txt.
+// atcc-occurrence-boundary-83.{prg,out}, numconv-6776/probe1.txt, and
+// review-6918/{out4,out5}.txt.
 std::size_t require_valid_occurrence_argument(const PrgValue& argument) {
     const double requested_occurrence = value_as_number(argument);
     const auto occurrence = checked_truncated_numeric_to_int64(requested_occurrence);
     if (!occurrence.has_value() || *occurrence <= 0 ||
-        *occurrence >= static_cast<std::int64_t>(std::numeric_limits<int>::max())) {
+        *occurrence > static_cast<std::int64_t>(kVfpMaxCharacterStringLength)) {
         throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"), 11);
     }
     return static_cast<std::size_t>(*occurrence);
@@ -153,7 +154,7 @@ std::int64_t require_valid_strtran_occurrence_argument(
     }
     const auto occurrence = checked_truncated_numeric_to_int64(requested_occurrence);
     if (!occurrence.has_value() || *occurrence == 0 || *occurrence < -1 ||
-        *occurrence >= static_cast<std::int64_t>(std::numeric_limits<int>::max())) {
+        *occurrence > static_cast<std::int64_t>(kVfpMaxCharacterStringLength)) {
         throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"), 11);
     }
     return *occurrence;

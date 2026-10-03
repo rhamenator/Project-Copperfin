@@ -193,22 +193,23 @@ std::vector<Row> build_rows() {
     // -1 sentinel; it is available only in VFP9 mode, while COPPERFIN rejects the out-of-range value.
     for (const char *mode : {"COPPERFIN", "VFP9"}) {
         const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
-        for (const char *value : {"0.5", "0", "-1.5", "-1.9", "-2.9", "2147483647", "2147483648",
-                                  "1E10", "1E20", "1E300", "EXP(1000)"}) {
+        for (const char *value : {"0.5", "0", "-1.5", "-1.9", "-2.9", "16777185", "2147483647",
+                                  "2147483648", "1E10", "1E20", "1E300", "EXP(1000)"}) {
             rows.push_back({set, std::string("AT('b','abcabc',") + value + ")", "ERR11"});
             rows.push_back({set, std::string("STRTRAN('abcabc','b','x',") + value + ")", "ERR11"});
             rows.push_back({set, std::string("STRTRAN('abcabc','b','x',1,") + value + ")", "ERR11"});
         }
         for (const char *function : {"ATC", "ATCC", "RAT", "RATC"}) {
             rows.push_back({set, std::string(function) + "('b','abcabc',0.5)", "ERR11"});
+            rows.push_back({set, std::string(function) + "('b','abcabc',16777185)", "ERR11"});
             rows.push_back({set, std::string(function) + "('b','abcabc',2147483647)", "ERR11"});
         }
         rows.push_back({set, "AT('b','abcabc',2.9)", "N:5"});
-        rows.push_back({set, "AT('b','abcabc',2147483646)", "N:0"});
+        rows.push_back({set, "AT('b','abcabc',16777184)", "N:0"});
         rows.push_back({set, "STRTRAN('abcabc','b','x',2.9)", "C:abcaxc"});
         rows.push_back({set, "STRTRAN('abcabc','b','x',1,2.9)", "C:axcaxc"});
-        rows.push_back({set, "STRTRAN('abcabc','b','x',2147483646)", "C:abcabc"});
-        rows.push_back({set, "STRTRAN('abcabc','b','x',1,2147483646)", "C:axcaxc"});
+        rows.push_back({set, "STRTRAN('abcabc','b','x',16777184)", "C:abcabc"});
+        rows.push_back({set, "STRTRAN('abcabc','b','x',1,16777184)", "C:axcaxc"});
         rows.push_back({set, "STRTRAN('abcabc','b','x',-1)", "C:axcaxc"});
         rows.push_back({set, "STRTRAN('abcabc','b','x',1,-1)", "C:axcaxc"});
         for (const char *value : {"0.5", "-2.9", "2147483647", "2147483648", "4294967295", "4294967296",
