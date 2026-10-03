@@ -150,7 +150,61 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-Owner-directed workstream, in this order:
+PR #6894 (`fix/chr-boundaries-5611`, head `d4a112c33`) is the active slice.
+Its focused normal and ASan/UBSan/float-cast-overflow tests pass; all review
+threads are resolved. Merge it when all 11 required checks report green, then
+clean its worktree/builds/branch before starting the next workstream.
+
+## Next owner-directed workstream: extended tables and indexes
+
+After #6894 merges, direct owner assignment makes open owner-authored,
+`agent-approved` design #6879 and its 23 direct sub-issues the next workstream.
+Their live metadata and all owner-authored comments were revalidated on
+2026-10-03. Work in this order:
+
+1. #6880: probe installed VFP9 on unknown table-header version bytes and choose
+   a distinct Copperfin marker that VFP rejects. Format work waits for this.
+2. #6888: first ship the bounded #6877 exact-integer index-key fix, preserving
+   adjacent keys above 2^53 in ascending and descending order.
+3. Independent starting slices: #6893 `SET TEXTBEHAVIOR` (default `VFP9`) and
+   #6895 `SET WARNINGS ON|OFF|ERROR` (name approved; default `ON`).
+4. Bitwise group: #6872 shared conversion helper, then #6871, #6873, #6874,
+   #6875, and #6876 (`BITAND64` family naming approved).
+5. After #6880: #6881 format/registry; types #6882-#6885, #6896-#6902 and
+   #6743; #6886 limits; #6887 native index; #6889 `INDEX ON`; #6890 DBC;
+   #6891 import/export/COPY; #6892 documentation. #6902 is design-first.
+
+Owner decisions for this workstream:
+
+- VFP-compatible remains the default. Any non-VFP column automatically gives
+  the table the distinct Copperfin header byte and a `SET WARNINGS`-controlled
+  warning; mixed VFP/non-VFP columns are allowed.
+- Copperfin-table limits are 1,024 columns, 65,500 fixed in-row bytes, 3,072
+  index-key bytes, 32 columns per key, and 8,000 in-row text bytes. Widths are
+  bytes. A declaration over its limit is an error and never auto-converts to
+  memo storage. Memo/sidecar storage is an explicitly declared type. Odd widths
+  for a two-byte-unit Unicode encoding follow `SET WARNINGS`: ON/OFF round down
+  with shown/suppressed warning; ERROR raises a catchable error.
+- `SET TEXTBEHAVIOR TO VFP9|COPPERFIN` governs every over-long text write:
+  default VFP9 truncates (UTF-8 at a character boundary), COPPERFIN raises a
+  catchable error naming the setting.
+- Copperfin tables retain fixed-width records. The native index is one
+  combination/multi-tag file per table, similar to but intentionally distinct
+  from CDX; Codex chooses and documents its layout and extension. Do not apply
+  external-engine key limits.
+- Nothing in the candidate type list is deferred. VFP9 claims require retained
+  installed-VFP9 evidence. Use one slice per PR, fail-before/pass-after coverage
+  in applicable modes, sanitizer evidence, docs/32 traceability, a valid dated
+  changelog fragment, signed/DCO commits, green required checks and resolved
+  review threads.
+
+The unfinished #5611/#6776 numeric-conversion work below is retained, not
+cancelled. Reconsider it after the owner-directed #6879 sequence unless the
+owner redirects again.
+
+## Retained workstreams
+
+Owner-directed workstream order before the #6879 assignment was:
 
 1. **The numeric-conversion group.** Work authority is the open,
    owner-authored, `agent-approved` umbrella #5611; #6776 is the design
