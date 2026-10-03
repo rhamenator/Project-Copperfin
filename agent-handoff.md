@@ -188,6 +188,8 @@ Owner decisions for this workstream:
 - `SET TEXTBEHAVIOR TO VFP9|COPPERFIN` governs every over-long text write:
   default VFP9 truncates (UTF-8 at a character boundary), COPPERFIN raises a
   catchable error naming the setting.
+- Bitwise numeric conversion wraps to the low 32 bits only in VFP9 mode;
+  default Copperfin mode rejects out-of-range values with error 11 (#6873).
 - Copperfin tables retain fixed-width records. The native index is one
   combination/multi-tag file per table, similar to but intentionally distinct
   from CDX; Codex chooses and documents its layout and extension. Do not apply
