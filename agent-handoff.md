@@ -9,6 +9,24 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
+PR #6918 (`fix/numeric-occurrence-5611`) merged into `main` as
+`95c30b998e88330852c335c8ef8141abf53eda19` on 2026-10-03. It completed the
+`AT`-family/`STRTRAN` occurrence-validation and `GETWORDNUM` boundary slice
+under #5611/#6776, including exact installed-VFP9 ceiling evidence and the
+VFP9-only `STRTRAN(...,4294967295)` sentinel quirk. All 33 checks passed at
+exact implementation head `030b3b727de35843c5c0b6384f2b2f6aa701a62f`,
+Codex review was clean, and both review conversations were resolved before
+merge.
+
+The active bounded slice is `fix/numeric-substr-start-5611`, created from
+`origin/main` at `95c30b998`. It covers only the VFP9-mode huge-positive
+`SUBSTR`/`SUBSTRC` start quirk under #5611/#6776; Copperfin mode remains safe
+and saturating. Fail-before evidence and focused normal tests are complete;
+production, tests, traceability and changelog edits are present, and all three
+focused suites pass under AddressSanitizer, UndefinedBehaviorSanitizer and
+float-cast-overflow instrumentation. Signed commit, push, PR, review and CI
+remain pending.
+
 PR #6917 (`fix/installer-artifact-policy-6905`) merged into `main` as
 `6b64a176d680aab732e0772cd889a423ed3c993e` on 2026-10-03. Successful
 pull-request installer packages/evidence/source now retain for 7 days,
@@ -285,9 +303,12 @@ Owner-directed workstream order before the #6879 assignment was:
    - Completed bounded slices: arrays (#6030, PR #6865), `BITLSHIFT`/
      `BITRSHIFT` (#5765, PR #6867), `GOMONTH`/`EOMONTH` (#5608, PR #6869),
      `SPACE` (#6775), `ROUND` (PR #6878), and `CHR` (this continuation slice).
-   - Active: `AT`/`STRTRAN` occurrence validation and `GETWORDNUM` boundary
-     coverage. `SUBSTR`/`SUBSTRC` with a huge positive start return the last
-     character in VFP9 (quirk, not yet emulated).
+   - Completed most recently: `AT`/`STRTRAN` occurrence validation and
+     `GETWORDNUM` boundary coverage (PR #6918).
+   - Active: `SUBSTR`/`SUBSTRC` huge-positive starts. Installed VFP9 converts
+     the start through signed low 32 bits, then returns the final character
+     when that value is at or before the source end; this operation-specific
+     quirk is available only in `NUMERICBEHAVIOR VFP9`.
    - DECLARE narrowing (#6050), `BINTOC`/`CTOBIN` (#5766), array dimensions
      (#5594), and the ~150 `llround(value_as_number(...))` sites in other
      modules (#5611 umbrella).

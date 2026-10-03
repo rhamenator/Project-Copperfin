@@ -972,7 +972,21 @@ std::optional<PrgValue> evaluate_string_function(
         if (saturating_numeric_to_int64(raw_start) < 1) {
             return make_string_value(std::string{});
         }
-        const std::size_t start = saturating_size_argument(raw_start) - 1U;
+        std::size_t start = saturating_size_argument(raw_start) - 1U;
+        // #5611/#6776: installed VFP9 takes an operation-specific path for a
+        // positive start beyond INT_MAX. It first retains the low signed 32
+        // bits, then returns the final byte when that value is at or before
+        // the source end (including zero/negative wrap); a wrapped value past
+        // the end remains empty. COPPERFIN deliberately keeps the safe,
+        // saturating behavior. Retained evidence:
+        // ~/temp/vfp9-probes/numconv-6776/{probe1.txt,substr-wrap-probe.prg}.
+        if (numeric_behavior(set_callback) == NumericBehavior::vfp9 &&
+            raw_start > static_cast<double>(std::numeric_limits<std::int32_t>::max()) && !source.empty()) {
+            const std::int64_t wrapped_start = vfp9_numeric_to_int32(raw_start);
+            const bool at_or_before_end =
+                wrapped_start <= 0 || static_cast<std::size_t>(wrapped_start) <= source.size();
+            start = at_or_before_end ? source.size() - 1U : source.size();
+        }
         const std::size_t length = arguments.size() >= 3U
                                        ? saturating_size_argument(value_as_number(arguments[2]))
                                        : std::string::npos;
@@ -984,7 +998,17 @@ std::optional<PrgValue> evaluate_string_function(
         if (saturating_numeric_to_int64(raw_start) < 1) {
             return make_string_value(std::string{});  // as SUBSTR(): a start below 1 is empty in VFP9
         }
-        const std::size_t start = saturating_size_argument(raw_start, 1U);
+        std::size_t start = saturating_size_argument(raw_start, 1U);
+        const std::size_t scalar_count = utf8_scalar_offsets_local(source).size() - 1U;
+        // Match SUBSTR's verified huge-positive VFP9 wrap/clamp quirk, but
+        // apply the end test and final-position clamp in Unicode scalar units.
+        if (numeric_behavior(set_callback) == NumericBehavior::vfp9 &&
+            raw_start > static_cast<double>(std::numeric_limits<std::int32_t>::max()) && scalar_count > 0U) {
+            const std::int64_t wrapped_start = vfp9_numeric_to_int32(raw_start);
+            const bool at_or_before_end =
+                wrapped_start <= 0 || static_cast<std::size_t>(wrapped_start) <= scalar_count;
+            start = at_or_before_end ? scalar_count : scalar_count + 1U;
+        }
         const std::size_t length = arguments.size() >= 3U
                                        ? saturating_size_argument(value_as_number(arguments[2]))
                                        : std::numeric_limits<std::size_t>::max();

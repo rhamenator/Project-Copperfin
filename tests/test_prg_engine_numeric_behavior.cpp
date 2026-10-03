@@ -187,6 +187,27 @@ std::vector<Row> build_rows() {
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SUBSTR('abcdef',1E20)", "C:"});
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SUBSTR('abcdef',2147483648)", "C:"});
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SUBSTR('abcdef',2147483647)", "C:"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SUBSTR('abcdef',4294967296)", "C:"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SUBSTR('abcdef',EXP(1000))", "C:"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SUBSTRC('abcdef',1E20)", "C:"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SUBSTRC('abcdef',EXP(1000))", "C:"});
+    // VFP9's start conversion is function-specific: a positive value above INT_MAX is reduced to a signed 32-bit
+    // value. When that result is at or before the end, SUBSTR/SUBSTRC clamp to the final character; a wrapped value
+    // beyond the end remains empty. This is a legacy quirk, so it is available only in VFP9 mode.
+    for (const char *value : {"1E20", "1E300", "2147483648", "4294967295", "4294967296",
+                              "4294967302", "9007199254740992", "EXP(1000)"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("SUBSTR('abcdef',") + value + ")", "C:f"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("SUBSTRC('abcdef',") + value + ")", "C:f"});
+    }
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "SUBSTR('abcdef',4294967296,1)", "C:f"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "SUBSTRC('abcdef',4294967296,1)", "C:f"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "SUBSTRC('café猫',4294967296)", "C:猫"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "SUBSTR('abcdef',2147483647)", "C:"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "SUBSTRC('abcdef',2147483647)", "C:"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "SUBSTR('abcdef',1E10)", "C:"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "SUBSTRC('abcdef',1E10)", "C:"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "SUBSTR('abcdef',4294967303)", "C:"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "SUBSTRC('abcdef',4294967303)", "C:"});
     // Occurrence controls are validated before conversion (#5611/#6776). Installed VFP9 raises error 11 for
     // sub-unit, nonpositive, non-finite, and oversized AT/STRTRAN occurrence arguments. Copperfin keeps that
     // stable fail-closed contract in both modes. The one observed VFP9 conversion quirk is STRTRAN's 2^32-1 ->

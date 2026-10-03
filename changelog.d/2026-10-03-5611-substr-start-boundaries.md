@@ -1,0 +1,1 @@
+- 2026-10-03: Reproduce installed VFP9's huge-positive `SUBSTR()` and `SUBSTRC()` start conversion only under `SET NUMERICBEHAVIOR TO VFP9`, while preserving Copperfin's safe empty result by default (#5611, #6776).
