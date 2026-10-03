@@ -29,7 +29,9 @@ patterns, a bounded UI tree, and a best-effort screenshot; human GUI remains
 and graceful exit, then exposed that the Windows PowerShell 5.1 child cannot
 autoload `Get-FileHash` from the inherited PowerShell 7 module path; the helper
 now computes SHA-256 directly through the framework. Review timeout finding
-`a2e900e07` is fixed and resolved; #6911 owns
+`a2e900e07` is fixed and resolved; the latest review's eager exit-code
+diagnostic finding is fixed by reading `ExitCode` only inside the observed-exit
+branch; #6911 owns
 the non-blocking inherited hosted-runner authority gap. Local focused checks
 pass. Re-run focused checks, push the current follow-up, resolve review
 conversations, then require a new exact hosted Windows lifecycle before merge.

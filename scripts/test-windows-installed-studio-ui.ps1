@@ -325,8 +325,9 @@ try {
         Start-Sleep -Milliseconds 250
         $process.Refresh()
     }
-    Assert-Condition (-not $process.HasExited) `
-        "Installed Copperfin Studio exited before UI automation (exit $($process.ExitCode))."
+    if ($process.HasExited) {
+        throw "Installed Copperfin Studio exited before UI automation (exit $($process.ExitCode))."
+    }
     Assert-Condition ($null -ne $root) `
         'Installed Copperfin Studio did not expose a top-level UI Automation window.'
     Assert-Condition ($root.Current.Name.StartsWith('Copperfin Studio', [System.StringComparison]::Ordinal)) `

@@ -163,6 +163,8 @@ forbid_text("${script}" "Remove-Item -Recurse" "recursive cleanup masking instal
 require_text("${ui_script}" "[ValidateRange(10, 300)]" "bounded UI timeout")
 require_text("${ui_script}" "AutomationElement]::ProcessIdProperty"
     "exact installed-process UI Automation binding")
+require_text("${ui_script}" "if ($process.HasExited)"
+    "exit-code access guarded by observed process exit")
 require_text("${ui_script}" "[System.Windows.Automation.ControlType]::Pane"
     "currently exposed named Studio surfaces (#6913)")
 require_text("${ui_script}" "SendMessageTimeout"
