@@ -9,6 +9,8 @@ name: Build Standalone Installers
 # DV-linux-rpm-installer-lifecycle-contract;
 # RQ-CF-REL-007; DQ-macos-installer-lifecycle-scope;
 # DV-macos-installer-lifecycle-contract;
+# RQ-CF-REL-009; DQ-installer-artifact-retention-policy;
+# DV-installer-artifact-retention-policy-contract;
 # HZ-system-failure-01; HZ-data-corruption-01; HZ-doc-command-01.
 
 on:
@@ -170,21 +172,13 @@ jobs:
           }
           & ./scripts/test-windows-installer-lifecycle.ps1 @lifecycleArguments
 
-      - name: Upload Windows installed-UI failure diagnostics
-        if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: copperfin-windows-installed-ui-failure-${{ github.run_id }}-${{ github.run_attempt }}
-          path: artifacts/windows-installer-lifecycle/**
-          if-no-files-found: warn
-          retention-days: 14
-
       - name: Create exact Corresponding Source archive
         uses: ./.github/actions/create-release-source
         with:
           revision: ${{ github.sha }}
 
       - name: Upload Windows installer artifacts
+        if: success()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: copperfin-windows-installers
@@ -195,6 +189,19 @@ jobs:
             artifacts/windows-installer-lifecycle/windows-installed-studio-ui.json
             release-source/Project-Copperfin-source-${{ github.sha }}.zip
           if-no-files-found: error
+          retention-days: ${{ github.event_name == 'pull_request' && 7 || 30 }}
+
+      - name: Upload Windows installed-UI failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: copperfin-windows-installed-ui-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/package/copperfin-*-Windows.exe
+            build/package/copperfin-*-Windows.zip
+            artifacts/windows-installer-lifecycle/**
+          if-no-files-found: warn
+          retention-days: 14
 
   macos-installer:
     runs-on: macos-latest
@@ -266,7 +273,7 @@ jobs:
           revision: ${{ github.sha }}
 
       - name: Upload macOS installer artifacts
-        if: always()
+        if: success()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: copperfin-macos-installers
@@ -274,9 +281,21 @@ jobs:
             build/package/copperfin-*-Darwin.pkg
             build/package/copperfin-*-Darwin.tar.gz
             artifacts/macos-installer-lifecycle/macos-installer-lifecycle.json
-            artifacts/macos-installer-lifecycle/macos-installer-lifecycle.log
             release-source/Project-Copperfin-source-${{ github.sha }}.zip
           if-no-files-found: error
+          retention-days: ${{ github.event_name == 'pull_request' && 7 || 30 }}
+
+      - name: Upload macOS installer failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: copperfin-macos-installer-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/package/copperfin-*-Darwin.pkg
+            build/package/copperfin-*-Darwin.tar.gz
+            artifacts/macos-installer-lifecycle/**
+          if-no-files-found: warn
+          retention-days: 14
 
   linux-deb-rpm-installers:
     runs-on: ubuntu-latest
@@ -400,7 +419,7 @@ jobs:
           revision: ${{ github.sha }}
 
       - name: Upload Linux installer artifacts
-        if: always()
+        if: success()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: copperfin-linux-installers
@@ -409,8 +428,21 @@ jobs:
             build/package/copperfin-*-Linux.rpm
             build/package/copperfin-*-Linux.tar.gz
             artifacts/linux-installer-lifecycle/linux-installer-lifecycle.json
-            artifacts/linux-installer-lifecycle/linux-installer-lifecycle.log
             artifacts/linux-rpm-installer-lifecycle/linux-rpm-installer-lifecycle.json
-            artifacts/linux-rpm-installer-lifecycle/linux-rpm-installer-lifecycle.log
             release-source/Project-Copperfin-source-${{ github.sha }}.zip
           if-no-files-found: error
+          retention-days: ${{ github.event_name == 'pull_request' && 7 || 30 }}
+
+      - name: Upload Linux installer failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: copperfin-linux-installer-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/package/copperfin-*-Linux.deb
+            build/package/copperfin-*-Linux.rpm
+            build/package/copperfin-*-Linux.tar.gz
+            artifacts/linux-installer-lifecycle/**
+            artifacts/linux-rpm-installer-lifecycle/**
+          if-no-files-found: warn
+          retention-days: 14

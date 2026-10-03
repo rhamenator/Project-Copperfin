@@ -144,8 +144,11 @@ require_text("${workflow}"
     "artifacts/macos-installer-lifecycle/macos-installer-lifecycle.log"
     "retained macOS lifecycle diagnostics")
 require_text("${workflow}"
-    "- name: Upload macOS installer artifacts\n        if: always()"
-    "failure-path macOS lifecycle diagnostics upload")
+    "- name: Upload macOS installer failure diagnostics\n        if: failure()"
+    "failure-only macOS lifecycle diagnostics upload")
+require_text("${workflow}"
+    "- name: Upload macOS installer artifacts\n        if: success()"
+    "success-only macOS installer upload")
 
 require_text("scripts/assemble-rc-candidate.py"
     "require_macos_installer_lifecycle_evidence"

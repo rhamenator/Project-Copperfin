@@ -125,8 +125,10 @@ require_text("${workflow}" "artifacts/linux-installer-lifecycle/linux-installer-
     "retained Linux lifecycle evidence")
 require_text("${workflow}" "artifacts/linux-installer-lifecycle/linux-installer-lifecycle.log"
     "retained Linux lifecycle diagnostics")
-require_text("${workflow}" "- name: Upload Linux installer artifacts\n        if: always()"
-    "failure-path Linux lifecycle diagnostics upload")
+require_text("${workflow}" "- name: Upload Linux installer failure diagnostics\n        if: failure()"
+    "failure-only Linux lifecycle diagnostics upload")
+require_text("${workflow}" "- name: Upload Linux installer artifacts\n        if: success()"
+    "success-only Linux installer upload")
 
 require_text("scripts/assemble-rc-candidate.py" "require_linux_installer_lifecycle_evidence"
     "fail-closed Linux lifecycle evidence admission")

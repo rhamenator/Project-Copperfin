@@ -9,18 +9,15 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
-Active continuation: PR #6916 (`fix/linux-rpm-lifecycle-6905`), based on
-`origin/main` at `ce15bab04`, is the fourth #6905 installed-product slice. It
-adds a distinct native RPM lifecycle in an ephemeral digest-pinned Fedora
-`linux/amd64` container: exact package and container-image identity, fresh
-native install, installed tree/English catalog/semantic command smoke,
-`rpm --verify`, same-version reinstall, external-fixture preservation, erase,
-and RPM-database plus filesystem residue checks. The RC assembler admits
-`linux_rpm: PASS` only from separate digest-bound RPM evidence. Focused local
-contracts and self-tests pass; review-driven daemon-container cleanup is
-separately bounded and keyed by `--cidfile`. Review conversations are resolved
-before waiting on the remaining exact-head hosted container evidence required
-for merge.
+PR #6916 (`fix/linux-rpm-lifecycle-6905`) merged into `main` as
+`ec556e17214266274508c430529a9f3912805e19` on 2026-10-03. It completed the
+fourth #6905 installed-product slice with a distinct native RPM lifecycle in an
+ephemeral digest-pinned Fedora `linux/amd64` container: exact package and
+container-image identity, fresh native install, installed
+tree/catalog/semantic command smoke, `rpm --verify`, same-version reinstall,
+external-fixture preservation, erase, and RPM-database/filesystem residue
+checks. Exact head `a5ca7e859` passed all 36 checks, including the native RPM
+lifecycle; all four review conversations were resolved before merge.
 
 PR #6910 (`fix/windows-installed-ui-6905`) merged into `main` as
 `ce15bab04fc14db26c81081b1dc5f067b7fc6c88` on 2026-10-03. Hosted run
@@ -198,21 +195,27 @@ after review found a macOS clone destination-identity gap.
 ## Active slice
 
 Issue #6905 is the directly owner-authorized installed-product and UI
-validation umbrella. The active second slice is branch
-`fix/macos-installer-lifecycle-6905` in
-`~/.codex/worktrees/macos-installer-lifecycle-6905/Project-Copperfin`. Add a
-real hosted macOS productbuild install with stable component identifiers,
-receipt/version and installed-resource verification, semantic installed CLI
-smoke, digest-bound evidence, fail-closed RC-bundle admission, and exact
-bounded cleanup on the disposable runner. Keep Developer ID/notarization,
-automated GUI, human GUI, and user-facing uninstall claims explicit as
-unperformed. Finish focused checks, signed commit, PR, review resolution,
-exact hosted lifecycle evidence, and merge; then clean the slice
-worktree/build/branch.
+validation umbrella. The active fifth slice is branch
+`fix/installer-artifact-policy-6905` in
+`~/.codex/worktrees/installer-artifact-policy-6905/Project-Copperfin`, based on
+`origin/main` at `ec556e172`. Make installer artifacts useful without treating
+every pull-request package as a candidate: retain successful PR packages,
+machine-readable lifecycle evidence, and source for 7 days; retain successful
+non-pull-request outputs for 30 days; retain any exact package already
+produced plus available failure diagnostics for 14 days; and preserve the
+separate immutable RC bundle's 90-day policy. Add focused workflow contracts,
+requirements/safety traceability, evaluation guidance, and exact-head hosted
+verification before merge.
+
+The Linux installed-GUI sub-slice remains explicitly deferred until the
+managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
+not installed-product evidence. Re-enter that slice when packaging exposes the
+managed Studio. After the artifact-policy slice, if no other actionable #6905
+gap remains, return to the retained owner-directed #5611/#6776
+numeric-conversion workstream.
 
 The owner-directed #6879 extended-table sequence and unfinished #5611/#6776
-numeric-conversion work remain retained and uncancelled. Continue #6905's next
-bounded installer/UI gap after this slice unless the owner redirects again.
+numeric-conversion work remain retained and uncancelled.
 
 ## Next owner-directed workstream: extended tables and indexes
 
