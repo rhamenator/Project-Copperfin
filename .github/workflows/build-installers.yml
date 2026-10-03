@@ -391,7 +391,7 @@ jobs:
             --volume "$PWD/scripts/test-linux-rpm-installer-lifecycle.sh:/opt/copperfin/test-linux-rpm-installer-lifecycle.sh:ro" \
             --volume "$PWD/artifacts/linux-rpm-installer-lifecycle:/evidence:rw" \
             "$rpm_image" \
-            bash -c 'dnf --assumeyes --setopt=install_weak_deps=False install gawk jq findutils && exec bash /opt/copperfin/test-linux-rpm-installer-lifecycle.sh --package /input/copperfin.rpm --evidence-directory /evidence --allow-container-mutation' \
+            bash -c 'dnf --assumeyes --setopt=install_weak_deps=False install diffutils findutils gawk jq && exec bash /opt/copperfin/test-linux-rpm-installer-lifecycle.sh --package /input/copperfin.rpm --evidence-directory /evidence --allow-container-mutation' \
             2>&1 | tee artifacts/linux-rpm-installer-lifecycle/linux-rpm-installer-lifecycle.log
 
       - name: Create exact Corresponding Source archive

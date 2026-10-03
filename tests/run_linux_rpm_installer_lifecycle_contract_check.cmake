@@ -92,7 +92,7 @@ require_text("${workflow}" "--platform linux/amd64" "explicit package architectu
 require_text("${workflow}" "--pull=never" "post-pull digest-only container execution")
 require_text("${workflow}" "timeout --signal=KILL 60 docker image inspect"
     "bounded resolved-container identity lookup")
-require_text("${workflow}" "install gawk jq findutils"
+require_text("${workflow}" "install diffutils findutils gawk jq"
     "Fedora provider packages for the lifecycle helper commands")
 require_text("${workflow}" "--cidfile" "daemon-owned container identity capture")
 require_text("${workflow}" "trap cleanup_rpm_container EXIT"
