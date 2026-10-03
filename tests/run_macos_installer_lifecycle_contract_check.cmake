@@ -73,8 +73,14 @@ require_text("${script}" "os.killpg(process.pid, signal.SIGKILL)"
     "timed-out process-tree termination")
 require_text("${script}" [=[installer -pkg "$package_path" -target /]=]
     "real productbuild package installation")
-require_text("${script}" "pkgutil --payload-files"
-    "pre-install exact payload inventory")
+require_text("${script}" [=[pkgutil --expand "$package_path" "$expanded_package"]=]
+    "outer distribution expansion")
+require_text("${script}" [=[done <"$component_packages"]=]
+    "nested component-package iteration")
+require_text("${script}" [=[pkgutil --payload-files "$component_package"]=]
+    "nested component pre-install payload inventory")
+require_text("${script}" "expected_suffixes = (\"-Documentation.pkg\", \"-Unspecified.pkg\")"
+    "exact nested component-package set")
 require_text("${script}" "pkgutil --pkg-info"
     "component receipt verification")
 require_text("${script}" "pkgutil --forget"

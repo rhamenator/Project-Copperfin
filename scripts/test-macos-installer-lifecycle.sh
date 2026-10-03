@@ -131,12 +131,69 @@ esac
 
 payload_paths_raw="$fixture_root/payload-paths.raw.txt"
 payload_paths="$fixture_root/payload-paths.txt"
+expanded_package="$fixture_root/package-expanded"
+component_packages="$fixture_root/component-packages.txt"
 created_directories="$fixture_root/created-directories.txt"
 receipt_paths="$fixture_root/receipt-paths.txt"
 inspect_stdout="$fixture_root/copperfin-inspect.stdout"
 external_fixture="$fixture_root/external-fixture.prg"
 
-pkgutil --payload-files "$package_path" >"$payload_paths_raw"
+cleanup_fixture() {
+    local original_status=$?
+    trap - EXIT
+    if [[ -n "${fixture_root:-}" && -d "$fixture_root" ]]; then
+        find "$fixture_root" -depth -delete
+    fi
+    exit "$original_status"
+}
+trap cleanup_fixture EXIT
+
+pkgutil --expand "$package_path" "$expanded_package"
+python3 - "$expanded_package" "$component_packages" <<'PY'
+import os
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1]).resolve(strict=True)
+destination = pathlib.Path(sys.argv[2])
+expected_suffixes = ("-Documentation.pkg", "-Unspecified.pkg")
+packages = []
+for current, directories, files in os.walk(root, followlinks=False):
+    current_path = pathlib.Path(current)
+    for name in directories:
+        candidate = current_path / name
+        if candidate.is_symlink():
+            raise SystemExit(f"Expanded productbuild archive contains a directory symlink: {candidate}")
+    for name in files:
+        candidate = current_path / name
+        if candidate.is_symlink():
+            raise SystemExit(f"Expanded productbuild archive contains a file symlink: {candidate}")
+        if name.endswith(".pkg"):
+            if "\n" in str(candidate) or "\r" in str(candidate):
+                raise SystemExit("Expanded component package path contains a line break")
+            packages.append(candidate.resolve(strict=True))
+
+if len(packages) != len(expected_suffixes):
+    raise SystemExit(
+        f"Expected {len(expected_suffixes)} nested component packages; found {len(packages)}"
+    )
+for suffix in expected_suffixes:
+    matches = [path for path in packages if path.name.endswith(suffix)]
+    if len(matches) != 1:
+        raise SystemExit(f"Expected exactly one nested component package ending in {suffix}")
+for package in packages:
+    package.relative_to(root)
+
+destination.write_text(
+    "".join(str(path) + "\n" for path in sorted(packages)),
+    encoding="utf-8",
+)
+PY
+
+: >"$payload_paths_raw"
+while IFS= read -r component_package; do
+    pkgutil --payload-files "$component_package" >>"$payload_paths_raw"
+done <"$component_packages"
 python3 - "$payload_paths_raw" "$payload_paths" <<'PY'
 from pathlib import PurePosixPath
 import sys

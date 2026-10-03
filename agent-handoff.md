@@ -9,6 +9,14 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
+Active continuation: PR #6908 (`fix/macos-installer-lifecycle-6905`) is the
+second #6905 installed-product slice. Its first hosted run and review found
+that the outer productbuild distribution has no direct payload inventory; the
+review fix expands it and aggregates the exact Documentation and Unspecified
+nested component payloads before installation. Re-run the hosted lifecycle,
+verify the exact evidence, resolve the review conversation, and merge after
+required checks pass.
+
 Issue #6905's first installed-product slice (PR #6906, merge `3af2b9609`)
 finished 2026-10-03: the exact generated Linux DEB now undergoes a disposable
 hosted-runner fresh install, installed-tree/English-catalog/semantic CLI smoke,
