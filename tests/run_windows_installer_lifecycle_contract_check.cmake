@@ -165,6 +165,12 @@ require_text("${ui_script}" "AutomationElement]::ProcessIdProperty"
     "exact installed-process UI Automation binding")
 require_text("${ui_script}" "if ($process.HasExited)"
     "exit-code access guarded by observed process exit")
+require_text("${ui_script}" "Observe.InitialLoadCompleted"
+    "successful initial fixture-load observation")
+require_text("${ui_script}" "Refresh verification marker."
+    "runner-owned fixture mutation before Refresh")
+require_text("${ui_script}" "Observe.RefreshCompleted"
+    "post-Refresh fixture-length observation")
 require_text("${ui_script}" "[System.Windows.Automation.ControlType]::Pane"
     "currently exposed named Studio surfaces (#6913)")
 require_text("${ui_script}" "SendMessageTimeout"

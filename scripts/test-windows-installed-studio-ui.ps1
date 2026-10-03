@@ -124,7 +124,8 @@ function Find-SemanticElement {
         [Parameter(Mandatory = $true)]
         [System.Windows.Automation.ControlType]$ControlType,
         [Parameter(Mandatory = $true)]
-        [string]$ExpectedName
+        [string]$ExpectedName,
+        [switch]$NamePrefix
     )
 
     $condition = [System.Windows.Automation.PropertyCondition]::new(
@@ -138,10 +139,20 @@ function Find-SemanticElement {
         if ($candidate.Current.ControlType.Id -ne $ControlType.Id) {
             continue
         }
-        if ([string]::Equals(
-                (Normalize-AccessibleName $candidate.Current.Name),
-                (Normalize-AccessibleName $ExpectedName),
-                [System.StringComparison]::OrdinalIgnoreCase)) {
+        $candidateName = Normalize-AccessibleName $candidate.Current.Name
+        $normalizedExpectedName = Normalize-AccessibleName $ExpectedName
+        $nameMatches = if ($NamePrefix) {
+            $candidateName.StartsWith(
+                $normalizedExpectedName,
+                [System.StringComparison]::OrdinalIgnoreCase)
+        }
+        else {
+            [string]::Equals(
+                $candidateName,
+                $normalizedExpectedName,
+                [System.StringComparison]::OrdinalIgnoreCase)
+        }
+        if ($nameMatches) {
             return $candidate
         }
     }
@@ -157,17 +168,20 @@ function Wait-SemanticElement {
         [Parameter(Mandatory = $true)]
         [string]$ExpectedName,
         [Parameter(Mandatory = $true)]
-        [DateTime]$Deadline
+        [DateTime]$Deadline,
+        [switch]$NamePrefix
     )
 
     while ([DateTime]::UtcNow -lt $Deadline) {
-        $candidate = Find-SemanticElement -Root $Root -ControlType $ControlType -ExpectedName $ExpectedName
+        $candidate = Find-SemanticElement -Root $Root -ControlType $ControlType `
+            -ExpectedName $ExpectedName -NamePrefix:$NamePrefix
         if ($null -ne $candidate) {
             return $candidate
         }
         Start-Sleep -Milliseconds 250
     }
-    throw "Timed out waiting for $($ControlType.ProgrammaticName) '$ExpectedName'."
+    $matchDescription = if ($NamePrefix) { 'starting with' } else { 'named' }
+    throw "Timed out waiting for $($ControlType.ProgrammaticName) $matchDescription '$ExpectedName'."
 }
 
 function Invoke-NativeButtonAction {
@@ -353,6 +367,21 @@ try {
         action = 'Observe.SemanticName'
     }
 
+    $initialLoadedStatus = Wait-SemanticElement -Root $root `
+        -ControlType ([System.Windows.Automation.ControlType]::Pane) `
+        -ExpectedName 'Snapshot loaded:' -Deadline $deadline -NamePrefix
+    $semanticControls += [ordered]@{
+        name = [string]$initialLoadedStatus.Current.Name
+        control_type = 'ControlType.Pane'
+        action = 'Observe.InitialLoadCompleted'
+    }
+
+    [System.IO.File]::AppendAllText(
+        $resolvedFixture,
+        [System.Environment]::NewLine + '* Refresh verification marker.',
+        [System.Text.UTF8Encoding]::new($false))
+    $refreshedFixtureLength = [System.IO.FileInfo]::new($resolvedFixture).Length
+
     $refreshControl = Wait-SemanticElement -Root $root `
         -ControlType ([System.Windows.Automation.ControlType]::Pane) `
         -ExpectedName 'Refresh' -Deadline $deadline
@@ -365,6 +394,21 @@ try {
         control_type = 'ControlType.Pane'
         action = 'NativeButton.BM_CLICK'
     }
+
+    $refreshedDetailsPrefix = "Size: $refreshedFixtureLength bytes"
+    $refreshedDetails = Wait-SemanticElement -Root $root `
+        -ControlType ([System.Windows.Automation.ControlType]::Pane) `
+        -ExpectedName $refreshedDetailsPrefix -Deadline $deadline -NamePrefix
+    $refreshedLoadedStatus = Wait-SemanticElement -Root $root `
+        -ControlType ([System.Windows.Automation.ControlType]::Pane) `
+        -ExpectedName 'Snapshot loaded:' -Deadline $deadline -NamePrefix
+    $semanticControls += [ordered]@{
+        name = [string]$refreshedDetails.Current.Name
+        control_type = 'ControlType.Pane'
+        action = 'Observe.RefreshCompleted'
+    }
+    Assert-Condition (-not [string]::IsNullOrWhiteSpace($refreshedLoadedStatus.Current.Name)) `
+        'Installed Copperfin Studio did not retain a successful loaded status after Refresh.'
 
     $windowObject = $null
     Assert-Condition `

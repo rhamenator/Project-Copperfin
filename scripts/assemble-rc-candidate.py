@@ -374,7 +374,7 @@ def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) ->
         or re.fullmatch(r"[0-9a-f]{64}", evidence["installed_studio_sha256"]) is None
         or evidence["human_gui"] != "NOT_RUN"
         or not isinstance(evidence["installed_studio_gui_semantic_controls"], list)
-        or len(evidence["installed_studio_gui_semantic_controls"]) < 4
+        or len(evidence["installed_studio_gui_semantic_controls"]) < 6
     ):
         raise AssemblyError("Windows installer lifecycle evidence does not prove the required bounded lifecycle")
     semantic_controls = evidence["installed_studio_gui_semantic_controls"]
@@ -392,6 +392,19 @@ def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) ->
     if (
         ("Copperfin Command", "ControlType.Pane", "Observe.SemanticName") not in semantic_identities
         or ("Refresh", "ControlType.Pane", "NativeButton.BM_CLICK") not in semantic_identities
+        or not any(
+            name.startswith("Snapshot loaded:")
+            and control_type == "ControlType.Pane"
+            and action == "Observe.InitialLoadCompleted"
+            for name, control_type, action in semantic_identities
+        )
+        or not any(
+            name.startswith("Size:")
+            and " bytes" in name
+            and control_type == "ControlType.Pane"
+            and action == "Observe.RefreshCompleted"
+            for name, control_type, action in semantic_identities
+        )
         or not any(
             name.lower().endswith(".prg")
             and control_type == "ControlType.Pane"
@@ -932,6 +945,16 @@ def self_test() -> None:
                     "name": "Refresh",
                     "control_type": "ControlType.Pane",
                     "action": "NativeButton.BM_CLICK",
+                },
+                {
+                    "name": "Snapshot loaded: 0 object rows, 0 fields, 0 companion indexes.",
+                    "control_type": "ControlType.Pane",
+                    "action": "Observe.InitialLoadCompleted",
+                },
+                {
+                    "name": "Size: 128 bytes   Last write: 10/03/2026 13:00:00   Extension: .prg",
+                    "control_type": "ControlType.Pane",
+                    "action": "Observe.RefreshCompleted",
                 },
                 {
                     "name": "Copperfin Studio - Visual program",

@@ -46,8 +46,10 @@ next sequential RC number.
    installed-command smoke, installed standalone Studio semantic UI automation,
    same-version maintenance reinstall, prior-version upgrade, silent uninstall,
    and residue checks. The installed UI result is process-bound UI Automation
-   evidence for the named document, Command, and Refresh surfaces, a bounded
-   native button action on the named Refresh surface, and a graceful
+   evidence for the named document, Command, and Refresh surfaces, successful
+   initial fixture loading, a bounded native button action on the named
+   Refresh surface, a post-Refresh fixture-length update proving asynchronous
+   reload completion, and a graceful
    `WindowPattern` close; it is not
    human usability evidence. The Linux DEB field is
    admitted only from digest-bound evidence for fresh install, installed-file

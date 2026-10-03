@@ -19,9 +19,10 @@ packaged WinForms surface currently exposes named document, Command, and
 Refresh controls as `ControlType.Pane`, not standard tab/menu/button roles.
 Hosted run `37120085946`, job `111194344036`, then proved that the Refresh
 surface exposes no UI Automation patterns and that the Windows PowerShell 5.1
-host does not expose the legacy pattern type. The follow-up keeps the process-bound accessible-name
-lookup, validates the exact native button handle/class, dispatches a bounded
-`BM_CLICK`, and closes through `WindowPattern`; #6913 owns the
+host does not expose the legacy pattern type. The follow-up keeps the
+process-bound accessible-name lookup, validates the exact native button
+handle/class, dispatches a bounded `BM_CLICK`, and closes through
+`WindowPattern`; #6913 owns the
 richer product accessibility roles. Machine-readable evidence binds the
 installed Studio digest and semantic controls; failures retain supported
 patterns, a bounded UI tree, and a best-effort screenshot; human GUI remains
@@ -31,10 +32,14 @@ autoload `Get-FileHash` from the inherited PowerShell 7 module path; the helper
 now computes SHA-256 directly through the framework. Review timeout finding
 `a2e900e07` is fixed and resolved; the latest review's eager exit-code
 diagnostic finding is fixed by reading `ExitCode` only inside the observed-exit
-branch; #6911 owns
-the non-blocking inherited hosted-runner authority gap. Local focused checks
-pass. Re-run focused checks, push the current follow-up, resolve review
-conversations, then require a new exact hosted Windows lifecycle before merge.
+branch; #6911 owns the non-blocking inherited hosted-runner authority gap.
+Local focused checks
+pass. The latest review also requires a proven successful initial fixture load
+and post-Refresh asynchronous reload rather than treating a live process as
+success; the follow-up mutates the runner-owned PRG and waits for its changed
+size in the loaded document details. Re-run focused checks, push the current
+follow-up, resolve review conversations, then require a new exact hosted
+Windows lifecycle before merge.
 
 PR #6908 (`fix/macos-installer-lifecycle-6905`) merged into `main` as
 `ed9a12512761197f7214b638bf43f413d0917f56` on 2026-10-03. Hosted run
