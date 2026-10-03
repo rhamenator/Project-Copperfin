@@ -52,6 +52,21 @@ function Normalize-AccessibleName {
     return ([string]$Name).Replace('&', '').Trim()
 }
 
+function Get-FileSha256 {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    $stream = [System.IO.File]::OpenRead($Path)
+    $algorithm = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        return ([System.BitConverter]::ToString(
+                $algorithm.ComputeHash($stream))).Replace('-', '').ToLowerInvariant()
+    }
+    finally {
+        $algorithm.Dispose()
+        $stream.Dispose()
+    }
+}
+
 if ($SelfTest) {
     Assert-Condition ((Normalize-AccessibleName '&File') -ceq 'File') `
         'Accessible-name normalization did not remove a WinForms mnemonic.'
@@ -59,6 +74,16 @@ if ($SelfTest) {
         'Accessible-name normalization did not trim surrounding space.'
     Assert-Condition ((Normalize-AccessibleName $null) -ceq '') `
         'Accessible-name normalization did not handle a missing name.'
+    $emptyFixture = [System.IO.Path]::GetTempFileName()
+    try {
+        [System.IO.File]::WriteAllBytes($emptyFixture, [byte[]]@())
+        Assert-Condition ((Get-FileSha256 -Path $emptyFixture) -ceq `
+                'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855') `
+            'Framework-compatible SHA-256 calculation returned an unexpected digest.'
+    }
+    finally {
+        [System.IO.File]::Delete($emptyFixture)
+    }
     Write-Host 'Windows installed Studio UI helper self-test passed.'
     return
 }
@@ -364,8 +389,8 @@ try {
     $evidence = [ordered]@{
         schema_version = 1
         kind = 'copperfin-windows-installed-studio-ui-result'
-        studio_sha256 = (Get-FileHash -LiteralPath $resolvedStudio -Algorithm SHA256).Hash.ToLowerInvariant()
-        fixture_sha256 = (Get-FileHash -LiteralPath $resolvedFixture -Algorithm SHA256).Hash.ToLowerInvariant()
+        studio_sha256 = Get-FileSha256 -Path $resolvedStudio
+        fixture_sha256 = Get-FileSha256 -Path $resolvedFixture
         window_title = $observedWindowTitle
         semantic_controls = @($semanticControls)
         automated_gui = 'PASS'

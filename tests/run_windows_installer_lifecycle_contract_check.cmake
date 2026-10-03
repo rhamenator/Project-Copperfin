@@ -169,6 +169,10 @@ require_text("${ui_script}" "SendMessageTimeout"
     "bounded native Refresh button action")
 require_text("${ui_script}" "'BUTTON'"
     "native Refresh button-class validation")
+require_text("${ui_script}" "[System.Security.Cryptography.SHA256]::Create()"
+    "Windows PowerShell-compatible evidence hashing")
+forbid_text("${ui_script}" "Get-FileHash"
+    "module-autoload-dependent evidence hashing")
 require_text("${ui_script}" "[System.Windows.Automation.WindowPattern]::Pattern"
     "semantic window-close action")
 require_text("${ui_script}" "CopyFromScreen" "failure screenshot capture")

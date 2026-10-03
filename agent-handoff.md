@@ -18,14 +18,18 @@ renders, the PRG loads, and failure diagnostics work, but also showed that the
 packaged WinForms surface currently exposes named document, Command, and
 Refresh controls as `ControlType.Pane`, not standard tab/menu/button roles.
 Hosted run `37120085946`, job `111194344036`, then proved that the Refresh
-surface exposes no UI Automation patterns and that PowerShell 7 cannot load
-the legacy pattern type. The follow-up keeps the process-bound accessible-name
+surface exposes no UI Automation patterns and that the Windows PowerShell 5.1
+host does not expose the legacy pattern type. The follow-up keeps the process-bound accessible-name
 lookup, validates the exact native button handle/class, dispatches a bounded
 `BM_CLICK`, and closes through `WindowPattern`; #6913 owns the
 richer product accessibility roles. Machine-readable evidence binds the
 installed Studio digest and semantic controls; failures retain supported
 patterns, a bounded UI tree, and a best-effort screenshot; human GUI remains
-`NOT_RUN`. Review timeout finding `a2e900e07` is fixed and resolved; #6911 owns
+`NOT_RUN`. Run `37122537317`, job `111201342603`, proved the full UI lifecycle
+and graceful exit, then exposed that the Windows PowerShell 5.1 child cannot
+autoload `Get-FileHash` from the inherited PowerShell 7 module path; the helper
+now computes SHA-256 directly through the framework. Review timeout finding
+`a2e900e07` is fixed and resolved; #6911 owns
 the non-blocking inherited hosted-runner authority gap. Local focused checks
 pass. Re-run focused checks, push the current follow-up, resolve review
 conversations, then require a new exact hosted Windows lifecycle before merge.
