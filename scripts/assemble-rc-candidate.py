@@ -15,6 +15,8 @@ DQ-windows-vsix-lifecycle-scope; DV-windows-vsix-lifecycle-contract;
 RQ-CF-REL-004; DQ-rc-launcher-trust-exception;
 DV-rc-launcher-trust-exception-contract; RQ-CF-REL-006;
 DQ-linux-installer-lifecycle-scope; DV-linux-installer-lifecycle-contract;
+DQ-linux-rpm-installer-lifecycle-scope;
+DV-linux-rpm-installer-lifecycle-contract;
 RQ-CF-REL-007; DQ-macos-installer-lifecycle-scope;
 DV-macos-installer-lifecycle-contract.
 """
@@ -38,6 +40,10 @@ CANDIDATE_TAG_PATTERN = re.compile(r"v0\.1\.0-rc\.[1-9][0-9]*\Z")
 RETENTION_DAYS = 90
 SOURCE_PREFIX = "Project-Copperfin-source-"
 VALIDATION_MANIFEST_SCHEMA = "rc-validation-manifest.schema.json"
+LINUX_RPM_CONTAINER_IMAGE = (
+    "docker.io/library/fedora@sha256:"
+    "99e203b80b1c3d8f7e161ec10a68fd02b081ef83a3963553e513c82846b97814"
+)
 SCAN_BLOCK_SIZE = 1024 * 1024
 # Construct the boundaries so this scanner's own source does not contain a
 # complete private-key sentinel and falsely reject the Corresponding Source
@@ -472,7 +478,6 @@ def require_linux_installer_lifecycle_evidence(path: Path, package: Path) -> dic
         "package_database_residue",
         "filesystem_residue",
         "installed_file_count",
-        "rpm_lifecycle",
     }
     expected_pass_fields = (
         "fresh_install",
@@ -488,7 +493,7 @@ def require_linux_installer_lifecycle_evidence(path: Path, package: Path) -> dic
     if (
         not isinstance(evidence, dict)
         or set(evidence) != expected_keys
-        or evidence["schema_version"] != 1
+        or evidence["schema_version"] != 2
         or evidence["kind"] != "copperfin-linux-installer-lifecycle-result"
         or evidence["package_sha256"] != sha256(package)
         or evidence["package_name"] != "copperfin"
@@ -496,7 +501,6 @@ def require_linux_installer_lifecycle_evidence(path: Path, package: Path) -> dic
         or not evidence["package_version"]
         or evidence["package_architecture"] != "amd64"
         or any(evidence[field] != "PASS" for field in expected_pass_fields)
-        or evidence["rpm_lifecycle"] != "NOT_RUN"
         or not isinstance(evidence["installed_file_count"], int)
         or isinstance(evidence["installed_file_count"], bool)
         or evidence["installed_file_count"] < 1
@@ -506,6 +510,78 @@ def require_linux_installer_lifecycle_evidence(path: Path, package: Path) -> dic
     ):
         raise AssemblyError(
             "Linux installer lifecycle evidence does not prove the required bounded lifecycle"
+        )
+    return evidence
+
+
+def require_linux_rpm_installer_lifecycle_evidence(path: Path, package: Path) -> dict:
+    try:
+        evidence = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise AssemblyError(
+            f"Linux RPM installer lifecycle evidence is not valid JSON: {path}"
+        ) from error
+    expected_keys = {
+        "schema_version",
+        "kind",
+        "package_sha256",
+        "container_image_reference",
+        "container_image_id",
+        "package_name",
+        "package_version",
+        "package_architecture",
+        "fresh_install",
+        "installed_tree_contract",
+        "english_locale_catalog",
+        "installed_cli_smoke",
+        "installed_cli_stdout",
+        "package_verify",
+        "same_version_maintenance_reinstall",
+        "external_artifact_survived",
+        "erase_uninstall",
+        "package_database_residue",
+        "filesystem_residue",
+        "installed_file_count",
+    }
+    expected_pass_fields = (
+        "fresh_install",
+        "installed_tree_contract",
+        "english_locale_catalog",
+        "installed_cli_smoke",
+        "package_verify",
+        "same_version_maintenance_reinstall",
+        "external_artifact_survived",
+        "erase_uninstall",
+        "package_database_residue",
+        "filesystem_residue",
+    )
+    if (
+        not isinstance(evidence, dict)
+        or set(evidence) != expected_keys
+        or evidence["schema_version"] != 1
+        or evidence["kind"] != "copperfin-linux-rpm-installer-lifecycle-result"
+        or evidence["package_sha256"] != sha256(package)
+        or evidence["container_image_reference"] != LINUX_RPM_CONTAINER_IMAGE
+        or not re.fullmatch(
+            r"sha256:[0-9a-f]{64}",
+            evidence["container_image_id"]
+            if isinstance(evidence["container_image_id"], str)
+            else "",
+        )
+        or evidence["package_name"] != "copperfin"
+        or not isinstance(evidence["package_version"], str)
+        or not evidence["package_version"]
+        or evidence["package_architecture"] != "x86_64"
+        or any(evidence[field] != "PASS" for field in expected_pass_fields)
+        or not isinstance(evidence["installed_file_count"], int)
+        or isinstance(evidence["installed_file_count"], bool)
+        or evidence["installed_file_count"] < 1
+        or not isinstance(evidence["installed_cli_stdout"], str)
+        or "asset_family: program" not in evidence["installed_cli_stdout"]
+        or "status: ok" not in evidence["installed_cli_stdout"]
+    ):
+        raise AssemblyError(
+            "Linux RPM installer lifecycle evidence does not prove the required bounded lifecycle"
         )
     return evidence
 
@@ -736,6 +812,22 @@ def assemble(args: argparse.Namespace) -> Path:
         output_root / "evidence/linux-installer-lifecycle.json",
         "Linux installer lifecycle evidence",
     )
+    bundled_linux_rpm = require_one(
+        output_root / "installers/linux", "*.rpm", "bundled Linux RPM package"
+    )
+    linux_rpm_lifecycle = require_one(
+        producer_roots["linux"],
+        "linux-rpm-installer-lifecycle.json",
+        "Linux RPM installer lifecycle evidence",
+    )
+    require_linux_rpm_installer_lifecycle_evidence(
+        linux_rpm_lifecycle, bundled_linux_rpm
+    )
+    copy_verified(
+        linux_rpm_lifecycle,
+        output_root / "evidence/linux-rpm-installer-lifecycle.json",
+        "Linux RPM installer lifecycle evidence",
+    )
 
     bundled_vsix = require_one(output_root / "ide/visual-studio", "*.vsix", "bundled Visual Studio VSIX")
     windows_vsix_lifecycle = require_one(
@@ -834,7 +926,7 @@ def assemble(args: argparse.Namespace) -> Path:
                 "windows_residue_checks": "PASS",
                 "macos_productbuild": "PASS",
                 "linux_deb": "PASS",
-                "linux_rpm": "NOT_RUN",
+                "linux_rpm": "PASS",
             },
             "visual_studio_vsix_build_and_static_checks": "PASS",
             "visual_studio_vsix_lifecycle": {
@@ -1011,7 +1103,7 @@ def self_test() -> None:
         )
         linux_deb_fixture = inputs / "copperfin-linux-installers/copperfin-0.1.0-Linux.deb"
         linux_lifecycle_fixture = {
-            "schema_version": 1,
+            "schema_version": 2,
             "kind": "copperfin-linux-installer-lifecycle-result",
             "package_sha256": sha256(linux_deb_fixture),
             "package_name": "copperfin",
@@ -1028,10 +1120,36 @@ def self_test() -> None:
             "package_database_residue": "PASS",
             "filesystem_residue": "PASS",
             "installed_file_count": 6,
-            "rpm_lifecycle": "NOT_RUN",
         }
         (inputs / "copperfin-linux-installers/linux-installer-lifecycle.json").write_text(
             json.dumps(linux_lifecycle_fixture, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        linux_rpm_fixture = inputs / "copperfin-linux-installers/copperfin-0.1.0-Linux.rpm"
+        linux_rpm_lifecycle_fixture = {
+            "schema_version": 1,
+            "kind": "copperfin-linux-rpm-installer-lifecycle-result",
+            "package_sha256": sha256(linux_rpm_fixture),
+            "container_image_reference": LINUX_RPM_CONTAINER_IMAGE,
+            "container_image_id": "sha256:" + "d" * 64,
+            "package_name": "copperfin",
+            "package_version": "0.1.0-1",
+            "package_architecture": "x86_64",
+            "fresh_install": "PASS",
+            "installed_tree_contract": "PASS",
+            "english_locale_catalog": "PASS",
+            "installed_cli_smoke": "PASS",
+            "installed_cli_stdout": "asset_family: program\nstatus: ok",
+            "package_verify": "PASS",
+            "same_version_maintenance_reinstall": "PASS",
+            "external_artifact_survived": "PASS",
+            "erase_uninstall": "PASS",
+            "package_database_residue": "PASS",
+            "filesystem_residue": "PASS",
+            "installed_file_count": 6,
+        }
+        (inputs / "copperfin-linux-installers/linux-rpm-installer-lifecycle.json").write_text(
+            json.dumps(linux_rpm_lifecycle_fixture, sort_keys=True) + "\n",
+            encoding="utf-8",
         )
         vsix_fixture_path = inputs / "copperfin-visualstudio-vsix/Copperfin.VisualStudio.vsix"
         windows_vsix_lifecycle_fixture = {
@@ -1110,6 +1228,7 @@ def self_test() -> None:
             "RC-TESTER-README.md",
             "SHA256SUMS.txt",
             "evidence/linux-installer-lifecycle.json",
+            "evidence/linux-rpm-installer-lifecycle.json",
             "evidence/macos-installer-lifecycle.json",
             "evidence/windows-installer-lifecycle.json",
             "evidence/windows-vsix-lifecycle.json",
@@ -1188,7 +1307,7 @@ def self_test() -> None:
                 "windows_residue_checks": "PASS",
                 "macos_productbuild": "PASS",
                 "linux_deb": "PASS",
-                "linux_rpm": "NOT_RUN",
+                "linux_rpm": "PASS",
             },
             "visual_studio_vsix_build_and_static_checks": "PASS",
             "visual_studio_vsix_lifecycle": {
@@ -1273,7 +1392,6 @@ def self_test() -> None:
             ("wrong package digest", "package_sha256", "0" * 64),
             ("wrong package architecture", "package_architecture", "arm64"),
             ("missing installed file inventory", "installed_file_count", 0),
-            ("unsupported RPM lifecycle claim", "rpm_lifecycle", "PASS"),
             ("missing semantic CLI result", "installed_cli_stdout", "status: ok"),
         )
         for description, field, replacement in linux_lifecycle_mutations:
@@ -1285,6 +1403,40 @@ def self_test() -> None:
                 require_linux_installer_lifecycle_evidence(
                     mutation_path,
                     bundle / "installers/linux/copperfin-0.1.0-Linux.deb",
+                )
+            except AssemblyError:
+                pass
+            else:
+                raise AssemblyError(f"self-test accepted {description}")
+
+        linux_rpm_lifecycle_path = bundle / "evidence/linux-rpm-installer-lifecycle.json"
+        linux_rpm_lifecycle = json.loads(
+            linux_rpm_lifecycle_path.read_text(encoding="utf-8")
+        )
+        linux_rpm_lifecycle_mutations = (
+            ("false RPM fresh-install status", "fresh_install", "NOT_RUN"),
+            ("wrong RPM package digest", "package_sha256", "0" * 64),
+            ("wrong RPM package architecture", "package_architecture", "amd64"),
+            ("unresolved RPM container reference", "container_image_reference", "fedora:42"),
+            (
+                "different digest-pinned RPM container reference",
+                "container_image_reference",
+                "docker.io/library/fedora@sha256:" + "c" * 64,
+            ),
+            ("malformed RPM container image ID", "container_image_id", "sha256:bad"),
+            ("missing RPM payload verification", "package_verify", "NOT_RUN"),
+            ("missing RPM installed file inventory", "installed_file_count", 0),
+            ("missing RPM semantic CLI result", "installed_cli_stdout", "status: ok"),
+        )
+        for description, field, replacement in linux_rpm_lifecycle_mutations:
+            mutated = dict(linux_rpm_lifecycle)
+            mutated[field] = replacement
+            mutation_path = root / f"bad-linux-rpm-lifecycle-{field}.json"
+            mutation_path.write_text(json.dumps(mutated) + "\n", encoding="utf-8")
+            try:
+                require_linux_rpm_installer_lifecycle_evidence(
+                    mutation_path,
+                    bundle / "installers/linux/copperfin-0.1.0-Linux.rpm",
                 )
             except AssemblyError:
                 pass

@@ -2,20 +2,20 @@
 # Copyright © 2026 Richard M. Hamilton.
 # SPDX-License-Identifier: GPL-3.0-only
 # Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
-# Traceability: RQ-CF-REL-006; DQ-linux-installer-lifecycle-scope;
-# DV-linux-installer-lifecycle-contract; HZ-system-failure-01;
+# Traceability: RQ-CF-REL-006; DQ-linux-rpm-installer-lifecycle-scope;
+# DV-linux-rpm-installer-lifecycle-contract; HZ-system-failure-01;
 # HZ-data-corruption-01; HZ-doc-command-01.
 
 set -euo pipefail
 
 usage() {
-    printf 'Usage: %s --package <deb> --evidence-directory <directory> --allow-system-mutation [--process-timeout-seconds <seconds>]\n' "$0" >&2
+    printf 'Usage: %s --package <rpm> --evidence-directory <directory> --allow-container-mutation [--process-timeout-seconds <seconds>]\n' "$0" >&2
 }
 
 package_path=""
 evidence_directory=""
 process_timeout_seconds=180
-allow_system_mutation=0
+allow_container_mutation=0
 while (($# > 0)); do
     case "$1" in
         --package)
@@ -30,8 +30,8 @@ while (($# > 0)); do
             process_timeout_seconds=${2-}
             shift 2
             ;;
-        --allow-system-mutation)
-            allow_system_mutation=1
+        --allow-container-mutation)
+            allow_container_mutation=1
             shift
             ;;
         *)
@@ -42,20 +42,26 @@ while (($# > 0)); do
 done
 
 if [[ -z "$package_path" || -z "$evidence_directory" || ! "$process_timeout_seconds" =~ ^[1-9][0-9]*$ \
-    || "$allow_system_mutation" != 1 ]]; then
+    || "$allow_container_mutation" != 1 ]]; then
     usage
     exit 2
 fi
-if [[ ${GITHUB_ACTIONS:-} != "true" || ${RUNNER_ENVIRONMENT:-} != "github-hosted" ]]; then
-    printf 'Linux installer lifecycle validation is restricted to a GitHub-hosted Actions runner.\n' >&2
+if [[ ${GITHUB_ACTIONS:-} != "true" || ${RUNNER_ENVIRONMENT:-} != "github-hosted" \
+    || ${COPPERFIN_RPM_CONTAINER:-} != "true" ]]; then
+    printf 'Linux RPM lifecycle validation is restricted to its disposable GitHub-hosted container.\n' >&2
     exit 1
 fi
-if ((EUID != 0)); then
-    printf 'Linux installer lifecycle validation must run as root.\n' >&2
+if [[ ! -f /.dockerenv || $EUID != 0 ]]; then
+    printf 'Linux RPM lifecycle validation must run as root inside a Docker container.\n' >&2
+    exit 1
+fi
+if [[ ! ${CONTAINER_IMAGE_REFERENCE:-} =~ ^docker\.io/library/fedora@sha256:[0-9a-f]{64}$ \
+    || ! ${CONTAINER_IMAGE_ID:-} =~ ^sha256:[0-9a-f]{64}$ ]]; then
+    printf 'Pinned Fedora container identity is missing or malformed.\n' >&2
     exit 1
 fi
 
-for command_name in dpkg dpkg-deb dpkg-query find jq realpath sha256sum timeout; do
+for command_name in awk cat cmp find grep jq mktemp realpath rpm sha256sum sort tee timeout wc; do
     if ! command -v "$command_name" >/dev/null 2>&1; then
         printf 'Required command is unavailable: %s\n' "$command_name" >&2
         exit 1
@@ -74,25 +80,21 @@ package_path=$(realpath -e -- "$package_path")
 evidence_directory=$(realpath -e -- "$evidence_directory")
 
 runner_temp=${RUNNER_TEMP:-}
-if [[ -z "$runner_temp" ]]; then
-    printf 'RUNNER_TEMP is required for bounded fixture cleanup.\n' >&2
-    exit 1
-fi
-if [[ -L "$runner_temp" || ! -d "$runner_temp" ]]; then
-    printf 'RUNNER_TEMP must be an existing regular directory: %s\n' "$runner_temp" >&2
+if [[ -z "$runner_temp" || -L "$runner_temp" || ! -d "$runner_temp" ]]; then
+    printf 'RUNNER_TEMP must identify an existing regular container directory.\n' >&2
     exit 1
 fi
 runner_temp=$(realpath -e -- "$runner_temp")
 
-package_name=$(dpkg-deb --field "$package_path" Package)
-package_version=$(dpkg-deb --field "$package_path" Version)
-package_architecture=$(dpkg-deb --field "$package_path" Architecture)
-if [[ "$package_name" != "copperfin" || -z "$package_version" || "$package_architecture" != "amd64" ]]; then
-    printf 'Unexpected Debian package identity: name=%s version=%s architecture=%s\n' \
+package_name=$(rpm --query --package --queryformat '%{NAME}' "$package_path")
+package_version=$(rpm --query --package --queryformat '%{VERSION}-%{RELEASE}' "$package_path")
+package_architecture=$(rpm --query --package --queryformat '%{ARCH}' "$package_path")
+if [[ "$package_name" != "copperfin" || -z "$package_version" || "$package_architecture" != "x86_64" ]]; then
+    printf 'Unexpected RPM package identity: name=%s version=%s architecture=%s\n' \
         "$package_name" "$package_version" "$package_architecture" >&2
     exit 1
 fi
-if dpkg-query --show "$package_name" >/dev/null 2>&1; then
+if rpm --query "$package_name" >/dev/null 2>&1; then
     printf 'Refusing to disturb a pre-existing %s package database record.\n' "$package_name" >&2
     exit 1
 fi
@@ -112,10 +114,10 @@ for expected_path in "${expected_installed_files[@]}" /usr/share/copperfin /usr/
     fi
 done
 
-fixture_root=$(mktemp -d "$runner_temp/copperfin-linux-installer-lifecycle.XXXXXX")
+fixture_root=$(mktemp -d "$runner_temp/copperfin-linux-rpm-lifecycle.XXXXXX")
 fixture_root=$(realpath -e -- "$fixture_root")
 case "$fixture_root" in
-    "$runner_temp"/copperfin-linux-installer-lifecycle.*) ;;
+    "$runner_temp"/copperfin-linux-rpm-lifecycle.*) ;;
     *)
         printf 'Fixture directory escaped RUNNER_TEMP: %s\n' "$fixture_root" >&2
         exit 1
@@ -127,7 +129,7 @@ cleanup() {
     local original_status=$?
     trap - EXIT
     if ((package_installed)); then
-        timeout --signal=KILL "$process_timeout_seconds" dpkg --purge "$package_name" >/dev/null 2>&1 || true
+        timeout --signal=KILL "$process_timeout_seconds" rpm --erase "$package_name" >/dev/null 2>&1 || true
     fi
     if [[ -n "${fixture_root:-}" && -d "$fixture_root" ]]; then
         find "$fixture_root" -depth -delete
@@ -151,14 +153,14 @@ inspect_stdout="$fixture_root/copperfin-inspect.stdout"
 printf 'PROCEDURE lifecycle_fixture\nRETURN .T.\n' >"$external_fixture"
 external_fixture_sha256=$(sha256sum -- "$external_fixture" | awk '{print $1}')
 
-printf 'Installing %s %s from %s\n' "$package_name" "$package_version" "$package_path"
+printf 'Installing %s %s from %s in %s\n' \
+    "$package_name" "$package_version" "$package_path" "$CONTAINER_IMAGE_REFERENCE"
 package_installed=1
-run_bounded dpkg --install "$package_path"
+run_bounded rpm --install "$package_path"
 
-installed_status=$(dpkg-query --show --showformat='${Status}' "$package_name")
-installed_version=$(dpkg-query --show --showformat='${Version}' "$package_name")
-if [[ "$installed_status" != "install ok installed" || "$installed_version" != "$package_version" ]]; then
-    printf 'Fresh install did not establish the expected package state.\n' >&2
+installed_identity=$(rpm --query --queryformat '%{NAME} %{VERSION}-%{RELEASE} %{ARCH}' "$package_name")
+if [[ "$installed_identity" != "$package_name $package_version $package_architecture" ]]; then
+    printf 'Fresh RPM install did not establish the expected package identity.\n' >&2
     exit 1
 fi
 
@@ -169,14 +171,14 @@ for expected_path in "${expected_installed_files[@]}"; do
     fi
 done
 
-dpkg-query --listfiles "$package_name" \
+rpm --query --list "$package_name" \
     | while IFS= read -r installed_path; do
         if [[ -f "$installed_path" || -L "$installed_path" ]]; then
             printf '%s\n' "$installed_path"
         fi
     done \
     | LC_ALL=C sort -u >"$installed_paths"
-dpkg-query --listfiles "$package_name" \
+rpm --query --list "$package_name" \
     | while IFS= read -r installed_path; do
         if [[ -d "$installed_path" && "$installed_path" == *copperfin* ]]; then
             printf '%s\n' "$installed_path"
@@ -192,6 +194,16 @@ if [[ ! -s "$installed_directories" ]]; then
     printf 'Installed package exposes no package-specific directory inventory.\n' >&2
     exit 1
 fi
+if ! run_bounded rpm --verify "$package_name" >"$fixture_root/rpm-verify-before.txt"; then
+    printf 'RPM verification failed immediately after installation.\n' >&2
+    cat "$fixture_root/rpm-verify-before.txt" >&2
+    exit 1
+fi
+if [[ -s "$fixture_root/rpm-verify-before.txt" ]]; then
+    printf 'RPM verification reported changed installed files.\n' >&2
+    cat "$fixture_root/rpm-verify-before.txt" >&2
+    exit 1
+fi
 
 while IFS= read -r installed_path; do
     sha256sum -- "$installed_path"
@@ -201,71 +213,75 @@ run_bounded /usr/bin/copperfin_inspect --locale en-US "$external_fixture" | tee 
 grep -Fq 'asset_family: program' "$inspect_stdout"
 grep -Fq 'status: ok' "$inspect_stdout"
 
-printf 'Reinstalling the same package version for maintenance validation.\n'
-run_bounded dpkg --install "$package_path"
-if [[ $(dpkg-query --show --showformat='${Status}' "$package_name") != "install ok installed" \
-    || $(dpkg-query --show --showformat='${Version}' "$package_name") != "$package_version" ]]; then
-    printf 'Same-version maintenance reinstall did not preserve package identity.\n' >&2
+printf 'Reinstalling the same RPM version for maintenance validation.\n'
+run_bounded rpm --replacepkgs --install "$package_path"
+if [[ $(rpm --query --queryformat '%{NAME} %{VERSION}-%{RELEASE} %{ARCH}' "$package_name") \
+    != "$package_name $package_version $package_architecture" ]]; then
+    printf 'Same-version RPM reinstall did not preserve package identity.\n' >&2
     exit 1
 fi
 while IFS= read -r installed_path; do
     if [[ ! -f "$installed_path" && ! -L "$installed_path" ]]; then
-        printf 'Same-version reinstall removed an installed file: %s\n' "$installed_path" >&2
+        printf 'Same-version RPM reinstall removed an installed file: %s\n' "$installed_path" >&2
         exit 1
     fi
     sha256sum -- "$installed_path"
 done <"$installed_paths" | LC_ALL=C sort >"$installed_inventory_after"
 if ! cmp -s "$installed_inventory_before" "$installed_inventory_after"; then
-    printf 'Same-version reinstall changed the installed file inventory.\n' >&2
+    printf 'Same-version RPM reinstall changed the installed file inventory.\n' >&2
     exit 1
 fi
-while IFS= read -r installed_directory; do
-    if [[ ! -d "$installed_directory" || -L "$installed_directory" ]]; then
-        printf 'Same-version reinstall removed a package-specific directory: %s\n' "$installed_directory" >&2
-        exit 1
-    fi
-done <"$installed_directories"
+if ! run_bounded rpm --verify "$package_name" >"$fixture_root/rpm-verify-after.txt" \
+    || [[ -s "$fixture_root/rpm-verify-after.txt" ]]; then
+    printf 'RPM verification failed after the same-version reinstall.\n' >&2
+    cat "$fixture_root/rpm-verify-after.txt" >&2
+    exit 1
+fi
 if [[ $(sha256sum -- "$external_fixture" | awk '{print $1}') != "$external_fixture_sha256" ]]; then
-    printf 'Same-version reinstall changed the external fixture.\n' >&2
+    printf 'Same-version RPM reinstall changed the external fixture.\n' >&2
     exit 1
 fi
 
-printf 'Purging %s and verifying package and filesystem residue.\n' "$package_name"
-run_bounded dpkg --purge "$package_name"
+printf 'Erasing %s and verifying RPM database and filesystem residue.\n' "$package_name"
+run_bounded rpm --erase "$package_name"
 package_installed=0
-if dpkg-query --show "$package_name" >/dev/null 2>&1; then
-    printf 'Package database retains a %s record after purge.\n' "$package_name" >&2
+if rpm --query "$package_name" >/dev/null 2>&1; then
+    printf 'RPM database retains a %s record after erase.\n' "$package_name" >&2
     exit 1
 fi
 while IFS= read -r installed_path; do
     if [[ -e "$installed_path" || -L "$installed_path" ]]; then
-        printf 'Installed package file remains after purge: %s\n' "$installed_path" >&2
+        printf 'Installed RPM file remains after erase: %s\n' "$installed_path" >&2
         exit 1
     fi
 done <"$installed_paths"
 while IFS= read -r installed_directory; do
     if [[ -e "$installed_directory" || -L "$installed_directory" ]]; then
-        printf 'Package-specific directory remains after purge: %s\n' "$installed_directory" >&2
+        printf 'Package-specific directory remains after RPM erase: %s\n' "$installed_directory" >&2
         exit 1
     fi
 done <"$installed_directories"
 if [[ $(sha256sum -- "$external_fixture" | awk '{print $1}') != "$external_fixture_sha256" ]]; then
-    printf 'Package purge changed the external fixture.\n' >&2
+    printf 'RPM erase changed the external fixture.\n' >&2
     exit 1
 fi
 
 installed_cli_stdout=$(cat "$inspect_stdout")
 jq -n \
     --arg package_sha256 "$package_sha256" \
+    --arg container_image_reference "$CONTAINER_IMAGE_REFERENCE" \
+    --arg container_image_id "$CONTAINER_IMAGE_ID" \
     --arg package_name "$package_name" \
     --arg package_version "$package_version" \
     --arg package_architecture "$package_architecture" \
     --arg installed_cli_stdout "$installed_cli_stdout" \
     --argjson installed_file_count "$installed_file_count" \
     '{
-        schema_version: 2,
-        kind: "copperfin-linux-installer-lifecycle-result",
+        schema_version: 1,
+        kind: "copperfin-linux-rpm-installer-lifecycle-result",
         package_sha256: $package_sha256,
+        container_image_reference: $container_image_reference,
+        container_image_id: $container_image_id,
         package_name: $package_name,
         package_version: $package_version,
         package_architecture: $package_architecture,
@@ -274,12 +290,13 @@ jq -n \
         english_locale_catalog: "PASS",
         installed_cli_smoke: "PASS",
         installed_cli_stdout: $installed_cli_stdout,
+        package_verify: "PASS",
         same_version_maintenance_reinstall: "PASS",
         external_artifact_survived: "PASS",
-        purge_uninstall: "PASS",
+        erase_uninstall: "PASS",
         package_database_residue: "PASS",
         filesystem_residue: "PASS",
         installed_file_count: $installed_file_count
-    }' >"$evidence_directory/linux-installer-lifecycle.json"
+    }' >"$evidence_directory/linux-rpm-installer-lifecycle.json"
 
-printf 'Linux Debian installer lifecycle validation passed.\n'
+printf 'Linux RPM installer lifecycle validation passed.\n'

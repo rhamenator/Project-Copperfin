@@ -1,0 +1,1 @@
+- 2026-10-03: Exercise the exact generated Linux RPM through native install, verification, maintenance reinstall, semantic installed-command smoke, erase, and residue checks in a digest-pinned disposable Fedora container, and admit its separate digest-bound evidence into RC validation.
