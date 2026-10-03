@@ -195,7 +195,7 @@ std::vector<Row> build_rows() {
     // value. When that result is at or before the end, SUBSTR/SUBSTRC clamp to the final character; a wrapped value
     // beyond the end remains empty. This is a legacy quirk, so it is available only in VFP9 mode.
     for (const char *value : {"1E20", "1E300", "2147483648", "4294967295", "4294967296",
-                              "4294967302", "9007199254740992", "EXP(1000)"}) {
+                              "4294967297", "4294967302", "9007199254740992", "EXP(1000)"}) {
         rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("SUBSTR('abcdef',") + value + ")", "C:f"});
         rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("SUBSTRC('abcdef',") + value + ")", "C:f"});
     }

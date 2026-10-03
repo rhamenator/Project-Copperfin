@@ -999,11 +999,11 @@ std::optional<PrgValue> evaluate_string_function(
             return make_string_value(std::string{});  // as SUBSTR(): a start below 1 is empty in VFP9
         }
         std::size_t start = saturating_size_argument(raw_start, 1U);
-        const std::size_t scalar_count = utf8_scalar_offsets_local(source).size() - 1U;
         // Match SUBSTR's verified huge-positive VFP9 wrap/clamp quirk, but
         // apply the end test and final-position clamp in Unicode scalar units.
         if (numeric_behavior(set_callback) == NumericBehavior::vfp9 &&
-            raw_start > static_cast<double>(std::numeric_limits<std::int32_t>::max()) && scalar_count > 0U) {
+            raw_start > static_cast<double>(std::numeric_limits<std::int32_t>::max()) && !source.empty()) {
+            const std::size_t scalar_count = utf8_scalar_offsets_local(source).size() - 1U;
             const std::int64_t wrapped_start = vfp9_numeric_to_int32(raw_start);
             const bool at_or_before_end =
                 wrapped_start <= 0 || static_cast<std::size_t>(wrapped_start) <= scalar_count;
