@@ -81,7 +81,7 @@ foreach(traceability_file IN ITEMS
 endforeach()
 
 require_text("${script}" "[ValidateRange(10, 600)]" "bounded process-timeout contract")
-require_text("${script}" "WaitForExit($ProcessTimeoutSeconds * 1000)" "bounded child-process wait")
+require_text("${script}" "WaitForExit($TimeoutSeconds * 1000)" "bounded child-process wait")
 require_text("${script}" "Kill($true)" "timed-out process-tree termination")
 require_text("${script}" "Fresh-install root already exists" "fresh-root precondition")
 require_text("${script}" "Installation root must be a direct child of RUNNER_TEMP" "runner-temporary-root boundary")
@@ -99,6 +99,10 @@ require_text("${script}" "installed_studio_automated_gui = 'PASS'"
 require_text("${script}" "human_gui = 'NOT_RUN'" "honest human-GUI limitation")
 require_text("${script}" "windows-installed-studio-ui.json"
     "installed Studio semantic UI evidence handoff")
+require_text("${script}" "$installedStudioUiWrapperTimeoutSeconds = $installedStudioUiTimeoutSeconds + 30"
+    "installed UI diagnostic and cleanup headroom")
+require_text("${script}" "-TimeoutSeconds $installedStudioUiWrapperTimeoutSeconds"
+    "installed UI wrapper-specific timeout")
 require_text("${script}" "same-version maintenance reinstall" "maintenance reinstall execution")
 require_text("${script}" "$upgradeFromPreviousVersionResult = 'NOT_RUN'" "honest upgrade limitation default")
 require_text("${script}" "upgrade_from_previous_version = $upgradeFromPreviousVersionResult" "conditional upgrade-result evidence")

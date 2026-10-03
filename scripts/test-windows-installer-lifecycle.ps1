@@ -84,7 +84,9 @@ function Invoke-BoundedProcess {
         [string[]]$Arguments = @(),
         [Parameter(Mandatory = $true)]
         [string]$Name,
-        [switch]$CaptureOutput
+        [switch]$CaptureOutput,
+        [ValidateRange(1, 660)]
+        [int]$TimeoutSeconds = $ProcessTimeoutSeconds
     )
 
     $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
@@ -103,9 +105,9 @@ function Invoke-BoundedProcess {
         Assert-Condition $process.Start() "$Name did not start."
         $stdoutTask = if ($CaptureOutput) { $process.StandardOutput.ReadToEndAsync() } else { $null }
         $stderrTask = if ($CaptureOutput) { $process.StandardError.ReadToEndAsync() } else { $null }
-        if (-not $process.WaitForExit($ProcessTimeoutSeconds * 1000)) {
+        if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
             try { $process.Kill($true) } catch { Write-Warning "$Name could not be terminated: $($_.Exception.Message)" }
-            throw "$Name exceeded the bounded $ProcessTimeoutSeconds-second timeout."
+            throw "$Name exceeded the bounded $TimeoutSeconds-second timeout."
         }
         $stdout = if ($CaptureOutput) { $stdoutTask.GetAwaiter().GetResult() } else { "" }
         $stderr = if ($CaptureOutput) { $stderrTask.GetAwaiter().GetResult() } else { "" }
@@ -559,6 +561,8 @@ try {
     $windowsPowerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
     Assert-Condition (Test-Path -LiteralPath $windowsPowerShell -PathType Leaf) `
         "Windows PowerShell UI Automation host is missing: $windowsPowerShell"
+    $installedStudioUiTimeoutSeconds = [Math]::Min($ProcessTimeoutSeconds, 120)
+    $installedStudioUiWrapperTimeoutSeconds = $installedStudioUiTimeoutSeconds + 30
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
         -Arguments @(
@@ -567,9 +571,10 @@ try {
             '-StudioPath', $installedStudioPath,
             '-FixturePath', $installedStudioUiFixture,
             '-EvidenceDirectory', $resolvedEvidenceDirectory,
-            '-TimeoutSeconds', "$([Math]::Min($ProcessTimeoutSeconds, 120))"
+            '-TimeoutSeconds', "$installedStudioUiTimeoutSeconds"
         ) `
-        -Name 'installed Copperfin Studio semantic UI lifecycle' | Out-Null
+        -Name 'installed Copperfin Studio semantic UI lifecycle' `
+        -TimeoutSeconds $installedStudioUiWrapperTimeoutSeconds | Out-Null
     $installedStudioUiEvidencePath = Join-Path $resolvedEvidenceDirectory 'windows-installed-studio-ui.json'
     Assert-Condition (Test-Path -LiteralPath $installedStudioUiEvidencePath -PathType Leaf) `
         'Installed Studio UI lifecycle omitted its machine-readable evidence.'
