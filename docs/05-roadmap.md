@@ -356,8 +356,8 @@ run `31702317708` passed, and independently downloaded evidence matches the
 retained NSIS SHA-256 `f77217c135ee223746f876b672b1a98366b1ba44ff38a94184e58f9fa408dcc6`.
 Prior-version Windows upgrade, macOS productbuild, and Linux DEB/RPM were
 initially `NOT_RUN`; the later #6905 installed-product workstream now supplies
-digest-bound Linux DEB and macOS productbuild evidence, while Linux RPM remains
-`NOT_RUN`. The Windows VSIX producer now directly installs the exact package
+digest-bound Linux DEB, Linux RPM, macOS productbuild, and Windows installed
+Studio UI evidence. The Windows VSIX producer now directly installs the exact package
 into an ephemeral-runner Visual Studio instance, verifies identity/version,
 package load, a runner-owned PRG and registered command outside the checkout,
 then uninstalls and checks extension residue. Same-version VSIX reinstall,
@@ -558,18 +558,18 @@ sequential RC must carry schema v3 and current lifecycle evidence before those
 claims can advance.
 
 The owner-directed installed-product validation workstream #6905 now treats
-package construction and package operation as distinct gates. Its first slice
-adds a hosted Ubuntu lifecycle for the exact generated DEB: fresh install,
-installed tree and locale catalog verification, semantic installed-command
-smoke, same-version maintenance reinstall, external-artifact survival, purge,
-and residue checks. The digest-bound result is admitted into the RC bundle as
-Linux DEB lifecycle evidence. The next bounded slice installs the exact macOS
-productbuild PKG on a disposable hosted runner, verifies stable component
-receipts, installed hosts/resources and semantic installed-command output,
-then performs exact bounded runner cleanup. Its evidence keeps Developer ID
-signing/notarization plus automated and human macOS GUI validation explicit as
-`NOT_RUN`. RPM installation also remains an explicit gap, as does any installed
-Linux GUI that is not yet shipped in the package.
+package construction and package operation as distinct gates. Hosted Ubuntu
+and digest-pinned Fedora lifecycles exercise the exact generated DEB and RPM;
+a hosted macOS lifecycle exercises the exact productbuild PKG and receipts;
+and the Windows lifecycle launches the exact installed managed Studio for
+semantic UI automation. Each result is digest-bound and admitted separately
+into the RC bundle without inferring human UI, signing, or notarization
+evidence. Under `RQ-CF-REL-009`, successful installer artifacts are retained
+for 7 days on pull requests and 30 days on non-pull-request runs; failure
+packages and
+diagnostics are retained 14 days; immutable RC bundles remain separate with
+90-day retention. Installed Linux GUI evidence remains deferred until the
+managed Studio is shipped in the Linux package.
 
 The MVP implementation subgoals are complete at final product/test heads
 `8d6c307d4`, `64e162fd4`, and `82b907cd5`. Exact synchronized test-head

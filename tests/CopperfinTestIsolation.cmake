@@ -811,6 +811,17 @@ function(copperfin_configure_native_test_isolation)
         AUDIT complete
     )
 
+    copperfin_set_test_isolation(test_installer_artifact_policy_contract
+        PARALLEL_SAFE
+        FILESYSTEM read-only
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+
     if(TEST test_rc_candidate_assembly)
         copperfin_set_test_isolation(test_rc_candidate_assembly
             PARALLEL_SAFE

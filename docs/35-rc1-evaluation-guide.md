@@ -26,6 +26,10 @@ maintenance-reinstall, package-verification, uninstall, and residue evidence.
 `DV-macos-installer-lifecycle-contract` govern the hosted macOS productbuild
 install, receipt/resource, installed-command, and bounded runner-cleanup
 evidence.
+`RQ-CF-REL-009`, `DQ-installer-artifact-retention-policy`, and
+`DV-installer-artifact-retention-policy-contract` govern which installer and
+diagnostic artifacts remain available after pull-request and non-pull-request
+workflows.
 
 Each Project Copperfin `v0.1.0-rc.N` candidate is a private-evaluation release
 candidate. It is not an official Project Copperfin release and is not
@@ -77,6 +81,21 @@ next sequential RC number.
 5. Retain the artifact name and digest with the test report. GitHub workflow
    artifacts expire; this bundle requests 90-day retention, which remains
    subject to repository and GitHub retention policy.
+
+## Installer Artifact Availability
+
+The standalone-installer workflow keeps successful pull-request installer
+artifacts for 7 days. Successful non-pull-request runs, including main pushes
+and manually dispatched RC callers, keep them for 30 days. These artifacts
+support prompt local or VM reproduction but are not release candidates and
+must not be substituted for an immutable RC bundle.
+
+If an installer build or lifecycle fails, the platform job instead keeps any
+package that was produced plus its available lifecycle logs and diagnostics
+for 14 days. A missing package does not hide the original failure: diagnostic
+upload tolerates absent files because configuration or compilation may have
+failed before packaging. Exact RC evaluation bundles remain separate and
+request 90-day retention.
 
 ## Payloads
 
