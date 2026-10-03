@@ -6,6 +6,8 @@
 # DQ-rc-launcher-trust-exception; DV-rc-launcher-trust-exception-contract;
 # RQ-CF-REL-006; DQ-linux-installer-lifecycle-scope;
 # DV-linux-installer-lifecycle-contract;
+# DQ-linux-rpm-installer-lifecycle-scope;
+# DV-linux-rpm-installer-lifecycle-contract;
 # RQ-CF-REL-007; DQ-macos-installer-lifecycle-scope;
 # DV-macos-installer-lifecycle-contract;
 # HZ-system-failure-01; HZ-doc-command-01.
@@ -89,6 +91,8 @@ require_manifest_schema_text("\"windows_installed_studio_automated_gui\""
     "Windows installed Studio semantic UI evidence")
 require_manifest_schema_text("\"linux_deb\": { \"const\": \"PASS\" }"
     "Linux Debian installer lifecycle evidence")
+require_manifest_schema_text("\"linux_rpm\": { \"const\": \"PASS\" }"
+    "Linux RPM installer lifecycle evidence")
 require_manifest_schema_text("\"macos_productbuild\": { \"const\": \"PASS\" }"
     "macOS productbuild installer lifecycle evidence")
 require_manifest_schema_text("\"windows_supported_prg_open_and_command\"" "Windows VSIX lifecycle evidence")

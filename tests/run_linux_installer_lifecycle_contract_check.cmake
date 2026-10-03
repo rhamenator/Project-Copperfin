@@ -98,6 +98,10 @@ require_text("${script}" "external_artifact_survived"
     "external artifact survival evidence")
 require_text("${script}" "linux-installer-lifecycle.json"
     "machine-readable lifecycle evidence")
+require_text("${script}" "schema_version: 2"
+    "DEB-only lifecycle evidence schema")
+forbid_text("${script}" "rpm_lifecycle"
+    "cross-package RPM claim in DEB evidence")
 require_text("${script}" "sha256sum" "exact installer and installed-file binding")
 require_text("${script}" "installed-directories.txt"
     "package-specific directory residue inventory")

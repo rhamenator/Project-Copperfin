@@ -16,9 +16,12 @@ lifecycle boundary. `RQ-CF-REL-004`, `DQ-rc-launcher-trust-exception`, and
 `DV-rc-launcher-trust-exception-contract` govern the explicit unsigned private
 RC launcher-trust exception.
 `RQ-CF-REL-006`, `DQ-linux-installer-lifecycle-scope`,
-`DV-linux-installer-lifecycle-contract`, `HZ-system-failure-01`,
+`DV-linux-installer-lifecycle-contract`,
+`DQ-linux-rpm-installer-lifecycle-scope`,
+`DV-linux-rpm-installer-lifecycle-contract`, `HZ-system-failure-01`,
 `HZ-data-corruption-01`, and `HZ-doc-command-01` govern the hosted Linux DEB
-install, installed-command, maintenance-reinstall, purge, and residue evidence.
+and digest-pinned Fedora-container RPM install, installed-command,
+maintenance-reinstall, package-verification, uninstall, and residue evidence.
 `RQ-CF-REL-007`, `DQ-macos-installer-lifecycle-scope`, and
 `DV-macos-installer-lifecycle-contract` govern the hosted macOS productbuild
 install, receipt/resource, installed-command, and bounded runner-cleanup
@@ -54,13 +57,16 @@ next sequential RC number.
    human usability evidence. The Linux DEB field is
    admitted only from digest-bound evidence for fresh install, installed-file
    and locale checks, installed-command semantic smoke, same-version reinstall,
-   purge, and residue checks. The macOS productbuild field is admitted only
+   purge, and residue checks. The Linux RPM field is separately admitted only
+   from evidence bound to both the exact RPM digest and a digest-pinned Fedora
+   container image, using the native RPM database for fresh install, payload
+   verification, same-version reinstall, erase, and residue checks. The macOS
+   productbuild field is admitted only
    from digest-bound evidence for a fresh system-root install, exact component
    receipts and versions, installed files and English catalog, semantic
    installed-command smoke, external-fixture survival, and bounded runner
    cleanup. It is not GUI, signing, notarization, or user-facing uninstaller
-   evidence. The Linux RPM lifecycle field remains separate. `NOT_RUN` means
-   the bundle workflow did not perform
+   evidence. `NOT_RUN` means the bundle workflow did not perform
    that exact operation; it must not be read as a failure or a pass.
    The signing, linguistic-review, and real-installed-VFP9 fields use the same
    vocabulary and describe only this exact candidate workflow. Evidence from a
@@ -90,8 +96,13 @@ next sequential RC number.
 - `evidence/linux-installer-lifecycle.json` records the hosted Linux DEB fresh
   install, exact installed tree and locale catalog checks, semantic
   `copperfin_inspect` smoke, same-version maintenance reinstall, external
-  artifact survival, purge, and residue results bound to the DEB SHA-256. It
-  records the distinct RPM lifecycle as `NOT_RUN` until directly exercised.
+  artifact survival, purge, and residue results bound to the DEB SHA-256.
+- `evidence/linux-rpm-installer-lifecycle.json` records the distinct native RPM
+  lifecycle in an ephemeral digest-pinned Fedora container: package identity,
+  exact installed tree and English catalog, semantic `copperfin_inspect`
+  smoke, native `rpm --verify`, same-version reinstall, external artifact
+  survival, erase, and RPM-database/filesystem residue results bound to the
+  exact RPM and resolved container image digests.
 - `evidence/macos-installer-lifecycle.json` records the hosted macOS
   productbuild fresh install, exact component receipts, installed tree and
   English locale checks, semantic `copperfin_inspect` smoke, external artifact

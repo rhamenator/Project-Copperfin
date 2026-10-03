@@ -5,6 +5,8 @@ name: Build Standalone Installers
 # DV-windows-installer-lifecycle-contract; DV-windows-installed-ui-contract;
 # RQ-CF-REL-006;
 # DQ-linux-installer-lifecycle-scope; DV-linux-installer-lifecycle-contract;
+# DQ-linux-rpm-installer-lifecycle-scope;
+# DV-linux-rpm-installer-lifecycle-contract;
 # RQ-CF-REL-007; DQ-macos-installer-lifecycle-scope;
 # DV-macos-installer-lifecycle-contract;
 # HZ-system-failure-01; HZ-data-corruption-01; HZ-doc-command-01.
@@ -341,6 +343,57 @@ jobs:
             --allow-system-mutation \
             2>&1 | tee artifacts/linux-installer-lifecycle/linux-installer-lifecycle.log
 
+      - name: Exercise Linux RPM installer lifecycle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/linux-rpm-installer-lifecycle
+          shopt -s nullglob
+          installers=(build/package/copperfin-*-Linux.rpm)
+          if ((${#installers[@]} != 1)); then
+            printf 'Linux RPM lifecycle requires exactly one RPM package; found %s.\n' "${#installers[@]}" >&2
+            exit 1
+          fi
+          rpm_image='docker.io/library/fedora@sha256:99e203b80b1c3d8f7e161ec10a68fd02b081ef83a3963553e513c82846b97814'
+          timeout --signal=KILL 300 docker pull --platform linux/amd64 "$rpm_image"
+          rpm_image_id=$(timeout --signal=KILL 60 docker image inspect --format '{{.Id}}' "$rpm_image")
+          rpm_container_state=$(mktemp -d "$RUNNER_TEMP/copperfin-rpm-container.XXXXXX")
+          rpm_container_cidfile="$rpm_container_state/container.cid"
+          cleanup_rpm_container() {
+            local original_status=$?
+            local rpm_container_id=''
+            trap - EXIT
+            if [[ -s "$rpm_container_cidfile" ]]; then
+              rpm_container_id=$(<"$rpm_container_cidfile")
+              if [[ "$rpm_container_id" =~ ^[0-9a-f]{12,64}$ ]]; then
+                timeout --signal=KILL 60 docker rm --force "$rpm_container_id" >/dev/null 2>&1 || true
+              fi
+            fi
+            find "$rpm_container_state" -depth -delete
+            exit "$original_status"
+          }
+          trap cleanup_rpm_container EXIT
+          timeout --signal=KILL 900 docker run \
+            --rm \
+            --cidfile "$rpm_container_cidfile" \
+            --pull=never \
+            --platform linux/amd64 \
+            --pids-limit=512 \
+            --memory=4g \
+            --security-opt=no-new-privileges \
+            --env GITHUB_ACTIONS=true \
+            --env RUNNER_ENVIRONMENT=github-hosted \
+            --env COPPERFIN_RPM_CONTAINER=true \
+            --env RUNNER_TEMP=/tmp \
+            --env "CONTAINER_IMAGE_REFERENCE=$rpm_image" \
+            --env "CONTAINER_IMAGE_ID=$rpm_image_id" \
+            --volume "$PWD/${installers[0]}:/input/copperfin.rpm:ro" \
+            --volume "$PWD/scripts/test-linux-rpm-installer-lifecycle.sh:/opt/copperfin/test-linux-rpm-installer-lifecycle.sh:ro" \
+            --volume "$PWD/artifacts/linux-rpm-installer-lifecycle:/evidence:rw" \
+            "$rpm_image" \
+            bash -c 'dnf --assumeyes --setopt=install_weak_deps=False install diffutils findutils gawk jq && exec bash /opt/copperfin/test-linux-rpm-installer-lifecycle.sh --package /input/copperfin.rpm --evidence-directory /evidence --allow-container-mutation' \
+            2>&1 | tee artifacts/linux-rpm-installer-lifecycle/linux-rpm-installer-lifecycle.log
+
       - name: Create exact Corresponding Source archive
         uses: ./.github/actions/create-release-source
         with:
@@ -357,5 +410,7 @@ jobs:
             build/package/copperfin-*-Linux.tar.gz
             artifacts/linux-installer-lifecycle/linux-installer-lifecycle.json
             artifacts/linux-installer-lifecycle/linux-installer-lifecycle.log
+            artifacts/linux-rpm-installer-lifecycle/linux-rpm-installer-lifecycle.json
+            artifacts/linux-rpm-installer-lifecycle/linux-rpm-installer-lifecycle.log
             release-source/Project-Copperfin-source-${{ github.sha }}.zip
           if-no-files-found: error
