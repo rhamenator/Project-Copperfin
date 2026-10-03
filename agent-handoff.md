@@ -9,6 +9,12 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
+PR #6894 merged into `main` as `5807fbedf` on 2026-10-03. It completed the
+`CHR()` numeric-boundary slice under #5611/#6776, including VFP9-mode modulo
+wrapping, Copperfin-mode out-of-range rejection, focused sanitizer coverage,
+and the review-requested additional wrap cases. All review conversations were
+resolved and all required checks passed.
+
 2026-10-02 session (all merged into `main`): cluster 25 finished (#6035 via
 #6769, plus #6755 and #6760); installer lifecycle CI fixed (#6761, #6696);
 macOS lane made green (#6762 `VAL(-1E-308)`, #6764 PowerShell host discovery,
@@ -150,10 +156,18 @@ after review found a macOS clone destination-identity gap.
 
 ## Active slice
 
-PR #6894 (`fix/chr-boundaries-5611`, head `d4a112c33`) is the active slice.
-Its focused normal and ASan/UBSan/float-cast-overflow tests pass; all review
-threads are resolved. Merge it when all 11 required checks report green, then
-clean its worktree/builds/branch before starting the next workstream.
+Issue #6905 is the directly owner-authorized installed-product and UI
+validation umbrella. The active first slice is branch
+`fix/linux-installer-lifecycle-6905` in
+`~/.codex/worktrees/linux-installer-lifecycle-6905/Project-Copperfin`. It adds
+a real hosted Ubuntu DEB install/installed-command/reinstall/purge lifecycle,
+digest-bound evidence, and fail-closed RC-bundle admission. Finish focused
+checks, signed commit, PR, review resolution, exact hosted lifecycle evidence,
+and merge; then clean the slice worktree/build/branch.
+
+The owner-directed #6879 extended-table sequence and unfinished #5611/#6776
+numeric-conversion work remain retained and uncancelled. Continue #6905's next
+bounded installer/UI gap after this slice unless the owner redirects again.
 
 ## Next owner-directed workstream: extended tables and indexes
 

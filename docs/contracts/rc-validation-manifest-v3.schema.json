@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:copperfin:schema:rc-validation-manifest:3",
-  "$comment": "Traceability: RQ-CF-REL-001; DQ-rc-evidence-v2-scope-separation; DV-rc-evidence-v2-schema-validation; RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope; DV-windows-installer-lifecycle-contract; RQ-CF-REL-003; DQ-windows-vsix-lifecycle-scope; DV-windows-vsix-lifecycle-contract; RQ-CF-REL-004; DQ-rc-launcher-trust-exception; DV-rc-launcher-trust-exception-contract; HZ-system-failure-01; HZ-data-corruption-01; HZ-doc-command-01.",
+  "$comment": "Traceability: RQ-CF-REL-001; DQ-rc-evidence-v2-scope-separation; DV-rc-evidence-v2-schema-validation; RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope; DV-windows-installer-lifecycle-contract; RQ-CF-REL-003; DQ-windows-vsix-lifecycle-scope; DV-windows-vsix-lifecycle-contract; RQ-CF-REL-004; DQ-rc-launcher-trust-exception; DV-rc-launcher-trust-exception-contract; RQ-CF-REL-006; DQ-linux-installer-lifecycle-scope; DV-linux-installer-lifecycle-contract; HZ-system-failure-01; HZ-data-corruption-01; HZ-doc-command-01.",
   "title": "Copperfin private evaluation release-candidate validation manifest v3",
   "type": "object",
   "additionalProperties": false,
@@ -91,7 +91,7 @@
             "windows_silent_uninstall": { "const": "PASS" },
             "windows_residue_checks": { "const": "PASS" },
             "macos_productbuild": { "const": "NOT_RUN" },
-            "linux_deb": { "const": "NOT_RUN" },
+            "linux_deb": { "const": "PASS" },
             "linux_rpm": { "const": "NOT_RUN" }
           }
         },

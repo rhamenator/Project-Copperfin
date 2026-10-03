@@ -4,6 +4,8 @@
 # Traceability: RQ-CF-REL-001; DQ-rc-evidence-v2-scope-separation;
 # DV-rc-evidence-v2-workflow-contract; RQ-CF-REL-004;
 # DQ-rc-launcher-trust-exception; DV-rc-launcher-trust-exception-contract;
+# RQ-CF-REL-006; DQ-linux-installer-lifecycle-scope;
+# DV-linux-installer-lifecycle-contract;
 # HZ-system-failure-01; HZ-doc-command-01.
 
 cmake_minimum_required(VERSION 3.20)
@@ -81,6 +83,8 @@ require_text_count("uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a8
     1 "authoritative RC bundle upload")
 require_manifest_schema_text("\"schema_version\": { \"const\": 3 }" "schema-v3 identity")
 require_manifest_schema_text("\"windows_installed_cli_smoke\"" "Windows installer lifecycle evidence")
+require_manifest_schema_text("\"linux_deb\": { \"const\": \"PASS\" }"
+    "Linux Debian installer lifecycle evidence")
 require_manifest_schema_text("\"windows_supported_prg_open_and_command\"" "Windows VSIX lifecycle evidence")
 require_manifest_schema_text("\"windows_launcher_release_trust\": { \"const\": \"RC_TEST_EXCEPTION\" }"
     "explicit non-release Windows launcher-trust exception")
@@ -116,6 +120,9 @@ foreach(traceability_file IN ITEMS
             RQ-CF-REL-004
             DQ-rc-launcher-trust-exception
             DV-rc-launcher-trust-exception-contract
+            RQ-CF-REL-006
+            DQ-linux-installer-lifecycle-scope
+            DV-linux-installer-lifecycle-contract
             HZ-system-failure-01
             HZ-doc-command-01)
         string(FIND "${traceability_contents}" "${traceability_id}" traceability_offset)

@@ -1,8 +1,9 @@
 name: Build Standalone Installers
 
 # Traceability: RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope;
-# DV-windows-installer-lifecycle-contract; HZ-system-failure-01;
-# HZ-data-corruption-01; HZ-doc-command-01.
+# DV-windows-installer-lifecycle-contract; RQ-CF-REL-006;
+# DQ-linux-installer-lifecycle-scope; DV-linux-installer-lifecycle-contract;
+# HZ-system-failure-01; HZ-data-corruption-01; HZ-doc-command-01.
 
 on:
   push:
@@ -277,12 +278,29 @@ jobs:
           -DCOPPERFIN_EXPECTED_ARTIFACT_SUFFIXES="Linux.deb;Linux.rpm;Linux.tar.gz"
           -P tests/run_cpack_artifact_contract_check.cmake
 
+      - name: Exercise Linux DEB installer lifecycle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/linux-installer-lifecycle
+          shopt -s nullglob
+          installers=(build/package/copperfin-*-Linux.deb)
+          if ((${#installers[@]} != 1)); then
+            printf 'Linux installer lifecycle requires exactly one DEB package; found %s.\n' "${#installers[@]}" >&2
+            exit 1
+          fi
+          sudo env "RUNNER_TEMP=$RUNNER_TEMP" bash scripts/test-linux-installer-lifecycle.sh \
+            --package "$PWD/${installers[0]}" \
+            --evidence-directory "$PWD/artifacts/linux-installer-lifecycle" \
+            2>&1 | tee artifacts/linux-installer-lifecycle/linux-installer-lifecycle.log
+
       - name: Create exact Corresponding Source archive
         uses: ./.github/actions/create-release-source
         with:
           revision: ${{ github.sha }}
 
       - name: Upload Linux installer artifacts
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: copperfin-linux-installers
@@ -290,5 +308,7 @@ jobs:
             build/package/copperfin-*-Linux.deb
             build/package/copperfin-*-Linux.rpm
             build/package/copperfin-*-Linux.tar.gz
+            artifacts/linux-installer-lifecycle/linux-installer-lifecycle.json
+            artifacts/linux-installer-lifecycle/linux-installer-lifecycle.log
             release-source/Project-Copperfin-source-${{ github.sha }}.zip
           if-no-files-found: error
