@@ -3087,6 +3087,8 @@
   "AssetEditor.Summary.LabelStrategy": "Strategy",
   "AssetEditor.Summary.LabelDeterministicFirst": "Deterministic First",
   "Runtime.Prg.Array.Error.PredicateMutatedSource": "Function argument value, type, or count is invalid.",
+  "Runtime.Prg.Array.Error.InvalidDimensions": "Array dimensions are invalid.",
+  "Runtime.Prg.Array.Error.SubscriptOutOfRange": "Subscript is outside defined range.",
   "Runtime.Prg.Expression.Error.VariableNotFound": "Variable '{variableName}' is not found.",
   "Runtime.Prg.String.Error.InvalidCharacterCode": "Function argument value, type, or count is invalid.",
   "Runtime.Prg.String.Error.InvalidOccurrence": "Function argument value, type, or count is invalid.",

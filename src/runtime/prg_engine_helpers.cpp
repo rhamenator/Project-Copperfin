@@ -1265,6 +1265,13 @@ std::int64_t numeric_count_argument(const double value, const NumericBehavior be
     return behavior == NumericBehavior::vfp9 ? vfp9_numeric_to_int32(value) : saturating_numeric_to_int64(value);
 }
 
+std::optional<std::int64_t> checked_truncated_numeric_to_int64(const double value) {
+    if (!std::isfinite(value) || value >= 9223372036854775808.0 || value < -9223372036854775808.0) {
+        return std::nullopt;
+    }
+    return static_cast<std::int64_t>(value);
+}
+
 std::size_t saturating_size_argument(const double value, const std::size_t minimum) {
     const std::int64_t truncated = saturating_numeric_to_int64(value);
     if (truncated <= 0 || static_cast<std::uint64_t>(truncated) < minimum) {

@@ -6704,14 +6704,23 @@
             case StatementKind::public_declaration:
                 if (statement.identifier == "array")
                 {
-                    std::vector<std::pair<std::string, std::pair<std::size_t, std::size_t>>> declarations;
+                    struct PublicArrayDeclaration
+                    {
+                        std::string normalized_name;
+                        std::size_t rows = 0U;
+                        std::size_t columns = 1U;
+                        bool is_two_dimensional = false;
+                    };
+                    std::vector<PublicArrayDeclaration> declarations;
                     declarations.reserve(statement.names.size());
                     for (const auto &declaration : statement.names)
                     {
                         std::string array_name;
                         std::size_t rows = 0U;
                         std::size_t columns = 1U;
-                        if (!parse_array_reference(declaration, frame, array_name, rows, columns))
+                        bool is_two_dimensional = false;
+                        if (!parse_array_reference(
+                                declaration, frame, array_name, rows, columns, &is_two_dimensional))
                         {
                             last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions");
                             last_fault_location = statement.location;
@@ -6728,15 +6737,17 @@
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};
                         }
-                        declarations.push_back({normalized, {rows, columns}});
+                        declarations.push_back({normalized, rows, columns, is_two_dimensional});
                     }
-                    for (const auto &[normalized, dimensions] : declarations)
+                    for (const PublicArrayDeclaration &declaration : declarations)
                     {
-                        public_names.insert(normalized);
-                        arrays[normalized] = RuntimeArray{
-                            .rows = dimensions.first,
-                            .columns = dimensions.second,
-                            .values = std::vector<PrgValue>(dimensions.first * dimensions.second, make_boolean_value(false)),
+                        public_names.insert(declaration.normalized_name);
+                        arrays[declaration.normalized_name] = RuntimeArray{
+                            .rows = declaration.rows,
+                            .columns = declaration.columns,
+                            .is_two_dimensional = declaration.is_two_dimensional,
+                            .values = std::vector<PrgValue>(
+                                declaration.rows * declaration.columns, make_boolean_value(false)),
                             .binding_identity = allocate_array_binding_identity()};
                     }
                     return {};
@@ -6773,7 +6784,9 @@
                         std::string array_name;
                         std::size_t rows = 0U;
                         std::size_t columns = 1U;
-                        if (!parse_array_reference(declaration, frame, array_name, rows, columns))
+                        bool is_two_dimensional = false;
+                        if (!parse_array_reference(
+                                declaration, frame, array_name, rows, columns, &is_two_dimensional))
                         {
                             last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions");
                             last_fault_location = statement.location;
@@ -6783,6 +6796,7 @@
                         frame.local_arrays[normalize_memory_variable_identifier(array_name)] = RuntimeArray{
                             .rows = rows,
                             .columns = columns,
+                            .is_two_dimensional = is_two_dimensional,
                             .values = std::vector<PrgValue>(rows * columns, make_boolean_value(false)),
                             .binding_identity = allocate_array_binding_identity()};
                     }
@@ -6804,7 +6818,9 @@
                         std::string array_name;
                         std::size_t rows = 0U;
                         std::size_t columns = 1U;
-                        if (!parse_array_reference(declaration, frame, array_name, rows, columns))
+                        bool is_two_dimensional = false;
+                        if (!parse_array_reference(
+                                declaration, frame, array_name, rows, columns, &is_two_dimensional))
                         {
                             last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions");
                             last_fault_location = statement.location;
@@ -6825,6 +6841,7 @@
                         arrays[normalized] = RuntimeArray{
                             .rows = rows,
                             .columns = columns,
+                            .is_two_dimensional = is_two_dimensional,
                             .values = std::vector<PrgValue>(rows * columns, make_boolean_value(false)),
                             .binding_identity = allocate_array_binding_identity()};
                     }

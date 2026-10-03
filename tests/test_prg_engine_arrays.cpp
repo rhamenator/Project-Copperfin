@@ -118,7 +118,11 @@ void test_aelement_single_subscript_uses_linear_index() {
         "DIMENSION aValues[3,2]\n"
         "nSecond = AELEMENT(aValues, 2)\n"
         "nFourth = AELEMENT(aValues, 4)\n"
-        "nOutOfRange = AELEMENT(aValues, 7)\n"
+        "TRY\n"
+        "  nOutOfRange = AELEMENT(aValues, 7)\n"
+        "CATCH TO oEx\n"
+        "  nOutOfRange = oEx.ErrorNo\n"
+        "ENDTRY\n"
         "RETURN\n");
 
     auto session = copperfin::runtime::PrgRuntimeSession::create(
@@ -141,8 +145,8 @@ void test_aelement_single_subscript_uses_linear_index() {
                "AELEMENT single-subscript form should not interpret a linear index as a row number");
     }
     if (out_of_range != state.globals.end()) {
-        expect(copperfin::runtime::format_value(out_of_range->second) == "0",
-               "AELEMENT single-subscript form should reject indexes beyond the array size");
+        expect(copperfin::runtime::format_value(out_of_range->second) == "1234",
+               "AELEMENT single-subscript form should raise VFP error 1234 beyond the array size");
     }
 
     fs::remove_all(temp_root, ignored);

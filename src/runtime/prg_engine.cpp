@@ -310,6 +310,7 @@ namespace copperfin::runtime
         {
             std::size_t rows = 0;
             std::size_t columns = 1;
+            bool is_two_dimensional = false;
             std::vector<PrgValue> values;
             std::uint64_t binding_identity = 0U;
             std::uint64_t mutation_generation = 0U;

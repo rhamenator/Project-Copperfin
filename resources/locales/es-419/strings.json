@@ -3087,6 +3087,8 @@
   "AssetEditor.Summary.LabelStrategy": "Estrategia",
   "AssetEditor.Summary.LabelDeterministicFirst": "Determinista primero",
   "Runtime.Prg.Array.Error.PredicateMutatedSource": "El valor, tipo o cantidad del argumento de la función no es válido.",
+  "Runtime.Prg.Array.Error.InvalidDimensions": "Las dimensiones de la matriz no son válidas.",
+  "Runtime.Prg.Array.Error.SubscriptOutOfRange": "El subíndice está fuera del intervalo definido.",
   "Runtime.Prg.Expression.Error.VariableNotFound": "No se encuentra la variable '{variableName}'.",
   "Runtime.Prg.String.Error.InvalidCharacterCode": "El valor, tipo o cantidad del argumento de la función no es válido.",
   "Runtime.Prg.String.Error.InvalidOccurrence": "El valor, tipo o cantidad del argumento de la función no es válido.",
