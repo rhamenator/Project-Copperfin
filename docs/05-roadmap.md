@@ -356,8 +356,8 @@ run `31702317708` passed, and independently downloaded evidence matches the
 retained NSIS SHA-256 `f77217c135ee223746f876b672b1a98366b1ba44ff38a94184e58f9fa408dcc6`.
 Prior-version Windows upgrade, macOS productbuild, and Linux DEB/RPM were
 initially `NOT_RUN`; the later #6905 installed-product workstream now supplies
-digest-bound Linux DEB evidence and is adding equivalent macOS productbuild
-evidence, while Linux RPM remains `NOT_RUN`. The Windows VSIX producer now directly installs the exact package
+digest-bound Linux DEB and macOS productbuild evidence, while Linux RPM remains
+`NOT_RUN`. The Windows VSIX producer now directly installs the exact package
 into an ephemeral-runner Visual Studio instance, verifies identity/version,
 package load, a runner-owned PRG and registered command outside the checkout,
 then uninstalls and checks extension residue. Same-version VSIX reinstall,
