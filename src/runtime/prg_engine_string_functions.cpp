@@ -1003,21 +1003,27 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(std::move(result));
     }
     if (function == "chr" && !arguments.empty()) {
-        // #5900: VFP9 truncates a fractional character-code argument
-        // toward zero (CHR(65.9) is 'A', character code 65, not 66) and
-        // raises error 11 for any code outside its accepted [0, 255]
-        // byte range (confirmed against real VFP9 output for CHR(-1),
-        // CHR(256), and CHR(300), all ERR11) rather than narrowing it.
-        // A nonfinite argument cannot round-trip through any valid VFP
-        // literal or reach here without a prior division-by-zero-style
-        // fault, but is treated the same way (out of range -> error 11)
-        // for a checked, UB-free conversion rather than an unchecked cast.
-        const double truncated_code = std::trunc(value_as_number(arguments[0]));
-        if (!std::isfinite(truncated_code) || truncated_code < 0.0 || truncated_code > 255.0) {
+        // Governing requirement: RQ-CF-PRG-CHR-BOUNDARIES-001 (#5611/#6776).
+        // Ordinary fractional arguments truncate toward zero. COPPERFIN validates the raw truncated value against
+        // the byte range. Installed VFP9 first rejects a positive value above 255, but converts negative values
+        // through its signed-32-bit path before applying the byte check: negative multiples of 2^32 (and negative
+        // integer-indefinite values) therefore become NUL, while -4294967295 becomes byte 1. Keep that compatibility
+        // quirk behind SET NUMERICBEHAVIOR; every conversion here is defined and free of out-of-range C++ casts.
+        const double raw_code = value_as_number(arguments[0]);
+        const double truncated_code = std::trunc(raw_code);
+        std::int64_t character_code = 0;
+        if (numeric_behavior(set_callback) == NumericBehavior::vfp9) {
+            character_code = vfp9_numeric_to_int32(truncated_code);
+            if (truncated_code > 255.0 || character_code < 0 || character_code > 255) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidCharacterCode"), 11);
+            }
+        } else if (!std::isfinite(truncated_code) || truncated_code < 0.0 || truncated_code > 255.0) {
             throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidCharacterCode"), 11);
+        } else {
+            character_code = static_cast<std::int64_t>(truncated_code);
         }
         return make_string_value(
-            std::string(1U, static_cast<char>(static_cast<unsigned char>(truncated_code))));
+            std::string(1U, static_cast<char>(static_cast<unsigned char>(character_code))));
     }
     if (function == "str" && !arguments.empty()) {
         // VFP9 SP2 (probe ~/temp/vfp9-probes/numconv-6776/probe4.txt) accepts 0 to 18 decimals and raises error 1908

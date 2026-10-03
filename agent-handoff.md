@@ -159,14 +159,9 @@ Owner-directed workstream, in this order:
    remaining work, by function, with the VFP9 behavior probed in
    `~/temp/vfp9-probes/numconv-6776/probe1.txt` (14 boundary values per
    expression; `probe1.out` is the UTF-16 original):
-   - Arrays (#6030): `AELEMENT`, `ASUBSCRIPT`, `ADEL`, `AINS`, `ACOPY` raise
-     error 1234 for every out-of-range value, so that is the default in both
-     modes. `ASCAN` start and `ASORT` mode wrap like the `LEFT` family (a
-     quirk). `ASIZE` errored in the probe harness and needs a corrected probe.
-   - `BITLSHIFT`/`BITRSHIFT` (#5765): error 11 for many values, a no-op shift for
-     others; needs its own table.
-   - `GOMONTH`/`EOMONTH` (#5608), `CHR`, `SPACE`, `ROUND`: mixed error 11, 1903
-     and wraparound results (`SPACE` is already bounded by #6775).
+   - Completed bounded slices: arrays (#6030, PR #6865), `BITLSHIFT`/
+     `BITRSHIFT` (#5765, PR #6867), `GOMONTH`/`EOMONTH` (#5608, PR #6869),
+     `SPACE` (#6775), `ROUND` (PR #6878), and `CHR` (this continuation slice).
    - `AT`/`STRTRAN`/`GETWORDNUM` occurrence: VFP9 raises 11 for almost every
      large value (consistent). `SUBSTR`/`SUBSTRC` with a huge positive start
      return the last character in VFP9 (quirk, not yet emulated).
