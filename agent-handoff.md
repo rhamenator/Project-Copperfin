@@ -9,16 +9,17 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
-Active continuation: branch `fix/windows-installed-ui-6905`, based on
+Active continuation: PR #6910 (`fix/windows-installed-ui-6905`), based on
 `origin/main` at `ed9a12512`, is the third #6905 installed-product slice. It
 extends the exact Windows NSIS lifecycle to launch the installed managed
 Studio against a runner-owned PRG, bind UI Automation to that process, select
 the named document and Copperfin Command tabs, expand File, invoke Exit, and
 require a bounded clean exit. Machine-readable evidence binds the installed
 Studio digest and semantic controls; failures retain a bounded UI tree and
-best-effort screenshot; human GUI remains `NOT_RUN`. Local focused checks pass.
-No commit, push, or PR existed when this handoff entry was written; the hosted
-Windows lifecycle is still required.
+best-effort screenshot; human GUI remains `NOT_RUN`. Signed implementation
+commit `c060afd76` is pushed; local focused checks pass. Resolve review
+conversations first, then require the exact hosted Windows lifecycle before
+merge.
 
 PR #6908 (`fix/macos-installer-lifecycle-6905`) merged into `main` as
 `ed9a12512761197f7214b638bf43f413d0917f56` on 2026-10-03. Hosted run
