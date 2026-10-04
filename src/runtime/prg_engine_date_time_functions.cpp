@@ -910,7 +910,8 @@ int checked_date_time_constructor_component(
     return static_cast<int>(converted);
 }
 
-// Governing requirement: RQ-CF-PRG-DOW-FIRST-DAY-BOUNDS-001.
+// Governing requirements: RQ-CF-PRG-DOW-FIRST-DAY-BOUNDS-001 and
+// RQ-CF-PRG-WEEK-OPTIONS-001.
 int checked_date_numeric_option(
     const PrgValue& value,
     const int minimum,
@@ -1240,34 +1241,32 @@ std::optional<PrgValue> evaluate_date_time_function(
             return make_number_value(0.0);
         }
 
-        int first_day = set_int_value(set_callback, "FDOW", 1, 1, 7);
+        int first_week_mode = 1;
         if (arguments.size() >= 2U) {
-            first_day = static_cast<int>(std::llround(value_as_number(arguments[1])));
-            if (first_day < 1 || first_day > 7) {
-                first_day = 1;
+            first_week_mode = checked_date_numeric_option(
+                arguments[1], 0, 3, numeric_behavior(set_callback));
+            if (first_week_mode == 0) {
+                first_week_mode = set_int_value(set_callback, "FWEEK", 1, 1, 3);
             }
         }
 
-        int first_week_mode = set_int_value(set_callback, "FWEEK", 1, 1, 3);
+        int first_day = 1;
         if (arguments.size() >= 3U) {
-            first_week_mode = static_cast<int>(std::llround(value_as_number(arguments[2])));
-            if (first_week_mode < 1 || first_week_mode > 3) {
-                first_week_mode = 1;
+            first_day = checked_date_numeric_option(
+                arguments[2], 0, 7, numeric_behavior(set_callback));
+            if (first_day == 0) {
+                first_day = set_int_value(set_callback, "FDOW", 1, 1, 7);
             }
-        }
-
-        if (first_week_mode == 1) {
-            const int day_of_year = date_to_julian(year, month, day) - date_to_julian(year, 1, 1) + 1;
-            const int jan1_weekday = weekday_number_sunday_first(year, 1, 1);
-            const int offset = (jan1_weekday - first_day + 7) % 7;
-            return make_number_value(static_cast<double>(((day_of_year + offset - 1) / 7) + 1));
         }
 
         const auto week_one_start_julian = [&](int week_year) {
             const int jan1_julian = date_to_julian(week_year, 1, 1);
             const int jan1_weekday = weekday_number_sunday_first(week_year, 1, 1);
             const int offset = (jan1_weekday - first_day + 7) % 7;
-            if (first_week_mode == 2) {
+            if (first_week_mode == 1) {
+                return jan1_julian - offset;
+            }
+            if (first_week_mode == 3) {
                 return jan1_julian + ((offset == 0) ? 0 : (7 - offset));
             }
 

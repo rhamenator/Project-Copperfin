@@ -139,27 +139,29 @@ namespace
             "quarter_value = QUARTER(CTOD('04/18/2026'))\n"
             "quarter_compact = QUARTER(CTOD('20261231'))\n"
             "week_value = WEEK(CTOD('04/18/2026'))\n"
-            "week_monday = WEEK(CTOD('01/05/2026'), 2)\n"
+            "week_monday = WEEK(CTOD('01/05/2026'), 1, 2)\n"
             "week_mode1_jan1 = WEEK(CTOD('01/01/2026'), 1, 1)\n"
-            "week_mode2_jan1 = WEEK(CTOD('01/01/2026'), 1, 2)\n"
-            "week_mode2_jan3 = WEEK(CTOD('01/03/2026'), 1, 2)\n"
-            "week_mode2_jan4 = WEEK(CTOD('01/04/2026'), 1, 2)\n"
-            "week_mode3_jan1 = WEEK(CTOD('01/01/2026'), 1, 3)\n"
-            "week_mode3_jan4 = WEEK(CTOD('01/04/2026'), 1, 3)\n"
-            "week_mode3_dec_rollover = WEEK(CTOD('12/29/2024'), 1, 3)\n"
+            "week_mode2_jan1 = WEEK(CTOD('01/01/2026'), 2, 1)\n"
+            "week_mode2_jan3 = WEEK(CTOD('01/03/2026'), 2, 1)\n"
+            "week_mode2_jan4 = WEEK(CTOD('01/04/2026'), 2, 1)\n"
+            "week_mode3_jan1 = WEEK(CTOD('01/01/2026'), 3, 1)\n"
+            "week_mode3_jan4 = WEEK(CTOD('01/04/2026'), 3, 1)\n"
+            "week_mode3_dec_rollover = WEEK(CTOD('12/29/2024'), 3, 1)\n"
+            "week_mode1_dec_rollover = WEEK(CTOD('12/31/2021'), 1, 1)\n"
             "week_fdow_before = WEEK(CTOD('01/04/2026'))\n"
             "SET FDOW TO 2\n"
             "fdow_after = SET('FDOW')\n"
             "week_fdow_after = WEEK(CTOD('01/04/2026'))\n"
             "week_fdow_explicit = WEEK(CTOD('01/04/2026'), 1)\n"
+            "week_fdow_zero = WEEK(CTOD('01/04/2026'), 1, 0)\n"
             "SET FWEEK TO 2\n"
             "fweek_after = SET('FWEEK')\n"
-            "week_fweek_after = WEEK(CTOD('01/01/2026'))\n"
-            "week_fweek_explicit = WEEK(CTOD('01/01/2026'), 1, 1)\n"
+            "week_fweek_after = WEEK(CTOD('01/01/2021'))\n"
+            "week_fweek_explicit = WEEK(CTOD('01/01/2021'), 0, 1)\n"
             "SET FDOW TO 1\n"
             "SET FWEEK TO 3\n"
             "fweek_after_three = SET('FWEEK')\n"
-            "week_fweek_three = WEEK(CTOD('01/01/2026'))\n"
+            "week_fweek_three = WEEK(CTOD('01/01/2021'), 0, 1)\n"
             "eomonth_value = EOMONTH(CTOD('04/18/2026'))\n"
             "eomonth_plus = EOMONTH(CTOD('01/10/2026'), 1)\n"
             "eomonth_minus = EOMONTH(CTOD('03/10/2026'), -1)\n"
@@ -387,21 +389,23 @@ namespace
         check("week_value", "16");
         check("week_monday", "2");
         check("week_mode1_jan1", "1");
-        check("week_mode2_jan1", "52");
-        check("week_mode2_jan3", "52");
+        check("week_mode2_jan1", "53");
+        check("week_mode2_jan3", "53");
         check("week_mode2_jan4", "1");
-        check("week_mode3_jan1", "53");
+        check("week_mode3_jan1", "52");
         check("week_mode3_jan4", "1");
-        check("week_mode3_dec_rollover", "1");
+        check("week_mode3_dec_rollover", "52");
+        check("week_mode1_dec_rollover", "1");
         check("week_fdow_before", "2");
         check("fdow_after", "2");
-        check("week_fdow_after", "1");
+        check("week_fdow_after", "2");
         check("week_fdow_explicit", "2");
+        check("week_fdow_zero", "1");
         check("fweek_after", "2");
-        check("week_fweek_after", "52");
-        check("week_fweek_explicit", "1");
+        check("week_fweek_after", "1");
+        check("week_fweek_explicit", "53");
         check("fweek_after_three", "3");
-        check("week_fweek_three", "53");
+        check("week_fweek_three", "52");
         check("eomonth_value", "04/30/2026");
         check("eomonth_plus", "02/28/2026");
         check("eomonth_minus", "02/28/2026");

@@ -1,0 +1,1 @@
+- 2026-10-04: Correct `WEEK()`'s first-week/first-day argument order, bounds, setting fallback, and year-boundary numbering while keeping VFP9's signed-32-bit conversion quirk opt-in.
