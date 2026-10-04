@@ -4,5 +4,5 @@
   offset arithmetic, a bounded host-allocation ceiling, failure-atomic
   metadata/content updates (including atomic `RESTORE FROM` validation and
   nested native-object rollback), preserved left-to-right visibility between
-  targets of one `DIMENSION` statement, and localized catchable error 230
-  diagnostics (#5594).
+  targets of one `DIMENSION`, `LOCAL ARRAY`, or `PRIVATE ARRAY` statement, and
+  localized catchable error 230 diagnostics (#5594).

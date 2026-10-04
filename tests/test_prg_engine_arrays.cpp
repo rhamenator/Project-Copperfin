@@ -990,6 +990,10 @@ void test_array_dimension_boundaries_are_catchable_and_atomic() {
         "ENDTRY\n"
         "nLocalError = RejectLocalArray()\n"
         "nPrivateError = RejectPrivateArray()\n"
+        "nSequentialLocalLength = SequentialLocalArray()\n"
+        "nSequentialPrivateLength = SequentialPrivateArray()\n"
+        "nSequentialLocalRollback = RejectSequentialLocalArray()\n"
+        "nSequentialPrivateRollback = RejectSequentialPrivateArray()\n"
         "nRowsAfter = ALEN(aStable,1)\n"
         "nColumnsAfter = ALEN(aStable,2)\n"
         "nFirstLengthAfter = ALEN(aFirstStable)\n"
@@ -1013,6 +1017,36 @@ void test_array_dimension_boundaries_are_catchable_and_atomic() {
         "nLimitLength = ALEN(aLimit)\n"
         "cLimitValue = aLimit[65000]\n"
         "RETURN\n"
+        "FUNCTION SequentialLocalArray\n"
+        "  LOCAL ARRAY aLocalFirst[2], aLocalSecond[ALEN(aLocalFirst)]\n"
+        "  RETURN ALEN(aLocalSecond)\n"
+        "ENDFUNC\n"
+        "FUNCTION SequentialPrivateArray\n"
+        "  PRIVATE ARRAY aPrivateFirst[2], aPrivateSecond[ALEN(aPrivateFirst)]\n"
+        "  RETURN ALEN(aPrivateSecond)\n"
+        "ENDFUNC\n"
+        "FUNCTION RejectSequentialLocalArray\n"
+        "  LOCAL ARRAY aLocalFirst[1]\n"
+        "  aLocalFirst[1] = 'local-kept'\n"
+        "  TRY\n"
+        "    LOCAL ARRAY aLocalFirst[3], aLocalSecond[ALEN(aLocalFirst) + 65000]\n"
+        "  CATCH TO oLocal\n"
+        "    IF oLocal.ErrorNo == 230 AND ALEN(aLocalFirst) == 1 AND aLocalFirst[1] == 'local-kept' AND TYPE('aLocalSecond') == 'U'\n"
+        "      RETURN 1\n"
+        "    ENDIF\n"
+        "  ENDTRY\n"
+        "  RETURN 0\n"
+        "ENDFUNC\n"
+        "FUNCTION RejectSequentialPrivateArray\n"
+        "  TRY\n"
+        "    PRIVATE ARRAY aPrivateKeep[3], aPrivateSecond[ALEN(aPrivateKeep) + 65000]\n"
+        "  CATCH TO oPrivate\n"
+        "    IF oPrivate.ErrorNo == 230 AND ALEN(aPrivateKeep) == 2 AND aPrivateKeep[1] == 'private-kept' AND TYPE('aPrivateSecond') == 'U'\n"
+        "      RETURN 1\n"
+        "    ENDIF\n"
+        "  ENDTRY\n"
+        "  RETURN 0\n"
+        "ENDFUNC\n"
         "FUNCTION RejectLocalArray\n"
         "  TRY\n"
         "    LOCAL ARRAY aRejectedLocal[65001]\n"
@@ -1064,6 +1098,10 @@ void test_array_dimension_boundaries_are_catchable_and_atomic() {
     check("crejectedpublictype", "U", "failed PUBLIC ARRAY should not publish a partial binding");
     check("nsequentialexistinglength", "2", "later dimensions should observe an earlier existing-array resize");
     check("nsequentialnewlength", "2", "later dimensions should observe an earlier newly created array");
+    check("nsequentiallocallength", "2", "later LOCAL ARRAY dimensions should observe an earlier declaration");
+    check("nsequentialprivatelength", "2", "later PRIVATE ARRAY dimensions should observe an earlier declaration");
+    check("nsequentiallocalrollback", "1", "failed LOCAL ARRAY sequences should restore all prior bindings");
+    check("nsequentialprivaterollback", "1", "failed PRIVATE ARRAY sequences should restore arrays and private state");
     check("cbracketunsafereadtype", "U", "bracket array reads should reject non-finite selectors safely");
     check("cparenunsafereadtype", "U", "parenthesis array reads should reject non-finite selectors safely");
     check("umacrounsaferead", "", "macro array reads should reject non-finite selectors safely");

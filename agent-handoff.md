@@ -230,9 +230,11 @@ bounded slice is open owner-authored, `agent-approved` issue #5594 on branch
 identified RESTORE atomicity, read-selector conversion, nested native-object
 rollback, and stale-handoff gaps; commit `9f49f9b83` addressed those findings.
 The next exact-head review found that atomic multi-target `DIMENSION` staging
-had lost VFP's left-to-right visibility. The pending second review fix now
-resizes each target before evaluating the next while retaining targeted
-rollback snapshots for statement atomicity. It centralizes checked dimension conversion,
+had lost VFP's left-to-right visibility; commit `035089fa1` restored it with
+targeted rollback snapshots. A third exact-head review found the same
+regression in `LOCAL ARRAY` and `PRIVATE ARRAY`; the pending review fix now
+publishes those declarations sequentially while rolling back both bindings and
+private-save metadata on later failure. It centralizes checked dimension conversion,
 checked element-count/offset arithmetic, a conservative 65,000-element host
 safety ceiling, and failure-atomic declaration/resize behavior across global,
 local, private, public, `ASIZE()`, direct assignment, RESTORE, and native-class
@@ -240,7 +242,7 @@ array paths. Focused portable array, data-I/O, and runtime-surface tests pass,
 including replacement/additive RESTORE rollback, bracket/parenthesis/macro
 read selectors, nested native-object construction failure, sequential
 multi-target visibility, and rollback after a later target fails. Remaining:
-signed second review-fix commit, push, review-conversation resolution, green
+signed third review-fix commit, push, review-conversation resolution, green
 exact-head checks, and merge. The same focused targets pass under Clang
 AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
 instrumentation; adjacent numeric-behavior, changelog, and

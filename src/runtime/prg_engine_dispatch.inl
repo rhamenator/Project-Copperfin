@@ -6781,42 +6781,69 @@
             case StatementKind::local_declaration:
                 if (statement.identifier == "array")
                 {
-                    struct LocalArrayDeclaration
+                    struct LocalArraySnapshot
                     {
-                        std::string normalized_name;
-                        std::size_t rows = 0U;
-                        std::size_t columns = 1U;
-                        bool is_two_dimensional = false;
+                        std::string name;
+                        std::optional<RuntimeArray> array;
                     };
-                    std::vector<LocalArrayDeclaration> declarations;
-                    declarations.reserve(statement.names.size());
-                    for (const auto &declaration : statement.names)
+                    std::vector<LocalArraySnapshot> snapshots;
+                    const auto rollback_local_arrays = [&]()
                     {
-                        std::string array_name;
-                        std::size_t rows = 0U;
-                        std::size_t columns = 1U;
-                        bool is_two_dimensional = false;
-                        if (!parse_array_reference(
-                                declaration, frame, array_name, rows, columns, &is_two_dimensional, true))
+                        for (auto saved = snapshots.rbegin(); saved != snapshots.rend(); ++saved)
                         {
-                            last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions");
-                            last_fault_location = statement.location;
-                            last_fault_statement = statement.text;
-                            return {.ok = false, .message = last_error_message};
+                            if (saved->array.has_value())
+                            {
+                                frame.local_arrays[saved->name] = *saved->array;
+                            }
+                            else
+                            {
+                                frame.local_arrays.erase(saved->name);
+                            }
                         }
-                        declarations.push_back(
-                            {normalize_memory_variable_identifier(array_name), rows, columns, is_two_dimensional});
-                    }
-                    for (const LocalArrayDeclaration &declaration : declarations)
+                    };
+                    try
                     {
-                        const std::size_t element_count = checked_array_element_count(
-                            declaration.rows, declaration.columns);
-                        frame.local_arrays[declaration.normalized_name] = RuntimeArray{
-                            .rows = declaration.rows,
-                            .columns = declaration.columns,
-                            .is_two_dimensional = declaration.is_two_dimensional,
-                            .values = std::vector<PrgValue>(element_count, make_boolean_value(false)),
-                            .binding_identity = allocate_array_binding_identity()};
+                        for (const auto &declaration : statement.names)
+                        {
+                            std::string array_name;
+                            std::size_t rows = 0U;
+                            std::size_t columns = 1U;
+                            bool is_two_dimensional = false;
+                            if (!parse_array_reference(
+                                    declaration, frame, array_name, rows, columns, &is_two_dimensional, true))
+                            {
+                                rollback_local_arrays();
+                                last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions");
+                                last_fault_location = statement.location;
+                                last_fault_statement = statement.text;
+                                return {.ok = false, .message = last_error_message};
+                            }
+                            const std::string normalized = normalize_memory_variable_identifier(array_name);
+                            const bool already_saved = std::any_of(
+                                snapshots.begin(), snapshots.end(),
+                                [&](const LocalArraySnapshot &saved) { return saved.name == normalized; });
+                            if (!already_saved)
+                            {
+                                const auto existing = frame.local_arrays.find(normalized);
+                                snapshots.push_back({
+                                    .name = normalized,
+                                    .array = existing == frame.local_arrays.end()
+                                                 ? std::optional<RuntimeArray>{std::nullopt}
+                                                 : std::optional<RuntimeArray>{existing->second}});
+                            }
+                            const std::size_t element_count = checked_array_element_count(rows, columns);
+                            frame.local_arrays[normalized] = RuntimeArray{
+                                .rows = rows,
+                                .columns = columns,
+                                .is_two_dimensional = is_two_dimensional,
+                                .values = std::vector<PrgValue>(element_count, make_boolean_value(false)),
+                                .binding_identity = allocate_array_binding_identity()};
+                        }
+                    }
+                    catch (...)
+                    {
+                        rollback_local_arrays();
+                        throw;
                     }
                     return {};
                 }
@@ -6831,52 +6858,95 @@
             {
                 if (statement.identifier == "array")
                 {
-                    struct PrivateArrayDeclaration
+                    struct PrivateArraySnapshot
                     {
-                        std::string normalized_name;
-                        std::size_t rows = 0U;
-                        std::size_t columns = 1U;
-                        bool is_two_dimensional = false;
+                        std::string name;
+                        std::optional<RuntimeArray> array;
+                        bool had_saved_entry = false;
+                        std::optional<RuntimeArray> saved_entry;
                     };
-                    std::vector<PrivateArrayDeclaration> declarations;
-                    declarations.reserve(statement.names.size());
-                    for (const auto &declaration : statement.names)
+                    std::vector<PrivateArraySnapshot> snapshots;
+                    const auto rollback_private_arrays = [&]()
                     {
-                        std::string array_name;
-                        std::size_t rows = 0U;
-                        std::size_t columns = 1U;
-                        bool is_two_dimensional = false;
-                        if (!parse_array_reference(
-                                declaration, frame, array_name, rows, columns, &is_two_dimensional, true))
+                        for (auto saved = snapshots.rbegin(); saved != snapshots.rend(); ++saved)
                         {
-                            last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions");
-                            last_fault_location = statement.location;
-                            last_fault_statement = statement.text;
-                            return {.ok = false, .message = last_error_message};
+                            if (saved->array.has_value())
+                            {
+                                arrays[saved->name] = *saved->array;
+                            }
+                            else
+                            {
+                                arrays.erase(saved->name);
+                            }
+                            if (saved->had_saved_entry)
+                            {
+                                frame.private_saved_arrays[saved->name] = saved->saved_entry;
+                            }
+                            else
+                            {
+                                frame.private_saved_arrays.erase(saved->name);
+                            }
                         }
-                        declarations.push_back(
-                            {normalize_memory_variable_identifier(array_name), rows, columns, is_two_dimensional});
+                    };
+                    try
+                    {
+                        for (const auto &declaration : statement.names)
+                        {
+                            std::string array_name;
+                            std::size_t rows = 0U;
+                            std::size_t columns = 1U;
+                            bool is_two_dimensional = false;
+                            if (!parse_array_reference(
+                                    declaration, frame, array_name, rows, columns, &is_two_dimensional, true))
+                            {
+                                rollback_private_arrays();
+                                last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions");
+                                last_fault_location = statement.location;
+                                last_fault_statement = statement.text;
+                                return {.ok = false, .message = last_error_message};
+                            }
+                            const std::string normalized = normalize_memory_variable_identifier(array_name);
+                            const bool already_saved = std::any_of(
+                                snapshots.begin(), snapshots.end(),
+                                [&](const PrivateArraySnapshot &saved) { return saved.name == normalized; });
+                            if (!already_saved)
+                            {
+                                const auto existing = arrays.find(normalized);
+                                const auto saved = frame.private_saved_arrays.find(normalized);
+                                snapshots.push_back({
+                                    .name = normalized,
+                                    .array = existing == arrays.end()
+                                                 ? std::optional<RuntimeArray>{std::nullopt}
+                                                 : std::optional<RuntimeArray>{existing->second},
+                                    .had_saved_entry = saved != frame.private_saved_arrays.end(),
+                                    .saved_entry = saved == frame.private_saved_arrays.end()
+                                                       ? std::optional<RuntimeArray>{std::nullopt}
+                                                       : saved->second});
+                            }
+                            const auto existing_array = arrays.find(normalized);
+                            frame.private_saved_arrays.try_emplace(
+                                normalized,
+                                existing_array == arrays.end()
+                                    ? std::optional<RuntimeArray>{std::nullopt}
+                                    : std::optional<RuntimeArray>{existing_array->second});
+                            const std::size_t element_count = checked_array_element_count(rows, columns);
+                            RuntimeArray replacement{
+                                .rows = rows,
+                                .columns = columns,
+                                .is_two_dimensional = is_two_dimensional,
+                                .values = std::vector<PrgValue>(element_count, make_boolean_value(false)),
+                                .binding_identity = allocate_array_binding_identity()};
+                            if (existing_array != arrays.end())
+                            {
+                                arrays.erase(existing_array);
+                            }
+                            arrays[normalized] = std::move(replacement);
+                        }
                     }
-                    for (const PrivateArrayDeclaration &declaration : declarations)
+                    catch (...)
                     {
-                        const auto existing_array = arrays.find(declaration.normalized_name);
-                        frame.private_saved_arrays.try_emplace(
-                            declaration.normalized_name,
-                            existing_array == arrays.end()
-                                ? std::optional<RuntimeArray>{std::nullopt}
-                                : std::optional<RuntimeArray>{existing_array->second});
-                        if (existing_array != arrays.end())
-                        {
-                            arrays.erase(existing_array);
-                        }
-                        const std::size_t element_count = checked_array_element_count(
-                            declaration.rows, declaration.columns);
-                        arrays[declaration.normalized_name] = RuntimeArray{
-                            .rows = declaration.rows,
-                            .columns = declaration.columns,
-                            .is_two_dimensional = declaration.is_two_dimensional,
-                            .values = std::vector<PrgValue>(element_count, make_boolean_value(false)),
-                            .binding_identity = allocate_array_binding_identity()};
+                        rollback_private_arrays();
+                        throw;
                     }
                     return {};
                 }
