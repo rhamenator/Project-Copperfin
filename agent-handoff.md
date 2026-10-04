@@ -248,8 +248,8 @@ fragment are drafted; all three focused targets pass normally and under Clang
 AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
 instrumentation. Adjacent probe evidence exposed an independent `WEEK()`
 option-order/range defect, filed as #6933 against current `main` and
-deliberately not folded into this slice. Remaining: signed commit, push,
-PR/review, green exact-head checks, and merge.
+deliberately not folded into this slice. Remaining: resolve review
+conversations, verify green exact-head checks, and merge.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
