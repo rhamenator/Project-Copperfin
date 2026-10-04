@@ -199,11 +199,11 @@ void test_unary_minus() {
     expect(negate(make_uint64_value(0U)) == i64(0), "#6035 -0 (uint64)");
 }
 
-// #5598 and #6035 end to end: CTOBIN() builds the exact 64-bit operands from bytes (INT64_MIN is 0x8000000000000000,
-// -1 is 0xFFFFFFFFFFFFFFFF), so the expression evaluator itself is exercised on every platform, not only on the
-// Windows DECLARE probes. `INT64_MIN / -1` used to raise SIGFPE and end the process; every overflow below must be a
-// catchable numeric overflow (error 39), and in-range exact results must survive. Expected text is "<VARTYPE>:<value>"
-// or "ERR<number>".
+// #5598 and #6035 end to end: CAST() supplies a small exact 64-bit seed and the expression evaluator builds INT64_MAX,
+// INT64_MIN and -1 without passing through a double. That exercises the evaluator on every platform, not only on the
+// Windows DECLARE probes, while leaving CTOBIN() to honor its VFP binary-decoding contract (#5766). `INT64_MIN / -1`
+// used to raise SIGFPE and end the process; every overflow below must be a catchable numeric overflow (error 39), and
+// in-range exact results must survive. Expected text is "<VARTYPE>:<value>" or "ERR<number>".
 struct ScriptRow {
     const char *expression;
     const char *expected;
@@ -234,9 +234,13 @@ std::string run_script_rows(const std::filesystem::path &dir) {
     namespace fs = std::filesystem;
     std::string body =
         "LOCAL cOut, oEx, x\ncOut = ''\n"
-        "nMin = CTOBIN(CHR(0)+CHR(0)+CHR(0)+CHR(0)+CHR(0)+CHR(0)+CHR(0)+CHR(128), 'N')\n"
-        "nMax = CTOBIN(CHR(255)+CHR(255)+CHR(255)+CHR(255)+CHR(255)+CHR(255)+CHR(255)+CHR(127), 'N')\n"
-        "nMinusOne = CTOBIN(CHR(255)+CHR(255)+CHR(255)+CHR(255)+CHR(255)+CHR(255)+CHR(255)+CHR(255), 'N')\n";
+        "nPower = CAST(1 AS INT64)\n"
+        "FOR nIndex = 1 TO 62\n"
+        "nPower = nPower * 2\n"
+        "ENDFOR\n"
+        "nMax = nPower + (nPower - 1)\n"
+        "nMin = -nMax - 1\n"
+        "nMinusOne = CAST(-1 AS INT64)\n";
     for (const ScriptRow &row : kScriptRows) {
         body += "TRY\nx = " + std::string(row.expression) + "\n";
         body += "cOut = cOut + VARTYPE(x) + ':' + IIF(VARTYPE(x) = 'N', ALLTRIM(STR(x, 25, 0)), TRANSFORM(x)) + CHR(10)\n";

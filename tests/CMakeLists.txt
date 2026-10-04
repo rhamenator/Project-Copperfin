@@ -5953,6 +5953,11 @@ copperfin_add_test(test_prg_engine_numeric_behavior cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
+copperfin_add_test(test_prg_engine_binary_conversion cf_xbase_runtime
+    test_prg_engine_binary_conversion.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_prg_engine_string_length_bounds cf_xbase_runtime
     test_prg_engine_string_length_bounds.cpp
     prg_engine_test_support.cpp

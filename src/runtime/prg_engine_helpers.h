@@ -216,6 +216,12 @@ PrgValue make_int64_value(std::int64_t value);
 PrgValue make_uint64_value(std::uint64_t value);
 PrgValue make_currency_value(std::int64_t scaled_value);
 
+// VFP-compatible binary conversion used by BINTOC()/CTOBIN(). `selector` is
+// null when the optional argument was omitted. Both functions validate the
+// complete selector grammar and byte width before conversion or allocation.
+PrgValue bintoc_value(const PrgValue& value, const PrgValue* selector);
+PrgValue ctobin_value(const PrgValue& value, const PrgValue* selector);
+
 // A plain decimal ([-]digits[.digits], at least one digit, optional surrounding blanks) as a Currency value scaled
 // by 10,000 and rounded half away from zero at the fifth decimal, for a `$` literal or a Y field's text. The range
 // is +-922337203685477.5807 (installed VFP9, probe retained at ~/temp/vfp9-probes/currency-c25/result.txt:

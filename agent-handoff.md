@@ -9,45 +9,16 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
-PR #6919 (`fix/numeric-substr-start-5611`) merged into `main` as
-`06cc138a8c4804e03b10a57b849208411258650d` on 2026-10-03. It completed the
-VFP9-mode huge-positive `SUBSTR`/`SUBSTRC` start slice under #5611/#6776 while
-keeping Copperfin mode safe and saturating. All 33 checks passed at exact head
-`3a1b754205e9c12b02e62ccbcc97b9e90f3cd8f1`, exact-head review was clean, and
-both conversations were resolved before merge. Review fixes avoided redundant
-scalar-offset work on ordinary `SUBSTRC` calls and pinned the positive
-wrapped-start-before-end case (`2^32 + 1`).
-
-The active bounded slice is issue #6050 on
-`fix/declare-numeric-boundaries-6050`, created from `origin/main` at
-`06cc138a8`. It covers only the undefined/incompatible numeric narrowing in
-native and managed `DECLARE`: defined VFP9-compatible low-32-bit conversion for
-ordinary INTEGER/LONG arguments, mode-aware handling of finite values outside
-signed 64-bit range, checked signed-64-bit extension admission,
-the same contract for native/managed value arguments and native by-reference
-initial values, localized catchable rejection of nonfinite or unsupported
-values, focused Windows integration coverage, and portable GCC/Clang source-
-level coverage. Retained VFP9 evidence is at
-`/home/rich/temp/vfp9-probes/declare-range-213/`. Production, portable helper
-tests, Windows native/managed integration fixtures, portable boundary
-contracts, requirements traceability, language coverage and changelog edits
-are complete. Focused GCC numeric/DECLARE tests pass; the shared numeric test
-also passes under Clang AddressSanitizer, UndefinedBehaviorSanitizer and
-float-cast-overflow instrumentation. The Windows tests cover INT32/UINT32 and
-INT64/UINT64 boundaries, native by-reference initial values, huge finite,
-infinities and interoperable NaN, and assert rejected values never enter the
-fixture. PR #6920 is open. Review correctly found that finite out-of-int64
-INTEGER values did not yet honor `SET NUMERICBEHAVIOR`; the response now keeps
-default COPPERFIN error 11, maps such values to the probed integer-indefinite
-zero only in explicit VFP9 mode, and preserves nonfinite rejection in both
-modes. Focused normal and sanitizer-backed numeric tests plus both portable
-DECLARE boundary contracts pass after that review fix. Signed commit
-`5cb877911` is pushed, its exact-head review is clean, and the review
-conversation is resolved. The first exact-head Windows run exposed that the
-Windows-only DECLARE body referenced a callback not in that member's scope;
-the follow-up now snapshots `NUMERICBEHAVIOR` from the session's own SET state
-before marshaling, and both portable boundary contracts pass. The exact-head
-Windows rerun, remaining CI and merge remain pending.
+PR #6920 (`fix/declare-numeric-boundaries-6050`) merged into `main` as
+`a2641cc9a9a03c2dfd5254fdad8f6d6be9f7994f` on 2026-10-03 and closed #6050.
+It completed defined native/managed `DECLARE` integer conversion under
+#5611/#6776, including low-32-bit VFP9 conversion, checked 64-bit admission,
+native by-reference initial values, portable source contracts, and focused
+Windows native/managed fixtures. All 33 checks passed at exact head
+`8d8294ce4c9b72eda2b3bd53dd68f0d75f1da22e`, exact-head review was clean, and
+the sole review conversation was resolved before merge. The review fixes made
+finite out-of-int64 INTEGER conversion mode-aware and made the Windows-only
+marshaler read `NUMERICBEHAVIOR` from the session SET state in scope.
 
 PR #6917 (`fix/installer-artifact-policy-6905`) merged into `main` as
 `6b64a176d680aab732e0772cd889a423ed3c993e` on 2026-10-03. Successful
@@ -244,15 +215,27 @@ after review found a macOS clone destination-identity gap.
 
 Open owner-authored, `agent-approved` issue #5611 is the implementation
 umbrella and reopened #6776 is the design/checklist reference. The active
-bounded slice is branch `fix/numeric-occurrence-5611` in
-`~/.codex/worktrees/numeric-occurrence-5611/Project-Copperfin`, based on
-`origin/main` at `6b64a176d`. Validate the `AT` family and `STRTRAN`
-occurrence controls before integer conversion, preserve `GETWORDNUM`'s safe
-empty result for out-of-range indices, and confine VFP9's observed
-`STRTRAN(...,4294967295)` conversion to the VFP9 numeric-behavior mode. The
-focused fail-before evidence is retained in the current build tree; complete
-portable/sanitizer verification, traceability, signed commit, PR, exact-head
-review, green checks, and merge.
+bounded slice is open owner-authored, `agent-approved` issue #5766 on branch
+`fix/bintoc-ctobin-contract-5766` in
+`~/.codex/worktrees/numeric-bintoc-5766/Project-Copperfin`, based on
+`origin/main` at `a2641cc9`. It replaces the unchecked arbitrary-width
+`BINTOC()` allocator and unconstrained `CTOBIN()` fold with the documented
+1/2/4/8, `F`/`B`/`N`/`Y`, `R`, and `S` contracts, canonical sortable and
+native byte order, exact Currency handling, and localized pre-conversion
+validation. Installed-VFP9 probe evidence is retained in
+`/home/rich/temp/vfp9-probes/bintoc-5766/`. Production code, focused canonical
+byte/error coverage, language coverage, requirements traceability, and the
+required adjustment to #6035's former non-VFP `CTOBIN(..., 'N')` test fixture
+are complete. Focused binary-conversion, numeric-behavior, exact-int64,
+runtime-surface, isolation-inventory and changelog tests pass locally; the new
+test also passes under Clang AddressSanitizer, UndefinedBehaviorSanitizer, and
+float-cast-overflow instrumentation. PR #6923 is open. Review found that the
+finite-double-to-float range check occurred after the narrowing conversion;
+the response now checks the `float` bounds first and pins huge positive and
+negative finite inputs. Two requests to apply `S` to 8-byte Numeric/Currency
+encoding conflict with retained installed-VFP9 bytes, so explicit `8S`/`8RS`
+vectors and the VFP9 Help discrepancy are now recorded rather than changing
+the observed contract. Complete exact-head review, green checks, and merge.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
@@ -327,11 +310,9 @@ Owner-directed workstream order before the #6879 assignment was:
      `SPACE` (#6775), `ROUND` (PR #6878), and `CHR` (this continuation slice).
    - Completed most recently: `AT`/`STRTRAN` occurrence validation and
      `GETWORDNUM` boundary coverage (PR #6918).
-   - Active: `SUBSTR`/`SUBSTRC` huge-positive starts. Installed VFP9 converts
-     the start through signed low 32 bits, then returns the final character
-     when that value is at or before the source end; this operation-specific
-     quirk is available only in `NUMERICBEHAVIOR VFP9`.
-   - DECLARE narrowing (#6050), `BINTOC`/`CTOBIN` (#5766), array dimensions
+   - Completed after those: `SUBSTR`/`SUBSTRC` huge-positive starts (PR #6919)
+     and native/managed `DECLARE` narrowing (#6050, PR #6920).
+   - Active: `BINTOC`/`CTOBIN` (#5766). Remaining after it: array dimensions
      (#5594), and the ~150 `llround(value_as_number(...))` sites in other
      modules (#5611 umbrella).
    - Small follow-ups: `STR` with a negative decimals count is error 1908 in

@@ -15,6 +15,7 @@
 #include <cctype>
 #include <cmath>
 #include <ctime>
+#include <cstring>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
@@ -1972,6 +1973,405 @@ PrgValue make_currency_value(std::int64_t scaled_value) {
     result.kind = PrgValueKind::currency;
     result.currency_value = scaled_value;
     return result;
+}
+
+namespace {
+
+enum class BinaryEncoding {
+    integer_1,
+    integer_2,
+    integer_4,
+    sortable_double,
+    native_float,
+    native_double,
+    currency
+};
+
+struct BinarySelector {
+    BinaryEncoding encoding = BinaryEncoding::integer_4;
+    bool reverse = false;
+    bool suppress_sign_transform = false;
+};
+
+[[noreturn]] void throw_invalid_binary_conversion() {
+    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+}
+
+bool is_numeric_value(const PrgValue& value) {
+    return value.kind == PrgValueKind::number || value.kind == PrgValueKind::int64 ||
+           value.kind == PrgValueKind::uint64 || value.kind == PrgValueKind::currency;
+}
+
+std::optional<int> exact_numeric_selector(const PrgValue& selector) {
+    if (!is_numeric_value(selector)) {
+        return std::nullopt;
+    }
+    if (selector.kind == PrgValueKind::int64) {
+        if (selector.int64_value < std::numeric_limits<int>::min() ||
+            selector.int64_value > std::numeric_limits<int>::max()) {
+            return std::nullopt;
+        }
+        return static_cast<int>(selector.int64_value);
+    }
+    if (selector.kind == PrgValueKind::uint64) {
+        if (selector.uint64_value > static_cast<std::uint64_t>(std::numeric_limits<int>::max())) {
+            return std::nullopt;
+        }
+        return static_cast<int>(selector.uint64_value);
+    }
+    if (selector.kind == PrgValueKind::currency) {
+        if (selector.currency_value % 10000 != 0) {
+            return std::nullopt;
+        }
+        const std::int64_t integral = selector.currency_value / 10000;
+        if (integral < std::numeric_limits<int>::min() || integral > std::numeric_limits<int>::max()) {
+            return std::nullopt;
+        }
+        return static_cast<int>(integral);
+    }
+    if (!std::isfinite(selector.number_value) || std::trunc(selector.number_value) != selector.number_value ||
+        selector.number_value < static_cast<double>(std::numeric_limits<int>::min()) ||
+        selector.number_value > static_cast<double>(std::numeric_limits<int>::max())) {
+        return std::nullopt;
+    }
+    return static_cast<int>(selector.number_value);
+}
+
+BinaryEncoding integer_encoding_for_width(const int width) {
+    switch (width) {
+        case 1: return BinaryEncoding::integer_1;
+        case 2: return BinaryEncoding::integer_2;
+        case 4: return BinaryEncoding::integer_4;
+        default: throw_invalid_binary_conversion();
+    }
+}
+
+std::size_t encoding_width(const BinaryEncoding encoding) {
+    switch (encoding) {
+        case BinaryEncoding::integer_1: return 1U;
+        case BinaryEncoding::integer_2: return 2U;
+        case BinaryEncoding::integer_4:
+        case BinaryEncoding::native_float: return 4U;
+        case BinaryEncoding::sortable_double:
+        case BinaryEncoding::native_double:
+        case BinaryEncoding::currency: return 8U;
+    }
+    throw_invalid_binary_conversion();
+}
+
+BinarySelector parse_bintoc_selector(const PrgValue* selector) {
+    if (selector == nullptr) {
+        return {};
+    }
+    if (selector->kind != PrgValueKind::string) {
+        const auto width = exact_numeric_selector(*selector);
+        if (!width.has_value()) {
+            throw_invalid_binary_conversion();
+        }
+        if (*width == 8) {
+            return {BinaryEncoding::sortable_double, false, false};
+        }
+        return {integer_encoding_for_width(*width), false, false};
+    }
+
+    const std::string flags = uppercase_copy(selector->string_value);
+    if (flags.empty()) {
+        throw_invalid_binary_conversion();
+    }
+    BinarySelector result;
+    bool has_encoding = false;
+    bool saw_reverse = false;
+    bool saw_suppress = false;
+    for (const char flag : flags) {
+        if (flag == 'R') {
+            if (saw_reverse) throw_invalid_binary_conversion();
+            saw_reverse = result.reverse = true;
+            continue;
+        }
+        if (flag == 'S') {
+            if (saw_suppress) throw_invalid_binary_conversion();
+            saw_suppress = result.suppress_sign_transform = true;
+            continue;
+        }
+        if (has_encoding) {
+            throw_invalid_binary_conversion();
+        }
+        has_encoding = true;
+        switch (flag) {
+            case '1': result.encoding = BinaryEncoding::integer_1; break;
+            case '2': result.encoding = BinaryEncoding::integer_2; break;
+            case '4': result.encoding = BinaryEncoding::integer_4; break;
+            case '8': result.encoding = BinaryEncoding::sortable_double; break;
+            case 'F': result.encoding = BinaryEncoding::native_float; break;
+            case 'B': result.encoding = BinaryEncoding::native_double; break;
+            default: throw_invalid_binary_conversion();
+        }
+    }
+    return result;
+}
+
+BinarySelector parse_ctobin_selector(const PrgValue* selector, const std::size_t source_size) {
+    if (selector != nullptr && selector->kind != PrgValueKind::string) {
+        throw_invalid_binary_conversion();
+    }
+    BinarySelector result;
+    bool has_encoding = false;
+    bool saw_reverse = false;
+    bool saw_suppress = false;
+    const std::string flags = selector == nullptr ? std::string{} : uppercase_copy(selector->string_value);
+    if (selector != nullptr && flags.empty()) {
+        throw_invalid_binary_conversion();
+    }
+    for (const char flag : flags) {
+        if (flag == 'R') {
+            if (saw_reverse) throw_invalid_binary_conversion();
+            saw_reverse = result.reverse = true;
+            continue;
+        }
+        if (flag == 'S') {
+            if (saw_suppress) throw_invalid_binary_conversion();
+            saw_suppress = result.suppress_sign_transform = true;
+            continue;
+        }
+        if (has_encoding) {
+            throw_invalid_binary_conversion();
+        }
+        has_encoding = true;
+        switch (flag) {
+            case '1': result.encoding = BinaryEncoding::integer_1; break;
+            case '2': result.encoding = BinaryEncoding::integer_2; break;
+            case '4': result.encoding = BinaryEncoding::integer_4; break;
+            case '8': result.encoding = BinaryEncoding::native_double; break;
+            case 'N': result.encoding = source_size == 4U ? BinaryEncoding::native_float
+                                                          : BinaryEncoding::native_double; break;
+            case 'B': result.encoding = BinaryEncoding::sortable_double; break;
+            case 'Y': result.encoding = BinaryEncoding::currency; break;
+            default: throw_invalid_binary_conversion();
+        }
+    }
+    if (!has_encoding) {
+        if (source_size == 8U) {
+            result.encoding = BinaryEncoding::sortable_double;
+        } else if (source_size == 1U || source_size == 2U || source_size == 4U) {
+            result.encoding = integer_encoding_for_width(static_cast<int>(source_size));
+        } else {
+            throw_invalid_binary_conversion();
+        }
+    }
+    if ((result.encoding == BinaryEncoding::native_float && source_size != 4U) ||
+        (result.encoding == BinaryEncoding::native_double && source_size != 8U) ||
+        encoding_width(result.encoding) != source_size) {
+        throw_invalid_binary_conversion();
+    }
+    return result;
+}
+
+std::optional<std::int64_t> signed_integer_argument(const PrgValue& value, const int bits) {
+    const std::int64_t minimum = bits == 32 ? std::numeric_limits<std::int32_t>::min()
+                                           : -(std::int64_t{1} << (bits - 1));
+    const std::int64_t maximum = bits == 32 ? std::numeric_limits<std::int32_t>::max()
+                                           : (std::int64_t{1} << (bits - 1)) - 1;
+    if (value.kind == PrgValueKind::int64) {
+        return value.int64_value >= minimum && value.int64_value <= maximum
+                   ? std::optional<std::int64_t>(value.int64_value)
+                   : std::nullopt;
+    }
+    if (value.kind == PrgValueKind::uint64) {
+        return value.uint64_value <= static_cast<std::uint64_t>(maximum)
+                   ? std::optional<std::int64_t>(static_cast<std::int64_t>(value.uint64_value))
+                   : std::nullopt;
+    }
+    if (value.kind == PrgValueKind::currency) {
+        const std::int64_t integral = value.currency_value / 10000;
+        return integral >= minimum && integral <= maximum ? std::optional<std::int64_t>(integral) : std::nullopt;
+    }
+    if (value.kind != PrgValueKind::number || !std::isfinite(value.number_value)) {
+        return std::nullopt;
+    }
+    const double truncated = std::trunc(value.number_value);
+    return truncated >= static_cast<double>(minimum) && truncated <= static_cast<double>(maximum)
+               ? std::optional<std::int64_t>(static_cast<std::int64_t>(truncated))
+               : std::nullopt;
+}
+
+std::string big_endian_bytes(std::uint64_t value, const std::size_t width) {
+    std::string result(width, '\0');
+    for (std::size_t index = 0U; index < width; ++index) {
+        result[width - index - 1U] = static_cast<char>(value & 0xFFU);
+        value >>= 8U;
+    }
+    return result;
+}
+
+std::string little_endian_bytes(std::uint64_t value, const std::size_t width) {
+    std::string result(width, '\0');
+    for (std::size_t index = 0U; index < width; ++index) {
+        result[index] = static_cast<char>(value & 0xFFU);
+        value >>= 8U;
+    }
+    return result;
+}
+
+std::uint64_t unsigned_from_big_endian(const std::string& bytes) {
+    std::uint64_t result = 0U;
+    for (const unsigned char byte : bytes) {
+        result = (result << 8U) | byte;
+    }
+    return result;
+}
+
+std::uint64_t unsigned_from_little_endian(const std::string& bytes) {
+    std::uint64_t result = 0U;
+    for (std::size_t index = bytes.size(); index-- > 0U;) {
+        result = (result << 8U) | static_cast<unsigned char>(bytes[index]);
+    }
+    return result;
+}
+
+std::int64_t signed_from_twos_complement(const std::uint64_t value, const int bits) {
+    if (bits == 64) {
+        if (value <= static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())) {
+            return static_cast<std::int64_t>(value);
+        }
+        return -1 - static_cast<std::int64_t>(std::numeric_limits<std::uint64_t>::max() - value);
+    }
+    const std::uint64_t sign_bit = std::uint64_t{1} << (bits - 1);
+    if ((value & sign_bit) == 0U) {
+        return static_cast<std::int64_t>(value);
+    }
+    const std::uint64_t mask = (std::uint64_t{1} << bits) - 1U;
+    return -1 - static_cast<std::int64_t>(mask - value);
+}
+
+template <typename Floating, typename Unsigned>
+Unsigned floating_bits(const Floating value) {
+    static_assert(sizeof(Floating) == sizeof(Unsigned));
+    Unsigned bits = 0;
+    std::memcpy(&bits, &value, sizeof(bits));
+    return bits;
+}
+
+template <typename Floating, typename Unsigned>
+Floating floating_from_bits(const Unsigned bits) {
+    static_assert(sizeof(Floating) == sizeof(Unsigned));
+    Floating value = 0;
+    std::memcpy(&value, &bits, sizeof(value));
+    return value;
+}
+
+}  // namespace
+
+PrgValue bintoc_value(const PrgValue& value, const PrgValue* selector) {
+    if (value.is_null || (selector != nullptr && selector->is_null)) {
+        return make_null_value();
+    }
+    if (!is_numeric_value(value)) {
+        throw_invalid_binary_conversion();
+    }
+    BinarySelector parsed = parse_bintoc_selector(selector);
+    std::string result;
+    if (parsed.encoding == BinaryEncoding::integer_1 || parsed.encoding == BinaryEncoding::integer_2 ||
+        parsed.encoding == BinaryEncoding::integer_4) {
+        const std::size_t width = encoding_width(parsed.encoding);
+        const auto converted = signed_integer_argument(value, static_cast<int>(width * 8U));
+        if (!converted.has_value()) {
+            throw_invalid_binary_conversion();
+        }
+        result = big_endian_bytes(static_cast<std::uint64_t>(*converted), width);
+        if (!parsed.suppress_sign_transform) {
+            result[0] = static_cast<char>(static_cast<unsigned char>(result[0]) ^ 0x80U);
+        }
+    } else if (parsed.encoding == BinaryEncoding::native_float) {
+        const double numeric = value_as_number(value);
+        if (!std::isfinite(numeric) ||
+            numeric < static_cast<double>(std::numeric_limits<float>::lowest()) ||
+            numeric > static_cast<double>(std::numeric_limits<float>::max())) {
+            throw_invalid_binary_conversion();
+        }
+        const float converted = static_cast<float>(numeric);
+        result = little_endian_bytes(floating_bits<float, std::uint32_t>(converted), 4U);
+    } else if (parsed.encoding == BinaryEncoding::native_double) {
+        const double converted = value_as_number(value);
+        if (!std::isfinite(converted)) {
+            throw_invalid_binary_conversion();
+        }
+        result = little_endian_bytes(floating_bits<double, std::uint64_t>(converted), 8U);
+    } else if (value.kind == PrgValueKind::currency) {
+        result = big_endian_bytes(static_cast<std::uint64_t>(value.currency_value), 8U);
+        result[0] = static_cast<char>(static_cast<unsigned char>(result[0]) ^ 0x80U);
+    } else {
+        const double converted = value_as_number(value);
+        if (!std::isfinite(converted)) {
+            throw_invalid_binary_conversion();
+        }
+        std::uint64_t bits = floating_bits<double, std::uint64_t>(converted);
+        if ((bits & (std::uint64_t{1} << 63U)) != 0U) {
+            bits = ~bits;
+        } else {
+            bits ^= std::uint64_t{1} << 63U;
+        }
+        result = big_endian_bytes(bits, 8U);
+    }
+    if (parsed.reverse) {
+        std::reverse(result.begin(), result.end());
+    }
+    return make_string_value(std::move(result));
+}
+
+PrgValue ctobin_value(const PrgValue& value, const PrgValue* selector) {
+    if (value.is_null || (selector != nullptr && selector->is_null)) {
+        return make_null_value();
+    }
+    if (value.kind != PrgValueKind::string || value.is_object_reference) {
+        throw_invalid_binary_conversion();
+    }
+    std::string bytes = value.string_value;
+    const BinarySelector parsed = parse_ctobin_selector(selector, bytes.size());
+    if (parsed.reverse) {
+        std::reverse(bytes.begin(), bytes.end());
+    }
+    if (parsed.encoding == BinaryEncoding::integer_1 || parsed.encoding == BinaryEncoding::integer_2 ||
+        parsed.encoding == BinaryEncoding::integer_4) {
+        if (!parsed.suppress_sign_transform) {
+            bytes[0] = static_cast<char>(static_cast<unsigned char>(bytes[0]) ^ 0x80U);
+        }
+        return make_number_value(static_cast<double>(signed_from_twos_complement(
+            unsigned_from_big_endian(bytes), static_cast<int>(bytes.size() * 8U))));
+    }
+    if (parsed.encoding == BinaryEncoding::native_float) {
+        const float converted = floating_from_bits<float, std::uint32_t>(
+            static_cast<std::uint32_t>(unsigned_from_little_endian(bytes)));
+        if (!std::isfinite(converted)) {
+            throw_invalid_binary_conversion();
+        }
+        return make_number_value(static_cast<double>(converted));
+    }
+    if (parsed.encoding == BinaryEncoding::native_double) {
+        const double converted = floating_from_bits<double, std::uint64_t>(unsigned_from_little_endian(bytes));
+        if (!std::isfinite(converted)) {
+            throw_invalid_binary_conversion();
+        }
+        return make_number_value(converted);
+    }
+    if (parsed.encoding == BinaryEncoding::currency) {
+        if (!parsed.suppress_sign_transform) {
+            bytes[0] = static_cast<char>(static_cast<unsigned char>(bytes[0]) ^ 0x80U);
+        }
+        return make_currency_value(signed_from_twos_complement(unsigned_from_big_endian(bytes), 64));
+    }
+    std::uint64_t bits = unsigned_from_big_endian(bytes);
+    if (!parsed.suppress_sign_transform) {
+        if ((bits & (std::uint64_t{1} << 63U)) != 0U) {
+            bits ^= std::uint64_t{1} << 63U;
+        } else {
+            bits = ~bits;
+        }
+    }
+    const double converted = floating_from_bits<double, std::uint64_t>(bits);
+    if (!std::isfinite(converted)) {
+        throw_invalid_binary_conversion();
+    }
+    return make_number_value(converted);
 }
 
 bool value_as_bool(const PrgValue& value) {
