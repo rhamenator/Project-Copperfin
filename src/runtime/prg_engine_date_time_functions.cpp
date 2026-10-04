@@ -910,6 +910,37 @@ int checked_date_time_constructor_component(
     return static_cast<int>(converted);
 }
 
+// Governing requirement: RQ-CF-PRG-DOW-FIRST-DAY-BOUNDS-001.
+int checked_date_numeric_option(
+    const PrgValue& value,
+    const int minimum,
+    const int maximum,
+    const NumericBehavior behavior) {
+    std::int64_t converted = 0;
+    if (behavior == NumericBehavior::vfp9) {
+        converted = vfp9_numeric_to_int32(value);
+    } else if (value.kind == PrgValueKind::int64) {
+        converted = value.int64_value;
+    } else if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value > static_cast<std::uint64_t>(maximum)) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        converted = static_cast<std::int64_t>(value.uint64_value);
+    } else {
+        const double truncated = std::trunc(value_as_number(value));
+        if (!std::isfinite(truncated) || truncated < static_cast<double>(minimum) ||
+            truncated > static_cast<double>(maximum)) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        converted = static_cast<std::int64_t>(truncated);
+    }
+
+    if (converted < minimum || converted > maximum) {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+    }
+    return static_cast<int>(converted);
+}
+
 // Governing requirement: RQ-CF-PRG-GOMONTH-BOUNDARIES-001.
 std::int64_t checked_month_offset(
     const PrgValue& value,
@@ -1112,9 +1143,10 @@ std::optional<PrgValue> evaluate_date_time_function(
         }
         int weekday = weekday_number_sunday_first(year, month, day);
         if (arguments.size() >= 2U) {
-            int first_day = static_cast<int>(std::llround(value_as_number(arguments[1])));
-            if (first_day < 1 || first_day > 7) {
-                first_day = 1;
+            int first_day = checked_date_numeric_option(
+                arguments[1], 0, 7, numeric_behavior(set_callback));
+            if (first_day == 0) {
+                first_day = set_int_value(set_callback, "FDOW", 1, 1, 7);
             }
             weekday = ((weekday - first_day + 7) % 7) + 1;
         }

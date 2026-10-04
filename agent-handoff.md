@@ -232,21 +232,24 @@ after review found a macOS clone destination-identity gap.
 
 Open owner-authored, `agent-approved` issue #5611 is the implementation
 umbrella and reopened #6776 is the design/checklist reference. The active
-`STR()` width/decimals slice merged in PR #6929 at `2e380ff4f`; all exact-head
-checks passed and its five review conversations were resolved. The next
-bounded slice is `DATE()` / `DATETIME()` numeric component validation on branch
-`fix/date-time-numeric-bounds-5611` in
-`~/.codex/worktrees/date-time-numeric-bounds-5611/Project-Copperfin`, based on
-that merge. A fresh 42-case installed-VFP9 probe establishes truncation toward
-zero, the exact 100..9999 year range, catchable error 11 for invalid calendar
-or time components, positive out-of-range rejection, and the explicit-VFP9
-negative low-32-bit conversion quirk. The probe and output are retained under
-`tests/fixtures/vfp9-date-time-constructor-bounds-observation/`. Production
-validation, focused script/direct-dispatch coverage, docs/22, docs/32, and the
-changelog fragment are drafted; both focused targets pass normally and under
-Clang AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
-instrumentation. Remaining: signed commit, push, PR/review, green exact-head
-checks, and merge.
+`DATE()` / `DATETIME()` numeric-component slice merged in PR #6930 at
+`e1f90c8d4`; all 33 checks passed at exact head `8e631b4b7`, exact-head review
+was clean, and there were no review conversations. The next bounded slice is
+`DOW()` optional first-day numeric validation on branch
+`fix/dow-week-numeric-bounds-5611` in
+`~/.codex/worktrees/dow-week-numeric-bounds-5611/Project-Copperfin`, based on
+that merge. A fresh 23-case installed-VFP9 probe establishes truncation toward
+zero, the accepted 0..7 range, explicit-zero `SET FDOW` fallback, error 11,
+and the explicit-VFP9 low-32-bit/integer-indefinite behavior. The probe and
+output are retained under
+`tests/fixtures/vfp9-dow-first-day-bounds-observation/`. Production validation,
+focused script/direct-dispatch coverage, docs/22, docs/32, and the changelog
+fragment are drafted; all three focused targets pass normally and under Clang
+AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
+instrumentation. Adjacent probe evidence exposed an independent `WEEK()`
+option-order/range defect, filed as #6933 against current `main` and
+deliberately not folded into this slice. Remaining: signed commit, push,
+PR/review, green exact-head checks, and merge.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
@@ -328,7 +331,10 @@ Owner-directed workstream order before the #6879 assignment was:
    - Completed after those: bounded `STR()` width/decimals validation (PR
      #6929), including the exact 237 width ceiling and explicit-mode negative
      low-32-bit quirk.
-   - Active: `DATE()` / `DATETIME()` numeric component validation.
+   - Completed after those: `DATE()` / `DATETIME()` numeric component
+     validation (PR #6930).
+   - Active: `DOW()` optional first-day numeric validation. Independent
+     `WEEK()` option-order/range compatibility remains tracked as #6933.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

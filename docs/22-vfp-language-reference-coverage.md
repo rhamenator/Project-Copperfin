@@ -1,5 +1,17 @@
 # VFP Language Reference Coverage
 
+- `DOW()` optional first-day numeric boundaries (2026-10-04, #5611 under
+  #6776): installed VFP9 truncates the option toward zero, accepts 0 through
+  7, uses `SET FDOW` when an explicit option truncates to zero, and raises
+  catchable error 11 after signed-32-bit conversion when the result is outside
+  that range. Default `COPPERFIN` behavior rejects non-finite and raw
+  out-of-range values before conversion; explicit `VFP9` behavior retains the
+  observed low-32-bit wrap and integer-indefinite zero. Exact int64/uint64
+  operands remain exact through validation. The complete probe and output are
+  retained under `tests/fixtures/vfp9-dow-first-day-bounds-observation/`.
+  The same probe pass exposed the separate `WEEK()` option-order defect #6933;
+  this slice does not expand into that independent compatibility correction.
+
 - `DATE()` / `DATETIME()` numeric component boundaries (2026-10-04, #5611
   under #6776): fresh installed-VFP9 evidence shows that constructor components
   truncate toward zero, the supported year range is 100 through 9999, and an

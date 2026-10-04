@@ -1,0 +1,1 @@
+- 2026-10-04: Validate `DOW()`'s optional first-day argument before conversion, preserve its documented 0-through-7 contract and `SET FDOW` fallback, and confine VFP9's signed-32-bit conversion quirk to `SET NUMERICBEHAVIOR TO VFP9`.
