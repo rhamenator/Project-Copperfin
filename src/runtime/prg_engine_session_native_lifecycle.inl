@@ -275,12 +275,6 @@
                             trim_copy(property_statement.expression);
                     }
                 }
-            }
-            catch (...)
-            {
-                discard_native_object_tree_without_destroy(*runtime_object);
-                throw;
-            }
             seed_native_olecontrol_timeout_policy_properties(*runtime_object);
             seed_native_olecontrol_verb_inspection_properties(*runtime_object);
             seed_native_visual_properties(*runtime_object);
@@ -514,7 +508,13 @@
                 }
             }
 
-            return runtime_object;
+                return runtime_object;
+            }
+            catch (...)
+            {
+                discard_native_object_tree_without_destroy(*runtime_object);
+                throw;
+            }
         }
         const Statement *current_statement() const
         {

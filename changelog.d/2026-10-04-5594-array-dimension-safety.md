@@ -1,6 +1,7 @@
 - 2026-10-04: Hardened runtime array declaration, resizing, restoration,
-  native-class initialization, and element-growth paths with centralized
+  native-class initialization, and element read/growth paths with centralized
   finite/integral dimension validation, checked element-count and row-major
   offset arithmetic, a bounded host-allocation ceiling, failure-atomic
-  metadata/content updates, and localized catchable error 230 diagnostics
+  metadata/content updates (including atomic `RESTORE FROM` validation and
+  nested native-object rollback), and localized catchable error 230 diagnostics
   (#5594).

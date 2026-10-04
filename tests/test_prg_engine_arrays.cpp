@@ -999,6 +999,10 @@ void test_array_dimension_boundaries_are_catchable_and_atomic() {
         "cTailAfter = aStable[2,2]\n"
         "cPrivateAfter = aPrivateKeep[1]\n"
         "cRejectedPublicType = TYPE('aRejectedPublic')\n"
+        "cUnsafeArrayExpression = 'aStable[EXP(1000)]'\n"
+        "cBracketUnsafeReadType = TYPE('aStable[EXP(1000)]')\n"
+        "cParenUnsafeReadType = TYPE('aStable(EXP(1000))')\n"
+        "uMacroUnsafeRead = &cUnsafeArrayExpression\n"
         "DIMENSION aLimit[65000]\n"
         "aLimit[65000] = 'boundary'\n"
         "nLimitLength = ALEN(aLimit)\n"
@@ -1053,6 +1057,9 @@ void test_array_dimension_boundaries_are_catchable_and_atomic() {
     check("ctailafter", "tail", "failed resizes should preserve the trailing value");
     check("cprivateafter", "private-kept", "failed PRIVATE ARRAY should preserve the prior binding");
     check("crejectedpublictype", "U", "failed PUBLIC ARRAY should not publish a partial binding");
+    check("cbracketunsafereadtype", "U", "bracket array reads should reject non-finite selectors safely");
+    check("cparenunsafereadtype", "U", "parenthesis array reads should reject non-finite selectors safely");
+    check("umacrounsaferead", "", "macro array reads should reject non-finite selectors safely");
     check("nlimitlength", "65000", "the Copperfin safety ceiling should remain usable");
     check("climitvalue", "boundary", "the maximum array's final element should remain safely writable");
 

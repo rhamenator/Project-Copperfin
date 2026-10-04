@@ -8326,20 +8326,17 @@
                 }
 
                 const bool additive = normalize_identifier(statement.identifier) == "additive";
-                if (!additive)
+                struct StagedRestoredVariable
                 {
-                    globals.clear();
-                    arrays.clear();
-                    public_names.clear();
-                    for (auto &active_frame : stack)
-                    {
-                        active_frame.private_saved_values.clear();
-                        active_frame.private_saved_arrays.clear();
-                        active_frame.locals.clear();
-                    }
-                }
+                    std::string name;
+                    PrgValue scalar_value;
+                    std::vector<PrgValue> array_values;
+                    std::size_t columns = 1U;
+                    bool is_array = false;
+                    bool restore_public = false;
+                };
+                std::vector<StagedRestoredVariable> staged_variables;
 
-                std::size_t restored_count = 0U;
                 std::string line;
                 while (std::getline(*input, line))
                 {
@@ -8453,7 +8450,7 @@
                             : std::optional<std::size_t>{1U};
                         if (!parsed_rows.has_value() || !parsed_columns.has_value())
                         {
-                            continue;
+                            throw_invalid_array_dimensions();
                         }
                         const std::size_t rows = *parsed_rows;
                         const std::size_t columns = std::max<std::size_t>(1U, *parsed_columns);
@@ -8471,31 +8468,60 @@
                             values.push_back(parse_memvar_value(element_type, element_text));
                         }
                         values.resize(element_count);
-                        assign_array(name, std::move(values), columns);
+                        staged_variables.push_back({
+                            .name = name,
+                            .scalar_value = make_empty_value(),
+                            .array_values = std::move(values),
+                            .columns = columns,
+                            .is_array = true,
+                            .restore_public = restore_public});
                     }
                     else
                     {
-                        const PrgValue restored_value = parse_memvar_value(type_code, raw_value);
-                        if (frame.local_names.contains(name) || frame.locals.contains(name))
-                        {
-                            frame.locals[name] = restored_value;
-                        }
-                        else
-                        {
-                            globals[name] = restored_value;
-                        }
+                        staged_variables.push_back({
+                            .name = name,
+                            .scalar_value = parse_memvar_value(type_code, raw_value),
+                            .array_values = {},
+                            .restore_public = restore_public});
                     }
+                }
 
-                    if (restore_public)
+                if (!additive)
+                {
+                    globals.clear();
+                    arrays.clear();
+                    public_names.clear();
+                    for (auto &active_frame : stack)
                     {
-                        public_names.insert(name);
+                        active_frame.private_saved_values.clear();
+                        active_frame.private_saved_arrays.clear();
+                        active_frame.locals.clear();
                     }
-                    ++restored_count;
+                }
+
+                for (StagedRestoredVariable &restored : staged_variables)
+                {
+                    if (restored.is_array)
+                    {
+                        assign_array(restored.name, std::move(restored.array_values), restored.columns);
+                    }
+                    else if (frame.local_names.contains(restored.name) || frame.locals.contains(restored.name))
+                    {
+                        frame.locals[restored.name] = restored.scalar_value;
+                    }
+                    else
+                    {
+                        globals[restored.name] = restored.scalar_value;
+                    }
+                    if (restored.restore_public)
+                    {
+                        public_names.insert(restored.name);
+                    }
                 }
 
                 events.push_back({.category = "runtime.restore_memory",
                                   .detail = copperfin::platform::path_to_utf8_string(source_path) +
-                                      " (" + std::to_string(restored_count) + " variables)",
+                                      " (" + std::to_string(staged_variables.size()) + " variables)",
                                   .location = statement.location});
                 return {};
             }

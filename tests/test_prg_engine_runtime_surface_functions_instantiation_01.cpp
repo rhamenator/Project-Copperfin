@@ -147,8 +147,21 @@ namespace copperfin::runtime_surface_tests
             "  nError = oException.ErrorNo\n"
             "ENDTRY\n"
             "cRejectedType = TYPE('oRejected')\n"
+            "nNestedError = 0\n"
+            "TRY\n"
+            "  oNestedRejected = CREATEOBJECT('UnsafeParent')\n"
+            "CATCH TO oNestedException\n"
+            "  nNestedError = oNestedException.ErrorNo\n"
+            "ENDTRY\n"
+            "cNestedRejectedType = TYPE('oNestedRejected')\n"
             "RETURN\n"
             "DEFINE CLASS UnsafeArrayHolder AS Custom\n"
+            "    DIMENSION aValues[40000, 2]\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS UnsafeParent AS Custom\n"
+            "    ADD OBJECT Child AS UnsafeChild\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS UnsafeChild AS Custom\n"
             "    DIMENSION aValues[40000, 2]\n"
             "ENDDEFINE\n");
 
@@ -181,6 +194,29 @@ namespace copperfin::runtime_surface_tests
             });
         expect(!has_rejected_object,
                "a rejected native-class construction should discard its partially registered object");
+        const auto nested_error = state.globals.find("nnestederror");
+        const auto nested_rejected_type = state.globals.find("cnestedrejectedtype");
+        expect(nested_error != state.globals.end(), "nested native-class array dimension error should be captured");
+        if (nested_error != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(nested_error->second) == "230",
+                   "unsafe nested native-class array dimensions should raise error 230");
+        }
+        expect(nested_rejected_type != state.globals.end(), "rejected nested native-class binding type should be captured");
+        if (nested_rejected_type != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(nested_rejected_type->second) == "U",
+                   "a rejected nested native-class construction should not assign a partial object reference");
+        }
+        const bool has_nested_rejected_object = std::any_of(
+            state.ole_objects.begin(),
+            state.ole_objects.end(),
+            [](const auto& object)
+            {
+                return object.prog_id == "UnsafeParent" || object.prog_id == "UnsafeChild";
+            });
+        expect(!has_nested_rejected_object,
+               "a rejected nested native-class construction should discard its parent and child objects");
 
         fs::remove_all(temp_root, ignored);
     }
