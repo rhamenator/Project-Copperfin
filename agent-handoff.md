@@ -244,8 +244,9 @@ elsewhere in explicit VFP9 mode (-4294967295 becomes 1 and -4294967296 becomes
 focused script rows, catchable-error coverage, docs/22, docs/32, and the
 changelog fragment are complete. Both focused targets pass normally and under
 Clang AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
-instrumentation. Remaining: signed commit, push, pull request, review
-resolution, green exact-head checks, and merge.
+instrumentation. Signed implementation commit `051f061ad` is pushed and PR
+#6929 targets `main`. Remaining: exact-head review, conversation resolution,
+green exact-head checks, and merge.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
