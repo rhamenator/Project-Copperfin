@@ -17,6 +17,7 @@
 #include <limits>
 #include <string>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -606,6 +607,28 @@ std::vector<Row> build_rows() {
                     "TTOC(DATETIME(2026,1,1,-4294967295,0,0),1)", "C:20260101010000"});
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
                     "TTOC(DATETIME(2026,1,1,-EXP(1000),0,0),1)", "C:20260101000000"});
+
+    // Governing requirement: RQ-CF-PRG-DOW-FIRST-DAY-BOUNDS-001.
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET FDOW TO 4\nSET NUMERICBEHAVIOR TO ") + mode;
+        rows.push_back({set, "DOW(DATE(2026,1,7),0)", "N:1"});
+        rows.push_back({set, "DOW(DATE(2026,1,7),1.9)", "N:4"});
+        rows.push_back({set, "DOW(DATE(2026,1,7),-0.9)", "N:1"});
+        rows.push_back({set, "DOW(DATE(2026,1,7),8)", "ERR11"});
+        rows.push_back({set, "DOW(DATE(2026,1,7),-1)", "ERR11"});
+    }
+    for (const char *value : {"1E20", "-1E20", "4294967296", "-4294967295", "EXP(1000)", "-EXP(1000)"}) {
+        rows.push_back({"SET FDOW TO 4\nSET NUMERICBEHAVIOR TO COPPERFIN",
+                        std::string("DOW(DATE(2026,1,7),") + value + ")", "ERR11"});
+    }
+    for (const char *value : {"1E20", "-1E20", "4294967296", "EXP(1000)", "-EXP(1000)"}) {
+        rows.push_back({"SET FDOW TO 4\nSET NUMERICBEHAVIOR TO VFP9",
+                        std::string("DOW(DATE(2026,1,7),") + value + ")", "N:1"});
+    }
+    rows.push_back({"SET FDOW TO 4\nSET NUMERICBEHAVIOR TO VFP9",
+                    "DOW(DATE(2026,1,7),-4294967295)", "N:4"});
+    rows.push_back({"SET FDOW TO 4\nSET NUMERICBEHAVIOR TO VFP9",
+                    "DOW(DATE(2026,1,7),4294967295)", "ERR11"});
     return rows;
 }
 
@@ -886,11 +909,51 @@ void test_date_time_constructor_direct_numeric_boundaries() {
     }
 }
 
+void test_dow_direct_numeric_boundaries() {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const auto callback = [](const char* mode) {
+        return [mode](const std::string& setting) {
+            if (setting == "NUMERICBEHAVIOR") {
+                return std::string(mode);
+            }
+            return setting == "FDOW" ? std::string("4") : std::string{};
+        };
+    };
+    const auto args_with_first_day = [](const copperfin::runtime::PrgValue& first_day) {
+        return std::vector<copperfin::runtime::PrgValue>{
+            copperfin::runtime::make_date_value("01/07/2026", 2026, 1, 7),
+            first_day};
+    };
+
+    const auto exact_low_bit_one = copperfin::runtime::make_int64_value(
+        std::numeric_limits<std::int64_t>::min() + 1);
+    const auto exact_low_bit_zero = copperfin::runtime::make_uint64_value(UINT64_C(4294967296));
+    for (const auto& expectation : std::vector<std::pair<copperfin::runtime::PrgValue, double>>{
+             {exact_low_bit_one, 4.0},
+             {exact_low_bit_zero, 1.0},
+             {copperfin::runtime::make_number_value(nan), 1.0}}) {
+        const auto result = copperfin::runtime::evaluate_date_time_function(
+            "dow", args_with_first_day(expectation.first), callback("VFP9"));
+        expect(result.has_value() && result->number_value == expectation.second,
+               "VFP9 DOW should preserve exact low-32-bit conversion and integer-indefinite zero");
+
+        bool rejected = false;
+        try {
+            (void)copperfin::runtime::evaluate_date_time_function(
+                "dow", args_with_first_day(expectation.first), callback("COPPERFIN"));
+        } catch (const copperfin::runtime::PrgCompatibilityError& error) {
+            rejected = error.error_code() == 11;
+        }
+        expect(rejected, "COPPERFIN DOW should reject an out-of-range or non-finite first-day option with error 11");
+    }
+}
+
 }  // namespace
 
 int main() {
     test_conversion_helpers();
     test_date_time_constructor_direct_numeric_boundaries();
+    test_dow_direct_numeric_boundaries();
     test_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {
