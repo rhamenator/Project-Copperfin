@@ -264,8 +264,9 @@ const std::vector<Row> kBoundaryRows = {
     {"CEILING($-922337203685477.5807)", "ERR1988"},
 };
 
+// Governing requirement: RQ-CF-PRG-CURRENCY-MOD-NUMERIC-DIVISOR-001 (#5611/#6776).
 // Fresh installed-VFP9 probe evidence for Numeric divisors is retained under
-// tests/fixtures/vfp9-currency-mod-numeric-divisor-observation/ (#5611/#6776).
+// tests/fixtures/vfp9-currency-mod-numeric-divisor-observation/.
 const std::vector<Row> kCurrencyModNumericRows = {
     {"MOD($0.0004,0.00014)", "Y:$0.0001"},
     {"MOD($0.0004,-0.00014)", "Y:$0.0000"},
@@ -369,6 +370,34 @@ void test_currency_mod_direct_numeric_boundaries() {
     expect(exact_positive.has_value() && exact_positive->currency_value == 100000,
         "Currency MOD should preserve an exact positive dividend below a huge exact positive divisor");
 
+    const auto exact_near_positive = copperfin::runtime::evaluate_numeric_function(
+        "mod",
+        std::vector<copperfin::runtime::PrgValue>{
+            copperfin::runtime::make_currency_value(-9223372036854775807LL),
+            copperfin::runtime::make_int64_value(922337203685478LL)},
+        callback("COPPERFIN"));
+    expect(exact_near_positive.has_value() && exact_near_positive->currency_value == 4193,
+        "Currency MOD should compute an exact in-range opposite-sign remainder near the positive boundary");
+
+    const auto exact_near_negative = copperfin::runtime::evaluate_numeric_function(
+        "mod",
+        std::vector<copperfin::runtime::PrgValue>{
+            copperfin::runtime::make_currency_value(9223372036854775807LL),
+            copperfin::runtime::make_int64_value(-922337203685478LL)},
+        callback("COPPERFIN"));
+    expect(exact_near_negative.has_value() && exact_near_negative->currency_value == -4193,
+        "Currency MOD should compute an exact in-range opposite-sign remainder near the negative boundary");
+
+    const auto exact_storage_minimum = copperfin::runtime::evaluate_numeric_function(
+        "mod",
+        std::vector<copperfin::runtime::PrgValue>{
+            copperfin::runtime::make_currency_value(4192),
+            copperfin::runtime::make_int64_value(-922337203685478LL)},
+        callback("COPPERFIN"));
+    expect(exact_storage_minimum.has_value() &&
+               exact_storage_minimum->currency_value == std::numeric_limits<std::int64_t>::min(),
+        "Currency MOD should preserve the exactly representable negative storage minimum");
+
     bool rejected = false;
     try {
         (void)copperfin::runtime::evaluate_numeric_function(
@@ -393,6 +422,20 @@ void test_currency_mod_direct_numeric_boundaries() {
         callback("VFP9"));
     expect(vfp_nan.has_value() && vfp_nan->currency_value == 0,
         "VFP9 Currency MOD should map a NaN divisor to integer-indefinite zero");
+
+    bool floating_boundary_rejected = false;
+    try {
+        (void)copperfin::runtime::evaluate_numeric_function(
+            "mod",
+            std::vector<copperfin::runtime::PrgValue>{
+                copperfin::runtime::make_currency_value(-1),
+                copperfin::runtime::make_number_value(922337203685477.6)},
+            callback("COPPERFIN"));
+    } catch (const copperfin::runtime::PrgCompatibilityError& error) {
+        floating_boundary_rejected = error.error_code() == 1988;
+    }
+    expect(floating_boundary_rejected,
+        "Copperfin Currency MOD should reject a rounded floating result at or above 2^63 before narrowing");
 }
 
 // MOD of the stored minimum by -0.0001 is INT64_MIN % -1, signed-division overflow (a SIGFPE on common targets). The

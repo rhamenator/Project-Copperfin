@@ -321,11 +321,50 @@ bool has_at_most_four_fraction_digits(const std::string& decimal) {
     return point == std::string::npos || decimal.size() - point - 1U <= 4U;
 }
 
+PrgValue currency_mod_exact_integer_outside_range(
+    const std::int64_t dividend,
+    const PrgValue& divisor_value,
+    const NumericBehavior behavior) {
+    const bool divisor_negative = divisor_value.kind == PrgValueKind::int64 && divisor_value.int64_value < 0;
+    const std::uint64_t divisor_magnitude = divisor_negative
+                                                ? 0ULL - static_cast<std::uint64_t>(divisor_value.int64_value)
+                                                : (divisor_value.kind == PrgValueKind::int64
+                                                       ? static_cast<std::uint64_t>(divisor_value.int64_value)
+                                                       : divisor_value.uint64_value);
+    const bool dividend_negative = dividend < 0;
+    if (dividend == 0 || dividend_negative == divisor_negative) {
+        return make_currency_value(dividend);
+    }
+
+    // The divisor is an exact whole number just outside Currency range, so its magnitude exceeds the dividend's
+    // and the sign-adjusted remainder is divisor + dividend. Compute that difference in scaled unsigned arithmetic:
+    // multiplying an arbitrary uint64 divisor by 10,000 first would itself overflow.
+    const std::uint64_t dividend_magnitude = currency_magnitude(dividend);
+    const std::uint64_t result_limit = divisor_negative
+                                           ? static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()) + 1U
+                                           : static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max());
+    if (divisor_magnitude <= (dividend_magnitude + result_limit) / static_cast<std::uint64_t>(kCurrencyUnit)) {
+        const std::uint64_t result_magnitude =
+            (divisor_magnitude * static_cast<std::uint64_t>(kCurrencyUnit)) - dividend_magnitude;
+        if (!divisor_negative) {
+            return make_currency_value(static_cast<std::int64_t>(result_magnitude));
+        }
+        const std::int64_t result = result_magnitude == result_limit
+                                        ? std::numeric_limits<std::int64_t>::min()
+                                        : -static_cast<std::int64_t>(result_magnitude);
+        return make_currency_value(result);
+    }
+    if (behavior == NumericBehavior::vfp9) {
+        return make_currency_value(0);
+    }
+    throw_currency_mod_out_of_range();
+}
+
 PrgValue currency_mod_numeric(
     const std::int64_t dividend,
     const PrgValue& divisor_value,
     const NumericBehavior behavior) {
-    // Governing requirement: RQ-CF-PRG-CURRENCY-FUNCTIONS-001 (#5611/#6776).
+    // Governing requirement: RQ-CF-PRG-CURRENCY-MOD-NUMERIC-DIVISOR-001 (#5611/#6776).
     if (divisor_value.kind == PrgValueKind::currency) {
         return currency_mod_scaled(dividend, divisor_value.currency_value);
     }
@@ -352,15 +391,7 @@ PrgValue currency_mod_numeric(
             return currency_mod_scaled(dividend, exact.scaled);
         }
         if (divisor_value.kind == PrgValueKind::int64 || divisor_value.kind == PrgValueKind::uint64) {
-            const bool divisor_negative = divisor_value.kind == PrgValueKind::int64 && divisor_value.int64_value < 0;
-            const bool dividend_negative = dividend < 0;
-            if (dividend == 0 || dividend_negative == divisor_negative) {
-                return make_currency_value(dividend);
-            }
-            if (behavior == NumericBehavior::vfp9) {
-                return make_currency_value(0);
-            }
-            throw_currency_mod_out_of_range();
+            return currency_mod_exact_integer_outside_range(dividend, divisor_value, behavior);
         }
     }
 
@@ -374,9 +405,9 @@ PrgValue currency_mod_numeric(
         remainder += divisor;
     }
     const long double scaled = std::round(remainder * 10000.0L);
-    if (std::isfinite(scaled) &&
-        scaled >= static_cast<long double>(std::numeric_limits<std::int64_t>::min()) &&
-        scaled <= static_cast<long double>(std::numeric_limits<std::int64_t>::max())) {
+    constexpr long double kInt64MinimumInclusive = -9223372036854775808.0L;
+    constexpr long double kInt64UpperBoundExclusive = 9223372036854775808.0L;
+    if (std::isfinite(scaled) && scaled >= kInt64MinimumInclusive && scaled < kInt64UpperBoundExclusive) {
         return make_currency_value(static_cast<std::int64_t>(scaled));
     }
     if (behavior == NumericBehavior::vfp9) {
