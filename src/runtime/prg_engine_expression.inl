@@ -1408,10 +1408,10 @@
                     {
                         const std::size_t row = arguments.empty()
                                                     ? 0U
-                                                    : static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[0])));
+                                                    : checked_array_read_selector(arguments[0]);
                         const std::size_t column = arguments.size() < 2U
                                                        ? 1U
-                                                       : static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[1])));
+                                                       : checked_array_read_selector(arguments[1]);
                         return apply_postfix_member_and_collection_access(
                             array_value_callback_(identifier, row, column));
                     }
@@ -2559,14 +2559,29 @@
                 return make_string_value(function);
             }
 
+            std::size_t checked_array_read_selector(const PrgValue &selector) const
+            {
+                const auto converted = checked_truncated_numeric_to_int64(value_as_number(selector));
+                if (!converted.has_value() || *converted <= 0)
+                {
+                    return 0U;
+                }
+                const auto unsigned_value = static_cast<std::uint64_t>(*converted);
+                if (unsigned_value > std::numeric_limits<std::size_t>::max())
+                {
+                    return 0U;
+                }
+                return static_cast<std::size_t>(unsigned_value);
+            }
+
             PrgValue parse_array_element_access(const std::string &array_name, char close_delimiter)
             {
-                const std::size_t row = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(parse_expression())));
+                const std::size_t row = checked_array_read_selector(parse_expression());
                 std::size_t column = 1U;
                 skip_whitespace();
                 if (match(","))
                 {
-                    column = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(parse_expression())));
+                    column = checked_array_read_selector(parse_expression());
                 }
                 match(std::string(1U, close_delimiter));
                 return array_value_callback_(array_name, row, column);
@@ -2599,13 +2614,10 @@
 
                 if (array_exists_callback_(identifier))
                 {
-                    const std::size_t row =
-                        static_cast<std::size_t>(std::max<double>(0.0, value_as_number(selector)));
+                    const std::size_t row = checked_array_read_selector(selector);
                     const std::size_t column =
                         secondary_selector.has_value()
-                            ? static_cast<std::size_t>(std::max<double>(
-                                  0.0,
-                                  value_as_number(*secondary_selector)))
+                            ? checked_array_read_selector(*secondary_selector)
                             : 1U;
                     return array_value_callback_(identifier, row, column);
                 }
@@ -2821,14 +2833,12 @@
                 const PrgValue &row_selector,
                 char close_delimiter)
             {
-                const std::size_t row = static_cast<std::size_t>(
-                    std::max<double>(0.0, value_as_number(row_selector)));
+                const std::size_t row = checked_array_read_selector(row_selector);
                 std::size_t column = 1U;
                 skip_whitespace();
                 if (match(","))
                 {
-                    column = static_cast<std::size_t>(
-                        std::max<double>(0.0, value_as_number(parse_expression())));
+                    column = checked_array_read_selector(parse_expression());
                 }
                 match(std::string(1U, close_delimiter));
                 return array_value_callback_(array_name, row, column);

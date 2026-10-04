@@ -326,6 +326,83 @@
             return find_array(name, frame) != nullptr;
         }
 
+        // Copperfin currently uses a conservative 65,000-element safety
+        // ceiling so a syntactically valid PRG cannot turn a dimension
+        // expression into an unbounded host allocation request. VFP9 permits
+        // larger ordinary arrays, so the compatibility gap is documented
+        // until the runtime has a configurable aggregate memory budget.
+        static constexpr std::size_t maximum_runtime_array_elements = 65'000U;
+
+        [[noreturn]] void throw_invalid_array_dimensions() const
+        {
+            throw PrgCompatibilityError(
+                runtime_text("Runtime.Prg.Array.Error.InvalidDimensions"),
+                230);
+        }
+
+        std::size_t checked_array_dimension(
+            const PrgValue &value,
+            std::size_t minimum,
+            bool require_integral) const
+        {
+            const double raw = value_as_number(value);
+            const auto converted = checked_truncated_numeric_to_int64(raw);
+            if (!converted.has_value() || *converted < 0 ||
+                (require_integral && std::trunc(raw) != raw))
+            {
+                throw_invalid_array_dimensions();
+            }
+            const auto result = static_cast<std::uint64_t>(*converted);
+            if (result < minimum || result > maximum_runtime_array_elements)
+            {
+                throw_invalid_array_dimensions();
+            }
+            return static_cast<std::size_t>(result);
+        }
+
+        std::size_t checked_array_element_count(
+            std::size_t rows,
+            std::size_t columns) const
+        {
+            if (rows > maximum_runtime_array_elements || columns == 0U ||
+                columns > maximum_runtime_array_elements ||
+                rows > maximum_runtime_array_elements / columns)
+            {
+                throw_invalid_array_dimensions();
+            }
+            const std::size_t count = rows * columns;
+            if (count > maximum_runtime_array_elements)
+            {
+                throw_invalid_array_dimensions();
+            }
+            return count;
+        }
+
+        std::optional<std::size_t> checked_array_element_offset(
+            const RuntimeArray &array,
+            std::size_t row,
+            std::size_t column) const
+        {
+            if (row == 0U || column == 0U || row > array.rows || column > array.columns ||
+                array.columns == 0U)
+            {
+                return std::nullopt;
+            }
+            const std::size_t zero_based_row = row - 1U;
+            if (zero_based_row > std::numeric_limits<std::size_t>::max() / array.columns)
+            {
+                return std::nullopt;
+            }
+            const std::size_t row_offset = zero_based_row * array.columns;
+            const std::size_t zero_based_column = column - 1U;
+            if (row_offset > std::numeric_limits<std::size_t>::max() - zero_based_column)
+            {
+                return std::nullopt;
+            }
+            const std::size_t offset = row_offset + zero_based_column;
+            return offset < array.values.size() ? std::optional<std::size_t>{offset} : std::nullopt;
+        }
+
         std::size_t array_length(const std::string &name, int dimension) const
         {
             const RuntimeArray *array = find_array(name);
@@ -365,12 +442,12 @@
         PrgValue array_value(const std::string &name, std::size_t row, std::size_t column = 1U) const
         {
             const RuntimeArray *array = find_array(name);
-            if (array == nullptr || row == 0U || column == 0U || row > array->rows || column > array->columns)
+            if (array == nullptr)
             {
                 return make_empty_value();
             }
-            const std::size_t index = ((row - 1U) * array->columns) + (column - 1U);
-            return index < array->values.size() ? array->values[index] : make_empty_value();
+            const auto index = checked_array_element_offset(*array, row, column);
+            return index.has_value() ? array->values[*index] : make_empty_value();
         }
 
         PrgValue array_value(
@@ -380,27 +457,23 @@
             const Frame &frame) const
         {
             const RuntimeArray *array = find_array(name, frame);
-            if (array == nullptr || row == 0U || column == 0U || row > array->rows || column > array->columns)
+            if (array == nullptr)
             {
                 return make_empty_value();
             }
-            const std::size_t index = ((row - 1U) * array->columns) + (column - 1U);
-            return index < array->values.size() ? array->values[index] : make_empty_value();
+            const auto index = checked_array_element_offset(*array, row, column);
+            return index.has_value() ? array->values[*index] : make_empty_value();
         }
 
         std::size_t array_linear_index(const RuntimeArray &array, std::size_t row, std::size_t column) const
         {
-            if (row == 0U || column == 0U || row > array.rows || column > array.columns)
-            {
-                return 0U;
-            }
-            const std::size_t index = ((row - 1U) * array.columns) + column;
-            return index <= array.values.size() ? index : 0U;
+            const auto offset = checked_array_element_offset(array, row, column);
+            return offset.has_value() ? *offset + 1U : 0U;
         }
 
         std::size_t array_subscript(const RuntimeArray &array, std::size_t element, int dimension) const
         {
-            if (element == 0U || element > array.values.size())
+            if (element == 0U || element > array.values.size() || array.columns == 0U)
             {
                 return 0U;
             }
@@ -441,9 +514,16 @@
             RuntimeArray array;
             array.columns = columns;
             array.is_two_dimensional = columns > 1U;
-            array.rows = values.empty() ? 0U : ((values.size() + columns - 1U) / columns);
+            if (values.size() > maximum_runtime_array_elements)
+            {
+                throw_invalid_array_dimensions();
+            }
+            array.rows = values.empty()
+                             ? 0U
+                             : (values.size() / columns) + (values.size() % columns == 0U ? 0U : 1U);
+            const std::size_t element_count = checked_array_element_count(array.rows, array.columns);
             array.values = std::move(values);
-            array.values.resize(array.rows * array.columns);
+            array.values.resize(element_count);
             array.binding_identity = allocate_array_binding_identity();
             if (!stack.empty())
             {
@@ -495,7 +575,8 @@
             std::string &array_name,
             std::size_t &row,
             std::size_t &column,
-            bool *is_two_dimensional = nullptr)
+            bool *is_two_dimensional = nullptr,
+            bool dimension_declaration = false)
         {
             const std::string trimmed = trim_copy(reference);
             if (trimmed.empty())
@@ -533,10 +614,20 @@
             {
                 *is_two_dimensional = parts.size() >= 2U;
             }
-            row = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(evaluate_expression(parts[0], frame))));
+            row = checked_array_dimension(
+                evaluate_expression(parts[0], frame),
+                1U,
+                dimension_declaration);
             column = parts.size() >= 2U
-                         ? static_cast<std::size_t>(std::max<double>(0.0, value_as_number(evaluate_expression(parts[1], frame))))
+                         ? checked_array_dimension(
+                               evaluate_expression(parts[1], frame),
+                               1U,
+                               dimension_declaration)
                          : 1U;
+            if (dimension_declaration)
+            {
+                (void)checked_array_element_count(row, column);
+            }
             return row > 0U && column > 0U;
         }
 
@@ -565,7 +656,12 @@
             {
                 return false;
             }
-            array->values[((row - 1U) * array->columns) + (column - 1U)] = value;
+            const auto offset = checked_array_element_offset(*array, row, column);
+            if (!offset.has_value())
+            {
+                throw_invalid_array_dimensions();
+            }
+            array->values[*offset] = value;
             mark_array_mutated(*array);
             return true;
         }
@@ -576,7 +672,8 @@
             std::size_t rows = 0U;
             std::size_t columns = 1U;
             bool is_two_dimensional = false;
-            if (!parse_array_reference(declaration, frame, array_name, rows, columns, &is_two_dimensional))
+            if (!parse_array_reference(
+                    declaration, frame, array_name, rows, columns, &is_two_dimensional, true))
             {
                 return false;
             }
@@ -591,19 +688,21 @@
             std::optional<bool> is_two_dimensional = std::nullopt)
         {
             columns = std::max<std::size_t>(1U, columns);
+            const std::size_t new_size = checked_array_element_count(rows, columns);
             RuntimeArray *array = find_array(name);
             if (array == nullptr)
             {
-                assign_array(name, {}, columns);
+                assign_array(name, std::vector<PrgValue>(new_size), columns);
                 array = find_array(name);
-            }
-            if (array == nullptr)
-            {
-                return make_number_value(0.0);
-            }
-            if (is_two_dimensional.has_value())
-            {
-                array->is_two_dimensional = *is_two_dimensional;
+                if (array == nullptr)
+                {
+                    return make_number_value(0.0);
+                }
+                if (is_two_dimensional.has_value())
+                {
+                    array->is_two_dimensional = *is_two_dimensional;
+                }
+                return make_number_value(static_cast<double>(array->values.size()));
             }
 
             // A row-major array whose column count is unchanged can grow or
@@ -620,7 +719,6 @@
             // O(n^2) instead of O(n).
             if (columns == array->columns)
             {
-                const std::size_t new_size = rows * columns;
                 const bool changed = rows != array->rows || new_size != array->values.size();
                 if (new_size > array->values.size())
                 {
@@ -628,7 +726,10 @@
                     // by doubling capacity rather than reserving exactly.
                     if (array->values.capacity() < new_size)
                     {
-                        array->values.reserve(std::max(new_size, array->values.capacity() * 2U));
+                        const std::size_t doubled_capacity = array->values.capacity() > maximum_runtime_array_elements / 2U
+                                                                 ? maximum_runtime_array_elements
+                                                                 : array->values.capacity() * 2U;
+                        array->values.reserve(std::max(new_size, doubled_capacity));
                     }
                     array->values.resize(new_size);
                 }
@@ -641,11 +742,15 @@
                     // size instead, matching what the row-major reshuffle
                     // path below would have given.
                     std::vector<PrgValue> shrunk(
-                        std::make_move_iterator(array->values.begin()),
-                        std::make_move_iterator(array->values.begin() + static_cast<std::ptrdiff_t>(new_size)));
+                        array->values.begin(),
+                        array->values.begin() + static_cast<std::ptrdiff_t>(new_size));
                     array->values = std::move(shrunk);
                 }
                 array->rows = rows;
+                if (is_two_dimensional.has_value())
+                {
+                    array->is_two_dimensional = *is_two_dimensional;
+                }
                 if (changed)
                 {
                     mark_array_mutated(*array);
@@ -653,18 +758,27 @@
                 return make_number_value(static_cast<double>(array->values.size()));
             }
 
-            std::vector<PrgValue> new_values(rows * columns);
+            std::vector<PrgValue> new_values(new_size);
             const std::size_t copy_rows = std::min(rows, array->rows);
             const std::size_t copy_columns = std::min(columns, array->columns);
             for (std::size_t row = 0U; row < copy_rows; ++row)
             {
                 for (std::size_t column = 0U; column < copy_columns; ++column)
                 {
-                    new_values[(row * columns) + column] = array->values[(row * array->columns) + column];
+                    const auto old_offset = checked_array_element_offset(*array, row + 1U, column + 1U);
+                    if (!old_offset.has_value())
+                    {
+                        throw_invalid_array_dimensions();
+                    }
+                    new_values.at((row * columns) + column) = array->values[*old_offset];
                 }
             }
             array->rows = rows;
             array->columns = columns;
+            if (is_two_dimensional.has_value())
+            {
+                array->is_two_dimensional = *is_two_dimensional;
+            }
             array->values = std::move(new_values);
             mark_array_mutated(*array);
             return make_number_value(static_cast<double>(array->values.size()));

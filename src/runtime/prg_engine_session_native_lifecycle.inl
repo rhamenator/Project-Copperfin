@@ -224,55 +224,57 @@
 
                 return *field_value;
             };
-            for (const NativeClassLookup &lineage_class : class_lineage)
+            try
             {
-                for (const Statement &property_statement : lineage_class.class_definition->property_statements)
+                for (const NativeClassLookup &lineage_class : class_lineage)
                 {
-                    if (property_statement.kind == StatementKind::dimension_command)
+                    for (const Statement &property_statement : lineage_class.class_definition->property_statements)
                     {
-                        for (const std::string &declaration : property_statement.names)
+                        if (property_statement.kind == StatementKind::dimension_command)
                         {
-                            std::string property_name;
-                            std::size_t rows = 0U;
-                            std::size_t columns = 1U;
-                            bool is_two_dimensional = false;
-                            if (!parse_array_reference(
-                                    declaration, frame, property_name, rows, columns, &is_two_dimensional) ||
-                                !is_bare_identifier_text(property_name))
+                            for (const std::string &declaration : property_statement.names)
                             {
-                                continue;
+                                std::string property_name;
+                                std::size_t rows = 0U;
+                                std::size_t columns = 1U;
+                                bool is_two_dimensional = false;
+                                if (!parse_array_reference(
+                                        declaration, frame, property_name, rows, columns, &is_two_dimensional, true) ||
+                                    !is_bare_identifier_text(property_name))
+                                {
+                                    continue;
+                                }
+                                property_name = normalize_identifier(property_name);
+                                RuntimeArray array;
+                                array.rows = rows;
+                                array.columns = columns;
+                                array.is_two_dimensional = is_two_dimensional;
+                                array.values.resize(checked_array_element_count(rows, columns));
+                                // RQ-CF-PRG-033: native-object arrays participate in
+                                // the same reentrant ASCAN binding checks.
+                                array.binding_identity = allocate_array_binding_identity();
+                                native_object_arrays[runtime_object->handle][property_name] = std::move(array);
+                                runtime_object->properties[property_name] = make_empty_value();
                             }
-                            property_name = normalize_identifier(property_name);
-                            RuntimeArray array;
-                            array.rows = rows;
-                            array.columns = columns;
-                            array.is_two_dimensional = is_two_dimensional;
-                            array.values.resize(rows * columns);
-                            // RQ-CF-PRG-033: native-object arrays participate in
-                            // the same reentrant ASCAN binding checks.
-                            array.binding_identity = allocate_array_binding_identity();
-                            native_object_arrays[runtime_object->handle][property_name] = std::move(array);
-                            runtime_object->properties[property_name] = make_empty_value();
+                            continue;
                         }
-                        continue;
-                    }
-                    if (property_statement.kind != StatementKind::assignment)
-                    {
-                        continue;
-                    }
+                        if (property_statement.kind != StatementKind::assignment)
+                        {
+                            continue;
+                        }
 
-                    const std::string property_name = normalize_identifier(property_statement.identifier);
-                    if (property_name.empty())
-                    {
-                        continue;
-                    }
+                        const std::string property_name = normalize_identifier(property_statement.identifier);
+                        if (property_name.empty())
+                        {
+                            continue;
+                        }
 
-                    runtime_object->properties[property_name] =
-                        evaluate_expression(property_statement.expression, frame);
-                    native_property_expression_text_by_handle[runtime_object->handle][property_name] =
-                        trim_copy(property_statement.expression);
+                        runtime_object->properties[property_name] =
+                            evaluate_expression(property_statement.expression, frame);
+                        native_property_expression_text_by_handle[runtime_object->handle][property_name] =
+                            trim_copy(property_statement.expression);
+                    }
                 }
-            }
             seed_native_olecontrol_timeout_policy_properties(*runtime_object);
             seed_native_olecontrol_verb_inspection_properties(*runtime_object);
             seed_native_visual_properties(*runtime_object);
@@ -506,7 +508,13 @@
                 }
             }
 
-            return runtime_object;
+                return runtime_object;
+            }
+            catch (...)
+            {
+                discard_native_object_tree_without_destroy(*runtime_object);
+                throw;
+            }
         }
         const Statement *current_statement() const
         {

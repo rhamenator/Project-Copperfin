@@ -803,55 +803,74 @@ void test_restore_from_rejects_invalid_array_dimensions() {
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
-    const fs::path mem_path = temp_root / "invalid_array_dimensions.mem";
     const std::string size_max = std::to_string(std::numeric_limits<std::size_t>::max());
-    write_text(
-        mem_path,
-        "valid=A:2,2|C:a|C:b|C:c|C:d\n"
-        "grouped=A:1.000,2|C:x|C:y\n"
-        "trailing=A:2abc,1|C:x|C:y\n"
-        "negative=A:-1,2|C:x\n"
-        "parseroverflow=A:" + size_max + "0,1|C:x\n"
-        "productoverflow=A:" + size_max + ",2|C:x\n");
-
-    const fs::path main_path = temp_root / "restore_array_dimensions.prg";
-    write_text(
-        main_path,
-        "RESTORE FROM '" + mem_path.string() + "'\n"
-        "valid_type = TYPE('valid')\n"
-        "valid_rows = ALEN(valid, 1)\n"
-        "valid_cols = ALEN(valid, 2)\n"
-        "valid_last = valid[2,2]\n"
-        "grouped_type = TYPE('grouped')\n"
-        "trailing_type = TYPE('trailing')\n"
-        "negative_type = TYPE('negative')\n"
-        "parser_overflow_type = TYPE('parseroverflow')\n"
-        "product_overflow_type = TYPE('productoverflow')\n"
-        "RETURN\n");
-
-    copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create(
-            make_runtime_session_options(main_path.string(), temp_root.string(), false));
-    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed, "#4859: RESTORE FROM should fail closed for invalid array dimensions");
-
-    const auto check = [&](const std::string& name, const std::string& expected) {
-        const auto found = state.globals.find(name);
-        expect(found != state.globals.end(), "#4859: " + name + " should be captured");
-        if (found != state.globals.end()) {
-            expect(copperfin::runtime::format_value(found->second) == expected,
-                   "#4859: " + name + " should equal " + expected);
-        }
+    const std::vector<std::pair<std::string, std::string>> invalid_dimensions = {
+        {"grouped", "1.000,2"},
+        {"trailing", "2abc,1"},
+        {"negative", "-1,2"},
+        {"parseroverflow", size_max + "0,1"},
+        {"productoverflow", size_max + ",2"},
     };
-    check("valid_type", "A");
-    check("valid_rows", "2");
-    check("valid_cols", "2");
-    check("valid_last", "d");
-    check("grouped_type", "U");
-    check("trailing_type", "U");
-    check("negative_type", "U");
-    check("parser_overflow_type", "U");
-    check("product_overflow_type", "U");
+
+    for (const auto &[case_name, dimensions] : invalid_dimensions) {
+        const fs::path case_root = temp_root / case_name;
+        fs::create_directories(case_root);
+        const fs::path mem_path = case_root / "invalid.mem";
+        write_text(
+            mem_path,
+            "incoming=C:must-not-publish\n"
+            "invalid=A:" + dimensions + "|C:x|C:y\n");
+
+        const fs::path main_path = case_root / "restore_array_dimensions.prg";
+        write_text(
+            main_path,
+            "cKeep = 'kept'\n"
+            "DIMENSION aKeep[2]\n"
+            "aKeep[1] = 'first'\n"
+            "aKeep[2] = 'second'\n"
+            "nReplaceError = 0\n"
+            "TRY\n"
+            "  RESTORE FROM '" + mem_path.string() + "'\n"
+            "CATCH TO oReplace\n"
+            "  nReplaceError = oReplace.ErrorNo\n"
+            "ENDTRY\n"
+            "cReplaceKeep = cKeep\n"
+            "cReplaceTail = aKeep[2]\n"
+            "cReplaceIncomingType = TYPE('incoming')\n"
+            "nAdditiveError = 0\n"
+            "TRY\n"
+            "  RESTORE FROM '" + mem_path.string() + "' ADDITIVE\n"
+            "CATCH TO oAdditive\n"
+            "  nAdditiveError = oAdditive.ErrorNo\n"
+            "ENDTRY\n"
+            "cAdditiveKeep = cKeep\n"
+            "cAdditiveTail = aKeep[2]\n"
+            "cAdditiveIncomingType = TYPE('incoming')\n"
+            "RETURN\n");
+
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                               make_runtime_session_options(main_path.string(), case_root.string(), false))
+                               .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "#4859: RESTORE FROM should catch invalid " + case_name + " dimensions: " + state.message);
+
+        const auto check = [&](const std::string& name, const std::string& expected) {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), "#4859: " + case_name + " " + name + " should be captured");
+            if (found != state.globals.end()) {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       "#4859: " + case_name + " " + name + " should equal " + expected);
+            }
+        };
+        check("nreplaceerror", "230");
+        check("creplacekeep", "kept");
+        check("creplacetail", "second");
+        check("creplaceincomingtype", "U");
+        check("nadditiveerror", "230");
+        check("cadditivekeep", "kept");
+        check("cadditivetail", "second");
+        check("cadditiveincomingtype", "U");
+    }
 
     fs::remove_all(temp_root, ignored);
 }

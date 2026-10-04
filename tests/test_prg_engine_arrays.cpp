@@ -911,6 +911,206 @@ void test_asize_two_argument_form_preserves_existing_column_count() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_array_dimension_boundaries_are_catchable_and_atomic() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_array_dimension_boundaries";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "array_dimension_boundaries.prg";
+    write_text(
+        main_path,
+        "DIMENSION aStable[2,2], aPrivateKeep[2]\n"
+        "aStable[1,1] = 'kept'\n"
+        "aStable[2,2] = 'tail'\n"
+        "aPrivateKeep[1] = 'private-kept'\n"
+        "DIMENSION aFirstStable[1]\n"
+        "aFirstStable[1] = 'first-kept'\n"
+        "nHugeError = 0\n"
+        "TRY\n"
+        "  DIMENSION aStable[9223372036854775808,2]\n"
+        "CATCH TO oHuge\n"
+        "  nHugeError = oHuge.ErrorNo\n"
+        "ENDTRY\n"
+        "nMultiError = 0\n"
+        "TRY\n"
+        "  DIMENSION aFirstStable[3], aRejectedSecond[ALEN(aFirstStable) + 65000]\n"
+        "CATCH TO oMulti\n"
+        "  nMultiError = oMulti.ErrorNo\n"
+        "ENDTRY\n"
+        "nProductError = 0\n"
+        "TRY\n"
+        "  DIMENSION aStable[40000,2]\n"
+        "CATCH TO oProduct\n"
+        "  nProductError = oProduct.ErrorNo\n"
+        "ENDTRY\n"
+        "nFractionError = 0\n"
+        "TRY\n"
+        "  DIMENSION aStable[2.5]\n"
+        "CATCH TO oFraction\n"
+        "  nFractionError = oFraction.ErrorNo\n"
+        "ENDTRY\n"
+        "nNegativeError = 0\n"
+        "TRY\n"
+        "  DIMENSION aStable[-1]\n"
+        "CATCH TO oNegative\n"
+        "  nNegativeError = oNegative.ErrorNo\n"
+        "ENDTRY\n"
+        "nInfinityError = 0\n"
+        "TRY\n"
+        "  DIMENSION aStable[EXP(1000)]\n"
+        "CATCH TO oInfinity\n"
+        "  nInfinityError = oInfinity.ErrorNo\n"
+        "ENDTRY\n"
+        "nNan = EXP(1000) - EXP(1000)\n"
+        "nNanError = 0\n"
+        "TRY\n"
+        "  DIMENSION aStable[nNan]\n"
+        "CATCH TO oNan\n"
+        "  nNanError = oNan.ErrorNo\n"
+        "ENDTRY\n"
+        "nAsizeError = 0\n"
+        "TRY\n"
+        "  nUnused = ASIZE(aStable, 1E300)\n"
+        "CATCH TO oAsize\n"
+        "  nAsizeError = oAsize.ErrorNo\n"
+        "ENDTRY\n"
+        "nElementError = 0\n"
+        "TRY\n"
+        "  aStable[9223372036854775808,2] = 'unsafe'\n"
+        "CATCH TO oElement\n"
+        "  nElementError = oElement.ErrorNo\n"
+        "ENDTRY\n"
+        "nPublicError = 0\n"
+        "TRY\n"
+        "  PUBLIC ARRAY aRejectedPublic[65001]\n"
+        "CATCH TO oPublic\n"
+        "  nPublicError = oPublic.ErrorNo\n"
+        "ENDTRY\n"
+        "nLocalError = RejectLocalArray()\n"
+        "nPrivateError = RejectPrivateArray()\n"
+        "nSequentialLocalLength = SequentialLocalArray()\n"
+        "nSequentialPrivateLength = SequentialPrivateArray()\n"
+        "nSequentialLocalRollback = RejectSequentialLocalArray()\n"
+        "nSequentialPrivateRollback = RejectSequentialPrivateArray()\n"
+        "nRowsAfter = ALEN(aStable,1)\n"
+        "nColumnsAfter = ALEN(aStable,2)\n"
+        "nFirstLengthAfter = ALEN(aFirstStable)\n"
+        "cFirstStableAfter = aFirstStable[1]\n"
+        "cRejectedSecondType = TYPE('aRejectedSecond')\n"
+        "cFirstAfter = aStable[1,1]\n"
+        "cTailAfter = aStable[2,2]\n"
+        "cPrivateAfter = aPrivateKeep[1]\n"
+        "cRejectedPublicType = TYPE('aRejectedPublic')\n"
+        "DIMENSION aSequentialExisting[1], aSequentialFollower[1]\n"
+        "DIMENSION aSequentialExisting[2], aSequentialFollower[ALEN(aSequentialExisting)]\n"
+        "DIMENSION aSequentialNew[2], aSequentialNewFollower[ALEN(aSequentialNew)]\n"
+        "nSequentialExistingLength = ALEN(aSequentialFollower)\n"
+        "nSequentialNewLength = ALEN(aSequentialNewFollower)\n"
+        "cUnsafeArrayExpression = 'aStable[EXP(1000)]'\n"
+        "cBracketUnsafeReadType = TYPE('aStable[EXP(1000)]')\n"
+        "cParenUnsafeReadType = TYPE('aStable(EXP(1000))')\n"
+        "uMacroUnsafeRead = &cUnsafeArrayExpression\n"
+        "DIMENSION aLimit[65000]\n"
+        "aLimit[65000] = 'boundary'\n"
+        "nLimitLength = ALEN(aLimit)\n"
+        "cLimitValue = aLimit[65000]\n"
+        "RETURN\n"
+        "FUNCTION SequentialLocalArray\n"
+        "  LOCAL ARRAY aLocalFirst[2], aLocalSecond[ALEN(aLocalFirst)]\n"
+        "  RETURN ALEN(aLocalSecond)\n"
+        "ENDFUNC\n"
+        "FUNCTION SequentialPrivateArray\n"
+        "  PRIVATE ARRAY aPrivateFirst[2], aPrivateSecond[ALEN(aPrivateFirst)]\n"
+        "  RETURN ALEN(aPrivateSecond)\n"
+        "ENDFUNC\n"
+        "FUNCTION RejectSequentialLocalArray\n"
+        "  LOCAL ARRAY aLocalFirst[1]\n"
+        "  aLocalFirst[1] = 'local-kept'\n"
+        "  TRY\n"
+        "    LOCAL ARRAY aLocalFirst[3], aLocalSecond[ALEN(aLocalFirst) + 65000]\n"
+        "  CATCH TO oLocal\n"
+        "    IF oLocal.ErrorNo == 230 AND ALEN(aLocalFirst) == 1 AND aLocalFirst[1] == 'local-kept' AND TYPE('aLocalSecond') == 'U'\n"
+        "      RETURN 1\n"
+        "    ENDIF\n"
+        "  ENDTRY\n"
+        "  RETURN 0\n"
+        "ENDFUNC\n"
+        "FUNCTION RejectSequentialPrivateArray\n"
+        "  TRY\n"
+        "    PRIVATE ARRAY aPrivateKeep[3], aPrivateSecond[ALEN(aPrivateKeep) + 65000]\n"
+        "  CATCH TO oPrivate\n"
+        "    IF oPrivate.ErrorNo == 230 AND ALEN(aPrivateKeep) == 2 AND aPrivateKeep[1] == 'private-kept' AND TYPE('aPrivateSecond') == 'U'\n"
+        "      RETURN 1\n"
+        "    ENDIF\n"
+        "  ENDTRY\n"
+        "  RETURN 0\n"
+        "ENDFUNC\n"
+        "FUNCTION RejectLocalArray\n"
+        "  TRY\n"
+        "    LOCAL ARRAY aRejectedLocal[65001]\n"
+        "  CATCH TO oLocal\n"
+        "    RETURN oLocal.ErrorNo\n"
+        "  ENDTRY\n"
+        "  RETURN 0\n"
+        "ENDFUNC\n"
+        "FUNCTION RejectPrivateArray\n"
+        "  TRY\n"
+        "    PRIVATE ARRAY aPrivateKeep[65001]\n"
+        "  CATCH TO oPrivate\n"
+        "    RETURN oPrivate.ErrorNo\n"
+        "  ENDTRY\n"
+        "  RETURN 0\n"
+        "ENDFUNC\n");
+
+    const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                           make_runtime_session_options(main_path, temp_root))
+                           .run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "invalid array dimensions should be catchable without terminating the host: " + state.message);
+
+    const auto check = [&](const std::string& name,
+                           const std::string& expected,
+                           const std::string& message) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), message + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   message + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+    for (const char* name : {
+             "nhugeerror", "nmultierror", "nproducterror", "nfractionerror", "ninfinityerror",
+             "nnegativeerror", "nnanerror", "nasizeerror", "nelementerror", "npublicerror",
+             "nlocalerror", "nprivateerror"}) {
+        check(name, "230", std::string{name} + " should use the localized invalid-dimensions error");
+    }
+    check("nrowsafter", "2", "failed resizes should preserve row metadata");
+    check("ncolumnsafter", "2", "failed resizes should preserve column metadata");
+    check("nfirstlengthafter", "1", "a later invalid DIMENSION target should not resize an earlier target");
+    check("cfirststableafter", "first-kept", "a later invalid DIMENSION target should preserve earlier values");
+    check("crejectedsecondtype", "U", "a failed multi-array DIMENSION should not create its invalid target");
+    check("cfirstafter", "kept", "failed resizes should preserve the first value");
+    check("ctailafter", "tail", "failed resizes should preserve the trailing value");
+    check("cprivateafter", "private-kept", "failed PRIVATE ARRAY should preserve the prior binding");
+    check("crejectedpublictype", "U", "failed PUBLIC ARRAY should not publish a partial binding");
+    check("nsequentialexistinglength", "2", "later dimensions should observe an earlier existing-array resize");
+    check("nsequentialnewlength", "2", "later dimensions should observe an earlier newly created array");
+    check("nsequentiallocallength", "2", "later LOCAL ARRAY dimensions should observe an earlier declaration");
+    check("nsequentialprivatelength", "2", "later PRIVATE ARRAY dimensions should observe an earlier declaration");
+    check("nsequentiallocalrollback", "1", "failed LOCAL ARRAY sequences should restore all prior bindings");
+    check("nsequentialprivaterollback", "1", "failed PRIVATE ARRAY sequences should restore arrays and private state");
+    check("cbracketunsafereadtype", "U", "bracket array reads should reject non-finite selectors safely");
+    check("cparenunsafereadtype", "U", "parenthesis array reads should reject non-finite selectors safely");
+    check("umacrounsaferead", "", "macro array reads should reject non-finite selectors safely");
+    check("nlimitlength", "65000", "the Copperfin safety ceiling should remain usable");
+    check("climitvalue", "boundary", "the maximum array's final element should remain safely writable");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 // resize_array() used to allocate a brand-new full-size buffer and manually
 // copy every surviving element on every call, even when the column count was
 // unchanged and growth was a pure append (row-major layout means element
@@ -2331,6 +2531,7 @@ int main() {
     test_array_dimension_and_element_assignment();
     test_preprocessor_constants_expand_in_array_subscripts_but_not_bracket_literals();
     test_asize_two_argument_form_preserves_existing_column_count();
+    test_array_dimension_boundaries_are_catchable_and_atomic();
     test_array_single_row_growth_loop_preserves_all_values();
     test_array_metadata_and_text_functions();
     test_macro_expanded_array_helpers_and_access();

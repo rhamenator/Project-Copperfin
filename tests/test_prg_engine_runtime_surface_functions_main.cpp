@@ -38,6 +38,7 @@ int main()
     test_typed_local_newobject_method_invocation_uses_local_storage();
     test_createobject_instantiates_native_prg_class_and_preserves_plain_object_creation();
     test_native_prg_class_dimension_properties_are_per_instance_arrays();
+    test_native_prg_class_rejects_unsafe_array_dimensions_atomically();
     test_newobject_instantiates_native_prg_class_and_preserves_ole_newobject();
     test_createobject_and_newobject_instantiate_same_prg_session_native_class();
     test_createobject_and_newobject_instantiate_same_prg_session_olepublic_native_class();
