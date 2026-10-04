@@ -252,6 +252,7 @@ std::vector<Row> build_rows() {
         rows.push_back({set, "STR(1.5,238,2)", "ERR1908"});
         rows.push_back({set, "STR(1.5,-1,2)", "ERR1908"});
         rows.push_back({set, "STR(1.5,0,2)", "C:"});
+        rows.push_back({set, "STR('not-a-number',0,2)", "ERR1"});
         rows.push_back({set, "STR(1.5,25,18)", "C:     1.500000000000000000"});
         rows.push_back({set, "STR(1.5,25,19)", "ERR1908"});
         rows.push_back({set, "STR(1.5,10,-1)", "ERR1908"});

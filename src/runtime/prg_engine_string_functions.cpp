@@ -1094,6 +1094,8 @@ std::optional<PrgValue> evaluate_string_function(
         if (arguments.size() >= 3U) {
             decimals = str_argument(value_as_number(arguments[2]), 18);
         }
+        // Validate the required numeric expression even when a zero width will suppress all output.
+        const double numeric_value = value_as_number(arguments[0]);
         // #5900: VFP9 truncates a fractional width argument toward zero
         // (STR(12, 4.9) is 4 characters wide, not 5), the same rule
         // already applied correctly to the decimals argument above.
@@ -1108,9 +1110,9 @@ std::optional<PrgValue> evaluate_string_function(
         }
         std::ostringstream stream;
         stream.imbue(std::locale::classic());
-        stream << std::fixed << std::setprecision(decimals) << value_as_number(arguments[0]);
+        stream << std::fixed << std::setprecision(decimals) << numeric_value;
         std::string result = stream.str();
-        if (!std::isfinite(value_as_number(arguments[0]))) {
+        if (!std::isfinite(numeric_value)) {
             // #6144: real VFP9 SP2 never exposes the C++ stream spelling
             // of a non-finite double ("inf"/"-inf"/"nan") -- it fills
             // the requested (or default 10-character) width with

@@ -245,13 +245,15 @@ focused script rows, catchable-error coverage, docs/22, docs/32, and the
 changelog fragment are complete. Both focused targets pass normally and under
 Clang AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
 instrumentation. Signed implementation commit `051f061ad` is pushed and PR
-#6929 targets `main`. Exact-head review found that explicit VFP9 mode must map
-negative infinity through the integer-indefinite low bits and requested direct
-non-finite argument coverage plus retained decimals 18/19 evidence. Those
-review fixes are implemented and locally re-probed; remaining: focused normal
-and sanitizer verification now pass. Remaining: signed review-fix commit,
-push, conversation resolution, fresh exact-head review, green exact-head
-checks, and merge.
+#6929 targets `main`. Review-fix commit `db158fd0a` preserves VFP9 negative-
+infinity conversion, adds direct non-finite argument coverage, and retains
+fresh decimals 18/19 evidence; its three conversations are resolved and both
+focused targets pass normally and under sanitizers. The next exact-head review
+found that width zero returned before validating the required numeric value;
+the pending fix evaluates that value before the empty result and adds a script
+regression. Both focused targets pass normally and under sanitizers after the
+fix. Remaining: signed commit, push, conversation resolution, fresh exact-head
+review, green exact-head checks, and merge.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
