@@ -150,7 +150,7 @@ namespace copperfin::runtime_surface_tests
             "nBitLShift = BITLSHIFT(3, 2)\n"
             "nBitRShift = BITRSHIFT(16, 2)\n"
             "cPacked = BINTOC(16909060, 4)\n"
-            "nUnpacked = CTOBIN(cPacked, 'N')\n"
+            "nUnpacked = CTOBIN(cPacked, '4')\n"
             "nCursorProp = CURSORGETPROP('Buffering')\n"
             "nVersion = VERSION()\n"
             "nVersionArg = VERSION(1)\n"

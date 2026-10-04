@@ -1,5 +1,19 @@
 # VFP Language Reference Coverage
 
+- `BINTOC()` / `CTOBIN()` binary representation (2026-10-04, #5766 under
+  #5611/#6776): VFP9's documented 1-, 2-, and 4-byte signed-integer forms now
+  use most-significant-byte-first sortable bytes with the high sign bit
+  transformed by default, with `R` and `S` providing byte reversal and raw
+  signed layout. The 8-byte sortable Numeric/Double and exact scaled Currency
+  layouts, native little-endian `F`/`B` floating layouts, inverse `N`/`B`/`Y`
+  conversions, NULL propagation, and result types match retained installed-
+  VFP9 byte probes. Widths, source lengths, value ranges, source types, and the
+  documented mutually-exclusive base selector are validated before conversion
+  or allocation; malformed, nonfinite, huge, or ambiguous inputs raise
+  catchable localized error 11. Focused portable canonical-vector and script-
+  level boundary coverage passes locally under normal and sanitizer builds;
+  hosted evidence remains part of the active slice.
+
 - `SET POINT` display punctuation (2026-08-08, #4913/#4914): shipped VFP9
   Help establishes that the setting controls the decimal-point character used
   to display numeric and Currency expressions, defaults and resets to period,
