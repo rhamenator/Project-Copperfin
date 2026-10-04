@@ -132,6 +132,8 @@ NumericBehavior numeric_behavior(const std::function<std::string(const std::stri
 std::int64_t saturating_numeric_to_int64(double value);
 // VFP9's 32-bit conversion described above, widened back to int64 for the caller.
 std::int64_t vfp9_numeric_to_int32(double value);
+// Preserve exact int64/uint64 low bits instead of first rounding them through double.
+std::int64_t vfp9_numeric_to_int32(const PrgValue& value);
 // A signed count or length argument under `behavior`.
 std::int64_t numeric_count_argument(double value, NumericBehavior behavior);
 // Truncate toward zero only when `value` is finite and representable as int64. This is the fail-closed conversion for
