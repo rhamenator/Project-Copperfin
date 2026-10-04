@@ -219,8 +219,9 @@
   converted argument. Copperfin validates before setting stream precision or
   allocating padding. Default `SET NUMERICBEHAVIOR TO COPPERFIN` rejects raw
   non-finite and out-of-range values; explicit `VFP9` mode preserves the
-  observed negative low-32-bit conversion. Reproducible source and complete
-  black-box output are retained in
+  observed negative low-32-bit conversion and negative-infinity
+  integer-indefinite result, while positive infinity remains error 1908.
+  Reproducible source and complete black-box output are retained in
   `tests/fixtures/vfp9-str-argument-bounds-observation/`.
 
 - Culture-invariant numeric parsing slice (2026-07-29, #4824 under #3217):

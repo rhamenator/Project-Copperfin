@@ -1071,7 +1071,9 @@ std::optional<PrgValue> evaluate_string_function(
             const double truncated = std::trunc(raw_value);
             std::int64_t converted = 0;
             if (behavior == NumericBehavior::vfp9) {
-                if (!std::isfinite(truncated) || truncated > static_cast<double>(maximum)) {
+                // Positive infinity follows the above-maximum error path. Negative infinity and NaN reproduce the
+                // shared VFP9 integer-indefinite low bits (0), just like finite values outside signed-int64 range.
+                if (truncated > static_cast<double>(maximum)) {
                     throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidStrWidth"), 1908);
                 }
                 converted = vfp9_numeric_to_int32(truncated);

@@ -26,6 +26,46 @@ FOR lnI = 1 TO ALEN(laWidths)
   ENDTRY
 ENDFOR
 
+LOCAL laDecimalEdges[2]
+laDecimalEdges[1] = 18
+laDecimalEdges[2] = 19
+FOR lnI = 1 TO ALEN(laDecimalEdges)
+  TRY
+    lcValue = STR(1.5, 25, laDecimalEdges[lnI])
+    ? "DECEDGE=" + TRANSFORM(laDecimalEdges[lnI]) + " LEN=" + TRANSFORM(LEN(lcValue)) + " VALUE=[" + lcValue + "]"
+  CATCH TO loError
+    ? "DECEDGE=" + TRANSFORM(laDecimalEdges[lnI]) + " ERR=" + TRANSFORM(loError.ErrorNo)
+  ENDTRY
+ENDFOR
+
+LOCAL lnPositiveInfinity, lnNegativeInfinity
+lnPositiveInfinity = EXP(1000)
+lnNegativeInfinity = -lnPositiveInfinity
+TRY
+  lcValue = STR(1.5, 10, lnPositiveInfinity)
+  ? "DECPOSINF LEN=" + TRANSFORM(LEN(lcValue))
+CATCH TO loError
+  ? "DECPOSINF ERR=" + TRANSFORM(loError.ErrorNo)
+ENDTRY
+TRY
+  lcValue = STR(1.5, 10, lnNegativeInfinity)
+  ? "DECNEGINF LEN=" + TRANSFORM(LEN(lcValue)) + " VALUE=[" + lcValue + "]"
+CATCH TO loError
+  ? "DECNEGINF ERR=" + TRANSFORM(loError.ErrorNo)
+ENDTRY
+TRY
+  lcValue = STR(1.5, lnPositiveInfinity, 2)
+  ? "WIDTHPOSINF LEN=" + TRANSFORM(LEN(lcValue))
+CATCH TO loError
+  ? "WIDTHPOSINF ERR=" + TRANSFORM(loError.ErrorNo)
+ENDTRY
+TRY
+  lcValue = STR(1.5, lnNegativeInfinity, 2)
+  ? "WIDTHNEGINF LEN=" + TRANSFORM(LEN(lcValue))
+CATCH TO loError
+  ? "WIDTHNEGINF ERR=" + TRANSFORM(loError.ErrorNo)
+ENDTRY
+
 LOCAL laPositiveBounds[3]
 laPositiveBounds[1] = 4294967295
 laPositiveBounds[2] = 4294967296

@@ -262,6 +262,7 @@ std::vector<Row> build_rows() {
         rows.push_back({set, "STR(1.5,10,1E20)", "ERR1908"});
         rows.push_back({set, "STR(1.5,10,1E300)", "ERR1908"});
         rows.push_back({set, "STR(1.5,10,EXP(1000))", "ERR1908"});
+        rows.push_back({set, "STR(1.5,EXP(1000),2)", "ERR1908"});
         rows.push_back({set, "STR(1.5,10,2.9)", "C:      1.50"});
     }
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "STR(1.5,10,-4294967295)", "ERR1908"});
@@ -274,6 +275,10 @@ std::vector<Row> build_rows() {
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "STR(1,-4294967296)", "C:"});
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "STR(1.5,10,-1E20)", "C:         2"});
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "STR(1,-1E20)", "C:"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "STR(1.5,10,-EXP(1000))", "ERR1908"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "STR(1,-EXP(1000))", "ERR1908"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "STR(1.5,10,-EXP(1000))", "C:         2"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "STR(1,-EXP(1000))", "C:"});
     // In-range counts are identical in both modes.
     for (const char *mode : {"COPPERFIN", "VFP9"}) {
         const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;

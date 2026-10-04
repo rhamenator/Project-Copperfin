@@ -8,7 +8,9 @@ compatibility installation. No implementation internals were inspected.
 `str-argument-bounds.out` is its complete console output. The observation
 establishes that widths 0 through 237 and decimals 0 through 18 are admitted
 after truncation; invalid converted arguments raise error 1908. It also
-captures the negative low-32-bit conversion at -4294967295 and -4294967296.
+captures the negative low-32-bit conversion at -4294967295 and -4294967296,
+plus the integer-indefinite result for negative infinity. Positive infinity
+raises error 1908.
 
 This evidence governs `RQ-CF-PRG-STR-ARGUMENT-BOUNDS-001` under issues #5611
 and #6776.

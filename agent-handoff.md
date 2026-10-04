@@ -245,8 +245,13 @@ focused script rows, catchable-error coverage, docs/22, docs/32, and the
 changelog fragment are complete. Both focused targets pass normally and under
 Clang AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
 instrumentation. Signed implementation commit `051f061ad` is pushed and PR
-#6929 targets `main`. Remaining: exact-head review, conversation resolution,
-green exact-head checks, and merge.
+#6929 targets `main`. Exact-head review found that explicit VFP9 mode must map
+negative infinity through the integer-indefinite low bits and requested direct
+non-finite argument coverage plus retained decimals 18/19 evidence. Those
+review fixes are implemented and locally re-probed; remaining: focused normal
+and sanitizer verification now pass. Remaining: signed review-fix commit,
+push, conversation resolution, fresh exact-head review, green exact-head
+checks, and merge.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is

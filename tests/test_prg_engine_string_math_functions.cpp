@@ -6,6 +6,7 @@
 #include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/localization/localization.h"
 #include "../src/runtime/prg_engine_helpers.h"
+#include "../src/runtime/prg_compatibility_error.h"
 #include "../src/runtime/prg_engine_string_functions.h"
 #include "prg_engine_test_support.h"
 
@@ -2216,6 +2217,56 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_str_nonfinite_width_and_decimals_follow_numeric_behavior()
+    {
+        using copperfin::runtime::PrgCompatibilityError;
+        const double infinity = std::numeric_limits<double>::infinity();
+        const double nan = std::numeric_limits<double>::quiet_NaN();
+
+        const auto evaluate = [](const char* mode, const double width, const double decimals) {
+            const auto set_callback = [mode](const std::string& name) {
+                return name == "NUMERICBEHAVIOR" ? std::string(mode) : std::string{};
+            };
+            return copperfin::runtime::evaluate_string_function(
+                "str",
+                {copperfin::runtime::make_number_value(1.5),
+                 copperfin::runtime::make_number_value(width),
+                 copperfin::runtime::make_number_value(decimals)},
+                false,
+                80U,
+                set_callback);
+        };
+        const auto expect_error_1908 = [&](const char* mode, const double width, const double decimals,
+                                           const std::string& label) {
+            try {
+                (void)evaluate(mode, width, decimals);
+                expect(false, label + " should raise error 1908");
+            } catch (const PrgCompatibilityError& error) {
+                expect(error.error_code() == 1908, label + " should raise error 1908");
+            }
+        };
+
+        // Default mode rejects every raw non-finite argument, while explicit VFP9 mode reproduces its integer-
+        // indefinite low bits (0) for NaN and negative infinity. Positive infinity remains above the maximum in
+        // both modes. NaN needs direct dispatch coverage because no supported PRG expression constructs it.
+        for (const double value : {nan, -infinity}) {
+            expect_error_1908("COPPERFIN", value, 2.0, "COPPERFIN non-finite STR width");
+            expect_error_1908("COPPERFIN", 10.0, value, "COPPERFIN non-finite STR decimals");
+
+            const auto vfp_width = evaluate("VFP9", value, 2.0);
+            expect(vfp_width.has_value() && copperfin::runtime::value_as_string(*vfp_width).empty(),
+                   "VFP9 NaN/negative-infinity STR width should convert to zero");
+            const auto vfp_decimals = evaluate("VFP9", 10.0, value);
+            expect(vfp_decimals.has_value() &&
+                       copperfin::runtime::value_as_string(*vfp_decimals) == "         2",
+                   "VFP9 NaN/negative-infinity STR decimals should convert to zero");
+        }
+        for (const char* mode : {"COPPERFIN", "VFP9"}) {
+            expect_error_1908(mode, infinity, 2.0, std::string(mode) + " positive-infinity STR width");
+            expect_error_1908(mode, 10.0, infinity, std::string(mode) + " positive-infinity STR decimals");
+        }
+    }
+
     void test_strtran_rejects_zero_occurrence_controls()
     {
         // #5952: STRTRAN()'s nStartOccurrence and nCount arguments both
@@ -2452,6 +2503,7 @@ int main()
     test_invariant_double_parser_accepts_subnormals_and_rejects_malformed_tokens();
     test_val_raises_numeric_overflow_for_out_of_range_magnitudes();
     test_transform_and_str_render_numeric_overflow_as_asterisks();
+    test_str_nonfinite_width_and_decimals_follow_numeric_behavior();
     test_strtran_rejects_zero_occurrence_controls();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
