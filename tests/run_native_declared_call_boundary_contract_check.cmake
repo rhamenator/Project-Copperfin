@@ -101,7 +101,8 @@ foreach(forbidden_token IN ITEMS
 endforeach()
 foreach(required_token IN ITEMS
         "NativeDeclaredCallRequest request;"
-        "checked_declared_int32_argument(value, numeric_behavior(set_callback))"
+        "const auto &set_state = current_set_state();"
+        "checked_declared_int32_argument(value, declared_numeric_behavior)"
         "checked_declared_int64_argument(value)"
         "request.function_address = declfn.native_function_address;"
         "request.use_cdecl = declfn.native_cdecl;"
@@ -118,6 +119,7 @@ foreach(required_token IN ITEMS
 endforeach()
 foreach(forbidden_token IN ITEMS
         "exact_declared_integer_value"
+        "numeric_behavior(set_callback)"
         "static_cast<std::int32_t>(value_as_number(args[index]))"
         "static_cast<std::int64_t>(value.uint64_value)")
     forbid_text("${declared_call_source}" "${forbidden_token}"

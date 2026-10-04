@@ -41,9 +41,13 @@ INTEGER values did not yet honor `SET NUMERICBEHAVIOR`; the response now keeps
 default COPPERFIN error 11, maps such values to the probed integer-indefinite
 zero only in explicit VFP9 mode, and preserves nonfinite rejection in both
 modes. Focused normal and sanitizer-backed numeric tests plus both portable
-DECLARE boundary contracts pass after that review fix. A signed review-fix
-commit, push, exact-head review, remaining CI, conversation resolution and
-merge remain pending.
+DECLARE boundary contracts pass after that review fix. Signed commit
+`5cb877911` is pushed, its exact-head review is clean, and the review
+conversation is resolved. The first exact-head Windows run exposed that the
+Windows-only DECLARE body referenced a callback not in that member's scope;
+the follow-up now snapshots `NUMERICBEHAVIOR` from the session's own SET state
+before marshaling, and both portable boundary contracts pass. The exact-head
+Windows rerun, remaining CI and merge remain pending.
 
 PR #6917 (`fix/installer-artifact-policy-6905`) merged into `main` as
 `6b64a176d680aab732e0772cd889a423ed3c993e` on 2026-10-03. Successful

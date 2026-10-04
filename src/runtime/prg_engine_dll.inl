@@ -167,9 +167,16 @@
             {
                 return i < declared_param_types.size() && declared_param_types[i].by_ref;
             };
+            const NumericBehavior declared_numeric_behavior = numeric_behavior(
+                [this](const std::string &option_name)
+                {
+                    const auto &set_state = current_set_state();
+                    const auto found_option = set_state.find(normalize_identifier(option_name));
+                    return found_option == set_state.end() ? std::string{} : found_option->second;
+                });
             const auto require_declared_integer32 = [&](const PrgValue &value) -> std::int32_t
             {
-                const auto converted = checked_declared_int32_argument(value, numeric_behavior(set_callback));
+                const auto converted = checked_declared_int32_argument(value, declared_numeric_behavior);
                 if (!converted.has_value())
                 {
                     throw PrgCompatibilityError(
