@@ -56,6 +56,8 @@ const std::vector<Row> kRows = {
     {"BINTOC(1,-1)", "ERR11"},
     {"BINTOC(1,1E300)", "ERR11"},
     {"BINTOC(1,EXP(1000))", "ERR11"},
+    {"BINTOC(1E300,'F')", "ERR11"},
+    {"BINTOC(-1E300,'F')", "ERR11"},
     {"BINTOC('x',4)", "ERR11"},
     {"BINTOC(1,'')", "ERR11"},
     {"BINTOC(1,'X')", "ERR11"},
@@ -172,14 +174,22 @@ void test_bintoc_golden_bytes() {
     const PrgValue flags_fr = make_string_value("FR");
     const PrgValue flags_b = make_string_value("B");
     const PrgValue flags_br = make_string_value("BR");
+    const PrgValue flags_8s = make_string_value("8S");
+    const PrgValue flags_8rs = make_string_value("8RS");
     expect_bintoc_hex(make_number_value(1.5), &flags_f, "0000C03F");
     expect_bintoc_hex(make_number_value(-100), &flags_fr, "C2C80000");
     expect_bintoc_hex(make_number_value(3.14159265358979323846), &flags_b, "182D4454FB210940");
     expect_bintoc_hex(make_number_value(3.14159265358979323846), &flags_br, "400921FB54442D18");
     expect_bintoc_hex(make_number_value(12.34), &width8, "C028AE147AE147AE");
     expect_bintoc_hex(make_number_value(-12.34), &width8, "3FD751EB851EB851");
+    // Installed VFP9 SP2 contradicts its help here: it accepts S with the
+    // 8-byte selector but still emits the sortable sign-transformed bytes.
+    expect_bintoc_hex(make_number_value(12.34), &flags_8s, "C028AE147AE147AE");
+    expect_bintoc_hex(make_number_value(-12.34), &flags_8rs, "51B81E85EB51D73F");
     expect_bintoc_hex(make_currency_value(123400), &width8, "800000000001E208");
     expect_bintoc_hex(make_currency_value(-123400), &width8, "7FFFFFFFFFFE1DF8");
+    expect_bintoc_hex(make_currency_value(123400), &flags_8s, "800000000001E208");
+    expect_bintoc_hex(make_currency_value(-123400), &flags_8rs, "F81DFEFFFFFFFF7F");
 }
 
 void test_ctobin_rejects_internal_object_references() {

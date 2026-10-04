@@ -229,8 +229,13 @@ required adjustment to #6035's former non-VFP `CTOBIN(..., 'N')` test fixture
 are complete. Focused binary-conversion, numeric-behavior, exact-int64,
 runtime-surface, isolation-inventory and changelog tests pass locally; the new
 test also passes under Clang AddressSanitizer, UndefinedBehaviorSanitizer, and
-float-cast-overflow instrumentation. Complete signed commit, PR, exact-head
-review, green checks, and merge.
+float-cast-overflow instrumentation. PR #6923 is open. Review found that the
+finite-double-to-float range check occurred after the narrowing conversion;
+the response now checks the `float` bounds first and pins huge positive and
+negative finite inputs. Two requests to apply `S` to 8-byte Numeric/Currency
+encoding conflict with retained installed-VFP9 bytes, so explicit `8S`/`8RS`
+vectors and the VFP9 Help discrepancy are now recorded rather than changing
+the observed contract. Complete exact-head review, green checks, and merge.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is

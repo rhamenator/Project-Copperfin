@@ -2283,10 +2283,12 @@ PrgValue bintoc_value(const PrgValue& value, const PrgValue* selector) {
         }
     } else if (parsed.encoding == BinaryEncoding::native_float) {
         const double numeric = value_as_number(value);
-        const float converted = static_cast<float>(numeric);
-        if (!std::isfinite(numeric) || !std::isfinite(converted)) {
+        if (!std::isfinite(numeric) ||
+            numeric < static_cast<double>(std::numeric_limits<float>::lowest()) ||
+            numeric > static_cast<double>(std::numeric_limits<float>::max())) {
             throw_invalid_binary_conversion();
         }
+        const float converted = static_cast<float>(numeric);
         result = little_endian_bytes(floating_bits<float, std::uint32_t>(converted), 4U);
     } else if (parsed.encoding == BinaryEncoding::native_double) {
         const double converted = value_as_number(value);

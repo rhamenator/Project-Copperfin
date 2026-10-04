@@ -7,9 +7,12 @@
   signed layout. The 8-byte sortable Numeric/Double and exact scaled Currency
   layouts, native little-endian `F`/`B` floating layouts, inverse `N`/`B`/`Y`
   conversions, NULL propagation, and result types match retained installed-
-  VFP9 byte probes. Widths, source lengths, value ranges, source types, and the
-  documented mutually-exclusive base selector are validated before conversion
-  or allocation; malformed, nonfinite, huge, or ambiguous inputs raise
+  VFP9 byte probes. Although VFP9 Help describes `S` as additive generally,
+  installed VFP9 accepts but ignores it for `BINTOC()`'s `8`, `F`, and `B`
+  floating/Currency encodings; Copperfin preserves the observed bytes and pins
+  this documentation discrepancy explicitly. Widths, source lengths, value
+  ranges, source types, and the documented mutually-exclusive base selector
+  are validated before conversion or allocation; malformed, nonfinite, huge, or ambiguous inputs raise
   catchable localized error 11. Focused portable canonical-vector and script-
   level boundary coverage passes locally under normal and sanitizer builds;
   hosted evidence remains part of the active slice.
