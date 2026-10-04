@@ -248,9 +248,9 @@ the changelog fragment are in PR #6936. Review-requested fixes derive January
 1 weekdays from Julian days rather than the Windows CRT at the year-3000
 boundary and add executable 7/7.9 first-day coverage. All three focused targets
 pass normally and under Clang AddressSanitizer, UndefinedBehaviorSanitizer,
-and float-cast-overflow instrumentation. Remaining: sign and push the review
-fix, resolve all three conversations after exact-change verification, obtain
-green exact-head checks and review, and merge.
+and float-cast-overflow instrumentation. The signed review fix is pushed;
+remaining: verify the exact remote change, resolve all three conversations,
+obtain green exact-head checks and review, and merge.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
