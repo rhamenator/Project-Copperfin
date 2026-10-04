@@ -1,0 +1,75 @@
+SET CENTURY ON
+SET DATE TO YMD
+SET FWEEK TO 3
+SET FDOW TO 4
+
+DIMENSION aCases[30,2]
+aCases[1,1] = "omitted"
+aCases[1,2] = "WEEK(DATE(2021,1,1))"
+aCases[2,1] = "first-week-zero-uses-set"
+aCases[2,2] = "WEEK(DATE(2021,1,1),0)"
+aCases[3,1] = "first-week-one"
+aCases[3,2] = "WEEK(DATE(2021,1,1),1)"
+aCases[4,1] = "first-week-two"
+aCases[4,2] = "WEEK(DATE(2021,1,1),2)"
+aCases[5,1] = "first-week-three"
+aCases[5,2] = "WEEK(DATE(2021,1,1),3)"
+aCases[6,1] = "first-week-four-invalid"
+aCases[6,2] = "WEEK(DATE(2021,1,1),4)"
+aCases[7,1] = "first-week-negative-invalid"
+aCases[7,2] = "WEEK(DATE(2021,1,1),-1)"
+aCases[8,1] = "first-week-fraction"
+aCases[8,2] = "WEEK(DATE(2021,1,1),2.9)"
+aCases[9,1] = "first-day-zero-uses-set"
+aCases[9,2] = "WEEK(DATE(2021,1,1),1,0)"
+aCases[10,1] = "first-day-one"
+aCases[10,2] = "WEEK(DATE(2021,1,1),1,1)"
+aCases[11,1] = "first-day-seven"
+aCases[11,2] = "WEEK(DATE(2021,1,1),1,7)"
+aCases[12,1] = "first-day-eight-invalid"
+aCases[12,2] = "WEEK(DATE(2021,1,1),1,8)"
+aCases[13,1] = "first-day-negative-invalid"
+aCases[13,2] = "WEEK(DATE(2021,1,1),1,-1)"
+aCases[14,1] = "first-day-fraction"
+aCases[14,2] = "WEEK(DATE(2021,1,1),1,7.9)"
+aCases[15,1] = "order-valid-3-7"
+aCases[15,2] = "WEEK(DATE(2021,1,1),3,7)"
+aCases[16,1] = "order-invalid-7-3"
+aCases[16,2] = "WEEK(DATE(2021,1,1),7,3)"
+aCases[17,1] = "first-week-huge-positive"
+aCases[17,2] = "WEEK(DATE(2021,1,1),1E20)"
+aCases[18,1] = "first-week-huge-negative"
+aCases[18,2] = "WEEK(DATE(2021,1,1),-1E20)"
+aCases[19,1] = "first-week-wrap-zero"
+aCases[19,2] = "WEEK(DATE(2021,1,1),4294967296)"
+aCases[20,1] = "first-week-wrap-one"
+aCases[20,2] = "WEEK(DATE(2021,1,1),-4294967295)"
+aCases[21,1] = "first-week-positive-infinity"
+aCases[21,2] = "WEEK(DATE(2021,1,1),EXP(1000))"
+aCases[22,1] = "first-week-negative-infinity"
+aCases[22,2] = "WEEK(DATE(2021,1,1),-EXP(1000))"
+aCases[23,1] = "first-day-huge-positive"
+aCases[23,2] = "WEEK(DATE(2021,1,1),1,1E20)"
+aCases[24,1] = "first-day-huge-negative"
+aCases[24,2] = "WEEK(DATE(2021,1,1),1,-1E20)"
+aCases[25,1] = "first-day-wrap-zero"
+aCases[25,2] = "WEEK(DATE(2021,1,1),1,4294967296)"
+aCases[26,1] = "first-day-wrap-one"
+aCases[26,2] = "WEEK(DATE(2021,1,1),1,-4294967295)"
+aCases[27,1] = "first-day-positive-infinity"
+aCases[27,2] = "WEEK(DATE(2021,1,1),1,EXP(1000))"
+aCases[28,1] = "first-day-negative-infinity"
+aCases[28,2] = "WEEK(DATE(2021,1,1),1,-EXP(1000))"
+aCases[29,1] = "first-week-uint32-max"
+aCases[29,2] = "WEEK(DATE(2021,1,1),4294967295)"
+aCases[30,1] = "first-day-uint32-max"
+aCases[30,2] = "WEEK(DATE(2021,1,1),1,4294967295)"
+
+FOR nCase = 1 TO ALEN(aCases, 1)
+    TRY
+        uResult = EVALUATE(aCases[nCase,2])
+        ? aCases[nCase,1] + " => N:[" + TRANSFORM(uResult) + "]"
+    CATCH TO oError
+        ? aCases[nCase,1] + " => ERR " + TRANSFORM(oError.ErrorNo) + " :" + oError.Message
+    ENDTRY
+ENDFOR

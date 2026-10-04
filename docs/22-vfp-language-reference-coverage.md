@@ -1,5 +1,19 @@
 # VFP Language Reference Coverage
 
+- `WEEK()` option semantics and numeric boundaries (2026-10-04, #6933 under
+  #5611/#6776): the documented signature is
+  `WEEK(date, nFirstWeek, nFirstDayOfWeek)`. Omitted options independently
+  default to 1; an explicit zero uses `SET FWEEK` or `SET FDOW`. Installed
+  VFP9 truncates options toward zero, accepts 0 through 3 and 0 through 7,
+  raises catchable error 11 outside those converted ranges, defines mode 2 as
+  the first week with at least four days in the year, and defines mode 3 as
+  the first full seven-day week. Weeks spanning either year boundary can use
+  the adjacent year's numbering. Default `COPPERFIN` behavior rejects
+  non-finite and raw out-of-range values before conversion; explicit `VFP9`
+  behavior retains signed-32-bit wrap and integer-indefinite zero. Complete
+  probe sources and output are retained under
+  `tests/fixtures/vfp9-week-option-semantics-observation/`.
+
 - `DOW()` optional first-day numeric boundaries (2026-10-04, #5611 under
   #6776): installed VFP9 truncates the option toward zero, accepts 0 through
   7, uses `SET FDOW` when an explicit option truncates to zero, and raises
