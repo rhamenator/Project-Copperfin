@@ -8,6 +8,8 @@ namespace Copperfin.ManagedDeclareFixture
 {
     public static class Methods
     {
+        private static int integerBoundaryEntryCount;
+
         public static int ReturnFortyTwo()
         {
             return 42;
@@ -36,6 +38,49 @@ namespace Copperfin.ManagedDeclareFixture
         public static ulong ReturnUInt64BeyondDouble()
         {
             return 18014398509481985UL;
+        }
+
+        public static long ReturnInt64Maximum()
+        {
+            return long.MaxValue;
+        }
+
+        public static ulong ReturnUInt64Maximum()
+        {
+            return ulong.MaxValue;
+        }
+
+        public static ulong ReturnUInt64AtSignedMaximum()
+        {
+            return 9223372036854775807UL;
+        }
+
+        public static double ReturnNaN()
+        {
+            return double.NaN;
+        }
+
+        public static int ResetIntegerBoundaryEntryCount()
+        {
+            integerBoundaryEntryCount = 0;
+            return 0;
+        }
+
+        public static int IntegerBoundaryEntryCount()
+        {
+            return integerBoundaryEntryCount;
+        }
+
+        public static int EchoInt32Boundary(int value)
+        {
+            ++integerBoundaryEntryCount;
+            return value;
+        }
+
+        public static long EchoInt64Boundary(long value)
+        {
+            ++integerBoundaryEntryCount;
+            return value;
         }
 
         public static double WidenDouble(double value)

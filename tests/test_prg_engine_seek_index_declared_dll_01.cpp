@@ -548,6 +548,117 @@ void test_declared_dll_long_uses_vfp_32_bit_width() {
 #endif
 }
 
+void test_declared_dll_integer_argument_boundaries() {
+#if defined(_WIN32)
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declared_dll_integer_boundaries";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "native");
+
+    const fs::path fixture_name = COPPERFIN_DECLARED_DLL_FIXTURE_NAME;
+    const fs::path fixture_copy = temp_root / "native" / fixture_name;
+    fs::copy_file(declared_dll_fixture_source_path(), fixture_copy, fs::copy_options::overwrite_existing, ignored);
+    expect(!ignored && fs::exists(fixture_copy),
+           "#6050: controlled integer-boundary fixture should copy under the PRG working directory");
+
+    const std::string module = "native/" + fixture_name.string();
+    const fs::path script_path = temp_root / "declared_dll_integer_boundaries.prg";
+    write_text(
+        script_path,
+        "PUBLIC nCase, nHugeError, nPositiveInfinityError, nNegativeInfinityError, nInt64OverflowError, nNaNError\n"
+        "nCase = 0\n"
+        "nHugeError = 0\n"
+        "nPositiveInfinityError = 0\n"
+        "nNegativeInfinityError = 0\n"
+        "nInt64OverflowError = 0\n"
+        "nNaNError = 0\n"
+        "DECLARE LONG CopperfinDeclaredDllIntegerBoundaryReset IN '" + module + "' AS BoundaryReset\n"
+        "DECLARE LONG CopperfinDeclaredDllIntegerBoundaryCount IN '" + module + "' AS BoundaryCount\n"
+        "DECLARE LONG CopperfinDeclaredDllInt32BoundaryEcho IN '" + module + "' AS Echo32 LONG value\n"
+        "DECLARE LONG CopperfinDeclaredDllInt32BoundaryByRef IN '" + module + "' AS Echo32ByRef LONG @ value\n"
+        "DECLARE INTEGER64 CopperfinDeclaredDllInt64BoundaryEcho IN '" + module + "' AS Echo64 INTEGER64 value\n"
+        "DECLARE LONG CopperfinDeclaredDllInt64BoundaryByRef IN '" + module + "' AS Echo64ByRef INTEGER64 @ value\n"
+        "DECLARE INTEGER64 CopperfinDeclaredDllInt64Maximum IN '" + module + "' AS Int64Maximum\n"
+        "DECLARE DOUBLE CopperfinDeclaredDllNaN IN '" + module + "' AS ReturnNaN\n"
+        "nReset = BoundaryReset()\n"
+        "nInt32Max = Echo32(2147483647)\n"
+        "nInt32Min = Echo32(2147483648)\n"
+        "nUint32Max = Echo32(4294967295)\n"
+        "nTwoTo32 = Echo32(4294967296)\n"
+        "nBelowInt32Min = Echo32(-2147483649)\n"
+        "nByRef = 4294967295\n"
+        "nByRefResult = Echo32ByRef(@nByRef)\n"
+        "nInt64MaxSource = Int64Maximum()\n"
+        "nInt64Max = Echo64(nInt64MaxSource)\n"
+        "nInt64Min = Echo64(-9223372036854775808)\n"
+        "nInt64ByRef = nInt64MaxSource\n"
+        "nInt64ByRefResult = Echo64ByRef(@nInt64ByRef)\n"
+        "nValidEntries = BoundaryCount()\n"
+        "ON ERROR DO HandleBoundaryError\n"
+        "nCase = 1\n"
+        "nUnexpectedHuge = Echo32(1E300)\n"
+        "nCase = 2\n"
+        "nUnexpectedPositiveInfinity = Echo32(EXP(1000))\n"
+        "nCase = 3\n"
+        "nUnexpectedNegativeInfinity = Echo32(-EXP(1000))\n"
+        "nCase = 4\n"
+        "nUnexpectedInt64Overflow = Echo64(9223372036854775808)\n"
+        "nCase = 5\n"
+        "nNaN = ReturnNaN()\n"
+        "nUnexpectedNaN = Echo32(nNaN)\n"
+        "ON ERROR\n"
+        "nFinalEntries = BoundaryCount()\n"
+        "RETURN\n"
+        "PROCEDURE HandleBoundaryError\n"
+        "DO CASE\n"
+        "CASE nCase = 1\n"
+        "  nHugeError = ERROR()\n"
+        "CASE nCase = 2\n"
+        "  nPositiveInfinityError = ERROR()\n"
+        "CASE nCase = 3\n"
+        "  nNegativeInfinityError = ERROR()\n"
+        "CASE nCase = 4\n"
+        "  nInt64OverflowError = ERROR()\n"
+        "CASE nCase = 5\n"
+        "  nNaNError = ERROR()\n"
+        "ENDCASE\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(script_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6050: native DECLARE boundary script should complete: " + state.message);
+
+    const auto expect_value = [&](const char* name, const char* expected, const char* label) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end() && copperfin::runtime::format_value(found->second) == expected,
+               std::string("#6050: ") + label);
+    };
+    expect_value("nint32max", "2147483647", "native INTEGER keeps INT32_MAX");
+    expect_value("nint32min", "-2147483648", "native INTEGER maps 2^31 to INT32_MIN");
+    expect_value("nuint32max", "-1", "native INTEGER preserves UINT32_MAX low bits");
+    expect_value("ntwoto32", "0", "native INTEGER discards bits above bit 31");
+    expect_value("nbelowint32min", "2147483647", "native INTEGER wraps below INT32_MIN");
+    expect_value("nbyrefresult", "-1", "native LONG @ uses the checked initial value");
+    expect_value("nbyref", "-1", "native LONG @ writes the checked low-32-bit value back");
+    expect_value("nint64max", "9223372036854775807", "native INTEGER64 preserves exact INT64_MAX");
+    expect_value("nint64min", "-9223372036854775808", "native INTEGER64 preserves INT64_MIN");
+    expect_value("nint64byrefresult", "1", "native INTEGER64 @ accepts an exact signed initial value");
+    expect_value("nint64byref", "9223372036854775807", "native INTEGER64 @ writes its exact value back");
+    expect_value("nvalidentries", "9", "all valid native boundary calls enter the fixture");
+    expect_value("nhugeerror", "11", "native INTEGER rejects a huge finite value");
+    expect_value("npositiveinfinityerror", "11", "native INTEGER rejects positive infinity");
+    expect_value("nnegativeinfinityerror", "11", "native INTEGER rejects negative infinity");
+    expect_value("nint64overflowerror", "11", "native INTEGER64 rejects numeric 2^63");
+    expect_value("nnanerror", "11", "native INTEGER rejects an interoperable NaN");
+    expect_value("nfinalentries", "9", "rejected native values never cross the ABI boundary");
+
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
 void test_declared_dll_single_uses_vfp_32_bit_float_width() {
 #if defined(_WIN32)
     namespace fs = std::filesystem;

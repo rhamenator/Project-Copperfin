@@ -403,6 +403,114 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_managed_declare_integer_argument_boundaries()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_dotnet_declare_integer_boundaries";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const std::string fixture = fixture_path();
+        const fs::path program_path = temp_root / "managed_integer_boundaries.prg";
+        write_text(
+            program_path,
+            "PUBLIC nCase, nHugeError, nPositiveInfinityError, nNegativeInfinityError, nInt64OverflowError, nNaNError, nUInt64Error\n"
+            "nCase = 0\n"
+            "nHugeError = 0\n"
+            "nPositiveInfinityError = 0\n"
+            "nNegativeInfinityError = 0\n"
+            "nInt64OverflowError = 0\n"
+            "nNaNError = 0\n"
+            "nUInt64Error = 0\n"
+            "DECLARE INTEGER Copperfin.ManagedDeclareFixture.Methods.ResetIntegerBoundaryEntryCount IN '" + fixture + "' AS BoundaryReset\n"
+            "DECLARE INTEGER Copperfin.ManagedDeclareFixture.Methods.IntegerBoundaryEntryCount IN '" + fixture + "' AS BoundaryCount\n"
+            "DECLARE INTEGER Copperfin.ManagedDeclareFixture.Methods.EchoInt32Boundary IN '" + fixture + "' AS Echo32 INTEGER value\n"
+            "DECLARE INTEGER64 Copperfin.ManagedDeclareFixture.Methods.EchoInt64Boundary IN '" + fixture + "' AS Echo64 INTEGER64 value\n"
+            "DECLARE INTEGER64 Copperfin.ManagedDeclareFixture.Methods.ReturnInt64Maximum IN '" + fixture + "' AS Int64Maximum\n"
+            "DECLARE INTEGER64 Copperfin.ManagedDeclareFixture.Methods.ReturnUInt64Maximum IN '" + fixture + "' AS UInt64Maximum\n"
+            "DECLARE INTEGER64 Copperfin.ManagedDeclareFixture.Methods.ReturnUInt64AtSignedMaximum IN '" + fixture + "' AS UInt64AtSignedMaximum\n"
+            "DECLARE DOUBLE Copperfin.ManagedDeclareFixture.Methods.ReturnNaN IN '" + fixture + "' AS ReturnNaN\n"
+            "nReset = BoundaryReset()\n"
+            "nInt32Max = Echo32(2147483647)\n"
+            "nInt32Min = Echo32(2147483648)\n"
+            "nUint32Max = Echo32(4294967295)\n"
+            "nTwoTo32 = Echo32(4294967296)\n"
+            "nBelowInt32Min = Echo32(-2147483649)\n"
+            "nInt64MaxSource = Int64Maximum()\n"
+            "nInt64Max = Echo64(nInt64MaxSource)\n"
+            "nInt64Min = Echo64(-9223372036854775808)\n"
+            "nUInt64Max = UInt64Maximum()\n"
+            "nUInt64ToInt32 = Echo32(nUInt64Max)\n"
+            "nUInt64SignedMaxSource = UInt64AtSignedMaximum()\n"
+            "nUInt64SignedMax = Echo64(nUInt64SignedMaxSource)\n"
+            "nValidEntries = BoundaryCount()\n"
+            "ON ERROR DO HandleBoundaryError\n"
+            "nCase = 1\n"
+            "nUnexpectedHuge = Echo32(1E300)\n"
+            "nCase = 2\n"
+            "nUnexpectedPositiveInfinity = Echo32(EXP(1000))\n"
+            "nCase = 3\n"
+            "nUnexpectedNegativeInfinity = Echo32(-EXP(1000))\n"
+            "nCase = 4\n"
+            "nUnexpectedInt64Overflow = Echo64(9223372036854775808)\n"
+            "nCase = 5\n"
+            "nNaN = ReturnNaN()\n"
+            "nUnexpectedNaN = Echo32(nNaN)\n"
+            "nCase = 6\n"
+            "nUnexpectedUInt64 = Echo64(nUInt64Max)\n"
+            "ON ERROR\n"
+            "nFinalEntries = BoundaryCount()\n"
+            "RETURN\n"
+            "PROCEDURE HandleBoundaryError\n"
+            "DO CASE\n"
+            "CASE nCase = 1\n"
+            "  nHugeError = ERROR()\n"
+            "CASE nCase = 2\n"
+            "  nPositiveInfinityError = ERROR()\n"
+            "CASE nCase = 3\n"
+            "  nNegativeInfinityError = ERROR()\n"
+            "CASE nCase = 4\n"
+            "  nInt64OverflowError = ERROR()\n"
+            "CASE nCase = 5\n"
+            "  nNaNError = ERROR()\n"
+            "CASE nCase = 6\n"
+            "  nUInt64Error = ERROR()\n"
+            "ENDCASE\n"
+            "RETURN\n"
+            "ENDPROC\n");
+
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(program_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#6050: managed DECLARE boundary script should complete: " + state.message);
+
+        const auto expect_value = [&](const char* name, const char* expected, const char* label) {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end() && copperfin::runtime::format_value(found->second) == expected,
+                   std::string("#6050: ") + label);
+        };
+        expect_value("nint32max", "2147483647", "managed INTEGER keeps INT32_MAX");
+        expect_value("nint32min", "-2147483648", "managed INTEGER maps 2^31 to INT32_MIN");
+        expect_value("nuint32max", "-1", "managed INTEGER preserves UINT32_MAX low bits");
+        expect_value("ntwoto32", "0", "managed INTEGER discards bits above bit 31");
+        expect_value("nbelowint32min", "2147483647", "managed INTEGER wraps below INT32_MIN");
+        expect_value("nint64max", "9223372036854775807", "managed INTEGER64 preserves exact INT64_MAX");
+        expect_value("nint64min", "-9223372036854775808", "managed INTEGER64 preserves INT64_MIN");
+        expect_value("nuint64toint32", "-1", "managed INTEGER accepts exact UINT64_MAX low bits");
+        expect_value("nuint64signedmax", "9223372036854775807", "managed INTEGER64 accepts unsigned INT64_MAX");
+        expect_value("nvalidentries", "9", "all valid managed boundary calls enter the fixture");
+        expect_value("nhugeerror", "11", "managed INTEGER rejects a huge finite value");
+        expect_value("npositiveinfinityerror", "11", "managed INTEGER rejects positive infinity");
+        expect_value("nnegativeinfinityerror", "11", "managed INTEGER rejects negative infinity");
+        expect_value("nint64overflowerror", "11", "managed INTEGER64 rejects numeric 2^63");
+        expect_value("nnanerror", "11", "managed INTEGER rejects an interoperable NaN");
+        expect_value("nuint64error", "11", "managed INTEGER64 rejects exact UINT64_MAX");
+        expect_value("nfinalentries", "9", "rejected managed values never reach reflection invocation");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_managed_declare_requires_qualified_type()
     {
         namespace fs = std::filesystem;
@@ -691,6 +799,7 @@ int main()
     test_managed_declare_requires_qualified_type();
     test_managed_declare_explicit_relative_path();
     test_managed_declare_success_contract();
+    test_managed_declare_integer_argument_boundaries();
     test_managed_declare_parentless_search_path();
     test_repeated_managed_exception_cleanup();
     test_managed_load_failure_localization();

@@ -167,19 +167,25 @@
             {
                 return i < declared_param_types.size() && declared_param_types[i].by_ref;
             };
-            // Declared 64-bit integer extensions must not pass through the
-            // binary64 representation used by ordinary VFP numeric values.
-            const auto exact_declared_integer_value = [](const PrgValue &value) -> std::int64_t
+            const auto require_declared_integer32 = [&](const PrgValue &value) -> std::int32_t
             {
-                if (value.kind == PrgValueKind::int64)
+                const auto converted = checked_declared_int32_argument(value);
+                if (!converted.has_value())
                 {
-                    return value.int64_value;
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
                 }
-                if (value.kind == PrgValueKind::uint64)
+                return *converted;
+            };
+            const auto require_declared_integer64 = [&](const PrgValue &value) -> std::int64_t
+            {
+                const auto converted = checked_declared_int64_argument(value);
+                if (!converted.has_value())
                 {
-                    return static_cast<std::int64_t>(value.uint64_value);
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
                 }
-                return static_cast<std::int64_t>(value_as_number(value));
+                return *converted;
             };
             // Convert interpreter values to the portable CLR-host boundary.
             auto to_managed_argument = [&](const PrgValue &v, const std::string &ptype) -> ManagedDeclaredArgument
@@ -204,13 +210,13 @@
                 else if (declared_dll_type_uses_64_bit_integer(base))
                 {
                     argument.kind = ManagedDeclaredArgumentKind::signed_integer64;
-                    argument.signed_integer_value = exact_declared_integer_value(v);
+                    argument.signed_integer_value = require_declared_integer64(v);
                 }
                 else
                 {
                     // VFP9 parameters permit INTEGER/LONG, not SHORT.
                     argument.kind = ManagedDeclaredArgumentKind::signed_integer32;
-                    argument.signed_integer_value = static_cast<std::int32_t>(value_as_number(v));
+                    argument.signed_integer_value = require_declared_integer32(v);
                 }
                 return argument;
             };
@@ -417,13 +423,12 @@
                     else if (declared_dll_type_uses_64_bit_integer(parameter_type))
                     {
                         argument.kind = NativeDeclaredArgumentKind::signed_integer64;
-                        argument.signed_integer_value = exact_declared_integer_value(args[index]);
+                        argument.signed_integer_value = require_declared_integer64(args[index]);
                     }
                     else
                     {
                         argument.kind = NativeDeclaredArgumentKind::signed_integer32;
-                        argument.signed_integer_value =
-                            static_cast<std::int32_t>(value_as_number(args[index]));
+                        argument.signed_integer_value = require_declared_integer32(args[index]);
                     }
                     request.arguments.push_back(std::move(argument));
                 }

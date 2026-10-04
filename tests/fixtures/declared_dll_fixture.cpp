@@ -3,6 +3,7 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include <cstdint>
+#include <limits>
 
 #if defined(_WIN32)
 #ifndef WIN32_LEAN_AND_MEAN
@@ -25,6 +26,7 @@ int declared_dll_fixture_module_anchor = 0;
 #endif
 std::int32_t declared_dll_arity_entry_count = 0;
 std::int32_t declared_dll_numeric_byref_entry_count = 0;
+std::int32_t declared_dll_integer_boundary_entry_count = 0;
 
 void record_declared_dll_arity_entry() {
     ++declared_dll_arity_entry_count;
@@ -57,6 +59,43 @@ COPPERFIN_TEST_EXPORT std::int64_t COPPERFIN_TEST_CALL CopperfinDeclaredDllInt64
 
 COPPERFIN_TEST_EXPORT std::int64_t COPPERFIN_TEST_CALL CopperfinDeclaredDllInt64Echo(std::int64_t value) {
     return value;
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllIntegerBoundaryReset() {
+    declared_dll_integer_boundary_entry_count = 0;
+    return 0L;
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllIntegerBoundaryCount() {
+    return static_cast<long>(declared_dll_integer_boundary_entry_count);
+}
+
+COPPERFIN_TEST_EXPORT std::int32_t COPPERFIN_TEST_CALL CopperfinDeclaredDllInt32BoundaryEcho(std::int32_t value) {
+    ++declared_dll_integer_boundary_entry_count;
+    return value;
+}
+
+COPPERFIN_TEST_EXPORT std::int32_t COPPERFIN_TEST_CALL CopperfinDeclaredDllInt32BoundaryByRef(std::int32_t* value) {
+    ++declared_dll_integer_boundary_entry_count;
+    return value == nullptr ? 0 : *value;
+}
+
+COPPERFIN_TEST_EXPORT std::int64_t COPPERFIN_TEST_CALL CopperfinDeclaredDllInt64BoundaryEcho(std::int64_t value) {
+    ++declared_dll_integer_boundary_entry_count;
+    return value;
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllInt64BoundaryByRef(std::int64_t* value) {
+    ++declared_dll_integer_boundary_entry_count;
+    return value == nullptr ? 0L : 1L;
+}
+
+COPPERFIN_TEST_EXPORT std::int64_t COPPERFIN_TEST_CALL CopperfinDeclaredDllInt64Maximum() {
+    return INT64_MAX;
+}
+
+COPPERFIN_TEST_EXPORT double COPPERFIN_TEST_CALL CopperfinDeclaredDllNaN() {
+    return std::numeric_limits<double>::quiet_NaN();
 }
 
 COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllInt64ByRef(std::int64_t* value) {

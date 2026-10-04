@@ -137,6 +137,15 @@ std::int64_t numeric_count_argument(double value, NumericBehavior behavior);
 // Truncate toward zero only when `value` is finite and representable as int64. This is the fail-closed conversion for
 // array positions/selectors and other arguments where saturation would turn invalid input into an ordinary value.
 std::optional<std::int64_t> checked_truncated_numeric_to_int64(double value);
+// #6050: integer arguments crossing a DECLARE boundary. Ordinary VFP9
+// INTEGER/LONG parameters receive the low 32 bits of a finite, int64-
+// representable value after truncation toward zero. Exact int64/uint64 values
+// keep their low bits without a floating round trip. INTEGER64 is a Copperfin
+// extension and accepts only values representable as signed int64. A missing
+// result means the caller must raise localized, catchable error 11 before
+// invoking native or managed code.
+std::optional<std::int32_t> checked_declared_int32_argument(const PrgValue& value);
+std::optional<std::int64_t> checked_declared_int64_argument(const PrgValue& value);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the
 // value is out of range). A size or count: truncated toward zero, never below `minimum`, saturating at the largest
 // value this build supports: INT64_MAX, or SIZE_MAX where size_t is narrower (NaN gives `minimum`). A rounded int64 (llround semantics for in-range values; NaN is 0 and

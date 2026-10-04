@@ -9,27 +9,33 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
-PR #6918 (`fix/numeric-occurrence-5611`) merged into `main` as
-`95c30b998e88330852c335c8ef8141abf53eda19` on 2026-10-03. It completed the
-`AT`-family/`STRTRAN` occurrence-validation and `GETWORDNUM` boundary slice
-under #5611/#6776, including exact installed-VFP9 ceiling evidence and the
-VFP9-only `STRTRAN(...,4294967295)` sentinel quirk. All 33 checks passed at
-exact implementation head `030b3b727de35843c5c0b6384f2b2f6aa701a62f`,
-Codex review was clean, and both review conversations were resolved before
-merge.
+PR #6919 (`fix/numeric-substr-start-5611`) merged into `main` as
+`06cc138a8c4804e03b10a57b849208411258650d` on 2026-10-03. It completed the
+VFP9-mode huge-positive `SUBSTR`/`SUBSTRC` start slice under #5611/#6776 while
+keeping Copperfin mode safe and saturating. All 33 checks passed at exact head
+`3a1b754205e9c12b02e62ccbcc97b9e90f3cd8f1`, exact-head review was clean, and
+both conversations were resolved before merge. Review fixes avoided redundant
+scalar-offset work on ordinary `SUBSTRC` calls and pinned the positive
+wrapped-start-before-end case (`2^32 + 1`).
 
-The active bounded slice is `fix/numeric-substr-start-5611`, created from
-`origin/main` at `95c30b998`. It covers only the VFP9-mode huge-positive
-`SUBSTR`/`SUBSTRC` start quirk under #5611/#6776; Copperfin mode remains safe
-and saturating. Fail-before evidence and focused normal tests are complete;
-production, tests, traceability and changelog edits are present, and all three
-focused suites pass under AddressSanitizer, UndefinedBehaviorSanitizer and
-float-cast-overflow instrumentation. Signed implementation commit `8b96907a6`
-is pushed and PR #6919 is open against `main`. Two Copilot findings were fixed:
-ordinary `SUBSTRC` calls no longer build a redundant scalar-offset vector, and
-the strictly-before-end positive wrap case (`2^32 + 1`) is pinned. Focused
-normal and sanitizer suites pass after those fixes; push, exact-head review,
-conversation resolution and CI remain pending.
+The active bounded slice is issue #6050 on
+`fix/declare-numeric-boundaries-6050`, created from `origin/main` at
+`06cc138a8`. It covers only the undefined/incompatible numeric narrowing in
+native and managed `DECLARE`: defined VFP9-compatible low-32-bit conversion for
+ordinary INTEGER/LONG arguments, checked signed-64-bit extension admission,
+the same contract for native/managed value arguments and native by-reference
+initial values, localized catchable rejection of nonfinite or unsupported
+values, focused Windows integration coverage, and portable GCC/Clang source-
+level coverage. Retained VFP9 evidence is at
+`/home/rich/temp/vfp9-probes/declare-range-213/`. Production, portable helper
+tests, Windows native/managed integration fixtures, portable boundary
+contracts, requirements traceability, language coverage and changelog edits
+are complete. Focused GCC numeric/DECLARE tests pass; the shared numeric test
+also passes under Clang AddressSanitizer, UndefinedBehaviorSanitizer and
+float-cast-overflow instrumentation. The Windows tests cover INT32/UINT32 and
+INT64/UINT64 boundaries, native by-reference initial values, huge finite,
+infinities and interoperable NaN, and assert rejected values never enter the
+fixture. Signed commit, push, PR, Windows CI and review remain pending.
 
 PR #6917 (`fix/installer-artifact-policy-6905`) merged into `main` as
 `6b64a176d680aab732e0772cd889a423ed3c993e` on 2026-10-03. Successful
