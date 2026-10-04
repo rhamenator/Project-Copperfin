@@ -148,6 +148,7 @@ namespace
             "week_mode3_jan4 = WEEK(CTOD('01/04/2026'), 3, 1)\n"
             "week_mode3_dec_rollover = WEEK(CTOD('12/29/2024'), 3, 1)\n"
             "week_mode1_dec_rollover = WEEK(CTOD('12/31/2021'), 1, 1)\n"
+            "week_mode1_year3000 = WEEK(DATE(3000,12,26), 1, 1)\n"
             "week_fdow_before = WEEK(CTOD('01/04/2026'))\n"
             "SET FDOW TO 2\n"
             "fdow_after = SET('FDOW')\n"
@@ -396,6 +397,7 @@ namespace
         check("week_mode3_jan4", "1");
         check("week_mode3_dec_rollover", "52");
         check("week_mode1_dec_rollover", "1");
+        check("week_mode1_year3000", "52");
         check("week_fdow_before", "2");
         check("fdow_after", "2");
         check("week_fdow_after", "2");

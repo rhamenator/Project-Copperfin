@@ -1261,7 +1261,10 @@ std::optional<PrgValue> evaluate_date_time_function(
 
         const auto week_one_start_julian = [&](int week_year) {
             const int jan1_julian = date_to_julian(week_year, 1, 1);
-            const int jan1_weekday = weekday_number_sunday_first(week_year, 1, 1);
+            // Derive the weekday from the Julian day instead of the host CRT.
+            // Windows mktime() stops at year 3000, while DATE() and WEEK()
+            // support the full recovered calendar range and need year + 1.
+            const int jan1_weekday = ((jan1_julian + 1) % 7) + 1;
             const int offset = (jan1_weekday - first_day + 7) % 7;
             if (first_week_mode == 1) {
                 return jan1_julian - offset;

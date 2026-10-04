@@ -244,10 +244,13 @@ options, `SET FWEEK`/`SET FDOW` fallback only for explicit zero, ranges 0..3
 and 0..7 with error 11, mode 2 as the four-day rule, mode 3 as the full-week
 rule, and rollover into week 1 at both year boundaries. Production code,
 retained probe fixtures, focused script/direct coverage, docs/22, docs/32, and
-the changelog fragment are drafted; all three focused targets pass normally
-and under Clang AddressSanitizer, UndefinedBehaviorSanitizer, and
-float-cast-overflow instrumentation. Remaining: signed commit, push,
-PR/review, green exact-head checks, and merge.
+the changelog fragment are in PR #6936. Review-requested fixes derive January
+1 weekdays from Julian days rather than the Windows CRT at the year-3000
+boundary and add executable 7/7.9 first-day coverage. All three focused targets
+pass normally and under Clang AddressSanitizer, UndefinedBehaviorSanitizer,
+and float-cast-overflow instrumentation. Remaining: sign and push the review
+fix, resolve all three conversations after exact-change verification, obtain
+green exact-head checks and review, and merge.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is

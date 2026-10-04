@@ -635,6 +635,8 @@ std::vector<Row> build_rows() {
         const std::string set = std::string("SET FWEEK TO 3\nSET FDOW TO 4\nSET NUMERICBEHAVIOR TO ") + mode;
         rows.push_back({set, "WEEK(DATE(2021,1,1),0)", "N:52"});
         rows.push_back({set, "WEEK(DATE(2021,1,1),1,0)", "N:1"});
+        rows.push_back({set, "WEEK(DATE(2021,1,1),1,7)", "N:1"});
+        rows.push_back({set, "WEEK(DATE(2021,1,1),1,7.9)", "N:1"});
         rows.push_back({set, "WEEK(DATE(2021,1,1),2.9)", "N:53"});
         rows.push_back({set, "WEEK(DATE(2021,1,1),4)", "ERR11"});
         rows.push_back({set, "WEEK(DATE(2021,1,1),-1)", "ERR11"});
