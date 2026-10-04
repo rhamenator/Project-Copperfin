@@ -608,6 +608,9 @@ void test_declared_dll_integer_argument_boundaries() {
         "nNaN = ReturnNaN()\n"
         "nUnexpectedNaN = Echo32(nNaN)\n"
         "ON ERROR\n"
+        "SET NUMERICBEHAVIOR TO VFP9\n"
+        "nVfp9Huge = Echo32(1E300)\n"
+        "SET NUMERICBEHAVIOR TO COPPERFIN\n"
         "nFinalEntries = BoundaryCount()\n"
         "RETURN\n"
         "PROCEDURE HandleBoundaryError\n"
@@ -653,7 +656,8 @@ void test_declared_dll_integer_argument_boundaries() {
     expect_value("nnegativeinfinityerror", "11", "native INTEGER rejects negative infinity");
     expect_value("nint64overflowerror", "11", "native INTEGER64 rejects numeric 2^63");
     expect_value("nnanerror", "11", "native INTEGER rejects an interoperable NaN");
-    expect_value("nfinalentries", "9", "rejected native values never cross the ABI boundary");
+    expect_value("nvfp9huge", "0", "native INTEGER maps a huge finite VFP9 value to zero");
+    expect_value("nfinalentries", "10", "only the VFP9 huge finite value crosses the ABI boundary");
 
     fs::remove_all(temp_root, ignored);
 #endif

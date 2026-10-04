@@ -115,7 +115,7 @@ endforeach()
 foreach(required_token IN ITEMS
         "std::vector<ManagedDeclaredArgument> managed_arguments;"
         "to_managed_argument(args[index], param_type_at(index))"
-        "checked_declared_int32_argument(value)"
+        "checked_declared_int32_argument(value, numeric_behavior(set_callback))"
         "checked_declared_int64_argument(value)"
         "if (!invocation.succeeded)"
         "invocation.compatible_error_code"

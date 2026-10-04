@@ -22,7 +22,8 @@ The active bounded slice is issue #6050 on
 `fix/declare-numeric-boundaries-6050`, created from `origin/main` at
 `06cc138a8`. It covers only the undefined/incompatible numeric narrowing in
 native and managed `DECLARE`: defined VFP9-compatible low-32-bit conversion for
-ordinary INTEGER/LONG arguments, checked signed-64-bit extension admission,
+ordinary INTEGER/LONG arguments, mode-aware handling of finite values outside
+signed 64-bit range, checked signed-64-bit extension admission,
 the same contract for native/managed value arguments and native by-reference
 initial values, localized catchable rejection of nonfinite or unsupported
 values, focused Windows integration coverage, and portable GCC/Clang source-
@@ -35,7 +36,14 @@ also passes under Clang AddressSanitizer, UndefinedBehaviorSanitizer and
 float-cast-overflow instrumentation. The Windows tests cover INT32/UINT32 and
 INT64/UINT64 boundaries, native by-reference initial values, huge finite,
 infinities and interoperable NaN, and assert rejected values never enter the
-fixture. Signed commit, push, PR, Windows CI and review remain pending.
+fixture. PR #6920 is open. Review correctly found that finite out-of-int64
+INTEGER values did not yet honor `SET NUMERICBEHAVIOR`; the response now keeps
+default COPPERFIN error 11, maps such values to the probed integer-indefinite
+zero only in explicit VFP9 mode, and preserves nonfinite rejection in both
+modes. Focused normal and sanitizer-backed numeric tests plus both portable
+DECLARE boundary contracts pass after that review fix. A signed review-fix
+commit, push, exact-head review, remaining CI, conversation resolution and
+merge remain pending.
 
 PR #6917 (`fix/installer-artifact-policy-6905`) merged into `main` as
 `6b64a176d680aab732e0772cd889a423ed3c993e` on 2026-10-03. Successful

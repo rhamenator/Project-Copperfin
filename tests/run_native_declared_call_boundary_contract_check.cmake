@@ -101,7 +101,7 @@ foreach(forbidden_token IN ITEMS
 endforeach()
 foreach(required_token IN ITEMS
         "NativeDeclaredCallRequest request;"
-        "checked_declared_int32_argument(value)"
+        "checked_declared_int32_argument(value, numeric_behavior(set_callback))"
         "checked_declared_int64_argument(value)"
         "request.function_address = declfn.native_function_address;"
         "request.use_cdecl = declfn.native_cdecl;"

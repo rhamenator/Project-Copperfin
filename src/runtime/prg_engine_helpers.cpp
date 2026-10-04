@@ -1290,15 +1290,24 @@ std::optional<std::int64_t> checked_truncated_numeric_to_int64(const double valu
     return static_cast<std::int64_t>(value);
 }
 
-std::optional<std::int32_t> checked_declared_int32_argument(const PrgValue& value) {
+std::optional<std::int32_t> checked_declared_int32_argument(
+    const PrgValue& value,
+    const NumericBehavior behavior) {
     if (value.kind == PrgValueKind::int64) {
         return declared_int32_from_int64(value.int64_value);
     }
     if (value.kind == PrgValueKind::uint64) {
         return signed_int32_from_low_bits(static_cast<std::uint32_t>(value.uint64_value));
     }
-    const auto converted = checked_truncated_numeric_to_int64(value_as_number(value));
+    const double numeric_value = value_as_number(value);
+    if (!std::isfinite(numeric_value)) {
+        return std::nullopt;
+    }
+    const auto converted = checked_truncated_numeric_to_int64(numeric_value);
     if (!converted.has_value()) {
+        if (behavior == NumericBehavior::vfp9) {
+            return static_cast<std::int32_t>(vfp9_numeric_to_int32(numeric_value));
+        }
         return std::nullopt;
     }
     return declared_int32_from_int64(*converted);

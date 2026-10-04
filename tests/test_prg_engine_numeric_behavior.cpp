@@ -693,31 +693,49 @@ void test_conversion_helpers() {
     expect(!checked_truncated_numeric_to_int64(-inf).has_value(), "checked conversion rejects negative infinity");
     expect(!checked_truncated_numeric_to_int64(nan).has_value(), "checked conversion rejects NaN");
 
-    // Governing requirement: RQ-CF-PRG-DECLARE-INTEGER-001 (#6050).
-    expect(checked_declared_int32_argument(copperfin::runtime::make_number_value(2147483647.0)) == 2147483647,
+    // Governing requirement: RQ-CF-PRG-DECLARE-INT32-001 (#6050/#6776).
+    expect(checked_declared_int32_argument(
+               copperfin::runtime::make_number_value(2147483647.0), NumericBehavior::copperfin) == 2147483647,
            "DECLARE INTEGER keeps INT32_MAX");
-    expect(checked_declared_int32_argument(copperfin::runtime::make_number_value(2147483648.0)) ==
+    expect(checked_declared_int32_argument(
+               copperfin::runtime::make_number_value(2147483648.0), NumericBehavior::copperfin) ==
                std::numeric_limits<std::int32_t>::min(),
            "DECLARE INTEGER interprets 2^31 through its low 32 bits");
-    expect(checked_declared_int32_argument(copperfin::runtime::make_number_value(4294967295.0)) == -1,
+    expect(checked_declared_int32_argument(
+               copperfin::runtime::make_number_value(4294967295.0), NumericBehavior::copperfin) == -1,
            "DECLARE INTEGER preserves the UINT32_MAX bit pattern");
-    expect(checked_declared_int32_argument(copperfin::runtime::make_number_value(4294967296.0)) == 0,
+    expect(checked_declared_int32_argument(
+               copperfin::runtime::make_number_value(4294967296.0), NumericBehavior::copperfin) == 0,
            "DECLARE INTEGER discards bits above the low 32");
-    expect(checked_declared_int32_argument(copperfin::runtime::make_number_value(-2147483649.0)) == 2147483647,
+    expect(checked_declared_int32_argument(
+               copperfin::runtime::make_number_value(-2147483649.0), NumericBehavior::copperfin) == 2147483647,
            "DECLARE INTEGER wraps negative values through the low 32 bits");
-    expect(checked_declared_int32_argument(copperfin::runtime::make_number_value(-2.9)) == -2,
+    expect(checked_declared_int32_argument(
+               copperfin::runtime::make_number_value(-2.9), NumericBehavior::copperfin) == -2,
            "DECLARE INTEGER truncates fractions toward zero before taking low bits");
-    expect(checked_declared_int32_argument(copperfin::runtime::make_int64_value(kMin)) == 0,
+    expect(checked_declared_int32_argument(
+               copperfin::runtime::make_int64_value(kMin), NumericBehavior::copperfin) == 0,
            "DECLARE INTEGER accepts exact INT64_MIN without a floating round trip");
     expect(checked_declared_int32_argument(copperfin::runtime::make_uint64_value(
-               std::numeric_limits<std::uint64_t>::max())) == -1,
+               std::numeric_limits<std::uint64_t>::max()), NumericBehavior::copperfin) == -1,
            "DECLARE INTEGER accepts exact UINT64_MAX low bits");
-    expect(!checked_declared_int32_argument(copperfin::runtime::make_number_value(1E300)).has_value(),
-           "DECLARE INTEGER rejects huge finite values outside the supported conversion range");
-    expect(!checked_declared_int32_argument(copperfin::runtime::make_number_value(inf)).has_value(),
-           "DECLARE INTEGER rejects infinity");
-    expect(!checked_declared_int32_argument(copperfin::runtime::make_number_value(nan)).has_value(),
-           "DECLARE INTEGER rejects NaN");
+    expect(!checked_declared_int32_argument(
+                copperfin::runtime::make_number_value(1E300), NumericBehavior::copperfin).has_value(),
+           "COPPERFIN DECLARE INTEGER rejects huge finite values outside the supported conversion range");
+    expect(checked_declared_int32_argument(
+               copperfin::runtime::make_number_value(1E300), NumericBehavior::vfp9) == 0,
+           "VFP9 DECLARE INTEGER maps a huge finite value to the integer-indefinite low bits");
+    expect(checked_declared_int32_argument(
+               copperfin::runtime::make_number_value(-1E300), NumericBehavior::vfp9) == 0,
+           "VFP9 DECLARE INTEGER maps a huge negative finite value to the integer-indefinite low bits");
+    for (const auto behavior : {NumericBehavior::copperfin, NumericBehavior::vfp9}) {
+        expect(!checked_declared_int32_argument(
+                    copperfin::runtime::make_number_value(inf), behavior).has_value(),
+               "DECLARE INTEGER rejects infinity in both numeric modes");
+        expect(!checked_declared_int32_argument(
+                    copperfin::runtime::make_number_value(nan), behavior).has_value(),
+               "DECLARE INTEGER rejects NaN in both numeric modes");
+    }
 
     expect(checked_declared_int64_argument(copperfin::runtime::make_int64_value(kMin)) == kMin,
            "DECLARE INTEGER64 accepts exact INT64_MIN");

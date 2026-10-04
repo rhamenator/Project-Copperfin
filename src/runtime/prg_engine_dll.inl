@@ -169,7 +169,7 @@
             };
             const auto require_declared_integer32 = [&](const PrgValue &value) -> std::int32_t
             {
-                const auto converted = checked_declared_int32_argument(value);
+                const auto converted = checked_declared_int32_argument(value, numeric_behavior(set_callback));
                 if (!converted.has_value())
                 {
                     throw PrgCompatibilityError(

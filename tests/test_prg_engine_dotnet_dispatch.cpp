@@ -460,6 +460,9 @@ namespace
             "nCase = 6\n"
             "nUnexpectedUInt64 = Echo64(nUInt64Max)\n"
             "ON ERROR\n"
+            "SET NUMERICBEHAVIOR TO VFP9\n"
+            "nVfp9Huge = Echo32(1E300)\n"
+            "SET NUMERICBEHAVIOR TO COPPERFIN\n"
             "nFinalEntries = BoundaryCount()\n"
             "RETURN\n"
             "PROCEDURE HandleBoundaryError\n"
@@ -506,7 +509,8 @@ namespace
         expect_value("nint64overflowerror", "11", "managed INTEGER64 rejects numeric 2^63");
         expect_value("nnanerror", "11", "managed INTEGER rejects an interoperable NaN");
         expect_value("nuint64error", "11", "managed INTEGER64 rejects exact UINT64_MAX");
-        expect_value("nfinalentries", "9", "rejected managed values never reach reflection invocation");
+        expect_value("nvfp9huge", "0", "managed INTEGER maps a huge finite VFP9 value to zero");
+        expect_value("nfinalentries", "10", "only the VFP9 huge finite value reaches reflection invocation");
 
         fs::remove_all(temp_root, ignored);
     }
