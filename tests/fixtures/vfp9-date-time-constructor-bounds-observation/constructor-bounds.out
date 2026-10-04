@@ -1,0 +1,42 @@
+date-year-0.4 => D:[20260101] EMPTY=.F.
+date-year-0.5 => D:[20260101] EMPTY=.F.
+date-year-0.6 => D:[20260101] EMPTY=.F.
+date-month-0.4 => D:[20260101] EMPTY=.F.
+date-month-0.5 => D:[20260101] EMPTY=.F.
+date-month-0.6 => D:[20260101] EMPTY=.F.
+date-day-0.4 => D:[20260101] EMPTY=.F.
+date-day-0.5 => D:[20260101] EMPTY=.F.
+date-day-0.6 => D:[20260101] EMPTY=.F.
+date-huge-positive => ERR 11 :Function argument value, type, or count is invalid.
+date-huge-negative => ERR 11 :Function argument value, type, or count is invalid.
+date-int-max => ERR 11 :Function argument value, type, or count is invalid.
+date-int-max-plus-one => ERR 11 :Function argument value, type, or count is invalid.
+date-negative-indefinite => ERR 11 :Function argument value, type, or count is invalid.
+date-positive-infinity => ERR 11 :Function argument value, type, or count is invalid.
+datetime-second-0.4 => T:[20260101000001] EMPTY=.F.
+datetime-second-0.5 => T:[20260101000001] EMPTY=.F.
+datetime-second-0.6 => T:[20260101000001] EMPTY=.F.
+datetime-hour-huge-positive => ERR 11 :Function argument value, type, or count is invalid.
+datetime-hour-huge-negative => T:[20260101000000] EMPTY=.F.
+datetime-hour-int-max-plus-one => ERR 11 :Function argument value, type, or count is invalid.
+datetime-hour-positive-infinity => ERR 11 :Function argument value, type, or count is invalid.
+date-year-lower-valid => D:[01000101] EMPTY=.F.
+date-year-lower-invalid => ERR 11 :Function argument value, type, or count is invalid.
+date-year-upper-valid => D:[99991231] EMPTY=.F.
+date-year-upper-invalid => ERR 11 :Function argument value, type, or count is invalid.
+datetime-hour-upper-valid => T:[20260101235959] EMPTY=.F.
+datetime-hour-upper-invalid => ERR 11 :Function argument value, type, or count is invalid.
+date-month-zero => ERR 11 :Function argument value, type, or count is invalid.
+date-day-zero => ERR 11 :Function argument value, type, or count is invalid.
+date-year-negative-wrap-100 => D:[01000101] EMPTY=.F.
+date-year-negative-wrap-9999 => D:[99990101] EMPTY=.F.
+date-year-negative-wrap-zero => ERR 11 :Function argument value, type, or count is invalid.
+date-year-negative-infinity => ERR 11 :Function argument value, type, or count is invalid.
+datetime-hour-negative-wrap-one => T:[20260101010000] EMPTY=.F.
+datetime-hour-negative-wrap-zero => T:[20260101000000] EMPTY=.F.
+datetime-hour-negative-infinity => T:[20260101000000] EMPTY=.F.
+datetime-minute-negative-wrap-one => T:[20260101000100] EMPTY=.F.
+datetime-second-negative-wrap-one => T:[20260101000001] EMPTY=.F.
+datetime-second-negative-fraction => T:[20260101000000] EMPTY=.F.
+datetime-second-negative-one => ERR 11 :Function argument value, type, or count is invalid.
+date-year-exact-negative-int64-edge => ERR 11 :Function argument value, type, or count is invalid.

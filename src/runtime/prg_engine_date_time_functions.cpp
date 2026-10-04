@@ -868,6 +868,48 @@ bool is_date_or_datetime(const PrgValue& value) {
     return operand_class == PrgOperandClass::date || operand_class == PrgOperandClass::datetime;
 }
 
+// Governing requirement: RQ-CF-PRG-DATE-CONSTRUCTOR-BOUNDS-001.
+int checked_date_time_constructor_component(
+    const PrgValue& value,
+    const int minimum,
+    const int maximum,
+    const NumericBehavior behavior) {
+    std::int64_t converted = 0;
+    if (behavior == NumericBehavior::vfp9) {
+        bool above_maximum = false;
+        if (value.kind == PrgValueKind::int64) {
+            above_maximum = value.int64_value > maximum;
+        } else if (value.kind == PrgValueKind::uint64) {
+            above_maximum = value.uint64_value > static_cast<std::uint64_t>(maximum);
+        } else {
+            above_maximum = std::trunc(value_as_number(value)) > static_cast<double>(maximum);
+        }
+        if (above_maximum) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        converted = vfp9_numeric_to_int32(value);
+    } else if (value.kind == PrgValueKind::int64) {
+        converted = value.int64_value;
+    } else if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value > static_cast<std::uint64_t>(maximum)) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        converted = static_cast<std::int64_t>(value.uint64_value);
+    } else {
+        const double truncated = std::trunc(value_as_number(value));
+        if (!std::isfinite(truncated) || truncated < static_cast<double>(minimum) ||
+            truncated > static_cast<double>(maximum)) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        converted = static_cast<std::int64_t>(truncated);
+    }
+
+    if (converted < minimum || converted > maximum) {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+    }
+    return static_cast<int>(converted);
+}
+
 // Governing requirement: RQ-CF-PRG-GOMONTH-BOUNDARIES-001.
 std::int64_t checked_month_offset(
     const PrgValue& value,
@@ -966,12 +1008,11 @@ std::optional<PrgValue> evaluate_date_time_function(
     require_date_time_argument_types(function, arguments);
     if (function == "date") {
         if (arguments.size() >= 3U) {
-            const int year = static_cast<int>(std::llround(value_as_number(arguments[0])));
-            const int month = static_cast<int>(std::llround(value_as_number(arguments[1])));
-            const int day = static_cast<int>(std::llround(value_as_number(arguments[2])));
-            if (!valid_runtime_date(year, month, day)) {
-                return make_date_value(std::string{});
-            }
+            const NumericBehavior behavior = numeric_behavior(set_callback);
+            const int year = checked_date_time_constructor_component(arguments[0], 100, 9999, behavior);
+            const int month = checked_date_time_constructor_component(arguments[1], 1, 12, behavior);
+            const int day = checked_date_time_constructor_component(
+                arguments[2], 1, days_in_month(year, month), behavior);
             return make_date_value(format_runtime_date_for_set(year, month, day, set_callback), year, month, day);
         }
         int year = 0;
@@ -989,16 +1030,20 @@ std::optional<PrgValue> evaluate_date_time_function(
     }
     if (function == "datetime") {
         if (arguments.size() >= 3U) {
-            const int year = static_cast<int>(std::llround(value_as_number(arguments[0])));
-            const int month = static_cast<int>(std::llround(value_as_number(arguments[1])));
-            const int day = static_cast<int>(std::llround(value_as_number(arguments[2])));
-            const int hour = arguments.size() >= 4U ? static_cast<int>(std::llround(value_as_number(arguments[3]))) : 0;
-            const int minute = arguments.size() >= 5U ? static_cast<int>(std::llround(value_as_number(arguments[4]))) : 0;
-            const int second = arguments.size() >= 6U ? static_cast<int>(std::llround(value_as_number(arguments[5]))) : 0;
-            if (!valid_runtime_date(year, month, day) ||
-                hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) {
-                return make_datetime_value(std::string{});
-            }
+            const NumericBehavior behavior = numeric_behavior(set_callback);
+            const int year = checked_date_time_constructor_component(arguments[0], 100, 9999, behavior);
+            const int month = checked_date_time_constructor_component(arguments[1], 1, 12, behavior);
+            const int day = checked_date_time_constructor_component(
+                arguments[2], 1, days_in_month(year, month), behavior);
+            const int hour = arguments.size() >= 4U
+                                 ? checked_date_time_constructor_component(arguments[3], 0, 23, behavior)
+                                 : 0;
+            const int minute = arguments.size() >= 5U
+                                   ? checked_date_time_constructor_component(arguments[4], 0, 59, behavior)
+                                   : 0;
+            const int second = arguments.size() >= 6U
+                                   ? checked_date_time_constructor_component(arguments[5], 0, 59, behavior)
+                                   : 0;
             return make_datetime_value(
                 format_runtime_datetime_for_set(year, month, day, hour, minute, second, set_callback),
                 year,

@@ -65,10 +65,8 @@ namespace
             main_path,
             "d = CTOD('04/18/2026')\n"
             "date_ctor = DATE(2026, 4, 18)\n"
-            "date_ctor_invalid = DATE(2026, 2, 31)\n"
             "datetime_ctor = DATETIME(2026, 4, 18, 13, 45, 56)\n"
             "datetime_ctor_partial = DATETIME(2026, 4, 18)\n"
-            "datetime_ctor_invalid = DATETIME(2026, 4, 18, 24, 0, 0)\n"
             "min_date = DTOC(MIN(DATE(2020, 12, 1), DATE(2021, 1, 15)), 1)\n"
             "max_date = DTOC(MAX(DATE(2020, 12, 1), DATE(2021, 1, 15)), 1)\n"
             "min_datetime = TTOC(MIN(DATETIME(2021, 1, 1, 0, 0, 1), DATETIME(2021, 1, 1, 0, 0, 0)), 1)\n"
@@ -180,8 +178,6 @@ namespace
             "dtoj_trailing_invalid = DTOJ(CTOD('04/18/2026junk'))\n"
             "jtod_value = JTOD(dtoj_value)\n"
             "jtod_invalid = JTOD(0)\n"
-            "date_ctor_invalid_vartype = VARTYPE(DATE(2024, 2, 31))\n"
-            "datetime_ctor_invalid_vartype = VARTYPE(DATETIME(2024, 2, 31, 0, 0, 0))\n"
             "stod_invalid_vartype = VARTYPE(STOD('2024-02-31'))\n"
             "ctod_invalid_vartype = VARTYPE(CTOD(''))\n"
             "ctot_invalid_vartype = VARTYPE(CTOT(''))\n"
@@ -193,8 +189,6 @@ namespace
             "eomonth_invalid = EOMONTH(CTOD('not-a-date'))\n"
             "gomonth_invalid_vartype = VARTYPE(gomonth_invalid)\n"
             "eomonth_invalid_vartype = VARTYPE(eomonth_invalid)\n"
-            "date_ctor_invalid_type = TYPE('DATE(2024, 2, 31)')\n"
-            "datetime_ctor_invalid_type = TYPE('DATETIME(2024, 2, 31, 0, 0, 0)')\n"
             "ctod_invalid_empty = EMPTY(CTOD(''))\n"
             "ctot_invalid_empty = EMPTY(CTOT(''))\n"
             "isleap_2024 = ISLEAPYEAR(2024)\n"
@@ -324,10 +318,8 @@ namespace
         };
 
         check("date_ctor", "04/18/2026");
-        check("date_ctor_invalid", "");
         check("datetime_ctor", "04/18/2026 13:45:56");
         check("datetime_ctor_partial", "04/18/2026 00:00:00");
-        check("datetime_ctor_invalid", "");
         check("min_date", "20201201");
         check("max_date", "20210115");
         check("min_datetime", "20210101000000");
@@ -428,8 +420,6 @@ namespace
         check("dtoj_trailing_invalid", "0");
         check("jtod_value", "04/18/2026");
         check("jtod_invalid", "");
-        check("date_ctor_invalid_vartype", "D");
-        check("datetime_ctor_invalid_vartype", "T");
         check("stod_invalid_vartype", "D");
         check("ctod_invalid_vartype", "D");
         check("ctot_invalid_vartype", "T");
@@ -441,8 +431,6 @@ namespace
         check("eomonth_invalid", "");
         check("gomonth_invalid_vartype", "D");
         check("eomonth_invalid_vartype", "D");
-        check("date_ctor_invalid_type", "D");
-        check("datetime_ctor_invalid_type", "T");
         check("ctod_invalid_empty", "true");
         check("ctot_invalid_empty", "true");
         check("isleap_2024", "true");

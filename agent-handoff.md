@@ -232,32 +232,21 @@ after review found a macOS clone destination-identity gap.
 
 Open owner-authored, `agent-approved` issue #5611 is the implementation
 umbrella and reopened #6776 is the design/checklist reference. The active
-bounded follow-up is `STR()` width/decimals validation on branch
-`fix/str-bounds-5611` in
-`~/.codex/worktrees/str-bounds-5611/Project-Copperfin`, based on `origin/main`
-at `2c56331d5`. A fresh installed-VFP9 probe established the exact width
-ceiling as 237 with error 1908 at 238, confirmed decimals 0 through 18 and
-error 1908 for -1, and recovered the same negative low-32-bit conversion used
-elsewhere in explicit VFP9 mode (-4294967295 becomes 1 and -4294967296 becomes
-0). The probe source and complete output are retained under
-`tests/fixtures/vfp9-str-argument-bounds-observation/`. Production validation,
-focused script rows, catchable-error coverage, docs/22, docs/32, and the
-changelog fragment are complete. Both focused targets pass normally and under
+`STR()` width/decimals slice merged in PR #6929 at `2e380ff4f`; all exact-head
+checks passed and its five review conversations were resolved. The next
+bounded slice is `DATE()` / `DATETIME()` numeric component validation on branch
+`fix/date-time-numeric-bounds-5611` in
+`~/.codex/worktrees/date-time-numeric-bounds-5611/Project-Copperfin`, based on
+that merge. A fresh 42-case installed-VFP9 probe establishes truncation toward
+zero, the exact 100..9999 year range, catchable error 11 for invalid calendar
+or time components, positive out-of-range rejection, and the explicit-VFP9
+negative low-32-bit conversion quirk. The probe and output are retained under
+`tests/fixtures/vfp9-date-time-constructor-bounds-observation/`. Production
+validation, focused script/direct-dispatch coverage, docs/22, docs/32, and the
+changelog fragment are drafted; both focused targets pass normally and under
 Clang AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
-instrumentation. Signed implementation commit `051f061ad` is pushed and PR
-#6929 targets `main`. Review-fix commit `db158fd0a` preserves VFP9 negative-
-infinity conversion, adds direct non-finite argument coverage, and retains
-fresh decimals 18/19 evidence; its three conversations are resolved and both
-focused targets pass normally and under sanitizers. The next exact-head review
-found that width zero returned before validating the required numeric value;
-the pending fix evaluates that value before the empty result and adds a script
-regression. Both focused targets pass normally and under sanitizers after the
-fix. A subsequent exact-head review found that exact int64 width/decimals
-operands were rounded through double before VFP9 low-bit conversion; the
-pending fix adds an exact-aware shared conversion overload and direct width and
-decimals coverage. Both focused targets pass normally and under sanitizers
-after that fix. Remaining: signed commit, push, conversation resolution, fresh
-exact-head review, green exact-head checks, and merge.
+instrumentation. Remaining: signed commit, push, PR/review, green exact-head
+checks, and merge.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
@@ -336,10 +325,11 @@ Owner-directed workstream order before the #6879 assignment was:
      and native/managed `DECLARE` narrowing (#6050, PR #6920).
    - Completed after those: `BINTOC`/`CTOBIN` (#5766, PR #6923).
    - Completed after those: array dimensions (#5594, PR #6926).
-   - Active: the bounded `STR()` width/decimals follow-up. Fresh installed-VFP9
-     evidence fixes the exact width ceiling at 237 with error 1908 and confirms
-     the explicit-mode negative low-32-bit quirk.
-   - Remaining after it: the ~150 `llround(value_as_number(...))` sites in
+   - Completed after those: bounded `STR()` width/decimals validation (PR
+     #6929), including the exact 237 width ceiling and explicit-mode negative
+     low-32-bit quirk.
+   - Active: `DATE()` / `DATETIME()` numeric component validation.
+   - Remaining after it: the other `llround(value_as_number(...))` sites in
      other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`
    #5740, `XMLTOCURSOR` #5767, `AGETFILEVERSION` #5686/#5759, project inventory
