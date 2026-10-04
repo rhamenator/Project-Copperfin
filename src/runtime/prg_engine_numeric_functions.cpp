@@ -360,6 +360,140 @@ PrgValue currency_mod_exact_integer_outside_range(
     throw_currency_mod_out_of_range();
 }
 
+std::string normalize_decimal_digits(std::string digits) {
+    const std::size_t first = digits.find_first_not_of('0');
+    return first == std::string::npos ? "0" : digits.substr(first);
+}
+
+int compare_decimal_digits(const std::string& left, const std::string& right) {
+    if (left.size() != right.size()) {
+        return left.size() < right.size() ? -1 : 1;
+    }
+    return left == right ? 0 : (left < right ? -1 : 1);
+}
+
+std::string subtract_decimal_digits(const std::string& left, const std::string& right) {
+    std::string result = left;
+    int borrow = 0;
+    std::size_t right_index = right.size();
+    for (std::size_t left_index = result.size(); left_index > 0U; --left_index) {
+        const int right_digit = right_index > 0U ? right[--right_index] - '0' : 0;
+        int digit = result[left_index - 1U] - '0' - right_digit - borrow;
+        borrow = digit < 0 ? 1 : 0;
+        if (digit < 0) {
+            digit += 10;
+        }
+        result[left_index - 1U] = static_cast<char>('0' + digit);
+    }
+    return normalize_decimal_digits(std::move(result));
+}
+
+std::string decimal_integer_remainder(const std::string& dividend, const std::string& divisor) {
+    std::string remainder = "0";
+    for (const char digit : dividend) {
+        if (remainder == "0") {
+            remainder.assign(1U, digit);
+        } else {
+            remainder.push_back(digit);
+        }
+        remainder = normalize_decimal_digits(std::move(remainder));
+        while (compare_decimal_digits(remainder, divisor) >= 0) {
+            remainder = subtract_decimal_digits(remainder, divisor);
+        }
+    }
+    return remainder;
+}
+
+std::string increment_decimal_digits(std::string digits) {
+    for (std::size_t index = digits.size(); index > 0U; --index) {
+        if (digits[index - 1U] != '9') {
+            ++digits[index - 1U];
+            return digits;
+        }
+        digits[index - 1U] = '0';
+    }
+    return "1" + digits;
+}
+
+PrgValue currency_mod_decimal(
+    const std::int64_t dividend,
+    const std::string& divisor_text,
+    const NumericBehavior behavior) {
+    const bool divisor_negative = !divisor_text.empty() && divisor_text.front() == '-';
+    const std::size_t start = divisor_negative ? 1U : 0U;
+    const std::size_t point = divisor_text.find('.', start);
+    const std::size_t scale = point == std::string::npos ? 0U : divisor_text.size() - point - 1U;
+    std::string divisor_digits = divisor_text.substr(start);
+    if (point != std::string::npos) {
+        divisor_digits.erase(point - start, 1U);
+    }
+    divisor_digits = normalize_decimal_digits(std::move(divisor_digits));
+    if (divisor_digits == "0") {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.DivisionByZero"), 1307);
+    }
+
+    // Align the portable round-trip decimal identity of the Numeric divisor with the exact scaled Currency
+    // dividend. Decimal long division keeps every stored Currency digit on MSVC, where long double is binary64.
+    const std::size_t common_scale = std::max<std::size_t>(4U, scale);
+    std::string dividend_digits = std::to_string(currency_magnitude(dividend));
+    dividend_digits.append(common_scale - 4U, '0');
+    divisor_digits.append(common_scale - scale, '0');
+
+    std::string result_digits = decimal_integer_remainder(dividend_digits, divisor_digits);
+    if (result_digits == "0") {
+        return make_currency_value(0);
+    }
+    if ((dividend < 0) != divisor_negative) {
+        result_digits = subtract_decimal_digits(divisor_digits, result_digits);
+    }
+
+    const std::size_t discarded_count = common_scale - 4U;
+    bool round_up = false;
+    std::string rounded_digits;
+    if (discarded_count == 0U) {
+        rounded_digits = result_digits;
+    } else if (result_digits.size() <= discarded_count) {
+        round_up = result_digits.size() == discarded_count && result_digits.front() >= '5';
+        rounded_digits = "0";
+    } else {
+        const std::size_t retained_count = result_digits.size() - discarded_count;
+        round_up = result_digits[retained_count] >= '5';
+        rounded_digits = result_digits.substr(0U, retained_count);
+    }
+    if (round_up) {
+        rounded_digits = increment_decimal_digits(std::move(rounded_digits));
+    }
+    rounded_digits = normalize_decimal_digits(std::move(rounded_digits));
+    if (rounded_digits == "0") {
+        return make_currency_value(0);
+    }
+
+    std::uint64_t magnitude = 0U;
+    bool fits_uint64 = true;
+    for (const char digit : rounded_digits) {
+        const std::uint64_t value = static_cast<std::uint64_t>(digit - '0');
+        if (magnitude > (std::numeric_limits<std::uint64_t>::max() - value) / 10U) {
+            fits_uint64 = false;
+            break;
+        }
+        magnitude = (magnitude * 10U) + value;
+    }
+    const std::uint64_t limit = divisor_negative
+                                    ? static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()) + 1U
+                                    : static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max());
+    if (!fits_uint64 || magnitude > limit) {
+        if (behavior == NumericBehavior::vfp9) {
+            return make_currency_value(0);
+        }
+        throw_currency_mod_out_of_range();
+    }
+    if (!divisor_negative) {
+        return make_currency_value(static_cast<std::int64_t>(magnitude));
+    }
+    return make_currency_value(
+        magnitude == limit ? std::numeric_limits<std::int64_t>::min() : -static_cast<std::int64_t>(magnitude));
+}
+
 PrgValue currency_mod_numeric(
     const std::int64_t dividend,
     const PrgValue& divisor_value,
@@ -395,25 +529,7 @@ PrgValue currency_mod_numeric(
         }
     }
 
-    const long double divisor = static_cast<long double>(value_as_number(divisor_value));
-    if (divisor == 0.0L) {
-        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.DivisionByZero"), 1307);
-    }
-    const long double dividend_units = static_cast<long double>(dividend) / 10000.0L;
-    long double remainder = std::fmod(dividend_units, divisor);
-    if (remainder != 0.0L && std::signbit(remainder) != std::signbit(divisor)) {
-        remainder += divisor;
-    }
-    const long double scaled = std::round(remainder * 10000.0L);
-    constexpr long double kInt64MinimumInclusive = -9223372036854775808.0L;
-    constexpr long double kInt64UpperBoundExclusive = 9223372036854775808.0L;
-    if (std::isfinite(scaled) && scaled >= kInt64MinimumInclusive && scaled < kInt64UpperBoundExclusive) {
-        return make_currency_value(static_cast<std::int64_t>(scaled));
-    }
-    if (behavior == NumericBehavior::vfp9) {
-        return make_currency_value(0);
-    }
-    throw_currency_mod_out_of_range();
+    return currency_mod_decimal(dividend, exact_text, behavior);
 }
 
 }  // namespace
