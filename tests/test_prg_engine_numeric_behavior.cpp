@@ -5,7 +5,9 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "../src/runtime/prg_engine_helpers.h"
+#include "../src/runtime/prg_engine_date_time_functions.h"
 #include "../src/runtime/prg_engine_numeric_functions.h"
+#include "../src/runtime/prg_compatibility_error.h"
 #include "prg_engine_test_support.h"
 
 #include <cmath>
@@ -568,6 +570,42 @@ std::vector<Row> build_rows() {
                     "DTOS(GOMONTH(DATE(2026,1,31),4294967296))", "C:"});
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
                     "DTOS(GOMONTH(DATE(2026,1,31),4294967296))", "C:20260131"});
+
+    // Governing requirement: RQ-CF-PRG-DATE-CONSTRUCTOR-BOUNDS-001.
+    // Installed VFP9 truncates DATE()/DATETIME() components, accepts years 100..9999, and raises error 11 for
+    // invalid calendar/time components. Positive out-of-range values are rejected before conversion. Its negative
+    // signed-32-bit conversion quirk remains available only in VFP9 mode, so a wrapped year or time component may
+    // become valid while COPPERFIN rejects the same raw value.
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        rows.push_back({set, "DTOS(DATE(2026.9,1.9,1.9))", "C:20260101"});
+        rows.push_back({set, "TTOC(DATETIME(2026,1,1,0,0,1.9),1)", "C:20260101000001"});
+        rows.push_back({set, "DTOS(DATE(100,1,1))", "C:01000101"});
+        rows.push_back({set, "DTOS(DATE(9999,12,31))", "C:99991231"});
+        rows.push_back({set, "DATE(99,1,1)", "ERR11"});
+        rows.push_back({set, "DATE(10000,1,1)", "ERR11"});
+        rows.push_back({set, "DATE(2026,2,29)", "ERR11"});
+        rows.push_back({set, "DATE(2026,0,1)", "ERR11"});
+        rows.push_back({set, "DATE(2026,1,0)", "ERR11"});
+        rows.push_back({set, "DATETIME(2026,1,1,24,0,0)", "ERR11"});
+        rows.push_back({set, "DATETIME(2026,1,1,0,60,0)", "ERR11"});
+        rows.push_back({set, "DATETIME(2026,1,1,0,0,60)", "ERR11"});
+        rows.push_back({set, "DATE(1E20,1,1)", "ERR11"});
+        rows.push_back({set, "DATE(EXP(1000),1,1)", "ERR11"});
+        rows.push_back({set, "DATETIME(2026,1,1,1E20,0,0)", "ERR11"});
+        rows.push_back({set, "DATETIME(2026,1,1,EXP(1000),0,0)", "ERR11"});
+    }
+    for (const char *expression : {
+             "DATE(-4294967196,1,1)",
+             "DATETIME(2026,1,1,-4294967295,0,0)",
+             "DATETIME(2026,1,1,-EXP(1000),0,0)"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", expression, "ERR11"});
+    }
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "DTOS(DATE(-4294967196,1,1))", "C:01000101"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                    "TTOC(DATETIME(2026,1,1,-4294967295,0,0),1)", "C:20260101010000"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                    "TTOC(DATETIME(2026,1,1,-EXP(1000),0,0),1)", "C:20260101000000"});
     return rows;
 }
 
@@ -807,10 +845,52 @@ void test_conversion_helpers() {
     }
 }
 
+void test_date_time_constructor_direct_numeric_boundaries() {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const auto callback = [](const char* mode) {
+        return [mode](const std::string& setting) {
+            return setting == "NUMERICBEHAVIOR" ? std::string(mode) : std::string{};
+        };
+    };
+    const auto args_with_hour = [](const copperfin::runtime::PrgValue& hour) {
+        return std::vector<copperfin::runtime::PrgValue>{
+            copperfin::runtime::make_number_value(2026.0),
+            copperfin::runtime::make_number_value(1.0),
+            copperfin::runtime::make_number_value(1.0),
+            hour,
+            copperfin::runtime::make_number_value(0.0),
+            copperfin::runtime::make_number_value(0.0)};
+    };
+
+    const auto exact_low_bit_one = copperfin::runtime::make_int64_value(
+        std::numeric_limits<std::int64_t>::min() + 1);
+    const auto wrapped = copperfin::runtime::evaluate_date_time_function(
+        "datetime", args_with_hour(exact_low_bit_one), callback("VFP9"));
+    expect(wrapped.has_value() && wrapped->string_value.find("01:00:00") != std::string::npos,
+           "VFP9 DATETIME should preserve an exact int64 component's low 32 bits");
+
+    const auto nan_vfp9 = copperfin::runtime::evaluate_date_time_function(
+        "datetime", args_with_hour(copperfin::runtime::make_number_value(nan)), callback("VFP9"));
+    expect(nan_vfp9.has_value() && nan_vfp9->string_value.find("00:00:00") != std::string::npos,
+           "VFP9 DATETIME should map an integer-indefinite time component to zero");
+
+    for (const auto& value : {exact_low_bit_one, copperfin::runtime::make_number_value(nan)}) {
+        bool rejected = false;
+        try {
+            (void)copperfin::runtime::evaluate_date_time_function(
+                "datetime", args_with_hour(value), callback("COPPERFIN"));
+        } catch (const copperfin::runtime::PrgCompatibilityError& error) {
+            rejected = error.error_code() == 11;
+        }
+        expect(rejected, "COPPERFIN DATETIME should reject an out-of-range or non-finite component with error 11");
+    }
+}
+
 }  // namespace
 
 int main() {
     test_conversion_helpers();
+    test_date_time_constructor_direct_numeric_boundaries();
     test_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {

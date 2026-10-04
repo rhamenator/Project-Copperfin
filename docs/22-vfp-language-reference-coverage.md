@@ -1,5 +1,19 @@
 # VFP Language Reference Coverage
 
+- `DATE()` / `DATETIME()` numeric component boundaries (2026-10-04, #5611
+  under #6776): fresh installed-VFP9 evidence shows that constructor components
+  truncate toward zero, the supported year range is 100 through 9999, and an
+  invalid calendar or time component raises catchable error 11 rather than
+  producing an empty typed value. Default `COPPERFIN` numeric behavior rejects
+  non-finite or raw out-of-range components before conversion. Explicit `VFP9`
+  behavior retains the recovered negative signed-32-bit conversion quirk, so a
+  wrapped year/time component can become valid and a negative integer-
+  indefinite time component becomes zero; positive values above a component's
+  maximum remain errors. Exact int64/uint64 operands are handled without an
+  undefined or lossy floating-to-integer cast. The complete 42-case probe and
+  output are retained under
+  `tests/fixtures/vfp9-date-time-constructor-bounds-observation/`.
+
 - `BINTOC()` / `CTOBIN()` binary representation (2026-10-04, #5766 under
   #5611/#6776): VFP9's documented 1-, 2-, and 4-byte signed-integer forms now
   use most-significant-byte-first sortable bytes with the high sign bit

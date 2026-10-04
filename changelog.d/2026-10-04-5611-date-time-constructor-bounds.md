@@ -1,0 +1,1 @@
+- 2026-10-04: Validate `DATE()` and `DATETIME()` numeric components before conversion, truncate fractions as VFP9 does, raise catchable error 11 for invalid dates/times, and keep VFP9's negative low-32-bit conversion quirk behind `SET NUMERICBEHAVIOR TO VFP9`.
