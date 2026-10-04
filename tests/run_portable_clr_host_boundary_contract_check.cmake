@@ -115,9 +115,20 @@ endforeach()
 foreach(required_token IN ITEMS
         "std::vector<ManagedDeclaredArgument> managed_arguments;"
         "to_managed_argument(args[index], param_type_at(index))"
+        "const auto &set_state = current_set_state();"
+        "checked_declared_int32_argument(value, declared_numeric_behavior)"
+        "checked_declared_int64_argument(value)"
         "if (!invocation.succeeded)"
         "invocation.compatible_error_code"
         "from_managed_value(invocation.value)")
     require_text("${declared_call_source}" "${required_token}"
         "portable interpreter-to-CLR boundary use")
+endforeach()
+foreach(forbidden_token IN ITEMS
+        "exact_declared_integer_value"
+        "numeric_behavior(set_callback)"
+        "static_cast<std::int32_t>(value_as_number(v))"
+        "static_cast<std::int64_t>(value.uint64_value)")
+    forbid_text("${declared_call_source}" "${forbidden_token}"
+        "unchecked managed DECLARE integer narrowing")
 endforeach()

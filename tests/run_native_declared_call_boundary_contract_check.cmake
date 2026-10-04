@@ -101,6 +101,9 @@ foreach(forbidden_token IN ITEMS
 endforeach()
 foreach(required_token IN ITEMS
         "NativeDeclaredCallRequest request;"
+        "const auto &set_state = current_set_state();"
+        "checked_declared_int32_argument(value, declared_numeric_behavior)"
+        "checked_declared_int64_argument(value)"
         "request.function_address = declfn.native_function_address;"
         "request.use_cdecl = declfn.native_cdecl;"
         "request.arguments.push_back(std::move(argument));"
@@ -113,6 +116,14 @@ foreach(required_token IN ITEMS
         "return make_int64_value(native_result.signed_integer_value);")
     require_text("${declared_call_source}" "${required_token}"
         "portable interpreter-to-native-call boundary use")
+endforeach()
+foreach(forbidden_token IN ITEMS
+        "exact_declared_integer_value"
+        "numeric_behavior(set_callback)"
+        "static_cast<std::int32_t>(value_as_number(args[index]))"
+        "static_cast<std::int64_t>(value.uint64_value)")
+    forbid_text("${declared_call_source}" "${forbidden_token}"
+        "unchecked native DECLARE integer narrowing")
 endforeach()
 
 require_text("${root_build}" "src/runtime/native_declared_call.cpp"

@@ -1253,12 +1253,30 @@ std::int64_t saturating_numeric_to_int64(const double value) {
     return static_cast<std::int64_t>(value);
 }
 
+namespace {
+
+std::int32_t signed_int32_from_low_bits(const std::uint32_t low_bits) {
+    constexpr auto kSignedMax = static_cast<std::uint32_t>(std::numeric_limits<std::int32_t>::max());
+    if (low_bits <= kSignedMax) {
+        return static_cast<std::int32_t>(low_bits);
+    }
+    // UINT32_MAX - low_bits is at most INT32_MAX, so this cast and the
+    // subtraction are defined on every target with exact 32-bit integers.
+    return -1 - static_cast<std::int32_t>(std::numeric_limits<std::uint32_t>::max() - low_bits);
+}
+
+std::int32_t declared_int32_from_int64(const std::int64_t value) {
+    const auto low_bits = static_cast<std::uint32_t>(static_cast<std::uint64_t>(value));
+    return signed_int32_from_low_bits(low_bits);
+}
+
+} // namespace
+
 std::int64_t vfp9_numeric_to_int32(const double value) {
     if (!std::isfinite(value) || value >= 9223372036854775808.0 || value < -9223372036854775808.0) {
         return 0;  // integer indefinite is 0x8000000000000000; its low 32 bits are 0
     }
-    const auto low_bits = static_cast<std::uint32_t>(static_cast<std::uint64_t>(static_cast<std::int64_t>(value)));
-    return static_cast<std::int64_t>(static_cast<std::int32_t>(low_bits));
+    return declared_int32_from_int64(static_cast<std::int64_t>(value));
 }
 
 std::int64_t numeric_count_argument(const double value, const NumericBehavior behavior) {
@@ -1270,6 +1288,42 @@ std::optional<std::int64_t> checked_truncated_numeric_to_int64(const double valu
         return std::nullopt;
     }
     return static_cast<std::int64_t>(value);
+}
+
+std::optional<std::int32_t> checked_declared_int32_argument(
+    const PrgValue& value,
+    const NumericBehavior behavior) {
+    if (value.kind == PrgValueKind::int64) {
+        return declared_int32_from_int64(value.int64_value);
+    }
+    if (value.kind == PrgValueKind::uint64) {
+        return signed_int32_from_low_bits(static_cast<std::uint32_t>(value.uint64_value));
+    }
+    const double numeric_value = value_as_number(value);
+    if (!std::isfinite(numeric_value)) {
+        return std::nullopt;
+    }
+    const auto converted = checked_truncated_numeric_to_int64(numeric_value);
+    if (!converted.has_value()) {
+        if (behavior == NumericBehavior::vfp9) {
+            return static_cast<std::int32_t>(vfp9_numeric_to_int32(numeric_value));
+        }
+        return std::nullopt;
+    }
+    return declared_int32_from_int64(*converted);
+}
+
+std::optional<std::int64_t> checked_declared_int64_argument(const PrgValue& value) {
+    if (value.kind == PrgValueKind::int64) {
+        return value.int64_value;
+    }
+    if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value > static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())) {
+            return std::nullopt;
+        }
+        return static_cast<std::int64_t>(value.uint64_value);
+    }
+    return checked_truncated_numeric_to_int64(value_as_number(value));
 }
 
 std::size_t saturating_size_argument(const double value, const std::size_t minimum) {

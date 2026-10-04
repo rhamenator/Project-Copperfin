@@ -47,6 +47,7 @@ void test_declared_dll_string_byref_argument_writeback();
 void test_declared_dll_explicit_relative_child_path();
 void test_declared_dll_double_arguments_follow_x64_abi();
 void test_declared_dll_long_uses_vfp_32_bit_width();
+void test_declared_dll_integer_argument_boundaries();
 void test_declared_dll_single_uses_vfp_32_bit_float_width();
 void test_declared_dll_win32_uses_typed_stdcall_slots();
 void test_declared_dll_win32_resolves_no_underscore_stdcall_export();
