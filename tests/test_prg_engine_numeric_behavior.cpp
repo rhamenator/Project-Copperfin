@@ -242,13 +242,20 @@ std::vector<Row> build_rows() {
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "STRTRAN('abcabc','b','x',1,4294967295)", "ERR11"});
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "STRTRAN('abcabc','b','x',4294967295)", "C:axcaxc"});
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "STRTRAN('abcabc','b','x',1,4294967295)", "C:axcaxc"});
-    // STR decimals (review of slice 2): VFP9 accepts 0 to 18 and raises error 1908 above that (probe4.txt); a huge value
-    // must be rejected before setprecision(), not saturated to INT_MAX and formatted.
+    // RQ-CF-PRG-STR-ARGUMENT-BOUNDS-001 (#5611/#6776): installed VFP9 accepts widths 0..237 and
+    // decimals 0..18 after truncation. Reject invalid values before formatting or padding so no argument can become an
+    // unbounded precision or allocation. Explicit VFP9 mode retains the recovered negative low-32-bit quirk.
     for (const char *mode : {"COPPERFIN", "VFP9"}) {
         const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
         rows.push_back({set, "STR(1.5,25,2)", "C:                     1.50"});
+        rows.push_back({set, "LEN(STR(1.5,237,2))", "N:237"});
+        rows.push_back({set, "STR(1.5,238,2)", "ERR1908"});
+        rows.push_back({set, "STR(1.5,-1,2)", "ERR1908"});
+        rows.push_back({set, "STR(1.5,0,2)", "C:"});
         rows.push_back({set, "STR(1.5,25,18)", "C:     1.500000000000000000"});
         rows.push_back({set, "STR(1.5,25,19)", "ERR1908"});
+        rows.push_back({set, "STR(1.5,10,-1)", "ERR1908"});
+        rows.push_back({set, "STR(1.5,10,-0.9)", "C:         2"});
         rows.push_back({set, "STR(1.5,10,100)", "ERR1908"});
         rows.push_back({set, "STR(1.5,10,2147483647)", "ERR1908"});
         rows.push_back({set, "STR(1.5,10,2147483648)", "ERR1908"});
@@ -257,6 +264,16 @@ std::vector<Row> build_rows() {
         rows.push_back({set, "STR(1.5,10,EXP(1000))", "ERR1908"});
         rows.push_back({set, "STR(1.5,10,2.9)", "C:      1.50"});
     }
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "STR(1.5,10,-4294967295)", "ERR1908"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "STR(1,-4294967295)", "ERR1908"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "STR(1.5,10,-1E20)", "ERR1908"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "STR(1,-1E20)", "ERR1908"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "STR(1.5,10,-4294967295)", "C:       1.5"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "STR(1,-4294967295)", "C:1"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "STR(1.5,10,-4294967296)", "C:         2"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "STR(1,-4294967296)", "C:"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "STR(1.5,10,-1E20)", "C:         2"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "STR(1,-1E20)", "C:"});
     // In-range counts are identical in both modes.
     for (const char *mode : {"COPPERFIN", "VFP9"}) {
         const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;

@@ -1061,58 +1061,53 @@ std::optional<PrgValue> evaluate_string_function(
             std::string(1U, static_cast<char>(static_cast<unsigned char>(character_code))));
     }
     if (function == "str" && !arguments.empty()) {
-        // VFP9 SP2 (probe ~/temp/vfp9-probes/numconv-6776/probe4.txt) accepts 0 to 18 decimals and raises error 1908
-        // ("Width or decimal place argument is invalid.") for anything larger, including 2147483647 and 1E20. Checking
-        // the truncated value before it reaches setprecision() bounds the work: saturating a huge count to INT_MAX
-        // and formatting that many digits would exhaust memory. A negative count keeps its existing clamp to 0.
-        int decimals = 0;
-        if (arguments.size() >= 3U) {
-            const double truncated_decimals = std::trunc(value_as_number(arguments[2]));
-            if (truncated_decimals > 18.0) {
+        // Governing requirement: RQ-CF-PRG-STR-ARGUMENT-BOUNDS-001 (#5611/#6776).
+        // Installed VFP9 accepts widths 0..237 and decimal counts 0..18 after truncation, and raises error 1908
+        // outside those ranges. Its negative out-of-int32 conversion still has the shared low-32-bit quirk: for
+        // example -4294967295 becomes 1 and -4294967296 becomes 0. Keep that compatibility behind
+        // SET NUMERICBEHAVIOR; COPPERFIN mode rejects every non-finite or out-of-range raw truncated value.
+        const NumericBehavior behavior = numeric_behavior(set_callback);
+        const auto str_argument = [&](const double raw_value, const int maximum) {
+            const double truncated = std::trunc(raw_value);
+            std::int64_t converted = 0;
+            if (behavior == NumericBehavior::vfp9) {
+                if (!std::isfinite(truncated) || truncated > static_cast<double>(maximum)) {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidStrWidth"), 1908);
+                }
+                converted = vfp9_numeric_to_int32(truncated);
+            } else {
+                if (!std::isfinite(truncated) || truncated < 0.0 ||
+                    truncated > static_cast<double>(maximum)) {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidStrWidth"), 1908);
+                }
+                converted = static_cast<std::int64_t>(truncated);
+            }
+            if (converted < 0 || converted > maximum) {
                 throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidStrWidth"), 1908);
             }
-            decimals = saturating_int_argument(truncated_decimals, 0, 18);
+            return static_cast<int>(converted);
+        };
+
+        int decimals = 0;
+        if (arguments.size() >= 3U) {
+            decimals = str_argument(value_as_number(arguments[2]), 18);
+        }
+        // #5900: VFP9 truncates a fractional width argument toward zero
+        // (STR(12, 4.9) is 4 characters wide, not 5), the same rule
+        // already applied correctly to the decimals argument above.
+        //
+        // #5947: reject before padding so no width can reach an unbounded allocation. The exact installed-VFP9
+        // ceiling is 237, not the earlier conservative DBF-derived 255 limit.
+        const int width = arguments.size() >= 2U
+                              ? str_argument(value_as_number(arguments[1]), 237)
+                              : 10;
+        if (width == 0) {
+            return make_string_value("");
         }
         std::ostringstream stream;
         stream.imbue(std::locale::classic());
         stream << std::fixed << std::setprecision(decimals) << value_as_number(arguments[0]);
         std::string result = stream.str();
-        // #5900: VFP9 truncates a fractional width argument toward zero
-        // (STR(12, 4.9) is 4 characters wide, not 5), the same rule
-        // already applied correctly to the decimals argument above.
-        //
-        // #5947 PR review (chatgpt-codex-connector, P2): an earlier
-        // version of this fix saturated an out-of-range width to
-        // std::numeric_limits<int>::max() rather than rejecting it, so a
-        // call like STR(1, 1e100) reached the result.insert() below with
-        // a width around 2^31, attempting to allocate roughly 2 GiB of
-        // spaces -- a real, well-defined-but-unbounded-allocation denial
-        // of service, not just a narrowing-cast correctness concern.
-        // kMaxStrWidth is a conservative safety bound (matching this
-        // codebase's own VFP field-width convention -- DBF field lengths
-        // are a std::uint8_t, max 255 -- not a specifically VFP9-probed
-        // STR()-width limit), well above any realistic legitimate width;
-        // anything beyond it is rejected the same way CHR() rejects an
-        // out-of-range code, rather than attempting the allocation.
-        constexpr double kMaxStrWidth = 255.0;
-        const double truncated_width = arguments.size() >= 2U
-                                           ? std::trunc(value_as_number(arguments[1]))
-                                           : 10.0;
-        if (std::isfinite(truncated_width) && truncated_width > kMaxStrWidth) {
-            throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidStrWidth"), 11);
-        }
-        // Every width <= 0 takes the same "no padding/truncation" path
-        // below regardless of exact magnitude, so an out-of-int-range
-        // negative value (equally capable of triggering the same class of
-        // narrowing-cast UB as the too-large case above) is clamped to -1
-        // rather than rejected -- behavior-preserving, not just safety-
-        // preserving, since it was already indistinguishable from any
-        // other negative width before this fix.
-        const int width = !std::isfinite(truncated_width)
-                              ? 0
-                              : truncated_width < 0.0
-                                    ? -1
-                                    : static_cast<int>(truncated_width);
         if (!std::isfinite(value_as_number(arguments[0]))) {
             // #6144: real VFP9 SP2 never exposes the C++ stream spelling
             // of a non-finite double ("inf"/"-inf"/"nan") -- it fills

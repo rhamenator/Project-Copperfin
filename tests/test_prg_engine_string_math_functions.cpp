@@ -1369,7 +1369,7 @@ namespace
     // instead of rejecting it, so STR(1, 1e100) attempted to allocate
     // roughly 2 GiB of padding spaces -- a real denial-of-service risk,
     // not just a narrowing-cast correctness concern. STR() must instead
-    // report VFP error 11 for a width beyond its supported bound without
+    // report VFP error 1908 for a width beyond its installed-runtime bound without
     // ever attempting the oversized allocation.
     void test_str_rejects_oversized_width_instead_of_allocating()
     {
@@ -1404,8 +1404,8 @@ namespace
                "allocation: " + state.message);
 
         const auto code = state.globals.find("ncapturedcode");
-        expect(code != state.globals.end() && copperfin::runtime::format_value(code->second) == "11",
-               "STR() with a width far beyond any supported bound should report VFP error 11");
+        expect(code != state.globals.end() && copperfin::runtime::format_value(code->second) == "1908",
+               "STR() with a width far beyond any supported bound should report VFP error 1908");
         const auto after_error = state.globals.find("naftererror");
         expect(after_error != state.globals.end() && copperfin::runtime::format_value(after_error->second) == "42",
                "STR() oversized width should resume after its ON ERROR handler");

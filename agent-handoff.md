@@ -9,6 +9,15 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
+PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
+`2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
+It completed the array-dimension safety slice under #5611/#6776 with checked
+dimension conversion, checked size/offset arithmetic, a bounded host ceiling,
+and failure-atomic declaration, resize, RESTORE, and native-class array paths
+while preserving sequential multi-target visibility. All required checks were
+green at exact head `1c2dfaa07`; exact-head review was clean and all review
+conversations were resolved before merge.
+
 PR #6923 (`fix/bintoc-ctobin-contract-5766`) merged into `main` as
 `5d64d0e97b3a5a6baf9ed91119e954035e6a2a09` on 2026-10-04 and closed #5766.
 It completed the `BINTOC()` / `CTOBIN()` numeric-conversion slice under
@@ -223,30 +232,20 @@ after review found a macOS clone destination-identity gap.
 
 Open owner-authored, `agent-approved` issue #5611 is the implementation
 umbrella and reopened #6776 is the design/checklist reference. The active
-bounded slice is open owner-authored, `agent-approved` issue #5594 on branch
-`fix/array-dimension-overflow-5594` in
-`~/.codex/worktrees/array-dimension-overflow-5594/Project-Copperfin`, based on
-`origin/main` at `5d64d0e97`. PR #6926 is open. Its first exact-head review
-identified RESTORE atomicity, read-selector conversion, nested native-object
-rollback, and stale-handoff gaps; commit `9f49f9b83` addressed those findings.
-The next exact-head review found that atomic multi-target `DIMENSION` staging
-had lost VFP's left-to-right visibility; commit `035089fa1` restored it with
-targeted rollback snapshots. A third exact-head review found the same
-regression in `LOCAL ARRAY` and `PRIVATE ARRAY`; the pending review fix now
-publishes those declarations sequentially while rolling back both bindings and
-private-save metadata on later failure. It centralizes checked dimension conversion,
-checked element-count/offset arithmetic, a conservative 65,000-element host
-safety ceiling, and failure-atomic declaration/resize behavior across global,
-local, private, public, `ASIZE()`, direct assignment, RESTORE, and native-class
-array paths. Focused portable array, data-I/O, and runtime-surface tests pass,
-including replacement/additive RESTORE rollback, bracket/parenthesis/macro
-read selectors, nested native-object construction failure, sequential
-multi-target visibility, and rollback after a later target fails. Remaining:
-signed third review-fix commit, push, review-conversation resolution, green
-exact-head checks, and merge. The same focused targets pass under Clang
-AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
-instrumentation; adjacent numeric-behavior, changelog, and
-safety-traceability checks passed before review.
+bounded follow-up is `STR()` width/decimals validation on branch
+`fix/str-bounds-5611` in
+`~/.codex/worktrees/str-bounds-5611/Project-Copperfin`, based on `origin/main`
+at `2c56331d5`. A fresh installed-VFP9 probe established the exact width
+ceiling as 237 with error 1908 at 238, confirmed decimals 0 through 18 and
+error 1908 for -1, and recovered the same negative low-32-bit conversion used
+elsewhere in explicit VFP9 mode (-4294967295 becomes 1 and -4294967296 becomes
+0). The probe source and complete output are retained under
+`tests/fixtures/vfp9-str-argument-bounds-observation/`. Production validation,
+focused script rows, catchable-error coverage, docs/22, docs/32, and the
+changelog fragment are complete. Both focused targets pass normally and under
+Clang AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
+instrumentation. Remaining: signed commit, push, pull request, review
+resolution, green exact-head checks, and merge.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
@@ -324,11 +323,12 @@ Owner-directed workstream order before the #6879 assignment was:
    - Completed after those: `SUBSTR`/`SUBSTRC` huge-positive starts (PR #6919)
      and native/managed `DECLARE` narrowing (#6050, PR #6920).
    - Completed after those: `BINTOC`/`CTOBIN` (#5766, PR #6923).
-   - Active: array dimensions (#5594). Remaining after it: the ~150
-     `llround(value_as_number(...))` sites in other modules (#5611 umbrella).
-   - Small follow-ups: `STR` with a negative decimals count is error 1908 in
-     VFP9 (Copperfin clamps to 0); the `STR` width cap is 255 with error 11 while
-     VFP9 accepts at least 100 and raises 1908 for 2147483647.
+   - Completed after those: array dimensions (#5594, PR #6926).
+   - Active: the bounded `STR()` width/decimals follow-up. Fresh installed-VFP9
+     evidence fixes the exact width ceiling at 237 with error 1908 and confirms
+     the explicit-mode negative low-32-bit quirk.
+   - Remaining after it: the ~150 `llround(value_as_number(...))` sites in
+     other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`
    #5740, `XMLTOCURSOR` #5767, `AGETFILEVERSION` #5686/#5759, project inventory
    #5703, PRG include depth #5728, runtime PRG load #5731, directory

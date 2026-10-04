@@ -213,6 +213,16 @@
   display formatting. `test_visual_asset_editor` CTest passes `1/1`; SQL and
   launcher numeric call sites remain separate follow-up work.
 
+- `STR()` argument bounds (2026-10-04, #5611/#6776): installed VFP9 SP2
+  accepts widths 0 through 237 and decimal counts 0 through 18 after
+  truncation, returns empty for width 0, and raises error 1908 for an invalid
+  converted argument. Copperfin validates before setting stream precision or
+  allocating padding. Default `SET NUMERICBEHAVIOR TO COPPERFIN` rejects raw
+  non-finite and out-of-range values; explicit `VFP9` mode preserves the
+  observed negative low-32-bit conversion. Reproducible source and complete
+  black-box output are retained in
+  `tests/fixtures/vfp9-str-argument-bounds-observation/`.
+
 - Culture-invariant numeric parsing slice (2026-07-29, #4824 under #3217):
   PRG preprocessor literals, expression literals, string-to-number coercion,
   and numeric index evaluation now use a shared locale-independent parser.
