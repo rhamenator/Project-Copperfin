@@ -9,6 +9,14 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
+PR #6923 (`fix/bintoc-ctobin-contract-5766`) merged into `main` as
+`5d64d0e97b3a5a6baf9ed91119e954035e6a2a09` on 2026-10-04 and closed #5766.
+It completed the `BINTOC()` / `CTOBIN()` numeric-conversion slice under
+#5611/#6776 with bounded flag/width validation, canonical sortable and native
+byte order, exact Currency handling, and localized catchable errors. All
+required checks passed at exact head `a813944b0f`; all review conversations
+were resolved before merge.
+
 PR #6920 (`fix/declare-numeric-boundaries-6050`) merged into `main` as
 `a2641cc9a9a03c2dfd5254fdad8f6d6be9f7994f` on 2026-10-03 and closed #6050.
 It completed defined native/managed `DECLARE` integer conversion under
@@ -215,27 +223,18 @@ after review found a macOS clone destination-identity gap.
 
 Open owner-authored, `agent-approved` issue #5611 is the implementation
 umbrella and reopened #6776 is the design/checklist reference. The active
-bounded slice is open owner-authored, `agent-approved` issue #5766 on branch
-`fix/bintoc-ctobin-contract-5766` in
-`~/.codex/worktrees/numeric-bintoc-5766/Project-Copperfin`, based on
-`origin/main` at `a2641cc9`. It replaces the unchecked arbitrary-width
-`BINTOC()` allocator and unconstrained `CTOBIN()` fold with the documented
-1/2/4/8, `F`/`B`/`N`/`Y`, `R`, and `S` contracts, canonical sortable and
-native byte order, exact Currency handling, and localized pre-conversion
-validation. Installed-VFP9 probe evidence is retained in
-`/home/rich/temp/vfp9-probes/bintoc-5766/`. Production code, focused canonical
-byte/error coverage, language coverage, requirements traceability, and the
-required adjustment to #6035's former non-VFP `CTOBIN(..., 'N')` test fixture
-are complete. Focused binary-conversion, numeric-behavior, exact-int64,
-runtime-surface, isolation-inventory and changelog tests pass locally; the new
-test also passes under Clang AddressSanitizer, UndefinedBehaviorSanitizer, and
-float-cast-overflow instrumentation. PR #6923 is open. Review found that the
-finite-double-to-float range check occurred after the narrowing conversion;
-the response now checks the `float` bounds first and pins huge positive and
-negative finite inputs. Two requests to apply `S` to 8-byte Numeric/Currency
-encoding conflict with retained installed-VFP9 bytes, so explicit `8S`/`8RS`
-vectors and the VFP9 Help discrepancy are now recorded rather than changing
-the observed contract. Complete exact-head review, green checks, and merge.
+bounded slice is open owner-authored, `agent-approved` issue #5594 on branch
+`fix/array-dimension-overflow-5594` in
+`~/.codex/worktrees/array-dimension-overflow-5594/Project-Copperfin`, based on
+`origin/main` at `5d64d0e97`. It centralizes checked dimension conversion,
+checked element-count/offset arithmetic, a conservative 65,000-element host
+safety ceiling, and failure-atomic declaration/resize behavior across global,
+local, private, public, `ASIZE()`, direct assignment, RESTORE, and native-class
+array paths. Focused portable array and runtime-surface tests pass. Remaining:
+commit, push, open the PR, resolve review, obtain green exact-head checks, and
+merge. The focused tests also pass under Clang AddressSanitizer,
+UndefinedBehaviorSanitizer, and float-cast-overflow instrumentation; adjacent
+numeric-behavior, changelog, and safety-traceability checks pass locally.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
@@ -312,9 +311,9 @@ Owner-directed workstream order before the #6879 assignment was:
      `GETWORDNUM` boundary coverage (PR #6918).
    - Completed after those: `SUBSTR`/`SUBSTRC` huge-positive starts (PR #6919)
      and native/managed `DECLARE` narrowing (#6050, PR #6920).
-   - Active: `BINTOC`/`CTOBIN` (#5766). Remaining after it: array dimensions
-     (#5594), and the ~150 `llround(value_as_number(...))` sites in other
-     modules (#5611 umbrella).
+   - Completed after those: `BINTOC`/`CTOBIN` (#5766, PR #6923).
+   - Active: array dimensions (#5594). Remaining after it: the ~150
+     `llround(value_as_number(...))` sites in other modules (#5611 umbrella).
    - Small follow-ups: `STR` with a negative decimals count is error 1908 in
      VFP9 (Copperfin clamps to 0); the `STR` width cap is 255 with error 11 while
      VFP9 accepts at least 100 and raises 1908 for 2147483647.

@@ -73,6 +73,7 @@ namespace copperfin::runtime_surface_tests
     void test_newobject_getpem_setpem_compobj_functions();
     void test_createobject_instantiates_native_prg_class_and_preserves_plain_object_creation();
     void test_native_prg_class_dimension_properties_are_per_instance_arrays();
+    void test_native_prg_class_rejects_unsafe_array_dimensions_atomically();
     void test_newobject_instantiates_native_prg_class_and_preserves_ole_newobject();
     void test_createobject_and_newobject_instantiate_same_prg_session_native_class();
     void test_createobject_and_newobject_instantiate_same_prg_session_olepublic_native_class();

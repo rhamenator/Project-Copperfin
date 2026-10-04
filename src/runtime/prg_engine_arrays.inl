@@ -166,10 +166,10 @@
             if (normalized_function == "asize")
             {
                 const std::size_t rows = arguments.size() >= 2U
-                                             ? static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[1])))
+                                             ? checked_array_dimension(arguments[1], 0U, true)
                                              : 0U;
                 const std::size_t columns = arguments.size() >= 3U
-                                                ? static_cast<std::size_t>(std::max<double>(1.0, value_as_number(arguments[2])))
+                                                ? checked_array_dimension(arguments[2], 1U, true)
                                                 : (array == nullptr ? 1U : array->columns);
                 return resize_array(array_name, rows, columns);
             }

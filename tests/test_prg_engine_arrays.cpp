@@ -911,6 +911,154 @@ void test_asize_two_argument_form_preserves_existing_column_count() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_array_dimension_boundaries_are_catchable_and_atomic() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_array_dimension_boundaries";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "array_dimension_boundaries.prg";
+    write_text(
+        main_path,
+        "DIMENSION aStable[2,2], aPrivateKeep[2]\n"
+        "aStable[1,1] = 'kept'\n"
+        "aStable[2,2] = 'tail'\n"
+        "aPrivateKeep[1] = 'private-kept'\n"
+        "DIMENSION aFirstStable[1]\n"
+        "aFirstStable[1] = 'first-kept'\n"
+        "nHugeError = 0\n"
+        "TRY\n"
+        "  DIMENSION aStable[9223372036854775808,2]\n"
+        "CATCH TO oHuge\n"
+        "  nHugeError = oHuge.ErrorNo\n"
+        "ENDTRY\n"
+        "nMultiError = 0\n"
+        "TRY\n"
+        "  DIMENSION aFirstStable[3], aRejectedSecond[65001]\n"
+        "CATCH TO oMulti\n"
+        "  nMultiError = oMulti.ErrorNo\n"
+        "ENDTRY\n"
+        "nProductError = 0\n"
+        "TRY\n"
+        "  DIMENSION aStable[40000,2]\n"
+        "CATCH TO oProduct\n"
+        "  nProductError = oProduct.ErrorNo\n"
+        "ENDTRY\n"
+        "nFractionError = 0\n"
+        "TRY\n"
+        "  DIMENSION aStable[2.5]\n"
+        "CATCH TO oFraction\n"
+        "  nFractionError = oFraction.ErrorNo\n"
+        "ENDTRY\n"
+        "nNegativeError = 0\n"
+        "TRY\n"
+        "  DIMENSION aStable[-1]\n"
+        "CATCH TO oNegative\n"
+        "  nNegativeError = oNegative.ErrorNo\n"
+        "ENDTRY\n"
+        "nInfinityError = 0\n"
+        "TRY\n"
+        "  DIMENSION aStable[EXP(1000)]\n"
+        "CATCH TO oInfinity\n"
+        "  nInfinityError = oInfinity.ErrorNo\n"
+        "ENDTRY\n"
+        "nNan = EXP(1000) - EXP(1000)\n"
+        "nNanError = 0\n"
+        "TRY\n"
+        "  DIMENSION aStable[nNan]\n"
+        "CATCH TO oNan\n"
+        "  nNanError = oNan.ErrorNo\n"
+        "ENDTRY\n"
+        "nAsizeError = 0\n"
+        "TRY\n"
+        "  nUnused = ASIZE(aStable, 1E300)\n"
+        "CATCH TO oAsize\n"
+        "  nAsizeError = oAsize.ErrorNo\n"
+        "ENDTRY\n"
+        "nElementError = 0\n"
+        "TRY\n"
+        "  aStable[9223372036854775808,2] = 'unsafe'\n"
+        "CATCH TO oElement\n"
+        "  nElementError = oElement.ErrorNo\n"
+        "ENDTRY\n"
+        "nPublicError = 0\n"
+        "TRY\n"
+        "  PUBLIC ARRAY aRejectedPublic[65001]\n"
+        "CATCH TO oPublic\n"
+        "  nPublicError = oPublic.ErrorNo\n"
+        "ENDTRY\n"
+        "nLocalError = RejectLocalArray()\n"
+        "nPrivateError = RejectPrivateArray()\n"
+        "nRowsAfter = ALEN(aStable,1)\n"
+        "nColumnsAfter = ALEN(aStable,2)\n"
+        "nFirstLengthAfter = ALEN(aFirstStable)\n"
+        "cFirstStableAfter = aFirstStable[1]\n"
+        "cRejectedSecondType = TYPE('aRejectedSecond')\n"
+        "cFirstAfter = aStable[1,1]\n"
+        "cTailAfter = aStable[2,2]\n"
+        "cPrivateAfter = aPrivateKeep[1]\n"
+        "cRejectedPublicType = TYPE('aRejectedPublic')\n"
+        "DIMENSION aLimit[65000]\n"
+        "aLimit[65000] = 'boundary'\n"
+        "nLimitLength = ALEN(aLimit)\n"
+        "cLimitValue = aLimit[65000]\n"
+        "RETURN\n"
+        "FUNCTION RejectLocalArray\n"
+        "  TRY\n"
+        "    LOCAL ARRAY aRejectedLocal[65001]\n"
+        "  CATCH TO oLocal\n"
+        "    RETURN oLocal.ErrorNo\n"
+        "  ENDTRY\n"
+        "  RETURN 0\n"
+        "ENDFUNC\n"
+        "FUNCTION RejectPrivateArray\n"
+        "  TRY\n"
+        "    PRIVATE ARRAY aPrivateKeep[65001]\n"
+        "  CATCH TO oPrivate\n"
+        "    RETURN oPrivate.ErrorNo\n"
+        "  ENDTRY\n"
+        "  RETURN 0\n"
+        "ENDFUNC\n");
+
+    const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                           make_runtime_session_options(main_path, temp_root))
+                           .run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "invalid array dimensions should be catchable without terminating the host: " + state.message);
+
+    const auto check = [&](const std::string& name,
+                           const std::string& expected,
+                           const std::string& message) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), message + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   message + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+    for (const char* name : {
+             "nhugeerror", "nmultierror", "nproducterror", "nfractionerror", "ninfinityerror",
+             "nnegativeerror", "nnanerror", "nasizeerror", "nelementerror", "npublicerror",
+             "nlocalerror", "nprivateerror"}) {
+        check(name, "230", std::string{name} + " should use the localized invalid-dimensions error");
+    }
+    check("nrowsafter", "2", "failed resizes should preserve row metadata");
+    check("ncolumnsafter", "2", "failed resizes should preserve column metadata");
+    check("nfirstlengthafter", "1", "a later invalid DIMENSION target should not resize an earlier target");
+    check("cfirststableafter", "first-kept", "a later invalid DIMENSION target should preserve earlier values");
+    check("crejectedsecondtype", "U", "a failed multi-array DIMENSION should not create its invalid target");
+    check("cfirstafter", "kept", "failed resizes should preserve the first value");
+    check("ctailafter", "tail", "failed resizes should preserve the trailing value");
+    check("cprivateafter", "private-kept", "failed PRIVATE ARRAY should preserve the prior binding");
+    check("crejectedpublictype", "U", "failed PUBLIC ARRAY should not publish a partial binding");
+    check("nlimitlength", "65000", "the Copperfin safety ceiling should remain usable");
+    check("climitvalue", "boundary", "the maximum array's final element should remain safely writable");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 // resize_array() used to allocate a brand-new full-size buffer and manually
 // copy every surviving element on every call, even when the column count was
 // unchanged and growth was a pure append (row-major layout means element
@@ -2331,6 +2479,7 @@ int main() {
     test_array_dimension_and_element_assignment();
     test_preprocessor_constants_expand_in_array_subscripts_but_not_bracket_literals();
     test_asize_two_argument_form_preserves_existing_column_count();
+    test_array_dimension_boundaries_are_catchable_and_atomic();
     test_array_single_row_growth_loop_preserves_all_values();
     test_array_metadata_and_text_functions();
     test_macro_expanded_array_helpers_and_access();

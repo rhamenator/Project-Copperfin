@@ -129,6 +129,62 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_prg_class_rejects_unsafe_array_dimensions_atomically()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_class_array_dimension_boundaries";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_class_array_dimension_boundaries.prg";
+        write_text(
+            main_path,
+            "nError = 0\n"
+            "TRY\n"
+            "  oRejected = CREATEOBJECT('UnsafeArrayHolder')\n"
+            "CATCH TO oException\n"
+            "  nError = oException.ErrorNo\n"
+            "ENDTRY\n"
+            "cRejectedType = TYPE('oRejected')\n"
+            "RETURN\n"
+            "DEFINE CLASS UnsafeArrayHolder AS Custom\n"
+            "    DIMENSION aValues[40000, 2]\n"
+            "ENDDEFINE\n");
+
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                               make_runtime_session_options(main_path, temp_root))
+                               .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "unsafe native-class array dimensions should be catchable: " + state.message);
+
+        const auto error = state.globals.find("nerror");
+        const auto rejected_type = state.globals.find("crejectedtype");
+        expect(error != state.globals.end(), "native-class array dimension error should be captured");
+        if (error != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(error->second) == "230",
+                   "unsafe native-class array dimensions should raise error 230");
+        }
+        expect(rejected_type != state.globals.end(), "rejected native-class binding type should be captured");
+        if (rejected_type != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(rejected_type->second) == "U",
+                   "a rejected native-class construction should not assign a partial object reference");
+        }
+        const bool has_rejected_object = std::any_of(
+            state.ole_objects.begin(),
+            state.ole_objects.end(),
+            [](const auto& object)
+            {
+                return object.prog_id == "UnsafeArrayHolder";
+            });
+        expect(!has_rejected_object,
+               "a rejected native-class construction should discard its partially registered object");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_newobject_instantiates_native_prg_class_and_preserves_ole_newobject()
     {
         namespace fs = std::filesystem;

@@ -6720,7 +6720,7 @@
                         std::size_t columns = 1U;
                         bool is_two_dimensional = false;
                         if (!parse_array_reference(
-                                declaration, frame, array_name, rows, columns, &is_two_dimensional))
+                                declaration, frame, array_name, rows, columns, &is_two_dimensional, true))
                         {
                             last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions");
                             last_fault_location = statement.location;
@@ -6741,13 +6741,15 @@
                     }
                     for (const PublicArrayDeclaration &declaration : declarations)
                     {
+                        const std::size_t element_count = checked_array_element_count(
+                            declaration.rows, declaration.columns);
                         public_names.insert(declaration.normalized_name);
                         arrays[declaration.normalized_name] = RuntimeArray{
                             .rows = declaration.rows,
                             .columns = declaration.columns,
                             .is_two_dimensional = declaration.is_two_dimensional,
                             .values = std::vector<PrgValue>(
-                                declaration.rows * declaration.columns, make_boolean_value(false)),
+                                element_count, make_boolean_value(false)),
                             .binding_identity = allocate_array_binding_identity()};
                     }
                     return {};
@@ -6779,6 +6781,15 @@
             case StatementKind::local_declaration:
                 if (statement.identifier == "array")
                 {
+                    struct LocalArrayDeclaration
+                    {
+                        std::string normalized_name;
+                        std::size_t rows = 0U;
+                        std::size_t columns = 1U;
+                        bool is_two_dimensional = false;
+                    };
+                    std::vector<LocalArrayDeclaration> declarations;
+                    declarations.reserve(statement.names.size());
                     for (const auto &declaration : statement.names)
                     {
                         std::string array_name;
@@ -6786,18 +6797,25 @@
                         std::size_t columns = 1U;
                         bool is_two_dimensional = false;
                         if (!parse_array_reference(
-                                declaration, frame, array_name, rows, columns, &is_two_dimensional))
+                                declaration, frame, array_name, rows, columns, &is_two_dimensional, true))
                         {
                             last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions");
                             last_fault_location = statement.location;
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};
                         }
-                        frame.local_arrays[normalize_memory_variable_identifier(array_name)] = RuntimeArray{
-                            .rows = rows,
-                            .columns = columns,
-                            .is_two_dimensional = is_two_dimensional,
-                            .values = std::vector<PrgValue>(rows * columns, make_boolean_value(false)),
+                        declarations.push_back(
+                            {normalize_memory_variable_identifier(array_name), rows, columns, is_two_dimensional});
+                    }
+                    for (const LocalArrayDeclaration &declaration : declarations)
+                    {
+                        const std::size_t element_count = checked_array_element_count(
+                            declaration.rows, declaration.columns);
+                        frame.local_arrays[declaration.normalized_name] = RuntimeArray{
+                            .rows = declaration.rows,
+                            .columns = declaration.columns,
+                            .is_two_dimensional = declaration.is_two_dimensional,
+                            .values = std::vector<PrgValue>(element_count, make_boolean_value(false)),
                             .binding_identity = allocate_array_binding_identity()};
                     }
                     return {};
@@ -6813,6 +6831,15 @@
             {
                 if (statement.identifier == "array")
                 {
+                    struct PrivateArrayDeclaration
+                    {
+                        std::string normalized_name;
+                        std::size_t rows = 0U;
+                        std::size_t columns = 1U;
+                        bool is_two_dimensional = false;
+                    };
+                    std::vector<PrivateArrayDeclaration> declarations;
+                    declarations.reserve(statement.names.size());
                     for (const auto &declaration : statement.names)
                     {
                         std::string array_name;
@@ -6820,17 +6847,21 @@
                         std::size_t columns = 1U;
                         bool is_two_dimensional = false;
                         if (!parse_array_reference(
-                                declaration, frame, array_name, rows, columns, &is_two_dimensional))
+                                declaration, frame, array_name, rows, columns, &is_two_dimensional, true))
                         {
                             last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions");
                             last_fault_location = statement.location;
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};
                         }
-                        const std::string normalized = normalize_memory_variable_identifier(array_name);
-                        const auto existing_array = arrays.find(normalized);
+                        declarations.push_back(
+                            {normalize_memory_variable_identifier(array_name), rows, columns, is_two_dimensional});
+                    }
+                    for (const PrivateArrayDeclaration &declaration : declarations)
+                    {
+                        const auto existing_array = arrays.find(declaration.normalized_name);
                         frame.private_saved_arrays.try_emplace(
-                            normalized,
+                            declaration.normalized_name,
                             existing_array == arrays.end()
                                 ? std::optional<RuntimeArray>{std::nullopt}
                                 : std::optional<RuntimeArray>{existing_array->second});
@@ -6838,11 +6869,13 @@
                         {
                             arrays.erase(existing_array);
                         }
-                        arrays[normalized] = RuntimeArray{
-                            .rows = rows,
-                            .columns = columns,
-                            .is_two_dimensional = is_two_dimensional,
-                            .values = std::vector<PrgValue>(rows * columns, make_boolean_value(false)),
+                        const std::size_t element_count = checked_array_element_count(
+                            declaration.rows, declaration.columns);
+                        arrays[declaration.normalized_name] = RuntimeArray{
+                            .rows = declaration.rows,
+                            .columns = declaration.columns,
+                            .is_two_dimensional = declaration.is_two_dimensional,
+                            .values = std::vector<PrgValue>(element_count, make_boolean_value(false)),
                             .binding_identity = allocate_array_binding_identity()};
                     }
                     return {};
@@ -7062,15 +7095,38 @@
             }
             case StatementKind::dimension_command:
             {
+                struct DimensionDeclaration
+                {
+                    std::string name;
+                    std::size_t rows = 0U;
+                    std::size_t columns = 1U;
+                    bool is_two_dimensional = false;
+                };
+                std::vector<DimensionDeclaration> declarations;
+                declarations.reserve(statement.names.size());
                 for (const auto &name : statement.names)
                 {
-                    if (!declare_array(name, frame))
+                    std::string array_name;
+                    std::size_t rows = 0U;
+                    std::size_t columns = 1U;
+                    bool is_two_dimensional = false;
+                    if (!parse_array_reference(
+                            name, frame, array_name, rows, columns, &is_two_dimensional, true))
                     {
                         last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions");
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
+                    declarations.push_back({array_name, rows, columns, is_two_dimensional});
+                }
+                for (const DimensionDeclaration &declaration : declarations)
+                {
+                    resize_array(
+                        declaration.name,
+                        declaration.rows,
+                        declaration.columns,
+                        declaration.is_two_dimensional);
                 }
                 events.push_back({.category = "runtime.dimension",
                                   .detail = std::to_string(statement.names.size()) + " array(s)",
@@ -8401,10 +8457,7 @@
                         }
                         const std::size_t rows = *parsed_rows;
                         const std::size_t columns = std::max<std::size_t>(1U, *parsed_columns);
-                        if (rows > std::numeric_limits<std::size_t>::max() / columns)
-                        {
-                            continue;
-                        }
+                        const std::size_t element_count = checked_array_element_count(rows, columns);
                         std::vector<PrgValue> values;
                         values.reserve(array_tokens.size() > 0U ? array_tokens.size() - 1U : 0U);
                         for (std::size_t element_index = 1U; element_index < array_tokens.size(); ++element_index)
@@ -8417,7 +8470,7 @@
                             const std::string element_text = element_colon == std::string::npos ? std::string{} : unescape_memvar_value(encoded_element.substr(element_colon + 1U));
                             values.push_back(parse_memvar_value(element_type, element_text));
                         }
-                        values.resize(rows * columns);
+                        values.resize(element_count);
                         assign_array(name, std::move(values), columns);
                     }
                     else
