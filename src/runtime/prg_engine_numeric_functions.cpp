@@ -294,6 +294,97 @@ PrgValue currency_round(const std::int64_t scaled, const int decimals) {
     return currency_from_magnitude(rounded, scaled < 0 && rounded != 0U);
 }
 
+[[noreturn]] void throw_currency_mod_invalid_argument() {
+    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+}
+
+[[noreturn]] void throw_currency_mod_out_of_range() {
+    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.CurrencyOutOfRange"), 1988);
+}
+
+PrgValue currency_mod_scaled(const std::int64_t dividend, const std::int64_t divisor) {
+    if (divisor == 0) {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.DivisionByZero"), 1307);
+    }
+    if (dividend == std::numeric_limits<std::int64_t>::min() && divisor == -1) {
+        return make_currency_value(0);
+    }
+    std::int64_t remainder = dividend % divisor;
+    if (remainder != 0 && (remainder < 0) != (divisor < 0)) {
+        remainder += divisor;
+    }
+    return make_currency_value(remainder);
+}
+
+bool has_at_most_four_fraction_digits(const std::string& decimal) {
+    const std::size_t point = decimal.find('.');
+    return point == std::string::npos || decimal.size() - point - 1U <= 4U;
+}
+
+PrgValue currency_mod_numeric(
+    const std::int64_t dividend,
+    const PrgValue& divisor_value,
+    const NumericBehavior behavior) {
+    // Governing requirement: RQ-CF-PRG-CURRENCY-FUNCTIONS-001 (#5611/#6776).
+    if (divisor_value.kind == PrgValueKind::currency) {
+        return currency_mod_scaled(dividend, divisor_value.currency_value);
+    }
+
+    std::string exact_text;
+    if (divisor_value.kind == PrgValueKind::int64) {
+        exact_text = std::to_string(divisor_value.int64_value);
+    } else if (divisor_value.kind == PrgValueKind::uint64) {
+        exact_text = std::to_string(divisor_value.uint64_value);
+    } else {
+        const double divisor = value_as_number(divisor_value);
+        if (!std::isfinite(divisor)) {
+            if (behavior == NumericBehavior::vfp9) {
+                return make_currency_value(0);
+            }
+            throw_currency_mod_invalid_argument();
+        }
+        exact_text = format_round_trip_decimal(divisor);
+    }
+
+    if (has_at_most_four_fraction_digits(exact_text)) {
+        const CurrencyDecimal exact = parse_currency_decimal(exact_text, true);
+        if (exact.status == CurrencyDecimalStatus::ok) {
+            return currency_mod_scaled(dividend, exact.scaled);
+        }
+        if (divisor_value.kind == PrgValueKind::int64 || divisor_value.kind == PrgValueKind::uint64) {
+            const bool divisor_negative = divisor_value.kind == PrgValueKind::int64 && divisor_value.int64_value < 0;
+            const bool dividend_negative = dividend < 0;
+            if (dividend == 0 || dividend_negative == divisor_negative) {
+                return make_currency_value(dividend);
+            }
+            if (behavior == NumericBehavior::vfp9) {
+                return make_currency_value(0);
+            }
+            throw_currency_mod_out_of_range();
+        }
+    }
+
+    const long double divisor = static_cast<long double>(value_as_number(divisor_value));
+    if (divisor == 0.0L) {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.DivisionByZero"), 1307);
+    }
+    const long double dividend_units = static_cast<long double>(dividend) / 10000.0L;
+    long double remainder = std::fmod(dividend_units, divisor);
+    if (remainder != 0.0L && std::signbit(remainder) != std::signbit(divisor)) {
+        remainder += divisor;
+    }
+    const long double scaled = std::round(remainder * 10000.0L);
+    if (std::isfinite(scaled) &&
+        scaled >= static_cast<long double>(std::numeric_limits<std::int64_t>::min()) &&
+        scaled <= static_cast<long double>(std::numeric_limits<std::int64_t>::max())) {
+        return make_currency_value(static_cast<std::int64_t>(scaled));
+    }
+    if (behavior == NumericBehavior::vfp9) {
+        return make_currency_value(0);
+    }
+    throw_currency_mod_out_of_range();
+}
+
 }  // namespace
 
 std::optional<PrgValue> evaluate_numeric_function(
@@ -317,23 +408,7 @@ std::optional<PrgValue> evaluate_numeric_function(
             return currency_round(scaled, decimals);
         }
         if (function == "mod" && arguments.size() >= 2U) {
-            const std::int64_t divisor = arguments[1].kind == PrgValueKind::currency
-                                             ? arguments[1].currency_value
-                                             : static_cast<std::int64_t>(std::llround(value_as_number(arguments[1]) * 10000.0));
-            if (divisor == 0) {
-                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.DivisionByZero"), 1307);
-            }
-            if (divisor == -1) {
-                // Every value is a multiple of 0.0001 (a scaled -1): INT64_MIN % -1 would overflow the signed
-                // division, so answer the mathematically correct zero first (VFP9: MOD($922337203685477.5807,$-0.0001)
-                // is $0).
-                return make_currency_value(0);
-            }
-            std::int64_t remainder = scaled % divisor;
-            if (remainder != 0 && (remainder < 0) != (divisor < 0)) {
-                remainder += divisor;
-            }
-            return make_currency_value(remainder);
+            return currency_mod_numeric(scaled, arguments[1], numeric_behavior(set_callback));
         }
     }
     if (function == "int" && !arguments.empty()) {

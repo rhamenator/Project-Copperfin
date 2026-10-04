@@ -1,5 +1,15 @@
 # VFP Language Reference Coverage
 
+- Currency-first `MOD()` Numeric-divisor boundaries (2026-10-04, #5611/#6776):
+  installed VFP9 computes the modulo using the Numeric divisor at its full
+  precision, rounds the Currency result to four decimal places, and preserves
+  the divisor's sign. Default `COPPERFIN` behavior rejects a non-finite divisor
+  with error 11 and a finite result outside Currency range with error 1988;
+  explicit `VFP9` behavior retains the recovered integer-indefinite zero for
+  those cases. Exact Currency and exactly representable four-place divisors
+  stay on scaled-integer arithmetic. Complete probes are retained under
+  `tests/fixtures/vfp9-currency-mod-numeric-divisor-observation/`.
+
 - `RGB()` component numeric boundaries (2026-10-04, #6938 under #5611/#6776):
   each red, green, and blue component truncates toward zero and then must be a
   byte. Installed VFP9 rejects a positive raw value above 255 before its

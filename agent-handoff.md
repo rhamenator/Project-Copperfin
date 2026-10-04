@@ -231,21 +231,23 @@ after review found a macOS clone destination-identity gap.
 ## Active slice
 
 Open owner-authored, `agent-approved` issue #5611 is the implementation
-umbrella and reopened #6776 is the design/checklist reference. The `WEEK()`
-option-order/range/year-boundary correction merged in PR #6936 at `34ea94088`
-and closed #6933. All 33 checks passed at exact head `0f50e15eb`, exact-head
-review was clean, and all three review conversations were resolved. The next
-bounded slice is `RGB()` component numeric validation, tracked by #6938 on
-branch `fix/rgb-numeric-bounds-5611` in
-`~/.codex/worktrees/rgb-numeric-bounds-5611/Project-Copperfin`, based on that
-merge. Fresh installed-VFP9 probes establish truncation, error 11, the raw
-positive 255 ceiling, and VFP9 negative signed-32-bit/integer-indefinite
-conversion across all three components. Production validation, focused
-script/direct coverage, retained fixtures, docs/22, docs/32, and the changelog
-fragment are drafted. Both focused targets pass normally and under Clang
-AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
-instrumentation; diff and changelog checks also pass. Remaining: signed commit,
-push, PR/review, green exact-head checks, and merge.
+umbrella and reopened #6776 is the design/checklist reference. The `RGB()`
+component numeric-validation correction merged in PR #6939 at `69b3c1510`
+and closed #6938. All 33 checks passed at exact head `54c2d3225`, exact-head
+review was clean, and there were no review conversations. The next bounded
+slice is the remaining Currency-first `MOD()` Numeric-divisor conversion on
+branch `fix/currency-mod-divisor-bounds-5611` in
+`~/.codex/worktrees/currency-mod-divisor-bounds-5611/Project-Copperfin`, based
+on that merge. Fresh installed-VFP9 evidence is retained under
+`tests/fixtures/vfp9-currency-mod-numeric-divisor-observation/`. Production now
+keeps exact scaled arithmetic where possible, computes fractional Numeric
+divisors without first rounding them to the Currency grid, and replaces the
+former unchecked `llround()` narrowing with defined Copperfin errors plus
+explicit VFP9 integer-indefinite behavior. Focused script/direct coverage,
+docs/22, docs/32, and the changelog fragment are drafted. Both focused targets
+pass normally and under Clang AddressSanitizer, UndefinedBehaviorSanitizer,
+and float-cast-overflow instrumentation; diff and changelog checks also pass.
+Remaining: signed commit, push, PR/review, green exact-head checks, and merge.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
@@ -333,9 +335,11 @@ Owner-directed workstream order before the #6879 assignment was:
      #6935).
    - Completed after those: `WEEK()` option order, bounds, setting fallback,
      and year-boundary compatibility (#6933, PR #6936).
-   - Active: `RGB()` component numeric validation (#6938).
+   - Completed after those: `RGB()` component numeric validation (#6938, PR
+     #6939).
+   - Active: Currency-first `MOD()` Numeric-divisor conversion.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
-     other modules (#5611 umbrella).
+     this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`
    #5740, `XMLTOCURSOR` #5767, `AGETFILEVERSION` #5686/#5759, project inventory
    #5703, PRG include depth #5728, runtime PRG load #5731, directory

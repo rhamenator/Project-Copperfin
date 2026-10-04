@@ -3,12 +3,16 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "../src/runtime/prg_engine_helpers.h"
+#include "../src/runtime/prg_engine_numeric_functions.h"
+#include "../src/runtime/prg_compatibility_error.h"
 #include "prg_engine_test_support.h"
 
 #include <filesystem>
 #include <iterator>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <system_error>
 #include <vector>
@@ -260,8 +264,37 @@ const std::vector<Row> kBoundaryRows = {
     {"CEILING($-922337203685477.5807)", "ERR1988"},
 };
 
-std::string run_rows(const fs::path &dir, const std::vector<Row> &rows, const bool exact) {
+// Fresh installed-VFP9 probe evidence for Numeric divisors is retained under
+// tests/fixtures/vfp9-currency-mod-numeric-divisor-observation/ (#5611/#6776).
+const std::vector<Row> kCurrencyModNumericRows = {
+    {"MOD($0.0004,0.00014)", "Y:$0.0001"},
+    {"MOD($0.0004,-0.00014)", "Y:$0.0000"},
+    {"MOD($0.0001,0.00015)", "Y:$0.0001"},
+    {"MOD($12.3456,2.00004)", "Y:$0.3454"},
+    {"MOD($12.3456,2.00005)", "Y:$0.3453"},
+    {"MOD($12.3456,2.00006)", "Y:$0.3452"},
+    {"MOD($10,1E20)", "Y:$10.0000"},
+    {"MOD($10,-1E20)", "ERR1988"},
+    {"MOD($10,EXP(1000))", "ERR11"},
+    {"MOD($10,-EXP(1000))", "ERR11"},
+};
+
+const std::vector<Row> kCurrencyModVfp9Rows = {
+    {"MOD($10,1E20)", "Y:$10.0000"},
+    {"MOD($10,-1E20)", "Y:$0.0000"},
+    {"MOD($10,EXP(1000))", "Y:$0.0000"},
+    {"MOD($10,-EXP(1000))", "Y:$0.0000"},
+};
+
+std::string run_rows(
+    const fs::path &dir,
+    const std::vector<Row> &rows,
+    const bool exact,
+    const std::string &numeric_behavior = {}) {
     std::string body = exact ? "LOCAL cOut, oEx, x\ncOut = ''\nSET DECIMALS TO 4\n" : "LOCAL cOut, oEx, x\ncOut = ''\n";
+    if (!numeric_behavior.empty()) {
+        body += "SET NUMERICBEHAVIOR TO " + numeric_behavior + "\n";
+    }
     for (const Row &row : rows) {
         body += "TRY\n";
         body += "x = " + std::string(row.expression) + "\n";
@@ -283,11 +316,15 @@ std::string run_rows(const fs::path &dir, const std::vector<Row> &rows, const bo
     return read_text(dir / "results.txt");
 }
 
-void check_rows(const std::vector<Row> &rows, const bool exact, const std::string &label) {
+void check_rows(
+    const std::vector<Row> &rows,
+    const bool exact,
+    const std::string &label,
+    const std::string &numeric_behavior = {}) {
     const fs::path dir = fs::temp_directory_path() / ("copperfin_currency_functions_" + label);
     std::error_code ignored;
     fs::remove_all(dir, ignored);
-    const std::string output = run_rows(dir, rows, exact);
+    const std::string output = run_rows(dir, rows, exact, numeric_behavior);
     expect(output.rfind("<incomplete", 0U) != 0U, "currency functions " + label + ": the script should complete: " + output);
     std::vector<std::string> lines;
     for (std::size_t start = 0U; start < output.size();) {
@@ -310,6 +347,52 @@ void check_rows(const std::vector<Row> &rows, const bool exact, const std::strin
 void test_currency_functions_match_vfp9() {
     check_rows(kRows, false, "values");
     check_rows(kBoundaryRows, true, "boundary");
+    check_rows(kCurrencyModNumericRows, true, "mod_numeric_copperfin", "COPPERFIN");
+    check_rows(kCurrencyModVfp9Rows, true, "mod_numeric_vfp9", "VFP9");
+}
+
+void test_currency_mod_direct_numeric_boundaries() {
+    const auto callback = [](const char* mode) {
+        return [mode](const std::string& setting) {
+            return setting == "NUMERICBEHAVIOR" ? std::string(mode) : std::string{};
+        };
+    };
+    const auto args_with_divisor = [](const copperfin::runtime::PrgValue& divisor) {
+        return std::vector<copperfin::runtime::PrgValue>{
+            copperfin::runtime::make_currency_value(100000), divisor};
+    };
+
+    const auto exact_positive = copperfin::runtime::evaluate_numeric_function(
+        "mod",
+        args_with_divisor(copperfin::runtime::make_uint64_value(std::numeric_limits<std::uint64_t>::max())),
+        callback("COPPERFIN"));
+    expect(exact_positive.has_value() && exact_positive->currency_value == 100000,
+        "Currency MOD should preserve an exact positive dividend below a huge exact positive divisor");
+
+    bool rejected = false;
+    try {
+        (void)copperfin::runtime::evaluate_numeric_function(
+            "mod",
+            args_with_divisor(copperfin::runtime::make_int64_value(std::numeric_limits<std::int64_t>::min())),
+            callback("COPPERFIN"));
+    } catch (const copperfin::runtime::PrgCompatibilityError& error) {
+        rejected = error.error_code() == 1988;
+    }
+    expect(rejected, "Copperfin Currency MOD should reject an exact out-of-range negative result");
+
+    const auto vfp_exact_negative = copperfin::runtime::evaluate_numeric_function(
+        "mod",
+        args_with_divisor(copperfin::runtime::make_int64_value(std::numeric_limits<std::int64_t>::min())),
+        callback("VFP9"));
+    expect(vfp_exact_negative.has_value() && vfp_exact_negative->currency_value == 0,
+        "VFP9 Currency MOD should map an exact out-of-range negative result to integer-indefinite zero");
+
+    const auto vfp_nan = copperfin::runtime::evaluate_numeric_function(
+        "mod",
+        args_with_divisor(copperfin::runtime::make_number_value(std::numeric_limits<double>::quiet_NaN())),
+        callback("VFP9"));
+    expect(vfp_nan.has_value() && vfp_nan->currency_value == 0,
+        "VFP9 Currency MOD should map a NaN divisor to integer-indefinite zero");
 }
 
 // MOD of the stored minimum by -0.0001 is INT64_MIN % -1, signed-division overflow (a SIGFPE on common targets). The
@@ -360,6 +443,7 @@ void test_mod_of_stored_minimum_does_not_overflow() {
 
 int main() {
     test_currency_functions_match_vfp9();
+    test_currency_mod_direct_numeric_boundaries();
     test_mod_of_stored_minimum_does_not_overflow();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
