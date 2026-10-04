@@ -935,7 +935,7 @@ void test_array_dimension_boundaries_are_catchable_and_atomic() {
         "ENDTRY\n"
         "nMultiError = 0\n"
         "TRY\n"
-        "  DIMENSION aFirstStable[3], aRejectedSecond[65001]\n"
+        "  DIMENSION aFirstStable[3], aRejectedSecond[ALEN(aFirstStable) + 65000]\n"
         "CATCH TO oMulti\n"
         "  nMultiError = oMulti.ErrorNo\n"
         "ENDTRY\n"
@@ -999,6 +999,11 @@ void test_array_dimension_boundaries_are_catchable_and_atomic() {
         "cTailAfter = aStable[2,2]\n"
         "cPrivateAfter = aPrivateKeep[1]\n"
         "cRejectedPublicType = TYPE('aRejectedPublic')\n"
+        "DIMENSION aSequentialExisting[1], aSequentialFollower[1]\n"
+        "DIMENSION aSequentialExisting[2], aSequentialFollower[ALEN(aSequentialExisting)]\n"
+        "DIMENSION aSequentialNew[2], aSequentialNewFollower[ALEN(aSequentialNew)]\n"
+        "nSequentialExistingLength = ALEN(aSequentialFollower)\n"
+        "nSequentialNewLength = ALEN(aSequentialNewFollower)\n"
         "cUnsafeArrayExpression = 'aStable[EXP(1000)]'\n"
         "cBracketUnsafeReadType = TYPE('aStable[EXP(1000)]')\n"
         "cParenUnsafeReadType = TYPE('aStable(EXP(1000))')\n"
@@ -1057,6 +1062,8 @@ void test_array_dimension_boundaries_are_catchable_and_atomic() {
     check("ctailafter", "tail", "failed resizes should preserve the trailing value");
     check("cprivateafter", "private-kept", "failed PRIVATE ARRAY should preserve the prior binding");
     check("crejectedpublictype", "U", "failed PUBLIC ARRAY should not publish a partial binding");
+    check("nsequentialexistinglength", "2", "later dimensions should observe an earlier existing-array resize");
+    check("nsequentialnewlength", "2", "later dimensions should observe an earlier newly created array");
     check("cbracketunsafereadtype", "U", "bracket array reads should reject non-finite selectors safely");
     check("cparenunsafereadtype", "U", "parenthesis array reads should reject non-finite selectors safely");
     check("umacrounsaferead", "", "macro array reads should reject non-finite selectors safely");

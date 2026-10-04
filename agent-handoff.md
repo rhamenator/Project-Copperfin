@@ -226,20 +226,25 @@ umbrella and reopened #6776 is the design/checklist reference. The active
 bounded slice is open owner-authored, `agent-approved` issue #5594 on branch
 `fix/array-dimension-overflow-5594` in
 `~/.codex/worktrees/array-dimension-overflow-5594/Project-Copperfin`, based on
-`origin/main` at `5d64d0e97`. PR #6926 is open; its first exact-head review
+`origin/main` at `5d64d0e97`. PR #6926 is open. Its first exact-head review
 identified RESTORE atomicity, read-selector conversion, nested native-object
-rollback, and stale-handoff gaps, all addressed in the pending review-fix
-commit. It centralizes checked dimension conversion,
+rollback, and stale-handoff gaps; commit `9f49f9b83` addressed those findings.
+The next exact-head review found that atomic multi-target `DIMENSION` staging
+had lost VFP's left-to-right visibility. The pending second review fix now
+resizes each target before evaluating the next while retaining targeted
+rollback snapshots for statement atomicity. It centralizes checked dimension conversion,
 checked element-count/offset arithmetic, a conservative 65,000-element host
 safety ceiling, and failure-atomic declaration/resize behavior across global,
 local, private, public, `ASIZE()`, direct assignment, RESTORE, and native-class
 array paths. Focused portable array, data-I/O, and runtime-surface tests pass,
 including replacement/additive RESTORE rollback, bracket/parenthesis/macro
-read selectors, and nested native-object construction failure. Remaining:
-signed review-fix commit, push, review-conversation resolution, green exact-head
-checks, and merge. The same focused targets pass under Clang AddressSanitizer,
-UndefinedBehaviorSanitizer, and float-cast-overflow instrumentation; adjacent
-numeric-behavior, changelog, and safety-traceability checks passed before review.
+read selectors, nested native-object construction failure, sequential
+multi-target visibility, and rollback after a later target fails. Remaining:
+signed second review-fix commit, push, review-conversation resolution, green
+exact-head checks, and merge. The same focused targets pass under Clang
+AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
+instrumentation; adjacent numeric-behavior, changelog, and
+safety-traceability checks passed before review.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
