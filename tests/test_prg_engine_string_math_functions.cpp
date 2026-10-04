@@ -224,7 +224,7 @@ namespace
             "max_str = MAX('beta', 'alpha', 'gamma')\n"
             "rgb_black = RGB(0, 0, 0)\n"
             "rgb_sample = RGB(1, 2, 3)\n"
-            "rgb_clamped = RGB(-1, 300, 255)\n"
+            "rgb_fractional = RGB(1.9, 2.9, 3.9)\n"
             "rand_seeded = RAND(-123)\n"
             "rand_next = RAND()\n"
             "f = IIF(.T., 'yes', 'no')\n"
@@ -512,7 +512,7 @@ namespace
         check("max_str", "gamma");
         check("rgb_black", "0");
         check("rgb_sample", "197121");
-        check("rgb_clamped", "16776960");
+        check("rgb_fractional", "197121");
         check("f", "yes");
         check("iif_true_guard", "guard-true");
         check("iif_false_guard", "guard-false");

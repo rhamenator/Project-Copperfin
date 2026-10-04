@@ -1,5 +1,15 @@
 # VFP Language Reference Coverage
 
+- `RGB()` component numeric boundaries (2026-10-04, #6938 under #5611/#6776):
+  each red, green, and blue component truncates toward zero and then must be a
+  byte. Installed VFP9 rejects a positive raw value above 255 before its
+  signed-32-bit conversion, but converts negative values first; negative
+  low-32-bit wraps and integer-indefinite zero therefore remain available only
+  under explicit `SET NUMERICBEHAVIOR TO VFP9`. Default `COPPERFIN` behavior
+  uses defined truncated byte validation and rejects non-finite/out-of-range
+  values with error 11. Complete probes are retained under
+  `tests/fixtures/vfp9-rgb-component-bounds-observation/`.
+
 - `WEEK()` option semantics and numeric boundaries (2026-10-04, #6933 under
   #5611/#6776): the documented signature is
   `WEEK(date, nFirstWeek, nFirstDayOfWeek)`. Omitted options independently
