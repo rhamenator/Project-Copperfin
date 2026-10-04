@@ -1067,7 +1067,8 @@ std::optional<PrgValue> evaluate_string_function(
         // example -4294967295 becomes 1 and -4294967296 becomes 0. Keep that compatibility behind
         // SET NUMERICBEHAVIOR; COPPERFIN mode rejects every non-finite or out-of-range raw truncated value.
         const NumericBehavior behavior = numeric_behavior(set_callback);
-        const auto str_argument = [&](const double raw_value, const int maximum) {
+        const auto str_argument = [&](const PrgValue& argument, const int maximum) {
+            const double raw_value = value_as_number(argument);
             const double truncated = std::trunc(raw_value);
             std::int64_t converted = 0;
             if (behavior == NumericBehavior::vfp9) {
@@ -1076,7 +1077,7 @@ std::optional<PrgValue> evaluate_string_function(
                 if (truncated > static_cast<double>(maximum)) {
                     throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidStrWidth"), 1908);
                 }
-                converted = vfp9_numeric_to_int32(truncated);
+                converted = vfp9_numeric_to_int32(argument);
             } else {
                 if (!std::isfinite(truncated) || truncated < 0.0 ||
                     truncated > static_cast<double>(maximum)) {
@@ -1092,7 +1093,7 @@ std::optional<PrgValue> evaluate_string_function(
 
         int decimals = 0;
         if (arguments.size() >= 3U) {
-            decimals = str_argument(value_as_number(arguments[2]), 18);
+            decimals = str_argument(arguments[2], 18);
         }
         // Validate the required numeric expression even when a zero width will suppress all output.
         const double numeric_value = value_as_number(arguments[0]);
@@ -1103,7 +1104,7 @@ std::optional<PrgValue> evaluate_string_function(
         // #5947: reject before padding so no width can reach an unbounded allocation. The exact installed-VFP9
         // ceiling is 237, not the earlier conservative DBF-derived 255 limit.
         const int width = arguments.size() >= 2U
-                              ? str_argument(value_as_number(arguments[1]), 237)
+                              ? str_argument(arguments[1], 237)
                               : 10;
         if (width == 0) {
             return make_string_value("");

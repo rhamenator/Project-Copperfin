@@ -252,8 +252,12 @@ focused targets pass normally and under sanitizers. The next exact-head review
 found that width zero returned before validating the required numeric value;
 the pending fix evaluates that value before the empty result and adds a script
 regression. Both focused targets pass normally and under sanitizers after the
-fix. Remaining: signed commit, push, conversation resolution, fresh exact-head
-review, green exact-head checks, and merge.
+fix. A subsequent exact-head review found that exact int64 width/decimals
+operands were rounded through double before VFP9 low-bit conversion; the
+pending fix adds an exact-aware shared conversion overload and direct width and
+decimals coverage. Both focused targets pass normally and under sanitizers
+after that fix. Remaining: signed commit, push, conversation resolution, fresh
+exact-head review, green exact-head checks, and merge.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is

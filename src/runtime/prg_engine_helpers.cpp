@@ -1280,6 +1280,16 @@ std::int64_t vfp9_numeric_to_int32(const double value) {
     return declared_int32_from_int64(static_cast<std::int64_t>(value));
 }
 
+std::int64_t vfp9_numeric_to_int32(const PrgValue& value) {
+    if (value.kind == PrgValueKind::int64) {
+        return declared_int32_from_int64(value.int64_value);
+    }
+    if (value.kind == PrgValueKind::uint64) {
+        return signed_int32_from_low_bits(static_cast<std::uint32_t>(value.uint64_value));
+    }
+    return vfp9_numeric_to_int32(value_as_number(value));
+}
+
 std::int64_t numeric_count_argument(const double value, const NumericBehavior behavior) {
     return behavior == NumericBehavior::vfp9 ? vfp9_numeric_to_int32(value) : saturating_numeric_to_int64(value);
 }
@@ -1295,10 +1305,10 @@ std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {
     if (value.kind == PrgValueKind::int64) {
-        return declared_int32_from_int64(value.int64_value);
+        return static_cast<std::int32_t>(vfp9_numeric_to_int32(value));
     }
     if (value.kind == PrgValueKind::uint64) {
-        return signed_int32_from_low_bits(static_cast<std::uint32_t>(value.uint64_value));
+        return static_cast<std::int32_t>(vfp9_numeric_to_int32(value));
     }
     const double numeric_value = value_as_number(value);
     if (!std::isfinite(numeric_value)) {

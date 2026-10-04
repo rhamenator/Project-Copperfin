@@ -2265,6 +2265,31 @@ namespace
             expect_error_1908(mode, infinity, 2.0, std::string(mode) + " positive-infinity STR width");
             expect_error_1908(mode, 10.0, infinity, std::string(mode) + " positive-infinity STR decimals");
         }
+
+        const auto vfp9_set_callback = [](const std::string& name) {
+            return name == "NUMERICBEHAVIOR" ? std::string{"VFP9"} : std::string{};
+        };
+        const auto exact_low_bit_one = copperfin::runtime::make_int64_value(
+            std::numeric_limits<std::int64_t>::min() + 1);
+        const auto exact_width = copperfin::runtime::evaluate_string_function(
+            "str",
+            {copperfin::runtime::make_number_value(1.0), exact_low_bit_one,
+             copperfin::runtime::make_number_value(0.0)},
+            false,
+            80U,
+            vfp9_set_callback);
+        expect(exact_width.has_value() && copperfin::runtime::value_as_string(*exact_width) == "1",
+               "VFP9 STR width should preserve an exact int64 operand's low 32 bits");
+        const auto exact_decimals = copperfin::runtime::evaluate_string_function(
+            "str",
+            {copperfin::runtime::make_number_value(1.5), copperfin::runtime::make_number_value(10.0),
+             exact_low_bit_one},
+            false,
+            80U,
+            vfp9_set_callback);
+        expect(exact_decimals.has_value() &&
+                   copperfin::runtime::value_as_string(*exact_decimals) == "       1.5",
+               "VFP9 STR decimals should preserve an exact int64 operand's low 32 bits");
     }
 
     void test_strtran_rejects_zero_occurrence_controls()
