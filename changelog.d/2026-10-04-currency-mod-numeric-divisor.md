@@ -1,0 +1,1 @@
+- 2026-10-04: Make Currency-first `MOD()` handle arbitrary Numeric divisors without undefined conversion, with defined Copperfin errors and opt-in VFP9 integer-indefinite behavior.
