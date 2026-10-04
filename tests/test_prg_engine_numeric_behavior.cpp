@@ -653,6 +653,32 @@ std::vector<Row> build_rows() {
                     "WEEK(DATE(2021,1,1),-4294967295)", "N:1"});
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
                     "WEEK(DATE(2021,1,1),4294967295)", "ERR11"});
+
+    // Governing requirement: RQ-CF-PRG-RGB-COMPONENT-BOUNDS-001.
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        rows.push_back({set, "RGB(0,0,0)", "N:0"});
+        rows.push_back({set, "RGB(1.9,2.9,3.9)", "N:197,121"});
+        rows.push_back({set, "RGB(-0.9,0,0)", "N:0"});
+        rows.push_back({set, "RGB(255,255,255)", "N:16,777,215"});
+        rows.push_back({set, "RGB(-1,0,0)", "ERR11"});
+        rows.push_back({set, "RGB(256,0,0)", "ERR11"});
+        rows.push_back({set, "RGB(0,256,0)", "ERR11"});
+        rows.push_back({set, "RGB(0,0,256)", "ERR11"});
+        rows.push_back({set, "RGB(EXP(1000),0,0)", "ERR11"});
+    }
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "RGB(255.9,0,0)", "N:255"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "RGB(255.9,0,0)", "ERR11"});
+    for (const char *component : {"-EXP(1000)", "-1E20", "-4294967296"}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN",
+                        std::string("RGB(") + component + ",0,0)", "ERR11"});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("RGB(") + component + ",0,0)", "N:0"});
+    }
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "RGB(-4294967295,0,0)", "ERR11"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "RGB(-4294967295,0,0)", "N:1"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "RGB(-4294967041,0,0)", "N:255"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "RGB(-4294967040,0,0)", "ERR11"});
     return rows;
 }
 
@@ -1014,6 +1040,51 @@ void test_week_direct_numeric_boundaries() {
     }
 }
 
+void test_rgb_direct_numeric_boundaries() {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const auto callback = [](const char* mode) {
+        return [mode](const std::string& setting) {
+            return setting == "NUMERICBEHAVIOR" ? std::string(mode) : std::string{};
+        };
+    };
+    const auto args_with_red = [](const copperfin::runtime::PrgValue& red) {
+        return std::vector<copperfin::runtime::PrgValue>{
+            red,
+            copperfin::runtime::make_number_value(0.0),
+            copperfin::runtime::make_number_value(0.0)};
+    };
+
+    const auto exact_low_bit_one = copperfin::runtime::make_int64_value(
+        std::numeric_limits<std::int64_t>::min() + 1);
+    for (const auto& value : {exact_low_bit_one, copperfin::runtime::make_number_value(nan)}) {
+        const auto result = copperfin::runtime::evaluate_numeric_function(
+            "rgb", args_with_red(value), callback("VFP9"));
+        const double expected = value.kind == copperfin::runtime::PrgValueKind::int64 ? 1.0 : 0.0;
+        expect(result.has_value() && result->number_value == expected,
+               "VFP9 RGB should preserve exact low-32-bit conversion and integer-indefinite zero");
+
+        bool rejected = false;
+        try {
+            (void)copperfin::runtime::evaluate_numeric_function(
+                "rgb", args_with_red(value), callback("COPPERFIN"));
+        } catch (const copperfin::runtime::PrgCompatibilityError& error) {
+            rejected = error.error_code() == 11;
+        }
+        expect(rejected, "COPPERFIN RGB should reject out-of-range or non-finite exact components");
+    }
+
+    bool rejected = false;
+    try {
+        (void)copperfin::runtime::evaluate_numeric_function(
+            "rgb",
+            args_with_red(copperfin::runtime::make_uint64_value(UINT64_C(4294967296))),
+            callback("VFP9"));
+    } catch (const copperfin::runtime::PrgCompatibilityError& error) {
+        rejected = error.error_code() == 11;
+    }
+    expect(rejected, "VFP9 RGB should reject an exact positive component above 255 before wrapping");
+}
+
 }  // namespace
 
 int main() {
@@ -1021,6 +1092,7 @@ int main() {
     test_date_time_constructor_direct_numeric_boundaries();
     test_dow_direct_numeric_boundaries();
     test_week_direct_numeric_boundaries();
+    test_rgb_direct_numeric_boundaries();
     test_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {

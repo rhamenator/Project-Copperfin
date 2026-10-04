@@ -231,26 +231,21 @@ after review found a macOS clone destination-identity gap.
 ## Active slice
 
 Open owner-authored, `agent-approved` issue #5611 is the implementation
-umbrella and reopened #6776 is the design/checklist reference. The active
-`DOW()` optional first-day slice merged in PR #6935 at `64837d69b`; all 33
-checks passed at exact head `b30cb9baa`, exact-head review was clean, and its
-one review conversation was resolved. The next bounded slice is the adjacent
-`WEEK()` option-order/range and year-boundary correction tracked by #6933 on
-branch `fix/week-option-order-bounds-6933` in
-`~/.codex/worktrees/week-option-order-bounds-6933/Project-Copperfin`, based on
-that merge. Fresh installed-VFP9 probes establish the documented argument
-order (`nFirstWeek`, then `nFirstDayOfWeek`), default value 1 for omitted
-options, `SET FWEEK`/`SET FDOW` fallback only for explicit zero, ranges 0..3
-and 0..7 with error 11, mode 2 as the four-day rule, mode 3 as the full-week
-rule, and rollover into week 1 at both year boundaries. Production code,
-retained probe fixtures, focused script/direct coverage, docs/22, docs/32, and
-the changelog fragment are in PR #6936. Review-requested fixes derive January
-1 weekdays from Julian days rather than the Windows CRT at the year-3000
-boundary and add executable 7/7.9 first-day coverage. All three focused targets
-pass normally and under Clang AddressSanitizer, UndefinedBehaviorSanitizer,
-and float-cast-overflow instrumentation. The signed review fix is pushed;
-remaining: verify the exact remote change, resolve all three conversations,
-obtain green exact-head checks and review, and merge.
+umbrella and reopened #6776 is the design/checklist reference. The `WEEK()`
+option-order/range/year-boundary correction merged in PR #6936 at `34ea94088`
+and closed #6933. All 33 checks passed at exact head `0f50e15eb`, exact-head
+review was clean, and all three review conversations were resolved. The next
+bounded slice is `RGB()` component numeric validation, tracked by #6938 on
+branch `fix/rgb-numeric-bounds-5611` in
+`~/.codex/worktrees/rgb-numeric-bounds-5611/Project-Copperfin`, based on that
+merge. Fresh installed-VFP9 probes establish truncation, error 11, the raw
+positive 255 ceiling, and VFP9 negative signed-32-bit/integer-indefinite
+conversion across all three components. Production validation, focused
+script/direct coverage, retained fixtures, docs/22, docs/32, and the changelog
+fragment are drafted. Both focused targets pass normally and under Clang
+AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
+instrumentation; diff and changelog checks also pass. Remaining: signed commit,
+push, PR/review, green exact-head checks, and merge.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
@@ -336,8 +331,9 @@ Owner-directed workstream order before the #6879 assignment was:
      validation (PR #6930).
    - Completed after those: `DOW()` optional first-day numeric validation (PR
      #6935).
-   - Active: `WEEK()` option order, bounds, setting fallback, and year-boundary
-     compatibility (#6933).
+   - Completed after those: `WEEK()` option order, bounds, setting fallback,
+     and year-boundary compatibility (#6933, PR #6936).
+   - Active: `RGB()` component numeric validation (#6938).
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

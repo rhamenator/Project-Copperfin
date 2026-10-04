@@ -1,0 +1,1 @@
+- 2026-10-04: Validate `RGB()` components without undefined integer conversion, returning error 11 outside the byte range while keeping VFP9 negative-wrap behavior opt-in.

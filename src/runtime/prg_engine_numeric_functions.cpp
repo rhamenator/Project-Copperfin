@@ -26,8 +26,43 @@ namespace copperfin::runtime {
 
 namespace {
 
-int color_component(const PrgValue& value) {
-    return std::clamp(static_cast<int>(std::llround(value_as_number(value))), 0, 255);
+// Governing requirement: RQ-CF-PRG-RGB-COMPONENT-BOUNDS-001.
+int color_component(const PrgValue& value, const NumericBehavior behavior) {
+    constexpr std::int64_t maximum_component = 255;
+    std::int64_t converted = 0;
+    if (behavior == NumericBehavior::vfp9) {
+        bool above_maximum = false;
+        if (value.kind == PrgValueKind::int64) {
+            above_maximum = value.int64_value > maximum_component;
+        } else if (value.kind == PrgValueKind::uint64) {
+            above_maximum = value.uint64_value > static_cast<std::uint64_t>(maximum_component);
+        } else {
+            above_maximum = value_as_number(value) > static_cast<double>(maximum_component);
+        }
+        if (above_maximum) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        converted = vfp9_numeric_to_int32(value);
+    } else if (value.kind == PrgValueKind::int64) {
+        converted = value.int64_value;
+    } else if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value > static_cast<std::uint64_t>(maximum_component)) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        converted = static_cast<std::int64_t>(value.uint64_value);
+    } else {
+        const double truncated = std::trunc(value_as_number(value));
+        if (!std::isfinite(truncated) || truncated < 0.0 ||
+            truncated > static_cast<double>(maximum_component)) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        converted = static_cast<std::int64_t>(truncated);
+    }
+
+    if (converted < 0 || converted > maximum_component) {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+    }
+    return static_cast<int>(converted);
 }
 
 std::string numeric_domain_error(
@@ -428,9 +463,10 @@ std::optional<PrgValue> evaluate_numeric_function(
         return make_number_value(value > 0.0 ? 1.0 : (value < 0.0 ? -1.0 : 0.0));
     }
     if (function == "rgb" && arguments.size() >= 3U) {
-        const int red = color_component(arguments[0]);
-        const int green = color_component(arguments[1]);
-        const int blue = color_component(arguments[2]);
+        const NumericBehavior behavior = numeric_behavior(set_callback);
+        const int red = color_component(arguments[0], behavior);
+        const int green = color_component(arguments[1], behavior);
+        const int blue = color_component(arguments[2], behavior);
         return make_number_value(static_cast<double>(red + (green * 256) + (blue * 65536)));
     }
     if (function == "rand") {

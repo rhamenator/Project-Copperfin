@@ -1,0 +1,16 @@
+negative-point-one => N:[0]
+negative-point-nine => N:[0]
+negative-one-point-one => ERR 11 :Function argument value, type, or count is invalid.
+wrap-negative-one => N:[1]
+wrap-zero => N:[0]
+wrap-two-five-five => N:[255]
+wrap-two-five-six => ERR 11 :Function argument value, type, or count is invalid.
+twice-wrap-one => N:[1]
+green-wrap-one => N:[256]
+blue-wrap-one => N:[65536]
+all-wrap => N:[197121]
+upper-exact => N:[255]
+upper-just-over => ERR 11 :Function argument value, type, or count is invalid.
+positive-two-five-four-nine => N:[254]
+negative-wrap-fraction => N:[1]
+negative-wrap-fraction-zero => N:[0]
