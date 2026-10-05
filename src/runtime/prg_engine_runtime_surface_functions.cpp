@@ -42,6 +42,44 @@ namespace copperfin::runtime {
 
 namespace {
 
+// RQ-CF-PRG-SYS-SELECTOR-NUMERIC-001 (#5611/#6776). Only the primary
+// selector: operation-specific parameters keep their independent contracts.
+std::optional<std::int64_t> sys_selector_integer(const PrgValue& value, const NumericBehavior behavior) {
+    if (value.kind == PrgValueKind::number || value.kind == PrgValueKind::int64 ||
+        value.kind == PrgValueKind::uint64) {
+        if (behavior == NumericBehavior::vfp9) {
+            if (value.kind == PrgValueKind::number && std::isnan(value.number_value)) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+            }
+            constexpr auto positive_ceiling = std::numeric_limits<std::int32_t>::max();
+            const bool oversized_positive = value.kind == PrgValueKind::int64
+                ? value.int64_value > positive_ceiling
+                : value.kind == PrgValueKind::uint64
+                    ? value.uint64_value > static_cast<std::uint64_t>(positive_ceiling)
+                    : value.number_value > static_cast<double>(positive_ceiling);
+            if (oversized_positive) {
+                // Installed VFP9 leaves huge positive selectors unrecognized,
+                // rather than letting their low bits alias a SYS operation.
+                return std::nullopt;
+            }
+            return std::max<std::int64_t>(0, vfp9_numeric_to_int32(value));
+        }
+        if (const auto integer = checked_declared_int64_argument(value); integer.has_value()) {
+            return *integer;
+        }
+    } else {
+        // Preserve existing Currency/Character/Logical/Empty coercion and
+        // half-away rounding; guard the rounded result before casting.
+        const double raw = value_as_number(value);
+        if (std::isfinite(raw)) {
+            if (const auto integer = checked_truncated_numeric_to_int64(std::round(raw)); integer.has_value()) {
+                return *integer;
+            }
+        }
+    }
+    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+}
+
 #include "prg_engine_runtime_surface_platform_helpers.inl"
 #include "prg_engine_runtime_surface_list_state_helpers.inl"
 

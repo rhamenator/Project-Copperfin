@@ -299,18 +299,39 @@ documentation-only head and passed a same-head job retry; diagnostic follow-up
 #6964 is open, with no .NET changes in this slice. Return gaps
 #5912/#5913/#5914/#5887/#5911/#6956/#6959 remain separate.
 
-The active bounded slice is the owner's HEX numeric-conversion evidence
-under #5611/#6776 on `fix/hex-numeric-5611`, based on `146367518`, in
-`~/.codex/worktrees/hex-numeric-5611/Project-Copperfin`. HEX is a Copperfin
-extension, not a VFP9 builtin; naming/precedence gap #5880 remains separate.
-Derived safety policy keeps finite negative-to-zero and fractional truncation,
-rejects non-finite or positive out-of-signed-64-bit values with catchable error
-11, and retains exact int64/uint64/Currency conversion in both settings.
-Focused build directories are `/home/rich/temp/copperfin-hex-5611-{build,sanitize}`.
-The 62 direct calls and 14 PRG rows cover both settings; old dispatch reports
-36 failures and sanitizer stops at the signed-64-bit ceiling. Both focused
-numeric-behavior and neighboring math suites pass normally and under Clang
-ASan/UBSan/float-cast-overflow.
+HEX numeric conversion merged in PR #6965 at `44d399248` with all 11 required
+checks green at signed head `8c41ea70a`, clean Codex/Copilot exact-head reviews
+and no conversations. Optional Windows MSVC was still running; every other
+check passed. Main was synchronized and the slice worktree/branches removed;
+both builds moved to recoverable trash. The 62 direct calls and 14 PRG rows
+pass normally and under Clang ASan/UBSan/float-cast-overflow; old dispatch
+reports 36 failures and sanitizer stops at the signed-64-bit ceiling.
+HEX is a Copperfin extension; naming/precedence #5880 remains separate.
+
+The active bounded slice is primary SYS Numeric-selector conversion under
+#5611/#6776 on `fix/sys-selector-numeric-5611`, based on `44d399248`, in
+`~/.codex/worktrees/sys-selector-numeric-5611/Project-Copperfin`. Default
+COPPERFIN checks signed-64-bit representability and truncates Numeric inputs;
+VFP9 retains observed negative signed-low-32-bit wrapping/clamping while
+oversized positive selectors remain unrecognized. Exact int64/uint64 avoid
+double rounding. Other coercions keep existing rounding behind a checked
+boundary; optional SYS arguments and operation/return gaps remain outside
+this slice. The 24-row installed Numeric probe is retained under
+`tests/fixtures/vfp9-sys-selector-numeric-observation/`; exploratory Currency
+calls timed out and are not admitted compatibility evidence. No VM changed.
+The separate SYS(7)/unknown-selector return discrepancy found by this probe
+is filed as #6966 against `44d399248`; it is not admitted into this slice.
+The old dispatch reports 26 semantic assertions failing. The initial 52-failure
+regression also inspected FE_INVALID, but macOS optimized ARM64 demonstrated
+that non-strict FP compilation can speculate guarded casts and set flags
+without violating semantic admission. Those unsupported floating-status
+assertions were removed; semantic results/errors/callbacks and sanitizer
+coverage remain. The regression covers 66 boundary calls, two valid
+operation-callback controls, and 11 catchable PRG rows in both settings.
+Both focused numeric-behavior and neighboring string/math suites pass
+normally and under Clang ASan/UBSan/float-cast-overflow.
+Focused build directories are
+`/home/rich/temp/copperfin-sys-selector-5611-{build,sanitize}`.
 The active branch/PR carries implementation, tests and verification evidence;
 next complete exact-head review/required CI, resolve verified fixes, merge,
 synchronize and clean up. Then re-read the live channel and select the next
@@ -422,7 +443,9 @@ Owner-directed workstream order before the #6879 assignment was:
      (PR #6957).
    - Completed after those: shared file-handle numeric conversion in ten
      low-level callers (PR #6960).
-   - Active: `FCHSIZE()` size numeric conversion.
+   - Completed after those: `FCHSIZE()` size numeric conversion (PR #6962)
+     and HEX extension numeric conversion (PR #6965).
+   - Active: primary SYS Numeric-selector conversion.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

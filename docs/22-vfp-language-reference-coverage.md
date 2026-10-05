@@ -1,5 +1,19 @@
 # VFP Language Reference Coverage
 
+- Primary `SYS()` Numeric-selector conversion (2026-10-05, #5611/#6776):
+  default COPPERFIN truncates Numeric inputs toward zero only within signed
+  64-bit range, otherwise raising localized catchable error 11 before dispatch.
+  Explicit VFP9 preserves recovered negative signed-low-32-bit conversion and
+  clamps negative converted selectors to zero; oversized positive selectors
+  remain unrecognized, never wrapping to an operation. Exact int64/uint64
+  selectors avoid double rounding; NaN rejection is derived safety policy.
+  Existing Currency/Character/Logical/Empty coercions keep their rounding but
+  now check representability before conversion. The retained 24-row installed
+  Numeric probe is in `tests/fixtures/vfp9-sys-selector-numeric-observation/`.
+  Optional SYS parameters and individual operation/return behavior are not
+  changed: SYS(0)/negative identity #6945, and SYS(7)/unknown-selector returns
+  #6966 remain gaps. Currency/type parity is not claimed by the Numeric probe.
+
 - `HEX()` extension numeric boundaries (2026-10-05, #5611/#6776): derived
   Copperfin safety policy is identical in both numeric modes because HEX is
   not a VFP9 builtin. Finite negative operands become zero, positive fractions
