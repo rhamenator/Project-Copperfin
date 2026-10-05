@@ -321,8 +321,12 @@ this slice. The 24-row installed Numeric probe is retained under
 calls timed out and are not admitted compatibility evidence. No VM changed.
 The separate SYS(7)/unknown-selector return discrepancy found by this probe
 is filed as #6966 against `44d399248`; it is not admitted into this slice.
-The old dispatch reports 52 assertions failing, including FE_INVALID from
-invalid llround calls. The regression covers 66 boundary calls, two valid
+The old dispatch reports 26 semantic assertions failing. The initial 52-failure
+regression also inspected FE_INVALID, but macOS optimized ARM64 demonstrated
+that non-strict FP compilation can speculate guarded casts and set flags
+without violating semantic admission. Those unsupported floating-status
+assertions were removed; semantic results/errors/callbacks and sanitizer
+coverage remain. The regression covers 66 boundary calls, two valid
 operation-callback controls, and 11 catchable PRG rows in both settings.
 Both focused numeric-behavior and neighboring string/math suites pass
 normally and under Clang ASan/UBSan/float-cast-overflow.

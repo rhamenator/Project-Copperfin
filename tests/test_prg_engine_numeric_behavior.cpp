@@ -12,7 +12,6 @@
 #include "prg_engine_test_support.h"
 
 #include <cmath>
-#include <cfenv>
 #include <cstdint>
 #include <filesystem>
 #include <iostream>
@@ -1261,6 +1260,9 @@ void test_hex_direct_numeric_boundaries() {
 
 // RQ-CF-PRG-SYS-SELECTOR-NUMERIC-001 (#5611/#6776). The retained installed probe
 // determines Numeric conversion, not unimplemented SYS return semantics.
+// Assert semantic results/errors/callbacks, not floating-point status flags:
+// non-strict FP builds may speculate a guarded cast (notably optimized ARM64).
+// ASan/UBSan/float-cast-overflow separately check source-level conversion safety.
 void test_sys_selector_direct_numeric_boundaries() {
     using namespace copperfin::runtime;
     const double inf = std::numeric_limits<double>::infinity();
@@ -1311,7 +1313,6 @@ void test_sys_selector_direct_numeric_boundaries() {
                 return std::string("1");
             };
             std::string actual;
-            std::feclearexcept(FE_INVALID);
             try {
                 const auto result = evaluate_runtime_surface_function(
                     "sys", {cases[i].value, make_number_value(1)}, {}, "/sys-sentinel/",
@@ -1325,10 +1326,7 @@ void test_sys_selector_direct_numeric_boundaries() {
             const char* expected = std::string(mode) == "COPPERFIN" ? cases[i].copperfin : cases[i].vfp9;
             const std::string label = std::string(mode) + " SYS selector boundary " + std::to_string(i);
             expect(actual == expected, label + " should preserve checked selector admission");
-            expect((std::fetestexcept(FE_INVALID) & FE_INVALID) == 0,
-                   label + " should not invoke an invalid llround conversion");
             expect(operation_callbacks == 0, label + " must not alias a state-changing SYS operation");
-            std::feclearexcept(FE_INVALID);
         }
         // Positive control: the callback guard above is connected to actual dispatch.
         int operation_callbacks = 0;
