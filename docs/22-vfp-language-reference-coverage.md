@@ -1,5 +1,20 @@
 # VFP Language Reference Coverage
 
+- `FOPEN()` mode numeric boundaries (2026-10-05, #5611/#6776): installed
+  VFP9 accepts converted modes 0, 1, 2, 10, 11, and 12. Numeric operands at
+  or below the raw positive ceiling of 12 truncate toward zero and then use
+  signed low-32-bit conversion; only the six supported results are admitted.
+  A raw positive Numeric value above 12 raises error 11 before wrap, while
+  negative values can wrap to a supported result and negative values outside
+  signed 64-bit range, including negative infinity, convert to zero. Currency
+  rejects a nonzero sub-unit magnitude, otherwise truncates to whole units,
+  rejects a positive whole value above 12, and applies the same conversion and
+  admission rule. Default `COPPERFIN` mode accepts only exact documented modes
+  and rejects every other value before filesystem lookup or integer
+  conversion; the existing Character mode extension remains unchanged.
+  Complete probe source and output are retained under
+  `tests/fixtures/vfp9-fopen-mode-bounds-observation/`.
+
 - `FDATE()` type-flag numeric boundaries (2026-10-05, #5611/#6776):
   installed VFP9 rejects a raw positive Numeric value above 1, otherwise
   truncates through its signed low-32-bit conversion and admits only converted
