@@ -1,5 +1,19 @@
 # VFP Language Reference Coverage
 
+- `CPCURRENT()` Numeric-selector conversion (2026-10-05, #5611/#6776): both
+  settings reject fractional, non-finite and out-of-signed-32-bit Numeric
+  inputs with localized catchable error 11 before reading configured code-page
+  state. Exact int64/uint64 inputs are checked without double rounding. Other
+  coercions retain existing rounding behind a checked boundary. The 32-row
+  installed VFP9 table is retained in
+  `tests/fixtures/vfp9-cpcurrent-numeric-observation/`; 80 direct boundary calls,
+  six query controls and 16 catchable PRG rows cover both settings. Numeric,
+  locale/code-page and string/math suites pass normally and under sanitizers.
+  This is conversion safety, not full CPCURRENT parity: the probe rejects
+  explicit zero, unknown integral selectors and tested nonnumeric arguments,
+  while their existing Copperfin behavior remains unchanged (#6968).
+  Startup configuration and host/OEM queries are outside this slice.
+
 - Primary `SYS()` Numeric-selector conversion (2026-10-05, #5611/#6776):
   default COPPERFIN truncates Numeric inputs toward zero only within signed
   64-bit range, otherwise raising localized catchable error 11 before dispatch.
@@ -497,7 +511,10 @@
   focused runtime-surface CTest passes `1/1`; hosted window-manager behavior
   remains separate evidence.
 
-- Current codepage status (2026-07-28, #4810 correction under #3217): VFP9
+- Current codepage status (2026-07-28, #4810 correction under #3217): the
+  following is the retained Copperfin startup contract, not complete native
+  CPCURRENT selector parity. Fresh installed evidence on 2026-10-05 rejects
+  explicit `CPCURRENT(0)`; that discrepancy is tracked by #6968. VFP9
   treats `CODEPAGE` as a startup item in `CONFIG.FPW`, not as a live
   `SET CODEPAGE TO n` command. Copperfin reads supported numeric `CODEPAGE`
   values from that file, treats `CODEPAGE=AUTO` and an absent item as the host

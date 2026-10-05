@@ -42,6 +42,34 @@ namespace copperfin::runtime {
 
 namespace {
 
+// RQ-CF-PRG-CPCURRENT-NUMERIC-001 (#5611/#6776). Conversion safety only;
+// the independent selector-domain/type parity gap is tracked by #6968.
+int cpcurrent_type_flag(const PrgValue& value) {
+    constexpr auto minimum = std::numeric_limits<std::int32_t>::min();
+    constexpr auto maximum = std::numeric_limits<std::int32_t>::max();
+    if (value.kind == PrgValueKind::int64) {
+        if (value.int64_value >= minimum && value.int64_value <= maximum) {
+            return static_cast<int>(value.int64_value);
+        }
+    } else if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value <= static_cast<std::uint64_t>(maximum)) {
+            return static_cast<int>(value.uint64_value);
+        }
+    } else {
+        const double raw = value_as_number(value);
+        if (std::isfinite(raw)) {
+            // Numeric selectors must already be integral. Other coercions keep
+            // their previous half-away rounding, without an unchecked llround.
+            const double integral = value.kind == PrgValueKind::number ? std::trunc(raw) : std::round(raw);
+            if ((value.kind != PrgValueKind::number || integral == raw) &&
+                integral >= static_cast<double>(minimum) && integral <= static_cast<double>(maximum)) {
+                return static_cast<int>(integral);
+            }
+        }
+    }
+    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+}
+
 // RQ-CF-PRG-SYS-SELECTOR-NUMERIC-001 (#5611/#6776). Only the primary
 // selector: operation-specific parameters keep their independent contracts.
 std::optional<std::int64_t> sys_selector_integer(const PrgValue& value, const NumericBehavior behavior) {

@@ -766,16 +766,16 @@
             << std::setw(12) << (lo4 & 0x0000FFFFFFFFFFFFULL);
         return make_string_value(oss.str());
     }
-    // VFP9 help (dv_foxhelp.chm, CPCURRENT() topic):
-    // - omitted/0 => configured VFP code page, or current OS code page when no
-    //   CODEPAGE config item is in effect
+    // CPCURRENT query behavior retained from the startup-configuration slice:
+    // - omitted/0 => configured code page, or current OS code page when no
+    //   CODEPAGE config item is in effect. Explicit 0 is a VFP9 gap (#6968).
     // - 1 => current OS code page regardless of CODEPAGE config
     // - 2 => underlying OS code page (MS-DOS/OEM on Windows)
     //
     // CODEPAGE is a startup configuration value, not a data-session SET state;
     // omitted and 0 read it back while 1 and 2 remain host/OEM queries.
     if (function == "cpcurrent") {
-        const int type_flag = arguments.empty() ? 0 : static_cast<int>(std::llround(value_as_number(arguments[0])));
+        const int type_flag = arguments.empty() ? 0 : cpcurrent_type_flag(arguments[0]);
         if (type_flag == 2) {
             return make_number_value(static_cast<double>(current_host_oem_code_page()));
         }
