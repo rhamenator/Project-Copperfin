@@ -751,6 +751,15 @@ std::vector<Row> build_rows() {
             }
         }
     }
+    // RQ-CF-PRG-SET-TEXTMERGE-NUMERIC-001: admission, not query-result parity.
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        for (const char* argument : {"0", "-1", "0.9", "5", "2147483647", "1E300", "-1E300",
+                                     "EXP(1000)", "-EXP(1000)"}) {
+            rows.push_back({set, std::string("SET('TEXTMERGE', ") + argument + ")", "ERR11"});
+        }
+        rows.push_back({set, "SET('TEXTMERGE', 3.9)", "C:SHOW"});
+    }
     return rows;
 }
 
@@ -1540,6 +1549,78 @@ void test_relation_index_direct_numeric_boundaries() {
     }
 }
 
+// RQ-CF-PRG-SET-TEXTMERGE-NUMERIC-001: only Numeric admission is native;
+// callback controls preserve independent query-result and other SET contracts.
+void test_set_textmerge_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    const double inf = std::numeric_limits<double>::infinity();
+    struct Case { PrgValue value; int copperfin; int vfp9; };
+    // -1 is error 11; positive values identify the admitted Numeric variant.
+    const std::vector<Case> cases{
+        {make_number_value(1), 1, 1}, {make_number_value(2), 2, 2},
+        {make_number_value(3), 3, 3}, {make_number_value(4), 4, 4},
+        {make_number_value(0), -1, -1}, {make_number_value(-1), -1, -1},
+        {make_number_value(0.9), -1, -1}, {make_number_value(std::nextafter(1.0, 0.0)), -1, -1},
+        {make_number_value(1.49), 1, 1}, {make_number_value(1.5), 1, 1},
+        {make_number_value(1.9), 1, 1}, {make_number_value(2.5), 2, 2},
+        {make_number_value(3.9), 3, 3}, {make_number_value(4.9), 4, 4},
+        {make_number_value(std::nextafter(5.0, 0.0)), 4, 4}, {make_number_value(5), -1, -1},
+        {make_number_value(2147483647), -1, -1},
+        {make_number_value(4294967297.0), -1, 1}, {make_number_value(4294967299.0), -1, 3},
+        {make_number_value(4294967300.0), -1, 4}, {make_number_value(4294967296.0), -1, -1},
+        {make_number_value(-4294967295.0), -1, 1}, {make_number_value(-4294967293.0), -1, 3},
+        {make_number_value(-4294967292.0), -1, 4},
+        {make_number_value(1E300), -1, -1}, {make_number_value(-1E300), -1, -1},
+        {make_number_value(inf), -1, -1}, {make_number_value(-inf), -1, -1},
+        {make_number_value(std::numeric_limits<double>::quiet_NaN()), -1, -1},
+        {make_int64_value(3), 3, 3}, {make_uint64_value(4), 4, 4},
+        {make_int64_value(std::numeric_limits<std::int64_t>::min() + 1), -1, 1},
+        {make_uint64_value(UINT64_C(9223372036854775809)), -1, 1}};
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const auto evaluate = [&](const std::string& option, const std::optional<PrgValue>& variant,
+                                  const std::string& expected_key, const bool reject) {
+            int callbacks = 0;
+            const auto setting = [&](const std::string& name) {
+                if (name == "NUMERICBEHAVIOR") { return std::string(mode); }
+                ++callbacks;
+                expect(name == expected_key, "SET query should preserve its admitted variant key");
+                return std::string("query-sentinel");
+            };
+            std::vector<PrgValue> arguments{make_string_value(option)};
+            if (variant.has_value()) { arguments.push_back(*variant); }
+            bool threw = false;
+            std::optional<PrgValue> actual;
+            try {
+                actual = evaluate_runtime_surface_function(
+                    "set", arguments, {}, {}, {}, {}, 0, {}, 0, {}, 0,
+                    {}, {}, {}, {}, {}, {}, {}, {}, setting,
+                    {}, {}, false, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {});
+            } catch (const PrgCompatibilityError& error) {
+                threw = true;
+                expect(error.error_code() == 11, "invalid TEXTMERGE variant should raise error 11");
+            }
+            expect(reject ? threw : !threw && actual.has_value() && actual->kind == PrgValueKind::string &&
+                                     actual->string_value == "query-sentinel",
+                   std::string(mode) + " SET variant should preserve result or catchable rejection");
+            expect(callbacks == (reject ? 0 : 1), "rejected variant should not query setting state");
+        };
+        for (const auto& row : cases) {
+            const int index = std::string(mode) == "COPPERFIN" ? row.copperfin : row.vfp9;
+            const std::string key = index == 1 || index == 3
+                ? "TeXtMeRgE," + std::to_string(index) : "TeXtMeRgE";
+            evaluate("TeXtMeRgE", row.value, key, index == -1);
+        }
+        // Preserve other coercions and omitted/other-SET variants, not native type parity.
+        evaluate("TEXTMERGE", make_currency_value(19000), "TEXTMERGE", false);
+        evaluate("TEXTMERGE", make_string_value(" 3 "), "TEXTMERGE,3", false);
+        evaluate("TEXTMERGE", make_boolean_value(true), "TEXTMERGE", false);
+        evaluate("TEXTMERGE", make_null_value(), "TEXTMERGE", false);
+        evaluate("TEXTMERGE", std::nullopt, "TEXTMERGE", false);
+        evaluate("EXACT", make_number_value(inf), "EXACT", false);
+        evaluate("TEXTMERGE", make_string_value("1E300"), "TEXTMERGE", false);
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -1553,6 +1634,7 @@ int main() {
     test_sys_selector_direct_numeric_boundaries();
     test_cpcurrent_direct_numeric_boundaries();
     test_relation_index_direct_numeric_boundaries();
+    test_set_textmerge_direct_numeric_boundaries();
     test_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {

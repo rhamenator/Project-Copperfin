@@ -70,6 +70,42 @@ int cpcurrent_type_flag(const PrgValue& value) {
     throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
 }
 
+// RQ-CF-PRG-SET-TEXTMERGE-NUMERIC-001 (#5611/#6776). Conversion only;
+// the independent query-result contracts remain gap #6973.
+std::int64_t textmerge_query_variant(const PrgValue& value, const NumericBehavior behavior) {
+    if (value.kind == PrgValueKind::number || value.kind == PrgValueKind::int64 ||
+        value.kind == PrgValueKind::uint64) {
+        if (behavior == NumericBehavior::vfp9) {
+            const auto variant = vfp9_numeric_to_int32(value);
+            if (variant >= 1 && variant <= 4) {
+                return variant;
+            }
+        } else if (value.kind == PrgValueKind::int64) {
+            if (value.int64_value >= 1 && value.int64_value <= 4) {
+                return value.int64_value;
+            }
+        } else if (value.kind == PrgValueKind::uint64) {
+            if (value.uint64_value >= 1 && value.uint64_value <= 4) {
+                return static_cast<std::int64_t>(value.uint64_value);
+            }
+        } else if (std::isfinite(value.number_value) && value.number_value >= 1.0 &&
+                   value.number_value < 5.0) {
+            // Native SET validates after truncation: 4.9 is variant 4.
+            return static_cast<std::int64_t>(std::trunc(value.number_value));
+        }
+    } else if (value.kind == PrgValueKind::currency) {
+        // Keep the existing Currency rounding/query fallback, not native type
+        // parity, but define the integral conversion before formatting a key.
+        const double raw = value_as_number(value);
+        if (std::isfinite(raw)) {
+            if (const auto variant = checked_truncated_numeric_to_int64(std::round(raw)); variant.has_value()) {
+                return *variant;
+            }
+        }
+    }
+    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+}
+
 // RQ-CF-PRG-RELATION-INDEX-NUMERIC-001 (#5611/#6776). Only the index;
 // relation ordering (#6971) and optional work-area semantics are independent.
 std::int64_t relation_index_number(const PrgValue& value, const NumericBehavior behavior) {
