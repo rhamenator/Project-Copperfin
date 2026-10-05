@@ -108,6 +108,36 @@ namespace copperfin::runtime_surface_tests
             "lHiddenFileDefault = FILE('.hidden_file.txt')\n"
             "lHiddenFileZero = FILE('.hidden_file.txt', 0)\n"
             "lHiddenFileWithFlags = FILE('.hidden_file.txt', 1)\n"
+            "SET NUMERICBEHAVIOR TO COPPERFIN\n"
+            "TRY\n"
+            "    lHiddenFileCopperfinFraction = FILE('.hidden_file.txt', 0.9)\n"
+            "    nHiddenFileCopperfinError = 0\n"
+            "CATCH TO loError\n"
+            "    nHiddenFileCopperfinError = loError.ErrorNo\n"
+            "ENDTRY\n"
+            "TRY\n"
+            "    lMissingFileCopperfinFraction = FILE('missing-file.prg', 0.9)\n"
+            "    nMissingFileCopperfinError = 0\n"
+            "CATCH TO loError\n"
+            "    nMissingFileCopperfinError = loError.ErrorNo\n"
+            "ENDTRY\n"
+            "TRY\n"
+            "    lHiddenFileCopperfinInfinite = FILE('.hidden_file.txt', EXP(1000))\n"
+            "    nHiddenFileCopperfinInfiniteError = 0\n"
+            "CATCH TO loError\n"
+            "    nHiddenFileCopperfinInfiniteError = loError.ErrorNo\n"
+            "ENDTRY\n"
+            "SET NUMERICBEHAVIOR TO VFP9\n"
+            "lHiddenFileVfpFraction = FILE('.hidden_file.txt', 0.9)\n"
+            "lHiddenFileVfpNegative = FILE('.hidden_file.txt', -1)\n"
+            "lHiddenFileVfpHuge = FILE('.hidden_file.txt', 1E300)\n"
+            "TRY\n"
+            "    lHiddenFileVfpInfinite = FILE('.hidden_file.txt', EXP(1000))\n"
+            "    nHiddenFileVfpInfiniteError = 0\n"
+            "CATCH TO loError\n"
+            "    nHiddenFileVfpInfiniteError = loError.ErrorNo\n"
+            "ENDTRY\n"
+            "SET NUMERICBEHAVIOR TO COPPERFIN\n"
             "lPathFileBefore = FILE('path_only.txt')\n"
             "SET PATH TO '" + path_probe_dir.string() + "'\n"
             "lPathFileAfter = FILE('path_only.txt')\n"
@@ -158,6 +188,13 @@ namespace copperfin::runtime_surface_tests
         check("lhiddenfiledefault", "false");
         check("lhiddenfilezero", "false");
         check("lhiddenfilewithflags", "true");
+        check("nhiddenfilecopperfinerror", "11");
+        check("nmissingfilecopperfinerror", "11");
+        check("nhiddenfilecopperfininfiniteerror", "11");
+        check("lhiddenfilevfpfraction", "true");
+        check("lhiddenfilevfpnegative", "true");
+        check("lhiddenfilevfphuge", "true");
+        check("nhiddenfilevfpinfiniteerror", "11");
 
         // SET PATH resolution should make path-only file discoverable
         check("lpathfilebefore", "false");
@@ -214,6 +251,36 @@ namespace copperfin::runtime_surface_tests
             "lHiddenDirDefault = DIRECTORY('.hidden_dir')\n"
             "lHiddenDirDefaultExplicit = DIRECTORY('.hidden_dir', 0)\n"
             "lHiddenDirShown = DIRECTORY('.hidden_dir', 1)\n"
+            "SET NUMERICBEHAVIOR TO COPPERFIN\n"
+            "TRY\n"
+            "    lHiddenDirCopperfinFraction = DIRECTORY('.hidden_dir', 0.9)\n"
+            "    nHiddenDirCopperfinError = 0\n"
+            "CATCH TO loError\n"
+            "    nHiddenDirCopperfinError = loError.ErrorNo\n"
+            "ENDTRY\n"
+            "TRY\n"
+            "    lMissingDirCopperfinFraction = DIRECTORY('missing-dir', 0.9)\n"
+            "    nMissingDirCopperfinError = 0\n"
+            "CATCH TO loError\n"
+            "    nMissingDirCopperfinError = loError.ErrorNo\n"
+            "ENDTRY\n"
+            "TRY\n"
+            "    lHiddenDirCopperfinInfinite = DIRECTORY('.hidden_dir', EXP(1000))\n"
+            "    nHiddenDirCopperfinInfiniteError = 0\n"
+            "CATCH TO loError\n"
+            "    nHiddenDirCopperfinInfiniteError = loError.ErrorNo\n"
+            "ENDTRY\n"
+            "SET NUMERICBEHAVIOR TO VFP9\n"
+            "lHiddenDirVfpFraction = DIRECTORY('.hidden_dir', 0.9)\n"
+            "lHiddenDirVfpNegative = DIRECTORY('.hidden_dir', -1)\n"
+            "lHiddenDirVfpHuge = DIRECTORY('.hidden_dir', 1E300)\n"
+            "TRY\n"
+            "    lHiddenDirVfpInfinite = DIRECTORY('.hidden_dir', EXP(1000))\n"
+            "    nHiddenDirVfpInfiniteError = 0\n"
+            "CATCH TO loError\n"
+            "    nHiddenDirVfpInfiniteError = loError.ErrorNo\n"
+            "ENDTRY\n"
+            "SET NUMERICBEHAVIOR TO COPPERFIN\n"
             "lHiddenDirTrailingSlash = DIRECTORY('.hidden_dir/')\n"
             "lPathOnlyDirBefore = DIRECTORY('path_only_dir')\n"
             "SET PATH TO '" + path_probe_dir.string() + "'\n"
@@ -246,6 +313,13 @@ namespace copperfin::runtime_surface_tests
         check("lhiddendirdefault", "false");
         check("lhiddendirdefaultexplicit", "false");
         check("lhiddendirshown", "true");
+        check("nhiddendircopperfinerror", "11");
+        check("nmissingdircopperfinerror", "11");
+        check("nhiddendircopperfininfiniteerror", "11");
+        check("lhiddendirvfpfraction", "true");
+        check("lhiddendirvfpnegative", "true");
+        check("lhiddendirvfphuge", "true");
+        check("nhiddendirvfpinfiniteerror", "11");
         check("lhiddendirtrailingslash", "false");
         check("lpathonlydirbefore", "false");
         check("lpathonlydirafter", "false");

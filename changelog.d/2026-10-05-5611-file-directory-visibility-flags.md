@@ -1,0 +1,1 @@
+- 2026-10-05: Fixed `FILE()` and `DIRECTORY()` visibility-flag conversion so strict Copperfin mode rejects invalid flags safely while VFP9 mode reproduces the recovered nonzero-value behavior without out-of-range integer conversion.

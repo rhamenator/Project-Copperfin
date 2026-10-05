@@ -1,5 +1,16 @@
 # VFP Language Reference Coverage
 
+- `FILE()` / `DIRECTORY()` visibility-flag numeric boundaries (2026-10-05,
+  #5611/#6776): installed VFP9 treats zero as false and every probed nonzero
+  finite flag as true, including fractions, negative one, and magnitudes of
+  `1E300`; it does not round the flag to an integer. Default `COPPERFIN` mode
+  accepts only the documented 0 and 1 values and raises catchable error 11 for
+  another value or a non-finite value. Explicit `VFP9` mode preserves the
+  recovered finite nonzero rule while still rejecting non-finite values, for
+  which no installed-VFP9 expression evidence was available. Complete probe
+  source and output are retained under
+  `tests/fixtures/vfp9-file-directory-visibility-flags-observation/`.
+
 - `RAND()` seed numeric boundaries (2026-10-04, #5611/#6776): installed
   VFP9 truncates a positive fractional seed toward zero, uses the seed's low
   32 bits, maps a positive value outside signed 64-bit range to seed zero, and

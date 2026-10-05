@@ -2,7 +2,29 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
+    // Governing requirement: RQ-CF-PRG-FILE-VISIBILITY-FLAGS-001 (#5611/#6776).
+    const auto visibility_flag_argument = [&](const PrgValue& value) {
+        const double raw = value_as_number(value);
+        if (!std::isfinite(raw)) {
+            throw PrgCompatibilityError(
+                runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        if (numeric_behavior(set_callback) == NumericBehavior::vfp9) {
+            return raw != 0.0;
+        }
+        if (raw == 0.0) {
+            return false;
+        }
+        if (raw == 1.0) {
+            return true;
+        }
+        throw PrgCompatibilityError(
+            runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+    };
+
     if (function == "file" && !arguments.empty()) {
+        const bool include_hidden_or_system = arguments.size() >= 2U &&
+            visibility_flag_argument(arguments[1]);
         std::error_code ignored;
         const std::filesystem::path path =
             resolve_runtime_file_probe_path(
@@ -11,12 +33,12 @@
         if (ignored || !std::filesystem::exists(status) || std::filesystem::is_directory(status)) {
             return make_boolean_value(false);
         }
-        const bool include_hidden_or_system = arguments.size() >= 2U &&
-            static_cast<int>(std::llround(value_as_number(arguments[1]))) == 1;
         return make_boolean_value(
             include_hidden_or_system || !copperfin::platform::path_is_hidden_or_system(path));
     }
     if (function == "directory" && !arguments.empty()) {
+        const bool show_hidden_or_system = arguments.size() >= 2U &&
+            visibility_flag_argument(arguments[1]);
         // Unlike FILE(), the mounted help documents DIRECTORY() as searching
         // only relative to the default directory -- no SET PATH fallback --
         // so this deliberately uses filesystem_probe_path, not
@@ -28,8 +50,6 @@
         if (ignored || !std::filesystem::exists(status) || !std::filesystem::is_directory(status)) {
             return make_boolean_value(false);
         }
-        const bool show_hidden_or_system = arguments.size() >= 2U &&
-            static_cast<int>(std::llround(value_as_number(arguments[1]))) == 1;
         if (show_hidden_or_system) {
             return make_boolean_value(true);
         }
