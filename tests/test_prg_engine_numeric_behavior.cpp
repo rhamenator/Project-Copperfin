@@ -679,6 +679,37 @@ std::vector<Row> build_rows() {
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "RGB(-4294967295,0,0)", "N:1"});
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "RGB(-4294967041,0,0)", "N:255"});
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "RGB(-4294967040,0,0)", "ERR11"});
+
+    // Governing requirement: RQ-CF-PRG-RAND-SEED-BOUNDS-001.
+    // Installed VFP9 truncates positive fractions, treats every non-positive
+    // seed as the same reset request, and takes the low 32 bits of large
+    // positive seeds. COPPERFIN keeps the first two documented behaviors but
+    // rejects positive values outside uint32 and non-finite values.
+    for (const char *mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode + "\n";
+        rows.push_back({set +
+                            "a=RAND(123)\nb=RAND()\nc=RAND(123.9)\nd=RAND()",
+                        "a==c AND b==d", "L:true"});
+        rows.push_back({set +
+                            "a=RAND(4294967295)\nb=RAND()\nc=RAND(4294967295.9)\nd=RAND()",
+                        "a==c AND b==d", "L:true"});
+        rows.push_back({set +
+                            "a=RAND($4294967295.0000)\nb=RAND()\nc=RAND($4294967295.0001)\nd=RAND()",
+                        "a==c AND b==d", "L:true"});
+        rows.push_back({set +
+                            "a=RAND(0)\nb=RAND()\nc=RAND(-1E20)\nd=RAND()",
+                        "a==c AND b==d", "L:true"});
+        rows.push_back({std::string("SET NUMERICBEHAVIOR TO ") + mode,
+                        "RAND(4294967295)>=0 AND RAND()<1", "L:true"});
+    }
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "RAND(4294967296)", "ERR11"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "RAND(EXP(1000))", "ERR11"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n"
+                    "a=RAND(1)\nb=RAND()\nc=RAND(4294967297)\nd=RAND()",
+                    "a==c AND b==d", "L:true"});
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n"
+                    "a=RAND(4294967296)\nb=RAND()\nc=RAND(EXP(1000))\nd=RAND()",
+                    "a==c AND b==d", "L:true"});
     return rows;
 }
 
@@ -1085,6 +1116,59 @@ void test_rgb_direct_numeric_boundaries() {
     expect(rejected, "VFP9 RGB should reject an exact positive component above 255 before wrapping");
 }
 
+void test_rand_direct_numeric_boundaries() {
+    const double inf = std::numeric_limits<double>::infinity();
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const auto callback = [](const char* mode) {
+        return [mode](const std::string& setting) {
+            return setting == "NUMERICBEHAVIOR" ? std::string(mode) : std::string{};
+        };
+    };
+    const auto evaluate = [&](const copperfin::runtime::PrgValue& seed, const char* mode) {
+        return copperfin::runtime::evaluate_numeric_function("rand", {seed}, callback(mode));
+    };
+    const auto in_unit_range = [](const std::optional<copperfin::runtime::PrgValue>& value) {
+        return value.has_value() && value->number_value >= 0.0 && value->number_value < 1.0;
+    };
+
+    const auto exact_currency_maximum = copperfin::runtime::make_currency_value(
+        INT64_C(4294967295) * INT64_C(10000));
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        expect(in_unit_range(evaluate(exact_currency_maximum, mode)),
+               std::string(mode) + " RAND should accept the exact uint32 Currency seed boundary");
+        expect(in_unit_range(evaluate(
+                   copperfin::runtime::make_int64_value(std::numeric_limits<std::int64_t>::min()), mode)),
+               std::string(mode) + " RAND should reset safely for an exact INT64_MIN seed");
+    }
+
+    for (const auto& seed : {
+             copperfin::runtime::make_uint64_value(std::numeric_limits<std::uint64_t>::max()),
+             copperfin::runtime::make_currency_value(INT64_C(4294967296) * INT64_C(10000)),
+             copperfin::runtime::make_number_value(inf),
+             copperfin::runtime::make_number_value(-inf)}) {
+        expect(in_unit_range(evaluate(seed, "VFP9")),
+               "VFP9 RAND should define exact low-32-bit and infinite seed conversion");
+
+        bool rejected = false;
+        try {
+            (void)evaluate(seed, "COPPERFIN");
+        } catch (const copperfin::runtime::PrgCompatibilityError& error) {
+            rejected = error.error_code() == 11;
+        }
+        expect(rejected, "COPPERFIN RAND should reject out-of-range or non-finite seeds with error 11");
+    }
+
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        bool rejected = false;
+        try {
+            (void)evaluate(copperfin::runtime::make_number_value(nan), mode);
+        } catch (const copperfin::runtime::PrgCompatibilityError& error) {
+            rejected = error.error_code() == 11;
+        }
+        expect(rejected, std::string(mode) + " RAND should reject NaN with error 11");
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -1093,6 +1177,7 @@ int main() {
     test_dow_direct_numeric_boundaries();
     test_week_direct_numeric_boundaries();
     test_rgb_direct_numeric_boundaries();
+    test_rand_direct_numeric_boundaries();
     test_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {

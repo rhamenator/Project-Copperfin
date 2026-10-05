@@ -1,5 +1,16 @@
 # VFP Language Reference Coverage
 
+- `RAND()` seed numeric boundaries (2026-10-04, #5611/#6776): installed
+  VFP9 truncates a positive fractional seed toward zero, uses the seed's low
+  32 bits, maps a positive value outside signed 64-bit range to seed zero, and
+  treats zero or any negative seed as the same deterministic reset request.
+  Default `COPPERFIN` behavior accepts the truncated positive seed through
+  `UINT32_MAX` and rejects a larger truncated or non-finite value with error
+  11; explicit `VFP9` behavior preserves the recovered positive low-32-bit and
+  signed-infinity behavior. Exact integer and Currency seeds avoid a floating
+  round trip. Complete probe source and output are retained under
+  `tests/fixtures/vfp9-rand-seed-bounds-observation/`.
+
 - Currency-first `MOD()` Numeric-divisor boundaries (2026-10-04, #5611/#6776):
   installed VFP9 computes the modulo using the Numeric divisor at its full
   precision, rounds the Currency result to four decimal places, and preserves

@@ -234,20 +234,37 @@ Open owner-authored, `agent-approved` issue #5611 is the implementation
 umbrella and reopened #6776 is the design/checklist reference. The `RGB()`
 component numeric-validation correction merged in PR #6939 at `69b3c1510`
 and closed #6938. All 33 checks passed at exact head `54c2d3225`, exact-head
-review was clean, and there were no review conversations. The next bounded
-slice is the remaining Currency-first `MOD()` Numeric-divisor conversion on
-branch `fix/currency-mod-divisor-bounds-5611` in
-`~/.codex/worktrees/currency-mod-divisor-bounds-5611/Project-Copperfin`, based
-on that merge. Fresh installed-VFP9 evidence is retained under
-`tests/fixtures/vfp9-currency-mod-numeric-divisor-observation/`. Production now
-keeps exact scaled arithmetic where possible, computes fractional Numeric
-divisors without first rounding them to the Currency grid, and replaces the
-former unchecked `llround()` narrowing with defined Copperfin errors plus
-explicit VFP9 integer-indefinite behavior. Focused script/direct coverage,
-docs/22, docs/32, and the changelog fragment are drafted. Both focused targets
-pass normally and under Clang AddressSanitizer, UndefinedBehaviorSanitizer,
-and float-cast-overflow instrumentation; diff and changelog checks also pass.
-Remaining: signed commit, push, PR/review, green exact-head checks, and merge.
+review was clean, and there were no review conversations. The Currency-first
+`MOD()` Numeric-divisor conversion then merged in PR #6941 at `3f48b096f`.
+All 33 checks passed at exact head `2136b52de`, exact-head review was clean,
+and all six review conversations were resolved after their fixes were verified.
+The completed worktree, branch, scratch probe, and build directories were
+cleaned up after merge.
+
+The next bounded slice is `RAND()` seed numeric conversion on branch
+`fix/rand-seed-bounds-5611` in
+`~/.codex/worktrees/rand-seed-bounds-5611/Project-Copperfin`, based on that
+merge. Fresh installed-VFP9 evidence retained in
+`tests/fixtures/vfp9-rand-seed-bounds-observation/` shows that positive fractions truncate,
+every non-positive seed requests the same reset sequence, positive values use
+their low 32 bits, and positive values outside int64 use integer-indefinite
+low bits zero. A draft replaces the unchecked `llround()`/`int` cast and
+`-INT_MIN` path with exact-aware, defined conversion: default COPPERFIN rejects
+positive values above `UINT32_MAX` and every non-finite seed with error 11;
+explicit VFP9 preserves the recovered positive low-32-bit behavior and signed
+infinity behavior. Exact int64/uint64/Currency arguments avoid a double round
+trip. Focused `test_prg_engine_numeric_behavior` and neighboring
+`test_prg_engine_string_math_functions` pass normally and under Clang
+AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
+instrumentation. The fixture, docs/22, docs/32 traceability, and changelog
+fragment are complete; diff and changelog checks pass. Signed commit
+`555be96ac` is pushed in PR #6942. One review comment claimed that fractional
+values just above `UINT32_MAX` should fail before truncation. A fresh installed-
+VFP9 follow-up proves both Numeric `4294967295.9` and Currency
+`$4294967295.0001` select the same two-value sequence as `UINT32_MAX`; the
+intended truncation-first ceiling is now explicit in tests, retained evidence,
+docs/22, and docs/32. Remaining: commit/push that review clarification, reply
+and resolve the conversation, verify green exact-head checks, and merge.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
@@ -337,7 +354,9 @@ Owner-directed workstream order before the #6879 assignment was:
      and year-boundary compatibility (#6933, PR #6936).
    - Completed after those: `RGB()` component numeric validation (#6938, PR
      #6939).
-   - Active: Currency-first `MOD()` Numeric-divisor conversion.
+   - Completed after those: Currency-first `MOD()` Numeric-divisor conversion
+     (PR #6941).
+   - Active: `RAND()` seed numeric conversion.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

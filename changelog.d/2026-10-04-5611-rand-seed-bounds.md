@@ -1,0 +1,1 @@
+- 2026-10-04: Make `RAND()` seed conversion defined and exact-aware, with checked default bounds and opt-in recovered VFP9 low-32-bit behavior.
