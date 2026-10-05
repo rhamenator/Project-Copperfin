@@ -365,11 +365,11 @@ interrupted before its numeric suite completed, so it is not a fixed-build
 three-suite result. Full updated control-flow validation remains hosted CI.
 Builds are `/home/rich/temp/copperfin-set-textmerge-5611-{build,sanitize}`.
 Implementation, fail-before and focused fixed-build verification are complete;
-next signed commit/push/PR and exact-head review/required CI.
-The active branch/PR carries implementation, tests and verification evidence;
-next complete exact-head review/required CI, resolve verified fixes, merge,
-synchronize and clean up. Then re-read the live channel and select the next
-bounded unfinished conversion under #5611/#6776; no unrelated defect discovery.
+signed/DCO implementation is pushed in PR #6975. The branch/PR carries code,
+tests and retained evidence. Next complete exact-head review/required CI,
+resolve verified fixes, merge, synchronize and clean up. Then re-read the live
+channel and select the next bounded unfinished conversion under #5611/#6776;
+no unrelated defect discovery.
 During selection, unrelated compatibility gaps in `FV()`/`PV()` signatures and
 `SYS(-1)` surfaced and were filed as #6944 and #6945 without expanding this
 slice.
