@@ -741,6 +741,16 @@ std::vector<Row> build_rows() {
             rows.push_back({set, std::string("CPCURRENT(") + argument + ")", "ERR11"});
         }
     }
+    // RQ-CF-PRG-RELATION-INDEX-NUMERIC-001: index conversion, not relation order.
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        for (const char* function : {"RELATION", "TARGET"}) {
+            for (const char* argument : {"0", "0.9", "9999.49", "10000", "2147483647",
+                                         "4294967297", "1E300", "-1E300", "EXP(1000)", "-EXP(1000)"}) {
+                rows.push_back({set, std::string(function) + "(" + argument + ")", "ERR11"});
+            }
+        }
+    }
     return rows;
 }
 
@@ -1457,6 +1467,79 @@ void test_cpcurrent_direct_numeric_boundaries() {
     }
 }
 
+// RQ-CF-PRG-RELATION-INDEX-NUMERIC-001: native Numeric admission and derived
+// exact-integer/NaN safety; callback captures isolate conversion from #6971 order.
+void test_relation_index_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    const double inf = std::numeric_limits<double>::infinity();
+    struct Case { PrgValue value; std::int64_t copperfin; std::int64_t vfp9; };
+    // -1 means error 11; 0 means the preserved nonnumeric empty-result path.
+    const std::vector<Case> cases{
+        {make_number_value(1), 1, 1}, {make_number_value(2), 2, 2},
+        {make_number_value(3), 3, 3}, {make_number_value(0), -1, -1},
+        {make_number_value(-1), -1, -1}, {make_number_value(0.9), -1, -1},
+        {make_number_value(std::nextafter(1.0, 0.0)), -1, -1},
+        {make_number_value(1.49), 1, 1}, {make_number_value(1.5), 1, 1},
+        {make_number_value(1.9), 1, 1}, {make_number_value(2.5), 2, 2},
+        {make_number_value(9998.9), 9998, 9998}, {make_number_value(9999), 9999, 9999},
+        {make_number_value(std::nextafter(9999.0, inf)), -1, -1},
+        {make_number_value(9999.49), -1, -1}, {make_number_value(10000), -1, -1},
+        {make_number_value(2147483647.0), -1, -1},
+        {make_number_value(4294967297.0), -1, -1},
+        {make_number_value(-4294967295.0), -1, 1},
+        {make_number_value(-4294967294.0), -1, 2},
+        {make_number_value(-4294957297.0), -1, 9999},
+        {make_number_value(-4294957296.0), -1, -1},
+        {make_number_value(1E300), -1, -1}, {make_number_value(-1E300), -1, -1},
+        {make_number_value(inf), -1, -1}, {make_number_value(-inf), -1, -1},
+        {make_number_value(std::numeric_limits<double>::quiet_NaN()), -1, -1},
+        {make_int64_value(2), 2, 2}, {make_uint64_value(9999), 9999, 9999},
+        {make_int64_value(-4294967295LL), -1, 1},
+        {make_int64_value(std::numeric_limits<std::int64_t>::max()), -1, -1},
+        {make_uint64_value(std::numeric_limits<std::uint64_t>::max()), -1, -1},
+        // Other coercions remain range-checked preservation, not native parity.
+        {make_currency_value(19000), 2, 2}, {make_boolean_value(true), 1, 1},
+        {make_null_value(), 0, 0}, {make_string_value("1.9"), 2, 2},
+        {make_string_value("1E300"), -1, -1}};
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        for (const char* function : {"relation", "target"}) {
+            for (std::size_t i = 0; i < cases.size(); ++i) {
+                const auto expected = std::string(mode) == "COPPERFIN" ? cases[i].copperfin : cases[i].vfp9;
+                int callbacks = 0;
+                const auto setting = [&](const std::string& name) {
+                    if (name == "NUMERICBEHAVIOR") { return std::string(mode); }
+                    ++callbacks;
+                    const std::string prefix = std::string("__relation_introspection__\x1f") + function + "\x1f";
+                    expect(name == prefix + std::to_string(expected) + "\x1fParentSentinel",
+                           "RELATION/TARGET should preserve the exact index and work-area designator");
+                    return std::string("query-sentinel");
+                };
+                bool threw = false;
+                std::optional<PrgValue> actual;
+                try {
+                    actual = evaluate_runtime_surface_function(
+                        function, {cases[i].value, make_string_value("ParentSentinel")}, {}, {}, {}, {}, 0, {}, 0,
+                        {}, 0, {}, {}, {}, {}, {}, {}, {}, {}, setting,
+                        {}, {}, false, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {});
+                } catch (const PrgCompatibilityError& error) {
+                    threw = true;
+                    expect(error.error_code() == 11, "invalid relation index should raise catchable error 11");
+                }
+                const std::string label = std::string(mode) + " " + function + " boundary " + std::to_string(i);
+                if (expected == -1) {
+                    expect(threw, label + " should reject before introspection");
+                } else {
+                    expect(!threw && actual.has_value() && actual->kind == PrgValueKind::string &&
+                               actual->string_value == (expected == 0 ? "" : "query-sentinel"),
+                           label + " should preserve the converted query result");
+                }
+                expect(callbacks == (expected > 0 ? 1 : 0),
+                       label + " should not introspect rejected or empty indexes");
+            }
+        }
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -1469,6 +1552,7 @@ int main() {
     test_hex_direct_numeric_boundaries();
     test_sys_selector_direct_numeric_boundaries();
     test_cpcurrent_direct_numeric_boundaries();
+    test_relation_index_direct_numeric_boundaries();
     test_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {

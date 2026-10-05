@@ -570,7 +570,9 @@
         return make_string_value(set_callback(option_name));
     }
     if ((function == "relation" || function == "target") && !arguments.empty()) {
-        const long long relation_number = static_cast<long long>(std::llround(value_as_number(arguments[0])));
+        // RQ-CF-PRG-RELATION-INDEX-NUMERIC-001: validate before state lookup.
+        const auto relation_number = relation_index_number(
+            arguments[0], numeric_behavior(set_callback));
         if (relation_number < 1) {
             return make_string_value(std::string{});
         }
