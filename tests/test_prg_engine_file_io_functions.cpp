@@ -4,10 +4,15 @@
 
 #include "copperfin/runtime/prg_engine.h"
 #include "prg_engine_test_support.h"
+#include "../src/runtime/prg_engine_file_io_functions.h"
+#include "../src/runtime/prg_engine_helpers.h"
+#include "../src/runtime/prg_compatibility_error.h"
 
 #include <cstdlib>
+#include <cmath>
 #include <filesystem>
 #include <iostream>
+#include <limits>
 #include <system_error>
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -149,6 +154,150 @@ void test_file_io_runtime_functions()
     check("nseekerror", "25");
 
     fs::remove_all(temp_root, ignored);
+}
+
+// Governing requirement: RQ-CF-PRG-FSEEK-NUMERIC-BOUNDS-001 (#5611/#6776).
+void test_fseek_numeric_boundaries()
+{
+    using namespace copperfin::runtime;
+    namespace fs = std::filesystem;
+    const fs::path root = fs::temp_directory_path() / "copperfin_prg_engine_fseek_boundaries";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    write_text(root / "data.txt", "abcdef");
+
+    struct Row {
+        const char* name;
+        PrgValue value;
+        bool origin;
+        bool strict_error;
+        bool vfp_error;
+        double vfp_position;
+    };
+    const std::vector<Row> rows{
+        {"offset fraction", make_number_value(1.9), false, true, false, 1},
+        {"offset negative fraction", make_number_value(-0.9), false, true, false, 0},
+        {"offset positive wrap", make_number_value(4294967297.0), false, true, false, 1},
+        {"offset negative wrap", make_number_value(-4294967296.0), false, true, false, 0},
+        {"offset huge", make_number_value(1E300), false, true, false, 0},
+        {"offset negative huge", make_number_value(-1E300), false, true, false, 0},
+        {"offset infinity", make_number_value(std::numeric_limits<double>::infinity()), false, true, false, 0},
+        {"offset negative infinity", make_number_value(-std::numeric_limits<double>::infinity()), false, true, false, 0},
+        {"offset NaN", make_number_value(std::numeric_limits<double>::quiet_NaN()), false, true, true, 0},
+        {"offset Currency fraction", make_currency_value(19000), false, true, false, 1},
+        {"offset Currency subunit", make_currency_value(9000), false, true, true, 0},
+        {"offset Currency negative subunit", make_currency_value(-9000), false, true, true, 0},
+        {"offset Currency negative wrap", make_currency_value(-42949672960000LL), false, true, false, 0},
+        {"offset Currency negative limit fraction", make_currency_value(-42949672969000LL), false, true, false, 0},
+        {"offset Currency positive limit", make_currency_value(42949672960000LL), false, true, true, 0},
+        {"offset Currency negative overflow", make_currency_value(-42949672970000LL), false, true, true, 0},
+        {"offset exact int64 low bits", make_int64_value(9007199254740993LL), false, true, false, 1},
+        {"offset exact uint64 low bits", make_uint64_value(9007199254740993ULL), false, true, false, 1},
+        {"offset below int32", make_number_value(-2147483649.0), false, true, false, 2147483647},
+        {"offset maximum", make_number_value(2147483647.0), false, false, false, 2147483647},
+        {"offset immediately above maximum", make_number_value(std::nextafter(2147483647.0, 2147483648.0)), false, true, false, 2147483647},
+        {"offset above int32", make_number_value(2147483648.0), false, true, false, -1},
+        {"offset minimum", make_number_value(-2147483648.0), false, false, false, -1},
+        {"offset immediately below minimum", make_number_value(std::nextafter(-2147483648.0, -2147483649.0)), false, true, false, -1},
+        {"offset max Currency", make_currency_value(21474836479000LL), false, true, false, 2147483647},
+        {"origin zero", make_number_value(0), true, false, false, 1},
+        {"origin current", make_number_value(1), true, false, false, 4},
+        {"origin end", make_number_value(2), true, false, false, 7},
+        {"origin fraction", make_number_value(1.9), true, true, false, 4},
+        {"origin above ceiling", make_number_value(2.9), true, true, true, 0},
+        {"origin negative fraction", make_number_value(-0.9), true, true, false, 1},
+        {"origin negative", make_number_value(-1), true, true, true, 0},
+        {"origin positive wrap", make_number_value(4294967296.0), true, true, true, 0},
+        {"origin negative wrap", make_number_value(-4294967295.0), true, true, false, 4},
+        {"origin huge", make_number_value(1E300), true, true, true, 0},
+        {"origin negative huge", make_number_value(-1E300), true, true, false, 1},
+        {"origin infinity", make_number_value(std::numeric_limits<double>::infinity()), true, true, true, 0},
+        {"origin negative infinity", make_number_value(-std::numeric_limits<double>::infinity()), true, true, false, 1},
+        {"origin NaN", make_number_value(std::numeric_limits<double>::quiet_NaN()), true, true, true, 0},
+        {"origin Currency fraction", make_currency_value(29000), true, true, false, 7},
+        {"origin Currency subunit", make_currency_value(9000), true, true, true, 0},
+        {"origin Currency negative wrap", make_currency_value(-42949672960000LL), true, true, false, 1},
+        {"origin Currency negative limit fraction", make_currency_value(-42949672969000LL), true, true, false, 1},
+        {"origin exact positive", make_uint64_value(std::numeric_limits<std::uint64_t>::max()), true, true, true, 0},
+        {"origin exact negative", make_int64_value(-9007199254740991LL), true, true, false, 4},
+    };
+    for (const bool verified : {false, true}) {
+        for (const bool vfp : {false, true}) {
+            const auto call = [&](const std::string& function, const std::vector<PrgValue>& arguments) {
+                return evaluate_file_io_function(function, arguments, root.string(), verified,
+                    [](const fs::path&) -> std::optional<std::string> { return "abcdef"; }, {},
+                    [vfp](const std::string&) { return vfp ? "VFP9" : "COPPERFIN"; }).value();
+            };
+            const auto handle = call("fopen", {make_string_value("data.txt"), make_number_value(0)});
+            expect(value_as_number(handle) > 0, "FSEEK fixture must open");
+            const auto check_row = [&](const Row& row) {
+                call("fseek", {handle, make_number_value(3), make_number_value(0)});
+                bool rejected = false;
+                try {
+                    const auto result = row.origin
+                        ? call("fseek", {handle, make_number_value(1), row.value})
+                        : call("fseek", {handle, row.value, make_number_value(0)});
+                    if (vfp || !row.strict_error) {
+                        expect(value_as_number(result) == row.vfp_position, std::string(row.name) + " VFP9 result");
+                    }
+                } catch (const PrgCompatibilityError& error) {
+                    rejected = true;
+                    expect(error.error_code() == 11, std::string(row.name) + " must raise error 11");
+                }
+                expect(rejected == (vfp ? row.vfp_error : row.strict_error), std::string(row.name) + " admission");
+                if (rejected || (vfp && row.vfp_position == -1)) {
+                    expect(value_as_number(call("ftell", {handle})) == 3, std::string(row.name) + " must preserve position");
+                }
+            };
+            for (const auto& row : rows) {
+                check_row(row);
+            }
+            for (const auto& invalid : {make_boolean_value(true), make_string_value("1"), make_null_value(), PrgValue{}}) {
+                check_row({"offset invalid type", invalid, false, true, true, 0});
+                check_row({"origin invalid type", invalid, true, true, true, 0});
+            }
+            call("fseek", {handle, make_number_value(3)});
+            expect(value_as_number(call("ftell", {handle})) == 3, "omitted origin selects start");
+            call("fclose", {handle});
+        }
+    }
+    const fs::path script = root / "fseek_boundaries.prg";
+    write_text(script,
+        "h = FOPEN('data.txt', 0)\n"
+        "=FSEEK(h, 3)\n"
+        "TRY\n"
+        "  nUnexpected = FSEEK(h, 1E300)\n"
+        "CATCH TO oError\n"
+        "  nOffsetError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "nPosition = FTELL(h)\n"
+        "TRY\n"
+        "  nUnexpected = FSEEK(-999, .T., 0)\n"
+        "CATCH TO oError\n"
+        "  nBadHandleOffsetError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  nUnexpected = FSEEK(-999, 0, .T.)\n"
+        "CATCH TO oError\n"
+        "  nBadHandleOriginError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "SET NUMERICBEHAVIOR TO VFP9\n"
+        "nWrapped = FSEEK(h, 4294967297, 0)\n"
+        "=FCLOSE(h)\n"
+        "RETURN\n");
+    auto session = PrgRuntimeSession::create(make_runtime_session_options(script, root));
+    const auto state = session.run(DebugResumeAction::continue_run);
+    expect(state.completed, "FSEEK boundary errors must be catchable: " + state.message);
+    for (const auto* name : {"noffseterror", "nbadhandleoffseterror", "nbadhandleoriginerror"}) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end() && format_value(found->second) == "11", std::string(name) + " error 11");
+    }
+    const auto position = state.globals.find("nposition");
+    expect(position != state.globals.end() && format_value(position->second) == "3", "script rejection preserves position");
+    const auto wrapped = state.globals.find("nwrapped");
+    expect(wrapped != state.globals.end() && format_value(wrapped->second) == "1", "script selects VFP9 conversion");
+    fs::remove_all(root, ignored);
 }
 
 void test_fdate_ftime_runtime_functions()
@@ -947,6 +1096,7 @@ void test_filetostr_reports_missing_and_non_file_inputs()
 int main()
 {
     test_file_io_runtime_functions();
+    test_fseek_numeric_boundaries();
     test_fdate_ftime_runtime_functions();
     test_fopen_mode_boundaries();
     test_fcreate_runtime_function();
