@@ -330,30 +330,42 @@ recoverable trash. Its 80 direct boundary calls, six query controls and 16 PRG
 rows pass normally and under sanitizers; old conversion fails 86 assertions.
 The 32-row native table remains retained. Query/type parity #6968 is separate.
 
-The active bounded slice is shared RELATION/TARGET first Numeric/exact-integer
-index conversion under #5611/#6776 on `fix/relation-index-numeric-5611`,
-based on `09555b5502a517777642fe8bf67411a90f66164c`, in
-`/home/rich/.codex/worktrees/relation-index-numeric-5611/Project-Copperfin`.
-Default COPPERFIN checks finite raw [1, 9999] before truncation. Explicit VFP9
-retains negative signed-low-32-bit wrapping, then requires index [1, 9999];
-oversized positive values never wrap. Invalid values raise localized catchable
-error 11 before relation-state lookup. Exact integers avoid double rounding;
-NaN rejection is derived safety policy. Other coercions preserve checked
-rounding/empty behavior, not recovered type parity. Work-area designators,
-ordering and cursor state are unchanged.
-The 68-result installed VFP9 09.00.0000.7423 Windows COM fixture is retained
-under `tests/fixtures/vfp9-relation-index-numeric-observation/`. Native
-9999.49 is error 11, unlike 9999, and newly added relations come first;
-the latter separate gap was filed as #6971 against this exact main revision.
-The original Access365 VM ran only a new COM process with temporary in-memory
-cursors, no installation/OS/persistent-table changes; graceful shutdown is
-confirmed. No overlay or clone was created. The earlier stalled Wine attempt
-is not native evidence and its scratch files were removed.
-Old dispatch fails 208 semantic assertions. The 148 direct calls and 40
-catchable PRG rows cover both modes/functions, exact index/designator and
-no relation query on rejection. Numeric-behavior, relation and string/math
-suites pass normally and under Clang ASan/UBSan/float-cast-overflow.
-Focused builds are `/home/rich/temp/copperfin-relation-index-5611-{build,sanitize}`.
+Shared RELATION/TARGET Numeric-index conversion merged in PR #6972 at
+`52daa2f7f6b39bfe232de3c65556be5aaf0fcdd6` on 2026-10-05. All 11 required
+checks passed at signed head `0d1bd0e2e56a2bf4c1b88c07fce660b36cdc2e50`;
+exact-head reviews completed without findings and no conversations remained.
+Optional Linux GCC and Windows MSVC were still running at merge; every other
+check passed. Main was synchronized, worktree/local/remote branches removed,
+and both builds moved to recoverable trash. Its 68-result Windows native
+fixture, 148 direct calls and 40 PRG rows remain retained; all three focused
+suites pass normally and under sanitizers, with 208 old-dispatch failures.
+Additive-order gap #6971 remains separate. Access365 finished its low-risk
+temporary-cursor COM probe and is shut down; no overlay/system changes.
+
+The active bounded slice is `SET('TEXTMERGE', n)` Numeric/exact-integer query
+variant conversion under #5611/#6776 on `fix/set-textmerge-numeric-5611`,
+based on `52daa2f7f6b39bfe232de3c65556be5aaf0fcdd6`, in
+`/home/rich/.codex/worktrees/set-textmerge-numeric-5611/Project-Copperfin`.
+The complete 34-result installed VFP9 09.00.0000.7423 Wine fixture is retained
+under `tests/fixtures/vfp9-set-textmerge-numeric-observation/`.
+Numeric variants truncate before 1..4 admission (4.9 is valid). Explicit VFP9
+wraps both positive and negative signed-low-32-bit values; default COPPERFIN
+must reject those aliases. Invalid values raise error 11 before querying state.
+Exact int64/uint64 and NaN are derived safety policy; Currency rounding and
+other coercions, omitted variants, other SET options and query results remain
+preservation-only. Native query-result gap #6973 (delimiter separator,
+destination and Numeric recursion level) was filed against this main revision;
+output-routing #6333 remains separate. No VM was started for this slice.
+The regression has 66 boundary calls, 14 preservation controls and 20 PRG rows.
+The old normal numeric regression fails 102 semantic assertions. After the
+conversion change, numeric-behavior and neighboring string/math suites pass
+with GCC Debug and Clang ASan/UBSan/float-cast-overflow. The unchanged sanitizer
+control-flow baseline also passed (377.46 seconds); that broader CTest run was
+interrupted before its numeric suite completed, so it is not a fixed-build
+three-suite result. Full updated control-flow validation remains hosted CI.
+Builds are `/home/rich/temp/copperfin-set-textmerge-5611-{build,sanitize}`.
+Implementation, fail-before and focused fixed-build verification are complete;
+next signed commit/push/PR and exact-head review/required CI.
 The active branch/PR carries implementation, tests and verification evidence;
 next complete exact-head review/required CI, resolve verified fixes, merge,
 synchronize and clean up. Then re-read the live channel and select the next
@@ -470,8 +482,10 @@ Owner-directed workstream order before the #6879 assignment was:
    - Completed after those: primary SYS Numeric-selector conversion (PR #6967).
    - Completed after those: CPCURRENT Numeric/exact-integer selector
      conversion (PR #6969); query-domain/type parity #6968 remains separate.
-   - Active: shared RELATION/TARGET Numeric/exact-integer index conversion
-     only; additive relation-order gap #6971 remains separate.
+   - Completed after those: shared RELATION/TARGET Numeric-index conversion
+     (PR #6972); additive relation-order gap #6971 remains separate.
+   - Active: SET(TEXTMERGE) Numeric/exact-integer query-variant conversion
+     only; query-result gap #6973 and output routing #6333 remain separate.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

@@ -558,7 +558,8 @@
                 variant.kind == PrgValueKind::int64 ||
                 variant.kind == PrgValueKind::uint64 ||
                 variant.kind == PrgValueKind::currency) {
-                variant_text = std::to_string(static_cast<long long>(std::llround(value_as_number(variant))));
+                // RQ-CF-PRG-SET-TEXTMERGE-NUMERIC-001: admit before query.
+                variant_text = std::to_string(textmerge_query_variant(variant, numeric_behavior(set_callback)));
             } else {
                 variant_text = trim_copy(value_as_string(variant));
             }

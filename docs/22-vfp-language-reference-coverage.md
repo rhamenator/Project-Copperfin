@@ -1,5 +1,19 @@
 # VFP Language Reference Coverage
 
+- `SET('TEXTMERGE', n)` Numeric query-variant conversion (2026-10-05,
+  #5611/#6776): default COPPERFIN requires finite values truncating to 1..4;
+  explicit VFP9 retains installed positive/negative signed-low-32-bit wrapping
+  before the same admission. Invalid converted variants raise localized
+  catchable error 11 before querying state; exact integers avoid double
+  rounding. NaN and exact-integer behavior are derived safety policy.
+  The complete 34-result installed VFP9 fixture is retained under
+  `tests/fixtures/vfp9-set-textmerge-numeric-observation/`; 66 direct boundary
+  calls, 14 preservation controls and 20 PRG rows cover both modes.
+  Currency rounding, other coercions, omitted variants and other SET options
+  are unchanged. Query-result parity is not claimed: #6973 retains delimiter
+  concatenation, output-destination and Numeric recursion-level gaps, while
+  #6333 separately owns TEXTMERGE output routing.
+
 - `RELATION()` / `TARGET()` Numeric-index conversion (2026-10-05,
   #5611/#6776): default COPPERFIN admits finite raw Numeric values in
   [1, 9999], truncating toward zero after checking the ceiling. Explicit VFP9
