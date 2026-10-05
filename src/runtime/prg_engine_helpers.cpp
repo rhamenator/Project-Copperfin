@@ -1368,6 +1368,36 @@ std::optional<std::int32_t> checked_adir_display_argument(
     return static_cast<std::int32_t>(*flag);
 }
 
+// RQ-CF-PRG-AFONT-SIZE-NUMERIC-001 (#5611/#6776); retained native AFONT
+// observations recover truncation and -1 aliases, not every converted value.
+// Exact extended integers and indefinite zero follow the shared numeric model.
+std::optional<std::int32_t> checked_afont_size_argument(
+    const PrgValue& value,
+    const NumericBehavior behavior) {
+    const bool numeric = value.kind == PrgValueKind::number || value.kind == PrgValueKind::int64 ||
+                         value.kind == PrgValueKind::uint64;
+    if (numeric && behavior == NumericBehavior::vfp9) {
+        return static_cast<std::int32_t>(vfp9_numeric_to_int32(value));
+    }
+    std::optional<std::int64_t> size;
+    if (value.kind == PrgValueKind::int64) {
+        size = value.int64_value;
+    } else if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value <= static_cast<std::uint64_t>(std::numeric_limits<std::int32_t>::max())) {
+            size = static_cast<std::int64_t>(value.uint64_value);
+        }
+    } else {
+        // Keep other existing coercions' half-away rounding, with no unsafe llround.
+        size = checked_truncated_numeric_to_int64(
+            numeric ? value.number_value : std::round(value_as_number(value)));
+    }
+    if (!size.has_value() || *size < std::numeric_limits<std::int32_t>::min() ||
+        *size > std::numeric_limits<std::int32_t>::max()) {
+        return std::nullopt;
+    }
+    return static_cast<std::int32_t>(*size);
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {

@@ -12,8 +12,9 @@ slice "merged into `v1-development`" is historical.
 The most recent shipped slice is ADIR PR #6980, detailed below. All 11 required
 exact-head checks passed, final review was clean and all five conversations
 were resolved. The active continuation is AFONT third-argument Numeric size
-conversion on `fix/afont-size-numeric-5611`: native recovery is retained; next
-implement and verify the bounded checked conversion. No VM is in use.
+conversion on `fix/afont-size-numeric-5611`: native recovery and bounded
+implementation pass focused normal/sanitizer verification; next open the PR
+and complete exact-head CI/review gates. No VM is in use.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -397,17 +398,23 @@ truncate to the -1 sentinel; 4294967295.9 and -4294967297.9 produce the same
 sentinel. Native accepts negative sizes; do not invent positive-only admission.
 Other tested sizes have indistinguishable results: huge/infinite exact-zero
 claims are shared-model derivations, not independently proven by this font.
-Next implement `checked_afont_size_argument`: default finite truncation to
+Implemented `checked_afont_size_argument`: default finite truncation to
 signed int32; explicit VFP9 shared low-32-bit conversion; exact int64/uint64
 without double rounding; existing other coercions retain checked rounding.
 Missing result raises localized error 11 before enumeration/array mutation.
-Add direct boundaries/NaN/exact-integer/coercion tests and both-mode public PRG
-canonical-size and unchanged-array rejection rows, prove old failure then
-normal/sanitizer passes, and add docs/32 reverse traceability. Run numeric tests
-sequentially across build directories to avoid their shared scratch path.
-No runtime code or tests changed yet; no build directory or PR exists. The
-branch/fixture/README preserve this exact preparation; push signed commits,
-open a PR against main, complete review/CI, then merge/synchronize/clean.
+198 direct calls and 137 public PRG rows cover boundaries/NaN/exact integers,
+canonical sizes, unchanged-array rejection and preservation controls. The old
+dispatch fails 40 assertions; all three focused numeric/array/string-math
+suites pass normally (7.20s) and under Clang ASan/UBSan/float-cast-overflow
+(30.63s), without diagnostics. README retains VR/DQ/DV results/reproduction;
+docs/32 and docs/22 retain bidirectional scope/verification links. Run numeric
+tests sequentially across build directories to avoid their shared scratch path.
+Builds are `/home/rich/temp/copperfin-afont-size-5611-build` and
+`/home/rich/temp/copperfin-afont-size-5611-sanitize`; remove them only after merge.
+Next push the signed implementation, open a PR against main for this branch
+(discover it by exact head branch), request automated exact-head review, and
+complete all 11 required checks plus conversation resolution before merge.
+Then synchronize main, clean the slice/build/branch and re-read the live channel.
 No VM was started, no font/system changes made, and no owner input is needed.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the

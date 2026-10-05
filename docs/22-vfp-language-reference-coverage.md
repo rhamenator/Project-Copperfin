@@ -1,5 +1,20 @@
 # VFP Language Reference Coverage
 
+- `AFONT()` third-argument Numeric/exact-integer size conversion (2026-10-05,
+  #5611/#6776): default COPPERFIN admits finite values truncating to signed
+  int32, including negative sizes; explicit VFP9 retains the shared low-32-bit
+  model. Invalid conversion raises localized catchable error 11 before font
+  enumeration or destination mutation. Exact integers avoid double rounding;
+  other existing coercions retain checked half-away rounding. The 54-call
+  installed VFP9 fixture in `tests/fixtures/vfp9-afont-size-numeric-observation/`
+  distinguishes fractional -1 and wrapped -1 sentinels; most other converted
+  integers (including huge/infinite zero) are not independently distinguished
+  by its scalable font. NaN/extended-integer policy is derived, not native
+  evidence. The fixture README records direct/PRG and sanitizer verification.
+  Host font discovery, current MVP size/result/array behavior, type admission
+  and fourth size/charset flag semantics are unchanged. Their existing gaps
+  remain #3252/#6955/#6958/#6963; this is not full AFONT result parity.
+
 - `ADIR()` optional Numeric/exact-integer display-flag conversion (2026-10-05,
   #5611/#6776): default COPPERFIN admits finite values truncating to 0..3;
   explicit VFP9 retains signed-low-32-bit aliases and huge/infinite-to-zero
