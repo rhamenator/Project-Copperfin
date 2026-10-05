@@ -28,6 +28,33 @@ namespace {
 
 constexpr std::uint32_t kRandResetSeed = 5489U;
 
+// RQ-CF-PRG-HEX-NUMERIC-BOUNDS-001 (#5611/#6776): an extension contract,
+// identical in both modes, not a VFP9 builtin/low-32-bit conversion (#5880).
+std::uint64_t hex_integer_argument(const PrgValue& value) {
+    if (value.kind == PrgValueKind::int64) {
+        return static_cast<std::uint64_t>(std::max<std::int64_t>(0, value.int64_value));
+    }
+    if (value.kind == PrgValueKind::currency) {
+        return static_cast<std::uint64_t>(std::max<std::int64_t>(0, value.currency_value / 10'000));
+    }
+    if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value <= static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())) {
+            return value.uint64_value;
+        }
+    } else {
+        const double raw = value_as_number(value);
+        // Check finiteness before the negative-to-zero clamp: max(0, NaN)
+        // would otherwise erase NaN, and negative infinity is not a number.
+        if (std::isfinite(raw)) {
+            if (const auto integer = checked_truncated_numeric_to_int64(std::max(0.0, raw));
+                integer.has_value()) {
+                return static_cast<std::uint64_t>(*integer);
+            }
+        }
+    }
+    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+}
+
 struct RandSeedAction {
     bool reset = false;
     std::uint32_t seed = 0U;
@@ -762,10 +789,9 @@ std::optional<PrgValue> evaluate_numeric_function(
         }
         return make_number_value(std::generate_canonical<double, 53>(generator));
     }
-    // HEX(nNumber) — return uppercase hexadecimal representation of a non-negative integer
+    // Copperfin HEX extension: bounded uppercase non-negative integer text.
     if (function == "hex" && !arguments.empty()) {
-        const auto n = static_cast<std::uint64_t>(
-            static_cast<std::int64_t>(std::max(0.0, std::trunc(value_as_number(arguments[0])))));
+        const auto n = hex_integer_argument(arguments[0]);
         if (n == 0U) {
             return make_string_value("0");
         }

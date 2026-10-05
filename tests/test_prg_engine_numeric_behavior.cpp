@@ -710,6 +710,17 @@ std::vector<Row> build_rows() {
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9\n"
                     "a=RAND(4294967296)\nb=RAND()\nc=RAND(EXP(1000))\nd=RAND()",
                     "a==c AND b==d", "L:true"});
+    // RQ-CF-PRG-HEX-NUMERIC-BOUNDS-001: Copperfin extension, not a VFP9 builtin.
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        rows.push_back({set, "HEX(255.9)", "C:FF"});
+        rows.push_back({set, "HEX(-1E300)", "C:0"});
+        rows.push_back({set, "HEX(9223372036854775808.0)", "ERR11"});
+        rows.push_back({set, "HEX(1E300)", "ERR11"});
+        rows.push_back({set, "HEX(EXP(1000))", "ERR11"});
+        rows.push_back({set, "HEX(-EXP(1000))", "ERR11"});
+        rows.push_back({set, "HEX($562949953421311.9999)", "C:1FFFFFFFFFFFF"});
+    }
     return rows;
 }
 
@@ -1169,6 +1180,72 @@ void test_rand_direct_numeric_boundaries() {
     }
 }
 
+// RQ-CF-PRG-HEX-NUMERIC-BOUNDS-001, derived from #5611/#6776 safety policy.
+// Both settings use the extension contract; #5880 retains name/precedence parity.
+void test_hex_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    const double inf = std::numeric_limits<double>::infinity();
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const double upper = 9223372036854775808.0;
+    const auto evaluate = [](const PrgValue& value, const char* mode) {
+        return evaluate_numeric_function("hex", {value}, [mode](const std::string& setting) {
+            return setting == "NUMERICBEHAVIOR" ? std::string(mode) : std::string{};
+        });
+    };
+    const std::vector<std::pair<PrgValue, std::string>> accepted{
+        {make_number_value(0.0), "0"},
+        {make_number_value(-0.0), "0"},
+        {make_number_value(0.9), "0"},
+        {make_number_value(-0.9), "0"},
+        {make_number_value(255.9), "FF"},
+        {make_number_value(65536.0), "10000"},
+        {make_number_value(std::nextafter(upper, 0.0)), "7FFFFFFFFFFFFC00"},
+        {make_number_value(-upper), "0"},
+        {make_number_value(std::nextafter(-upper, -inf)), "0"},
+        {make_number_value(-1E300), "0"},
+        {make_int64_value(std::numeric_limits<std::int64_t>::min()), "0"},
+        {make_int64_value(std::numeric_limits<std::int64_t>::max()), "7FFFFFFFFFFFFFFF"},
+        {make_int64_value(INT64_C(9007199254740993)), "20000000000001"},
+        {make_uint64_value(UINT64_C(9007199254740993)), "20000000000001"},
+        {make_uint64_value(static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())),
+         "7FFFFFFFFFFFFFFF"},
+        {make_currency_value(INT64_C(5629499534213120000) - 1), "1FFFFFFFFFFFF"},
+        {make_currency_value(std::numeric_limits<std::int64_t>::max()), "346DC5D638865"},
+        {make_currency_value(std::numeric_limits<std::int64_t>::min()), "0"},
+        {make_currency_value(9999), "0"},
+        // Coercion remains outside this numeric-conversion slice.
+        {make_string_value("255"), "FF"},
+        {make_boolean_value(true), "1"},
+        {make_null_value(), "0"},
+        {make_empty_value(), "0"}};
+    const std::vector<PrgValue> rejected{
+        make_number_value(upper),
+        make_number_value(std::nextafter(upper, inf)),
+        make_number_value(1E300),
+        make_number_value(inf),
+        make_number_value(-inf),
+        make_number_value(nan),
+        make_uint64_value(UINT64_C(9223372036854775808)),
+        make_uint64_value(std::numeric_limits<std::uint64_t>::max())};
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        for (std::size_t i = 0; i < accepted.size(); ++i) {
+            const auto result = evaluate(accepted[i].first, mode);
+            expect(result.has_value() && result->kind == PrgValueKind::string &&
+                       result->string_value == accepted[i].second,
+                   std::string(mode) + " HEX accepted boundary " + std::to_string(i));
+        }
+        for (std::size_t i = 0; i < rejected.size(); ++i) {
+            bool caught = false;
+            try {
+                (void)evaluate(rejected[i], mode);
+            } catch (const PrgCompatibilityError& error) {
+                caught = error.error_code() == 11;
+            }
+            expect(caught, std::string(mode) + " HEX rejected boundary " + std::to_string(i));
+        }
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -1178,6 +1255,7 @@ int main() {
     test_week_direct_numeric_boundaries();
     test_rgb_direct_numeric_boundaries();
     test_rand_direct_numeric_boundaries();
+    test_hex_direct_numeric_boundaries();
     test_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {

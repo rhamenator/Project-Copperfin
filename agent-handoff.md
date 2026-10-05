@@ -286,25 +286,35 @@ GCC, macOS Clang and Windows MSVC were still running at merge; other checks
 were green. Main was synchronized, and the completed worktree, branches and
 build directories were cleaned up (builds moved to recoverable trash).
 
-The active bounded slice is `FCHSIZE()` size numeric conversion on branch
-`fix/fchsize-numeric-5611` in
-`~/.codex/worktrees/fchsize-numeric-5611/Project-Copperfin`, based on that
-merge. Default COPPERFIN admits exact nonnegative signed-32-bit sizes;
-explicit VFP9 uses the shared file-position conversion, then rejects negative
-converted sizes. The 101-call installed-VFP9 probe is retained in
-`tests/fixtures/vfp9-fchsize-numeric-observation/`; oversized probe values only
-use read-only handles. The 56-row native/verified two-mode matrix and script
-report 366 failures with old dispatch; float-cast-overflow sanitizer stops at
-its `1E300` conversion. Focused build directories are
-`/home/rich/temp/copperfin-fchsize-5611-{build,sanitize}`. Both focused file-I/O
-and verified-byte suites pass normally and under Clang
-ASan/UBSan/float-cast-overflow. Signed/DCO implementation commit `16fd0c3c3`
-is pushed in PR #6962. Remaining: obtain green required checks and clean
-exact-head review, resolve verified fixes,
-merge and clean up. Next: inventory the remaining #5611 conversions, starting
-with the owner's HEX conversion evidence. Return gaps
-#5912/#5913/#5914/#5887/#5911/#6956/#6959 remain separate; negative FCHSIZE
-size admission is corrected here, but #5912's success return is unchanged.
+`FCHSIZE()` size conversion merged in PR #6962 at `146367518` with all
+11 required checks green at final signed head `1e74778d1`, clean exact-head
+review and the sole conversation resolved. Optional Windows MSVC was still
+running at merge; every other check passed. Main was synchronized and the
+slice worktree/branches removed; builds were moved to recoverable trash.
+The 101-call installed-VFP9 fixture and 56-row native/verified two-mode matrix
+remain retained. Both focused suites pass normally and under Clang
+ASan/UBSan/float-cast-overflow; old dispatch reports 366 failures and sanitizer
+stops at 1E300. An unrelated macOS .NET-candidate test failed once on the
+documentation-only head and passed a same-head job retry; diagnostic follow-up
+#6964 is open, with no .NET changes in this slice. Return gaps
+#5912/#5913/#5914/#5887/#5911/#6956/#6959 remain separate.
+
+The active bounded slice is the owner's HEX numeric-conversion evidence
+under #5611/#6776 on `fix/hex-numeric-5611`, based on `146367518`, in
+`~/.codex/worktrees/hex-numeric-5611/Project-Copperfin`. HEX is a Copperfin
+extension, not a VFP9 builtin; naming/precedence gap #5880 remains separate.
+Derived safety policy keeps finite negative-to-zero and fractional truncation,
+rejects non-finite or positive out-of-signed-64-bit values with catchable error
+11, and retains exact int64/uint64/Currency conversion in both settings.
+Focused build directories are `/home/rich/temp/copperfin-hex-5611-{build,sanitize}`.
+The 62 direct calls and 14 PRG rows cover both settings; old dispatch reports
+36 failures and sanitizer stops at the signed-64-bit ceiling. Both focused
+numeric-behavior and neighboring math suites pass normally and under Clang
+ASan/UBSan/float-cast-overflow.
+The active branch/PR carries implementation, tests and verification evidence;
+next complete exact-head review/required CI, resolve verified fixes, merge,
+synchronize and clean up. Then re-read the live channel and select the next
+bounded unfinished conversion under #5611/#6776; no unrelated defect discovery.
 During selection, unrelated compatibility gaps in `FV()`/`PV()` signatures and
 `SYS(-1)` surfaced and were filed as #6944 and #6945 without expanding this
 slice.
