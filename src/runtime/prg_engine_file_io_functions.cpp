@@ -295,6 +295,72 @@ FOpenModeSelection fopen_mode_from_value(
     return FOpenModeSelection{.stream_mode = "rb"};
 }
 
+[[noreturn]] void throw_invalid_fcreate_attribute() {
+    throw PrgCompatibilityError(
+        runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+}
+
+// Governing requirement: RQ-CF-PRG-FCREATE-ATTRIBUTE-BOUNDS-001 (#5611/#6776).
+int fcreate_attribute_from_value(
+    const PrgValue& attribute_value,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    const bool numeric_type = attribute_value.kind == PrgValueKind::number ||
+        attribute_value.kind == PrgValueKind::int64 ||
+        attribute_value.kind == PrgValueKind::uint64 ||
+        attribute_value.kind == PrgValueKind::currency;
+    if (attribute_value.is_null || !numeric_type) {
+        throw_invalid_fcreate_attribute();
+    }
+
+    std::int64_t attribute = 0;
+    if (numeric_behavior(set_callback) != NumericBehavior::vfp9) {
+        if (attribute_value.kind == PrgValueKind::int64) {
+            attribute = attribute_value.int64_value;
+        } else if (attribute_value.kind == PrgValueKind::uint64) {
+            if (attribute_value.uint64_value > 7U) {
+                throw_invalid_fcreate_attribute();
+            }
+            attribute = static_cast<std::int64_t>(attribute_value.uint64_value);
+        } else if (attribute_value.kind == PrgValueKind::currency) {
+            if (attribute_value.currency_value % INT64_C(10000) != 0) {
+                throw_invalid_fcreate_attribute();
+            }
+            attribute = attribute_value.currency_value / INT64_C(10000);
+        } else {
+            const double raw = attribute_value.number_value;
+            if (!std::isfinite(raw) || std::trunc(raw) != raw || raw < 0.0 || raw > 7.0) {
+                throw_invalid_fcreate_attribute();
+            }
+            attribute = static_cast<std::int64_t>(raw);
+        }
+    } else if (attribute_value.kind == PrgValueKind::currency) {
+        if (attribute_value.currency_value != 0 &&
+            attribute_value.currency_value > -INT64_C(10000) &&
+            attribute_value.currency_value < INT64_C(10000)) {
+            throw_invalid_fcreate_attribute();
+        }
+        const std::int64_t whole_units = attribute_value.currency_value / INT64_C(10000);
+        if (whole_units > 7) {
+            throw_invalid_fcreate_attribute();
+        }
+        attribute = vfp9_numeric_to_int32(make_int64_value(whole_units));
+    } else {
+        const double raw = value_as_number(attribute_value);
+        if (std::isnan(raw) ||
+            (attribute_value.kind == PrgValueKind::int64 && attribute_value.int64_value > 7) ||
+            (attribute_value.kind == PrgValueKind::uint64 && attribute_value.uint64_value > 7U) ||
+            (attribute_value.kind == PrgValueKind::number && raw > 7.0)) {
+            throw_invalid_fcreate_attribute();
+        }
+        attribute = vfp9_numeric_to_int32(attribute_value);
+    }
+
+    if (attribute < 0 || attribute > 7) {
+        throw_invalid_fcreate_attribute();
+    }
+    return static_cast<int>(attribute);
+}
+
 bool fopen_read_only_mode(const std::string& mode) {
     return mode.find('r') != std::string::npos &&
         mode.find('+') == std::string::npos &&
@@ -525,7 +591,7 @@ std::optional<PrgValue> evaluate_file_io_function(
     if (function == "fcreate" && !arguments.empty()) {
         const std::filesystem::path path = resolve_file_path(value_as_string(arguments[0]), default_directory);
         const int attribute = arguments.size() >= 2U
-            ? static_cast<int>(std::llround(value_as_number(arguments[1])))
+            ? fcreate_attribute_from_value(arguments[1], set_callback)
             : 0;
 
         // FCREATE() always creates (overwriting any existing file) and opens for

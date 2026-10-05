@@ -1,5 +1,19 @@
 # VFP Language Reference Coverage
 
+- `FCREATE()` attribute numeric boundaries (2026-10-05, #5611/#6776):
+  installed VFP9 accepts converted attributes 0 through 7. Numeric operands at
+  or below the raw positive ceiling of 7 truncate toward zero and then use
+  signed low-32-bit conversion; a raw positive value above 7 raises error 11
+  before wrap. Currency rejects a nonzero sub-unit magnitude, otherwise
+  truncates to whole units, rejects a positive whole value above 7, and applies
+  the same conversion and range rule. Logical, Character, Empty, and NULL
+  attributes raise error 11. Default `COPPERFIN` mode accepts only exact integer
+  attributes 0 through 7 and rejects every other value before file creation or
+  integer conversion. Attribute zero permits writes and every accepted nonzero
+  attribute blocks writes on the created handle. Complete probe source and
+  output are retained under
+  `tests/fixtures/vfp9-fcreate-attribute-bounds-observation/`.
+
 - `FOPEN()` mode numeric boundaries (2026-10-05, #5611/#6776): installed
   VFP9 accepts converted modes 0, 1, 2, 10, 11, and 12. Numeric operands at
   or below the raw positive ceiling of 12 truncate toward zero and then use
