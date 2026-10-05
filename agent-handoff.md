@@ -9,12 +9,17 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
-The most recent shipped slice is ADIR PR #6980, detailed below. All 11 required
-exact-head checks passed, final review was clean and all five conversations
-were resolved. The active continuation is AFONT third-argument Numeric size
-conversion on `fix/afont-size-numeric-5611`: native recovery and bounded
-implementation pass focused normal/sanitizer verification in open PR #6983;
-next complete exact-head CI/review gates. No VM is in use.
+The most recent shipped slice is AFONT PR #6983, merged into main as
+`757bf88d4427e3d56fb36d833a171e9edb591a5e` on 2026-10-05 at 23:47:52 UTC.
+All 11 required checks passed at signed head `4c1cbe6db1`, its exact-head
+review was clean, and the review conversation was resolved after verification.
+All completed optional checks passed; Windows MSVC was still running at merge.
+Main is synchronized and the completed worktree/branches are removed; the
+420 MB normal and 787 MB sanitizer builds are in recoverable trash.
+The active continuation is FIELD() first-argument Numeric/exact-integer index
+conversion on `fix/field-index-numeric-5611`, from this main revision.
+Native recovery is retained; production implementation has not started.
+No VM is in use.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -382,40 +387,45 @@ and 420 MB/787 MB builds moved to recoverable trash. Its 46-result native
 fixture, 170 direct calls and 114 PRG rows remain retained; all three focused
 normal/sanitizer suites pass, with 60 old-dispatch semantic failures. No VM used.
 
-AFONT Numeric/exact-integer third-argument size conversion is the selected
-bounded continuation under #5611/#6776 on `fix/afont-size-numeric-5611`, from
-main `3aa571eaad1dd169b97491c5c3bd260882a2d4a2`, in
-`/home/rich/.codex/worktrees/afont-size-numeric-5611/Project-Copperfin`.
-Only migration of the existing `size_filter` llround/narrowing site in
-`prg_engine_arrays.inl` is selected. Preserve host font discovery, fixed MVP
-size/result/array behavior and existing other coercions. Existing admitted
-#3252/#6955/#6958/#6963 retain result/platform, second/third type admission and
-fourth size/charset flag gaps; do not expand this slice or file duplicates.
-The complete 54-call installed VFP9 09.00.0000.7423 Wine fixture is retained in
-`tests/fixtures/vfp9-afont-size-numeric-observation/`. The first installed
-scalable font exposes Numeric -1 versus Logical true in the array: -1.5/-1.9
-truncate to the -1 sentinel; 4294967295.9 and -4294967297.9 produce the same
-sentinel. Native accepts negative sizes; do not invent positive-only admission.
-Other tested sizes have indistinguishable results: huge/infinite exact-zero
-claims are shared-model derivations, not independently proven by this font.
-Implemented `checked_afont_size_argument`: default finite truncation to
-signed int32; explicit VFP9 shared low-32-bit conversion; exact int64/uint64
-without double rounding; existing other coercions retain checked rounding.
-Missing result raises localized error 11 before enumeration/array mutation.
-198 direct calls and 137 public PRG rows cover boundaries/NaN/exact integers,
-canonical sizes, unchanged-array rejection and preservation controls. The old
-dispatch fails 40 assertions; all three focused numeric/array/string-math
-suites pass normally (7.20s) and under Clang ASan/UBSan/float-cast-overflow
-(30.63s), without diagnostics. README retains VR/DQ/DV results/reproduction;
-docs/32 and docs/22 retain bidirectional scope/verification links. Run numeric
-tests sequentially across build directories to avoid their shared scratch path.
-Builds are `/home/rich/temp/copperfin-afont-size-5611-build` and
-`/home/rich/temp/copperfin-afont-size-5611-sanitize`; remove them only after merge.
-PR #6983 is open against main; signed implementation `58c3411e6` is pushed.
-Next complete exact-head automated review and all 11 required checks, verify
-any review fixes and resolve their conversations before merge.
-Then synchronize main, clean the slice/build/branch and re-read the live channel.
-No VM was started, no font/system changes made, and no owner input is needed.
+AFONT Numeric/exact-integer third-argument size conversion completed in PR
+#6983. Its retained 54-call installed VFP9 fixture, 198 direct checks and 137
+PRG rows are in `tests/fixtures/vfp9-afont-size-numeric-observation/` and
+`tests/test_prg_engine_numeric_behavior.cpp`. Old dispatch failed 40
+assertions; fixed normal suites passed 3/3 (7.20s) and Clang ASan/UBSan/
+float-cast-overflow passed 3/3 (30.63s) without diagnostics. A handoff review
+fix was verified and resolved; its changelog indentation failure was corrected
+in the final signed head, which passed all 138 fragment checks and focused
+5/5 validation (7.54s). Linux/macOS broad suites and VSIX lifecycle then
+passed at the exact final head. Existing #3252/#6955/#6958/#6963 remain
+separate; font/result/type/charset parity was not expanded.
+
+FIELD() Numeric/exact-integer first-argument index conversion is the selected
+bounded continuation under #5611/#6776 on `fix/field-index-numeric-5611`,
+from main `757bf88d4427e3d56fb36d833a171e9edb591a5e`, in
+`/home/rich/.codex/worktrees/field-index-numeric-5611/Project-Copperfin`.
+Only the existing FIELD index llround/size_t site in
+`src/runtime/prg_engine_expression.inl` is selected. Preserve optional
+work-area/alias designators, field-name lookup, cursor/session state, omitted
+arguments and existing non-Numeric coercions. FSIZE, SELECT and FIELD's
+optional third argument are not selected.
+The complete 58-call installed VFP9 09.00.0000.7423 Wine fixture is retained
+in `tests/fixtures/vfp9-field-index-numeric-observation/`; two fresh
+replays match byte-for-byte. Numeric fractions truncate toward zero.
+Important operation-specific evidence: positive 4294967297/8/9 return empty,
+but negative -4294967295/4/3 expose fields 1/2/3. Do not apply unconditional
+shared signed-low-32 wrapping to positive oversized arguments. Huge/infinite
+results are empty; they do not independently prove an exact converted index.
+Eight routing/arity/type controls are observations, not permission to expand
+this Numeric-only slice. Exact 64-bit/NaN behavior must be derived explicitly
+from the owner policy, not attributed to VFP9.
+No production change or build exists yet. Next finish the operation-specific
+conversion contract, add independent boundary/helper and public PRG tests
+with fail-before evidence, implement the bounded checked conversion, run
+normal and sanitizer tests serially, complete docs/32 and docs/22 reverse
+traceability and verification README, then signed push/PR/review/required CI.
+Check the merged AFONT Windows MSVC run if it becomes actionable.
+No VM was started, no persistent table/system changes made, and no owner input
+is needed. Re-read the live channel before any further work selection.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
@@ -533,7 +543,9 @@ Owner-directed workstream order before the #6879 assignment was:
      conversion (PR #6978).
    - Completed after those: ADIR Numeric/exact-integer optional display-flag
      conversion (PR #6980).
-   - Active: AFONT Numeric/exact-integer third-argument size conversion only.
+   - Completed after those: AFONT Numeric/exact-integer third-argument size
+     conversion (PR #6983).
+   - Active: FIELD Numeric/exact-integer first-argument field-index conversion.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

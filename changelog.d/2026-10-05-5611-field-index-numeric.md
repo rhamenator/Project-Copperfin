@@ -1,0 +1,1 @@
+- 2026-10-05: Record merged AFONT PR #6983 and cleanup, select the bounded FIELD() Numeric-index continuation under #5611/#6776, and retain two identical installed-VFP9 cursor-only recovery runs; no FIELD production behavior has changed yet.
