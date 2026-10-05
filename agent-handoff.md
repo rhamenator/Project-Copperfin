@@ -258,8 +258,10 @@ otherwise, while explicit VFP9 preserves the recovered finite nonzero rule.
 Tests, retained evidence, docs/22, docs/32 traceability, and a changelog
 fragment are complete. Focused runtime-surface validation passes normally and
 under Clang AddressSanitizer, UndefinedBehaviorSanitizer, and
-float-cast-overflow instrumentation; diff and changelog checks pass. Remaining:
-signed commit, push, PR/review, green exact-head checks, and merge.
+float-cast-overflow instrumentation; diff and changelog checks pass. Signed
+commit `c56133289` is pushed in PR #6947. There are no review conversations;
+the exact-head CI and automated review are in progress. Remaining: address any
+actionable review/CI result, verify green exact-head checks, and merge.
 During selection, unrelated compatibility gaps in `FV()`/`PV()` signatures and
 `SYS(-1)` surfaced and were filed as #6944 and #6945 without expanding this
 slice.
