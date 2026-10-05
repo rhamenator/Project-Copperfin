@@ -260,6 +260,104 @@ bool file_last_write_local_time(const std::filesystem::path& path, std::tm& loca
     return true;
 }
 
+[[noreturn]] void throw_invalid_fdate_type() {
+    throw PrgCompatibilityError(
+        runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+}
+
+// Governing requirement: RQ-CF-PRG-FDATE-TYPE-BOUNDS-001 (#5611/#6776).
+bool fdate_datetime_requested(
+    const PrgValue& value,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    const bool numeric_type = value.kind == PrgValueKind::number ||
+        value.kind == PrgValueKind::int64 ||
+        value.kind == PrgValueKind::uint64 ||
+        value.kind == PrgValueKind::currency;
+    if (value.is_null || !numeric_type) {
+        throw_invalid_fdate_type();
+    }
+
+    if (numeric_behavior(set_callback) != NumericBehavior::vfp9) {
+        if (value.kind == PrgValueKind::int64) {
+            if (value.int64_value == 0) {
+                return false;
+            }
+            if (value.int64_value == 1) {
+                return true;
+            }
+            throw_invalid_fdate_type();
+        }
+        if (value.kind == PrgValueKind::uint64) {
+            if (value.uint64_value == 0U) {
+                return false;
+            }
+            if (value.uint64_value == 1U) {
+                return true;
+            }
+            throw_invalid_fdate_type();
+        }
+        if (value.kind == PrgValueKind::currency) {
+            if (value.currency_value == 0) {
+                return false;
+            }
+            if (value.currency_value == INT64_C(10000)) {
+                return true;
+            }
+            throw_invalid_fdate_type();
+        }
+
+        const double raw = value_as_number(value);
+        if (!std::isfinite(raw)) {
+            throw_invalid_fdate_type();
+        }
+        if (raw == 0.0) {
+            return false;
+        }
+        if (raw == 1.0) {
+            return true;
+        }
+        throw_invalid_fdate_type();
+    }
+
+    std::int64_t converted = 0;
+    if (value.kind == PrgValueKind::currency) {
+        // Installed VFP9 rejects nonzero sub-unit Currency values, truncates
+        // other Currency values to whole units, rejects a positive whole value
+        // above 1, then applies signed low-32-bit conversion before admitting
+        // only 0 or 1.
+        if (value.currency_value != 0 &&
+            value.currency_value > -INT64_C(10000) &&
+            value.currency_value < INT64_C(10000)) {
+            throw_invalid_fdate_type();
+        }
+        const std::int64_t whole_units = value.currency_value / INT64_C(10000);
+        if (whole_units > 1) {
+            throw_invalid_fdate_type();
+        }
+        converted = vfp9_numeric_to_int32(make_int64_value(whole_units));
+    } else {
+        const double raw = value_as_number(value);
+        if (std::isnan(raw)) {
+            throw_invalid_fdate_type();
+        }
+        if ((value.kind == PrgValueKind::int64 && value.int64_value > 1) ||
+            (value.kind == PrgValueKind::uint64 && value.uint64_value > 1U) ||
+            (value.kind != PrgValueKind::int64 &&
+             value.kind != PrgValueKind::uint64 && raw > 1.0)) {
+            throw_invalid_fdate_type();
+        }
+        converted = vfp9_numeric_to_int32(value);
+    }
+
+    if (converted == 0) {
+        return false;
+    }
+    if (converted == 1) {
+        return true;
+    }
+    throw_invalid_fdate_type();
+}
+
 }  // namespace
 
 std::optional<PrgValue> evaluate_file_io_function(
@@ -275,6 +373,8 @@ std::optional<PrgValue> evaluate_file_io_function(
     }
 
     if (function == "fdate" && !arguments.empty()) {
+        const bool datetime_requested = arguments.size() >= 2U &&
+            fdate_datetime_requested(arguments[1], set_callback);
         const std::filesystem::path path = resolve_existing_file_probe_path(
             value_as_string(arguments[0]), default_directory, set_callback);
         std::tm local_tm{};
@@ -285,8 +385,6 @@ std::optional<PrgValue> evaluate_file_io_function(
         const int month = local_tm.tm_mon + 1;
         const int day = local_tm.tm_mday;
 
-        const bool datetime_requested = arguments.size() >= 2U &&
-            static_cast<int>(std::llround(value_as_number(arguments[1]))) == 1;
         if (datetime_requested) {
             return make_datetime_value(
                 format_runtime_datetime_for_set(

@@ -1,5 +1,21 @@
 # VFP Language Reference Coverage
 
+- `FDATE()` type-flag numeric boundaries (2026-10-05, #5611/#6776):
+  installed VFP9 rejects a raw positive Numeric value above 1, otherwise
+  truncates through its signed low-32-bit conversion and admits only converted
+  0 (Date) or 1 (DateTime). Currency rejects a nonzero sub-unit magnitude,
+  otherwise truncates to whole units and applies the same admission rule,
+  rejecting a positive whole value above 1 before low-32-bit conversion.
+  Logical, Character, Empty, and NULL flags raise error 11 rather than being
+  coerced to numeric zero or one.
+  Consequently negative out-of-range and negative-infinity Numeric values that
+  convert to zero return Date, while their positive counterparts raise error
+  11. Default `COPPERFIN` mode accepts only exact documented numeric 0 and 1
+  values and rejects every other value and type before filesystem lookup or
+  integer conversion.
+  Complete probe source and output are retained under
+  `tests/fixtures/vfp9-fdate-type-bounds-observation/`.
+
 - `FILE()` / `DIRECTORY()` visibility-flag numeric boundaries (2026-10-05,
   #5611/#6776): installed VFP9 treats zero as false and every probed nonzero
   finite flag as true, including fractions, negative one, and magnitudes of

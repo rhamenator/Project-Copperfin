@@ -1,0 +1,1 @@
+- 2026-10-05: Fixed `FDATE()` type-flag conversion so nonnumeric and undocumented values are rejected safely while VFP9 mode reproduces recovered Numeric and Currency conversion behavior without out-of-range host conversion.
