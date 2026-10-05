@@ -265,24 +265,25 @@ review reported no findings, and there were no review conversations. The
 completed worktree, branch, scratch probe, and build directories were cleaned
 up after merge.
 
-The active bounded slice is `FCREATE()` optional numeric file-attribute
-conversion on branch `fix/fcreate-attribute-5611` in
-`~/.codex/worktrees/fcreate-attribute-5611/Project-Copperfin`, based on that
-merge. Fresh installed-VFP9 evidence shows that converted attributes 0 through
-7 are valid. Numeric operands at or below the raw positive ceiling of 7
-truncate toward zero and use signed low-32-bit conversion; Currency rejects a
-nonzero sub-unit magnitude, otherwise truncates to whole units and follows the
-same positive ceiling and conversion rule. The implementation makes default COPPERFIN
-strict at exact integer attributes 0 through 7 and preserves the recovered
-quirk under explicit VFP9 before file creation. Tests, retained evidence,
-docs/22, docs/32 traceability, and a changelog fragment are retained in PR #6952. Focused
-file-I/O validation passes normally and under Clang AddressSanitizer,
-UndefinedBehaviorSanitizer, and float-cast-overflow instrumentation. Both review
-findings are addressed in the branch: the strict FCREATE type cases and their
-assertions are in the dedicated attribute-boundary test, and this continuation
-brief reflects the open PR. Remaining: verify and resolve those conversations,
-obtain green required checks for the final commit and clean review state, then
-merge and clean up.
+The `FCREATE()` attribute-conversion slice merged in PR #6952 at
+`2a99e37f9`. All 11 required checks passed for final commit `1ccee0e4c`,
+review found no further issue, and both conversations were resolved before
+merge. The completed worktree, branch, probe and build directories were cleaned
+up. Optional Windows MSVC was still running at merge; all other checks passed.
+
+The active bounded slice is `FSEEK()` offset and origin numeric conversion on
+branch `fix/fseek-numeric-5611` in
+`~/.codex/worktrees/fseek-numeric-5611/Project-Copperfin`, based on that merge.
+Installed VFP9 observations are retained in the fixture directory; the default
+requires exact signed-32-bit offsets and exact 0/1/2 origins. Explicit VFP9
+reproduces observed Numeric wrapping and Currency limits. Native and verified
+paths share validation before seeking. Focused file-I/O and verified-byte tests
+pass normally and under Clang ASan/UBSan/float-cast-overflow; the boundary
+regressions fail against the old conversion dispatch. Merge gates: resolved
+review findings, green required checks and clean review for the final commit;
+then merge and clean up. Handle conversion is a
+subsequent #5611 slice. A newly observed failed-seek return mismatch was filed
+as #6956 without expanding the conversion slice.
 During selection, unrelated compatibility gaps in `FV()`/`PV()` signatures and
 `SYS(-1)` surfaced and were filed as #6944 and #6945 without expanding this
 slice.
@@ -384,7 +385,9 @@ Owner-directed workstream order before the #6879 assignment was:
      (PR #6948).
    - Completed after those: `FOPEN()` optional numeric mode conversion
      (PR #6950).
-   - Active: `FCREATE()` optional numeric file-attribute conversion.
+   - Completed after those: `FCREATE()` optional numeric file-attribute
+     conversion (PR #6952).
+   - Active: `FSEEK()` offset and origin numeric conversion.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

@@ -1,5 +1,19 @@
 # VFP Language Reference Coverage
 
+- `FSEEK()` offset/origin numeric boundaries (2026-10-05, #5611/#6776):
+  default `COPPERFIN` requires exact signed-32-bit offsets and exact origins
+  0, 1, or 2. Invalid values/types raise catchable error 11 before seeking.
+  Explicit `VFP9` truncates Numeric offsets through signed low-32-bit
+  conversion, with out-of-int64 values and infinities converting to zero.
+  Currency rejects nonzero sub-unit magnitudes and whole units outside
+  [-4294967296, 4294967295], then uses the same low bits. Origins additionally
+  reject raw Numeric above 2 or whole Currency above 2 and require a converted
+  0/1/2 result. NaN is rejected in both modes as a derived safety policy.
+  Native and verified-byte paths share admission; rejected operands preserve
+  position. File-handle conversion remains a later #5611 slice. The separate
+  failed-seek return gap is tracked by #6956. The complete 82-case installed
+  probe is retained under `tests/fixtures/vfp9-fseek-numeric-bounds-observation/`.
+
 - `FCREATE()` attribute numeric boundaries (2026-10-05, #5611/#6776):
   installed VFP9 accepts converted attributes 0 through 7. Numeric operands at
   or below the raw positive ceiling of 7 truncate toward zero and then use
