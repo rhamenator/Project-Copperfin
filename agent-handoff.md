@@ -298,8 +298,9 @@ report 366 failures with old dispatch; float-cast-overflow sanitizer stops at
 its `1E300` conversion. Focused build directories are
 `/home/rich/temp/copperfin-fchsize-5611-{build,sanitize}`. Both focused file-I/O
 and verified-byte suites pass normally and under Clang
-ASan/UBSan/float-cast-overflow. Remaining: push signed/DCO commit, open PR, obtain
-green required checks and clean exact-head review, resolve verified fixes,
+ASan/UBSan/float-cast-overflow. Signed/DCO implementation commit `16fd0c3c3`
+is pushed in PR #6962. Remaining: obtain green required checks and clean
+exact-head review, resolve verified fixes,
 merge and clean up. Next: inventory the remaining #5611 conversions, starting
 with the owner's HEX conversion evidence. Return gaps
 #5912/#5913/#5914/#5887/#5911/#6956/#6959 remain separate; negative FCHSIZE
