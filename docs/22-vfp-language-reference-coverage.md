@@ -1,5 +1,17 @@
 # VFP Language Reference Coverage
 
+- `ALINES()` optional Numeric/exact-integer flag conversion (2026-10-05,
+  #5611/#6776): default COPPERFIN admits finite values truncating to 0..31;
+  explicit VFP9 retains signed-low-32-bit aliases and huge/infinite-to-zero
+  conversion before that admission. Invalid flags raise localized catchable
+  error 11 before destination-array mutation. Exact integers avoid double
+  rounding; NaN behavior is derived safety policy, not a native observation.
+  The complete 36-result installed VFP9 fixture is retained under
+  `tests/fixtures/vfp9-alines-flags-numeric-observation/`.
+  Other coercions retain checked rounding; omitted flags, splitting, parse
+  tokens, full flag semantics and other array functions remain outside this
+  conversion slice. The fixture README records focused verification.
+
 - `SET('TEXTMERGE', n)` Numeric query-variant conversion (2026-10-05,
   #5611/#6776): default COPPERFIN requires finite values truncating to 1..4;
   explicit VFP9 retains installed positive/negative signed-low-32-bit wrapping

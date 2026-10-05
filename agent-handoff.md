@@ -342,37 +342,39 @@ suites pass normally and under sanitizers, with 208 old-dispatch failures.
 Additive-order gap #6971 remains separate. Access365 finished its low-risk
 temporary-cursor COM probe and is shut down; no overlay/system changes.
 
-The active bounded slice is `SET('TEXTMERGE', n)` Numeric/exact-integer query
-variant conversion under #5611/#6776 on `fix/set-textmerge-numeric-5611`,
-based on `52daa2f7f6b39bfe232de3c65556be5aaf0fcdd6`, in
-`/home/rich/.codex/worktrees/set-textmerge-numeric-5611/Project-Copperfin`.
-The complete 34-result installed VFP9 09.00.0000.7423 Wine fixture is retained
-under `tests/fixtures/vfp9-set-textmerge-numeric-observation/`.
-Numeric variants truncate before 1..4 admission (4.9 is valid). Explicit VFP9
-wraps both positive and negative signed-low-32-bit values; default COPPERFIN
-must reject those aliases. Invalid values raise error 11 before querying state.
-Exact int64/uint64 and NaN are derived safety policy; Currency rounding and
-other coercions, omitted variants, other SET options and query results remain
-preservation-only. Native query-result gap #6973 (delimiter separator,
-destination and Numeric recursion level) was filed against this main revision;
-output-routing #6333 remains separate. No VM was started for this slice.
-The regression has 66 boundary calls, 14 preservation controls and 20 PRG rows.
-The old normal numeric regression fails 102 semantic assertions. After the
-conversion change, numeric-behavior and neighboring string/math suites pass
-with GCC Debug and Clang ASan/UBSan/float-cast-overflow. The unchanged sanitizer
-control-flow baseline also passed (377.46 seconds); that broader CTest run was
-interrupted before its numeric suite completed, so it is not a fixed-build
-three-suite result. Full updated control-flow validation remains hosted CI.
-Builds are `/home/rich/temp/copperfin-set-textmerge-5611-{build,sanitize}`.
-Implementation, fail-before and focused fixed-build verification are complete;
-signed/DCO implementation is pushed in PR #6975. The branch/PR carries code,
-tests and retained evidence. Next complete exact-head review/required CI,
-resolve verified fixes, merge, synchronize and clean up. Then re-read the live
-channel and select the next bounded unfinished conversion under #5611/#6776;
-no unrelated defect discovery.
-During selection, unrelated compatibility gaps in `FV()`/`PV()` signatures and
-`SYS(-1)` surfaced and were filed as #6944 and #6945 without expanding this
-slice.
+SET(TEXTMERGE) Numeric query-variant conversion merged in PR #6975 at
+`91467cdc9219d0f0d579d3ee2c7a05ff6e6187d7` on 2026-10-05. All 33 checks
+passed at signed head `167a2a53a51b50002ee88f76fc0706ea94d084a9`, exact-head
+Codex review was clean and the sole handoff conversation was verified and
+resolved. Main was synchronized, worktree/local/remote branches removed, and
+both builds moved to recoverable trash. Its 34-result native fixture, 80 direct
+calls and 20 PRG rows remain retained; focused normal/sanitizer suites pass,
+with 102 old-dispatch semantic failures. #6973/#6333 remain separate.
+
+ALINES Numeric/exact-integer flags are the active bounded slice under #5611/#6776,
+on `fix/alines-flags-numeric-5611` from main
+`91467cdc9219d0f0d579d3ee2c7a05ff6e6187d7`, in
+`/home/rich/.codex/worktrees/alines-flags-numeric-5611/Project-Copperfin`.
+Only the optional flags conversion is in scope: splitting, parse tokens, output
+array shape/content semantics, ADIR/AFONT and other array conversions are not.
+The complete 36-result installed VFP9 09.00.0000.7423 Wine fixture is retained
+under `tests/fixtures/vfp9-alines-flags-numeric-observation/`.
+Native truncates before requiring flags 0..31; negative sub-units truncate to
+zero and 31.9 is valid. Explicit VFP9 wraps positive/negative signed-low-32 bits
+and maps huge/infinite values to flag zero. Default COPPERFIN must reject
+oversized/nonfinite aliases; exact integers and NaN follow derived safety
+policy. Existing other coercions retain checked rounding.
+Implementation and focused verification are complete: 138 direct calls and
+92 PRG rows cover both modes, eight unchanged-array rejection checks and
+preserved controls. The initial old-dispatch regression failed 52 semantic
+assertions; fixed numeric-behavior, array and string/math suites pass with GCC
+Debug and Clang ASan/UBSan/float-cast-overflow, without sanitizer diagnostics.
+The branch carries code, tests and retained evidence; its PR is recoverable
+from the branch identity. Next complete exact-head automated review/required
+CI, verify and resolve any fixes, merge, synchronize and clean up. Builds are
+`/home/rich/temp/copperfin-alines-flags-5611-{build,sanitize}`. No VM started.
+After merge, re-read the live channel and select the next bounded unfinished
+conversion under #5611/#6776; no unrelated defect discovery.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
@@ -484,8 +486,9 @@ Owner-directed workstream order before the #6879 assignment was:
      conversion (PR #6969); query-domain/type parity #6968 remains separate.
    - Completed after those: shared RELATION/TARGET Numeric-index conversion
      (PR #6972); additive relation-order gap #6971 remains separate.
-   - Active: SET(TEXTMERGE) Numeric/exact-integer query-variant conversion
-     only; query-result gap #6973 and output routing #6333 remain separate.
+   - Completed after those: SET(TEXTMERGE) Numeric query-variant conversion
+     (PR #6975); query-result gap #6973 and routing #6333 remain separate.
+   - Active: ALINES Numeric/exact-integer optional flag conversion only.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

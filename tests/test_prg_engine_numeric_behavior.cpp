@@ -760,6 +760,71 @@ std::vector<Row> build_rows() {
         }
         rows.push_back({set, "SET('TEXTMERGE', 3.9)", "C:SHOW"});
     }
+    // RQ-CF-PRG-ALINES-FLAGS-NUMERIC-001: retained native conversion observations;
+    // first element distinguishes trimming, not full flag/splitting semantics.
+    struct AlinesCase { const char* argument; const char* copperfin; const char* vfp9; };
+    const std::vector<AlinesCase> alines_cases{
+        {"0", "C: a ", "C: a "},
+        {"1", "C:a", "C:a"},
+        {"2", "C: a ", "C: a "},
+        {"3", "C:a", "C:a"},
+        {"4", "C: a ", "C: a "},
+        {"31", "C:a", "C:a"},
+        {"32", "ERR11", "ERR11"},
+        {"-1", "ERR11", "ERR11"},
+        {"0.49", "C: a ", "C: a "},
+        {"0.5", "C: a ", "C: a "},
+        {"0.9", "C: a ", "C: a "},
+        {"1.49", "C:a", "C:a"},
+        {"1.5", "C:a", "C:a"},
+        {"1.9", "C:a", "C:a"},
+        {"2.5", "C: a ", "C: a "},
+        {"31.49", "C:a", "C:a"},
+        {"31.9", "C:a", "C:a"},
+        {"32.5", "ERR11", "ERR11"},
+        {"2147483647", "ERR11", "ERR11"},
+        {"2147483648", "ERR11", "ERR11"},
+        {"-2147483648", "ERR11", "ERR11"},
+        {"-2147483649", "ERR11", "ERR11"},
+        {"4294967297", "ERR11", "C:a"},
+        {"-4294967295", "ERR11", "C:a"},
+        {"4294967327", "ERR11", "C:a"},
+        {"-4294967265", "ERR11", "C:a"},
+        {"1E300", "ERR11", "C: a "},
+        {"-1E300", "ERR11", "C: a "},
+        {"EXP(1000)", "ERR11", "C: a "},
+        {"-EXP(1000)", "ERR11", "C: a "},
+        {"-0.49", "C: a ", "C: a "},
+        {"-0.5", "C: a ", "C: a "},
+        {"-0.9", "C: a ", "C: a "},
+        {"-1.1", "ERR11", "ERR11"},
+        {"4294967328", "ERR11", "ERR11"},
+        {"-4294967264", "ERR11", "ERR11"}};
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        const std::string array = set + "\nLOCAL ARRAY aFlag[1]\naFlag[1] = 'sentinel'";
+        for (const auto& row : alines_cases) {
+            rows.push_back({array + "\nx = ALINES(aFlag, ' a ' + CHR(13) + ' b ', " + row.argument + ")",
+                            "aFlag[1]", std::string(mode) == "COPPERFIN" ? row.copperfin : row.vfp9});
+        }
+        // Rejection is catchable and leaves shape/content unchanged in both modes.
+        for (const char* argument : {"32", "-1", "4294967328", "-4294967264"}) {
+            rows.push_back({array + "\nLOCAL nError\nnError = 0\nTRY\n"
+                            "x = ALINES(aFlag, ' a ' + CHR(13) + ' b ', " + argument + ")\n"
+                            "CATCH TO oEx\nnError = oEx.ErrorNo\nENDTRY",
+                            "ALLTRIM(STR(nError)) + ':' + ALLTRIM(STR(ALEN(aFlag))) + ':' + aFlag[1]",
+                            "C:11:1:sentinel"});
+        }
+        // Preserve omitted flags, custom delimiters and existing non-Numeric coercions.
+        rows.push_back({array + "\nx = ALINES(aFlag, ' a ' + CHR(13) + ' b ')", "aFlag[1]", "C: a "});
+        rows.push_back({array + "\nx = ALINES(aFlag, ' a | b ', 1, '|')", "aFlag[1]", "C:a"});
+        for (const char* argument : {".T.", "'1.5'", "$1.5000"}) {
+            rows.push_back({array + "\nx = ALINES(aFlag, ' a ' + CHR(13) + ' b ', " + argument + ")",
+                            "aFlag[1]", std::string(argument) == ".T." ? "C:a" : "C: a "});
+        }
+        rows.push_back({array + "\nx = ALINES(aFlag, ' a ' + CHR(13) + ' b ', .NULL.)",
+                        "aFlag[1]", "C: a "});
+    }
     return rows;
 }
 
@@ -1621,6 +1686,90 @@ void test_set_textmerge_direct_numeric_boundaries() {
     }
 }
 
+// RQ-CF-PRG-ALINES-FLAGS-NUMERIC-001: exact integers/NaN are derived safety
+// boundaries; other coercions are preservation controls, not native type parity.
+void test_alines_flags_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    const double inf = std::numeric_limits<double>::infinity();
+    struct Case { PrgValue value; int copperfin; int vfp9; };
+    // -1 denotes rejected admission; otherwise the exact converted flags.
+    const std::vector<Case> cases{
+        {make_number_value(0), 0, 0},
+        {make_number_value(1), 1, 1},
+        {make_number_value(2), 2, 2},
+        {make_number_value(3), 3, 3},
+        {make_number_value(4), 4, 4},
+        {make_number_value(31), 31, 31},
+        {make_number_value(32), -1, -1},
+        {make_number_value(-1), -1, -1},
+        {make_number_value(0.49), 0, 0},
+        {make_number_value(0.5), 0, 0},
+        {make_number_value(0.9), 0, 0},
+        {make_number_value(1.49), 1, 1},
+        {make_number_value(1.5), 1, 1},
+        {make_number_value(1.9), 1, 1},
+        {make_number_value(2.5), 2, 2},
+        {make_number_value(31.49), 31, 31},
+        {make_number_value(31.9), 31, 31},
+        {make_number_value(32.5), -1, -1},
+        {make_number_value(2147483647), -1, -1},
+        {make_number_value(2147483648), -1, -1},
+        {make_number_value(-2147483648), -1, -1},
+        {make_number_value(-2147483649), -1, -1},
+        {make_number_value(4294967297.0), -1, 1},
+        {make_number_value(-4294967295.0), -1, 1},
+        {make_number_value(4294967327.0), -1, 31},
+        {make_number_value(-4294967265.0), -1, 31},
+        {make_number_value(1E300), -1, 0},
+        {make_number_value(-1E300), -1, 0},
+        {make_number_value(inf), -1, 0},
+        {make_number_value(-inf), -1, 0},
+        {make_number_value(-0.49), 0, 0},
+        {make_number_value(-0.5), 0, 0},
+        {make_number_value(-0.9), 0, 0},
+        {make_number_value(-1.1), -1, -1},
+        {make_number_value(4294967328.0), -1, -1},
+        {make_number_value(-4294967264.0), -1, -1},
+        {make_number_value(std::nextafter(-1.0, 0.0)), 0, 0},
+        {make_number_value(std::nextafter(-1.0, -inf)), -1, -1},
+        {make_number_value(std::nextafter(1.0, 0.0)), 0, 0},
+        {make_number_value(std::nextafter(32.0, 0.0)), 31, 31},
+        {make_number_value(std::nextafter(32.0, inf)), -1, -1},
+        {make_number_value(std::numeric_limits<double>::quiet_NaN()), -1, 0},
+        {make_int64_value(0), 0, 0}, {make_int64_value(31), 31, 31},
+        {make_int64_value(-1), -1, -1}, {make_int64_value(32), -1, -1},
+        {make_int64_value(std::numeric_limits<std::int64_t>::min()), -1, 0},
+        {make_int64_value(std::numeric_limits<std::int64_t>::min() + 1), -1, 1},
+        {make_int64_value(std::numeric_limits<std::int64_t>::max()), -1, -1},
+        {make_int64_value(INT64_C(9007199254740993)), -1, 1},
+        {make_uint64_value(0), 0, 0}, {make_uint64_value(31), 31, 31},
+        {make_uint64_value(32), -1, -1},
+        {make_uint64_value(UINT64_C(9223372036854775839)), -1, 31},
+        {make_uint64_value(UINT64_C(9223372036854775840)), -1, -1},
+        {make_uint64_value(std::numeric_limits<std::uint64_t>::max()), -1, -1},
+        {make_string_value("0.5"), 1, 1}, {make_string_value("1.5"), 2, 2},
+        {make_string_value("32"), 32, 32},
+        {make_string_value("2147483647"), 2147483647, 2147483647},
+        {make_string_value("2147483647.5"), -1, -1},
+        {make_string_value("2147483648"), -1, -1},
+        {make_string_value("-2147483648.5"), -1, -1},
+        {make_string_value("1E300"), -1, -1},
+        {make_currency_value(15000), 2, 2},
+        {make_currency_value(std::numeric_limits<std::int64_t>::max()), -1, -1},
+        {make_boolean_value(true), 1, 1}, {make_boolean_value(false), 0, 0},
+        {make_null_value(), 0, 0}};
+    for (const auto behavior : {NumericBehavior::copperfin, NumericBehavior::vfp9}) {
+        for (std::size_t index = 0; index < cases.size(); ++index) {
+            const auto& row = cases[index];
+            const int expected = behavior == NumericBehavior::copperfin ? row.copperfin : row.vfp9;
+            const auto actual = checked_alines_flags_argument(row.value, behavior);
+            expect(expected == -1 ? !actual.has_value() : actual.has_value() && *actual == expected,
+                   "ALINES exact flags/rejection case " + std::to_string(index) +
+                   (behavior == NumericBehavior::copperfin ? " COPPERFIN" : " VFP9"));
+        }
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -1635,6 +1784,7 @@ int main() {
     test_cpcurrent_direct_numeric_boundaries();
     test_relation_index_direct_numeric_boundaries();
     test_set_textmerge_direct_numeric_boundaries();
+    test_alines_flags_direct_numeric_boundaries();
     test_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {

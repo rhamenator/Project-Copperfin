@@ -1,0 +1,37 @@
+VERSION|Visual FoxPro 09.00.0000.7423 for Windows
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 0)|N:2|[ a ]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 1)|N:2|[a]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 2)|N:2|[ a ]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 3)|N:2|[a]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 4)|N:2|[ a ]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 31)|N:2|[a]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 32)|ERR11
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', -1)|ERR11
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 0.49)|N:2|[ a ]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 0.5)|N:2|[ a ]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 0.9)|N:2|[ a ]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 1.49)|N:2|[a]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 1.5)|N:2|[a]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 1.9)|N:2|[a]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 2.5)|N:2|[ a ]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 31.49)|N:2|[a]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 31.9)|N:2|[a]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 32.5)|ERR11
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 2147483647)|ERR11
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 2147483648)|ERR11
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', -2147483648)|ERR11
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', -2147483649)|ERR11
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 4294967297)|N:2|[a]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', -4294967295)|N:2|[a]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 4294967327)|N:2|[a]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', -4294967265)|N:2|[a]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 1E300)|N:2|[ a ]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', -1E300)|N:2|[ a ]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', EXP(1000))|N:2|[ a ]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', -EXP(1000))|N:2|[ a ]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', -0.49)|N:2|[ a ]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', -0.5)|N:2|[ a ]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', -0.9)|N:2|[ a ]
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', -1.1)|ERR11
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', 4294967328)|ERR11
+ALINES(aProbe, ' a ' + CHR(13) + ' b ', -4294967264)|ERR11
