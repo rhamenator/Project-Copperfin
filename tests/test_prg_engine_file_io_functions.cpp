@@ -424,6 +424,19 @@ void test_file_handle_numeric_boundaries()
                     expect(rejected == should_reject, label + " admission");
                     if (rejected) {
                         expect(value_as_number(call("ferror", {})) == 0, label + " must not mutate FERROR on argument error");
+                        // Review regression: testing only an initially clear
+                        // FERROR cannot detect clearing it before rejection.
+                        call("ftell", {make_number_value(0)});
+                        expect(value_as_number(call("ferror", {})) == 6, label + " seed existing FERROR");
+                        bool rejected_again = false;
+                        try {
+                            call(function, arguments);
+                        } catch (const PrgCompatibilityError& error) {
+                            rejected_again = true;
+                            expect(error.error_code() == 11, label + " repeated error 11");
+                        }
+                        expect(rejected_again, label + " repeat rejection with existing FERROR");
+                        expect(value_as_number(call("ferror", {})) == 6, label + " preserve existing FERROR on argument error");
                     }
                     const bool closed = !rejected && live && function == "fclose";
                     const double expected_position = closed ? -1 :
