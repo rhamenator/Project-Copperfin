@@ -262,15 +262,18 @@ signed low 32 bits and admits only 0/1; Currency rejects a nonzero sub-unit,
 otherwise truncates to whole units, rejects positive whole values above 1,
 then performs the same conversion. A draft makes default COPPERFIN strict at
 exact documented 0/1 and preserves the recovered behavior only under explicit
-VFP9 without out-of-range host conversion. The signed implementation head is
-`c25dd9461`.
+VFP9 without out-of-range host conversion. Automated review subsequently
+found that nonnumeric and NULL flags still reached the numeric coercion helper;
+the branch now rejects those operands before mode selection, with retained
+installed-VFP9 evidence and portable regressions for Logical, Character,
+Empty, and NULL flags.
 Tests, retained evidence, docs/22, docs/32 traceability, and a changelog
 fragment are complete. Focused file-I/O validation passes normally and under
 Clang AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
-instrumentation; diff and changelog checks pass. The PR opened with no review
-conversations; exact-head CI and automated review are in progress. Remaining:
-resolve any actionable review or CI failure, obtain green required exact-head
-checks and clean review state, then merge and clean up.
+instrumentation; diff and changelog checks pass. Remaining: push the verified
+review fix, resolve its conversations after exact-change verification, obtain
+green required exact-head checks and clean review state, then merge and clean
+up.
 During selection, unrelated compatibility gaps in `FV()`/`PV()` signatures and
 `SYS(-1)` surfaced and were filed as #6944 and #6945 without expanding this
 slice.

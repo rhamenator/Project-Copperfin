@@ -6,10 +6,13 @@
   0 (Date) or 1 (DateTime). Currency rejects a nonzero sub-unit magnitude,
   otherwise truncates to whole units and applies the same admission rule,
   rejecting a positive whole value above 1 before low-32-bit conversion.
+  Logical, Character, Empty, and NULL flags raise error 11 rather than being
+  coerced to numeric zero or one.
   Consequently negative out-of-range and negative-infinity Numeric values that
   convert to zero return Date, while their positive counterparts raise error
-  11. Default `COPPERFIN` mode accepts only exact documented 0 and 1 values and
-  rejects every other value before filesystem lookup or integer conversion.
+  11. Default `COPPERFIN` mode accepts only exact documented numeric 0 and 1
+  values and rejects every other value and type before filesystem lookup or
+  integer conversion.
   Complete probe source and output are retained under
   `tests/fixtures/vfp9-fdate-type-bounds-observation/`.
 

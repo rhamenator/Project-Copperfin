@@ -4,6 +4,8 @@
 `fdate-type-bounds.out` is its complete output. The probe creates a temporary
 file, passes Numeric and Currency values through the optional `nType`
 argument, records the return type or catchable error, and removes the file.
+It also confirms that Logical, Character, Empty, and NULL flags all raise
+error 11 rather than being coerced to Numeric zero or one.
 
 For Numeric values, VFP9 rejects a raw positive value above 1, otherwise
 truncates toward zero through its signed low-32-bit conversion and accepts

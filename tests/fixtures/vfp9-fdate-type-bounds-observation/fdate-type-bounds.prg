@@ -1,5 +1,5 @@
-LOCAL lcFile, lnHandle, lnCase, luResult, loError
-LOCAL ARRAY aCases[20, 2]
+LOCAL lcFile, lnHandle, lnCase, luEmpty, luResult, loError
+LOCAL ARRAY aCases[24, 2]
 lcFile = ADDBS(SYS(2023)) + "copperfin-fdate-type-probe.dat"
 lnHandle = FCREATE(lcFile)
 = FPUTS(lnHandle, "probe")
@@ -45,6 +45,14 @@ aCases[19, 1] = "currency_uint32wrap"
 aCases[19, 2] = $4294967296.0000
 aCases[20, 1] = "currency_uint32wrap_plus1"
 aCases[20, 2] = $4294967297.0000
+aCases[21, 1] = "logical_true"
+aCases[21, 2] = .T.
+aCases[22, 1] = "character_one"
+aCases[22, 2] = "1"
+aCases[23, 1] = "empty"
+aCases[23, 2] = luEmpty
+aCases[24, 1] = "null"
+aCases[24, 2] = .NULL.
 
 FOR lnCase = 1 TO ALEN(aCases, 1)
     TRY

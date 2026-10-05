@@ -18,3 +18,7 @@ fdate_currency_neg0_9=ERR11
 fdate_currency_neg_uint32wrap=D
 fdate_currency_uint32wrap=ERR11
 fdate_currency_uint32wrap_plus1=ERR11
+fdate_logical_true=ERR11
+fdate_character_one=ERR11
+fdate_empty=ERR11
+fdate_null=ERR11

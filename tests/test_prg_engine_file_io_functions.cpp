@@ -167,6 +167,7 @@ void test_fdate_ftime_runtime_functions()
     const fs::path main_path = temp_root / "fdate_ftime_functions.prg";
     write_text(
         main_path,
+        "LOCAL uEmpty\n"
         "nCreated = STRTOFILE('data', 'created.txt')\n"
         "dFileDate = FDATE('created.txt')\n"
         "dFileDateDefault = FDATE('created.txt', 0)\n"
@@ -199,6 +200,30 @@ void test_fdate_ftime_runtime_functions()
         "  nCopperfinCurrencyFractionError = 0\n"
         "CATCH TO oError\n"
         "  nCopperfinCurrencyFractionError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  dUnexpectedCopperfinLogical = FDATE('created.txt', .T.)\n"
+        "  nCopperfinLogicalError = 0\n"
+        "CATCH TO oError\n"
+        "  nCopperfinLogicalError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  dUnexpectedCopperfinCharacter = FDATE('created.txt', '1')\n"
+        "  nCopperfinCharacterError = 0\n"
+        "CATCH TO oError\n"
+        "  nCopperfinCharacterError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  dUnexpectedCopperfinEmpty = FDATE('created.txt', uEmpty)\n"
+        "  nCopperfinEmptyError = 0\n"
+        "CATCH TO oError\n"
+        "  nCopperfinEmptyError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  dUnexpectedCopperfinNull = FDATE('created.txt', .NULL.)\n"
+        "  nCopperfinNullError = 0\n"
+        "CATCH TO oError\n"
+        "  nCopperfinNullError = oError.ErrorNo\n"
         "ENDTRY\n"
         "SET NUMERICBEHAVIOR TO VFP9\n"
         "lVfpFractionDate = (FDATE('created.txt', 0.9) == DATE())\n"
@@ -237,6 +262,12 @@ void test_fdate_ftime_runtime_functions()
         "  nVfpCurrencyPositiveWrapError = 0\n"
         "CATCH TO oError\n"
         "  nVfpCurrencyPositiveWrapError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  dUnexpectedVfpCharacter = FDATE('created.txt', '1')\n"
+        "  nVfpCharacterError = 0\n"
+        "CATCH TO oError\n"
+        "  nVfpCharacterError = oError.ErrorNo\n"
         "ENDTRY\n"
         "SET NUMERICBEHAVIOR TO COPPERFIN\n"
         "nTimeLength = LEN(cFileTime)\n"
@@ -282,6 +313,10 @@ void test_fdate_ftime_runtime_functions()
     check("ncopperfinmissingfractionerror", "11");
     check("ncopperfininfiniteerror", "11");
     check("ncopperfincurrencyfractionerror", "11");
+    check("ncopperfinlogicalerror", "11");
+    check("ncopperfincharactererror", "11");
+    check("ncopperfinemptyerror", "11");
+    check("ncopperfinnullerror", "11");
     check("lvfpfractiondate", "true");
     check("lvfpnegativefractiondate", "true");
     check("lvfpnegativewrapdate", "true");
@@ -294,6 +329,7 @@ void test_fdate_ftime_runtime_functions()
     check("nvfpinfiniteerror", "11");
     check("nvfpcurrencysubuniterror", "11");
     check("nvfpcurrencypositivewraperror", "11");
+    check("nvfpcharactererror", "11");
     check("ntimelength", "8");
     check("ctimecolonone", ":");
     check("ctimecolontwo", ":");

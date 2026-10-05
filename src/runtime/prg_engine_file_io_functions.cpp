@@ -269,6 +269,14 @@ bool file_last_write_local_time(const std::filesystem::path& path, std::tm& loca
 bool fdate_datetime_requested(
     const PrgValue& value,
     const std::function<std::string(const std::string&)>& set_callback) {
+    const bool numeric_type = value.kind == PrgValueKind::number ||
+        value.kind == PrgValueKind::int64 ||
+        value.kind == PrgValueKind::uint64 ||
+        value.kind == PrgValueKind::currency;
+    if (value.is_null || !numeric_type) {
+        throw_invalid_fdate_type();
+    }
+
     if (numeric_behavior(set_callback) != NumericBehavior::vfp9) {
         if (value.kind == PrgValueKind::int64) {
             if (value.int64_value == 0) {
