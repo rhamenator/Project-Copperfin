@@ -1,0 +1,1 @@
+- 2026-10-05: Retained 54 installed-VFP9 AFONT Numeric-size observations and selected its bounded third-argument checked-conversion continuation under #5611/#6776 after ADIR PR #6980 merged; runtime migration and regression/sanitizer verification remain pending, with font-result/type/fourth-flag parity kept separate.
