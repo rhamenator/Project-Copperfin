@@ -7,10 +7,12 @@
 #include "../src/runtime/prg_engine_helpers.h"
 #include "../src/runtime/prg_engine_date_time_functions.h"
 #include "../src/runtime/prg_engine_numeric_functions.h"
+#include "../src/runtime/prg_engine_runtime_surface_functions.h"
 #include "../src/runtime/prg_compatibility_error.h"
 #include "prg_engine_test_support.h"
 
 #include <cmath>
+#include <cfenv>
 #include <cstdint>
 #include <filesystem>
 #include <iostream>
@@ -721,6 +723,17 @@ std::vector<Row> build_rows() {
         rows.push_back({set, "HEX(-EXP(1000))", "ERR11"});
         rows.push_back({set, "HEX($562949953421311.9999)", "C:1FFFFFFFFFFFF"});
     }
+    // RQ-CF-PRG-SYS-SELECTOR-NUMERIC-001: selector admission only; SYS return gaps are separate.
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        rows.push_back({set, "SYS(5.9)==SYS(5)", "L:true"});
+        rows.push_back({set, "SYS(9223372036854775808.0)",
+                        std::string(mode) == "COPPERFIN" ? "ERR11" : "C:0"});
+        rows.push_back({set, "SYS(1E300)", std::string(mode) == "COPPERFIN" ? "ERR11" : "C:0"});
+        rows.push_back({set, "SYS(EXP(1000))", std::string(mode) == "COPPERFIN" ? "ERR11" : "C:0"});
+        rows.push_back({set, "SYS(-EXP(1000))", std::string(mode) == "COPPERFIN" ? "ERR11" : "C:0"});
+    }
+    rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "SYS(-4294967291)==SYS(5)", "L:true"});
     return rows;
 }
 
@@ -1246,6 +1259,97 @@ void test_hex_direct_numeric_boundaries() {
     }
 }
 
+// RQ-CF-PRG-SYS-SELECTOR-NUMERIC-001 (#5611/#6776). The retained installed probe
+// determines Numeric conversion, not unimplemented SYS return semantics.
+void test_sys_selector_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    const double inf = std::numeric_limits<double>::infinity();
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const double upper = 9223372036854775808.0;
+    struct Case { PrgValue value; const char* copperfin; const char* vfp9; };
+    const std::vector<Case> cases{
+        {make_number_value(5), "/sys-sentinel/", "/sys-sentinel/"},
+        {make_number_value(5.49), "/sys-sentinel/", "/sys-sentinel/"},
+        {make_number_value(5.5), "/sys-sentinel/", "/sys-sentinel/"},
+        {make_number_value(5.9), "/sys-sentinel/", "/sys-sentinel/"},
+        {make_number_value(-0.9), "0", "0"},
+        {make_number_value(-1), "0", "0"},
+        {make_number_value(2147483647), "0", "0"},
+        {make_number_value(2147483648), "0", "0"},
+        {make_number_value(-2147483648.0), "0", "0"},
+        {make_number_value(-2147483649.0), "0", "0"},
+        {make_number_value(4294967301.0), "0", "0"},
+        {make_number_value(4294969326.0), "0", "0"}, // low bits are state-changing SYS(2030)
+        {make_number_value(-4294967291.0), "0", "/sys-sentinel/"},
+        {make_number_value(std::nextafter(upper, 0.0)), "0", "0"},
+        {make_number_value(upper), "ERR11", "0"},
+        {make_number_value(std::nextafter(upper, inf)), "ERR11", "0"},
+        {make_number_value(-upper), "0", "0"},
+        {make_number_value(std::nextafter(-upper, -inf)), "ERR11", "0"},
+        {make_number_value(1E300), "ERR11", "0"},
+        {make_number_value(-1E300), "ERR11", "0"},
+        {make_number_value(inf), "ERR11", "0"},
+        {make_number_value(-inf), "ERR11", "0"},
+        {make_number_value(nan), "ERR11", "ERR11"},
+        {make_int64_value(std::numeric_limits<std::int64_t>::max()), "0", "0"},
+        {make_int64_value(std::numeric_limits<std::int64_t>::min() + 5), "0", "/sys-sentinel/"},
+        {make_uint64_value(UINT64_C(9223372036854775807)), "0", "0"},
+        {make_uint64_value(UINT64_C(9223372036854775808)), "ERR11", "0"},
+        {make_uint64_value(std::numeric_limits<std::uint64_t>::max()), "ERR11", "0"},
+        // Nonnumeric/Currency coercion remains unchanged, but rounded values are checked before casting.
+        {make_boolean_value(true), "0", "0"},
+        {make_null_value(), "0", "0"},
+        {make_string_value("5.9"), "0", "0"},
+        {make_string_value("1E300"), "ERR11", "ERR11"},
+        {make_currency_value(59000), "0", "0"}};
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        for (std::size_t i = 0; i < cases.size(); ++i) {
+            int operation_callbacks = 0;
+            const auto setting = [&](const std::string& name) {
+                if (name == "NUMERICBEHAVIOR") { return std::string(mode); }
+                ++operation_callbacks;
+                return std::string("1");
+            };
+            std::string actual;
+            std::feclearexcept(FE_INVALID);
+            try {
+                const auto result = evaluate_runtime_surface_function(
+                    "sys", {cases[i].value, make_number_value(1)}, {}, "/sys-sentinel/",
+                    {}, {}, 0, {}, 0, {}, 0, {}, {}, {}, {}, {}, {}, {}, {}, setting,
+                    {}, {}, false, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {});
+                actual = result.has_value() && result->kind == PrgValueKind::string
+                    ? result->string_value : "wrong-result-type";
+            } catch (const PrgCompatibilityError& error) {
+                actual = "ERR" + std::to_string(error.error_code());
+            }
+            const char* expected = std::string(mode) == "COPPERFIN" ? cases[i].copperfin : cases[i].vfp9;
+            const std::string label = std::string(mode) + " SYS selector boundary " + std::to_string(i);
+            expect(actual == expected, label + " should preserve checked selector admission");
+            expect((std::fetestexcept(FE_INVALID) & FE_INVALID) == 0,
+                   label + " should not invoke an invalid llround conversion");
+            expect(operation_callbacks == 0, label + " must not alias a state-changing SYS operation");
+            std::feclearexcept(FE_INVALID);
+        }
+        // Positive control: the callback guard above is connected to actual dispatch.
+        int operation_callbacks = 0;
+        const auto setting = [&](const std::string& name) {
+            if (name == "NUMERICBEHAVIOR") { return std::string(mode); }
+            expect(name == std::string("__sys2030__\x1f") + "1",
+                   "SYS(2030,1) should request the existing session-local switch");
+            ++operation_callbacks;
+            return std::string("1");
+        };
+        const auto result = evaluate_runtime_surface_function(
+            "sys", {make_number_value(2030), make_number_value(1)}, {}, "/sys-sentinel/",
+            {}, {}, 0, {}, 0, {}, 0, {}, {}, {}, {}, {}, {}, {}, {}, setting,
+            {}, {}, false, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {});
+        expect(result.has_value() && result->kind == PrgValueKind::number && result->number_value == 1,
+               std::string(mode) + " valid SYS selector should retain its operation result");
+        expect(operation_callbacks == 1,
+               std::string(mode) + " valid SYS selector should reach the operation callback");
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -1256,6 +1360,7 @@ int main() {
     test_rgb_direct_numeric_boundaries();
     test_rand_direct_numeric_boundaries();
     test_hex_direct_numeric_boundaries();
+    test_sys_selector_direct_numeric_boundaries();
     test_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {

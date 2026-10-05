@@ -1,0 +1,26 @@
+VERSION|Visual FoxPro 09.00.0000.7423 for Windows
+BASE7-LENGTH|0
+0|C:other-length-22
+5|C:matches-5
+5.49|C:matches-5
+5.5|C:matches-5
+5.9|C:matches-5
+7.9|C:matches-7
+-0.9|C:other-length-22
+-1|C:other-length-22
+2147483647|C:matches-7
+2147483648|C:matches-7
+-2147483648|C:other-length-22
+-2147483649|C:matches-7
+4294967295|C:matches-7
+4294967296|C:matches-7
+4294967301|C:matches-7
+4294967303|C:matches-7
+-4294967291|C:matches-5
+-4294967289|C:matches-7
+9007199254740992|C:matches-7
+9223372036854775808.0|C:matches-7
+1E300|C:matches-7
+-1E300|C:other-length-22
+EXP(1000)|C:matches-7
+-EXP(1000)|C:other-length-22

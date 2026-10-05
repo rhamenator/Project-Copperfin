@@ -65,7 +65,11 @@
             return std::string("PROCEDURE ") + routine_name + " " + file_path;
         };
         if (!arguments.empty()) {
-            const long long sys_code = std::llround(value_as_number(arguments[0]));
+            const auto selector = sys_selector_integer(arguments[0], numeric_behavior(set_callback));
+            if (!selector.has_value()) {
+                return make_string_value("0"); // unchanged unrecognized-selector return contract
+            }
+            const std::int64_t sys_code = *selector;
             if (sys_code == 3) {
                 // VFP9 SYS(3) is a legal temporary filename component, not
                 // a product/version descriptor. Keep it extension-free so
