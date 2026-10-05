@@ -13,8 +13,8 @@ The most recent shipped slice is ADIR PR #6980, detailed below. All 11 required
 exact-head checks passed, final review was clean and all five conversations
 were resolved. The active continuation is AFONT third-argument Numeric size
 conversion on `fix/afont-size-numeric-5611`: native recovery and bounded
-implementation pass focused normal/sanitizer verification; next open the PR
-and complete exact-head CI/review gates. No VM is in use.
+implementation pass focused normal/sanitizer verification in open PR #6983;
+next complete exact-head CI/review gates. No VM is in use.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -411,9 +411,9 @@ docs/32 and docs/22 retain bidirectional scope/verification links. Run numeric
 tests sequentially across build directories to avoid their shared scratch path.
 Builds are `/home/rich/temp/copperfin-afont-size-5611-build` and
 `/home/rich/temp/copperfin-afont-size-5611-sanitize`; remove them only after merge.
-Next push the signed implementation, open a PR against main for this branch
-(discover it by exact head branch), request automated exact-head review, and
-complete all 11 required checks plus conversation resolution before merge.
+PR #6983 is open against main; signed implementation `58c3411e6` is pushed.
+Next complete exact-head automated review and all 11 required checks, verify
+any review fixes and resolve their conversations before merge.
 Then synchronize main, clean the slice/build/branch and re-read the live channel.
 No VM was started, no font/system changes made, and no owner input is needed.
 
