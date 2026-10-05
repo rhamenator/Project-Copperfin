@@ -241,30 +241,30 @@ and all six review conversations were resolved after their fixes were verified.
 The completed worktree, branch, scratch probe, and build directories were
 cleaned up after merge.
 
-The next bounded slice is `RAND()` seed numeric conversion on branch
-`fix/rand-seed-bounds-5611` in
-`~/.codex/worktrees/rand-seed-bounds-5611/Project-Copperfin`, based on that
-merge. Fresh installed-VFP9 evidence retained in
-`tests/fixtures/vfp9-rand-seed-bounds-observation/` shows that positive fractions truncate,
-every non-positive seed requests the same reset sequence, positive values use
-their low 32 bits, and positive values outside int64 use integer-indefinite
-low bits zero. A draft replaces the unchecked `llround()`/`int` cast and
-`-INT_MIN` path with exact-aware, defined conversion: default COPPERFIN rejects
-positive values above `UINT32_MAX` and every non-finite seed with error 11;
-explicit VFP9 preserves the recovered positive low-32-bit behavior and signed
-infinity behavior. Exact int64/uint64/Currency arguments avoid a double round
-trip. Focused `test_prg_engine_numeric_behavior` and neighboring
-`test_prg_engine_string_math_functions` pass normally and under Clang
-AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
-instrumentation. The fixture, docs/22, docs/32 traceability, and changelog
-fragment are complete; diff and changelog checks pass. Signed commit
-`555be96ac` is pushed in PR #6942. One review comment claimed that fractional
-values just above `UINT32_MAX` should fail before truncation. A fresh installed-
-VFP9 follow-up proves both Numeric `4294967295.9` and Currency
-`$4294967295.0001` select the same two-value sequence as `UINT32_MAX`; the
-intended truncation-first ceiling is now explicit in tests, retained evidence,
-docs/22, and docs/32. Remaining: commit/push that review clarification, reply
-and resolve the conversation, verify green exact-head checks, and merge.
+The `RAND()` seed numeric-conversion slice merged in PR #6942 at `7ba689c48`.
+All 33 exact-head checks passed and its one review conversation was resolved
+after fresh VFP9 evidence proved the intended truncation-first ceiling. The
+completed worktree, branch, probe, and build directories were cleaned up.
+
+The active bounded slice is `FILE()` / `DIRECTORY()` visibility-flag numeric
+conversion on branch `fix/file-directory-flags-5611` in
+`~/.codex/worktrees/file-directory-flags-5611/Project-Copperfin`. Fresh
+installed-VFP9 evidence shows that zero excludes Hidden/System entries and
+every probed nonzero finite value includes them, including fractions,
+negative one, and magnitudes of `1E300`; the current `llround()`/`int` path is
+both undefined for large values and incorrectly rounds fractional flags.
+A draft makes default COPPERFIN accept only documented 0/1 and raise error 11
+otherwise, while explicit VFP9 preserves the recovered finite nonzero rule.
+Tests, retained evidence, docs/22, docs/32 traceability, and a changelog
+fragment are complete. Focused runtime-surface validation passes normally and
+under Clang AddressSanitizer, UndefinedBehaviorSanitizer, and
+float-cast-overflow instrumentation; diff and changelog checks pass. Signed
+commit `c56133289` is pushed in PR #6947. There are no review conversations;
+the exact-head CI and automated review are in progress. Remaining: address any
+actionable review/CI result, verify green exact-head checks, and merge.
+During selection, unrelated compatibility gaps in `FV()`/`PV()` signatures and
+`SYS(-1)` surfaced and were filed as #6944 and #6945 without expanding this
+slice.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
@@ -356,7 +356,8 @@ Owner-directed workstream order before the #6879 assignment was:
      #6939).
    - Completed after those: Currency-first `MOD()` Numeric-divisor conversion
      (PR #6941).
-   - Active: `RAND()` seed numeric conversion.
+   - Completed after those: `RAND()` seed numeric conversion (PR #6942).
+   - Active: `FILE()` / `DIRECTORY()` visibility-flag numeric conversion.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`
