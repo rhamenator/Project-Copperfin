@@ -108,13 +108,20 @@
 
             if (normalized_function == "alines" && arguments.size() >= 2U)
             {
-                const int flags = arguments.size() >= 3U ? static_cast<int>(std::llround(value_as_number(arguments[2]))) : 0;
+                // RQ-CF-PRG-ALINES-FLAGS-NUMERIC-001: reject before array mutation.
+                const auto flags = arguments.size() >= 3U
+                    ? checked_alines_flags_argument(arguments[2], array_numeric_behavior)
+                    : std::optional<std::int32_t>{0};
+                if (!flags.has_value())
+                {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                }
                 std::vector<std::string> parse_tokens;
                 for (std::size_t index = 3U; index < arguments.size(); ++index)
                 {
                     parse_tokens.push_back(value_as_string(arguments[index]));
                 }
-                return populate_lines_array(array_name, value_as_string(arguments[1]), flags, parse_tokens);
+                return populate_lines_array(array_name, value_as_string(arguments[1]), *flags, parse_tokens);
             }
 
             if (normalized_function == "adir")

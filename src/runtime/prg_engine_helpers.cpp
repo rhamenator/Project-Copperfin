@@ -1301,6 +1301,40 @@ std::optional<std::int64_t> checked_truncated_numeric_to_int64(const double valu
     return static_cast<std::int64_t>(value);
 }
 
+// RQ-CF-PRG-ALINES-FLAGS-NUMERIC-001 (#5611/#6776); native evidence retained in
+// tests/fixtures/vfp9-alines-flags-numeric-observation/. Splitting is unchanged.
+std::optional<std::int32_t> checked_alines_flags_argument(
+    const PrgValue& value,
+    const NumericBehavior behavior) {
+    if (value.kind == PrgValueKind::number || value.kind == PrgValueKind::int64 ||
+        value.kind == PrgValueKind::uint64) {
+        std::optional<std::int64_t> flags;
+        if (behavior == NumericBehavior::vfp9) {
+            flags = vfp9_numeric_to_int32(value);
+        } else if (value.kind == PrgValueKind::int64) {
+            flags = value.int64_value;
+        } else if (value.kind == PrgValueKind::uint64) {
+            if (value.uint64_value <= 31U) {
+                flags = static_cast<std::int64_t>(value.uint64_value);
+            }
+        } else {
+            flags = checked_truncated_numeric_to_int64(value.number_value);
+        }
+        if (!flags.has_value() || *flags < 0 || *flags > 31) {
+            return std::nullopt;
+        }
+        return static_cast<std::int32_t>(*flags);
+    }
+    // Preserve other existing coercions without inferring a native type contract.
+    // std::round has llround's in-range rounding, without its integer-domain call.
+    const auto flags = checked_truncated_numeric_to_int64(std::round(value_as_number(value)));
+    if (!flags.has_value() || *flags < std::numeric_limits<std::int32_t>::min() ||
+        *flags > std::numeric_limits<std::int32_t>::max()) {
+        return std::nullopt;
+    }
+    return static_cast<std::int32_t>(*flags);
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {

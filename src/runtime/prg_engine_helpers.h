@@ -139,6 +139,12 @@ std::int64_t numeric_count_argument(double value, NumericBehavior behavior);
 // Truncate toward zero only when `value` is finite and representable as int64. This is the fail-closed conversion for
 // array positions/selectors and other arguments where saturation would turn invalid input into an ordinary value.
 std::optional<std::int64_t> checked_truncated_numeric_to_int64(double value);
+// RQ-CF-PRG-ALINES-FLAGS-NUMERIC-001: Numeric/exact-integer flags truncate to
+// 0..31. COPPERFIN checks admission before conversion; only VFP9 retains
+// signed-low-32-bit aliases and integer-indefinite zero. Other coercions keep
+// existing half-away rounding with a checked int32 boundary, not native type
+// parity. Missing result means localized error 11 before array mutation.
+std::optional<std::int32_t> checked_alines_flags_argument(const PrgValue& value, NumericBehavior behavior);
 // #6050: integer arguments crossing a DECLARE boundary. Ordinary VFP9
 // INTEGER/LONG parameters receive the low 32 bits after truncation toward
 // zero. Exact int64/uint64 values keep their low bits without a floating round
