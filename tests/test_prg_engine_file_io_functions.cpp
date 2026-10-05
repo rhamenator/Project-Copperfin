@@ -300,6 +300,194 @@ void test_fseek_numeric_boundaries()
     fs::remove_all(root, ignored);
 }
 
+// Governing requirement: RQ-CF-PRG-FCHSIZE-NUMERIC-BOUNDS-001 (#5611/#6776).
+void test_fchsize_numeric_boundaries()
+{
+    using namespace copperfin::runtime;
+    namespace fs = std::filesystem;
+    const fs::path root = fs::temp_directory_path() / "copperfin_prg_engine_fchsize_boundaries";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    struct Row {
+        const char* name;
+        PrgValue size;
+        bool strict_error;
+        bool vfp_error;
+        std::uint64_t converted;
+    };
+    const std::vector<Row> rows{
+        {"zero", make_number_value(0), false, false, 0},
+        {"exact", make_number_value(3), false, false, 3},
+        {"extend", make_number_value(8), false, false, 8},
+        {"int64 exact", make_int64_value(3), false, false, 3},
+        {"uint64 exact", make_uint64_value(3), false, false, 3},
+        {"fraction", make_number_value(3.9), true, false, 3},
+        {"immediately below", make_number_value(std::nextafter(3.0, 2.0)), true, false, 2},
+        {"immediately above", make_number_value(std::nextafter(3.0, 4.0)), true, false, 3},
+        {"subunit", make_number_value(0.9), true, false, 0},
+        {"negative subunit", make_number_value(-0.9), true, false, 0},
+        {"negative", make_number_value(-1), true, true, 0},
+        {"negative fraction", make_number_value(-3.9), true, true, 0},
+        {"int32 maximum", make_number_value(2147483647), false, false, 2147483647},
+        {"int64 maximum admitted", make_int64_value(2147483647), false, false, 2147483647},
+        {"uint64 maximum admitted", make_uint64_value(2147483647), false, false, 2147483647},
+        {"immediately above maximum", make_number_value(std::nextafter(2147483647.0, 2147483648.0)), true, false, 2147483647},
+        {"above int32", make_number_value(2147483648.0), true, true, 0},
+        {"int32 minimum", make_number_value(-2147483648.0), true, true, 0},
+        {"below int32", make_number_value(-2147483649.0), true, false, 2147483647},
+        {"uint32 maximum", make_number_value(4294967295.0), true, true, 0},
+        {"positive wrap", make_number_value(4294967299.0), true, false, 3},
+        {"negative wrap", make_number_value(-4294967293.0), true, false, 3},
+        {"double wrap", make_number_value(8589934595.0), true, false, 3},
+        {"negative double wrap", make_number_value(-8589934589.0), true, false, 3},
+        {"huge", make_number_value(1E300), true, false, 0},
+        {"negative huge", make_number_value(-1E300), true, false, 0},
+        {"infinity", make_number_value(std::numeric_limits<double>::infinity()), true, false, 0},
+        {"negative infinity", make_number_value(-std::numeric_limits<double>::infinity()), true, false, 0},
+        {"NaN", make_number_value(std::numeric_limits<double>::quiet_NaN()), true, true, 0},
+        {"int64 low bits above double precision", make_int64_value(INT64_C(9007199254740995)), true, false, 3},
+        {"uint64 low bits above double precision", make_uint64_value(UINT64_C(9007199254740995)), true, false, 3},
+        {"uint64 high low bits", make_uint64_value(UINT64_C(9223372036854775811)), true, false, 3},
+        {"int64 minimum", make_int64_value(std::numeric_limits<std::int64_t>::min()), true, false, 0},
+        {"int64 maximum", make_int64_value(std::numeric_limits<std::int64_t>::max()), true, true, 0},
+        {"uint64 maximum", make_uint64_value(std::numeric_limits<std::uint64_t>::max()), true, true, 0},
+        {"Currency exact", make_currency_value(30000), false, false, 3},
+        {"Currency fraction", make_currency_value(39000), true, false, 3},
+        {"Currency subunit", make_currency_value(9000), true, true, 0},
+        {"Currency negative subunit", make_currency_value(-9000), true, true, 0},
+        {"Currency negative", make_currency_value(-10000), true, true, 0},
+        {"Currency negative fraction", make_currency_value(-39000), true, true, 0},
+        {"Currency maximum", make_currency_value(INT64_C(21474836470000)), false, false, 2147483647},
+        {"Currency maximum fraction", make_currency_value(INT64_C(21474836479000)), true, false, 2147483647},
+        {"Currency above int32", make_currency_value(INT64_C(21474836480000)), true, true, 0},
+        {"Currency int32 minimum", make_currency_value(-INT64_C(21474836480000)), true, true, 0},
+        {"Currency positive wrap", make_currency_value(INT64_C(42949672990000)), true, true, 0},
+        {"Currency negative wrap", make_currency_value(-INT64_C(42949672930000)), true, false, 3},
+        {"Currency negative limit fraction", make_currency_value(-INT64_C(42949672969000)), true, false, 0},
+        {"Currency negative overflow", make_currency_value(-INT64_C(42949672970000)), true, true, 0},
+        {"Currency maximum storage", make_currency_value(std::numeric_limits<std::int64_t>::max()), true, true, 0},
+        {"Currency minimum storage", make_currency_value(std::numeric_limits<std::int64_t>::min()), true, true, 0},
+        {"Logical", make_boolean_value(true), true, true, 0},
+        {"Logical false", make_boolean_value(false), true, true, 0},
+        {"numeric Character", make_string_value("3"), true, true, 0},
+        {"NULL", make_null_value(), true, true, 0},
+        {"Empty", PrgValue{}, true, true, 0},
+    };
+    for (const bool verified : {false, true}) {
+        for (const bool vfp : {false, true}) {
+            const auto call = [&](const std::string& function, const std::vector<PrgValue>& arguments) {
+                return evaluate_file_io_function(function, arguments, root.string(), verified,
+                    [](const fs::path&) -> std::optional<std::string> { return "abcdef"; }, {},
+                    [vfp](const std::string&) { return vfp ? "VFP9" : "COPPERFIN"; }).value();
+            };
+            for (const auto& row : rows) {
+                const bool error_expected = vfp ? row.vfp_error : row.strict_error;
+                // Never give large or uncertain operands a writable handle, even
+                // when running this test against the pre-fix implementation.
+                write_text(root / "data.txt", "abcdef");
+                const auto handle = call("fopen", {make_string_value("data.txt"), make_number_value(0)});
+                call("fseek", {handle, make_number_value(3)});
+                call("ftell", {make_number_value(0)}); // Seed nonzero FERROR.
+                bool rejected = false;
+                try {
+                    expect(value_as_number(call("fchsize", {handle, row.size})) == -1,
+                        std::string(row.name) + " read-only resize must remain blocked");
+                } catch (const PrgCompatibilityError& error) {
+                    rejected = true;
+                    expect(error.error_code() == 11, std::string(row.name) + " error 11");
+                }
+                expect(rejected == error_expected, std::string(row.name) + " size admission");
+                const auto file_error = value_as_number(call("ferror", {}));
+                expect(rejected ? file_error == 6 : file_error != 0, std::string(row.name) + " error state");
+                expect(value_as_number(call("ftell", {handle})) == 3, std::string(row.name) + " position preserved");
+                expect(read_text(root / "data.txt") == "abcdef", std::string(row.name) + " persistent bytes preserved");
+                call("fclose", {handle});
+                // Size validation precedes invalid-handle lookup in both modes.
+                rejected = false;
+                try {
+                    expect(value_as_number(call("fchsize", {make_number_value(-999), row.size})) == -1,
+                        std::string(row.name) + " invalid handle return");
+                } catch (const PrgCompatibilityError& error) {
+                    rejected = true;
+                    expect(error.error_code() == 11, std::string(row.name) + " invalid handle error 11");
+                }
+                expect(rejected == error_expected, std::string(row.name) + " validation order");
+            }
+            if (!verified) {
+                for (const auto& row : rows) {
+                    if (row.converted > 8) {
+                        continue;
+                    }
+                    // Limit the original value too: the old conversion must not
+                    // create huge files during fail-before verification.
+                    if (value_as_number(row.size) > 8 || !std::isfinite(value_as_number(row.size))) {
+                        continue;
+                    }
+                    write_text(root / "data.txt", "abcdef");
+                    const auto handle = call("fopen", {make_string_value("data.txt"), make_number_value(2)});
+                    call("fseek", {handle, make_number_value(3)});
+                    call("ftell", {make_number_value(0)});
+                    bool rejected = false;
+                    try {
+                        expect(value_as_number(call("fchsize", {handle, row.size})) == 0,
+                            std::string(row.name) + " existing success return (separate #5912 gap)");
+                    } catch (const PrgCompatibilityError& error) {
+                        rejected = true;
+                        expect(error.error_code() == 11, std::string(row.name) + " writable error 11");
+                    }
+                    const bool error_expected = vfp ? row.vfp_error : row.strict_error;
+                    expect(rejected == error_expected, std::string(row.name) + " writable admission");
+                    expect(value_as_number(call("ferror", {})) == (rejected ? 6 : 0),
+                        std::string(row.name) + " rejection preserves / success clears FERROR");
+                    expect(value_as_number(call("ftell", {handle})) == 3, std::string(row.name) + " resize preserves position");
+                    call("fclose", {handle});
+                    expect(fs::file_size(root / "data.txt") == (error_expected ? 6 : row.converted),
+                        std::string(row.name) + " converted size / unchanged on rejection");
+                    const auto bytes = read_text(root / "data.txt");
+                    expect(bytes.substr(0, std::min<std::size_t>(bytes.size(), 6)) ==
+                        std::string("abcdef").substr(0, std::min<std::size_t>(bytes.size(), 6)),
+                        std::string(row.name) + " retained prefix");
+                }
+            }
+        }
+    }
+    const fs::path script = root / "fchsize_boundaries.prg";
+    write_text(root / "data.txt", "abcdef");
+    write_text(script,
+        "h = FOPEN('data.txt', 2)\n"
+        "=FSEEK(h, 3)\n"
+        "=FTELL(0)\n"
+        "TRY\n"
+        "  nUnexpected = FCHSIZE(h, 1E300)\n"
+        "CATCH TO oError\n"
+        "  nSizeError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "nErrorAfter = FERROR()\n"
+        "nPosition = FTELL(h)\n"
+        "cAfterReject = FILETOSTR('data.txt')\n"
+        "TRY\n"
+        "  nUnexpected = FCHSIZE(-999, .T.)\n"
+        "CATCH TO oError\n"
+        "  nOrderError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "SET NUMERICBEHAVIOR TO VFP9\n"
+        "nResize = FCHSIZE(h, 3.9)\n"
+        "=FCLOSE(h)\n"
+        "cResized = FILETOSTR('data.txt')\n"
+        "RETURN\n");
+    auto session = PrgRuntimeSession::create(make_runtime_session_options(script, root));
+    const auto state = session.run(DebugResumeAction::continue_run);
+    expect(state.completed, "FCHSIZE size errors must be catchable: " + state.message);
+    for (const auto& [name, expected] : std::vector<std::pair<std::string, std::string>>{
+            {"nsizeerror", "11"}, {"nordererror", "11"}, {"nerrorafter", "6"},
+            {"nposition", "3"}, {"cafterreject", "abcdef"}, {"nresize", "0"}, {"cresized", "abc"}}) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end() && format_value(found->second) == expected, name + " script expectation");
+    }
+    fs::remove_all(root, ignored);
+}
+
 // Governing requirement: RQ-CF-PRG-FILE-HANDLE-NUMERIC-001 (#5611/#6776).
 void test_file_handle_numeric_boundaries()
 {
@@ -1292,6 +1480,7 @@ int main()
 {
     test_file_io_runtime_functions();
     test_fseek_numeric_boundaries();
+    test_fchsize_numeric_boundaries();
     test_file_handle_numeric_boundaries();
     test_fdate_ftime_runtime_functions();
     test_fopen_mode_boundaries();

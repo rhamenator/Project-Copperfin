@@ -278,22 +278,32 @@ was still running at merge; every other check passed. The completed worktree,
 branch and build directories were cleaned up. Failed-seek return parity is
 separate gap #6956.
 
-The active bounded slice is shared file-handle numeric conversion for all ten
-low-level file-I/O callers on branch `fix/file-handle-numeric-5611` in
-`~/.codex/worktrees/file-handle-numeric-5611/Project-Copperfin`, based on that
-merge. Default COPPERFIN admits exact signed-32-bit numeric handles; explicit
-VFP9 reproduces Numeric truncation/wrapping and Currency conversion limits.
-Both modes retain invalid-type FERROR 6 without coercion. The 380-row installed
-VFP9 probe, 51-row native/verified two-mode test matrix, catchable script and
-requirements traceability are retained; old dispatch reports 1350 failures.
-Focused file-I/O and verified-byte suites pass normally and under Clang
-ASan/UBSan/float-cast-overflow. Builds are
-`/home/rich/temp/copperfin-file-handle-5611-{build,sanitize}`. Remaining: obtain
-green required checks and clean review for the final commit, verify/resolve
-any findings, merge and clean up. FCHSIZE's size argument is the next bounded
-#5611 slice; the owner's HEX conversion evidence on #5611 remains in the
-later-module inventory. Return gaps #5912/#5913/#5914/#5887/#5911/#6956 and
-newly filed #6959 remain separate from this conversion slice.
+Shared file-handle numeric conversion merged in PR #6960 at `cbd5ee9b6`.
+All 11 required checks passed at final signed head `4b8ca7248`; exact-head
+review was clean, and the sole conversation was resolved after the
+nonzero-FERROR preservation test fix was pushed and verified. Optional Linux
+GCC, macOS Clang and Windows MSVC were still running at merge; other checks
+were green. Main was synchronized, and the completed worktree, branches and
+build directories were cleaned up (builds moved to recoverable trash).
+
+The active bounded slice is `FCHSIZE()` size numeric conversion on branch
+`fix/fchsize-numeric-5611` in
+`~/.codex/worktrees/fchsize-numeric-5611/Project-Copperfin`, based on that
+merge. Default COPPERFIN admits exact nonnegative signed-32-bit sizes;
+explicit VFP9 uses the shared file-position conversion, then rejects negative
+converted sizes. The 101-call installed-VFP9 probe is retained in
+`tests/fixtures/vfp9-fchsize-numeric-observation/`; oversized probe values only
+use read-only handles. The 56-row native/verified two-mode matrix and script
+report 366 failures with old dispatch; float-cast-overflow sanitizer stops at
+its `1E300` conversion. Focused build directories are
+`/home/rich/temp/copperfin-fchsize-5611-{build,sanitize}`. Both focused file-I/O
+and verified-byte suites pass normally and under Clang
+ASan/UBSan/float-cast-overflow. Remaining: push signed/DCO commit, open PR, obtain
+green required checks and clean exact-head review, resolve verified fixes,
+merge and clean up. Next: inventory the remaining #5611 conversions, starting
+with the owner's HEX conversion evidence. Return gaps
+#5912/#5913/#5914/#5887/#5911/#6956/#6959 remain separate; negative FCHSIZE
+size admission is corrected here, but #5912's success return is unchanged.
 During selection, unrelated compatibility gaps in `FV()`/`PV()` signatures and
 `SYS(-1)` surfaced and were filed as #6944 and #6945 without expanding this
 slice.
@@ -399,8 +409,9 @@ Owner-directed workstream order before the #6879 assignment was:
      conversion (PR #6952).
    - Completed after those: `FSEEK()` offset/origin numeric conversion
      (PR #6957).
-   - Active: shared file-handle numeric conversion in ten low-level callers.
-   - Next bounded slice: `FCHSIZE()` size numeric conversion.
+   - Completed after those: shared file-handle numeric conversion in ten
+     low-level callers (PR #6960).
+   - Active: `FCHSIZE()` size numeric conversion.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

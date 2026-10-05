@@ -1,5 +1,20 @@
 # VFP Language Reference Coverage
 
+- `FCHSIZE()` size numeric boundaries (2026-10-05, #5611/#6776): default
+  COPPERFIN admits only exact numeric integers in [0, 2147483647]. Fractions,
+  negative, non-finite, out-of-range and nonnumeric sizes raise localized
+  catchable error 11 before handle lookup, flush or resize; rejection preserves
+  FERROR, position and bytes. Explicit VFP9 shares FSEEK's recovered Numeric
+  truncation/low-32-bit conversion and Currency restrictions, then rejects a
+  negative converted size. Thus Numeric negative sub-units and huge/infinite
+  values become zero, while Currency nonzero sub-units are rejected. NaN
+  rejection and exact int64/uint64 conversion are derived owner safety policy.
+  The 101-call installed probe (161 output lines) is retained under
+  `tests/fixtures/vfp9-fchsize-numeric-observation/`. Native and admitted-byte
+  streams share size admission; verified streams remain read-only. Small
+  resizes preserve position. Success still returns zero instead of VFP9's new
+  size: the remaining #5912 return gap is not part of this conversion slice.
+
 - Low-level file-handle numeric boundaries (2026-10-05, #5611/#6776): all
   ten callers (FCLOSE, FREAD, FWRITE, FGETS, FPUTS, FSEEK, FTELL, FEOF,
   FFLUSH, FCHSIZE) share checked admission. Default COPPERFIN accepts exact
@@ -14,7 +29,7 @@
   safety requirements, not VFP9 claims. The 380-row installed probe is retained
   under `tests/fixtures/vfp9-file-handle-numeric-observation/`. Return gaps
   #5912/#5913/#5914/#5887/#5911/#6956/#6959 remain separate; FCHSIZE's size
-  argument is a subsequent numeric-conversion slice.
+  argument is governed by the bounded size policy above.
 
 - `FSEEK()` offset/origin numeric boundaries (2026-10-05, #5611/#6776):
   default `COPPERFIN` requires exact signed-32-bit offsets and exact origins

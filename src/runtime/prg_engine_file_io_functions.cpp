@@ -258,14 +258,15 @@ std::int32_t file_handle_from_value(
     return static_cast<std::int32_t>(converted);
 }
 
-[[noreturn]] void throw_invalid_fseek_argument() {
+[[noreturn]] void throw_invalid_file_position_argument() {
     throw PrgCompatibilityError(
         runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
 }
 
 // Governing requirement: RQ-CF-PRG-FSEEK-NUMERIC-BOUNDS-001 (#5611/#6776).
+// Shared by RQ-CF-PRG-FCHSIZE-NUMERIC-BOUNDS-001 for the size operand.
 // Bound the offset to the same signed 32-bit domain on LP64 and Windows.
-std::int32_t fseek_integer_from_value(
+std::int32_t file_position_integer_from_value(
     const PrgValue& value,
     bool origin,
     const std::function<std::string(const std::string&)>& set_callback) {
@@ -273,7 +274,7 @@ std::int32_t fseek_integer_from_value(
         value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64 ||
         value.kind == PrgValueKind::currency;
     if (value.is_null || !numeric_type) {
-        throw_invalid_fseek_argument();
+        throw_invalid_file_position_argument();
     }
 
     std::int64_t converted = 0;
@@ -284,49 +285,60 @@ std::int32_t fseek_integer_from_value(
             converted = value.int64_value;
         } else if (value.kind == PrgValueKind::uint64) {
             if (value.uint64_value > static_cast<std::uint64_t>(maximum)) {
-                throw_invalid_fseek_argument();
+                throw_invalid_file_position_argument();
             }
             converted = static_cast<std::int64_t>(value.uint64_value);
         } else if (value.kind == PrgValueKind::currency) {
             if (value.currency_value % INT64_C(10000) != 0) {
-                throw_invalid_fseek_argument();
+                throw_invalid_file_position_argument();
             }
             converted = value.currency_value / INT64_C(10000);
         } else {
             const double raw = value.number_value;
             if (!std::isfinite(raw) || std::trunc(raw) != raw ||
                 raw < static_cast<double>(minimum) || raw > static_cast<double>(maximum)) {
-                throw_invalid_fseek_argument();
+                throw_invalid_file_position_argument();
             }
             converted = static_cast<std::int64_t>(raw);
         }
         if (converted < minimum || converted > maximum) {
-            throw_invalid_fseek_argument();
+            throw_invalid_file_position_argument();
         }
     } else if (value.kind == PrgValueKind::currency) {
         const std::int64_t whole = value.currency_value / INT64_C(10000);
         if ((value.currency_value != 0 && whole == 0) ||
             whole < -INT64_C(4294967296) || whole >= INT64_C(4294967296) ||
             (origin && whole > 2)) {
-            throw_invalid_fseek_argument();
+            throw_invalid_file_position_argument();
         }
         converted = vfp9_numeric_to_int32(make_int64_value(whole));
     } else {
         if (value.kind == PrgValueKind::number && std::isnan(value.number_value)) {
-            throw_invalid_fseek_argument();
+            throw_invalid_file_position_argument();
         }
         if (origin &&
             ((value.kind == PrgValueKind::number && value.number_value > 2.0) ||
              (value.kind == PrgValueKind::int64 && value.int64_value > 2) ||
              (value.kind == PrgValueKind::uint64 && value.uint64_value > 2U))) {
-            throw_invalid_fseek_argument();
+            throw_invalid_file_position_argument();
         }
         converted = vfp9_numeric_to_int32(value);
     }
     if (origin && (converted < 0 || converted > 2)) {
-        throw_invalid_fseek_argument();
+        throw_invalid_file_position_argument();
     }
     return static_cast<std::int32_t>(converted);
+}
+
+// Governing requirement: RQ-CF-PRG-FCHSIZE-NUMERIC-BOUNDS-001 (#5611/#6776).
+std::uint64_t fchsize_size_from_value(
+    const PrgValue& value,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    const std::int32_t converted = file_position_integer_from_value(value, false, set_callback);
+    if (converted < 0) {
+        throw_invalid_file_position_argument();
+    }
+    return static_cast<std::uint64_t>(converted);
 }
 
 struct FOpenModeSelection {
@@ -969,9 +981,9 @@ std::optional<PrgValue> evaluate_file_io_function(
     }
 
     if (function == "fseek" && arguments.size() >= 2U) {
-        const long offset = static_cast<long>(fseek_integer_from_value(arguments[1], false, set_callback));
+        const long offset = static_cast<long>(file_position_integer_from_value(arguments[1], false, set_callback));
         const int origin_mode = arguments.size() >= 3U
-            ? fseek_integer_from_value(arguments[2], true, set_callback) : 0;
+            ? file_position_integer_from_value(arguments[2], true, set_callback) : 0;
         const int handle = file_handle_from_value(arguments[0], set_callback);
         auto* opened = resolve_open_handle(handle);
         if (!is_open_handle(opened)) {
@@ -1085,6 +1097,9 @@ std::optional<PrgValue> evaluate_file_io_function(
     }
 
     if (function == "fchsize" && arguments.size() >= 2U) {
+        // Validate before handle lookup, flush or mutation, including verified
+        // read-only streams. Rejection must not change FERROR or file bytes.
+        const std::uint64_t requested_size = fchsize_size_from_value(arguments[1], set_callback);
         const int handle = file_handle_from_value(arguments[0], set_callback);
         auto* opened = resolve_open_handle(handle);
         if (opened == nullptr || opened->file == nullptr) {
@@ -1092,11 +1107,10 @@ std::optional<PrgValue> evaluate_file_io_function(
             return make_number_value(-1.0);
         }
 
-        const long long requested_size = static_cast<long long>(std::max(0.0, value_as_number(arguments[1])));
         std::fflush(opened->file);
         const int result = copperfin::platform::resize_file_stream(
             opened->file,
-            static_cast<std::uint64_t>(requested_size));
+            requested_size);
         if (result == 0) {
             clear_file_error();
         } else {
