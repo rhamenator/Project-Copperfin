@@ -26,6 +26,69 @@ namespace copperfin::runtime {
 
 namespace {
 
+constexpr std::uint32_t kRandResetSeed = 5489U;
+
+struct RandSeedAction {
+    bool reset = false;
+    std::uint32_t seed = 0U;
+};
+
+[[noreturn]] void throw_rand_seed_invalid_argument() {
+    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+}
+
+// Governing requirement: RQ-CF-PRG-RAND-SEED-BOUNDS-001 (#5611/#6776).
+RandSeedAction rand_seed_action(const PrgValue& value, const NumericBehavior behavior) {
+    const auto positive_integer_seed = [behavior](const std::uint64_t seed) {
+        if (behavior == NumericBehavior::copperfin &&
+            seed > static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max())) {
+            throw_rand_seed_invalid_argument();
+        }
+        return RandSeedAction{false, static_cast<std::uint32_t>(seed)};
+    };
+
+    if (value.kind == PrgValueKind::int64) {
+        return value.int64_value <= 0 ? RandSeedAction{true, kRandResetSeed}
+                                      : positive_integer_seed(static_cast<std::uint64_t>(value.int64_value));
+    }
+    if (value.kind == PrgValueKind::uint64) {
+        return value.uint64_value == 0U ? RandSeedAction{true, kRandResetSeed}
+                                        : positive_integer_seed(value.uint64_value);
+    }
+    if (value.kind == PrgValueKind::currency) {
+        if (value.currency_value <= 0) {
+            return RandSeedAction{true, kRandResetSeed};
+        }
+        return positive_integer_seed(static_cast<std::uint64_t>(value.currency_value / 10'000));
+    }
+
+    const double raw = value_as_number(value);
+    if (!std::isfinite(raw)) {
+        if (behavior == NumericBehavior::copperfin || std::isnan(raw)) {
+            throw_rand_seed_invalid_argument();
+        }
+        return std::signbit(raw) ? RandSeedAction{true, kRandResetSeed}
+                                 : RandSeedAction{false, 0U};
+    }
+    if (raw <= 0.0) {
+        return RandSeedAction{true, kRandResetSeed};
+    }
+
+    const double truncated = std::trunc(raw);
+    if (behavior == NumericBehavior::copperfin) {
+        if (truncated > static_cast<double>(std::numeric_limits<std::uint32_t>::max())) {
+            throw_rand_seed_invalid_argument();
+        }
+        return RandSeedAction{false, static_cast<std::uint32_t>(truncated)};
+    }
+    if (const auto converted = checked_truncated_numeric_to_int64(truncated); converted.has_value()) {
+        return RandSeedAction{false, static_cast<std::uint32_t>(static_cast<std::uint64_t>(*converted))};
+    }
+    // Installed VFP9 converts a positive value outside int64 through the
+    // integer-indefinite value, whose low 32 bits are zero.
+    return RandSeedAction{false, 0U};
+}
+
 // Governing requirement: RQ-CF-PRG-RGB-COMPONENT-BOUNDS-001.
 int color_component(const PrgValue& value, const NumericBehavior behavior) {
     constexpr std::int64_t maximum_component = 255;
@@ -692,14 +755,10 @@ std::optional<PrgValue> evaluate_numeric_function(
         return make_number_value(static_cast<double>(red + (green * 256) + (blue * 65536)));
     }
     if (function == "rand") {
-        static thread_local std::mt19937 generator{5489U};
+        static thread_local std::mt19937 generator{kRandResetSeed};
         if (!arguments.empty()) {
-            const int seed = static_cast<int>(std::llround(value_as_number(arguments[0])));
-            if (seed < 0) {
-                generator.seed(static_cast<std::uint32_t>(-seed));
-            } else if (seed > 0) {
-                generator.seed(static_cast<std::uint32_t>(seed));
-            }
+            const RandSeedAction action = rand_seed_action(arguments[0], numeric_behavior(set_callback));
+            generator.seed(action.reset ? kRandResetSeed : action.seed);
         }
         return make_number_value(std::generate_canonical<double, 53>(generator));
     }
