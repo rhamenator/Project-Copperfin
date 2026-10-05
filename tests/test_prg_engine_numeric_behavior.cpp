@@ -691,6 +691,12 @@ std::vector<Row> build_rows() {
                             "a=RAND(123)\nb=RAND()\nc=RAND(123.9)\nd=RAND()",
                         "a==c AND b==d", "L:true"});
         rows.push_back({set +
+                            "a=RAND(4294967295)\nb=RAND()\nc=RAND(4294967295.9)\nd=RAND()",
+                        "a==c AND b==d", "L:true"});
+        rows.push_back({set +
+                            "a=RAND($4294967295.0000)\nb=RAND()\nc=RAND($4294967295.0001)\nd=RAND()",
+                        "a==c AND b==d", "L:true"});
+        rows.push_back({set +
                             "a=RAND(0)\nb=RAND()\nc=RAND(-1E20)\nd=RAND()",
                         "a==c AND b==d", "L:true"});
         rows.push_back({std::string("SET NUMERICBEHAVIOR TO ") + mode,

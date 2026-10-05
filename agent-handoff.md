@@ -257,8 +257,14 @@ trip. Focused `test_prg_engine_numeric_behavior` and neighboring
 `test_prg_engine_string_math_functions` pass normally and under Clang
 AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
 instrumentation. The fixture, docs/22, docs/32 traceability, and changelog
-fragment are complete; diff and changelog checks pass. Remaining: final
-self-review, signed commit, push, PR/review, green exact-head checks, and merge.
+fragment are complete; diff and changelog checks pass. Signed commit
+`555be96ac` is pushed in PR #6942. One review comment claimed that fractional
+values just above `UINT32_MAX` should fail before truncation. A fresh installed-
+VFP9 follow-up proves both Numeric `4294967295.9` and Currency
+`$4294967295.0001` select the same two-value sequence as `UINT32_MAX`; the
+intended truncation-first ceiling is now explicit in tests, retained evidence,
+docs/22, and docs/32. Remaining: commit/push that review clarification, reply
+and resolve the conversation, verify green exact-head checks, and merge.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is

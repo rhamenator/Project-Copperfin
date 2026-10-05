@@ -13,4 +13,7 @@ then repeated, proving that the first two values of each recovered sequence are
 deterministic rather than a coincidental single-value match.
 
 `rand-seed.prg` is the complete probe source and `rand-seed.out` is its complete
-output.
+output. `fractional-ceiling-review.prg` and its matching `.out` file are the
+complete focused follow-up proving that Numeric `4294967295.9` and Currency
+`$4294967295.0001` select the same two-value sequence as their respective
+`UINT32_MAX` integer values; the ceiling is applied after truncation.
