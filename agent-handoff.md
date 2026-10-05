@@ -246,22 +246,28 @@ All 33 exact-head checks passed and its one review conversation was resolved
 after fresh VFP9 evidence proved the intended truncation-first ceiling. The
 completed worktree, branch, probe, and build directories were cleaned up.
 
-The active bounded slice is `FILE()` / `DIRECTORY()` visibility-flag numeric
-conversion on branch `fix/file-directory-flags-5611` in
-`~/.codex/worktrees/file-directory-flags-5611/Project-Copperfin`. Fresh
-installed-VFP9 evidence shows that zero excludes Hidden/System entries and
-every probed nonzero finite value includes them, including fractions,
-negative one, and magnitudes of `1E300`; the current `llround()`/`int` path is
-both undefined for large values and incorrectly rounds fractional flags.
-A draft makes default COPPERFIN accept only documented 0/1 and raise error 11
-otherwise, while explicit VFP9 preserves the recovered finite nonzero rule.
+The `FILE()` / `DIRECTORY()` visibility-flag numeric-conversion slice merged
+in PR #6947 at `68178c648`. All required checks passed at exact head
+`cde062b21`, optional installer/package checks were also green, exact-head
+Copilot review had no findings, and there were no review conversations. The
+completed worktree, branch, scratch probe, and build directories were cleaned
+up after merge.
+
+The active bounded slice is `FDATE()` optional type-flag numeric conversion on
+branch `fix/fdate-datetime-flag-5611` in
+`~/.codex/worktrees/fdate-datetime-flag-5611/Project-Copperfin`, based on that
+merge. Fresh installed-VFP9 evidence shows type-specific Numeric and Currency
+conversion: Numeric rejects a raw positive value above 1, otherwise uses the
+signed low 32 bits and admits only 0/1; Currency rejects a nonzero sub-unit,
+otherwise truncates to whole units, rejects positive whole values above 1,
+then performs the same conversion. A draft makes default COPPERFIN strict at
+exact documented 0/1 and preserves the recovered behavior only under explicit
+VFP9 without out-of-range host conversion.
 Tests, retained evidence, docs/22, docs/32 traceability, and a changelog
-fragment are complete. Focused runtime-surface validation passes normally and
-under Clang AddressSanitizer, UndefinedBehaviorSanitizer, and
-float-cast-overflow instrumentation; diff and changelog checks pass. Signed
-commit `c56133289` is pushed in PR #6947. There are no review conversations;
-the exact-head CI and automated review are in progress. Remaining: address any
-actionable review/CI result, verify green exact-head checks, and merge.
+fragment are complete. Focused file-I/O validation passes normally and under
+Clang AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
+instrumentation; diff and changelog checks pass. Remaining: signed commit,
+push, PR/review, green exact-head checks, and merge.
 During selection, unrelated compatibility gaps in `FV()`/`PV()` signatures and
 `SYS(-1)` surfaced and were filed as #6944 and #6945 without expanding this
 slice.
@@ -357,7 +363,9 @@ Owner-directed workstream order before the #6879 assignment was:
    - Completed after those: Currency-first `MOD()` Numeric-divisor conversion
      (PR #6941).
    - Completed after those: `RAND()` seed numeric conversion (PR #6942).
-   - Active: `FILE()` / `DIRECTORY()` visibility-flag numeric conversion.
+   - Completed after those: `FILE()` / `DIRECTORY()` visibility-flag numeric
+     conversion (PR #6947).
+   - Active: `FDATE()` optional type-flag numeric conversion.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

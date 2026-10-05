@@ -175,6 +175,70 @@ void test_fdate_ftime_runtime_functions()
         "lDateMatchesToday = (dFileDate == DATE())\n"
         "lDateDefaultMatchesToday = (dFileDateDefault == DATE())\n"
         "lDateTimeDateMatchesToday = (TTOD(tFileDateTime) == DATE())\n"
+        "SET NUMERICBEHAVIOR TO COPPERFIN\n"
+        "TRY\n"
+        "  dUnexpectedCopperfinFraction = FDATE('created.txt', 0.9)\n"
+        "  nCopperfinFractionError = 0\n"
+        "CATCH TO oError\n"
+        "  nCopperfinFractionError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  dUnexpectedCopperfinMissingFraction = FDATE('missing-flag.txt', 0.9)\n"
+        "  nCopperfinMissingFractionError = 0\n"
+        "CATCH TO oError\n"
+        "  nCopperfinMissingFractionError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  dUnexpectedCopperfinInfinite = FDATE('created.txt', EXP(1000))\n"
+        "  nCopperfinInfiniteError = 0\n"
+        "CATCH TO oError\n"
+        "  nCopperfinInfiniteError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  dUnexpectedCopperfinCurrencyFraction = FDATE('created.txt', $1.9000)\n"
+        "  nCopperfinCurrencyFractionError = 0\n"
+        "CATCH TO oError\n"
+        "  nCopperfinCurrencyFractionError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "SET NUMERICBEHAVIOR TO VFP9\n"
+        "lVfpFractionDate = (FDATE('created.txt', 0.9) == DATE())\n"
+        "lVfpNegativeFractionDate = (FDATE('created.txt', -0.9) == DATE())\n"
+        "lVfpNegativeWrapDate = (FDATE('created.txt', -4294967296) == DATE())\n"
+        "lVfpNegativeHugeDate = (FDATE('created.txt', -1E300) == DATE())\n"
+        "lVfpNegativeInfiniteDate = (FDATE('created.txt', -EXP(1000)) == DATE())\n"
+        "lVfpCurrencyFractionDateTime = (TTOD(FDATE('created.txt', $1.9000)) == DATE())\n"
+        "lVfpCurrencyNegativeWrapDate = (FDATE('created.txt', $-4294967296.0000) == DATE())\n"
+        "TRY\n"
+        "  dUnexpectedVfpAboveOne = FDATE('created.txt', 1.1)\n"
+        "  nVfpAboveOneError = 0\n"
+        "CATCH TO oError\n"
+        "  nVfpAboveOneError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  dUnexpectedVfpHuge = FDATE('created.txt', 1E300)\n"
+        "  nVfpHugeError = 0\n"
+        "CATCH TO oError\n"
+        "  nVfpHugeError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  dUnexpectedVfpInfinite = FDATE('created.txt', EXP(1000))\n"
+        "  nVfpInfiniteError = 0\n"
+        "CATCH TO oError\n"
+        "  nVfpInfiniteError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  dUnexpectedVfpCurrencySubunit = FDATE('created.txt', $0.9000)\n"
+        "  nVfpCurrencySubunitError = 0\n"
+        "CATCH TO oError\n"
+        "  nVfpCurrencySubunitError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  dUnexpectedVfpCurrencyPositiveWrap = FDATE('created.txt', $4294967296.0000)\n"
+        "  nVfpCurrencyPositiveWrapError = 0\n"
+        "CATCH TO oError\n"
+        "  nVfpCurrencyPositiveWrapError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "SET NUMERICBEHAVIOR TO COPPERFIN\n"
         "nTimeLength = LEN(cFileTime)\n"
         "cTimeColonOne = SUBSTR(cFileTime, 3, 1)\n"
         "cTimeColonTwo = SUBSTR(cFileTime, 6, 1)\n"
@@ -214,6 +278,22 @@ void test_fdate_ftime_runtime_functions()
     check("ldatematchestoday", "true");
     check("ldatedefaultmatchestoday", "true");
     check("ldatetimedatematchestoday", "true");
+    check("ncopperfinfractionerror", "11");
+    check("ncopperfinmissingfractionerror", "11");
+    check("ncopperfininfiniteerror", "11");
+    check("ncopperfincurrencyfractionerror", "11");
+    check("lvfpfractiondate", "true");
+    check("lvfpnegativefractiondate", "true");
+    check("lvfpnegativewrapdate", "true");
+    check("lvfpnegativehugedate", "true");
+    check("lvfpnegativeinfinitedate", "true");
+    check("lvfpcurrencyfractiondatetime", "true");
+    check("lvfpcurrencynegativewrapdate", "true");
+    check("nvfpaboveoneerror", "11");
+    check("nvfphugeerror", "11");
+    check("nvfpinfiniteerror", "11");
+    check("nvfpcurrencysubuniterror", "11");
+    check("nvfpcurrencypositivewraperror", "11");
     check("ntimelength", "8");
     check("ctimecolonone", ":");
     check("ctimecolontwo", ":");
