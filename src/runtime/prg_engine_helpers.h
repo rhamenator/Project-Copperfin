@@ -150,6 +150,11 @@ std::optional<std::int32_t> checked_alines_flags_argument(const PrgValue& value,
 // aliases and indefinite zero. Other coercions preserve checked int32 rounding.
 // Missing result means localized error 11 before enumeration/array mutation.
 std::optional<std::int32_t> checked_adir_display_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-AFONT-SIZE-NUMERIC-001: Numeric/exact-integer sizes truncate to
+// signed int32, including negative sizes. Only explicit VFP9 retains low-32-bit
+// aliases and shared-model indefinite zero. Other coercions keep checked int32
+// half-away rounding. Missing result means error 11 before font/array work.
+std::optional<std::int32_t> checked_afont_size_argument(const PrgValue& value, NumericBehavior behavior);
 // #6050: integer arguments crossing a DECLARE boundary. Ordinary VFP9
 // INTEGER/LONG parameters receive the low 32 bits after truncation toward
 // zero. Exact int64/uint64 values keep their low bits without a floating round

@@ -9,12 +9,12 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
-The most recent shipped slice is ALINES PR #6978, detailed below; its optional
-Windows MSVC check also passed on 2026-10-05, so all 33 head checks are green.
-The active continuation is ADIR display-flag conversion on
-`fix/adir-display-numeric-5611`; implementation and focused normal/sanitizer
-verification are complete. Its branch identifies the PR; next complete
-exact-head review/required CI, merge and clean up as detailed below.
+The most recent shipped slice is ADIR PR #6980, detailed below. All 11 required
+exact-head checks passed, final review was clean and all five conversations
+were resolved. The active continuation is AFONT third-argument Numeric size
+conversion on `fix/afont-size-numeric-5611`: native recovery and bounded
+implementation pass focused normal/sanitizer verification in open PR #6983;
+next complete exact-head CI/review gates. No VM is in use.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -369,36 +369,53 @@ to recoverable trash. Its 36-result native fixture, 138 direct calls and
 92 PRG rows remain retained; all three focused suites pass normally and under
 sanitizers, with 52 old-dispatch semantic failures. No VM was used.
 
-ADIR Numeric/exact-integer optional display flags are the active bounded slice
-under #5611/#6776 on `fix/adir-display-numeric-5611`, from main
-`2a0c811dc422480402d325c3d11afb18457eec0d`, in
-`/home/rich/.codex/worktrees/adir-display-numeric-5611/Project-Copperfin`.
-Exact local paths here preserve owner-requested continuation state; portable
-verification commands are in the fixture README, not tied to this checkout.
-The complete 46-result installed VFP9 09.00.0000.7423 Wine fixture and harmless
-`MiXeD.txt` are retained under
-`tests/fixtures/vfp9-adir-display-numeric-observation/`.
-Native truncates before converted 0..3 admission (3 and 3.9 are valid);
-negative sub-units become zero. Explicit VFP9 wraps signed low-32 bits from
-both directions and maps huge/infinite values to zero. Default COPPERFIN must
-reject those aliases; exact integers and NaN follow derived safety policy.
-Preserve existing other coercions with checked rounding. Only the display-flag
-conversion is in scope: enumeration, skeleton/attributes, filename/8.3
-rendering, volume labels, array semantics, AFONT and other array conversions
-are not. In particular native flag-two filename text is platform-specific,
-not a new rendering requirement.
-Implementation and focused verification are complete: 170 direct helper calls
-and 114 PRG rows cover both modes, ten catchable unchanged-array rejection
-checks and twelve preservation controls. The old-dispatch regression failed
-60 semantic assertions; fixed numeric-behavior, array and string/math suites
-pass with GCC Debug (2.70 seconds) and Clang ASan/UBSan/float-cast-overflow
-(11.07 seconds), without sanitizer diagnostics. Code/tests/native evidence and
-docs/32 reverse traceability are retained on this branch; its PR is recoverable
-from the branch identity. Next complete exact-head automated review/required
-CI, verify and resolve any fixes, merge, synchronize and clean up. Builds are
-`/home/rich/temp/copperfin-adir-display-5611-{build,sanitize}`. No VM started.
-After merge, re-read the live channel and select the next bounded unfinished
-conversion under #5611/#6776; no unrelated defect discovery.
+ADIR Numeric/exact-integer display conversion merged in PR #6980 as
+`3aa571eaad1dd169b97491c5c3bd260882a2d4a2` on 2026-10-05 at 21:46:21 UTC.
+All 11 required checks passed at signed head
+`c3a37e04956ad707af7448954bc1bcbc9609faff`; exact-head Codex review was clean,
+and all five Copilot conversations were verified/resolved. Broad native,
+managed UI, sanitizer/fuzz/stress/migration and installer checks also passed
+after infrastructure retries. Optional dynamic CodeQL actions/C#/Python jobs
+could not acquire runners and GitHub rejects their rerun; C/C++ analysis passed.
+Main is synchronized; the completed worktree/local/remote branches were removed
+and 420 MB/787 MB builds moved to recoverable trash. Its 46-result native
+fixture, 170 direct calls and 114 PRG rows remain retained; all three focused
+normal/sanitizer suites pass, with 60 old-dispatch semantic failures. No VM used.
+
+AFONT Numeric/exact-integer third-argument size conversion is the selected
+bounded continuation under #5611/#6776 on `fix/afont-size-numeric-5611`, from
+main `3aa571eaad1dd169b97491c5c3bd260882a2d4a2`, in
+`/home/rich/.codex/worktrees/afont-size-numeric-5611/Project-Copperfin`.
+Only migration of the existing `size_filter` llround/narrowing site in
+`prg_engine_arrays.inl` is selected. Preserve host font discovery, fixed MVP
+size/result/array behavior and existing other coercions. Existing admitted
+#3252/#6955/#6958/#6963 retain result/platform, second/third type admission and
+fourth size/charset flag gaps; do not expand this slice or file duplicates.
+The complete 54-call installed VFP9 09.00.0000.7423 Wine fixture is retained in
+`tests/fixtures/vfp9-afont-size-numeric-observation/`. The first installed
+scalable font exposes Numeric -1 versus Logical true in the array: -1.5/-1.9
+truncate to the -1 sentinel; 4294967295.9 and -4294967297.9 produce the same
+sentinel. Native accepts negative sizes; do not invent positive-only admission.
+Other tested sizes have indistinguishable results: huge/infinite exact-zero
+claims are shared-model derivations, not independently proven by this font.
+Implemented `checked_afont_size_argument`: default finite truncation to
+signed int32; explicit VFP9 shared low-32-bit conversion; exact int64/uint64
+without double rounding; existing other coercions retain checked rounding.
+Missing result raises localized error 11 before enumeration/array mutation.
+198 direct calls and 137 public PRG rows cover boundaries/NaN/exact integers,
+canonical sizes, unchanged-array rejection and preservation controls. The old
+dispatch fails 40 assertions; all three focused numeric/array/string-math
+suites pass normally (7.20s) and under Clang ASan/UBSan/float-cast-overflow
+(30.63s), without diagnostics. README retains VR/DQ/DV results/reproduction;
+docs/32 and docs/22 retain bidirectional scope/verification links. Run numeric
+tests sequentially across build directories to avoid their shared scratch path.
+Builds are `/home/rich/temp/copperfin-afont-size-5611-build` and
+`/home/rich/temp/copperfin-afont-size-5611-sanitize`; remove them only after merge.
+PR #6983 is open against main; signed implementation `58c3411e6` is pushed.
+Next complete exact-head automated review and all 11 required checks, verify
+any review fixes and resolve their conversations before merge.
+Then synchronize main, clean the slice/build/branch and re-read the live channel.
+No VM was started, no font/system changes made, and no owner input is needed.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
@@ -514,7 +531,9 @@ Owner-directed workstream order before the #6879 assignment was:
      (PR #6975); query-result gap #6973 and routing #6333 remain separate.
    - Completed after those: ALINES Numeric/exact-integer optional flag
      conversion (PR #6978).
-   - Active: ADIR Numeric/exact-integer optional display-flag conversion only.
+   - Completed after those: ADIR Numeric/exact-integer optional display-flag
+     conversion (PR #6980).
+   - Active: AFONT Numeric/exact-integer third-argument size conversion only.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

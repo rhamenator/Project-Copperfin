@@ -16,6 +16,7 @@
 #include <filesystem>
 #include <iostream>
 #include <limits>
+#include <optional>
 #include <string>
 #include <system_error>
 #include <utility>
@@ -103,10 +104,59 @@ const std::vector<AdirCase> kAdirCases{
     {"8", 8, -1, -1}, {"15", 15, -1, -1}, {"31", 31, -1, -1}, {"32", 32, -1, -1},
     {"4294967300", 4294967300, -1, -1}, {"-4294967292", -4294967292, -1, -1}};
 
+// RQ-CF-PRG-AFONT-SIZE-NUMERIC-001: the 54 native calls are retained in
+// fixtures/vfp9-afont-size-numeric-observation/. Only -1 sentinel aliases
+// distinguish the converted integer natively; other VFP9 values below are
+// shared-model policy, not claims of recovered font-result parity.
+struct AfontCase {
+    const char* argument;
+    double value;
+    std::optional<std::int32_t> copperfin;
+    std::int32_t vfp9;
+};
+const std::vector<AfontCase> kAfontCases{
+    {"0", 0, 0, 0}, {"1", 1, 1, 1}, {"8", 8, 8, 8}, {"12", 12, 12, 12},
+    {"-1", -1, -1, -1},
+    {"0.49", 0.49, 0, 0}, {"0.5", 0.5, 0, 0}, {"0.9", 0.9, 0, 0},
+    {"1.49", 1.49, 1, 1}, {"1.5", 1.5, 1, 1}, {"1.9", 1.9, 1, 1},
+    {"12.49", 12.49, 12, 12}, {"12.5", 12.5, 12, 12}, {"12.9", 12.9, 12, 12},
+    {"-0.49", -0.49, 0, 0}, {"-0.5", -0.5, 0, 0}, {"-0.9", -0.9, 0, 0},
+    {"-1.1", -1.1, -1, -1},
+    {"2147483647", 2147483647, 2147483647, 2147483647},
+    {"2147483648", 2147483648, std::nullopt, INT32_MIN},
+    {"-2147483648", -2147483648, INT32_MIN, INT32_MIN},
+    {"-2147483649", -2147483649, std::nullopt, INT32_MAX},
+    {"4294967295", 4294967295, std::nullopt, -1},
+    {"4294967296", 4294967296, std::nullopt, 0},
+    {"4294967297", 4294967297, std::nullopt, 1},
+    {"4294967308", 4294967308, std::nullopt, 12},
+    {"-4294967296", -4294967296, std::nullopt, 0},
+    {"-4294967295", -4294967295, std::nullopt, 1},
+    {"-4294967284", -4294967284, std::nullopt, 12},
+    {"1E20", 1E20, std::nullopt, 0}, {"-1E20", -1E20, std::nullopt, 0},
+    {"1E300", 1E300, std::nullopt, 0}, {"-1E300", -1E300, std::nullopt, 0},
+    {"EXP(1000)", std::numeric_limits<double>::infinity(), std::nullopt, 0},
+    {"-EXP(1000)", -std::numeric_limits<double>::infinity(), std::nullopt, 0},
+    {"4294967308.9", 4294967308.9, std::nullopt, 12},
+    {"-4294967284.9", -4294967284.9, std::nullopt, 12},
+    {"32767", 32767, 32767, 32767}, {"32768", 32768, 32768, 32768},
+    {"65535", 65535, 65535, 65535}, {"65536", 65536, 65536, 65536},
+    {"-32768", -32768, -32768, -32768}, {"-65536", -65536, -65536, -65536},
+    {"-1.49", -1.49, -1, -1}, {"-1.5", -1.5, -1, -1},
+    {"-1.9", -1.9, -1, -1}, {"-2", -2, -2, -2}, {"-2.1", -2.1, -2, -2},
+    {"4294967295.9", 4294967295.9, std::nullopt, -1},
+    {"-4294967297", -4294967297, std::nullopt, -1},
+    {"-4294967297.9", -4294967297.9, std::nullopt, -1},
+    {"9007199254740992", 9007199254740992, std::nullopt, 0},
+    {"9223372036854775808", 9223372036854775808.0, std::nullopt, 0},
+    {"-9223372036854775808", -9223372036854775808.0, std::nullopt, 0}};
+
 std::vector<Row> build_rows() {
     std::vector<Row> rows;
     // The default (never set) is COPPERFIN. This must be the first row: every later row sets the mode.
     rows.push_back({"", "SET('NUMERICBEHAVIOR')", "C:COPPERFIN"});
+    rows.push_back({"LOCAL ARRAY aDefaultSize[1]",
+                    "AFONT(aDefaultSize, 'AbsentFontCopperfinNumeric', 1E300)", "ERR11"});
     for (const char *function : {"LEFT", "RIGHT", "LEFTC", "RIGHTC"}) {
         for (const Value &value : kValues) {
             const std::string expression = std::string(function) + "('abcdef'," + value.text + ")";
@@ -883,6 +933,53 @@ std::vector<Row> build_rows() {
         rows.push_back({array + "\nnFound = ADIR(aFlag, 'missing-adir-fixture.txt', '', 3.9)",
                         "ALLTRIM(STR(nFound)) + ':' + ALLTRIM(STR(ALEN(aFlag))) + ':' + aFlag[1]",
                         "C:0:1:sentinel"});
+    }
+    // RQ-CF-PRG-AFONT-SIZE-NUMERIC-001: select a reported host font and
+    // compare with canonical sizes, preserving current result/array semantics.
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const bool is_copperfin = std::string(mode) == "COPPERFIN";
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        const std::string array = set +
+            "\nLOCAL ARRAY aFonts[1], aSize[1], aCanonicalSize[1]\nLOCAL cFont, nSize, nCanonical\n"
+            "x = AFONT(aFonts)\ncFont = aFonts[1]\naSize[1] = 'sentinel'\naCanonicalSize[1] = 'sentinel'";
+        for (const auto& row : kAfontCases) {
+            const auto size = is_copperfin ? row.copperfin : std::optional<std::int32_t>{row.vfp9};
+            rows.push_back({array + "\nnCanonical = AFONT(aCanonicalSize, cFont, " +
+                            std::to_string(size.value_or(0)) + ")\nnSize = AFONT(aSize, cFont, " +
+                            row.argument + ")",
+                            "nSize == nCanonical AND ALEN(aSize) == ALEN(aCanonicalSize) AND "
+                            "VARTYPE(aSize[1]) == VARTYPE(aCanonicalSize[1]) AND aSize[1] == aCanonicalSize[1]",
+                            size.has_value() ? "L:true" : "ERR11"});
+        }
+        // Admission must precede font lookup and mutation even for an absent font.
+        std::vector<std::string> invalid{"'2147483648'", "'-2147483649'", "'1E300'"};
+        if (is_copperfin) {
+            invalid.insert(invalid.end(), {"2147483648", "-2147483649", "1E300",
+                                           "-1E300", "EXP(1000)", "-EXP(1000)"});
+        }
+        for (const auto& argument : invalid) {
+            rows.push_back({array + "\nLOCAL nError\nnError = 0\nTRY\n"
+                            "x = AFONT(aSize, 'AbsentFontCopperfinNumeric', " + argument +
+                            ")\nCATCH TO oEx\nnError = oEx.ErrorNo\nENDTRY",
+                            "ALLTRIM(STR(nError)) + ':' + ALLTRIM(STR(ALEN(aSize))) + ':' + aSize[1]",
+                            "C:11:1:sentinel"});
+        }
+        rows.push_back({array + "\nnCanonical = AFONT(aCanonicalSize, cFont, 0)\n"
+                        "nSize = AFONT(aSize, cFont)",
+                        "nSize == nCanonical AND ALEN(aSize) == ALEN(aCanonicalSize) AND "
+                        "aSize[1] == aCanonicalSize[1]", "L:true"});
+        rows.push_back({array + "\nnSize = AFONT(aSize, '', 0)", "nSize == ALEN(aFonts)", "L:true"});
+        for (const char* argument : {".T.", "'0.5'", "$0.5000", ".NULL."}) {
+            const int size = std::string(argument) == ".NULL." ? 0 : 1;
+            rows.push_back({array + "\nnCanonical = AFONT(aCanonicalSize, cFont, " +
+                            std::to_string(size) + ")\nnSize = AFONT(aSize, cFont, " + argument + ")",
+                            "nSize == nCanonical AND ALEN(aSize) == ALEN(aCanonicalSize) AND "
+                            "aSize[1] == aCanonicalSize[1]", "L:true"});
+        }
+        rows.push_back({array, "AFONT(aSize, 'AbsentFontCopperfinNumeric', 12)", "N:0"});
+        // Fourth-argument interpretation remains #6963; this is preservation only.
+        rows.push_back({array + "\nnCanonical = AFONT(aCanonicalSize, cFont, 12)\n"
+                        "nSize = AFONT(aSize, cFont, 12, 1)", "nSize == nCanonical", "L:true"});
     }
     return rows;
 }
@@ -1889,6 +1986,72 @@ void test_adir_display_direct_numeric_boundaries() {
     }
 }
 
+// RQ-CF-PRG-AFONT-SIZE-NUMERIC-001: exact conversions supplement the
+// host-font preservation rows. NaN/extended-integer results are derived policy.
+void test_afont_size_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    const double inf = std::numeric_limits<double>::infinity();
+    const auto min = std::numeric_limits<std::int32_t>::min();
+    const auto max = std::numeric_limits<std::int32_t>::max();
+    struct Case { PrgValue value; std::optional<std::int32_t> copperfin; std::optional<std::int32_t> vfp9; };
+    std::vector<Case> cases;
+    for (const auto& row : kAfontCases) {
+        cases.push_back({make_number_value(row.value), row.copperfin, row.vfp9});
+    }
+    const std::vector<Case> additional{
+        {make_number_value(std::numeric_limits<double>::quiet_NaN()), std::nullopt, 0},
+        {make_number_value(-0.0), 0, 0},
+        {make_number_value(std::nextafter(-1.0, 0.0)), 0, 0},
+        {make_number_value(std::nextafter(-1.0, -inf)), -1, -1},
+        {make_number_value(std::nextafter(1.0, 0.0)), 0, 0},
+        {make_number_value(2147483647.9), max, max},
+        {make_number_value(-2147483648.9), min, min},
+        {make_number_value(std::nextafter(2147483648.0, 0.0)), max, max},
+        {make_number_value(std::nextafter(2147483648.0, inf)), std::nullopt, min},
+        {make_number_value(std::nextafter(-2147483649.0, 0.0)), min, min},
+        {make_number_value(std::nextafter(-2147483649.0, -inf)), std::nullopt, max},
+        {make_number_value(9223372036854775808.0), std::nullopt, 0},
+        {make_number_value(-9223372036854775808.0), std::nullopt, 0},
+        {make_number_value(std::nextafter(9223372036854775808.0, 0.0)), std::nullopt, -1024},
+        {make_number_value(std::nextafter(-9223372036854775808.0, 0.0)), std::nullopt, 1024},
+        {make_number_value(std::nextafter(-9223372036854775808.0, -inf)), std::nullopt, 0},
+        {make_int64_value(min), min, min}, {make_int64_value(max), max, max},
+        {make_int64_value(static_cast<std::int64_t>(min) - 1), std::nullopt, max},
+        {make_int64_value(static_cast<std::int64_t>(max) + 1), std::nullopt, min},
+        {make_int64_value(std::numeric_limits<std::int64_t>::min()), std::nullopt, 0},
+        {make_int64_value(std::numeric_limits<std::int64_t>::min() + 1), std::nullopt, 1},
+        {make_int64_value(std::numeric_limits<std::int64_t>::max()), std::nullopt, -1},
+        {make_int64_value(INT64_C(9007199254740993)), std::nullopt, 1},
+        {make_uint64_value(0), 0, 0}, {make_uint64_value(max), max, max},
+        {make_uint64_value(static_cast<std::uint64_t>(max) + 1), std::nullopt, min},
+        {make_uint64_value(UINT64_C(9223372036854775809)), std::nullopt, 1},
+        {make_uint64_value(UINT64_C(9223372036854775820)), std::nullopt, 12},
+        {make_uint64_value(std::numeric_limits<std::uint64_t>::max()), std::nullopt, -1},
+        {make_uint64_value(std::numeric_limits<std::uint64_t>::max() - 1), std::nullopt, -2},
+        {make_string_value("0.5"), 1, 1}, {make_string_value("-0.5"), -1, -1},
+        {make_string_value("2147483647.49"), max, max},
+        {make_string_value("-2147483648.49"), min, min},
+        {make_string_value("2147483647.5"), std::nullopt, std::nullopt},
+        {make_string_value("-2147483648.5"), std::nullopt, std::nullopt},
+        {make_string_value("2147483648"), std::nullopt, std::nullopt},
+        {make_string_value("-2147483649"), std::nullopt, std::nullopt},
+        {make_string_value("1E300"), std::nullopt, std::nullopt},
+        {make_currency_value(15000), 2, 2},
+        {make_currency_value(std::numeric_limits<std::int64_t>::max()), std::nullopt, std::nullopt},
+        {make_boolean_value(true), 1, 1}, {make_boolean_value(false), 0, 0},
+        {make_null_value(), 0, 0}};
+    cases.insert(cases.end(), additional.begin(), additional.end());
+    for (const auto behavior : {NumericBehavior::copperfin, NumericBehavior::vfp9}) {
+        for (std::size_t index = 0; index < cases.size(); ++index) {
+            const auto& row = cases[index];
+            const auto expected = behavior == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin;
+            expect(checked_afont_size_argument(row.value, behavior) == expected,
+                   "AFONT exact size/rejection case " + std::to_string(index) +
+                   (behavior == NumericBehavior::copperfin ? " COPPERFIN" : " VFP9"));
+        }
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -1905,6 +2068,7 @@ int main() {
     test_set_textmerge_direct_numeric_boundaries();
     test_alines_flags_direct_numeric_boundaries();
     test_adir_display_direct_numeric_boundaries();
+    test_afont_size_direct_numeric_boundaries();
     test_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {

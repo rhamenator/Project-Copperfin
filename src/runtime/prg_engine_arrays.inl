@@ -159,10 +159,16 @@
             if (normalized_function == "afont")
             {
                 const std::string font_filter = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
-                const int size_filter = arguments.size() >= 3U
-                                            ? static_cast<int>(std::llround(value_as_number(arguments[2])))
-                                            : 0;
-                return populate_font_array(array_name, font_filter, size_filter);
+                // RQ-CF-PRG-AFONT-SIZE-NUMERIC-001: reject before font lookup
+                // or destination mutation; font/result/charset semantics stay intact.
+                const auto size_filter = arguments.size() >= 3U
+                    ? checked_afont_size_argument(arguments[2], array_numeric_behavior)
+                    : std::optional<std::int32_t>{0};
+                if (!size_filter.has_value())
+                {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                }
+                return populate_font_array(array_name, font_filter, *size_filter);
             }
 
             if (normalized_function == "aprinters")
