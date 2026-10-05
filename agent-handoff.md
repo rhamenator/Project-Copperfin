@@ -320,24 +320,40 @@ normally and under sanitizers. Old dispatch fails 26 semantic assertions;
 unsupported FE_INVALID assertions were removed after optimized macOS ARM64
 showed non-strict FP speculation (fixture README retains the diagnosis).
 
-The active bounded slice is CPCURRENT Numeric/exact-integer selector
-conversion under #5611/#6776 on `fix/cpcurrent-numeric-5611`, based on
-`8101c2838`, in `~/.codex/worktrees/cpcurrent-numeric-5611/Project-Copperfin`.
-Both settings reject fractional, non-finite and out-of-signed-32-bit Numeric
-values with localized catchable error 11 before configured-state lookup.
-Exact int64/uint64 avoid floating rounding. Other coercions retain existing
-rounding behind checked admission; omitted/configured/host/OEM query behavior
-is unchanged. The complete 32-row installed-VFP9 table is retained under
-`tests/fixtures/vfp9-cpcurrent-numeric-observation/`. It also exposed explicit
-zero, unknown-integral and nonnumeric selector parity gaps, filed as #6968
-against `8101c2838`; those query/type contracts are not admitted into this
-conversion-only slice and their existing behavior is not native-parity evidence.
-No VM was started or changed. Old conversion fails 86 semantic assertions.
-The 80 direct boundary calls, six query controls and 16 catchable PRG rows
-cover both settings. Numeric-behavior, locale/code-page and neighboring
-string/math suites pass normally and under Clang ASan/UBSan/float-cast-overflow.
-Focused build directories are
-`/home/rich/temp/copperfin-cpcurrent-5611-{build,sanitize}`.
+CPCURRENT Numeric/exact-integer selector conversion merged in PR #6969 at
+`09555b5502a517777642fe8bf67411a90f66164c` on 2026-10-05. All 11 required
+checks passed at signed head `8adbd5fefe60db8e24f868dc96a3ce4525c4dfd2`;
+Codex and Copilot exact-head reviews were clean and there were no conversations.
+Optional Windows MSVC was still running; every other check passed. Main was
+synchronized, worktree/local/remote branches removed, and builds moved to
+recoverable trash. Its 80 direct boundary calls, six query controls and 16 PRG
+rows pass normally and under sanitizers; old conversion fails 86 assertions.
+The 32-row native table remains retained. Query/type parity #6968 is separate.
+
+The active bounded slice is shared RELATION/TARGET first Numeric/exact-integer
+index conversion under #5611/#6776 on `fix/relation-index-numeric-5611`,
+based on `09555b5502a517777642fe8bf67411a90f66164c`, in
+`/home/rich/.codex/worktrees/relation-index-numeric-5611/Project-Copperfin`.
+Default COPPERFIN checks finite raw [1, 9999] before truncation. Explicit VFP9
+retains negative signed-low-32-bit wrapping, then requires index [1, 9999];
+oversized positive values never wrap. Invalid values raise localized catchable
+error 11 before relation-state lookup. Exact integers avoid double rounding;
+NaN rejection is derived safety policy. Other coercions preserve checked
+rounding/empty behavior, not recovered type parity. Work-area designators,
+ordering and cursor state are unchanged.
+The 68-result installed VFP9 09.00.0000.7423 Windows COM fixture is retained
+under `tests/fixtures/vfp9-relation-index-numeric-observation/`. Native
+9999.49 is error 11, unlike 9999, and newly added relations come first;
+the latter separate gap was filed as #6971 against this exact main revision.
+The original Access365 VM ran only a new COM process with temporary in-memory
+cursors, no installation/OS/persistent-table changes; graceful shutdown is
+confirmed. No overlay or clone was created. The earlier stalled Wine attempt
+is not native evidence and its scratch files were removed.
+Old dispatch fails 208 semantic assertions. The 148 direct calls and 40
+catchable PRG rows cover both modes/functions, exact index/designator and
+no relation query on rejection. Numeric-behavior, relation and string/math
+suites pass normally and under Clang ASan/UBSan/float-cast-overflow.
+Focused builds are `/home/rich/temp/copperfin-relation-index-5611-{build,sanitize}`.
 The active branch/PR carries implementation, tests and verification evidence;
 next complete exact-head review/required CI, resolve verified fixes, merge,
 synchronize and clean up. Then re-read the live channel and select the next
@@ -452,8 +468,10 @@ Owner-directed workstream order before the #6879 assignment was:
    - Completed after those: `FCHSIZE()` size numeric conversion (PR #6962)
      and HEX extension numeric conversion (PR #6965).
    - Completed after those: primary SYS Numeric-selector conversion (PR #6967).
-   - Active: CPCURRENT Numeric/exact-integer selector conversion only;
-     query-domain/type parity #6968 remains separate.
+   - Completed after those: CPCURRENT Numeric/exact-integer selector
+     conversion (PR #6969); query-domain/type parity #6968 remains separate.
+   - Active: shared RELATION/TARGET Numeric/exact-integer index conversion
+     only; additive relation-order gap #6971 remains separate.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

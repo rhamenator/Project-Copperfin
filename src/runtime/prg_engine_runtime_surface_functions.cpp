@@ -70,6 +70,52 @@ int cpcurrent_type_flag(const PrgValue& value) {
     throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
 }
 
+// RQ-CF-PRG-RELATION-INDEX-NUMERIC-001 (#5611/#6776). Only the index;
+// relation ordering (#6971) and optional work-area semantics are independent.
+std::int64_t relation_index_number(const PrgValue& value, const NumericBehavior behavior) {
+    constexpr std::int64_t maximum = 9999;
+    if (value.kind == PrgValueKind::number || value.kind == PrgValueKind::int64 ||
+        value.kind == PrgValueKind::uint64) {
+        const bool oversized_positive = value.kind == PrgValueKind::int64
+            ? value.int64_value > maximum
+            : value.kind == PrgValueKind::uint64
+                ? value.uint64_value > static_cast<std::uint64_t>(maximum)
+                : value.number_value > static_cast<double>(maximum);
+        if (!oversized_positive) {
+            if (behavior == NumericBehavior::vfp9) {
+                if (value.kind != PrgValueKind::number || !std::isnan(value.number_value)) {
+                    const auto index = vfp9_numeric_to_int32(value);
+                    if (index >= 1 && index <= maximum) {
+                        return index;
+                    }
+                }
+            } else if (value.kind == PrgValueKind::int64) {
+                if (value.int64_value >= 1) {
+                    return value.int64_value;
+                }
+            } else if (value.kind == PrgValueKind::uint64) {
+                if (value.uint64_value >= 1) {
+                    return static_cast<std::int64_t>(value.uint64_value);
+                }
+            } else if (std::isfinite(value.number_value) && value.number_value >= 1.0) {
+                // Installed VFP9 validates the raw ceiling before truncation:
+                // 9999 is accepted, but even 9999.49 is error 11.
+                return static_cast<std::int64_t>(std::trunc(value.number_value));
+            }
+        }
+    } else {
+        // Preserve existing nonnumeric coercion/rounding and empty-index
+        // behavior, without using an unchecked llround library conversion.
+        const double raw = value_as_number(value);
+        if (std::isfinite(raw)) {
+            if (const auto index = checked_truncated_numeric_to_int64(std::round(raw)); index.has_value()) {
+                return *index;
+            }
+        }
+    }
+    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+}
+
 // RQ-CF-PRG-SYS-SELECTOR-NUMERIC-001 (#5611/#6776). Only the primary
 // selector: operation-specific parameters keep their independent contracts.
 std::optional<std::int64_t> sys_selector_integer(const PrgValue& value, const NumericBehavior behavior) {

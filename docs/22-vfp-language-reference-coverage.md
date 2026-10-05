@@ -1,5 +1,20 @@
 # VFP Language Reference Coverage
 
+- `RELATION()` / `TARGET()` Numeric-index conversion (2026-10-05,
+  #5611/#6776): default COPPERFIN admits finite raw Numeric values in
+  [1, 9999], truncating toward zero after checking the ceiling. Explicit VFP9
+  retains negative signed-low-32-bit wrapping, then requires an index in
+  [1, 9999]; oversized positive values never wrap. Rejection is localized,
+  catchable error 11 before relation-state lookup. Exact integers avoid double
+  rounding; NaN rejection is derived safety policy. The 68-result installed
+  Windows VFP9 COM fixture is retained in
+  `tests/fixtures/vfp9-relation-index-numeric-observation/`.
+  148 direct calls and 40 catchable PRG rows cover both modes/functions.
+  Other coercions retain checked rounding; their type parity is not recovered.
+  Optional work-area designators and relation state remain unchanged.
+  Additive relation order disagrees with the fresh native probe and is tracked
+  separately by #6971, not rationalized from the existing relation tests.
+
 - `CPCURRENT()` Numeric-selector conversion (2026-10-05, #5611/#6776): both
   settings reject fractional, non-finite and out-of-signed-32-bit Numeric
   inputs with localized catchable error 11 before reading configured code-page
