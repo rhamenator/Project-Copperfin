@@ -1,5 +1,19 @@
 # VFP Language Reference Coverage
 
+- `ADIR()` optional Numeric/exact-integer display-flag conversion (2026-10-05,
+  #5611/#6776): default COPPERFIN admits finite values truncating to 0..3;
+  explicit VFP9 retains signed-low-32-bit aliases and huge/infinite-to-zero
+  conversion before the same admission. Native flag 3 and 3.9 are valid.
+  Invalid admission raises localized catchable error 11 before enumeration
+  or destination-array mutation. Exact integers avoid double rounding; NaN
+  handling is derived safety policy, not native evidence. The complete
+  46-result installed VFP9 fixture is retained under
+  `tests/fixtures/vfp9-adir-display-numeric-observation/`.
+  Other coercions retain checked rounding. Enumeration, skeleton/attributes,
+  filename/8.3 rendering, volume labels, output-array semantics and other
+  array functions are unchanged; native flag-two text is not a newly selected
+  cross-platform rendering contract. The fixture README records verification.
+
 - `ALINES()` optional Numeric/exact-integer flag conversion (2026-10-05,
   #5611/#6776): default COPPERFIN admits finite values truncating to 0..31;
   explicit VFP9 retains signed-low-32-bit aliases and huge/infinite-to-zero

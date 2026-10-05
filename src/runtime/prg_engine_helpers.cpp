@@ -1335,6 +1335,39 @@ std::optional<std::int32_t> checked_alines_flags_argument(
     return static_cast<std::int32_t>(*flags);
 }
 
+// RQ-CF-PRG-ADIR-DISPLAY-NUMERIC-001 (#5611/#6776); installed native evidence
+// in tests/fixtures/vfp9-adir-display-numeric-observation/. Rendering is unchanged.
+std::optional<std::int32_t> checked_adir_display_argument(
+    const PrgValue& value,
+    const NumericBehavior behavior) {
+    if (value.kind == PrgValueKind::number || value.kind == PrgValueKind::int64 ||
+        value.kind == PrgValueKind::uint64) {
+        std::optional<std::int64_t> flag;
+        if (behavior == NumericBehavior::vfp9) {
+            flag = vfp9_numeric_to_int32(value);
+        } else if (value.kind == PrgValueKind::int64) {
+            flag = value.int64_value;
+        } else if (value.kind == PrgValueKind::uint64) {
+            if (value.uint64_value <= 3U) {
+                flag = static_cast<std::int64_t>(value.uint64_value);
+            }
+        } else {
+            flag = checked_truncated_numeric_to_int64(value.number_value);
+        }
+        if (!flag.has_value() || *flag < 0 || *flag > 3) {
+            return std::nullopt;
+        }
+        return static_cast<std::int32_t>(*flag);
+    }
+    // Preserve existing coercions, not a newly recovered native type contract.
+    const auto flag = checked_truncated_numeric_to_int64(std::round(value_as_number(value)));
+    if (!flag.has_value() || *flag < std::numeric_limits<std::int32_t>::min() ||
+        *flag > std::numeric_limits<std::int32_t>::max()) {
+        return std::nullopt;
+    }
+    return static_cast<std::int32_t>(*flag);
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {

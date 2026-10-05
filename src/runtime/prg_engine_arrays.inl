@@ -128,10 +128,16 @@
             {
                 const std::string skeleton = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{"*.*"};
                 const std::string attributes = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
-                const int display_flag = arguments.size() >= 4U
-                    ? static_cast<int>(std::llround(value_as_number(arguments[3])))
-                    : 0;
-                return populate_directory_array(array_name, skeleton, attributes, display_flag);
+                // RQ-CF-PRG-ADIR-DISPLAY-NUMERIC-001: validate before directory
+                // enumeration (including V requests) or destination mutation.
+                const auto display_flag = arguments.size() >= 4U
+                    ? checked_adir_display_argument(arguments[3], array_numeric_behavior)
+                    : std::optional<std::int32_t>{0};
+                if (!display_flag.has_value())
+                {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                }
+                return populate_directory_array(array_name, skeleton, attributes, *display_flag);
             }
 
             if (normalized_function == "afields")

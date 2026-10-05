@@ -77,6 +77,32 @@ struct Row {
     std::string expected;    // "C:<text>" or "ERR<number>"
 };
 
+// RQ-CF-PRG-ADIR-DISPLAY-NUMERIC-001: the 46 installed-VFP9 observations
+// retained in fixtures/vfp9-adir-display-numeric-observation/. -1 is rejection.
+struct AdirCase { const char* argument; double value; int copperfin; int vfp9; };
+const std::vector<AdirCase> kAdirCases{
+    {"0", 0, 0, 0}, {"1", 1, 1, 1}, {"2", 2, 2, 2}, {"3", 3, 3, 3},
+    {"-1", -1, -1, -1},
+    {"0.49", 0.49, 0, 0}, {"0.5", 0.5, 0, 0}, {"0.9", 0.9, 0, 0},
+    {"1.49", 1.49, 1, 1}, {"1.5", 1.5, 1, 1}, {"1.9", 1.9, 1, 1},
+    {"2.49", 2.49, 2, 2}, {"2.5", 2.5, 2, 2}, {"2.9", 2.9, 2, 2},
+    {"3.5", 3.5, 3, 3},
+    {"2147483647", 2147483647, -1, -1}, {"2147483648", 2147483648, -1, -1},
+    {"-2147483648", -2147483648, -1, -1}, {"-2147483649", -2147483649, -1, -1},
+    {"4294967296", 4294967296, -1, 0}, {"4294967297", 4294967297, -1, 1},
+    {"4294967298", 4294967298, -1, 2}, {"4294967299", 4294967299, -1, 3},
+    {"-4294967296", -4294967296, -1, 0}, {"-4294967295", -4294967295, -1, 1},
+    {"-4294967294", -4294967294, -1, 2}, {"-4294967293", -4294967293, -1, 3},
+    {"1E300", 1E300, -1, 0}, {"-1E300", -1E300, -1, 0},
+    {"EXP(1000)", std::numeric_limits<double>::infinity(), -1, 0},
+    {"-EXP(1000)", -std::numeric_limits<double>::infinity(), -1, 0},
+    {"-0.49", -0.49, 0, 0}, {"-0.5", -0.5, 0, 0}, {"-0.9", -0.9, 0, 0},
+    {"-1.1", -1.1, -1, -1},
+    {"4294967298.9", 4294967298.9, -1, 2}, {"-4294967294.9", -4294967294.9, -1, 2},
+    {"3.9", 3.9, 3, 3}, {"4", 4, -1, -1}, {"4.5", 4.5, -1, -1},
+    {"8", 8, -1, -1}, {"15", 15, -1, -1}, {"31", 31, -1, -1}, {"32", 32, -1, -1},
+    {"4294967300", 4294967300, -1, -1}, {"-4294967292", -4294967292, -1, -1}};
+
 std::vector<Row> build_rows() {
     std::vector<Row> rows;
     // The default (never set) is COPPERFIN. This must be the first row: every later row sets the mode.
@@ -825,6 +851,38 @@ std::vector<Row> build_rows() {
         rows.push_back({array + "\nx = ALINES(aFlag, ' a ' + CHR(13) + ' b ', .NULL.)",
                         "aFlag[1]", "C: a "});
     }
+    // RQ-CF-PRG-ADIR-DISPLAY-NUMERIC-001: compare each admitted value with
+    // its canonical flag, not a new cross-platform 8.3 rendering requirement.
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        const std::string array = set + "\nLOCAL ARRAY aFlag[1], aCanonical[1]\naFlag[1] = 'sentinel'";
+        for (const auto& row : kAdirCases) {
+            const int flag = std::string(mode) == "COPPERFIN" ? row.copperfin : row.vfp9;
+            const std::string setup = array + "\nx = ADIR(aCanonical, 'MiXeD.txt', '', " +
+                std::to_string(flag < 0 ? 0 : flag) + ")\nnFound = ADIR(aFlag, 'MiXeD.txt', '', " +
+                row.argument + ")";
+            rows.push_back({setup, "nFound == 1 AND ALEN(aFlag, 2) == 5 AND aFlag[1,1] == aCanonical[1,1]",
+                            flag < 0 ? "ERR11" : "L:true"});
+        }
+        // Invalid admission must precede enumeration and destination mutation.
+        for (const char* argument : {"4", "-1", "4294967300", "-4294967292", "'1E300'"}) {
+            rows.push_back({array + "\nLOCAL nError\nnError = 0\nTRY\n"
+                            "x = ADIR(aFlag, 'MiXeD.txt', '', " + argument + ")\n"
+                            "CATCH TO oEx\nnError = oEx.ErrorNo\nENDTRY",
+                            "ALLTRIM(STR(nError)) + ':' + ALLTRIM(STR(ALEN(aFlag))) + ':' + aFlag[1]",
+                            "C:11:1:sentinel"});
+        }
+        rows.push_back({array + "\nnFound = ADIR(aFlag, 'MiXeD.txt')", "aFlag[1,1]", "C:MIXED.TXT"});
+        for (const char* argument : {".T.", "'1.5'", "$1.5000", ".NULL."}) {
+            const int flag = std::string(argument) == ".T." ? 1 : (std::string(argument) == ".NULL." ? 0 : 2);
+            rows.push_back({array + "\nx = ADIR(aCanonical, 'MiXeD.txt', '', " + std::to_string(flag) +
+                            ")\nnFound = ADIR(aFlag, 'MiXeD.txt', '', " + argument + ")",
+                            "nFound == 1 AND aFlag[1,1] == aCanonical[1,1]", "L:true"});
+        }
+        rows.push_back({array + "\nnFound = ADIR(aFlag, 'missing-adir-fixture.txt', '', 3.9)",
+                        "ALLTRIM(STR(nFound)) + ':' + ALLTRIM(STR(ALEN(aFlag))) + ':' + aFlag[1]",
+                        "C:0:1:sentinel"});
+    }
     return rows;
 }
 
@@ -857,6 +915,8 @@ void test_numeric_behavior_script_rows() {
     const fs::path dir = fs::temp_directory_path() / "copperfin_numeric_behavior";
     std::error_code ignored;
     fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    write_text(dir / "MiXeD.txt", "Harmless ADIR display-flag fixture.\n");
     const std::vector<Row> rows = build_rows();
     const std::string output = run_rows(dir, rows);
     expect(output.rfind("<incomplete", 0U) != 0U, "numeric behavior: the script should complete: " + output);
@@ -1770,6 +1830,64 @@ void test_alines_flags_direct_numeric_boundaries() {
     }
 }
 
+// RQ-CF-PRG-ADIR-DISPLAY-NUMERIC-001: exact flags, adjacent boundaries and
+// derived NaN/extended-integer safety policy; not a filename rendering test.
+void test_adir_display_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    const double inf = std::numeric_limits<double>::infinity();
+    struct Case { PrgValue value; int copperfin; int vfp9; };
+    std::vector<Case> cases;
+    for (const auto& row : kAdirCases) {
+        cases.push_back({make_number_value(row.value), row.copperfin, row.vfp9});
+    }
+    const std::vector<Case> additional{
+        {make_number_value(std::nextafter(-1.0, 0.0)), 0, 0},
+        {make_number_value(std::nextafter(-1.0, -inf)), -1, -1},
+        {make_number_value(std::nextafter(1.0, 0.0)), 0, 0},
+        {make_number_value(std::nextafter(4.0, 0.0)), 3, 3},
+        {make_number_value(std::nextafter(4.0, inf)), -1, -1},
+        {make_number_value(std::numeric_limits<double>::quiet_NaN()), -1, 0},
+        {make_number_value(9223372036854775808.0), -1, 0},
+        {make_number_value(-9223372036854775808.0), -1, 0},
+        {make_number_value(std::nextafter(9223372036854775808.0, 0.0)), -1, -1},
+        {make_number_value(std::nextafter(-9223372036854775808.0, 0.0)), -1, -1},
+        {make_number_value(std::nextafter(-9223372036854775808.0, -inf)), -1, 0},
+        {make_int64_value(0), 0, 0}, {make_int64_value(3), 3, 3},
+        {make_int64_value(-1), -1, -1}, {make_int64_value(4), -1, -1},
+        {make_int64_value(std::numeric_limits<std::int64_t>::min()), -1, 0},
+        {make_int64_value(std::numeric_limits<std::int64_t>::min() + 1), -1, 1},
+        {make_int64_value(std::numeric_limits<std::int64_t>::min() + 3), -1, 3},
+        {make_int64_value(std::numeric_limits<std::int64_t>::max()), -1, -1},
+        {make_int64_value(INT64_C(9007199254740993)), -1, 1},
+        {make_uint64_value(0), 0, 0}, {make_uint64_value(3), 3, 3},
+        {make_uint64_value(4), -1, -1},
+        {make_uint64_value(UINT64_C(9223372036854775811)), -1, 3},
+        {make_uint64_value(UINT64_C(9223372036854775812)), -1, -1},
+        {make_uint64_value(std::numeric_limits<std::uint64_t>::max()), -1, -1},
+        {make_string_value("0.5"), 1, 1}, {make_string_value("1.5"), 2, 2},
+        {make_string_value("4"), 4, 4},
+        {make_string_value("2147483647"), 2147483647, 2147483647},
+        {make_string_value("2147483647.5"), -1, -1},
+        {make_string_value("2147483648"), -1, -1},
+        {make_string_value("-2147483648.5"), -1, -1},
+        {make_string_value("1E300"), -1, -1},
+        {make_currency_value(15000), 2, 2},
+        {make_currency_value(std::numeric_limits<std::int64_t>::max()), -1, -1},
+        {make_boolean_value(true), 1, 1}, {make_boolean_value(false), 0, 0},
+        {make_null_value(), 0, 0}};
+    cases.insert(cases.end(), additional.begin(), additional.end());
+    for (const auto behavior : {NumericBehavior::copperfin, NumericBehavior::vfp9}) {
+        for (std::size_t index = 0; index < cases.size(); ++index) {
+            const auto& row = cases[index];
+            const int expected = behavior == NumericBehavior::copperfin ? row.copperfin : row.vfp9;
+            const auto actual = checked_adir_display_argument(row.value, behavior);
+            expect(expected == -1 ? !actual.has_value() : actual.has_value() && *actual == expected,
+                   "ADIR exact display flag/rejection case " + std::to_string(index) +
+                   (behavior == NumericBehavior::copperfin ? " COPPERFIN" : " VFP9"));
+        }
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -1785,6 +1903,7 @@ int main() {
     test_relation_index_direct_numeric_boundaries();
     test_set_textmerge_direct_numeric_boundaries();
     test_alines_flags_direct_numeric_boundaries();
+    test_adir_display_direct_numeric_boundaries();
     test_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {

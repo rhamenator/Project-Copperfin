@@ -145,6 +145,11 @@ std::optional<std::int64_t> checked_truncated_numeric_to_int64(double value);
 // existing half-away rounding with a checked int32 boundary, not native type
 // parity. Missing result means localized error 11 before array mutation.
 std::optional<std::int32_t> checked_alines_flags_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-ADIR-DISPLAY-NUMERIC-001: Numeric/exact-integer display flags
+// truncate to 0..3 (including 3). Only explicit VFP9 retains low-32-bit
+// aliases and indefinite zero. Other coercions preserve checked int32 rounding.
+// Missing result means localized error 11 before enumeration/array mutation.
+std::optional<std::int32_t> checked_adir_display_argument(const PrgValue& value, NumericBehavior behavior);
 // #6050: integer arguments crossing a DECLARE boundary. Ordinary VFP9
 // INTEGER/LONG parameters receive the low 32 bits after truncation toward
 // zero. Exact int64/uint64 values keep their low bits without a floating round
