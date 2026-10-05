@@ -195,6 +195,69 @@ void set_file_error_from_errno(int fallback_code = 31) {
     }
 }
 
+[[noreturn]] void throw_invalid_file_handle_argument() {
+    throw PrgCompatibilityError(
+        runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+}
+
+// Governing requirement: RQ-CF-PRG-FILE-HANDLE-NUMERIC-001 (#5611/#6776).
+// Zero is never issued as a handle. Return it for VFP's invalid-type/conversion
+// cases so callers keep their existing invalid-handle result and FERROR 6.
+std::int32_t file_handle_from_value(
+    const PrgValue& value,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    const bool numeric_type = value.kind == PrgValueKind::number ||
+        value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64 ||
+        value.kind == PrgValueKind::currency;
+    if (value.is_null || !numeric_type) {
+        return 0;
+    }
+    if (numeric_behavior(set_callback) == NumericBehavior::vfp9) {
+        if (value.kind == PrgValueKind::currency) {
+            const std::int64_t whole = value.currency_value / INT64_C(10000);
+            if ((value.currency_value != 0 && whole == 0) ||
+                whole < -INT64_C(4294967296) || whole >= INT64_C(4294967296)) {
+                return 0;
+            }
+            return static_cast<std::int32_t>(vfp9_numeric_to_int32(make_int64_value(whole)));
+        }
+        // NaN has no retained installed-VFP9 expression; rejection is derived
+        // safety policy. Numeric infinities have recovered zero conversion.
+        if (value.kind == PrgValueKind::number && std::isnan(value.number_value)) {
+            throw_invalid_file_handle_argument();
+        }
+        return static_cast<std::int32_t>(vfp9_numeric_to_int32(value));
+    }
+
+    std::int64_t converted = 0;
+    if (value.kind == PrgValueKind::int64) {
+        converted = value.int64_value;
+    } else if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value > static_cast<std::uint64_t>(std::numeric_limits<std::int32_t>::max())) {
+            throw_invalid_file_handle_argument();
+        }
+        converted = static_cast<std::int64_t>(value.uint64_value);
+    } else if (value.kind == PrgValueKind::currency) {
+        if (value.currency_value % INT64_C(10000) != 0) {
+            throw_invalid_file_handle_argument();
+        }
+        converted = value.currency_value / INT64_C(10000);
+    } else {
+        const double raw = value.number_value;
+        if (!std::isfinite(raw) || std::trunc(raw) != raw ||
+            raw < static_cast<double>(std::numeric_limits<std::int32_t>::min()) ||
+            raw > static_cast<double>(std::numeric_limits<std::int32_t>::max())) {
+            throw_invalid_file_handle_argument();
+        }
+        converted = static_cast<std::int64_t>(raw);
+    }
+    if (converted < std::numeric_limits<std::int32_t>::min() ||
+        converted > std::numeric_limits<std::int32_t>::max()) {
+        throw_invalid_file_handle_argument();
+    }
+    return static_cast<std::int32_t>(converted);
+}
+
 [[noreturn]] void throw_invalid_fseek_argument() {
     throw PrgCompatibilityError(
         runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
@@ -688,7 +751,7 @@ std::optional<PrgValue> evaluate_file_io_function(
     }
 
     if (function == "fclose" && !arguments.empty()) {
-        const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+        const int handle = file_handle_from_value(arguments[0], set_callback);
         auto* opened = resolve_open_handle(handle);
         if (!is_open_handle(opened)) {
             last_file_error_code() = 6;
@@ -712,7 +775,7 @@ std::optional<PrgValue> evaluate_file_io_function(
     }
 
     if (function == "fread" && arguments.size() >= 2U) {
-        const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+        const int handle = file_handle_from_value(arguments[0], set_callback);
         auto* opened = resolve_open_handle(handle);
         if (!is_open_handle(opened)) {
             last_file_error_code() = 6;
@@ -757,7 +820,7 @@ std::optional<PrgValue> evaluate_file_io_function(
     }
 
     if (function == "fwrite" && arguments.size() >= 2U) {
-        const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+        const int handle = file_handle_from_value(arguments[0], set_callback);
         auto* opened = resolve_open_handle(handle);
         if (!is_open_handle(opened) || opened->verified_read || opened->write_blocked) {
             last_file_error_code() = 6;
@@ -804,7 +867,7 @@ std::optional<PrgValue> evaluate_file_io_function(
     }
 
     if (function == "fgets" && !arguments.empty()) {
-        const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+        const int handle = file_handle_from_value(arguments[0], set_callback);
         auto* opened = resolve_open_handle(handle);
         if (!is_open_handle(opened)) {
             last_file_error_code() = 6;
@@ -865,7 +928,7 @@ std::optional<PrgValue> evaluate_file_io_function(
     }
 
     if (function == "fputs" && arguments.size() >= 2U) {
-        const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+        const int handle = file_handle_from_value(arguments[0], set_callback);
         auto* opened = resolve_open_handle(handle);
         if (!is_open_handle(opened) || opened->verified_read || opened->write_blocked) {
             last_file_error_code() = 6;
@@ -909,7 +972,7 @@ std::optional<PrgValue> evaluate_file_io_function(
         const long offset = static_cast<long>(fseek_integer_from_value(arguments[1], false, set_callback));
         const int origin_mode = arguments.size() >= 3U
             ? fseek_integer_from_value(arguments[2], true, set_callback) : 0;
-        const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+        const int handle = file_handle_from_value(arguments[0], set_callback);
         auto* opened = resolve_open_handle(handle);
         if (!is_open_handle(opened)) {
             last_file_error_code() = 6;
@@ -961,7 +1024,7 @@ std::optional<PrgValue> evaluate_file_io_function(
     }
 
     if (function == "ftell" && !arguments.empty()) {
-        const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+        const int handle = file_handle_from_value(arguments[0], set_callback);
         auto* opened = resolve_open_handle(handle);
         if (!is_open_handle(opened)) {
             last_file_error_code() = 6;
@@ -983,7 +1046,7 @@ std::optional<PrgValue> evaluate_file_io_function(
     }
 
     if (function == "feof" && !arguments.empty()) {
-        const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+        const int handle = file_handle_from_value(arguments[0], set_callback);
         auto* opened = resolve_open_handle(handle);
         if (!is_open_handle(opened)) {
             last_file_error_code() = 6;
@@ -1000,7 +1063,7 @@ std::optional<PrgValue> evaluate_file_io_function(
     }
 
     if (function == "fflush" && !arguments.empty()) {
-        const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+        const int handle = file_handle_from_value(arguments[0], set_callback);
         auto* opened = resolve_open_handle(handle);
         if (!is_open_handle(opened)) {
             last_file_error_code() = 6;
@@ -1022,7 +1085,7 @@ std::optional<PrgValue> evaluate_file_io_function(
     }
 
     if (function == "fchsize" && arguments.size() >= 2U) {
-        const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+        const int handle = file_handle_from_value(arguments[0], set_callback);
         auto* opened = resolve_open_handle(handle);
         if (opened == nullptr || opened->file == nullptr) {
             last_file_error_code() = 6;

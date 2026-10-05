@@ -300,6 +300,188 @@ void test_fseek_numeric_boundaries()
     fs::remove_all(root, ignored);
 }
 
+// Governing requirement: RQ-CF-PRG-FILE-HANDLE-NUMERIC-001 (#5611/#6776).
+void test_file_handle_numeric_boundaries()
+{
+    using namespace copperfin::runtime;
+    namespace fs = std::filesystem;
+    const fs::path root = fs::temp_directory_path() / "copperfin_prg_engine_file_handle_boundaries";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    struct Row {
+        const char* name;
+        std::function<PrgValue(std::int64_t)> argument;
+        bool strict_error;
+        bool vfp_error;
+        bool strict_live;
+        bool vfp_live;
+    };
+    const std::vector<Row> rows{
+        {"exact", [](std::int64_t h) { (void)h; return make_number_value(h); }, false, false, true, true},
+        {"exact int64", [](std::int64_t h) { (void)h; return make_int64_value(h); }, false, false, true, true},
+        {"exact uint64", [](std::int64_t h) { (void)h; return make_uint64_value(static_cast<std::uint64_t>(h)); }, false, false, true, true},
+        {"exact Currency", [](std::int64_t h) { (void)h; return make_currency_value(h * INT64_C(10000)); }, false, false, true, true},
+        {"fraction", [](std::int64_t h) { (void)h; return make_number_value(h + 0.9); }, true, false, false, true},
+        {"immediately above", [](std::int64_t h) { (void)h; return make_number_value(std::nextafter(static_cast<double>(h), h + 1.0)); }, true, false, false, true},
+        {"fraction below", [](std::int64_t h) { (void)h; return make_number_value(h - 0.1); }, true, false, false, false},
+        {"immediately below", [](std::int64_t h) { (void)h; return make_number_value(std::nextafter(static_cast<double>(h), h - 1.0)); }, true, false, false, false},
+        {"negative fraction", [](std::int64_t h) { (void)h; return make_number_value(-0.9); }, true, false, false, false},
+        {"zero", [](std::int64_t h) { (void)h; return make_number_value(0); }, false, false, false, false},
+        {"negative", [](std::int64_t h) { (void)h; return make_number_value(-999); }, false, false, false, false},
+        {"int32 maximum", [](std::int64_t h) { (void)h; return make_number_value(2147483647); }, false, false, false, false},
+        {"int32 minimum", [](std::int64_t h) { (void)h; return make_number_value(-2147483648.0); }, false, false, false, false},
+        {"above int32", [](std::int64_t h) { (void)h; return make_number_value(2147483648.0); }, true, false, false, false},
+        {"below int32", [](std::int64_t h) { (void)h; return make_number_value(-2147483649.0); }, true, false, false, false},
+        {"above int32 uint64", [](std::int64_t h) { (void)h; return make_uint64_value(UINT64_C(2147483648)); }, true, false, false, false},
+        {"below int32 int64", [](std::int64_t h) { (void)h; return make_int64_value(-INT64_C(2147483649)); }, true, false, false, false},
+        {"positive wrap", [](std::int64_t h) { (void)h; return make_number_value(h + 4294967296.0); }, true, false, false, true},
+        {"negative wrap", [](std::int64_t h) { (void)h; return make_number_value(h - 4294967296.0); }, true, false, false, true},
+        {"negative double wrap", [](std::int64_t h) { (void)h; return make_number_value(h - 8589934592.0); }, true, false, false, true},
+        {"uint16 not a wrap", [](std::int64_t h) { (void)h; return make_number_value(h + 65536.0); }, false, false, false, false},
+        {"huge", [](std::int64_t h) { (void)h; return make_number_value(1E300); }, true, false, false, false},
+        {"negative huge", [](std::int64_t h) { (void)h; return make_number_value(-1E300); }, true, false, false, false},
+        {"infinity", [](std::int64_t h) { (void)h; return make_number_value(std::numeric_limits<double>::infinity()); }, true, false, false, false},
+        {"negative infinity", [](std::int64_t h) { (void)h; return make_number_value(-std::numeric_limits<double>::infinity()); }, true, false, false, false},
+        {"NaN", [](std::int64_t h) { (void)h; return make_number_value(std::numeric_limits<double>::quiet_NaN()); }, true, true, false, false},
+        {"exact int64 low bits", [](std::int64_t h) { (void)h; return make_int64_value(INT64_C(9007199254740992) + h); }, true, false, false, true},
+        {"exact uint64 low bits", [](std::int64_t h) { (void)h; return make_uint64_value(UINT64_C(9007199254740992) + static_cast<std::uint64_t>(h)); }, true, false, false, true},
+        {"exact unsigned high low bits", [](std::int64_t h) { (void)h; return make_uint64_value(UINT64_C(9223372036854775808) + static_cast<std::uint64_t>(h)); }, true, false, false, true},
+        {"int64 maximum", [](std::int64_t h) { (void)h; return make_int64_value(std::numeric_limits<std::int64_t>::max()); }, true, false, false, false},
+        {"int64 minimum", [](std::int64_t h) { (void)h; return make_int64_value(std::numeric_limits<std::int64_t>::min()); }, true, false, false, false},
+        {"uint64 maximum", [](std::int64_t h) { (void)h; return make_uint64_value(std::numeric_limits<std::uint64_t>::max()); }, true, false, false, false},
+        {"Currency fraction", [](std::int64_t h) { (void)h; return make_currency_value(h * INT64_C(10000) + 9000); }, true, false, false, true},
+        {"Currency subunit", [](std::int64_t h) { (void)h; return make_currency_value(9000); }, true, false, false, false},
+        {"Currency negative subunit", [](std::int64_t h) { (void)h; return make_currency_value(-9000); }, true, false, false, false},
+        {"Currency positive wrap invalid", [](std::int64_t h) { (void)h; return make_currency_value((h + INT64_C(4294967296)) * INT64_C(10000)); }, true, false, false, false},
+        {"Currency negative wrap", [](std::int64_t h) { (void)h; return make_currency_value((h - INT64_C(4294967296)) * INT64_C(10000)); }, true, false, false, true},
+        {"Currency negative double wrap invalid", [](std::int64_t h) { (void)h; return make_currency_value((h - INT64_C(8589934592)) * INT64_C(10000)); }, true, false, false, false},
+        {"Currency positive limit", [](std::int64_t h) { (void)h; return make_currency_value(INT64_C(42949672960000)); }, true, false, false, false},
+        {"Currency negative limit fraction", [](std::int64_t h) { (void)h; return make_currency_value(-INT64_C(42949672969000)); }, true, false, false, false},
+        {"Currency huge", [](std::int64_t h) { (void)h; return make_currency_value(std::numeric_limits<std::int64_t>::max()); }, true, false, false, false},
+        {"immediately above int32 maximum", [](std::int64_t) { return make_number_value(std::nextafter(2147483647.0, 2147483648.0)); }, true, false, false, false},
+        {"immediately below int32 minimum", [](std::int64_t) { return make_number_value(std::nextafter(-2147483648.0, -2147483649.0)); }, true, false, false, false},
+        {"Currency int32 maximum", [](std::int64_t) { return make_currency_value(INT64_C(21474836470000)); }, false, false, false, false},
+        {"Currency int32 minimum", [](std::int64_t) { return make_currency_value(-INT64_C(21474836480000)); }, false, false, false, false},
+        {"Currency above int32", [](std::int64_t) { return make_currency_value(INT64_C(21474836480000)); }, true, false, false, false},
+        {"Currency below int32", [](std::int64_t) { return make_currency_value(-INT64_C(21474836490000)); }, true, false, false, false},
+        {"Logical", [](std::int64_t h) { (void)h; return make_boolean_value(true); }, false, false, false, false},
+        {"numeric Character", [](std::int64_t h) { (void)h; return make_string_value(std::to_string(h)); }, false, false, false, false},
+        {"NULL", [](std::int64_t h) { (void)h; return make_null_value(); }, false, false, false, false},
+        {"Empty", [](std::int64_t h) { (void)h; return PrgValue{}; }, false, false, false, false},
+    };
+    for (const bool verified : {false, true}) {
+        for (const bool vfp : {false, true}) {
+            const auto call = [&](const std::string& function, const std::vector<PrgValue>& arguments) {
+                return evaluate_file_io_function(function, arguments, root.string(), verified,
+                    [](const fs::path&) -> std::optional<std::string> { return "abcdef"; }, {},
+                    [vfp](const std::string&) { return vfp ? "VFP9" : "COPPERFIN"; }).value();
+            };
+            for (const std::string function : {"fclose", "fread", "fwrite", "fgets", "fputs",
+                     "fseek", "ftell", "feof", "fflush", "fchsize"}) {
+                for (const auto& row : rows) {
+                    write_text(root / "data.txt", "abcdef");
+                    const auto handle = call("fopen", {make_string_value("data.txt"), make_number_value(verified ? 0 : 2)});
+                    call("fseek", {handle, make_number_value(3)});
+                    std::vector<PrgValue> arguments{row.argument(static_cast<std::int64_t>(value_as_number(handle)))};
+                    if (function == "fread" || function == "fgets" || function == "fseek") {
+                        arguments.push_back(make_number_value(1));
+                    } else if (function == "fwrite" || function == "fputs") {
+                        arguments.push_back(make_string_value("Z"));
+                    } else if (function == "fchsize") {
+                        arguments.push_back(make_number_value(3));
+                    }
+                    const std::string label = function + " " + row.name + (vfp ? " VFP9" : " COPPERFIN") +
+                        (verified ? " verified" : " native");
+                    const bool should_reject = vfp ? row.vfp_error : row.strict_error;
+                    const bool live = vfp ? row.vfp_live : row.strict_live;
+                    const bool blocked_write = verified &&
+                        (function == "fwrite" || function == "fputs" || function == "fchsize");
+                    bool rejected = false;
+                    try {
+                        const auto result = call(function, arguments);
+                        const auto file_error = call("ferror", {});
+                        if (!should_reject) {
+                            std::string expected;
+                            if (!live || blocked_write) {
+                                // Existing return gaps #5913/#5914/#6959 remain
+                                // separate from conversion; pin current results.
+                                expected = function == "fread" || function == "fgets" ? "" :
+                                    function == "feof" ? "true" : "-1";
+                            } else {
+                                expected = function == "fread" || function == "fgets" ? "d" :
+                                    function == "feof" ? "false" : function == "ftell" ? "3" :
+                                    function == "fwrite" || function == "fseek" ? "1" :
+                                    function == "fputs" ? "2" : "0";
+                            }
+                            expect(format_value(result) == expected, label + " result");
+                            expect(value_as_number(file_error) == ((!live || blocked_write) ? 6 : 0), label + " FERROR");
+                        }
+                    } catch (const PrgCompatibilityError& error) {
+                        rejected = true;
+                        expect(error.error_code() == 11, label + " error 11");
+                    }
+                    expect(rejected == should_reject, label + " admission");
+                    if (rejected) {
+                        expect(value_as_number(call("ferror", {})) == 0, label + " must not mutate FERROR on argument error");
+                    }
+                    const bool closed = !rejected && live && function == "fclose";
+                    const double expected_position = closed ? -1 :
+                        rejected || !live || blocked_write ? 3 :
+                        function == "fseek" ? 1 : function == "fread" || function == "fgets" || function == "fwrite" ? 4 :
+                        function == "fputs" ? 5 : 3;
+                    expect(value_as_number(call("ftell", {handle})) == expected_position, label + " target position/lifetime");
+                    call("fclose", {handle});
+                    const std::string expected_bytes = rejected || !live || verified ? "abcdef" :
+                        function == "fwrite" ? "abcZef" : function == "fputs" ? "abcZ\nf" :
+                        function == "fchsize" ? "abc" : "abcdef";
+                    expect(read_text(root / "data.txt") == expected_bytes, label + " persistent bytes");
+                }
+            }
+        }
+    }
+    const fs::path script = root / "file_handle_boundaries.prg";
+    write_text(root / "data.txt", "abcdef");
+    write_text(script,
+        "h = FOPEN('data.txt', 2)\n"
+        "=FSEEK(h, 3)\n"
+        "TRY\n"
+        "  cUnexpected = FREAD(h + 0.9, 1)\n"
+        "CATCH TO oError\n"
+        "  nReadError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  nUnexpected = FCLOSE(h + 4294967296)\n"
+        "CATCH TO oError\n"
+        "  nCloseError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  nUnexpected = FCHSIZE(h + 4294967296, 0)\n"
+        "CATCH TO oError\n"
+        "  nResizeError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "nPosition = FTELL(h)\n"
+        "cPreserved = FILETOSTR('data.txt')\n"
+        "cInvalid = FREAD(TRANSFORM(h), 1)\n"
+        "nTypeError = FERROR()\n"
+        "SET NUMERICBEHAVIOR TO VFP9\n"
+        "cFraction = FREAD(h + 0.9, 1)\n"
+        "nWrappedClose = FCLOSE(h + 4294967296)\n"
+        "nAfterClose = FTELL(h)\n"
+        "RETURN\n");
+    auto session = PrgRuntimeSession::create(make_runtime_session_options(script, root));
+    const auto state = session.run(DebugResumeAction::continue_run);
+    expect(state.completed, "file-handle script errors must be catchable: " + state.message);
+    for (const auto& [name, expected] : std::vector<std::pair<std::string, std::string>>{
+             {"nreaderror", "11"}, {"ncloseerror", "11"}, {"nresizeerror", "11"},
+             {"nposition", "3"}, {"cpreserved", "abcdef"}, {"cinvalid", ""}, {"ntypeerror", "6"},
+             {"cfraction", "d"}, {"nwrappedclose", "0"}, {"nafterclose", "-1"}}) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end() && format_value(found->second) == expected, name + " script result");
+    }
+    fs::remove_all(root, ignored);
+}
+
 void test_fdate_ftime_runtime_functions()
 {
     namespace fs = std::filesystem;
@@ -1097,6 +1279,7 @@ int main()
 {
     test_file_io_runtime_functions();
     test_fseek_numeric_boundaries();
+    test_file_handle_numeric_boundaries();
     test_fdate_ftime_runtime_functions();
     test_fopen_mode_boundaries();
     test_fcreate_runtime_function();

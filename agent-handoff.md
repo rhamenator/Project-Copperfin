@@ -271,19 +271,29 @@ review found no further issue, and both conversations were resolved before
 merge. The completed worktree, branch, probe and build directories were cleaned
 up. Optional Windows MSVC was still running at merge; all other checks passed.
 
-The active bounded slice is `FSEEK()` offset and origin numeric conversion on
-branch `fix/fseek-numeric-5611` in
-`~/.codex/worktrees/fseek-numeric-5611/Project-Copperfin`, based on that merge.
-Installed VFP9 observations are retained in the fixture directory; the default
-requires exact signed-32-bit offsets and exact 0/1/2 origins. Explicit VFP9
-reproduces observed Numeric wrapping and Currency limits. Native and verified
-paths share validation before seeking. Focused file-I/O and verified-byte tests
-pass normally and under Clang ASan/UBSan/float-cast-overflow; the boundary
-regressions fail against the old conversion dispatch. Merge gates: resolved
-review findings, green required checks and clean review for the final commit;
-then merge and clean up. Handle conversion is a
-subsequent #5611 slice. A newly observed failed-seek return mismatch was filed
-as #6956 without expanding the conversion slice.
+The `FSEEK()` offset/origin numeric-conversion slice merged in PR #6957 at
+`7d4d77867`. All 11 required checks passed at exact head `a16e76fdf`, review
+reported no findings and there were no conversations. Optional Windows MSVC
+was still running at merge; every other check passed. The completed worktree,
+branch and build directories were cleaned up. Failed-seek return parity is
+separate gap #6956.
+
+The active bounded slice is shared file-handle numeric conversion for all ten
+low-level file-I/O callers on branch `fix/file-handle-numeric-5611` in
+`~/.codex/worktrees/file-handle-numeric-5611/Project-Copperfin`, based on that
+merge. Default COPPERFIN admits exact signed-32-bit numeric handles; explicit
+VFP9 reproduces Numeric truncation/wrapping and Currency conversion limits.
+Both modes retain invalid-type FERROR 6 without coercion. The 380-row installed
+VFP9 probe, 51-row native/verified two-mode test matrix, catchable script and
+requirements traceability are retained; old dispatch reports 1350 failures.
+Focused file-I/O and verified-byte suites pass normally and under Clang
+ASan/UBSan/float-cast-overflow. Builds are
+`/home/rich/temp/copperfin-file-handle-5611-{build,sanitize}`. Remaining: obtain
+green required checks and clean review for the final commit, verify/resolve
+any findings, merge and clean up. FCHSIZE's size argument is the next bounded
+#5611 slice; the owner's HEX conversion evidence on #5611 remains in the
+later-module inventory. Return gaps #5912/#5913/#5914/#5887/#5911/#6956 and
+newly filed #6959 remain separate from this conversion slice.
 During selection, unrelated compatibility gaps in `FV()`/`PV()` signatures and
 `SYS(-1)` surfaced and were filed as #6944 and #6945 without expanding this
 slice.
@@ -387,7 +397,10 @@ Owner-directed workstream order before the #6879 assignment was:
      (PR #6950).
    - Completed after those: `FCREATE()` optional numeric file-attribute
      conversion (PR #6952).
-   - Active: `FSEEK()` offset and origin numeric conversion.
+   - Completed after those: `FSEEK()` offset/origin numeric conversion
+     (PR #6957).
+   - Active: shared file-handle numeric conversion in ten low-level callers.
+   - Next bounded slice: `FCHSIZE()` size numeric conversion.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`
