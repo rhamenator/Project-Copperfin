@@ -23,4 +23,5 @@ extension coverage are derived policy, not claims about installed VFP9.
 Failed seeks expose a separate return-value gap tracked by #6956: VFP9
 returns the unchanged position and FERROR 25; Copperfin currently returns -1
 and preserves position. This conversion slice preserves that existing result.
-File-handle conversion is a subsequent #5611 slice.
+File-handle conversion is recovered separately in
+`../vfp9-file-handle-numeric-observation/` under #5611.

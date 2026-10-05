@@ -1,5 +1,21 @@
 # VFP Language Reference Coverage
 
+- Low-level file-handle numeric boundaries (2026-10-05, #5611/#6776): all
+  ten callers (FCLOSE, FREAD, FWRITE, FGETS, FPUTS, FSEEK, FTELL, FEOF,
+  FFLUSH, FCHSIZE) share checked admission. Default COPPERFIN accepts exact
+  signed-32-bit numeric handles; fractions, non-finite and out-of-range values
+  raise catchable error 11 before lookup, closing, reading, writing, seeking,
+  flushing or resizing. Explicit VFP9 preserves observed Numeric truncation
+  and low-32-bit wrapping, with huge/infinite values becoming invalid handles.
+  Currency truncates but treats nonzero sub-unit values and whole units outside
+  [-4294967296, 4294967295] as invalid handles. Logical, Character, NULL and
+  Empty always follow invalid-handle FERROR 6 without coercion. NaN rejection,
+  exact extended integer conversion and FTELL's shared policy are derived
+  safety requirements, not VFP9 claims. The 380-row installed probe is retained
+  under `tests/fixtures/vfp9-file-handle-numeric-observation/`. Return gaps
+  #5912/#5913/#5914/#5887/#5911/#6956/#6959 remain separate; FCHSIZE's size
+  argument is a subsequent numeric-conversion slice.
+
 - `FSEEK()` offset/origin numeric boundaries (2026-10-05, #5611/#6776):
   default `COPPERFIN` requires exact signed-32-bit offsets and exact origins
   0, 1, or 2. Invalid values/types raise catchable error 11 before seeking.
@@ -10,7 +26,7 @@
   reject raw Numeric above 2 or whole Currency above 2 and require a converted
   0/1/2 result. NaN is rejected in both modes as a derived safety policy.
   Native and verified-byte paths share admission; rejected operands preserve
-  position. File-handle conversion remains a later #5611 slice. The separate
+  position. File-handle conversion follows the shared policy above. The separate
   failed-seek return gap is tracked by #6956. The complete 82-case installed
   probe is retained under `tests/fixtures/vfp9-fseek-numeric-bounds-observation/`.
 
