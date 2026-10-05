@@ -272,15 +272,17 @@ merge. Fresh installed-VFP9 evidence shows that converted attributes 0 through
 7 are valid. Numeric operands at or below the raw positive ceiling of 7
 truncate toward zero and use signed low-32-bit conversion; Currency rejects a
 nonzero sub-unit magnitude, otherwise truncates to whole units and follows the
-same positive ceiling and conversion rule. The draft makes default COPPERFIN
+same positive ceiling and conversion rule. The implementation makes default COPPERFIN
 strict at exact integer attributes 0 through 7 and preserves the recovered
 quirk under explicit VFP9 before file creation. Tests, retained evidence,
-docs/22, docs/32 traceability, and a changelog fragment are drafted. Focused
+docs/22, docs/32 traceability, and a changelog fragment are retained in PR #6952. Focused
 file-I/O validation passes normally and under Clang AddressSanitizer,
-UndefinedBehaviorSanitizer, and float-cast-overflow instrumentation. Remaining:
-review the diff, run repository checks, commit, push, open the PR, resolve any
-review findings, obtain green required exact-head checks and clean review
-state, then merge and clean up.
+UndefinedBehaviorSanitizer, and float-cast-overflow instrumentation. Both review
+findings are addressed in the branch: the strict FCREATE type cases and their
+assertions are in the dedicated attribute-boundary test, and this continuation
+brief reflects the open PR. Remaining: verify and resolve those conversations,
+obtain green required checks for the final commit and clean review state, then
+merge and clean up.
 During selection, unrelated compatibility gaps in `FV()`/`PV()` signatures and
 `SYS(-1)` surfaced and were filed as #6944 and #6945 without expanding this
 slice.

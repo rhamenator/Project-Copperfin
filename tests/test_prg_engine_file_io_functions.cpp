@@ -399,24 +399,6 @@ void test_fopen_mode_boundaries()
         "CATCH TO oError\n"
         "  nStrictLogicalError = oError.ErrorNo\n"
         "ENDTRY\n"
-        "TRY\n"
-        "  hUnexpectedStrictCharacter = FCREATE('strict-character.txt', '1')\n"
-        "  nStrictCharacterError = 0\n"
-        "CATCH TO oError\n"
-        "  nStrictCharacterError = oError.ErrorNo\n"
-        "ENDTRY\n"
-        "TRY\n"
-        "  hUnexpectedStrictEmpty = FCREATE('strict-empty.txt', uEmpty)\n"
-        "  nStrictEmptyError = 0\n"
-        "CATCH TO oError\n"
-        "  nStrictEmptyError = oError.ErrorNo\n"
-        "ENDTRY\n"
-        "TRY\n"
-        "  hUnexpectedStrictNull = FCREATE('strict-null.txt', .NULL.)\n"
-        "  nStrictNullError = 0\n"
-        "CATCH TO oError\n"
-        "  nStrictNullError = oError.ErrorNo\n"
-        "ENDTRY\n"
         "SET NUMERICBEHAVIOR TO VFP9\n"
         "hVfpFractionRead = FOPEN('vfp-fraction-read.txt', 0.9)\n"
         "nVfpFractionReadWrite = FWRITE(hVfpFractionRead, 'x')\n"
@@ -491,9 +473,6 @@ void test_fopen_mode_boundaries()
     check("nstricthugeerror", "11");
     check("nstrictinfiniteerror", "11");
     check("nstrictlogicalerror", "11");
-    check("nstrictcharactererror", "11");
-    check("nstrictemptyerror", "11");
-    check("nstrictnullerror", "11");
     check("nvfpfractionreadwrite", "0");
     check("nvfpfractionwrite", "1");
     check("nvfpfractionreadwritewrite", "1");
@@ -652,6 +631,24 @@ void test_fcreate_attribute_boundaries()
         "CATCH TO oError\n"
         "  nStrictLogicalError = oError.ErrorNo\n"
         "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedStrictCharacter = FCREATE('strict-character.txt', '1')\n"
+        "  nStrictCharacterError = 0\n"
+        "CATCH TO oError\n"
+        "  nStrictCharacterError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedStrictEmpty = FCREATE('strict-empty.txt', uEmpty)\n"
+        "  nStrictEmptyError = 0\n"
+        "CATCH TO oError\n"
+        "  nStrictEmptyError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedStrictNull = FCREATE('strict-null.txt', .NULL.)\n"
+        "  nStrictNullError = 0\n"
+        "CATCH TO oError\n"
+        "  nStrictNullError = oError.ErrorNo\n"
+        "ENDTRY\n"
         "SET NUMERICBEHAVIOR TO VFP9\n"
         "hVfpFractionZero = FCREATE('vfp-fraction-zero.txt', 0.9)\n"
         "nVfpFractionZeroWrite = FWRITE(hVfpFractionZero, 'x')\n"
@@ -720,6 +717,9 @@ void test_fcreate_attribute_boundaries()
     check("nstricteighterror", "11");
     check("nstrictinfiniteerror", "11");
     check("nstrictlogicalerror", "11");
+    check("nstrictcharactererror", "11");
+    check("nstrictemptyerror", "11");
+    check("nstrictnullerror", "11");
     check("nvfpfractionzerowrite", "1");
     check("nvfpfractiononewrite", "-1");
     check("nvfpnegativefractionwrite", "1");
