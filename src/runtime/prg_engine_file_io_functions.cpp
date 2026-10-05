@@ -195,39 +195,104 @@ void set_file_error_from_errno(int fallback_code = 31) {
     }
 }
 
-std::string fopen_mode_from_value(const PrgValue& mode_value) {
+struct FOpenModeSelection {
+    std::string stream_mode;
+    bool create_missing = false;
+};
+
+[[noreturn]] void throw_invalid_fopen_mode() {
+    throw PrgCompatibilityError(
+        runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+}
+
+bool supported_fopen_numeric_mode(std::int64_t mode) {
+    return mode == 0 || mode == 1 || mode == 2 ||
+        mode == 10 || mode == 11 || mode == 12;
+}
+
+// Governing requirement: RQ-CF-PRG-FOPEN-MODE-BOUNDS-001 (#5611/#6776).
+FOpenModeSelection fopen_mode_from_value(
+    const PrgValue& mode_value,
+    const std::function<std::string(const std::string&)>& set_callback) {
     if (mode_value.kind == PrgValueKind::string) {
         const std::string raw_mode = trim_copy(value_as_string(mode_value));
         if (!raw_mode.empty()) {
-            return raw_mode;
+            return FOpenModeSelection{.stream_mode = raw_mode};
         }
+        return FOpenModeSelection{.stream_mode = "rb"};
     }
 
-    const int mode = static_cast<int>(std::llround(value_as_number(mode_value)));
+    const bool numeric_type = mode_value.kind == PrgValueKind::number ||
+        mode_value.kind == PrgValueKind::int64 ||
+        mode_value.kind == PrgValueKind::uint64 ||
+        mode_value.kind == PrgValueKind::currency;
+    if (mode_value.is_null || !numeric_type) {
+        throw_invalid_fopen_mode();
+    }
+
+    std::int64_t mode = 0;
+    if (numeric_behavior(set_callback) != NumericBehavior::vfp9) {
+        if (mode_value.kind == PrgValueKind::int64) {
+            mode = mode_value.int64_value;
+        } else if (mode_value.kind == PrgValueKind::uint64) {
+            if (mode_value.uint64_value >
+                static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())) {
+                throw_invalid_fopen_mode();
+            }
+            mode = static_cast<std::int64_t>(mode_value.uint64_value);
+        } else if (mode_value.kind == PrgValueKind::currency) {
+            if (mode_value.currency_value % INT64_C(10000) != 0) {
+                throw_invalid_fopen_mode();
+            }
+            mode = mode_value.currency_value / INT64_C(10000);
+        } else {
+            const double raw = mode_value.number_value;
+            if (!std::isfinite(raw) || std::trunc(raw) != raw || raw < 0.0 || raw > 12.0) {
+                throw_invalid_fopen_mode();
+            }
+            mode = static_cast<std::int64_t>(raw);
+        }
+    } else if (mode_value.kind == PrgValueKind::currency) {
+        if (mode_value.currency_value != 0 &&
+            mode_value.currency_value > -INT64_C(10000) &&
+            mode_value.currency_value < INT64_C(10000)) {
+            throw_invalid_fopen_mode();
+        }
+        const std::int64_t whole_units = mode_value.currency_value / INT64_C(10000);
+        if (whole_units > 12) {
+            throw_invalid_fopen_mode();
+        }
+        mode = vfp9_numeric_to_int32(make_int64_value(whole_units));
+    } else {
+        const double raw = value_as_number(mode_value);
+        if (std::isnan(raw) ||
+            (mode_value.kind == PrgValueKind::int64 && mode_value.int64_value > 12) ||
+            (mode_value.kind == PrgValueKind::uint64 && mode_value.uint64_value > 12U) ||
+            (mode_value.kind == PrgValueKind::number && raw > 12.0)) {
+            throw_invalid_fopen_mode();
+        }
+        mode = vfp9_numeric_to_int32(mode_value);
+    }
+
+    if (!supported_fopen_numeric_mode(mode)) {
+        throw_invalid_fopen_mode();
+    }
     if (mode == 1) {
-        return "wb";
+        return FOpenModeSelection{.stream_mode = "wb"};
     }
     if (mode == 2) {
-        return "rb+";
+        return FOpenModeSelection{.stream_mode = "rb+", .create_missing = true};
     }
     if (mode == 10) {
-        return "rb";
+        return FOpenModeSelection{.stream_mode = "rb"};
     }
     if (mode == 11) {
-        return "wb";
+        return FOpenModeSelection{.stream_mode = "wb"};
     }
     if (mode == 12) {
-        return "rb+";
+        return FOpenModeSelection{.stream_mode = "rb+", .create_missing = true};
     }
-    return "rb";
-}
-
-bool fopen_numeric_read_write_mode(const PrgValue& mode_value) {
-    if (mode_value.kind == PrgValueKind::string) {
-        return false;
-    }
-    const int mode = static_cast<int>(std::llround(value_as_number(mode_value)));
-    return mode == 2 || mode == 12;
+    return FOpenModeSelection{.stream_mode = "rb"};
 }
 
 bool fopen_read_only_mode(const std::string& mode) {
@@ -412,7 +477,10 @@ std::optional<PrgValue> evaluate_file_io_function(
 
     if (function == "fopen" && !arguments.empty()) {
         const std::filesystem::path path = resolve_file_path(value_as_string(arguments[0]), default_directory);
-        const std::string mode = arguments.size() >= 2U ? fopen_mode_from_value(arguments[1]) : std::string{"rb"};
+        const FOpenModeSelection mode_selection = arguments.size() >= 2U
+            ? fopen_mode_from_value(arguments[1], set_callback)
+            : FOpenModeSelection{.stream_mode = "rb"};
+        const std::string& mode = mode_selection.stream_mode;
 
         if (require_verified_file_byte_overrides && fopen_read_only_mode(mode)) {
             const auto verified = read_verified_file_callback ? read_verified_file_callback(path) : std::nullopt;
@@ -432,9 +500,7 @@ std::optional<PrgValue> evaluate_file_io_function(
         }
 
         std::FILE* opened = copperfin::platform::open_file_stream(path, mode);
-        if (opened == nullptr &&
-            fopen_numeric_read_write_mode(arguments.size() >= 2U ? arguments[1] : make_number_value(0.0)) &&
-            errno == ENOENT) {
+        if (opened == nullptr && mode_selection.create_missing && errno == ENOENT) {
             // rb+ preserves existing contents; only create a missing file after
             // that first open proves the path does not exist.
             opened = copperfin::platform::open_file_stream(path, "wb+");

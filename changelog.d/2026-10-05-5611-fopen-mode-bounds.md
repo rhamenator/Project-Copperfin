@@ -1,0 +1,1 @@
+- 2026-10-05: Fixed `FOPEN()` numeric-mode conversion so default behavior rejects fractional and invalid modes safely while explicit VFP9 mode reproduces recovered Numeric and Currency conversion without out-of-range host conversion.

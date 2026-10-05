@@ -343,6 +343,153 @@ void test_fdate_ftime_runtime_functions()
     fs::remove_all(temp_root, ignored);
 }
 
+void test_fopen_mode_boundaries()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_fopen_mode_boundaries";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto seed = [&](const std::string& name) {
+        write_text(temp_root / name, "seed");
+    };
+    seed("strict.txt");
+    seed("vfp-fraction-read.txt");
+    seed("vfp-fraction-write.txt");
+    seed("vfp-fraction-read-write.txt");
+    seed("vfp-wrap-read.txt");
+    seed("vfp-wrap-write.txt");
+    seed("vfp-negative-huge.txt");
+    seed("vfp-negative-infinite.txt");
+    seed("vfp-currency-write.txt");
+    seed("vfp-currency-wrap-read.txt");
+
+    const fs::path main_path = temp_root / "fopen_mode_boundaries.prg";
+    write_text(
+        main_path,
+        "SET NUMERICBEHAVIOR TO COPPERFIN\n"
+        "TRY\n"
+        "  hUnexpectedStrictFraction = FOPEN('strict.txt', 0.9)\n"
+        "  nStrictFractionError = 0\n"
+        "CATCH TO oError\n"
+        "  nStrictFractionError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedStrictMissingFraction = FOPEN('missing.txt', 0.9)\n"
+        "  nStrictMissingFractionError = 0\n"
+        "CATCH TO oError\n"
+        "  nStrictMissingFractionError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedStrictHuge = FOPEN('strict.txt', 1E300)\n"
+        "  nStrictHugeError = 0\n"
+        "CATCH TO oError\n"
+        "  nStrictHugeError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedStrictInfinite = FOPEN('strict.txt', EXP(1000))\n"
+        "  nStrictInfiniteError = 0\n"
+        "CATCH TO oError\n"
+        "  nStrictInfiniteError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedStrictLogical = FOPEN('strict.txt', .T.)\n"
+        "  nStrictLogicalError = 0\n"
+        "CATCH TO oError\n"
+        "  nStrictLogicalError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "SET NUMERICBEHAVIOR TO VFP9\n"
+        "hVfpFractionRead = FOPEN('vfp-fraction-read.txt', 0.9)\n"
+        "nVfpFractionReadWrite = FWRITE(hVfpFractionRead, 'x')\n"
+        "=FCLOSE(hVfpFractionRead)\n"
+        "hVfpFractionWrite = FOPEN('vfp-fraction-write.txt', 1.9)\n"
+        "nVfpFractionWrite = FWRITE(hVfpFractionWrite, 'x')\n"
+        "=FCLOSE(hVfpFractionWrite)\n"
+        "hVfpFractionReadWrite = FOPEN('vfp-fraction-read-write.txt', 2.9)\n"
+        "nVfpFractionReadWriteWrite = FWRITE(hVfpFractionReadWrite, 'x')\n"
+        "=FCLOSE(hVfpFractionReadWrite)\n"
+        "hVfpWrapRead = FOPEN('vfp-wrap-read.txt', -4294967296)\n"
+        "nVfpWrapReadWrite = FWRITE(hVfpWrapRead, 'x')\n"
+        "=FCLOSE(hVfpWrapRead)\n"
+        "hVfpWrapWrite = FOPEN('vfp-wrap-write.txt', -4294967295)\n"
+        "nVfpWrapWrite = FWRITE(hVfpWrapWrite, 'x')\n"
+        "=FCLOSE(hVfpWrapWrite)\n"
+        "hVfpNegativeHuge = FOPEN('vfp-negative-huge.txt', -1E300)\n"
+        "nVfpNegativeHugeWrite = FWRITE(hVfpNegativeHuge, 'x')\n"
+        "=FCLOSE(hVfpNegativeHuge)\n"
+        "hVfpNegativeInfinite = FOPEN('vfp-negative-infinite.txt', -EXP(1000))\n"
+        "nVfpNegativeInfiniteWrite = FWRITE(hVfpNegativeInfinite, 'x')\n"
+        "=FCLOSE(hVfpNegativeInfinite)\n"
+        "TRY\n"
+        "  hUnexpectedVfpThirteen = FOPEN('strict.txt', 13)\n"
+        "  nVfpThirteenError = 0\n"
+        "CATCH TO oError\n"
+        "  nVfpThirteenError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedVfpHuge = FOPEN('strict.txt', 1E300)\n"
+        "  nVfpHugeError = 0\n"
+        "CATCH TO oError\n"
+        "  nVfpHugeError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedVfpInfinite = FOPEN('strict.txt', EXP(1000))\n"
+        "  nVfpInfiniteError = 0\n"
+        "CATCH TO oError\n"
+        "  nVfpInfiniteError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedVfpCurrencySubunit = FOPEN('strict.txt', $0.9000)\n"
+        "  nVfpCurrencySubunitError = 0\n"
+        "CATCH TO oError\n"
+        "  nVfpCurrencySubunitError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "hVfpCurrencyWrite = FOPEN('vfp-currency-write.txt', $1.9000)\n"
+        "nVfpCurrencyWrite = FWRITE(hVfpCurrencyWrite, 'x')\n"
+        "=FCLOSE(hVfpCurrencyWrite)\n"
+        "hVfpCurrencyWrapRead = FOPEN('vfp-currency-wrap-read.txt', $-4294967296.0000)\n"
+        "nVfpCurrencyWrapReadWrite = FWRITE(hVfpCurrencyWrapRead, 'x')\n"
+        "=FCLOSE(hVfpCurrencyWrapRead)\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "FOPEN mode-boundary script should complete: " + state.message);
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " variable should be present for FOPEN mode-boundary test");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("nstrictfractionerror", "11");
+    check("nstrictmissingfractionerror", "11");
+    check("nstricthugeerror", "11");
+    check("nstrictinfiniteerror", "11");
+    check("nstrictlogicalerror", "11");
+    check("nvfpfractionreadwrite", "0");
+    check("nvfpfractionwrite", "1");
+    check("nvfpfractionreadwritewrite", "1");
+    check("nvfpwrapreadwrite", "0");
+    check("nvfpwrapwrite", "1");
+    check("nvfpnegativehugewrite", "0");
+    check("nvfpnegativeinfinitewrite", "0");
+    check("nvfpthirteenerror", "11");
+    check("nvfphugeerror", "11");
+    check("nvfpinfiniteerror", "11");
+    check("nvfpcurrencysubuniterror", "11");
+    check("nvfpcurrencywrite", "1");
+    check("nvfpcurrencywrapreadwrite", "0");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_fcreate_runtime_function()
 {
     namespace fs = std::filesystem;
@@ -654,6 +801,7 @@ int main()
 {
     test_file_io_runtime_functions();
     test_fdate_ftime_runtime_functions();
+    test_fopen_mode_boundaries();
     test_fcreate_runtime_function();
     test_unicode_paths_survive_prg_file_io_and_includes();
     test_fwrite_fputs_negative_count_writes_everything();
