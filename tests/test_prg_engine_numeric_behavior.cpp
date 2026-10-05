@@ -733,6 +733,14 @@ std::vector<Row> build_rows() {
         rows.push_back({set, "SYS(-EXP(1000))", std::string(mode) == "COPPERFIN" ? "ERR11" : "C:0"});
     }
     rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", "SYS(-4294967291)==SYS(5)", "L:true"});
+    // RQ-CF-PRG-CPCURRENT-NUMERIC-001: query-domain/type parity is a separate gap.
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        for (const char* argument : {"1.9", "2.5", "2147483648", "4294967298", "1E300", "-1E300",
+                                     "EXP(1000)", "-EXP(1000)"}) {
+            rows.push_back({set, std::string("CPCURRENT(") + argument + ")", "ERR11"});
+        }
+    }
     return rows;
 }
 
@@ -1348,6 +1356,107 @@ void test_sys_selector_direct_numeric_boundaries() {
     }
 }
 
+// RQ-CF-PRG-CPCURRENT-NUMERIC-001 (#5611/#6776): bounded integer admission
+// precedes configured/default lookup. Native query-domain/type parity is separate.
+void test_cpcurrent_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    const double inf = std::numeric_limits<double>::infinity();
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const double upper = 2147483648.0;
+    enum class Result { configured, host, oem, error };
+    struct Case { PrgValue value; Result expected; };
+    const std::vector<Case> cases{
+        {make_number_value(0), Result::configured},
+        {make_number_value(-0.0), Result::configured},
+        {make_number_value(1), Result::host},
+        {make_number_value(2), Result::oem},
+        {make_number_value(-1), Result::host}, // existing query-domain gaps remain separate
+        {make_number_value(99), Result::host},
+        {make_number_value(0.49), Result::error},
+        {make_number_value(0.5), Result::error},
+        {make_number_value(0.9), Result::error},
+        {make_number_value(1.49), Result::error},
+        {make_number_value(1.5), Result::error},
+        {make_number_value(1.9), Result::error},
+        {make_number_value(2.49), Result::error},
+        {make_number_value(2.5), Result::error},
+        {make_number_value(2.9), Result::error},
+        {make_number_value(-0.9), Result::error},
+        {make_number_value(upper - 1.0), Result::host},
+        {make_number_value(std::nextafter(upper, 0.0)), Result::error},
+        {make_number_value(upper), Result::error},
+        {make_number_value(-upper), Result::host},
+        {make_number_value(std::nextafter(-upper, -inf)), Result::error},
+        {make_number_value(4294967298.0), Result::error},
+        {make_number_value(-4294967294.0), Result::error},
+        {make_number_value(1E300), Result::error},
+        {make_number_value(-1E300), Result::error},
+        {make_number_value(inf), Result::error},
+        {make_number_value(-inf), Result::error},
+        {make_number_value(nan), Result::error},
+        {make_int64_value(2), Result::oem},
+        {make_int64_value(std::numeric_limits<std::int32_t>::max()), Result::host},
+        {make_int64_value(std::numeric_limits<std::int64_t>::max()), Result::error},
+        {make_int64_value(std::numeric_limits<std::int64_t>::min() + 2), Result::error},
+        {make_uint64_value(2), Result::oem},
+        {make_uint64_value(UINT64_C(2147483648)), Result::error},
+        {make_uint64_value(std::numeric_limits<std::uint64_t>::max()), Result::error},
+        // Preserve other coercions behind checked rounding; native type parity remains separate.
+        {make_currency_value(19000), Result::oem},
+        {make_boolean_value(true), Result::host},
+        {make_null_value(), Result::configured},
+        {make_string_value("2"), Result::oem},
+        {make_string_value("1E300"), Result::error}};
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        int configured_reads = 0;
+        const auto setting = [&](const std::string& name) {
+            if (name == "NUMERICBEHAVIOR") { return std::string(mode); }
+            expect(name == "CODEPAGE", "CPCURRENT should not mutate or query unrelated session state");
+            ++configured_reads;
+            return std::string("777");
+        };
+        const auto call = [&](const std::vector<PrgValue>& arguments) {
+            return evaluate_runtime_surface_function(
+                "cpcurrent", arguments, {}, {}, {}, {}, 0, {}, 0, {}, 0, {}, {}, {}, {}, {}, {}, {}, {}, setting,
+                {}, {}, false, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {});
+        };
+        const auto omitted = call({});
+        expect(omitted.has_value() && omitted->kind == PrgValueKind::number && omitted->number_value == 777,
+               std::string(mode) + " omitted CPCURRENT selector should preserve configuration lookup");
+        expect(configured_reads == 1, "omitted CPCURRENT should read configuration exactly once");
+        const auto host = call({make_number_value(1)});
+        const auto oem = call({make_number_value(2)});
+        expect(host.has_value() && host->kind == PrgValueKind::number &&
+                   oem.has_value() && oem->kind == PrgValueKind::number,
+               "CPCURRENT host/OEM controls should return code-page numbers");
+        if (!host.has_value() || !oem.has_value()) { continue; }
+        for (std::size_t i = 0; i < cases.size(); ++i) {
+            configured_reads = 0;
+            bool threw = false;
+            std::optional<PrgValue> actual;
+            try {
+                actual = call({cases[i].value});
+            } catch (const PrgCompatibilityError& error) {
+                threw = true;
+                expect(error.error_code() == 11, "invalid CPCURRENT selector should raise catchable error 11");
+            }
+            const std::string label = std::string(mode) + " CPCURRENT boundary " + std::to_string(i);
+            const auto expected = cases[i].expected;
+            if (expected == Result::error) {
+                expect(threw, label + " should reject before selecting a code-page query");
+            } else {
+                const double expected_value = expected == Result::configured ? 777
+                    : expected == Result::host ? host->number_value : oem->number_value;
+                expect(!threw && actual.has_value() && actual->kind == PrgValueKind::number &&
+                           actual->number_value == expected_value,
+                       label + " should retain its configured/host/OEM query result");
+            }
+            expect(configured_reads == (expected == Result::configured ? 1 : 0),
+                   label + " should preserve configured-state reads on rejection and other queries");
+        }
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -1359,6 +1468,7 @@ int main() {
     test_rand_direct_numeric_boundaries();
     test_hex_direct_numeric_boundaries();
     test_sys_selector_direct_numeric_boundaries();
+    test_cpcurrent_direct_numeric_boundaries();
     test_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {
