@@ -1,7 +1,7 @@
 # Installed VFP9 ADIR Numeric-display-flag observations
 
 Recovered 2026-10-05 from installed Visual FoxPro 09.00.0000.7423 under Wine
-using the existing `/home/rich/bin/vfp9-probe` without modification.
+using the existing local `vfp9-probe` wrapper without modification.
 `adir.prg` is complete clean-room source; `adir.out` retains all 46 results
 plus VERSION. `MiXeD.txt` is a supplied harmless filename fixture. The fresh
 process enumerates only that fixture into a local array; no persistent table,
@@ -47,12 +47,18 @@ domain/int64 boundaries, NaN and exact extended integer values above 2^53.
 
 All three focused suites pass with GCC 15.2 Debug (2.70 seconds total) and
 Clang 21.1.8 ASan/UBSan/float-cast-overflow (11.07 seconds total), without
-sanitizer diagnostics. Normal build:
-`/home/rich/temp/copperfin-adir-display-5611-build`, Ninja, Debug `-O0 -g1`.
-Instrumented build: `/home/rich/temp/copperfin-adir-display-5611-sanitize`,
-Clang/Clang++, Debug `-O0 -g1 -fsanitize=address,undefined,float-cast-overflow
--fno-omit-frame-pointer` for C/C++, with the same sanitizer linker flags.
-Both build and run these targets:
+sanitizer diagnostics. To reproduce from the repository root, replace
+`<normal-build-dir>` and `<sanitizer-build-dir>` with separate local build
+directories outside the source checkout. These paths are placeholders, not
+required machine-specific locations. Configure Ninja/GCC Debug and the
+Clang/Clang++ instrumented Debug build as follows:
+
+```sh
+cmake -S . -B <normal-build-dir> -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG='-O0 -g1' -DCMAKE_C_FLAGS_DEBUG='-O0 -g1' -DCOPPERFIN_BUILD_TESTS=ON
+cmake -S . -B <sanitizer-build-dir> -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_FLAGS_DEBUG='-O0 -g1 -fsanitize=address,undefined,float-cast-overflow -fno-omit-frame-pointer' -DCMAKE_C_FLAGS_DEBUG='-O0 -g1 -fsanitize=address,undefined,float-cast-overflow -fno-omit-frame-pointer' -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address,undefined,float-cast-overflow' -DCOPPERFIN_BUILD_TESTS=ON
+```
+
+For each directory, substitute its path for `<build>` below:
 
 ```sh
 cmake --build <build> --target test_prg_engine_numeric_behavior test_prg_engine_arrays test_prg_engine_string_math_functions -j 6
@@ -60,10 +66,16 @@ ctest --test-dir <build> -R '^test_prg_engine_(numeric_behavior|arrays|string_ma
 ```
 
 The instrumented invocation sets `ASAN_OPTIONS=detect_leaks=0` and
-`UBSAN_OPTIONS=halt_on_error=1`. Broader Linux/Windows/macOS validation and
-exact-head automated review remain PR merge gates. Retain this source, output,
+`UBSAN_OPTIONS=halt_on_error=1`. Hosted Linux/Windows/macOS checks provide
+broader evidence; all required checks, exact-head automated review and resolved
+conversations remain PR merge gates. Retain this source, output,
 tests and result summary with release evidence; remove scratch builds after
 merge. No VM was started or altered.
+
+Review follow-up (2026-10-05): portable configuration instructions replace
+machine-specific build paths, and the row builder computes its mode comparison
+once per outer loop. All three suites still pass normally (2.68 seconds) and
+under the same sanitizers (10.63 seconds), without diagnostics.
 
 Verification IDs: `VR-5611-ADIR-NATIVE-001`, `VR-5611-ADIR-BOUNDARY-001`, and
 `VR-5611-ADIR-SANITIZER-001` map respectively to the retained native table,

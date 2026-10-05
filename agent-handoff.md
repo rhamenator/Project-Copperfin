@@ -373,6 +373,8 @@ ADIR Numeric/exact-integer optional display flags are the active bounded slice
 under #5611/#6776 on `fix/adir-display-numeric-5611`, from main
 `2a0c811dc422480402d325c3d11afb18457eec0d`, in
 `/home/rich/.codex/worktrees/adir-display-numeric-5611/Project-Copperfin`.
+Exact local paths here preserve owner-requested continuation state; portable
+verification commands are in the fixture README, not tied to this checkout.
 The complete 46-result installed VFP9 09.00.0000.7423 Wine fixture and harmless
 `MiXeD.txt` are retained under
 `tests/fixtures/vfp9-adir-display-numeric-observation/`.

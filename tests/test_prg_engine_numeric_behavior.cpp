@@ -854,10 +854,11 @@ std::vector<Row> build_rows() {
     // RQ-CF-PRG-ADIR-DISPLAY-NUMERIC-001: compare each admitted value with
     // its canonical flag, not a new cross-platform 8.3 rendering requirement.
     for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const bool is_copperfin = std::string(mode) == "COPPERFIN";
         const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
         const std::string array = set + "\nLOCAL ARRAY aFlag[1], aCanonical[1]\naFlag[1] = 'sentinel'";
         for (const auto& row : kAdirCases) {
-            const int flag = std::string(mode) == "COPPERFIN" ? row.copperfin : row.vfp9;
+            const int flag = is_copperfin ? row.copperfin : row.vfp9;
             const std::string setup = array + "\nx = ADIR(aCanonical, 'MiXeD.txt', '', " +
                 std::to_string(flag < 0 ? 0 : flag) + ")\nnFound = ADIR(aFlag, 'MiXeD.txt', '', " +
                 row.argument + ")";
