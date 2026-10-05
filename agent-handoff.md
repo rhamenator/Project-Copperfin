@@ -253,8 +253,8 @@ Copilot review had no findings, and there were no review conversations. The
 completed worktree, branch, scratch probe, and build directories were cleaned
 up after merge.
 
-The active bounded slice is `FDATE()` optional type-flag numeric conversion on
-branch `fix/fdate-datetime-flag-5611` in
+The active bounded slice is `FDATE()` optional type-flag numeric conversion in
+PR #6948 on branch `fix/fdate-datetime-flag-5611` in
 `~/.codex/worktrees/fdate-datetime-flag-5611/Project-Copperfin`, based on that
 merge. Fresh installed-VFP9 evidence shows type-specific Numeric and Currency
 conversion: Numeric rejects a raw positive value above 1, otherwise uses the
@@ -262,12 +262,15 @@ signed low 32 bits and admits only 0/1; Currency rejects a nonzero sub-unit,
 otherwise truncates to whole units, rejects positive whole values above 1,
 then performs the same conversion. A draft makes default COPPERFIN strict at
 exact documented 0/1 and preserves the recovered behavior only under explicit
-VFP9 without out-of-range host conversion.
+VFP9 without out-of-range host conversion. The signed implementation head is
+`c25dd9461`.
 Tests, retained evidence, docs/22, docs/32 traceability, and a changelog
 fragment are complete. Focused file-I/O validation passes normally and under
 Clang AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
-instrumentation; diff and changelog checks pass. Remaining: signed commit,
-push, PR/review, green exact-head checks, and merge.
+instrumentation; diff and changelog checks pass. The PR opened with no review
+conversations; exact-head CI and automated review are in progress. Remaining:
+resolve any actionable review or CI failure, obtain green required exact-head
+checks and clean review state, then merge and clean up.
 During selection, unrelated compatibility gaps in `FV()`/`PV()` signatures and
 `SYS(-1)` surfaced and were filed as #6944 and #6945 without expanding this
 slice.
