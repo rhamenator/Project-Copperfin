@@ -259,22 +259,28 @@ three review conversations were resolved after their fixes were verified, and
 the completed worktree, branch, scratch probe, and build directories were
 cleaned up after merge.
 
-The active bounded slice is `FOPEN()` optional numeric mode conversion on
-branch `fix/fopen-mode-5611` in
-`~/.codex/worktrees/fopen-mode-5611/Project-Copperfin`, based on that merge.
-Fresh installed-VFP9 evidence shows that converted modes 0, 1, 2, 10, 11, and
-12 are valid. Numeric operands at or below the raw positive ceiling of 12
+The `FOPEN()` optional numeric mode-conversion slice merged in PR #6950 at
+`f8877f04d`. All required exact-head checks passed at `6097cb7a0`, automated
+review reported no findings, and there were no review conversations. The
+completed worktree, branch, scratch probe, and build directories were cleaned
+up after merge.
+
+The active bounded slice is `FCREATE()` optional numeric file-attribute
+conversion on branch `fix/fcreate-attribute-5611` in
+`~/.codex/worktrees/fcreate-attribute-5611/Project-Copperfin`, based on that
+merge. Fresh installed-VFP9 evidence shows that converted attributes 0 through
+7 are valid. Numeric operands at or below the raw positive ceiling of 7
 truncate toward zero and use signed low-32-bit conversion; Currency rejects a
 nonzero sub-unit magnitude, otherwise truncates to whole units and follows the
-same positive ceiling and conversion rule. The implementation makes default
-COPPERFIN strict at the exact documented modes, preserves the recovered quirk
-under explicit VFP9, and leaves the existing Character mode extension intact.
-Tests, retained evidence, docs/22, docs/32 traceability, and a changelog
-fragment are drafted. Focused file-I/O validation passes normally and under
-Clang AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow
-instrumentation. Remaining: review the diff, run repository checks, commit,
-push, open the PR, resolve any review findings, obtain green required
-exact-head checks and clean review state, then merge and clean up.
+same positive ceiling and conversion rule. The draft makes default COPPERFIN
+strict at exact integer attributes 0 through 7 and preserves the recovered
+quirk under explicit VFP9 before file creation. Tests, retained evidence,
+docs/22, docs/32 traceability, and a changelog fragment are drafted. Focused
+file-I/O validation passes normally and under Clang AddressSanitizer,
+UndefinedBehaviorSanitizer, and float-cast-overflow instrumentation. Remaining:
+review the diff, run repository checks, commit, push, open the PR, resolve any
+review findings, obtain green required exact-head checks and clean review
+state, then merge and clean up.
 During selection, unrelated compatibility gaps in `FV()`/`PV()` signatures and
 `SYS(-1)` surfaced and were filed as #6944 and #6945 without expanding this
 slice.
@@ -374,7 +380,9 @@ Owner-directed workstream order before the #6879 assignment was:
      conversion (PR #6947).
    - Completed after those: `FDATE()` optional type-flag numeric conversion
      (PR #6948).
-   - Active: `FOPEN()` optional numeric mode conversion.
+   - Completed after those: `FOPEN()` optional numeric mode conversion
+     (PR #6950).
+   - Active: `FCREATE()` optional numeric file-attribute conversion.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

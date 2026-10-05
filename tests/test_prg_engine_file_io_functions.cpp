@@ -399,6 +399,24 @@ void test_fopen_mode_boundaries()
         "CATCH TO oError\n"
         "  nStrictLogicalError = oError.ErrorNo\n"
         "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedStrictCharacter = FCREATE('strict-character.txt', '1')\n"
+        "  nStrictCharacterError = 0\n"
+        "CATCH TO oError\n"
+        "  nStrictCharacterError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedStrictEmpty = FCREATE('strict-empty.txt', uEmpty)\n"
+        "  nStrictEmptyError = 0\n"
+        "CATCH TO oError\n"
+        "  nStrictEmptyError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedStrictNull = FCREATE('strict-null.txt', .NULL.)\n"
+        "  nStrictNullError = 0\n"
+        "CATCH TO oError\n"
+        "  nStrictNullError = oError.ErrorNo\n"
+        "ENDTRY\n"
         "SET NUMERICBEHAVIOR TO VFP9\n"
         "hVfpFractionRead = FOPEN('vfp-fraction-read.txt', 0.9)\n"
         "nVfpFractionReadWrite = FWRITE(hVfpFractionRead, 'x')\n"
@@ -473,6 +491,9 @@ void test_fopen_mode_boundaries()
     check("nstricthugeerror", "11");
     check("nstrictinfiniteerror", "11");
     check("nstrictlogicalerror", "11");
+    check("nstrictcharactererror", "11");
+    check("nstrictemptyerror", "11");
+    check("nstrictnullerror", "11");
     check("nvfpfractionreadwrite", "0");
     check("nvfpfractionwrite", "1");
     check("nvfpfractionreadwritewrite", "1");
@@ -585,6 +606,132 @@ void test_fcreate_runtime_function()
     check("nclosereopened", "0");
     check("cattributedafterreopen", "now writable");
     check("hmissingdir", "-1");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_fcreate_attribute_boundaries()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_fcreate_attribute_boundaries";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "fcreate_attribute_boundaries.prg";
+    write_text(
+        main_path,
+        "SET NUMERICBEHAVIOR TO COPPERFIN\n"
+        "TRY\n"
+        "  hUnexpectedStrictFraction = FCREATE('strict-fraction.txt', 0.9)\n"
+        "  nStrictFractionError = 0\n"
+        "CATCH TO oError\n"
+        "  nStrictFractionError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedStrictMissingFraction = FCREATE('missing/strict.txt', 0.9)\n"
+        "  nStrictMissingFractionError = 0\n"
+        "CATCH TO oError\n"
+        "  nStrictMissingFractionError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedStrictEight = FCREATE('strict-eight.txt', 8)\n"
+        "  nStrictEightError = 0\n"
+        "CATCH TO oError\n"
+        "  nStrictEightError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedStrictInfinite = FCREATE('strict-infinite.txt', EXP(1000))\n"
+        "  nStrictInfiniteError = 0\n"
+        "CATCH TO oError\n"
+        "  nStrictInfiniteError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedStrictLogical = FCREATE('strict-logical.txt', .T.)\n"
+        "  nStrictLogicalError = 0\n"
+        "CATCH TO oError\n"
+        "  nStrictLogicalError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "SET NUMERICBEHAVIOR TO VFP9\n"
+        "hVfpFractionZero = FCREATE('vfp-fraction-zero.txt', 0.9)\n"
+        "nVfpFractionZeroWrite = FWRITE(hVfpFractionZero, 'x')\n"
+        "=FCLOSE(hVfpFractionZero)\n"
+        "hVfpFractionOne = FCREATE('vfp-fraction-one.txt', 1.9)\n"
+        "nVfpFractionOneWrite = FWRITE(hVfpFractionOne, 'x')\n"
+        "=FCLOSE(hVfpFractionOne)\n"
+        "hVfpNegativeFraction = FCREATE('vfp-negative-fraction.txt', -0.9)\n"
+        "nVfpNegativeFractionWrite = FWRITE(hVfpNegativeFraction, 'x')\n"
+        "=FCLOSE(hVfpNegativeFraction)\n"
+        "hVfpWrapZero = FCREATE('vfp-wrap-zero.txt', -4294967296)\n"
+        "nVfpWrapZeroWrite = FWRITE(hVfpWrapZero, 'x')\n"
+        "=FCLOSE(hVfpWrapZero)\n"
+        "hVfpWrapOne = FCREATE('vfp-wrap-one.txt', -4294967295)\n"
+        "nVfpWrapOneWrite = FWRITE(hVfpWrapOne, 'x')\n"
+        "=FCLOSE(hVfpWrapOne)\n"
+        "hVfpNegativeHuge = FCREATE('vfp-negative-huge.txt', -1E300)\n"
+        "nVfpNegativeHugeWrite = FWRITE(hVfpNegativeHuge, 'x')\n"
+        "=FCLOSE(hVfpNegativeHuge)\n"
+        "hVfpNegativeInfinite = FCREATE('vfp-negative-infinite.txt', -EXP(1000))\n"
+        "nVfpNegativeInfiniteWrite = FWRITE(hVfpNegativeInfinite, 'x')\n"
+        "=FCLOSE(hVfpNegativeInfinite)\n"
+        "TRY\n"
+        "  hUnexpectedVfpEight = FCREATE('vfp-eight.txt', 8)\n"
+        "  nVfpEightError = 0\n"
+        "CATCH TO oError\n"
+        "  nVfpEightError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedVfpPositiveWrap = FCREATE('vfp-positive-wrap.txt', 4294967296)\n"
+        "  nVfpPositiveWrapError = 0\n"
+        "CATCH TO oError\n"
+        "  nVfpPositiveWrapError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  hUnexpectedVfpCurrencySubunit = FCREATE('vfp-currency-subunit.txt', $0.9000)\n"
+        "  nVfpCurrencySubunitError = 0\n"
+        "CATCH TO oError\n"
+        "  nVfpCurrencySubunitError = oError.ErrorNo\n"
+        "ENDTRY\n"
+        "hVfpCurrencyOne = FCREATE('vfp-currency-one.txt', $1.9000)\n"
+        "nVfpCurrencyOneWrite = FWRITE(hVfpCurrencyOne, 'x')\n"
+        "=FCLOSE(hVfpCurrencyOne)\n"
+        "hVfpCurrencyWrapZero = FCREATE('vfp-currency-wrap-zero.txt', $-4294967296.0000)\n"
+        "nVfpCurrencyWrapZeroWrite = FWRITE(hVfpCurrencyWrapZero, 'x')\n"
+        "=FCLOSE(hVfpCurrencyWrapZero)\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "FCREATE attribute-boundary script should complete: " + state.message);
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " variable should be present for FCREATE attribute-boundary test");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("nstrictfractionerror", "11");
+    check("nstrictmissingfractionerror", "11");
+    check("nstricteighterror", "11");
+    check("nstrictinfiniteerror", "11");
+    check("nstrictlogicalerror", "11");
+    check("nvfpfractionzerowrite", "1");
+    check("nvfpfractiononewrite", "-1");
+    check("nvfpnegativefractionwrite", "1");
+    check("nvfpwrapzerowrite", "1");
+    check("nvfpwraponewrite", "-1");
+    check("nvfpnegativehugewrite", "1");
+    check("nvfpnegativeinfinitewrite", "1");
+    check("nvfpeighterror", "11");
+    check("nvfppositivewraperror", "11");
+    check("nvfpcurrencysubuniterror", "11");
+    check("nvfpcurrencyonewrite", "-1");
+    check("nvfpcurrencywrapzerowrite", "1");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -803,6 +950,7 @@ int main()
     test_fdate_ftime_runtime_functions();
     test_fopen_mode_boundaries();
     test_fcreate_runtime_function();
+    test_fcreate_attribute_boundaries();
     test_unicode_paths_survive_prg_file_io_and_includes();
     test_fwrite_fputs_negative_count_writes_everything();
     test_filetostr_reports_missing_and_non_file_inputs();

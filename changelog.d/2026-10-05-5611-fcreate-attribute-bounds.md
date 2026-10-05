@@ -1,0 +1,1 @@
+- 2026-10-05: Fixed `FCREATE()` attribute conversion so default behavior rejects fractional and invalid attributes safely while explicit VFP9 mode reproduces recovered Numeric and Currency conversion without out-of-range host conversion.
