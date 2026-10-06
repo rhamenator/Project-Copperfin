@@ -6300,8 +6300,45 @@
                     }
                     else if (normalized_name == "fweek")
                     {
-                        current_set_state()[normalized_name] = std::to_string(
-                            evaluate_set_integer_value(option_value, 1, 1, 3));
+                        // RQ-CF-PRG-SET-FWEEK-NUMERIC-001: convert before
+                        // setting mutation or the successful SET event below.
+                        const std::string candidate = strip_set_to_value(option_value);
+                        PrgValue operand = make_number_value(1.0);
+                        if (!candidate.empty())
+                        {
+                            try
+                            {
+                                if (should_evaluate_set_value(candidate))
+                                {
+                                    operand = evaluate_expression(candidate, frame);
+                                }
+                                else if (const auto literal = try_parse_numeric_index_value(candidate); literal.has_value())
+                                {
+                                    // Bare Numeric SET tokens previously went through
+                                    // Character coercion. Keep their actual Numeric domain.
+                                    operand = make_number_value(*literal);
+                                }
+                                else
+                                {
+                                    operand = make_string_value(unquote_string(candidate));
+                                }
+                            }
+                            catch (...)
+                            {
+                                // Preserve the previous expression-evaluation fallback;
+                                // Numeric conversion rejection is outside this catch.
+                                operand = make_number_value(1.0);
+                            }
+                        }
+                        const auto mode = current_set_state().find("numericbehavior");
+                        const auto week = checked_set_fweek_argument(operand,
+                            mode != current_set_state().end() && normalize_identifier(mode->second) == "vfp9"
+                                ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
+                        if (!week.has_value())
+                        {
+                            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Dispatch.Error.SetFweekInvalidValue"), 46);
+                        }
+                        current_set_state()[normalized_name] = std::to_string(*week);
                     }
                     else if (normalized_name == "decimals")
                     {

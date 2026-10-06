@@ -1562,6 +1562,31 @@ std::optional<std::int32_t> checked_set_fdow_argument(
     return *day;
 }
 
+// RQ-CF-PRG-SET-FWEEK-NUMERIC-001 (#5611/#6776). Installed VFP9
+// recovers 1..3 truncation and negative-only aliases, not positive wrapping.
+std::optional<std::int32_t> checked_set_fweek_argument(
+    const PrgValue& value,
+    const NumericBehavior behavior) {
+    const bool numeric = value.kind == PrgValueKind::number || value.kind == PrgValueKind::int64 ||
+                         value.kind == PrgValueKind::uint64;
+    if (!numeric) {
+        // Preserve ordinary previous coercions, not native type parity.
+        try {
+            const auto rounded = checked_truncated_numeric_to_int64(std::round(value_as_number(value)));
+            return rounded.has_value() ? static_cast<std::int32_t>(std::clamp<std::int64_t>(*rounded, 1, 3)) : 1;
+        } catch (...) {
+            return 1;
+        }
+    }
+    // Reuse only the independently verified negative-only conversion model,
+    // not SQL property/session semantics. Zero/indefinite also reject here.
+    const auto week = checked_sqlgetprop_handle_argument(value, behavior);
+    if (!week.has_value() || *week < 1 || *week > 3) {
+        return std::nullopt;
+    }
+    return *week;
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {

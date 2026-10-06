@@ -1,5 +1,18 @@
 # VFP Language Reference Coverage
 
+- SET FWEEK TO Numeric/exact-integer conversion (2026-10-06, #5611/#6776):
+  truncate into 1..3 with checked default COPPERFIN rejection. Explicit VFP9
+  admits negative-only low-32 aliases; positive wrapping, zero and huge/infinite
+  indefinite zero reject. Localized catchable error 46 precedes mutation or a
+  success event; omission resets to 1. Exact integers avoid double rounding,
+  while NaN rejection is derived safety policy. The complete 56-line native
+  fixture and README under `tests/fixtures/vfp9-set-fweek-numeric-observation/`
+  plus direct/fresh two-mode/locale/WEEK-consumer tests reverse-link to
+  RQ-CF-PRG-SET-FWEEK-NUMERIC-001 in docs/32. Other coercions/evaluation fallback
+  remain preserved controls, not native type parity. EPOCH/other settings and
+  evaluation policy remain separate; admission gap #7010 is against exact main.
+  No argument-sized allocation or backend/VM change is introduced.
+
 - SET FDOW TO Numeric/exact-integer conversion (2026-10-06, #5611/#6776):
   truncate into 1..7 with checked default COPPERFIN rejection. Explicit VFP9
   admits negative-only low-32 aliases; positive wrapping, zero and huge/infinite

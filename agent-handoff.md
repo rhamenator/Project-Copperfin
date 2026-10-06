@@ -9,54 +9,54 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
-The most recent shipped slice is SET DECIMALS PR #7007, merged into main as
-`980b2c3aa97483af4db2c69b20c0b30c5956441a` on 2026-10-06 at 08:16:13 UTC.
-All 11 required checks passed at signed head `604cba0d2`; exact-head Codex
+The most recent shipped slice is SET FDOW PR #7009, merged into main as
+`0b481f4eff562a56f27e2171e16da28b21eb4db9` on 2026-10-06 at 09:16:07 UTC.
+All 11 required checks passed at signed head `417460c62`; exact-head Codex
 review completed cleanly and no conversations remained. Every completed
 optional check passed, including broad Linux/macOS, sanitizer/fuzz/stress,
 managed UI, security and all installers; Windows MSVC remained in progress.
 Main is synchronized, its worktree/local/remote branches removed, and 518 MB
-normal/862 MB sanitizer builds plus generated FXP moved to recoverable trash.
+normal/1013 MB sanitizer builds plus generated FXP moved to recoverable trash.
 Unrelated files/worktrees remain untouched.
-The retained installed-VFP9 fixture has 50 operands/53 lines. 146 direct calls,
+The retained installed-VFP9 fixture has 50 operands/53 lines. 144 direct calls,
 188 fresh two-mode/bare-parenthesized runtime cases and four locale cases map
-to RQ-CF-PRG-SET-DECIMALS-NUMERIC-001. Corrected original dispatch failed 264
-selected assertions in both toolchains. Final GCC passed 4/4 (8.85s), Clang
-ASan/UBSan/float-cast-overflow passed 4/4 (38.24s) without diagnostics, and
-seven contracts passed (21.05s); all 146 fragments validated. Other-type
-admission #7006 remains separate and unadmitted.
+to RQ-CF-PRG-SET-FDOW-NUMERIC-001. Original dispatch failed exactly 572 selected
+assertions in both toolchains. Final GCC passed 4/4 (10.27s), Clang
+ASan/UBSan/float-cast-overflow passed 4/4 (43.18s) without diagnostics, and
+seven contracts passed (18.47s); all 147 fragments validated. Other-type
+admission #7008 remains separate and unadmitted.
 
-SET FDOW TO Numeric/exact-integer conversion is selected next under #5611/#6776
-from this exact main on `fix/set-fdow-numeric-5611`, in
-`/home/rich/.codex/worktrees/set-fdow-numeric-5611/Project-Copperfin`.
-Only FDOW's integer-setting dispatch is selected; FWEEK/EPOCH, other setters,
-evaluation policy and non-Numeric admission remain separate. Three fresh
-installed-VFP9 runs match 53 lines: 50 operands, omitted reset and final 1.
-Numeric values truncate to 1..7; invalid values raise 46 and preserve FDOW 5.
-Explicit VFP9 allows negative-only low-32 aliases, not positive wrapping;
-zero and huge/infinite indefinite zero still reject. Non-Numeric controls
-raise native error 10, unlike existing Copperfin rounding/clamping/fallback.
-Complete native source/output is retained in
-`tests/fixtures/vfp9-set-fdow-numeric-observation/`.
-144 direct calls, 188 fresh runtime cases plus four locale cases are added.
-Original dispatch fails exactly 572 selected assertions in both GCC (numeric
-8.15s; four suites 9.57s) and Clang sanitizers (numeric 36.35s; full 42.64s).
-Helpers/coercion controls, old Numeric cases and three neighbors pass; no
-baseline sanitizer diagnostics. Non-Numeric admission gap #7008 is separately
-filed against exact main without implementation admission.
-Only FDOW is wired to checked conversion/localized error 46 before mutation/
-success event; omission/evaluation fallback remains 1. Final GCC passes 4/4
-(10.27s; numeric 8.93s); Clang ASan/UBSan/float-cast-overflow passes 4/4
-(43.18s; numeric 36.99s) without diagnostics. Runtime numeric suites ran
-serially across build directories. Catalog/install, localization/isolation,
-signoff/changelog/channel contracts pass 7/7 (18.47s); all 147 fragments validate.
-Completed README VR/DQ/DV and docs/22/docs/32 retain boundary/walkthrough/
-rollback evidence. Three final native outputs (omitted display padding trimmed)
-match byte-for-byte; final source/output SHA-256 are retained in the README.
-Builds remain at /home/rich/temp/copperfin-set-fdow-5611-build and
-/home/rich/temp/copperfin-set-fdow-5611-sanitize. Next: signed commit/push/PR,
-then exact-head required CI/review gates. No VM/backend/system change or owner
-input needed.
+SET FWEEK TO Numeric/exact-integer conversion is selected next under #5611/#6776
+from this exact main on `fix/set-fweek-numeric-5611`, in
+`/home/rich/.codex/worktrees/set-fweek-numeric-5611/Project-Copperfin`.
+Only FWEEK's integer-setting dispatch is selected; EPOCH, other setters,
+expression-evaluation policy and non-Numeric admission remain separate.
+Complete fresh installed-VFP9 source/output is retained under
+`tests/fixtures/vfp9-set-fweek-numeric-observation/`: three final processes
+match all 56 lines (50 operands, omitted reset, three WEEK consumer checks,
+final 1). Numeric values truncate to 1..3; error 46 preserves FWEEK 2.
+Negative-only aliases select 1/3; positive wrapping and huge/infinite values
+reject. Seven non-Numeric controls raise native 10, unlike existing coercions;
+separate gap #7010 is filed against exact main without implementation admission.
+144 direct calls, 188 fresh runtime cases and four locale cases are added.
+The independent consumer outputs are WEEK({^2021-01-01},0,1) = 1/53/52 for
+FWEEK 1/2/3. Original dispatch fails exactly 572 selected assertions in both
+GCC (numeric 8.86s; four suites 10.22s) and Clang sanitizers (numeric 38.15s;
+four suites 43.96s). Helpers/coercion controls, existing Numeric rows and three
+neighbors pass; no baseline sanitizer diagnostics. Only FWEEK is now wired
+to checked conversion and localized error 46 before setting mutation/success.
+Omission/evaluation fallback is preserved. Final GCC passes 4/4 (10.23s;
+numeric 8.92s); Clang ASan/UBSan/float-cast-overflow passes 4/4 (44.17s;
+numeric 38.24s) without diagnostics. Runtime suites ran serially across build
+directories. Catalog/install, localization/isolation, signoff/changelog/channel
+contracts pass 7/7 (18.52s); all 148 fragments validate. Completed README
+VR/DQ/DV, native fixture hashes and docs/22/docs/32 retain boundary, consumer,
+walkthrough and rollback evidence.
+Builds remain at /home/rich/temp/copperfin-set-fweek-5611-build and
+/home/rich/temp/copperfin-set-fweek-5611-sanitize.
+Next: signed commit/push/PR, inspect all 11 required exact-head checks and
+review/conversations, address/verify any actionable finding, then merge only
+when gates pass. No VM/backend/system change or owner input needed.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -758,8 +758,10 @@ Owner-directed workstream order before the #6879 assignment was:
      conversion (PR #7005); existence/type gap #7003 remains separate.
    - Completed after those: SET DECIMALS TO Numeric/exact-integer setting
      conversion (PR #7007); other-type admission #7006 remains separate.
-   - Selected next: SET FDOW TO Numeric/exact-integer setting conversion;
-     native 1..7, error 46 and negative-only aliases recovered. FWEEK/EPOCH,
+   - Completed after those: SET FDOW TO Numeric/exact-integer setting
+     conversion (PR #7009); other-type admission #7008 remains separate.
+   - Selected next: SET FWEEK TO Numeric/exact-integer setting conversion;
+     native 1..3, error 46 and negative-only aliases recovered. EPOCH,
      other settings/evaluation/non-Numeric parity remain separate.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
