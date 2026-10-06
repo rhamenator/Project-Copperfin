@@ -1,5 +1,22 @@
 # VFP Language Reference Coverage
 
+- SQLDISCONNECT first-argument Numeric/exact-integer handle conversion
+  (2026-10-06, #5611/#6776): default COPPERFIN checks finite signed-int32
+  admission after truncation; explicit VFP9 additionally preserves negative
+  low-32 aliases and huge/infinite zero, never positive aliases. Rejection
+  raises catchable localized 1466 before disconnect callbacks/events; Numeric
+  diagnostics use the existing safe decimal formatter. Exact integers and NaN
+  use derived safety policy. The complete 48-call native fixture/README in
+  `tests/fixtures/vfp9-sqldisconnect-handle-numeric-observation/` retains
+  evidence, completed normal/sanitizer results and scope boundaries.
+  Fresh synthetic sessions at handle 1 check removal, preserved connection/
+  last-action metadata on rejection, mode reset and cleanup without ODBC/network.
+  Disconnect-all/absent-handle results, type admission, backend/session lifecycle
+  and other SQL callers are separate; existing other coercions retain checked
+  half-away rounding without native type parity. Encountered callback/type gaps
+  are #7001, reported against exact main 4aef3ae305 without implementation
+  admission. The shared Numeric formatter gap #6997 is unchanged.
+
 - SQLSETPROP first-argument Numeric/exact-integer handle conversion
   (2026-10-06, #5611/#6776): default COPPERFIN checks finite signed-int32
   admission after truncation; explicit VFP9 additionally preserves negative

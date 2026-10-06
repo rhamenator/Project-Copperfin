@@ -9,16 +9,16 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
-The most recent shipped slice is SQLGETPROP PR #6998, merged into main as
-`e3bdb6458f6b1c5f801f530c29d06ee8fff6bf29` on 2026-10-06 at 04:16:46 UTC.
-All 11 required checks passed at signed head `745778830b`; exact-head Codex
+The most recent shipped slice is SQLSETPROP PR #7000, merged into main as
+`4aef3ae3052a3d004da5dbe48bbbb8189a810cd1` on 2026-10-06 at 05:16:38 UTC.
+All 11 required checks passed at signed head `cb920f30a8`; exact-head Codex
 review was clean and there were no conversations. All completed optional
 checks passed; Windows MSVC was still running at merge. Main is synchronized,
 the worktree/local/remote branches are removed, and the 451 MB normal/865 MB
 sanitizer builds are in recoverable trash. Unrelated files/worktrees remain.
-The active continuation is SQLSETPROP first-argument Numeric/exact-integer
-handle conversion only on `fix/sqlsetprop-handle-numeric-5611`, from this main
-revision. Property-value conversion, backend/connection behavior and other
+The active continuation is SQLDISCONNECT first-argument Numeric/exact-integer
+handle conversion only on `fix/sqldisconnect-handle-numeric-5611`, from this main
+revision. Disconnect-all/absent-handle/type results, connection lifecycle and other
 callers are outside scope. No VM is in use.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
@@ -513,8 +513,44 @@ filed separately as #6999 against exact main e3bdb6458 without implementation
 admission. The general shared formatter gap #6997 remains unchanged.
 Completed README VR/DQ/DV, fixture identities, error-before-setter/property-
 reset walkthrough and docs/22/docs/32 traceability retain the bounded scope.
-Integration next: signed push/PR, clean exact-head review and all 11 required
-checks with resolved conversations before merge. No owner input needed.
+SQLSETPROP shipped as PR #7000 at signed head cb920f30a8 with all 11 required
+checks green, clean exact-head Codex review and zero review conversations.
+Merged 2026-10-06 05:16:38 UTC as 4aef3ae3052a3d004da5dbe48bbbb8189a810cd1.
+Main is synchronized; its worktree/local/remote branches are removed and both
+builds are in recoverable trash. All completed optional checks passed; Windows
+MSVC remained in progress. Unrelated files/worktrees are preserved and the
+live channel was re-read empty.
+
+SQLDISCONNECT first-argument handle conversion is now selected under #5611/#6776
+on `fix/sqldisconnect-handle-numeric-5611`, from exact main
+`4aef3ae3052a3d004da5dbe48bbbb8189a810cd1`, in
+`/home/rich/.codex/worktrees/sqldisconnect-handle-numeric-5611/Project-Copperfin`.
+Only its expression-dispatch llround/int site is selected; disconnect-all,
+absent-handle/type result parity, backend/session lifecycle and other SQL
+callers stay separate. No VM or external SQL connection is used.
+The complete connection-free native fixture is retained under
+`tests/fixtures/vfp9-sqldisconnect-handle-numeric-observation/`; fresh repeated
+50-line output contains VERSION, 48 calls and unchanged session 1. It independently
+matches the selected negative-only zero aliases observed for GET/SETPROP.
+134 direct calls and 300 fresh-session PRG rows are added. Original dispatch
+fails exactly 41 new conversion/caught-message assertions in GCC (numeric
+6.40s; full run 8.22s) and Clang sanitizers (numeric 29.95s; full run 36.92s).
+Direct helpers, preserved callback/coercion controls, existing GET/SETPROP rows
+and all three neighbors pass; no baseline sanitizer diagnostic occurred.
+Only SQLDISCONNECT first-argument dispatch is now checked with safe original
+Numeric rejection text; disconnect callbacks and successful events are unchanged.
+Final GCC passes 4/4 (9.22s; numeric 7.23s); Clang ASan/UBSan/float-cast-overflow
+passes 4/4 (38.78s; numeric 31.45s) without diagnostics. Runtime tests ran
+serially across build directories. Changelog/signoff/live-channel contracts
+pass 4/4 (4.21s); all 144 fragments validate. Normal and sanitizer builds:
+`/home/rich/temp/copperfin-sqldisconnect-handle-5611-build` and
+`/home/rich/temp/copperfin-sqldisconnect-handle-5611-sanitize`.
+Completed README VR/DQ/DV, fixture hashes, error-before-disconnect/cleanup
+walkthrough and docs/22/docs/32 traceability retain the bounded scope.
+Next: signed push/PR and exact-head integration gates. The encountered
+disconnect-all/absent-handle/
+type gap is #7001, filed against exact main without implementation admission.
+The shared Numeric formatter gap #6997 remains unchanged. No owner input needed.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
@@ -642,7 +678,9 @@ Owner-directed workstream order before the #6879 assignment was:
      (PR #6995).
    - Completed after those: SQLGETPROP Numeric/exact-integer first-argument
      handle conversion (PR #6998).
-   - Active: SQLSETPROP Numeric/exact-integer first-argument handle conversion.
+   - Completed after those: SQLSETPROP Numeric/exact-integer first-argument
+     handle conversion (PR #7000).
+   - Active: SQLDISCONNECT Numeric/exact-integer first-argument handle conversion.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

@@ -2093,11 +2093,22 @@
                 }
                 if (function == "sqldisconnect" && !arguments.empty())
                 {
-                    const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
-                    const bool ok = sql_disconnect_callback_(handle);
+                    // RQ-CF-PRG-SQLDISCONNECT-HANDLE-NUMERIC-001: reject
+                    // conversion before connection removal or success events.
+                    const auto handle = checked_sqldisconnect_handle_argument(arguments[0], numeric_behavior(set_callback_));
+                    if (!handle)
+                    {
+                        // Isolate this diagnostic from the unchanged shared
+                        // formatter's unchecked Numeric llround path (#6997).
+                        const std::string handle_text = arguments[0].kind == PrgValueKind::number
+                            ? format_round_trip_decimal(arguments[0].number_value) : value_as_string(arguments[0]);
+                        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Sql.Error.HandleNotFound",
+                            {{"handle", handle_text}}), 1466);
+                    }
+                    const bool ok = sql_disconnect_callback_(*handle);
                     if (ok)
                     {
-                        record_event_callback_("sql.disconnect", std::to_string(handle));
+                        record_event_callback_("sql.disconnect", std::to_string(*handle));
                     }
                     return make_number_value(ok ? 1.0 : -1.0);
                 }
