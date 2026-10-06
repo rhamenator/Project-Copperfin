@@ -78,6 +78,59 @@ struct Row {
     std::string expected;    // "C:<text>" or "ERR<number>"
 };
 
+// RQ-CF-PRG-SQLGETPROP-HANDLE-NUMERIC-001: independent conversion
+// table anchored by 41 native Numeric queries; nonzero absent-handle results
+// cannot distinguish every index, so those use documented shared-model policy.
+struct SqlGetPropHandleCase {
+    const char* argument;
+    double value;
+    std::optional<std::int32_t> copperfin;
+    std::optional<std::int32_t> vfp9;
+};
+const std::vector<SqlGetPropHandleCase> kSqlGetPropHandleCases{
+    {"0", 0, 0, 0},
+    {"1", 1, 1, 1},
+    {"2", 2, 2, 2},
+    {"-1", -1, -1, -1},
+    {"0.49", 0.49, 0, 0},
+    {"0.5", 0.5, 0, 0},
+    {"0.9", 0.9, 0, 0},
+    {"1.49", 1.49, 1, 1},
+    {"1.5", 1.5, 1, 1},
+    {"1.9", 1.9, 1, 1},
+    {"-0.49", -0.49, 0, 0},
+    {"-0.5", -0.5, 0, 0},
+    {"-0.9", -0.9, 0, 0},
+    {"-1.1", -1.1, -1, -1},
+    {"2147483647", 2147483647, INT32_MAX, INT32_MAX},
+    {"2147483648", 2147483648, std::nullopt, std::nullopt},
+    {"-2147483648", -2147483648, INT32_MIN, INT32_MIN},
+    {"-2147483649", -2147483649, std::nullopt, INT32_MAX},
+    {"4294967295", 4294967295, std::nullopt, std::nullopt},
+    {"4294967296", 4294967296, std::nullopt, std::nullopt},
+    {"4294967297", 4294967297, std::nullopt, std::nullopt},
+    {"4294967298", 4294967298, std::nullopt, std::nullopt},
+    {"-4294967296", -4294967296, std::nullopt, 0},
+    {"-4294967295", -4294967295, std::nullopt, 1},
+    {"-4294967294", -4294967294, std::nullopt, 2},
+    {"4294967296.9", 4294967296.9, std::nullopt, std::nullopt},
+    {"-4294967295.9", -4294967295.9, std::nullopt, 1},
+    {"1E20", 1E20, std::nullopt, std::nullopt},
+    {"-1E20", -1E20, std::nullopt, 0},
+    {"1E300", 1E300, std::nullopt, std::nullopt},
+    {"-1E300", -1E300, std::nullopt, 0},
+    {"EXP(1000)", std::numeric_limits<double>::infinity(), std::nullopt, std::nullopt},
+    {"-EXP(1000)", -std::numeric_limits<double>::infinity(), std::nullopt, 0},
+    {"9007199254740992", 9007199254740992, std::nullopt, std::nullopt},
+    {"32767", 32767, 32767, 32767},
+    {"32768", 32768, 32768, 32768},
+    {"65535", 65535, 65535, 65535},
+    {"65536", 65536, 65536, 65536},
+    {"65537", 65537, 65537, 65537},
+    {"-65535", -65535, -65535, -65535},
+    {"-65536", -65536, -65536, -65536},
+};
+
 // RQ-CF-PRG-SELECT-SELECTOR-NUMERIC-001: independent conversion table
 // anchored by the retained 50 Numeric native calls; -1 means error 17.
 struct SelectSelectorCase { const char* argument; double value; int copperfin; int vfp9; };
@@ -1191,6 +1244,49 @@ std::vector<Row> build_rows() {
     }
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN\nUSE IN cfselectother\nUSE IN cfselectprobe",
                     "SELECT('cfselectprobe')", "N:0"});
+    // RQ-CF-PRG-SQLGETPROP-HANDLE-NUMERIC-001: the existing synthetic
+    // session connection distinguishes handle 1 from absent handles without
+    // opening an ODBC/network connection. Native query/backend gaps stay separate.
+    rows.push_back({"nSqlNumeric = SQLCONNECT('dsn=Northwind')",
+                    "SQLGETPROP(nSqlNumeric, 'ConnectHandle')", "N:1"});
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        for (const auto& row : kSqlGetPropHandleCases) {
+            const auto handle = std::string(mode) == "VFP9" ? row.vfp9 : row.copperfin;
+            const std::string expression = "SQLGETPROP(" + std::string(row.argument) + ", 'ConnectHandle')";
+            rows.push_back({set, handle.has_value()
+                ? expression + " = SQLGETPROP(" + std::to_string(*handle) + ", 'ConnectHandle')"
+                : expression, handle.has_value() ? "L:true" : "ERR1466"});
+        }
+        for (const char* argument : {"1E300", "EXP(1000)", "4294967297"}) {
+            rows.push_back({set + "\nLOCAL nSqlError\nnSqlError = 0\nTRY\nx = SQLGETPROP(" +
+                            argument + ", 'Asynchronous')\nCATCH TO oEx\nnSqlError = oEx.ErrorNo\nENDTRY",
+                            "ALLTRIM(STR(nSqlError)) + ':' + ALLTRIM(STR(SQLGETPROP(nSqlNumeric, 'ConnectHandle'))) + ':' + SQLGETPROP(nSqlNumeric, 'LastSqlAction')",
+                            "C:1466:1:connect"});
+        }
+        // Rejection must retain the original handle without routing huge
+        // finite diagnostics through value_as_string's unchecked llround.
+        for (const auto& diagnostic : std::vector<std::pair<std::string, std::string>>{
+                 {"1E300", "1" + std::string(300U, '0')}, {"EXP(1000)", "inf"}}) {
+            rows.push_back({set + "\nLOCAL cSqlMessage\ncSqlMessage = ''\nTRY\nx = SQLGETPROP(" +
+                            diagnostic.first + ", 'Asynchronous')\nCATCH TO oEx\ncSqlMessage = oEx.Message\nENDTRY",
+                            "cSqlMessage", "C:SQL handle not found: " + diagnostic.second});
+        }
+        rows.push_back({set, "SQLGETPROP(nSqlNumeric, 'ConnectHandle')", "N:1"});
+        rows.push_back({set, "SQLGETPROP(nSqlNumeric, 'Connected')", "L:true"});
+        rows.push_back({set, "SQLGETPROP(nSqlNumeric, 'LastSqlAction')", "C:connect"});
+        rows.push_back({set, "SQLGETPROP(0, 'Asynchronous')", "N:-1"});
+        rows.push_back({set, "SQLGETPROP(-1, 'Asynchronous')", "N:-1"});
+        rows.push_back({set, "SQLGETPROP(2, 'Asynchronous')", "N:-1"});
+        rows.push_back({set, "SQLGETPROP('1', 'ConnectHandle')", "N:1"});
+        rows.push_back({set, "SQLGETPROP($0.5, 'ConnectHandle')", "N:1"});
+        rows.push_back({set, "SQLGETPROP($1.5, 'ConnectHandle')", "N:-1"});
+        rows.push_back({set, "SQLGETPROP(.T., 'ConnectHandle')", "N:1"});
+        rows.push_back({set, "SQLGETPROP(.F., 'ConnectHandle')", "N:-1"});
+        rows.push_back({set, "SQLGETPROP(.NULL., 'ConnectHandle')", "N:-1"});
+    }
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SQLDISCONNECT(nSqlNumeric)", "N:1"});
+    rows.push_back({"", "SQLGETPROP(nSqlNumeric, 'ConnectHandle')", "N:-1"});
     return rows;
 }
 
@@ -2435,6 +2531,58 @@ void test_select_selector_direct_numeric_boundaries() {
     }
 }
 
+// RQ-CF-PRG-SQLGETPROP-HANDLE-NUMERIC-001: native zero aliases plus
+// derived exact-integer/NaN/adjacent-double and preserved coercion boundaries.
+void test_sqlgetprop_handle_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    for (const auto mode : {NumericBehavior::copperfin, NumericBehavior::vfp9}) {
+        for (const auto& row : kSqlGetPropHandleCases) {
+            const auto expected = mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin;
+            expect(checked_sqlgetprop_handle_argument(make_number_value(row.value), mode) == expected,
+                   "SQLGETPROP direct numeric boundary " + std::string(row.argument));
+        }
+        struct Case {
+            PrgValue value;
+            std::optional<std::int32_t> copperfin;
+            std::optional<std::int32_t> vfp9;
+        };
+        const std::vector<Case> boundaries{
+            {make_number_value(std::numeric_limits<double>::quiet_NaN()), std::nullopt, std::nullopt},
+            {make_number_value(std::nextafter(2147483648.0, 0.0)), INT32_MAX, INT32_MAX},
+            {make_number_value(2147483648.0), std::nullopt, std::nullopt},
+            {make_number_value(std::nextafter(-2147483649.0, 0.0)), INT32_MIN, INT32_MIN},
+            {make_number_value(-2147483649.0), std::nullopt, INT32_MAX},
+            {make_number_value(9223372036854775808.0), std::nullopt, std::nullopt},
+            {make_int64_value(INT64_MIN), std::nullopt, 0},
+            {make_int64_value(INT64_MIN + 1), std::nullopt, 1},
+            {make_int64_value(-INT64_C(9007199254740993)), std::nullopt, -1},
+            {make_int64_value(-INT64_C(4294967295)), std::nullopt, 1},
+            {make_int64_value(0), 0, 0},
+            {make_int64_value(INT64_MAX), std::nullopt, std::nullopt},
+            {make_uint64_value(INT32_MAX), INT32_MAX, INT32_MAX},
+            {make_uint64_value(UINT64_C(2147483648)), std::nullopt, std::nullopt},
+            {make_uint64_value(UINT64_MAX), std::nullopt, std::nullopt},
+            {make_uint64_value(UINT64_C(9007199254740993)), std::nullopt, std::nullopt},
+            {make_boolean_value(true), 1, 1},
+            {make_boolean_value(false), 0, 0},
+            {make_null_value(), 0, 0},
+            {make_empty_value(), 0, 0},
+            {make_string_value("1"), 1, 1},
+            {make_currency_value(5000), 1, 1},
+            {make_currency_value(15000), 2, 2},
+            {make_currency_value(-15000), -2, -2},
+            {make_currency_value(INT64_MIN), std::nullopt, std::nullopt},
+            {make_currency_value(INT64_MAX), std::nullopt, std::nullopt},
+        };
+        for (std::size_t index = 0; index < boundaries.size(); ++index) {
+            const auto& row = boundaries[index];
+            const auto expected = mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin;
+            expect(checked_sqlgetprop_handle_argument(row.value, mode) == expected,
+                   "SQLGETPROP direct extended boundary " + std::to_string(index));
+        }
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -2455,6 +2603,7 @@ int main() {
     test_field_index_direct_numeric_boundaries();
     test_fsize_index_direct_numeric_boundaries();
     test_select_selector_direct_numeric_boundaries();
+    test_sqlgetprop_handle_direct_numeric_boundaries();
     test_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {

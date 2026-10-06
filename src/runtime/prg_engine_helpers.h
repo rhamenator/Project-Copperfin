@@ -170,6 +170,11 @@ std::optional<std::size_t> checked_fsize_index_argument(const PrgValue& value);
 // admit 0..32767, and retain low-32 aliases only in explicit VFP9 mode.
 // Other coercions retain checked half-away rounding. Missing means error 17.
 std::optional<std::int32_t> checked_select_selector_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-SQLGETPROP-HANDLE-NUMERIC-001: truncate Numeric handles;
+// only negative Numeric operands use explicit VFP9 low-32/indefinite aliases.
+// Positive/default and other coercions require checked signed-int32 admission.
+// Missing means catchable error 1466; property/backend behavior is separate.
+std::optional<std::int32_t> checked_sqlgetprop_handle_argument(const PrgValue& value, NumericBehavior behavior);
 // #6050: integer arguments crossing a DECLARE boundary. Ordinary VFP9
 // INTEGER/LONG parameters receive the low 32 bits after truncation toward
 // zero. Exact int64/uint64 values keep their low bits without a floating round

@@ -1462,6 +1462,22 @@ std::optional<std::int32_t> checked_select_selector_argument(
     return selector;
 }
 
+// RQ-CF-PRG-SQLGETPROP-HANDLE-NUMERIC-001 (#5611/#6776): installed
+// connection-free queries distinguish negative-only zero aliases.
+std::optional<std::int32_t> checked_sqlgetprop_handle_argument(
+    const PrgValue& value,
+    const NumericBehavior behavior) {
+    const bool negative_numeric =
+        (value.kind == PrgValueKind::number && value.number_value < 0.0) ||
+        (value.kind == PrgValueKind::int64 && value.int64_value < 0);
+    if (negative_numeric && behavior == NumericBehavior::vfp9) {
+        return vfp9_numeric_to_int32(value);
+    }
+    // Reuse the checked signed-int32 conversion only, not AFONT semantics.
+    // Non-Numeric operands retain existing checked half-away rounding.
+    return checked_afont_size_argument(value, NumericBehavior::copperfin);
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {

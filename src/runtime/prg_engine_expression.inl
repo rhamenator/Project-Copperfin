@@ -2163,8 +2163,19 @@
                 }
                 if (function == "sqlgetprop" && arguments.size() >= 2U)
                 {
-                    const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
-                    return sql_get_prop_callback_(handle, value_as_string(arguments[1]));
+                    // RQ-CF-PRG-SQLGETPROP-HANDLE-NUMERIC-001: reject
+                    // conversion before the separate property-query callback.
+                    const auto handle = checked_sqlgetprop_handle_argument(arguments[0], numeric_behavior(set_callback_));
+                    if (!handle)
+                    {
+                        // Keep rejected Numeric diagnostics out of the shared
+                        // formatter's unchecked llround path (#6997).
+                        const std::string handle_text = arguments[0].kind == PrgValueKind::number
+                            ? format_round_trip_decimal(arguments[0].number_value) : value_as_string(arguments[0]);
+                        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Sql.Error.HandleNotFound",
+                            {{"handle", handle_text}}), 1466);
+                    }
+                    return sql_get_prop_callback_(*handle, value_as_string(arguments[1]));
                 }
                 if (function == "sqlsetprop" && arguments.size() >= 3U)
                 {
