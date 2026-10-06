@@ -161,6 +161,11 @@ std::optional<std::int32_t> checked_afont_size_argument(const PrgValue& value, N
 // aliases but positive oversized indices stay empty. Other coercions keep
 // checked half-away rounding; NaN is rejected. Missing result means error 11.
 std::optional<std::size_t> checked_field_index_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-FSIZE-INDEX-NUMERIC-001: installed VFP9 rejects Numeric
+// FSIZE indices rather than converting them; exact extended integers follow
+// the same derived admission. Other existing non-Character coercions retain
+// checked half-away rounding. Missing result means catchable error 11.
+std::optional<std::size_t> checked_fsize_index_argument(const PrgValue& value);
 // #6050: integer arguments crossing a DECLARE boundary. Ordinary VFP9
 // INTEGER/LONG parameters receive the low 32 bits after truncation toward
 // zero. Exact int64/uint64 values keep their low bits without a floating round

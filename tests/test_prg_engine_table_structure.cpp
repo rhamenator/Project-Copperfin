@@ -65,7 +65,9 @@ void test_alter_table_drop_and_alter_column_rewrite() {
         "cField3 = FIELD(3)\n"
         "cFieldMissing = FIELD(4, 'People')\n"
         "nSizeName = FSIZE('NAME', 'People')\n"
-        "nSizeActive = FSIZE(2)\n"
+        // RQ-CF-PRG-FSIZE-INDEX-NUMERIC-001: Numeric indices are not native.
+        "nSizeActive = FSIZE('ACTIVE')\n"
+        "nFsizeError = 0\nTRY\nx = FSIZE(2)\nCATCH TO oEx\nnFsizeError = oEx.ErrorNo\nENDTRY\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
@@ -79,13 +81,16 @@ void test_alter_table_drop_and_alter_column_rewrite() {
     const auto field_missing = state.globals.find("cfieldmissing");
     const auto size_name = state.globals.find("nsizename");
     const auto size_active = state.globals.find("nsizeactive");
+    const auto fsize_error = state.globals.find("nfsizeerror");
+    expect(fsize_error != state.globals.end() && copperfin::runtime::format_value(fsize_error->second) == "11",
+           "FSIZE Numeric admission should raise catchable error 11 for a local cursor");
     expect(count != state.globals.end(), "ALTER TABLE script should expose record count");
     expect(field_count != state.globals.end(), "ALTER TABLE script should expose field count");
     expect(field1 != state.globals.end(), "FIELD(1, alias) should be captured for local cursor schema");
     expect(field3 != state.globals.end(), "FIELD(3) should be captured for current local cursor schema");
     expect(field_missing != state.globals.end(), "FIELD() beyond schema should be captured as empty");
     expect(size_name != state.globals.end(), "FSIZE(name, alias) should be captured for local cursor schema");
-    expect(size_active != state.globals.end(), "FSIZE(index) should be captured for current local cursor schema");
+    expect(size_active != state.globals.end(), "FSIZE(name) should be captured for current local cursor schema");
     if (count != state.globals.end()) {
         expect(copperfin::runtime::format_value(count->second) == "3", "INSERT after ALTER TABLE should append one row");
     }
@@ -105,7 +110,7 @@ void test_alter_table_drop_and_alter_column_rewrite() {
         expect(copperfin::runtime::format_value(size_name->second) == "12", "FSIZE(name, alias) should reflect ALTER COLUMN width");
     }
     if (size_active != state.globals.end()) {
-        expect(copperfin::runtime::format_value(size_active->second) == "1", "FSIZE(index) should return the current cursor field width");
+        expect(copperfin::runtime::format_value(size_active->second) == "1", "FSIZE(name) should return the current cursor field width");
     }
 
     const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);

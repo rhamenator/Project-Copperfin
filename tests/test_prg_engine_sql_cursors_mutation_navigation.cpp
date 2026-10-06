@@ -140,7 +140,9 @@ void test_cursor_identity_functions_for_sql_result_cursors() {
         "nFields = FCOUNT('sqlcust')\n"
         "cField2 = FIELD(2, 'sqlcust')\n"
         "nSizeAmount = FSIZE('AMOUNT', 'sqlcust')\n"
-        "nSizeName = FSIZE(2, 'sqlcust')\n"
+        // RQ-CF-PRG-FSIZE-INDEX-NUMERIC-001: preserve name lookup, not the invalid Numeric extension.
+        "nSizeName = FSIZE('NAME', 'sqlcust')\n"
+        "nFsizeError = 0\nTRY\nx = FSIZE(2, 'sqlcust')\nCATCH TO oEx\nnFsizeError = oEx.ErrorNo\nENDTRY\n"
         "nAFieldCount = AFIELDS(aSqlFields, 'sqlcust')\n"
         "cAField2 = aSqlFields[2,1]\n"
         "nAField2Size = aSqlFields[2,3]\n"
@@ -157,6 +159,9 @@ void test_cursor_identity_functions_for_sql_result_cursors() {
     const auto field2 = state.globals.find("cfield2");
     const auto size_amount = state.globals.find("nsizeamount");
     const auto size_name = state.globals.find("nsizename");
+    const auto fsize_error = state.globals.find("nfsizeerror");
+    expect(fsize_error != state.globals.end() && copperfin::runtime::format_value(fsize_error->second) == "11",
+           "FSIZE Numeric admission should raise catchable error 11 for a SQL cursor");
     const auto afield_count = state.globals.find("nafieldcount");
     const auto afield2 = state.globals.find("cafield2");
     const auto afield2_size = state.globals.find("nafield2size");
@@ -166,7 +171,7 @@ void test_cursor_identity_functions_for_sql_result_cursors() {
     expect(fields != state.globals.end(), "FCOUNT('sqlcust') should be captured for the SQL cursor");
     expect(field2 != state.globals.end(), "FIELD(index, alias) should be captured for the SQL cursor");
     expect(size_amount != state.globals.end(), "FSIZE(name, alias) should be captured for the SQL cursor");
-    expect(size_name != state.globals.end(), "FSIZE(index, alias) should be captured for the SQL cursor");
+    expect(size_name != state.globals.end(), "FSIZE(name, alias) should be captured for the SQL cursor");
     expect(afield_count != state.globals.end(), "AFIELDS(array, alias) should be captured for the SQL cursor");
     expect(afield2 != state.globals.end(), "AFIELDS should populate SQL cursor field names");
     expect(afield2_size != state.globals.end(), "AFIELDS should populate SQL cursor field widths");
@@ -187,7 +192,7 @@ void test_cursor_identity_functions_for_sql_result_cursors() {
         expect(copperfin::runtime::format_value(size_amount->second) == "18", "FSIZE(name, alias) should expose synthetic SQL numeric width");
     }
     if (size_name != state.globals.end()) {
-        expect(copperfin::runtime::format_value(size_name->second) == "32", "FSIZE(index, alias) should expose synthetic SQL character width");
+        expect(copperfin::runtime::format_value(size_name->second) == "32", "FSIZE(name, alias) should expose synthetic SQL character width");
     }
     if (afield_count != state.globals.end()) {
         expect(copperfin::runtime::format_value(afield_count->second) == "3", "AFIELDS(array, alias) should expose synthetic SQL field count");

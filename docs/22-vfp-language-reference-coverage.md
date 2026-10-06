@@ -1,5 +1,21 @@
 # VFP Language Reference Coverage
 
+- `FSIZE()` first-argument Numeric/exact-integer admission (2026-10-06,
+  #5611/#6776): installed VFP9 rejects all Numeric inputs with error 11,
+  including ordinary field numbers, fractions, huge values and infinities.
+  Both numeric modes now reject Numeric and derived exact int64/uint64/NaN
+  inputs before conversion or lookup; FIELD's wrapping model does not apply.
+  The complete 64-call fixture in
+  `tests/fixtures/vfp9-fsize-index-numeric-observation/` also preserves
+  named-field widths and alias/work-area controls. The README records direct,
+  PRG, table-structure, SQL-cursor and sanitizer verification.
+  Two old Numeric-index width tests now use their actual Character names
+  and separately assert catchable error 11. Existing other coercions retain
+  checked rounding. Omitted arguments, non-Numeric type admission, Character
+  lookup/routing and SET COMPATIBLE/file-size behavior (#6014) are unchanged;
+  #6990 retains the separate omitted/Currency/Logical/NULL admission gap.
+  Full FSIZE parity is not claimed.
+
 - `FIELD()` first-argument Numeric/exact-integer index conversion (2026-10-06,
   #5611/#6776): default COPPERFIN truncates finite values behind signed-int64
   and positive size_t admission, clamping admitted negatives to empty lookup.
