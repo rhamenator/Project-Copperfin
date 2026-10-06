@@ -1681,7 +1681,14 @@
                     }
                     else
                     {
-                        index = static_cast<std::size_t>(std::max<long long>(0LL, std::llround(value_as_number(arguments[0]))));
+                        // RQ-CF-PRG-FSIZE-INDEX-NUMERIC-001: Numeric indices
+                        // reject before lookup in both modes; name lookup stays separate.
+                        const auto converted = checked_fsize_index_argument(arguments[0]);
+                        if (!converted.has_value())
+                        {
+                            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                        }
+                        index = *converted;
                     }
                     const std::string designator = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
                     return make_number_value(static_cast<double>(field_size_callback_(field_name, index, designator)));

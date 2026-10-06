@@ -1435,6 +1435,16 @@ std::optional<std::size_t> checked_field_index_argument(
     return static_cast<std::size_t>(*index);
 }
 
+// RQ-CF-PRG-FSIZE-INDEX-NUMERIC-001 (#5611/#6776): FSIZE's installed
+// Numeric type rejection is consistent, not FIELD's switchable index quirk.
+std::optional<std::size_t> checked_fsize_index_argument(const PrgValue& value) {
+    if (value.kind == PrgValueKind::number || value.kind == PrgValueKind::int64 ||
+        value.kind == PrgValueKind::uint64) {
+        return std::nullopt;
+    }
+    return checked_field_index_argument(value, NumericBehavior::copperfin);
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {

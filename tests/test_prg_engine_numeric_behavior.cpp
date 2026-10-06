@@ -1065,6 +1065,45 @@ std::vector<Row> build_rows() {
     }
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN\nSELECT cfprobe", "FIELD(1.9)", "C:ALPHA"});
     rows.push_back({"USE IN cfother\nUSE IN cfprobe", "FIELD(1)", "C:"});
+    // RQ-CF-PRG-FSIZE-INDEX-NUMERIC-001: all 50 installed Numeric
+    // observations reject; named-field controls prove the cursor is usable.
+    rows.push_back({"CREATE CURSOR cfsizeprobe (ALPHA C(5), BRAVO N(4), CHARLIE L)\nSELECT 0\n"
+                    "CREATE CURSOR cfsizeother (DELTA C(7), ECHO N(6), FOXTROT L)\nSELECT cfsizeprobe",
+                    "UPPER(ALIAS())", "C:CFSIZEPROBE"});
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode + "\nSELECT cfsizeprobe";
+        // Arguments only are shared with FIELD's independent native table;
+        // FSIZE expected errors come from its separate retained fixture.
+        for (const auto& row : kFieldIndexCases) {
+            rows.push_back({set, "FSIZE(" + std::string(row.argument) + ")", "ERR11"});
+        }
+        rows.push_back({set, "FSIZE(1.9, 'cfsizeother')", "ERR11"});
+        rows.push_back({set, "FSIZE(2.9, 'cfsizeprobe')", "ERR11"});
+        rows.push_back({set, "FSIZE(1.9, SELECT('cfsizeother'))", "ERR11"});
+        for (const char* argument : {"0", "1", "1.9", "4294967297", "-4294967295",
+                                     "1E300", "-1E300", "EXP(1000)", "-EXP(1000)"}) {
+            rows.push_back({set + "\nLOCAL nError\nnError = 0\nTRY\n"
+                            "x = FSIZE(" + argument + ")\nCATCH TO oEx\nnError = oEx.ErrorNo\nENDTRY",
+                            "ALLTRIM(STR(nError)) + ':' + UPPER(ALIAS()) + ':' + "
+                            "ALLTRIM(STR(FSIZE('BRAVO'))) + ':' + ALLTRIM(STR(FCOUNT()))",
+                            "C:11:CFSIZEPROBE:4:3"});
+        }
+        rows.push_back({set, "FSIZE('ALPHA')", "N:5"});
+        rows.push_back({set, "FSIZE('BRAVO')", "N:4"});
+        rows.push_back({set, "FSIZE('CHARLIE')", "N:1"});
+        rows.push_back({set, "FSIZE('MISSING')", "N:0"});
+        rows.push_back({set, "FSIZE('2.5')", "N:0"});
+        rows.push_back({set, "FSIZE('DELTA', 'cfsizeother')", "N:7"});
+        rows.push_back({set, "FSIZE('ECHO', SELECT('cfsizeother'))", "N:6"});
+        rows.push_back({set, "UPPER(ALIAS())", "C:CFSIZEPROBE"});
+        // Separate arity/non-Numeric gaps: preservation only, not parity.
+        rows.push_back({set, "FSIZE()", "N:0"});
+        rows.push_back({set, "FSIZE($2.5)", "N:1"});
+        rows.push_back({set, "FSIZE(.T.)", "N:5"});
+        rows.push_back({set, "FSIZE(.NULL.)", "N:0"});
+    }
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN\nSELECT cfsizeprobe", "FSIZE(1)", "ERR11"});
+    rows.push_back({"USE IN cfsizeother\nUSE IN cfsizeprobe", "FSIZE('ALPHA')", "N:0"});
     return rows;
 }
 
@@ -2208,6 +2247,52 @@ void test_field_index_direct_numeric_boundaries() {
     }
 }
 
+// RQ-CF-PRG-FSIZE-INDEX-NUMERIC-001: Numeric rejection precedes any cast.
+void test_fsize_index_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    std::vector<PrgValue> numeric;
+    for (const auto& row : kFieldIndexCases) {
+        numeric.push_back(make_number_value(row.value));
+    }
+    for (const double value : {std::numeric_limits<double>::quiet_NaN(), -0.0,
+                               std::nextafter(1.0, 0.0), std::nextafter(1.0, 2.0),
+                               9223372036854775808.0, -9223372036854775808.0,
+                               std::nextafter(9223372036854775808.0, 0.0),
+                               std::nextafter(-9223372036854775808.0, -std::numeric_limits<double>::infinity())}) {
+        numeric.push_back(make_number_value(value));
+    }
+    for (const auto value : {INT64_MIN, INT64_MIN + 1, -INT64_C(4294967295),
+                             -INT64_C(9007199254740993), INT64_C(0), INT64_C(1),
+                             INT64_C(9007199254740993), INT64_MAX}) {
+        numeric.push_back(make_int64_value(value));
+    }
+    for (const auto value : {UINT64_C(0), UINT64_C(1), UINT64_C(4294967297),
+                             UINT64_C(9007199254740993), UINT64_C(9223372036854775807),
+                             UINT64_C(9223372036854775808), UINT64_MAX}) {
+        numeric.push_back(make_uint64_value(value));
+    }
+    for (std::size_t index = 0; index < numeric.size(); ++index) {
+        expect(!checked_fsize_index_argument(numeric[index]).has_value(),
+               "FSIZE rejects Numeric/exact index case " + std::to_string(index));
+    }
+    struct Case { PrgValue value; std::int64_t expected; };
+    const std::vector<Case> preserved{
+        {make_boolean_value(true), 1}, {make_boolean_value(false), 0},
+        {make_null_value(), 0}, {make_empty_value(), 0},
+        {make_currency_value(25000), 3}, {make_currency_value(-25000), 0},
+        {make_currency_value(INT64_MIN), 0},
+        {make_currency_value(INT64_MAX), INT64_C(922337203685478)}};
+    for (std::size_t index = 0; index < preserved.size(); ++index) {
+        const auto& row = preserved[index];
+        std::optional<std::size_t> expected;
+        if (static_cast<std::uint64_t>(row.expected) <= std::numeric_limits<std::size_t>::max()) {
+            expected = static_cast<std::size_t>(row.expected);
+        }
+        expect(checked_fsize_index_argument(row.value) == expected,
+               "FSIZE preserves checked coercion case " + std::to_string(index));
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -2226,6 +2311,7 @@ int main() {
     test_adir_display_direct_numeric_boundaries();
     test_afont_size_direct_numeric_boundaries();
     test_field_index_direct_numeric_boundaries();
+    test_fsize_index_direct_numeric_boundaries();
     test_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {
