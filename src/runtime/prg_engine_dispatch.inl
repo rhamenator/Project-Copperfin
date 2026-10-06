@@ -6300,8 +6300,91 @@
                     }
                     else if (normalized_name == "fweek")
                     {
-                        current_set_state()[normalized_name] = std::to_string(
-                            evaluate_set_integer_value(option_value, 1, 1, 3));
+                        // RQ-CF-PRG-SET-FWEEK-NUMERIC-001: convert before
+                        // setting mutation or the successful SET event below.
+                        const std::string candidate = strip_set_to_value(option_value);
+                        // Classify complete decimal literal syntax separately from
+                        // finite parsing, so range failure cannot become Character.
+                        const auto is_decimal_literal = [](const std::string &text) {
+                            std::size_t cursor = 0;
+                            if (cursor < text.size() && (text[cursor] == '+' || text[cursor] == '-'))
+                            {
+                                ++cursor;
+                            }
+                            const auto consume_digits = [&]() {
+                                const std::size_t begin = cursor;
+                                while (cursor < text.size() && text[cursor] >= '0' && text[cursor] <= '9')
+                                {
+                                    ++cursor;
+                                }
+                                return cursor != begin;
+                            };
+                            bool mantissa_digits = consume_digits();
+                            if (cursor < text.size() && text[cursor] == '.')
+                            {
+                                ++cursor;
+                                mantissa_digits = consume_digits() || mantissa_digits;
+                            }
+                            if (!mantissa_digits)
+                            {
+                                return false;
+                            }
+                            if (cursor < text.size() && (text[cursor] == 'e' || text[cursor] == 'E'))
+                            {
+                                ++cursor;
+                                if (cursor < text.size() && (text[cursor] == '+' || text[cursor] == '-'))
+                                {
+                                    ++cursor;
+                                }
+                                if (!consume_digits())
+                                {
+                                    return false;
+                                }
+                            }
+                            return cursor == text.size();
+                        };
+                        PrgValue operand = make_number_value(1.0);
+                        if (!candidate.empty())
+                        {
+                            try
+                            {
+                                if (should_evaluate_set_value(candidate))
+                                {
+                                    operand = evaluate_expression(candidate, frame);
+                                }
+                                else if (const auto literal = try_parse_numeric_index_value(candidate); literal.has_value())
+                                {
+                                    // Bare Numeric SET tokens previously went through
+                                    // Character coercion. Keep their actual Numeric domain.
+                                    operand = make_number_value(*literal);
+                                }
+                                else if (is_decimal_literal(candidate))
+                                {
+                                    // A full Numeric literal that failed finite parsing
+                                    // stays in Numeric rejection, not Character fallback.
+                                    operand = make_number_value(std::numeric_limits<double>::quiet_NaN());
+                                }
+                                else
+                                {
+                                    operand = make_string_value(unquote_string(candidate));
+                                }
+                            }
+                            catch (...)
+                            {
+                                // Preserve the previous expression-evaluation fallback;
+                                // Numeric conversion rejection is outside this catch.
+                                operand = make_number_value(1.0);
+                            }
+                        }
+                        const auto mode = current_set_state().find("numericbehavior");
+                        const auto week = checked_set_fweek_argument(operand,
+                            mode != current_set_state().end() && normalize_identifier(mode->second) == "vfp9"
+                                ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
+                        if (!week.has_value())
+                        {
+                            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Dispatch.Error.SetFweekInvalidValue"), 46);
+                        }
+                        current_set_state()[normalized_name] = std::to_string(*week);
                     }
                     else if (normalized_name == "decimals")
                     {

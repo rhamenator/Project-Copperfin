@@ -209,7 +209,9 @@ namespace copperfin::runtime_surface_tests
             "cCollateFromSecondHopMacro = SET('COLLATE')\n"
             "SET FDOW TO 7\n"
             "cFdowFromSet = SET('FDOW')\n"
-            "SET FWEEK TO 4\n"
+            // RQ-CF-PRG-SET-FWEEK-NUMERIC-001: 4 raises 46, not a clamp to 3.
+            // Use valid 3 here; dedicated Numeric cases assert invalid-value rejection.
+            "SET FWEEK TO 3\n"
             "cFweekFromSet = SET('FWEEK')\n"
             "SET POINT TO ';'\n"
             "cPointFromSet = SET('POINT')\n"
