@@ -1398,6 +1398,43 @@ std::optional<std::int32_t> checked_afont_size_argument(
     return static_cast<std::int32_t>(*size);
 }
 
+// RQ-CF-PRG-FIELD-INDEX-NUMERIC-001 (#5611/#6776). The retained native
+// FIELD fixture distinguishes negative wrapping from positive empty results.
+std::optional<std::size_t> checked_field_index_argument(
+    const PrgValue& value,
+    const NumericBehavior behavior) {
+    const bool numeric = value.kind == PrgValueKind::number || value.kind == PrgValueKind::int64 ||
+                         value.kind == PrgValueKind::uint64;
+    if (numeric && behavior == NumericBehavior::vfp9) {
+        if (value.kind == PrgValueKind::number && std::isnan(value.number_value)) {
+            return std::nullopt;
+        }
+        constexpr auto ceiling = std::numeric_limits<std::int32_t>::max();
+        const bool oversized_positive = value.kind == PrgValueKind::int64
+            ? value.int64_value > ceiling
+            : value.kind == PrgValueKind::uint64
+                ? value.uint64_value > static_cast<std::uint64_t>(ceiling)
+                : value.number_value > static_cast<double>(ceiling);
+        // Zero is an empty-lookup sentinel, not a recovered exact native index.
+        if (oversized_positive) {
+            return 0U;
+        }
+        return static_cast<std::size_t>(std::max<std::int64_t>(0, vfp9_numeric_to_int32(value)));
+    }
+    const auto index = numeric ? checked_declared_int64_argument(value)
+        : checked_truncated_numeric_to_int64(std::round(value_as_number(value)));
+    if (!index.has_value()) {
+        return std::nullopt;
+    }
+    if (*index <= 0) {
+        return 0U;
+    }
+    if (static_cast<std::uint64_t>(*index) > std::numeric_limits<std::size_t>::max()) {
+        return std::nullopt;
+    }
+    return static_cast<std::size_t>(*index);
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {

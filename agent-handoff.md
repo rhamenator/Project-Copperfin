@@ -13,12 +13,15 @@ The most recent shipped slice is AFONT PR #6983, merged into main as
 `757bf88d4427e3d56fb36d833a171e9edb591a5e` on 2026-10-05 at 23:47:52 UTC.
 All 11 required checks passed at signed head `4c1cbe6db1`, its exact-head
 review was clean, and the review conversation was resolved after verification.
-All completed optional checks passed; Windows MSVC was still running at merge.
+All completed optional checks passed; Windows MSVC was still running at merge
+and subsequently passed before the FIELD PR.
 Main is synchronized and the completed worktree/branches are removed; the
 420 MB normal and 787 MB sanitizer builds are in recoverable trash.
 The active continuation is FIELD() first-argument Numeric/exact-integer index
 conversion on `fix/field-index-numeric-5611`, from this main revision.
-Native recovery is retained; production implementation has not started.
+Native recovery and the bounded checked implementation are retained;
+normal and sanitizer verification passed. The current branch's FIELD PR
+checks and exact-head review remain the integration gate.
 No VM is in use.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
@@ -418,11 +421,30 @@ results are empty; they do not independently prove an exact converted index.
 Eight routing/arity/type controls are observations, not permission to expand
 this Numeric-only slice. Exact 64-bit/NaN behavior must be derived explicitly
 from the owner policy, not attributed to VFP9.
-No production change or build exists yet. Next finish the operation-specific
-conversion contract, add independent boundary/helper and public PRG tests
-with fail-before evidence, implement the bounded checked conversion, run
-normal and sanitizer tests serially, complete docs/32 and docs/22 reverse
-traceability and verification README, then signed push/PR/review/required CI.
+The checked helper and FIELD-only dispatch now implement finite signed-int64
+and positive size_t admission in COPPERFIN (admitted negatives stay empty),
+and negative low-32 aliases plus a positive-over-INT32_MAX empty sentinel in
+VFP9. NaN rejects both modes; exact int64/uint64 avoid double rounding.
+Other coercions retain checked half-away rounding. The 196 independent direct
+calls and 141 public PRG rows include errors with unchanged alias/schema and
+existing routing/arity/type/third-flag preservation. The corrected old FIELD
+dispatch fails 41 semantic assertions (5.57s); the initial alias-setup failure
+is not conversion evidence. The fixture explicitly SELECTs 0 before creating
+its second cursor and avoids case-parity claims. Separate gaps filed against
+exact main: FIELD arity/non-Numeric types #6987 and CREATE CURSOR work-area
+allocation #6988. They are not admitted follow-up production slices.
+Normal and Clang ASan/UBSan/float-cast-overflow builds are respectively
+`/home/rich/temp/copperfin-field-index-5611-build` and
+`/home/rich/temp/copperfin-field-index-5611-sanitize`; run their numeric,
+array, string/math and table-structure tests serially across directories.
+Normal GCC verification passes 4/4 (7.71s), and Clang ASan/UBSan/
+float-cast-overflow passes 4/4 (34.02s) without diagnostics. Changelog,
+contributor-signoff and channel contracts pass 4/4 (3.96s); 139 fragments are
+valid. The fixture README retains completed VR/DQ/DV/reproduction evidence.
+The current branch's PR must pass all 11 required exact-head checks, clean
+review and resolved conversations before merge. docs/32 and docs/22 map the
+selected requirement only; do not expand FSIZE, SELECT, cursor allocation
+or type parity. Main remains unchanged until the FIELD PR merges.
 Check the merged AFONT Windows MSVC run if it becomes actionable.
 No VM was started, no persistent table/system changes made, and no owner input
 is needed. Re-read the live channel before any further work selection.

@@ -78,6 +78,50 @@ struct Row {
     std::string expected;    // "C:<text>" or "ERR<number>"
 };
 
+// RQ-CF-PRG-FIELD-INDEX-NUMERIC-001: independent expectations from the
+// retained three-field VFP9 fixture. COPPERFIN signed-int64 admission and
+// exact converted indices outside the observed field set are derived policy.
+struct FieldIndexCase {
+    const char* argument;
+    double value;
+    std::optional<std::int64_t> copperfin;
+    std::int64_t vfp9;
+};
+const std::vector<FieldIndexCase> kFieldIndexCases{
+    {"0", 0, 0, 0}, {"1", 1, 1, 1}, {"2", 2, 2, 2}, {"3", 3, 3, 3},
+    {"4", 4, 4, 4}, {"-1", -1, 0, 0},
+    {"0.49", 0.49, 0, 0}, {"0.5", 0.5, 0, 0}, {"0.9", 0.9, 0, 0},
+    {"1.49", 1.49, 1, 1}, {"1.5", 1.5, 1, 1}, {"1.9", 1.9, 1, 1},
+    {"2.49", 2.49, 2, 2}, {"2.5", 2.5, 2, 2}, {"2.9", 2.9, 2, 2},
+    {"3.9", 3.9, 3, 3},
+    {"-0.49", -0.49, 0, 0}, {"-0.5", -0.5, 0, 0}, {"-0.9", -0.9, 0, 0},
+    {"-1.1", -1.1, 0, 0},
+    {"2147483647", 2147483647, 2147483647, 2147483647},
+    {"2147483648", 2147483648, INT64_C(2147483648), 0},
+    {"-2147483648", -2147483648, 0, 0},
+    {"-2147483649", -2147483649, 0, INT32_MAX},
+    {"4294967295", 4294967295, INT64_C(4294967295), 0},
+    {"4294967296", 4294967296, INT64_C(4294967296), 0},
+    {"4294967297", 4294967297, INT64_C(4294967297), 0},
+    {"4294967298", 4294967298, INT64_C(4294967298), 0},
+    {"4294967299", 4294967299, INT64_C(4294967299), 0},
+    {"4294967300", 4294967300, INT64_C(4294967300), 0},
+    {"-4294967296", -4294967296, 0, 0},
+    {"-4294967295", -4294967295, 0, 1},
+    {"-4294967294", -4294967294, 0, 2},
+    {"-4294967293", -4294967293, 0, 3},
+    {"4294967298.9", 4294967298.9, INT64_C(4294967298), 0},
+    {"-4294967294.9", -4294967294.9, 0, 2},
+    {"1E20", 1E20, std::nullopt, 0}, {"-1E20", -1E20, std::nullopt, 0},
+    {"1E300", 1E300, std::nullopt, 0}, {"-1E300", -1E300, std::nullopt, 0},
+    {"EXP(1000)", std::numeric_limits<double>::infinity(), std::nullopt, 0},
+    {"-EXP(1000)", -std::numeric_limits<double>::infinity(), std::nullopt, 0},
+    {"9007199254740992", 9007199254740992, INT64_C(9007199254740992), 0},
+    {"32767", 32767, 32767, 32767}, {"32768", 32768, 32768, 32768},
+    {"65535", 65535, 65535, 65535}, {"65536", 65536, 65536, 65536},
+    {"65537", 65537, 65537, 65537},
+    {"-65535", -65535, 0, 0}, {"-65536", -65536, 0, 0}};
+
 // RQ-CF-PRG-ADIR-DISPLAY-NUMERIC-001: the 46 installed-VFP9 observations
 // retained in fixtures/vfp9-adir-display-numeric-observation/. -1 is rejection.
 struct AdirCase { const char* argument; double value; int copperfin; int vfp9; };
@@ -981,6 +1025,46 @@ std::vector<Row> build_rows() {
         rows.push_back({array + "\nnCanonical = AFONT(aCanonicalSize, cFont, 12)\n"
                         "nSize = AFONT(aSize, cFont, 12, 1)", "nSize == nCanonical", "L:true"});
     }
+    // RQ-CF-PRG-FIELD-INDEX-NUMERIC-001: actual field names distinguish
+    // truncation and negative wrapping; positive oversized indices stay empty.
+    rows.push_back({"CREATE CURSOR cfprobe (ALPHA C(5), BRAVO N(4), CHARLIE L)\nSELECT 0\n"
+                    "CREATE CURSOR cfother (DELTA C(5), ECHO N(4), FOXTROT L)\nSELECT cfprobe",
+                    "UPPER(ALIAS())", "C:CFPROBE"});
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const bool is_copperfin = std::string(mode) == "COPPERFIN";
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode + "\nSELECT cfprobe";
+        for (const auto& row : kFieldIndexCases) {
+            const auto index = is_copperfin ? row.copperfin : std::optional<std::int64_t>{row.vfp9};
+            const bool admitted = index.has_value() &&
+                static_cast<std::uint64_t>(*index) <= std::numeric_limits<std::size_t>::max();
+            const char* name = index == 1 ? "ALPHA" : index == 2 ? "BRAVO" : index == 3 ? "CHARLIE" : "";
+            rows.push_back({set, "FIELD(" + std::string(row.argument) + ")",
+                            admitted ? std::string("C:") + name : "ERR11"});
+        }
+        for (const char* argument : {"1E20", "-1E20", "1E300", "-1E300",
+                                     "EXP(1000)", "-EXP(1000)", "'1E300'"}) {
+            const bool rejected = is_copperfin || std::string(argument) == "'1E300'";
+            rows.push_back({set + "\nLOCAL nError\nnError = 0\nTRY\n"
+                            "x = FIELD(" + argument + ")\nCATCH TO oEx\nnError = oEx.ErrorNo\nENDTRY",
+                            "ALLTRIM(STR(nError)) + ':' + UPPER(ALIAS()) + ':' + FIELD(2) + ':' + ALLTRIM(STR(FCOUNT()))",
+                            rejected ? "C:11:CFPROBE:BRAVO:3" : "C:0:CFPROBE:BRAVO:3"});
+        }
+        rows.push_back({set, "FIELD(1.9, 'cfother')", "C:DELTA"});
+        rows.push_back({set, "FIELD(2.9, 'cfprobe')", "C:BRAVO"});
+        rows.push_back({set, "FIELD(1.9, SELECT('cfother'))", "C:DELTA"});
+        rows.push_back({set, "UPPER(ALIAS())", "C:CFPROBE"});
+        // Existing arity/type/third-flag behavior is preservation, not parity.
+        rows.push_back({set, "FIELD()", "C:"});
+        rows.push_back({set, "FIELD('2.5')", "C:CHARLIE"});
+        rows.push_back({set, "FIELD($2.5)", "C:CHARLIE"});
+        rows.push_back({set, "FIELD(.T.)", "C:ALPHA"});
+        rows.push_back({set, "FIELD(.NULL.)", "C:"});
+        rows.push_back({set, "FIELD(1, 'cfprobe', 0)", "C:ALPHA"});
+        rows.push_back({set, "FIELD(1, 'cfprobe', 1)", "C:ALPHA"});
+        rows.push_back({set + "\nSELECT cfother", "FIELD(2.9)", "C:ECHO"});
+    }
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN\nSELECT cfprobe", "FIELD(1.9)", "C:ALPHA"});
+    rows.push_back({"USE IN cfother\nUSE IN cfprobe", "FIELD(1)", "C:"});
     return rows;
 }
 
@@ -2052,6 +2136,78 @@ void test_afont_size_direct_numeric_boundaries() {
     }
 }
 
+// RQ-CF-PRG-FIELD-INDEX-NUMERIC-001: native three-field outputs are
+// supplemented by derived exact int64/uint64, NaN and destination boundaries.
+void test_field_index_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    const double inf = std::numeric_limits<double>::infinity();
+    struct Case { PrgValue value; std::optional<std::int64_t> copperfin; std::optional<std::int64_t> vfp9; };
+    std::vector<Case> cases;
+    for (const auto& row : kFieldIndexCases) {
+        cases.push_back({make_number_value(row.value), row.copperfin, row.vfp9});
+    }
+    const std::vector<Case> additional{
+        {make_number_value(std::numeric_limits<double>::quiet_NaN()), std::nullopt, std::nullopt},
+        {make_number_value(-0.0), 0, 0},
+        {make_number_value(std::nextafter(1.0, 0.0)), 0, 0},
+        {make_number_value(std::nextafter(1.0, inf)), 1, 1},
+        {make_number_value(std::nextafter(2.0, 0.0)), 1, 1},
+        {make_number_value(std::nextafter(2.0, inf)), 2, 2},
+        {make_number_value(std::nextafter(2147483648.0, 0.0)), INT32_MAX, 0},
+        {make_number_value(std::nextafter(-2147483649.0, 0.0)), 0, 0},
+        {make_number_value(std::nextafter(-2147483649.0, -inf)), 0, INT32_MAX},
+        {make_number_value(9223372036854775808.0), std::nullopt, 0},
+        {make_number_value(-9223372036854775808.0), 0, 0},
+        {make_number_value(std::nextafter(9223372036854775808.0, 0.0)),
+            INT64_C(9223372036854774784), 0},
+        {make_number_value(std::nextafter(-9223372036854775808.0, 0.0)), 0, 1024},
+        {make_number_value(std::nextafter(-9223372036854775808.0, -inf)), std::nullopt, 0},
+        {make_number_value(-9007199254740991.0), 0, 1},
+        {make_int64_value(INT32_MIN), 0, 0}, {make_int64_value(INT32_MAX), INT32_MAX, INT32_MAX},
+        {make_int64_value(INT64_C(2147483648)), INT64_C(2147483648), 0},
+        {make_int64_value(-INT64_C(2147483649)), 0, INT32_MAX},
+        {make_int64_value(INT64_C(4294967297)), INT64_C(4294967297), 0},
+        {make_int64_value(-INT64_C(4294967295)), 0, 1},
+        {make_int64_value(std::numeric_limits<std::int64_t>::min()), 0, 0},
+        {make_int64_value(std::numeric_limits<std::int64_t>::min() + 1), 0, 1},
+        {make_int64_value(std::numeric_limits<std::int64_t>::max()),
+            std::numeric_limits<std::int64_t>::max(), 0},
+        {make_int64_value(-INT64_C(9007199254740991)), 0, 1},
+        {make_int64_value(-INT64_C(9007199254740993)), 0, 0},
+        {make_int64_value(INT64_C(9007199254740993)), INT64_C(9007199254740993), 0},
+        {make_uint64_value(0), 0, 0}, {make_uint64_value(1), 1, 1},
+        {make_uint64_value(INT32_MAX), INT32_MAX, INT32_MAX},
+        {make_uint64_value(UINT64_C(4294967295)), INT64_C(4294967295), 0},
+        {make_uint64_value(UINT64_C(4294967296)), INT64_C(4294967296), 0},
+        {make_uint64_value(UINT64_C(9007199254740993)), INT64_C(9007199254740993), 0},
+        {make_uint64_value(UINT64_C(9223372036854775807)), INT64_MAX, 0},
+        {make_uint64_value(UINT64_C(9223372036854775808)), std::nullopt, 0},
+        {make_uint64_value(std::numeric_limits<std::uint64_t>::max()), std::nullopt, 0},
+        {make_string_value("2.5"), 3, 3}, {make_string_value("-2.5"), 0, 0},
+        {make_string_value("4294967297"), INT64_C(4294967297), INT64_C(4294967297)},
+        {make_string_value("1E300"), std::nullopt, std::nullopt},
+        {make_string_value("9223372036854775808"), std::nullopt, std::nullopt},
+        {make_currency_value(25000), 3, 3},
+        {make_currency_value(std::numeric_limits<std::int64_t>::max()),
+            INT64_C(922337203685478), INT64_C(922337203685478)},
+        {make_boolean_value(true), 1, 1}, {make_boolean_value(false), 0, 0},
+        {make_null_value(), 0, 0}, {make_empty_value(), 0, 0}};
+    cases.insert(cases.end(), additional.begin(), additional.end());
+    for (const auto behavior : {NumericBehavior::copperfin, NumericBehavior::vfp9}) {
+        for (std::size_t index = 0; index < cases.size(); ++index) {
+            const auto& row = cases[index];
+            const auto wide = behavior == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin;
+            std::optional<std::size_t> expected;
+            if (wide.has_value() && static_cast<std::uint64_t>(*wide) <= std::numeric_limits<std::size_t>::max()) {
+                expected = static_cast<std::size_t>(*wide);
+            }
+            expect(checked_field_index_argument(row.value, behavior) == expected,
+                   "FIELD exact index/rejection case " + std::to_string(index) +
+                   (behavior == NumericBehavior::copperfin ? " COPPERFIN" : " VFP9"));
+        }
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -2069,6 +2225,7 @@ int main() {
     test_alines_flags_direct_numeric_boundaries();
     test_adir_display_direct_numeric_boundaries();
     test_afont_size_direct_numeric_boundaries();
+    test_field_index_direct_numeric_boundaries();
     test_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {
