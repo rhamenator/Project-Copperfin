@@ -9,17 +9,29 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
-The most recent shipped slice is SQLSETPROP PR #7000, merged into main as
-`4aef3ae3052a3d004da5dbe48bbbb8189a810cd1` on 2026-10-06 at 05:16:38 UTC.
-All 11 required checks passed at signed head `cb920f30a8`; exact-head Codex
+The most recent shipped slice is SQLDISCONNECT PR #7002, merged into main as
+`667b6fd61936a65b5a5944aa048f92e6947bf0d1` on 2026-10-06 at 06:17:15 UTC.
+All 11 required checks passed at signed head `1b5b3e5fe4`; exact-head Codex
 review was clean and there were no conversations. All completed optional
 checks passed; Windows MSVC was still running at merge. Main is synchronized,
-the worktree/local/remote branches are removed, and the 451 MB normal/865 MB
+the worktree/local/remote branches are removed, and the 452 MB normal/865 MB
 sanitizer builds are in recoverable trash. Unrelated files/worktrees remain.
-The active continuation is SQLDISCONNECT first-argument Numeric/exact-integer
-handle conversion only on `fix/sqldisconnect-handle-numeric-5611`, from this main
-revision. Disconnect-all/absent-handle/type results, connection lifecycle and other
-callers are outside scope. No VM is in use.
+The active continuation is SET DATASESSION TO Numeric/exact-integer selector
+conversion on `fix/set-datasession-numeric-5611` in
+`/home/rich/.codex/worktrees/set-datasession-numeric-5611/Project-Copperfin`,
+from this main revision. Complete native fixture and 140 direct/108 synthetic
+script cases plus resumable/locale cases are retained. Original dispatch fails
+exactly 251 selected assertions in both GCC (numeric 7.04s; full 8.42s) and
+Clang sanitizers (numeric 34.27s; full 40.21s); direct helpers, preserved
+coercion controls, existing numeric rows and three session neighbors pass.
+Final GCC passes 4/4 in 8.97s (numeric 7.49s); Clang ASan/UBSan/float-cast-overflow
+passes 4/4 in 39.54s (numeric 32.77s) without diagnostics. Catalog/install,
+test-isolation, signoff/changelog/channel contracts pass 7/7 in 20.91s; all 145
+fragments validate. Completed fixture README VR/DQ/DV and bidirectional
+docs/22/docs/32 traceability retain exact scope, hashes and reproduction.
+Next: signed push/PR, required exact-head checks and clean review. Session
+creation, existence/type parity (#7003) and other setters remain separate.
+No VM or external backend is in use; no owner input is needed.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -547,10 +559,41 @@ pass 4/4 (4.21s); all 144 fragments validate. Normal and sanitizer builds:
 `/home/rich/temp/copperfin-sqldisconnect-handle-5611-sanitize`.
 Completed README VR/DQ/DV, fixture hashes, error-before-disconnect/cleanup
 walkthrough and docs/22/docs/32 traceability retain the bounded scope.
-Next: signed push/PR and exact-head integration gates. The encountered
+Shipped as PR #7002 with all 11 required checks green, clean exact-head Codex
+review and zero review conversations. Merged 2026-10-06 06:17:15 UTC as
+667b6fd61936a65b5a5944aa048f92e6947bf0d1. The optional macOS installer job
+passed after a same-head, job-only retry of GitHub artifact-upload ENOTFOUND;
+no source change was needed. Other completed optional checks passed; Windows
+MSVC remained in progress. Main is synchronized; the worktree/local/remote
+branches are removed and both builds plus generated FXP are in recoverable
+trash. Unrelated files/worktrees are preserved and the live channel was empty.
+The encountered
 disconnect-all/absent-handle/
 type gap is #7001, filed against exact main without implementation admission.
 The shared Numeric formatter gap #6997 remains unchanged. No owner input needed.
+
+SET DATASESSION TO Numeric/exact-integer selector conversion is selected next
+from exact main 667b6fd61936a65b5a5944aa048f92e6947bf0d1 on
+`fix/set-datasession-numeric-5611`, in
+`/home/rich/.codex/worktrees/set-datasession-numeric-5611/Project-Copperfin`.
+Complete clean-room native source/output retains 61 commands/64 lines in
+`tests/fixtures/vfp9-set-datasession-numeric-observation/`; two fresh final
+runs match byte-for-byte. Numeric fractions truncate and both-sign low-32
+aliases select live native sessions 1/2. Invalid selection raises 1540 while
+preserving the active session. Other positive indices are derived checked
+domain policy, not native existence evidence. The encountered existence/type
+gap is #7003, filed against exact main without implementation admission.
+140 direct calls and 108 fresh synthetic cases plus two resumable/four locale
+cases cover bounds, state/settings retention, successful-event suppression,
+catchability, mode reset and cleanup. Original dispatch fails exactly 251
+selected assertions in both toolchains; helpers/controls/existing numeric
+rows and three neighbors pass. Final results and README/matrix evidence are
+summarized above. Builds are `/home/rich/temp/copperfin-set-datasession-5611-build`
+and `/home/rich/temp/copperfin-set-datasession-5611-sanitize`; numeric tests ran
+serially across build directories. The unchanged broad control-flow baseline
+was interrupted after sustained execution and is not claimed passed; focused
+resumable operands and relations/database/date-time neighbors are verified.
+Next is signed push/PR and exact-head integration gates. No owner input needed.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
@@ -680,7 +723,11 @@ Owner-directed workstream order before the #6879 assignment was:
      handle conversion (PR #6998).
    - Completed after those: SQLSETPROP Numeric/exact-integer first-argument
      handle conversion (PR #7000).
-   - Active: SQLDISCONNECT Numeric/exact-integer first-argument handle conversion.
+   - Completed after those: SQLDISCONNECT Numeric/exact-integer first-argument
+     handle conversion (PR #7002).
+   - Selected next: SET DATASESSION TO Numeric/exact-integer selector conversion;
+     recover installed VFP9 behavior before implementation. Session creation,
+     existence/type parity and other setters remain separate.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

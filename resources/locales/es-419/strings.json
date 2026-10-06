@@ -1536,6 +1536,7 @@
   "Runtime.Prg.Dispatch.Error.GatherNoCurrentRecord": "GATHER: no hay un registro actual",
   "Runtime.Prg.Dispatch.Error.GatherNoCurrentWorkArea": "GATHER: no hay un area de trabajo actual",
   "Runtime.Prg.Dispatch.Error.InvalidArrayName": "{command}: nombre de arreglo no valido",
+  "Runtime.Prg.Dispatch.Error.DataSessionInvalidSelector": "SET DATASESSION TO requiere un identificador de sesión positivo y representable.",
   "Runtime.Prg.Dispatch.Error.InvalidObjectTarget": "{command}: destino de objeto no valido",
   "Runtime.Prg.Dispatch.Error.CreateCursorRequiresNonEmptyAlias": "CREATE CURSOR requiere un alias no vacio",
   "Runtime.Prg.Dispatch.Error.CreateCursorRequiresSupportedFieldDeclaration": "CREATE CURSOR requiere al menos una declaracion de campo compatible",

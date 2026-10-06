@@ -10,6 +10,7 @@
 #include "../src/runtime/prg_engine_runtime_surface_functions.h"
 #include "../src/runtime/prg_compatibility_error.h"
 #include "prg_engine_test_support.h"
+#include "test_environment_support.h"
 
 #include <cmath>
 #include <cstdint>
@@ -129,6 +130,65 @@ const std::vector<SqlGetPropHandleCase> kSqlGetPropHandleCases{
     {"65537", 65537, 65537, 65537},
     {"-65535", -65535, -65535, -65535},
     {"-65536", -65536, -65536, -65536},
+};
+
+// RQ-CF-PRG-SET-DATASESSION-NUMERIC-001 (#5611/#6776). Native sessions 1/2
+// distinguish truncation and aliases; other positive indices use derived checked
+// signed-int32 policy, not a claim that native VFP creates missing sessions.
+struct DataSessionSelectorCase {
+    const char* argument;
+    double value;
+    std::optional<std::int32_t> copperfin;
+    std::optional<std::int32_t> vfp9;
+};
+const std::vector<DataSessionSelectorCase> kDataSessionSelectorCases{
+    {"0", 0, std::nullopt, std::nullopt},
+    {"1", 1, 1, 1},
+    {"2", 2, 2, 2},
+    {"3", 3, 3, 3},
+    {"-1", -1, std::nullopt, std::nullopt},
+    {"0.49", 0.49, std::nullopt, std::nullopt},
+    {"0.5", 0.5, std::nullopt, std::nullopt},
+    {"0.9", 0.9, std::nullopt, std::nullopt},
+    {"1.49", 1.49, 1, 1},
+    {"1.5", 1.5, 1, 1},
+    {"1.9", 1.9, 1, 1},
+    {"2.49", 2.49, 2, 2},
+    {"2.5", 2.5, 2, 2},
+    {"2.9", 2.9, 2, 2},
+    {"-0.49", -0.49, std::nullopt, std::nullopt},
+    {"-0.5", -0.5, std::nullopt, std::nullopt},
+    {"-0.9", -0.9, std::nullopt, std::nullopt},
+    {"-1.1", -1.1, std::nullopt, std::nullopt},
+    {"2147483647", 2147483647, 2147483647, 2147483647},
+    {"2147483648", 2147483648, std::nullopt, std::nullopt},
+    {"-2147483648", -2147483648, std::nullopt, std::nullopt},
+    {"-2147483649", -2147483649, std::nullopt, 2147483647},
+    {"4294967295", 4294967295, std::nullopt, std::nullopt},
+    {"4294967296", 4294967296, std::nullopt, std::nullopt},
+    {"4294967297", 4294967297, std::nullopt, 1},
+    {"4294967298", 4294967298, std::nullopt, 2},
+    {"-4294967296", -4294967296, std::nullopt, std::nullopt},
+    {"-4294967295", -4294967295, std::nullopt, 1},
+    {"-4294967294", -4294967294, std::nullopt, 2},
+    {"4294967296.9", 4294967296.9, std::nullopt, std::nullopt},
+    {"-4294967295.9", -4294967295.9, std::nullopt, 1},
+    {"-4294967294.9", -4294967294.9, std::nullopt, 2},
+    {"1E20", 1E20, std::nullopt, std::nullopt},
+    {"-1E20", -1E20, std::nullopt, std::nullopt},
+    {"1E300", 1E300, std::nullopt, std::nullopt},
+    {"-1E300", -1E300, std::nullopt, std::nullopt},
+    {"EXP(1000)", std::numeric_limits<double>::infinity(), std::nullopt, std::nullopt},
+    {"-EXP(1000)", -std::numeric_limits<double>::infinity(), std::nullopt, std::nullopt},
+    {"9007199254740992", 9007199254740992, std::nullopt, std::nullopt},
+    {"32767", 32767, 32767, 32767},
+    {"32768", 32768, 32768, 32768},
+    {"65535", 65535, 65535, 65535},
+    {"65536", 65536, 65536, 65536},
+    {"65537", 65537, 65537, 65537},
+    {"65538", 65538, 65538, 65538},
+    {"-65535", -65535, std::nullopt, std::nullopt},
+    {"-65534", -65534, std::nullopt, std::nullopt},
 };
 
 // RQ-CF-PRG-SELECT-SELECTOR-NUMERIC-001: independent conversion table
@@ -1410,6 +1470,178 @@ void test_sqldisconnect_numeric_behavior_script_rows() {
         }
         check(mode, "1E300", std::nullopt, "1" + std::string(300U, '0'));
         check(mode, "EXP(1000)", std::nullopt, "inf");
+    }
+    fs::remove_all(dir, ignored);
+}
+
+// RQ-CF-PRG-SET-DATASESSION-NUMERIC-001: independent native/derived boundaries.
+void test_datasession_selector_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    for (const auto mode : {NumericBehavior::copperfin, NumericBehavior::vfp9}) {
+        for (const auto& row : kDataSessionSelectorCases) {
+            expect(checked_datasession_selector_argument(make_number_value(row.value), mode) ==
+                       (mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin),
+                   std::string("SET DATASESSION direct ") + row.argument);
+        }
+        struct Boundary { PrgValue value; std::optional<std::int32_t> copperfin; std::optional<std::int32_t> vfp9; };
+        const std::vector<Boundary> boundaries{
+            {make_number_value(std::numeric_limits<double>::quiet_NaN()), std::nullopt, std::nullopt},
+            {make_number_value(std::nextafter(1.0, 0.0)), std::nullopt, std::nullopt},
+            {make_number_value(std::nextafter(1.0, 2.0)), 1, 1},
+            {make_number_value(2147483647.9), INT32_MAX, INT32_MAX},
+            {make_number_value(std::nextafter(2147483648.0, 0.0)), INT32_MAX, INT32_MAX},
+            {make_int64_value(INT64_MIN), std::nullopt, std::nullopt},
+            {make_int64_value(INT64_MIN + 1), std::nullopt, 1},
+            {make_int64_value(INT64_MAX), std::nullopt, std::nullopt},
+            {make_int64_value(9007199254740993LL), std::nullopt, 1},
+            {make_int64_value(-9007199254740991LL), std::nullopt, 1},
+            {make_uint64_value(UINT64_MAX), std::nullopt, std::nullopt},
+            {make_uint64_value(9007199254740993ULL), std::nullopt, 1},
+            {make_uint64_value(4294967298ULL), std::nullopt, 2},
+            {make_int64_value(INT32_MAX), INT32_MAX, INT32_MAX},
+            {make_uint64_value(INT32_MAX), INT32_MAX, INT32_MAX},
+            {make_boolean_value(true), 1, 1},
+            {make_boolean_value(false), 1, 1},
+            {make_null_value(), 1, 1},
+            {make_string_value("2"), 2, 2},
+            {make_currency_value(5000), 1, 1},
+            {make_currency_value(15000), 2, 2},
+            {make_currency_value(-15000), 1, 1},
+            {make_currency_value(INT64_MAX), std::nullopt, std::nullopt},
+        };
+        for (std::size_t index = 0; index < boundaries.size(); ++index) {
+            const auto& row = boundaries[index];
+            expect(checked_datasession_selector_argument(row.value, mode) ==
+                       (mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin),
+                   "SET DATASESSION extended boundary " + std::to_string(index));
+        }
+    }
+}
+
+// Each run initializes only synthetic in-process session 2 and default session 1.
+// Native existence/type parity is deliberately separate. State/event expectations
+// make a rejected selector observably failure-atomic before session creation.
+void test_datasession_numeric_behavior_script_rows() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_datasession_numeric_behavior";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    const auto check = [&](const char* mode, const std::string& argument,
+                           const std::optional<std::int32_t> selector) {
+        const std::string set_mode = std::string("SET NUMERICBEHAVIOR TO ") + mode + "\n";
+        const std::string script =
+            "nSessionError = 0\n" + set_mode +
+            "SET DATASESSION TO 2\nSET DELETED ON\n" + set_mode +
+            "TRY\nSET DATASESSION TO " + argument + "\n"
+            "CATCH TO oEx\nnSessionError = oEx.ErrorNo\nENDTRY\n"
+            "nAfterSession = VAL(TRANSFORM(SET('DATASESSION')))\n"
+            "cAfterDeleted = SET('DELETED')\n"
+            "SET DATASESSION TO 2\ncRetainedDeleted = SET('DELETED')\n"
+            "SET NUMERICBEHAVIOR TO COPPERFIN\n"
+            "SET DATASESSION TO 1\nSET NUMERICBEHAVIOR TO COPPERFIN\n"
+            "cResetMode = SET('NUMERICBEHAVIOR')\nRETURN\n";
+        const fs::path path = dir / "rows.prg";
+        write_text(path, script);
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(path.string(), dir.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        const std::string name = std::string("SET DATASESSION ") + mode + " [" + argument + "]";
+        expect(state.completed, name + " completes catch/cleanup: " + state.message);
+        const auto value = [&](const char* key) {
+            const auto found = state.globals.find(key);
+            return found == state.globals.end() ? "<missing>" : copperfin::runtime::format_value(found->second);
+        };
+        expect(value("nsessionerror") == (selector.has_value() ? "0" : "1540"),
+               name + " caught error, got " + value("nsessionerror"));
+        expect(value("naftersession") == std::to_string(selector.value_or(2)), name + " selected/preserved session");
+        expect(value("cafterdeleted") == (selector == 2 || !selector.has_value() ? "ON" : "OFF"),
+               name + " session-local state");
+        expect(value("cretaineddeleted") == "ON", name + " session 2 setting retained");
+        expect(value("cresetmode") == "COPPERFIN", name + " mode reset");
+        std::size_t changes = 0;
+        for (const auto& event : state.events) {
+            if (event.category == "runtime.datasession") {
+                ++changes;
+            }
+        }
+        expect(changes == (selector.has_value() ? 4U : 3U), name + " no successful event on rejection");
+    };
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        for (const auto& row : kDataSessionSelectorCases) {
+            check(mode, row.argument, std::string(mode) == "VFP9" ? row.vfp9 : row.copperfin);
+        }
+        for (const auto& control : std::vector<std::pair<std::string, std::int32_t>>{
+                 {"$0.5", 1}, {"$1.5", 2}, {".T.", 1}, {".F.", 1}, {".NULL.", 1}, {"'1'", 1}, {"'2'", 2}}) {
+            check(mode, control.first, control.second);
+        }
+    }
+    // Existing resumable expression path: conversion occurs after the UDF returns.
+    // Inline function is outside run_rows' generated main body.
+    const auto source = dir / "resumable.prg";
+    write_text(source,
+        "SET DATASESSION TO 2\nSET DELETED ON\nSET DATASESSION TO 1\n"
+        "SET DATASESSION TO choose_session()\n"
+        "nResumedSession = VAL(TRANSFORM(SET('DATASESSION')))\n"
+        "cResumedDeleted = SET('DELETED')\nSET DATASESSION TO 1\nRETURN\n"
+        "FUNCTION choose_session\nRETURN 2.9\nENDFUNC\n");
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(source.string(), dir.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SET DATASESSION resumable operand completes");
+    const auto selected = state.globals.find("nresumedsession");
+    const auto deleted = state.globals.find("cresumeddeleted");
+    expect(selected != state.globals.end() && copperfin::runtime::format_value(selected->second) == "2",
+           "SET DATASESSION resumable fraction truncates");
+    expect(deleted != state.globals.end() && copperfin::runtime::format_value(deleted->second) == "ON",
+           "SET DATASESSION resumable session-local state");
+    const auto rejected_source = dir / "resumable_rejected.prg";
+    write_text(rejected_source,
+        "SET DATASESSION TO 1\nnResumedError = 0\nTRY\n"
+        "SET DATASESSION TO rejected_session()\n"
+        "CATCH TO oEx\nnResumedError = oEx.ErrorNo\nENDTRY\n"
+        "nRejectedSession = VAL(TRANSFORM(SET('DATASESSION')))\n"
+        "cRejectedDeleted = SET('DELETED')\nSET DATASESSION TO 1\nRETURN\n"
+        "FUNCTION rejected_session\nSET DATASESSION TO 2\nSET DELETED ON\nRETURN 0\nENDFUNC\n");
+    auto rejected_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(rejected_source.string(), dir.string(), false));
+    const auto rejected_state = rejected_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(rejected_state.completed, "SET DATASESSION rejected resumable operand completes catch");
+    for (const auto& [key, expected] : std::vector<std::pair<std::string, std::string>>{
+             {"nresumederror", "1540"}, {"nrejectedsession", "2"}, {"crejecteddeleted", "ON"}}) {
+        const auto found = rejected_state.globals.find(key);
+        expect(found != rejected_state.globals.end() && copperfin::runtime::format_value(found->second) == expected,
+               "SET DATASESSION resumable rejection preserves post-expression state " + key);
+    }
+    // Numeric error text is catalog-backed in every shipped locale, with the
+    // same catchable code and unchanged session. Native error wording is not claimed.
+    {
+        ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+        const std::vector<std::pair<std::string, std::string>> locales{
+            {"en-US", "SET DATASESSION TO requires a positive, representable session identifier."},
+            {"es-419", "SET DATASESSION TO requiere un identificador de sesión positivo y representable."},
+            {"pt-BR", "SET DATASESSION TO requer um identificador de sessão positivo e representável."},
+            {"qps-ploc", "[!! SET DATASESSION TO řëqüïřëš å þøšïţïṽë, řëþřëšëñţåƀľë šëššïøñ ïðëñţïƒïëř. !!]"},
+        };
+        for (const auto& [locale, expected] : locales) {
+            set_env_value("COPPERFIN_LOCALE", locale, true);
+            const auto path = dir / "localized.prg";
+            write_text(path, "SET DATASESSION TO 2\nTRY\nSET DATASESSION TO 1E300\n"
+                             "CATCH TO oEx\nnLocalizedError = oEx.ErrorNo\ncLocalizedMessage = oEx.Message\nENDTRY\n"
+                             "nRetainedSession = VAL(TRANSFORM(SET('DATASESSION')))\nRETURN\n");
+            auto localized_session = copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(path.string(), dir.string(), false));
+            const auto result = localized_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(result.completed, "SET DATASESSION localized catch " + locale);
+            const auto message = result.globals.find("clocalizedmessage");
+            const auto error = result.globals.find("nlocalizederror");
+            const auto retained = result.globals.find("nretainedsession");
+            expect(message != result.globals.end() && copperfin::runtime::format_value(message->second) == expected,
+                   "SET DATASESSION translated diagnostic " + locale);
+            expect(error != result.globals.end() && copperfin::runtime::format_value(error->second) == "1540",
+                   "SET DATASESSION localized code " + locale);
+            expect(retained != result.globals.end() && copperfin::runtime::format_value(retained->second) == "2",
+                   "SET DATASESSION localized failure atomicity " + locale);
+        }
     }
     fs::remove_all(dir, ignored);
 }
@@ -2713,6 +2945,8 @@ int main() {
     test_sql_property_handle_direct_numeric_boundaries("SQLDISCONNECT", copperfin::runtime::checked_sqldisconnect_handle_argument);
     test_numeric_behavior_script_rows();
     test_sqldisconnect_numeric_behavior_script_rows();
+    test_datasession_selector_direct_numeric_boundaries();
+    test_datasession_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";

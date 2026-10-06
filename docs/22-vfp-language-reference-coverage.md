@@ -1,5 +1,23 @@
 # VFP Language Reference Coverage
 
+- SET DATASESSION TO Numeric/exact-integer selector conversion
+  (2026-10-06, #5611/#6776): default COPPERFIN admits finite positive signed-int32
+  selectors after truncation; explicit VFP9 applies signed-low-32 conversion
+  before the positive domain. Conversion rejection raises localized catchable
+  1540 before changing the active session, creating session state or emitting
+  success. Exact integers avoid double rounding; NaN rejects both modes as
+  derived safety policy. The complete 61-command native fixture/README in
+  `tests/fixtures/vfp9-set-datasession-numeric-observation/` recovers fractions,
+  both-sign aliases and error/state preservation in live sessions 1/2.
+  Other positive IDs are derived checked-domain policy, not native evidence
+  of session existence. Existing missing-session creation and other operand
+  type/coercion parity remain separate (#7003, reported against exact main
+  667b6fd619 without implementation admission). Non-Numeric conversions retain
+  checked rounding and minimum-1 clamping without native type-parity claims.
+  Normal/sanitizer tests cover selectors, session-local settings, resumable
+  operands, catchability, successful-event suppression and all shipped locales.
+  No argument-sized allocation/loop, persistent table, VM or backend is added.
+
 - SQLDISCONNECT first-argument Numeric/exact-integer handle conversion
   (2026-10-06, #5611/#6776): default COPPERFIN checks finite signed-int32
   admission after truncation; explicit VFP9 additionally preserves negative

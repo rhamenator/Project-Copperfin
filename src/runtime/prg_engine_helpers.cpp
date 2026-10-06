@@ -1494,6 +1494,26 @@ std::optional<std::int32_t> checked_sqldisconnect_handle_argument(
     return checked_sqlgetprop_handle_argument(value, behavior);
 }
 
+// RQ-CF-PRG-SET-DATASESSION-NUMERIC-001 (#5611/#6776). Installed VFP9
+// sessions 1/2 recover fractional truncation and both-sign low-32 aliases.
+// Exact integers/NaN and other positive IDs follow derived safety policy.
+std::optional<std::int32_t> checked_datasession_selector_argument(
+    const PrgValue& value,
+    const NumericBehavior behavior) {
+    const bool numeric = value.kind == PrgValueKind::number || value.kind == PrgValueKind::int64 ||
+                         value.kind == PrgValueKind::uint64;
+    if (value.kind == PrgValueKind::number && std::isnan(value.number_value)) {
+        return std::nullopt;
+    }
+    const auto selector = checked_afont_size_argument(
+        value, numeric ? behavior : NumericBehavior::copperfin);
+    if (!selector.has_value() || (numeric && *selector < 1)) {
+        return std::nullopt;
+    }
+    // Preserve existing non-Numeric coercions without claiming native type parity.
+    return std::max<std::int32_t>(1, *selector);
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {
