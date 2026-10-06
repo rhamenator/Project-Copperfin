@@ -155,6 +155,12 @@ std::optional<std::int32_t> checked_adir_display_argument(const PrgValue& value,
 // aliases and shared-model indefinite zero. Other coercions keep checked int32
 // half-away rounding. Missing result means error 11 before font/array work.
 std::optional<std::int32_t> checked_afont_size_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-FIELD-INDEX-NUMERIC-001: Numeric/exact integers truncate with
+// checked signed-int64 and size_t admission in COPPERFIN, clamping negatives
+// to the existing empty-field index zero. VFP9 keeps negative low-32-bit
+// aliases but positive oversized indices stay empty. Other coercions keep
+// checked half-away rounding; NaN is rejected. Missing result means error 11.
+std::optional<std::size_t> checked_field_index_argument(const PrgValue& value, NumericBehavior behavior);
 // #6050: integer arguments crossing a DECLARE boundary. Ordinary VFP9
 // INTEGER/LONG parameters receive the low 32 bits after truncation toward
 // zero. Exact int64/uint64 values keep their low bits without a floating round

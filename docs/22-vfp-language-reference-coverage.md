@@ -1,5 +1,22 @@
 # VFP Language Reference Coverage
 
+- `FIELD()` first-argument Numeric/exact-integer index conversion (2026-10-06,
+  #5611/#6776): default COPPERFIN truncates finite values behind signed-int64
+  and positive size_t admission, clamping admitted negatives to empty lookup.
+  Explicit VFP9 preserves negative signed-low-32 aliases but original positive
+  values above INT32_MAX stay empty. Invalid conversion raises localized
+  catchable error 11 before lookup; exact integers avoid double rounding.
+  NaN rejection, exact extended integers and huge/infinite exact conversion
+  are derived safety policy, not independently distinguished native values.
+  The complete 58-call installed VFP9 fixture in
+  `tests/fixtures/vfp9-field-index-numeric-observation/` distinguishes
+  fractions and negative aliases from positive oversized empty output; the
+  README records direct/PRG, normal and sanitizer verification.
+  Other coercions retain checked rounding; lookup, work-area/alias routing,
+  cursor/session state, omitted arguments and third flags are unchanged.
+  Separate arity/type differences (#6987) and cursor allocation (#6988) remain
+  gaps, not admitted fixes or full FIELD parity claims.
+
 - `AFONT()` third-argument Numeric/exact-integer size conversion (2026-10-05,
   #5611/#6776): default COPPERFIN admits finite values truncating to signed
   int32, including negative sizes; explicit VFP9 retains the shared low-32-bit

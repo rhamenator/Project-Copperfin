@@ -1,0 +1,3 @@
+- 2026-10-05: Record merged AFONT PR #6983 and cleanup, then implement the bounded FIELD() Numeric-index continuation under #5611/#6776 with checked signed-int64/size_t admission, fractional truncation and operation-specific VFP9 negative aliases/positive empty indices.
+  Retain two identical installed-VFP9 cursor-only recovery runs, independent boundary/PRG regressions and bidirectional requirement documentation; separate FIELD arity/type and CREATE CURSOR allocation gaps remain #6987/#6988 without production scope expansion.
+  The corrected old dispatch fails 41 assertions; four focused suites pass normally and with ASan/UBSan/float-cast-overflow, with no sanitizer diagnostics.
