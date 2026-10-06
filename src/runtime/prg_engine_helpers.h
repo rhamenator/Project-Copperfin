@@ -188,6 +188,10 @@ std::optional<std::int32_t> checked_datasession_selector_argument(const PrgValue
 // 0..18. Explicit VFP9 keeps low-32 aliases and indefinite zero; other existing
 // coercions preserve checked rounding/clamping. Missing means error 10.
 std::optional<std::int32_t> checked_set_decimals_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-SET-FDOW-NUMERIC-001: Numeric/exact integers truncate to
+// 1..7. Explicit VFP9 keeps negative-only low-32 aliases; missing means 46.
+// Other existing coercions preserve checked rounding/clamping/fallback to 1.
+std::optional<std::int32_t> checked_set_fdow_argument(const PrgValue& value, NumericBehavior behavior);
 // #6050: integer arguments crossing a DECLARE boundary. Ordinary VFP9
 // INTEGER/LONG parameters receive the low 32 bits after truncation toward
 // zero. Exact int64/uint64 values keep their low bits without a floating round

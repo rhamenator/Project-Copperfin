@@ -132,6 +132,60 @@ const std::vector<SqlGetPropHandleCase> kSqlGetPropHandleCases{
     {"-65536", -65536, -65536, -65536},
 };
 
+// RQ-CF-PRG-SET-FDOW-NUMERIC-001: independent installed-VFP9 Numeric
+// observations. Exact integers and NaN follow the parent safety policy.
+struct SetFdowCase {
+    const char* argument;
+    double value;
+    std::optional<std::int32_t> copperfin;
+    std::optional<std::int32_t> vfp9;
+};
+const std::vector<SetFdowCase> kSetFdowCases{
+    {"0", 0, std::nullopt, std::nullopt},
+    {"1", 1, 1, 1},
+    {"2", 2, 2, 2},
+    {"7", 7, 7, 7},
+    {"8", 8, std::nullopt, std::nullopt},
+    {"-1", -1, std::nullopt, std::nullopt},
+    {"0.49", 0.49, std::nullopt, std::nullopt},
+    {"0.5", 0.5, std::nullopt, std::nullopt},
+    {"0.9", 0.9, std::nullopt, std::nullopt},
+    {"1.49", 1.49, 1, 1},
+    {"1.5", 1.5, 1, 1},
+    {"1.9", 1.9, 1, 1},
+    {"6.9", 6.9, 6, 6},
+    {"7.9", 7.9, 7, 7},
+    {"8.1", 8.1, std::nullopt, std::nullopt},
+    {"-0.49", -0.49, std::nullopt, std::nullopt},
+    {"-0.5", -0.5, std::nullopt, std::nullopt},
+    {"-0.9", -0.9, std::nullopt, std::nullopt},
+    {"-1.1", -1.1, std::nullopt, std::nullopt},
+    {"2147483647", 2147483647, std::nullopt, std::nullopt},
+    {"2147483648", 2147483648, std::nullopt, std::nullopt},
+    {"-2147483648", -2147483648, std::nullopt, std::nullopt},
+    {"-2147483649", -2147483649, std::nullopt, std::nullopt},
+    {"4294967295", 4294967295, std::nullopt, std::nullopt},
+    {"4294967296", 4294967296, std::nullopt, std::nullopt},
+    {"4294967297", 4294967297, std::nullopt, std::nullopt},
+    {"4294967303", 4294967303, std::nullopt, std::nullopt},
+    {"-4294967296", -4294967296, std::nullopt, std::nullopt},
+    {"-4294967295", -4294967295, std::nullopt, 1},
+    {"-4294967289", -4294967289, std::nullopt, 7},
+    {"4294967296.9", 4294967296.9, std::nullopt, std::nullopt},
+    {"-4294967295.9", -4294967295.9, std::nullopt, 1},
+    {"1E20", 1E20, std::nullopt, std::nullopt},
+    {"-1E20", -1E20, std::nullopt, std::nullopt},
+    {"1E300", 1E300, std::nullopt, std::nullopt},
+    {"-1E300", -1E300, std::nullopt, std::nullopt},
+    {"9007199254740992", 9007199254740992, std::nullopt, std::nullopt},
+    {"-9007199254740992", -9007199254740992, std::nullopt, std::nullopt},
+    {"9223372036854774784", 9223372036854774784, std::nullopt, std::nullopt},
+    {"9223372036854775808", 9223372036854775808.0, std::nullopt, std::nullopt},
+    {"-9223372036854775808", -9223372036854775808.0, std::nullopt, std::nullopt},
+    {"(1E300 * 1E300)", std::numeric_limits<double>::infinity(), std::nullopt, std::nullopt},
+    {"(-1E300 * 1E300)", -std::numeric_limits<double>::infinity(), std::nullopt, std::nullopt},
+};
+
 // RQ-CF-PRG-SET-DECIMALS-NUMERIC-001: independent 43-Numeric native
 // table; exact extended integers/NaN use documented derived safety policy.
 struct SetDecimalsCase {
@@ -1834,6 +1888,142 @@ void test_set_decimals_numeric_behavior_script_rows() {
     fs::remove_all(dir, ignored);
 }
 
+// RQ-CF-PRG-SET-FDOW-NUMERIC-001: conversion and failure-atomic setting.
+void test_set_fdow_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    struct Extended {
+        PrgValue value;
+        std::optional<std::int32_t> copperfin;
+        std::optional<std::int32_t> vfp9;
+    };
+    const std::vector<Extended> extended{
+        {make_number_value(std::nextafter(1.0, 0.0)), std::nullopt, std::nullopt},
+        {make_number_value(std::nextafter(1.0, 2.0)), 1, 1},
+        {make_number_value(std::nextafter(8.0, 0.0)), 7, 7},
+        {make_number_value(std::nextafter(8.0, 9.0)), std::nullopt, std::nullopt},
+        {make_number_value(std::nextafter(-4294967295.0, -1E20)), std::nullopt, 1},
+        {make_number_value(std::nextafter(-4294967295.0, 0.0)), std::nullopt, 2},
+        {make_number_value(std::numeric_limits<double>::quiet_NaN()), std::nullopt, std::nullopt},
+        {make_int64_value(0), std::nullopt, std::nullopt},
+        {make_int64_value(1), 1, 1},
+        {make_int64_value(7), 7, 7},
+        {make_int64_value(8), std::nullopt, std::nullopt},
+        {make_int64_value(-1), std::nullopt, std::nullopt},
+        {make_int64_value(4294967297LL), std::nullopt, std::nullopt},
+        {make_int64_value(-4294967295LL), std::nullopt, 1},
+        {make_int64_value(-4294967289LL), std::nullopt, 7},
+        {make_int64_value(-9007199254740991LL), std::nullopt, 1},
+        {make_int64_value(INT64_MIN), std::nullopt, std::nullopt},
+        {make_int64_value(INT64_MAX), std::nullopt, std::nullopt},
+        {make_uint64_value(1), 1, 1},
+        {make_uint64_value(7), 7, 7},
+        {make_uint64_value(9007199254740993ULL), std::nullopt, std::nullopt},
+        {make_uint64_value(UINT64_MAX), std::nullopt, std::nullopt},
+        {make_currency_value(5000), 1, 1},
+        {make_currency_value(15000), 2, 2},
+        {make_boolean_value(true), 1, 1},
+        {make_boolean_value(false), 1, 1},
+        {make_null_value(), 1, 1},
+        {make_string_value("2"), 2, 2},
+        {make_string_value("abc"), 1, 1},
+    };
+    for (const auto mode : {NumericBehavior::copperfin, NumericBehavior::vfp9}) {
+        for (const auto& row : kSetFdowCases) {
+            expect(checked_set_fdow_argument(make_number_value(row.value), mode) ==
+                   (mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin),
+                   std::string("SET FDOW direct Numeric ") + row.argument);
+        }
+        for (std::size_t index = 0; index < extended.size(); ++index) {
+            const auto& row = extended[index];
+            expect(checked_set_fdow_argument(row.value, mode) ==
+                   (mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin),
+                   "SET FDOW direct extended/coercion " + std::to_string(index));
+        }
+    }
+}
+
+void test_set_fdow_numeric_behavior_script_rows() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_set_fdow_numeric_behavior";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    const auto check = [&](const char* mode, const std::string& argument,
+                           const std::optional<std::int32_t> fdow) {
+        const std::string script = std::string("SET NUMERICBEHAVIOR TO ") + mode +
+            "\nSET FDOW TO 5\nnFdowError = 0\nTRY\nSET FDOW TO " + argument +
+            "\nCATCH TO oEx\nnFdowError = oEx.ErrorNo\nENDTRY\n"
+            "nAfterFdow = VAL(TRANSFORM(SET('FDOW')))\n"
+            "nSelectedDay = DOW({^2026-10-04}, 0)\n"
+            "SET NUMERICBEHAVIOR TO COPPERFIN\nSET FDOW TO\n"
+            "nResetFdow = VAL(TRANSFORM(SET('FDOW')))\n"
+            "cResetMode = SET('NUMERICBEHAVIOR')\nRETURN\n";
+        const fs::path path = dir / "row.prg";
+        write_text(path, script);
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(path.string(), dir.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        const std::string name = std::string("SET FDOW ") + mode + " [" + argument + "]";
+        const auto value = [&](const char* key) {
+            const auto found = state.globals.find(key);
+            return found == state.globals.end() ? "<missing>" : copperfin::runtime::format_value(found->second);
+        };
+        expect(state.completed, name + " completes: " + state.message);
+        expect(value("nfdowerror") == (fdow.has_value() ? "0" : "46"), name + " caught error");
+        expect(value("nafterfdow") == std::to_string(fdow.value_or(5)), name + " selected/preserved value");
+        expect(value("nselectedday") == std::to_string((1 - fdow.value_or(5) + 7) % 7 + 1),
+               name + " DOW consumes selected setting");
+        expect(value("nresetfdow") == "1", name + " omitted operand reset");
+        expect(value("cresetmode") == "COPPERFIN", name + " mode reset");
+        std::size_t successful = 0;
+        for (const auto& event : state.events) {
+            if (event.category == "runtime.set" && event.detail.rfind("FDOW", 0) == 0) {
+                ++successful;
+            }
+        }
+        expect(successful == (fdow.has_value() ? 3U : 2U), name + " no success event on rejection");
+    };
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        for (const auto& row : kSetFdowCases) {
+            const auto expected = std::string(mode) == "VFP9" ? row.vfp9 : row.copperfin;
+            check(mode, row.argument, expected);
+            check(mode, std::string("(") + row.argument + ")", expected);
+        }
+        for (const auto& [argument, expected] : std::vector<std::pair<std::string, std::int32_t>>{
+                 {"($0.5)", 1}, {"($1.5)", 2}, {"(.T.)", 1}, {"(.F.)", 1},
+                 {"(.NULL.)", 1}, {"('2')", 2}, {"('abc')", 1}, {"", 1}}) {
+            check(mode, argument, expected);
+        }
+    }
+    {
+        ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+        const std::vector<std::pair<std::string, std::string>> locales{
+            {"en-US", "SET FDOW TO requires a converted value from 1 through 7."},
+            {"es-419", "SET FDOW TO requiere un valor convertido de 1 a 7."},
+            {"pt-BR", "SET FDOW TO requer um valor convertido de 1 a 7."},
+            {"qps-ploc", "[!! SET FDOW TO řëqüïřëš å çøñṽëřţëð ṽåľüë ƒřøm 1 ţhřøüĝh 7. !!]"},
+        };
+        for (const auto& [locale, expected] : locales) {
+            set_env_value("COPPERFIN_LOCALE", locale, true);
+            const auto path = dir / "localized.prg";
+            write_text(path, "SET FDOW TO 5\nTRY\nSET FDOW TO (1E300)\n"
+                             "CATCH TO oEx\nnLocalizedError = oEx.ErrorNo\ncLocalizedMessage = oEx.Message\nENDTRY\n"
+                             "nRetainedFdow = VAL(TRANSFORM(SET('FDOW')))\nRETURN\n");
+            auto session = copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(path.string(), dir.string(), false));
+            const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(state.completed, "SET FDOW localized catch " + locale);
+            const auto value = [&](const char* key) {
+                const auto found = state.globals.find(key);
+                return found == state.globals.end() ? "<missing>" : copperfin::runtime::format_value(found->second);
+            };
+            expect(value("nlocalizederror") == "46", "SET FDOW localized code " + locale);
+            expect(value("clocalizedmessage") == expected, "SET FDOW translated diagnostic " + locale);
+            expect(value("nretainedfdow") == "5", "SET FDOW localized failure atomicity " + locale);
+        }
+    }
+    fs::remove_all(dir, ignored);
+}
+
 void test_numeric_behavior_script_rows() {
     const fs::path dir = fs::temp_directory_path() / "copperfin_numeric_behavior";
     std::error_code ignored;
@@ -3137,6 +3327,8 @@ int main() {
     test_datasession_numeric_behavior_script_rows();
     test_set_decimals_direct_numeric_boundaries();
     test_set_decimals_numeric_behavior_script_rows();
+    test_set_fdow_direct_numeric_boundaries();
+    test_set_fdow_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";

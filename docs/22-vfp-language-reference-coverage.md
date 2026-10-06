@@ -1,5 +1,18 @@
 # VFP Language Reference Coverage
 
+- SET FDOW TO Numeric/exact-integer conversion (2026-10-06, #5611/#6776):
+  truncate into 1..7 with checked default COPPERFIN rejection. Explicit VFP9
+  admits negative-only low-32 aliases; positive wrapping, zero and huge/infinite
+  indefinite zero reject. Localized catchable error 46 precedes mutation or a
+  success event; omission resets to 1. Exact integers avoid double rounding,
+  while NaN rejection is derived safety policy. The complete 53-line native
+  fixture and README under `tests/fixtures/vfp9-set-fdow-numeric-observation/`
+  plus direct/fresh two-mode/locale/DOW-consumer tests reverse-link to
+  RQ-CF-PRG-SET-FDOW-NUMERIC-001 in docs/32. Other coercions/evaluation fallback
+  remain preserved controls, not native type parity. FWEEK/EPOCH and evaluation
+  policy remain separate; other-type admission gap #7008 is against exact main.
+  No argument-sized allocation or backend/VM change is introduced.
+
 - SET DECIMALS TO Numeric/exact-integer conversion (2026-10-06, #5611/#6776):
   fractions truncate to 0..18; default COPPERFIN rejects non-finite/out-of-domain
   operands. Explicit VFP9 preserves both-sign signed-low-32 aliases and
