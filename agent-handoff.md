@@ -9,19 +9,19 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
-The most recent shipped slice is FIELD PR #6989, merged into main as
-`6716b18725c5881e0e40be3a0993fd659e28bef1` on 2026-10-06 at 01:16:20 UTC.
-All 11 required checks passed at signed head `4fd3f5dbc1`; exact-head Codex
+The most recent shipped slice is FSIZE PR #6992, merged into main as
+`e15a654ec03f85692e996042688bd28046c0db95` on 2026-10-06 at 02:16:19 UTC.
+All 11 required checks passed at signed head `ff696c001e`; exact-head Codex
 review was clean and there were no conversations. All completed optional
 checks passed; Windows MSVC was still running at merge. Main is synchronized,
-the worktree/local/remote branches are removed, and the 452 MB normal/866 MB
+the worktree/local/remote branches are removed, and the 484 MB normal/947 MB
 sanitizer builds are in recoverable trash. Unrelated files/worktrees remain.
-The active continuation is FSIZE first-argument Numeric/exact-integer admission
-on `fix/fsize-index-numeric-5611`, from this main revision. Native recovery
-rejects Numeric indices rather than inheriting FIELD's wrapping policy.
-Focused implementation and normal/sanitizer verification are complete;
-the current branch's PR and exact-head review/check gates remain the
-integration boundary. No VM is in use.
+The active continuation is SELECT() first-argument Numeric/exact-integer
+selector conversion on `fix/select-selector-numeric-5611`, from this main
+revision. Native recovery and normal/sanitizer verification are complete;
+the current branch's PR and exact-head review/check gates remain next.
+Query routing #6013 and non-Numeric
+admission #6994 stay separate. No VM is in use.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -410,49 +410,56 @@ float-cast-overflow passed 4/4 (34.02s) without diagnostics. Changelog,
 contributor-signoff and channel contracts passed 4/4 (3.96s), with 139 valid
 fragments. All required exact-head CI/review gates passed before merge;
 completed optional native, managed, security, sanitizer/fuzz/stress/migration
-and installer lanes passed. Windows MSVC was still running; investigate only
-if actionable. FIELD arity/type #6987 and cursor allocation #6988 remain
+and installer lanes passed. Windows MSVC subsequently passed; all 33 checks
+completed successfully. FIELD arity/type #6987 and cursor allocation #6988 remain
 separate unadmitted production work.
 
-FSIZE first-argument Numeric/exact-integer admission is the bounded next
-#5611/#6776 slice on `fix/fsize-index-numeric-5611`, from main
-`6716b18725c5881e0e40be3a0993fd659e28bef1`, in
-`/home/rich/.codex/worktrees/fsize-index-numeric-5611/Project-Copperfin`.
-Only its existing non-Character llround/size_t index site in
-`src/runtime/prg_engine_expression.inl` is selected. Character name lookup,
-alias/work-area routing, other coercions/arity, FIELD/SELECT, cursor allocation
-and SET COMPATIBLE/file-size behavior #6014 remain outside production scope.
-The complete 64-call installed VFP9 09.00.0000.7423 Wine fixture is retained in
-`tests/fixtures/vfp9-fsize-index-numeric-observation/`; two fresh replays match
-byte-for-byte. Every Numeric input raises 11, including ordinary field numbers,
-fractions, huge/infinite values and designator controls. Named field queries
-return actual widths (5/4/1 and routed 7/6), with unchanged selected CFPROBE.
-Do not apply FIELD's index wrapping model. Both modes must use the consistent
-native Numeric rejection; exact int64/uint64/NaN follow derived kind admission.
-The checked helper preserves other non-Character coercions via checked
-half-away rounding; Character lookup bypasses it unchanged.
-81 direct calls and 151 PRG rows cover admission/state/named-field preservation.
-Old dispatch fails 125 PRG assertions and the local/SQL Numeric error controls
-(127 total, 8.28s); preserved named-field and type/arity controls pass.
-Separate gap #6990 retains FSIZE omitted/Currency/Logical/NULL admission; it
-is not newly admitted or fixed here.
-Two incorrect old local/SQL schema tests now use actual Character names for
-the same width assertions and independently assert Numeric error 11.
-The test explicitly SELECTs 0 before its second cursor (#6988).
-Normal/sanitizer builds are
-`/home/rich/temp/copperfin-fsize-index-5611-build` and
-`/home/rich/temp/copperfin-fsize-index-5611-sanitize`. Run numeric, array,
-string/math, table-structure and SQL-cursor-mutation suites serially across
-directories. Fail-before is retained above; all five suites pass normally
+FSIZE first-argument Numeric/exact-integer admission completed in PR #6992.
+Its 64-call native fixture, 81 direct calls and 151 PRG rows remain retained
+with docs/22/docs/32 and completed README VR/DQ/DV/reproduction evidence.
+Old dispatch failed 127 assertions (8.28s); five suites passed normally
 (8.52s) and under ASan/UBSan/float-cast-overflow (38.95s), without diagnostics.
-All four documentation/signoff/channel contracts pass (4.57s), 140 changelog
-fragments validate and diff --check is clean. Completed README VR/DQ/DV
-results are retained. The current branch's PR requires exact-head clean
-review, all 11 required checks and verified conversation resolution before
-merge; recover the live PR by this branch name rather than stale check states.
-docs/32, docs/22 and the fixture README map only the selected requirement.
-No VM, persistent table or system change was needed; no owner input is needed.
-Re-read the live channel before selecting any further work.
+All four documentation/signoff/channel contracts passed (4.57s), with 140
+valid fragments. All 11 required exact-head checks passed and Codex review was
+clean with no conversations before merge. All completed optional checks
+passed; Windows MSVC was still running at merge. Branches, worktree and builds
+are cleaned as recorded above. Other type/arity #6990 and SET COMPATIBLE/file
+semantics #6014 remain separate. No VM or persistent/system changes were used.
+
+SELECT() first-argument Numeric/exact-integer conversion is selected under
+#5611/#6776 on `fix/select-selector-numeric-5611`, from main
+`e15a654ec03f85692e996042688bd28046c0db95`, in
+`/home/rich/.codex/worktrees/select-selector-numeric-5611/Project-Copperfin`.
+Only the existing SELECT() llround/int site in prg_engine_expression.inl is
+selected. Command SELECT, current/unused query routing and COMPATIBLE behavior
+(#6013), aliases, data-session state and non-Numeric admission remain separate.
+The complete 60-call installed VFP9 09.00.0000.7423 Wine fixture in
+`tests/fixtures/vfp9-select-selector-numeric-observation/` matches across two
+fresh processes. Numeric fractions truncate; converted values outside
+0..32767 raise 17; explicit VFP9 keeps low-32 aliases and huge/infinite zero.
+Exact integers and NaN are derived safety boundaries, not native extensions.
+Other coercions retain checked half-away rounding without native type parity.
+164 direct calls and 126 PRG rows isolate conversion with canonical SELECT
+controls; they do not assert the incorrect current/unused query outputs as
+native parity. Test cursors use explicit areas 1/2 to isolate #6988.
+The original SELECT dispatch fails 68 semantic assertions with corrected
+Logical-output formatting (numeric 6.08s, four-suite baseline 35.01s).
+All 164 direct helper calls and non-Numeric/alias/state controls pass.
+An earlier formatting-confounded run is excluded from conversion evidence.
+The expression now uses the checked helper; a local callback-name compile
+error was corrected. Native Currency/Logical/NULL admission differences are
+filed separately as #6994 against exact main e15a654ec03f85692e996042688bd28046c0db95;
+they do not expand this slice. Normal/sanitizer builds are
+`/home/rich/temp/copperfin-select-selector-5611-build` and
+`/home/rich/temp/copperfin-select-selector-5611-sanitize`; run numeric, array,
+string/math and work-area suites serially across directories. Normal suites
+pass 4/4 (35.55s; numeric 6.15s); sanitizer suites pass 4/4 (137.19s; numeric
+27.08s), without diagnostics. Four contracts pass (3.91s), 141 fragments
+validate and diff --check/fixture identities pass. Completed README VR/DQ/DV
+and docs/22/docs/32 traceability are retained. Next: signed push/PR, exact-head
+review and all 11 required checks with resolved conversations before merge.
+Recover the live PR by this branch name rather than stale check snapshots.
+No owner input is needed. Re-read the live channel before further selection.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
@@ -574,7 +581,9 @@ Owner-directed workstream order before the #6879 assignment was:
      conversion (PR #6983).
    - Completed after those: FIELD Numeric/exact-integer first-argument index
      conversion (PR #6989).
-   - Active: FSIZE Numeric/exact-integer first-argument admission only.
+   - Completed after those: FSIZE Numeric/exact-integer first-argument
+     admission (PR #6992).
+   - Active: SELECT() Numeric/exact-integer first-argument selector conversion.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`
