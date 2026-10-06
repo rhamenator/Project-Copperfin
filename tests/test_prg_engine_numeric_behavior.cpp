@@ -78,6 +78,62 @@ struct Row {
     std::string expected;    // "C:<text>" or "ERR<number>"
 };
 
+// RQ-CF-PRG-SELECT-SELECTOR-NUMERIC-001: independent conversion table
+// anchored by the retained 50 Numeric native calls; -1 means error 17.
+struct SelectSelectorCase { const char* argument; double value; int copperfin; int vfp9; };
+const std::vector<SelectSelectorCase> kSelectSelectorCases{
+    {"0", 0, 0, 0},
+    {"1", 1, 1, 1},
+    {"2", 2, 2, 2},
+    {"3", 3, 3, 3},
+    {"4", 4, 4, 4},
+    {"-1", -1, -1, -1},
+    {"0.49", 0.49, 0, 0},
+    {"0.5", 0.5, 0, 0},
+    {"0.9", 0.9, 0, 0},
+    {"1.49", 1.49, 1, 1},
+    {"1.5", 1.5, 1, 1},
+    {"1.9", 1.9, 1, 1},
+    {"2.49", 2.49, 2, 2},
+    {"2.5", 2.5, 2, 2},
+    {"2.9", 2.9, 2, 2},
+    {"3.9", 3.9, 3, 3},
+    {"-0.49", -0.49, 0, 0},
+    {"-0.5", -0.5, 0, 0},
+    {"-0.9", -0.9, 0, 0},
+    {"-1.1", -1.1, -1, -1},
+    {"2147483647", 2147483647, -1, -1},
+    {"2147483648", 2147483648, -1, -1},
+    {"-2147483648", -2147483648, -1, -1},
+    {"-2147483649", -2147483649, -1, -1},
+    {"4294967295", 4294967295, -1, -1},
+    {"4294967296", 4294967296, -1, 0},
+    {"4294967297", 4294967297, -1, 1},
+    {"4294967298", 4294967298, -1, 2},
+    {"4294967299", 4294967299, -1, 3},
+    {"4294967300", 4294967300, -1, 4},
+    {"-4294967296", -4294967296, -1, 0},
+    {"-4294967295", -4294967295, -1, 1},
+    {"-4294967294", -4294967294, -1, 2},
+    {"-4294967293", -4294967293, -1, 3},
+    {"4294967298.9", 4294967298.9, -1, 2},
+    {"-4294967294.9", -4294967294.9, -1, 2},
+    {"1E20", 1E20, -1, 0},
+    {"-1E20", -1E20, -1, 0},
+    {"1E300", 1E300, -1, 0},
+    {"-1E300", -1E300, -1, 0},
+    {"EXP(1000)", std::numeric_limits<double>::infinity(), -1, 0},
+    {"-EXP(1000)", -std::numeric_limits<double>::infinity(), -1, 0},
+    {"9007199254740992", 9007199254740992, -1, 0},
+    {"32767", 32767, 32767, 32767},
+    {"32768", 32768, -1, -1},
+    {"65535", 65535, -1, -1},
+    {"65536", 65536, -1, -1},
+    {"65537", 65537, -1, -1},
+    {"-65535", -65535, -1, -1},
+    {"-65536", -65536, -1, -1},
+};
+
 // RQ-CF-PRG-FIELD-INDEX-NUMERIC-001: independent expectations from the
 // retained three-field VFP9 fixture. COPPERFIN signed-int64 admission and
 // exact converted indices outside the observed field set are derived policy.
@@ -1104,6 +1160,37 @@ std::vector<Row> build_rows() {
     }
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN\nSELECT cfsizeprobe", "FSIZE(1)", "ERR11"});
     rows.push_back({"USE IN cfsizeother\nUSE IN cfsizeprobe", "FSIZE('ALPHA')", "N:0"});
+    // RQ-CF-PRG-SELECT-SELECTOR-NUMERIC-001: canonical comparisons isolate
+    // numeric conversion from the known current/unused query routing gap #6013.
+    rows.push_back({"SELECT 1\nCREATE CURSOR cfselectprobe (ALPHA C(5))\nSELECT 2\n"
+                    "CREATE CURSOR cfselectother (BRAVO N(4))\nSELECT cfselectprobe",
+                    "UPPER(ALIAS())", "C:CFSELECTPROBE"});
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode + "\nSELECT cfselectprobe";
+        for (const auto& row : kSelectSelectorCases) {
+            const int selector = std::string(mode) == "VFP9" ? row.vfp9 : row.copperfin;
+            const std::string expression = "SELECT(" + std::string(row.argument) + ")";
+            rows.push_back({set, selector < 0 ? expression : expression + " = SELECT(" + std::to_string(selector) + ")",
+                            selector < 0 ? "ERR17" : "L:true"});
+        }
+        for (const char* argument : {"-1", "32768", "2147483647"}) {
+            rows.push_back({set + "\nLOCAL nError\nnError = 0\nTRY\nx = SELECT(" + argument +
+                            ")\nCATCH TO oEx\nnError = oEx.ErrorNo\nENDTRY",
+                            "ALLTRIM(STR(nError)) + ':' + UPPER(ALIAS()) + ':' + ALLTRIM(STR(FCOUNT()))",
+                            "C:17:CFSELECTPROBE:1"});
+        }
+        rows.push_back({set, "SELECT('cfselectprobe') = SELECT()", "L:true"});
+        rows.push_back({set, "SELECT('cfselectother')", "N:2"});
+        rows.push_back({set, "SELECT('missing')", "N:0"});
+        rows.push_back({set, "SELECT(.T.) = SELECT(1)", "L:true"});
+        rows.push_back({set, "SELECT(.F.) = SELECT(0)", "L:true"});
+        rows.push_back({set, "SELECT(.NULL.) = SELECT(0)", "L:true"});
+        rows.push_back({set, "SELECT($0.5) = SELECT(1)", "L:true"});
+        rows.push_back({set, "SELECT($1.5) = SELECT(2)", "L:true"});
+        rows.push_back({set, "UPPER(ALIAS())", "C:CFSELECTPROBE"});
+    }
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN\nUSE IN cfselectother\nUSE IN cfselectprobe",
+                    "SELECT('cfselectprobe')", "N:0"});
     return rows;
 }
 
@@ -2293,6 +2380,61 @@ void test_fsize_index_direct_numeric_boundaries() {
     }
 }
 
+// RQ-CF-PRG-SELECT-SELECTOR-NUMERIC-001: independent native-domain
+// table plus derived exact-integer/NaN/adjacent-double boundaries.
+void test_select_selector_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    for (const auto mode : {NumericBehavior::copperfin, NumericBehavior::vfp9}) {
+        for (const auto& row : kSelectSelectorCases) {
+            const int raw = mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin;
+            const std::optional<std::int32_t> expected = raw < 0 ? std::nullopt : std::optional<std::int32_t>(raw);
+            expect(checked_select_selector_argument(make_number_value(row.value), mode) == expected,
+                   "SELECT direct native boundary " + std::string(row.argument));
+        }
+        struct Case { PrgValue value; int copperfin; int vfp9; };
+        const std::vector<Case> boundaries{
+            {make_number_value(std::numeric_limits<double>::quiet_NaN()), -1, -1},
+            {make_number_value(std::nextafter(32768.0, 0.0)), 32767, 32767},
+            {make_number_value(32768.0), -1, -1},
+            {make_number_value(std::nextafter(-1.0, 0.0)), 0, 0},
+            {make_number_value(-1.0), -1, -1},
+            {make_number_value(9223372036854775808.0), -1, 0},
+            {make_int64_value(INT64_MIN), -1, 0},
+            {make_int64_value(INT64_MIN + 1), -1, 1},
+            {make_int64_value(-INT64_C(9007199254740993)), -1, -1},
+            {make_int64_value(-INT64_C(4294967295)), -1, 1},
+            {make_int64_value(INT64_C(0)), 0, 0},
+            {make_int64_value(INT64_C(32767)), 32767, 32767},
+            {make_int64_value(INT64_C(32768)), -1, -1},
+            {make_int64_value(INT64_C(4294967297)), -1, 1},
+            {make_int64_value(INT64_C(9007199254740993)), -1, 1},
+            {make_int64_value(INT64_MAX), -1, -1},
+            {make_uint64_value(UINT64_C(0)), 0, 0},
+            {make_uint64_value(UINT64_C(32767)), 32767, 32767},
+            {make_uint64_value(UINT64_C(32768)), -1, -1},
+            {make_uint64_value(UINT64_C(4294967297)), -1, 1},
+            {make_uint64_value(UINT64_C(9007199254740993)), -1, 1},
+            {make_uint64_value(UINT64_C(9223372036854775808)), -1, 0},
+            {make_uint64_value(UINT64_MAX), -1, -1},
+            {make_boolean_value(true), 1, 1},
+            {make_boolean_value(false), 0, 0},
+            {make_null_value(), 0, 0}, {make_empty_value(), 0, 0},
+            {make_currency_value(5000), 1, 1},
+            {make_currency_value(15000), 2, 2},
+            {make_currency_value(-15000), -2, -2},
+            {make_currency_value(INT64_MIN), -1, -1},
+            {make_currency_value(INT64_MAX), -1, -1}};
+        for (std::size_t index = 0; index < boundaries.size(); ++index) {
+            const auto& row = boundaries[index];
+            const int raw = mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin;
+            // -2 is a preserved non-Numeric rounded value, not rejection.
+            const std::optional<std::int32_t> expected = raw == -1 ? std::nullopt : std::optional<std::int32_t>(raw);
+            expect(checked_select_selector_argument(row.value, mode) == expected,
+                   "SELECT direct extended boundary " + std::to_string(index));
+        }
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -2312,6 +2454,7 @@ int main() {
     test_afont_size_direct_numeric_boundaries();
     test_field_index_direct_numeric_boundaries();
     test_fsize_index_direct_numeric_boundaries();
+    test_select_selector_direct_numeric_boundaries();
     test_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {

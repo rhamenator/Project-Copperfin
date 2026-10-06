@@ -1628,7 +1628,14 @@
                     {
                         return make_number_value(static_cast<double>(resolve_work_area_callback_(value_as_string(arguments[0]))));
                     }
-                    const int requested = static_cast<int>(std::llround(value_as_number(arguments[0])));
+                    // RQ-CF-PRG-SELECT-SELECTOR-NUMERIC-001: reject before
+                    // existing query routing, which remains separate (#6013).
+                    const auto converted = checked_select_selector_argument(arguments[0], numeric_behavior(set_callback_));
+                    if (!converted.has_value())
+                    {
+                        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 17);
+                    }
+                    const int requested = *converted;
                     return make_number_value(static_cast<double>(requested == 0 ? next_free_work_area_callback_() : resolve_work_area_callback_(std::to_string(requested))));
                 }
                 if (function == "alias")

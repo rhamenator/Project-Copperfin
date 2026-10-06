@@ -1445,6 +1445,23 @@ std::optional<std::size_t> checked_fsize_index_argument(const PrgValue& value) {
     return checked_field_index_argument(value, NumericBehavior::copperfin);
 }
 
+// RQ-CF-PRG-SELECT-SELECTOR-NUMERIC-001 (#5611/#6776); query routing
+// remains separate (#6013). No unchecked integral conversion reaches it.
+std::optional<std::int32_t> checked_select_selector_argument(
+    const PrgValue& value,
+    const NumericBehavior behavior) {
+    const bool numeric = value.kind == PrgValueKind::number || value.kind == PrgValueKind::int64 ||
+                         value.kind == PrgValueKind::uint64;
+    if (value.kind == PrgValueKind::number && std::isnan(value.number_value)) {
+        return std::nullopt; // derived safety boundary, not a native NaN claim
+    }
+    const auto selector = checked_afont_size_argument(value, behavior);
+    if (!selector.has_value() || (numeric && (*selector < 0 || *selector > 32767))) {
+        return std::nullopt;
+    }
+    return selector;
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {

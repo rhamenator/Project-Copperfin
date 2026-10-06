@@ -1,5 +1,20 @@
 # VFP Language Reference Coverage
 
+- SELECT() first-argument Numeric/exact-integer selector conversion
+  (2026-10-06, #5611/#6776): default COPPERFIN truncates finite values and
+  admits converted 0..32767; explicit VFP9 keeps signed-low-32 aliases and
+  huge/infinite zero before the same domain. Rejection raises catchable error
+  17 before query callbacks. Exact int64/uint64 avoid double rounding and NaN
+  rejects both modes as derived safety policy. The complete 60-call native
+  fixture and README in
+  `tests/fixtures/vfp9-select-selector-numeric-observation/` retain evidence,
+  boundaries, normal/sanitizer verification and recovery limits.
+  Existing other coercions retain checked half-away rounding. Command SELECT,
+  aliases/session state, omitted arguments and COMPATIBLE routing are unchanged.
+  Current/unused work-area query semantics remain #6013; canonical SELECT
+  comparisons verify conversion, not full native result parity. Currency and
+  Logical/NULL admission observations remain the separate gap #6994.
+
 - `FSIZE()` first-argument Numeric/exact-integer admission (2026-10-06,
   #5611/#6776): installed VFP9 rejects all Numeric inputs with error 11,
   including ordinary field numbers, fractions, huge values and infinities.

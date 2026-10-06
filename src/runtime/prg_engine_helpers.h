@@ -166,6 +166,10 @@ std::optional<std::size_t> checked_field_index_argument(const PrgValue& value, N
 // the same derived admission. Other existing non-Character coercions retain
 // checked half-away rounding. Missing result means catchable error 11.
 std::optional<std::size_t> checked_fsize_index_argument(const PrgValue& value);
+// RQ-CF-PRG-SELECT-SELECTOR-NUMERIC-001: truncate Numeric selectors,
+// admit 0..32767, and retain low-32 aliases only in explicit VFP9 mode.
+// Other coercions retain checked half-away rounding. Missing means error 17.
+std::optional<std::int32_t> checked_select_selector_argument(const PrgValue& value, NumericBehavior behavior);
 // #6050: integer arguments crossing a DECLARE boundary. Ordinary VFP9
 // INTEGER/LONG parameters receive the low 32 bits after truncation toward
 // zero. Exact int64/uint64 values keep their low bits without a floating round
