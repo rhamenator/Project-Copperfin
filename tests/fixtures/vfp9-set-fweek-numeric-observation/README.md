@@ -30,7 +30,11 @@ checked-conversion and hazard requirements, not native extended/NaN evidence.
 The operation-specific helper shares only the independently verified negative-
 only signed-int32 conversion model used by SQLGETPROP, not SQL semantics.
 
-Bare Numeric tokens enter Numeric conversion, not Character coercion;
+Bare Numeric tokens enter Numeric conversion, not Character coercion.
+Complete decimal literal syntax retains Numeric rejection when finite parsing
+overflows or totally underflows (such as 1E999 or 1E-999). This lexical/range
+policy derives from the selected domain/hazard contract, not additional native
+literal-range observations. Quoted and malformed text retain existing fallback;
 parenthesized operands retain their actual kind. Existing evaluation exceptions
 still fall back to 1; evaluation/resumption is not redesigned. Other ordinary
 Currency/logical/null/Character operands retain checked half-away rounding,
@@ -38,7 +42,8 @@ clamping/fallback to 1, not native type parity. Native controls instead raise
 10 while retaining 2; separate gap #7010 against exact main
 0b481f4eff562a56f27e2171e16da28b21eb4db9 is not admitted into this slice.
 EPOCH, other settings and date/week algorithms remain separate.
-There is no argument-sized allocation, loop or new backend.
+There is no operand-magnitude-sized allocation or loop, or new backend.
+The complete-literal check makes one linear source-text pass with constant state.
 
 ## Reproduction and identity
 
@@ -66,11 +71,11 @@ because this suite and neighboring numeric tests own shared temporary paths.
 
 ```sh
 cmake -S . -B /home/rich/temp/copperfin-set-fweek-5611-build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG='-O0 -g1'
-cmake --build /home/rich/temp/copperfin-set-fweek-5611-build --target test_prg_engine_numeric_behavior test_prg_engine_relations test_prg_engine_database_lifecycle test_prg_engine_date_time_functions test_localization -j4
-ctest --test-dir /home/rich/temp/copperfin-set-fweek-5611-build -R '^test_prg_engine_(numeric_behavior|relations|database_lifecycle|date_time_functions)$' --output-on-failure
+cmake --build /home/rich/temp/copperfin-set-fweek-5611-build --target test_prg_engine_numeric_behavior test_prg_engine_relations test_prg_engine_database_lifecycle test_prg_engine_date_time_functions test_prg_engine_runtime_surface_functions test_localization -j4
+ctest --test-dir /home/rich/temp/copperfin-set-fweek-5611-build -R '^test_prg_engine_(numeric_behavior|relations|database_lifecycle|date_time_functions|runtime_surface_functions)$' --output-on-failure
 cmake -S . -B /home/rich/temp/copperfin-set-fweek-5611-sanitize -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS_DEBUG='-O0 -g1 -fsanitize=address,undefined,float-cast-overflow -fno-omit-frame-pointer' -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address,undefined,float-cast-overflow'
-cmake --build /home/rich/temp/copperfin-set-fweek-5611-sanitize --target test_prg_engine_numeric_behavior test_prg_engine_relations test_prg_engine_database_lifecycle test_prg_engine_date_time_functions -j2
-ctest --test-dir /home/rich/temp/copperfin-set-fweek-5611-sanitize -R '^test_prg_engine_(numeric_behavior|relations|database_lifecycle|date_time_functions)$' --output-on-failure
+cmake --build /home/rich/temp/copperfin-set-fweek-5611-sanitize --target test_prg_engine_numeric_behavior test_prg_engine_relations test_prg_engine_database_lifecycle test_prg_engine_date_time_functions test_prg_engine_runtime_surface_functions -j2
+ctest --test-dir /home/rich/temp/copperfin-set-fweek-5611-sanitize -R '^test_prg_engine_(numeric_behavior|relations|database_lifecycle|date_time_functions|runtime_surface_functions)$' --output-on-failure
 ctest --test-dir /home/rich/temp/copperfin-set-fweek-5611-build -R '^test_(locale_catalog_install_contract|native_test_isolation_contract|localization|changelog_fragment_assembler|changelog_fragments_valid|contributor_signoff_contract|agent_channel_contract)$' --output-on-failure
 ```
 
@@ -108,15 +113,45 @@ Seven catalog/localization/isolation/signoff/changelog/channel contracts pass
 7/7 (19.36s), with 148 valid fragments. These setup results supplement rather
 than replace the production fail-before/pass-after evidence above.
 
+## Bare literal-range review correction
+
+Review comment 4194174679 identified a failed finite parse of a complete
+bare decimal Numeric token falling through to Character fallback 1. A FWEEK-
+local complete decimal syntax check now preserves Numeric rejection through
+the existing checked helper/error 46 before mutation/event publication.
+The internal NaN rejection sentinel is not a parsed value or native observation.
+No shared parser, other setter or expression-evaluation fallback is changed.
+
+VR-5611-SET-FWEEK-LITERAL-RANGE-001: 50 additional fresh runtime rows cover
+both signs, leading plus, exponent signs/case, leading/trailing decimal points,
+total overflow/underflow, representable subnormal and zero controls. Quoted
+out-of-range text, malformed numeric-like text and finite decimal controls
+preserve their earlier behavior. With tests retained but pre-review f48a79dc1
+dispatch unchanged, exactly 80 selected error/state/WEEK/event assertions fail
+in GCC (8.77s) and Clang sanitizers (37.07s), with no sanitizer diagnostics.
+Other existing/helper/control assertions pass. This supplements the 188
+original runtime cases (238 total); direct calls and four locale cases are
+unchanged. These are derived lexical/range safety cases, not native evidence.
+After the FWEEK-only classification correction, all five selected suites pass
+in GCC (15.61s; Numeric 8.74s; surface 5.55s) and Clang
+ASan/UBSan/float-cast-overflow (69.95s; Numeric 40.69s; surface 23.35s),
+without diagnostics. Runtime runs are serial. All seven catalog/localization/
+isolation/signoff/changelog/channel contracts pass 7/7 (19.66s), and all
+148 fragments and git diff checks pass. Native fixture hashes are unchanged.
+
 ## Documentation assurance
 
 DQ-5611-SET-FWEEK-CONVERSION-001 requires documented finite/domain admission,
+bare literal range-failure rejection and preserved malformed/quoted controls,
 negative-only compatibility, type/evaluation limits, serial reproduction,
 state/event failure atomicity, downstream setting use and rollback.
 DV-5611-SET-FWEEK-CONVERSION-001: maintainer-authorized agent self-review
 on 2026-10-06 checked source/output identity, independent expectations,
 rejection before mutation/event, four catalogs, walkthrough and completed
 automated evidence above. This is not independent-human review.
+The review-fix walkthrough additionally checks bare 1E999 and 1E-999 reject
+with 46 while retaining FWEEK 2, WEEK result 53 and no success event in both
+modes; quoted out-of-range/malformed controls still select fallback 1.
 
 Procedural delta: unchecked Numeric round/clamp is replaced for FWEEK only
 by checked truncation/domain rejection; explicit VFP9 keeps negative aliases.

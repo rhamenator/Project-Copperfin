@@ -64,10 +64,24 @@ sanitizers (23.22s), without diagnostics. Corrected setup plus Numeric/
 relations/database/date-time passes GCC 5/5 (15.26s) and sanitizers 5/5
 (66.03s) without diagnostics. Seven contracts pass 7/7 (19.36s), 148 fragments
 valid; retained README/matrix/changelog carry the correction.
-Next: push the signed/DCO setup-only follow-up, verify the exact pushed change,
-then await all 11 required exact-head checks and clean exact-head review with
-resolved conversations before merge. No VM/backend/system change or owner
-input is needed. EPOCH is next only after this slice ships and is cleaned.
+Setup-only signed follow-up f48a79dc1 is pushed and passed all 11 required
+checks. Its review conversation PRRT_kwDOR7wYLc6pa5dM (comment 4194174679)
+identified bare decimal overflow/underflow becoming Character fallback 1.
+Only FWEEK now classifies complete decimal syntax on failed finite parsing,
+preserving Numeric rejection via the checked helper/error 46 before mutation.
+Other setters/shared parsing/evaluation fallback remain unchanged.
+Fifty additional derived range/control rows (238 runtime cases total) cover
+both signs, plus/exponent/decimal syntax, overflow/underflow and preserved
+quoted/malformed/finite/subnormal/zero controls. Pre-review dispatch fails
+exactly 80 assertions in GCC (8.77s) and Clang sanitizers (37.07s), without
+diagnostics. Final five suites pass GCC 5/5 (15.61s) and Clang
+ASan/UBSan/float-cast-overflow 5/5 (69.95s), without diagnostics. Seven
+contracts pass 7/7 (19.66s); 148 fragments and unchanged native hashes validate.
+README/docs22/docs32/changelog retain derived-policy limits and evidence.
+Next: signed/DCO review-fix commit and push, verify exact change after push,
+then reply/resolve that conversation only when fully addressed. Await fresh
+11 required checks and exact-head review before merge/sync/cleanup. EPOCH is
+next only afterward. No VM/backend/system change or owner input is needed.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.

@@ -2178,6 +2178,20 @@ void test_set_fweek_numeric_behavior_script_rows() {
             check(mode, row.argument, expected);
             check(mode, std::string("(") + row.argument + ")", expected);
         }
+        // RQ-CF-PRG-SET-FWEEK-NUMERIC-001: derived lexical/range policy.
+        // Full decimal Numeric tokens retain Numeric rejection even if the
+        // finite parser overflows/underflows; quoted/malformed text stays a
+        // preserved Character fallback, not native type-parity evidence.
+        for (const char* argument : {"1E999", "-1E999", "+1E999", "1E+999",
+                                    "1e999", "1E-999", "-1E-999", "+1E-999",
+                                    ".1E999", "1.E-999", "1E-308", "0E999", "0E-999"}) {
+            check(mode, argument, std::nullopt);
+        }
+        for (const char* argument : {"1E", "1E+", "1EE999", "1E999junk",
+                                    "1.2.3", ".", "--1E999", "('1E999')",
+                                    "'1E-999'", "+1.9", ".19E1", "1.9e+0"}) {
+            check(mode, argument, 1);
+        }
         for (const auto& [argument, expected] : std::vector<std::pair<std::string, std::int32_t>>{
                  {"($0.5)", 1}, {"($1.5)", 2}, {"(.T.)", 1}, {"(.F.)", 1},
                  {"(.NULL.)", 1}, {"('2')", 2}, {"('abc')", 1}, {"", 1}}) {

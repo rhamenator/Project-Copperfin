@@ -6,7 +6,11 @@
   indefinite zero reject. Localized catchable error 46 precedes mutation or a
   success event; omission resets to 1. Exact integers avoid double rounding,
   while NaN rejection is derived safety policy. The complete 56-line native
-  fixture and README under `tests/fixtures/vfp9-set-fweek-numeric-observation/`
+  fixture remains unchanged; 50 derived lexical/range/control rows preserve
+  Numeric rejection for bare decimal parser overflow/underflow instead of
+  Character fallback (238 runtime cases total). Quoted/malformed controls and
+  expression-evaluation fallback are unchanged. The fixture and README under
+  `tests/fixtures/vfp9-set-fweek-numeric-observation/`
   plus direct/fresh two-mode/locale/WEEK-consumer tests reverse-link to
   RQ-CF-PRG-SET-FWEEK-NUMERIC-001 in docs/32. Other coercions/evaluation fallback
   remain preserved controls, not native type parity. EPOCH/other settings and

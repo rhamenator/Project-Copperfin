@@ -6,3 +6,5 @@
   other settings, evaluation and non-Numeric admission remain separate.
   Correct the runtime-surface setup to use valid FWEEK 3 instead of an
   obsolete out-of-range clamp; retain session/default/restoration assertions.
+  Keep complete bare decimal literals on the Numeric rejection path when
+  finite parsing overflows or underflows; preserve quoted/malformed fallback.
