@@ -54,9 +54,20 @@ VR/DQ/DV, native fixture hashes and docs/22/docs/32 retain boundary, consumer,
 walkthrough and rollback evidence.
 Builds remain at /home/rich/temp/copperfin-set-fweek-5611-build and
 /home/rich/temp/copperfin-set-fweek-5611-sanitize.
-Next: signed commit/push/PR, inspect all 11 required exact-head checks and
-review/conversations, address/verify any actionable finding, then merge only
-when gates pass. No VM/backend/system change or owner input needed.
+PR #7011 is open. Its initial signed head 2ea82582f passed all 11 required
+checks and clean exact-head Codex review with zero conversations. Broad
+Linux/macOS failed the runtime-surface setup's obsolete SET FWEEK TO 4 clamp.
+No production change is needed: use valid 3 and retain all session/default/
+restoration assertions; the Numeric suite separately verifies error 46 for 4.
+Unchanged setup reproduces 27 local failures in GCC (5.51s) and Clang
+sanitizers (23.22s), without diagnostics. Corrected setup plus Numeric/
+relations/database/date-time passes GCC 5/5 (15.26s) and sanitizers 5/5
+(66.03s) without diagnostics. Seven contracts pass 7/7 (19.36s), 148 fragments
+valid; retained README/matrix/changelog carry the correction.
+Next: push the signed/DCO setup-only follow-up, verify the exact pushed change,
+then await all 11 required exact-head checks and clean exact-head review with
+resolved conversations before merge. No VM/backend/system change or owner
+input is needed. EPOCH is next only after this slice ships and is cleaned.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.

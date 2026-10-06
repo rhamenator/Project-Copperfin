@@ -89,6 +89,25 @@ Fixture identity and git diff --check pass. Local evidence is not independent-
 human, installed-GUI, complete SET evaluation or full date/week parity evidence.
 Hosted exact-head checks/review remain separate integration gates.
 
+## Broad validation setup correction
+
+The first hosted head 2ea82582f passed the Numeric suite but both Linux GCC
+and macOS Clang failed the runtime-surface suite with 27 cascading assertions.
+Its setup used SET FWEEK TO 4 while expecting readback/restoration of 3,
+an obsolete clamp contradicted by this native fixture's error 46. The setup
+now uses valid 3; readback, new-session default 1 and restored value 3 remain
+asserted. The dedicated Numeric cases retain error-46/state/event coverage
+for 4 in both modes. No production change or unrelated expectation is needed.
+VR-5611-SET-FWEEK-SURFACE-001: unchanged setup reproduces exactly 27 failures
+locally in GCC (5.51s) and Clang sanitizers (23.22s), without sanitizer
+diagnostics. Corrected setup plus Numeric/relations/database-lifecycle/date-time
+passes 5/5 in GCC (15.26s; surface 5.36s; Numeric 8.52s).
+Clang ASan/UBSan/float-cast-overflow passes the same 5/5 (66.03s; surface
+23.13s; Numeric 36.93s) without diagnostics. Toolchain runtime runs are serial.
+Seven catalog/localization/isolation/signoff/changelog/channel contracts pass
+7/7 (19.36s), with 148 valid fragments. These setup results supplement rather
+than replace the production fail-before/pass-after evidence above.
+
 ## Documentation assurance
 
 DQ-5611-SET-FWEEK-CONVERSION-001 requires documented finite/domain admission,

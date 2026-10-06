@@ -4,3 +4,5 @@
   complete installed-VFP9 source/output, boundary/state/week-consumer tests,
   sanitizer and bidirectional requirements/documentation evidence. EPOCH,
   other settings, evaluation and non-Numeric admission remain separate.
+  Correct the runtime-surface setup to use valid FWEEK 3 instead of an
+  obsolete out-of-range clamp; retain session/default/restoration assertions.
