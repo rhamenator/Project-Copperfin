@@ -1285,8 +1285,48 @@ std::vector<Row> build_rows() {
         rows.push_back({set, "SQLGETPROP(.F., 'ConnectHandle')", "N:-1"});
         rows.push_back({set, "SQLGETPROP(.NULL., 'ConnectHandle')", "N:-1"});
     }
+    // RQ-CF-PRG-SQLSETPROP-HANDLE-NUMERIC-001: reset the synthetic handle's
+    // Boolean property before each row so incorrect aliases expose mutation.
+    // Property-value Numeric conversion is deliberately not exercised here.
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        const std::string reset = set + "\nSQLSETPROP(nSqlNumeric, 'Asynchronous', .F.)";
+        for (const auto& row : kSqlGetPropHandleCases) {
+            const auto handle = std::string(mode) == "VFP9" ? row.vfp9 : row.copperfin;
+            const std::string setter = "SQLSETPROP(" + std::string(row.argument) + ", 'Asynchronous', .T.)";
+            rows.push_back({reset,
+                            "ALLTRIM(STR(" + setter + ")) + ':' + TRANSFORM(SQLGETPROP(nSqlNumeric, 'Asynchronous'))",
+                            handle.has_value() ? (*handle == 1 ? "C:1:true" : "C:-1:false") : "ERR1466"});
+        }
+        for (const char* argument : {"1E300", "EXP(1000)", "4294967297"}) {
+            rows.push_back({reset + "\nLOCAL nSqlSetError\nnSqlSetError = 0\nTRY\nx = SQLSETPROP(" +
+                            argument + ", 'Asynchronous', .T.)\nCATCH TO oEx\nnSqlSetError = oEx.ErrorNo\nENDTRY",
+                            "ALLTRIM(STR(nSqlSetError)) + ':' + TRANSFORM(SQLGETPROP(nSqlNumeric, 'Asynchronous')) + ':' + ALLTRIM(STR(SQLGETPROP(nSqlNumeric, 'ConnectHandle'))) + ':' + SQLGETPROP(nSqlNumeric, 'LastSqlAction')",
+                            "C:1466:false:1:connect"});
+        }
+        for (const auto& diagnostic : std::vector<std::pair<std::string, std::string>>{
+                 {"1E300", "1" + std::string(300U, '0')}, {"EXP(1000)", "inf"}}) {
+            rows.push_back({reset + "\nLOCAL cSqlSetMessage\ncSqlSetMessage = ''\nTRY\nx = SQLSETPROP(" +
+                            diagnostic.first + ", 'Asynchronous', .T.)\nCATCH TO oEx\ncSqlSetMessage = oEx.Message\nENDTRY",
+                            "cSqlSetMessage", "C:SQL handle not found: " + diagnostic.second});
+        }
+        // Preserved setter/default/type controls are not native parity claims.
+        for (const auto& control : std::vector<std::pair<std::string, bool>>{
+                 {"0", false}, {"-1", false}, {"2", false}, {"'1'", true},
+                 {"$0.5", true}, {"$1.5", false}, {".T.", true}, {".F.", false}, {".NULL.", false}}) {
+            rows.push_back({reset,
+                            "ALLTRIM(STR(SQLSETPROP(" + control.first + ", 'Asynchronous', .T.))) + ':' + TRANSFORM(SQLGETPROP(nSqlNumeric, 'Asynchronous'))",
+                            control.second ? "C:1:true" : "C:-1:false"});
+        }
+        rows.push_back({set, "SQLGETPROP(nSqlNumeric, 'Connected')", "L:true"});
+        rows.push_back({set, "SQLGETPROP(nSqlNumeric, 'LastSqlAction')", "C:connect"});
+        rows.push_back({set, "SQLGETPROP(nSqlNumeric, 'ConnectHandle')", "N:1"});
+    }
+    rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN\nSQLSETPROP(nSqlNumeric, 'Asynchronous', .F.)",
+                    "SQLGETPROP(nSqlNumeric, 'Asynchronous')", "L:false"});
     rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", "SQLDISCONNECT(nSqlNumeric)", "N:1"});
     rows.push_back({"", "SQLGETPROP(nSqlNumeric, 'ConnectHandle')", "N:-1"});
+    rows.push_back({"", "SQLSETPROP(nSqlNumeric, 'Asynchronous', .T.)", "N:-1"});
     return rows;
 }
 
@@ -2533,13 +2573,17 @@ void test_select_selector_direct_numeric_boundaries() {
 
 // RQ-CF-PRG-SQLGETPROP-HANDLE-NUMERIC-001: native zero aliases plus
 // derived exact-integer/NaN/adjacent-double and preserved coercion boundaries.
-void test_sqlgetprop_handle_direct_numeric_boundaries() {
+// SQLSETPROP's independent 48-call fixture establishes the same table.
+// RQ-CF-PRG-SQLSETPROP-HANDLE-NUMERIC-001 shares expectations, not dispatch.
+void test_sql_property_handle_direct_numeric_boundaries(
+    const char* function,
+    std::optional<std::int32_t> (*convert)(const copperfin::runtime::PrgValue&, copperfin::runtime::NumericBehavior)) {
     using namespace copperfin::runtime;
     for (const auto mode : {NumericBehavior::copperfin, NumericBehavior::vfp9}) {
         for (const auto& row : kSqlGetPropHandleCases) {
             const auto expected = mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin;
-            expect(checked_sqlgetprop_handle_argument(make_number_value(row.value), mode) == expected,
-                   "SQLGETPROP direct numeric boundary " + std::string(row.argument));
+            expect(convert(make_number_value(row.value), mode) == expected,
+                   std::string(function) + " direct numeric boundary " + row.argument);
         }
         struct Case {
             PrgValue value;
@@ -2577,8 +2621,8 @@ void test_sqlgetprop_handle_direct_numeric_boundaries() {
         for (std::size_t index = 0; index < boundaries.size(); ++index) {
             const auto& row = boundaries[index];
             const auto expected = mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin;
-            expect(checked_sqlgetprop_handle_argument(row.value, mode) == expected,
-                   "SQLGETPROP direct extended boundary " + std::to_string(index));
+            expect(convert(row.value, mode) == expected,
+                   std::string(function) + " direct extended boundary " + std::to_string(index));
         }
     }
 }
@@ -2603,7 +2647,8 @@ int main() {
     test_field_index_direct_numeric_boundaries();
     test_fsize_index_direct_numeric_boundaries();
     test_select_selector_direct_numeric_boundaries();
-    test_sqlgetprop_handle_direct_numeric_boundaries();
+    test_sql_property_handle_direct_numeric_boundaries("SQLGETPROP", copperfin::runtime::checked_sqlgetprop_handle_argument);
+    test_sql_property_handle_direct_numeric_boundaries("SQLSETPROP", copperfin::runtime::checked_sqlsetprop_handle_argument);
     test_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {
