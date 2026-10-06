@@ -1537,6 +1537,7 @@
   "Runtime.Prg.Dispatch.Error.GatherNoCurrentWorkArea": "GATHER: nao ha area de trabalho atual",
   "Runtime.Prg.Dispatch.Error.InvalidArrayName": "{command}: nome de array invalido",
   "Runtime.Prg.Dispatch.Error.DataSessionInvalidSelector": "SET DATASESSION TO requer um identificador de sessão positivo e representável.",
+  "Runtime.Prg.Dispatch.Error.SetDecimalsInvalidValue": "SET DECIMALS TO requer um valor convertido de 0 a 18.",
   "Runtime.Prg.Dispatch.Error.InvalidObjectTarget": "{command}: destino de objeto invalido",
   "Runtime.Prg.Dispatch.Error.CreateCursorRequiresNonEmptyAlias": "CREATE CURSOR exige um alias nao vazio",
   "Runtime.Prg.Dispatch.Error.CreateCursorRequiresSupportedFieldDeclaration": "CREATE CURSOR exige pelo menos uma declaracao de campo compativel",

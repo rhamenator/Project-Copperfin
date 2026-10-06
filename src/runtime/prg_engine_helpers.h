@@ -184,6 +184,10 @@ std::optional<std::int32_t> checked_sqldisconnect_handle_argument(const PrgValue
 // RQ-CF-PRG-SET-DATASESSION-NUMERIC-001: checked positive session selector.
 // Existence/lifecycle stay separate; other coercions retain rounding/clamping.
 std::optional<std::int32_t> checked_datasession_selector_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-SET-DECIMALS-NUMERIC-001: Numeric/exact integers truncate to
+// 0..18. Explicit VFP9 keeps low-32 aliases and indefinite zero; other existing
+// coercions preserve checked rounding/clamping. Missing means error 10.
+std::optional<std::int32_t> checked_set_decimals_argument(const PrgValue& value, NumericBehavior behavior);
 // #6050: integer arguments crossing a DECLARE boundary. Ordinary VFP9
 // INTEGER/LONG parameters receive the low 32 bits after truncation toward
 // zero. Exact int64/uint64 values keep their low bits without a floating round

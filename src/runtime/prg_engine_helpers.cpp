@@ -1514,6 +1514,29 @@ std::optional<std::int32_t> checked_datasession_selector_argument(
     return std::max<std::int32_t>(1, *selector);
 }
 
+// RQ-CF-PRG-SET-DECIMALS-NUMERIC-001 (#5611/#6776). Retained installed
+// VFP9 observations recover truncation, 0..18 and both-sign aliases/indefinite.
+std::optional<std::int32_t> checked_set_decimals_argument(
+    const PrgValue& value,
+    const NumericBehavior behavior) {
+    const bool numeric = value.kind == PrgValueKind::number || value.kind == PrgValueKind::int64 ||
+                         value.kind == PrgValueKind::uint64;
+    if (!numeric) {
+        // Preserve existing non-Numeric coercions, not native type parity.
+        try {
+            const auto rounded = checked_truncated_numeric_to_int64(std::round(value_as_number(value)));
+            return rounded.has_value() ? static_cast<std::int32_t>(std::clamp<std::int64_t>(*rounded, 0, 18)) : 2;
+        } catch (...) {
+            return 2; // Same coercion fallback as the previous SET integer path.
+        }
+    }
+    const auto decimals = checked_afont_size_argument(value, behavior);
+    if (!decimals.has_value() || *decimals < 0 || *decimals > 18) {
+        return std::nullopt;
+    }
+    return *decimals;
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {

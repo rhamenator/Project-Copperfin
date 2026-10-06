@@ -1,5 +1,20 @@
 # VFP Language Reference Coverage
 
+- SET DECIMALS TO Numeric/exact-integer conversion (2026-10-06, #5611/#6776):
+  fractions truncate to 0..18; default COPPERFIN rejects non-finite/out-of-domain
+  operands. Explicit VFP9 preserves both-sign signed-low-32 aliases and
+  huge/infinite integer-indefinite zero. Rejection raises catchable localized
+  error 10 before setting mutation/success events; omitted operand resets to 2.
+  Exact extended integers avoid double rounding; NaN follows derived policy.
+  Complete 53-line installed-VFP9 fixture/README and direct/fresh two-mode
+  regression evidence are retained in
+  `tests/fixtures/vfp9-set-decimals-numeric-observation/`, mapped to
+  RQ-CF-PRG-SET-DECIMALS-NUMERIC-001. Existing non-Numeric rounding/clamping and
+  evaluation fallback are preserved without native type-parity claims;
+  the encountered non-Numeric admission gap is #7006 against exact main.
+  FDOW/FWEEK/EPOCH, other settings and evaluation semantics remain separate.
+  No argument-sized allocation, table/backend/VM or system change is introduced.
+
 - SET DATASESSION TO Numeric/exact-integer selector conversion
   (2026-10-06, #5611/#6776): default COPPERFIN admits finite positive signed-int32
   selectors after truncation; explicit VFP9 applies signed-low-32 conversion

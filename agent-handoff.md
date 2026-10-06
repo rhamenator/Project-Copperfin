@@ -9,29 +9,53 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
-The most recent shipped slice is SQLDISCONNECT PR #7002, merged into main as
-`667b6fd61936a65b5a5944aa048f92e6947bf0d1` on 2026-10-06 at 06:17:15 UTC.
-All 11 required checks passed at signed head `1b5b3e5fe4`; exact-head Codex
-review was clean and there were no conversations. All completed optional
-checks passed; Windows MSVC was still running at merge. Main is synchronized,
-the worktree/local/remote branches are removed, and the 452 MB normal/865 MB
-sanitizer builds are in recoverable trash. Unrelated files/worktrees remain.
-The active continuation is SET DATASESSION TO Numeric/exact-integer selector
-conversion on `fix/set-datasession-numeric-5611` in
-`/home/rich/.codex/worktrees/set-datasession-numeric-5611/Project-Copperfin`,
-from this main revision. Complete native fixture and 140 direct/108 synthetic
-script cases plus resumable/locale cases are retained. Original dispatch fails
-exactly 251 selected assertions in both GCC (numeric 7.04s; full 8.42s) and
-Clang sanitizers (numeric 34.27s; full 40.21s); direct helpers, preserved
-coercion controls, existing numeric rows and three session neighbors pass.
-Final GCC passes 4/4 in 8.97s (numeric 7.49s); Clang ASan/UBSan/float-cast-overflow
-passes 4/4 in 39.54s (numeric 32.77s) without diagnostics. Catalog/install,
-test-isolation, signoff/changelog/channel contracts pass 7/7 in 20.91s; all 145
-fragments validate. Completed fixture README VR/DQ/DV and bidirectional
-docs/22/docs/32 traceability retain exact scope, hashes and reproduction.
-Next: signed push/PR, required exact-head checks and clean review. Session
-creation, existence/type parity (#7003) and other setters remain separate.
-No VM or external backend is in use; no owner input is needed.
+The most recent shipped slice is SET DATASESSION PR #7005, merged into main as
+`d5b1031df8d010c2534a8cece03a193de937d7d3` on 2026-10-06 at 07:16:08 UTC.
+All 11 required checks passed at signed head `d3a825a86`; exact-head Codex
+review completed cleanly and there were no conversations. Every completed
+optional check passed, including broad Linux/macOS, sanitizer/fuzz/stress,
+managed UI, security and all installers; Windows MSVC remained in progress.
+Main is synchronized, the slice worktree/local/remote branches are removed,
+and the 577 MB normal/991 MB sanitizer builds plus generated FXP are in
+recoverable trash. Unrelated files/worktrees remain untouched.
+The retained native fixture contains 61 commands/64 lines. 140 direct calls,
+108 fresh synthetic cases and focused resumable/locale cases map to
+RQ-CF-PRG-SET-DATASESSION-NUMERIC-001. Original dispatch failed exactly 251
+selected assertions in both toolchains. Final GCC passed 4/4 (8.97s) and
+Clang ASan/UBSan/float-cast-overflow passed 4/4 (39.54s) without diagnostics.
+Seven contracts passed and all 145 fragments validated. The unchanged broad
+local control-flow baseline was interrupted, not claimed passed; hosted broad
+Linux/macOS suites subsequently passed. Session existence/type #7003 remains
+separate and unadmitted.
+The next bounded slice is SET DECIMALS TO Numeric/exact-integer conversion,
+only its integer-setting dispatch, under admitted #5611/#6776 on
+`fix/set-decimals-numeric-5611` in
+`/home/rich/.codex/worktrees/set-decimals-numeric-5611/Project-Copperfin`,
+from this exact main revision. Two fresh installed-VFP9 runs match 53 lines:
+50 evaluated operands, omitted reset and final setting. Numeric fractions
+truncate into 0..18; invalid converted values raise 10 and preserve DECIMALS 5.
+Both-sign low-32 aliases and huge/infinite zero are explicit-VFP9 quirks.
+The native complete source/output is retained in
+`tests/fixtures/vfp9-set-decimals-numeric-observation/`.
+146 direct calls and 188 fresh two-mode/bare-parenthesized runtime cases plus
+four locale cases are retained. Corrected original dispatch fails exactly 264
+selected assertions in GCC (numeric 7.65s; full 9.06s) and Clang sanitizers
+(numeric 32.64s; full 38.86s); direct helpers, preserved controls, existing
+numeric rows and all three neighbors pass. An initial missing coercion fallback
+was corrected; its aborted prototype runs are excluded from baseline evidence.
+Only the SET DECIMALS dispatch is now wired, rejecting conversion before
+setting mutation/success events and preserving omission/evaluation fallback.
+Final GCC passes 4/4 (8.85s; numeric 7.40s), and Clang ASan/UBSan/float-cast-
+overflow passes 4/4 (38.24s; numeric 32.46s) without diagnostics. Seven catalog,
+localization/isolation/signoff/changelog/channel contracts pass (21.05s);
+all 146 fragments validate. Completed README VR/DQ/DV, hashes and docs/22/docs/32
+traceability retain the boundary. The encountered non-Numeric admission gap
+is #7006 against exact main, without implementation admission.
+Builds are /home/rich/temp/copperfin-set-decimals-5611-build and
+/home/rich/temp/copperfin-set-decimals-5611-sanitize; runtime numeric tests ran
+serially across build directories. Next: signed push/PR and exact-head gates.
+FDOW/FWEEK/EPOCH, other setters, expression evaluation policy and non-Numeric
+admission remain separate. No VM/backend/system change or owner input needed.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -593,7 +617,11 @@ and `/home/rich/temp/copperfin-set-datasession-5611-sanitize`; numeric tests ran
 serially across build directories. The unchanged broad control-flow baseline
 was interrupted after sustained execution and is not claimed passed; focused
 resumable operands and relations/database/date-time neighbors are verified.
-Next is signed push/PR and exact-head integration gates. No owner input needed.
+Shipped as PR #7005 at signed head d3a825a86 with all 11 required checks green,
+clean exact-head review and no conversations. Merged 2026-10-06 07:16:08 UTC
+as d5b1031df8d010c2534a8cece03a193de937d7d3. Completed optional checks passed;
+Windows MSVC remained running. Main is synchronized, branches/worktree removed
+and both builds/FXP are in recoverable trash. SET DECIMALS is selected next.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
@@ -725,9 +753,11 @@ Owner-directed workstream order before the #6879 assignment was:
      handle conversion (PR #7000).
    - Completed after those: SQLDISCONNECT Numeric/exact-integer first-argument
      handle conversion (PR #7002).
-   - Selected next: SET DATASESSION TO Numeric/exact-integer selector conversion;
-     recover installed VFP9 behavior before implementation. Session creation,
-     existence/type parity and other setters remain separate.
+   - Completed after those: SET DATASESSION TO Numeric/exact-integer selector
+     conversion (PR #7005); existence/type gap #7003 remains separate.
+   - Selected next: SET DECIMALS TO Numeric/exact-integer setting conversion;
+     native fractions/domain/error 10 recovered. FDOW/FWEEK/EPOCH and other
+     settings/evaluation/non-Numeric parity remain separate.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`
