@@ -175,6 +175,9 @@ std::optional<std::int32_t> checked_select_selector_argument(const PrgValue& val
 // Positive/default and other coercions require checked signed-int32 admission.
 // Missing means catchable error 1466; property/backend behavior is separate.
 std::optional<std::int32_t> checked_sqlgetprop_handle_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-SQLSETPROP-HANDLE-NUMERIC-001: independently observed identical
+// handle conversion; property-value conversion and setter behavior are separate.
+std::optional<std::int32_t> checked_sqlsetprop_handle_argument(const PrgValue& value, NumericBehavior behavior);
 // #6050: integer arguments crossing a DECLARE boundary. Ordinary VFP9
 // INTEGER/LONG parameters receive the low 32 bits after truncation toward
 // zero. Exact int64/uint64 values keep their low bits without a floating round

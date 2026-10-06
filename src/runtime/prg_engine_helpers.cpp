@@ -1478,6 +1478,14 @@ std::optional<std::int32_t> checked_sqlgetprop_handle_argument(
     return checked_afont_size_argument(value, NumericBehavior::copperfin);
 }
 
+// RQ-CF-PRG-SQLSETPROP-HANDLE-NUMERIC-001: the retained connection-free
+// setter probe independently establishes the same negative-only aliases.
+std::optional<std::int32_t> checked_sqlsetprop_handle_argument(
+    const PrgValue& value,
+    const NumericBehavior behavior) {
+    return checked_sqlgetprop_handle_argument(value, behavior);
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {

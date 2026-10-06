@@ -1,5 +1,23 @@
 # VFP Language Reference Coverage
 
+- SQLSETPROP first-argument Numeric/exact-integer handle conversion
+  (2026-10-06, #5611/#6776): default COPPERFIN checks finite signed-int32
+  admission after truncation; explicit VFP9 additionally preserves negative
+  low-32 aliases and huge/infinite zero, never positive aliases. Rejection
+  raises catchable localized 1466 before setter callbacks; Numeric diagnostic
+  text uses the existing safe decimal formatter. Exact integers and NaN use
+  derived safety policy. The complete 48-call native fixture/README in
+  `tests/fixtures/vfp9-sqlsetprop-handle-numeric-observation/` retains evidence,
+  normal/sanitizer results and limits. Synthetic Boolean-property resets check
+  setter mutation as well as return values, without an ODBC/network connection.
+  Other SQL callers, property-value conversions, default/invalid-setter results,
+  backend/session/connection behavior and non-Numeric admission are separate.
+  Existing other coercions retain checked half-away rounding; neither those
+  controls nor connected synthetic comparisons claim native setter parity.
+  The encountered default/invalid-setter and type-admission gap is #6999,
+  reported against exact main e3bdb6458 without implementation admission.
+  The shared Numeric formatter gap #6997 is not changed.
+
 - SQLGETPROP first-argument Numeric/exact-integer handle conversion
   (2026-10-06, #5611/#6776): default COPPERFIN checks finite signed-int32
   conversion after truncation; explicit VFP9 additionally preserves negative

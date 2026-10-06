@@ -9,17 +9,17 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
-The most recent shipped slice is SELECT PR #6995, merged into main as
-`369d5f41bb162c909c497fc097c982957289d574` on 2026-10-06 at 03:16:08 UTC.
-All 11 required checks passed at signed head `392197c677`; exact-head Codex
+The most recent shipped slice is SQLGETPROP PR #6998, merged into main as
+`e3bdb6458f6b1c5f801f530c29d06ee8fff6bf29` on 2026-10-06 at 04:16:46 UTC.
+All 11 required checks passed at signed head `745778830b`; exact-head Codex
 review was clean and there were no conversations. All completed optional
 checks passed; Windows MSVC was still running at merge. Main is synchronized,
-the worktree/local/remote branches are removed, and the 453 MB normal/868 MB
+the worktree/local/remote branches are removed, and the 451 MB normal/865 MB
 sanitizer builds are in recoverable trash. Unrelated files/worktrees remain.
-The active continuation is SQLGETPROP first-argument Numeric/exact-integer
-handle conversion only on `fix/sqlgetprop-handle-numeric-5611`, from this main
-revision. Property values, backend/connection behavior and other callers are
-outside scope. No VM is in use.
+The active continuation is SQLSETPROP first-argument Numeric/exact-integer
+handle conversion only on `fix/sqlsetprop-handle-numeric-5611`, from this main
+revision. Property-value conversion, backend/connection behavior and other
+callers are outside scope. No VM is in use.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -437,7 +437,7 @@ with Windows MSVC still running. Query routing #6013, non-Numeric admission
 #6994 and cursor allocation #6988 remain separate. FSIZE's optional Windows
 MSVC subsequently passed; all 33 FSIZE checks completed successfully.
 
-SQLGETPROP first-argument Numeric/exact-integer handle conversion is selected
+SQLGETPROP first-argument Numeric/exact-integer handle conversion shipped in PR #6998
 under #5611/#6776 on `fix/sqlgetprop-handle-numeric-5611`, from main
 `369d5f41bb162c909c497fc097c982957289d574`, in
 `/home/rich/.codex/worktrees/sqlgetprop-handle-numeric-5611/Project-Copperfin`.
@@ -476,9 +476,45 @@ Normal/sanitizer builds are
 `/home/rich/temp/copperfin-sqlgetprop-handle-5611-sanitize`.
 Completed README VR/DQ/DV, fixture identities and docs/22/docs/32 traceability
 retain the conversion/query boundary and recovery limits. No VM was used.
-Next: signed push/PR, exact-head
-review and all 11 required checks with resolved conversations before merge.
-No owner input is needed. Re-read the live channel before further selection.
+PR #6998 merged at e3bdb6458 after all 11 required checks and clean exact-head
+review, with no conversations. The slice worktree/branches are removed and
+both builds are in recoverable trash; paths above are historical reproduction
+locations. Unrelated files are preserved. The live channel was re-read empty.
+
+SQLSETPROP first-argument handle conversion is now selected under #5611/#6776
+on `fix/sqlsetprop-handle-numeric-5611`, from exact main
+`e3bdb6458f6b1c5f801f530c29d06ee8fff6bf29`, in
+`/home/rich/.codex/worktrees/sqlsetprop-handle-numeric-5611/Project-Copperfin`.
+Only its expression-dispatch llround/int site is selected. Separate property-
+value conversions, setter/default/backend results, connection/session state,
+non-Numeric admission and all other SQL callers remain outside scope.
+The complete connection-free native fixture is retained in
+`tests/fixtures/vfp9-sqlsetprop-handle-numeric-observation/`; three fresh runs
+match 52 lines (48 setter calls, VERSION, unchanged default before/after and
+unchanged session 1). Its conversion boundary independently matches SQLGETPROP.
+The new operation-specific helper shares the verified conversion only.
+134 direct calls and 118 PRG rows are added; setter rows reset the synthetic
+connection's Boolean property and verify returned status plus mutation state.
+No ODBC/network connection or VM is used. Normal and sanitizer builds are
+`/home/rich/temp/copperfin-sqlsetprop-handle-5611-build` and
+`/home/rich/temp/copperfin-sqlsetprop-handle-5611-sanitize`.
+Original dispatch fails exactly 47 new conversion/caught-message assertions
+in GCC (numeric 6.49s; full run 8.27s) and Clang sanitizers (numeric 29.68s;
+full run 36.72s); direct helpers, preserved controls, SQLGETPROP rows and all
+three neighbors pass. No baseline sanitizer diagnostic was produced.
+Only SQLSETPROP's first-argument dispatch is now checked, with safe Numeric
+rejection diagnostics; property-value conversion and backend callbacks are
+unchanged. GCC passes 4/4 (7.64s; numeric 5.93s); Clang ASan/UBSan/float-cast-
+overflow passes 4/4 (34.64s; numeric 27.80s) without diagnostics. Runtime
+tests ran serially across build directories. Changelog/signoff/live-channel
+contracts pass 4/4 (5.65s); all 143 fragments validate.
+The encountered default/invalid-setter and non-Numeric admission gap is
+filed separately as #6999 against exact main e3bdb6458 without implementation
+admission. The general shared formatter gap #6997 remains unchanged.
+Completed README VR/DQ/DV, fixture identities, error-before-setter/property-
+reset walkthrough and docs/22/docs/32 traceability retain the bounded scope.
+Integration next: signed push/PR, clean exact-head review and all 11 required
+checks with resolved conversations before merge. No owner input needed.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
 managed Studio is shipped in the Linux package; source-tree Mono/Xvfb smoke is
@@ -604,7 +640,9 @@ Owner-directed workstream order before the #6879 assignment was:
      admission (PR #6992).
    - Completed after those: SELECT() Numeric/exact-integer selector conversion
      (PR #6995).
-   - Active: SQLGETPROP Numeric/exact-integer first-argument handle conversion.
+   - Completed after those: SQLGETPROP Numeric/exact-integer first-argument
+     handle conversion (PR #6998).
+   - Active: SQLSETPROP Numeric/exact-integer first-argument handle conversion.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`
