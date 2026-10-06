@@ -6256,11 +6256,52 @@
                         std::string hours_value = evaluate_set_string_value(option_value, "24");
                         current_set_state()[normalized_name] = normalize_identifier(hours_value) == "12" ? std::string{"12"} : std::string{"24"};
                     }
-                    else if (normalized_name == "fdow" || normalized_name == "fweek")
+                    else if (normalized_name == "fdow")
                     {
-                        const int max_value = normalized_name == "fdow" ? 7 : 3;
-                        const int parsed_value = evaluate_set_integer_value(option_value, 1, 1, max_value);
-                        current_set_state()[normalized_name] = std::to_string(parsed_value);
+                        // RQ-CF-PRG-SET-FDOW-NUMERIC-001: convert before
+                        // setting mutation or the successful SET event below.
+                        const std::string candidate = strip_set_to_value(option_value);
+                        PrgValue operand = make_number_value(1.0);
+                        if (!candidate.empty())
+                        {
+                            try
+                            {
+                                if (should_evaluate_set_value(candidate))
+                                {
+                                    operand = evaluate_expression(candidate, frame);
+                                }
+                                else if (const auto literal = try_parse_numeric_index_value(candidate); literal.has_value())
+                                {
+                                    // Bare Numeric SET tokens previously went through
+                                    // Character coercion. Keep their actual Numeric domain.
+                                    operand = make_number_value(*literal);
+                                }
+                                else
+                                {
+                                    operand = make_string_value(unquote_string(candidate));
+                                }
+                            }
+                            catch (...)
+                            {
+                                // Preserve the previous expression-evaluation fallback;
+                                // Numeric conversion rejection is outside this catch.
+                                operand = make_number_value(1.0);
+                            }
+                        }
+                        const auto mode = current_set_state().find("numericbehavior");
+                        const auto day = checked_set_fdow_argument(operand,
+                            mode != current_set_state().end() && normalize_identifier(mode->second) == "vfp9"
+                                ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
+                        if (!day.has_value())
+                        {
+                            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Dispatch.Error.SetFdowInvalidValue"), 46);
+                        }
+                        current_set_state()[normalized_name] = std::to_string(*day);
+                    }
+                    else if (normalized_name == "fweek")
+                    {
+                        current_set_state()[normalized_name] = std::to_string(
+                            evaluate_set_integer_value(option_value, 1, 1, 3));
                     }
                     else if (normalized_name == "decimals")
                     {
