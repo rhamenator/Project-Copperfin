@@ -9,19 +9,17 @@ slice "merged into `v1-development`" is historical.
 
 ## Last shipped slice
 
-The most recent shipped slice is FSIZE PR #6992, merged into main as
-`e15a654ec03f85692e996042688bd28046c0db95` on 2026-10-06 at 02:16:19 UTC.
-All 11 required checks passed at signed head `ff696c001e`; exact-head Codex
+The most recent shipped slice is SELECT PR #6995, merged into main as
+`369d5f41bb162c909c497fc097c982957289d574` on 2026-10-06 at 03:16:08 UTC.
+All 11 required checks passed at signed head `392197c677`; exact-head Codex
 review was clean and there were no conversations. All completed optional
 checks passed; Windows MSVC was still running at merge. Main is synchronized,
-the worktree/local/remote branches are removed, and the 484 MB normal/947 MB
+the worktree/local/remote branches are removed, and the 453 MB normal/868 MB
 sanitizer builds are in recoverable trash. Unrelated files/worktrees remain.
-The active continuation is SELECT() first-argument Numeric/exact-integer
-selector conversion on `fix/select-selector-numeric-5611`, from this main
-revision. Native recovery and normal/sanitizer verification are complete;
-the current branch's PR and exact-head review/check gates remain next.
-Query routing #6013 and non-Numeric
-admission #6994 stay separate. No VM is in use.
+The active continuation is SQLGETPROP first-argument Numeric/exact-integer
+handle conversion only on `fix/sqlgetprop-handle-numeric-5611`, from this main
+revision. Property values, backend/connection behavior and other callers are
+outside scope. No VM is in use.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -426,39 +424,60 @@ passed; Windows MSVC was still running at merge. Branches, worktree and builds
 are cleaned as recorded above. Other type/arity #6990 and SET COMPATIBLE/file
 semantics #6014 remain separate. No VM or persistent/system changes were used.
 
-SELECT() first-argument Numeric/exact-integer conversion is selected under
-#5611/#6776 on `fix/select-selector-numeric-5611`, from main
-`e15a654ec03f85692e996042688bd28046c0db95`, in
-`/home/rich/.codex/worktrees/select-selector-numeric-5611/Project-Copperfin`.
-Only the existing SELECT() llround/int site in prg_engine_expression.inl is
-selected. Command SELECT, current/unused query routing and COMPATIBLE behavior
-(#6013), aliases, data-session state and non-Numeric admission remain separate.
-The complete 60-call installed VFP9 09.00.0000.7423 Wine fixture in
-`tests/fixtures/vfp9-select-selector-numeric-observation/` matches across two
-fresh processes. Numeric fractions truncate; converted values outside
-0..32767 raise 17; explicit VFP9 keeps low-32 aliases and huge/infinite zero.
-Exact integers and NaN are derived safety boundaries, not native extensions.
-Other coercions retain checked half-away rounding without native type parity.
-164 direct calls and 126 PRG rows isolate conversion with canonical SELECT
-controls; they do not assert the incorrect current/unused query outputs as
-native parity. Test cursors use explicit areas 1/2 to isolate #6988.
-The original SELECT dispatch fails 68 semantic assertions with corrected
-Logical-output formatting (numeric 6.08s, four-suite baseline 35.01s).
-All 164 direct helper calls and non-Numeric/alias/state controls pass.
-An earlier formatting-confounded run is excluded from conversion evidence.
-The expression now uses the checked helper; a local callback-name compile
-error was corrected. Native Currency/Logical/NULL admission differences are
-filed separately as #6994 against exact main e15a654ec03f85692e996042688bd28046c0db95;
-they do not expand this slice. Normal/sanitizer builds are
-`/home/rich/temp/copperfin-select-selector-5611-build` and
-`/home/rich/temp/copperfin-select-selector-5611-sanitize`; run numeric, array,
-string/math and work-area suites serially across directories. Normal suites
-pass 4/4 (35.55s; numeric 6.15s); sanitizer suites pass 4/4 (137.19s; numeric
-27.08s), without diagnostics. Four contracts pass (3.91s), 141 fragments
-validate and diff --check/fixture identities pass. Completed README VR/DQ/DV
-and docs/22/docs/32 traceability are retained. Next: signed push/PR, exact-head
+SELECT() Numeric/exact-integer selector conversion completed in PR #6995.
+The retained 60-call native fixture, 164 direct calls and 126 PRG rows map to
+RQ-CF-PRG-SELECT-SELECTOR-NUMERIC-001 in docs/22/docs/32 and completed README
+VR/DQ/DV/reproduction evidence. Old dispatch failed 68 semantic assertions
+(numeric 6.08s; four-suite baseline 35.01s); formatting-confounded output was
+excluded. Normal suites passed 4/4 (35.55s); sanitizer suites passed 4/4
+(137.19s), without diagnostics. Four contracts passed (3.91s), 141 fragments
+validated. All 11 required checks passed, exact-head review was clean and no
+conversations remained before merge; all completed optional checks passed,
+with Windows MSVC still running. Query routing #6013, non-Numeric admission
+#6994 and cursor allocation #6988 remain separate. FSIZE's optional Windows
+MSVC subsequently passed; all 33 FSIZE checks completed successfully.
+
+SQLGETPROP first-argument Numeric/exact-integer handle conversion is selected
+under #5611/#6776 on `fix/sqlgetprop-handle-numeric-5611`, from main
+`369d5f41bb162c909c497fc097c982957289d574`, in
+`/home/rich/.codex/worktrees/sqlgetprop-handle-numeric-5611/Project-Copperfin`.
+Only its llround/int site in prg_engine_expression.inl is selected. Other SQL
+callers, property-value conversion, backend/connection/session behavior and
+non-Numeric admission remain separate.
+The complete 48-call installed VFP9 09.00.0000.7423 Wine fixture is retained in
+`tests/fixtures/vfp9-sqlgetprop-handle-numeric-observation/`; two fresh
+connection-free queries match all 50 lines. Fractions near zero truncate;
+huge positive handles reject with 1466, whereas explicit VFP9 negative
+low-32 aliases and huge/infinite zero remain observable through handle zero.
+Nonzero absent-handle outputs do not independently distinguish every converted
+index; exact int64/uint64 and NaN follow documented derived safety policy.
+The checked helper is wired into only this expression dispatch. 134 direct
+calls/119 final PRG rows use the existing synthetic in-process connection, not an
+ODBC/network connection. Original dispatch failed exactly 43 conversion
+assertions in both GCC (numeric 6.13s; full run 7.80s) and Clang sanitizers
+(numeric 27.68s; full run 34.34s); all direct helper and preserved controls plus
+three neighbors passed. No baseline sanitizer diagnostic was produced.
+After this conversion change, normal suites pass 4/4 (7.63s; numeric 5.94s),
+and sanitizer suites pass 4/4 (34.59s; numeric 27.33s) without diagnostics.
+Native default/invalid-query and other-type admission gaps are filed separately
+as #6996 against exact main 369d5f41, without an implementation-admission label.
+Final diagnostic walkthrough found the shared Numeric formatter's unchecked
+huge-finite llround (#6997). Four message rows were added after the original
+115-row baseline; two finite-huge messages fail (5.86s) while infinite controls
+pass. Only SQLGETPROP's rejection diagnostic now uses the existing safe
+round-trip decimal formatter; the shared formatter/other callers are untouched.
+Final normal verification with all 119 rows passes 4/4 (7.83s; numeric 6.11s).
+Final sanitizer verification passes 4/4 (34.19s; numeric 27.45s), including
+safe diagnostic regressions, without sanitizer diagnostics.
+Changelog/live-channel/full safety workflow contracts pass 4/4 (360.90s),
+final fragment checks pass 2/2 (0.45s), and all 142 fragments validate.
+Normal/sanitizer builds are
+`/home/rich/temp/copperfin-sqlgetprop-handle-5611-build` and
+`/home/rich/temp/copperfin-sqlgetprop-handle-5611-sanitize`.
+Completed README VR/DQ/DV, fixture identities and docs/22/docs/32 traceability
+retain the conversion/query boundary and recovery limits. No VM was used.
+Next: signed push/PR, exact-head
 review and all 11 required checks with resolved conversations before merge.
-Recover the live PR by this branch name rather than stale check snapshots.
 No owner input is needed. Re-read the live channel before further selection.
 
 The Linux installed-GUI sub-slice remains explicitly deferred until the
@@ -583,7 +602,9 @@ Owner-directed workstream order before the #6879 assignment was:
      conversion (PR #6989).
    - Completed after those: FSIZE Numeric/exact-integer first-argument
      admission (PR #6992).
-   - Active: SELECT() Numeric/exact-integer first-argument selector conversion.
+   - Completed after those: SELECT() Numeric/exact-integer selector conversion
+     (PR #6995).
+   - Active: SQLGETPROP Numeric/exact-integer first-argument handle conversion.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

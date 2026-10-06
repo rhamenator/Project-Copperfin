@@ -1,5 +1,21 @@
 # VFP Language Reference Coverage
 
+- SQLGETPROP first-argument Numeric/exact-integer handle conversion
+  (2026-10-06, #5611/#6776): default COPPERFIN checks finite signed-int32
+  conversion after truncation; explicit VFP9 additionally preserves negative
+  low-32 aliases and huge/infinite zero, never positive aliases. Conversion
+  rejection raises catchable 1466 before query callbacks. Exact integers and
+  NaN follow derived safety policy. The complete 48-call native fixture and
+  README in `tests/fixtures/vfp9-sqlgetprop-handle-numeric-observation/`
+  retain evidence and boundaries. Canonical synthetic-connection tests isolate
+  conversion, not native backend/default-query/invalid-handle result parity.
+  Other SQL callers, property values, backend/session/connection behavior and
+  non-Numeric admission remain separate; other coercions keep checked rounding.
+  The newly encountered default/invalid-query and other-type gaps are #6996,
+  reported against current main without admitting that separate scope.
+  Rejected Numeric diagnostic text uses the existing safe decimal formatter;
+  the general shared-formatter gap #6997 remains outside this slice.
+
 - SELECT() first-argument Numeric/exact-integer selector conversion
   (2026-10-06, #5611/#6776): default COPPERFIN truncates finite values and
   admits converted 0..32767; explicit VFP9 keeps signed-low-32 aliases and
