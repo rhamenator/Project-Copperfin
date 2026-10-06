@@ -1355,6 +1355,65 @@ std::string run_rows(const fs::path &dir, const std::vector<Row> &rows) {
     return read_text(dir / "results.txt");
 }
 
+// RQ-CF-PRG-SQLDISCONNECT-HANDLE-NUMERIC-001: every run starts with a
+// fresh synthetic handle 1. A rounded/wrapped alias is observable as connection
+// removal; rejected conversion must preserve the connection and action metadata.
+// No ODBC/backend is opened. Existing default/absent/type behavior is a control.
+void test_sqldisconnect_numeric_behavior_script_rows() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_sqldisconnect_numeric_behavior";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    auto check = [&](const char* mode, const std::string& argument,
+                     const std::optional<std::int32_t> handle,
+                     const std::optional<std::string>& diagnostic = std::nullopt) {
+        const bool removed = handle.has_value() && *handle == 1;
+        const std::string setup = std::string("SET NUMERICBEHAVIOR TO ") + mode +
+            "\nnSqlDisconnect = SQLCONNECT('dsn=Northwind')";
+        const std::string call =
+            "LOCAL nDisconnectError, nDisconnectStatus, cDisconnectMessage\n"
+            "nDisconnectError = 0\nnDisconnectStatus = 0\ncDisconnectMessage = ''\n"
+            "TRY\nnDisconnectStatus = SQLDISCONNECT(" + argument + ")\n"
+            "CATCH TO oEx\nnDisconnectError = oEx.ErrorNo\ncDisconnectMessage = oEx.Message\nENDTRY";
+        const std::string expression = diagnostic.has_value() ? "cDisconnectMessage" :
+            "ALLTRIM(STR(nDisconnectError)) + ':' + ALLTRIM(STR(nDisconnectStatus)) + ':' + "
+            "ALLTRIM(STR(SQLGETPROP(nSqlDisconnect, 'ConnectHandle'))) + ':' + "
+            "TRANSFORM(SQLGETPROP(nSqlDisconnect, 'LastSqlAction'))";
+        const std::string expected = diagnostic.has_value() ? "C:SQL handle not found: " + *diagnostic :
+            (!handle.has_value() ? "C:1466:0:1:connect" : removed ? "C:0:1:-1:-1" : "C:0:-1:1:connect");
+        const std::vector<Row> rows{
+            {setup, "SQLGETPROP(nSqlDisconnect, 'ConnectHandle')", "N:1"},
+            {call, expression, expected},
+            {"SET NUMERICBEHAVIOR TO COPPERFIN",
+             "ALLTRIM(STR(SQLDISCONNECT(nSqlDisconnect))) + ':' + "
+             "ALLTRIM(STR(SQLGETPROP(nSqlDisconnect, 'ConnectHandle'))) + ':' + SET('NUMERICBEHAVIOR')",
+             removed ? "C:-1:-1:COPPERFIN" : "C:1:-1:COPPERFIN"},
+        };
+        const std::string output = run_rows(dir, rows);
+        std::string expected_output;
+        for (const auto& row : rows) {
+            expected_output += row.expected + "\n";
+        }
+        expect(output == expected_output,
+               std::string("SQLDISCONNECT ") + mode + " [" + argument + "]" +
+               (diagnostic.has_value() ? " diagnostic" : " lifecycle") +
+               " expected [" + expected_output + "], got [" + output + "]");
+    };
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        for (const auto& row : kSqlGetPropHandleCases) {
+            check(mode, row.argument, std::string(mode) == "VFP9" ? row.vfp9 : row.copperfin);
+        }
+        for (const auto& control : std::vector<std::pair<std::string, std::int32_t>>{
+                 {"$0.5", 1}, {"$1.5", 2}, {".T.", 1}, {".F.", 0},
+                 {".NULL.", 0}, {"'0'", 0}, {"'1'", 1}}) {
+            check(mode, control.first, control.second);
+        }
+        check(mode, "1E300", std::nullopt, "1" + std::string(300U, '0'));
+        check(mode, "EXP(1000)", std::nullopt, "inf");
+    }
+    fs::remove_all(dir, ignored);
+}
+
 void test_numeric_behavior_script_rows() {
     const fs::path dir = fs::temp_directory_path() / "copperfin_numeric_behavior";
     std::error_code ignored;
@@ -2575,6 +2634,8 @@ void test_select_selector_direct_numeric_boundaries() {
 // derived exact-integer/NaN/adjacent-double and preserved coercion boundaries.
 // SQLSETPROP's independent 48-call fixture establishes the same table.
 // RQ-CF-PRG-SQLSETPROP-HANDLE-NUMERIC-001 shares expectations, not dispatch.
+// RQ-CF-PRG-SQLDISCONNECT-HANDLE-NUMERIC-001 independently anchors the same
+// table through its own 48-call native fixture and connection-state rows.
 void test_sql_property_handle_direct_numeric_boundaries(
     const char* function,
     std::optional<std::int32_t> (*convert)(const copperfin::runtime::PrgValue&, copperfin::runtime::NumericBehavior)) {
@@ -2649,7 +2710,9 @@ int main() {
     test_select_selector_direct_numeric_boundaries();
     test_sql_property_handle_direct_numeric_boundaries("SQLGETPROP", copperfin::runtime::checked_sqlgetprop_handle_argument);
     test_sql_property_handle_direct_numeric_boundaries("SQLSETPROP", copperfin::runtime::checked_sqlsetprop_handle_argument);
+    test_sql_property_handle_direct_numeric_boundaries("SQLDISCONNECT", copperfin::runtime::checked_sqldisconnect_handle_argument);
     test_numeric_behavior_script_rows();
+    test_sqldisconnect_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";

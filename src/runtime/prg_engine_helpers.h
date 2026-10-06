@@ -178,6 +178,9 @@ std::optional<std::int32_t> checked_sqlgetprop_handle_argument(const PrgValue& v
 // RQ-CF-PRG-SQLSETPROP-HANDLE-NUMERIC-001: independently observed identical
 // handle conversion; property-value conversion and setter behavior are separate.
 std::optional<std::int32_t> checked_sqlsetprop_handle_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-SQLDISCONNECT-HANDLE-NUMERIC-001: independently observed identical
+// conversion; disconnect-all/absent-handle/type and lifecycle behavior are separate.
+std::optional<std::int32_t> checked_sqldisconnect_handle_argument(const PrgValue& value, NumericBehavior behavior);
 // #6050: integer arguments crossing a DECLARE boundary. Ordinary VFP9
 // INTEGER/LONG parameters receive the low 32 bits after truncation toward
 // zero. Exact int64/uint64 values keep their low bits without a floating round

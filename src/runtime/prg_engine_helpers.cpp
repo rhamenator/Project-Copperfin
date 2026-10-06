@@ -1486,6 +1486,14 @@ std::optional<std::int32_t> checked_sqlsetprop_handle_argument(
     return checked_sqlgetprop_handle_argument(value, behavior);
 }
 
+// RQ-CF-PRG-SQLDISCONNECT-HANDLE-NUMERIC-001: the independent connection-free
+// disconnect probe establishes the same negative-only zero aliases.
+std::optional<std::int32_t> checked_sqldisconnect_handle_argument(
+    const PrgValue& value,
+    const NumericBehavior behavior) {
+    return checked_sqlgetprop_handle_argument(value, behavior);
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {
