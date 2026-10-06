@@ -6605,9 +6605,20 @@
                 {
                     return {};
                 }
-                const int session_id = static_cast<int>(std::llround(value_as_number(*session_value)));
+                // RQ-CF-PRG-SET-DATASESSION-NUMERIC-001 (#5611/#6776):
+                // validate before changing the session, creating state or emitting success.
+                const auto mode = current_set_state().find("numericbehavior");
+                const auto session_id = checked_datasession_selector_argument(
+                    *session_value,
+                    mode != current_set_state().end() && normalize_identifier(mode->second) == "vfp9"
+                        ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
                 resumed_set_datasession_value.reset();
-                current_data_session = std::max(1, session_id);
+                if (!session_id.has_value())
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Dispatch.Error.DataSessionInvalidSelector"), 1540);
+                }
+                current_data_session = *session_id;
                 (void)current_session_state();
                 events.push_back({.category = "runtime.datasession",
                                   .detail = "SET DATASESSION TO " + std::to_string(current_data_session),

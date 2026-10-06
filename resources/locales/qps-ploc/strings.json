@@ -1536,6 +1536,7 @@
   "Runtime.Prg.Dispatch.Error.GatherNoCurrentRecord": "GATHER: no current record",
   "Runtime.Prg.Dispatch.Error.GatherNoCurrentWorkArea": "GATHER: no current work area",
   "Runtime.Prg.Dispatch.Error.InvalidArrayName": "{command}: invalid array name",
+  "Runtime.Prg.Dispatch.Error.DataSessionInvalidSelector": "[!! SET DATASESSION TO řëqüïřëš å þøšïţïṽë, řëþřëšëñţåƀľë šëššïøñ ïðëñţïƒïëř. !!]",
   "Runtime.Prg.Dispatch.Error.InvalidObjectTarget": "{command}: invalid object target",
   "Runtime.Prg.Dispatch.Error.CreateCursorRequiresNonEmptyAlias": "CREATE CURSOR requires a non-empty alias",
   "Runtime.Prg.Dispatch.Error.CreateCursorRequiresSupportedFieldDeclaration": "CREATE CURSOR requires at least one supported field declaration",

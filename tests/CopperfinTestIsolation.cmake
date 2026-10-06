@@ -901,7 +901,6 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_currency_overflow
             test_prg_engine_currency_exact_muldiv
             test_prg_engine_string_length_bounds
-            test_prg_engine_numeric_behavior
             test_prg_engine_binary_conversion
             test_prg_engine_int64_exact_expression
             test_prg_engine_currency_val
@@ -934,6 +933,18 @@ function(copperfin_configure_native_test_isolation)
             AUDIT complete
         )
     endforeach()
+
+    # #5611/#6776: the numeric suite now scopes/restores COPPERFIN_LOCALE.
+    # Its shared fixed temporary roots still require serial scheduling.
+    copperfin_set_test_isolation(test_prg_engine_numeric_behavior
+        FILESYSTEM process-owned
+        ENVIRONMENT scoped-process
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
 
     copperfin_set_test_isolation(test_package_document_install
         PARALLEL_SAFE
