@@ -12,6 +12,17 @@
   remains a separate retained checkpoint; real CENTURY/ROLLOVER is still a
   required admitted #3698 follow-on, not completed by this query correction.
 
+- SET EPOCH contract-recovery gap (2026-10-06, #5611/#6776, existing #3698):
+  two fresh installed-VFP9 runs retain ten matching lines in
+  `tests/fixtures/vfp9-set-epoch-numeric-observation/`. Three macro EPOCH
+  command forms raise 36 and SET('EPOCH') raises 231; the actual CENTURY 19
+  ROLLOVER 50 control returns 19/50 and CTOD years 2049/1950.
+  RQ-CF-PRG-SET-EPOCH-CONTRACT-001 in docs/32 remains a gap, not implemented
+  numeric/native parity. Existing Copperfin 1950/1/9999 is not requirement
+  evidence. Owner disposition is needed before preserving an explicit
+  Copperfin extension or deferring/removing EPOCH under #3698. No production,
+  locale, regression-policy, CENTURY/parser or VM/system changes were made.
+
 - SET FWEEK TO Numeric/exact-integer conversion (2026-10-06, #5611/#6776):
   truncate into 1..3 with checked default COPPERFIN rejection. Explicit VFP9
   admits negative-only low-32 aliases; positive wrapping, zero and huge/infinite
