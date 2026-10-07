@@ -1,5 +1,20 @@
 # VFP Language Reference Coverage
 
+- SQLPRIMARYKEYS first-argument Numeric/exact-integer conversion (#5611/#6776,
+  2026-10-07): owner-derived extension policy, finite signed-int32 truncation
+  in both modes, localized catchable 1466 before metadata/cursor/state/events
+  and safe original Numeric diagnostics. Exact integers avoid double rounding.
+  Complete native-presence fixture in
+  `tests/fixtures/vfp9-sqlprimarykeys-numeric-observation/` retains missing-function
+  error 1 and a recognized native SQLTABLES control; it establishes no native
+  SQLPRIMARYKEYS conversion/result/type semantics. The owner-directed extension
+  remains supported, with no invented VFP9 aliases. Requirement
+  RQ-CF-PRG-SQLPRIMARYKEYS-HANDLE-NUMERIC-001 maps helpers/dispatch/direct and
+  synthetic verification in docs/32. Tests compare metadata cursor shape/
+  payload, preserved guard, connection state, successful events, catchability,
+  reset/closure/disconnect. Backend results, cursor allocation, type/arity,
+  other SQL callers and formatter #6997 remain outside this bounded scope.
+
 - SQLDATABASES first-argument Numeric/exact-integer conversion (#5611/#6776,
   2026-10-07): owner-derived extension policy, finite signed-int32 truncation
   in both modes, localized catchable 1466 before metadata/cursor/state/events

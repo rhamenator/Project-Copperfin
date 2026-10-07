@@ -1,0 +1,53 @@
+VERSION|Visual FoxPro 09.00.0000.7423 for Windows
+CONTROL|ERR1466
+SQLPRIMARYKEYS(0, 'ORD*', 'native_primarykeys')|ERR1
+FIRST_ERROR|File 'sqlprimarykeys.prg' does not exist.
+SQLPRIMARYKEYS(1, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(2, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(-1, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(0.49, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(0.5, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(0.9, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(1.49, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(1.5, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(1.9, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(-0.49, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(-0.5, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(-0.9, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(-1.1, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(2147483647, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(2147483648, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(-2147483648, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(-2147483649, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(4294967295, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(4294967296, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(4294967297, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(4294967298, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(-4294967296, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(-4294967295, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(-4294967294, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(4294967296.9, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(-4294967295.9, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(1E20, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(-1E20, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(1E300, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(-1E300, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(EXP(1000), 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(-EXP(1000), 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(9007199254740992, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(32767, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(32768, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(65535, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(65536, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(65537, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(-65535, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(-65536, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS($0.5, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS($1.5, 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(.T., 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(.F., 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS(.NULL., 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS('0', 'ORD*', 'native_primarykeys')|ERR1
+SQLPRIMARYKEYS('1', 'ORD*', 'native_primarykeys')|ERR1
+CURSOR|F
+SESSION|1
