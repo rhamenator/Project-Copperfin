@@ -1563,6 +1563,15 @@ std::optional<std::int32_t> checked_sqlcolumns_handle_argument(
     return checked_sqlgetprop_handle_argument(value, NumericBehavior::copperfin);
 }
 
+// RQ-CF-PRG-SQLROWCOUNT-HANDLE-NUMERIC-001: owner-directed extension
+// safety under #5611/#6776. Installed VFP9 lacks this function, so neither
+// mode infers native aliases; finite checked admission prevents wrong reads.
+std::optional<std::int32_t> checked_sqlrowcount_handle_argument(
+    const PrgValue& value,
+    const NumericBehavior) {
+    return checked_sqlgetprop_handle_argument(value, NumericBehavior::copperfin);
+}
+
 // RQ-CF-PRG-SET-DATASESSION-NUMERIC-001 (#5611/#6776). Installed VFP9
 // sessions 1/2 recover fractional truncation and both-sign low-32 aliases.
 // Exact integers/NaN and other positive IDs follow derived safety policy.
