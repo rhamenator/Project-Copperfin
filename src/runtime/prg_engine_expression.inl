@@ -2185,10 +2185,20 @@
                 }
                 if (function == "sqlprimarykeys" && !arguments.empty())
                 {
-                    const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+                    // RQ-CF-PRG-SQLPRIMARYKEYS-HANDLE-NUMERIC-001: extension
+                    // admission before metadata cursor/state/events in both modes.
+                    const auto handle = checked_sqlprimarykeys_handle_argument(arguments[0], numeric_behavior(set_callback_));
+                    if (!handle)
+                    {
+                        // Keep Numeric rejection out of formatter gap #6997.
+                        const std::string handle_text = arguments[0].kind == PrgValueKind::number
+                            ? format_round_trip_decimal(arguments[0].number_value) : value_as_string(arguments[0]);
+                        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Sql.Error.HandleNotFound",
+                            {{"handle", handle_text}}), 1466);
+                    }
                     const std::string table_name = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
                     const std::string cursor_alias = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
-                    return make_number_value(static_cast<double>(sql_primary_keys_callback_(handle, table_name, cursor_alias)));
+                    return make_number_value(static_cast<double>(sql_primary_keys_callback_(*handle, table_name, cursor_alias)));
                 }
                 if (function == "sqlforeignkeys" && !arguments.empty())
                 {

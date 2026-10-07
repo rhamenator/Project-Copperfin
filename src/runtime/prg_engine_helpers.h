@@ -201,6 +201,7 @@ std::optional<std::int32_t> checked_sqltables_handle_argument(const PrgValue& va
 // truncating signed int32 in both modes, with no native conversion oracle.
 // Rejection precedes metadata cursor/state/events; no aliases inferred.
 std::optional<std::int32_t> checked_sqldatabases_handle_argument(const PrgValue& value, NumericBehavior behavior);
+std::optional<std::int32_t> checked_sqlprimarykeys_handle_argument(const PrgValue& value, NumericBehavior behavior);
 // RQ-CF-PRG-SET-DATASESSION-NUMERIC-001: checked positive session selector.
 // Existence/lifecycle stay separate; other coercions retain rounding/clamping.
 std::optional<std::int32_t> checked_datasession_selector_argument(const PrgValue& value, NumericBehavior behavior);
