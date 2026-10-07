@@ -1754,20 +1754,23 @@
                     // order (an engaged tag_number signals this form to the
                     // callback). DESCENDING([cTableAlias | nWorkArea]):
                     // reports the currently active order's direction (a
-                    // nullopt tag_number signals this form). nTagNumber is
-                    // passed through unclamped so an explicit 0 or negative
-                    // value is preserved as "explicitly provided but out of
-                    // range" rather than silently coerced up to tag 1.
+                    // nullopt tag_number signals this form).
+                    // RQ-CF-PRG-DESCENDING-ORDINAL-NUMERIC-001 checks Numeric
+                    // ordinals before the callback; existing other-type zero
+                    // selection remains distinct from omitted.
                     if (arguments.size() >= 2U)
                     {
                         const std::string index_file_name = value_as_string(arguments[0]);
-                        const double raw_tag_number = value_as_number(arguments[1]);
-                        const std::size_t tag_number = raw_tag_number > 0.0
-                            ? static_cast<std::size_t>(raw_tag_number)
-                            : 0U;
+                        const auto tag_number = checked_descending_ordinal_argument(
+                            arguments[1], numeric_behavior(set_callback_));
+                        if (!tag_number)
+                        {
+                            throw PrgCompatibilityError(runtime_text(
+                                "Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                        }
                         const std::string designator =
                             arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
-                        return make_boolean_value(descending_callback_(index_file_name, tag_number, designator));
+                        return make_boolean_value(descending_callback_(index_file_name, *tag_number, designator));
                     }
                     const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
                     return make_boolean_value(descending_callback_({}, std::nullopt, designator));
