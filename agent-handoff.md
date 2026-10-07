@@ -55,18 +55,18 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-SQLDATABASES Numeric/exact-integer handle conversion PR #7035 merged into main
-2026-10-07 08:16:00 UTC as 14d3f41775792b0c331ee31b21e8ecb22114b761.
-Signed/DCO exact head 490dbea43800f84a26cacb9089ce1008d405a897 passed all
-11 required checks. Clean exact-head Codex review completed 07:31:56 UTC,
-summary 6033159827; verified no-findings thumbs-up 07:32:00 UTC. Zero reviews,
+SQLPRIMARYKEYS Numeric/exact-integer handle conversion PR #7037 merged into main
+2026-10-07 09:17:40 UTC as 0501c5e5ea8793be3bc95b9dafed9ed8f6100f84.
+Signed/DCO exact head a78b4f319e13e97744c29d983dcdc3a8f4e27526 passed all
+11 required checks. Clean exact-head Codex review completed 08:35:08 UTC,
+summary 6034109413; verified no-findings thumbs-up 08:35:11 UTC. Zero reviews,
 threads and closing references, pagination complete. Claude requested first
-6033159732, eyes only; no completed review or explicit quota/setup notice.
+6034111030, eyes only; no completed review or explicit quota/setup notice.
 All 32 completed checks passed; optional Windows MSVC remained running
-(run 37587659848/job 112681449981). 134 direct checks and 104 synthetic cases/
+(run 37594245172/job 112702840469). 134 direct checks and 104 synthetic cases/
 320 PRG rows pass. Both old-dispatch baselines fail 66 selected assertions;
-final GCC four suites 15.52s, sanitizer four suites 68.60s without diagnostics;
-six contracts 4.45s, 156 fragments. Post-push Numeric 13.64s, contracts 4.49s.
+final GCC four suites 16.59s, sanitizer four suites 71.15s without diagnostics;
+six contracts 4.47s, 157 fragments. Post-push Numeric 14.61s, contracts 4.53s.
 Complete 48-call/53-line native fixture/four matching runs and completed
 VR/DQ/DV retained in README and docs/32. Derived finite-int32 policy in both
 modes; missing native function resolution establishes presence only, not
@@ -75,17 +75,17 @@ extension absence. Parents #5611/#6776 remain OPEN/owner/agent-approved and
 unfinished. Main synchronized; owned WT/local/remote branches removed. Both
 builds (453 MB/863 MB) and generated FXP in recoverable trash. Unrelated files/
 WTs preserved; channel empty. Prior canonical handoff retained in stash
-7f2c4f2236f245f371184680775848ff10b7d8a0; older stashes untouched.
-SQLTABLES #7034 and SQLROLLBACK #7031 passed all 33 checks, including MSVC.
+3eb36a9f8c27e502f4bd86497be84da76e5034d4; older stashes untouched.
+SQLDATABASES #7035, SQLTABLES #7034 and SQLROLLBACK #7031 passed all 33 checks.
 Separate #7032 native callback/type/index recovery gap remains open/unadmitted.
 EPOCH #7023 and CENTURY/ROLLOVER #7024 completed earlier; #3698 closed.
 #6879 retained next workstream remains uncancelled.
 
 ## Selected next bounded slice
 
-SQLPRIMARYKEYS first-argument Numeric/exact-integer handle conversion under
+SQLFOREIGNKEYS first-argument Numeric/exact-integer handle conversion under
 freshly revalidated owner-authored OPEN agent-approved #5611/#6776 selected
-from exact main 14d3f41775792b0c331ee31b21e8ecb22114b761.
+from exact main 0501c5e5ea8793be3bc95b9dafed9ed8f6100f84.
 Only its unchecked llround/int expression-dispatch site is in scope. Other SQL
 callers, table-pattern/metadata/backend results, cursor allocation, type/arity
 and absent/default-handle semantics remain separate. Independently observe
@@ -93,34 +93,33 @@ installed VFP9 support; absence of native syntax is not grounds to skip an
 intentional extension. Derive/document extension boundaries from owner policy
 and hazards, not existing code as its own requirement source; do not invent
 native aliases. Dedicated WT
-/home/rich/.codex/worktrees/sqlprimarykeys-handle-numeric-5611/Project-Copperfin
-on fix/sqlprimarykeys-handle-numeric-5611 from origin/main. No commit, push or PR
-yet. Helper, 134 direct checks, 104 synthetic cases/320 PRG rows, native fixture,
-traceability and changelog are uncommitted; expression dispatch is unchanged
-for the two-build baseline. Installed VFP9 reports missing sqlprimarykeys.prg
-(ERR 1) for all 48 calls, with recognized SQLTABLES control (1466). Four fresh
-serial runs match all 53 retained lines. Presence only, not an argument/index/
-type/backend oracle. Both modes use the owner-derived finite/truncating int32
-boundary without inferred aliases; exact integers avoid double rounding.
-Both unchanged-dispatch baselines fail exactly 66 selected SQLPRIMARYKEYS
-assertions, with all direct/setup/coercion/cleanup controls and neighboring
-suites passing. GCC Numeric 14.48s/four suites 16.15s; Clang sanitizer Numeric
-66.10s/four suites 73.18s, no sanitizer diagnostics. Six contracts pass 5.20s,
-157 valid fragments. One-site dispatch is now wired. Final GCC four suites
-pass 4/4 in 16.59s (Numeric 14.78s); Clang ASan/UBSan/float-cast-overflow
-pass 4/4 in 71.15s (Numeric 64.01s), without diagnostics. Final six contracts
-pass 4.47s, 157 fragments. Native source/output hashes unchanged. Completed
-README VR/DQ/DV and docs/22/docs/32 retain derived extension policy, safe
-diagnostics, exact integers/adjacent domain, metadata/guard/state/event checks,
-reset/closure/disconnect walkthrough and rollback. No baseline expectation
-weakened. Next: signed/DCO commit, push/PR, Claude-first exact-head review/gates.
+/home/rich/.codex/worktrees/sqlforeignkeys-handle-numeric-5611/Project-Copperfin
+on fix/sqlforeignkeys-handle-numeric-5611 from origin/main. No PR yet.
+Helper, 134 direct checks, 104 fresh synthetic cases/320 PRG rows and complete
+native fixture are uncommitted; one-site dispatch is now wired after both
+unchanged-dispatch baselines. Installed VFP9 independently reports missing
+sqlforeignkeys.prg (ERR 1), with recognized SQLTABLES control (1466). Four fresh
+serial runs match all 53 retained lines, presence only, not conversion/type/
+backend parity. Both modes use derived finite/truncating int32 policy, exact
+integers, checked preserved coercions and safe original Numeric 1466 diagnostics.
+Both baselines fail exactly 66 selected SQLFOREIGNKEYS assertions; direct/setup/
+coercion/cleanup controls and three neighbors pass, no sanitizer diagnostic.
+GCC Numeric 15.71s/four suites 17.41s; Clang sanitizer Numeric 73.54s/four suites
+80.60s. Baseline six contracts pass 4.91s, 158 valid fragments.
+Final GCC four suites pass 4/4 (18.02s; Numeric 16.28s); Clang ASan/UBSan/
+float-cast-overflow pass 4/4 (77.08s; Numeric 70.13s), without diagnostics.
+Final six contracts pass 4.38s, 158 valid fragments. Native hashes unchanged;
+completed README VR/DQ/DV, docs/22/docs/32 and changelog retain bounded policy,
+state/cursor/guard/event comparisons and reviewed rollback/notification.
+Next: final diff review, signed/DCO commit, push/PR and Claude review first.
+No owner input needed. Baseline expectations remain unchanged.
 Owned build paths, when configured:
-/home/rich/temp/copperfin-sqlprimarykeys-handle-5611-build and
-/home/rich/temp/copperfin-sqlprimarykeys-handle-5611-sanitize.
+/home/rich/temp/copperfin-sqlforeignkeys-handle-5611-build and
+/home/rich/temp/copperfin-sqlforeignkeys-handle-5611-sanitize.
 No VM/external backend/system change admitted. Runtime suites serial across
 builds; never overlap build processes within one directory. Request Claude
 first; merge only all 11 required green, clean exact-head authorized review and
-resolved conversations. #7035 optional MSVC passed 08:19:27 UTC; all 33 green.
+resolved conversations.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -834,7 +833,8 @@ Owner-directed workstream order before the #6879 assignment was:
    - Completed after those: SQLTABLES handle conversion (PR #7034); native
      connected-index and callback/type gaps #7032 remain separate.
    - Completed after those: SQLDATABASES handle conversion (PR #7035).
-   - Selected next: SQLPRIMARYKEYS first-argument Numeric/exact-integer handle
+   - Completed after those: SQLPRIMARYKEYS handle conversion (PR #7037).
+   - Selected next: SQLFOREIGNKEYS first-argument Numeric/exact-integer handle
      conversion; native-presence observation and owner-derived extension policy.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).

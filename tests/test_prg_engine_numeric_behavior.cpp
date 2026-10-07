@@ -1558,7 +1558,8 @@ std::string run_rows(const fs::path &dir, const std::vector<Row> &rows,
                      const std::optional<std::size_t> expected_rollback_events = std::nullopt,
                      const std::optional<std::size_t> expected_tables_events = std::nullopt,
                      const std::optional<std::size_t> expected_databases_events = std::nullopt,
-                     const std::optional<std::size_t> expected_primarykeys_events = std::nullopt) {
+                     const std::optional<std::size_t> expected_primarykeys_events = std::nullopt,
+                     const std::optional<std::size_t> expected_foreignkeys_events = std::nullopt) {
     std::string body = "LOCAL cOut, oEx, x\ncOut = ''\n";
     for (const Row &row : rows) {
         body += "TRY\n";
@@ -1639,6 +1640,17 @@ std::string run_rows(const fs::path &dir, const std::vector<Row> &rows,
         expect(primarykeys_events == *expected_primarykeys_events && cursor_events == *expected_primarykeys_events,
                "SQLPRIMARYKEYS successful primary-key/cursor event counts expected " + std::to_string(*expected_primarykeys_events) +
                ", got " + std::to_string(primarykeys_events) + "/" + std::to_string(cursor_events));
+    }
+    if (expected_foreignkeys_events.has_value()) {
+        std::size_t foreignkeys_events = 0;
+        std::size_t cursor_events = 0;
+        for (const auto& event : state.events) {
+            if (event.category == "sql.foreignkeys") ++foreignkeys_events;
+            if (event.category == "sql.cursor") ++cursor_events;
+        }
+        expect(foreignkeys_events == *expected_foreignkeys_events && cursor_events == *expected_foreignkeys_events,
+               "SQLFOREIGNKEYS successful foreign-key/cursor event counts expected " + std::to_string(*expected_foreignkeys_events) +
+               ", got " + std::to_string(foreignkeys_events) + "/" + std::to_string(cursor_events));
     }
     return read_text(dir / "results.txt");
 }
@@ -2103,6 +2115,86 @@ void test_sqlprimarykeys_numeric_behavior_script_rows() {
         std::string expected_output;
         for (const auto& row : rows) expected_output += row.expected + "\n";
         expect(output == expected_output, std::string("SQLPRIMARYKEYS ") + mode + " [" + argument +
+               "] expected [" + expected_output + "], got [" + output + "]");
+    };
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        for (const auto& row : kSqlGetPropHandleCases) {
+            // Owner-derived extension policy; VFP9 has no native function.
+            check(mode, row.argument, row.copperfin);
+        }
+        for (const auto& control : std::vector<std::pair<std::string, std::int32_t>>{
+                 {"$0.5", 1}, {"$1.5", 2}, {".T.", 1}, {".F.", 0},
+                 {".NULL.", 0}, {"'0'", 0}, {"'1'", 1}}) {
+            check(mode, control.first, control.second);
+        }
+        check(mode, "1E300", std::nullopt, "1" + std::string(300U, '0'));
+        check(mode, "-1E300", std::nullopt, "-1" + std::string(300U, '0'));
+        check(mode, "EXP(1000)", std::nullopt, "inf");
+        check(mode, "-EXP(1000)", std::nullopt, "-inf");
+    }
+    fs::remove_all(dir, ignored);
+}
+
+// RQ-CF-PRG-SQLFOREIGNKEYS-HANDLE-NUMERIC-001: independent checked admission,
+// extension-owned expectations, synthetic metadata and preserved guard cursor.
+void test_sqlforeignkeys_numeric_behavior_script_rows() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_sqlforeignkeys_numeric_behavior";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    const auto check = [&](const char* mode, const std::string& argument,
+                           const std::optional<std::int32_t> handle,
+                           const std::optional<std::string>& diagnostic = std::nullopt) {
+        const bool materialized = handle == 1;
+        const std::string setup = std::string("SET NUMERICBEHAVIOR TO ") + mode +
+            "\nCREATE CURSOR foreignkeys_guard (marker C(12))\n"
+            "INSERT INTO foreignkeys_guard VALUES ('unchanged')\n"
+            "nSqlForeignKeys = SQLCONNECT('dsn=Northwind')\n"
+            "nForeignKeysWrite = SQLEXEC(nSqlForeignKeys, 'insert into customers values (1)')\n"
+            "nForeignKeysCancel = SQLCANCEL(nSqlForeignKeys)";
+        const std::string call =
+            "nForeignKeysError = 0\nnForeignKeysStatus = 0\ncForeignKeysMessage = ''\n"
+            "TRY\nnForeignKeysStatus = SQLFOREIGNKEYS(" + argument + ", 'ORD*', 'numeric_foreignkeys')\n"
+            "CATCH TO oEx\nnForeignKeysError = oEx.ErrorNo\ncForeignKeysMessage = oEx.Message\nENDTRY\n"
+            "nForeignKeysRows = -1\nnForeignKeysFields = -1\ncForeignKeysFirst = ''\n"
+            "IF USED('numeric_foreignkeys')\n"
+            "nForeignKeysRows = RECCOUNT('numeric_foreignkeys')\n"
+            "nForeignKeysFields = FCOUNT('numeric_foreignkeys')\n"
+            "cForeignKeysFirst = ALLTRIM(numeric_foreignkeys.FKCOLUMN_NAME)\nENDIF";
+        const std::string state =
+            "ALLTRIM(STR(SQLGETPROP(nSqlForeignKeys, 'ConnectHandle'))) + ':' + "
+            "TRANSFORM(SQLGETPROP(nSqlForeignKeys, 'LastSqlAction')) + ':' + "
+            "IIF(SQLGETPROP(nSqlForeignKeys, 'TransactionDirty'), 'T', 'F') + ':' + "
+            "IIF(SQLGETPROP(nSqlForeignKeys, 'CancelRequested'), 'T', 'F')";
+        const std::string guard =
+            "ALLTRIM(STR(RECCOUNT('foreignkeys_guard'))) + ':' + "
+            "ALLTRIM(STR(FCOUNT('foreignkeys_guard'))) + ':' + ALLTRIM(foreignkeys_guard.marker)";
+        const std::string expression =
+            "ALLTRIM(STR(nForeignKeysError)) + ':' + ALLTRIM(STR(nForeignKeysStatus)) + ':' + " + state +
+            " + ':' + IIF(USED('numeric_foreignkeys'), 'T', 'F') + ':' + "
+            "TRANSFORM(SQLGETPROP(nSqlForeignKeys, 'LastCursorAlias')) + ':' + "
+            "ALLTRIM(STR(nForeignKeysRows)) + ':' + ALLTRIM(STR(nForeignKeysFields)) + ':' + "
+            "cForeignKeysFirst + ':' + " + guard;
+        const std::string expected = !handle.has_value() ? "C:1466:0:1:cancel:T:T:F::-1:-1::1:1:unchanged" :
+            materialized ? "C:0:1:1:foreignkeys:T:F:T:numeric_foreignkeys:1:14:CUSTOMER_ID:1:1:unchanged" :
+                           "C:0:-1:1:cancel:T:T:F::-1:-1::1:1:unchanged";
+        std::vector<Row> rows{
+            {setup, "ALLTRIM(STR(nForeignKeysWrite)) + ':' + ALLTRIM(STR(nForeignKeysCancel)) + ':' + " + state +
+             " + ':' + IIF(USED('numeric_foreignkeys'), 'T', 'F') + ':' + " + guard,
+             "C:1:1:1:cancel:T:T:F:1:1:unchanged"},
+            {call, expression, expected},
+        };
+        if (diagnostic.has_value()) rows.push_back({"", "cForeignKeysMessage", "C:SQL handle not found: " + *diagnostic});
+        rows.push_back({"IF USED('numeric_foreignkeys')\nUSE IN numeric_foreignkeys\nENDIF\n"
+                        "USE IN foreignkeys_guard\nSET NUMERICBEHAVIOR TO COPPERFIN",
+            "ALLTRIM(STR(SQLDISCONNECT(nSqlForeignKeys))) + ':' + "
+            "ALLTRIM(STR(SQLGETPROP(nSqlForeignKeys, 'ConnectHandle'))) + ':' + SET('NUMERICBEHAVIOR') + ':' + "
+            "IIF(USED('numeric_foreignkeys'), 'T', 'F') + ':' + IIF(USED('foreignkeys_guard'), 'T', 'F')",
+            "C:1:-1:COPPERFIN:F:F"});
+        const std::string output = run_rows(dir, rows, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, materialized ? 1U : 0U);
+        std::string expected_output;
+        for (const auto& row : rows) expected_output += row.expected + "\n";
+        expect(output == expected_output, std::string("SQLFOREIGNKEYS ") + mode + " [" + argument +
                "] expected [" + expected_output + "], got [" + output + "]");
     };
     for (const char* mode : {"COPPERFIN", "VFP9"}) {
@@ -4188,6 +4280,7 @@ int main() {
     test_sql_property_handle_direct_numeric_boundaries("SQLTABLES", copperfin::runtime::checked_sqltables_handle_argument, false);
     test_sql_property_handle_direct_numeric_boundaries("SQLDATABASES", copperfin::runtime::checked_sqldatabases_handle_argument, false);
     test_sql_property_handle_direct_numeric_boundaries("SQLPRIMARYKEYS", copperfin::runtime::checked_sqlprimarykeys_handle_argument, false);
+    test_sql_property_handle_direct_numeric_boundaries("SQLFOREIGNKEYS", copperfin::runtime::checked_sqlforeignkeys_handle_argument, false);
     test_numeric_behavior_script_rows();
     test_sqldisconnect_numeric_behavior_script_rows();
     test_sqlcancel_numeric_behavior_script_rows();
@@ -4196,6 +4289,7 @@ int main() {
     test_sqltables_numeric_behavior_script_rows();
     test_sqldatabases_numeric_behavior_script_rows();
     test_sqlprimarykeys_numeric_behavior_script_rows();
+    test_sqlforeignkeys_numeric_behavior_script_rows();
     test_datasession_selector_direct_numeric_boundaries();
     test_datasession_numeric_behavior_script_rows();
     test_set_decimals_direct_numeric_boundaries();
