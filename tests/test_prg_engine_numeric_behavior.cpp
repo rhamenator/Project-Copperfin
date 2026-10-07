@@ -1560,7 +1560,8 @@ std::string run_rows(const fs::path &dir, const std::vector<Row> &rows,
                      const std::optional<std::size_t> expected_databases_events = std::nullopt,
                      const std::optional<std::size_t> expected_primarykeys_events = std::nullopt,
                      const std::optional<std::size_t> expected_foreignkeys_events = std::nullopt,
-                     const std::optional<std::size_t> expected_columns_events = std::nullopt) {
+                     const std::optional<std::size_t> expected_columns_events = std::nullopt,
+                     const std::optional<std::size_t> expected_readonly_sql_events = std::nullopt) {
     std::string body = "LOCAL cOut, oEx, x\ncOut = ''\n";
     for (const Row &row : rows) {
         body += "TRY\n";
@@ -1663,6 +1664,15 @@ std::string run_rows(const fs::path &dir, const std::vector<Row> &rows,
         expect(columns_events == *expected_columns_events && cursor_events == *expected_columns_events,
                "SQLCOLUMNS successful column/cursor event counts expected " + std::to_string(*expected_columns_events) +
                ", got " + std::to_string(columns_events) + "/" + std::to_string(cursor_events));
+    }
+    if (expected_readonly_sql_events.has_value()) {
+        std::size_t sql_events = 0;
+        for (const auto& event : state.events) {
+            if (event.category.rfind("sql.", 0) == 0) ++sql_events;
+        }
+        expect(sql_events == *expected_readonly_sql_events,
+               "SQLROWCOUNT must not emit or alter SQL events; expected " +
+               std::to_string(*expected_readonly_sql_events) + ", got " + std::to_string(sql_events));
     }
     return read_text(dir / "results.txt");
 }
@@ -2307,6 +2317,82 @@ void test_sqlcolumns_numeric_behavior_script_rows() {
             check(mode, format, "-1E300", std::nullopt, "-1" + std::string(300U, '0'));
             check(mode, format, "EXP(1000)", std::nullopt, "inf");
             check(mode, format, "-EXP(1000)", std::nullopt, "-inf");
+        }
+    }
+    fs::remove_all(dir, ignored);
+}
+
+// RQ-CF-PRG-SQLROWCOUNT-HANDLE-NUMERIC-001: owner-derived extension
+// boundaries; fresh canceled DML/SELECT state and guard controls, not VFP parity.
+void test_sqlrowcount_numeric_behavior_script_rows() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_sqlrowcount_numeric_behavior";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    const auto check = [&](const char* mode, const bool selected, const std::string& argument,
+                           const std::optional<std::int32_t> handle,
+                           const std::optional<std::string>& diagnostic = std::nullopt) {
+        const std::string count = selected ? "3" : "1";
+        const std::string setup = std::string("SET NUMERICBEHAVIOR TO ") + mode +
+            "\nCREATE CURSOR row_guard (marker C(12))\n"
+            "INSERT INTO row_guard VALUES ('unchanged')\n"
+            "nSqlRows = SQLCONNECT('dsn=Northwind')\n"
+            "nRowsWrite = SQLEXEC(nSqlRows, 'insert into customers values (1)')\n" +
+            (selected ? "SELECT 0\nnRowsSelect = SQLEXEC(nSqlRows, 'select * from customers', 'row_result')\n" : "") +
+            "nRowsCancel = SQLCANCEL(nSqlRows)\nSELECT row_guard";
+        const std::string state =
+            "ALLTRIM(STR(SQLGETPROP(nSqlRows, 'ConnectHandle'))) + ':' + "
+            "ALLTRIM(STR(SQLGETPROP(nSqlRows, 'LastResultCount'))) + ':' + "
+            "TRANSFORM(SQLGETPROP(nSqlRows, 'LastSqlAction')) + ':' + "
+            "IIF(SQLGETPROP(nSqlRows, 'TransactionDirty'), 'T', 'F') + ':' + "
+            "IIF(SQLGETPROP(nSqlRows, 'CancelRequested'), 'T', 'F') + ':' + "
+            "TRANSFORM(SQLGETPROP(nSqlRows, 'LastCursorAlias')) + ':' + "
+            "ALIAS() + ':' + ALLTRIM(STR(RECCOUNT('row_guard'))) + ':' + "
+            "ALLTRIM(STR(FCOUNT('row_guard'))) + ':' + ALLTRIM(row_guard.marker) + ':' + "
+            "IIF(USED('row_result'), 'T', 'F')";
+        const std::string expected_state = "1:" + count + ":cancel:T:T:" +
+            (selected ? "row_result" : "") + ":row_guard:1:1:unchanged:" + (selected ? "T" : "F");
+        const std::string call =
+            "nRowsError = 0\nnRowsStatus = 0\ncRowsMessage = ''\n"
+            "TRY\nnRowsStatus = SQLROWCOUNT(" + argument + ")\n"
+            "CATCH TO oEx\nnRowsError = oEx.ErrorNo\ncRowsMessage = oEx.Message\nENDTRY";
+        const std::string expected = !handle.has_value() ? "C:1466:0:" + expected_state :
+            "C:0:" + (handle == 1 ? count : "-1") + ":" + expected_state;
+        std::vector<Row> rows{
+            {setup, "ALLTRIM(STR(nRowsWrite)) + ':' + ALLTRIM(STR(nRowsCancel)) + ':' + " + state,
+             "C:1:1:" + expected_state},
+            {call, "ALLTRIM(STR(nRowsError)) + ':' + ALLTRIM(STR(nRowsStatus)) + ':' + " + state, expected},
+        };
+        if (selected) rows.push_back({"", "RECCOUNT('row_result')", "N:3"});
+        if (diagnostic.has_value()) rows.push_back({"", "cRowsMessage", "C:SQL handle not found: " + *diagnostic});
+        rows.push_back({"IF USED('row_result')\nUSE IN row_result\nENDIF\n"
+                        "USE IN row_guard\nSET NUMERICBEHAVIOR TO COPPERFIN",
+            "ALLTRIM(STR(SQLDISCONNECT(nSqlRows))) + ':' + "
+            "ALLTRIM(STR(SQLGETPROP(nSqlRows, 'ConnectHandle'))) + ':' + SET('NUMERICBEHAVIOR') + ':' + "
+            "IIF(USED('row_result'), 'T', 'F') + ':' + IIF(USED('row_guard'), 'T', 'F')",
+            "C:1:-1:COPPERFIN:F:F"});
+        const std::string output = run_rows(dir, rows, 1U, std::nullopt, std::nullopt,
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, selected ? 7U : 5U);
+        std::string expected_output;
+        for (const auto& row : rows) expected_output += row.expected + "\n";
+        expect(output == expected_output, std::string("SQLROWCOUNT ") + mode + (selected ? " SELECT [" : " DML [") +
+               argument + "] expected [" + expected_output + "], got [" + output + "]");
+    };
+    for (const bool selected : {false, true}) {
+        for (const char* mode : {"COPPERFIN", "VFP9"}) {
+            for (const auto& row : kSqlGetPropHandleCases) {
+                // Checked owner-derived policy in both modes, not native aliases.
+                check(mode, selected, row.argument, row.copperfin);
+            }
+            for (const auto& control : std::vector<std::pair<std::string, std::int32_t>>{
+                     {"$0.5", 1}, {"$1.5", 2}, {".T.", 1}, {".F.", 0},
+                     {".NULL.", 0}, {"'0'", 0}, {"'1'", 1}}) {
+                check(mode, selected, control.first, control.second);
+            }
+            check(mode, selected, "1E300", std::nullopt, "1" + std::string(300U, '0'));
+            check(mode, selected, "-1E300", std::nullopt, "-1" + std::string(300U, '0'));
+            check(mode, selected, "EXP(1000)", std::nullopt, "inf");
+            check(mode, selected, "-EXP(1000)", std::nullopt, "-inf");
         }
     }
     fs::remove_all(dir, ignored);
@@ -4379,6 +4465,7 @@ int main() {
     test_sql_property_handle_direct_numeric_boundaries("SQLPRIMARYKEYS", copperfin::runtime::checked_sqlprimarykeys_handle_argument, false);
     test_sql_property_handle_direct_numeric_boundaries("SQLFOREIGNKEYS", copperfin::runtime::checked_sqlforeignkeys_handle_argument, false);
     test_sql_property_handle_direct_numeric_boundaries("SQLCOLUMNS", copperfin::runtime::checked_sqlcolumns_handle_argument, false);
+    test_sql_property_handle_direct_numeric_boundaries("SQLROWCOUNT", copperfin::runtime::checked_sqlrowcount_handle_argument, false);
     test_numeric_behavior_script_rows();
     test_sqldisconnect_numeric_behavior_script_rows();
     test_sqlcancel_numeric_behavior_script_rows();
@@ -4389,6 +4476,7 @@ int main() {
     test_sqlprimarykeys_numeric_behavior_script_rows();
     test_sqlforeignkeys_numeric_behavior_script_rows();
     test_sqlcolumns_numeric_behavior_script_rows();
+    test_sqlrowcount_numeric_behavior_script_rows();
     test_datasession_selector_direct_numeric_boundaries();
     test_datasession_numeric_behavior_script_rows();
     test_set_decimals_direct_numeric_boundaries();

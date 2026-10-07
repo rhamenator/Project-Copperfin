@@ -1,5 +1,20 @@
 # VFP Language Reference Coverage
 
+- SQLROWCOUNT first-argument Numeric/exact-integer conversion (#5611/#6776,
+  2026-10-07): owner-derived extension policy, finite signed-int32 truncation
+  in both modes, localized catchable 1466 before row-count reads and safe
+  original Numeric diagnostics. Exact integers avoid double rounding.
+  Complete 48-attempt/52-line installed-VFP9 presence fixture in
+  `tests/fixtures/vfp9-sqlrowcount-handle-numeric-observation/` records
+  resolution error 1, recognized native control 1466 and unchanged session,
+  not handle/type/row-count semantics. Native absence does not skip an
+  extension. RQ-CF-PRG-SQLROWCOUNT-HANDLE-NUMERIC-001 maps owner-derived policy
+  in docs/32. Direct and fresh canceled DML/SELECT cases compare return/error/
+  message, counts, connection/dirty/cancel/action state, selected alias,
+  guard/result preservation, total SQL events and reset/cleanup. Callback
+  return/lifecycle/backend, type/arity, other SQL sites and formatter #6997
+  remain separate; synthetic result controls are not native backend parity.
+
 - SQLCOLUMNS first-argument Numeric/exact-integer conversion (#5611/#6776,
   2026-10-07): derived finite signed-int32 truncation in both modes, localized
   catchable 1466 before metadata callbacks/cursors/state/success events and
