@@ -1774,7 +1774,25 @@
                 }
                 if (function == "tag")
                 {
-                    const std::string first = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+                    // RQ-CF-PRG-TAG-ORDINAL-NUMERIC-001 (#5611/#6776).
+                    // Numeric first arguments cannot designate an index file;
+                    // avoid the shared formatter's unchecked llround (#6997).
+                    const bool numeric_first = !arguments.empty() &&
+                        (arguments[0].kind == PrgValueKind::number ||
+                         arguments[0].kind == PrgValueKind::int64 ||
+                         arguments[0].kind == PrgValueKind::uint64);
+                    const std::string first = arguments.empty() || numeric_first
+                        ? std::string{} : value_as_string(arguments[0]);
+                    const auto ordinal = [this](const PrgValue& value) -> std::size_t
+                    {
+                        const auto checked = checked_tag_ordinal_argument(value, numeric_behavior(set_callback_));
+                        if (!checked)
+                        {
+                            throw PrgCompatibilityError(runtime_text(
+                                "Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                        }
+                        return *checked;
+                    };
                     std::size_t tag_number = 1U;
                     std::string designator;
                     std::string index_file_name;
@@ -1784,7 +1802,7 @@
                         index_file_name = first;
                         if (arguments.size() >= 2U)
                         {
-                            tag_number = static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[1])));
+                            tag_number = ordinal(arguments[1]);
                         }
                         if (arguments.size() >= 3U)
                         {
@@ -1793,9 +1811,9 @@
                     }
                     else
                     {
-                        if (!first.empty())
+                        if (numeric_first || !first.empty())
                         {
-                            tag_number = static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[0])));
+                            tag_number = ordinal(arguments[0]);
                         }
                         if (arguments.size() >= 2U)
                         {

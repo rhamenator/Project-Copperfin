@@ -1,5 +1,21 @@
 # VFP Language Reference Coverage
 
+- TAG ordinal Numeric/exact-integer conversion (#5611/#6776, 2026-10-07):
+  checked finite truncation into 1..32767 with the native raw-positive ceiling;
+  explicit VFP9 retains negative-only signed-low-32 aliases. NaN rejects and
+  extended integers use derived exact admission/modular policy, not native
+  extension evidence. Localized catchable 11 precedes index lookup; Numeric
+  first operands avoid the shared unsafe formatter without changing it (#6997).
+  Three matching installed VFP9 7423 runs in
+  tests/fixtures/vfp9-tag-ordinal-numeric-observation/ retain 136 calls plus
+  omitted/state/cleanup controls, 142 lines. Independent direct and fresh
+  synthetic rows compare both forms on indexed/empty cursors, output/error/
+  message, order/pointer/payload/session/mode/reset. RQ-CF-PRG-TAG-ORDINAL-NUMERIC-001
+  links helpers/expression/tests and native/derived verification in docs/32
+  and the fixture README. Omitted routing (#7057), other-type admission (#7058)
+  and index metadata/result/backend/arity/lifecycle remain separate gaps;
+  KEY/DESCENDING casts unchanged.
+
 - ALEN optional dimension Numeric/exact-integer conversion (#5611/#6776,
   2026-10-07): default finite truncation into 0..2; explicit VFP9 signed
   low-32 aliases and observed huge/infinite indefinite zero before the same
