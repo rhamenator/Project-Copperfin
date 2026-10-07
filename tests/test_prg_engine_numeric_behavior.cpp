@@ -1552,7 +1552,8 @@ std::vector<Row> build_rows() {
     return rows;
 }
 
-std::string run_rows(const fs::path &dir, const std::vector<Row> &rows) {
+std::string run_rows(const fs::path &dir, const std::vector<Row> &rows,
+                     const std::optional<std::size_t> expected_cancel_events = std::nullopt) {
     std::string body = "LOCAL cOut, oEx, x\ncOut = ''\n";
     for (const Row &row : rows) {
         body += "TRY\n";
@@ -1573,6 +1574,15 @@ std::string run_rows(const fs::path &dir, const std::vector<Row> &rows) {
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     if (!state.completed) {
         return "<incomplete: " + state.message + ">";
+    }
+    if (expected_cancel_events.has_value()) {
+        std::size_t cancel_events = 0;
+        for (const auto& event : state.events) {
+            if (event.category == "sql.cancel") ++cancel_events;
+        }
+        expect(cancel_events == *expected_cancel_events,
+               "SQLCANCEL successful event count expected " + std::to_string(*expected_cancel_events) +
+               ", got " + std::to_string(cancel_events));
     }
     return read_text(dir / "results.txt");
 }
@@ -1632,6 +1642,63 @@ void test_sqldisconnect_numeric_behavior_script_rows() {
         }
         check(mode, "1E300", std::nullopt, "1" + std::string(300U, '0'));
         check(mode, "EXP(1000)", std::nullopt, "inf");
+    }
+    fs::remove_all(dir, ignored);
+}
+
+// RQ-CF-PRG-SQLCANCEL-HANDLE-NUMERIC-001: derived checked conversion,
+// independently from native absent-handle errors which cannot reveal indices.
+// Synthetic handle 1 exposes unintended cancellation/action mutation.
+void test_sqlcancel_numeric_behavior_script_rows() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_sqlcancel_numeric_behavior";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    const auto check = [&](const char* mode, const std::string& argument,
+                           const std::optional<std::int32_t> handle,
+                           const std::optional<std::string>& diagnostic = std::nullopt) {
+        const bool cancelled = handle == 1;
+        const std::string setup = std::string("SET NUMERICBEHAVIOR TO ") + mode +
+            "\nnSqlCancel = SQLCONNECT('dsn=Northwind')";
+        const std::string call =
+            "nCancelError = 0\nnCancelStatus = 0\ncCancelMessage = ''\n"
+            "TRY\nnCancelStatus = SQLCANCEL(" + argument + ")\n"
+            "CATCH TO oEx\nnCancelError = oEx.ErrorNo\ncCancelMessage = oEx.Message\nENDTRY";
+        const std::string expression = diagnostic.has_value() ? "cCancelMessage" :
+            "ALLTRIM(STR(nCancelError)) + ':' + ALLTRIM(STR(nCancelStatus)) + ':' + "
+            "ALLTRIM(STR(SQLGETPROP(nSqlCancel, 'ConnectHandle'))) + ':' + "
+            "TRANSFORM(SQLGETPROP(nSqlCancel, 'LastSqlAction')) + ':' + "
+            "IIF(SQLGETPROP(nSqlCancel, 'CancelRequested'), 'T', 'F')";
+        const std::string expected = diagnostic.has_value() ? "C:SQL handle not found: " + *diagnostic :
+            (!handle.has_value() ? "C:1466:0:1:connect:F" : cancelled ? "C:0:1:1:cancel:T" : "C:0:-1:1:connect:F");
+        const std::vector<Row> rows{
+            {setup, "SQLGETPROP(nSqlCancel, 'ConnectHandle')", "N:1"},
+            {call, expression, expected},
+            {"SET NUMERICBEHAVIOR TO COPPERFIN",
+             "ALLTRIM(STR(SQLDISCONNECT(nSqlCancel))) + ':' + "
+             "ALLTRIM(STR(SQLGETPROP(nSqlCancel, 'ConnectHandle'))) + ':' + SET('NUMERICBEHAVIOR')",
+             "C:1:-1:COPPERFIN"},
+        };
+        const std::string output = run_rows(dir, rows, cancelled ? 1U : 0U);
+        std::string expected_output;
+        for (const auto& row : rows) expected_output += row.expected + "\n";
+        expect(output == expected_output, std::string("SQLCANCEL ") + mode + " [" + argument +
+               "] expected [" + expected_output + "], got [" + output + "]");
+    };
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        for (const auto& row : kSqlGetPropHandleCases) {
+            // Deliberately no speculative VFP9 low-32 aliases.
+            check(mode, row.argument, row.copperfin);
+        }
+        for (const auto& control : std::vector<std::pair<std::string, std::int32_t>>{
+                 {"$0.5", 1}, {"$1.5", 2}, {".T.", 1}, {".F.", 0},
+                 {".NULL.", 0}, {"'0'", 0}, {"'1'", 1}}) {
+            check(mode, control.first, control.second);
+        }
+        check(mode, "1E300", std::nullopt, "1" + std::string(300U, '0'));
+        check(mode, "-1E300", std::nullopt, "-1" + std::string(300U, '0'));
+        check(mode, "EXP(1000)", std::nullopt, "inf");
+        check(mode, "-EXP(1000)", std::nullopt, "-inf");
     }
     fs::remove_all(dir, ignored);
 }
@@ -3621,11 +3688,12 @@ void test_select_selector_direct_numeric_boundaries() {
 // table through its own 48-call native fixture and connection-state rows.
 void test_sql_property_handle_direct_numeric_boundaries(
     const char* function,
-    std::optional<std::int32_t> (*convert)(const copperfin::runtime::PrgValue&, copperfin::runtime::NumericBehavior)) {
+    std::optional<std::int32_t> (*convert)(const copperfin::runtime::PrgValue&, copperfin::runtime::NumericBehavior),
+    const bool observed_negative_aliases = true) {
     using namespace copperfin::runtime;
     for (const auto mode : {NumericBehavior::copperfin, NumericBehavior::vfp9}) {
         for (const auto& row : kSqlGetPropHandleCases) {
-            const auto expected = mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin;
+            const auto expected = mode == NumericBehavior::vfp9 && observed_negative_aliases ? row.vfp9 : row.copperfin;
             expect(convert(make_number_value(row.value), mode) == expected,
                    std::string(function) + " direct numeric boundary " + row.argument);
         }
@@ -3664,7 +3732,7 @@ void test_sql_property_handle_direct_numeric_boundaries(
         };
         for (std::size_t index = 0; index < boundaries.size(); ++index) {
             const auto& row = boundaries[index];
-            const auto expected = mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin;
+            const auto expected = mode == NumericBehavior::vfp9 && observed_negative_aliases ? row.vfp9 : row.copperfin;
             expect(convert(row.value, mode) == expected,
                    std::string(function) + " direct extended boundary " + std::to_string(index));
         }
@@ -3694,8 +3762,10 @@ int main() {
     test_sql_property_handle_direct_numeric_boundaries("SQLGETPROP", copperfin::runtime::checked_sqlgetprop_handle_argument);
     test_sql_property_handle_direct_numeric_boundaries("SQLSETPROP", copperfin::runtime::checked_sqlsetprop_handle_argument);
     test_sql_property_handle_direct_numeric_boundaries("SQLDISCONNECT", copperfin::runtime::checked_sqldisconnect_handle_argument);
+    test_sql_property_handle_direct_numeric_boundaries("SQLCANCEL", copperfin::runtime::checked_sqlcancel_handle_argument, false);
     test_numeric_behavior_script_rows();
     test_sqldisconnect_numeric_behavior_script_rows();
+    test_sqlcancel_numeric_behavior_script_rows();
     test_datasession_selector_direct_numeric_boundaries();
     test_datasession_numeric_behavior_script_rows();
     test_set_decimals_direct_numeric_boundaries();
