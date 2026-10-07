@@ -55,86 +55,83 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-DESCENDING ordinal conversion PR #7065 merged 2026-10-07 22:15:37 UTC as
-51c90be0466fdf2293ca0c6192c68c642ed5f4f1, exact signed/DCO head
-f8c62b08577789fe9400ab93a4eba82805531abb. All 11 required checks green;
-30/33 hosted checks SUCCESS at merge; optional Linux GCC and macOS Clang
-subsequently SUCCESS at22:16:22/22:17:33 UTC. Optional Windows MSVC still
-running at22:24:35 (no failure); recheck its exact-head outcome later.
-Complete REST reviews/inline and GraphQL threads/closing-reference pagination
-empty. Clean exact-head authorized Codex fallback completed21:50:42.277620Z,
-summary6047533961/verified connector thumbs552401871. Claude-first6047535698
-has verified bot eyes only, no quota/setup notice; not clean evidence.
+ISLEAPYEAR Numeric/exact-integer conversion PR #7066 merged2026-10-07
+23:15:54 UTC as8183da5a64c3100bfac33a8bffd0bc25b1b7ec7a, exact signed/DCO
+headf3f30c069b613a394dee88f59d44a33deea0877e. All11requiredchecksgreen;
+32/33hostedchecksSUCCESS at merge, optionalWindowsMSVC still running/no failure.
+Fresh complete REST reviews/inline and GraphQL threads/closing-reference
+pagination empty. Clean exact-head authorized Codex fallback completed
+22:41:18.666540Z, summary6048328232/verifiedconnector thumbs552511021.
+Claude-first6048327670 verifiedbot eyes435170944 only, no quota/setup notice;
+not clean evidence. Parent#5611/#6776 remain unfinished OPEN owner-agent-approved.
 
-Three matching136-call/142-line VFP9 7423 probes;59 independent Numeric columns/
-118 comparisons/zero mismatches;182direct checks/576fresh statefulcases/
-2652PRGrows. Corrected GCC original dispatch fails350selected assertions,
-zero setup/guard/call-state/cleanup mismatches; Clang fails21 then actual
-float-cast-overflow1E20, not completed sanitizer Numeric baseline.
-Fixed GCC5/5 62.89s(Numeric57.95); same Clang ASan/UBSan/float-cast-overflow
-binary with private TMPDIR5/5 360.20s(Numeric348.51), no diagnostics.
-First fixed sanitizer22olderSQL state/event failures/zeroDESCfailures/zero
-diagnostics retained in checksummed tracked log; cause not proven and passing
-isolation does not erase it. No unrelated SQL code changes. Sixcontracts6/6
-4.36s,167validfragments; post-push Numeric110.69s/contracts6/6 4.42s.
-Proof6047568084 and fixture README VR/DQ/DV retain completed medium-misuse
-development self-review/walkthrough/rollback without independent-human,
-release/native-format/type/routing parity claims. #7063 type/#7064 alias-routing
-remain OPEN/unadmitted; parent #5611/#6776 unfinished OPEN owner-agent-approved.
+Three matching23-line VFP9 7423 probes;ten equivalent February comparisons/
+zero mismatches,ten extension callsERR1,guard73unchanged. Derived pure-math
+signed64 mathematical-year predicate in both modes (no native low32 aliases),
+checked before bounded modulo400. 96directchecks/70freshcases/292PRGrows.
+Original GCC74selectedassertions(58direct/16script),zero state/cleanup
+mismatches; Clangactual1E20float-cast-overflow0.03s, not completed Numeric
+baseline. Fixed GCC5/5 77.28s(Numeric76.15); ClangASan/UBSan/float-cast-overflow
+5/5 348.56s(Numeric343.91), no diagnostics; private TMPDIR/serial runtime.
+Sixcontracts6/6 4.79s,168fragments; post-pushNumeric77.37s/contracts6/6 4.21s.
+Proof6048356816, README VR/DQ/DV and docs22/docs32 retain completed
+medium-misuse development self-review/walkthrough/rollback and checksummed
+negative baseline, not independent-human/native-extension/type/arity/release
+qualification. Previous DESCENDING#7065 optionalWindowsMSVC subsequently
+SUCCESS23:02:52UTC; no previous unresolved CI failure identified.
 
-Main synchronized. Completed WT/local/remote branch removed;490MB/955MB
-builds and probe.FXP in recoverable trash. Canonical pre-sync stash
-e15c4435e2b13243565c9041a6ca8a95c0ec78e7 retained, all earlier stashes,
-detached WTs and unrelated files preserved. No leftover build/test/watch.
+Main synchronized. Completed WT/local/remote branch removed;484MB/942MB
+builds and generated probe.FXP in recoverable trash. Scoped canonical pre-sync
+stash688c84ec49c985487bfe16173862f1ad8ade96f8 retained alongside all earlier
+stashes, unrelated files and detached WTs. No build/test/probe/watch running.
 Live channel re-read empty. EPOCH/CENTURY complete,#3698closed;
 #6879 retained after numeric work.
 
 ## Selected active bounded slice
 
-ISLEAPYEAR single Numeric/exact-integer year conversion under #5611/#6776,
-base origin/main51c90be0466fdf2293ca0c6192c68c642ed5f4f1.
-WT /home/rich/.codex/worktrees/isleapyear-numeric-5611/Project-Copperfin;
-branch fix/isleapyear-numeric-5611, no commit/push/PR.
-Only its direct floating-to-int year cast is selected; JTOD/JTOT and other
-date/Julian/type/arity/settings/session/NULL behavior remain separate.
-Pre-implementation derived RQ-CF-PRG-ISLEAPYEAR-NUMERIC-001 in fixture README
-uses owner extension judgment, #6776 and the USNO Gregorian divisibility rule.
-Pure proleptic integer-year predicate admits checked signed64 truncation/exact
-integers, including zero/negative mathematical years, not Date construction
-or historical-adoption/range claims. Both modes identical; native extension
-absence must not manufacture low32 aliases. NaN/infinite/outside signed64
-reject localized catchable11; exact unsigned above INT64_MAX rejects.
-Admitted year modulo400 safely reuses existing int-based calendar predicate.
-Ordinary other coercions/globalNULL/routing are preservation controls only.
-Independent native probe: three matching23-line VFP9 7423 runs, ten extension
-forms ERR1 and ten equivalent native February lengths/zero expected mismatches,
-unchanged guard73. Sourcecb13b81e2aaecd1f1cdb17667f6eb1be1fd0ec5be2728f2d21ee9e3ebf2cbf5c;
-outputbb1ea694096415aedf179e0b13dcab806dc8b6973df3cb2e2106f4d9292f5efa.
-96 independent direct checks and70freshguardedcases/292PRGrows added before
-production changes. Both five-target normal/sanitizer builds complete; a test
-error accessor typo was corrected before compilation. Existing unused-function,
-lambda-capture/missing-field warnings remain unrelated. Original Clang baseline
-Numeric aborts0.03s on actual float-cast-overflow1E20 at date_time_functions.cpp
-1581:37; four neighbors pass, total4.23s; not completed Numeric sanitizer
-baseline. Original GCC five-suite baseline completes161.33s(Numeric160.18):
-74 selected failures(58direct/16script), zero setup/after/cleanup/call-state
-mismatches; four neighbors and older rows pass. Only this task's Numeric
-process appeared in sampled snapshots. Both fixed five-target rebuilds pass.
-Normal /home/rich/temp/copperfin-isleapyear-5611-build; sanitizer
-/home/rich/temp/copperfin-isleapyear-5611-sanitize. Only selected cast now uses
-checked signed64 admission and bounded modulo400; no shared-helper change.
-Fixed GCC five-suite acceptance5/5 77.28s(Numeric76.15); fixed Clang
-ASan/UBSan/float-cast-overflow5/5 348.56s(Numeric343.91), no diagnostics.
-Private TMPDIR/serial suites, sampled Numeric process only; no runtime overlap.
-Sixcontracts6/6 4.79s,168validfragments. Complete textual original sanitizer
-failure retained in fixture SHA-256
-958718aa6205f83592a53a626e7f872701319db9d6fd7bc725ebd7b4ccd4591f (trailing whitespace normalized).
-Coverage/matrix RQdefined and README VR/DQ/DV complete medium-misuse
-development self-review/walkthrough/rollback, no independent-human/release/
-native-extension/type/arity parity claim.
-Next: final diff/contracts, signed commit/push/Claude-first PR review.
-No owner blocker. Exact-head clean review/all11requiredgreen/resolvedthreads
-gate future merge; Claude-first documented trigger, authorized Codex fallback.
+JTOD/JTOT shared first-argument Numeric/exact-integer Julian-day conversion
+under #5611/#6776, from origin/main
+8183da5a64c3100bfac33a8bffd0bc25b1b7ec7a.
+WT /home/rich/.codex/worktrees/julian-numeric-5611/Project-Copperfin;
+branch fix/julian-numeric-5611; checked conversion implemented, ready to sign/push.
+Only the shared direct floating-to-int Julian day cast is selected.
+DTOJ/TTOJ arithmetic/storage, Date constructors/ranges/settings/formatting,
+type/arity/global NULL and #4116 format work remain separate.
+
+RQ-CF-PRG-JULIAN-NUMERIC-001 was documented before implementation from owner
+extension intent, parent/hazards, USNO integer civil-day provenance and
+Microsoft DateTime0001..9999 envelope, not existing code. Both modes check
+signed64 truncation/exact admission; unsafe inputs reject localized11; admitted
+out-of-calendar integers return typed empty values. No invented low32 aliases;
+JTOT wall-clock midnight is not astronomical noon or fractional-day time.
+Three fresh serial 47-line installed VFP9 7423 runs match: 22 extension ERR1,
+22 independent equivalent Date/midnight DateTime/empty comparisons with zero
+mismatches, guard31 unchanged. Probe source SHA256
+8102ab95d09ca84f7657d273f2d56c9355c3566dd6495c4394c6f5d039556428;
+output ffbf05aad93043221663016aadb4365b2e5ae39b42d1ce447acc722b18231c2e.
+
+236 direct calls and 156 fresh cases/648 PRG rows were added before source
+changes. Original GCC: 120 selected assertions (96 direct/24 script), zero
+setup/after/cleanup/call-state mismatches; older rows/four neighbors pass.
+Numeric78.99s, total80.15s. Clang ASan/UBSan/float-cast-overflow catches actual
+2^31 float-to-int UB at date_time_functions.cpp:1561:39 in0.03s; four neighbors
+pass, total4.51s, not a completed Numeric baseline. Complete textual negative
+record original-sanitizer-failure.log (trailing whitespace normalized) SHA256
+2a7193fe46bf61ad864917790566eacb14ae2dea796388ca4a0ffd5fa73ae959.
+
+Only the shared Julian branch now uses checked int64 admission plus safe int
+narrowing before the unchanged bounded calendar converter. Fixed GCC five
+suites pass5/5 in117.35s (Numeric113.12); Clang ASan/UBSan/float-cast-overflow
+pass5/5 in358.56s (Numeric353.93), no diagnostics; serial/private TMPDIR.
+Six contracts pass6/6 in4.43s, final-doc rerun4.23s;169 valid fragments.
+README VR/DQ/DV complete medium-misuse development self-review/walkthrough/
+rollback; coverage/docs32 RQ defined. Not independent-human/native-extension/
+type-arity/release qualification.
+Owned normal build /home/rich/temp/copperfin-julian-5611-build and -sanitize
+retained pending merge. No build/test/probe/watch running.
+Next: signed commit/push, main PR Claude-first exact-head review and post-push
+verification. No PR or owner blocker. Exact-head clean review, all11 required
+green and resolved threads gate future merge.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -870,8 +867,10 @@ Owner-directed workstream order before the #6879 assignment was:
      (PR #7062); omitted routing #7060/type admission #7061 remain separate.
    - Completed after those: DESCENDING ordinal Numeric/exact-integer conversion
      (PR #7065); type #7063/alias routing #7064 remain separate.
-   - Active: ISLEAPYEAR Numeric/exact-integer year conversion, only its direct
-     floating-to-int boundary; extension requirements derive from owner intent.
+   - Completed after those: ISLEAPYEAR Numeric/exact-integer conversion
+     (PR #7066); retained intentional extension with derived mathematical bounds.
+   - Active: JTOD/JTOT shared first-argument Julian-day numeric conversion,
+     only its direct floating-to-int boundary; recover native/derived evidence.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

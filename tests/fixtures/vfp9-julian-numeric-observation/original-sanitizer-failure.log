@@ -1,0 +1,36 @@
+Test project /home/rich/temp/copperfin-julian-5611-sanitize
+    Start 378: test_prg_engine_null_builtins
+1/5 Test #378: test_prg_engine_null_builtins ...........   Passed    0.59 sec
+    Start 383: test_prg_engine_date_function_types
+2/5 Test #383: test_prg_engine_date_function_types .....   Passed    0.92 sec
+    Start 391: test_prg_engine_numeric_behavior
+3/5 Test #391: test_prg_engine_numeric_behavior ........***Failed    0.03 sec
+/home/rich/.codex/worktrees/julian-numeric-5611/Project-Copperfin/src/runtime/prg_engine_date_time_functions.cpp:1561:39: runtime error: 2.14748e+09 is outside the range of representable values of type 'int'
+SUMMARY: UndefinedBehaviorSanitizer: undefined-behavior /home/rich/.codex/worktrees/julian-numeric-5611/Project-Copperfin/src/runtime/prg_engine_date_time_functions.cpp:1561:39
+
+    Start 424: test_prg_engine_string_math_functions
+4/5 Test #424: test_prg_engine_string_math_functions ...   Passed    2.27 sec
+    Start 427: test_prg_engine_date_time_functions
+5/5 Test #427: test_prg_engine_date_time_functions .....   Passed    0.68 sec
+
+80% tests passed, 1 tests failed out of 5
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =   4.49 sec*proc (5 tests)
+copperfin-isolation:child-processes=none            =   4.49 sec*proc (5 tests)
+copperfin-isolation:environment=none                =   4.46 sec*proc (4 tests)
+copperfin-isolation:environment=scoped-process      =   0.03 sec*proc (1 test)
+copperfin-isolation:filesystem=process-owned        =   1.53 sec*proc (3 tests)
+copperfin-isolation:filesystem=test-owned-unique    =   2.95 sec*proc (2 tests)
+copperfin-isolation:network=none                    =   4.49 sec*proc (5 tests)
+copperfin-isolation:platform=portable               =   4.49 sec*proc (5 tests)
+copperfin-isolation:resources=none                  =   4.49 sec*proc (5 tests)
+copperfin-isolation:samples=none                    =   4.49 sec*proc (5 tests)
+copperfin-isolation:schedule=parallel-safe          =   2.95 sec*proc (2 tests)
+copperfin-isolation:schedule=serial                 =   1.53 sec*proc (3 tests)
+
+Total Test time (real) =   4.51 sec
+
+The following tests FAILED:
+	391 - test_prg_engine_numeric_behavior (Failed)         copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=process-owned copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+Errors while running CTest

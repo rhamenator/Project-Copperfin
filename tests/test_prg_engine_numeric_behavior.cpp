@@ -3278,6 +3278,125 @@ void test_key_ordinal_numeric_behavior_script_rows() {
 }
 
 
+// RQ-CF-PRG-JULIAN-NUMERIC-001: independent civil-day literals and native
+// equivalent Date/DateTime controls; not nonexistent native Julian aliases.
+void test_julian_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    struct Case {
+        const char* name;
+        PrgValue argument;
+        std::optional<std::string> date;
+        std::int64_t midnight_jdn;
+    };
+    const std::vector<Case> cases{
+        {"1721426", make_number_value(1721426), "0001-01-01", 1721426},
+        {"1757585", make_number_value(1757585), "0100-01-01", 1757585},
+        {"2305814", make_number_value(2305814), "1601-01-01", 2305814},
+        {"2415079", make_number_value(2415079), "1900-02-28", 2415079},
+        {"2415080", make_number_value(2415080), "1900-03-01", 2415080},
+        {"2440588", make_number_value(2440588), "1970-01-01", 2440588},
+        {"2451545", make_number_value(2451545), "2000-01-01", 2451545},
+        {"2460370", make_number_value(2460370), "2024-02-29", 2460370},
+        {"2461149", make_number_value(2461149), "2026-04-18", 2461149},
+        {"5373484", make_number_value(5373484), "9999-12-31", 5373484},
+        {"2461149.9", make_number_value(2461149.9), "2026-04-18", 2461149},
+        {"1721426.9", make_number_value(1721426.9), "0001-01-01", 1721426},
+        {"5373484.9", make_number_value(5373484.9), "9999-12-31", 5373484},
+        {"1721425.9", make_number_value(1721425.9), "", 0},
+        {"5373485.1", make_number_value(5373485.1), "", 0},
+        {"-0.9", make_number_value(-0.9), "", 0},
+        {"below calendar min", make_number_value(std::nextafter(1721426.0, 0.0)), "", 0},
+        {"above calendar min", make_number_value(std::nextafter(1721426.0, 1721427.0)), "0001-01-01", 1721426},
+        {"below calendar upper", make_number_value(std::nextafter(5373485.0, 0.0)), "9999-12-31", 5373484},
+        {"above calendar upper", make_number_value(std::nextafter(5373485.0, 5373486.0)), "", 0},
+        {"1721425", make_number_value(1721425), "", 0},
+        {"5373485", make_number_value(5373485), "", 0},
+        {"0", make_number_value(0), "", 0},
+        {"-1", make_number_value(-1), "", 0},
+        {"2147483647", make_number_value(2147483647), "", 0},
+        {"2147483648", make_number_value(2147483648), "", 0},
+        {"-2147483648", make_number_value(-2147483648), "", 0},
+        {"-2147483649", make_number_value(-2147483649), "", 0},
+        {"4297428445", make_number_value(4297428445), "", 0},
+        {"-4292506147", make_number_value(-4292506147), "", 0},
+        {"10000000000", make_number_value(10000000000), "", 0},
+        {"1E20", make_number_value(1E20), std::nullopt, 0},
+        {"-1E20", make_number_value(-1E20), std::nullopt, 0},
+        {"1E300", make_number_value(1E300), std::nullopt, 0},
+        {"-1E300", make_number_value(-1E300), std::nullopt, 0},
+        {"infinity", make_number_value(std::numeric_limits<double>::infinity()), std::nullopt, 0},
+        {"negative infinity", make_number_value(-std::numeric_limits<double>::infinity()), std::nullopt, 0},
+        {"NaN", make_number_value(std::numeric_limits<double>::quiet_NaN()), std::nullopt, 0},
+        {"double signed64 min", make_number_value(-9223372036854775808.0), "", 0},
+        {"double signed64 max", make_number_value(9223372036854775808.0), std::nullopt, 0},
+        {"below signed64 min", make_number_value(std::nextafter(-9223372036854775808.0, -std::numeric_limits<double>::infinity())), std::nullopt, 0},
+        {"below signed64 max", make_number_value(std::nextafter(9223372036854775808.0, 0.0)), "", 0},
+        {"exact signed min", make_int64_value(INT64_MIN), "", 0},
+        {"exact signed max", make_int64_value(INT64_MAX), "", 0},
+        {"exact minus one", make_int64_value(-1), "", 0},
+        {"exact positive alias", make_int64_value(4297428445LL), "", 0},
+        {"exact negative alias", make_int64_value(-4292506147LL), "", 0},
+        {"exact above double precision", make_int64_value(9007199254740993LL), "", 0},
+        {"exact unsigned signed-max", make_uint64_value(static_cast<std::uint64_t>(INT64_MAX)), "", 0},
+        {"exact unsigned over signed-max", make_uint64_value(static_cast<std::uint64_t>(INT64_MAX)+1), std::nullopt, 0},
+        {"exact unsigned max", make_uint64_value(UINT64_MAX), std::nullopt, 0},
+        {"exact signed ordinary", make_int64_value(2461149), "2026-04-18", 2461149},
+        {"exact unsigned calendar min", make_uint64_value(1721426), "0001-01-01", 1721426},
+        {"exact unsigned calendar max", make_uint64_value(5373484), "9999-12-31", 5373484},
+        {"Character ordinary", make_string_value("2461149.9"), "2026-04-18", 2461149},
+        {"Character huge", make_string_value("1E300"), std::nullopt, 0},
+        {"Logical true", make_boolean_value(true), "", 0},
+        {"Logical false", make_boolean_value(false), "", 0},
+        {"Currency ordinary", make_currency_value(24611499000LL), "2026-04-18", 2461149},
+    };
+    for (const char* mode : {"COPPERFIN", "VFP9"}) for (const char* function : {"jtod", "jtot"}) {
+        const bool datetime = std::string(function) == "jtot";
+        for (const auto& row : cases) {
+            int setting_calls = 0;
+            const auto settings = [mode, &setting_calls](const std::string& option) {
+                ++setting_calls;
+                if (option == "NUMERICBEHAVIOR") return std::string(mode);
+                if (option == "DATE") return std::string("YMD");
+                if (option == "CENTURY") return std::string("ON");
+                if (option == "MARK") return std::string("-");
+                if (option == "EPOCH") return std::string("1975");
+                return std::string{};
+            };
+            std::optional<std::string> actual;
+            int error = 0;
+            std::string message;
+            try {
+                const auto result = evaluate_date_time_function(function, {row.argument}, settings);
+                expect(result && result->kind == PrgValueKind::string &&
+                       result->string_flavor == (datetime ? PrgStringFlavor::datetime : PrgStringFlavor::date),
+                       std::string("Julian direct type ") + function + " " + row.name);
+                if (result) {
+                    actual = value_as_string(*result);
+                    if (row.date.has_value()) {
+                        expect(result->int64_value == row.midnight_jdn * 86400LL,
+                               std::string("Julian direct midnight payload ") + function + " " + row.name);
+                    }
+                }
+            } catch (const PrgCompatibilityError& ex) {
+                error = ex.error_code();
+                message = ex.what();
+            }
+            const auto expected = row.date.has_value()
+                ? std::optional<std::string>(*row.date + (datetime && !row.date->empty() ? " 00:00:00" : ""))
+                : std::nullopt;
+            expect(actual == expected && error == (row.date.has_value() ? 0 : 11),
+                   std::string("Julian direct ") + mode + " " + function + " " + row.name);
+            if (!row.date.has_value()) {
+                expect(message == "Function argument value, type, or count is invalid.",
+                       std::string("Julian direct localized error ") + row.name);
+            }
+            if (!row.date.has_value() || row.date->empty()) {
+                expect(setting_calls == 0, std::string("Julian admission precedes formatting ") + row.name);
+            }
+        }
+    }
+}
+
 // RQ-CF-PRG-ISLEAPYEAR-NUMERIC-001: independently specified mathematical
 // extension results, not native ISLEAPYEAR observations or wrapped int32 aliases.
 void test_isleapyear_direct_numeric_boundaries() {
@@ -3356,6 +3475,97 @@ void test_isleapyear_direct_numeric_boundaries() {
                                       std::string("ISLEAPYEAR direct localized error ") + row.name);
         }
     }
+}
+
+// RQ-CF-PRG-JULIAN-NUMERIC-001: independent extension calendar and admission
+// boundaries; global NULL and ordinary coercions are preservation controls.
+void test_julian_numeric_behavior_script_rows() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_julian_numeric_behavior";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    const std::vector<std::pair<std::string, std::optional<std::string>>> cases{
+        {"1721426", "1:1:1"},
+        {"1757585", "100:1:1"},
+        {"2305814", "1601:1:1"},
+        {"2415079", "1900:2:28"},
+        {"2415080", "1900:3:1"},
+        {"2440588", "1970:1:1"},
+        {"2451545", "2000:1:1"},
+        {"2460370", "2024:2:29"},
+        {"2461149", "2026:4:18"},
+        {"5373484", "9999:12:31"},
+        {"2461149.9", "2026:4:18"},
+        {"1721426.9", "1:1:1"},
+        {"5373484.9", "9999:12:31"},
+        {"1721425.9", "EMPTY"},
+        {"5373485.1", "EMPTY"},
+        {"-0.9", "EMPTY"},
+        {"1721425", "EMPTY"},
+        {"5373485", "EMPTY"},
+        {"0", "EMPTY"},
+        {"-1", "EMPTY"},
+        {"2147483647", "EMPTY"},
+        {"2147483648", "EMPTY"},
+        {"-2147483648", "EMPTY"},
+        {"-2147483649", "EMPTY"},
+        {"4297428445", "EMPTY"},
+        {"-4292506147", "EMPTY"},
+        {"1E10", "EMPTY"},
+        {"1E20", std::nullopt},
+        {"-1E20", std::nullopt},
+        {"1E300", std::nullopt},
+        {"-1E300", std::nullopt},
+        {"-9223372036854775808", "EMPTY"},
+        {"9223372036854775808", std::nullopt},
+        {"'2461149.9'", "2026:4:18"},
+        {"'1E300'", std::nullopt},
+        {".T.", "EMPTY"},
+        {".F.", "EMPTY"},
+        {"$2461149.9", "2026:4:18"},
+        {".NULL.", std::nullopt},
+    };
+    for (const char* mode : {"COPPERFIN", "VFP9"})
+        for (const char* function : {"JTOD", "JTOT"}) for (const auto& row : cases) {
+        const std::string setup = std::string("SET NUMERICBEHAVIOR TO ") + mode +
+            "\nSET DATE TO YMD\nSET CENTURY OFF\nSET MARK TO '-'\nSET EPOCH TO 1975\n"
+            "CREATE CURSOR julianguard (marker C(12))\nINSERT INTO julianguard VALUES ('guard')\n";
+        const std::string state = "ALIAS()+':'+ALLTRIM(STR(RECCOUNT()))+':'+ALLTRIM(STR(RECNO()))+':'+"
+            "ALLTRIM(marker)+':'+ALLTRIM(STR(VAL(TRANSFORM(SET('DATASESSION')))))+':'+SET('NUMERICBEHAVIOR')+':'+"
+            "SET('DATE')+':'+SET('CENTURY')+':'+SET('MARK')+':'+ALLTRIM(STR(VAL(TRANSFORM(SET('EPOCH')))))";
+        const std::string unchanged = std::string("julianguard:1:1:guard:1:")+mode+":YMD:OFF:-:1975";
+        const bool is_null = row.first == ".NULL.";
+        const bool is_datetime = std::string(function) == "JTOT";
+        const std::string call = std::string("nJulianError=0\ncJulianResult='unassigned'\ncJulianMessage=''\nTRY\n")+
+            "uJulianResult="+function+"("+row.first+")\n"
+            "IF ISNULL(uJulianResult)\ncJulianResult='X'\nELSE\n"
+            "IF EMPTY(uJulianResult)\ncJulianResult=VARTYPE(uJulianResult)+':EMPTY'\nELSE\n"
+            "cJulianResult=VARTYPE(uJulianResult)+':'+ALLTRIM(STR(YEAR(uJulianResult)))+':'+"
+            "ALLTRIM(STR(MONTH(uJulianResult)))+':'+ALLTRIM(STR(DAY(uJulianResult)))\n"+
+            (is_datetime ? "cJulianResult=cJulianResult+':'+ALLTRIM(STR(HOUR(uJulianResult)))+':'+"
+                           "ALLTRIM(STR(MINUTE(uJulianResult)))+':'+ALLTRIM(STR(SEC(uJulianResult)))\n" : "")+
+            "ENDIF\nENDIF\nCATCH TO oEx\nnJulianError=oEx.ErrorNo\ncJulianMessage=oEx.Message\nENDTRY";
+        const std::string result = is_null ? "0:[X]:" : row.second
+            ? std::string("0:[")+(is_datetime ? "T:" : "D:")+*row.second+
+                (is_datetime && *row.second != "EMPTY" ? ":0:0:0" : "")+"]:"
+            : "11:[unassigned]:";
+        std::vector<Row> rows{
+            {setup,state,"C:"+unchanged},
+            {call,"ALLTRIM(STR(nJulianError))+':['+cJulianResult+']:'+ "+state,"C:"+result+unchanged},
+            {"",state,"C:"+unchanged},
+            {"USE IN julianguard\nSET NUMERICBEHAVIOR TO COPPERFIN\nSET DATE TO MDY\nSET CENTURY ON\n"
+             "SET MARK TO '/'\nSET EPOCH TO 1950",
+             "SET('NUMERICBEHAVIOR')+':'+IIF(USED('julianguard'),'T','F')+':'+ALIAS()","C:COPPERFIN:F:"},
+        };
+        if (!row.second && !is_null) rows.insert(rows.begin()+2,
+            {"","cJulianMessage","C:Function argument value, type, or count is invalid."});
+        std::string expected;
+        for (const auto& entry : rows) expected += entry.expected+"\n";
+        const auto actual = run_rows(dir,rows);
+        expect(actual == expected, std::string(function)+" "+mode+" ["+row.first+
+               "] expected ["+expected+"], got ["+actual+"]");
+    }
+    fs::remove_all(dir,ignored);
 }
 
 // RQ-CF-PRG-ISLEAPYEAR-NUMERIC-001: fresh guarded calls in both modes.
@@ -5762,6 +5972,8 @@ void test_sql_property_handle_direct_numeric_boundaries(
 }  // namespace
 
 int main() {
+    test_julian_direct_numeric_boundaries();
+    test_julian_numeric_behavior_script_rows();
     test_isleapyear_direct_numeric_boundaries();
     test_isleapyear_numeric_behavior_script_rows();
     test_descending_ordinal_direct_numeric_boundaries();
