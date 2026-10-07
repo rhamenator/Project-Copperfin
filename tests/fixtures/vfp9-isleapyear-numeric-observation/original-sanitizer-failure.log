@@ -1,0 +1,106 @@
+Start testing: Oct 07 18:23 EDT
+----------------------------------------------------------
+378/435 Testing: test_prg_engine_null_builtins
+378/435 Test: test_prg_engine_null_builtins
+Command: "/home/rich/temp/copperfin-isleapyear-5611-sanitize/tests/test_prg_engine_null_builtins"
+Directory: /home/rich/temp/copperfin-isleapyear-5611-sanitize/tests
+"test_prg_engine_null_builtins" start time: Oct 07 18:23 EDT
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.58 sec
+----------------------------------------------------------
+Test Passed.
+"test_prg_engine_null_builtins" end time: Oct 07 18:23 EDT
+"test_prg_engine_null_builtins" time elapsed: 00:00:00
+----------------------------------------------------------
+
+383/435 Testing: test_prg_engine_date_function_types
+383/435 Test: test_prg_engine_date_function_types
+Command: "/home/rich/temp/copperfin-isleapyear-5611-sanitize/tests/test_prg_engine_date_function_types"
+Directory: /home/rich/temp/copperfin-isleapyear-5611-sanitize/tests
+"test_prg_engine_date_function_types" start time: Oct 07 18:23 EDT
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.85 sec
+----------------------------------------------------------
+Test Passed.
+"test_prg_engine_date_function_types" end time: Oct 07 18:23 EDT
+"test_prg_engine_date_function_types" time elapsed: 00:00:00
+----------------------------------------------------------
+
+391/435 Testing: test_prg_engine_numeric_behavior
+391/435 Test: test_prg_engine_numeric_behavior
+Command: "/home/rich/temp/copperfin-isleapyear-5611-sanitize/tests/test_prg_engine_numeric_behavior"
+Directory: /home/rich/temp/copperfin-isleapyear-5611-sanitize/tests
+"test_prg_engine_numeric_behavior" start time: Oct 07 18:23 EDT
+Output:
+----------------------------------------------------------
+/home/rich/.codex/worktrees/isleapyear-numeric-5611/Project-Copperfin/src/runtime/prg_engine_date_time_functions.cpp:1581:37: runtime error: 1e+20 is outside the range of representable values of type 'int'
+SUMMARY: UndefinedBehaviorSanitizer: undefined-behavior /home/rich/.codex/worktrees/isleapyear-numeric-5611/Project-Copperfin/src/runtime/prg_engine_date_time_functions.cpp:1581:37
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Failed.
+"test_prg_engine_numeric_behavior" end time: Oct 07 18:23 EDT
+"test_prg_engine_numeric_behavior" time elapsed: 00:00:00
+----------------------------------------------------------
+
+424/435 Testing: test_prg_engine_string_math_functions
+424/435 Test: test_prg_engine_string_math_functions
+Command: "/home/rich/temp/copperfin-isleapyear-5611-sanitize/tests/test_prg_engine_string_math_functions"
+Directory: /home/rich/temp/copperfin-isleapyear-5611-sanitize/tests
+"test_prg_engine_string_math_functions" start time: Oct 07 18:23 EDT
+Output:
+----------------------------------------------------------
+All tests passed.
+<end of output>
+Test time =   2.11 sec
+----------------------------------------------------------
+Test Passed.
+"test_prg_engine_string_math_functions" end time: Oct 07 18:23 EDT
+"test_prg_engine_string_math_functions" time elapsed: 00:00:02
+----------------------------------------------------------
+
+427/435 Testing: test_prg_engine_date_time_functions
+427/435 Test: test_prg_engine_date_time_functions
+Command: "/home/rich/temp/copperfin-isleapyear-5611-sanitize/tests/test_prg_engine_date_time_functions"
+Directory: /home/rich/temp/copperfin-isleapyear-5611-sanitize/tests
+"test_prg_engine_date_time_functions" start time: Oct 07 18:23 EDT
+Output:
+----------------------------------------------------------
+All tests passed.
+<end of output>
+Test time =   0.64 sec
+----------------------------------------------------------
+Test Passed.
+"test_prg_engine_date_time_functions" end time: Oct 07 18:23 EDT
+"test_prg_engine_date_time_functions" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 07 18:23 EDT
+
+copperfin-isolation:audit=complete =   4.22 sec*proc
+
+copperfin-isolation:child-processes=none =   4.22 sec*proc
+
+copperfin-isolation:environment=none =   4.19 sec*proc
+
+copperfin-isolation:environment=scoped-process =   0.03 sec*proc
+
+copperfin-isolation:filesystem=process-owned =   1.47 sec*proc
+
+copperfin-isolation:filesystem=test-owned-unique =   2.75 sec*proc
+
+copperfin-isolation:network=none =   4.22 sec*proc
+
+copperfin-isolation:platform=portable =   4.22 sec*proc
+
+copperfin-isolation:resources=none =   4.22 sec*proc
+
+copperfin-isolation:samples=none =   4.22 sec*proc
+
+copperfin-isolation:schedule=parallel-safe =   2.75 sec*proc
+
+copperfin-isolation:schedule=serial =   1.47 sec*proc

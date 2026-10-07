@@ -1578,8 +1578,16 @@ std::optional<PrgValue> evaluate_date_time_function(
         return make_date_value(format_runtime_date_for_set(year, month, day, set_callback), year, month, day);
     }
     if (function == "isleapyear" && !arguments.empty()) {
-        int year = static_cast<int>(value_as_number(arguments[0]));
-        return make_boolean_value(is_leap_year(year));
+        // RQ-CF-PRG-ISLEAPYEAR-NUMERIC-001: derived pure-math extension,
+        // identical in both modes; no native ISLEAPYEAR aliases to emulate.
+        const auto year = checked_declared_int64_argument(arguments[0]);
+        if (!year) {
+            throw PrgCompatibilityError(runtime_text(
+                "Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        // Gregorian leap years repeat every 400 years. The remainder is
+        // bounded/exact even at INT64_MIN; this is not a low-32-bit alias.
+        return make_boolean_value(is_leap_year(static_cast<int>(*year % 400)));
     }
 
     return std::nullopt;
