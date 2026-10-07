@@ -87,6 +87,24 @@ namespace copperfin::runtime
 
     namespace
     {
+        // RQ-CF-PRG-SET-CENTURY-QUERY-001: this host observation is not
+        // the active parsing window. Never change the host calendar settings.
+        int regional_calendar_two_digit_year_maximum()
+        {
+#if defined(_WIN32)
+            DWORD calendar = 0, year = 0;
+            if (GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_ICALENDARTYPE | LOCALE_RETURN_NUMBER,
+                               reinterpret_cast<LPWSTR>(&calendar), sizeof(calendar) / sizeof(wchar_t)) &&
+                GetCalendarInfoW(LOCALE_USER_DEFAULT, calendar, CAL_ITWODIGITYEARMAX | CAL_RETURN_NUMBER,
+                                 nullptr, 0, &year) &&
+                year <= static_cast<DWORD>(std::numeric_limits<int>::max()))
+            {
+                return static_cast<int>(year);
+            }
+#endif
+            return -1; // No Windows regional-calendar observation is available.
+        }
+
         constexpr std::intptr_t kCopperfinVfpMainWindowHwnd = 1000;
         constexpr std::intptr_t kCopperfinScreenClientHwnd = 1001;
         constexpr std::intptr_t kCopperfinSyntheticWindowHwndBase = 100000;
@@ -2587,6 +2605,18 @@ namespace copperfin::runtime
                     normalized_name = "udfparms";
                 }
                 const std::string normalized_variant = normalize_identifier(option_variant);
+                if (normalized_name == "century" &&
+                    (normalized_variant == "1" || normalized_variant == "2"))
+                {
+                    // RQ-CF-PRG-SET-CENTURY-WINDOW-001 / QUERY-001:
+                    // EPOCH owns the sole window, so either setter is observable.
+                    const int epoch = std::stoi(current_set_state().at("epoch"));
+                    return std::to_string(normalized_variant == "1" ? epoch / 100 : epoch % 100);
+                }
+                if (normalized_name == "century" && normalized_variant == "3")
+                {
+                    return std::to_string(regional_calendar_two_digit_year_maximum());
+                }
                 if (normalized_name == "textmerge" && normalized_variant == "1")
                 {
                     const auto [left_delimiter, right_delimiter] = current_textmerge_delimiters();
@@ -10282,6 +10312,7 @@ namespace copperfin::runtime
         impl->runtime_config_path = std::move(runtime_config_path);
         impl->default_directory_by_session.emplace(1, impl->startup_default_directory);
         impl->data_sessions.try_emplace(1);
+        (void)impl->current_set_state();
         const int application_surface_handle =
             impl->register_ole_object("_SCREEN", "runtime application surface");
         if (const auto application_surface = impl->ole_objects.find(application_surface_handle);

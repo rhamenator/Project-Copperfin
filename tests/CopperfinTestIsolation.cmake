@@ -946,6 +946,18 @@ function(copperfin_configure_native_test_isolation)
         AUDIT complete
     )
 
+    # #3698: one test-owned fixed scratch root, scoped/restored locale;
+    # Windows calendar lookup is read-only. Duplicate instances stay serial.
+    copperfin_set_test_isolation(test_prg_engine_century_rollover
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT scoped-process
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM configured
+        AUDIT complete
+    )
+
     copperfin_set_test_isolation(test_package_document_install
         PARALLEL_SAFE
         FILESYSTEM process-owned

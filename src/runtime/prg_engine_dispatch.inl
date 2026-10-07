@@ -6204,10 +6204,107 @@
                                 ? std::string{"REFERENCE"}
                                 : std::string{"VALUE"};
                     }
+                    else if (normalized_name == "century")
+                    {
+                        // RQ-CF-PRG-SET-CENTURY-WINDOW-001 / NUMERIC-001:
+                        // ON/OFF is display only; TO updates the shared EPOCH.
+                        const std::string requested = trim_copy(option_value);
+                        const std::string normalized = normalize_identifier(requested);
+                        if (normalized == "on" || normalized == "off")
+                        {
+                            current_set_state()["century"] = normalized;
+                        }
+                        else if (normalized == "to" ||
+                                 (requested.size() > 2U && starts_with_insensitive(requested, "TO") &&
+                                  std::isspace(static_cast<unsigned char>(requested[2])) != 0))
+                        {
+                            const std::string operands = trim_copy(requested.substr(2U));
+                            if (operands.empty())
+                            {
+                                current_set_state()["epoch"] = std::to_string(default_set_century_epoch());
+                            }
+                            else
+                            {
+                                const auto rollover_position = find_keyword_top_level(operands, "ROLLOVER");
+                                const std::string century_text = trim_copy(operands.substr(0U, rollover_position));
+                                const std::string rollover_text = rollover_position == std::string::npos
+                                    ? std::string{} : trim_copy(operands.substr(rollover_position + 8U));
+                                if (century_text.empty())
+                                {
+                                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Statement.Error.SyntaxError"), 12);
+                                }
+                                if (rollover_position != std::string::npos && rollover_text.empty())
+                                {
+                                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Dispatch.Error.SetCenturyMissingRollover"), 67);
+                                }
+                                const auto evaluate_operand = [&](const std::string &text) {
+                                    // Complete out-of-parser-range decimal literals
+                                    // must reject, not become Character or zero.
+                                    std::size_t cursor = 0;
+                                    if (cursor < text.size() && (text[cursor] == '+' || text[cursor] == '-')) ++cursor;
+                                    const auto digits = [&]() {
+                                        const auto begin = cursor;
+                                        while (cursor < text.size() && text[cursor] >= '0' && text[cursor] <= '9') ++cursor;
+                                        return cursor != begin;
+                                    };
+                                    bool mantissa = digits();
+                                    if (cursor < text.size() && text[cursor] == '.')
+                                    {
+                                        ++cursor;
+                                        mantissa = digits() || mantissa;
+                                    }
+                                    bool exponent = true;
+                                    if (cursor < text.size() && (text[cursor] == 'E' || text[cursor] == 'e'))
+                                    {
+                                        ++cursor;
+                                        if (cursor < text.size() && (text[cursor] == '+' || text[cursor] == '-')) ++cursor;
+                                        exponent = digits();
+                                    }
+                                    if (mantissa && exponent && cursor == text.size())
+                                    {
+                                        const auto literal = try_parse_numeric_index_value(text);
+                                        if (!literal.has_value())
+                                        {
+                                            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Dispatch.Error.SetCenturyInvalidValue"), 11);
+                                        }
+                                        return make_number_value(*literal);
+                                    }
+                                    return evaluate_expression(text, frame);
+                                };
+                                const auto admit_operand = [&](const PrgValue &value, const int minimum) {
+                                    if (value.is_null || (value.kind != PrgValueKind::number && value.kind != PrgValueKind::int64 &&
+                                        value.kind != PrgValueKind::uint64 && value.kind != PrgValueKind::currency))
+                                    {
+                                        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Dispatch.Error.SetCenturyInvalidType"), 9);
+                                    }
+                                    const auto mode = current_set_state().find("numericbehavior");
+                                    const auto converted = checked_set_century_argument(value,
+                                        mode != current_set_state().end() && normalize_identifier(mode->second) == "vfp9"
+                                            ? NumericBehavior::vfp9 : NumericBehavior::copperfin, minimum, 99);
+                                    if (!converted.has_value())
+                                    {
+                                        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Dispatch.Error.SetCenturyInvalidValue"), 11);
+                                    }
+                                    return *converted;
+                                };
+                                const int century = admit_operand(evaluate_operand(century_text), 1);
+                                const int rollover = rollover_position == std::string::npos
+                                    ? std::stoi(current_set_state().at("epoch")) % 100
+                                    : admit_operand(evaluate_operand(rollover_text), 0);
+                                // #3698 explicitly requires failure atomicity, even
+                                // though VFP can change century before rollover fails.
+                                current_set_state()["epoch"] = std::to_string(century * 100 + rollover);
+                            }
+                        }
+                        else
+                        {
+                            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Dispatch.Error.SetCenturyInvalidSyntax"), 10);
+                        }
+                    }
                     else if (normalized_name == "exact" || normalized_name == "deleted" || normalized_name == "near" ||
                         normalized_name == "strictdate" || normalized_name == "optimize" ||
                         normalized_name == "talk" || normalized_name == "safety" || normalized_name == "escape" ||
-                        normalized_name == "century" || normalized_name == "seconds" || normalized_name == "exclusive" ||
+                        normalized_name == "seconds" || normalized_name == "exclusive" ||
                         normalized_name == "multilocks" || normalized_name == "null" || normalized_name == "ansi" ||
                         normalized_name == "truncateonoverflow")
                     {

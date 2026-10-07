@@ -1615,6 +1615,43 @@ std::optional<std::int32_t> checked_set_epoch_argument(const PrgValue& value) {
     return static_cast<std::int32_t>(*year);
 }
 
+// RQ-CF-PRG-SET-CENTURY-NUMERIC-001: bounded, exact conversion before
+// mutation; native observations in vfp9-set-century-rollover-observation.
+std::optional<std::int32_t> checked_set_century_argument(
+    const PrgValue& value, const NumericBehavior behavior, const int minimum, const int maximum) {
+    std::optional<std::int64_t> converted;
+    if (value.is_null || (value.kind != PrgValueKind::number && value.kind != PrgValueKind::int64 &&
+        value.kind != PrgValueKind::uint64 && value.kind != PrgValueKind::currency)) {
+        return std::nullopt;
+    }
+    if (behavior == NumericBehavior::vfp9) {
+        converted = value.kind == PrgValueKind::currency
+            ? vfp9_numeric_to_int32(make_int64_value(value.currency_value / 10000))
+            : vfp9_numeric_to_int32(value);
+    } else if (value.kind == PrgValueKind::int64) {
+        converted = value.int64_value;
+    } else if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value > static_cast<std::uint64_t>(maximum)) return std::nullopt;
+        converted = static_cast<std::int64_t>(value.uint64_value);
+    } else if (value.kind == PrgValueKind::currency) {
+        converted = value.currency_value / 10000;
+    } else {
+        converted = checked_truncated_numeric_to_int64(value.number_value);
+    }
+    if (!converted.has_value() || *converted < minimum || *converted > maximum) return std::nullopt;
+    return static_cast<std::int32_t>(*converted);
+}
+
+int default_set_century_epoch_for_year(const int year) {
+    // Derived clock-boundary policy keeps the shared representable year domain.
+    return static_cast<int>(std::clamp<std::int64_t>(static_cast<std::int64_t>(year) - 50, 1, 9999));
+}
+
+int default_set_century_epoch() {
+    const auto local = local_time_from_time_t(std::time(nullptr));
+    return default_set_century_epoch_for_year(local.tm_year + 1900);
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {

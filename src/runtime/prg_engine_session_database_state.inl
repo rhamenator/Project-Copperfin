@@ -5,7 +5,11 @@
 
         DataSessionState &current_session_state()
         {
-            auto [iterator, _] = data_sessions.try_emplace(current_data_session);
+            auto [iterator, inserted] = data_sessions.try_emplace(current_data_session);
+            if (inserted)
+            {
+                (void)current_set_state();
+            }
             iterator->second.selected_work_area = std::max(1, iterator->second.selected_work_area);
             iterator->second.next_work_area = std::max(1, iterator->second.next_work_area);
             return iterator->second;

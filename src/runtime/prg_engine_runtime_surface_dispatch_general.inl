@@ -551,6 +551,22 @@
     }
     if (function == "set" && !arguments.empty()) {
         std::string option_name = value_as_string(arguments[0]);
+        if (normalize_identifier(option_name) == "century") {
+            // RQ-CF-PRG-SET-CENTURY-QUERY-001: native typed queries,
+            // checked selector admission before any window/calendar lookup.
+            if (arguments.size() > 2U) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Dll.Error.TooManyArguments"), 1230);
+            }
+            if (arguments.size() == 2U) {
+                const auto variant = checked_set_century_argument(
+                    arguments[1], numeric_behavior(set_callback), 1, 3);
+                if (!variant.has_value()) {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                }
+                return make_number_value(try_parse_invariant_double(
+                    set_callback(option_name + "," + std::to_string(*variant))).value_or(-1.0));
+            }
+        }
         if (arguments.size() >= 2U && normalize_identifier(option_name) == "textmerge") {
             const PrgValue &variant = arguments[1];
             std::string variant_text;
