@@ -55,82 +55,84 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-SQLROWCOUNT first-argument handle conversion PR #7043 merged into main
-2026-10-07 12:45:59 UTC as 1f6a711b32fbccc515d95caa38d31f305122851f.
-Signed/DCO exact head 6deb0ccc85e1e0aec1451d31bd1d2cb1a6f41405 passed all
-11 required checks; authorized Codex review completed without findings
-12:05:49.731986 UTC, summary 6037493939 and verified bot thumbs-up 12:05:53.
+SQLPREPARE first-argument handle conversion PR #7046 merged into main
+2026-10-07 13:46:06 UTC as adc1e460560aa32942276db1b8497f4dbb0891bf.
+Signed/DCO head 668e3786ecfef943df60f20592abe218f5bd43aa passed all 11
+required checks. Authorized exact-head Codex review completed cleanly
+13:04:18.317918 UTC (summary 6038504573; verified bot thumbs-up 13:04:22).
 Zero review threads/inline comments/closing references, complete pagination
-freshly verified before merge. Claude first request 6037495332 has eyes only;
-no explicit quota/setup failure or duplicate request. All 33 checks subsequently
-passed, including Windows MSVC run 37618259098/job 112781784903; verified
-after merge during this continuation.
-134 direct calls, 208 canceled DML/SELECT cases and 744 PRG rows pass in both
-modes; unchanged-dispatch baselines each fail exactly 104 selected assertions,
-controls/neighbors passing without sanitizer diagnostics. Final GCC four
-suites 23.18s (Numeric 21.46s), Clang ASan/UBSan/float-cast-overflow four
-105.62s (Numeric 98.72s) without diagnostics; six contracts 6/6 6.89s,
-160 valid fragments. Post-push Numeric 22.16s and six contracts 4.35s.
-Complete installed VFP9 fixture retains 48 attempts/52 lines/four matching
-serial runs. Resolution error 1 and missing-file message are extension-presence
-evidence only; recognized SQLTABLES control raises 1466, session 1 unchanged.
-Owner-derived finite/truncating signed-int32 admission applies in both modes,
-exact integers stay exact, existing other coercions retain checked rounding.
-Reject before row-count reads with localized 1466 and safe original Numeric
-diagnostics. Callback return/lifecycle/backend, type/arity/absent/default,
-other sites and formatter #6997 remain separate. Completed README VR/DQ/DV
-and docs/22/docs/32 retain bidirectional requirements and extension boundaries.
-Main synchronized; owned WT/local/remote branch removed. Both builds
-(454 MB/864 MB) and generated probe.FXP moved to recoverable trash.
-Unrelated files, detached WTs and older stashes preserved; scoped pre-sync
-handoff stash 18dd9ff6e108e4006ddcc26ba03fc4bec5cb33c0 retained.
-Live channel re-read empty after cleanup.
-Prior SQLCOLUMNS #7041 passed all 33 checks; diagnostic #7042 (intermittent
-macOS .NET empty benchmark measurements) remains unadmitted, not root-caused.
-Parents #5611/#6776 remain OPEN owner-authored agent-approved and unfinished.
-EPOCH #7023/CENTURY #7024 complete, #3698 closed; #6879 remains retained.
+freshly verified before merge. Claude first request 6038505774 has eyes only;
+no explicit quota/setup failure or duplicate request. All 32 completed
+optional/required checks pass; Windows MSVC run 37625558765/job 112806286142
+remains in progress and must be checked on continuation.
+134 direct checks and 416 canceled DML/SELECT cases/1,488 PRG rows retain
+empty/nonempty prepared commands, catchability/message, count/connection/
+dirty/cancel/action, selected alias, guard/result cursors, exact prepare/total
+SQL events and reset/cleanup in both modes. Both unchanged-dispatch baselines
+fail exactly 320 selected assertions (208 output/state, 56 prepare-event,
+56 total-event), controls/neighbors pass without sanitizer diagnostics.
+Final GCC four suites 30.80s (Numeric 29.10s), Clang ASan/UBSan/float-cast-
+overflow four 139.53s (Numeric 132.57s) without diagnostics; six contracts
+6/6 4.49s, 161 valid fragments. Post-push Numeric 29.07s/contracts 4.45s.
+Installed VFP9 fixture retains 48 calls/52 lines, three fully compared fresh
+serial runs. Native absent/type admission and connected-index recovery #7045
+remain unadmitted, without inferred aliases. Both modes use derived finite/
+truncating signed-int32 admission, exact integers and checked other coercions.
+Reject before prepared/cancel/action/events, with localized 1466 and safe
+original Numeric diagnostics; command/callback/type/arity/backend/AERROR and
+formatter #6997 stay separate. Completed README VR/DQ/DV/docs22/docs32 retain
+bidirectional traceability, misuse and rollback evidence.
+Main synchronized; owned WT/local/remote branch removed. Builds (454 MB/864 MB)
+and probe.FXP moved to recoverable trash. Unrelated files/detached WTs/older
+stashes preserved; pre-sync scoped handoff stash
+a41babd1dde859ae1498d81e286522b4c2d8d901 retained. Live channel re-read empty.
+SQLROWCOUNT #7043 passed all 33 checks. #5611/#6776 remain OPEN owner-authored
+agent-approved and unfinished; EPOCH/CENTURY complete, #3698 closed, #6879 retained.
 
 ## Selected active bounded slice
 
-SQLPREPARE first-argument Numeric/exact-integer handle conversion under
-freshly revalidated OPEN owner-authored agent-approved #5611/#6776 from exact
-origin/main 1f6a711b32fbccc515d95caa38d31f305122851f.
-Dedicated WT /home/rich/.codex/worktrees/sqlprepare-handle-numeric-5611/Project-Copperfin,
-branch fix/sqlprepare-handle-numeric-5611. No PR yet; ready for signed/DCO
-commit, push and PR. Complete installed VFP9 7423 fixture (48 calls/52 lines)
-matches in three fully compared fresh serial runs: 41 absent Numeric errors
-1466, seven other-type errors 11, recognized control 1466, first invalid-
-connection message and unchanged session 1. Absent errors reveal no converted
-indices/aliases. Separate #7045 against exact main retains callback/type
-admission and connected-index recovery, without expanding this slice.
-Derived finite/truncating signed-int32 admission applies in both modes.
-Exact integers stay exact; existing other coercions retain checked rounding.
-Reject unsafe handles with localized catchable 1466 before prepared/cancel/
-action mutation or events; safe original Numeric messages bypass unchanged
-formatter #6997. Only SQLPREPARE first-argument dispatch/helper changed;
-command/callback/type/arity/backend/AERROR, SQLEXEC/CALLFN and other sites
-remain separate.
-134 direct calls and 416 canceled DML/SELECT cases/1,488 PRG rows compare
-empty/nonempty command replacement/retention, status/error/message, count/
-connection/dirty/cancel/action, selected alias, guard/result cursor, exact
-prepare/total SQL events and reset/cleanup in both modes.
-Both unchanged-dispatch baselines fail exactly 320 selected assertions:
-208 output/state, 56 prepare-event and 56 total-event comparisons. Direct/
-helper/setup/coercion/cleanup and three neighbors pass; zero setup/cleanup/
-result-count control mismatches in failed output cases and no sanitizer
-diagnostics. GCC Numeric 28.91s/four suites 30.62s; Clang 135.51s/four 142.62s.
-Final GCC four suites 4/4 30.80s (Numeric 29.10s); Clang ASan/UBSan/float-cast-
-overflow four suites 4/4 139.53s (Numeric 132.57s), without diagnostics.
-Six final contracts 6/6 4.49s; baseline 4.50s; 161 valid fragments.
-Completed README VR/DQ/DV and docs/22/docs/32 retain reverse traceability,
-native/derived boundaries and medium-severity procedural delta/misuse/rollback.
-Build dirs /home/rich/temp/copperfin-sqlprepare-handle-5611-build and
-/home/rich/temp/copperfin-sqlprepare-handle-5611-sanitize remain owned scratch.
-Next: signed/DCO commit, push/PR, Claude first and authorized exact-head Codex
-fallback; fix/verify actionable CI/review and only then resolve conversations.
-Merge only all 11 required green, clean exact-head review and conversations
-resolved; preserve/synchronize/clean owned resources afterwards.
-No owner input or VM/backend/system change. #5611/#6776 unfinished; #6879 retained.
+SQLEXEC first-argument Numeric/exact-integer handle conversion under fresh
+OPEN owner-authored agent-approved #5611/#6776 from exact origin/main
+adc1e460560aa32942276db1b8497f4dbb0891bf.
+WT /home/rich/.codex/worktrees/sqlexec-handle-numeric-5611/Project-Copperfin,
+branch fix/sqlexec-handle-numeric-5611. No commit or PR yet.
+Only expression first-argument llround/int site is selected. Derived parent
+RQ-CF-PRG-NUMERIC-BEHAVIOR-001 and HZ-runtime-crash-01/HZ-data-corruption-01
+require finite/truncating signed-int32 in both modes, exact integers without
+floating round trip, checked existing other coercions, catchable localized
+1466 before executable command/cursor/state/events and safe original messages.
+Native fixture in tests/fixtures/vfp9-sqlexec-handle-numeric-observation/
+retains 48 calls/53 lines, three matching serial installed-VFP9 7423 runs:
+41 absent Numeric errors 1466, seven other-type errors 11, control 1466,
+first invalid-connection message, unchanged session 1 and absent native_exec.
+Source e3b995b47f7f031ed70c71833950f748c9d0be16dd54c525b7898e7196b5447c,
+output c2a7714106416e8642664c1a002c617f01af79cbc625a0458a478c48cbae8d75.
+Separate #7047 against exact main retains callback/type/connected-index
+recovery, without admitting production expansion or inferring aliases.
+Helper/direct tests and 416 cases are complete, and only selected dispatch
+is now wired. Complete unchanged-dispatch baselines each fail exactly 320
+selected assertions: 208 output/state, 42 exec events, 42 total events and
+28 effective-command details. Direct/helper/coercion/setup/cleanup controls
+and three neighbors pass; all 208 failed outputs have zero setup/cleanup/prior-
+count mismatches per toolchain. No sanitizer diagnostics. GCC Numeric
+37.57s/four suites 39.30s; full Clang Numeric 171.00s/four 177.88s.
+Earlier supplemental Clang without command-detail assertions failed 292
+(Numeric 172.22s/four 183.84s); do not use it as the full final baseline.
+Six baseline contracts pass 6/6 5.10s, 162 valid fragments.
+Final fixed GCC four suites pass 4/4 in 40.07s (Numeric 38.31s);
+Clang ASan/UBSan/float-cast-overflow pass 4/4 in 177.48s (Numeric 170.61s),
+without diagnostics. Six final contracts pass 6/6 5.06s, 162 valid fragments.
+134 direct checks and 416 cases/1,724 PRG rows pass unchanged expectations.
+Completed README VR/DQ/DV and docs22/docs32 retain native/derived boundaries,
+self-review, misuse, walkthrough, procedural delta and rollback. Native hashes,
+git diff --check and channel verification pass. No commit or PR yet.
+Builds /home/rich/temp/copperfin-sqlexec-handle-5611-build and
+/home/rich/temp/copperfin-sqlexec-handle-5611-sanitize retained until merge.
+Next: signed/DCO commit, push and PR; request Claude first, retain authorized
+exact-head Codex fallback, verify exact pushed change, require all 11 green
+required checks and clean exact-head review/resolved conversations before merge.
+Preserve callback/command/type/arity/AERROR/backend, other callers/CALLFN and
+formatter #6997. No VM/backend/system changes or owner blocker.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -850,8 +852,11 @@ Owner-directed workstream order before the #6879 assignment was:
      callback/type/connected-index gap #7040 remains separate.
    - Completed after those: SQLROWCOUNT handle conversion (PR #7043);
      native absence is an intentional supported extension boundary.
-   - Active: SQLPREPARE first-argument Numeric/exact-integer conversion;
+   - Completed after those: SQLPREPARE first-argument Numeric/exact-integer
+     conversion (PR #7046);
      native callback/type/connected-index gap #7045 remains separate.
+   - Active: SQLEXEC first-argument Numeric/exact-integer conversion;
+     native callback/type/connected-index gap #7047 remains separate.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

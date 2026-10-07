@@ -1,0 +1,1 @@
+- 2026-10-07: Bound SQLEXEC first-argument Numeric/exact-integer handles before execution, cursor/state changes or events in both modes; retain native admission evidence, independent command/state/cursor/event controls, sanitizer-backed boundaries and requirements/documentation traceability (#5611/#6776; callback/type/connected-index recovery #7047 remains separate).
