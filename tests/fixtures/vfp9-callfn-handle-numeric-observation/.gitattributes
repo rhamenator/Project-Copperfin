@@ -1,0 +1,2 @@
+# Preserve the native FOXTOOLS version line's observed trailing space.
+probe.out -whitespace

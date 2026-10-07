@@ -1910,14 +1910,24 @@
                 }
                 if (function == "callfn" && !arguments.empty())
                 {
-                    const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+                    // RQ-CF-PRG-CALLFN-HANDLE-NUMERIC-001: validate before
+                    // argument copying and registered API invocation/events.
+                    const auto handle = checked_callfn_handle_argument(arguments[0], numeric_behavior(set_callback_));
+                    if (!handle)
+                    {
+                        // Preserve original Numeric text outside formatter #6997.
+                        const std::string handle_text = arguments[0].kind == PrgValueKind::number
+                            ? format_round_trip_decimal(arguments[0].number_value) : value_as_string(arguments[0]);
+                        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Dll.Error.RegisteredApiHandleNotFound",
+                            {{"handle", handle_text}}), 1098);
+                    }
                     std::vector<PrgValue> call_arguments;
                     call_arguments.reserve(arguments.size() > 0U ? arguments.size() - 1U : 0U);
                     for (std::size_t index = 1U; index < arguments.size(); ++index)
                     {
                         call_arguments.push_back(arguments[index]);
                     }
-                    return callfn_callback_(handle, call_arguments);
+                    return callfn_callback_(*handle, call_arguments);
                 }
                 if ((function == "createobjectex" || function == "createobjecte") && arguments.size() >= 2U)
                 {

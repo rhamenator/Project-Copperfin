@@ -1,5 +1,24 @@
 # VFP Language Reference Coverage
 
+- CALLFN first-argument Numeric/exact-integer conversion (#5611/#6776,
+  2026-10-07): default finite signed-int32 truncation;
+  explicit VFP9 finite in-int64 truncation and low-16 aliases, with exact
+  extended integer modular policy. Reject unsafe operands with localized
+  catchable 1098 before registered API invocation/events, retaining safe
+  original Numeric diagnostics and checked existing other coercions.
+  Installed VFP9/FoxTools fixture in
+  `tests/fixtures/vfp9-callfn-handle-numeric-observation/` retains three
+  matching 58-call/65-line runs. Live handle 1 distinguishes truncation and
+  both-sign low-16 aliases; absent converted indices, exact extended integers
+  and unsafe rejection remain explicit derived policy, not native recovery.
+  RQ-CF-PRG-CALLFN-HANDLE-NUMERIC-001 maps this boundary in docs/32.
+  Direct and fresh live/empty-session synthetic cases independently compare
+  result/error/original message, guard shape/count/payload, retained registration,
+  next handle, invocation/registration counts and mode/library/cursor cleanup.
+  Callback/REGFN/session/native ABI/type/arity/return parity remain separate
+  #7050; no broader CALLFN completeness or real native ABI claim. Other
+  conversion sites and formatter #6997 remain unchanged.
+
 - SQLEXEC first-argument Numeric/exact-integer conversion (#5611/#6776,
   2026-10-07): derived finite signed-int32 truncation in both modes, catchable
   localized 1466 before execution/cursor/count/cancel/action mutation or events,
