@@ -55,69 +55,71 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-SQLROLLBACK Numeric/exact-integer handle conversion PR #7031 merged into main
-on 2026-10-07 at 06:15:50 UTC as
-ad127c62acc20bb97445efbe5380fbaf39117ef1. Signed/DCO exact head
-97297ebd01be7496b78214825e4c9517ea5aa20b passed all 11 required checks.
-Codex exact-head review completed 05:36:51 UTC, summary 6031690221;
-verified no-findings PR thumbs-up 05:36:54 UTC. Zero reviews/conversations
-and zero closing references (pagination complete). Claude requested first
-(6031691438), eyes only; no completed review or explicit quota/setup notice.
-All 32 completed optional/required checks passed; only Windows MSVC remained
-running at merge (run 37577039137/job 112648142150).
-134 direct checks and 104 fresh-session cases/320 PRG rows pass: GCC four
-suites 12.71s, Clang ASan/UBSan/float-cast-overflow/default-leak four suites
-54.96s without diagnostics. Both old-dispatch baselines fail exactly 66
-selected assertions. Post-push Numeric passes 11.46s; six contracts 4.37s,
-154 fragments. Complete native 48-call/50-line fixture, four fresh matching
-runs and completed VR/DQ/DV are retained in fixture README and docs/32.
-Derived finite int32 policy in both modes; absent native errors cannot reveal
-aliases. Separate #7030 native callback/type/index recovery gap remains open.
-#5611/#6776 remain OPEN, unfinished. Main synchronized; completed WT/local/
-remote branches removed. Both owned builds (453 MB/863 MB) and generated FXP
-moved to recoverable trash. Unrelated files/WTs preserved; live channel empty.
-Prior canonical handoff retained in stash 5ce0367f6cb2646400db0e3de27e0cb6516724bc.
-SQLCOMMIT #7029 subsequently passed all 33 checks, including Windows MSVC.
-EPOCH #7023 and CENTURY/ROLLOVER #7024 shipped earlier; #3698 is closed.
+SQLTABLES Numeric/exact-integer handle conversion PR #7034 merged into main
+2026-10-07 07:15:44 UTC as 2cca52e59bcfb9286799b78e5fa7c48da0a1d02e.
+Signed/DCO exact head 79d3d2c4324fbb90ac4d0928b1510d88f4acd37c passed all
+11 required checks. Codex exact-head review completed 06:31:10 UTC, summary
+6032350762; verified no-findings PR thumbs-up 06:31:14 UTC. Zero reviews/
+threads and closing references (pagination complete). Claude requested first
+6032353452, eyes only; no completed review or explicit quota/setup notice.
+All 32 completed checks passed; optional Windows MSVC remained running
+(run 37581777207/job 112662871929). 134 direct checks and 104 fresh synthetic
+cases/320 PRG rows pass: GCC four suites 13.71s; sanitizer four suites 62.27s
+without diagnostics. Both old-dispatch baselines fail exactly 66 selected
+assertions. Post-push Numeric 12.28s, six contracts 4.36s, 155 fragments.
+Complete 48-call/51-line native fixture/four matching runs and completed
+VR/DQ/DV retained in README and docs/32. Derived finite-int32 policy in both
+modes; native absent errors cannot establish indices. Separate #7032 native
+callback/type/index recovery gap remains open/unadmitted. Parents #5611/#6776
+remain OPEN/owner/agent-approved and unfinished. Main synchronized; owned
+WT/local/remote branches removed. Both builds (453 MB/863 MB) and generated
+FXP in recoverable trash. Unrelated files/WTs preserved; live channel empty.
+Prior canonical handoff retained in stash
+d955a20a23635459eeaa6e061944cec40b23d197.
+SQLROLLBACK #7031 subsequently passed all 33 checks, including Windows MSVC.
+EPOCH #7023 and CENTURY/ROLLOVER #7024 completed earlier; #3698 closed.
 #6879 retained next workstream remains uncancelled.
 
 ## Selected next bounded slice
 
-SQLTABLES first-argument Numeric/exact-integer handle conversion under freshly
-revalidated owner-authored OPEN agent-approved #5611/#6776 is selected from
-exact main ad127c62acc20bb97445efbe5380fbaf39117ef1.
+SQLDATABASES first-argument Numeric/exact-integer handle conversion under
+freshly revalidated owner-authored OPEN agent-approved #5611/#6776 selected
+from exact main 2cca52e59bcfb9286799b78e5fa7c48da0a1d02e.
 Only its unchecked llround/int expression-dispatch site is in scope. Other
 SQL callers, metadata/backend results, cursor allocation, type/arity and
-absent/default-handle parity remain separate. Independently recover installed
-VFP9 evidence; identical absent errors cannot establish converted indices.
-Dedicated WT /home/rich/.codex/worktrees/sqltables-handle-numeric-5611/Project-Copperfin
-on fix/sqltables-handle-numeric-5611 starts from origin/main; local verification
-complete, uncommitted/no PR yet. Complete clean-room 48-call/51-line fixture
-retained; four fresh serial Wine runs match (preliminary source without cursor
-row not retained). Numeric absent handles all raise 1466; Currency/Logical/
-NULL/Character controls raise 11; metadata cursor remains absent/session 1.
-Indices unobserved; derive finite/truncating int32 in both modes, no aliases.
-Separate #7032 native type/absent/index-recovery gap filed against exact main,
-not admitted. Source SHA-256
-5366fcabf42f40268e6c3a6d7217582708e4d9c44297327779560e701f67b5a9;
-output 39794122c2f49b4ee0164fc6915dc7bfc6f3bf5ce46f4d6fe375ccfb8e9a0e73.
-Checked helper and SQLTABLES-only dispatch pass 134 direct checks and 104 fresh
-synthetic cases/320 PRG rows. Independent expectations compare metadata cursor
-presence/shape/first payload, local guard shape/payload, connection/dirty/cancel/
-action flags, LastCursorAlias, successful table/cursor events, error/message,
-mode reset, cursor closure and disconnect. Both old-dispatch baselines fail
-exactly 66 selected assertions; setup/coercion/cleanup and three neighbors pass.
-GCC baseline 14.01s (Numeric 12.29s), sanitizer 61.56s (Numeric 54.62s).
-Final GCC 4/4 13.71s (Numeric 12.02s); Clang ASan/UBSan/float-cast-overflow/
-default-leak 4/4 62.27s (Numeric 55.36s), no diagnostics. Six contracts 6/6
-5.19s, 155 valid fragments. Completed README VR/DQ/DV and docs/22/32 retain
-misuse/boundary/verified walkthrough/rollback evidence; no expectations weakened.
-Owned builds /home/rich/temp/copperfin-sqltables-handle-5611-build and
-/home/rich/temp/copperfin-sqltables-handle-5611-sanitize retained until merge.
-No VM/backend/system change. Parents freshly revalidated OPEN/owner/agent-approved.
-Next: signed/DCO commit and push, PR to main, Claude first exact-head review;
-merge only all 11 required green, clean authorized review and resolved threads.
-Track #7031 optional Windows MSVC without duplicate retries.
+absent/default-handle semantics remain separate. Independently observe installed
+VFP9 support; absence of native syntax is not grounds to skip an intentional
+extension. Derive/document extension boundaries from owner policy and hazards,
+not existing code as its own requirement source; do not invent native aliases.
+Dedicated WT /home/rich/.codex/worktrees/sqldatabases-handle-numeric-5611/Project-Copperfin
+on fix/sqldatabases-handle-numeric-5611 from origin/main; no commit, push or PR
+yet. Checked helper, 134 direct checks, 104 fresh synthetic cases/320 PRG rows,
+traceability and native fixture are uncommitted; one-site dispatch now wired
+after both baselines. VFP9 reports missing sqldatabases.prg (ERR 1) for
+all 48 calls; recognized SQLTABLES control reports 1466. Complete 53-line
+native output matches four fresh runs: presence evidence, not a conversion
+oracle. Both-mode finite/truncating int32 boundary derives from owner extension
+policy; exact integer admission avoids double and other coercions stay scoped.
+Both unchanged-dispatch baselines fail exactly 66 SQLDATABASES assertions;
+GCC Numeric 13.36s/four suites 15.02s; Clang sanitizer Numeric 63.27s/four
+suites 70.34s, without sanitizer diagnostics. All neighbors/setup/coercion/
+cleanup/direct controls pass. Six contracts passed 5.13s, 156 fragments.
+Owned builds are
+/home/rich/temp/copperfin-sqldatabases-handle-5611-build and
+/home/rich/temp/copperfin-sqldatabases-handle-5611-sanitize.
+Final GCC four suites pass 4/4 in 15.52s (Numeric 13.76s); Clang ASan/UBSan/
+float-cast-overflow pass 4/4 in 68.60s (Numeric 61.38s), without diagnostics.
+Final six contracts pass 4.45s, 156 fragments. Native hashes unchanged.
+Completed README VR/DQ/DV and docs/22/docs/32 retain derived extension policy,
+safe diagnostics, exact integer and adjacent-domain checks, metadata/guard/
+state/event comparisons, reset/closure/disconnect walkthrough and rollback.
+No expectation was weakened after baseline failures. Next: signed/DCO commit,
+push/PR, Claude-first review, exact-head gates, then sync/clean before selection.
+No VM/external backend/system change admitted. Runtime tests serial across
+builds; never overlap build processes within one build directory. Request
+Claude first; merge only all 11 required green, clean exact-head authorized
+review and resolved conversations. Track #7034 optional Windows MSVC without
+duplicate retries.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -828,8 +830,10 @@ Owner-directed workstream order before the #6879 assignment was:
      connected-index and callback/type gaps #7028 remain separate.
    - Completed after those: SQLROLLBACK handle conversion (PR #7031); native
      connected-index and callback/type gaps #7030 remain separate.
-   - Selected next: SQLTABLES first-argument Numeric/exact-integer handle
-     conversion; independently recover native evidence, retain derived gaps.
+   - Completed after those: SQLTABLES handle conversion (PR #7034); native
+     connected-index and callback/type gaps #7032 remain separate.
+   - Selected next: SQLDATABASES first-argument Numeric/exact-integer handle
+     conversion; native-presence observation and owner-derived extension policy.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`
