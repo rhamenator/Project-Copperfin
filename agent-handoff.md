@@ -7,6 +7,20 @@ Develop on `main`: branch from `origin/main` and open pull requests with
 `docs/v1-development-retirement-2026-10-01.md`); older text below that says a
 slice "merged into `v1-development`" is historical.
 
+## Extension intent (direct owner steering, 2026-10-06)
+
+VFP compatibility is the foundation, not the feature ceiling. Copperfin
+extensions deliberately fix VFP problems and fill gaps with modern development
+tools and platforms, borrowing suitable ideas from other languages/platforms
+where useful; some gaps require substantial capabilities. Absence of native
+VFP syntax or precedent is not grounds to skip or demote an extension. For the
+selected admitted work, document derived extension requirements, boundaries,
+interoperability and verification from owner product intent; use installed VFP
+as the oracle for the equivalent legacy behavior, not as an oracle for an
+extension it does not implement. This steering is additive: finish the retained
+EPOCH query/numeric slices and then #3698 CENTURY/ROLLOVER. It does not admit
+unrelated production work or waive acceptance/review evidence.
+
 ## Review routing (owner steering, 2026-10-06)
 
 The owner reports GitHub review availability exhausted for the rest of
@@ -41,117 +55,77 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-SET FWEEK PR #7011 merged into main as
-`0c7b209ebbfce42a02d935fffa9e8e8cd7b749d8` on 2026-10-06 at 11:18:46 UTC.
-All 11 required checks passed at signed/DCO head
-`6532e2328ad7a6cc0a2c7f7dc270e2704c0e2e62`; exact-head Codex review completed
-cleanly and the sole conversation was verified after push and resolved.
-Every completed optional check passed, including all installers, managed UI,
-security and sanitizer/fuzz/stress/migration. Broad Linux/macOS/Windows were
-still running at merge. Main is synchronized; the slice worktree/local/remote
-branches were removed, and 676 MB normal/1.2 GB sanitizer builds plus generated
-FXP moved to recoverable trash. Unrelated files/worktrees remain untouched.
-Its three identical installed-VFP9 runs retain 50 operands/56 output lines,
-including independent WEEK consumer values 1/53/52. Final coverage is
-144 direct calls, 238 runtime cases and four locales. Original dispatch fails
-572 selected assertions; the bare-literal review regression fails 80 before
-its fix in both toolchains. Final five suites pass GCC 5/5 (15.61s) and Clang
-ASan/UBSan/float-cast-overflow 5/5 (69.95s), without diagnostics. Seven contracts
-pass (19.66s), final five contracts pass (4.28s), and 148 fragments validate.
-Post-push Numeric passes GCC (9.07s) and sanitizers (37.49s), without diagnostics.
-The obsolete runtime-surface setup was corrected from invalid 4 to valid 3
-without losing session assertions. Other-type admission #7010 remains separate.
+SET EPOCH raw-query prerequisite PR #7022 merged into main as
+aa6304eeb26cc63761a13293abeaa4e90f2842b3 on 2026-10-07 at 01:45:53 UTC,
+closing #7021. All 11 required checks passed at signed/DCO head
+4cf67b422b324bfb696d601903b1c28a3d178d80. Exact-head Codex review completed
+at 01:10:36 UTC with its no-findings thumbs-up and zero review conversations
+(pagination complete). Every completed optional check passed; Windows MSVC
+was still running at merge. Claude was requested first and claude[bot]
+acknowledged with eyes on comment 6028619494; no completed Claude review or
+explicit quota/setup failure was posted. An eyes reaction is not review.
+Sixteen date/time additions preserve year-1 raw readback and 01=>1/00=>100
+consumer windows, independent display, both Numeric modes, session isolation
+and omission. Exact-main baseline failed ten initial checks; final four GCC
+suites passed (9.94s), four contracts passed (0.54s), and post-push date/time
+passed (0.16s). RQ-CF-PRG-SET-EPOCH-QUERY-001 and completed VR/DQ/DV remain in
+docs/32 and docs/set-epoch-query-7021.md. No local sanitizer/VM claim.
+Main is synchronized, the completed query worktree/local/remote branches are
+removed, and its 451 MB build is in recoverable trash. Numeric scratch and
+unrelated files/worktrees are preserved. Live channel re-read empty.
 
-SET EPOCH TO Numeric/exact-integer conversion is selected next under admitted
-#5611/#6776 from this exact main on `fix/set-epoch-numeric-5611`, in
-`/home/rich/.codex/worktrees/set-epoch-numeric-5611/Project-Copperfin`.
-Only EPOCH's integer-setting dispatch is selected. Other setters,
-expression-evaluation policy and non-Numeric admission remain separate.
-The owner resolved the product-policy blocker on 2026-10-06: retain both
-commands, deliberately supporting the simpler Copperfin-only SET EPOCH
-interface. EPOCH names the start of the two-digit-year interpretation window;
-CENTURY ON/OFF controls display independently. VFP-compatible CENTURY TO ...
-ROLLOVER must set the equivalent window, not disable EPOCH when display is OFF.
-The owner explicitly delegates judgment for extension-only design/boundaries
-and verification rather than skipping an extension for lack of native syntax.
-The bounded EPOCH numeric-conversion/independent-display slice is now retained
-in progress with an evidenced prerequisite: the existing raw SET('EPOCH')
-query maps stored year 1 to ON, and its parser consumer silently falls back to
-1950. Focused issue #7021 was filed against exact main; no approval label was
-added. Under the admitted #3698 workstream and direct owner extension policy,
-take the separate bounded EPOCH raw-query prerequisite first, then re-enter the
-numeric slice. Full CENTURY/ROLLOVER, query/reset/session semantics remain the
-next #3698 slice; both interfaces remain required and #3698 is not complete.
-The prerequisite worktree is
-`/home/rich/.codex/worktrees/set-epoch-query-5611/Project-Copperfin`, branch
-`fix/set-epoch-query-5611`, created from origin/main 0c7b209eb. EPOCH is now
-included in the existing raw numeric-setting callback path, with no setter,
-conversion/default/calendar/CENTURY changes. Sixteen date/time assertions cover
-year-1 raw readback, 01=>1/00=>100, CTOD/DTOC/CTOT/TTOC, display ON/OFF,
-both Numeric modes, session default/restoration and omitted reset. Exact-main
-baseline fails ten initial assertions. Final GCC four suites pass 4/4 (9.94s),
-four contracts pass (0.54s), 149 fragments and channel/diff checks pass.
-RQ-CF-PRG-SET-EPOCH-QUERY-001 and completed VR/DQ/DV are in docs/32 and
-docs/set-epoch-query-7021.md. Own build
-`/home/rich/temp/copperfin-set-epoch-query-7021-build` must be cleaned after
-its PR merges/closes. No local query sanitizer/VM/installed-product claim.
-Next action: signed/DCO commit, push and main-base PR with Claude-first review;
-require exact-head clean review, all 11 required checks and resolved
-conversations before merging. Do not implement full CENTURY in this PR.
-Two fresh final installed-VFP9 09.00.0000.7423 Wine processes match all ten
-lines in tests/fixtures/vfp9-set-epoch-numeric-observation/epoch.prg/epoch.out:
-three macro EPOCH command forms raise 36, SET('EPOCH') raises 231, while actual
-SET CENTURY TO 19 ROLLOVER 50 reports 19/50 and CTOD years 2049/1950.
-EXECSCRIPT forms raise 10 in the final program; no universal error or native
-Numeric-domain claim is made. Initial direct compilation failed 36 and
-provided no Numeric matrix. Source SHA-256 is
-a01e1cc70e6c9e23a8ac5b0d07e5d5e1c556c019c50b225f5f2c56b65b3d2c99;
-output SHA-256 is
-59e68b19e9b1e8c9690e869a378b046fe68d2ec6a9f23d0ad60a10063500e759.
-Existing owner-authored/agent-approved #3698 already tracks the non-VFP EPOCH
-interface and real CENTURY/ROLLOVER contract; no duplicate issue was filed.
-The owner's extension policy supersedes #3698's earlier remove-or-mode
-condition. Existing 1950/1/9999 values alone are not requirement evidence;
-explicitly document derived extension choices before claiming completion.
-Recover native equivalent CENTURY/ROLLOVER consumer behavior with CENTURY both
-ON and OFF; retain native EPOCH rejection as provenance, not a blocker.
-Native oracle recovery is complete: two fresh century-window.prg processes
-match all 103 retained lines for 1950/1975/2025, OFF/ON and eight two-digit
-years each. Source SHA-256 65e3968a5647ba88f3b3fec8d99c15f0ecce43755517a94bed00433bdf7d3d25;
-output 6e4c632bf6f64caafc1083824e6a53213737c3a5664bfae3d6969bc6060ac174.
-The numeric worktree now has checked Numeric/exact-integer conversion, full
-bare-decimal classification, four localized error-10 messages, 31 direct cases,
-104 conversion/locale PRG cases and 96 native-equivalent consumer cases. It
-documents derived 1..9999 truncation, fixed omission 1950, identical modes,
-non-finite/domain rejection before mutation/event, preserved ordinary other
-coercions and display independence. No native EPOCH Numeric parity is claimed.
-The original dispatch fails 210 selected assertions. The first checked GCC
-run passes four of five suites but exposes 12 year-1 raw-query dependency
-failures; do not change tests to bless ON or claim a passing numeric slice.
-Normal build /home/rich/temp/copperfin-set-epoch-5611-build and Clang sanitizer
-build /home/rich/temp/copperfin-set-epoch-5611-sanitize are owned scratch and
-must be retained until numeric completion, then cleaned recoverably. Sanitizer
-build completed; runtime sanitizer tests have not run. All five contracts pass
-(383.54s, including the complete safety workflow contract). The obsolete
-uncalled integer-setting lambda is removed; re-entry must rebuild both targets.
-Numeric checkpoint ce8df4493128814e10074e1566c030503e6e39a6 is signed/DCO
-verified and the numeric worktree is tracked/untracked clean (ignored FXP only).
-Next action: retain it without pushing/opening a failed PR;
-implement and verify #7021's bounded prerequisite separately, signed/DCO PR,
-Claude-first review, exact-head gates, merge/synchronize/clean it; then re-enter
-the retained numeric branch, incorporate main, rerun all focused normal and
-sanitizer suites plus contracts and complete DQ/DV/requirements before its PR.
-README and docs22/docs32 at the evidence-only local checkpoint still record
-RQ-CF-PRG-SET-EPOCH-CONTRACT-001 as gap; supersede that state with this direct
-owner policy and actual verification as the slice proceeds. Checkpoint 5bd6f5d319df78177bea0abb30a3e540bfc9fa9e
-is signed/DCO verified on the selected branch; all 149 fragments and channel
-integrity/diff checks pass. The worktree is clean except ignored generated FXP.
-Neither active branch has a PR or push yet. Native FXP is ignored local
-scratch, retained until each slice's cleanup. Root live channel was re-read
-empty before the dependency selection; no VM/backend/system changes.
-Automation copperfin-implementation-loop-daybreak-blue is confirmed ACTIVE
-with this resolved owner policy and Claude-first/Codex-fallback routing; its
-existing schedule, thread and notification policy are preserved.
+## Selected EPOCH numeric slice and retained CENTURY follow-on
+
+Continue the retained #5611/#6776 slice in
+/home/rich/.codex/worktrees/set-epoch-numeric-5611/Project-Copperfin,
+branch fix/set-epoch-numeric-5611. Original signed/DCO checkpoint
+ce8df4493128814e10074e1566c030503e6e39a6 is retained as historical evidence;
+rebase both local commits onto merged origin/main aa6304eeb, preserving the
+native fixtures and both query/numeric requirement entries. No numeric push
+or PR yet. Only EPOCH dispatch/conversion and equivalent consumer verification
+are selected; other setters, general expression evaluation and non-Numeric
+type parity remain separate.
+
+Direct owner steering retains both commands: EPOCH is the intentional simpler
+two-digit-year window-start extension, available in both Numeric modes;
+CENTURY ON/OFF is independent display policy. Missing native syntax is not a
+reason to skip an extension. Full VFP-compatible CENTURY TO ... ROLLOVER,
+query variants/default restoration/session semantics and two-interface
+interoperability remain the next admitted #3698 slice, not complete here.
+The previous #3698 remove-or-extension-mode condition is superseded.
+
+The extension derives checked finite/exact Numeric truncation into 1..9999,
+localized catchable error 10 before mutation/success event, fixed omission
+reset 1950, identical Numeric modes and preserved ordinary other coercions.
+Complete bare decimal range failures cannot become Character fallback.
+Upper windows do not guarantee calendar representability for every expanded
+date. Native EPOCH rejection is provenance, not a Numeric requirement.
+Retained epoch.prg/epoch.out match ten lines in two fresh VFP9 7423 processes;
+century-window.prg/century-window.out match all 103 lines in two fresh
+processes for windows 1950/1975/2025, OFF/ON and eight short years each.
+Exact identities, derivation and medium-severity DQ/DV are in the fixture
+README. No VM/backend/system change or native EPOCH Numeric parity claim.
+
+Implementation and unchanged desired coverage are retained: checked helper,
+EPOCH-only lexical/evaluation dispatch, four locales, 31 direct cases,
+104 conversion/locale PRG cases and 96 native-equivalent consumer cases.
+Original dispatch failed 210 assertions. The initial checked GCC run passed
+four of five suites with 12 year-1 query failures; #7022 is now the merged
+prerequisite, not permission to bless ON. Sanitizer build completed but runtime
+sanitizer tests had not run. Five contracts passed (383.54s). Removal of the
+obsolete unchecked integer-setting lambda occurred after the initial builds.
+
+Next action: finish the signed rebase, rebuild and rerun five focused suites
+normally and under Clang ASan/UBSan/float-cast-overflow serially across builds;
+rerun applicable contracts, complete actual VR/DQ/DV and docs/32 Numeric/window
+entries, update the single existing fragment, then signed/DCO push and main PR.
+Request Claude first and require a clean exact-head Claude/Codex review,
+all 11 required checks and all conversations resolved before merge.
+Own builds /home/rich/temp/copperfin-set-epoch-5611-build and
+/home/rich/temp/copperfin-set-epoch-5611-sanitize must remain until numeric
+completion, then be cleaned recoverably. Ignored native FXP is owned scratch.
+Automation copperfin-implementation-loop-daybreak-blue remains ACTIVE with
+the existing schedule/thread/quiet-notification policy.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.

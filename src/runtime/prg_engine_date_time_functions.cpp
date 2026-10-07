@@ -129,6 +129,8 @@ int set_int_value(
     return value < min_value || value > max_value ? default_value : value;
 }
 
+// RQ-CF-PRG-SET-EPOCH-WINDOW-001: owner-retained extension, equivalent
+// native CENTURY/ROLLOVER window; CENTURY ON/OFF only affects formatting.
 int epoch_year(const std::function<std::string(const std::string&)>& set_callback) {
     return set_int_value(set_callback, "EPOCH", 1950, 1, 9999);
 }

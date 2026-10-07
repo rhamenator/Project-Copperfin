@@ -1587,6 +1587,34 @@ std::optional<std::int32_t> checked_set_fweek_argument(
     return *week;
 }
 
+// RQ-CF-PRG-SET-EPOCH-NUMERIC-001: derived extension contract under the
+// owner's 2026-10-06 retention/judgment policy, not native EPOCH semantics.
+std::optional<std::int32_t> checked_set_epoch_argument(const PrgValue& value) {
+    std::optional<std::int64_t> year;
+    if (value.kind == PrgValueKind::int64) {
+        year = value.int64_value;
+    } else if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value > 9999) {
+            return std::nullopt;
+        }
+        year = static_cast<std::int64_t>(value.uint64_value);
+    } else if (value.kind == PrgValueKind::number) {
+        year = checked_truncated_numeric_to_int64(value.number_value);
+    } else {
+        // Preserve ordinary pre-existing coercions without type-parity claims.
+        try {
+            const auto rounded = checked_truncated_numeric_to_int64(std::round(value_as_number(value)));
+            return rounded.has_value() ? static_cast<std::int32_t>(std::clamp<std::int64_t>(*rounded, 1, 9999)) : 1950;
+        } catch (...) {
+            return 1950;
+        }
+    }
+    if (!year.has_value() || *year < 1 || *year > 9999) {
+        return std::nullopt;
+    }
+    return static_cast<std::int32_t>(*year);
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {

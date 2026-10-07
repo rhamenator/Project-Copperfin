@@ -1539,6 +1539,7 @@
   "Runtime.Prg.Dispatch.Error.DataSessionInvalidSelector": "SET DATASESSION TO requer um identificador de sessão positivo e representável.",
   "Runtime.Prg.Dispatch.Error.SetDecimalsInvalidValue": "SET DECIMALS TO requer um valor convertido de 0 a 18.",
   "Runtime.Prg.Dispatch.Error.SetFweekInvalidValue": "SET FWEEK TO requer um valor convertido de 1 a 3.",
+  "Runtime.Prg.Dispatch.Error.SetEpochInvalidValue": "SET EPOCH TO requer um ano convertido de 1 a 9999.",
   "Runtime.Prg.Dispatch.Error.SetFdowInvalidValue": "SET FDOW TO requer um valor convertido de 1 a 7.",
   "Runtime.Prg.Dispatch.Error.InvalidObjectTarget": "{command}: destino de objeto invalido",
   "Runtime.Prg.Dispatch.Error.CreateCursorRequiresNonEmptyAlias": "CREATE CURSOR exige um alias nao vazio",

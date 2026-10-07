@@ -5579,26 +5579,6 @@
                     }
                     return unquote_string(candidate);
                 };
-                const auto evaluate_set_integer_value = [&](const std::string &raw_value, int default_value, int min_value, int max_value) -> int
-                {
-                    const std::string candidate = strip_set_to_value(raw_value);
-                    if (candidate.empty())
-                    {
-                        return default_value;
-                    }
-                    int parsed_value = default_value;
-                    try
-                    {
-                        parsed_value = static_cast<int>(std::llround(value_as_number(
-                            should_evaluate_set_value(candidate) ? evaluate_expression(candidate, frame)
-                                                                 : make_string_value(unquote_string(candidate)))));
-                    }
-                    catch (...)
-                    {
-                        parsed_value = default_value;
-                    }
-                    return std::clamp(parsed_value, min_value, max_value);
-                };
                 const auto normalize_boolean_set_value = [&](const std::string &raw_value) -> std::string
                 {
                     auto map_boolean_token = [](const std::string &raw_token) -> std::optional<std::string>
@@ -6430,7 +6410,84 @@
                     }
                     else if (normalized_name == "epoch")
                     {
-                        current_set_state()[normalized_name] = std::to_string(evaluate_set_integer_value(option_value, 1950, 1, 9999));
+                        // RQ-CF-PRG-SET-EPOCH-NUMERIC-001: owner-retained
+                        // extension in both numeric modes; validate before mutation.
+                        const std::string candidate = strip_set_to_value(option_value);
+                        // Classify complete decimal literal syntax separately from
+                        // finite parsing, so range failure cannot become Character.
+                        const auto is_decimal_literal = [](const std::string &text) {
+                            std::size_t cursor = 0;
+                            if (cursor < text.size() && (text[cursor] == '+' || text[cursor] == '-'))
+                            {
+                                ++cursor;
+                            }
+                            const auto consume_digits = [&]() {
+                                const std::size_t begin = cursor;
+                                while (cursor < text.size() && text[cursor] >= '0' && text[cursor] <= '9')
+                                {
+                                    ++cursor;
+                                }
+                                return cursor != begin;
+                            };
+                            bool mantissa_digits = consume_digits();
+                            if (cursor < text.size() && text[cursor] == '.')
+                            {
+                                ++cursor;
+                                mantissa_digits = consume_digits() || mantissa_digits;
+                            }
+                            if (!mantissa_digits)
+                            {
+                                return false;
+                            }
+                            if (cursor < text.size() && (text[cursor] == 'e' || text[cursor] == 'E'))
+                            {
+                                ++cursor;
+                                if (cursor < text.size() && (text[cursor] == '+' || text[cursor] == '-'))
+                                {
+                                    ++cursor;
+                                }
+                                if (!consume_digits())
+                                {
+                                    return false;
+                                }
+                            }
+                            return cursor == text.size();
+                        };
+                        PrgValue operand = make_number_value(1950.0);
+                        if (!candidate.empty())
+                        {
+                            try
+                            {
+                                if (should_evaluate_set_value(candidate))
+                                {
+                                    operand = evaluate_expression(candidate, frame);
+                                }
+                                else if (const auto literal = try_parse_numeric_index_value(candidate); literal.has_value())
+                                {
+                                    operand = make_number_value(*literal);
+                                }
+                                else if (is_decimal_literal(candidate))
+                                {
+                                    operand = make_number_value(std::numeric_limits<double>::quiet_NaN());
+                                }
+                                else
+                                {
+                                    operand = make_string_value(unquote_string(candidate));
+                                }
+                            }
+                            catch (...)
+                            {
+                                // Preserve evaluation fallback; conversion rejection
+                                // stays outside this catch, before mutation/events.
+                                operand = make_number_value(1950.0);
+                            }
+                        }
+                        const auto year = checked_set_epoch_argument(operand);
+                        if (!year.has_value())
+                        {
+                            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Dispatch.Error.SetEpochInvalidValue"), 10);
+                        }
+                        current_set_state()[normalized_name] = std::to_string(*year);
                     }
                     else if (normalized_name == "date")
                     {

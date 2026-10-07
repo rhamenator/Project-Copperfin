@@ -196,6 +196,11 @@ std::optional<std::int32_t> checked_set_fdow_argument(const PrgValue& value, Num
 // 1..3. Explicit VFP9 keeps negative-only low-32 aliases; missing means 46.
 // Other existing coercions preserve checked rounding/clamping/fallback to 1.
 std::optional<std::int32_t> checked_set_fweek_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-SET-EPOCH-NUMERIC-001: intentional extension in both numeric
+// modes. Numeric/exact integers truncate to 1..9999 without wrapping or
+// saturation; missing means localized error 10 before mutation. Ordinary
+// other coercions retain checked rounding/clamping/fallback to 1950.
+std::optional<std::int32_t> checked_set_epoch_argument(const PrgValue& value);
 // #6050: integer arguments crossing a DECLARE boundary. Ordinary VFP9
 // INTEGER/LONG parameters receive the low 32 bits after truncation toward
 // zero. Exact int64/uint64 values keep their low bits without a floating round
