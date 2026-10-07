@@ -55,86 +55,96 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-CALLFN first-argument Numeric/exact-integer conversion PR #7051 merged
-2026-10-07 16:48:00 UTC as f8929616deb0c09b753671071e8718e1f2172ee4.
-Exact signed/DCO head e182fc97378be59a8a476825528c78becf16b29e passed all
-11 required checks. Authorized exact-head Codex review completed cleanly
-15:50:24.798228 UTC (summary 6041488192; bot thumbs 551507748 at 15:50:28).
-Fresh complete pagination verified zero reviews/inline comments/threads/
-closing references before merge. Claude-first request 6041493280 has eyes
-434809375 only; no explicit quota/setup failure or duplicate review request.
-31/33 hosted checks pass; optional VSIX and Windows MSVC failures are retained,
-not claimed green. VSIX run 37647015033 attempts 1/2 (jobs 112880323819/
-112893275132) both hit the 600s installation timeout after successful build;
-both failure-cleanup uninstalls passed. Artifacts 11494919768/11497981371
-retain exact package hashes/operation timings. Focused current-main gap
-#7053 owns further diagnosis; no VSIX production scope was admitted.
-Windows run 37647015018/job 112880324801 passes 435/436; only
-test_visual_asset_editor times out 180.02s. Numeric passes 48.15s,
-CENTURY/ROLLOVER 0.47s. Preceding SQLEXEC #7048 already failed the same
-editor test 180.04s before the GitHub outage. Focused gap #7054 retains both
-heads/results; editor source unchanged. SQLEXEC run 37634532488 attempt 2/
-job 112880387091 completed with the same sole editor timeout 180.02s:
-435/436 passed, total 1098.12s, CENTURY 0.83s. Issue #7054 comment
-6043038278 retains exact aca85d2b6dccfe251aa6cdf995fb64f1266d5179 retry
-evidence; no root cause established, no third retry or editor scope expansion.
-PR comment 6042568241 retains CI boundaries and gap links.
+ALEN optional dimension Numeric/exact-integer conversion PR #7056 merged
+2026-10-07 18:16:34 UTC as 6297dd2367318dbbd7db745271175ef872cc27ee.
+Exact signed/DCO head 68d1ffba5b508d788f565d9ca207d99a71d20c56 passed all
+11 required checks; fresh complete reviews/inline/thread/closing-reference
+pagination was empty. Authorized exact-head Codex review completed cleanly
+17:41:06.717226 UTC (summary6043404950, verified bot thumbs551779223).
+Claude-first request6043427059 has eyes only, no explicit quota/setup failure;
+no duplicate request and no absence/eyes-as-clean claim. At merge,31/33 hosted
+checks passed; optional Linux GCC and Windows MSVC remained in progress,
+not claimed green. This head's VSIX/Windows/macOS/Linux installer checks passed;
+prior optional timeout gaps #7053/#7054 remain separate, no root cause guessed.
 
-166 direct checks / 248 fresh live/empty-session cases / 1,008 PRG rows;
-both unchanged-dispatch baselines fail exactly 101 selected assertions, zero
-setup/guard/session/registration/counter/cleanup mismatches. GCC four 4/4
-44.08s (Numeric 41.81s); Clang ASan/UBSan/float-cast-overflow four 4/4
-203.21s (Numeric 193.80s), no diagnostics. Six contracts 6/6 4.38s;
-163 fragments. Pushed-head Numeric 42.08s, five contracts 4.04s plus native
-isolation pass; additional intake 4.41s and full safety workflow 375.52s
-(six-test run 384.38s) pass. Completed README VR/DQ/DV/docs22/docs32 retain
-native/derived boundaries, medium misuse, procedural delta/walkthrough/
-rollback and reverse links. Three matching native 58-call/65-line VFP9 7423/
-FoxTools 9.00 runs retain source/output hashes. #7050 native absent/type gap
-and #6997 formatter remain separate. No native ABI qualification is inferred.
-Main synchronized; owned worktree/local/remote branch removed. Builds
-459 MB/874 MB, probe.FXP and downloaded diagnostics moved to recoverable
-trash. Unrelated files, detached worktrees and all older stashes preserved.
-Pre-sync scoped handoff stash 66c58bd198c56bda7089445819439e5aafd1d71b retained.
-Live channel re-read empty. #5611/#6776 remain OPEN owner-authored approved
-and unfinished; EPOCH/CENTURY complete, #3698 closed, #6879 retained.
+178 direct checks /240 fresh cases /1062 PRG rows; independent state/message/
+shape/payload/cursor/session/mode/cleanup. GCC unchanged-dispatch baseline
+failed109 selected assertions, zero guard/call-state/setup/cleanup mismatches,
+all direct/coercion/omitted/neighbor controls passed. Clang baseline reported
+five semantic failures then actual UB at expression.inl:2604:85 for2147483648
+outside int; no completed Numeric sanitizer-baseline claim. Fixed GCC4/4
+46.15s (Numeric43.80); Clang ASan/UBSan/float-cast-overflow4/4 204.80s
+(Numeric195.80), no diagnostics. Six contracts6/6 4.33s;164 fragments.
+Post-push exact-head Numeric45.03s and six contracts6/6 4.22s;
+PR proof6043481425. Completed fixture README VR/DQ/DV/docs22/docs32 retain
+native/derived boundaries, medium misuse/procedural delta/walkthrough/rollback
+and reverse links, without independent-human/release claims. Installed VFP9
+7423: three matching114-call/119-line runs; source/output hashes retained.
+Default checked finite truncation0..2; explicitVFP9 signedlow32 aliases and
+huge/infinite zero; NaN rejects, extended exact integers derived. Other
+coercions preserved, callback untouched. #6302 dimensionality and #7055 native
+other-type admission remain separate, not fixed or declared complete.
+
+Main synchronized; owned worktree/local/remote branch removed.459MB/874MB
+builds and generated probe.FXP moved to recoverable trash. Unrelated root
+files, detached worktrees and all stashes preserved. Pre-sync scoped handoff
+stash9bc3758bde9e60f8ad675fb687cdb14e6f79b0f1 retained. Watch33420 completed
+exit0 and drained. Live channel re-read empty. #5611/#6776 remain OPEN
+owner-authored approved and unfinished; EPOCH/CENTURY complete, #3698 closed,
+#6879 retained after numeric work. CALLFN#7051 preceding evidence remains in
+its PR/retained fixture and previous handoff stash66c58bd198c56bda7089445819439e5aafd1d71b.
 
 ## Selected active bounded slice
 
-ALEN optional dimension Numeric/exact-integer conversion under admitted
-#5611/#6776, from origin/main f8929616deb0c09b753671071e8718e1f2172ee4.
-WT /home/rich/.codex/worktrees/alen-dimension-numeric-5611/Project-Copperfin;
-branch fix/alen-dimension-numeric-5611. Only selected expression ALEN dimension
-and operation-specific checked helper change; array representation/allocation/
-name/existence/type/arity/result callbacks and other sites remain unchanged.
-RQ-CF-PRG-ALEN-DIMENSION-NUMERIC-001: default finite truncation to 0..2;
-explicit VFP9 observed signed low-32 aliases and huge/infinite indefinite zero;
-NaN rejects in both modes; exact extended integers stay exact (derived policy).
-Other current coercions retain checked truncation; omitted dimension stays 0.
-Localized catchable 11 is checked before the length callback, no argument-sized
-allocation/loop. Installed VFP9 7423 fixture: three fresh serial 114-call/119-line
-runs match, with independent 3x4/5-element shapes, markers/session unchanged.
-Source e06f798a31408e17de33907e414319ff057a7634cdbb96d69fcf3586dd7df839;
-output 20dd6160d6227845163e357eef677105dee0c8c44477b8e766356d8b48bd373a.
-Existing #6302 owns one-dimensional dimension2 result; new #7055 retains
-native other-type admission against main f892...; neither gap repaired here.
-178 direct checks /240 fresh cases /1062 PRG rows; independent state/message/
-shape/payload/cursor/session/mode/cleanup. GCC unchanged-dispatch baseline
-fails 109 selected assertions, zero guard/call-state/setup/cleanup mismatches,
-all direct/coercion/omitted/neighbor controls pass. Clang baseline reports five
-semantic failures then UB at expression.inl:2604:85 for 2147483648 outside int;
-Numeric 1.35s/four 29.51s, neighbors pass, no completed Numeric baseline claim.
-Fixed GCC 4/4 in 46.15s (Numeric 43.80); Clang ASan/UBSan/float-cast-overflow
-4/4 in 204.80s (Numeric 195.80), no diagnostics. Six contracts 6/6 finally in 4.33s,
-164 fragments. Builds /home/rich/temp/copperfin-alen-dimension-5611-{build,sanitize}.
-Completed fixture README VR/DQ/DV development self-review, native/derived
-boundaries, medium misuse/procedural delta/walkthrough/rollback, docs/22 and docs/32
-bidirectional mapping and dated changelog. No independent-human/release claim.
-Next: final contracts/diff/signature verification, signed commit/push/PR,
-Claude-first exact-head review (authorized Codex fallback if needed); then
-required 11 green+clean exact-head review+resolved conversations before merge.
-No commit/push/PR yet; no owner input or VM/system change required.
-Preserve unrelated files/detached worktrees/stashes; all prior sessions drained.
+TAG ordinal Numeric/exact-integer conversion under admitted #5611/#6776,
+selected from origin/main6297dd2367318dbbd7db745271175ef872cc27ee.
+WT /home/rich/.codex/worktrees/tag-ordinal-numeric-5611/Project-Copperfin;
+branch fix/tag-ordinal-numeric-5611, no commit/push/PR yet.
+Only the two TAG ordinal casts in expression.inl (ordinal-first and
+index-file-first) are replaced with checked_tag_ordinal_argument. Numeric
+first operands bypass the already tracked unsafe shared formatter #6997;
+the formatter itself, omitted/type/backend/index/result/arity/lifecycle
+and adjacent KEY/DESCENDING conversions remain unchanged.
+
+Installed VFP9 7423: three matching complete142-line runs,136calls plus
+omitted/state/cleanup controls. Source a3c8d0e70ec57c70c8b01d8c2611846995461c94d70f3357c9348361ca9bb2ad;
+output3721ea80d774a2e8e859015b130ca4b6f52d0a5221b0132021b1f3904009b1dd.
+Default finite Numeric truncation1..32767 and native raw-positive ceiling
+(32767.9 rejects); explicitVFP9 negative-only signedlow32 aliases. Derived
+NaN rejection/exact extended modular policy; catchable localized11 before
+lookup. Other coercions retain checkedminimumone/truncation over fullsize_t,
+including representable string1E19, not native type admission.
+
+59 independent Numeric columns verified against both native forms:
+118 comparisons, zero mismatches.182direct checks,560fresh indexed/empty
+both-form/both-mode cases /2580PRGrows retain error/result/message and
+order/pointer/guard/session/mode/reset. GCC original-dispatch baseline
+fails346 selected assertions in49.16s (four51.46s), zero setup/guard/
+call-state/cleanup mismatches; all controls/olderrows/neighbors pass.
+Clang baseline fails21 then actual float-cast-overflow at expression.inl:
+1798:67 for1E20 outsideunsignedlong; Numeric1.32s/four10.65s,three
+neighborspass. No completed sanitizerNumeric-baseline claim.
+FixedGCC4/4 passed52.23s (Numeric49.93s). Sixcontracts6/6 in4.93s
+initially and4.39s finally after documentation completion;165validfragments.
+FixedClang ASan/UBSan/float-cast-overflow4/4 passed248.87s
+(Numeric239.68), no diagnostics. Both exact-source rebuilds55954/79679
+completed before verification. Runtime suites SERIAL across builddirs.
+Normal /home/rich/temp/copperfin-tag-ordinal-5611-build;
+sanitizer /home/rich/temp/copperfin-tag-ordinal-5611-sanitize.
+README VR/DQ/DV/docs22/docs32/changelog retain mediummisuse/proceduraldelta/
+walkthrough/rollback; completed development self-review is not independent
+human/release/fullnative parity. Next: signedDCO
+push/PR, Claude-first exact-head review (authorized Codexfallback), all11
+requiredgreen/allconversationsresolved beforemerge. No ownerblocker.
+
+New native omitted routing #7057 and other-type admission #7058 filed
+against exactmain6297dd236; baseline controls verify current behavior.
+Both separate/unadmitted, no fixes in active slice. Initial exploratory
+native omitted-control run was incomplete, not acceptance; owned scratch
+_7KU0VP7SF moved recoverably to trash after exact validation. Subsequent
+complete probes clean their own files. ALEN's remaining optional Linux/
+Windows checks completed successfully; all33pass aftermerge, not
+retroactive at-merge evidence.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -862,8 +872,10 @@ Owner-directed workstream order before the #6879 assignment was:
      remains separate.
    - Completed after those: CALLFN first-argument Numeric/exact-integer
      conversion (PR #7051); native absent/type gap #7050 remains separate.
-   - Active: ALEN optional dimension Numeric/exact-integer conversion,
-     bounded direct floating-to-int dispatch site under #5611/#6776.
+   - Completed after those: ALEN optional dimension Numeric/exact-integer
+     conversion (PR #7056); #6302 dimensionality/#7055 type gap remain separate.
+   - Active: TAG ordinal Numeric/exact-integer conversion, only its two
+     direct floating-to-size_t dispatch sites under #5611/#6776.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

@@ -224,6 +224,9 @@ std::optional<std::int32_t> checked_callfn_handle_argument(const PrgValue& value
 // to 0..2; explicit VFP9 keeps low-32 aliases and indefinite zero, but rejects
 // NaN. Other existing coercions retain checked truncation, not type parity.
 std::optional<std::int32_t> checked_alen_dimension_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-TAG-ORDINAL-NUMERIC-001: checked 1..32767 Numeric ordinal;
+// explicit VFP9 preserves negative-only low-32 aliases. Routing stays separate.
+std::optional<std::size_t> checked_tag_ordinal_argument(const PrgValue& value, NumericBehavior behavior);
 // RQ-CF-PRG-SET-DATASESSION-NUMERIC-001: checked positive session selector.
 // Existence/lifecycle stay separate; other coercions retain rounding/clamping.
 std::optional<std::int32_t> checked_datasession_selector_argument(const PrgValue& value, NumericBehavior behavior);

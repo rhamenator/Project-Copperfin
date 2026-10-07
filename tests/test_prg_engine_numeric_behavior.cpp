@@ -132,6 +132,69 @@ const std::vector<SqlGetPropHandleCase> kSqlGetPropHandleCases{
     {"-65536", -65536, -65536, -65536},
 };
 
+// RQ-CF-PRG-TAG-ORDINAL-NUMERIC-001: explicit native/derived columns.
+const std::vector<SqlGetPropHandleCase> kTagOrdinalCases{
+    {"0", 0, std::nullopt, std::nullopt},
+    {"1", 1, 1, 1},
+    {"2", 2, 2, 2},
+    {"-1", -1, std::nullopt, std::nullopt},
+    {"3", 3, 3, 3},
+    {"0.49", 0.49, std::nullopt, std::nullopt},
+    {"0.5", 0.5, std::nullopt, std::nullopt},
+    {"0.9", 0.9, std::nullopt, std::nullopt},
+    {"1.49", 1.49, 1, 1},
+    {"1.5", 1.5, 1, 1},
+    {"1.9", 1.9, 1, 1},
+    {"2.49", 2.49, 2, 2},
+    {"2.5", 2.5, 2, 2},
+    {"2.9", 2.9, 2, 2},
+    {"3.1", 3.1, 3, 3},
+    {"-0.49", -0.49, std::nullopt, std::nullopt},
+    {"-0.5", -0.5, std::nullopt, std::nullopt},
+    {"-0.9", -0.9, std::nullopt, std::nullopt},
+    {"-1.1", -1.1, std::nullopt, std::nullopt},
+    {"2147483647", 2147483647, std::nullopt, std::nullopt},
+    {"2147483648", 2147483648, std::nullopt, std::nullopt},
+    {"-2147483648", -2147483648, std::nullopt, std::nullopt},
+    {"-2147483649", -2147483649, std::nullopt, std::nullopt},
+    {"4294967295", 4294967295, std::nullopt, std::nullopt},
+    {"4294967296", 4294967296, std::nullopt, std::nullopt},
+    {"4294967297", 4294967297, std::nullopt, std::nullopt},
+    {"4294967298", 4294967298, std::nullopt, std::nullopt},
+    {"4294967299", 4294967299, std::nullopt, std::nullopt},
+    {"-4294967296", -4294967296, std::nullopt, std::nullopt},
+    {"-4294967295", -4294967295, std::nullopt, 1},
+    {"-4294967294", -4294967294, std::nullopt, 2},
+    {"1E20", 1E20, std::nullopt, std::nullopt},
+    {"-1E20", -1E20, std::nullopt, std::nullopt},
+    {"1E300", 1E300, std::nullopt, std::nullopt},
+    {"-1E300", -1E300, std::nullopt, std::nullopt},
+    {"EXP(1000)", std::numeric_limits<double>::infinity(), std::nullopt, std::nullopt},
+    {"-EXP(1000)", -std::numeric_limits<double>::infinity(), std::nullopt, std::nullopt},
+    {"9007199254740992", 9007199254740992, std::nullopt, std::nullopt},
+    {"65536", 65536, std::nullopt, std::nullopt},
+    {"65537", 65537, std::nullopt, std::nullopt},
+    {"65538", 65538, std::nullopt, std::nullopt},
+    {"-65535", -65535, std::nullopt, std::nullopt},
+    {"-65534", -65534, std::nullopt, std::nullopt},
+    {"32768", 32768, std::nullopt, std::nullopt},
+    {"32769", 32769, std::nullopt, std::nullopt},
+    {"-32767", -32767, std::nullopt, std::nullopt},
+    {"4294967296.9", 4294967296.9, std::nullopt, std::nullopt},
+    {"-4294967295.9", -4294967295.9, std::nullopt, 1},
+    {"-2.9", -2.9, std::nullopt, std::nullopt},
+    {"3.9", 3.9, 3, 3},
+    {"4", 4, 4, 4},
+    {"65539", 65539, std::nullopt, std::nullopt},
+    {"32770", 32770, std::nullopt, std::nullopt},
+    {"32766", 32766, 32766, 32766},
+    {"32767", 32767, 32767, 32767},
+    {"32767.9", 32767.9, std::nullopt, std::nullopt},
+    {"-4294934530", -4294934530, std::nullopt, 32766},
+    {"-4294934529", -4294934529, std::nullopt, 32767},
+    {"-4294934528", -4294934528, std::nullopt, std::nullopt},
+};
+
 // RQ-CF-PRG-ALEN-DIMENSION-NUMERIC-001: 48 Numeric observations on
 // independent 3x4 and one-dimensional arrays. Expectations are explicit,
 // never computed using the production conversion helper.
@@ -2867,6 +2930,113 @@ void test_callfn_numeric_behavior_script_rows() {
     fs::remove_all(dir, ignored);
 }
 
+// RQ-CF-PRG-TAG-ORDINAL-NUMERIC-001: independent native/derived boundaries.
+void test_tag_ordinal_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    struct Boundary { PrgValue value; std::optional<std::size_t> copperfin, vfp9; };
+    const std::vector<Boundary> boundaries{
+        {make_number_value(std::numeric_limits<double>::quiet_NaN()), std::nullopt, std::nullopt},
+        {make_number_value(std::nextafter(1.0, 0.0)), std::nullopt, std::nullopt},
+        {make_number_value(std::nextafter(1.0, 2.0)), 1, 1},
+        {make_number_value(std::nextafter(32767.0, 0.0)), 32766, 32766},
+        {make_number_value(std::nextafter(32767.0, 32768.0)), std::nullopt, std::nullopt},
+        {make_number_value(-9223372036854775808.0), std::nullopt, std::nullopt},
+        {make_number_value(std::nextafter(-9223372036854775808.0, -std::numeric_limits<double>::infinity())), std::nullopt, std::nullopt},
+        {make_int64_value(INT64_MIN), std::nullopt, std::nullopt},
+        {make_int64_value(INT64_MIN+1), std::nullopt, 1},
+        {make_int64_value(INT64_MAX), std::nullopt, std::nullopt},
+        {make_int64_value(-9007199254740991LL), std::nullopt, 1},
+        {make_int64_value(9007199254740993LL), std::nullopt, std::nullopt},
+        {make_uint64_value(9007199254740993ULL), std::nullopt, std::nullopt},
+        {make_uint64_value(UINT64_MAX), std::nullopt, std::nullopt},
+        {make_int64_value(1), 1, 1}, {make_int64_value(32767), 32767, 32767},
+        {make_uint64_value(1), 1, 1}, {make_uint64_value(32767), 32767, 32767},
+        {make_uint64_value(32768), std::nullopt, std::nullopt},
+        {make_int64_value(-4294967294LL), std::nullopt, 2},
+        {make_int64_value(-4294934529LL), std::nullopt, 32767},
+        {make_boolean_value(true), 1, 1}, {make_boolean_value(false), 1, 1},
+        {make_null_value(), 1, 1}, {make_string_value("2.9"), 2, 2},
+        {make_string_value("-1"), 1, 1}, {make_string_value("1E300"), std::nullopt, std::nullopt},
+        {make_string_value("1E19"),
+         sizeof(std::size_t)>=8 ? std::optional<std::size_t>{static_cast<std::size_t>(10000000000000000000ULL)} : std::nullopt,
+         sizeof(std::size_t)>=8 ? std::optional<std::size_t>{static_cast<std::size_t>(10000000000000000000ULL)} : std::nullopt},
+        {make_currency_value(5000), 1, 1}, {make_currency_value(15000), 1, 1},
+        {make_currency_value(25000), 2, 2}, {make_currency_value(-15000), 1, 1},
+    };
+    for (const auto mode : {NumericBehavior::copperfin, NumericBehavior::vfp9}) {
+        for (const auto& row : kTagOrdinalCases)
+            expect(checked_tag_ordinal_argument(make_number_value(row.value), mode) ==
+                   (mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin),
+                   std::string("TAG direct ") + row.argument);
+        for (std::size_t i=0; i<boundaries.size(); ++i)
+            expect(checked_tag_ordinal_argument(boundaries[i].value, mode) ==
+                   (mode == NumericBehavior::vfp9 ? boundaries[i].vfp9 : boundaries[i].copperfin),
+                   "TAG extended direct " + std::to_string(i));
+    }
+}
+
+// RQ-CF-PRG-TAG-ORDINAL-NUMERIC-001: fresh synthetic index state, both forms.
+// Current omitted/type routing is a preservation control, not native parity.
+void test_tag_ordinal_numeric_behavior_script_rows() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_tag_ordinal_numeric_behavior";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    const auto table = dir / "people.dbf";
+    const auto cdx = dir / "people.cdx";
+    write_simple_dbf(table, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_synthetic_cdx(cdx, "FIRST", "UPPER(NAME)");
+    write_synthetic_idx(dir / "people.idx", "NAME");
+    const auto check = [&](const char* mode, const bool file_first, const bool empty,
+                           const std::string& arg, const std::optional<std::size_t> ordinal,
+                           const bool omitted=false) {
+        const std::string setup = std::string("SET NUMERICBEHAVIOR TO ") + mode + "\n" +
+            (empty ? "CREATE CURSOR tagguard (name C(10))\nINSERT INTO tagguard VALUES ('ALPHA')\n"
+                   : "USE '" + table.string() + "' ALIAS tagguard IN 0\nSET ORDER TO TAG FIRST\nGO TOP\n");
+        const std::string state = "ORDER() + ':' + ALIAS() + ':' + ALLTRIM(STR(RECCOUNT())) + ':' + "
+            "ALLTRIM(STR(RECNO())) + ':' + ALLTRIM(name) + ':' + "
+            "ALLTRIM(STR(VAL(TRANSFORM(SET('DATASESSION'))))) + ':' + SET('NUMERICBEHAVIOR')";
+        const std::string unchanged = std::string(empty ? "" : "FIRST") +
+            ":tagguard:" + (empty ? "1" : "3") + ":1:ALPHA:1:" + mode;
+        const std::string expression = omitted ? (file_first ? "TAG('" + cdx.string() + "')" : "TAG()")
+            : file_first ? "TAG('" + cdx.string() + "'," + arg + ",'tagguard')"
+                         : "TAG(" + arg + ",'tagguard')";
+        const std::string result = empty || !ordinal ? "" :
+            file_first ? (*ordinal==1 ? "FIRST" : "") :
+                         (*ordinal==1 ? "PEOPLE" : *ordinal==2 ? "FIRST" : "");
+        const std::string call = "nTagError=0\ncTagResult='unassigned'\ncTagMessage=''\nTRY\n"
+            "cTagResult=" + expression + "\nCATCH TO oEx\nnTagError=oEx.ErrorNo\n"
+            "cTagMessage=oEx.Message\nENDTRY";
+        std::vector<Row> rows{
+            {setup,state,"C:"+unchanged},
+            {call,"ALLTRIM(STR(nTagError))+':['+cTagResult+']:'+"+state,
+             "C:"+std::string(ordinal ? "0:["+result+"]:" : "11:[unassigned]:")+unchanged},
+            {"",state,"C:"+unchanged},
+            {"USE IN tagguard\nSET NUMERICBEHAVIOR TO COPPERFIN",
+             "SET('NUMERICBEHAVIOR')+':'+IIF(USED('tagguard'),'T','F')+':'+ALIAS()","C:COPPERFIN:F:"},
+        };
+        if (!ordinal) rows.insert(rows.begin()+2,
+            {"","cTagMessage","C:Function argument value, type, or count is invalid."});
+        std::string wanted;
+        for (const auto& row:rows) wanted += row.expected+"\n";
+        const auto got=run_rows(dir,rows);
+        expect(got==wanted,std::string("TAG ")+mode+(file_first?" file ":" ordinal ")+
+               (empty?"empty ":"indexed ")+"["+arg+"] expected ["+wanted+"], got ["+got+"]");
+    };
+    for (const bool file_first:{false,true}) for (const bool empty:{false,true})
+        for (const char* mode:{"COPPERFIN","VFP9"}) {
+            for (const auto& row:kTagOrdinalCases)
+                check(mode,file_first,empty,row.argument,
+                      std::string(mode)=="VFP9"?row.vfp9:row.copperfin);
+            for (const auto& row:std::vector<std::pair<std::string,std::size_t>>{
+                     {"$0.5",1},{"$1.5",1},{"$2.5",2},{".T.",1},{".F.",1},{".NULL.",1},
+                     {"'0'",1},{"'1'",1},{"'2'",2},{"'-1'",1}})
+                check(mode,file_first,empty,row.first,row.second);
+            check(mode,file_first,empty,"<omitted>",1,true);
+        }
+    fs::remove_all(dir,ignored);
+}
+
 // RQ-CF-PRG-ALEN-DIMENSION-NUMERIC-001: native aliases plus independently
 // specified exact/NaN/adjacent boundaries and existing-coercion controls.
 void test_alen_dimension_direct_numeric_boundaries() {
@@ -5025,6 +5195,8 @@ void test_sql_property_handle_direct_numeric_boundaries(
 }  // namespace
 
 int main() {
+    test_tag_ordinal_direct_numeric_boundaries();
+    test_tag_ordinal_numeric_behavior_script_rows();
     test_alen_dimension_direct_numeric_boundaries();
     test_alen_dimension_numeric_behavior_script_rows();
     test_conversion_helpers();
