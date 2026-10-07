@@ -197,6 +197,10 @@ std::optional<std::int32_t> checked_sqlrollback_handle_argument(const PrgValue& 
 // in both modes. Native absent errors cannot distinguish converted indices;
 // no aliases inferred. Rejection precedes metadata cursor/state/events.
 std::optional<std::int32_t> checked_sqltables_handle_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-SQLDATABASES-HANDLE-NUMERIC-001: extension-owned finite/
+// truncating signed int32 in both modes, with no native conversion oracle.
+// Rejection precedes metadata cursor/state/events; no aliases inferred.
+std::optional<std::int32_t> checked_sqldatabases_handle_argument(const PrgValue& value, NumericBehavior behavior);
 // RQ-CF-PRG-SET-DATASESSION-NUMERIC-001: checked positive session selector.
 // Existence/lifecycle stay separate; other coercions retain rounding/clamping.
 std::optional<std::int32_t> checked_datasession_selector_argument(const PrgValue& value, NumericBehavior behavior);
