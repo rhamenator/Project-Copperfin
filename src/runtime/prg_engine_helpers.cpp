@@ -1590,6 +1590,31 @@ std::optional<std::int32_t> checked_sqlexec_handle_argument(
     return checked_sqlgetprop_handle_argument(value, NumericBehavior::copperfin);
 }
 
+// RQ-CF-PRG-CALLFN-HANDLE-NUMERIC-001 (#5611/#6776): installed
+// FoxTools live handle 1 distinguishes truncation and both-sign low-16 aliases.
+// Exact extended integers follow derived exact modular policy, not VFP types.
+std::optional<std::int32_t> checked_callfn_handle_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    const bool numeric = value.kind == PrgValueKind::number ||
+                         value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
+    if (numeric && behavior == NumericBehavior::vfp9) {
+        std::uint64_t bits;
+        if (value.kind == PrgValueKind::int64) {
+            bits = static_cast<std::uint64_t>(value.int64_value);
+        } else if (value.kind == PrgValueKind::uint64) {
+            bits = value.uint64_value;
+        } else {
+            // Unsafe native absent errors do not establish a converted index.
+            const auto integer = checked_truncated_numeric_to_int64(value.number_value);
+            if (!integer) return std::nullopt;
+            bits = static_cast<std::uint64_t>(*integer);
+        }
+        return static_cast<std::int32_t>(bits & UINT64_C(65535));
+    }
+    // Conversion only; do not inherit native SQL aliases or callback semantics.
+    return checked_sqlgetprop_handle_argument(value, NumericBehavior::copperfin);
+}
+
 // RQ-CF-PRG-SET-DATASESSION-NUMERIC-001 (#5611/#6776). Installed VFP9
 // sessions 1/2 recover fractional truncation and both-sign low-32 aliases.
 // Exact integers/NaN and other positive IDs follow derived safety policy.

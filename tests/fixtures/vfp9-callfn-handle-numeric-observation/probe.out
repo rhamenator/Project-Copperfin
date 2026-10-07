@@ -1,0 +1,65 @@
+VERSION|Visual FoxPro 09.00.0000.7423 for Windows
+FOXTOOLS|9.00 
+HANDLE|1
+CONTROL|9
+CALLFN(0, 'Copperfin')|ERR1098
+FIRST_ERROR|Unregistered function
+CALLFN(1, 'Copperfin')|N:[9]
+CALLFN(2, 'Copperfin')|ERR1098
+CALLFN(-1, 'Copperfin')|ERR1098
+CALLFN(0.49, 'Copperfin')|ERR1098
+CALLFN(0.5, 'Copperfin')|ERR1098
+CALLFN(0.9, 'Copperfin')|ERR1098
+CALLFN(1.49, 'Copperfin')|N:[9]
+CALLFN(1.5, 'Copperfin')|N:[9]
+CALLFN(1.9, 'Copperfin')|N:[9]
+CALLFN(-0.49, 'Copperfin')|ERR1098
+CALLFN(-0.5, 'Copperfin')|ERR1098
+CALLFN(-0.9, 'Copperfin')|ERR1098
+CALLFN(-1.1, 'Copperfin')|ERR1098
+CALLFN(2147483647, 'Copperfin')|ERR1098
+CALLFN(2147483648, 'Copperfin')|ERR1098
+CALLFN(-2147483648, 'Copperfin')|ERR1098
+CALLFN(-2147483649, 'Copperfin')|ERR1098
+CALLFN(4294967295, 'Copperfin')|ERR1098
+CALLFN(4294967296, 'Copperfin')|ERR1098
+CALLFN(4294967297, 'Copperfin')|N:[9]
+CALLFN(4294967298, 'Copperfin')|ERR1098
+CALLFN(-4294967296, 'Copperfin')|ERR1098
+CALLFN(-4294967295, 'Copperfin')|N:[9]
+CALLFN(-4294967294, 'Copperfin')|ERR1098
+CALLFN(4294967296.9, 'Copperfin')|ERR1098
+CALLFN(-4294967295.9, 'Copperfin')|N:[9]
+CALLFN(1E20, 'Copperfin')|ERR1098
+CALLFN(-1E20, 'Copperfin')|ERR1098
+CALLFN(1E300, 'Copperfin')|ERR1098
+CALLFN(-1E300, 'Copperfin')|ERR1098
+CALLFN(EXP(1000), 'Copperfin')|ERR1098
+CALLFN(-EXP(1000), 'Copperfin')|ERR1098
+CALLFN(9007199254740992, 'Copperfin')|ERR1098
+CALLFN(32767, 'Copperfin')|ERR1098
+CALLFN(32768, 'Copperfin')|ERR1098
+CALLFN(65535, 'Copperfin')|ERR1098
+CALLFN(65536, 'Copperfin')|ERR1098
+CALLFN(65537, 'Copperfin')|N:[9]
+CALLFN(-65535, 'Copperfin')|N:[9]
+CALLFN(-65536, 'Copperfin')|ERR1098
+CALLFN($0.5, 'Copperfin')|ERR9
+CALLFN($1.5, 'Copperfin')|ERR9
+CALLFN(.T., 'Copperfin')|ERR9
+CALLFN(.F., 'Copperfin')|ERR9
+CALLFN(.NULL., 'Copperfin')|ERR9
+CALLFN('0', 'Copperfin')|ERR9
+CALLFN('1', 'Copperfin')|ERR9
+CALLFN(65536.9, 'Copperfin')|ERR1098
+CALLFN(65537.9, 'Copperfin')|N:[9]
+CALLFN(-65535.9, 'Copperfin')|N:[9]
+CALLFN(-65536.9, 'Copperfin')|ERR1098
+CALLFN(2147483649, 'Copperfin')|N:[9]
+CALLFN(-2147483647, 'Copperfin')|N:[9]
+CALLFN(65538, 'Copperfin')|ERR1098
+CALLFN(2.9, 'Copperfin')|ERR1098
+CALLFN(32769, 'Copperfin')|ERR1098
+CALLFN(-32767, 'Copperfin')|ERR1098
+RETAINED|9
+SESSION|1

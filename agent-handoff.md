@@ -55,84 +55,76 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-SQLPREPARE first-argument handle conversion PR #7046 merged into main
-2026-10-07 13:46:06 UTC as adc1e460560aa32942276db1b8497f4dbb0891bf.
-Signed/DCO head 668e3786ecfef943df60f20592abe218f5bd43aa passed all 11
+SQLEXEC first-argument handle conversion PR #7048 merged into main
+2026-10-07 14:46:14 UTC as 9748f049fd73ac14614e1eb246e10039cb56ae50.
+Signed/DCO head aca85d2b6dccfe251aa6cdf995fb64f1266d5179 passed all 11
 required checks. Authorized exact-head Codex review completed cleanly
-13:04:18.317918 UTC (summary 6038504573; verified bot thumbs-up 13:04:22).
-Zero review threads/inline comments/closing references, complete pagination
-freshly verified before merge. Claude first request 6038505774 has eyes only;
-no explicit quota/setup failure or duplicate request. All 32 completed
-optional/required checks pass; Windows MSVC run 37625558765/job 112806286142
-remains in progress and must be checked on continuation.
-134 direct checks and 416 canceled DML/SELECT cases/1,488 PRG rows retain
-empty/nonempty prepared commands, catchability/message, count/connection/
-dirty/cancel/action, selected alias, guard/result cursors, exact prepare/total
-SQL events and reset/cleanup in both modes. Both unchanged-dispatch baselines
-fail exactly 320 selected assertions (208 output/state, 56 prepare-event,
-56 total-event), controls/neighbors pass without sanitizer diagnostics.
-Final GCC four suites 30.80s (Numeric 29.10s), Clang ASan/UBSan/float-cast-
-overflow four 139.53s (Numeric 132.57s) without diagnostics; six contracts
-6/6 4.49s, 161 valid fragments. Post-push Numeric 29.07s/contracts 4.45s.
-Installed VFP9 fixture retains 48 calls/52 lines, three fully compared fresh
-serial runs. Native absent/type admission and connected-index recovery #7045
-remain unadmitted, without inferred aliases. Both modes use derived finite/
-truncating signed-int32 admission, exact integers and checked other coercions.
-Reject before prepared/cancel/action/events, with localized 1466 and safe
-original Numeric diagnostics; command/callback/type/arity/backend/AERROR and
-formatter #6997 stay separate. Completed README VR/DQ/DV/docs22/docs32 retain
-bidirectional traceability, misuse and rollback evidence.
-Main synchronized; owned WT/local/remote branch removed. Builds (454 MB/864 MB)
-and probe.FXP moved to recoverable trash. Unrelated files/detached WTs/older
-stashes preserved; pre-sync scoped handoff stash
-a41babd1dde859ae1498d81e286522b4c2d8d901 retained. Live channel re-read empty.
-SQLROWCOUNT #7043 passed all 33 checks. #5611/#6776 remain OPEN owner-authored
-agent-approved and unfinished; EPOCH/CENTURY complete, #3698 closed, #6879 retained.
+14:12:29.006455 UTC (summary 6039776576; verified bot thumbs-up 551269097
+at 14:12:34 UTC). Zero reviews/inline comments/threads/closing references,
+complete pagination freshly verified before merge. Claude-first request
+6039777510 has eyes 434721678 only, no explicit quota/setup failure or
+duplicate request. All 32 completed checks pass; optional Windows MSVC
+run 37634532488/job 112837128428 remains in progress, check on continuation.
+SQLPREPARE #7046 subsequently passed all 33 checks.
+134 direct checks and 416 canceled dirty cases / 1,724 PRG rows compare DML,
+explicit SELECT, prepared fallback and empty command/no statement, original
+messages, connection/count/cancel/action/alias state, guard/prior/result
+cursors/counts, exact exec/SQL events/effective command and reset/cleanup.
+Both complete unchanged-dispatch baselines fail exactly 320 selected assertions
+(208 output/state, 42 exec-event, 42 total-event, 28 command detail), with
+controls/neighbors passing and zero setup/cleanup/prior-count mismatches.
+Final GCC 4/4 40.07s (Numeric 38.31s), Clang ASan/UBSan/float-cast-overflow
+4/4 177.48s (Numeric 170.61s), no diagnostics; six contracts 6/6 5.06s,
+162 valid fragments; post-push Numeric 37.24s/contracts 4.44s.
+Installed VFP9 retains three matching 48-call/53-line native runs.
+Native callback/type/connected-index recovery #7047 remains separate and
+unadmitted; no inferred aliases or expanded command/callback/backend/AERROR.
+Completed README VR/DQ/DV/docs22/docs32 retain bidirectional traceability,
+medium-severity misuse, procedural delta, walkthrough and rollback.
+Main synchronized; owned worktree/local/remote branch removed. Builds
+454 MB/864 MB and probe.FXP moved to recoverable trash. Unrelated files,
+detached worktrees and older stashes preserved. Pre-sync scoped handoff stash
+16acc8b20afe6e0a049bef6f1b5315bc15f03738 retained. Live channel re-read empty.
+#5611/#6776 remain OPEN owner-authored agent-approved and unfinished;
+EPOCH/CENTURY complete, #3698 closed, #6879 retained.
 
 ## Selected active bounded slice
 
-SQLEXEC first-argument Numeric/exact-integer handle conversion under fresh
+CALLFN first-argument Numeric/exact-integer handle conversion under fresh
 OPEN owner-authored agent-approved #5611/#6776 from exact origin/main
-adc1e460560aa32942276db1b8497f4dbb0891bf.
-WT /home/rich/.codex/worktrees/sqlexec-handle-numeric-5611/Project-Copperfin,
-branch fix/sqlexec-handle-numeric-5611. No commit or PR yet.
-Only expression first-argument llround/int site is selected. Derived parent
-RQ-CF-PRG-NUMERIC-BEHAVIOR-001 and HZ-runtime-crash-01/HZ-data-corruption-01
-require finite/truncating signed-int32 in both modes, exact integers without
-floating round trip, checked existing other coercions, catchable localized
-1466 before executable command/cursor/state/events and safe original messages.
-Native fixture in tests/fixtures/vfp9-sqlexec-handle-numeric-observation/
-retains 48 calls/53 lines, three matching serial installed-VFP9 7423 runs:
-41 absent Numeric errors 1466, seven other-type errors 11, control 1466,
-first invalid-connection message, unchanged session 1 and absent native_exec.
-Source e3b995b47f7f031ed70c71833950f748c9d0be16dd54c525b7898e7196b5447c,
-output c2a7714106416e8642664c1a002c617f01af79cbc625a0458a478c48cbae8d75.
-Separate #7047 against exact main retains callback/type/connected-index
-recovery, without admitting production expansion or inferring aliases.
-Helper/direct tests and 416 cases are complete, and only selected dispatch
-is now wired. Complete unchanged-dispatch baselines each fail exactly 320
-selected assertions: 208 output/state, 42 exec events, 42 total events and
-28 effective-command details. Direct/helper/coercion/setup/cleanup controls
-and three neighbors pass; all 208 failed outputs have zero setup/cleanup/prior-
-count mismatches per toolchain. No sanitizer diagnostics. GCC Numeric
-37.57s/four suites 39.30s; full Clang Numeric 171.00s/four 177.88s.
-Earlier supplemental Clang without command-detail assertions failed 292
-(Numeric 172.22s/four 183.84s); do not use it as the full final baseline.
-Six baseline contracts pass 6/6 5.10s, 162 valid fragments.
-Final fixed GCC four suites pass 4/4 in 40.07s (Numeric 38.31s);
-Clang ASan/UBSan/float-cast-overflow pass 4/4 in 177.48s (Numeric 170.61s),
-without diagnostics. Six final contracts pass 6/6 5.06s, 162 valid fragments.
-134 direct checks and 416 cases/1,724 PRG rows pass unchanged expectations.
-Completed README VR/DQ/DV and docs22/docs32 retain native/derived boundaries,
-self-review, misuse, walkthrough, procedural delta and rollback. Native hashes,
-git diff --check and channel verification pass. No commit or PR yet.
-Builds /home/rich/temp/copperfin-sqlexec-handle-5611-build and
-/home/rich/temp/copperfin-sqlexec-handle-5611-sanitize retained until merge.
-Next: signed/DCO commit, push and PR; request Claude first, retain authorized
-exact-head Codex fallback, verify exact pushed change, require all 11 green
-required checks and clean exact-head review/resolved conversations before merge.
-Preserve callback/command/type/arity/AERROR/backend, other callers/CALLFN and
-formatter #6997. No VM/backend/system changes or owner blocker.
+9748f049fd73ac14614e1eb246e10039cb56ae50.
+WT /home/rich/.codex/worktrees/callfn-handle-numeric-5611/Project-Copperfin,
+branch fix/callfn-handle-numeric-5611. No commit/push/PR yet.
+Only selected expression conversion/helper declaration/definition changed:
+default checked signed-int32 truncation; explicit VFP9 checked in-int64
+Numeric truncation/low-16 aliases; exact extended integer modular conversion.
+Unsafe rejection uses catalog-backed 1098 and safe original-operand text
+before copying/API invocation/events. Callback/REGFN/session/lifecycle/native
+ABI/type/arity/return/other callers and formatter #6997 remain unchanged.
+Installed FoxTools 9.00/VFP9 7423 retains three matching final 58-call/65-line
+runs. Live handle 1 recovers truncation/both-sign low-16 aliases; other absent
+indices/exact integers/unsafe rejection are explicit derived policy.
+Source 413b2b7ab64a014a729a33fa9c891bfd16932046274f73fa2ab3629108385de3;
+output 7d03d15cbe6351fdd60b434a480551582d0ecf61e4b38b6bfa11bd1bf3f2a58b.
+Exact-file fixture Git attribute preserves observed FOXTOOLS trailing byte.
+Native absent/type admission gap #7050 against this main remains unadmitted.
+166 direct checks / 248 fresh live/empty-session cases / 1,008 PRG rows pass
+unchanged independent expectations. Both unchanged-dispatch baselines fail
+exactly 101 assertions (82 output/diagnostic, 19 invocation counts); zero
+setup/guard/session/retained-registration/counter/cleanup mismatches and
+all direct/coercion/neighbor controls pass. GCC Numeric 40.97s/four 43.25s;
+Clang sanitizer Numeric 188.91s/four 198.64s, no diagnostics.
+Fixed GCC four suites 4/4 44.08s (Numeric 41.81s); Clang ASan/UBSan/float-cast-
+overflow four 4/4 203.21s (Numeric 193.80s), no diagnostics. Six final
+contracts 6/6 4.38s, 163 valid fragments. Completed README VR/DQ/DV/docs22/
+docs32 retain reverse links, native/derived boundaries, medium-severity misuse,
+procedural delta, walkthrough, development self-review and rollback.
+Owned builds /home/rich/temp/copperfin-callfn-handle-5611-build and
+/home/rich/temp/copperfin-callfn-handle-5611-sanitize retained until merge.
+Next: signed/DCO commit/push/PR, Claude-first authorized exact-head review,
+verify exact pushed change and all 11 required checks/conversations before
+merge. Owned probe.FXP is scratch; recoverable trash after merge.
+No VM/system change or owner blocker; unrelated files/stashes/worktrees retained.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.

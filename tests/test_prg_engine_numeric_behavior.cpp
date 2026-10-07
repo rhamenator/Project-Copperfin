@@ -132,6 +132,62 @@ const std::vector<SqlGetPropHandleCase> kSqlGetPropHandleCases{
     {"-65536", -65536, -65536, -65536},
 };
 
+// RQ-CF-PRG-CALLFN-HANDLE-NUMERIC-001: 51 Numeric native observations.
+// Absent indices use explicit low-16 policy, not inferred native indices.
+const std::vector<SqlGetPropHandleCase> kCallFnHandleCases{
+    {"0", 0, 0, 0},
+    {"1", 1, 1, 1},
+    {"2", 2, 2, 2},
+    {"-1", -1, -1, 65535},
+    {"0.49", 0.49, 0, 0},
+    {"0.5", 0.5, 0, 0},
+    {"0.9", 0.9, 0, 0},
+    {"1.49", 1.49, 1, 1},
+    {"1.5", 1.5, 1, 1},
+    {"1.9", 1.9, 1, 1},
+    {"-0.49", -0.49, 0, 0},
+    {"-0.5", -0.5, 0, 0},
+    {"-0.9", -0.9, 0, 0},
+    {"-1.1", -1.1, -1, 65535},
+    {"2147483647", 2147483647, INT32_MAX, 65535},
+    {"2147483648", 2147483648, std::nullopt, 0},
+    {"-2147483648", -2147483648, INT32_MIN, 0},
+    {"-2147483649", -2147483649, std::nullopt, 65535},
+    {"4294967295", 4294967295, std::nullopt, 65535},
+    {"4294967296", 4294967296, std::nullopt, 0},
+    {"4294967297", 4294967297, std::nullopt, 1},
+    {"4294967298", 4294967298, std::nullopt, 2},
+    {"-4294967296", -4294967296, std::nullopt, 0},
+    {"-4294967295", -4294967295, std::nullopt, 1},
+    {"-4294967294", -4294967294, std::nullopt, 2},
+    {"4294967296.9", 4294967296.9, std::nullopt, 0},
+    {"-4294967295.9", -4294967295.9, std::nullopt, 1},
+    {"1E20", 1E20, std::nullopt, std::nullopt},
+    {"-1E20", -1E20, std::nullopt, std::nullopt},
+    {"1E300", 1E300, std::nullopt, std::nullopt},
+    {"-1E300", -1E300, std::nullopt, std::nullopt},
+    {"EXP(1000)", std::numeric_limits<double>::infinity(), std::nullopt, std::nullopt},
+    {"-EXP(1000)", -std::numeric_limits<double>::infinity(), std::nullopt, std::nullopt},
+    {"9007199254740992", 9007199254740992, std::nullopt, 0},
+    {"32767", 32767, 32767, 32767},
+    {"32768", 32768, 32768, 32768},
+    {"65535", 65535, 65535, 65535},
+    {"65536", 65536, 65536, 0},
+    {"65537", 65537, 65537, 1},
+    {"-65535", -65535, -65535, 1},
+    {"-65536", -65536, -65536, 0},
+    {"65536.9", 65536.9, 65536, 0},
+    {"65537.9", 65537.9, 65537, 1},
+    {"-65535.9", -65535.9, -65535, 1},
+    {"-65536.9", -65536.9, -65536, 0},
+    {"2147483649", 2147483649, std::nullopt, 1},
+    {"-2147483647", -2147483647, -2147483647, 1},
+    {"65538", 65538, 65538, 2},
+    {"2.9", 2.9, 2, 2},
+    {"32769", 32769, 32769, 32769},
+    {"-32767", -32767, -32767, 32769}
+};
+
 // RQ-CF-PRG-SET-FWEEK-NUMERIC-001: independent installed-VFP9 Numeric
 // observations. Exact integers and NaN follow the parent safety policy.
 struct SetFweekCase {
@@ -1564,7 +1620,9 @@ std::string run_rows(const fs::path &dir, const std::vector<Row> &rows,
                      const std::optional<std::size_t> expected_total_sql_events = std::nullopt,
                      const std::optional<std::size_t> expected_prepare_events = std::nullopt,
                      const std::optional<std::size_t> expected_exec_events = std::nullopt,
-                     const std::optional<std::string>& expected_last_exec_detail = std::nullopt) {
+                     const std::optional<std::string>& expected_last_exec_detail = std::nullopt,
+                     const std::optional<std::size_t> expected_callfn_events = std::nullopt,
+                     const std::optional<std::size_t> expected_regfn_events = std::nullopt) {
     std::string body = "LOCAL cOut, oEx, x\ncOut = ''\n";
     for (const Row &row : rows) {
         body += "TRY\n";
@@ -1694,6 +1752,14 @@ std::string run_rows(const fs::path &dir, const std::vector<Row> &rows,
         expect(last_exec_detail == *expected_last_exec_detail,
                "SQLEXEC last execution detail: expected [" + *expected_last_exec_detail +
                "], got [" + last_exec_detail + "]");
+    }
+    for (const auto& [category, count] : std::vector<std::pair<std::string, std::optional<std::size_t>>>{
+             {"interop.callfn", expected_callfn_events}, {"interop.regfn", expected_regfn_events}}) {
+        if (!count) continue;
+        std::size_t actual = 0U;
+        for (const auto& event : state.events) if (event.category == category) ++actual;
+        expect(actual == *count, category + " successful event count: expected " +
+               std::to_string(*count) + ", got " + std::to_string(actual));
     }
     if (expected_prepare_events.has_value()) {
         std::size_t prepare_events = 0;
@@ -2605,6 +2671,143 @@ void test_sqlexec_numeric_behavior_script_rows() {
             check(mode, variant, "-1E300", std::nullopt, "-1" + std::string(300U, '0'));
             check(mode, variant, "EXP(1000)", std::nullopt, "inf");
             check(mode, variant, "-EXP(1000)", std::nullopt, "-inf");
+        }
+    }
+    fs::remove_all(dir, ignored);
+}
+
+// RQ-CF-PRG-CALLFN-HANDLE-NUMERIC-001: exact checked columns,
+// native live aliases and derived exact/NaN/adjacent-integer boundaries.
+void test_callfn_handle_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    struct Boundary {
+        PrgValue value;
+        std::optional<std::int32_t> copperfin;
+        std::optional<std::int32_t> vfp9;
+    };
+    const std::vector<Boundary> boundaries{
+        {make_number_value(std::numeric_limits<double>::quiet_NaN()), std::nullopt, std::nullopt},
+        {make_number_value(std::nextafter(1.0, 0.0)), 0, 0},
+        {make_number_value(std::nextafter(1.0, 2.0)), 1, 1},
+        {make_number_value(std::nextafter(65536.0, 0.0)), 65535, 65535},
+        {make_number_value(std::nextafter(65536.0, 70000.0)), 65536, 0},
+        {make_number_value(std::nextafter(2147483648.0, 0.0)), INT32_MAX, 65535},
+        {make_number_value(2147483647.9), INT32_MAX, 65535},
+        {make_number_value(std::nextafter(-2147483649.0, 0.0)), INT32_MIN, 0},
+        {make_number_value(9223372036854775808.0), std::nullopt, std::nullopt},
+        {make_number_value(std::nextafter(9223372036854775808.0, 0.0)), std::nullopt, 64512},
+        {make_number_value(-9223372036854775808.0), std::nullopt, 0},
+        {make_number_value(std::nextafter(-9223372036854775808.0, -std::numeric_limits<double>::infinity())), std::nullopt, std::nullopt},
+        {make_int64_value(INT64_MIN), std::nullopt, 0},
+        {make_int64_value(INT64_MIN + 1), std::nullopt, 1},
+        {make_int64_value(INT64_MAX), std::nullopt, 65535},
+        {make_int64_value(9007199254740993LL), std::nullopt, 1},
+        {make_int64_value(-9007199254740991LL), std::nullopt, 1},
+        {make_uint64_value(UINT64_MAX), std::nullopt, 65535},
+        {make_uint64_value(9007199254740993ULL), std::nullopt, 1},
+        {make_uint64_value(4294967298ULL), std::nullopt, 2},
+        {make_int64_value(INT32_MAX), INT32_MAX, 65535},
+        {make_int64_value(INT32_MIN), INT32_MIN, 0},
+        {make_uint64_value(INT32_MAX), INT32_MAX, 65535},
+        {make_boolean_value(true), 1, 1}, {make_boolean_value(false), 0, 0},
+        {make_null_value(), 0, 0}, {make_string_value("1"), 1, 1},
+        {make_string_value("2147483648"), std::nullopt, std::nullopt},
+        {make_currency_value(5000), 1, 1}, {make_currency_value(15000), 2, 2},
+        {make_currency_value(-15000), -2, -2},
+        {make_currency_value(INT64_MAX), std::nullopt, std::nullopt},
+    };
+    for (const auto mode : {NumericBehavior::copperfin, NumericBehavior::vfp9}) {
+        for (const auto& row : kCallFnHandleCases) {
+            expect(checked_callfn_handle_argument(make_number_value(row.value), mode) ==
+                       (mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin),
+                   std::string("CALLFN direct ") + row.argument);
+        }
+        for (std::size_t i = 0; i < boundaries.size(); ++i) {
+            const auto& row = boundaries[i];
+            expect(checked_callfn_handle_argument(row.value, mode) ==
+                       (mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin),
+                   "CALLFN extended direct boundary " + std::to_string(i));
+        }
+    }
+}
+
+// RQ-CF-PRG-CALLFN-HANDLE-NUMERIC-001: synthetic registration/session,
+// arguments, guard data, counter, exact events, catchability and reset controls.
+// Real native ABI/callback admission/type parity remain separate #7050.
+void test_callfn_numeric_behavior_script_rows() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_callfn_numeric_behavior";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    const auto check = [&](const char* mode, const bool other_session,
+                           const std::string& argument, const std::optional<std::int32_t> handle,
+                           const std::optional<std::string>& diagnostic = std::nullopt) {
+        const bool invoked = !other_session && handle == 1;
+        const std::string set_mode = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        std::string setup = set_mode +
+            "\nSET LIBRARY TO 'Foxtools'\nCREATE CURSOR call_guard1 (marker C(12))\n"
+            "INSERT INTO call_guard1 VALUES ('unchanged')\n"
+            "hCall = REGFN32('lstrlenA', 'C', 'I', 'kernel32.dll')\n"
+            "nCallSeed = CALLFN(hCall, 'seed')\n";
+        if (other_session) {
+            setup += "SET DATASESSION TO 2\n" + set_mode +
+                "\nSET LIBRARY TO 'Foxtools'\nCREATE CURSOR call_guard2 (marker C(12))\n"
+                "INSERT INTO call_guard2 VALUES ('unchanged')\n";
+        }
+        const std::string alias = other_session ? "call_guard2" : "call_guard1";
+        const std::string state = "ALLTRIM(STR(VAL(TRANSFORM(SET('DATASESSION'))))) + ':' + "
+            "SET('NUMERICBEHAVIOR') + ':' + ALIAS() + ':' + ALLTRIM(STR(RECCOUNT())) + ':' + "
+            "ALLTRIM(STR(FCOUNT())) + ':' + ALLTRIM(marker)";
+        const std::string original = std::string(other_session ? "2:" : "1:") +
+            mode + ":" + alias + ":1:1:unchanged";
+        const std::string call =
+            "nCallError = 0\nnCallResult = 0\ncCallMessage = ''\nTRY\n"
+            "nCallResult = CALLFN(" + argument + ", 'Copperfin')\n"
+            "CATCH TO oEx\nnCallError = oEx.ErrorNo\ncCallMessage = oEx.Message\nENDTRY";
+        std::vector<Row> rows{
+            {setup, "ALLTRIM(STR(hCall)) + ':' + ALLTRIM(STR(nCallSeed)) + ':' + " + state,
+             "C:1:4:" + original},
+            {call, "ALLTRIM(STR(nCallError)) + ':' + ALLTRIM(STR(nCallResult)) + ':' + " + state,
+             "C:" + std::string(handle.has_value() ? "0:" : "1098:") +
+                 (handle.has_value() ? (invoked ? "9:" : "-1:") : "0:") + original},
+        };
+        if (diagnostic) rows.push_back({"", "cCallMessage", "C:Registered API handle not found: " + *diagnostic});
+        const std::string return_to_first = other_session
+            ? "USE IN call_guard2\nSET DATASESSION TO 1\nSELECT call_guard1\n" : "";
+        rows.push_back({return_to_first +
+            "nCallRetained = CALLFN(hCall, 'seed')\n"
+            "hCallNext = REGFN32('lstrlenA', 'C', 'I', 'kernel32.dll')\n"
+            "nCallNext = CALLFN(hCallNext, 'AB')",
+            "ALLTRIM(STR(nCallRetained)) + ':' + ALLTRIM(STR(hCallNext)) + ':' + "
+            "ALLTRIM(STR(nCallNext)) + ':' + " + state,
+            "C:4:2:2:1:" + std::string(mode) + ":call_guard1:1:1:unchanged"});
+        rows.push_back({"USE IN call_guard1\nSET LIBRARY TO\nSET NUMERICBEHAVIOR TO COPPERFIN",
+            "SET('NUMERICBEHAVIOR') + ':' + IIF(USED('call_guard1'), 'T', 'F') + ':' + ALIAS()",
+            "C:COPPERFIN:F:"});
+        const std::string output = run_rows(dir, rows, std::nullopt, std::nullopt, std::nullopt,
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt,
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt, 3U + (invoked ? 1U : 0U), 2U);
+        std::string expected_output;
+        for (const auto& row : rows) expected_output += row.expected + "\n";
+        expect(output == expected_output, std::string("CALLFN ") + mode +
+            (other_session ? " other-session " : " live-session ") + "[" + argument +
+            "] expected [" + expected_output + "], got [" + output + "]");
+    };
+    for (const bool other_session : {false, true}) {
+        for (const char* mode : {"COPPERFIN", "VFP9"}) {
+            for (const auto& row : kCallFnHandleCases) {
+                check(mode, other_session, row.argument,
+                      std::string(mode) == "VFP9" ? row.vfp9 : row.copperfin);
+            }
+            for (const auto& control : std::vector<std::pair<std::string, std::int32_t>>{
+                     {"$0.5", 1}, {"$1.5", 2}, {".T.", 1}, {".F.", 0},
+                     {".NULL.", 0}, {"'0'", 0}, {"'1'", 1}}) {
+                check(mode, other_session, control.first, control.second);
+            }
+            check(mode, other_session, "1E300", std::nullopt, "1" + std::string(300U, '0'));
+            check(mode, other_session, "-1E300", std::nullopt, "-1" + std::string(300U, '0'));
+            check(mode, other_session, "EXP(1000)", std::nullopt, "inf");
+            check(mode, other_session, "-EXP(1000)", std::nullopt, "-inf");
         }
     }
     fs::remove_all(dir, ignored);
@@ -4693,6 +4896,8 @@ int main() {
     test_sqlrowcount_numeric_behavior_script_rows();
     test_sqlprepare_numeric_behavior_script_rows();
     test_sqlexec_numeric_behavior_script_rows();
+    test_callfn_handle_direct_numeric_boundaries();
+    test_callfn_numeric_behavior_script_rows();
     test_datasession_selector_direct_numeric_boundaries();
     test_datasession_numeric_behavior_script_rows();
     test_set_decimals_direct_numeric_boundaries();

@@ -1,0 +1,1 @@
+- 2026-10-07: Check CALLFN Numeric/exact-integer handle conversion before registered API invocation, retaining observed FoxTools low-16 aliases only in VFP9 mode and independent registration/session/event boundary evidence (#5611, #6776).
