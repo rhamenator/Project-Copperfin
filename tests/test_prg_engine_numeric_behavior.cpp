@@ -1554,7 +1554,8 @@ std::vector<Row> build_rows() {
 
 std::string run_rows(const fs::path &dir, const std::vector<Row> &rows,
                      const std::optional<std::size_t> expected_cancel_events = std::nullopt,
-                     const std::optional<std::size_t> expected_commit_events = std::nullopt) {
+                     const std::optional<std::size_t> expected_commit_events = std::nullopt,
+                     const std::optional<std::size_t> expected_rollback_events = std::nullopt) {
     std::string body = "LOCAL cOut, oEx, x\ncOut = ''\n";
     for (const Row &row : rows) {
         body += "TRY\n";
@@ -1593,6 +1594,15 @@ std::string run_rows(const fs::path &dir, const std::vector<Row> &rows,
         expect(commit_events == *expected_commit_events,
                "SQLCOMMIT successful event count expected " + std::to_string(*expected_commit_events) +
                ", got " + std::to_string(commit_events));
+    }
+    if (expected_rollback_events.has_value()) {
+        std::size_t rollback_events = 0;
+        for (const auto& event : state.events) {
+            if (event.category == "sql.rollback") ++rollback_events;
+        }
+        expect(rollback_events == *expected_rollback_events,
+               "SQLROLLBACK successful event count expected " + std::to_string(*expected_rollback_events) +
+               ", got " + std::to_string(rollback_events));
     }
     return read_text(dir / "results.txt");
 }
@@ -1755,6 +1765,68 @@ void test_sqlcommit_numeric_behavior_script_rows() {
         std::string expected_output;
         for (const auto& row : rows) expected_output += row.expected + "\n";
         expect(output == expected_output, std::string("SQLCOMMIT ") + mode + " [" + argument +
+               "] expected [" + expected_output + "], got [" + output + "]");
+    };
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        for (const auto& row : kSqlGetPropHandleCases) {
+            // Checked expectation column; native aliases remain unobserved.
+            check(mode, row.argument, row.copperfin);
+        }
+        for (const auto& control : std::vector<std::pair<std::string, std::int32_t>>{
+                 {"$0.5", 1}, {"$1.5", 2}, {".T.", 1}, {".F.", 0},
+                 {".NULL.", 0}, {"'0'", 0}, {"'1'", 1}}) {
+            check(mode, control.first, control.second);
+        }
+        check(mode, "1E300", std::nullopt, "1" + std::string(300U, '0'));
+        check(mode, "-1E300", std::nullopt, "-1" + std::string(300U, '0'));
+        check(mode, "EXP(1000)", std::nullopt, "inf");
+        check(mode, "-EXP(1000)", std::nullopt, "-inf");
+    }
+    fs::remove_all(dir, ignored);
+}
+
+// RQ-CF-PRG-SQLROLLBACK-HANDLE-NUMERIC-001: derive checked admission rather
+// than infer native converted indices from identical absent-handle errors.
+// Dirty transaction + cancel state expose an unintended rollback on handle 1.
+void test_sqlrollback_numeric_behavior_script_rows() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_sqlrollback_numeric_behavior";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    const auto check = [&](const char* mode, const std::string& argument,
+                           const std::optional<std::int32_t> handle,
+                           const std::optional<std::string>& diagnostic = std::nullopt) {
+        const bool rolled_back = handle == 1;
+        const std::string setup = std::string("SET NUMERICBEHAVIOR TO ") + mode +
+            "\nnSqlRollback = SQLCONNECT('dsn=Northwind')\n"
+            "nRollbackWrite = SQLEXEC(nSqlRollback, 'insert into customers values (1)')\n"
+            "nRollbackCancel = SQLCANCEL(nSqlRollback)";
+        const std::string call =
+            "nRollbackError = 0\nnRollbackStatus = 0\ncRollbackMessage = ''\n"
+            "TRY\nnRollbackStatus = SQLROLLBACK(" + argument + ")\n"
+            "CATCH TO oEx\nnRollbackError = oEx.ErrorNo\ncRollbackMessage = oEx.Message\nENDTRY";
+        const std::string state =
+            "ALLTRIM(STR(SQLGETPROP(nSqlRollback, 'ConnectHandle'))) + ':' + "
+            "TRANSFORM(SQLGETPROP(nSqlRollback, 'LastSqlAction')) + ':' + "
+            "IIF(SQLGETPROP(nSqlRollback, 'TransactionDirty'), 'T', 'F') + ':' + "
+            "IIF(SQLGETPROP(nSqlRollback, 'CancelRequested'), 'T', 'F')";
+        const std::string expression = "ALLTRIM(STR(nRollbackError)) + ':' + ALLTRIM(STR(nRollbackStatus)) + ':' + " + state;
+        const std::string expected = !handle.has_value() ? "C:1466:0:1:cancel:T:T" :
+            rolled_back ? "C:0:1:1:rollback:F:F" : "C:0:-1:1:cancel:T:T";
+        std::vector<Row> rows{
+            {setup, "ALLTRIM(STR(nRollbackWrite)) + ':' + ALLTRIM(STR(nRollbackCancel)) + ':' + " + state,
+             "C:1:1:1:cancel:T:T"},
+            {call, expression, expected},
+        };
+        if (diagnostic.has_value()) rows.push_back({"", "cRollbackMessage", "C:SQL handle not found: " + *diagnostic});
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN",
+            "ALLTRIM(STR(SQLDISCONNECT(nSqlRollback))) + ':' + "
+            "ALLTRIM(STR(SQLGETPROP(nSqlRollback, 'ConnectHandle'))) + ':' + SET('NUMERICBEHAVIOR')",
+            "C:1:-1:COPPERFIN"});
+        const std::string output = run_rows(dir, rows, std::nullopt, std::nullopt, rolled_back ? 1U : 0U);
+        std::string expected_output;
+        for (const auto& row : rows) expected_output += row.expected + "\n";
+        expect(output == expected_output, std::string("SQLROLLBACK ") + mode + " [" + argument +
                "] expected [" + expected_output + "], got [" + output + "]");
     };
     for (const char* mode : {"COPPERFIN", "VFP9"}) {
@@ -3836,10 +3908,12 @@ int main() {
     test_sql_property_handle_direct_numeric_boundaries("SQLDISCONNECT", copperfin::runtime::checked_sqldisconnect_handle_argument);
     test_sql_property_handle_direct_numeric_boundaries("SQLCANCEL", copperfin::runtime::checked_sqlcancel_handle_argument, false);
     test_sql_property_handle_direct_numeric_boundaries("SQLCOMMIT", copperfin::runtime::checked_sqlcommit_handle_argument, false);
+    test_sql_property_handle_direct_numeric_boundaries("SQLROLLBACK", copperfin::runtime::checked_sqlrollback_handle_argument, false);
     test_numeric_behavior_script_rows();
     test_sqldisconnect_numeric_behavior_script_rows();
     test_sqlcancel_numeric_behavior_script_rows();
     test_sqlcommit_numeric_behavior_script_rows();
+    test_sqlrollback_numeric_behavior_script_rows();
     test_datasession_selector_direct_numeric_boundaries();
     test_datasession_numeric_behavior_script_rows();
     test_set_decimals_direct_numeric_boundaries();

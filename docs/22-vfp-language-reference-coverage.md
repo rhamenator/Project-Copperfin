@@ -1,5 +1,19 @@
 # VFP Language Reference Coverage
 
+- SQLROLLBACK first-argument Numeric/exact-integer conversion (#5611/#6776,
+  2026-10-07): derived finite signed-int32 truncation in both modes, with
+  localized catchable 1466 before transaction callbacks/state/events and safe
+  original Numeric diagnostics. Exact integers avoid double rounding. The
+  complete native 48-call/50-line fixture in
+  `tests/fixtures/vfp9-sqlrollback-handle-numeric-observation/` recovers absent/
+  type errors but cannot distinguish converted indices; no aliases or native
+  connected/backend rollback parity are inferred. Requirement
+  RQ-CF-PRG-SQLROLLBACK-HANDLE-NUMERIC-001 maps the derived boundary in docs/32.
+  Direct and synthetic transaction tests compare dirty/cancel/action flags,
+  successful rollback events, catchability, mode reset and disconnect cleanup.
+  Separate parity/recovery gap #7030 and formatter #6997 stay outside scope.
+  No VM/backend/system change or argument-sized loop added.
+
 - SQLCOMMIT first-argument Numeric/exact-integer conversion (#5611/#6776,
   2026-10-07): derived finite signed-int32 truncation in both modes, with
   localized catchable 1466 before transaction callbacks/state/events and safe
