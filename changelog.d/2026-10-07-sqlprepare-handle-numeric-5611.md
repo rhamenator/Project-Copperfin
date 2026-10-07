@@ -1,0 +1,1 @@
+- 2026-10-07: Bound SQLPREPARE first-argument Numeric/exact-integer handle conversion before prepared-command/state/events in both modes, retaining native admission evidence, independent state regressions, safe diagnostics and requirements/documentation traceability (#5611/#6776); callback/type/backend parity remains separate (#7045).

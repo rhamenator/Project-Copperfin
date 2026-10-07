@@ -1572,6 +1572,15 @@ std::optional<std::int32_t> checked_sqlrowcount_handle_argument(
     return checked_sqlgetprop_handle_argument(value, NumericBehavior::copperfin);
 }
 
+// RQ-CF-PRG-SQLPREPARE-HANDLE-NUMERIC-001: derived #5611/#6776 safety;
+// native absent errors cannot distinguish connected indices or aliases.
+// Preserve existing other coercions; their native admission gap is #7045.
+std::optional<std::int32_t> checked_sqlprepare_handle_argument(
+    const PrgValue& value,
+    const NumericBehavior) {
+    return checked_sqlgetprop_handle_argument(value, NumericBehavior::copperfin);
+}
+
 // RQ-CF-PRG-SET-DATASESSION-NUMERIC-001 (#5611/#6776). Installed VFP9
 // sessions 1/2 recover fractional truncation and both-sign low-32 aliases.
 // Exact integers/NaN and other positive IDs follow derived safety policy.

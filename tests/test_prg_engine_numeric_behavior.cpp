@@ -1561,7 +1561,8 @@ std::string run_rows(const fs::path &dir, const std::vector<Row> &rows,
                      const std::optional<std::size_t> expected_primarykeys_events = std::nullopt,
                      const std::optional<std::size_t> expected_foreignkeys_events = std::nullopt,
                      const std::optional<std::size_t> expected_columns_events = std::nullopt,
-                     const std::optional<std::size_t> expected_readonly_sql_events = std::nullopt) {
+                     const std::optional<std::size_t> expected_total_sql_events = std::nullopt,
+                     const std::optional<std::size_t> expected_prepare_events = std::nullopt) {
     std::string body = "LOCAL cOut, oEx, x\ncOut = ''\n";
     for (const Row &row : rows) {
         body += "TRY\n";
@@ -1665,14 +1666,23 @@ std::string run_rows(const fs::path &dir, const std::vector<Row> &rows,
                "SQLCOLUMNS successful column/cursor event counts expected " + std::to_string(*expected_columns_events) +
                ", got " + std::to_string(columns_events) + "/" + std::to_string(cursor_events));
     }
-    if (expected_readonly_sql_events.has_value()) {
+    if (expected_total_sql_events.has_value()) {
         std::size_t sql_events = 0;
         for (const auto& event : state.events) {
             if (event.category.rfind("sql.", 0) == 0) ++sql_events;
         }
-        expect(sql_events == *expected_readonly_sql_events,
-               "SQLROWCOUNT must not emit or alter SQL events; expected " +
-               std::to_string(*expected_readonly_sql_events) + ", got " + std::to_string(sql_events));
+        expect(sql_events == *expected_total_sql_events,
+               "SQL total event count expected " +
+               std::to_string(*expected_total_sql_events) + ", got " + std::to_string(sql_events));
+    }
+    if (expected_prepare_events.has_value()) {
+        std::size_t prepare_events = 0;
+        for (const auto& event : state.events) {
+            if (event.category == "sql.prepare") ++prepare_events;
+        }
+        expect(prepare_events == *expected_prepare_events,
+               "SQLPREPARE successful event count expected " +
+               std::to_string(*expected_prepare_events) + ", got " + std::to_string(prepare_events));
     }
     return read_text(dir / "results.txt");
 }
@@ -2393,6 +2403,93 @@ void test_sqlrowcount_numeric_behavior_script_rows() {
             check(mode, selected, "-1E300", std::nullopt, "-1" + std::string(300U, '0'));
             check(mode, selected, "EXP(1000)", std::nullopt, "inf");
             check(mode, selected, "-EXP(1000)", std::nullopt, "-inf");
+        }
+    }
+    fs::remove_all(dir, ignored);
+}
+
+// RQ-CF-PRG-SQLPREPARE-HANDLE-NUMERIC-001: independent checked admission,
+// seeded prepared command, canceled dirty DML/SELECT state and cursor controls.
+// Native absent errors (#7045) do not establish converted indices or aliases.
+void test_sqlprepare_numeric_behavior_script_rows() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_sqlprepare_numeric_behavior";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    const auto check = [&](const char* mode, const bool selected, const bool empty_command,
+                           const std::string& argument, const std::optional<std::int32_t> handle,
+                           const std::optional<std::string>& diagnostic = std::nullopt) {
+        const bool prepared = handle == 1;
+        const std::string command = empty_command ? "" : "select * from orders";
+        const std::string count = selected ? "3" : "1";
+        const std::string setup = std::string("SET NUMERICBEHAVIOR TO ") + mode +
+            "\nCREATE CURSOR prepare_guard (marker C(12))\n"
+            "INSERT INTO prepare_guard VALUES ('unchanged')\n"
+            "nSqlPrepare = SQLCONNECT('dsn=Northwind')\n"
+            "nPrepareWrite = SQLEXEC(nSqlPrepare, 'insert into customers values (1)')\n" +
+            (selected ? "SELECT 0\nnPrepareSelect = SQLEXEC(nSqlPrepare, 'select * from customers', 'prepare_result')\n" : "") +
+            "nPrepareSeed = SQLPREPARE(nSqlPrepare, 'seed command')\n"
+            "nPrepareCancel = SQLCANCEL(nSqlPrepare)\nSELECT prepare_guard";
+        const std::string state =
+            "ALLTRIM(STR(SQLGETPROP(nSqlPrepare, 'ConnectHandle'))) + ':' + "
+            "ALLTRIM(STR(SQLGETPROP(nSqlPrepare, 'LastResultCount'))) + ':' + "
+            "TRANSFORM(SQLGETPROP(nSqlPrepare, 'PreparedCommand')) + ':' + "
+            "TRANSFORM(SQLGETPROP(nSqlPrepare, 'LastSqlAction')) + ':' + "
+            "IIF(SQLGETPROP(nSqlPrepare, 'TransactionDirty'), 'T', 'F') + ':' + "
+            "IIF(SQLGETPROP(nSqlPrepare, 'CancelRequested'), 'T', 'F') + ':' + "
+            "TRANSFORM(SQLGETPROP(nSqlPrepare, 'LastCursorAlias')) + ':' + "
+            "ALIAS() + ':' + ALLTRIM(STR(RECCOUNT('prepare_guard'))) + ':' + "
+            "ALLTRIM(STR(FCOUNT('prepare_guard'))) + ':' + ALLTRIM(prepare_guard.marker) + ':' + "
+            "IIF(USED('prepare_result'), 'T', 'F')";
+        const std::string tail = ":" + (selected ? std::string("prepare_result") : "") +
+            ":prepare_guard:1:1:unchanged:" + (selected ? "T" : "F");
+        const std::string expected_state = "1:" + count + ":seed command:cancel:T:T" + tail;
+        const std::string prepared_state = "1:" + count + ":" + command + ":prepare:T:F" + tail;
+        const std::string call =
+            "nPrepareError = 0\nnPrepareStatus = 0\ncPrepareMessage = ''\n"
+            "TRY\nnPrepareStatus = SQLPREPARE(" + argument + ", '" + command + "')\n"
+            "CATCH TO oEx\nnPrepareError = oEx.ErrorNo\ncPrepareMessage = oEx.Message\nENDTRY";
+        const std::string expected = !handle.has_value() ? "C:1466:0:" + expected_state :
+            prepared ? "C:0:1:" + prepared_state : "C:0:-1:" + expected_state;
+        std::vector<Row> rows{
+            {setup, "ALLTRIM(STR(nPrepareWrite)) + ':' + ALLTRIM(STR(nPrepareSeed)) + ':' + "
+             "ALLTRIM(STR(nPrepareCancel)) + ':' + " + state, "C:1:1:1:" + expected_state},
+            {call, "ALLTRIM(STR(nPrepareError)) + ':' + ALLTRIM(STR(nPrepareStatus)) + ':' + " + state, expected},
+        };
+        if (selected) rows.push_back({"", "RECCOUNT('prepare_result')", "N:3"});
+        if (diagnostic.has_value()) rows.push_back({"", "cPrepareMessage", "C:SQL handle not found: " + *diagnostic});
+        rows.push_back({"IF USED('prepare_result')\nUSE IN prepare_result\nENDIF\n"
+                        "USE IN prepare_guard\nSET NUMERICBEHAVIOR TO COPPERFIN",
+            "ALLTRIM(STR(SQLDISCONNECT(nSqlPrepare))) + ':' + "
+            "ALLTRIM(STR(SQLGETPROP(nSqlPrepare, 'ConnectHandle'))) + ':' + SET('NUMERICBEHAVIOR') + ':' + "
+            "IIF(USED('prepare_result'), 'T', 'F') + ':' + IIF(USED('prepare_guard'), 'T', 'F')",
+            "C:1:-1:COPPERFIN:F:F"});
+        const std::string output = run_rows(dir, rows, 1U, std::nullopt, std::nullopt,
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt,
+            (selected ? 8U : 6U) + (prepared ? 1U : 0U), prepared ? 2U : 1U);
+        std::string expected_output;
+        for (const auto& row : rows) expected_output += row.expected + "\n";
+        expect(output == expected_output, std::string("SQLPREPARE ") + mode +
+               (selected ? " SELECT " : " DML ") + (empty_command ? "empty [" : "nonempty [") +
+               argument + "] expected [" + expected_output + "], got [" + output + "]");
+    };
+    for (const bool empty_command : {false, true}) {
+        for (const bool selected : {false, true}) {
+            for (const char* mode : {"COPPERFIN", "VFP9"}) {
+                for (const auto& row : kSqlGetPropHandleCases) {
+                    // Derived checked column only; no inferred VFP9 aliases.
+                    check(mode, selected, empty_command, row.argument, row.copperfin);
+                }
+                for (const auto& control : std::vector<std::pair<std::string, std::int32_t>>{
+                         {"$0.5", 1}, {"$1.5", 2}, {".T.", 1}, {".F.", 0},
+                         {".NULL.", 0}, {"'0'", 0}, {"'1'", 1}}) {
+                    check(mode, selected, empty_command, control.first, control.second);
+                }
+                check(mode, selected, empty_command, "1E300", std::nullopt, "1" + std::string(300U, '0'));
+                check(mode, selected, empty_command, "-1E300", std::nullopt, "-" + std::string("1") + std::string(300U, '0'));
+                check(mode, selected, empty_command, "EXP(1000)", std::nullopt, "inf");
+                check(mode, selected, empty_command, "-EXP(1000)", std::nullopt, "-inf");
+            }
         }
     }
     fs::remove_all(dir, ignored);
@@ -4466,6 +4563,7 @@ int main() {
     test_sql_property_handle_direct_numeric_boundaries("SQLFOREIGNKEYS", copperfin::runtime::checked_sqlforeignkeys_handle_argument, false);
     test_sql_property_handle_direct_numeric_boundaries("SQLCOLUMNS", copperfin::runtime::checked_sqlcolumns_handle_argument, false);
     test_sql_property_handle_direct_numeric_boundaries("SQLROWCOUNT", copperfin::runtime::checked_sqlrowcount_handle_argument, false);
+    test_sql_property_handle_direct_numeric_boundaries("SQLPREPARE", copperfin::runtime::checked_sqlprepare_handle_argument, false);
     test_numeric_behavior_script_rows();
     test_sqldisconnect_numeric_behavior_script_rows();
     test_sqlcancel_numeric_behavior_script_rows();
@@ -4477,6 +4575,7 @@ int main() {
     test_sqlforeignkeys_numeric_behavior_script_rows();
     test_sqlcolumns_numeric_behavior_script_rows();
     test_sqlrowcount_numeric_behavior_script_rows();
+    test_sqlprepare_numeric_behavior_script_rows();
     test_datasession_selector_direct_numeric_boundaries();
     test_datasession_numeric_behavior_script_rows();
     test_set_decimals_direct_numeric_boundaries();
