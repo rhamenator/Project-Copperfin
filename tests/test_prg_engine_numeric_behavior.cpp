@@ -132,6 +132,60 @@ const std::vector<SqlGetPropHandleCase> kSqlGetPropHandleCases{
     {"-65536", -65536, -65536, -65536},
 };
 
+// RQ-CF-PRG-ALEN-DIMENSION-NUMERIC-001: 48 Numeric observations on
+// independent 3x4 and one-dimensional arrays. Expectations are explicit,
+// never computed using the production conversion helper.
+const std::vector<SqlGetPropHandleCase> kAlenDimensionCases{
+    {"0", 0, 0, 0},
+    {"1", 1, 1, 1},
+    {"2", 2, 2, 2},
+    {"-1", -1, std::nullopt, std::nullopt},
+    {"3", 3, std::nullopt, std::nullopt},
+    {"0.49", 0.49, 0, 0},
+    {"0.5", 0.5, 0, 0},
+    {"0.9", 0.9, 0, 0},
+    {"1.49", 1.49, 1, 1},
+    {"1.5", 1.5, 1, 1},
+    {"1.9", 1.9, 1, 1},
+    {"2.49", 2.49, 2, 2},
+    {"2.5", 2.5, 2, 2},
+    {"2.9", 2.9, 2, 2},
+    {"3.1", 3.1, std::nullopt, std::nullopt},
+    {"-0.49", -0.49, 0, 0},
+    {"-0.5", -0.5, 0, 0},
+    {"-0.9", -0.9, 0, 0},
+    {"-1.1", -1.1, std::nullopt, std::nullopt},
+    {"2147483647", 2147483647, std::nullopt, std::nullopt},
+    {"2147483648", 2147483648, std::nullopt, std::nullopt},
+    {"-2147483648", -2147483648, std::nullopt, std::nullopt},
+    {"-2147483649", -2147483649, std::nullopt, std::nullopt},
+    {"4294967295", 4294967295, std::nullopt, std::nullopt},
+    {"4294967296", 4294967296, std::nullopt, 0},
+    {"4294967297", 4294967297, std::nullopt, 1},
+    {"4294967298", 4294967298, std::nullopt, 2},
+    {"4294967299", 4294967299, std::nullopt, std::nullopt},
+    {"-4294967296", -4294967296, std::nullopt, 0},
+    {"-4294967295", -4294967295, std::nullopt, 1},
+    {"-4294967294", -4294967294, std::nullopt, 2},
+    {"1E20", 1E20, std::nullopt, 0},
+    {"-1E20", -1E20, std::nullopt, 0},
+    {"1E300", 1E300, std::nullopt, 0},
+    {"-1E300", -1E300, std::nullopt, 0},
+    {"EXP(1000)", std::numeric_limits<double>::infinity(), std::nullopt, 0},
+    {"-EXP(1000)", -std::numeric_limits<double>::infinity(), std::nullopt, 0},
+    {"9007199254740992", 9007199254740992, std::nullopt, 0},
+    {"65536", 65536, std::nullopt, std::nullopt},
+    {"65537", 65537, std::nullopt, std::nullopt},
+    {"65538", 65538, std::nullopt, std::nullopt},
+    {"-65535", -65535, std::nullopt, std::nullopt},
+    {"-65534", -65534, std::nullopt, std::nullopt},
+    {"32768", 32768, std::nullopt, std::nullopt},
+    {"32769", 32769, std::nullopt, std::nullopt},
+    {"-32767", -32767, std::nullopt, std::nullopt},
+    {"4294967296.9", 4294967296.9, std::nullopt, 0},
+    {"-4294967295.9", -4294967295.9, std::nullopt, 1},
+};
+
 // RQ-CF-PRG-CALLFN-HANDLE-NUMERIC-001: 51 Numeric native observations.
 // Absent indices use explicit low-16 policy, not inferred native indices.
 const std::vector<SqlGetPropHandleCase> kCallFnHandleCases{
@@ -2813,6 +2867,125 @@ void test_callfn_numeric_behavior_script_rows() {
     fs::remove_all(dir, ignored);
 }
 
+// RQ-CF-PRG-ALEN-DIMENSION-NUMERIC-001: native aliases plus independently
+// specified exact/NaN/adjacent boundaries and existing-coercion controls.
+void test_alen_dimension_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    struct Boundary { PrgValue value; std::optional<std::int32_t> copperfin, vfp9; };
+    const std::vector<Boundary> boundaries{
+        {make_number_value(std::numeric_limits<double>::quiet_NaN()), std::nullopt, std::nullopt},
+        {make_number_value(std::nextafter(-1.0, 0.0)), 0, 0},
+        {make_number_value(std::nextafter(-1.0, -2.0)), std::nullopt, std::nullopt},
+        {make_number_value(std::nextafter(1.0, 0.0)), 0, 0},
+        {make_number_value(std::nextafter(1.0, 2.0)), 1, 1},
+        {make_number_value(std::nextafter(2.0, 0.0)), 1, 1},
+        {make_number_value(std::nextafter(2.0, 3.0)), 2, 2},
+        {make_number_value(std::nextafter(3.0, 0.0)), 2, 2},
+        {make_number_value(std::nextafter(3.0, 4.0)), std::nullopt, std::nullopt},
+        {make_number_value(9223372036854775808.0), std::nullopt, 0},
+        {make_number_value(std::nextafter(9223372036854775808.0, 0.0)), std::nullopt, std::nullopt},
+        {make_number_value(-9223372036854775808.0), std::nullopt, 0},
+        {make_number_value(std::nextafter(-9223372036854775808.0, -std::numeric_limits<double>::infinity())), std::nullopt, 0},
+        {make_int64_value(INT64_MIN), std::nullopt, 0},
+        {make_int64_value(INT64_MIN + 1), std::nullopt, 1},
+        {make_int64_value(INT64_MAX), std::nullopt, std::nullopt},
+        {make_int64_value(9007199254740993LL), std::nullopt, 1},
+        {make_int64_value(-9007199254740991LL), std::nullopt, 1},
+        {make_uint64_value(UINT64_MAX), std::nullopt, std::nullopt},
+        {make_uint64_value(9007199254740993ULL), std::nullopt, 1},
+        {make_uint64_value(4294967298ULL), std::nullopt, 2},
+        {make_int64_value(0), 0, 0}, {make_int64_value(1), 1, 1}, {make_int64_value(2), 2, 2},
+        {make_int64_value(-1), std::nullopt, std::nullopt},
+        {make_uint64_value(0), 0, 0}, {make_uint64_value(1), 1, 1}, {make_uint64_value(2), 2, 2},
+        {make_uint64_value(3), std::nullopt, std::nullopt},
+        {make_boolean_value(true), 1, 1}, {make_boolean_value(false), 0, 0},
+        {make_null_value(), 0, 0}, {make_string_value("1"), 1, 1},
+        {make_string_value("3"), 3, 3}, {make_string_value("-1"), -1, -1},
+        {make_string_value("2147483648"), std::nullopt, std::nullopt},
+        {make_currency_value(5000), 0, 0}, {make_currency_value(15000), 1, 1},
+        {make_currency_value(25000), 2, 2}, {make_currency_value(-15000), -1, -1},
+        {make_currency_value(INT64_MAX), std::nullopt, std::nullopt},
+    };
+    for (const auto mode : {NumericBehavior::copperfin, NumericBehavior::vfp9}) {
+        for (const auto& row : kAlenDimensionCases) {
+            expect(checked_alen_dimension_argument(make_number_value(row.value), mode) ==
+                       (mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin),
+                   std::string("ALEN direct ") + row.argument);
+        }
+        for (std::size_t i = 0; i < boundaries.size(); ++i) {
+            const auto& row = boundaries[i];
+            expect(checked_alen_dimension_argument(row.value, mode) ==
+                       (mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin),
+                   "ALEN extended direct boundary " + std::to_string(i));
+        }
+    }
+}
+
+// RQ-CF-PRG-ALEN-DIMENSION-NUMERIC-001: fresh shape/payload/cursor/session/
+// mode/catchability controls. One-dimensional result/type admission is a gap,
+// not repaired or rationalized by these current-behavior preservation controls.
+void test_alen_dimension_numeric_behavior_script_rows() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_alen_dimension_numeric_behavior";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    const auto check = [&](const char* mode, const bool two_dimensional,
+                           const std::string& argument, const std::optional<std::int32_t> dimension,
+                           const bool omitted = false) {
+        const std::string setup = std::string("SET NUMERICBEHAVIOR TO ") + mode +
+            "\nDIMENSION aAlenTwo[3,4], aAlenOne[5]\naAlenTwo = 101\naAlenOne = 31\n"
+            "aAlenTwo[2,3] = 789\naAlenOne[5] = 73\n"
+            "CREATE CURSOR alen_guard (marker C(12))\nINSERT INTO alen_guard VALUES ('unchanged')\n";
+        const std::string state =
+            "ALLTRIM(STR(ALEN(aAlenTwo))) + ':' + ALLTRIM(STR(ALEN(aAlenTwo,1))) + ':' + "
+            "ALLTRIM(STR(ALEN(aAlenTwo,2))) + ':' + ALLTRIM(STR(ALEN(aAlenOne))) + ':' + "
+            "ALLTRIM(STR(ALEN(aAlenOne,1))) + ':' + ALLTRIM(STR(ALEN(aAlenOne,2))) + ':' + "
+            "ALLTRIM(STR(aAlenTwo[2,3])) + ':' + ALLTRIM(STR(aAlenOne[5])) + ':' + "
+            "ALLTRIM(STR(VAL(TRANSFORM(SET('DATASESSION'))))) + ':' + SET('NUMERICBEHAVIOR') + ':' + "
+            "ALIAS() + ':' + ALLTRIM(STR(RECCOUNT())) + ':' + ALLTRIM(marker)";
+        const std::string unchanged = std::string("12:3:4:5:5:1:789:73:1:") + mode + ":alen_guard:1:unchanged";
+        const std::string call = "nAlenError = 0\nnAlenResult = -77\ncAlenMessage = ''\nTRY\n"
+            "nAlenResult = ALEN(" + std::string(two_dimensional ? "aAlenTwo" : "aAlenOne") +
+            (omitted ? "" : ", " + argument) + ")\n"
+            "CATCH TO oEx\nnAlenError = oEx.ErrorNo\ncAlenMessage = oEx.Message\nENDTRY";
+        const int result = !dimension ? -77 : two_dimensional
+            ? (*dimension == 1 ? 3 : *dimension == 2 ? 4 : 12)
+            : (*dimension == 1 ? 5 : *dimension == 2 ? 1 : 5);
+        std::vector<Row> rows{
+            {setup, state, "C:" + unchanged},
+            {call, "ALLTRIM(STR(nAlenError)) + ':' + ALLTRIM(STR(nAlenResult)) + ':' + " + state,
+             "C:" + std::string(dimension ? "0:" : "11:") + std::to_string(result) + ":" + unchanged},
+            {"", state, "C:" + unchanged},
+            {"USE IN alen_guard\nSET NUMERICBEHAVIOR TO COPPERFIN",
+             "SET('NUMERICBEHAVIOR') + ':' + IIF(USED('alen_guard'), 'T', 'F') + ':' + ALIAS()",
+             "C:COPPERFIN:F:"},
+        };
+        if (!dimension) rows.insert(rows.begin() + 2,
+            {"", "cAlenMessage", "C:Function argument value, type, or count is invalid."});
+        const std::string output = run_rows(dir, rows);
+        std::string expected_output;
+        for (const auto& row : rows) expected_output += row.expected + "\n";
+        expect(output == expected_output, std::string("ALEN ") + mode +
+            (two_dimensional ? " 3x4 " : " 1d ") + "[" + argument +
+            "] expected [" + expected_output + "], got [" + output + "]");
+    };
+    for (const bool two_dimensional : {true, false}) {
+        for (const char* mode : {"COPPERFIN", "VFP9"}) {
+            for (const auto& row : kAlenDimensionCases) {
+                check(mode, two_dimensional, row.argument,
+                      std::string(mode) == "VFP9" ? row.vfp9 : row.copperfin);
+            }
+            for (const auto& control : std::vector<std::pair<std::string, std::int32_t>>{
+                     {"$0.5", 0}, {"$1.5", 1}, {"$2.5", 2}, {".T.", 1}, {".F.", 0},
+                     {".NULL.", 0}, {"'0'", 0}, {"'1'", 1}, {"'2'", 2}, {"'3'", 3}, {"'-1'", -1}}) {
+                check(mode, two_dimensional, control.first, control.second);
+            }
+            check(mode, two_dimensional, "<omitted>", 0, true);
+        }
+    }
+    fs::remove_all(dir, ignored);
+}
+
 // RQ-CF-PRG-SET-DATASESSION-NUMERIC-001: independent native/derived boundaries.
 void test_datasession_selector_direct_numeric_boundaries() {
     using namespace copperfin::runtime;
@@ -4852,6 +5025,8 @@ void test_sql_property_handle_direct_numeric_boundaries(
 }  // namespace
 
 int main() {
+    test_alen_dimension_direct_numeric_boundaries();
+    test_alen_dimension_numeric_behavior_script_rows();
     test_conversion_helpers();
     test_date_time_constructor_direct_numeric_boundaries();
     test_dow_direct_numeric_boundaries();

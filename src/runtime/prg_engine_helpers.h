@@ -220,6 +220,10 @@ std::optional<std::int32_t> checked_sqlexec_handle_argument(const PrgValue& valu
 // RQ-CF-PRG-CALLFN-HANDLE-NUMERIC-001: checked signed-int32 default;
 // recovered VFP9 low-16 Numeric aliases, before registered API invocation.
 std::optional<std::int32_t> checked_callfn_handle_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-ALEN-DIMENSION-NUMERIC-001: Numeric/exact integers truncate
+// to 0..2; explicit VFP9 keeps low-32 aliases and indefinite zero, but rejects
+// NaN. Other existing coercions retain checked truncation, not type parity.
+std::optional<std::int32_t> checked_alen_dimension_argument(const PrgValue& value, NumericBehavior behavior);
 // RQ-CF-PRG-SET-DATASESSION-NUMERIC-001: checked positive session selector.
 // Existence/lifecycle stay separate; other coercions retain rounding/clamping.
 std::optional<std::int32_t> checked_datasession_selector_argument(const PrgValue& value, NumericBehavior behavior);

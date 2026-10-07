@@ -1615,6 +1615,35 @@ std::optional<std::int32_t> checked_callfn_handle_argument(
     return checked_sqlgetprop_handle_argument(value, NumericBehavior::copperfin);
 }
 
+// RQ-CF-PRG-ALEN-DIMENSION-NUMERIC-001 (#5611/#6776). Native arrays
+// independently distinguish truncation, low-32 aliases and indefinite zero.
+// NaN rejection and exact extended integer modular policy are derived safety.
+std::optional<std::int32_t> checked_alen_dimension_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    const bool numeric = value.kind == PrgValueKind::number ||
+                         value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
+    if (value.kind == PrgValueKind::number && std::isnan(value.number_value)) {
+        return std::nullopt;
+    }
+    std::optional<std::int64_t> dimension;
+    if (numeric && behavior == NumericBehavior::vfp9) {
+        dimension = vfp9_numeric_to_int32(value);
+    } else if (value.kind == PrgValueKind::int64) {
+        dimension = value.int64_value;
+    } else if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value <= 2U) dimension = static_cast<std::int64_t>(value.uint64_value);
+    } else {
+        // No half-away rounding: preserve this site's ordinary coercions.
+        dimension = checked_truncated_numeric_to_int64(value_as_number(value));
+    }
+    if (!dimension || (numeric && (*dimension < 0 || *dimension > 2)) ||
+        *dimension < std::numeric_limits<std::int32_t>::min() ||
+        *dimension > std::numeric_limits<std::int32_t>::max()) {
+        return std::nullopt;
+    }
+    return static_cast<std::int32_t>(*dimension);
+}
+
 // RQ-CF-PRG-SET-DATASESSION-NUMERIC-001 (#5611/#6776). Installed VFP9
 // sessions 1/2 recover fractional truncation and both-sign low-32 aliases.
 // Exact integers/NaN and other positive IDs follow derived safety policy.

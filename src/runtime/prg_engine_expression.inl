@@ -2601,8 +2601,16 @@
                     const std::string array_name = resolve_array_argument_name(
                         raw_arguments.empty() ? std::string{} : raw_arguments[0],
                         &arguments[0]);
-                    const int dimension = arguments.size() >= 2U ? static_cast<int>(value_as_number(arguments[1])) : 0;
-                    return make_number_value(static_cast<double>(array_length_callback_(array_name, dimension)));
+                    // RQ-CF-PRG-ALEN-DIMENSION-NUMERIC-001: reject before
+                    // the callback; retain name resolution and length policy.
+                    const auto dimension = arguments.size() >= 2U
+                        ? checked_alen_dimension_argument(arguments[1], numeric_behavior(set_callback_))
+                        : std::optional<std::int32_t>{0};
+                    if (!dimension)
+                    {
+                        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                    }
+                    return make_number_value(static_cast<double>(array_length_callback_(array_name, *dimension)));
                 }
                 if ((function == "acopy" || function == "adel" || function == "adir" || function == "aelement" ||
                      function == "afields" || function == "afont" || function == "agetfileversion" ||
