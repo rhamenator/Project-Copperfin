@@ -1,5 +1,23 @@
 # VFP Language Reference Coverage
 
+- ALEN optional dimension Numeric/exact-integer conversion (#5611/#6776,
+  2026-10-07): default finite truncation into 0..2; explicit VFP9 signed
+  low-32 aliases and observed huge/infinite indefinite zero before the same
+  admission. NaN rejects in both modes as derived safety; exact extended
+  integers avoid a double round trip and use derived exact modular policy
+  only in VFP9 mode. Localized catchable 11 precedes the length callback;
+  omitted dimension and checked other coercions retain current behavior.
+  Installed fixture tests/fixtures/vfp9-alen-dimension-numeric-observation/
+  retains three matching 114-call/119-line runs on independent 3x4 and
+  one-dimensional arrays. RQ-CF-PRG-ALEN-DIMENSION-NUMERIC-001 maps this
+  boundary and native/derived verification in docs/32 and the fixture README.
+  Direct and fresh synthetic cases independently compare result/error/message,
+  shape/payload, selected guard cursor/count/marker, session, mode and cleanup.
+  Array representation/allocation/name/existence/type/arity/result paths and
+  other conversions are unchanged. Existing #6302 owns one-dimensional
+  dimension2 result; #7055 records native type-admission differences. These
+  are preserved gaps, not claims of full ALEN or type compatibility.
+
 - CALLFN first-argument Numeric/exact-integer conversion (#5611/#6776,
   2026-10-07): default finite signed-int32 truncation;
   explicit VFP9 finite in-int64 truncation and low-16 aliases, with exact

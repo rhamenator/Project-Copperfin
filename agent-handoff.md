@@ -55,76 +55,86 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-SQLEXEC first-argument handle conversion PR #7048 merged into main
-2026-10-07 14:46:14 UTC as 9748f049fd73ac14614e1eb246e10039cb56ae50.
-Signed/DCO head aca85d2b6dccfe251aa6cdf995fb64f1266d5179 passed all 11
-required checks. Authorized exact-head Codex review completed cleanly
-14:12:29.006455 UTC (summary 6039776576; verified bot thumbs-up 551269097
-at 14:12:34 UTC). Zero reviews/inline comments/threads/closing references,
-complete pagination freshly verified before merge. Claude-first request
-6039777510 has eyes 434721678 only, no explicit quota/setup failure or
-duplicate request. All 32 completed checks pass; optional Windows MSVC
-run 37634532488/job 112837128428 remains in progress, check on continuation.
-SQLPREPARE #7046 subsequently passed all 33 checks.
-134 direct checks and 416 canceled dirty cases / 1,724 PRG rows compare DML,
-explicit SELECT, prepared fallback and empty command/no statement, original
-messages, connection/count/cancel/action/alias state, guard/prior/result
-cursors/counts, exact exec/SQL events/effective command and reset/cleanup.
-Both complete unchanged-dispatch baselines fail exactly 320 selected assertions
-(208 output/state, 42 exec-event, 42 total-event, 28 command detail), with
-controls/neighbors passing and zero setup/cleanup/prior-count mismatches.
-Final GCC 4/4 40.07s (Numeric 38.31s), Clang ASan/UBSan/float-cast-overflow
-4/4 177.48s (Numeric 170.61s), no diagnostics; six contracts 6/6 5.06s,
-162 valid fragments; post-push Numeric 37.24s/contracts 4.44s.
-Installed VFP9 retains three matching 48-call/53-line native runs.
-Native callback/type/connected-index recovery #7047 remains separate and
-unadmitted; no inferred aliases or expanded command/callback/backend/AERROR.
-Completed README VR/DQ/DV/docs22/docs32 retain bidirectional traceability,
-medium-severity misuse, procedural delta, walkthrough and rollback.
+CALLFN first-argument Numeric/exact-integer conversion PR #7051 merged
+2026-10-07 16:48:00 UTC as f8929616deb0c09b753671071e8718e1f2172ee4.
+Exact signed/DCO head e182fc97378be59a8a476825528c78becf16b29e passed all
+11 required checks. Authorized exact-head Codex review completed cleanly
+15:50:24.798228 UTC (summary 6041488192; bot thumbs 551507748 at 15:50:28).
+Fresh complete pagination verified zero reviews/inline comments/threads/
+closing references before merge. Claude-first request 6041493280 has eyes
+434809375 only; no explicit quota/setup failure or duplicate review request.
+31/33 hosted checks pass; optional VSIX and Windows MSVC failures are retained,
+not claimed green. VSIX run 37647015033 attempts 1/2 (jobs 112880323819/
+112893275132) both hit the 600s installation timeout after successful build;
+both failure-cleanup uninstalls passed. Artifacts 11494919768/11497981371
+retain exact package hashes/operation timings. Focused current-main gap
+#7053 owns further diagnosis; no VSIX production scope was admitted.
+Windows run 37647015018/job 112880324801 passes 435/436; only
+test_visual_asset_editor times out 180.02s. Numeric passes 48.15s,
+CENTURY/ROLLOVER 0.47s. Preceding SQLEXEC #7048 already failed the same
+editor test 180.04s before the GitHub outage. Focused gap #7054 retains both
+heads/results; editor source unchanged. SQLEXEC run 37634532488 attempt 2/
+job 112880387091 completed with the same sole editor timeout 180.02s:
+435/436 passed, total 1098.12s, CENTURY 0.83s. Issue #7054 comment
+6043038278 retains exact aca85d2b6dccfe251aa6cdf995fb64f1266d5179 retry
+evidence; no root cause established, no third retry or editor scope expansion.
+PR comment 6042568241 retains CI boundaries and gap links.
+
+166 direct checks / 248 fresh live/empty-session cases / 1,008 PRG rows;
+both unchanged-dispatch baselines fail exactly 101 selected assertions, zero
+setup/guard/session/registration/counter/cleanup mismatches. GCC four 4/4
+44.08s (Numeric 41.81s); Clang ASan/UBSan/float-cast-overflow four 4/4
+203.21s (Numeric 193.80s), no diagnostics. Six contracts 6/6 4.38s;
+163 fragments. Pushed-head Numeric 42.08s, five contracts 4.04s plus native
+isolation pass; additional intake 4.41s and full safety workflow 375.52s
+(six-test run 384.38s) pass. Completed README VR/DQ/DV/docs22/docs32 retain
+native/derived boundaries, medium misuse, procedural delta/walkthrough/
+rollback and reverse links. Three matching native 58-call/65-line VFP9 7423/
+FoxTools 9.00 runs retain source/output hashes. #7050 native absent/type gap
+and #6997 formatter remain separate. No native ABI qualification is inferred.
 Main synchronized; owned worktree/local/remote branch removed. Builds
-454 MB/864 MB and probe.FXP moved to recoverable trash. Unrelated files,
-detached worktrees and older stashes preserved. Pre-sync scoped handoff stash
-16acc8b20afe6e0a049bef6f1b5315bc15f03738 retained. Live channel re-read empty.
-#5611/#6776 remain OPEN owner-authored agent-approved and unfinished;
-EPOCH/CENTURY complete, #3698 closed, #6879 retained.
+459 MB/874 MB, probe.FXP and downloaded diagnostics moved to recoverable
+trash. Unrelated files, detached worktrees and all older stashes preserved.
+Pre-sync scoped handoff stash 66c58bd198c56bda7089445819439e5aafd1d71b retained.
+Live channel re-read empty. #5611/#6776 remain OPEN owner-authored approved
+and unfinished; EPOCH/CENTURY complete, #3698 closed, #6879 retained.
 
 ## Selected active bounded slice
 
-CALLFN first-argument Numeric/exact-integer handle conversion under fresh
-OPEN owner-authored agent-approved #5611/#6776 from exact origin/main
-9748f049fd73ac14614e1eb246e10039cb56ae50.
-WT /home/rich/.codex/worktrees/callfn-handle-numeric-5611/Project-Copperfin,
-branch fix/callfn-handle-numeric-5611. No commit/push/PR yet.
-Only selected expression conversion/helper declaration/definition changed:
-default checked signed-int32 truncation; explicit VFP9 checked in-int64
-Numeric truncation/low-16 aliases; exact extended integer modular conversion.
-Unsafe rejection uses catalog-backed 1098 and safe original-operand text
-before copying/API invocation/events. Callback/REGFN/session/lifecycle/native
-ABI/type/arity/return/other callers and formatter #6997 remain unchanged.
-Installed FoxTools 9.00/VFP9 7423 retains three matching final 58-call/65-line
-runs. Live handle 1 recovers truncation/both-sign low-16 aliases; other absent
-indices/exact integers/unsafe rejection are explicit derived policy.
-Source 413b2b7ab64a014a729a33fa9c891bfd16932046274f73fa2ab3629108385de3;
-output 7d03d15cbe6351fdd60b434a480551582d0ecf61e4b38b6bfa11bd1bf3f2a58b.
-Exact-file fixture Git attribute preserves observed FOXTOOLS trailing byte.
-Native absent/type admission gap #7050 against this main remains unadmitted.
-166 direct checks / 248 fresh live/empty-session cases / 1,008 PRG rows pass
-unchanged independent expectations. Both unchanged-dispatch baselines fail
-exactly 101 assertions (82 output/diagnostic, 19 invocation counts); zero
-setup/guard/session/retained-registration/counter/cleanup mismatches and
-all direct/coercion/neighbor controls pass. GCC Numeric 40.97s/four 43.25s;
-Clang sanitizer Numeric 188.91s/four 198.64s, no diagnostics.
-Fixed GCC four suites 4/4 44.08s (Numeric 41.81s); Clang ASan/UBSan/float-cast-
-overflow four 4/4 203.21s (Numeric 193.80s), no diagnostics. Six final
-contracts 6/6 4.38s, 163 valid fragments. Completed README VR/DQ/DV/docs22/
-docs32 retain reverse links, native/derived boundaries, medium-severity misuse,
-procedural delta, walkthrough, development self-review and rollback.
-Owned builds /home/rich/temp/copperfin-callfn-handle-5611-build and
-/home/rich/temp/copperfin-callfn-handle-5611-sanitize retained until merge.
-Next: signed/DCO commit/push/PR, Claude-first authorized exact-head review,
-verify exact pushed change and all 11 required checks/conversations before
-merge. Owned probe.FXP is scratch; recoverable trash after merge.
-No VM/system change or owner blocker; unrelated files/stashes/worktrees retained.
+ALEN optional dimension Numeric/exact-integer conversion under admitted
+#5611/#6776, from origin/main f8929616deb0c09b753671071e8718e1f2172ee4.
+WT /home/rich/.codex/worktrees/alen-dimension-numeric-5611/Project-Copperfin;
+branch fix/alen-dimension-numeric-5611. Only selected expression ALEN dimension
+and operation-specific checked helper change; array representation/allocation/
+name/existence/type/arity/result callbacks and other sites remain unchanged.
+RQ-CF-PRG-ALEN-DIMENSION-NUMERIC-001: default finite truncation to 0..2;
+explicit VFP9 observed signed low-32 aliases and huge/infinite indefinite zero;
+NaN rejects in both modes; exact extended integers stay exact (derived policy).
+Other current coercions retain checked truncation; omitted dimension stays 0.
+Localized catchable 11 is checked before the length callback, no argument-sized
+allocation/loop. Installed VFP9 7423 fixture: three fresh serial 114-call/119-line
+runs match, with independent 3x4/5-element shapes, markers/session unchanged.
+Source e06f798a31408e17de33907e414319ff057a7634cdbb96d69fcf3586dd7df839;
+output 20dd6160d6227845163e357eef677105dee0c8c44477b8e766356d8b48bd373a.
+Existing #6302 owns one-dimensional dimension2 result; new #7055 retains
+native other-type admission against main f892...; neither gap repaired here.
+178 direct checks /240 fresh cases /1062 PRG rows; independent state/message/
+shape/payload/cursor/session/mode/cleanup. GCC unchanged-dispatch baseline
+fails 109 selected assertions, zero guard/call-state/setup/cleanup mismatches,
+all direct/coercion/omitted/neighbor controls pass. Clang baseline reports five
+semantic failures then UB at expression.inl:2604:85 for 2147483648 outside int;
+Numeric 1.35s/four 29.51s, neighbors pass, no completed Numeric baseline claim.
+Fixed GCC 4/4 in 46.15s (Numeric 43.80); Clang ASan/UBSan/float-cast-overflow
+4/4 in 204.80s (Numeric 195.80), no diagnostics. Six contracts 6/6 finally in 4.33s,
+164 fragments. Builds /home/rich/temp/copperfin-alen-dimension-5611-{build,sanitize}.
+Completed fixture README VR/DQ/DV development self-review, native/derived
+boundaries, medium misuse/procedural delta/walkthrough/rollback, docs/22 and docs/32
+bidirectional mapping and dated changelog. No independent-human/release claim.
+Next: final contracts/diff/signature verification, signed commit/push/PR,
+Claude-first exact-head review (authorized Codex fallback if needed); then
+required 11 green+clean exact-head review+resolved conversations before merge.
+No commit/push/PR yet; no owner input or VM/system change required.
+Preserve unrelated files/detached worktrees/stashes; all prior sessions drained.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -847,8 +857,13 @@ Owner-directed workstream order before the #6879 assignment was:
    - Completed after those: SQLPREPARE first-argument Numeric/exact-integer
      conversion (PR #7046);
      native callback/type/connected-index gap #7045 remains separate.
-   - Active: SQLEXEC first-argument Numeric/exact-integer conversion;
-     native callback/type/connected-index gap #7047 remains separate.
+   - Completed after those: SQLEXEC first-argument Numeric/exact-integer
+     conversion (PR #7048); native callback/type/connected-index gap #7047
+     remains separate.
+   - Completed after those: CALLFN first-argument Numeric/exact-integer
+     conversion (PR #7051); native absent/type gap #7050 remains separate.
+   - Active: ALEN optional dimension Numeric/exact-integer conversion,
+     bounded direct floating-to-int dispatch site under #5611/#6776.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`
