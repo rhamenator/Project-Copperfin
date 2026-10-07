@@ -1,5 +1,20 @@
 # VFP Language Reference Coverage
 
+- SQLPREPARE first-argument Numeric/exact-integer conversion (#5611/#6776,
+  2026-10-07): derived finite signed-int32 truncation in both modes, localized
+  catchable 1466 before prepared-command/cancel/action mutation and events,
+  safe original Numeric diagnostics and exact integers without double rounding.
+  Complete 48-call/52-line installed-VFP9 fixture in
+  `tests/fixtures/vfp9-sqlprepare-handle-numeric-observation/` recovers absent
+  Numeric 1466/other-type 11, first message and unchanged session, not connected
+  indices or aliases. RQ-CF-PRG-SQLPREPARE-HANDLE-NUMERIC-001 maps derived policy
+  in docs/32. Direct and canceled DML/SELECT cases with empty/nonempty commands
+  independently compare prepared command, status/error/message, count,
+  connection/dirty/cancel/action, selected alias, guard/result, exact prepare/
+  total SQL events and reset/cleanup. Callback/type/arity/backend and connected
+  native indices remain separate #7045; SQLEXEC/CALLFN and formatter #6997
+  are unchanged.
+
 - SQLROWCOUNT first-argument Numeric/exact-integer conversion (#5611/#6776,
   2026-10-07): owner-derived extension policy, finite signed-int32 truncation
   in both modes, localized catchable 1466 before row-count reads and safe

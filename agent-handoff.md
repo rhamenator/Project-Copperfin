@@ -55,82 +55,82 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-SQLCOLUMNS first-argument handle conversion PR #7041 merged into main
-2026-10-07 11:22:53 UTC as f60319296cb3cc885c650155d0395059b38bee6e.
-Signed/DCO exact head a9920a33de1b36387bddddbee388348f53cf134a passed all
-11 required checks. Authorized exact-head Codex review completed without
-findings 10:33:37.572091 UTC, summary 6036082206; verified bot PR thumbs-up
-10:33:40 UTC. Zero review threads/inline comments/closing references with
-complete pagination. Claude requested first via 6036084576; eyes only,
-no completed review or explicit quota/setup failure. No duplicate request.
-All 33 checks subsequently passed, including optional Windows MSVC
-(run 37608042806/job 112748247477); verified 11:45 UTC.
-The required macOS lane first failed only unchanged .NET benchmark assertions
-(empty measurements; 1.45s); unrelated sample/test/benchmark/process/workflow
-paths had no diff against exact main. Separate diagnostic #7042 retains
-missing rejection/process evidence, distinct from #6964, without admitting
-.NET changes. Same-head failed-job-only retry passed run 37608042706 attempt 2,
-job 112764157578: all 34 selected tests (13.90s; .NET candidate 1.68s) and
-seven private/parser regressions (4.27s). This establishes intermittency,
-not root cause; #7042 remains open. No source/assertion/budget weakening.
-134 direct checks and 208 fresh FOXPRO/NATIVE synthetic cases/640 PRG rows
-pass. Both unchanged-dispatch baselines fail exactly 132 selected assertions;
-helpers/setup/coercion/cleanup/three neighbors pass, no sanitizer diagnostic.
-Final GCC four suites 20.52s (Numeric 18.78s), Clang ASan/UBSan/float-cast-
-overflow four suites 92.88s (Numeric 85.90s), without diagnostics; six contracts
-4.42s, 159 valid fragments. Post-push Numeric 19.08s and six contracts 4.40s.
-Complete 48-call/53-line installed VFP9 fixture/four matching runs retains
-Numeric absent errors 1466, other-type controls 11 and unchanged session/cursor.
-Identical absent errors do not reveal converted indices/aliases. Owner-derived
-checked finite/truncating signed-int32 policy applies in both modes; exact
-integers remain exact and existing other coercions use checked rounding.
-Safe original Numeric diagnostic bypasses unchanged formatter gap #6997.
-Completed README VR/DQ/DV and docs/22/docs/32 retain reverse traceability.
-Separate native callback/type/connected-index gap #7040 remains unadmitted.
-Main synchronized; owned WT/local/remote branch removed. Builds (453 MB/864 MB)
-and generated probe.FXP moved to recoverable trash. Unrelated files, detached
-WTs and older stashes preserved. Pre-sync canonical handoff retained in scoped
-stash e7e9d6b10339ee2f515dbde2344707b21de0b5b4; live channel re-read empty.
-Prior SQLFOREIGNKEYS #7039 subsequently passed all 33 checks (MSVC verified
-10:49 UTC); SQLPRIMARYKEYS #7037 also passed all 33 checks. Parents #5611/#6776
-remain OPEN owner-authored agent-approved and unfinished. EPOCH #7023 and
-CENTURY #7024 complete, #3698 closed; #6879 remains retained.
+SQLROWCOUNT first-argument handle conversion PR #7043 merged into main
+2026-10-07 12:45:59 UTC as 1f6a711b32fbccc515d95caa38d31f305122851f.
+Signed/DCO exact head 6deb0ccc85e1e0aec1451d31bd1d2cb1a6f41405 passed all
+11 required checks; authorized Codex review completed without findings
+12:05:49.731986 UTC, summary 6037493939 and verified bot thumbs-up 12:05:53.
+Zero review threads/inline comments/closing references, complete pagination
+freshly verified before merge. Claude first request 6037495332 has eyes only;
+no explicit quota/setup failure or duplicate request. All 33 checks subsequently
+passed, including Windows MSVC run 37618259098/job 112781784903; verified
+after merge during this continuation.
+134 direct calls, 208 canceled DML/SELECT cases and 744 PRG rows pass in both
+modes; unchanged-dispatch baselines each fail exactly 104 selected assertions,
+controls/neighbors passing without sanitizer diagnostics. Final GCC four
+suites 23.18s (Numeric 21.46s), Clang ASan/UBSan/float-cast-overflow four
+105.62s (Numeric 98.72s) without diagnostics; six contracts 6/6 6.89s,
+160 valid fragments. Post-push Numeric 22.16s and six contracts 4.35s.
+Complete installed VFP9 fixture retains 48 attempts/52 lines/four matching
+serial runs. Resolution error 1 and missing-file message are extension-presence
+evidence only; recognized SQLTABLES control raises 1466, session 1 unchanged.
+Owner-derived finite/truncating signed-int32 admission applies in both modes,
+exact integers stay exact, existing other coercions retain checked rounding.
+Reject before row-count reads with localized 1466 and safe original Numeric
+diagnostics. Callback return/lifecycle/backend, type/arity/absent/default,
+other sites and formatter #6997 remain separate. Completed README VR/DQ/DV
+and docs/22/docs/32 retain bidirectional requirements and extension boundaries.
+Main synchronized; owned WT/local/remote branch removed. Both builds
+(454 MB/864 MB) and generated probe.FXP moved to recoverable trash.
+Unrelated files, detached WTs and older stashes preserved; scoped pre-sync
+handoff stash 18dd9ff6e108e4006ddcc26ba03fc4bec5cb33c0 retained.
+Live channel re-read empty after cleanup.
+Prior SQLCOLUMNS #7041 passed all 33 checks; diagnostic #7042 (intermittent
+macOS .NET empty benchmark measurements) remains unadmitted, not root-caused.
+Parents #5611/#6776 remain OPEN owner-authored agent-approved and unfinished.
+EPOCH #7023/CENTURY #7024 complete, #3698 closed; #6879 remains retained.
 
 ## Selected active bounded slice
 
-SQLROWCOUNT first-argument Numeric/exact-integer handle conversion under
+SQLPREPARE first-argument Numeric/exact-integer handle conversion under
 freshly revalidated OPEN owner-authored agent-approved #5611/#6776 from exact
-origin/main f60319296cb3cc885c650155d0395059b38bee6e.
-Dedicated WT /home/rich/.codex/worktrees/sqlrowcount-handle-numeric-5611/Project-Copperfin,
-branch fix/sqlrowcount-handle-numeric-5611. No PR yet; ready for signed/DCO
-commit, push and PR. Complete installed-VFP9 source/output (48 attempts/52
-lines) repeats in four fresh serial runs: function-resolution error 1, first
-missing-file message, recognized SQLTABLES control 1466 and unchanged session 1.
-This is extension-presence evidence, not conversion/type/row-count parity or a
-new defect. Owner-derived finite/truncating signed-int32 admission applies in
-both modes; exact integers remain exact, other coercions retain checked rounding.
-Reject unsafe conversion with localized catchable 1466 before row-count reads;
-safe original Numeric diagnostics bypass unchanged formatter gap #6997.
-Only SQLROWCOUNT first-argument dispatch and its checked helper changed.
-Callback return/lifecycle/backend, type/arity/absent/default behavior,
-SQLEXEC/SQLPREPARE/CALLFN and other sites remain separate.
-134 direct calls and 208 fresh canceled DML/SELECT cases/744 PRG rows compare
-counts/status/error/message, connection/action/dirty/cancel, selected alias,
-guard/result cursor, total SQL events and reset/cleanup in both modes.
-Both unchanged-dispatch baselines fail exactly 104 selected assertions;
-helpers/setup/coercion/cleanup/event controls and three neighbors pass without
-sanitizer diagnostics (GCC 23.07s, Clang 104.65s).
-Final GCC four suites 4/4 23.18s (Numeric 21.46s); Clang ASan/UBSan/
-float-cast-overflow four suites 4/4 105.62s (Numeric 98.72s), no diagnostics.
-Six final contracts 6/6 6.89s; 160 fragments validate. Completed README
-VR/DQ/DV and docs/22/docs/32 retain reverse traceability and extension limits.
-Build dirs /home/rich/temp/copperfin-sqlrowcount-handle-5611-build and
-/home/rich/temp/copperfin-sqlrowcount-handle-5611-sanitize remain owned scratch.
-Next: signed commit, push/PR, Claude first and authorized Codex fallback.
-Merge only all 11 required green, clean authorized exact-head review and all
-conversations resolved; preserve/synchronize/clean owned resources afterwards.
-No owner input needed, no VM/external backend/system change. #5611/#6776 remain
-unfinished; #6879 retained.
+origin/main 1f6a711b32fbccc515d95caa38d31f305122851f.
+Dedicated WT /home/rich/.codex/worktrees/sqlprepare-handle-numeric-5611/Project-Copperfin,
+branch fix/sqlprepare-handle-numeric-5611. No PR yet; ready for signed/DCO
+commit, push and PR. Complete installed VFP9 7423 fixture (48 calls/52 lines)
+matches in three fully compared fresh serial runs: 41 absent Numeric errors
+1466, seven other-type errors 11, recognized control 1466, first invalid-
+connection message and unchanged session 1. Absent errors reveal no converted
+indices/aliases. Separate #7045 against exact main retains callback/type
+admission and connected-index recovery, without expanding this slice.
+Derived finite/truncating signed-int32 admission applies in both modes.
+Exact integers stay exact; existing other coercions retain checked rounding.
+Reject unsafe handles with localized catchable 1466 before prepared/cancel/
+action mutation or events; safe original Numeric messages bypass unchanged
+formatter #6997. Only SQLPREPARE first-argument dispatch/helper changed;
+command/callback/type/arity/backend/AERROR, SQLEXEC/CALLFN and other sites
+remain separate.
+134 direct calls and 416 canceled DML/SELECT cases/1,488 PRG rows compare
+empty/nonempty command replacement/retention, status/error/message, count/
+connection/dirty/cancel/action, selected alias, guard/result cursor, exact
+prepare/total SQL events and reset/cleanup in both modes.
+Both unchanged-dispatch baselines fail exactly 320 selected assertions:
+208 output/state, 56 prepare-event and 56 total-event comparisons. Direct/
+helper/setup/coercion/cleanup and three neighbors pass; zero setup/cleanup/
+result-count control mismatches in failed output cases and no sanitizer
+diagnostics. GCC Numeric 28.91s/four suites 30.62s; Clang 135.51s/four 142.62s.
+Final GCC four suites 4/4 30.80s (Numeric 29.10s); Clang ASan/UBSan/float-cast-
+overflow four suites 4/4 139.53s (Numeric 132.57s), without diagnostics.
+Six final contracts 6/6 4.49s; baseline 4.50s; 161 valid fragments.
+Completed README VR/DQ/DV and docs/22/docs/32 retain reverse traceability,
+native/derived boundaries and medium-severity procedural delta/misuse/rollback.
+Build dirs /home/rich/temp/copperfin-sqlprepare-handle-5611-build and
+/home/rich/temp/copperfin-sqlprepare-handle-5611-sanitize remain owned scratch.
+Next: signed/DCO commit, push/PR, Claude first and authorized exact-head Codex
+fallback; fix/verify actionable CI/review and only then resolve conversations.
+Merge only all 11 required green, clean exact-head review and conversations
+resolved; preserve/synchronize/clean owned resources afterwards.
+No owner input or VM/backend/system change. #5611/#6776 unfinished; #6879 retained.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -848,8 +848,10 @@ Owner-directed workstream order before the #6879 assignment was:
    - Completed after those: SQLFOREIGNKEYS handle conversion (PR #7039).
    - Completed after those: SQLCOLUMNS handle conversion (PR #7041); native
      callback/type/connected-index gap #7040 remains separate.
-   - Active: SQLROWCOUNT first-argument Numeric/exact-integer conversion;
-     derived extension requirement and local verification complete; PR gates next.
+   - Completed after those: SQLROWCOUNT handle conversion (PR #7043);
+     native absence is an intentional supported extension boundary.
+   - Active: SQLPREPARE first-argument Numeric/exact-integer conversion;
+     native callback/type/connected-index gap #7045 remains separate.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

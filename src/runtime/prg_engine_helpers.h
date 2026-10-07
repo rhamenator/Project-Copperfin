@@ -211,6 +211,9 @@ std::optional<std::int32_t> checked_sqlcolumns_handle_argument(const PrgValue& v
 // RQ-CF-PRG-SQLROWCOUNT-HANDLE-NUMERIC-001: owner-derived extension
 // policy, finite/truncating signed int32 in both modes, before row-count reads.
 std::optional<std::int32_t> checked_sqlrowcount_handle_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-SQLPREPARE-HANDLE-NUMERIC-001: derived finite/truncating
+// signed int32 in both modes, before prepared-command/state/event mutation.
+std::optional<std::int32_t> checked_sqlprepare_handle_argument(const PrgValue& value, NumericBehavior behavior);
 // RQ-CF-PRG-SET-DATASESSION-NUMERIC-001: checked positive session selector.
 // Existence/lifecycle stay separate; other coercions retain rounding/clamping.
 std::optional<std::int32_t> checked_datasession_selector_argument(const PrgValue& value, NumericBehavior behavior);
