@@ -3278,6 +3278,163 @@ void test_key_ordinal_numeric_behavior_script_rows() {
 }
 
 
+// RQ-CF-PRG-ISLEAPYEAR-NUMERIC-001: independently specified mathematical
+// extension results, not native ISLEAPYEAR observations or wrapped int32 aliases.
+void test_isleapyear_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    struct Case { const char* name; PrgValue argument; std::optional<bool> expected; };
+    const std::vector<Case> cases{
+        {"0", make_number_value(0), true},
+        {"1", make_number_value(1), false},
+        {"4", make_number_value(4), true},
+        {"100", make_number_value(100), false},
+        {"400", make_number_value(400), true},
+        {"1800", make_number_value(1800), false},
+        {"1900", make_number_value(1900), false},
+        {"1996", make_number_value(1996), true},
+        {"2000", make_number_value(2000), true},
+        {"2024", make_number_value(2024), true},
+        {"2026", make_number_value(2026), false},
+        {"2100", make_number_value(2100), false},
+        {"2400", make_number_value(2400), true},
+        {"9996", make_number_value(9996), true},
+        {"9999", make_number_value(9999), false},
+        {"2024.9", make_number_value(2024.9), true},
+        {"1900.9", make_number_value(1900.9), false},
+        {"-400.9", make_number_value(-400.9), true},
+        {"-100.9", make_number_value(-100.9), false},
+        {"0.9", make_number_value(0.9), true},
+        {"1E20", make_number_value(1E20), std::nullopt},
+        {"-1E20", make_number_value(-1E20), std::nullopt},
+        {"1E300", make_number_value(1E300), std::nullopt},
+        {"-1E300", make_number_value(-1E300), std::nullopt},
+        {"infinity", make_number_value(std::numeric_limits<double>::infinity()), std::nullopt},
+        {"negative infinity", make_number_value(-std::numeric_limits<double>::infinity()), std::nullopt},
+        {"NaN", make_number_value(std::numeric_limits<double>::quiet_NaN()), std::nullopt},
+        {"double signed64 upper", make_number_value(9223372036854775808.0), std::nullopt},
+        {"double signed64 lower", make_number_value(-9223372036854775808.0), true},
+        {"below signed64 lower", make_number_value(std::nextafter(-9223372036854775808.0, -std::numeric_limits<double>::infinity())), std::nullopt},
+        {"below signed64 upper", make_number_value(std::nextafter(9223372036854775808.0, 0.0)), true},
+        {"fraction immediately below4", make_number_value(std::nextafter(4.0, 0.0)), false},
+        {"fraction immediately above4", make_number_value(std::nextafter(4.0, 5.0)), true},
+        {"exact signed min", make_int64_value(INT64_MIN), true},
+        {"exact signed max", make_int64_value(INT64_MAX), false},
+        {"exact signed max-3", make_int64_value(INT64_MAX-3), true},
+        {"exact negative century", make_int64_value(-4294967300LL), false},
+        {"exact positive century", make_int64_value(4294967300LL), false},
+        {"exact unsigned signed-max", make_uint64_value(static_cast<std::uint64_t>(INT64_MAX)), false},
+        {"exact unsigned over signed-max", make_uint64_value(static_cast<std::uint64_t>(INT64_MAX)+1), std::nullopt},
+        {"exact unsigned max", make_uint64_value(UINT64_MAX), std::nullopt},
+        {"exact above double precision", make_int64_value(9007199254740993LL), false},
+        {"Character2024.9", make_string_value("2024.9"), true},
+        {"Character huge", make_string_value("1E300"), std::nullopt},
+        {"Logical true", make_boolean_value(true), false},
+        {"Logical false", make_boolean_value(false), true},
+        {"Currency2024.9", make_currency_value(20249000), true},
+        {"Currency1900.9", make_currency_value(19009000), false},
+    };
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const auto settings = [mode](const std::string& option) {
+            return option == "NUMERICBEHAVIOR" ? std::string(mode) : std::string{};
+        };
+        for (const auto& row : cases) {
+            std::optional<bool> actual;
+            int error = 0;
+            std::string message;
+            try {
+                const auto result = evaluate_date_time_function("isleapyear", {row.argument}, settings);
+                expect(result && result->kind == PrgValueKind::boolean,
+                       std::string("ISLEAPYEAR direct type ") + row.name);
+                if (result && result->kind == PrgValueKind::boolean) actual = result->boolean_value;
+            } catch (const PrgCompatibilityError& ex) {
+                error = ex.error_code();
+                message = ex.what();
+            }
+            expect(actual == row.expected && error == (row.expected ? 0 : 11),
+                   std::string("ISLEAPYEAR direct ") + mode + " " + row.name);
+            if (!row.expected) expect(message == "Function argument value, type, or count is invalid.",
+                                      std::string("ISLEAPYEAR direct localized error ") + row.name);
+        }
+    }
+}
+
+// RQ-CF-PRG-ISLEAPYEAR-NUMERIC-001: fresh guarded calls in both modes.
+// Date settings/state, ordinary coercions and global NULL are preservation controls.
+void test_isleapyear_numeric_behavior_script_rows() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_isleapyear_numeric_behavior";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    const std::vector<std::pair<std::string, std::optional<bool>>> cases{
+        {"0", true},
+        {"1", false},
+        {"4", true},
+        {"100", false},
+        {"400", true},
+        {"1800", false},
+        {"1900", false},
+        {"1996", true},
+        {"2000", true},
+        {"2024", true},
+        {"2026", false},
+        {"2100", false},
+        {"2400", true},
+        {"9996", true},
+        {"9999", false},
+        {"2024.9", true},
+        {"1900.9", false},
+        {"-400.9", true},
+        {"-100.9", false},
+        {"0.9", true},
+        {"1E20", std::nullopt},
+        {"-1E20", std::nullopt},
+        {"1E300", std::nullopt},
+        {"-1E300", std::nullopt},
+        {"4294967300", false},
+        {"-4294967300", false},
+        {"9223372036854775808", std::nullopt},
+        {"-9223372036854775808", true},
+        {"'2024.9'", true},
+        {"'1E300'", std::nullopt},
+        {".T.", false},
+        {".F.", true},
+        {"$2024.9", true},
+        {"$1900.9", false},
+        {".NULL.", std::nullopt}, // special global NULL propagation, not an error
+    };
+    for (const char* mode : {"COPPERFIN", "VFP9"}) for (const auto& row : cases) {
+        const std::string setup = std::string("SET NUMERICBEHAVIOR TO ") + mode +
+            "\nSET DATE TO YMD\nSET CENTURY OFF\nSET MARK TO '-'\nSET EPOCH TO 1975\n"
+            "CREATE CURSOR leapguard (marker C(12))\nINSERT INTO leapguard VALUES ('guard')\n";
+        const std::string state = "ALIAS()+':'+ALLTRIM(STR(RECCOUNT()))+':'+ALLTRIM(STR(RECNO()))+':'+"
+            "ALLTRIM(marker)+':'+ALLTRIM(STR(VAL(TRANSFORM(SET('DATASESSION')))))+':'+SET('NUMERICBEHAVIOR')+':'+"
+            "SET('DATE')+':'+SET('CENTURY')+':'+SET('MARK')+':'+ALLTRIM(STR(VAL(TRANSFORM(SET('EPOCH')))))";
+        const std::string unchanged = std::string("leapguard:1:1:guard:1:")+mode+":YMD:OFF:-:1975";
+        const bool is_null = row.first == ".NULL.";
+        const std::string call = "nLeapError=0\ncLeapResult='unassigned'\ncLeapMessage=''\nTRY\n"
+            "uLeapResult=ISLEAPYEAR("+row.first+")\ncLeapResult=IIF(ISNULL(uLeapResult),'X',IIF(uLeapResult,'T','F'))\n"
+            "CATCH TO oEx\nnLeapError=oEx.ErrorNo\ncLeapMessage=oEx.Message\nENDTRY";
+        const std::string result = is_null ? "0:[X]:" : row.second
+            ? std::string("0:[")+(*row.second ? "T" : "F")+"]:" : "11:[unassigned]:";
+        std::vector<Row> rows{
+            {setup,state,"C:"+unchanged},
+            {call,"ALLTRIM(STR(nLeapError))+':['+cLeapResult+']:'+ "+state,"C:"+result+unchanged},
+            {"",state,"C:"+unchanged},
+            {"USE IN leapguard\nSET NUMERICBEHAVIOR TO COPPERFIN\nSET DATE TO MDY\nSET CENTURY ON\n"
+             "SET MARK TO '/'\nSET EPOCH TO 1950",
+             "SET('NUMERICBEHAVIOR')+':'+IIF(USED('leapguard'),'T','F')+':'+ALIAS()","C:COPPERFIN:F:"},
+        };
+        if (!row.second && !is_null) rows.insert(rows.begin()+2,
+            {"","cLeapMessage","C:Function argument value, type, or count is invalid."});
+        std::string expected;
+        for (const auto& entry : rows) expected += entry.expected+"\n";
+        const auto actual = run_rows(dir,rows);
+        expect(actual == expected, std::string("ISLEAPYEAR ")+mode+" ["+row.first+
+               "] expected ["+expected+"], got ["+actual+"]");
+    }
+    fs::remove_all(dir,ignored);
+}
+
 // RQ-CF-PRG-DESCENDING-ORDINAL-NUMERIC-001: independent native/derived boundaries.
 void test_descending_ordinal_direct_numeric_boundaries() {
     using namespace copperfin::runtime;
@@ -5605,6 +5762,8 @@ void test_sql_property_handle_direct_numeric_boundaries(
 }  // namespace
 
 int main() {
+    test_isleapyear_direct_numeric_boundaries();
+    test_isleapyear_numeric_behavior_script_rows();
     test_descending_ordinal_direct_numeric_boundaries();
     test_descending_ordinal_numeric_behavior_script_rows();
     test_key_ordinal_direct_numeric_boundaries();

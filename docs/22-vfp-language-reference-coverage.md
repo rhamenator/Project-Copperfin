@@ -1,5 +1,20 @@
 # VFP Language Reference Coverage
 
+- ISLEAPYEAR Numeric/exact-integer year conversion (#5611/#6776,
+  2026-10-07): RQ-CF-PRG-ISLEAPYEAR-NUMERIC-001 derives a checked signed-64
+  proleptic Gregorian mathematical predicate in both modes from owner extension
+  intent and the public USNO leap-year rule. Finite Numeric truncates; exact
+  integers avoid double rounding; unsafe inputs reject localized catchable 11.
+  Modulo 400 bounds the existing predicate without invented VFP low-32 aliases.
+  Three matching installed VFP9 7423 observations in
+  tests/fixtures/vfp9-isleapyear-numeric-observation/ confirm ten ordinary
+  equivalent February lengths and absence of native extension syntax.
+  96 direct checks and 70 fresh guarded cases/292 PRG rows verify results,
+  errors, state/date settings, ordinary coercions and global NULL.
+  README VR/DQ/DV and docs/32 distinguish derived boundaries, negative baseline
+  evidence and completed development self-review. Date/Julian consumers,
+  Date ranges, routing, type/arity parity and release qualification stay separate.
+
 - DESCENDING index-file-first ordinal Numeric/exact-integer conversion
   (#5611/#6776, 2026-10-07): independent installed VFP9 7423 source/output in
   tests/fixtures/vfp9-descending-ordinal-numeric-observation/ recovers ordinary
