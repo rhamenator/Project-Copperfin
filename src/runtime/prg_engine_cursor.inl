@@ -1613,7 +1613,14 @@
 
         std::map<std::string, std::string> &current_set_state()
         {
-            auto [iterator, _] = set_state_by_session.try_emplace(current_data_session);
+            auto [iterator, inserted] = set_state_by_session.try_emplace(current_data_session);
+            if (inserted)
+            {
+                // RQ-CF-PRG-SET-CENTURY-WINDOW-001: one parsing window,
+                // independent display; fresh private sessions do not inherit it.
+                iterator->second["epoch"] = std::to_string(default_set_century_epoch());
+                iterator->second["century"] = current_data_session == 1 ? "on" : "off";
+            }
             return iterator->second;
         }
 

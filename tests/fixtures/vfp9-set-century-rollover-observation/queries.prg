@@ -1,0 +1,43 @@
+LOCAL lcRows, nCount, nRow, lcExpression, lcResult, loError
+LOCAL ARRAY aRows[1]
+SET TALK OFF
+SET CENTURY TO 20 ROLLOVER 25
+? 'VERSION|' + VERSION()
+TEXT TO lcRows NOSHOW
+SET('CENTURY')
+SET('CENTURY',1)
+SET('CENTURY',2)
+SET('CENTURY',3)
+SET('CENTURY',1.9)
+SET('CENTURY',2.9)
+SET('CENTURY',3.9)
+SET('CENTURY',0.9)
+SET('CENTURY',4)
+SET('CENTURY',-1)
+SET('CENTURY',4294967297)
+SET('CENTURY',-4294967295)
+SET('CENTURY',1E300)
+SET('CENTURY',(1E300 * 1E300))
+SET('CENTURY',$1.9000)
+SET('CENTURY',$2.9000)
+SET('CENTURY','1')
+SET('CENTURY','2')
+SET('CENTURY','3')
+SET('CENTURY','')
+SET('CENTURY','arbitrary')
+SET('CENTURY',.T.)
+SET('CENTURY',.F.)
+SET('CENTURY',.NULL.)
+SET('CENTURY',{},1)
+SET('CENTURY',1,2)
+ENDTEXT
+nCount = ALINES(aRows, lcRows, 1)
+FOR nRow = 1 TO nCount
+    lcExpression = aRows[nRow]
+    TRY
+        lcResult = VARTYPE(EVALUATE(lcExpression)) + ':' + TRANSFORM(EVALUATE(lcExpression))
+    CATCH TO loError
+        lcResult = 'ERR:' + TRANSFORM(loError.ErrorNo)
+    ENDTRY
+    ? 'QUERY|' + lcExpression + '|' + lcResult
+ENDFOR

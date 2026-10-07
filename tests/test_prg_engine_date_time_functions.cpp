@@ -92,6 +92,8 @@ namespace
             "date_default = SET('DATE')\n"
             "century_default = SET('CENTURY')\n"
             "epoch_default = SET('EPOCH')\n"
+            // RQ-CF-PRG-SET-CENTURY-WINDOW-001: native fresh-session default.
+            "expected_native_epoch = ALLTRIM(STR(YEAR(DATE()) - 50, 4, 0))\n"
             "mark_default = SET('MARK')\n"
             "hours_default = SET('HOURS')\n"
             "seconds_set_default = SET('SECONDS')\n"
@@ -222,6 +224,9 @@ namespace
             "ctot_dmy_ambiguous = TTOC(CTOT('01/02/2024 13:45:56'), 1)\n"
             "dtot_dmy_ambiguous = TTOC(DTOT(CTOD('01/02/2024')), 1)\n"
             "ttod_dmy_ambiguous = DTOC(TTOD(CTOT('01/02/2024 13:45:56')), 1)\n"
+            // These test the intentional fixed EPOCH omission reset, not the
+            // newly recovered native CENTURY initial/session window.
+            "SET EPOCH TO\n"
             "ctod_epoch_default_49 = DTOC(CTOD('01/02/49'), 1)\n"
             "ctod_epoch_default_50 = DTOC(CTOD('01/02/50'), 1)\n"
             "SET EPOCH TO 1975\n"
@@ -374,7 +379,8 @@ namespace
         check("datetime_arithmetic_type", "T");
         check("date_default", "MDY");
         check("century_default", "ON");
-        check("epoch_default", "1950");
+        const auto expected_native_epoch = copperfin::runtime::format_value(state.globals.at("expected_native_epoch"));
+        check("epoch_default", expected_native_epoch);
         check("mark_default", "/");
         check("hours_default", "24");
         check("seconds_set_default", "ON");
@@ -515,7 +521,7 @@ namespace
         check("epoch_low_off", "1");
         check("epoch_low_year_off", "1");
         check("epoch_low_display_off", "01/02/01");
-        check("epoch_low_session2", "1950");
+        check("epoch_low_session2", expected_native_epoch);
         check("epoch_low_restored", "1");
         check("epoch_low_year_restored", "1");
         check("epoch_low_reset", "1950");
@@ -555,8 +561,8 @@ namespace
         check("seconds_on", "ON");
         check("ttoc_hours_24_seconds_on", "04/18/2026 13:45:56");
         check("date_session2", "MDY");
-        check("century_session2", "ON");
-        check("epoch_session2", "1950");
+        check("century_session2", "OFF");
+        check("epoch_session2", expected_native_epoch);
         check("mark_session2", "/");
         check("hours_session2", "24");
         check("seconds_session2", "ON");

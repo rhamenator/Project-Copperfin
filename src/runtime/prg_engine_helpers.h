@@ -201,6 +201,15 @@ std::optional<std::int32_t> checked_set_fweek_argument(const PrgValue& value, Nu
 // saturation; missing means localized error 10 before mutation. Ordinary
 // other coercions retain checked rounding/clamping/fallback to 1950.
 std::optional<std::int32_t> checked_set_epoch_argument(const PrgValue& value);
+// RQ-CF-PRG-SET-CENTURY-NUMERIC-001 (#3698): Numeric/Currency/exact
+// integers truncate into the caller's century, rollover or selector domain.
+// VFP9 admits independently observed low-32 aliases; COPPERFIN never wraps.
+std::optional<std::int32_t> checked_set_century_argument(
+    const PrgValue& value, NumericBehavior behavior, int minimum, int maximum);
+// RQ-CF-PRG-SET-CENTURY-WINDOW-001: initial/bare-TO window starts fifty
+// years before the current local year. EPOCH's explicit reset remains 1950.
+int default_set_century_epoch_for_year(int year);
+int default_set_century_epoch();
 // #6050: integer arguments crossing a DECLARE boundary. Ordinary VFP9
 // INTEGER/LONG parameters receive the low 32 bits after truncation toward
 // zero. Exact int64/uint64 values keep their low bits without a floating round

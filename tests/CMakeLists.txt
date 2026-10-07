@@ -6354,6 +6354,11 @@ copperfin_add_test(test_prg_engine_date_time_functions cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
+copperfin_add_test(test_prg_engine_century_rollover cf_xbase_runtime
+    test_prg_engine_century_rollover.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_dbf_datetime_vfp_compat cf_xbase_runtime
     test_dbf_datetime_vfp_compat.cpp
     prg_engine_test_support.cpp

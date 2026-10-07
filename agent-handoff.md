@@ -55,84 +55,88 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-SET EPOCH raw-query prerequisite PR #7022 merged into main as
-aa6304eeb26cc63761a13293abeaa4e90f2842b3 on 2026-10-07 at 01:45:53 UTC,
-closing #7021. All 11 required checks passed at signed/DCO head
-4cf67b422b324bfb696d601903b1c28a3d178d80. Exact-head Codex review completed
-at 01:10:36 UTC with its no-findings thumbs-up and zero review conversations
-(pagination complete). Every completed optional check passed; Windows MSVC
-was still running at merge. Claude was requested first and claude[bot]
-acknowledged with eyes on comment 6028619494; no completed Claude review or
-explicit quota/setup failure was posted. An eyes reaction is not review.
-Sixteen date/time additions preserve year-1 raw readback and 01=>1/00=>100
-consumer windows, independent display, both Numeric modes, session isolation
-and omission. Exact-main baseline failed ten initial checks; final four GCC
-suites passed (9.94s), four contracts passed (0.54s), and post-push date/time
-passed (0.16s). RQ-CF-PRG-SET-EPOCH-QUERY-001 and completed VR/DQ/DV remain in
-docs/32 and docs/set-epoch-query-7021.md. No local sanitizer/VM claim.
-Main is synchronized, the completed query worktree/local/remote branches are
-removed, and its 451 MB build is in recoverable trash. Numeric scratch and
-unrelated files/worktrees are preserved. Live channel re-read empty.
+SET EPOCH Numeric conversion PR #7023 merged into main as
+22f1ac91ba1ba2e4d89dba22699822b5a3310f28 on 2026-10-07 at 02:17:48 UTC.
+All 11 required checks passed at signed/DCO head
+ae6fb69f6844b881f70eda61f6477af13cdcde6a; exact-head Codex review completed
+01:55:21 UTC with its no-findings thumbs-up at 01:55:24 UTC and zero review
+conversations (pagination complete). All completed optional checks passed;
+Linux GCC, macOS Clang and Windows MSVC were still running at merge.
+Claude was requested first (comment 6029189121) and acknowledged with eyes,
+but posted no completed review or explicit quota/setup message. Eyes is not
+review evidence. Owner-authorized Codex fallback supplies the clean review.
+The retained 31 direct, 104 conversion/locale and 96 native-equivalent consumer
+cases pass: GCC five suites 16.56s and Clang ASan/UBSan/float-cast-overflow/leak
+detection five suites 73.77s, no diagnostics. Post-push Numeric passed 11.09s.
+The fresh native output matches all 103 retained lines. Completed VR/DQ/DV and
+CONTRACT/NUMERIC/WINDOW recovered rows are retained in the fixture README,
+docs/22 and docs/32. Raw-query prerequisite #7022/#7021 shipped earlier at
+aa6304eeb; both #5611/#6776 remain open and #3698 remains unfinished.
+Main is synchronized, numeric worktree/local/remote branches removed, both
+owned builds and two generated FXP files moved to recoverable trash.
+Unrelated files/worktrees are preserved; live channel re-read empty.
 
-## Selected EPOCH numeric slice and retained CENTURY follow-on
+## Selected CENTURY/ROLLOVER follow-on
 
-Continue the retained #5611/#6776 slice in
-/home/rich/.codex/worktrees/set-epoch-numeric-5611/Project-Copperfin,
-branch fix/set-epoch-numeric-5611. Original signed/DCO checkpoint
-ce8df4493128814e10074e1566c030503e6e39a6 is retained as historical evidence;
-both local commits were signed/DCO rebased onto merged origin/main aa6304eeb,
-preserving native fixtures and query/numeric requirement entries. Rebased
-checkpoint 1e7ed73d7a8f0d817bdbb9d4038ea66bffc2b54c is signed/DCO verified.
-No numeric push or PR yet. Only EPOCH dispatch/conversion and equivalent consumer verification
-are selected; other setters, general expression evaluation and non-Numeric
-type parity remain separate.
-
-Direct owner steering retains both commands: EPOCH is the intentional simpler
-two-digit-year window-start extension, available in both Numeric modes;
-CENTURY ON/OFF is independent display policy. Missing native syntax is not a
-reason to skip an extension. Full VFP-compatible CENTURY TO ... ROLLOVER,
-query variants/default restoration/session semantics and two-interface
-interoperability remain the next admitted #3698 slice, not complete here.
-The previous #3698 remove-or-extension-mode condition is superseded.
-
-The extension derives checked finite/exact Numeric truncation into 1..9999,
-localized catchable error 10 before mutation/success event, fixed omission
-reset 1950, identical Numeric modes and preserved ordinary other coercions.
-Complete bare decimal range failures cannot become Character fallback.
-Upper windows do not guarantee calendar representability for every expanded
-date. Native EPOCH rejection is provenance, not a Numeric requirement.
-Retained epoch.prg/epoch.out match ten lines in two fresh VFP9 7423 processes;
-century-window.prg/century-window.out match all 103 lines in two fresh
-processes for windows 1950/1975/2025, OFF/ON and eight short years each.
-Exact identities, derivation and medium-severity DQ/DV are in the fixture
-README. No VM/backend/system change or native EPOCH Numeric parity claim.
-
-Implementation and unchanged desired coverage are retained: checked helper,
-EPOCH-only lexical/evaluation dispatch, four locales, 31 direct cases,
-104 conversion/locale PRG cases and 96 native-equivalent consumer cases.
-Original dispatch failed 210 assertions. The initial checked GCC run passed
-four of five suites with 12 year-1 query failures; #7022 is now the merged
-prerequisite, not permission to bless ON. Sanitizer build completed but runtime
-sanitizer tests had not run. Five contracts passed (383.54s). Removal of the
-obsolete unchecked integer-setting lambda occurred after the initial builds.
-
-Re-entry verification completed: rebuilt both targets after removing the
-obsolete lambda and incorporating #7022. Five suites pass GCC 5/5 (16.56s,
-Numeric 9.49s) and Clang ASan/UBSan/float-cast-overflow/leak detection 5/5
-(73.77s, Numeric 42.20s), without diagnostics, serially across builds. All
-unchanged desired cases now pass; no new production dependency emerged.
-Fresh native VFP output exactly matches all 103 retained lines and hashes.
-Localization/changelog/channel contracts pass 4/4 (15.73s), signoff contract
-passes (3.48s); all 150 fragments and channel/diff checks pass. The previously
-completed unchanged full safety-workflow contract is retained, not re-run.
-README VR/DQ/DV is complete, docs/32 CONTRACT/NUMERIC/WINDOW rows are recovered
-from owner/native evidence, docs22 and the single fragment are updated.
-Next action: final contracts, signed/DCO completion commit, push and main PR.
-Request Claude first and require a clean exact-head Claude/Codex review,
-all 11 required checks and all conversations resolved before merge.
-Own builds /home/rich/temp/copperfin-set-epoch-5611-build and
-/home/rich/temp/copperfin-set-epoch-5611-sanitize must remain until numeric
-completion, then be cleaned recoverably. Ignored native FXP is owned scratch.
+Owner-authored OPEN agent-approved #3698 is admitted and selected from exact
+origin/main 22f1ac91ba1ba2e4d89dba22699822b5a3310f28, in
+/home/rich/.codex/worktrees/set-century-rollover-3698/Project-Copperfin,
+branch fix/set-century-rollover-3698, production/tests/docs implemented but
+not yet committed/pushed/PR-opened at this checkpoint.
+Owned evidence folder:
+tests/fixtures/vfp9-set-century-rollover-observation/ contains century.prg/out,
+windows-query.ps1/out, queries.prg/out, README.md and .gitignore (FXP ignored).
+Two fresh Wine processes match all 79 final lines (33 reset macro-command
+rows, seven selectors and private-session round trip; command-list echo is
+retained). Installed VFP9 7423 shows truncation, errors 9/11/syntax, low-32
+aliases and partial century mutation for invalid rollover operands. Bare TO
+restores 19/76 in 2026 while preserving display; omission of ROLLOVER keeps
+the old rollover. Native invalid-input quirks do not waive failure atomicity.
+Two fresh Windows VFP9 COM objects match all 12 final lines: automation initial
+display ON, fresh private Session OFF, both 19/76, selector 3 returns 2049.
+Wine selector 3 returns -1; it is not Windows calendar evidence. Regional
+calendar maximum is separate from current parsing window. Other calendars
+are untested, not implicitly supported by a hardcoded 2049 or -1.
+The original copperfin-vfp9-win11 VM was already running; no boot, installer,
+registry/calendar/disk change was made. It is left running as found. The owned
+guest PS1 was removed after the COM objects quit/released. No credentials
+were printed; process-local PowerShell Bypass did not change system policy.
+Fixture SHA-256: century.prg be47176dc287c6abe17fba1df4ada62e05924ff5d212336ba7affc5e89da758f;
+century.out 2e8ca13d6c2f78274705aaaa2d2a66d0b09b03a8fa1ed21a969453288152b641;
+windows-query.ps1 c3756f1a30d0753f006b4344af47ebca05482815cf2f6836c7b4d65e4eb5e1be;
+windows-query.out 1cc4193915916eccc69e737cf9709643daa262c8ddcc26eaa188d99b9051af29;
+queries.prg de2cd822adbcf6ab9638fab5479c422c0c1c187c0214450160a0172de0d07040;
+queries.out dd3bbd83b5229212ddbf5a5e089376e580460ee5aba4b82de3e57b190574e14a.
+Two fresh query repeats match all 53 lines/26 evaluated typed/arity cases;
+Character selectors reject 11, third argument raises 1230. Before production
+edits the initial 218 runtime cases fail 693 assertions; five existing suites
+pass. Final 222 fresh-session cases, 156 direct-domain checks and eight clock
+boundaries pass in GCC six suites 17.70s and Clang ASan/UBSan/float-cast-overflow
+six suites 77.44s, no diagnostics. Five contracts pass 4.93s; 151 fragments,
+channel integrity and diff checks pass. Complete VR/DQ/DV/self-review and
+WINDOW/NUMERIC/QUERY recovered requirements are in fixture README/docs32.
+Production now separates ON/OFF display, shared EPOCH parsing window and
+Windows calendar observation. Initial/bare CENTURY TO use local-year-minus-50;
+private sessions start OFF. Explicit EPOCH omission remains fixed 1950.
+Both Numeric modes reject atomically, intentionally safer than native partial
+rollover failure; default rejects aliases, explicit VFP9 retains observed ones.
+Builds owned by this slice: /home/rich/temp/copperfin-set-century-3698-build and
+/home/rich/temp/copperfin-set-century-3698-sanitize. No process still running.
+Next: signed/DCO commit, push/open main-base PR, request verified @claude review
+first and exact-head authorized Codex fallback as needed; finish hosted checks/
+review, merge when gates pass, close #3698 only with full retained evidence,
+then synchronize/clean only this slice and select next admitted Numeric work.
+Display policy stays independent of parsing. Direct owner steering retains
+SET EPOCH in both Numeric modes and supersedes #3698's old remove-or-mode-gate
+condition; absence of native syntax is not a reason to skip an extension.
+EPOCH truncation/domain/error/explicit omission reset to 1950 is shipped and
+must remain. The old fixed initial session window is not its own requirement;
+native CENTURY default/session evidence must govern the follow-on policy.
+Do not mark #3698 complete without query/default/session/consumer and
+failure-atomic boundary evidence. Other settings, general expression
+evaluation and unrelated numeric sites are not selected.
+Request Claude review first on a new PR, accept a clean exact-head authorized
+Codex fallback, require all 11 checks and resolve all review conversations.
 Automation copperfin-implementation-loop-daybreak-blue remains ACTIVE with
 the existing schedule/thread/quiet-notification policy.
 
