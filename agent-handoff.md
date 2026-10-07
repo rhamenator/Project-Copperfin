@@ -53,98 +53,83 @@ both EPOCH and CENTURY (see selected work below), without authorizing unrelated
 production work. Reconfirm review availability/routing
 after October rather than assuming quota restoration.
 
-## Previous shipped slice
-
-SET EPOCH Numeric conversion PR #7023 merged into main as
-22f1ac91ba1ba2e4d89dba22699822b5a3310f28 on 2026-10-07 at 02:17:48 UTC.
-All 11 required checks passed at signed/DCO head
-ae6fb69f6844b881f70eda61f6477af13cdcde6a; exact-head Codex review completed
-01:55:21 UTC with its no-findings thumbs-up at 01:55:24 UTC and zero review
-conversations (pagination complete). All completed optional checks passed;
-Linux GCC, macOS Clang and Windows MSVC were still running at merge.
-Claude was requested first (comment 6029189121) and acknowledged with eyes,
-but posted no completed review or explicit quota/setup message. Eyes is not
-review evidence. Owner-authorized Codex fallback supplies the clean review.
-The retained 31 direct, 104 conversion/locale and 96 native-equivalent consumer
-cases pass: GCC five suites 16.56s and Clang ASan/UBSan/float-cast-overflow/leak
-detection five suites 73.77s, no diagnostics. Post-push Numeric passed 11.09s.
-The fresh native output matches all 103 retained lines. Completed VR/DQ/DV and
-CONTRACT/NUMERIC/WINDOW recovered rows are retained in the fixture README,
-docs/22 and docs/32. Raw-query prerequisite #7022/#7021 shipped earlier at
-aa6304eeb; both #5611/#6776 remain open and #3698 remains unfinished.
-Main is synchronized, numeric worktree/local/remote branches removed, both
-owned builds and two generated FXP files moved to recoverable trash.
-Unrelated files/worktrees are preserved; live channel re-read empty.
-
 ## Last shipped slice
 
-CENTURY/ROLLOVER PR #7024 merged on 2026-10-07 at 03:45:39 UTC as
-4a65f1d7cf7eb8dc6a616765da561e97d1610d41 and closed #3698. Signed/DCO head
-0d911525a796376a517ac6db54409cdecd0fa1f4 passed all 11 required checks.
-Exact-head Codex review completed 03:09:40 UTC with its no-findings thumbs-up
-at 03:09:43; no review conversations (100-item pagination complete).
-Claude was requested first (6030054781) and acknowledged with eyes; no
-completed Claude review or explicit quota/setup failure observed. Every
-completed optional check passed; Windows Native Validation MSVC was still
-running at merge. Its first completed run subsequently timed out only in
-unrelated test_dbf_table (191.48s) and test_visual_asset_editor (180.28s),
-without assertion output; CENTURY and Numeric suites passed. Scoped same-head
-Windows job retry was requested for run 37565147703, job 112611030806;
-retry evidence remains pending, not a green optional-check claim.
-Native source/output identities, intentional failure
-atomicity and extension distinctions, 693 baseline failures and completed
-VR/DQ/DV/self-review remain in
-tests/fixtures/vfp9-set-century-rollover-observation/README.md and docs/32.
-Final 222 fresh-session cases, 156 direct checks and eight clock boundaries
-pass GCC six suites 17.70s and Clang sanitizers six suites 77.44s; five
-contracts pass 4.93s. Shared EPOCH parsing state, independent CENTURY display,
-typed queries and Windows calendar observation are implemented. Native
-initial/bare CENTURY TO uses local-year-minus-50; explicit EPOCH omission
-remains fixed 1950. Both modes reject invalid CENTURY operands atomically.
-Original Windows VM was left running as found; no system/calendar changes.
-Main is synchronized. Owned slice WT/local/remote branches removed; both
-builds and generated FXP files moved to recoverable trash. Unrelated files
-and worktrees preserved; live channel re-read empty. Prior canonical handoff
-is retained in stash 47d0d12e179120b527e64b393fabb4e1688ec5ed.
-#5611/#6776 remain open.
+SQLCANCEL Numeric/exact-integer handle conversion PR #7026 merged into main
+on 2026-10-07 at 04:45:45 UTC as
+98660b353b5f1dc68938e572ea301e98d6a2b894. Signed/DCO head
+3ee70fad360be4391fe62901789d0b0a78b5781c passed all 11 required checks.
+Exact-head Codex review completed 04:03:15 UTC with its no-findings thumbs-up
+04:03:19; zero review conversations (pagination complete). Claude requested
+first (6030645546), eyes only; no explicit quota/setup failure observed.
+All completed optional checks passed; Windows MSVC still running at merge.
+134 direct checks and 104 fresh-session cases/312 PRG rows pass; GCC four
+suites 11.78s, Clang ASan/UBSan/float-cast-overflow/default-leak four suites
+51.77s without diagnostics. Corrected old-dispatch baseline fails 66 selected
+assertions; Logical-formatting-confounded initial run is discarded.
+Post-push Numeric passes 10.18s and six contracts pass 4.44s. Complete native
+48-call/50-line clean-room observations and VR/DQ/DV/self-review are retained
+in tests/fixtures/vfp9-sqlcancel-handle-numeric-observation/README.md and
+docs/32. Both modes use derived safe int32 policy because absent native errors
+cannot distinguish converted indices; #7025 callback/type parity and native
+connected-index recovery stay separate. No VM/backend/system change.
+Main synchronized; completed WT/local/remote branches removed. Both owned
+builds and generated FXP moved to recoverable trash. Unrelated files/WTs
+preserved, live channel re-read empty. Prior canonical handoff is retained in
+stash f3005b494deefd90c81a1a8483b5f39c962d528b.
+
+EPOCH #7023 and CENTURY/ROLLOVER #7024 shipped earlier; #3698 is closed.
+The optional #7024 Windows run 37565147703 first timed out only in
+test_dbf_table/test_visual_asset_editor without assertion output; CENTURY and
+Numeric passed. Same-head retry job 112624284280 started 04:00:20 UTC at
+0d911525a796376a517ac6db54409cdecd0fa1f4 and remains in progress at this
+heartbeat, not clean evidence. No unrelated production scope admitted.
+#5611/#6776 remain open; #6879 retained next workstream is uncancelled.
 
 ## Selected next bounded slice
 
-SQLCANCEL first-argument Numeric/exact-integer handle conversion under admitted
-owner-authored OPEN agent-approved #5611/#6776 is selected from exact main
-4a65f1d7cf7eb8dc6a616765da561e97d1610d41. Only its unchecked llround/int
-expression-dispatch site is in scope. Recover independently in a fresh,
-connection-free installed-VFP9 probe; do not infer SQLGETPROP or
-SQLDISCONNECT conversion without evidence. Backend cancellation semantics,
-absent/default handles, type/arity parity and other SQL callers stay separate.
-Dedicated WT /home/rich/.codex/worktrees/sqlcancel-handle-numeric-5611/Project-Copperfin
-on fix/sqlcancel-handle-numeric-5611 is active, uncommitted; no PR yet.
-Three fresh installed-VFP9 Wine probes match all 50 lines/48 calls.
-All Numeric absent handles raise 1466, so converted indices/aliases remain
-unobserved; use the derived checked/truncating int32 policy in both modes
-rather than infer SQLGETPROP aliases. Native other types raise 11; #7025
-records separate callback/type gaps against exact main without admission.
-Source/output SHA-256:
-8023d557f4cb983b1baaa280ec9e07e63a8154a921bcaab82489e48f2395e279 /
-8b90a384f4cabc6dfe743693bb4a05f42246b050a628b7e70b2cb1bead81c851.
-134 direct and 104 fresh-session/312 PRG rows cover independent admission,
-state/action/cancel flags, exact success events, diagnostics, reset/cleanup.
-Corrected sanitizer baseline fails 66 new assertions, numeric 47.30s/full
-54.26s; three neighbors/direct helpers/preserved controls pass. First
-formatting-confounded run discarded. Five contracts pass 4.72s, 152 fragments.
-Checked helper and SQLCANCEL-only dispatch implemented. Completed final GCC
-four suites pass 4/4 in 11.78s (numeric 10.09s); Clang ASan/UBSan/
-float-cast-overflow/default leak detection passes 4/4 in 51.77s (numeric
-44.94s), no diagnostics. Tests were serial across directories. Completed
-README VR/DQ/DV records and locale-install contract (1/1, 0.06s) retained.
-Normal overlapping build was interrupted/recovered; no GCC baseline claim.
-Owned builds: /home/rich/temp/copperfin-sqlcancel-handle-5611-build and
-/home/rich/temp/copperfin-sqlcancel-handle-5611-sanitize.
-Next: signed/DCO commit, push/open PR and review/check gates. No VM/backend
-used. Track the same-head optional Windows retry for previous PR #7024;
-no unrelated production changes are admitted by its unexplained timeouts.
-Request Claude first and require a clean exact-head authorized review plus
-all 11 green checks and resolved conversations before merging.
+SQLCOMMIT first-argument Numeric/exact-integer handle conversion under the
+freshly admitted owner-authored OPEN agent-approved #5611/#6776, from exact
+main 98660b353b5f1dc68938e572ea301e98d6a2b894.
+Only SQLCOMMIT's unchecked llround/int expression-dispatch site is selected.
+SQLROLLBACK, transaction/backend semantics, absent/default-handle/type/arity
+parity and other SQL callers stay separate. Independently probe installed
+VFP9 before choosing per-mode conversion; identical absent-handle errors do
+not prove converted indices or SQLGETPROP aliases.
+Dedicated WT /home/rich/.codex/worktrees/sqlcommit-handle-numeric-5611/Project-Copperfin
+on fix/sqlcommit-handle-numeric-5611 starts from origin/main; uncommitted,
+no PR yet. Complete clean-room 48-call/50-line fixture retained; four fresh
+Wine outputs match including final serial cross-check. Numeric absent handles
+all raise 1466; Currency/Logical/NULL/Character controls raise 11. Converted
+indices remain unobserved, so checked finite/truncating int32 policy in both
+modes is derived; no speculative SQLGETPROP aliases. Separate parity/native
+connected-index recovery issue #7028 filed against exact current main.
+Source SHA-256 8eb4497aed8cbe730b9541fb213c00e90db108da345cfbadee469326a1f59ad4;
+output 05dd09626eaa6bf5aa8e30303e13fc9a423ed85cf5c807117944efe0d79bac4f.
+Checked helper, 134 direct checks and 104 synthetic cases/320 PRG rows added.
+Tests start with dirty/cancelled handle 1 and compare setup, status/error,
+connection, dirty/cancel/action state, successful commit events, messages,
+mode reset and disconnect cleanup. Old dispatch baseline fails exactly
+66 new conversion/state/event/message assertions in GCC Debug (Numeric
+10.25s; four suites 12.06s) and Clang ASan/UBSan/float-cast-overflow (Numeric
+48.21s; four suites 55.43s). Three neighbors/direct helper/preserved controls
+pass; no sanitizer diagnostic. Baseline evidence retained in fixture README.
+SQLCOMMIT-only checked dispatch now wired; other SQL callers untouched.
+Final GCC four suites pass 4/4 in 12.34s (Numeric 10.55s); Clang ASan/
+UBSan/float-cast-overflow/default leak detection passes 4/4 in 54.19s
+(Numeric 47.05s), without diagnostics. Runtime tests serial across dirs;
+same baseline expectations unchanged. Native source/output hashes rechecked.
+Completed README VR/DQ/DV/self-review and docs/22/32 evidence retained.
+Six locale/signoff/changelog/channel/isolation contracts pass 6/6 (4.45s);
+153 fragments valid; initial undated fragment rejected and corrected locally.
+Owned builds /home/rich/temp/copperfin-sqlcommit-handle-5611-build and
+/home/rich/temp/copperfin-sqlcommit-handle-5611-sanitize retained for PR checks;
+no active build/test process or overlapping build per directory.
+Next: signed/DCO commit, push/open PR, Claude-first request and review/check gates.
+Do not start VM/backend connections.
+Request Claude first; clean exact-head authorized review, all 11 green checks
+and resolved conversations remain merge gates. Track both optional Windows
+runs for #7024/#7026 and act on actionable failures without expanding scope.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -850,9 +835,13 @@ Owner-directed workstream order before the #6879 assignment was:
      conversion (PR #7009); other-type admission #7008 remains separate.
    - Completed after those: SET FWEEK TO Numeric/exact-integer setting
      conversion (PR #7011); other-type admission #7010 remains separate.
-   - Selected next: SET EPOCH TO Numeric/exact-integer setting conversion;
-     recover its native contract independently. Other settings/evaluation/
-     non-Numeric parity remain separate.
+   - Completed after those: SET EPOCH query prerequisite (#7022/#7021) and
+     Numeric/exact-integer conversion (PR #7023), then admitted #3698
+     CENTURY/ROLLOVER (PR #7024). Both share parsing, independent display.
+   - Completed after those: SQLCANCEL handle conversion (PR #7026); native
+     connected-index and callback/type gaps #7025 remain separate.
+   - Selected next: SQLCOMMIT first-argument Numeric/exact-integer handle
+     conversion; independently recover native evidence, retain derived gaps.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

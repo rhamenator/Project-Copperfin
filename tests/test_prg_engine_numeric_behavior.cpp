@@ -1553,7 +1553,8 @@ std::vector<Row> build_rows() {
 }
 
 std::string run_rows(const fs::path &dir, const std::vector<Row> &rows,
-                     const std::optional<std::size_t> expected_cancel_events = std::nullopt) {
+                     const std::optional<std::size_t> expected_cancel_events = std::nullopt,
+                     const std::optional<std::size_t> expected_commit_events = std::nullopt) {
     std::string body = "LOCAL cOut, oEx, x\ncOut = ''\n";
     for (const Row &row : rows) {
         body += "TRY\n";
@@ -1583,6 +1584,15 @@ std::string run_rows(const fs::path &dir, const std::vector<Row> &rows,
         expect(cancel_events == *expected_cancel_events,
                "SQLCANCEL successful event count expected " + std::to_string(*expected_cancel_events) +
                ", got " + std::to_string(cancel_events));
+    }
+    if (expected_commit_events.has_value()) {
+        std::size_t commit_events = 0;
+        for (const auto& event : state.events) {
+            if (event.category == "sql.commit") ++commit_events;
+        }
+        expect(commit_events == *expected_commit_events,
+               "SQLCOMMIT successful event count expected " + std::to_string(*expected_commit_events) +
+               ", got " + std::to_string(commit_events));
     }
     return read_text(dir / "results.txt");
 }
@@ -1688,6 +1698,68 @@ void test_sqlcancel_numeric_behavior_script_rows() {
     for (const char* mode : {"COPPERFIN", "VFP9"}) {
         for (const auto& row : kSqlGetPropHandleCases) {
             // Deliberately no speculative VFP9 low-32 aliases.
+            check(mode, row.argument, row.copperfin);
+        }
+        for (const auto& control : std::vector<std::pair<std::string, std::int32_t>>{
+                 {"$0.5", 1}, {"$1.5", 2}, {".T.", 1}, {".F.", 0},
+                 {".NULL.", 0}, {"'0'", 0}, {"'1'", 1}}) {
+            check(mode, control.first, control.second);
+        }
+        check(mode, "1E300", std::nullopt, "1" + std::string(300U, '0'));
+        check(mode, "-1E300", std::nullopt, "-1" + std::string(300U, '0'));
+        check(mode, "EXP(1000)", std::nullopt, "inf");
+        check(mode, "-EXP(1000)", std::nullopt, "-inf");
+    }
+    fs::remove_all(dir, ignored);
+}
+
+// RQ-CF-PRG-SQLCOMMIT-HANDLE-NUMERIC-001: derive checked admission rather
+// than infer native converted indices from identical absent-handle errors.
+// Dirty transaction + cancel state expose an unintended commit on handle 1.
+void test_sqlcommit_numeric_behavior_script_rows() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_sqlcommit_numeric_behavior";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    const auto check = [&](const char* mode, const std::string& argument,
+                           const std::optional<std::int32_t> handle,
+                           const std::optional<std::string>& diagnostic = std::nullopt) {
+        const bool committed = handle == 1;
+        const std::string setup = std::string("SET NUMERICBEHAVIOR TO ") + mode +
+            "\nnSqlCommit = SQLCONNECT('dsn=Northwind')\n"
+            "nCommitWrite = SQLEXEC(nSqlCommit, 'insert into customers values (1)')\n"
+            "nCommitCancel = SQLCANCEL(nSqlCommit)";
+        const std::string call =
+            "nCommitError = 0\nnCommitStatus = 0\ncCommitMessage = ''\n"
+            "TRY\nnCommitStatus = SQLCOMMIT(" + argument + ")\n"
+            "CATCH TO oEx\nnCommitError = oEx.ErrorNo\ncCommitMessage = oEx.Message\nENDTRY";
+        const std::string state =
+            "ALLTRIM(STR(SQLGETPROP(nSqlCommit, 'ConnectHandle'))) + ':' + "
+            "TRANSFORM(SQLGETPROP(nSqlCommit, 'LastSqlAction')) + ':' + "
+            "IIF(SQLGETPROP(nSqlCommit, 'TransactionDirty'), 'T', 'F') + ':' + "
+            "IIF(SQLGETPROP(nSqlCommit, 'CancelRequested'), 'T', 'F')";
+        const std::string expression = "ALLTRIM(STR(nCommitError)) + ':' + ALLTRIM(STR(nCommitStatus)) + ':' + " + state;
+        const std::string expected = !handle.has_value() ? "C:1466:0:1:cancel:T:T" :
+            committed ? "C:0:1:1:commit:F:F" : "C:0:-1:1:cancel:T:T";
+        std::vector<Row> rows{
+            {setup, "ALLTRIM(STR(nCommitWrite)) + ':' + ALLTRIM(STR(nCommitCancel)) + ':' + " + state,
+             "C:1:1:1:cancel:T:T"},
+            {call, expression, expected},
+        };
+        if (diagnostic.has_value()) rows.push_back({"", "cCommitMessage", "C:SQL handle not found: " + *diagnostic});
+        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN",
+            "ALLTRIM(STR(SQLDISCONNECT(nSqlCommit))) + ':' + "
+            "ALLTRIM(STR(SQLGETPROP(nSqlCommit, 'ConnectHandle'))) + ':' + SET('NUMERICBEHAVIOR')",
+            "C:1:-1:COPPERFIN"});
+        const std::string output = run_rows(dir, rows, std::nullopt, committed ? 1U : 0U);
+        std::string expected_output;
+        for (const auto& row : rows) expected_output += row.expected + "\n";
+        expect(output == expected_output, std::string("SQLCOMMIT ") + mode + " [" + argument +
+               "] expected [" + expected_output + "], got [" + output + "]");
+    };
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        for (const auto& row : kSqlGetPropHandleCases) {
+            // Checked expectation column; native aliases remain unobserved.
             check(mode, row.argument, row.copperfin);
         }
         for (const auto& control : std::vector<std::pair<std::string, std::int32_t>>{
@@ -3763,9 +3835,11 @@ int main() {
     test_sql_property_handle_direct_numeric_boundaries("SQLSETPROP", copperfin::runtime::checked_sqlsetprop_handle_argument);
     test_sql_property_handle_direct_numeric_boundaries("SQLDISCONNECT", copperfin::runtime::checked_sqldisconnect_handle_argument);
     test_sql_property_handle_direct_numeric_boundaries("SQLCANCEL", copperfin::runtime::checked_sqlcancel_handle_argument, false);
+    test_sql_property_handle_direct_numeric_boundaries("SQLCOMMIT", copperfin::runtime::checked_sqlcommit_handle_argument, false);
     test_numeric_behavior_script_rows();
     test_sqldisconnect_numeric_behavior_script_rows();
     test_sqlcancel_numeric_behavior_script_rows();
+    test_sqlcommit_numeric_behavior_script_rows();
     test_datasession_selector_direct_numeric_boundaries();
     test_datasession_numeric_behavior_script_rows();
     test_set_decimals_direct_numeric_boundaries();
