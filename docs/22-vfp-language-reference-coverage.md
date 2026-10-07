@@ -1,5 +1,19 @@
 # VFP Language Reference Coverage
 
+- SQLCANCEL first-argument Numeric/exact-integer conversion (2026-10-07,
+  #5611/#6776): checked finite signed-int32 truncation in both modes, with
+  localized catchable 1466 before cancellation/state/events and safe original
+  Numeric diagnostics. Exact integers avoid double rounding. The complete
+  48-call installed-VFP9 fixture in
+  `tests/fixtures/vfp9-sqlcancel-handle-numeric-observation/` recovers absent/
+  type errors but cannot distinguish converted indices; no speculative
+  VFP9 aliases or native connected-cancellation parity are claimed.
+  RQ-CF-PRG-SQLCANCEL-HANDLE-NUMERIC-001 maps the derived policy in docs/32.
+  Direct and fresh synthetic-session tests verify cancellation flags, action
+  metadata, successful events, rejection preservation, mode reset and cleanup.
+  Callback/type parity #7025 and shared formatter #6997 remain separate.
+  No external connection, VM/system change or argument-sized allocation added.
+
 - SET CENTURY TO/ROLLOVER (#3698, 2026-10-07): retain SET EPOCH as the
   simpler Copperfin extension and give both interfaces one parsing window,
   independent of ON/OFF display. Native-backed syntax, typed queries 1/2/3,
