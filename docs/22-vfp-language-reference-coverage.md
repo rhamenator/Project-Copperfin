@@ -1,5 +1,20 @@
 # VFP Language Reference Coverage
 
+- SQLEXEC first-argument Numeric/exact-integer conversion (#5611/#6776,
+  2026-10-07): derived finite signed-int32 truncation in both modes, catchable
+  localized 1466 before execution/cursor/count/cancel/action mutation or events,
+  exact integers without float rounding and safe original Numeric diagnostics.
+  Complete installed-VFP9 48-call/53-line fixture in
+  `tests/fixtures/vfp9-sqlexec-handle-numeric-observation/` records absent/type
+  errors, first message and unchanged cursor/session, not connected indices.
+  RQ-CF-PRG-SQLEXEC-HANDLE-NUMERIC-001 maps the derived policy in docs/32.
+  Direct and canceled dirty synthetic cases independently compare DML/SELECT/
+  prepared fallback/empty-command controls, status/error/message, prepared
+  command, count/connection/cancel/action/alias, guard/prior/result cursors,
+  exact exec/SQL events and reset/cleanup. Callback/type/arity/backend/AERROR
+  and connected-index parity remain separate #7047; CALLFN/other sites and
+  formatter #6997 are unchanged.
+
 - SQLPREPARE first-argument Numeric/exact-integer conversion (#5611/#6776,
   2026-10-07): derived finite signed-int32 truncation in both modes, localized
   catchable 1466 before prepared-command/cancel/action mutation and events,

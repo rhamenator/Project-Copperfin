@@ -1,0 +1,53 @@
+VERSION|Visual FoxPro 09.00.0000.7423 for Windows
+CONTROL|ERR1466
+SQLEXEC(0, 'select * from customers', 'native_exec')|ERR1466
+FIRST_ERROR|Connection handle is invalid.
+SQLEXEC(1, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(2, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(-1, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(0.49, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(0.5, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(0.9, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(1.49, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(1.5, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(1.9, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(-0.49, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(-0.5, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(-0.9, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(-1.1, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(2147483647, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(2147483648, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(-2147483648, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(-2147483649, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(4294967295, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(4294967296, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(4294967297, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(4294967298, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(-4294967296, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(-4294967295, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(-4294967294, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(4294967296.9, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(-4294967295.9, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(1E20, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(-1E20, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(1E300, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(-1E300, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(EXP(1000), 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(-EXP(1000), 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(9007199254740992, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(32767, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(32768, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(65535, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(65536, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(65537, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(-65535, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC(-65536, 'select * from customers', 'native_exec')|ERR1466
+SQLEXEC($0.5, 'select * from customers', 'native_exec')|ERR11
+SQLEXEC($1.5, 'select * from customers', 'native_exec')|ERR11
+SQLEXEC(.T., 'select * from customers', 'native_exec')|ERR11
+SQLEXEC(.F., 'select * from customers', 'native_exec')|ERR11
+SQLEXEC(.NULL., 'select * from customers', 'native_exec')|ERR11
+SQLEXEC('0', 'select * from customers', 'native_exec')|ERR11
+SQLEXEC('1', 'select * from customers', 'native_exec')|ERR11
+SESSION|1
+CURSOR|.F.
