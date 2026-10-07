@@ -96,18 +96,41 @@ retain fresh-session default, session isolation/restoration and related SETs.
 VR-5611-SET-EPOCH-WINDOW-001: two fresh final native runs match all 103 lines.
 Window source SHA-256: 65e3968a5647ba88f3b3fec8d99c15f0ecce43755517a94bed00433bdf7d3d25.
 Window output SHA-256: 6e4c632bf6f64caafc1083824e6a53213737c3a5664bfae3d6969bc6060ac174.
-VR-5611-SET-EPOCH-NUMERIC-001: original dispatch fails 210 assertions; initial
-checked GCC run passes four of five suites but reports 12 year-1 readback
-failures. Separate current-main issue #7021 records the pre-existing raw-query
-normalization of EPOCH 1 to ON, which also makes its parser consumer fall back
-to 1950. Do not bless ON as the extension requirement or claim this slice is
-complete. The obsolete, now-uncalled unchecked integer-setting lambda was
-removed after that run; the re-entry validation must rebuild.
+VR-5611-SET-EPOCH-NUMERIC-001: original dispatch fails 210 assertions. The
+initial checked GCC run passes four of five suites but exposes 12 year-1
+readback failures caused by the pre-existing EPOCH 1=>ON normalization and
+1950 consumer fallback. The separate prerequisite PR #7022 closed #7021 and
+merged as aa6304eeb26cc63761a13293abeaa4e90f2842b3. Both retained local commits
+were signed/DCO rebased onto that main revision without weakening assertions.
+Both builds were rebuilt after removing the obsolete unchecked integer-setting
+lambda and incorporating the raw-query fix.
 
-Re-entry condition: merge the separate bounded #3698-derived #7021 raw-query
-prerequisite, incorporate origin/main here, then rerun the unchanged desired
-regressions plus normal/sanitizer and contracts. Verification is in progress;
-this checkpoint is not a passing sanitizer, exact-head review or merge claim.
+Final verification on 2026-10-06 America/Detroit (2026-10-07 UTC):
+
+- GCC Debug five focused suites pass 5/5 (16.56s; Numeric 9.49s).
+- Clang ASan/UBSan/float-cast-overflow with halt-on-error and leak detection
+  passes the same five suites 5/5 (73.77s; Numeric 42.20s), without diagnostics.
+- Relations, database lifecycle, Numeric, runtime-surface functions and
+  date/time suites run serially across build directories to avoid shared
+  temporary fixture collisions.
+- The 31 direct cases, 104 conversion/locale PRG cases and 96 equivalent-window
+  PRG cases pass, including year 1, exact integers, range/lexical rejection,
+  both modes, preserved setting/display and success-event suppression.
+- Localization/changelog/channel contracts pass 4/4 (15.73s); contributor
+  signoff contract passes separately (3.48s). All 150 fragments validate and
+  channel integrity/diff checks pass. The unchanged full safety-workflow
+  contract previously passed in the retained checkpoint; it is not a new run.
+- A fresh installed-VFP9 window probe exactly matches all 103 retained lines
+  and unchanged source/output SHA-256 identities, supplementing the two
+  original matching runs.
+
+Reproduction uses owned normal and sanitizer build paths recorded in
+agent-handoff.md. Run ctest with the anchored expression
+`^test_prg_engine_(numeric_behavior|relations|database_lifecycle|runtime_surface_functions|date_time_functions)$`
+and -j1; sanitizer configuration enables address, undefined and
+float-cast-overflow instrumentation. These are focused local results, not
+installed-product or independent-human evidence. Exact-head hosted checks and
+review remain PR merge gates; full CENTURY/ROLLOVER is still the next slice.
 
 ## Documentation assurance and residual scope
 
@@ -118,10 +141,16 @@ choices from native observations, explaining failure atomicity and independent
 display, and retaining the unfinished CENTURY/ROLLOVER slice.
 
 DV-5611-SET-EPOCH-CONTRACT-001: maintainer-authorized agent self-review on
-2026-10-06 compared the two complete native window outputs and hashes, retained
-the native rejection provenance, checked the desired regression failures
-against the scoped query callback and recorded #7021 against exact main.
-Numeric completion remains gated on its separate prerequisite and revalidation.
+2026-10-06 compared complete native outputs and hashes, retained rejection
+provenance, distinguished owner-derived extension choices from native evidence
+and confirmed that #3698 CENTURY/ROLLOVER is not claimed complete.
+DV-5611-SET-EPOCH-NUMERIC-001: the same self-review checked the original
+210 failures, dependency isolation/merged prerequisite and unchanged desired
+tests; rebuilt both targets and inspected passing normal/sanitizer results,
+all four caught localized messages, retained state/display and success-event
+suppression. It verified reverse requirement/code/test links and the
+walkthrough below against the passing PRG cases. This is completed development
+documentation verification, not independent-human review.
 
 Procedural delta: remove the owner-policy pause after the direct instruction;
 replace unchecked round/narrow/clamp of Numeric operands with a checked

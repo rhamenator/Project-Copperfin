@@ -80,9 +80,10 @@ Continue the retained #5611/#6776 slice in
 /home/rich/.codex/worktrees/set-epoch-numeric-5611/Project-Copperfin,
 branch fix/set-epoch-numeric-5611. Original signed/DCO checkpoint
 ce8df4493128814e10074e1566c030503e6e39a6 is retained as historical evidence;
-rebase both local commits onto merged origin/main aa6304eeb, preserving the
-native fixtures and both query/numeric requirement entries. No numeric push
-or PR yet. Only EPOCH dispatch/conversion and equivalent consumer verification
+both local commits were signed/DCO rebased onto merged origin/main aa6304eeb,
+preserving native fixtures and query/numeric requirement entries. Rebased
+checkpoint 1e7ed73d7a8f0d817bdbb9d4038ea66bffc2b54c is signed/DCO verified.
+No numeric push or PR yet. Only EPOCH dispatch/conversion and equivalent consumer verification
 are selected; other setters, general expression evaluation and non-Numeric
 type parity remain separate.
 
@@ -115,10 +116,18 @@ prerequisite, not permission to bless ON. Sanitizer build completed but runtime
 sanitizer tests had not run. Five contracts passed (383.54s). Removal of the
 obsolete unchecked integer-setting lambda occurred after the initial builds.
 
-Next action: finish the signed rebase, rebuild and rerun five focused suites
-normally and under Clang ASan/UBSan/float-cast-overflow serially across builds;
-rerun applicable contracts, complete actual VR/DQ/DV and docs/32 Numeric/window
-entries, update the single existing fragment, then signed/DCO push and main PR.
+Re-entry verification completed: rebuilt both targets after removing the
+obsolete lambda and incorporating #7022. Five suites pass GCC 5/5 (16.56s,
+Numeric 9.49s) and Clang ASan/UBSan/float-cast-overflow/leak detection 5/5
+(73.77s, Numeric 42.20s), without diagnostics, serially across builds. All
+unchanged desired cases now pass; no new production dependency emerged.
+Fresh native VFP output exactly matches all 103 retained lines and hashes.
+Localization/changelog/channel contracts pass 4/4 (15.73s), signoff contract
+passes (3.48s); all 150 fragments and channel/diff checks pass. The previously
+completed unchanged full safety-workflow contract is retained, not re-run.
+README VR/DQ/DV is complete, docs/32 CONTRACT/NUMERIC/WINDOW rows are recovered
+from owner/native evidence, docs22 and the single fragment are updated.
+Next action: final contracts, signed/DCO completion commit, push and main PR.
 Request Claude first and require a clean exact-head Claude/Codex review,
 all 11 required checks and all conversations resolved before merge.
 Own builds /home/rich/temp/copperfin-set-epoch-5611-build and
