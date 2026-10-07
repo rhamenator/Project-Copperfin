@@ -1,5 +1,20 @@
 # VFP Language Reference Coverage
 
+- SQLCOLUMNS first-argument Numeric/exact-integer conversion (#5611/#6776,
+  2026-10-07): derived finite signed-int32 truncation in both modes, localized
+  catchable 1466 before metadata callbacks/cursors/state/success events and
+  safe original Numeric diagnostics. Exact integers avoid double rounding.
+  Complete 48-call/53-line installed-VFP9 fixture in
+  `tests/fixtures/vfp9-sqlcolumns-handle-numeric-observation/` recovers
+  absent/type errors, first message and cursor/session state, not connected
+  indices or aliases. RQ-CF-PRG-SQLCOLUMNS-HANDLE-NUMERIC-001 maps the derived
+  policy in docs/32. Direct and fresh-session FOXPRO/NATIVE tests compare
+  cursor shape/payload, preserved guard, connection/dirty/cancel/action state,
+  successful column/cursor events, catchability/diagnostics and reset/cleanup.
+  Backend metadata/format results, cursor allocation, type/arity, absent
+  callback results, other SQL callers and formatter #6997 remain separate.
+  #7040 retains native admission parity and connected-index recovery.
+
 - SQLFOREIGNKEYS first-argument Numeric/exact-integer conversion (#5611/#6776,
   2026-10-07): owner-derived extension policy, finite signed-int32 truncation
   in both modes, localized catchable 1466 before metadata/cursor/state/events

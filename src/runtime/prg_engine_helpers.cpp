@@ -1554,6 +1554,15 @@ std::optional<std::int32_t> checked_sqlforeignkeys_handle_argument(
     return checked_sqlgetprop_handle_argument(value, NumericBehavior::copperfin);
 }
 
+// RQ-CF-PRG-SQLCOLUMNS-HANDLE-NUMERIC-001: derived #5611/#6776 safety;
+// the native connection-free fixture cannot establish converted indices.
+// Both modes reject unsafe handles without speculating about legacy aliases.
+std::optional<std::int32_t> checked_sqlcolumns_handle_argument(
+    const PrgValue& value,
+    const NumericBehavior) {
+    return checked_sqlgetprop_handle_argument(value, NumericBehavior::copperfin);
+}
+
 // RQ-CF-PRG-SET-DATASESSION-NUMERIC-001 (#5611/#6776). Installed VFP9
 // sessions 1/2 recover fractional truncation and both-sign low-32 aliases.
 // Exact integers/NaN and other positive IDs follow derived safety policy.
