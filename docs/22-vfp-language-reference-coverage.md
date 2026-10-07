@@ -1,5 +1,19 @@
 # VFP Language Reference Coverage
 
+- SQLTABLES first-argument Numeric/exact-integer conversion (#5611/#6776,
+  2026-10-07): derived finite signed-int32 truncation in both modes, with
+  localized catchable 1466 before metadata callbacks/cursors/state/events and
+  safe original Numeric diagnostics. Exact integers avoid double rounding.
+  Complete native 48-call/51-line fixture in
+  `tests/fixtures/vfp9-sqltables-handle-numeric-observation/` recovers absent/
+  type errors and absent cursor state, not connected indices or aliases.
+  RQ-CF-PRG-SQLTABLES-HANDLE-NUMERIC-001 maps the derived boundary in docs/32.
+  Direct and synthetic tests independently verify cursor materialization,
+  local guard shape/payload, connection state, table/cursor events, errors,
+  mode reset, cursor closure and disconnect. Separate native parity/index
+  recovery #7032 and formatter #6997 remain outside scope. No VM/backend/
+  system change, argument-sized loop or cursor-allocation change.
+
 - SQLROLLBACK first-argument Numeric/exact-integer conversion (#5611/#6776,
   2026-10-07): derived finite signed-int32 truncation in both modes, with
   localized catchable 1466 before transaction callbacks/state/events and safe
