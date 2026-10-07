@@ -1,5 +1,21 @@
 # VFP Language Reference Coverage
 
+- DESCENDING index-file-first ordinal Numeric/exact-integer conversion
+  (#5611/#6776, 2026-10-07): independent installed VFP9 7423 source/output in
+  tests/fixtures/vfp9-descending-ordinal-numeric-observation/ recovers ordinary
+  truncation, raw-positive32767 ceiling and negative-only signed-low32 aliases.
+  RQ-CF-PRG-DESCENDING-ORDINAL-NUMERIC-001 derives finite/exact1..32767 default,
+  NaN rejection and exact extension safety from the parent/hazards. The checked
+  helper is verified directly; fresh synthetic per-CDX ordinal tests distinguish
+  active runtime direction, persisted direction, a preceding global IDX and
+  indexed/empty states while preserving pointer/payload/alias/session/mode.
+  Normal and private-TMPDIR sanitizer focused suites pass5/5; six contracts
+  pass6/6. The first fixed sanitizer run's22 older SQL failures are retained,
+  not erased or attributed to a proven cause. README VR/DQ/DV and docs/32 map
+  native/derived evidence and completed development self-review. Type #7063
+  and one-argument alias #7064 gaps, metadata/runtime-override/format parity
+  stay separate; this is not independent-human or release qualification.
+
 - KEY ordinal Numeric/exact-integer conversion (#5611/#6776, 2026-10-07):
   checked finite truncation into 1..32767 with the independently observed
   raw-positive ceiling; explicit VFP9 retains negative-only signed-low-32

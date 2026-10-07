@@ -15,6 +15,7 @@
 #include <cmath>
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <limits>
 #include <optional>
@@ -258,6 +259,69 @@ const std::vector<SqlGetPropHandleCase> kKeyOrdinalCases{
     {"-4294934528", -4294934528, std::nullopt, std::nullopt},
 };
 
+
+// RQ-CF-PRG-DESCENDING-ORDINAL-NUMERIC-001: explicit independent DESCENDING probe columns.
+const std::vector<SqlGetPropHandleCase> kDescendingOrdinalCases{
+    {"0", 0, std::nullopt, std::nullopt},
+    {"1", 1, 1, 1},
+    {"2", 2, 2, 2},
+    {"-1", -1, std::nullopt, std::nullopt},
+    {"3", 3, 3, 3},
+    {"0.49", 0.49, std::nullopt, std::nullopt},
+    {"0.5", 0.5, std::nullopt, std::nullopt},
+    {"0.9", 0.9, std::nullopt, std::nullopt},
+    {"1.49", 1.49, 1, 1},
+    {"1.5", 1.5, 1, 1},
+    {"1.9", 1.9, 1, 1},
+    {"2.49", 2.49, 2, 2},
+    {"2.5", 2.5, 2, 2},
+    {"2.9", 2.9, 2, 2},
+    {"3.1", 3.1, 3, 3},
+    {"-0.49", -0.49, std::nullopt, std::nullopt},
+    {"-0.5", -0.5, std::nullopt, std::nullopt},
+    {"-0.9", -0.9, std::nullopt, std::nullopt},
+    {"-1.1", -1.1, std::nullopt, std::nullopt},
+    {"2147483647", 2147483647, std::nullopt, std::nullopt},
+    {"2147483648", 2147483648, std::nullopt, std::nullopt},
+    {"-2147483648", -2147483648, std::nullopt, std::nullopt},
+    {"-2147483649", -2147483649, std::nullopt, std::nullopt},
+    {"4294967295", 4294967295, std::nullopt, std::nullopt},
+    {"4294967296", 4294967296, std::nullopt, std::nullopt},
+    {"4294967297", 4294967297, std::nullopt, std::nullopt},
+    {"4294967298", 4294967298, std::nullopt, std::nullopt},
+    {"4294967299", 4294967299, std::nullopt, std::nullopt},
+    {"-4294967296", -4294967296, std::nullopt, std::nullopt},
+    {"-4294967295", -4294967295, std::nullopt, 1},
+    {"-4294967294", -4294967294, std::nullopt, 2},
+    {"1E20", 1E20, std::nullopt, std::nullopt},
+    {"-1E20", -1E20, std::nullopt, std::nullopt},
+    {"1E300", 1E300, std::nullopt, std::nullopt},
+    {"-1E300", -1E300, std::nullopt, std::nullopt},
+    {"EXP(1000)", std::numeric_limits<double>::infinity(), std::nullopt, std::nullopt},
+    {"-EXP(1000)", -std::numeric_limits<double>::infinity(), std::nullopt, std::nullopt},
+    {"9007199254740992", 9007199254740992, std::nullopt, std::nullopt},
+    {"65536", 65536, std::nullopt, std::nullopt},
+    {"65537", 65537, std::nullopt, std::nullopt},
+    {"65538", 65538, std::nullopt, std::nullopt},
+    {"-65535", -65535, std::nullopt, std::nullopt},
+    {"-65534", -65534, std::nullopt, std::nullopt},
+    {"32768", 32768, std::nullopt, std::nullopt},
+    {"32769", 32769, std::nullopt, std::nullopt},
+    {"-32767", -32767, std::nullopt, std::nullopt},
+    {"4294967296.9", 4294967296.9, std::nullopt, std::nullopt},
+    {"-4294967295.9", -4294967295.9, std::nullopt, 1},
+    {"-2.9", -2.9, std::nullopt, std::nullopt},
+    {"3.9", 3.9, 3, 3},
+    {"4", 4, 4, 4},
+    {"65539", 65539, std::nullopt, std::nullopt},
+    {"32770", 32770, std::nullopt, std::nullopt},
+    {"32766", 32766, 32766, 32766},
+    {"32767", 32767, 32767, 32767},
+    {"32767.9", 32767.9, std::nullopt, std::nullopt},
+    {"-4294934530", -4294934530, std::nullopt, 32766},
+    {"-4294934529", -4294934529, std::nullopt, 32767},
+    {"-4294934528", -4294934528, std::nullopt, std::nullopt},
+};
 
 // RQ-CF-PRG-ALEN-DIMENSION-NUMERIC-001: 48 Numeric observations on
 // independent 3x4 and one-dimensional arrays. Expectations are explicit,
@@ -3214,6 +3278,175 @@ void test_key_ordinal_numeric_behavior_script_rows() {
 }
 
 
+// RQ-CF-PRG-DESCENDING-ORDINAL-NUMERIC-001: independent native/derived boundaries.
+void test_descending_ordinal_direct_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    struct Boundary { PrgValue value; std::optional<std::size_t> copperfin, vfp9; };
+    const std::vector<Boundary> boundaries{
+        {make_number_value(std::numeric_limits<double>::quiet_NaN()), std::nullopt, std::nullopt},
+        {make_number_value(std::nextafter(1.0, 0.0)), std::nullopt, std::nullopt},
+        {make_number_value(std::nextafter(1.0, 2.0)), 1, 1},
+        {make_number_value(std::nextafter(32767.0, 0.0)), 32766, 32766},
+        {make_number_value(std::nextafter(32767.0, 32768.0)), std::nullopt, std::nullopt},
+        {make_number_value(-9223372036854775808.0), std::nullopt, std::nullopt},
+        {make_number_value(std::nextafter(-9223372036854775808.0, -std::numeric_limits<double>::infinity())), std::nullopt, std::nullopt},
+        {make_int64_value(INT64_MIN), std::nullopt, std::nullopt},
+        {make_int64_value(INT64_MIN+1), std::nullopt, 1},
+        {make_int64_value(INT64_MAX), std::nullopt, std::nullopt},
+        {make_int64_value(-9007199254740991LL), std::nullopt, 1},
+        {make_int64_value(9007199254740993LL), std::nullopt, std::nullopt},
+        {make_uint64_value(9007199254740993ULL), std::nullopt, std::nullopt},
+        {make_uint64_value(UINT64_MAX), std::nullopt, std::nullopt},
+        {make_int64_value(1), 1, 1}, {make_int64_value(32767), 32767, 32767},
+        {make_uint64_value(1), 1, 1}, {make_uint64_value(32767), 32767, 32767},
+        {make_uint64_value(32768), std::nullopt, std::nullopt},
+        {make_int64_value(-4294967294LL), std::nullopt, 2},
+        {make_int64_value(-4294934529LL), std::nullopt, 32767},
+        {make_boolean_value(true), 1, 1}, {make_boolean_value(false), 0, 0},
+        {make_null_value(), 0, 0}, {make_string_value("2.9"), 2, 2},
+        {make_string_value("-1"), 0, 0}, {make_string_value("1E300"), std::nullopt, std::nullopt},
+        {make_string_value("1E19"),
+         sizeof(std::size_t)>=8 ? std::optional<std::size_t>{static_cast<std::size_t>(10000000000000000000ULL)} : std::nullopt,
+         sizeof(std::size_t)>=8 ? std::optional<std::size_t>{static_cast<std::size_t>(10000000000000000000ULL)} : std::nullopt},
+        {make_currency_value(5000), 0, 0}, {make_currency_value(15000), 1, 1},
+        {make_currency_value(25000), 2, 2}, {make_currency_value(-15000), 0, 0},
+    };
+    for (const auto mode : {NumericBehavior::copperfin, NumericBehavior::vfp9}) {
+        for (const auto& row : kDescendingOrdinalCases)
+            expect(checked_descending_ordinal_argument(make_number_value(row.value), mode) ==
+                   (mode == NumericBehavior::vfp9 ? row.vfp9 : row.copperfin),
+                   std::string("DESCENDING direct ") + row.argument);
+        for (std::size_t i=0; i<boundaries.size(); ++i)
+            expect(checked_descending_ordinal_argument(boundaries[i].value, mode) ==
+                   (mode == NumericBehavior::vfp9 ? boundaries[i].vfp9 : boundaries[i].copperfin),
+                   "DESCENDING extended direct " + std::to_string(i));
+    }
+}
+
+// RQ-CF-PRG-DESCENDING-ORDINAL-NUMERIC-001: fresh synthetic per-file
+// directions, independent ordinal expectations and unchanged active override.
+// Omitted/type routing and synthetic encodings are preservation controls.
+void write_descending_numeric_two_tag_cdx(
+    const std::filesystem::path &path,
+    const std::string &first_tag_name,
+    const std::string &first_expression,
+    bool first_descending,
+    const std::string &second_tag_name,
+    const std::string &second_expression,
+    bool second_descending)
+{
+    std::vector<std::uint8_t> bytes(4096U, 0U);
+    write_le_u16(bytes, 0U, 1024U);
+    write_le_u16(bytes, 12U, 10U);
+    write_le_u16(bytes, 14U, 480U);
+    write_le_u16(bytes, 1024U, 0x0003U);
+    write_le_u16(bytes, 1026U, 2U);
+    write_le_u32(bytes, 1028U, 2048U);
+    write_le_u32(bytes, 1032U, 2560U);
+
+    if (first_expression.size() > 512U || second_expression.size() > 512U)
+    {
+        throw std::length_error("write_synthetic_two_tag_cdx: expression too long for synthetic fixture buffer");
+    }
+    for (std::size_t index = 0; index < first_expression.size(); ++index)
+    {
+        bytes[2048U + index] = static_cast<std::uint8_t>(first_expression[index]);
+    }
+    if (first_descending)
+    {
+        bytes[2048U + 502U] = 0x01U;
+    }
+    for (std::size_t index = 0; index < second_expression.size(); ++index)
+    {
+        bytes[2560U + index] = static_cast<std::uint8_t>(second_expression[index]);
+    }
+    if (second_descending)
+    {
+        bytes[2560U + 502U] = 0x01U;
+    }
+
+    const std::size_t tail_start = 1024U + 512U - (2U * 10U);
+    if (first_tag_name.size() > 10U || second_tag_name.size() > 10U)
+    {
+        throw std::length_error("write_synthetic_two_tag_cdx: tag name too long for its 10-byte slot");
+    }
+    for (std::size_t index = 0; index < first_tag_name.size(); ++index)
+    {
+        bytes[tail_start + index] = static_cast<std::uint8_t>(first_tag_name[index]);
+    }
+    for (std::size_t index = 0; index < second_tag_name.size(); ++index)
+    {
+        bytes[tail_start + 10U + index] = static_cast<std::uint8_t>(second_tag_name[index]);
+    }
+
+    std::ofstream output(path, std::ios::binary);
+    output.write(reinterpret_cast<const char *>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+}
+
+void test_descending_ordinal_numeric_behavior_script_rows() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_descending_ordinal_numeric_behavior";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    const auto table = dir / "people.dbf";
+    const auto cdx = dir / "people.cdx";
+    write_simple_dbf(table, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_descending_numeric_two_tag_cdx(cdx, "ASCTAG", "NAME", false,
+                                       "DESCTAG", "NAME", true);
+    // A global IDX must not shift DESCENDING's per-CDX ordinal.
+    write_synthetic_idx(dir / "people.idx", "NAME");
+    const auto check = [&](const char* mode, const bool explicit_alias, const bool empty,
+                           const std::string& arg, const std::optional<std::size_t> ordinal,
+                           const bool omitted=false) {
+        const std::string setup = std::string("SET NUMERICBEHAVIOR TO ") + mode + "\n" +
+            (empty ? "CREATE CURSOR descguard (name C(10))\nINSERT INTO descguard VALUES ('ALPHA')\n"
+                   : "USE '" + table.string() + "' ALIAS descguard IN 0\nSET ORDER TO TAG ASCTAG DESCENDING\nGO TOP\n");
+        const std::string state = "ORDER() + ':' + IIF(DESCENDING(),'T','F') + ':' + ALIAS() + ':' + "
+            "ALLTRIM(STR(RECCOUNT())) + ':' + ALLTRIM(STR(RECNO())) + ':' + ALLTRIM(name) + ':' + "
+            "ALLTRIM(STR(VAL(TRANSFORM(SET('DATASESSION'))))) + ':' + SET('NUMERICBEHAVIOR')";
+        const std::string unchanged = std::string(empty ? ":F:descguard:1:1:ALPHA" : "ASCTAG:T:descguard:3:3:CHARLIE") +
+            ":1:" + mode;
+        const std::string expression = omitted ? (explicit_alias ? "DESCENDING('descguard')" : "DESCENDING()")
+            : "DESCENDING('" + cdx.string() + "'," + arg + (explicit_alias ? ",'descguard')" : ")");
+        const std::string result = omitted ? (empty ? "F" : "T")
+            : (!empty && ordinal && *ordinal==2 ? "T" : "F");
+        const std::string call = "nDescError=0\ncDescResult='unassigned'\ncDescMessage=''\nTRY\n"
+            "cDescResult=IIF(" + expression + ",'T','F')\nCATCH TO oEx\nnDescError=oEx.ErrorNo\n"
+            "cDescMessage=oEx.Message\nENDTRY";
+        std::vector<Row> rows{
+            {setup,state,"C:"+unchanged},
+            {call,"ALLTRIM(STR(nDescError))+':['+cDescResult+']:'+"+state,
+             "C:"+std::string(ordinal ? "0:["+result+"]:" : "11:[unassigned]:")+unchanged},
+            {"",state,"C:"+unchanged},
+            {"USE IN descguard\nSET NUMERICBEHAVIOR TO COPPERFIN",
+             "SET('NUMERICBEHAVIOR')+':'+IIF(USED('descguard'),'T','F')+':'+ALIAS()","C:COPPERFIN:F:"},
+        };
+        if (!ordinal) rows.insert(rows.begin()+2,
+            {"","cDescMessage","C:Function argument value, type, or count is invalid."});
+        std::string wanted;
+        for (const auto& row:rows) wanted += row.expected+"\n";
+        const auto got=run_rows(dir,rows);
+        expect(got==wanted,std::string("DESCENDING ")+mode+(explicit_alias?" alias ":" current ")+
+               (empty?"empty ":"indexed ")+"["+arg+"] expected ["+wanted+"], got ["+got+"]");
+    };
+    for (const bool explicit_alias:{false,true}) for (const bool empty:{false,true})
+        for (const char* mode:{"COPPERFIN","VFP9"}) {
+            for (const auto& row:kDescendingOrdinalCases)
+                check(mode,explicit_alias,empty,row.argument,
+                      std::string(mode)=="VFP9"?row.vfp9:row.copperfin);
+            for (const auto& row:std::vector<std::pair<std::string,std::size_t>>{
+                     {"$0.5",0},{"$1.5",1},{"$2.5",2},{".T.",1},{".F.",0},{".NULL.",0},
+                     {"'0'",0},{"'1'",1},{"'2'",2},{"'-1'",0}})
+                check(mode,explicit_alias,empty,row.first,row.second);
+            check(mode,explicit_alias,empty,"<omitted>",0,true);
+            check(mode,explicit_alias,empty,"'1E300'",std::nullopt);
+            check(mode,explicit_alias,empty,"'1E19'",sizeof(std::size_t)>=8
+                  ? std::optional<std::size_t>{static_cast<std::size_t>(10000000000000000000ULL)}
+                  : std::nullopt);
+        }
+    fs::remove_all(dir,ignored);
+}
+
 // RQ-CF-PRG-ALEN-DIMENSION-NUMERIC-001: native aliases plus independently
 // specified exact/NaN/adjacent boundaries and existing-coercion controls.
 void test_alen_dimension_direct_numeric_boundaries() {
@@ -5372,6 +5605,8 @@ void test_sql_property_handle_direct_numeric_boundaries(
 }  // namespace
 
 int main() {
+    test_descending_ordinal_direct_numeric_boundaries();
+    test_descending_ordinal_numeric_behavior_script_rows();
     test_key_ordinal_direct_numeric_boundaries();
     test_key_ordinal_numeric_behavior_script_rows();
     test_tag_ordinal_direct_numeric_boundaries();
