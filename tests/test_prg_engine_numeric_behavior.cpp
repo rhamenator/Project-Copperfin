@@ -2228,6 +2228,175 @@ void test_set_fweek_numeric_behavior_script_rows() {
     fs::remove_all(dir, ignored);
 }
 
+// RQ-CF-PRG-SET-EPOCH-NUMERIC-001: owner-retained extension, no VFP wrapping.
+void test_set_epoch_numeric_boundaries() {
+    using namespace copperfin::runtime;
+    const std::vector<std::pair<PrgValue, std::optional<std::int32_t>>> direct{
+        {make_number_value(1), 1}, {make_number_value(1.9), 1},
+        {make_number_value(1950.9), 1950}, {make_number_value(9999.9), 9999},
+        {make_number_value(std::nextafter(1.0, 0.0)), std::nullopt},
+        {make_number_value(std::nextafter(1.0, 2.0)), 1},
+        {make_number_value(std::nextafter(10000.0, 0.0)), 9999},
+        {make_number_value(10000), std::nullopt}, {make_number_value(0), std::nullopt},
+        {make_number_value(-1), std::nullopt}, {make_number_value(1E300), std::nullopt},
+        {make_number_value(-1E300), std::nullopt},
+        {make_number_value(std::numeric_limits<double>::infinity()), std::nullopt},
+        {make_number_value(-std::numeric_limits<double>::infinity()), std::nullopt},
+        {make_number_value(std::numeric_limits<double>::quiet_NaN()), std::nullopt},
+        {make_int64_value(1), 1}, {make_int64_value(9999), 9999},
+        {make_int64_value(10000), std::nullopt}, {make_int64_value(0), std::nullopt},
+        {make_int64_value(INT64_MIN), std::nullopt}, {make_int64_value(INT64_MAX), std::nullopt},
+        {make_int64_value(-4294965321LL), std::nullopt},
+        {make_uint64_value(1), 1}, {make_uint64_value(9999), 9999},
+        {make_uint64_value(10000), std::nullopt}, {make_uint64_value(UINT64_MAX), std::nullopt},
+        {make_string_value("1975.9"), 1976}, {make_string_value("abc"), 1950},
+        {make_currency_value(19759000), 1976}, {make_boolean_value(false), 1},
+        {make_null_value(), 1}
+    };
+    for (std::size_t i = 0; i < direct.size(); ++i) {
+        expect(checked_set_epoch_argument(direct[i].first) == direct[i].second,
+               "SET EPOCH direct boundary " + std::to_string(i));
+    }
+    const fs::path dir = fs::temp_directory_path() / "copperfin_set_epoch_numeric_behavior";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    const auto check = [&](const char* mode, const std::string& argument,
+                           const std::optional<std::int32_t> expected) {
+        const auto path = dir / "row.prg";
+        write_text(path, std::string("SET NUMERICBEHAVIOR TO ") + mode +
+            "\nSET CENTURY OFF\nSET EPOCH TO 1975\nnError = 0\nTRY\nSET EPOCH TO " + argument +
+            "\nCATCH TO oEx\nnError = oEx.ErrorNo\nENDTRY\n"
+            "cAfter = SET('EPOCH')\ncDisplay = SET('CENTURY')\n"
+            "SET EPOCH TO\ncReset = SET('EPOCH')\nRETURN\n");
+        auto session = PrgRuntimeSession::create(make_runtime_session_options(path.string(), dir.string(), false));
+        const auto state = session.run(DebugResumeAction::continue_run);
+        const auto value = [&](const char* key) {
+            const auto found = state.globals.find(key);
+            return found == state.globals.end() ? "<missing>" : format_value(found->second);
+        };
+        const std::string name = std::string("SET EPOCH ") + mode + " [" + argument + "]";
+        expect(state.completed, name + " completes: " + state.message);
+        expect(value("nerror") == (expected.has_value() ? "0" : "10"), name + " catchable rejection");
+        expect(value("cafter") == std::to_string(expected.value_or(1975)), name + " selected/retained year");
+        expect(value("cdisplay") == "OFF", name + " display independent");
+        expect(value("creset") == "1950", name + " omitted reset");
+        std::size_t successful = 0;
+        for (const auto& event : state.events) {
+            if (event.category == "runtime.set" && event.detail.rfind("EPOCH", 0) == 0) {
+                ++successful;
+            }
+        }
+        expect(successful == (expected.has_value() ? 3U : 2U), name + " no success event on rejection");
+    };
+    const std::vector<std::pair<std::string, std::optional<std::int32_t>>> rows{
+        {"1", 1}, {"1.9", 1}, {"1950.9", 1950}, {"1975.5", 1975},
+        {"9999", 9999}, {"9999.9", 9999}, {"10000", std::nullopt},
+        {"0", std::nullopt}, {"0.9", std::nullopt}, {"-1", std::nullopt},
+        {"-1975.5", std::nullopt}, {"1E300", std::nullopt}, {"-1E300", std::nullopt},
+        {"4294969271", std::nullopt}, {"-4294965321", std::nullopt},
+        {"9223372036854775807", std::nullopt},
+        {"18446744073709551615", std::nullopt},
+        {"1E-308", std::nullopt}
+    };
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        for (const auto& [argument, expected] : rows) {
+            check(mode, argument, expected);
+            check(mode, "(" + argument + ")", expected);
+        }
+        for (const char* literal : {"1E999", "-1E999", "+1E999", ".1E999", "1E-999", "1.E-999", "0E999"}) {
+            check(mode, literal, std::nullopt);
+        }
+        for (const auto& [argument, expected] : std::vector<std::pair<std::string, std::int32_t>>{
+                {"", 1950}, {"('1975.9')", 1976}, {"'abc'", 1950},
+                {"1E999junk", 1950}, {"($1975.9)", 1976}, {"(.T.)", 1}, {"(.NULL.)", 1}}) {
+            check(mode, argument, expected);
+        }
+    }
+    {
+        ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+        for (const auto& [locale, expected] : std::vector<std::pair<std::string, std::string>>{
+                {"en-US", "SET EPOCH TO requires a converted year from 1 through 9999."},
+                {"es-419", "SET EPOCH TO requiere un año convertido de 1 a 9999."},
+                {"pt-BR", "SET EPOCH TO requer um ano convertido de 1 a 9999."},
+                {"qps-ploc", "[!! SET EPOCH TO řëqüïřëš å çøñṽëřţëð ýöåř ƒřøm 1 ţhřøüĝh 9999. !!]"}}) {
+            set_env_value("COPPERFIN_LOCALE", locale, true);
+            const auto path = dir / "localized.prg";
+            write_text(path, "SET EPOCH TO 1975\nTRY\nSET EPOCH TO (1E300)\n"
+                "CATCH TO oEx\nnError = oEx.ErrorNo\ncMessage = oEx.Message\nENDTRY\n"
+                "cAfter = SET('EPOCH')\nRETURN\n");
+            auto session = PrgRuntimeSession::create(make_runtime_session_options(path.string(), dir.string(), false));
+            const auto state = session.run(DebugResumeAction::continue_run);
+            const auto value = [&](const char* key) {
+                const auto found = state.globals.find(key);
+                return found == state.globals.end() ? "<missing>" : format_value(found->second);
+            };
+            expect(state.completed && value("nerror") == "10", "SET EPOCH localized catch " + locale);
+            expect(value("cmessage") == expected, "SET EPOCH localized message " + locale);
+            expect(value("cafter") == "1975", "SET EPOCH localized failure atomicity " + locale);
+        }
+    }
+    fs::remove_all(dir, ignored);
+}
+
+// RQ-CF-PRG-SET-EPOCH-WINDOW-001: equivalent installed VFP9 CENTURY/ROLLOVER
+// oracle in century-window.prg/.out. SET EPOCH itself is Copperfin-only.
+void test_set_epoch_display_independent_native_window() {
+    using namespace copperfin::runtime;
+    struct Window { int epoch; std::vector<int> years; };
+    const std::vector<Window> windows{
+        {1950, {2000, 2024, 2025, 2049, 1950, 1974, 1975, 1999}},
+        {1975, {2000, 2024, 2025, 2049, 2050, 2074, 1975, 1999}},
+        {2025, {2100, 2124, 2025, 2049, 2050, 2074, 2075, 2099}}
+    };
+    const std::vector<std::string> short_years{"00", "24", "25", "49", "50", "74", "75", "99"};
+    const fs::path dir = fs::temp_directory_path() / "copperfin_set_epoch_native_window";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        for (const auto& window : windows) {
+            for (const char* display : {"OFF", "ON"}) {
+                for (std::size_t i = 0; i < short_years.size(); ++i) {
+                    const auto path = dir / "window.prg";
+                    const std::string date = "01/02/" + short_years[i];
+                    write_text(path, std::string("SET NUMERICBEHAVIOR TO ") + mode +
+                        "\nSET DATE TO MDY\nSET CENTURY " + display +
+                        "\nSET EPOCH TO " + std::to_string(window.epoch) +
+                        "\nnYear = YEAR(CTOD('" + date + "'))\n"
+                        "cDate = DTOC(CTOD('" + date + "'), 1)\n"
+                        "cDisplay = DTOC(CTOD('" + date + "'))\n"
+                        "cTime = TTOC(CTOT('" + date + " 13:45:56'), 1)\n"
+                        "cDateTime = TTOC(DTOT(CTOD('" + date + "')), 1)\n"
+                        "cTimeDate = DTOC(TTOD(CTOT('" + date + " 13:45:56')), 1)\n"
+                        "cTtos = TTOS('" + date + " 13:45:56')\n"
+                        "cFullYear = DTOC(CTOD('01/02/1949'), 1)\nRETURN\n");
+                    auto session = PrgRuntimeSession::create(make_runtime_session_options(path.string(), dir.string(), false));
+                    const auto state = session.run(DebugResumeAction::continue_run);
+                    const auto value = [&](const char* key) {
+                        const auto found = state.globals.find(key);
+                        return found == state.globals.end() ? "<missing>" : format_value(found->second);
+                    };
+                    const auto year = std::to_string(window.years[i]);
+                    const std::string name = std::string("EPOCH window ") + mode + " " +
+                        std::to_string(window.epoch) + " " + display + " " + short_years[i];
+                    expect(state.completed, name + " completes: " + state.message);
+                    expect(value("nyear") == year, name + " year");
+                    expect(value("cdate") == year + "0102", name + " DTOC sortable");
+                    expect(value("cdisplay") == "01/02/" + (std::string(display) == "OFF" ? short_years[i] : year), name + " display only");
+                    expect(value("ctime") == year + "0102134556", name + " CTOT/TTOC");
+                    expect(value("cdatetime") == year + "0102000000", name + " DTOT");
+                    expect(value("ctimedate") == year + "0102", name + " TTOD");
+                    // Derived extension consistency: native VFP has no TTOS function.
+                    expect(value("cttos") == year + "0102134556", name + " TTOS extension consistency");
+                    expect(value("cfullyear") == "19490102", name + " full year independent");
+                }
+            }
+        }
+    }
+    fs::remove_all(dir, ignored);
+}
+
 void test_numeric_behavior_script_rows() {
     const fs::path dir = fs::temp_directory_path() / "copperfin_numeric_behavior";
     std::error_code ignored;
@@ -3533,6 +3702,8 @@ int main() {
     test_set_decimals_numeric_behavior_script_rows();
     test_set_fweek_direct_numeric_boundaries();
     test_set_fweek_numeric_behavior_script_rows();
+    test_set_epoch_numeric_boundaries();
+    test_set_epoch_display_independent_native_window();
     test_set_fdow_direct_numeric_boundaries();
     test_set_fdow_numeric_behavior_script_rows();
     test_gomonth_out_of_range_dbf_round_trip();

@@ -12,6 +12,24 @@
   remains a separate retained checkpoint; real CENTURY/ROLLOVER is still a
   required admitted #3698 follow-on, not completed by this query correction.
 
+- SET EPOCH extension recovery (2026-10-06, #5611/#6776, admitted #3698):
+  the owner explicitly retains both interfaces and delegates missing extension
+  design/verification. EPOCH names a two-digit-year window independently of
+  CENTURY ON/OFF display. Native rejection provenance is retained, not used to
+  skip the extension. Two fresh native CENTURY/ROLLOVER runs match 103 lines
+  for three windows and both display modes in
+  `tests/fixtures/vfp9-set-epoch-numeric-observation/`. Checked Numeric/exact
+  conversion truncates into 1..9999, resets omission to 1950 and raises
+  localized catchable error 10 before mutation/events in both modes. The
+  separate raw-query dependency #7021 shipped in PR #7022. Original dispatch
+  fails 210 assertions; after rebasing onto that prerequisite, all five suites
+  pass normally (16.56s) and under ASan/UBSan/float-cast-overflow (73.77s).
+  Coverage is 31 direct cases, 104 conversion/locale PRG cases and 96 native-
+  equivalent window cases; fresh native output matches all 103 lines.
+  Completed VR/DQ/DV and explicit extension boundaries are in the fixture
+  README; docs/32 maps CONTRACT, NUMERIC and WINDOW requirements.
+  Full CENTURY/ROLLOVER remains a required admitted #3698 follow-on.
+
 - SET FWEEK TO Numeric/exact-integer conversion (2026-10-06, #5611/#6776):
   truncate into 1..3 with checked default COPPERFIN rejection. Explicit VFP9
   admits negative-only low-32 aliases; positive wrapping, zero and huge/infinite
