@@ -1679,6 +1679,44 @@ std::optional<std::size_t> checked_tag_ordinal_argument(
     return static_cast<std::size_t>(*ordinal);
 }
 
+// RQ-CF-PRG-KEY-ORDINAL-NUMERIC-001 (#5611/#6776). Installed KEY
+// independently distinguishes ordinals, raw-positive ceiling and negative
+// low-32 aliases. NaN/exact extension boundaries derive from safety policy.
+std::optional<std::size_t> checked_key_ordinal_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    const bool numeric = value.kind == PrgValueKind::number ||
+                         value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
+    if (!numeric) {
+        // Preserve this site's existing less-than-one empty/truncation coercions,
+        // without claiming native other-type admission or routing parity.
+        const double ordinal = value_as_number(value);
+        // Engaged zero means the preserved empty selection, not an error.
+        if (!(ordinal >= 1.0)) return std::size_t{0};
+        // The exclusive power-of-two bound is exact even when SIZE_MAX is
+        // not exactly representable as double. Do not narrow through int64.
+        if (!std::isfinite(ordinal) ||
+            ordinal >= std::ldexp(1.0, std::numeric_limits<std::size_t>::digits)) {
+            return std::nullopt;
+        }
+        return static_cast<std::size_t>(ordinal);
+    }
+    constexpr std::int64_t ceiling = 32767;
+    if ((value.kind == PrgValueKind::number &&
+         (std::isnan(value.number_value) || value.number_value > ceiling)) ||
+        (value.kind == PrgValueKind::int64 && value.int64_value > ceiling) ||
+        (value.kind == PrgValueKind::uint64 && value.uint64_value > ceiling)) {
+        return std::nullopt;
+    }
+    const auto ordinal = behavior == NumericBehavior::vfp9
+        ? std::optional<std::int64_t>{vfp9_numeric_to_int32(value)}
+        : checked_declared_int64_argument(value);
+    if (!ordinal || *ordinal < 1 || *ordinal > ceiling) {
+        return std::nullopt;
+    }
+    return static_cast<std::size_t>(*ordinal);
+}
+
+
 // RQ-CF-PRG-SET-DATASESSION-NUMERIC-001 (#5611/#6776). Installed VFP9
 // sessions 1/2 recover fractional truncation and both-sign low-32 aliases.
 // Exact integers/NaN and other positive IDs follow derived safety policy.

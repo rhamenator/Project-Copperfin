@@ -227,6 +227,9 @@ std::optional<std::int32_t> checked_alen_dimension_argument(const PrgValue& valu
 // RQ-CF-PRG-TAG-ORDINAL-NUMERIC-001: checked 1..32767 Numeric ordinal;
 // explicit VFP9 preserves negative-only low-32 aliases. Routing stays separate.
 std::optional<std::size_t> checked_tag_ordinal_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-KEY-ORDINAL-NUMERIC-001: checked Numeric 1..32767;
+// zero preserves other-type empty selection; missing means invalid conversion.
+std::optional<std::size_t> checked_key_ordinal_argument(const PrgValue& value, NumericBehavior behavior);
 // RQ-CF-PRG-SET-DATASESSION-NUMERIC-001: checked positive session selector.
 // Existence/lifecycle stay separate; other coercions retain rounding/clamping.
 std::optional<std::int32_t> checked_datasession_selector_argument(const PrgValue& value, NumericBehavior behavior);

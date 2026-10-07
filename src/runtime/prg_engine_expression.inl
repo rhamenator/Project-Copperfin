@@ -1832,14 +1832,24 @@
                 }
                 if (function == "key")
                 {
-                    const std::string first = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
-                    const auto to_positive_index = [](double value) -> std::optional<std::size_t>
+                    // RQ-CF-PRG-KEY-ORDINAL-NUMERIC-001 (#5611/#6776).
+                    // Numeric cannot name an index file; avoid the shared
+                    // unchecked formatter (#6997) without changing its policy.
+                    const bool numeric_first = !arguments.empty() &&
+                        (arguments[0].kind == PrgValueKind::number ||
+                         arguments[0].kind == PrgValueKind::int64 ||
+                         arguments[0].kind == PrgValueKind::uint64);
+                    const std::string first = arguments.empty() || numeric_first
+                        ? std::string{} : value_as_string(arguments[0]);
+                    const auto to_positive_index = [this](const PrgValue& value) -> std::size_t
                     {
-                        if (!(value >= 1.0))
+                        const auto checked = checked_key_ordinal_argument(value, numeric_behavior(set_callback_));
+                        if (!checked)
                         {
-                            return std::nullopt;
+                            throw PrgCompatibilityError(runtime_text(
+                                "Runtime.Prg.Expression.Error.InvalidArgument"), 11);
                         }
-                        return static_cast<std::size_t>(value);
+                        return *checked;
                     };
                     std::optional<std::size_t> index_number;
                     std::string designator;
@@ -1850,7 +1860,7 @@
                         index_file_name = first;
                         if (arguments.size() >= 2U)
                         {
-                            index_number = to_positive_index(value_as_number(arguments[1]));
+                            index_number = to_positive_index(arguments[1]);
                         }
                         if (arguments.size() >= 3U)
                         {
@@ -1859,14 +1869,14 @@
                     }
                     else if (!arguments.empty())
                     {
-                        index_number = to_positive_index(value_as_number(arguments[0]));
+                        index_number = to_positive_index(arguments[0]);
                         if (arguments.size() >= 2U)
                         {
                             designator = value_as_string(arguments[1]);
                         }
                     }
 
-                    if (!index_number.has_value())
+                    if (!index_number.has_value() || *index_number == 0U)
                     {
                         return make_string_value(std::string{});
                     }

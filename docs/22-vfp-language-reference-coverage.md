@@ -1,5 +1,24 @@
 # VFP Language Reference Coverage
 
+- KEY ordinal Numeric/exact-integer conversion (#5611/#6776, 2026-10-07):
+  checked finite truncation into 1..32767 with the independently observed
+  raw-positive ceiling; explicit VFP9 retains negative-only signed-low-32
+  aliases. Derived NaN/exact extended integer safety avoids floating round
+  trips. Localized catchable 11 precedes key lookup; Numeric first operands
+  avoid the shared unsafe formatter without changing it (#6997).
+  Three matching installed VFP9 7423 runs in
+  tests/fixtures/vfp9-key-ordinal-numeric-observation/ retain 136 calls plus
+  omitted/state/cleanup controls, 142 lines. 182 direct checks and
+  576 fresh synthetic cases/2652 PRG rows compare both forms on indexed/
+  empty cursors, output/error/message/order/pointer/payload/alias/session/mode/
+  reset/cleanup. RQ-CF-PRG-KEY-ORDINAL-NUMERIC-001 maps helpers/expression/tests
+  and independent native/derived verification in docs/32 and the fixture README.
+  Omitted routing (#7060), other-type admission (#7061), index metadata/
+  results/backend/arity/lifecycle and TAG/DESCENDING remain separate.
+  Current other-type less-than-one empty selection is preserved; unsafe
+  coercions reject 11 and representable positives retain checked full-size_t
+  conversion. This is not native type/routing/index-format parity.
+
 - TAG ordinal Numeric/exact-integer conversion (#5611/#6776, 2026-10-07):
   checked finite truncation into 1..32767 with the native raw-positive ceiling;
   explicit VFP9 retains negative-only signed-low-32 aliases. NaN rejects and
@@ -14,7 +33,7 @@
   links helpers/expression/tests and native/derived verification in docs/32
   and the fixture README. Omitted routing (#7057), other-type admission (#7058)
   and index metadata/result/backend/arity/lifecycle remain separate gaps;
-  KEY/DESCENDING casts unchanged.
+  That TAG slice left KEY/DESCENDING casts unchanged; KEY is covered above.
 
 - ALEN optional dimension Numeric/exact-integer conversion (#5611/#6776,
   2026-10-07): default finite truncation into 0..2; explicit VFP9 signed

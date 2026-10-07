@@ -502,8 +502,14 @@ void test_key_and_tagcount_functions() {
         "cKey1 = KEY(1, 'People')\n"
         "cKey2 = KEY(2, 'People')\n"
         "cKeyMissing = KEY(99, 'People')\n"
-        "cKeyZero = KEY(0, 'People')\n"
-        "cKeyNegative = KEY(-1, 'People')\n"
+        // RQ-CF-PRG-KEY-ORDINAL-NUMERIC-001: native Numeric admission,
+        // with catchability allowing the remaining index controls to execute.
+        "cKeyZero = 'unassigned'\nTRY\n"
+        "cKeyZero = KEY(0, 'People')\nCATCH TO oEx\n"
+        "cKeyZero = ALLTRIM(STR(oEx.ErrorNo))\nENDTRY\n"
+        "cKeyNegative = 'unassigned'\nTRY\n"
+        "cKeyNegative = KEY(-1, 'People')\nCATCH TO oEx\n"
+        "cKeyNegative = ALLTRIM(STR(oEx.ErrorNo))\nENDTRY\n"
         "nTagCountMissingFile = TAGCOUNT('nosuchfile.cdx', 'People')\n"
         "nTagCountCdxOnly = TAGCOUNT('" + cdx_path.string() + "', 'People')\n"
         "cKeyCdxOnly = KEY('" + cdx_path.string() + "', 1, 'People')\n"
@@ -573,13 +579,13 @@ void test_key_and_tagcount_functions() {
     }
     if (key_zero != state.globals.end()) {
         expect(
-            copperfin::runtime::format_value(key_zero->second).empty(),
-            "KEY(0, ...) should return the empty string rather than clamping up to the first tag");
+            copperfin::runtime::format_value(key_zero->second) == "11",
+            "KEY(0, ...) should raise catchable argument error 11 before index lookup");
     }
     if (key_negative != state.globals.end()) {
         expect(
-            copperfin::runtime::format_value(key_negative->second).empty(),
-            "KEY(-1, ...) should return the empty string rather than clamping up to the first tag");
+            copperfin::runtime::format_value(key_negative->second) == "11",
+            "KEY(-1, ...) should raise catchable argument error 11 before index lookup");
     }
     if (tag_count_missing_file != state.globals.end()) {
         expect(
