@@ -2750,6 +2750,8 @@ namespace copperfin::runtime
                     return std::string("OFF");
                 }
 
+                // RQ-CF-PRG-SET-EPOCH-QUERY-001: the intentional extension's
+                // year is numeric state, never Boolean normalization of 1.
                 if (normalized_name == "path" ||
                     normalized_name == "date" ||
                     normalized_name == "mark" ||
@@ -2758,6 +2760,7 @@ namespace copperfin::runtime
                     normalized_name == "fweek" ||
                     normalized_name == "reprocess" ||
                     normalized_name == "decimals" ||
+                    normalized_name == "epoch" ||
                     normalized_name == "collate" ||
                     normalized_name == "numericbehavior" ||
                     normalized_name == "point" ||

@@ -1,5 +1,17 @@
 # VFP Language Reference Coverage
 
+- SET EPOCH raw-year query prerequisite (2026-10-06, #7021 under admitted
+  #3698 and owner-directed #5611/#6776): preserve the selected year instead of
+  Boolean-normalizing 1 to ON and silently using the 1950 parser fallback.
+  This is the owner's intentional simpler extension, not native EPOCH parity.
+  Sixteen regressions cover readback/consumers, independent display, both
+  Numeric modes, session default/restoration and omission reset. Exact-main
+  baseline fails ten checks; four focused GCC suites and four contracts pass.
+  See RQ-CF-PRG-SET-EPOCH-QUERY-001 in docs/32 and
+  `docs/set-epoch-query-7021.md` for completed VR/DQ/DV. Numeric conversion
+  remains a separate retained checkpoint; real CENTURY/ROLLOVER is still a
+  required admitted #3698 follow-on, not completed by this query correction.
+
 - SET FWEEK TO Numeric/exact-integer conversion (2026-10-06, #5611/#6776):
   truncate into 1..3 with checked default COPPERFIN rejection. Explicit VFP9
   admits negative-only low-32 aliases; positive wrapping, zero and huge/infinite

@@ -7,81 +7,151 @@ Develop on `main`: branch from `origin/main` and open pull requests with
 `docs/v1-development-retirement-2026-10-01.md`); older text below that says a
 slice "merged into `v1-development`" is historical.
 
+## Review routing (owner steering, 2026-10-06)
+
+The owner reports GitHub review availability exhausted for the rest of
+October 2026; the exhaustion start date is unknown. The owner will task Claude
+with reviews. For new/revised slice heads through October 31, retain a Claude
+or owner-authorized fallback Codex review tied to the exact commit and address
+its findings before merging;
+all 11 required checks and resolved GitHub conversations remain gates.
+Unavailable/skipped GitHub bot reviews are not clean-review evidence. Preserve
+actual historical review records without guessing when availability ended.
+The owner's subsequent instruction authorizes requesting Claude review when
+creating each PR. Use a verified Claude reviewer identity if available; the
+official Claude Code Review integration documents a top-level @claude review
+comment on an open, non-draft PR as its manual trigger. Do not assign an
+unverified GitHub account named Claude or silently enable a paid integration.
+The current CLI collaborator list contains only rhamenator, no Claude workflow
+was found under .github, and app-installation lookup returned 401; installation
+or quota status therefore remains unconfirmed, not known absent/exhausted.
+The owner additionally authorizes Codex as the fallback when Claude is not
+working. Try Claude first, then request Codex through the repository's verified
+@codex review integration if Claude is unavailable or quota-blocked. Do not
+assume reported monthly exhaustion has reset or treat quota notices as review.
+Report explicit quota/setup failures with PR URL, exact head and message;
+if neither service can review, wait for the owner's terminal Claude review.
+No response is not a completed clean review. Do not independently launch
+terminal Claude or create/message another chat. Request fresh exact-head review
+after fixes; all required checks and conversation-resolution gates still apply.
+The subsequent direct owner instruction resumes the EPOCH slice and retains
+both EPOCH and CENTURY (see selected work below), without authorizing unrelated
+production work. Reconfirm review availability/routing
+after October rather than assuming quota restoration.
+
 ## Last shipped slice
 
-The most recent shipped slice is SET FDOW PR #7009, merged into main as
-`0b481f4eff562a56f27e2171e16da28b21eb4db9` on 2026-10-06 at 09:16:07 UTC.
-All 11 required checks passed at signed head `417460c62`; exact-head Codex
-review completed cleanly and no conversations remained. Every completed
-optional check passed, including broad Linux/macOS, sanitizer/fuzz/stress,
-managed UI, security and all installers; Windows MSVC remained in progress.
-Main is synchronized, its worktree/local/remote branches removed, and 518 MB
-normal/1013 MB sanitizer builds plus generated FXP moved to recoverable trash.
-Unrelated files/worktrees remain untouched.
-The retained installed-VFP9 fixture has 50 operands/53 lines. 144 direct calls,
-188 fresh two-mode/bare-parenthesized runtime cases and four locale cases map
-to RQ-CF-PRG-SET-FDOW-NUMERIC-001. Original dispatch failed exactly 572 selected
-assertions in both toolchains. Final GCC passed 4/4 (10.27s), Clang
-ASan/UBSan/float-cast-overflow passed 4/4 (43.18s) without diagnostics, and
-seven contracts passed (18.47s); all 147 fragments validated. Other-type
-admission #7008 remains separate and unadmitted.
+SET FWEEK PR #7011 merged into main as
+`0c7b209ebbfce42a02d935fffa9e8e8cd7b749d8` on 2026-10-06 at 11:18:46 UTC.
+All 11 required checks passed at signed/DCO head
+`6532e2328ad7a6cc0a2c7f7dc270e2704c0e2e62`; exact-head Codex review completed
+cleanly and the sole conversation was verified after push and resolved.
+Every completed optional check passed, including all installers, managed UI,
+security and sanitizer/fuzz/stress/migration. Broad Linux/macOS/Windows were
+still running at merge. Main is synchronized; the slice worktree/local/remote
+branches were removed, and 676 MB normal/1.2 GB sanitizer builds plus generated
+FXP moved to recoverable trash. Unrelated files/worktrees remain untouched.
+Its three identical installed-VFP9 runs retain 50 operands/56 output lines,
+including independent WEEK consumer values 1/53/52. Final coverage is
+144 direct calls, 238 runtime cases and four locales. Original dispatch fails
+572 selected assertions; the bare-literal review regression fails 80 before
+its fix in both toolchains. Final five suites pass GCC 5/5 (15.61s) and Clang
+ASan/UBSan/float-cast-overflow 5/5 (69.95s), without diagnostics. Seven contracts
+pass (19.66s), final five contracts pass (4.28s), and 148 fragments validate.
+Post-push Numeric passes GCC (9.07s) and sanitizers (37.49s), without diagnostics.
+The obsolete runtime-surface setup was corrected from invalid 4 to valid 3
+without losing session assertions. Other-type admission #7010 remains separate.
 
-SET FWEEK TO Numeric/exact-integer conversion is selected next under #5611/#6776
-from this exact main on `fix/set-fweek-numeric-5611`, in
-`/home/rich/.codex/worktrees/set-fweek-numeric-5611/Project-Copperfin`.
-Only FWEEK's integer-setting dispatch is selected; EPOCH, other setters,
+SET EPOCH TO Numeric/exact-integer conversion is selected next under admitted
+#5611/#6776 from this exact main on `fix/set-epoch-numeric-5611`, in
+`/home/rich/.codex/worktrees/set-epoch-numeric-5611/Project-Copperfin`.
+Only EPOCH's integer-setting dispatch is selected. Other setters,
 expression-evaluation policy and non-Numeric admission remain separate.
-Complete fresh installed-VFP9 source/output is retained under
-`tests/fixtures/vfp9-set-fweek-numeric-observation/`: three final processes
-match all 56 lines (50 operands, omitted reset, three WEEK consumer checks,
-final 1). Numeric values truncate to 1..3; error 46 preserves FWEEK 2.
-Negative-only aliases select 1/3; positive wrapping and huge/infinite values
-reject. Seven non-Numeric controls raise native 10, unlike existing coercions;
-separate gap #7010 is filed against exact main without implementation admission.
-144 direct calls, 188 fresh runtime cases and four locale cases are added.
-The independent consumer outputs are WEEK({^2021-01-01},0,1) = 1/53/52 for
-FWEEK 1/2/3. Original dispatch fails exactly 572 selected assertions in both
-GCC (numeric 8.86s; four suites 10.22s) and Clang sanitizers (numeric 38.15s;
-four suites 43.96s). Helpers/coercion controls, existing Numeric rows and three
-neighbors pass; no baseline sanitizer diagnostics. Only FWEEK is now wired
-to checked conversion and localized error 46 before setting mutation/success.
-Omission/evaluation fallback is preserved. Final GCC passes 4/4 (10.23s;
-numeric 8.92s); Clang ASan/UBSan/float-cast-overflow passes 4/4 (44.17s;
-numeric 38.24s) without diagnostics. Runtime suites ran serially across build
-directories. Catalog/install, localization/isolation, signoff/changelog/channel
-contracts pass 7/7 (18.52s); all 148 fragments validate. Completed README
-VR/DQ/DV, native fixture hashes and docs/22/docs/32 retain boundary, consumer,
-walkthrough and rollback evidence.
-Builds remain at /home/rich/temp/copperfin-set-fweek-5611-build and
-/home/rich/temp/copperfin-set-fweek-5611-sanitize.
-PR #7011 is open. Its initial signed head 2ea82582f passed all 11 required
-checks and clean exact-head Codex review with zero conversations. Broad
-Linux/macOS failed the runtime-surface setup's obsolete SET FWEEK TO 4 clamp.
-No production change is needed: use valid 3 and retain all session/default/
-restoration assertions; the Numeric suite separately verifies error 46 for 4.
-Unchanged setup reproduces 27 local failures in GCC (5.51s) and Clang
-sanitizers (23.22s), without diagnostics. Corrected setup plus Numeric/
-relations/database/date-time passes GCC 5/5 (15.26s) and sanitizers 5/5
-(66.03s) without diagnostics. Seven contracts pass 7/7 (19.36s), 148 fragments
-valid; retained README/matrix/changelog carry the correction.
-Setup-only signed follow-up f48a79dc1 is pushed and passed all 11 required
-checks. Its review conversation PRRT_kwDOR7wYLc6pa5dM (comment 4194174679)
-identified bare decimal overflow/underflow becoming Character fallback 1.
-Only FWEEK now classifies complete decimal syntax on failed finite parsing,
-preserving Numeric rejection via the checked helper/error 46 before mutation.
-Other setters/shared parsing/evaluation fallback remain unchanged.
-Fifty additional derived range/control rows (238 runtime cases total) cover
-both signs, plus/exponent/decimal syntax, overflow/underflow and preserved
-quoted/malformed/finite/subnormal/zero controls. Pre-review dispatch fails
-exactly 80 assertions in GCC (8.77s) and Clang sanitizers (37.07s), without
-diagnostics. Final five suites pass GCC 5/5 (15.61s) and Clang
-ASan/UBSan/float-cast-overflow 5/5 (69.95s), without diagnostics. Seven
-contracts pass 7/7 (19.66s); 148 fragments and unchanged native hashes validate.
-README/docs22/docs32/changelog retain derived-policy limits and evidence.
-Next: signed/DCO review-fix commit and push, verify exact change after push,
-then reply/resolve that conversation only when fully addressed. Await fresh
-11 required checks and exact-head review before merge/sync/cleanup. EPOCH is
-next only afterward. No VM/backend/system change or owner input is needed.
+The owner resolved the product-policy blocker on 2026-10-06: retain both
+commands, deliberately supporting the simpler Copperfin-only SET EPOCH
+interface. EPOCH names the start of the two-digit-year interpretation window;
+CENTURY ON/OFF controls display independently. VFP-compatible CENTURY TO ...
+ROLLOVER must set the equivalent window, not disable EPOCH when display is OFF.
+The owner explicitly delegates judgment for extension-only design/boundaries
+and verification rather than skipping an extension for lack of native syntax.
+The bounded EPOCH numeric-conversion/independent-display slice is now retained
+in progress with an evidenced prerequisite: the existing raw SET('EPOCH')
+query maps stored year 1 to ON, and its parser consumer silently falls back to
+1950. Focused issue #7021 was filed against exact main; no approval label was
+added. Under the admitted #3698 workstream and direct owner extension policy,
+take the separate bounded EPOCH raw-query prerequisite first, then re-enter the
+numeric slice. Full CENTURY/ROLLOVER, query/reset/session semantics remain the
+next #3698 slice; both interfaces remain required and #3698 is not complete.
+The prerequisite worktree is
+`/home/rich/.codex/worktrees/set-epoch-query-5611/Project-Copperfin`, branch
+`fix/set-epoch-query-5611`, created from origin/main 0c7b209eb. EPOCH is now
+included in the existing raw numeric-setting callback path, with no setter,
+conversion/default/calendar/CENTURY changes. Sixteen date/time assertions cover
+year-1 raw readback, 01=>1/00=>100, CTOD/DTOC/CTOT/TTOC, display ON/OFF,
+both Numeric modes, session default/restoration and omitted reset. Exact-main
+baseline fails ten initial assertions. Final GCC four suites pass 4/4 (9.94s),
+four contracts pass (0.54s), 149 fragments and channel/diff checks pass.
+RQ-CF-PRG-SET-EPOCH-QUERY-001 and completed VR/DQ/DV are in docs/32 and
+docs/set-epoch-query-7021.md. Own build
+`/home/rich/temp/copperfin-set-epoch-query-7021-build` must be cleaned after
+its PR merges/closes. No local query sanitizer/VM/installed-product claim.
+Next action: signed/DCO commit, push and main-base PR with Claude-first review;
+require exact-head clean review, all 11 required checks and resolved
+conversations before merging. Do not implement full CENTURY in this PR.
+Two fresh final installed-VFP9 09.00.0000.7423 Wine processes match all ten
+lines in tests/fixtures/vfp9-set-epoch-numeric-observation/epoch.prg/epoch.out:
+three macro EPOCH command forms raise 36, SET('EPOCH') raises 231, while actual
+SET CENTURY TO 19 ROLLOVER 50 reports 19/50 and CTOD years 2049/1950.
+EXECSCRIPT forms raise 10 in the final program; no universal error or native
+Numeric-domain claim is made. Initial direct compilation failed 36 and
+provided no Numeric matrix. Source SHA-256 is
+a01e1cc70e6c9e23a8ac5b0d07e5d5e1c556c019c50b225f5f2c56b65b3d2c99;
+output SHA-256 is
+59e68b19e9b1e8c9690e869a378b046fe68d2ec6a9f23d0ad60a10063500e759.
+Existing owner-authored/agent-approved #3698 already tracks the non-VFP EPOCH
+interface and real CENTURY/ROLLOVER contract; no duplicate issue was filed.
+The owner's extension policy supersedes #3698's earlier remove-or-mode
+condition. Existing 1950/1/9999 values alone are not requirement evidence;
+explicitly document derived extension choices before claiming completion.
+Recover native equivalent CENTURY/ROLLOVER consumer behavior with CENTURY both
+ON and OFF; retain native EPOCH rejection as provenance, not a blocker.
+Native oracle recovery is complete: two fresh century-window.prg processes
+match all 103 retained lines for 1950/1975/2025, OFF/ON and eight two-digit
+years each. Source SHA-256 65e3968a5647ba88f3b3fec8d99c15f0ecce43755517a94bed00433bdf7d3d25;
+output 6e4c632bf6f64caafc1083824e6a53213737c3a5664bfae3d6969bc6060ac174.
+The numeric worktree now has checked Numeric/exact-integer conversion, full
+bare-decimal classification, four localized error-10 messages, 31 direct cases,
+104 conversion/locale PRG cases and 96 native-equivalent consumer cases. It
+documents derived 1..9999 truncation, fixed omission 1950, identical modes,
+non-finite/domain rejection before mutation/event, preserved ordinary other
+coercions and display independence. No native EPOCH Numeric parity is claimed.
+The original dispatch fails 210 selected assertions. The first checked GCC
+run passes four of five suites but exposes 12 year-1 raw-query dependency
+failures; do not change tests to bless ON or claim a passing numeric slice.
+Normal build /home/rich/temp/copperfin-set-epoch-5611-build and Clang sanitizer
+build /home/rich/temp/copperfin-set-epoch-5611-sanitize are owned scratch and
+must be retained until numeric completion, then cleaned recoverably. Sanitizer
+build completed; runtime sanitizer tests have not run. All five contracts pass
+(383.54s, including the complete safety workflow contract). The obsolete
+uncalled integer-setting lambda is removed; re-entry must rebuild both targets.
+Numeric checkpoint ce8df4493128814e10074e1566c030503e6e39a6 is signed/DCO
+verified and the numeric worktree is tracked/untracked clean (ignored FXP only).
+Next action: retain it without pushing/opening a failed PR;
+implement and verify #7021's bounded prerequisite separately, signed/DCO PR,
+Claude-first review, exact-head gates, merge/synchronize/clean it; then re-enter
+the retained numeric branch, incorporate main, rerun all focused normal and
+sanitizer suites plus contracts and complete DQ/DV/requirements before its PR.
+README and docs22/docs32 at the evidence-only local checkpoint still record
+RQ-CF-PRG-SET-EPOCH-CONTRACT-001 as gap; supersede that state with this direct
+owner policy and actual verification as the slice proceeds. Checkpoint 5bd6f5d319df78177bea0abb30a3e540bfc9fa9e
+is signed/DCO verified on the selected branch; all 149 fragments and channel
+integrity/diff checks pass. The worktree is clean except ignored generated FXP.
+Neither active branch has a PR or push yet. Native FXP is ignored local
+scratch, retained until each slice's cleanup. Root live channel was re-read
+empty before the dependency selection; no VM/backend/system changes.
+Automation copperfin-implementation-loop-daybreak-blue is confirmed ACTIVE
+with this resolved owner policy and Claude-first/Codex-fallback routing; its
+existing schedule, thread and notification policy are preserved.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -785,9 +855,11 @@ Owner-directed workstream order before the #6879 assignment was:
      conversion (PR #7007); other-type admission #7006 remains separate.
    - Completed after those: SET FDOW TO Numeric/exact-integer setting
      conversion (PR #7009); other-type admission #7008 remains separate.
-   - Selected next: SET FWEEK TO Numeric/exact-integer setting conversion;
-     native 1..3, error 46 and negative-only aliases recovered. EPOCH,
-     other settings/evaluation/non-Numeric parity remain separate.
+   - Completed after those: SET FWEEK TO Numeric/exact-integer setting
+     conversion (PR #7011); other-type admission #7010 remains separate.
+   - Selected next: SET EPOCH TO Numeric/exact-integer setting conversion;
+     recover its native contract independently. Other settings/evaluation/
+     non-Numeric parity remain separate.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

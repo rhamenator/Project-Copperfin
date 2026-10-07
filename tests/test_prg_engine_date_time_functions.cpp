@@ -234,6 +234,32 @@ namespace
             "ttos_epoch_1975_74 = TTOS('01/02/74 13:45:56')\n"
             "dtot_epoch_1975_74 = TTOC(DTOT(CTOD('01/02/74')), 1)\n"
             "ttod_epoch_1975_74 = DTOC(TTOD(CTOT('01/02/74 13:45:56')), 1)\n"
+            // RQ-CF-PRG-SET-EPOCH-QUERY-001 (#7021, admitted #3698):
+            // owner-retained extension year state must not become Boolean ON.
+            "SET EPOCH TO 1\nSET CENTURY ON\n"
+            "epoch_low_on = SET('EPOCH')\n"
+            "epoch_low_year_on = YEAR(CTOD('01/02/01'))\n"
+            "epoch_zero_year = YEAR(CTOD('01/02/00'))\n"
+            "epoch_low_date = DTOC(CTOD('01/02/01'), 1)\n"
+            "epoch_low_time = TTOC(CTOT('01/02/01 13:45:56'), 1)\n"
+            "epoch_low_display_on = DTOC(CTOD('01/02/01'))\n"
+            "SET NUMERICBEHAVIOR TO VFP9\n"
+            "epoch_low_vfp9 = SET('EPOCH')\n"
+            "epoch_low_year_vfp9 = YEAR(CTOD('01/02/01'))\n"
+            "SET NUMERICBEHAVIOR TO COPPERFIN\n"
+            "SET CENTURY OFF\n"
+            "epoch_low_off = SET('EPOCH')\n"
+            "epoch_low_year_off = YEAR(CTOD('01/02/01'))\n"
+            "epoch_low_display_off = DTOC(CTOD('01/02/01'))\n"
+            "SET DATASESSION TO 2\n"
+            "epoch_low_session2 = SET('EPOCH')\n"
+            "SET DATASESSION TO 1\n"
+            "epoch_low_restored = SET('EPOCH')\n"
+            "epoch_low_year_restored = YEAR(CTOD('01/02/01'))\n"
+            "SET EPOCH TO\n"
+            "epoch_low_reset = SET('EPOCH')\n"
+            "epoch_low_year_reset = YEAR(CTOD('01/02/01'))\n"
+            "SET EPOCH TO 1975\nSET CENTURY ON\n"
             "SET CENTURY OFF\n"
             "century_off = SET('CENTURY')\n"
             "dtoc_century_off = DTOC(CTOD('18/04/2026'))\n"
@@ -478,6 +504,22 @@ namespace
         check("ttos_epoch_1975_74", "20740201134556");
         check("dtot_epoch_1975_74", "20740201000000");
         check("ttod_epoch_1975_74", "20740201");
+        check("epoch_low_on", "1");
+        check("epoch_low_year_on", "1");
+        check("epoch_zero_year", "100");
+        check("epoch_low_date", "00010201");
+        check("epoch_low_time", "00010201134556");
+        check("epoch_low_display_on", "01/02/0001");
+        check("epoch_low_vfp9", "1");
+        check("epoch_low_year_vfp9", "1");
+        check("epoch_low_off", "1");
+        check("epoch_low_year_off", "1");
+        check("epoch_low_display_off", "01/02/01");
+        check("epoch_low_session2", "1950");
+        check("epoch_low_restored", "1");
+        check("epoch_low_year_restored", "1");
+        check("epoch_low_reset", "1950");
+        check("epoch_low_year_reset", "2001");
         check("century_off", "OFF");
         check("dtoc_century_off", "18/04/26");
         check("date_set_ymd", "YMD");
