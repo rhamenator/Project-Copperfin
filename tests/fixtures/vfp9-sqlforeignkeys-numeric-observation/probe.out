@@ -1,0 +1,53 @@
+VERSION|Visual FoxPro 09.00.0000.7423 for Windows
+CONTROL|ERR1466
+SQLFOREIGNKEYS(0, 'ORD*', 'native_foreignkeys')|ERR1
+FIRST_ERROR|File 'sqlforeignkeys.prg' does not exist.
+SQLFOREIGNKEYS(1, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(2, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(-1, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(0.49, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(0.5, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(0.9, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(1.49, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(1.5, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(1.9, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(-0.49, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(-0.5, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(-0.9, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(-1.1, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(2147483647, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(2147483648, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(-2147483648, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(-2147483649, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(4294967295, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(4294967296, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(4294967297, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(4294967298, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(-4294967296, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(-4294967295, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(-4294967294, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(4294967296.9, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(-4294967295.9, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(1E20, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(-1E20, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(1E300, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(-1E300, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(EXP(1000), 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(-EXP(1000), 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(9007199254740992, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(32767, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(32768, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(65535, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(65536, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(65537, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(-65535, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(-65536, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS($0.5, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS($1.5, 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(.T., 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(.F., 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS(.NULL., 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS('0', 'ORD*', 'native_foreignkeys')|ERR1
+SQLFOREIGNKEYS('1', 'ORD*', 'native_foreignkeys')|ERR1
+CURSOR|F
+SESSION|1
