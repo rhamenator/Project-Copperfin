@@ -5968,6 +5968,20 @@ copperfin_add_test(test_prg_engine_error_command_numeric cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
+copperfin_add_test(test_prg_engine_go_record_numeric cf_xbase_runtime
+    test_prg_engine_go_record_numeric.cpp
+    prg_engine_test_support.cpp
+)
+
+copperfin_add_test(test_prg_engine_go_record_neighbors cf_xbase_runtime
+    test_prg_engine_go_record_neighbors.cpp
+    test_prg_engine_runtime_surface_functions_buffering.cpp
+    prg_engine_test_support.cpp
+)
+target_include_directories(test_prg_engine_go_record_neighbors PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/runtime
+)
+
 copperfin_add_test(test_prg_engine_error_command_neighbors cf_xbase_runtime
     test_prg_engine_error_command_neighbors.cpp
     test_prg_engine_control_flow_error_handling_and_faults.cpp

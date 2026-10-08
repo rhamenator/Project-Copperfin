@@ -4941,7 +4941,25 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    requested_record = std::llround(value_as_number(*requested_value));
+                    // RQ-CF-PRG-GO-RECORD-NUMERIC-001: reject conversion
+                    // before navigation/row-buffer commits/relations/events.
+                    // Valid negative pending identities remain admitted;
+                    // general record/type validation is separate (#7081).
+                    const auto &set_state = current_set_state();
+                    const auto mode = set_state.find("numericbehavior");
+                    const auto converted = checked_go_record_argument(*requested_value,
+                        mode != set_state.end() && normalize_identifier(mode->second) == "vfp9"
+                            ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
+                    if (!converted)
+                    {
+                        const std::string operand = requested_value->kind == PrgValueKind::number
+                            ? format_round_trip_decimal(requested_value->number_value)
+                            : value_as_string(*requested_value);
+                        throw PrgCompatibilityError(runtime_text(
+                            "Runtime.Prg.Dispatch.Error.GoRecordNumberInvalid",
+                            {{"value", operand}}), 5);
+                    }
+                    requested_record = *converted;
                 }
 
                 {

@@ -1,0 +1,40 @@
+RQ-CF-PRG-GO-RECORD-NUMERIC-001: unchanged-production audit
+Base main 5a1eeadd21ee97b7544e1cc336ee6d860256aebe
+Original dispatcher git blob a06d6738bce7e95ff13507d3c77d39445f33195f
+Dispatcher SHA256 1990967a7cb7d2a291e0b354c167caccc249663c12be767d395c502fba0d7d91
+Baseline test SHA256 2f60d8cd88e8f0eef2c6fe534907bd97542c37bbe24df204f16f444129429de3
+588 guarded mode/command/buffering rows plus4 dirty-row sessions.
+Direct helper/eight locale tests were added after baseline; not baseline claims.
+No production/helper conversion changes were present for either baseline.
+
+GCC15.2 Debug-O0-g1: numeric1.46s; focused two-test total1.88s;
+four existing navigation/pending-buffer regressions passed0.40s.
+Clang21.1.8 Debug-O0-g1 ASan/UBSan/float-cast-overflow:
+focused total6.92s; no sanitizer diagnostics; detect_leaks=0, not leak qualification.
+Both fail exactly340 selected assertions:
+316 guarded conversion row/state mismatches
+12 guarded successful-event count mismatches
+4 unsafe-target dirty-row position mismatches
+4 persisted dirty-row mismatches
+4 dirty-row successful-event mismatches
+0 guarded count/alias/session/mode suffix failures
+0 setup/completion/cleanup/disk-setup/count failures
+0 focused existing-neighbor failures
+No older Numeric baseline execution or direct helper baseline claim.
+
+Actual unchanged-dispatch controls (both modes/commands):
+unbuffered GO/GOTO -1 and0 -> code0/fall-throughT/record1/BOFT/EOFF/payloadone
+unbuffered GO/GOTO4 -> code0/fall-throughT/record4/BOFF/EOFT/blank payload
+Currency$1.5 and Character'2' -> code0/fall-throughT/record2/payloadtwo
+buffered4/5 GO -1 -> record-1/pending1; valid physical4 maps public-1
+four mode/row-buffer2/3 unsafeGO1E300 -> code0/T/record1/BOFT/EOFF/one
+four row-buffer2/3 disk record2 -> dirty, not originaltwo
+Native unbuffered -1/0/4 reject5 and preserve record2; Currency/String reject10.
+Record-existence/type gap#7081 remains unfinished/unadmitted.
+
+GCC baseline log SHA256 9659a8bae97f5c3223f821058587e4e709bdaf244352d86a6096eb5ca83f5426
+Clang baseline log SHA256 88a5b1ce792e92fed4f5cb992ea39797250346575ccf5bd052fc880647af585e
+Full owned logs retained in copperfin-go-record-5611-build/sanitize until merge.
+Runs strictly serial across builds with privateTMPDIR.
+Preliminary harness observer-selection/BOF/public-recno mismatches excluded,
+corrected without production edits before these two acceptance baselines.
