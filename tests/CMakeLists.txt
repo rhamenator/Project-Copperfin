@@ -5963,6 +5963,18 @@ copperfin_add_test(test_prg_engine_numeric_behavior cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
+copperfin_add_test(test_prg_engine_error_command_numeric cf_xbase_runtime
+    test_prg_engine_error_command_numeric.cpp
+    prg_engine_test_support.cpp
+)
+
+copperfin_add_test(test_prg_engine_error_command_neighbors cf_xbase_runtime
+    test_prg_engine_error_command_neighbors.cpp
+    test_prg_engine_control_flow_error_handling_and_faults.cpp
+    test_prg_engine_control_flow_shared_test_helpers.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_prg_engine_binary_conversion cf_xbase_runtime
     test_prg_engine_binary_conversion.cpp
     prg_engine_test_support.cpp

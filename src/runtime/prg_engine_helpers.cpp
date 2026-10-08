@@ -1301,6 +1301,34 @@ std::optional<std::int64_t> checked_truncated_numeric_to_int64(const double valu
     return static_cast<std::int64_t>(value);
 }
 
+// RQ-CF-PRG-ERROR-COMMAND-NUMERIC-001 (#5611/#6776): retained native
+// evaluation-order observations in vfp9-error-command-numeric-observation.
+std::optional<std::int32_t> checked_error_number_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    std::optional<std::int64_t> converted;
+    const bool negative_numeric =
+        (value.kind == PrgValueKind::number && value.number_value < 0) ||
+        (value.kind == PrgValueKind::int64 && value.int64_value < 0);
+    if (negative_numeric && behavior == NumericBehavior::vfp9) {
+        converted = vfp9_numeric_to_int32(value);
+    } else if (value.kind == PrgValueKind::int64) {
+        converted = value.int64_value;
+    } else if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value <= static_cast<std::uint64_t>(INT32_MAX)) {
+            converted = static_cast<std::int64_t>(value.uint64_value);
+        }
+    } else if (value.kind == PrgValueKind::number) {
+        converted = checked_truncated_numeric_to_int64(value.number_value);
+    } else if (value.kind == PrgValueKind::currency) {
+        // Preserve existing Currency rounding, not native ERROR type parity.
+        converted = checked_truncated_numeric_to_int64(std::round(value_as_number(value)));
+    }
+    if (!converted || *converted < 0 || *converted > INT32_MAX) {
+        return std::nullopt;
+    }
+    return static_cast<std::int32_t>(*converted);
+}
+
 // RQ-CF-PRG-CURSORSETPROP-BUFFERING-NUMERIC-001 (#5611/#6776);
 // native Numeric oracle and exact-extension policy retained in its fixture.
 std::optional<std::int32_t> checked_cursor_buffering_mode_argument(

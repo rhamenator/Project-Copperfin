@@ -1465,6 +1465,7 @@
   "Runtime.Prg.Dispatch.Error.CommandInvalidArgumentCount": "{command} requiere uno o dos argumentos",
   "Runtime.Prg.Dispatch.Error.CommandInvalidArgumentType": "{command} requiere un argumento numerico o de caracter",
   "Runtime.Prg.Dispatch.Error.UserRaisedError": "Error {code}.",
+  "Runtime.Prg.Dispatch.Error.ErrorNumberInvalid": "Número de ERROR no válido: {value}",
   "Runtime.Prg.Dispatch.Error.UserRaisedErrorWithParameter": "Error {code}: '{parameter}'.",
   "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed": "No se pudo resolver el destino de {command}: {target}",
   "Runtime.Prg.Dispatch.Error.ReturnToCrossesExpressionInvocationBoundary": "{command} no puede desenrollar mas alla de una llamada a rutina realizada desde una expresion o un evento de devolucion de llamada",

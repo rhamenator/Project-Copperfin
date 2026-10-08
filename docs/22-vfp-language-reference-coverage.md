@@ -1,5 +1,19 @@
 # VFP Language Reference Coverage
 
+- ERROR first-operand Numeric conversion (#5611/#6776,2026-10-08):
+  RQ-CF-PRG-ERROR-COMMAND-NUMERIC-001 recovers truncation and the two-stage
+  parameter order from three matching66-line installed VFP9 observations
+  plus three matching38-line counting-UDF/Currency controls. Default checks
+  nonnegative signed32; explicit VFP9 alone retains negative low32/indefinite0
+  aliases. Missing conversions raise localized1941 before the parameter;
+  converted0 rejects after it. Exact int64/uint64 use derived no-double-loss
+  policy, Currency preserves checked half-away coercion. 118 direct checks,
+  148 guarded rows/eight locale cases and seven existing ERROR neighbors pass
+  GCC/focused Clang sanitizers; full GCC older Numeric passes. Fixture README/
+  docs32 retain baseline/fixed RQ/VR/DQ/DV evidence and limits. Positive domain
+  admission is not native catalog membership; catalog/type gap#7079, full
+  messages/arity, resumable handling and general error lifecycle stay separate.
+
 - CURSORSETPROP BUFFERING Numeric mode (#5611/#6776,2026-10-08):
   RQ-CF-PRG-CURSORSETPROP-BUFFERING-NUMERIC-001 recovers Numeric truncation,
   modes1..5 and catchable1469 on invalid conversion from three matching45-line
