@@ -1382,6 +1382,15 @@ std::optional<std::int64_t> checked_mrkbar_number_argument(
     return bar;
 }
 
+// RQ-CF-PRG-SKPBAR-NUMERIC-001 (#5611/#6776): independent enabled/disabled
+// singleton controls match MRKBAR conversion; general native1612 gap#7098
+// is separate. Parent-derived exact-integer/nonfinite/coercion bounds share
+// this checked helper without migrating the first-pass lookup policy.
+std::optional<std::int64_t> checked_skpbar_number_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    return checked_mrkbar_number_argument(value, behavior);
+}
+
 // RQ-CF-PRG-SKIP-COUNT-NUMERIC-001 (#5611/#6776): count conversion only,
 // not shared navigation or native type admission. Widened int32 counts make
 // the existing long-long abs operation defined, including INT32_MIN.

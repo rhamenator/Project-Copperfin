@@ -1,5 +1,21 @@
 # VFP Language Reference Coverage
 
+- SKPBAR Numeric/exact-integer identifier conversion (#5611/#6776/#5868,2026-10-08):
+  RQ-CF-PRG-SKPBAR-NUMERIC-001 mapped before migration. Independent installed
+  VFP9 7423 three matching paired125-line singleton1/2/MAX enabled/disabled controls
+  recover truncation/both-sign low32 positive aliases;4294967297 queries1,
+  not SET SKIP positive saturation. [Fixture](../tests/fixtures/vfp9-skpbar-numeric/README.md)
+  retains help/source/output hashes. Default Numeric/exact1..MAX/otherwise
+  existing safe false; explicit legacy aliases. General native1612 gap#7098
+  remains separate from first-pass #4617 false policy; type/system-menu/
+  other-query/lifecycle work excluded.96direct/372guarded/three old neighbors;
+  original55 selected identity failures per compiler, zero unrelated/no diagnostics;
+  fixed GCC12/12 PASS468.93s; Clang sanitizers3/3 PASS95.56s and unchanged
+  repeat3/3 PASS9.03s/no diagnostics. Shared MRKBAR regression included; slower
+  first sanitizer pass retained. DQ/DV development self-review/walkthrough/rollback
+  complete, not independent human/full native-error/type/GUI/leak/platform/release
+  qualification. Bounded requirement defined; hosted PR gates remain separate.
+
 - MRKBAR Numeric/exact-integer identifier conversion (#5611/#6776/#5868,2026-10-08):
   RQ-CF-PRG-MRKBAR-NUMERIC-001 mapped before migration. Three matching installed
   VFP9 7423 paired125-line singleton1/2/MAX query controls recover truncation

@@ -1,0 +1,1 @@
+- 2026-10-08: Checked SKPBAR Numeric/exact-integer identifier conversion with default truncation/bounds and explicit VFP9 both-sign aliases, preserving first-pass false lookup and other menu/session state under #5611/#6776/#5868; native general lookup error gap #7098 remains separate.

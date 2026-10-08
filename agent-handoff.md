@@ -55,119 +55,115 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-SET MARK OF BAR parsed Numeric-literal PR #7094 merged2026-10-08T15:16:38Z
-as 1a7dd8a2a6fa9c62a50d7b46356c008776ac7b55 from signed/DCO G head
-44781bc5ddc5d180ef988afd8a334872dc493d95. All11 required SUCCESS;
-At merge33/36 total SUCCESS, only three optional Native pending, no failures.
-Clean exact-head authorized Codex PR-open fallback summary6062392088
-Completed14:45:33.774911Z/root thumb55416807714:45:37Z, no findings.
-Claude-first6062392718 no completed response, not approval. Fresh paginated
-REST reviews/inline and exhausted Graph threads/closing refs empty;
-gate6063037648. Post-push8/8 PASS11.62s proof6062411319/logSHA
-c464787fd0b63f2f4b91a65c2a10f9ada17ed5def4df71dc1653b671245dc1bf.
+MRKBAR Numeric/exact-integer PR#7097 merged2026-10-08T16:16:50Z as
+89fd9ee5b6dcc14f2183cd893b2425340e49c243 from signed/DCO G exacthead
+f09f5fb614826aa6224158188e7d6889b49d46c4. All11 required SUCCESS;
+at merge33/36 total SUCCESS, only3optional Native pending/no failures.
+Clean authorized verified Codex PR-open fallback6063674867 Completed
+15:54:32.071159Z/root thumb55434055215:54:35Z, no findings.
+Claude-first6063678764 no completed response, NOT approval.
+Fresh paginated REST reviews/inline and exhausted Graph review threads/
+closing refs empty; gate6064191372. Post-push8/8 PASS11.38s,
+proof6063699046/logbca08fdf8e33826315a9542a1cf63ae38ac979d50b2bae7f6d501b1d6efe38e0.
 
-RQ-CF-PRG-SET-MARK-BAR-NUMERIC-001: checked before flag/state/event,
-default finite truncated1..MAX; legacy negative-wide positive aliases and
-positive>=2^32 MAX; converted-1/-2 catchable1612 in supported user popups
-(unlike SKIP's no-op), other invalid167/four locales. Three matching125-line
-installed VFP9 7423 paired singleton1/2/MAX runs/40operands/onebar/noactivation.
-Source059b287f2dde795e3719f4ff906b19bead220ce95d777ae0d9b00a1e8a668081,
-output416c7895fa8bbdad7b89085dace1b7fe45fd2f1ea2c1214993e16e40c544aa82.
-70direct/124guarded/32locales/three old neighbors; original dispatcher372
-selected failures per GCC/Clang, zero unrelated/no diagnostics. Fixed
-GCC11/11 PASS459.68s/log11ff81f384be8393ecda57a1f667465def6c3abca2229937670a3795f6edb118;
-Clang sanitizers2/2 PASS2.68s/log6a7d3f17f48b53b1af5c932da43c9d12c6154ca18f76fc9106267ae310fbd4d5,
-no diagnostics/detect_leaks0. Fixture/audit/docs22/32 retain all hashes and
-completed medium-misuse development DQ/DV self-review/walkthrough/rollback,
-not independent human/full type/GUI/leak/platform/release qualification.
-General SET MARK positive-target gap#7093 and lifecycle#4630 separate.
+RQ-CF-PRG-MRKBAR-NUMERIC-001: independent installed VFP9 7423 three matching
+125-line/40-operand paired singleton1/2/MAX query runs, one bar/noactivation.
+Sourcebf93a8387cf1172a3fb7e0ad1bda7ccbe58142f06610721ffac983e50cd1075a,
+output0ba923a5a2ad36470a7ea2592cf06cf29c55fb720f1d4c2162436bff087acf44.
+Default finite truncated1..MAX/otherwise existing false; explicit VFP9
+both-sign low32 positive aliases, unlike setter positive saturation;
+4294967297 queries1. Exact extended integers preserve precision by parent
+policy; other coercions retain checked half-away signed64; selected session/
+query state preserved.96direct/372guarded/three old neighbors; original
+callback55 selected identity failures per GCC/Clang, zero unrelated/no diagnostics.
+Fixed GCC11/11 PASS485.79s/log7f51711bac9c71c978b92de9702231dd0d67c5a359ae0210c84101d4c5f38a2a;
+Clang sanitizers2/2 PASS4.99s/log5dc354647bd0b29884eae56bc28b4c1918cdbc484f659a63cc4c3a7bc4a67a5c,
+no diagnostics/detect_leaks0. All failures/hashes in fixture baseline audit.
+README/docs22/32 retain medium-misuse development DQ/DV self-review/
+walkthrough/rollback, not independent human/full native-error/type/system-menu/
+GUI/leak/platform/release qualification. General lookup gap#7095 separate.
 
-Exact-head Native Linux37794838552/job113371481810 SUCCESS456/456535.45s
-(new0.54/neighbors0.01), proof6063144783; macOS37794838394/job113371482290
-SUCCESS456/456398.74s(new0.83/neighbors0.08) plus four2/2 repeats
-21.40/21.22/22.20/20.84s, proof6063145396.
-Windows37794838356/job113371481992 attempt1 failed2026-10-08T15:37:04Z:
-456/457 PASS900.66s; sole test_visual_asset_editor timeout180.01s.
-Selected MARK numeric3.63/neighbors0.04 PASS; no selected-slice failure.
-Failed-job exact-head rerun requested; retain failed run, not clean Windows
-evidence. No production/timeout-limit expansion; monitor rerun actual results.
-Prior #7092 now all Native complete: Windows37787343590/job113345383128
-SUCCESS455/4551053.17s(new3.02/neighbors0.05), proof6063043781;
-Linux454/454526.82s and macOS454/454469.33s plus four repeats retained.
-Canonical main synchronized1a7dd8a2a6fa9c62a50d7b46356c008776ac7b55.
-Completed MARK WT/local/remote branch removed normally after cleanstatus;
-owned800MB GCC/569MB sanitizer builds moved to recoverable trash.
-Scoped continuity stashce8d46226faed596d7342adb7b08df8d95c0e237 retained;
-older stashes/unrelated files/detached WTs preserved. Channel reread empty.
-Attachment cap100: obsolete #6649 merged attachment unlinked only/GitHub
-untouched; #7094 attached. EPOCH/CENTURY complete/#3698 closed;
-#6879 retained after numeric; no umbrella/#5868/#4618 closure.
+Exact-head Native macOS37803713335/job113402343359 SUCCESS458/458409.86s
+(new1.31/neighbors0.05), four2/2 locale repeats21.61/22.79/20.44/20.26s.
+Proof6064252990. Linux37803713415/job113402343886 SUCCESS458/458479.38s
+(new0.89/neighbors0.01), proof6064342677. Windows37803713389 still monitored.
+Prior MARK#7094 Windows37794838356 attempt1 failed456/457900.66s,
+sole visual_asset_editor timeout180.01s; selected MARK3.63/neighbors0.04 PASS.
+Failed-job exact-head rerun attempt2/job113397658179 SUCCESS16:28:33Z:
+457/457 PASS746.30s, visual_asset_editor85.51s; retained logSHA
+f90f496b57d400277c2ac4d249a0677d0de841771e3159eb28a2ca692034a2cf.
+Failed attempt/proof6063488327 retained separately; no production/timeout
+changes were made for the retry. Prior Linux/macOS
+456/456 and older#7092 all platform results retained in GitHub/earlier stash.
+
+Main synchronized89fd9ee5b6dcc14f2183cd893b2425340e49c243. Completed MRKBAR
+WT/local/remote branch removed normally after cleanstatus; owned801MB GCC/
+567MB sanitizer trees moved to recoverable trash. Scoped continuity stash
+dc5b65c26c990fb57a44e8a8d650eb3923178cda retained; older stashes/foreign
+files/detached WTs preserved. Channel reread empty. Attachment cap100:
+obsolete merged#6653 attachment unlinked only/GitHub untouched;#7097 attached.
+EPOCH/CENTURY complete/#3698 closed;#6879 retained after numeric.
+No umbrella/#5868/#4617/#4618/#7093/#7095 closure or new admission labels.
 
 ## Selected active bounded slice
 
-MRKBAR second-argument Numeric/exact-integer bar identifier under admitted
-#5611/#6776/#5868; first-pass #4618 remains owner-authored OPEN/agent-approved.
-Base origin/main1a7dd8a2a6fa9c62a50d7b46356c008776ac7b55.
-WT /home/rich/.codex/worktrees/mrkbar-numeric-5611/Project-Copperfin,
-branch fix/mrkbar-numeric-5611. Only existing mark-query callback conversion;
-preserve first-pass false fallback, mark lookup/accepted other coercions,
-selected session and all menu/callback/state/cleanup behavior.
-General missing-target/error policy#7095, type admission, system menus,
-other query functions, popup order/count#6152 and #4630 lifecycle excluded.
-
-RQ-CF-PRG-MRKBAR-NUMERIC-001 derives from parent numeric/safety policy and
-independent installed native controls; bounded local acceptance now defined.
-Three unchanged serial VFP9 7423 runs match125lines/40operands x singleton
-1/2/MAX, one RELATIVE bar/noactivation, paired unmarked/marked controls.
-Sourcebf93a8387cf1172a3fb7e0ad1bda7ccbe58142f06610721ffac983e50cd1075a,
-output0ba923a5a2ad36470a7ea2592cf06cf29c55fb720f1d4c2162436bff087acf44.
-Unlike SET MARK, positive4294967297 aliases1, notMAX; both-sign low32
-positive aliases recovered independently. Missing/nonpositive native1612
-contradicts first-pass #4618's false fallback; focused #7095 filed against
-exact main using native/source-path evidence, not independent Copperfin
-baseline claim. Preserve existing fallback here, do not expand general lookup.
-Shipped MRKBAR help7f9a8ff8-b97d-4502-be18-98ef2f4a3d22 read fully;
-generated probe.FXP moved to recoverable trash. No VM/backend/system mutation.
-Mapped the gap BEFORE helper/production and constructed independent direct/
-paired guarded/selected-session/coercion/old-neighbor regressions; original/
-fixed comparison on both compilers and serial private TMPDIR acceptance done.
-Requirement gap mapped README/docs22/32 BEFORE helper/production. Helper
-checked_mrkbar_number_argument constructed: Numeric/exact default1..MAX,
-VFP9 both-sign low32 positive aliases; nonfinite rejects; exact int64/uint64
-avoid double precision loss; other coercions checked half-away signed64.
-96direct (58Numeric/6nonfinite/6nextafter/20exact/6coercion),372guarded
-(348paired identity+24opposite-origin session2) and three old neighbors.
-Independent marked patterns across1/2/MAX, skip only2, repeated host callback
-identity, prompts/count/cursor/session/zero query mutation-events/cleanup guards.
-Original unchanged mark callback/base prg_engine.cpp blob
-3422390b36ade981970a53e35df7d3ed7bb2b165/SHA
-db8b272b9e29e95435f3003b1140bbc4d0c87a7bed8fe26018718352fdab5dde.
-HelperSHAefcc9b7bdc03b222f4c2a3fa6df260bc24e4addd06a08531764a10cabc46b4a1,
-testSHA5a6eb2d9fde734ae1a9bbdb137f2819144aad0490d48dbff7589ef8f2dc872bb.
-Original callback baselines completed serial/private TMPDIR on both fresh
-GCC15.2/Clang21.1.8 sanitizer configurations: exactly55 query-identity failures
-each, identical sorted failureSHA
-b0c48ba04ad012ed8567b8daa8749b6b904b3ee3db4488bcbfe68b0afe8df33d.
-Zero unrelated failures/sanitizer diagnostics; neighbors pass.
-Logs c170b127ceeef3d815a3e5a921ac8a122cecad652a953725a52568d8323421d7
-and ccfef93db34c8e98e35459af5de2f6183acf333d1a3c1227b31b577b610234d8;
-all55 retained in fixture baseline-audit.md; frozen test/helper hashes above.
-Mark callback now uses checked helper/selected session, no other production
-changes. Fixed GCC11/11 PASS485.79s/numeric5.57/neighbors0.15:
-log7f51711bac9c71c978b92de9702231dd0d67c5a359ae0210c84101d4c5f38a2a.
-Clang ASan/UBSan/float-cast-overflow2/2 PASS4.99s, no diagnostics/detect_leaks0:
-log5dc354647bd0b29884eae56bc28b4c1918cdbc484f659a63cc4c3a7bc4a67a5c.
-Frozen helper/tests unchanged; fixed callbackSHA
+SKPBAR second-argument Numeric/exact-integer bar identifier under admitted
+#5611/#6776/#5868; first-pass #4617 OPEN/owner-authored/agent-approved,
+metadata/body verified2026-10-08T16:18Z. Base origin/main
+89fd9ee5b6dcc14f2183cd893b2425340e49c243.
+WT /home/rich/.codex/worktrees/skpbar-numeric-5611/Project-Copperfin,
+branch fix/skpbar-numeric-5611. Existing skip-query callback currently uses
+unchecked llround(value_as_number) in prg_engine.cpp; original/base blob
+4d2f4727e16c532a7d8c74c533fe725177c1a384/SHA
 38d0a63fe03ae1415a4d3b63be3341f1f2d786d9e9d869b877f959fd6eeaa6a7.
-README/docs22/32 retain completed medium-misuse development DQ/DV
-self-review/walkthrough/rollback, not independent human/full native-error/
-type/system-menu/GUI/leak/platform/release qualification.
-Owned /home/rich/temp/copperfin-mrkbar-5611-build and sibling mrkbar-5611-sanitize.
-CMake/isolation frozen; next signed-DCO commit/push/Claude-first PR,
-post-push focused verification and all11/exact-head review/resolution gates.
-No commit/push/PR yet. Windows #7094 exact-head rerun attempt2 in progress,
-watch25232/proof6063488327; failed attempt1 retained, not clean evidence.
-
+Bounded Numeric/exact-integer conversion only; preserve first-pass false
+fallback, skip lookup/accepted other coercions, selected session and all
+menu/callback/mark/cursor/cleanup behavior. General missing-target/native-error
+policy, type admission, system menus, other queries, popup order/count#6152
+and #4630 lifecycle excluded. Shipped SKPBAR help31c60e9b-b946-4acf-815d-bd2fda529c71
+read fully. Three unchanged serial installed VFP9 7423 runs match125lines/
+40operands x singleton1/2/MAX, paired known-integer SET SKIP enabled/disabled
+seeds, onebar/noactivation. Source432fec290b3d743e188b5347e49feb4328c8453acba8d01339f7629e9622efc4,
+output050559431a92cd1e83c78de95abc0ed42b018c4c11f38397455e57e7bac7ed61.
+Fractions truncate; both-sign low32 positive aliases,4294967297 queries1
+unlike SET SKIP saturation. Native missing/nonpositive1612 conflict against
+first-pass #4617 false fallback filed focused unadmitted#7098 against exact
+main using native/source-path evidence, not separate Copperfin lookup baseline.
+No new admission label/general lookup implementation. probe.FXP recoverably
+trashed. RQ-CF-PRG-SKPBAR-NUMERIC-001 gap/parent safety boundaries mapped
+README/docs22/32 BEFORE helper/migration; helper delegates independently
+matched checked MRKBAR conversion without changing that implementation.
+Default/exact1..MAX, explicit VFP9 low32 aliases; other checked half-away
+coercions, nonfinite safety/extended precision owner-derived.
+96direct/372guarded independent opposite skip patterns across1/2/MAX,
+independent mark only2, zero skip/mark events/mutation, repeated host callbacks
+matching skip suppression, prompts/count/cursor/session/cleanup, three old
+neighbors. Frozen testSHAc39704e731ed00eeeed02a26fed70ff78514436502f402b5adc4312fcb668306,
+helperSHAb7d3a07c4e9c68209e3ac0ae758b412f3ffd70cab28c42b579237a712bf52005.
+Both original callback baselines completed: exactly55 selected query-identity
+failures per compiler, zero unrelated/no runtime sanitizer diagnostics;
+all failures/source/test/helper/log hashes retained in fixture baseline audit.
+GCC total4.46s(log6132cc5afdc73cdf364885f24b9589d0bfe102b796640ad4d82548488dd3ff95),
+Clang4.76s(logf70e201286502683269278fb5f341852b9e5985dbf561ea903aa7b24dcd29886),
+same sorted failure hash71c87c4632d9bd68120622161f8bb5eb0a7a3d98508c2b159bac7d6da0257254.
+Only skip-query callback migrated to selected-session checked conversion,
+fixed sourceSHA9ec338536657ab687ea297225ae96fb672cbac32529f8a16eecff80bf3cb6acc.
+Two fresh configurations/builds in
+/home/rich/temp/copperfin-skpbar-5611-build and sibling skpbar-5611-sanitize.
+CMake/isolation frozen throughout build/test; compiler builds overlapped,
+runtime/native validation strictly serial/private TMPDIR.
+Fixed GCC12/12 PASS468.93s(SKPBAR4.34/neighbors0.11/MRKBAR4.34),
+log7d93d50e581959d494aa1b1e2202a0b15658f996157a7d66444f7995fd5ec2b4.
+Clang sanitizers3/3 PASS95.56s(SKPBAR61.53/neighbors0.10/MRKBAR33.92),
+log71b8d247db133dbc585702c9c8e01a6c11154b16d4fc38bd6504e0aba51f3d99;
+unchanged repeat3/3 PASS9.03s(SKPBAR4.44/neighbors0.10/MRKBAR4.48),
+log5e712cc20c9e2a8a6a6c7e1911b57289c4a58c0468bad3961874437eb6f605da.
+No diagnostics/detect_leaks0; slower first pass retained without guessed cause.
+DQDV medium development self-review/walkthrough/rollback and traceability
+complete, not independent human/full native-error/type/system-menu/GUI/leak/
+platform/release qualification. Bounded requirement defined; umbrella/gap open.
+Next signed-DCO commit/push/Claude-first PR/exact-head focused proof/gates.
+No commit/push/PR yet; preserve foreign files/detached WTs/stashes.
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
 It completed the array-dimension safety slice under #5611/#6776 with checked
@@ -922,7 +918,8 @@ Owner-directed workstream order before the #6879 assignment was:
    - Completed after it: ON SELECTION BAR DO/static-action identifiers (PR#7091).
    - Completed after it: SET SKIP OF BAR identifiers (PR#7092).
    - Completed after it: SET MARK OF BAR identifiers (PR#7094).
-   - Active: MRKBAR second-argument Numeric/exact-integer identifiers.
+   - Completed after it: MRKBAR Numeric/exact-integer identifiers (PR#7097).
+   - Active: SKPBAR second-argument Numeric/exact-integer identifiers.
      Other bar consumers#5868, popup order/count#6152 and expression admission
      #6225/#6227 remain unfinished.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
