@@ -1340,6 +1340,13 @@ std::optional<std::int32_t> checked_on_selection_bar_number_argument(
     return checked_on_bar_number_argument(value, behavior);
 }
 
+// RQ-CF-PRG-SET-SKIP-BAR-NUMERIC-001: independent singleton native state
+// controls recover the conversion, but -1/-2 succeeds here without user mutation.
+std::optional<std::int32_t> checked_set_skip_bar_number_argument(
+    const double value, const NumericBehavior behavior) {
+    return checked_on_bar_number_argument(value, behavior);
+}
+
 // RQ-CF-PRG-SKIP-COUNT-NUMERIC-001 (#5611/#6776): count conversion only,
 // not shared navigation or native type admission. Widened int32 counts make
 // the existing long-long abs operation defined, including INT32_MIN.

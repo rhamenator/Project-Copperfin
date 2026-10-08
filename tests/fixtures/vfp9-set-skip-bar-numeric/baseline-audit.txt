@@ -1,0 +1,37 @@
+RQ-CF-PRG-SET-SKIP-BAR-NUMERIC-001, admitted #5611/#6776/#5868.
+Base main e12a7940ae9e80b5347e40f5c296b6e340a6d082.
+Original dispatcher blob1c36259d9a4ce0f0332cb99152d0869ace50dff6;
+SHA25652c30d7433c7a10c4e67bcce39f00d705c04a8e7062a5ed6f0d3585152b01f8f.
+Provisional helperSHAb015031e5b445864aba9f32338d24a1fb972e5a8a3e0a91d84c6160261b4037f.
+Final testSHAe1ca23679f04f611980937590d4dc39e3db8161998f3df910a98774876cf4edd.
+GCC15.2 Debug original-dispatch negative:412 selected failures,
+66 catchable-code/66 continuation/66 failure-atomic event count/
+38 converted event identity/96 repeated independent host selection/
+40 seeded skip flags/40 locale metadata-message-state. Zero unrelated:
+70direct, marks/prompts/count/cursor/session, seed events, selected callback
+identity, explicit cleanup/reset and three old neighbors pass.
+Numeric2.07s/neighbors0.11s, CTest2 total2.19s exit8.
+GCC logSHAaa71de9a75e4e8ab26634c4d34a63d5163c2bc73126c3bc870bed2e54391c0f3.
+Clang21.1.8 Debug -O1 ASan/UBSan/float-cast-overflow original-dispatch replay:
+identical412 selected failures, zero unrelated/no diagnostics.
+Numeric1.93s/neighbors0.10s, CTest2 total2.04s exit8;
+logSHA23cde667e4b020b162ca97bec81e2b92a2a151fcef9f871343154dfd23fee4fa.
+ASAN detect_leaks0/abort1; UBSAN halt_on_error0/print_stacktrace1.
+Private TMPDIR, runtime strictly serial. No original-domain crash finding
+is claimed from the llround call alone.
+Reconstruct in a disposable worktree: retain helper/tests/CMake, restore ONLY
+dispatch.inl from the recorded base, rebuild two targets and run matching
+CTest regex-j1/private TMPDIR. Keep final numeric assertions unchanged.
+
+Construction: before either test compilation/run, changed test-only Boolean
+snapshot formatting from TRANSFORM to explicit IIF '.T.'/'.F.' to avoid
+coupling guards to unrelated TRANSFORM formatting. Initial testSHA
+cb7131c473b0ed94503d7941552fa6bf7742649ea8c2d85bc9fa9a7524a3aef2 was never
+runtime verification or acceptance evidence. No failing harness run excluded.
+Native initial single-.T. three runs mapped the requirement before helper;
+three final paired .T./.F. runs independently strengthen state identity.
+Initial native source e8e598d35054e938f82cf702e55533a71b2e4cc794246707cd2a71366aaa479a,
+outpute4e1a9078649fb1bf256756c998d33b2189bf6d8ba21278c83524013e23f96d8.
+Final paired hashes are retained in README; both sets matched independently.
+Generated probe.FXP moved to recoverable trash. Lowercase probe.fxp cleanup
+attempt found no file; corrected exact uppercase target, no other files removed.
