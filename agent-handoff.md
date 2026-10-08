@@ -55,98 +55,89 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-SKIP count numeric conversion PR #7084 merged 2026-10-08 07:46:22 UTC
-as eeae9e0b6a729d3bac5ec55db0beeb834a65c6c6, signed/DCO exact head
-f317e487a06b102a6991f9eb80c9720f87daddca. All11 required SUCCESS;35/36
-reported checks SUCCESS, optional Windows Native still running at merge;
-that unchanged-head job subsequently passed443/443827.72s, proof6055435502.
-Clean exact-head Codex PR-open fallback summary6054489692 completed07:07:22Z,
-verified connector thumbs553277961. Claude-first6054498335 no completed
-response/quota/setup notice, not approval. Paginated REST reviews/inline and
-Graph threads/closing refs empty, pagination exhausted. Merge proof6055233316.
-Post-push8/8 7.38s proof6054548867 at unchanged signed head; initial local
-stale CMake isolation inventory was regenerated and all8 passed without
-source/head change.
+UNLOCK RECORD numeric conversion PR #7087 merged2026-10-08T08:46:29Z as
+6198c079c4e9995a7365e4500a19f3fd5f68f0c9, signed/DCO exact head
+9abf1a2868549c6ad5e5a0f4a98b4b8f771593f6. All11 required SUCCESS;
+33/36 reported checks SUCCESS, three optional full Native jobs running.
+Clean exact-head Codex PR-open fallback summary6055812364 completed
+08:24:05.532441Z; verified connector rootthumb55340894608:24:10Z.
+Claude-first6055814951 no completed response/quota/setup notice, not approval.
+Fresh REST reviews/inline and Graph threads/closing refs empty, pagination
+exhausted. Merge proof6056193576; exact post-push8/8 7.89s proof6055827965.
+Only explicit record conversion; default checked nonnegative signed32/exact,
+VFP9 negative positive-low32 aliases only, positive wide/non-record targets
+never alias small records, NaN rejects both, safe other half-away coercions.
+Localized10 before release/event; captured target mode/restored callback session.
+Native three matching74-line shared-DBF runs with prelocks/cleanup. Original
+dispatcher76 selected failures per GCC/Clang, zero others/no sanitizer
+diagnostics; checksummed grouped baseline distinct from final fresh sessions.
+Fixed82 direct/124 guarded/twelve locale/two resumed/four dirty-disk cases,
+six old navigation/lock neighbors. GCC4/4 151.88s includes older Numeric/
+localization; Clang2/2 8.80s ASan/UBSan/float-cast-overflow/no diagnostics/
+detect_leaks0. Seven contracts7/7 360.35s;176 fragments valid. Fixture README/
+docs22/32/changelog retain RQ/VR/DQ/DV medium-misuse development self-review/
+walkthrough/rollback, not independent-human/full native/type/OS-lock/platform/
+leak/release evidence. #7085 missing-record/type/error-lifecycle and #7086
+ISRLOCKED alias query remain OPEN/unadmitted, parents unfinished.
 
-RQ-CF-PRG-SKIP-COUNT-NUMERIC-001: only count conversion; default checked
-signed32 truncation/exact comparison, explicit VFP9 both-sign low32/huge0,
-NaN rejects both. Other safe coercions checked half-away. Localized11 before
-navigation/buffer commits/relations/success event. Preserve default/zero,
-resumable evaluation/generation revalidation/session routing/shared movement.
-Native three matching100-line and three matching40-line pending4/5 runs;
-original byte-identical dispatcher292 selected failures each GCC/Clang, zero
-others. Fixed98 direct/480 guarded/four dirty-disk/twelve locale/two default
-sessions/four existing neighbors pass. GCC4/4 105.90s includes localization
-and full older Numeric; focused Clang2/2 8.25s ASan/UBSan/float-cast-overflow,
-no diagnostics/detect_leaks0. Seven contracts7/7 378.76s,175 fragments valid.
-Fixture README/docs22/32/changelog retain checksummed baseline and RQ/VR/DQ/DV
-medium-misuse development self-review/walkthrough/rollback; not independent
-human/full native/type/navigation/platform/leak/release qualification.
-Type gap#7083 remains OPEN/unadmitted; parents unfinished.
-
-Canonical main synchronized to exact merge. Completed SKIP WT/local/remote
-branch removed; owned320MB/602MB builds and generated probe/pendingFXPs moved
-to recoverable trash. Scoped continuity stash
-e222f1dda60bba51e86509f38b3e4a0f95124a89 retained with older stashes/unrelated
-files/detached WTs. Channel empty. EPOCH/CENTURY complete/#3698 closed;
-#6879 retained after numeric. #5611/#6776 OPEN/owner/exactagent-approved.
+Canonical main synchronized to exact merge. Completed UNLOCK WT/local/remote
+branch removed; owned337MB/676MB builds and probe.FXP moved to recoverable trash.
+Initial remove declined safely while FXP trash was pending; after tracked/
+untracked-clean recheck normal removal completed, no force. Scoped continuity
+stash5f6a512f6063ae9a456b58b4928e8ee47fb48633 retained with older stashes,
+unrelated files and detached WTs. Channel empty. EPOCH/CENTURY complete/#3698
+closed; #6879 retained after numeric. #5611/#6776 OPEN/owner/agent-approved.
 
 ## Selected active bounded slice
 
-UNLOCK RECORD operand Numeric/exact-integer conversion under admitted
-#5611/#6776, base origin/main eeae9e0b6a729d3bac5ec55db0beeb834a65c6c6.
-Dedicated WT /home/rich/.codex/worktrees/unlock-record-numeric-5611/Project-Copperfin,
-branch fix/unlock-record-numeric-5611. Selected only unlock_command's explicit
-record llround site; preserve non-record UNLOCK/ALL, lock storage/ownership,
-general record existence/type policy, evaluator lifetime/session routing and
-all other conversions. RQ-CF-PRG-UNLOCK-RECORD-NUMERIC-001 is implemented,
-uncommitted/no PR. Three matching74-line installed VFP9 shared-table runs
-verify all3locks before every operand, selected/IN release/pointer/session/
-continuation and complete owned-DBF cleanup. Retained fixture source/output.
-Default checked nonnegative signed32 Numeric truncation/exact comparison;
-VFP9 negative positive-low32 aliases only; oversized positives never alias
-small records (checked wide target, beyond int64model0). NaN rejects both;
-other safe coercions retain checked half-away. Localized10 before release/
-success event; captured target-session mode/restored callback session.
-Original byte-identical main dispatcher76 selected failures each GCC/Clang,
-zero others/no sanitizer diagnostics, checksummed baseline-audit.txt.
-Final124 guarded operands use fresh sessions: grouped tests exposed existing
-stale explicit-error metadata on later missing-record failures. #7085 owns
-that missing-record/type/lifecycle gap; #7086 owns ISRLOCKED second-argument
-alias routing. Both OPEN/unadmitted; no production fixes for either.
-Clang fixed2/2 8.80s passes82 direct/124 guarded/twelve locale/two resumed
-session/four dirty-disk cases plus6 existing neighbor functions, ASan/UBSan/
-float-cast-overflow halt1/no diagnostics/detect_leaks0. GCC4/4 151.88s,
-older Numeric134.25s/localization14.99s/new2.31s/neighbors.32s. Seven contracts
-7/7 360.35s, safety-workflow348.84s;176 fragments valid. Completed medium-
-misuse self-review/walkthrough/rollback and reverse RQ/VR/DQ/DV in fixture
-README/docs22/32/changelog; not independent-human/native-type/OS-lock/platform/
-leak/release qualification. All local processes finished. Next sign/DCO commit,
-push/PRmain, Claude-first review and exact post-push verification. Resolve actual
-PR/head from branch on continuation; merge only all11 required SUCCESS, clean
-exact-head authorized review and resolved conversations. Owned builds retained:
-/home/rich/temp/copperfin-unlock-record-5611-build and -sanitize, privateTMPDIR.
-Initial cursor-only recovery excluded (no observable native cursor locks);
-first shared-table attempt wrong alias setup timed out25s without diagnostic,
-no root-cause or cleanup claim for that failed preliminary scratch table.
-Do not infer full native lock/existence/type policy from Copperfin code.
-No owner input/automation pause; preserve unrelated files/stashes/detached WTs.
+SLEEP explicit-duration Numeric/exact-integer conversion under #5611/#6776,
+base origin/main6198c079c4e9995a7365e4500a19f3fd5f68f0c9.
+Dedicated WT /home/rich/.codex/worktrees/sleep-duration-numeric-5611/Project-Copperfin,
+branch fix/sleep-duration-numeric-5611. Selected only sleep_command's explicit
+llround-to-size_t site, not scheduler default/YIELD, task lifecycle/cancellation,
+critical-section policy, timer clocks or other conversions.
+RQ-CF-PRG-SLEEP-DURATION-NUMERIC-001 is being derived from admitted checked-
+conversion policy, owner extension intent and docs25 concurrency obligations.
+Retain ordinary millisecond half-away quantization, raw negative rejection;
+check finite/representable signed64-and-size_t before converting; exact integer
+kinds preserve precision. Both modes share defined extension policy, no invented
+native low32 aliases. Three matching five-line installed VFP9 safe zero-spelling
+attempts reject10 with recognized INT/session control; NOT full command-absence
+or duration/type/rounding evidence. Fixture source/output hashes retained.
+Helper and34 direct/68 fresh guarded/eight locale/two default-resume tests plus
+four old neighbors added; requirement matrix mapped before dispatch changes.
+Byte-identical original dispatcher blob e7fe0c50e8dda7b7f85b4bbdf87db893635e47cb
+fails48 selected assertions per GCC/Clang,zero other failures/no sanitizer
+diagnostics; older GCC Numeric91.79s/four neighbors pass. Checksummed audit
+retained. Dispatcher now uses helper with localized catchable11; four additional
+resumed-session boundary cases added AFTER baseline. Fixed GCC4/4 263.77s
+(Numeric245.99/localization15.97) and focused Clang2/2 21.53s pass without
+ASan/UBSan/float-cast-overflow diagnostics/detect_leaks0. Two initial fixed
+pseudo-message assertion-only failures corrected; not production locale edits
+or passing preliminary evidence. Fixture docs22/32/changelog retain completed
+development self-review/walkthrough/rollback,177 valid fragments. Private builds
+/home/rich/temp/copperfin-sleep-duration-5611-{build,sanitize}.
+Seven repository contracts pass7/7 380.80s (safety376.17s),177 valid fragments;
+diff/self-review completed. Next signed/DCO commit, push/PR main, Claude-first
+review, exact-head focused post-push checks and all11 required CI gates plus
+resolved conversations before merge. No commit/push/PR yet.
+Do not skip this intentional extension merely because VFP lacks its command.
+No owner input/automation pause. Preserve pending full native monitors below.
 
-Post-merge optional SKIP Windows run37741297979/job113192376365 remains
-SUCCESS at exact f317e487a06b102a6991f9eb80c9720f87daddca:
-443/443827.72s, SKIP1.08s/GO1.10s, proof6055435502. Watcher72202 finished0;
-old required watcher4307 finished0. No remaining SKIP check monitor.
-
-GO#7082 optional Windows retry run37732065417 attempt2/job113180316438
-completed SUCCESS at exact3a194945e56e2c95e66039389c36f9f6d330985a:
-442/442 native tests1292.87s; previously failing Access SaveAsText controls
-pass18.81s, GO numeric2.15s. Watcher98323 finished0, proof6055232866.
-No Access/process/workflow source changes or specific root-cause claim.
-Earlier ERROR#7080 unchanged-head retry440/4401025.43s/proof6053801217 done.
-No remaining old Windows retry monitor. All native/runtime tests strictly
-serial/privateTMPDIR. No VM/system/ODBC/network changes. Future merge requires
-all11 required SUCCESS, clean exact-head Claude/authorizedCodex/owner-terminal
-review and every conversation resolved.
+Post-merge optional #7087 Native monitors at exact9abf1a286:
+Linux run37749389276/job113218601420 watcher60198;
+Windows run37749389217/job113218601418 watcher77770;
+macOS run37749389078/job113218600190 watcher57877.
+Linux444/444415.51s and macOS444/444469.27s plus four repeated2/2 native checks
+now SUCCESS; watchers60198/57877 completed0. Windows still IN_PROGRESS; pending
+does not count as completed evidence.
+Required watcher19841 finished0. Inspect actual failures if any without scope
+expansion; no source/workflow changes or root-cause claim. Prior SKIP Windows
+443/443827.72s proof6055435502; GO retry442/4421292.87s proof6055232866;
+ERROR retry440/4401025.43s proof6053801217 done. Native/PRG/runtime strictly
+serial/privateTMPDIR; no VM/system/ODBC/backend/network changes. Future merge
+requires all11 required SUCCESS, clean exact-head authorized Claude/Codex/
+owner-terminal review and every conversation resolved.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.

@@ -1332,6 +1332,26 @@ std::optional<std::int32_t> checked_skip_count_argument(
     return static_cast<std::int32_t>(*converted);
 }
 
+// RQ-CF-PRG-SLEEP-DURATION-NUMERIC-001: derived extension, no native alias.
+std::optional<std::size_t> checked_sleep_duration_argument(const PrgValue& value) {
+    std::uint64_t duration = 0;
+    if (value.kind == PrgValueKind::uint64) {
+        duration = value.uint64_value;
+    } else if (value.kind == PrgValueKind::int64) {
+        if (value.int64_value < 0) return std::nullopt;
+        duration = static_cast<std::uint64_t>(value.int64_value);
+    } else {
+        const double raw = value_as_number(value);
+        if (!std::isfinite(raw) || raw < 0) return std::nullopt;
+        const auto rounded = checked_truncated_numeric_to_int64(std::round(raw));
+        if (!rounded || *rounded < 0) return std::nullopt;
+        duration = static_cast<std::uint64_t>(*rounded);
+    }
+    if (duration > static_cast<std::uint64_t>(INT64_MAX) ||
+        duration > std::numeric_limits<std::size_t>::max()) return std::nullopt;
+    return static_cast<std::size_t>(duration);
+}
+
 // RQ-CF-PRG-UNLOCK-RECORD-NUMERIC-001 (#5611/#6776): installed native
 // shared-table observations. Keep record-existence/type/lock policy separate.
 std::optional<std::uint64_t> checked_unlock_record_argument(

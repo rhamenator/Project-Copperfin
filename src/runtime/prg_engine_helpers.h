@@ -139,6 +139,10 @@ std::int64_t numeric_count_argument(double value, NumericBehavior behavior);
 // Truncate toward zero only when `value` is finite and representable as int64. This is the fail-closed conversion for
 // array positions/selectors and other arguments where saturation would turn invalid input into an ordinary value.
 std::optional<std::int64_t> checked_truncated_numeric_to_int64(double value);
+// RQ-CF-PRG-SLEEP-DURATION-NUMERIC-001 (#5611/#6776): extension policy
+// is identical in both modes. Preserve half-away milliseconds, reject raw
+// negatives/nonfinite/out-of-domain, exact integer values avoid double loss.
+std::optional<std::size_t> checked_sleep_duration_argument(const PrgValue& value);
 // RQ-CF-PRG-SKIP-COUNT-NUMERIC-001: default signed32 truncation/exact
 // comparison; VFP9 alone retains both-sign low32/indefinite-zero aliases.
 // NaN rejects both modes; safe other coercions remain checked half-away.
