@@ -1471,6 +1471,8 @@
   "Runtime.Prg.Dispatch.Error.DefineBarNumberInvalid": "[!! DÉFÍNÉ BÁR: ínválíd bár ídéntífíér !!]",
   "Runtime.Prg.Dispatch.Error.OnBarNumberInvalid": "[!! ÓN BÁR: ínválíd bár ídéntífíér !!]",
   "Runtime.Prg.Dispatch.Error.OnBarNumberNotFound": "[!! ÓN BÁR: bár nót fóúnd !!]",
+  "Runtime.Prg.Dispatch.Error.OnSelectionBarNumberInvalid": "[!! ÓN SÉLÉCTÍÓN BÁR: ínválíd bár ídéntífíér !!]",
+  "Runtime.Prg.Dispatch.Error.OnSelectionBarNumberNotFound": "[!! ÓN SÉLÉCTÍÓN BÁR: bár nót fóúnd !!]",
   "Runtime.Prg.Dispatch.Error.UserRaisedErrorWithParameter": "Error {code}: '{parameter}'.",
   "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed": "Unable to resolve {command} target: {target}",
   "Runtime.Prg.Dispatch.Error.ReturnToCrossesExpressionInvocationBoundary": "{command} cannot unwind past a routine call made from an expression or event callback",
