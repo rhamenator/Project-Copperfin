@@ -1,0 +1,33 @@
+RQ-CF-PRG-DEFINE-BAR-NUMERIC-001, admitted #5611/#6776.
+Base main 4a1c6b2bf98fb3304be780d5ace3397ccaabb68e.
+Original dispatcher blob c0f44466bf5ded4aea79457e3cce2adcc19993d7.
+Original dispatcher SHA256:
+84bb0cf8cc875afd2d46c3d76f23b7f89ed2037a8ae0ed51992bbd41fb5db70b.
+Unchanged provisional helper SHA256:
+11321c87539d849f25e28461bbd8a8b8fb2fa60848976d9fc60f1b8cc60fb424.
+Test SHA256:
+4d896e23fbc5db93b40fb7521019b6f5be3187088d45b51d1f60b412ebdb6029.
+Both compilers report150 selected assertions and zero unrelated failures:
+134 guarded code/continuation/PROMPT/count/small/max-identity failures;
+16 four-locale metadata/message failures. Direct68 checks and old2 neighbors
+pass. No crash or ASan/UBSan/float-cast-overflow diagnostic was observed;
+do not claim a sanitizer finding from llround's invalid-domain result alone.
+GCC15.2.0 Debug: numeric0.80s/neighbors0.10s; CTest2 total0.91s, exit8.
+Clang21.1.8 Debug ASan/UBSan/float-cast-overflow: numeric2.96s/neighbors0.42s;
+CTest2 total3.40s, exit8; ASAN detect_leaks0/abort_on_error1,
+UBSAN halt_on_error0/print_stacktrace1. Private TMPDIR, strictly serial.
+GCC baseline CTest log SHA256:
+86d47b8e5b8f05139d420b89db249e7b971e3d36f5e4d6f89c0bea8e9c57cd7f.
+Clang baseline CTest log SHA256:
+1701c592b8cd9e2f8d98c0058c99632d51773cd81c23b82472dadfb5bc4c6a71.
+Reconstruction: retain this provisional helper/new tests/CMake, restore ONLY
+dispatch.inl from stated base, rebuild the two targets in a disposable WT,
+run their CTest regex -j1/privateTMPDIR with stated instrumentation.
+Original test source has no assertion-only corrections. Final test adds FOUR
+session_policy_and_prompt_selection cases after baseline; these are not claimed
+as negative evidence. For reconstruction remove that function/main invocation
+to restore the original test SHA256 above.
+Initial compilation failures (neighbor runtime include path missing; accidental
+overlapping GCC build archives) were corrected before any baseline execution;
+exclusive rebuild completed. Failed compilation is not passing evidence or
+a production defect. Subsequent runtime verification remains strictly serial.

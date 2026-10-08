@@ -3155,9 +3155,20 @@
                     return {};
                 }
 
+                // RQ-CF-PRG-DEFINE-BAR-NUMERIC-001: admission before PROMPT
+                // evaluation or any map insertion/replacement.
+                const auto &set_state = current_set_state();
+                const auto mode = set_state.find("numericbehavior");
+                const auto converted_bar = checked_define_bar_number_argument(*bar_number,
+                    mode != set_state.end() && normalize_identifier(mode->second) == "vfp9"
+                        ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
+                if (!converted_bar.has_value())
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Dispatch.Error.DefineBarNumberInvalid"), 167);
+                }
                 const PrgValue prompt_value = evaluate_expression(statement.expression, frame);
-                current_session_state().popup_bar_prompts[popup_name][
-                    static_cast<long long>(std::llround(*bar_number))] = value_as_string(prompt_value);
+                current_session_state().popup_bar_prompts[popup_name][*converted_bar] = value_as_string(prompt_value);
                 return {};
             }
             case StatementKind::on_bar_activate_popup_command:

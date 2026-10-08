@@ -1468,6 +1468,7 @@
   "Runtime.Prg.Dispatch.Error.ErrorNumberInvalid": "[ͼInvalid ERROR number: {value}ͽ]",
   "Runtime.Prg.Dispatch.Error.GoRecordNumberInvalid": "[ͼInvalid GO record number: {value}ͽ]",
   "Runtime.Prg.Dispatch.Error.SkipCountInvalid": "[ͼInvalid SKIP count: {value}ͽ]",
+  "Runtime.Prg.Dispatch.Error.DefineBarNumberInvalid": "[!! DÉFÍNÉ BÁR: ínválíd bár ídéntífíér !!]",
   "Runtime.Prg.Dispatch.Error.UserRaisedErrorWithParameter": "Error {code}: '{parameter}'.",
   "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed": "Unable to resolve {command} target: {target}",
   "Runtime.Prg.Dispatch.Error.ReturnToCrossesExpressionInvocationBoundary": "{command} cannot unwind past a routine call made from an expression or event callback",
