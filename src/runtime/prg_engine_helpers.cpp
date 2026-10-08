@@ -1301,6 +1301,37 @@ std::optional<std::int64_t> checked_truncated_numeric_to_int64(const double valu
     return static_cast<std::int64_t>(value);
 }
 
+// RQ-CF-PRG-SKIP-COUNT-NUMERIC-001 (#5611/#6776): count conversion only,
+// not shared navigation or native type admission. Widened int32 counts make
+// the existing long-long abs operation defined, including INT32_MIN.
+std::optional<std::int32_t> checked_skip_count_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    if (value.kind == PrgValueKind::number && std::isnan(value.number_value)) {
+        return std::nullopt;
+    }
+    if (behavior == NumericBehavior::vfp9 &&
+        (value.kind == PrgValueKind::number || value.kind == PrgValueKind::int64 ||
+         value.kind == PrgValueKind::uint64)) {
+        return static_cast<std::int32_t>(vfp9_numeric_to_int32(value));
+    }
+    std::optional<std::int64_t> converted;
+    if (value.kind == PrgValueKind::int64) {
+        converted = value.int64_value;
+    } else if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value <= static_cast<std::uint64_t>(INT32_MAX)) {
+            converted = static_cast<std::int64_t>(value.uint64_value);
+        }
+    } else if (value.kind == PrgValueKind::number) {
+        converted = checked_truncated_numeric_to_int64(value.number_value);
+    } else {
+        converted = checked_truncated_numeric_to_int64(std::round(value_as_number(value)));
+    }
+    if (!converted || *converted < INT32_MIN || *converted > INT32_MAX) {
+        return std::nullopt;
+    }
+    return static_cast<std::int32_t>(*converted);
+}
+
 // RQ-CF-PRG-GO-RECORD-NUMERIC-001 (#5611/#6776): conversion only,
 // not record existence/type admission (#7081). Preserve pending negatives.
 std::optional<std::int32_t> checked_go_record_argument(

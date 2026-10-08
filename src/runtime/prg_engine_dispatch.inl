@@ -5057,7 +5057,24 @@
                 {
                     ScopedDataSessionSelection target_session(
                         current_data_session, cursor_reference.data_session);
-                    const long long delta = std::llround(value_as_number(*delta_value));
+                    // RQ-CF-PRG-SKIP-COUNT-NUMERIC-001: checked count before
+                    // navigation, buffer commits, relation/filter evaluation
+                    // and successful SKIP events. Native type admission is #7083.
+                    const auto &set_state = current_set_state();
+                    const auto mode = set_state.find("numericbehavior");
+                    const auto converted = checked_skip_count_argument(*delta_value,
+                        mode != set_state.end() && normalize_identifier(mode->second) == "vfp9"
+                            ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
+                    if (!converted)
+                    {
+                        const std::string operand = delta_value->kind == PrgValueKind::number
+                            ? format_round_trip_decimal(delta_value->number_value)
+                            : value_as_string(*delta_value);
+                        throw PrgCompatibilityError(runtime_text(
+                            "Runtime.Prg.Dispatch.Error.SkipCountInvalid",
+                            {{"value", operand}}), 11);
+                    }
+                    const long long delta = *converted;
                     bool skip_cursor_lost = false;
                     const bool moved = move_by_visible_records(*cursor, frame, delta, &skip_cursor_lost);
                     if (skip_cursor_lost)

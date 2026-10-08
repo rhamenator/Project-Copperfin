@@ -1,5 +1,20 @@
 # VFP Language Reference Coverage
 
+- SKIP count Numeric conversion (#5611/#6776,2026-10-08):
+  RQ-CF-PRG-SKIP-COUNT-NUMERIC-001 recovers truncation and both-sign wrapped
+  counts from three matching100-line installed VFP9 runs plus three
+  matching40-line pending-buffer runs. Default checks signed32; explicit
+  VFP9 retains both-sign low32/huge-infinite0 aliases; NaN rejects both.
+  Exact extended integers retain precision; safe other coercions retain
+  checked half-away policy. Localized11 precedes navigation/buffer/relation/
+  successful-event mutation on rejection.98 helper/480 guarded cases,
+  four dirty-row disk/twelve locale/two default-zero sessions and four
+  existing neighbors pass GCC/focused Clang sanitizers; full GCC Numeric
+  and localization pass. Unchanged dispatcher292 failures and signed-abs
+  sanitizer evidence are retained, with completed RQ/VR/DQ/DV in fixture
+  README/docs32. Type-admission parity remains separate#7083; no shared
+  navigation/filter/relation/lifetime/GO/UNLOCK expansion.
+
 - GO/GOTO explicit record-number Numeric conversion (#5611/#6776,2026-10-08):
   RQ-CF-PRG-GO-RECORD-NUMERIC-001 recovers Numeric truncation and valid
   negative pending identities from three matching82-line installed VFP9
