@@ -50,9 +50,12 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
 - The PRG fixture, activity log, and extracted package live under one explicit
   runner-temporary evidence root. Visual Studio launches with that directory as
   its working directory, so the smoke does not rely on the source checkout.
-- VSIXInstaller has a separate bounded 600-second wait, timed-out process-tree
-  termination, and retained structured install/uninstall timing and outcome
-  diagnostics. Failure cleanup re-inventories the selected instance before
+- VSIXInstaller has a separate bounded wait: the hosted workflow explicitly
+  grants 2,400 seconds to each install/uninstall operation under direct owner
+  steering on 2026-10-08; the standalone helper still defaults to 600 seconds.
+  The IDE/process public range and 360-second default are unchanged. Timed-out
+  process-tree termination and structured install/uninstall timing and outcome
+  diagnostics remain mandatory. Failure cleanup re-inventories the selected instance before
   deciding whether an exact-identity uninstall is required; a timeout cannot
   make an installed extension invisible to cleanup merely because the normal
   install-return path was not reached.
@@ -84,6 +87,52 @@ workflow, helper, assembler/schema, and documentation. After consumption, do
 not rewrite its tag or evidence: withdraw the candidate, publish the affected
 VSIX digest and failed stage, correct the package or verifier with regression
 coverage, and issue the next sequential immutable candidate.
+
+## Owner-Directed Installer Budget Delta (2026-10-08)
+
+`DQ-windows-vsix-lifecycle-scope` / `DV-windows-vsix-lifecycle-contract` /
+`RQ-CF-REL-003`: PR #7099's hosted run `37812662984` exhausted the previous
+600-second install budget twice; its second attempt also exhausted the cleanup
+uninstall budget. Both failures remain negative evidence. The owner explicitly
+directed a 40-minute workflow budget after reporting local disk contention.
+That policy is not a measured optimum or proof of the hosted delay's cause.
+
+Procedural delta: the workflow passes `-InstallerTimeoutSeconds 2400`; the
+installer and child-process validators admit that bound. Standalone installer
+default 600, IDE/process default 360 and public ceiling 600, instance selection,
+timeout termination, failure cleanup, diagnostics, and every lifecycle acceptance
+gate are unchanged. The budget applies separately to installation and cleanup
+uninstallation, not to the entire job, so one slow install cannot consume the
+cleanup allowance.
+
+Misuse severity of this budget/documentation delta is **medium**: a stalled
+installer can occupy the disposable runner for longer; a longer wait cannot be
+treated as a successful operation or authorize changes to a user's installed
+IDE. This does not downgrade the high-severity false-evidence hazard above.
+Rollback is a coordinated revert of this budget, validator, regression-contract,
+matrix and report delta; retain failed artifacts and report the exact failed
+stage on the PR rather than rewriting historical evidence.
+
+Development self-review and walkthrough: Codex, acting under the repository
+owner's direct instruction, checked the workflow argument through both validators
+to the existing bounded wait and failure-cleanup call. The focused contract
+rejects the original 600-second-only script, accepts 60 and 2400, rejects 59 and
+2401, and runs a real short-lived child at each accepted installer bound; it
+also requires unchanged standalone/IDE defaults and workflow value. The helper
+self-test rejects an internal child-process budget above 2400. This is automated
+development verification, not independent human review or an executed Windows
+installer lifecycle. Fresh exact-head hosted lifecycle and PR review remain
+required before merging this correction; no high-severity documentation issue
+is closed by this delta.
+
+Retained local verification: serial/private-TMPDIR VSIX, Actions, native-platform,
+RC workflow, RC assembly, community, and safety-traceability contracts passed
+7/7 in 366.60 seconds (VSIX 6.76 seconds), log SHA-256
+`0b3c7b602631ae18c3dc8937f8a387fa6f204d3a2fc22888992bf3091b81c192`.
+Original-script negative contract log SHA-256 is
+`34dd6ac268d15326aed8126cfab7fa0f2cd2bd04e9a3e611accfe13075da9e7d`;
+the original failure identifies the missing owner-directed installer upper bound.
+Changelog fragment validation, channel verification and `git diff --check` pass.
 
 ## Verification And Residual Gaps
 

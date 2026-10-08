@@ -20,7 +20,8 @@ param(
     [int]$ProcessTimeoutSeconds = 360,
 
     [Parameter(ParameterSetName = 'Lifecycle')]
-    [ValidateRange(60, 600)]
+    [Parameter(ParameterSetName = 'SelfTest')]
+    [ValidateRange(60, 2400)]
     [int]$InstallerTimeoutSeconds = 600,
 
     [Parameter(Mandatory = $true, ParameterSetName = 'SelfTest')]
@@ -40,7 +41,7 @@ function Invoke-BoundedProcess {
         [Parameter(Mandatory = $true)][string]$FilePath,
         [string[]]$Arguments = @(),
         [Parameter(Mandatory = $true)][string]$Name,
-        [ValidateRange(30, 600)][int]$TimeoutSeconds = $ProcessTimeoutSeconds
+        [ValidateRange(30, 2400)][int]$TimeoutSeconds = $ProcessTimeoutSeconds
     )
 
     $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
@@ -195,6 +196,21 @@ function Test-ExactInstalledDirectoryAbsent {
 }
 
 if ($SelfTest) {
+    # Exercise the real child-process binding without installing anything or
+    # waiting for the budget to elapse. The hosted workflow uses 2400 seconds.
+    $selfTestShell = (Get-Process -Id $PID).Path
+    Invoke-BoundedProcess -FilePath $selfTestShell -Arguments @('-NoLogo', '-NoProfile', '-Command', 'exit 0') `
+        -Name 'Installer timeout binding self-test' -TimeoutSeconds $InstallerTimeoutSeconds | Out-Null
+    $unboundedTimeoutRejected = $false
+    try {
+        Invoke-BoundedProcess -FilePath $selfTestShell -Arguments @('-NoLogo', '-NoProfile', '-Command', 'exit 0') `
+            -Name 'Out-of-range timeout self-test' -TimeoutSeconds 2401 | Out-Null
+    }
+    catch {
+        if ($_.FullyQualifiedErrorId -notlike 'ParameterArgumentValidationError*') { throw }
+        $unboundedTimeoutRejected = $true
+    }
+    Assert-Condition $unboundedTimeoutRejected 'Self-test accepted a child-process timeout above 2400 seconds.'
     $fixtureRoot = Join-Path ([System.IO.Path]::GetTempPath()) `
         "copperfin-vsix-lifecycle-self-test-$([Guid]::NewGuid().ToString('N'))"
     $manifestPath = Join-Path $fixtureRoot 'extension.vsixmanifest'

@@ -107,12 +107,40 @@ No umbrella/#5868/#4617/#4618/#7093/#7095 closure or new admission labels.
 
 ## Selected active bounded slice
 
+Owner-directed CI correction2026-10-08 on active SKPBAR PR#7099: repeated
+VSIX run37812662984 exhausted600s installation twice and cleanup on attempt2.
+Owner explicitly sets hosted install/uninstall budget2400s each; standalone
+installer600 and public IDE360/default ceiling600 remain unchanged. Bounded
+validator/short-lived child and regression contract verify the new admission;
+exact-head hosted lifecycle and fresh Claude-first/authorized Codex review
+remain merge gates. Previous head27523a8 clean review is historical only
+after this correction. No SKPBAR runtime/test baselines changed by this delta.
+Local serial/private-TMPDIR7/7 contracts PASS366.60s(VSIX6.76), logSHA
+0b3c7b602631ae18c3dc8937f8a387fa6f204d3a2fc22888992bf3091b81c192.
+Original timeout contract fails missing2400 bound, retained logSHA
+34dd6ac268d15326aed8126cfab7fa0f2cd2bd04e9a3e611accfe13075da9e7d.
+Changelog/channel/diff checks pass; fresh hosted lifecycle remains unexecuted.
+Owner requested local VSIX measurement, then reported disk contention and
+requested timeout change/VM shutdown. Local measurement deferred, not complete:
+own clone copy stopped/recoverable incomplete copies in owned build; clone
+never defined/booted. Re-enter only after contention clears and a full
+independent clone can be completed/verified; never test installer on originals
+or boot partial disks. Normal Windows shutdown confirmed VFP9 off; all VMs
+off at shutdown verification. Original disks/firmware/backups/pristine template
+preserved. Access365 briefly started outside this task and is off at the latest
+check; do not interrupt other active work or use it for routine verification.
+Owner reiterates frugal VM use for disk I/O: focused local checks/hosted CI
+take priority; no VM/clone restart for routine verification while constrained.
+Owner reports host reboot required to recover responsiveness; keep VM/cloning
+work suspended rather than resuming it after reboot.
+Prepared XML/NVRAM/offline TPM/measurement script retained until scoped cleanup.
+
 SKPBAR second-argument Numeric/exact-integer bar identifier under admitted
 #5611/#6776/#5868; first-pass #4617 OPEN/owner-authored/agent-approved,
 metadata/body verified2026-10-08T16:18Z. Base origin/main
 89fd9ee5b6dcc14f2183cd893b2425340e49c243.
 WT /home/rich/.codex/worktrees/skpbar-numeric-5611/Project-Copperfin,
-branch fix/skpbar-numeric-5611. Existing skip-query callback currently uses
+branch fix/skpbar-numeric-5611. Original/base skip-query callback used
 unchecked llround(value_as_number) in prg_engine.cpp; original/base blob
 4d2f4727e16c532a7d8c74c533fe725177c1a384/SHA
 38d0a63fe03ae1415a4d3b63be3341f1f2d786d9e9d869b877f959fd6eeaa6a7.
