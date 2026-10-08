@@ -934,6 +934,19 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
 
+    # SET SKIP OF BAR: private TMPDIR roots, scoped locale, serial runtime.
+    foreach(skip_bar_test IN ITEMS test_prg_engine_set_skip_bar_numeric test_prg_engine_set_skip_bar_neighbors)
+        copperfin_set_test_isolation(${skip_bar_test}
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT scoped-process
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            AUDIT complete
+        )
+    endforeach()
+
     # ON SELECTION BAR numeric/old menu neighbors: private-TMPDIR owned
     # roots, scoped locale, no children/network, serial runtime verification.
     foreach(selection_bar_test IN ITEMS test_prg_engine_on_selection_bar_numeric test_prg_engine_on_selection_bar_neighbors)

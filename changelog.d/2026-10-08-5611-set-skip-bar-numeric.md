@@ -1,0 +1,1 @@
+- 2026-10-08: Checked parsed Numeric-literal SET SKIP OF BAR identifiers before skip-state and success-event mutation, with default truncation/bounds, opt-in VFP9 aliases/MAX/supported-user-lane sentinels, localized167 and retained independent native/baseline/guarded callback evidence under #5611/#6776/#5868.

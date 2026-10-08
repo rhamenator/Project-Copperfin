@@ -1472,6 +1472,7 @@
   "Runtime.Prg.Dispatch.Error.OnBarNumberInvalid": "ON BAR: identificador de barra no valido",
   "Runtime.Prg.Dispatch.Error.OnBarNumberNotFound": "ON BAR: no se encontro la barra",
   "Runtime.Prg.Dispatch.Error.OnSelectionBarNumberInvalid": "ON SELECTION BAR: identificador de barra no valido",
+  "Runtime.Prg.Dispatch.Error.SetSkipBarNumberInvalid": "SET SKIP OF BAR: identificador de barra no valido",
   "Runtime.Prg.Dispatch.Error.OnSelectionBarNumberNotFound": "ON SELECTION BAR: no se encontro la barra",
   "Runtime.Prg.Dispatch.Error.UserRaisedErrorWithParameter": "Error {code}: '{parameter}'.",
   "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed": "No se pudo resolver el destino de {command}: {target}",

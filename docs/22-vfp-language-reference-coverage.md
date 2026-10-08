@@ -1,5 +1,21 @@
 # VFP Language Reference Coverage
 
+- SET SKIP OF BAR Numeric-literal conversion (#5611/#6776/#5868,2026-10-08):
+  RQ-CF-PRG-SET-SKIP-BAR-NUMERIC-001 mapped before migration to three matching
+  native125-line/40-operand singleton1/2/MAX controls, one bar/noactivation.
+  Fractional truncation, negative-wide aliases and positive>=2^32 MAX;
+  converted-1/-2 succeeds without changing seeded user skip state, unlike
+  ON BAR/ON SELECTION lookup errors. Other invalid admitted Numeric167;
+  default finite converted1..MAX. [Fixture](../tests/fixtures/vfp9-set-skip-bar-numeric/README.md)
+  retains hashes/help/scope. Checked conversion precedes flag evaluation/state/
+  event; four locales supply catchable167. 70direct/124guarded/16locale cases
+  and three old neighbors; unchanged original dispatcher412 selected failures
+  per GCC/Clang, zero unrelated/no diagnostics. Fixed GCC11/11 PASS465.86s,
+  Clang sanitizers2/2 PASS2.26s/no diagnostics (detect_leaks0). Bounded medium-
+  misuse DQ/DV development self-review/walkthrough complete, not independent
+  human/full type/GUI/leak/release qualification. SET MARK,
+  queries, expression/type/system-menu and lifecycle remain separate.
+
 - ON SELECTION BAR Numeric-literal DO/static-action conversion (#5611/#6776/
   #5868,2026-10-08): RQ-CF-PRG-ON-SELECTION-BAR-NUMERIC-001 mapped before
   migration to three matching installed VFP9 7423 singleton runs,250lines/

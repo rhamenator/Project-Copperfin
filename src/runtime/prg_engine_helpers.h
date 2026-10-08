@@ -152,6 +152,9 @@ std::optional<std::int32_t> checked_on_bar_number_argument(double value, Numeric
 // RQ-CF-PRG-ON-SELECTION-BAR-NUMERIC-001: native positive keys/-1/-2.
 // Selection registration rejects the negative sentinels with1604, not1612.
 std::optional<std::int32_t> checked_on_selection_bar_number_argument(double value, NumericBehavior behavior);
+// RQ-CF-PRG-SET-SKIP-BAR-NUMERIC-001: native permits -1/-2 in VFP9 mode;
+// dispatcher preserves no-op user-bar behavior, not system-menu support.
+std::optional<std::int32_t> checked_set_skip_bar_number_argument(double value, NumericBehavior behavior);
 // RQ-CF-PRG-SKIP-COUNT-NUMERIC-001: default signed32 truncation/exact
 // comparison; VFP9 alone retains both-sign low32/indefinite-zero aliases.
 // NaN rejects both modes; safe other coercions remain checked half-away.
