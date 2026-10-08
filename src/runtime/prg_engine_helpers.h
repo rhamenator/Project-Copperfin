@@ -139,6 +139,11 @@ std::int64_t numeric_count_argument(double value, NumericBehavior behavior);
 // Truncate toward zero only when `value` is finite and representable as int64. This is the fail-closed conversion for
 // array positions/selectors and other arguments where saturation would turn invalid input into an ordinary value.
 std::optional<std::int64_t> checked_truncated_numeric_to_int64(double value);
+// RQ-CF-PRG-CURSORSETPROP-BUFFERING-NUMERIC-001: Numeric/exact modes
+// truncate into 1..5; only explicit VFP9 retains signed-low32 aliases.
+// Other coercions retain checked half-away domain admission. Missing Numeric
+// result means localized1469 before mutation, not a false success/changed mode.
+std::optional<std::int32_t> checked_cursor_buffering_mode_argument(const PrgValue& value, NumericBehavior behavior);
 // RQ-CF-PRG-BINDEVENT-FLAGS-NUMERIC-001: Numeric/exact integers truncate
 // to nonnegative signed32 flags; only VFP9 admits exact low32/indefinite-zero
 // aliases. Return bits 0/1. Other coercions retain checked signed32 rounding.

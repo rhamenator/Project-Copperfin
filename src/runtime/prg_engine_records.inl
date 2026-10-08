@@ -3051,23 +3051,40 @@
                 {
                     return make_boolean_value(false);
                 }
-                const int requested_mode = static_cast<int>(std::llround(value_as_number(arguments[1])));
-                if (requested_mode != 1 && requested_mode != 2 && requested_mode != 3 &&
-                    requested_mode != 4 && requested_mode != 5)
+                // RQ-CF-PRG-CURSORSETPROP-BUFFERING-NUMERIC-001:
+                // validate before buffering mode or pending-record mutation.
+                const auto &set_state = current_set_state();
+                const auto mode = set_state.find("numericbehavior");
+                const auto requested_mode = checked_cursor_buffering_mode_argument(arguments[1],
+                    mode != set_state.end() && normalize_identifier(mode->second) == "vfp9"
+                        ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
+                if (!requested_mode)
                 {
+                    const auto &value = arguments[1];
+                    const bool numeric = value.kind == PrgValueKind::number ||
+                        value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
+                    const std::string operand = value.kind == PrgValueKind::int64
+                        ? std::to_string(value.int64_value) : value.kind == PrgValueKind::uint64
+                        ? std::to_string(value.uint64_value)
+                        : format_round_trip_decimal(numeric ? value.number_value :
+                            std::round(value_as_number(value)));
                     last_error_message = runtime_text(
                         "Runtime.Prg.Records.Error.UnsupportedCursorBufferingMode",
-                        {{"mode", std::to_string(requested_mode)}});
+                        {{"mode", operand}});
+                    if (numeric)
+                    {
+                        throw PrgCompatibilityError(last_error_message, 1469);
+                    }
                     return make_boolean_value(false);
                 }
-                if (requested_mode != cursor->buffering_mode && !cursor->buffered_records.empty())
+                if (*requested_mode != cursor->buffering_mode && !cursor->buffered_records.empty())
                 {
                     last_error_message = runtime_text(
                         "Runtime.Prg.Records.Error.PendingCursorBufferChanges",
                         {{"command", "CURSORSETPROP"}});
                     return make_boolean_value(false);
                 }
-                cursor->buffering_mode = requested_mode;
+                cursor->buffering_mode = *requested_mode;
                 return make_boolean_value(true);
             }
 

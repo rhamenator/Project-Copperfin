@@ -934,6 +934,18 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
 
+    # #5611/#6776 BUFFERING mode: test-owned scratch, scoped/restored locale;
+    # no children/network/samples/resources; serial, no duplicate invocation.
+    copperfin_set_test_isolation(test_prg_engine_cursor_buffering_numeric
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT scoped-process
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+
     # #5611/#6776 BINDEVENT flags: four test-owned mode/form scratch roots;
     # scoped/restored locale; no child process, network, source sample or shared
     # resource. Runtime execution stays serial; duplicate instances unsupported.

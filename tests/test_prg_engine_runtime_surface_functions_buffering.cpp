@@ -759,7 +759,14 @@ namespace copperfin::runtime_surface_tests
             "REPLACE NAME WITH 'Discarded' IN people\n"
             "TABLEREVERT(.T., 'people')\n"
             "cReverted = people.NAME\n"
+            // RQ-CF-PRG-CURSORSETPROP-BUFFERING-NUMERIC-001: fresh VFP9
+            // evidence rejects mode6 with catchable1469, not a false return.
+            "TRY\n"
             "lUnsupported = CURSORSETPROP('Buffering', 6, 'people')\n"
+            "CATCH TO oUnsupported\n"
+            "nUnsupportedError = oUnsupported.ErrorNo\n"
+            "ENDTRY\n"
+            "nModeAfterUnsupported = CURSORGETPROP('Buffering', 'people')\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session =
@@ -788,7 +795,9 @@ namespace copperfin::runtime_surface_tests
         expect(value_for("cbuffered") == "Buffered", "buffered field reads should see pending values");
         expect(value_for("ccommitted") == "Buffered", "TABLEUPDATE should retain committed values in the cursor");
         expect(value_for("creverted") == "Buffered", "TABLEREVERT should restore the last committed value");
-        expect(value_for("lunsupported") == "false", "unsupported buffering modes should fail explicitly");
+        expect(value_for("nunsupportederror") == "1469" &&
+                   value_for("nmodeafterunsupported") == "5",
+               "unsupported Numeric buffering modes raise1469 and preserve mode5");
 
         const auto after_resume = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
         expect(after_resume.ok && after_resume.table.records.size() == 2U &&

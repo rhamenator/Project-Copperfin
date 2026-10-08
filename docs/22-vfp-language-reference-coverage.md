@@ -1,5 +1,17 @@
 # VFP Language Reference Coverage
 
+- CURSORSETPROP BUFFERING Numeric mode (#5611/#6776,2026-10-08):
+  RQ-CF-PRG-CURSORSETPROP-BUFFERING-NUMERIC-001 recovers Numeric truncation,
+  modes1..5 and catchable1469 on invalid conversion from three matching45-line
+  installed VFP9 probes. Default checks the finite domain; explicit VFP9 alone
+  retains defined low32/indefinite-zero conversion, with zero invalid. Exact
+  int64/uint64 follow derived equivalent policy without double precision loss.
+  124 direct calls/172 guarded both-mode explicit/implicit alias cases retain
+  boundary/status/message/result/mode/cursor/session/cleanup evidence. Only
+  BUFFERING's second-argument conversion changes; broader buffering/pending-
+  edit rules, property routing/arity and type gap#7077 remain separate.
+  Completed acceptance and limits are retained in fixture README/docs32.
+
 - BINDEVENT object-event flags (#5611/#6776, 2026-10-08):
   RQ-CF-PRG-BINDEVENT-FLAGS-NUMERIC-001 recovers Numeric truncation,
   nonnegative converted admission and bits 0/1 from three matching 49-line
