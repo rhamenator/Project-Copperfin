@@ -1466,6 +1466,7 @@
   "Runtime.Prg.Dispatch.Error.CommandInvalidArgumentType": "{command} requer um argumento numerico ou de caractere",
   "Runtime.Prg.Dispatch.Error.UserRaisedError": "Erro {code}.",
   "Runtime.Prg.Dispatch.Error.ErrorNumberInvalid": "Número de ERROR inválido: {value}",
+  "Runtime.Prg.Dispatch.Error.GoRecordNumberInvalid": "Número de registro de GO inválido: {value}",
   "Runtime.Prg.Dispatch.Error.UserRaisedErrorWithParameter": "Erro {code}: '{parameter}'.",
   "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed": "Nao foi possivel resolver o destino de {command}: {target}",
   "Runtime.Prg.Dispatch.Error.ReturnToCrossesExpressionInvocationBoundary": "{command} nao pode desfazer alem de uma chamada de rotina feita a partir de uma expressao ou retorno de chamada de evento",

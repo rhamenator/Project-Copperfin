@@ -1301,6 +1301,40 @@ std::optional<std::int64_t> checked_truncated_numeric_to_int64(const double valu
     return static_cast<std::int64_t>(value);
 }
 
+// RQ-CF-PRG-GO-RECORD-NUMERIC-001 (#5611/#6776): conversion only,
+// not record existence/type admission (#7081). Preserve pending negatives.
+std::optional<std::int32_t> checked_go_record_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    std::optional<std::int64_t> converted;
+    const bool negative_numeric =
+        (value.kind == PrgValueKind::number && value.number_value < 0) ||
+        (value.kind == PrgValueKind::int64 && value.int64_value < 0);
+    if (value.kind == PrgValueKind::int64) {
+        converted = value.int64_value;
+    } else if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value <= static_cast<std::uint64_t>(INT32_MAX)) {
+            converted = static_cast<std::int64_t>(value.uint64_value);
+        }
+    } else if (value.kind == PrgValueKind::number) {
+        converted = checked_truncated_numeric_to_int64(value.number_value);
+    } else {
+        // Preserve checked existing half-away coercions, not native type10.
+        converted = checked_truncated_numeric_to_int64(std::round(value_as_number(value)));
+    }
+    if (converted && *converted >= INT32_MIN && *converted <= INT32_MAX) {
+        return static_cast<std::int32_t>(*converted);
+    }
+    if (negative_numeric && behavior == NumericBehavior::vfp9) {
+        const auto alias = vfp9_numeric_to_int32(value);
+        // Native buffered probes reject huge negative operands whose low32
+        // would synthesize a negative pending identity. Only positive aliases.
+        if (alias > 0) {
+            return static_cast<std::int32_t>(alias);
+        }
+    }
+    return std::nullopt;
+}
+
 // RQ-CF-PRG-ERROR-COMMAND-NUMERIC-001 (#5611/#6776): retained native
 // evaluation-order observations in vfp9-error-command-numeric-observation.
 std::optional<std::int32_t> checked_error_number_argument(

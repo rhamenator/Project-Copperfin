@@ -1,5 +1,20 @@
 # VFP Language Reference Coverage
 
+- GO/GOTO explicit record-number Numeric conversion (#5611/#6776,2026-10-08):
+  RQ-CF-PRG-GO-RECORD-NUMERIC-001 recovers Numeric truncation and valid
+  negative pending identities from three matching82-line installed VFP9
+  observations plus three matching34-line buffering4/5 controls. Default
+  checks signed32; only explicit VFP9 retains oversized negative low32
+  aliases with a positive result. Exact integers compare without double
+  loss; other safe coercions retain checked half-away policy. Conversion
+  failure raises localized5 before navigation/buffer commits/relations/
+  success events. 122 direct/588 guarded rows, four dirty-row disk cases,
+  eight locale cases and four existing neighbors pass GCC/focused Clang
+  sanitizers; full GCC older Numeric passes. Fixture README/docs32 retain
+  unchanged/fixed RQ/VR/DQ/DV evidence. Conversion admission does not
+  establish record existence or native type parity; #7081 remains separate,
+  as do TOP/BOTTOM/SKIP/UNLOCK and shared navigation/lifecycle behavior.
+
 - ERROR first-operand Numeric conversion (#5611/#6776,2026-10-08):
   RQ-CF-PRG-ERROR-COMMAND-NUMERIC-001 recovers truncation and the two-stage
   parameter order from three matching66-line installed VFP9 observations

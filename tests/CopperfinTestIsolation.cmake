@@ -934,6 +934,20 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
 
+    # GO record tests use private-TMPDIR owned roots, scoped locale, strictly
+    # serial runtime and existing focused navigation/buffering scratch roots.
+    foreach(go_test IN ITEMS test_prg_engine_go_record_numeric test_prg_engine_go_record_neighbors)
+        copperfin_set_test_isolation(${go_test}
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT scoped-process
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            AUDIT complete
+        )
+    endforeach()
+
     # #5611/#6776 ERROR conversion: private-TMPDIR mode/locale roots and existing
     # neighbor scratch roots; scoped/restored locale; strictly serial runtime.
     foreach(error_test IN ITEMS test_prg_engine_error_command_numeric test_prg_engine_error_command_neighbors)

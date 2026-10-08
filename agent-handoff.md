@@ -55,96 +55,89 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-CURSORSETPROP BUFFERING Numeric/exact-integer conversion PR #7078 merged
-2026-10-08 03:16:12 UTC as 70bc9233d2e5bf1a4a1b4d11568a00f27b9e17d2 at
-signed/DCO head e162981b0cb451913d0041489887e1643b421660 (signature G).
-All 11 required checks SUCCESS; 35/36 reported checks SUCCESS, only optional
-native Windows MSVC running, no failure. Complete REST reviews/inline and
-Graph threads/closing references empty, all pagination exhausted.
-Codex PR-open summary6051031564 completed 02:39:23.933980Z on exact e162981,
-verified connector root thumbs552903751. Claude-first6051033336 remains
-eyes435322994 only, no quota/setup notice; not clean-review evidence.
-Merge proof6051440354, post-push proof6051041477; watcher19327 finished exit0.
+ERROR first-operand Numeric/exact-integer conversion PR #7080 merged
+2026-10-08 04:46:06 UTC as 5a1eeadd21ee97b7544e1cc336ee6d860256aebe at
+signed/DCO exact head a2242a92f46149f9441b10de786201eeaf691363.
+Both own commits verify G/signoff; all 11 required checks SUCCESS.
+Codex summary6052010939 completed04:11:52.702460Z on exact a2242a9;
+verified connector root thumbs553031703, no findings. Claude-first6052008991
+eyes only, not approval; no quota/setup notice. Complete REST reviews/inline
+and Graph conversations/closing refs empty, all pagination exhausted.
+At merge,33/36 reported checks SUCCESS; optional native Windows MSVC/macOS Clang and
+macOS installer running, no failure. Required watcher41671 finished exit0.
+Merge proof6052466368, post-push proof6052032198.
 
-RQ-CF-PRG-CURSORSETPROP-BUFFERING-NUMERIC-001 migrated only its second operand:
-checked truncation/domain1..5 default, explicit VFP9 defined low32/
-indefinite-zero aliases, localized1469 with original operand diagnostics
-before mode/pending-record mutation. Property/alias/type/arity and general
-buffering remain separate. Type gap #7077 remains unfinished/unadmitted.
-Three matching 45-line VFP9 runs; 124 direct/172 guarded cases. Original
-dispatch failed120 rows each compiler, zero state/other failures.
-GCC4/4 107.84s (full older Numeric); focused Clang ASan/UBSan/
-float-cast-overflow3/3 106.21s, no diagnostics, no full older Numeric,
-detect_leaks=0. Post-push boundary1/1 1.55s/contracts6/6 4.32s.
-172 fragments; RQ/VR/DQ/DV, native hashes, negative audit, medium-misuse
+RQ-CF-PRG-ERROR-COMMAND-NUMERIC-001 migrated only its first operand:
+checked default truncation/domain0..INT32_MAX, VFP9-only negative low32/
+indefinite0 aliases, checked retained Currency half-away coercion, localized1941
+before optional parameter on missing conversion and after parameter on zero.
+Other type/arity/catalog and error-state lifecycle remain separate.
+Native catalog/type/Currency recovery gap #7079 remains OPEN/unadmitted.
+Three matching66-line and three matching38-line strict serial VFP9 7423 runs.
+118 direct/148 guarded/eight locale cases and seven existing ERROR regressions.
+Original dispatcher fails90 selected rows each compiler, zero other failures;
+baseline audit94ed0cb3425f732abef27934bd9241379081139e8b95eeee0434d81504ecf9c4.
+GCC3/3 87.56s (full older Numeric); focused Clang ASan/UBSan/
+float-cast-overflow2/2 5.13s without diagnostics, detect_leaks=0.
+Six contracts6/6 5.24s; additional safety-workflow359.21s; exact post-push
+8/8 6.26s. All173 fragments valid, completed RQ/VR/DQ/DV medium-misuse
 development self-review/walkthrough/rollback retained. Not independent-human,
-full-type/native message, platform, leak or release qualification.
+complete native/type/message, platform, leak or release qualification.
 
-Main synchronized at the merge revision. Completed worktree and local/remote
-branch removed; 461MB/789MB owned builds and generatedFXP moved to recoverable
-trash. Scoped handoff stashdd1f029786743f8a5dbb510a44eb605784b7c049 retained
-alongside all prior stashes. Unrelated untracked files/detached WTs preserved.
-Live channel re-read empty. Prior #7076 optional MSVC subsequently SUCCESS.
-#5611/#6776 remain OPEN/admitted and unfinished; EPOCH/CENTURY complete,
-#3698 closed; #6879 retained after numeric.
+Main synchronized to the merge revision. Completed WT/local/remote branch
+removed; owned424MB/700MB builds and generatedFXPs moved to recoverable trash.
+Scoped continuity stashc7fbdd9972ac8260dda4ee4b406059d37bdeffee retained with all
+older stashes, unrelated untracked files and detached WTs. Live channel empty.
+#5611/#6776 remain OPEN/owner/agent-approved and unfinished; EPOCH/CENTURY
+complete, #3698 closed, #6879 retained after numeric.
 
 ## Selected active bounded slice
 
-ERROR first-operand Numeric/exact conversion under admitted #5611/#6776,
-RQ-CF-PRG-ERROR-COMMAND-NUMERIC-001. Dedicated WT
-/home/rich/.codex/worktrees/error-command-numeric-5611/Project-Copperfin;
-branch fix/error-command-numeric-5611, base
-70bc9233d2e5bf1a4a1b4d11568a00f27b9e17d2. Production helper/dispatcher,
-all four localized original-operand diagnostics, focused tests/isolation,
-fixture audit, docs22/32 RQ/VR/DQ/DV and dated fragment are implemented
-committed as signed/DCO7d3253efeb182f72649dec7a949fbab94afcfa9d and pushed;
-final documentation completion record follows; no PR yet. Only the selected llround/int site changes.
+GO/GOTO explicit record-number Numeric/exact-integer conversion is selected
+under admitted #5611/#6776 from exact origin/main
+5a1eeadd21ee97b7544e1cc336ee6d860256aebe, in dedicated WT
+/home/rich/.codex/worktrees/go-record-numeric-5611/Project-Copperfin,
+branch fix/go-record-numeric-5611. Only go_command's llround conversion is
+selected. GO TOP/BOTTOM, SKIP, UNLOCK RECORD, aggregate scopes, general record
+existence/type admission and relation/filter/cursor-lifetime semantics remain
+outside production scope. Preserve current generation revalidation and target
+session selection. Production/helper/locales and isolated tests are now
+implemented and locally verified at this pre-push record; both builds finished.
+Resolve actual PR/head from the branch on continuation rather than inferring
+them from this pre-commit record. Signed/DCO commit and PR creation follow.
+Native probes: three matching82-line plus three matching34-line pending
+buffer runs. Retained baseline-audit.txt: unchanged main dispatcher gives
+exactly340 selected failures on each GCC/Clang, zero other failures.
+Current tests:122 direct,588 guarded,4 dirty-row disk checks,8 locale cases
+and4 existing neighbors all pass. Independent diagnostic expectations now
+use the safe formatter's301-digit decimal1E300; no production change for
+the initial eight harness-only mismatches. GCC3/3 89.66s includes full older
+Numeric87.59s; focused Clang2/2 8.47s, ASan/UBSan/float-cast-overflow,
+no diagnostics/detect_leaks=0. Six contracts6/6 7.22s,174 fragments valid.
+RQ/VR/DQ/DV self-review/guarded/rollback and docs22/32 now retain acceptance
+and exact log hashes. Long safety-workflow contract passes358.49s;
+watcher94445 finished exit0. Final diff/fragment/channel checks pass;
+next signed/DCO commit/push/PR/review and exact post-push verification.
+Gap#7081 records existing general record/type mutation differences against
+main5a1eeadd; OPEN/unadmitted, no production expansion. Owned builds:
+/home/rich/temp/copperfin-go-record-5611-build and ...-sanitize. No native/
+local PRG runtime process active; strict serial/privateTMPDIR remains required.
 
-Default Numeric/exact truncates into conversion-stage0..INT32_MAX. Explicit
-VFP9 alone admits negative low32/indefinite0 aliases; positive overflow,
-non-finite or negative converted values reject. Missing raises1941 before
-optional parameter evaluation; converted0 rejects1941 after it. Currency
-keeps checked half-away conversion, character and positive-code message/
-metadata paths remain unchanged. No full catalog/type/arity or error-state/
-resumable-UDF lifecycle claim; #7079 remains OPEN/unadmitted/unfinished.
+Post-merge optional Windows #7080: run37726066119/job113144391607 failed
+shared native validation; build succeeded, existing test_dbf_table and
+test_visual_asset_editor timed out. ERROR numeric/neighbors/older Numeric
+passed. Job-only unchanged-head retry submitted, attempt2/job113160232264,
+head a2242a92f46149f9441b10de786201eeaf691363. Watcher32691 active;
+PR continuity6052788515. No unrelated fix or clean-retry claim. Monitor
+completion before declaring optional Windows resolved; no owner-input block.
 
-Retained fixture tests/fixtures/vfp9-error-command-numeric-observation/
-contains three matching66-line VFP9 7423 observations and three matching38-line
-counting-UDF/Currency controls, exact source/output hashes in README.
-Overlapping X11-failed batch and malformed Currency-literal preliminary
-controls discarded. Strictly serial native/runtime execution only; no VM/
-ODBC/network/system change. GeneratedFXPs ignored/owned.
-
-Baseline audit94ed0cb3425f732abef27934bd9241379081139e8b95eeee0434d81504ecf9c4:
-dispatcher blob53fcaac496e823ac92fd5f727dd8f75bae09eca7 byte-identical to base,
-helper linked unused; exactly90 selected rows fail each compiler; all118
-direct checks/148 state suffixes/setup/reset/cleanup/seven existing ERROR
-neighbors pass. Initial harness TRANSFORM grouping/logical mismatch excluded.
-Actual baseline ERROR99/Currency controls now reproduced and added to #7079
-as comment6051872181 (native controls6051543903). No type/catalog expansion.
-
-Fixed118 direct/148 guarded cases/eight both-mode locale cases pass.
-GCC focused2/2 1.84s and full3/3 87.56s (olderNumeric86.45s); Clang
-ASan/UBSan/float-cast-overflow focused2/2 5.13s, no diagnostics,
-detect_leaks=0, not full older Numeric/leak qualification. Medium-misuse
-development maintainer self-review/guarded walkthrough/rollback completed,
-not independent/human or platform/release qualification. All173 fragments
-validate; git diff--check/channel verify pass. Six final repository contracts
-pass6/6 in5.24s (intake/signoff/changelog/locale/isolation). The additional
-safety_traceability_workflow_contract passes359.21s, its selection6/6 364.25s.
-Owned builds /home/rich/temp/copperfin-error-command-5611-build and
-/home/rich/temp/copperfin-error-command-5611-sanitize retain logs/privateTMPDIRs.
-
-Next: signed/DCO final evidence commit, push/PRmain, Claude-first verified
-trigger and authorized Codex
-exact-head review. Post-push focused verification; merge only all11 required
-green/clean exact-head review/resolved conversations. Then synchronize main,
-clean only validated owned build/FXP/branch/WT, re-read channel and select the
-next bounded admitted numeric slice. Parent issues remain OPEN/admitted;
-#6879 retained after numeric. No owner input or automation pause is needed.
-Canonical and WT handoffs retain this continuation; unrelated files/stashes/
-detached WTs are preserved. No runtime/native process remains running;
-no contract/build/test/probe process remains active.
+Next: signed/DCO commit/push/PRmain and Claude-first exact-head review. Post-push
+focused verification; merge only all11 required SUCCESS, clean exact-head
+review and every conversation resolved. Preserve #7080 optional Windows retry
+continuity; #7081 remains separate, parent issues unfinished. After merge clean
+only owned build/FXP/branch/WT, re-read canonical channel and select next slice.
+Native/runtime tests strictly serial with privateTMPDIR. No owner input or
+automation pause; no VM/system/ODBC/network changes.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -889,8 +882,10 @@ Owner-directed workstream order before the #6879 assignment was:
      routine extension retained, type/Currency gap #7070 remains separate.
    - Completed after those: CURSORSETPROP BUFFERING second-argument numeric
      conversion (PR #7078); general buffering/type gap #7077 remain separate.
-   - Active: ERROR first-operand numeric conversion; native catalog/type
-     recovery gap #7079 remains separate.
+   - Completed after those: ERROR first-operand numeric conversion (PR #7080);
+     native catalog/type recovery gap #7079 remains separate.
+   - Active: GO/GOTO explicit record-number conversion; general record/type
+     recovery gap #7081 remains separate.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`
