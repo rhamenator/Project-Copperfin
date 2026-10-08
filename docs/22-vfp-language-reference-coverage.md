@@ -1,5 +1,21 @@
 # VFP Language Reference Coverage
 
+- UNLOCK RECORD Numeric conversion (#5611/#6776,2026-10-08):
+  RQ-CF-PRG-UNLOCK-RECORD-NUMERIC-001 uses three matching74-line installed
+  VFP9 shared-table runs with all three locks verified before each operand.
+  Numeric fractions truncate; default checks nonnegative signed32, while
+  explicit VFP9 retains negative-to-positive low32 aliases and oversized
+  positive wide/non-record targets WITHOUT small-record wrapping. Exact
+  integer/NaN/default boundaries are owner-derived safe extensions. Localized
+  conversion error10 precedes release/success events and uses captured target
+  session policy.82 helper calls/124 fresh selected/IN cases, twelve locale
+  metadata/two resumed-session/four dirty-row disk controls and six existing
+  neighbors pass focused Clang sanitizers; full GCC older Numeric/localization
+  pass4/4. Fixture README/docs32 retain native,
+  original/fixed RQ/VR/DQ/DV evidence. Missing-record/type/error-lifecycle#7085
+  and two-argument ISRLOCKED alias-query#7086 remain separate; no broader
+  UNLOCK/ALL, lock ownership/backend, buffering/navigation or release claim.
+
 - SKIP count Numeric conversion (#5611/#6776,2026-10-08):
   RQ-CF-PRG-SKIP-COUNT-NUMERIC-001 recovers truncation and both-sign wrapped
   counts from three matching100-line installed VFP9 runs plus three

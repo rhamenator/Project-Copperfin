@@ -4876,9 +4876,29 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    const std::size_t recno = static_cast<std::size_t>(
-                        std::max<double>(0.0, std::llround(value_as_number(*record_value))));
-                    if (recno == 0U || recno > cursor->record_count)
+                    // RQ-CF-PRG-UNLOCK-RECORD-NUMERIC-001 (#5611/#6776):
+                    // convert against the captured target's SET mode, restore
+                    // the callback-selected session, and reject before release.
+                    const auto requested_record = [&]()
+                    {
+                        ScopedDataSessionSelection target_session(
+                            current_data_session, cursor_reference.data_session);
+                        const auto &set_state = current_set_state();
+                        const auto mode = set_state.find("numericbehavior");
+                        return checked_unlock_record_argument(
+                            *record_value,
+                            mode != set_state.end() && normalize_identifier(mode->second) == "vfp9"
+                                ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
+                    }();
+                    if (!requested_record.has_value())
+                    {
+                        throw PrgCompatibilityError(runtime_text(
+                            "Runtime.Prg.Dispatch.Error.UnlockRecordNumberInvalid",
+                            {{"value", record_value->kind == PrgValueKind::number
+                                           ? format_round_trip_decimal(record_value->number_value)
+                                           : value_as_string(*record_value)}}), 10);
+                    }
+                    if (*requested_record == 0U || *requested_record > cursor->record_count)
                     {
                         last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.UnlockRecordTargetRecordNotFound");
                         last_fault_location = statement.location;
@@ -4886,6 +4906,8 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
+                    // The unchanged existence guard proves size_t admission.
+                    const auto recno = static_cast<std::size_t>(*requested_record);
                     unlock_cursor_record_lock(*cursor, recno, cursor_reference.data_session);
                     events.push_back({.category = "runtime.unlock",
                                       .detail = (cursor->alias.empty() ? std::to_string(cursor->work_area) : cursor->alias) +

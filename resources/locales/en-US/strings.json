@@ -1240,6 +1240,7 @@
   "Runtime.Prg.Dispatch.Error.ObjectTargetAssignmentFailed": "Object target assignment failed",
   "Runtime.Prg.Dispatch.Error.OleObjectNotFoundForPropertyAssignment": "OLE object not found for property assignment: {targetIdentifier}",
   "Runtime.Prg.Dispatch.Error.UnlockRecordTargetRecordNotFound": "UNLOCK RECORD target record not found",
+  "Runtime.Prg.Dispatch.Error.UnlockRecordNumberInvalid": "Invalid UNLOCK RECORD number: {value}",
   "Runtime.Prg.Dispatch.Error.ScatterNameUnableToCreateObject": "SCATTER NAME: unable to create object",
   "Runtime.Prg.Dispatch.Error.RestoreFromOpenFailed": "RESTORE FROM: unable to open source file",
   "Runtime.Prg.Dispatch.Error.SaveToFilenameRequired": "SAVE TO: filename required",
