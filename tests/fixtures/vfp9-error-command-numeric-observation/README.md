@@ -162,9 +162,9 @@ detect_leaks=0. VR-ERRORNUMBER-003: full GCC selection passes3/3 in87.56s
 (older Numeric86.45s,new1.00s,neighbors0.10s). Clang excludes full older Numeric.
 Six final repository contracts pass6/6 in5.24s: issue intake, signoff,
 changelog assembler/validity, locale installation and native test isolation.
-All173 fragments validate; the additional long safety-workflow negative-fixture
-contract remains running, not claimed passed. No merge/release completion is
-claimed. DQ-ERRORNUMBER-001 maps to DV-ERRORNUMBER-001/-002 and
+All173 fragments validate. The additional long safety-workflow negative-fixture
+contract also passes in359.21s (its six-contract selection6/6 in364.25s).
+No merge/release completion is claimed. DQ-ERRORNUMBER-001 maps to DV-ERRORNUMBER-001/-002 and
 VR-ERRORNUMBER-001/-002; DQ-ERRORNUMBER-002 maps to DV-ERRORNUMBER-003 and
 VR-ERRORNUMBER-003. These records implement the docs32 reverse mapping.
 
