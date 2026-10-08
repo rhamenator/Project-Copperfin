@@ -1,0 +1,1 @@
+- 2026-10-08: Checked MRKBAR Numeric/exact-integer identifier conversion with default truncation/bounds and opt-in VFP9 both-sign aliases, preserving first-pass false lookup and other menu/session state under #5611/#6776/#5868; native general lookup error gap #7095 remains separate.

@@ -1,5 +1,21 @@
 # VFP Language Reference Coverage
 
+- MRKBAR Numeric/exact-integer identifier conversion (#5611/#6776/#5868,2026-10-08):
+  RQ-CF-PRG-MRKBAR-NUMERIC-001 mapped before migration. Three matching installed
+  VFP9 7423 paired125-line singleton1/2/MAX query controls recover truncation
+  and both-sign low32 positive aliases;4294967297 queries1, not SET MARK's MAX.
+  [Fixture](../tests/fixtures/vfp9-mrkbar-numeric/README.md) retains hashes/help.
+  Numeric/exact-integer default1..MAX/otherwise existing safe false; opt-in
+  legacy aliases. General native missing-target1612 gap#7095 remains separate
+  from preserved first-pass #4618 false lookup policy; type/system-menu/
+  other-query/lifecycle work excluded. Checked helper/single selected-session
+  callback implemented;96direct/372guarded/three old neighbors. Original
+  callback55 selected failures per GCC/Clang, zero unrelated/no diagnostics;
+  fixed GCC11/11 PASS485.79s and Clang sanitizers2/2 PASS4.99s/no diagnostics
+  (detect_leaks0). Medium-misuse development DQ/DV self-review/walkthrough/
+  rollback complete, not independent human/full native-error/type/system-menu/
+  GUI/leak/platform/release qualification; bounded requirement defined.
+
 - SET MARK OF BAR Numeric-literal conversion (#5611/#6776/#5868,2026-10-08):
   RQ-CF-PRG-SET-MARK-BAR-NUMERIC-001 mapped before migration to three matching
   installed VFP9 7423 paired125-line singleton1/2/MAX controls, one bar/noactivation.

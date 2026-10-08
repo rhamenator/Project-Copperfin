@@ -158,6 +158,11 @@ std::optional<std::int32_t> checked_set_skip_bar_number_argument(double value, N
 // RQ-CF-PRG-SET-MARK-BAR-NUMERIC-001: independent native controls;
 // dispatcher rejects converted -1/-2 with1612 in supported user popups.
 std::optional<std::int32_t> checked_set_mark_bar_number_argument(double value, NumericBehavior behavior);
+// RQ-CF-PRG-MRKBAR-NUMERIC-001: default Numeric/exact1..MAX truncation,
+// explicit VFP9 both-sign low32 positive aliases, not SET MARK saturation.
+// Other existing coercions retain checked signed64 half-away rounding.
+// Missing means existing false fallback, not native lookup-error parity#7095.
+std::optional<std::int64_t> checked_mrkbar_number_argument(const PrgValue& value, NumericBehavior behavior);
 // RQ-CF-PRG-SKIP-COUNT-NUMERIC-001: default signed32 truncation/exact
 // comparison; VFP9 alone retains both-sign low32/indefinite-zero aliases.
 // NaN rejects both modes; safe other coercions remain checked half-away.
