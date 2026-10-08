@@ -1,0 +1,16 @@
+Original dispatcher main b00a4758b6fbd790cb381aa9505499b726cc5079
+SHA256 eceba464aecf9f2cf96d1edbc8831b165ea38542a759445cd868f3339cd4813d
+New checked helper linked but not called by either original flag site.
+132 direct helper calls pass independently; 176 script cases across four
+mode/form executions. GCC original 98 failures (90 rows,8 event-count checks)
+in 0.71s; Clang ASan/UBSan/float-cast-overflow same 98 in 3.08s, no diagnostic.
+Zero cursor/session/mode suffix mismatches; completed setup/cleanup/reset and
+all omitted/non-Numeric coercion controls pass. No fenv or full Numeric
+sanitizer baseline claim; llround errors need not produce float-cast reports.
+Raw GCC original log SHA256
+75780a0543cba91dc465de34941b805a3aa34b0db71889a131c0d6dc728843f1
+Raw Clang original log SHA256
+64b81857e4e4c0d58de7700b065fb6c2811a0ee8b5769cc4d527e2c7d2c24b0e
+Raw logs are owned scratch evidence until merge cleanup, not reproduced here.
+Condensed representative failure:
+FAIL: BINDEVENT row COPPERFIN method 7 expected ERR11|-99|Function argument value, type, or count is invalid.|BH|BH|1|1:1:guard|COPPERFIN|1 got OK|1||B|BH|1|1:1:guard|COPPERFIN|1

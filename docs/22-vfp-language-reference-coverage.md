@@ -1,5 +1,18 @@
 # VFP Language Reference Coverage
 
+- BINDEVENT object-event flags (#5611/#6776, 2026-10-08):
+  RQ-CF-PRG-BINDEVENT-FLAGS-NUMERIC-001 recovers Numeric truncation,
+  nonnegative converted admission and bits 0/1 from three matching 49-line
+  installed VFP9 7423 probes. Default checks 0..INT32_MAX; explicit VFP9
+  alone retains low32/indefinite-zero aliases. Exact integers and the
+  intentional routine-delegate extension receive equivalent defined policy.
+  Both optional flag paths reject localized 11 before binding/duplicate/
+  ordinal/success-event mutation. 132 direct calls and 176 both-form/mode
+  cases cover boundary/error/message/timing/suppression, retained duplicate,
+  cursor/session/mode, cleanup and event counts. Fixture README/docs32 retain
+  original/fixed evidence; type/Currency #7070, handles/messages, lifecycle,
+  property-read behavior and general routing/arity stay separate.
+
 - FV/PV unsupported optional-argument conversion boundary (#5611/#6776 and
   admitted #5878, 2026-10-08): RQ-CF-PRG-FINANCIAL-OPTIONAL-ARITY-001 uses
   three matching37-line installed VFP9 7423 probes to recover excess-arity

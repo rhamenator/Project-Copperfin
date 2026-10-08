@@ -1301,6 +1301,33 @@ std::optional<std::int64_t> checked_truncated_numeric_to_int64(const double valu
     return static_cast<std::int64_t>(value);
 }
 
+// RQ-CF-PRG-BINDEVENT-FLAGS-NUMERIC-001 (#5611/#6776); native method
+// observations and derived routine-extension equivalence in the fixture.
+std::optional<std::int32_t> checked_bindevent_flags_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    const bool numeric = value.kind == PrgValueKind::number ||
+        value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
+    std::optional<std::int64_t> flags;
+    if (numeric && behavior == NumericBehavior::vfp9) {
+        flags = vfp9_numeric_to_int32(value);
+    } else if (value.kind == PrgValueKind::int64) {
+        flags = value.int64_value;
+    } else if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value <= static_cast<std::uint64_t>(INT32_MAX)) {
+            flags = static_cast<std::int64_t>(value.uint64_value);
+        }
+    } else {
+        flags = checked_truncated_numeric_to_int64(numeric ? value.number_value :
+            std::round(value_as_number(value)));
+    }
+    if (!flags || *flags > INT32_MAX || *flags < (numeric ? 0 : INT32_MIN)) {
+        return std::nullopt;
+    }
+    // Signed32 admission above makes narrowing defined. Only supported bits
+    // are exposed; no sign-dependent integral conversion is needed.
+    return static_cast<std::int32_t>(*flags) & 3;
+}
+
 // RQ-CF-PRG-ALINES-FLAGS-NUMERIC-001 (#5611/#6776); native evidence retained in
 // tests/fixtures/vfp9-alines-flags-numeric-observation/. Splitting is unchanged.
 std::optional<std::int32_t> checked_alines_flags_argument(
