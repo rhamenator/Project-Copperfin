@@ -1,5 +1,21 @@
 # VFP Language Reference Coverage
 
+- SLEEP explicit-duration conversion (#5611/#6776,2026-10-08):
+  RQ-CF-PRG-SLEEP-DURATION-NUMERIC-001 is a defined owner-derived extension,
+  not a native duration oracle: three matching five-line installed VFP9 safe
+  zero-spelling attempts reject10 with healthy INT/session controls. Both
+  NUMERICBEHAVIOR modes retain millisecond half-away quantization and exact
+  integer precision, rejecting raw negative/nonfinite/NaN or rounded values
+  beyond nonnegative signed64 intersect size_t with localized catchable11
+  before waiting or blocking/success events.34 helper checks/68 fresh guarded
+  cases/eight locale/two default-zero/four resumed-session callbacks and four
+  existing sleep/critical/cancellation neighbors pass focused Clang sanitizers;
+  full GCC Numeric/localization pass4/4. Fixture README/docs32 retain original
+  dispatcher48 selected failures per compiler and completed development
+  RQ/VR/DQ/DV self-review/walkthrough/rollback. Scheduler default, YIELD, task/
+  cancellation/critical policy and clock accuracy unchanged; representability
+  is NOT a latency cap, no invented native aliases or platform/release claim.
+
 - UNLOCK RECORD Numeric conversion (#5611/#6776,2026-10-08):
   RQ-CF-PRG-UNLOCK-RECORD-NUMERIC-001 uses three matching74-line installed
   VFP9 shared-table runs with all three locks verified before each operand.

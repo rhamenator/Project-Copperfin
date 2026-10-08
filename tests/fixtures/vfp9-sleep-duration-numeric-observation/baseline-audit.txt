@@ -1,0 +1,34 @@
+RQ-CF-PRG-SLEEP-DURATION-NUMERIC-001 original-dispatch negative audit
+Base main: 6198c079c4e9995a7365e4500a19f3fd5f68f0c9
+Original dispatcher blob: e7fe0c50e8dda7b7f85b4bbdf87db893635e47cb
+Original dispatcher SHA256: 78706673a79abdabbeb68aec3ed3b57425f0a62d19c76997e865f180e77a4207
+Provisional helper source SHA256: a8db2990ea956b72e089f41b8a1f903cf4d0b4867e43e739b8bafe1a937088b0
+Original test source SHA256: 953da27752771d325184150e976d18108fe0e21803930d68cb707bcca60d2296
+Clang21.1.8 -O0 -g0 ASan/UBSan/float-cast-overflow:
+48 selected failures, zero other failures; no sanitizer diagnostics.
+26 guarded assertions (20 code/state,6 blocking-policy event counts),
+22 locale assertions (8 metadata,6 messages,8 blocking/success events).
+34 direct helper calls, other guarded setup/cursor/payload/session/mode/reset,
+zero/default/resumed evaluation and four existing neighbor functions pass.
+New36.28s/neighbors2.94s; CTest real44.41s, negative exit8.
+ASAN detect_leaks0/abort1; UBSAN halt0/printstack1 for complete negative
+execution. Fixed verification uses halt1. No leak qualification.
+Clang raw CTest log SHA256: ce9f48cd90ebe330f01dc78d141f2a4fc60b15661ed2d498711142ec5a4eb9e0
+Every large positive operand executes only inside an already-held critical
+section. Negative small controls alone may run without it. No large physical
+wait occurs, regardless of the original llround result.
+Installed native probes are safe rejected zero spellings, NOT conversion,
+type, error-number or rounding expectations. These expectations are derived
+from the admitted owner policy and concurrency parent obligations.
+GCC15.2 -O0 -g0: identical48 selected failures,zero others/no diagnostic.
+New0.90s/neighbors0.72s/full older Numeric91.79s pass; total93.43s exit8.
+GCC raw CTest log SHA256: 72df82f0877f754ffeea83a0ce6c897fd232a1343f0dc8c802be749c5555e384
+Four resumed-session valid/invalid boundary cases were added after this
+baseline and are not claimed as original-dispatch evidence. Original test
+source reconstruction also restores the original pseudo-message assertion:
+ expect(language=="qps-ploc"?message.starts_with("[!! ")&&message.find("SLEEP")!=std::string::npos:message==expected,"SLEEP localized invalid duration");
+Remove resumed_session_boundaries and its main call, restore that line, then
+compare the source SHA above before rerunning. The initial fixed execution
+had two assertion-only failures: pseudo-localization accents SLEEP. The final
+test checks pseudo delimiters/non-English rather than unaccented SLEEP. This
+does not change production localization or turn that first fixed run green.

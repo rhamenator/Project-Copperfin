@@ -13685,15 +13685,15 @@
                     {
                         return {};
                     }
-                    const double evaluated_delay = value_as_number(*delay_value);
-                    if (!std::isfinite(evaluated_delay) || evaluated_delay < 0.0)
+                    // RQ-CF-PRG-SLEEP-DURATION-NUMERIC-001: both modes share
+                    // checked extension admission before waiting/policy/events.
+                    const auto duration = checked_sleep_duration_argument(*delay_value);
+                    if (!duration.has_value())
                     {
-                        last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.SleepInvalidDuration");
-                        last_fault_location = statement.location;
-                        last_fault_statement = statement.text;
-                        return {.ok = false, .message = last_error_message};
+                        throw PrgCompatibilityError(
+                            runtime_text("Runtime.Prg.Dispatch.Error.SleepInvalidDuration"), 11);
                     }
-                    sleep_duration_ms = static_cast<std::size_t>(std::llround(evaluated_delay));
+                    sleep_duration_ms = *duration;
                 }
 
                 if (sleep_duration_ms != 0U &&

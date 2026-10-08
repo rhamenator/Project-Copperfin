@@ -5973,6 +5973,17 @@ copperfin_add_test(test_prg_engine_skip_count_numeric cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
+copperfin_add_test(test_prg_engine_sleep_duration_numeric cf_xbase_runtime
+    test_prg_engine_sleep_duration_numeric.cpp
+    prg_engine_test_support.cpp
+)
+copperfin_add_test(test_prg_engine_sleep_duration_neighbors cf_xbase_runtime
+    test_prg_engine_sleep_duration_neighbors.cpp
+    test_prg_engine_control_flow_task_supervision.cpp
+    test_prg_engine_control_flow_critical_sections.cpp
+    test_prg_engine_control_flow_shared_test_helpers.cpp
+    prg_engine_test_support.cpp
+)
 copperfin_add_test(test_prg_engine_unlock_record_numeric cf_xbase_runtime
     test_prg_engine_unlock_record_numeric.cpp
     prg_engine_test_support.cpp
