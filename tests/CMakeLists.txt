@@ -5977,6 +5977,19 @@ copperfin_add_test(test_prg_engine_set_skip_bar_numeric cf_xbase_runtime
     test_prg_engine_set_skip_bar_numeric.cpp
     prg_engine_test_support.cpp
 )
+copperfin_add_test(test_prg_engine_mrkbar_numeric cf_xbase_runtime
+    test_prg_engine_mrkbar_numeric.cpp
+    prg_engine_test_support.cpp
+)
+copperfin_add_test(test_prg_engine_mrkbar_neighbors cf_xbase_runtime
+    test_prg_engine_mrkbar_neighbors.cpp
+    test_prg_engine_runtime_surface_functions_list_controls_20.cpp
+    prg_engine_test_support.cpp
+)
+target_include_directories(test_prg_engine_mrkbar_neighbors PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/runtime
+)
+
 copperfin_add_test(test_prg_engine_set_mark_bar_numeric cf_xbase_runtime
     test_prg_engine_set_mark_bar_numeric.cpp
     prg_engine_test_support.cpp

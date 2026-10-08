@@ -3460,8 +3460,14 @@ namespace copperfin::runtime
                 }
 
                 const std::string popup_name = normalize_identifier(value_as_string(arguments[0]));
-                const long long bar_number = static_cast<long long>(std::llround(value_as_number(arguments[1])));
-                if (popup_name.empty() || bar_number < 1LL)
+                // RQ-CF-PRG-MRKBAR-NUMERIC-001: checked conversion uses the
+                // selected session; lookup/false fallback remains separate #7095.
+                const auto &set_state = current_set_state();
+                const auto mode = set_state.find("numericbehavior");
+                const auto bar_number = checked_mrkbar_number_argument(arguments[1],
+                    mode != set_state.end() && normalize_identifier(mode->second) == "vfp9"
+                        ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
+                if (popup_name.empty() || !bar_number.has_value())
                 {
                     return std::nullopt;
                 }
@@ -3471,7 +3477,7 @@ namespace copperfin::runtime
                 {
                     return make_boolean_value(false);
                 }
-                const auto bar = popup->second.find(bar_number);
+                const auto bar = popup->second.find(*bar_number);
                 return make_boolean_value(bar != popup->second.end() && bar->second);
             },
             [this, &frame](

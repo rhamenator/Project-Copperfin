@@ -1354,6 +1354,34 @@ std::optional<std::int32_t> checked_set_mark_bar_number_argument(
     return checked_on_bar_number_argument(value, behavior);
 }
 
+// RQ-CF-PRG-MRKBAR-NUMERIC-001 (#5611/#6776): independent native singleton
+// mark queries distinguish both-sign aliases from setter saturation.
+std::optional<std::int64_t> checked_mrkbar_number_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    const bool numeric = value.kind == PrgValueKind::number ||
+                         value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
+    if (value.kind == PrgValueKind::number && !std::isfinite(value.number_value)) {
+        return std::nullopt;
+    }
+    std::optional<std::int64_t> bar;
+    if (numeric && behavior == NumericBehavior::vfp9) {
+        bar = vfp9_numeric_to_int32(value);
+    } else if (value.kind == PrgValueKind::int64) {
+        bar = value.int64_value;
+    } else if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value <= static_cast<std::uint64_t>(INT32_MAX)) {
+            bar = static_cast<std::int64_t>(value.uint64_value);
+        }
+    } else {
+        const double raw = value_as_number(value);
+        bar = checked_truncated_numeric_to_int64(numeric ? raw : std::round(raw));
+    }
+    if (!bar || *bar < 1 || (numeric && *bar > INT32_MAX)) {
+        return std::nullopt;
+    }
+    return bar;
+}
+
 // RQ-CF-PRG-SKIP-COUNT-NUMERIC-001 (#5611/#6776): count conversion only,
 // not shared navigation or native type admission. Widened int32 counts make
 // the existing long-long abs operation defined, including INT32_MIN.
