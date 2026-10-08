@@ -1,0 +1,1 @@
+- 2026-10-08: Checked parsed Numeric-literal SET MARK OF BAR identifiers before mark-state and success-event mutation, with default truncation/bounds, opt-in VFP9 aliases/MAX, localized167/1612 and retained independent paired native/baseline/guarded evidence under #5611/#6776/#5868; general missing-positive-target gap #7093 remains separate.

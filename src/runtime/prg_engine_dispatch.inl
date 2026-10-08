@@ -5807,13 +5807,31 @@
                         const std::string popup_name = normalize_identifier(unquote_identifier(popup_text));
                         if (to_position != std::string::npos && bar_number.has_value() && !popup_name.empty())
                         {
+                            // RQ-CF-PRG-SET-MARK-BAR-NUMERIC-001: validate
+                            // before flag evaluation/state/success telemetry.
+                            const auto &set_state = current_set_state();
+                            const auto mode = set_state.find("numericbehavior");
+                            const auto converted_bar = checked_set_mark_bar_number_argument(*bar_number,
+                                mode != set_state.end() && normalize_identifier(mode->second) == "vfp9"
+                                    ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
+                            if (!converted_bar.has_value())
+                            {
+                                throw PrgCompatibilityError(
+                                    runtime_text("Runtime.Prg.Dispatch.Error.SetMarkBarNumberInvalid"), 167);
+                            }
+                            // Native -1/-2 reports1612 in supported user popups.
+                            // General positive missing-target policy is #7093.
+                            if (*converted_bar < 0)
+                            {
+                                throw PrgCompatibilityError(
+                                    runtime_text("Runtime.Prg.Dispatch.Error.SetMarkBarNumberNotFound"), 1612);
+                            }
                             const bool marked = value_as_bool(evaluate_expression(
                                 trim_copy(mark_tail.substr(to_position + 2U)), frame));
-                            current_session_state().popup_bar_mark_states[popup_name][
-                                static_cast<long long>(std::llround(*bar_number))] = marked;
+                            current_session_state().popup_bar_mark_states[popup_name][*converted_bar] = marked;
                             events.push_back({.category = "runtime.set_mark",
                                               .detail = "popup=" + popup_name +
-                                                        " bar=" + std::to_string(static_cast<long long>(std::llround(*bar_number))) +
+                                                        " bar=" + std::to_string(*converted_bar) +
                                                         " marked=" + (marked ? "true" : "false"),
                                               .location = statement.location});
                             return {};

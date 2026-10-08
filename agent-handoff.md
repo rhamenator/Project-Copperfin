@@ -55,125 +55,122 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-ON SELECTION BAR parsed Numeric-literal DO/static-action PR #7091 merged
-2026-10-08T13:16:27Z as e12a7940ae9e80b5347e40f5c296b6e340a6d082 from
-signed/DCO G head94920bc6d8ca1621a9775730f3cf84c8ae1ae586.
-All11 required SUCCESS;34/36 total SUCCESS at final gate, only optional
-Linux/Windows Native pending, no failures. Clean exact-head authorized Codex
-PR-open fallback summary6060238814 Completed12:51:47.547381Z plus verified
-connector root thumb553902730 at12:51:51Z. Claude-first6060243074 no completed
-response/quota/setup notice, not approval. Fresh paginated REST reviews/inline
-and Graph threads/closing refs empty, pagination exhausted; gate6060714915.
-Post-push8/8 PASS7.94s proof6060257323/logSHA
-b598312643cf1fb2af0fbe984d5f250260160dec5560c9c62533219b7fcb0c3e.
+SET SKIP OF BAR parsed Numeric-literal PR #7092 merged
+2026-10-08T14:16:06Z as 53f66b4f9686e98a92c33cf6fa672526a6826719 from
+signed/DCO G head ed4187c21e414152d82a6c44d2543db87c38e317.
+All11 required SUCCESS;33/36 total SUCCESS at final gate, only the three
+optional Native lanes pending, no failures. Clean exact-head authorized
+Codex PR-open fallback summary6061323185 Completed13:50:55.875235Z with
+verified connector root thumb554034895 at13:50:59Z, no findings.
+Claude-first6061321108 no completed response/quota/setup notice, not approval.
+Fresh paginated REST reviews/inline and Graph threads/closing refs empty,
+pagination exhausted; gate6061835306. Post-push8/8 PASS8.27s proof6061338457,
+logSHA2180636d72369926c618bdee11b6a731353d774934e653333c1e66461db3ac4a.
 
-RQ-CF-PRG-ON-SELECTION-BAR-NUMERIC-001: default finite truncation1..MAX;
-legacy negative-wide aliases/positive>=2^32 MAX. Converted-1/-2 native1604,
-other invalid admitted Numeric167, checked before binding/cache mutation.
-Unparsed NaN/inf/exponents/type/expression admission unchanged.
-Three matching installed VFP9 7423 complete250line40operand singleton
-seeds1/2/MAX x two forms, exactly one bar/noactivation; source
-120d61ce3e0b0a9953e729a7f201493c88bd92711797fae1c1fc5fea8a739ef4,
-outputad15cad20bdb2072aa8d7625e4eec7cc96dc91016fb49b5b35c9c9b4835a986d.
-70 direct/124 guarded incl opposite-origin session2/32 locales/three old neighbors.
-Original dispatcher296 selected failures per GCC/Clang, zero unrelated/no
-diagnostics; preliminary four cleanup-fixture failures excluded in audit.
-Final GCC11/11 PASS457.26s; Clang sanitizers2/2 PASS2.30s/detect_leaks0,
-no diagnostics. Fixture/docs22/32 retain hashes and completed medium-misuse
-DQ/DV development self-review/walkthrough/rollback, not independent human/
-full type/GUI/leak/release qualification. #6226/#4630 remain separate.
+RQ-CF-PRG-SET-SKIP-BAR-NUMERIC-001: default finite truncation1..MAX;
+legacy negative-wide aliases/positive>=2^32 MAX. Converted-1/-2 accepted
+without changing supported user bars; no negative user keys/system-menu claim.
+Invalid admitted Numeric167 before flag evaluation/state/event; four locales.
+Three matching installed VFP9 7423 paired125-line/40operand singleton1/2/MAX
+runs, one RELATIVE bar/noactivation; source
+397d6b473b4f20418f930333da5e05dbbfc1ae2f5d12839fada85038b5f8aff3,
+outputf023e19ff12609f6e567912d0cd7dc49acaa1e0ed237035c5ee154c978c61989.
+70direct/124guarded incl opposite-origin session2/16locales/three old neighbors.
+Original dispatcher412 selected failures per GCC/Clang, zero unrelated/
+no diagnostics; unchanged final tests. Fixed GCC11/11 PASS465.86s,
+Clang sanitizers2/2 PASS2.26s/no diagnostics/detect_leaks0.
+Fixture/docs22/32 retain hashes/audit and completed medium-misuse DQ/DV
+development self-review/walkthrough/rollback, not independent human/full type/
+GUI/leak/platform/release qualification. #4630 remains separate.
 
-Required watcher94337 completed0. macOS Native37779700114/job113319394646
-SUCCESS452/452404.30s (new1.12/neighbors0.08) plus four2/2 repeats
-21.69/21.24/21.06/22.56s; watcher27701 completed0.
-Optional exact-head Linux37779700391/job113319395350 SUCCESS452/452522.77s
-(new0.52/neighbors0.01), watcher83443 completed0.
-Windows37779700293/job113319396951 SUCCESS453/453789.68s
-(new2.51/neighbors0.03), watcher23426 completed0; all three Native now complete.
-Prior ON BAR #7090 all Native now complete: Linux450/450539.35s,
-macOS450/450402.02s plus four2/2 repeats, Windows37773272412/job113297811251
-SUCCESS451/4511204.32s (new2.52/neighbors0.05), watcher48112 completed0.
-Canonical main synchronizede12a7940ae9e80b5347e40f5c296b6e340a6d082;
-completed selection WT/local/remote branch removed normally after cleanstatus.
-Owned829MB GCC/596MB sanitizer builds moved to recoverable trash.
-Scoped continuity stashcb89f8c19ca7041bbb9c1324fbf464d9d2956ff8 retained;
+Required watcher54797 completed0. Exact-head Native still monitored:
+macOS37787343597/job113345383251 SUCCESS454/454469.33s
+(new0.43/neighbors0.04), four2/2 repeats20.53/22.21/21.87/21.12s.
+Linux37787343901/job113345397040 SUCCESS454/454526.82s
+(new0.47/neighbors0.01), proof6062109422. macOS proof6062032602.
+Windows37787343590 watcher99787 remains monitored; no inferred success.
+Previous #7091 all Native complete: Linux452/452522.77s,
+macOS452/452404.30s plus four2/2 repeats, Windows453/453789.68s.
+Canonical main synchronized53f66b4f9686e98a92c33cf6fa672526a6826719;
+completed SKIP WT/local/remote branch removed normally after cleanstatus.
+Owned829MB GCC/594MB sanitizer builds moved to recoverable trash.
+Scoped continuity stash2b31ff238e631b4bd8be2b70a19a48e60f58684a retained;
 older stashes/unrelated files/detached WTs preserved; channel reread empty.
-PR attachment cap100: unlinked obsolete merged #6645 attachment only,
-GitHub PR untouched; #7091 attached. EPOCH/CENTURY done/#3698 closed;
-#6879 retained after numeric. #5611/#6776/#5868 fresh OPEN owner/admitted,
+PR attachment cap100: obsolete merged #6647 attachment unlinked only,
+GitHub PR untouched; #7092 attached. EPOCH/CENTURY done/#3698 closed;
+#6879 retained after numeric; #5611/#6776/#5868 OPEN owner/admitted,
 no umbrella or broader #5868 closure.
 
 ## Selected active bounded slice
 
-SET SKIP OF BAR parsed Numeric-literal identifier only, under #5611/#6776
+SET MARK OF BAR parsed Numeric-literal identifier only, under #5611/#6776
 and admitted #5868, next unfinished existing bar consumer.
-Base origin/main e12a7940ae9e80b5347e40f5c296b6e340a6d082.
-Dedicated WT /home/rich/.codex/worktrees/set-skip-bar-numeric-5611/Project-Copperfin,
-branch fix/set-skip-bar-numeric-5611.
-Scope is checked identifier conversion before skip-state mutation/success
-telemetry, preserving accepted skip-expression evaluation, current session,
-sparse bar keys and other menu state. SET MARK/bar query/function/type/
-expression admission, general missing-bar/host routing/lifecycle/system-menu
-work are excluded; no discovery or unrelated production changes.
-RQ-CF-PRG-SET-SKIP-BAR-NUMERIC-001 derives from parent
-RQ-CF-PRG-NUMERIC-BEHAVIOR-001; bounded requirement now defined with independent
-installed native singleton controls/error/identity and unchanged regressions.
-Next: signed/DCO commit/push/PR, Claude-first exact-head external review,
-post-push focused replay/all11 required/resolved conversations before merge.
-No commit/PR yet; single admitted production site implemented and verified.
-Three matching installed VFP9 7423 complete125line/40operand singleton
-seeds1/2/MAX controls, one bar/noactivation. Three initial single-.T. runs
-mapped before helper; three expanded paired .T./.F. runs also match:
-source397d6b473b4f20418f930333da5e05dbbfc1ae2f5d12839fada85038b5f8aff3,
-outputf023e19ff12609f6e567912d0cd7dc49acaa1e0ed237035c5ee154c978c61989.
-Independent native state:1.9 only1, negative-wide1/2 aliases,positive>=2^32
-MAX; converted-1/-2 succeeds with seeded skip unchanged (not lookup error).
-Other nonpositive167; positive missing keys accepted with seed unchanged.
-Shipped SET SKIP OF helpfb960559-060b-4ffa-aaa4-35514c8789dc read fully.
-Mapped gap README/docs32 BEFORE helper. Helper wraps recovered
-conversion; dispatcher keeps accepted sentinels no-op for user bars,
-never claims system-menu support. Parsed/accepted expression policy unchanged.
-70direct/124 guarded .T./.F. incl8opposite-origin session2/16locale cases and
-three old neighbors; independent host acceptance/suppression plus skip flags,
-marks/cursor/prompts/count/event identity/cleanup/reset. Final tests unchanged.
-Original dispatcher byte-identical baseSHA
-52c30d7433c7a10c4e67bcce39f00d705c04a8e7062a5ed6f0d3585152b01f8f.
-Provisional helperSHAb015031e5b445864aba9f32338d24a1fb972e5a8a3e0a91d84c6160261b4037f;
-initial testSHAcb7131c473b0ed94503d7941552fa6bf7742649ea8c2d85bc9fa9a7524a3aef2.
-Before compilation/run Boolean snapshots changed to explicit IIF '.T.'/'.F.'
-instead of unrelated TRANSFORM formatting; final testSHA
-e1ca23679f04f611980937590d4dc39e3db8161998f3df910a98774876cf4edd.
-Fresh GCCbuild84581 completed0 including broader Numeric/localization;
-original-dispatch GCC baseline412 selected failures (66code/66continuation/
-66eventcount/38eventidentity/96hostselection/40skipflags/40locales), zero
-unrelated. Numeric2.07s/neighbors0.11s, total2.19s exit8; logSHA
-aa71de9a75e4e8ab26634c4d34a63d5163c2bc73126c3bc870bed2e54391c0f3.
-No excluded harness-failure run. Clang sanitizerbuild56920 completed0;
-same412 selected failures/zero unrelated/no diagnostics, numeric1.93s/
-neighbors0.10s,total2.04s,logSHA
-23cde667e4b020b162ca97bec81e2b92a2a151fcef9f871343154dfd23fee4fa.
-Negative replay used ASANdetect_leaks0/abort1,UBSANhalt0/stack1.
-Helper/final test unchanged across both baseline/fix.
-Single SET SKIP branch now checked before flag evaluation/state/event,
-localized167, accepted legacy negative sentinels no-op for user bars.
-Fixed dispatcherSHA2bc749d81c8211dfcbc5c7f97b7929416b9a4d05af2649aeae10eaff2fe44fd5.
-Exclusive fixed GCCbuild23546 and Clang sanitizerbuild7009 completed0 in
-/home/rich/temp/copperfin-set-skip-bar-5611-{build,sanitize}.
-Fixed GCC focused2/2 PASS2.02s (new1.90/neighbors0.10), logSHA
-f2e45f8853bf8631d1156df85d40d0272cac238d5b29843d5378e42d7c6eebea.
-Full GCC11 run26196 PASS465.86s (broader Numeric/localization/new2 plus contracts),
-logSHA5151f13728233b6f08b0f29f5951c46cefbc37b5a54901c217474e1ab5c2514e.
-Then Clang focused2/2 PASS2.26s (new2.16/neighbors0.09), no diagnostics;
-ASANdetect_leaks0/abort1, UBSANhalt1/stack1,logSHA
-08fa8d9eb47ba43db53438727addc68d806acfbb0efe2c58b60e01fb77a19dc3.
+Base origin/main53f66b4f9686e98a92c33cf6fa672526a6826719.
+Dedicated WT /home/rich/.codex/worktrees/set-mark-bar-numeric-5611/Project-Copperfin,
+branch fix/set-mark-bar-numeric-5611.
+Scope checked identifier conversion before mark flag evaluation/state/success
+telemetry, preserving accepted expression evaluation/current selected session/
+sparse bar keys and other menu state. Bar query/function/type/expression
+admission, general target/host routing/lifecycle/system-menu work excluded.
+RQ-CF-PRG-SET-MARK-BAR-NUMERIC-001 derives from parent
+RQ-CF-PRG-NUMERIC-BEHAVIOR-001; bounded requirement now defined by independent
+installed native singleton controls/error/identity and bounded regressions.
+Three matching installed VFP9 7423 paired125-line/40operand singleton1/2/MAX
+runs, one RELATIVE bar/noactivation. Native converted-1/-2 error1612 here,
+not SKIP's accepted no-op; other invalid167, fractions truncate, aliases/MAX
+distinguished by paired state controls. SourceSHA
+059b287f2dde795e3719f4ff906b19bead220ce95d777ae0d9b00a1e8a668081,
+outputSHA416c7895fa8bbdad7b89085dace1b7fe45fd2f1ea2c1214993e16e40c544aa82.
+Shipped help64e4e2e2-84c7-4d60-b814-74ad4606e25b read fully; generated
+probe.FXP moved to recoverable trash. Requirement gap mapped README/docs32
+BEFORE helper; native also reveals general positive missing-target1612 gap
+#7093 filed against exact main, source-path evidence not baseline-runtime
+claim. General lookup stays separate/no admission label manufactured.
+Helper wraps independently recovered conversion. 70direct/124guarded paired
+mark-state/32locales/three old neighbors constructed; independent skip policy/
+callback markers/prompts/count/cursor/session/event/cleanup guards.
+Original dispatcher blob a33b9ef7d263d99b2b5df3f1b7849730c0f79513,
+SHA2bc749d81c8211dfcbc5c7f97b7929416b9a4d05af2649aeae10eaff2fe44fd5
+unchanged, helperSHAf0b1105c42e71877516d0ee1d8550fec33ed4285cab94948500365c1e0c96786,
+Initial testSHAf1e757ecdb50c0f4dc7af9bbae3d610ea2e6a34c2dceaa436e5463ee15b06282:
+first original-dispatch GCC run372 selected failures, zero unrelated;
+2.11s exit8, logSHA24ef85e3979c0edb01a71fd32079ed8f88af3864b252fc6254cf400a987b7821.
+Then braces/line-break only remove a new misleading-indentation warning;
+assertions unchanged, final testSHA
+8f909efe4f42759638b68b9754254362378abd07c8eb3172408d64a257edfe39.
+Fresh GCCbuild41025 completed0 incl broader Numeric/localization in
+/home/rich/temp/copperfin-set-mark-bar-5611-build; Clang sanitize configure
+53630/build77731 completed0 in sibling set-mark-bar-5611-sanitize.
+GCC test-only rebuild4088 completed0; final original-dispatch replay30940
+completed exit8 with identical372 selected failures, zero unrelated.
+Final GCC baseline2.23s (new2.11/neighbors0.11),logSHA
+b44070d377771926187a6d1edeacb2698239fdaa4021bbd4073ed81c4755ecb8.
+Exclusive Clang final-test rebuild9277 completed0; baseline3927 exit8,
+same372 selected failures/zero unrelated/no sanitizer diagnostics:
+76code/76continuation/76eventcount/32telemetry/40markflags/72locales.
+Clang2.42s(new2.31/neighbors0.09),logSHA
+0a793c5419cda2117cb78cf1e7fbd5dfa3671ea594631c37f6ff4f63b14f5e60;
+ASANdetect_leaks0/abort1,UBSANhalt0/stack1. Negatives strictly serial/privateTMPDIR.
+Single SET MARK branch now checks before flag evaluation/state/event;
+localized167/1612 in four catalogs. General positive lookup#7093 untouched.
+Fixed dispatcherSHA1e6be40fd0a68da91b25f27dde9db35e2cbb76e8ae20b4b8a1bf0a938642da98.
+Helper/final tests unchanged across both baselines/fix. GCC fixedbuild20887
+completed0; Clang fixedbuild14712 completed0/exclusive.
+Fixed GCCfocused2/2 PASS2.24s (new2.13/neighbors0.10), logSHA
+783b58f5e4950bb41684b025c189b3a91c74560d2f858c64c5f3519dabb1ac61.
+Full GCC11 run75100 PASS459.68s (new2.15/neighbors0.10), logSHA
+11ff81f384be8393ecda57a1f667465def6c3abca2229937670a3795f6edb118.
+Then Clang fixedruntime77755 PASS2/2 in2.68s (new2.56/neighbors0.10),
+no diagnostics/detect_leaks0/abort1,UBSANhalt1/stack1, logSHA
+6a7d3f17f48b53b1af5c932da43c9d12c6154ca18f76fc9106267ae310fbd4d5.
+Runtime verification strictly serial/privateTMPDIR; final helper/tests unchanged.
 Medium-misuse DQ/DV development self-review/walkthrough complete against
-final unchanged tests/results, not independent human/full type/GUI/leak/
-platform/release qualification. No local runtime tests overlap.
-Final README/docs22/32 acceptance reconciliation complete; signed/DCO PR next.
-Initial README/matrix patch failed atomically due incomplete row context;
-corrected mapping exists before helper; not verification evidence.
-Preserve unrelated files/stashes/detached WTs; no VM/template/backend/system
-mutation; native/PRG/runtime tests strictly serial/privateTMPDIR.
+focused/broader/sanitizer results, not independent human/full type/GUI/leak/
+platform/release qualification; bounded development acceptance complete.
+Final docs reconciled; next signed-DCO commit/push/new PR/Claude-first review.
+No commit or PR yet; no VM/template/backend/system mutation.
+Complete traceability/locales/DQ-DV/signed-DCO/push/PR/Claude-first exact-head
+review/post-push/all11 required/resolved-conversation gates before completion.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -927,7 +924,8 @@ Owner-directed workstream order before the #6879 assignment was:
    - Completed after those: DEFINE BAR Numeric-literal identifiers (PR#7089).
    - Completed after it: ON BAR ... ACTIVATE POPUP Numeric identifiers (PR#7090).
    - Completed after it: ON SELECTION BAR DO/static-action identifiers (PR#7091).
-   - Active: SET SKIP OF BAR parsed Numeric-literal identifiers.
+   - Completed after it: SET SKIP OF BAR identifiers (PR#7092).
+   - Active: SET MARK OF BAR parsed Numeric-literal identifiers.
      Other bar consumers#5868, popup order/count#6152 and expression admission
      #6225/#6227 remain unfinished.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
