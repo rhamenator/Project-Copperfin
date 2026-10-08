@@ -1301,6 +1301,24 @@ std::optional<std::int64_t> checked_truncated_numeric_to_int64(const double valu
     return static_cast<std::int64_t>(value);
 }
 
+// RQ-CF-PRG-DEFINE-BAR-NUMERIC-001 (#5611/#6776). Native RELATIVE controls
+// distinguish positive saturation from negative low32 aliases. Admission is
+// bounded before any cast; nonfinite rejection in both modes is owner-derived.
+std::optional<std::int32_t> checked_define_bar_number_argument(
+    const double value, const NumericBehavior behavior) {
+    if (!std::isfinite(value)) {
+        return std::nullopt;
+    }
+    const auto converted = behavior == NumericBehavior::vfp9
+        ? std::optional<std::int64_t>(value >= 4294967296.0
+              ? std::numeric_limits<std::int32_t>::max() : vfp9_numeric_to_int32(value))
+        : checked_truncated_numeric_to_int64(value);
+    if (!converted || *converted < 1 || *converted > std::numeric_limits<std::int32_t>::max()) {
+        return std::nullopt;
+    }
+    return static_cast<std::int32_t>(*converted);
+}
+
 // RQ-CF-PRG-SKIP-COUNT-NUMERIC-001 (#5611/#6776): count conversion only,
 // not shared navigation or native type admission. Widened int32 counts make
 // the existing long-long abs operation defined, including INT32_MIN.

@@ -1468,6 +1468,7 @@
   "Runtime.Prg.Dispatch.Error.ErrorNumberInvalid": "Número de ERROR no válido: {value}",
   "Runtime.Prg.Dispatch.Error.GoRecordNumberInvalid": "Número de registro de GO no válido: {value}",
   "Runtime.Prg.Dispatch.Error.SkipCountInvalid": "Cantidad de SKIP no válida: {value}",
+  "Runtime.Prg.Dispatch.Error.DefineBarNumberInvalid": "DEFINE BAR: identificador de barra no valido",
   "Runtime.Prg.Dispatch.Error.UserRaisedErrorWithParameter": "Error {code}: '{parameter}'.",
   "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed": "No se pudo resolver el destino de {command}: {target}",
   "Runtime.Prg.Dispatch.Error.ReturnToCrossesExpressionInvocationBoundary": "{command} no puede desenrollar mas alla de una llamada a rutina realizada desde una expresion o un evento de devolucion de llamada",

@@ -1,5 +1,23 @@
 # VFP Language Reference Coverage
 
+- DEFINE BAR Numeric-literal conversion (#5611/#6776,2026-10-08):
+  RQ-CF-PRG-DEFINE-BAR-NUMERIC-001 maps installed VFP9 7423 RELATIVE sparse
+  popup observations, including seeded small/maximum identities, to a checked
+  default converted1..INT32_MAX domain and explicit VFP9 negative-low32 aliases/
+  positive>=2^32 saturation to INT32_MAX. Ordinary fractions truncate in BOTH
+  modes; native rejection is catchable167. Nonfinite/NaN reject both as a
+  derived safety boundary before PROMPT or map mutation. The fixture README
+  records three matching67-line native runs, original-dispatch150 selected
+  failures per compiler, final GCC focused/contracts9/9 and Clang sanitizers2/2,
+  broader Numeric/localization4/4 and development DQ/DV/hazards.68 direct/
+  56 fresh guarded/eight locale/four inline-PROMPT session cases and two old
+  neighbors pass; the four session cases were added after the baseline.
+  Existing sparse allocation and broader parser/menu commands are unchanged.
+  #5868 remains unfinished for other bar-number consumers; #6152 retains
+  popup ordinal/RELATIVE/order/count behavior, #6225 expression admission.
+  The historical non-RELATIVE timeout source is non-runnable text; never repeat
+  large native ordinal allocation. No full native/GUI/platform/release claim.
+
 - SLEEP explicit-duration conversion (#5611/#6776,2026-10-08):
   RQ-CF-PRG-SLEEP-DURATION-NUMERIC-001 is a defined owner-derived extension,
   not a native duration oracle: three matching five-line installed VFP9 safe

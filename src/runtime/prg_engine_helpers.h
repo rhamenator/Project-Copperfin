@@ -143,6 +143,9 @@ std::optional<std::int64_t> checked_truncated_numeric_to_int64(double value);
 // is identical in both modes. Preserve half-away milliseconds, reject raw
 // negatives/nonfinite/out-of-domain, exact integer values avoid double loss.
 std::optional<std::size_t> checked_sleep_duration_argument(const PrgValue& value);
+
+// RQ-CF-PRG-DEFINE-BAR-NUMERIC-001: existing parsed Numeric identifier only.
+std::optional<std::int32_t> checked_define_bar_number_argument(double value, NumericBehavior behavior);
 // RQ-CF-PRG-SKIP-COUNT-NUMERIC-001: default signed32 truncation/exact
 // comparison; VFP9 alone retains both-sign low32/indefinite-zero aliases.
 // NaN rejects both modes; safe other coercions remain checked half-away.
