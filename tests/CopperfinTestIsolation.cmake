@@ -934,6 +934,20 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
 
+    # #5611/#6776 ERROR conversion: private-TMPDIR mode/locale roots and existing
+    # neighbor scratch roots; scoped/restored locale; strictly serial runtime.
+    foreach(error_test IN ITEMS test_prg_engine_error_command_numeric test_prg_engine_error_command_neighbors)
+        copperfin_set_test_isolation(${error_test}
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT scoped-process
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            AUDIT complete
+        )
+    endforeach()
+
     # #5611/#6776 BUFFERING mode: test-owned scratch, scoped/restored locale;
     # no children/network/samples/resources; serial, no duplicate invocation.
     copperfin_set_test_isolation(test_prg_engine_cursor_buffering_numeric

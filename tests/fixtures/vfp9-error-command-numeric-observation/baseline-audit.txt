@@ -1,0 +1,39 @@
+RQ-CF-PRG-ERROR-COMMAND-NUMERIC-001 unchanged-dispatch baseline, 2026-10-08
+Base: 70bc9233d2e5bf1a4a1b4d11568a00f27b9e17d2
+Dispatch git blob: 53fcaac496e823ac92fd5f727dd8f75bae09eca7 (equals base)
+Dispatch SHA256: 9aeb9801e85030c6b72b411a6bb1fc7df16271c49c4ccd37642bdc9bce0e2260
+Test source SHA256: 7394612df696b514ce5574b77c2cded3ab835fcf7b63c40aed7267ceb2d4a16e
+Shared checked helper is linked but unused by this unchanged dispatcher.
+GCC15.2 Debug -O0 -g1: 90 selected row mismatches, numeric0.70s/combined0.81s.
+Clang21.1.8 -O0 -g1 ASan/UBSan/float-cast-overflow: same90 mismatches,
+numeric2.91s/combined3.32s; no sanitizer diagnostic; detect_leaks=0.
+118 direct helper checks, 148 state suffixes, setup/reset/cleanup and all seven
+existing ERROR neighbor tests pass in each compiler. No extra failures.
+Each runtime invocation is strictly serial under its own private TMPDIR.
+ctest -R '^test_prg_engine_error_command_(numeric|neighbors)$' -j1 --output-on-failure
+GCC log SHA256: 55013d5353bf26ba509c773fc662018368b4fa1ecdd8e40fb1bb8cbcbaec1311
+Clang log SHA256: 5a36b91128c580c0948ecdeb09b8591e923d1406f2a63ae65b2e6325c54a44ce
+Initial TRANSFORM/grouped-integer/logical harness mismatches were corrected;
+the preliminary output is excluded from the final90 regression counts.
+Representative wrong old requests: ERROR1.5 raises2 instead of1;
+ERROR0.5 raises1 instead of1941; ERROR0 publishes code0/ERROR()0/AERROR()1;
+ERROR2147483648 raises -2147483648; invalid parameterized conversion still
+calls the parameter UDF instead of suppressing it.
+Actual sampled catalog/type controls (same in both compilers):
+CONTROL COPPERFIN bare 12 99|F|0|99|99|T|Error 99.|1:1:guard|1|COPPERFIN
+CONTROL COPPERFIN bare 32 12|F|0|12|12|T|Error 12.|1:1:guard|1|COPPERFIN
+CONTROL COPPERFIN bare 33 1|F|0|1|1|T|Error 1.|1:1:guard|1|COPPERFIN
+CONTROL COPPERFIN parameter 12 99|F|1|99|99|T|Error 99: 'guard'.|1:1:guard|1|COPPERFIN
+CONTROL COPPERFIN parameter 32 12|F|1|12|12|T|Error 12: 'guard'.|1:1:guard|1|COPPERFIN
+CONTROL COPPERFIN parameter 33 1|F|1|1|1|T|Error 1: 'guard'.|1:1:guard|1|COPPERFIN
+CONTROL VFP9 bare 12 99|F|0|99|99|T|Error 99.|1:1:guard|1|VFP9
+CONTROL VFP9 bare 32 12|F|0|12|12|T|Error 12.|1:1:guard|1|VFP9
+CONTROL VFP9 bare 33 1|F|0|1|1|T|Error 1.|1:1:guard|1|VFP9
+CONTROL VFP9 parameter 12 99|F|1|99|99|T|Error 99: 'guard'.|1:1:guard|1|VFP9
+CONTROL VFP9 parameter 32 12|F|1|12|12|T|Error 12: 'guard'.|1:1:guard|1|VFP9
+CONTROL VFP9 parameter 33 1|F|1|1|1|T|Error 1: 'guard'.|1:1:guard|1|VFP9
+Columns: caughtCode|after|parameterCalls|ERROR()|AERRORcode|messageMatches|
+message|cursorPointer:count:label|session|mode. Rows12/32/33 mean99/$11.5/$0.5.
+Native99 raises1941; native Currency controls raise9 without parameter call.
+This catalog/type gap stays separate and unfinished in #7079; baseline proof
+is linked as issuecomment6051872181, not an implementation admission.

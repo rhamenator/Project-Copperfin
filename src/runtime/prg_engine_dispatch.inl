@@ -14288,7 +14288,28 @@
                 std::string message;
                 if (first_is_numeric)
                 {
-                    error_number = static_cast<int>(std::llround(value_as_number(first_value)));
+                    // RQ-CF-PRG-ERROR-COMMAND-NUMERIC-001: conversion-stage
+                    // rejection precedes the optional parameter. Native zero
+                    // rejection follows it; catalog membership is separate (#7079).
+                    const auto &set_state = current_set_state();
+                    const auto mode = set_state.find("numericbehavior");
+                    const auto converted = checked_error_number_argument(first_value,
+                        mode != set_state.end() && normalize_identifier(mode->second) == "vfp9"
+                            ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
+                    const auto reject_error_number = [&]() -> void
+                    {
+                        const std::string operand = first_value.kind == PrgValueKind::number
+                            ? format_round_trip_decimal(first_value.number_value)
+                            : value_as_string(first_value);
+                        throw PrgCompatibilityError(runtime_text(
+                            "Runtime.Prg.Dispatch.Error.ErrorNumberInvalid",
+                            {{"value", operand}}), 1941);
+                    };
+                    if (!converted)
+                    {
+                        reject_error_number();
+                    }
+                    error_number = *converted;
                     if (!statement.secondary_expression.empty())
                     {
                         const PrgValue parameter_value =
@@ -14315,6 +14336,10 @@
                         message = runtime_text(
                             "Runtime.Prg.Dispatch.Error.UserRaisedError",
                             {{"code", std::to_string(error_number)}});
+                    }
+                    if (error_number == 0)
+                    {
+                        reject_error_number();
                     }
                 }
                 else

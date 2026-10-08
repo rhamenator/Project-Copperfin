@@ -55,79 +55,96 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-BINDEVENT optional Numeric/exact-integer flags PR #7076 merged 2026-10-08
-02:16:12 UTC as 0f679faf71d1c2346e8500272b521dbab84a5a0e at signed/DCO
-head 915de0b3f548fec168c9ea434f1131dd90cee9bd. All11required SUCCESS;
-35/36 reported checks SUCCESS, only optional native Windows MSVC running,
-no failure. Complete REST reviews/inline and Graph threads/closingrefs empty,
-all pagination exhausted. Codex PR-open summary6050391586 completed
-01:40:15.500995Z exact915de0b, verified connector thumbs552818369.
-Claude-first6050392711 eyes435288974 only, no quota/setup notice; not clean.
-Merge proof6050801889, post-push proof6050400854. Watcher90646 completed exit0.
+CURSORSETPROP BUFFERING Numeric/exact-integer conversion PR #7078 merged
+2026-10-08 03:16:12 UTC as 70bc9233d2e5bf1a4a1b4d11568a00f27b9e17d2 at
+signed/DCO head e162981b0cb451913d0041489887e1643b421660 (signature G).
+All 11 required checks SUCCESS; 35/36 reported checks SUCCESS, only optional
+native Windows MSVC running, no failure. Complete REST reviews/inline and
+Graph threads/closing references empty, all pagination exhausted.
+Codex PR-open summary6051031564 completed 02:39:23.933980Z on exact e162981,
+verified connector root thumbs552903751. Claude-first6051033336 remains
+eyes435322994 only, no quota/setup notice; not clean-review evidence.
+Merge proof6051440354, post-push proof6051041477; watcher19327 finished exit0.
 
-RQ-CF-PRG-BINDEVENT-FLAGS-NUMERIC-001 migrated only object-method fifth and
-supported routine-extension fourth flags: checked nonnegative signed32
-default, defined VFP9 low32/indefinite-zero aliases, bits0/1, localized11
-before binding/ordinal/success-event mutation. Type/Currency gap#7070,
-window handles/messages, routing/arity and event lifetime remain separate;
-routine extension retained under explicit owner modernization intent.
-Three identical49-line VFP9 runs,132direct/176scriptcases. Original98failures
-each compiler(90rows/8events), zero state mismatches, no sanitizer diagnostic.
-GCC6/6 87.87s(fullolderNumeric),focusedClang5/5 8.07s(no fullolderNumeric,
-detect_leaks=0),post-push flags1/1 0.75s/contracts6/6 4.31s,171fragments.
-RQ/VR/DQ/DV,medium-misuse development self-review/walkthrough/rollback/native
-hashes retained; not independent-human,fullnativeparity or release qualification.
+RQ-CF-PRG-CURSORSETPROP-BUFFERING-NUMERIC-001 migrated only its second operand:
+checked truncation/domain1..5 default, explicit VFP9 defined low32/
+indefinite-zero aliases, localized1469 with original operand diagnostics
+before mode/pending-record mutation. Property/alias/type/arity and general
+buffering remain separate. Type gap #7077 remains unfinished/unadmitted.
+Three matching 45-line VFP9 runs; 124 direct/172 guarded cases. Original
+dispatch failed120 rows each compiler, zero state/other failures.
+GCC4/4 107.84s (full older Numeric); focused Clang ASan/UBSan/
+float-cast-overflow3/3 106.21s, no diagnostics, no full older Numeric,
+detect_leaks=0. Post-push boundary1/1 1.55s/contracts6/6 4.32s.
+172 fragments; RQ/VR/DQ/DV, native hashes, negative audit, medium-misuse
+development self-review/walkthrough/rollback retained. Not independent-human,
+full-type/native message, platform, leak or release qualification.
 
-Main synchronized. Completed slice worktree/local/remote branch removed;
-514MB/927MB owned builds and generatedFXP in recoverable trash. Scoped
-pre-sync handoff stash6bec17918c28387c38b1d2132152ac3ff900d1f6 retained
-alongside all prior stashes. Unrelated files/detachedWTs preserved.
-Live channel re-read empty. #5611/#6776/#7070 remain unfinished;
-EPOCH/CENTURY complete,#3698 closed,#6879 retained after numeric.
+Main synchronized at the merge revision. Completed worktree and local/remote
+branch removed; 461MB/789MB owned builds and generatedFXP moved to recoverable
+trash. Scoped handoff stashdd1f029786743f8a5dbb510a44eb605784b7c049 retained
+alongside all prior stashes. Unrelated untracked files/detached WTs preserved.
+Live channel re-read empty. Prior #7076 optional MSVC subsequently SUCCESS.
+#5611/#6776 remain OPEN/admitted and unfinished; EPOCH/CENTURY complete,
+#3698 closed; #6879 retained after numeric.
 
 ## Selected active bounded slice
 
-CURSORSETPROP('BUFFERING', nMode[, alias]) second-argument Numeric/exact-integer
-conversion under admitted #5611/#6776, RQ-CF-PRG-CURSORSETPROP-BUFFERING-NUMERIC-001.
-Only the llround/int site in records.inl is migrated. Base main
-0f679faf71d1c2346e8500272b521dbab84a5a0e; dedicated WT
-/home/rich/.codex/worktrees/cursorsetprop-buffering-5611/Project-Copperfin;
-branch fix/cursorsetprop-buffering-numeric-5611.
+ERROR first-operand Numeric/exact conversion under admitted #5611/#6776,
+RQ-CF-PRG-ERROR-COMMAND-NUMERIC-001. Dedicated WT
+/home/rich/.codex/worktrees/error-command-numeric-5611/Project-Copperfin;
+branch fix/error-command-numeric-5611, base
+70bc9233d2e5bf1a4a1b4d11568a00f27b9e17d2. Production helper/dispatcher,
+all four localized original-operand diagnostics, focused tests/isolation,
+fixture audit, docs22/32 RQ/VR/DQ/DV and dated fragment are implemented
+committed as signed/DCO7d3253efeb182f72649dec7a949fbab94afcfa9d and pushed;
+final documentation completion record follows; no PR yet. Only the selected llround/int site changes.
 
-Three matching 45-line VFP9 7423 runs retain39 Numeric/four type controls,
-version/cleanup. Numeric truncation into1..5; default finite domain admission,
-explicit VFP9 defined low32/indefinite-zero aliases, zero invalid. Exact
-int64/uint64 follow derived extension policy without double loss. Rejected
-Numeric raises existing localized1469/safe original operand text before
-buffering/pending-record mutation. Lookup/routing/type/arity, pending-edit/
-broader buffering and other callers stay separate. Native type gap#7077
-filed against exact main, no admission label; existing other coercions retained.
+Default Numeric/exact truncates into conversion-stage0..INT32_MAX. Explicit
+VFP9 alone admits negative low32/indefinite0 aliases; positive overflow,
+non-finite or negative converted values reject. Missing raises1941 before
+optional parameter evaluation; converted0 rejects1941 after it. Currency
+keeps checked half-away conversion, character and positive-code message/
+metadata paths remain unchanged. No full catalog/type/arity or error-state/
+resumable-UDF lifecycle claim; #7079 remains OPEN/unadmitted/unfinished.
 
-Pre-implementation requirement/matrix/verification mapping retained.
-124 direct calls/172 guarded cases across four mode/alias runs. Original
-dispatcher byte-identical to main, helper linked unused:120 row failures
-each compiler, zero state suffix/other failures; direct/control/setup/cleanup
-and old buffering neighbor pass. GCC new1.49s/total2.45s; Clang new44.62s/
-total47.29s, no diagnostic. No full older Numeric baseline claim.
-Fixed GCC4/4 107.84s(full older Numeric84.25s, new1.32s, buffering0.93s,
-tablemutation21.33s). Focused ClangASan/UBSan/float-cast-overflow3/3 106.21s
-(new4.52s,buffering2.66s,tablemutation99.02s), no diagnostics; full older
-Numeric excluded,detect_leaks=0. Runtime strictly serial/privateTMPDIR.
-Six contracts6/6 4.33s,172 fragments. README/docs22/docs32/changelog retain
-RQ/VR/DQ/DV and completed medium-misuse development self-review/walkthrough/
-rollback; no independent-human/fulltypeparity/platform/release claim.
+Retained fixture tests/fixtures/vfp9-error-command-numeric-observation/
+contains three matching66-line VFP9 7423 observations and three matching38-line
+counting-UDF/Currency controls, exact source/output hashes in README.
+Overlapping X11-failed batch and malformed Currency-literal preliminary
+controls discarded. Strictly serial native/runtime execution only; no VM/
+ODBC/network/system change. GeneratedFXPs ignored/owned.
 
-Owned builds retained until merge:
- /home/rich/temp/copperfin-cursorsetprop-buffering-5611-build
- /home/rich/temp/copperfin-cursorsetprop-buffering-5611-sanitize
-All build/test/probe sessions completed; ignored probe.FXP owned.
-Next: final-doc contracts, signed/DCO commit,push,PR/main,Claude-first/
-authorized Codex exact-head review,post-push exact-head verification.
-Inspect all comments/checks/conversations; fix actionable failures,merge only
-all11requiredgreen/cleanexacthead/resolved conversations. Parents#5611/#6776
-and gap#7077 remain unfinished. No owner decision/automation pause needed.
-Unrelated files/stashes/detached worktrees preserved; prior#7069 optional
-WindowsMSVC subsequently SUCCESS,#7076 optionalWindowsMSVC still running.
+Baseline audit94ed0cb3425f732abef27934bd9241379081139e8b95eeee0434d81504ecf9c4:
+dispatcher blob53fcaac496e823ac92fd5f727dd8f75bae09eca7 byte-identical to base,
+helper linked unused; exactly90 selected rows fail each compiler; all118
+direct checks/148 state suffixes/setup/reset/cleanup/seven existing ERROR
+neighbors pass. Initial harness TRANSFORM grouping/logical mismatch excluded.
+Actual baseline ERROR99/Currency controls now reproduced and added to #7079
+as comment6051872181 (native controls6051543903). No type/catalog expansion.
+
+Fixed118 direct/148 guarded cases/eight both-mode locale cases pass.
+GCC focused2/2 1.84s and full3/3 87.56s (olderNumeric86.45s); Clang
+ASan/UBSan/float-cast-overflow focused2/2 5.13s, no diagnostics,
+detect_leaks=0, not full older Numeric/leak qualification. Medium-misuse
+development maintainer self-review/guarded walkthrough/rollback completed,
+not independent/human or platform/release qualification. All173 fragments
+validate; git diff--check/channel verify pass. Six final repository contracts
+pass6/6 in5.24s (intake/signoff/changelog/locale/isolation). The additional
+safety_traceability_workflow_contract passes359.21s, its selection6/6 364.25s.
+Owned builds /home/rich/temp/copperfin-error-command-5611-build and
+/home/rich/temp/copperfin-error-command-5611-sanitize retain logs/privateTMPDIRs.
+
+Next: signed/DCO final evidence commit, push/PRmain, Claude-first verified
+trigger and authorized Codex
+exact-head review. Post-push focused verification; merge only all11 required
+green/clean exact-head review/resolved conversations. Then synchronize main,
+clean only validated owned build/FXP/branch/WT, re-read channel and select the
+next bounded admitted numeric slice. Parent issues remain OPEN/admitted;
+#6879 retained after numeric. No owner input or automation pause is needed.
+Canonical and WT handoffs retain this continuation; unrelated files/stashes/
+detached WTs are preserved. No runtime/native process remains running;
+no contract/build/test/probe process remains active.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -870,8 +887,10 @@ Owner-directed workstream order before the #6879 assignment was:
      #5878 core financial behavior remains unfinished.
    - Completed after those: BINDEVENT optional object-event flags (PR #7076);
      routine extension retained, type/Currency gap #7070 remains separate.
-   - Active: CURSORSETPROP BUFFERING second-argument numeric conversion;
-     general buffering and type gap #7077 remain separate.
+   - Completed after those: CURSORSETPROP BUFFERING second-argument numeric
+     conversion (PR #7078); general buffering/type gap #7077 remain separate.
+   - Active: ERROR first-operand numeric conversion; native catalog/type
+     recovery gap #7079 remains separate.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`
