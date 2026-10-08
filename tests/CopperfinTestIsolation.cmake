@@ -934,6 +934,20 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
 
+    # ON SELECTION BAR numeric/old menu neighbors: private-TMPDIR owned
+    # roots, scoped locale, no children/network, serial runtime verification.
+    foreach(selection_bar_test IN ITEMS test_prg_engine_on_selection_bar_numeric test_prg_engine_on_selection_bar_neighbors)
+        copperfin_set_test_isolation(${selection_bar_test}
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT scoped-process
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            AUDIT complete
+        )
+    endforeach()
+
     # ON BAR numeric/old menu neighbors: private-TMPDIR scratch roots,
     # scoped locale, no children/network, serial runtime verification.
     foreach(on_bar_test IN ITEMS test_prg_engine_on_bar_numeric test_prg_engine_on_bar_neighbors)

@@ -3213,14 +3213,32 @@
                     unquote_identifier(trim_copy(statement.identifier)));
                 const std::string handler_name = normalize_identifier(
                     unquote_identifier(trim_copy(statement.expression)));
-                if (!bar_number.has_value() || *bar_number < 1.0 ||
+                if (!bar_number.has_value() ||
                     popup_name.empty() || handler_name.empty())
                 {
                     return {};
                 }
 
-                current_session_state().popup_bar_selection_handlers[popup_name][
-                    static_cast<long long>(std::llround(*bar_number))] = handler_name;
+                // RQ-CF-PRG-ON-SELECTION-BAR-NUMERIC-001: validate current-
+                // session Numeric policy before replacing the handler.
+                const auto &set_state = current_set_state();
+                const auto mode = set_state.find("numericbehavior");
+                const auto converted_bar = checked_on_selection_bar_number_argument(*bar_number,
+                    mode != set_state.end() && normalize_identifier(mode->second) == "vfp9"
+                        ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
+                if (!converted_bar.has_value())
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Dispatch.Error.OnSelectionBarNumberInvalid"), 167);
+                }
+                if (*converted_bar < 0)
+                {
+                    // Independent native selection registration gives1604,
+                    // distinct from ON BAR's1612 in this user-popup lane.
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Dispatch.Error.OnSelectionBarNumberNotFound"), 1604);
+                }
+                current_session_state().popup_bar_selection_handlers[popup_name][*converted_bar] = handler_name;
                 return {};
             }
             case StatementKind::on_selection_bar_action_command:
@@ -3229,17 +3247,33 @@
                 const std::string popup_name = normalize_identifier(
                     unquote_identifier(trim_copy(statement.identifier)));
                 const std::string action_text = trim_copy(statement.expression);
-                if (!bar_number.has_value() || *bar_number < 1.0 ||
+                if (!bar_number.has_value() ||
                     popup_name.empty() || action_text.empty() ||
                     action_text.find('&') != std::string::npos)
                 {
                     return {};
                 }
 
-                current_session_state().popup_bar_selection_actions[popup_name][
-                    static_cast<long long>(std::llround(*bar_number))] = action_text;
+                // RQ-CF-PRG-ON-SELECTION-BAR-NUMERIC-001: failure-atomic
+                // conversion before binding replacement AND cache invalidation.
+                const auto &set_state = current_set_state();
+                const auto mode = set_state.find("numericbehavior");
+                const auto converted_bar = checked_on_selection_bar_number_argument(*bar_number,
+                    mode != set_state.end() && normalize_identifier(mode->second) == "vfp9"
+                        ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
+                if (!converted_bar.has_value())
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Dispatch.Error.OnSelectionBarNumberInvalid"), 167);
+                }
+                if (*converted_bar < 0)
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Dispatch.Error.OnSelectionBarNumberNotFound"), 1604);
+                }
+                current_session_state().popup_bar_selection_actions[popup_name][*converted_bar] = action_text;
                 current_session_state().popup_bar_action_routines[popup_name].erase(
-                    static_cast<long long>(std::llround(*bar_number)));
+                    *converted_bar);
                 return {};
             }
             case StatementKind::on_selection_popup_command:

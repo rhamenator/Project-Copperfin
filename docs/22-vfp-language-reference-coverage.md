@@ -1,5 +1,23 @@
 # VFP Language Reference Coverage
 
+- ON SELECTION BAR Numeric-literal DO/static-action conversion (#5611/#6776/
+  #5868,2026-10-08): RQ-CF-PRG-ON-SELECTION-BAR-NUMERIC-001 mapped before
+  migration to three matching installed VFP9 7423 singleton runs,250lines/
+  40operands x seeds1/2/MAX x two forms, one bar/noactivation. Ordinary
+  fractions truncate; negative-wide legacy aliases/positive>=2^32 MAX match
+  observed identities. Converted-1/-2 gives1604 here, not ON BAR1612; other
+  invalid admitted Numeric167. Default finite converted1..MAX; direct
+  nonfinite helper containment does not admit unchanged unparsed syntax.
+  [Fixture README](../tests/fixtures/vfp9-on-selection-bar-numeric/README.md)
+  retains source/output hashes,296 selected original-dispatch failures per
+  GCC/Clang with zero unrelated failures,70 direct/124 guarded/32 locale cases
+  and three old neighbors. Two selected sites checked before map/cache mutation;
+  GCC11/11 PASS457.26s and Clang sanitizer2/2 PASS2.30s/no diagnostics.
+  Defined bounded conversion; medium-misuse DQ/DV development self-review/
+  walkthrough complete, not independent human/full type/GUI/release review;
+  #6226 expression/general missing-bar admission and #4630 lifecycle remain
+  separate, no ON BAR/skip/mark/query or routing/precedence/system-menu change.
+
 - ON BAR ... ACTIVATE POPUP Numeric-literal conversion (#5611/#6776/#5868,
   2026-10-08): RQ-CF-PRG-ON-BAR-NUMERIC-001 is mapped before migration to
   independent VFP9 7423 singleton RELATIVE parent seeds1/2/MAX, at mosttwo

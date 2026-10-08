@@ -1,0 +1,32 @@
+RQ-CF-PRG-ON-SELECTION-BAR-NUMERIC-001, admitted #5611/#6776/#5868.
+Base main0814c97cf27c3c809f34e02bb0bcc52d52a3582e.
+Original dispatcher blobb3d6b37c906693df0cb7b696c2fd80093fc65ee9;
+SHA256c1d89abed48fae0eb68f9f611b3310df7b65bbf895fbef49bfaae59287dcda43.
+Provisional helperSHA391fe344904bbf002b57fe145677a6a05190117bc9b90859c2a0af3761de5c87.
+Final testSHAbb732ea3c62d44e220945c9b7239ef781040cec9159b3a8a54143224ae62b31e.
+GCC15.2 Debug byte-identical original dispatch finalized negative evidence:
+296 selected failures:76 catchable-code,76 continuation,80 independent
+repeated seeded route and64 four-locale metadata/message failures. Zero
+unrelated failures: helper70, initial cache priming, no declaration execution,
+prompts/count/session/cursor, explicit release/reset and old three neighbors
+pass. Numeric2.11s/neighbors0.11s; CTest2 total2.23s exit8.
+Final GCC logSHA857862f8e514dc3f577ec59d68030a3cad7df256155fd8403ced938a33ea2b4d.
+Clang21.1.8 Debug -O1 ASan/UBSan/float-cast-overflow finalized negative
+evidence: identical296 selected failures, zero unrelated failures/no diagnostics.
+Numeric2.11s/neighbors0.09s, CTest2 total2.21s exit8.
+Clang logSHA53c92f74423bf1de2d06bc98c663116cb991ef80011f4cb9f6276fd14534a417.
+ASAN detect_leaks0/abort_on_error1; UBSAN halt_on_error0/print_stacktrace1.
+Private TMPDIR, strictly serial runtime; no crash/sanitizer finding is
+claimed from the original llround domain failure alone.
+Reconstruct in a disposable worktree: retain helper/tests/CMake and restore
+ONLY dispatch.inl from base, rebuild two targets, run matching regex-j1 with
+private TMPDIR. Final fixed tests must remain unchanged across that comparison.
+
+Excluded preliminary GCC run:300 failures including four cleanup/reset
+assertions when old2.9 rounding overwrote test-only DO Finish at bar3.
+Move the test-owned cleanup handler to unaffected bar100, keeping all native
+numeric expectations and selected production dispatcher byte-identical.
+No production lifecycle/host routing repair. Original logSHA
+74c8a512c684a3caad042338016e3753f927509ce35e072c2abacf27f975046a;
+preliminary testSHA861c144f415ce018392a7f1cd7f5af73e29629b0cc10f015e91db6476df7d49b.
+This excluded run is not final acceptance or a separate product defect.
