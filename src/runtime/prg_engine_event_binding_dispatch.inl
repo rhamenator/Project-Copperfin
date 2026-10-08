@@ -389,7 +389,26 @@
         NativeEventBinding binding;
         binding.source_handle = (*source_object)->handle;
         binding.event_name = event_name;
-        binding.ordinal = next_native_event_binding_ordinal++;
+
+        // RQ-CF-PRG-BINDEVENT-FLAGS-NUMERIC-001: validate both supported
+        // object-event forms before consuming an ordinal or changing bindings.
+        const auto flags_argument = [&](const std::size_t index) -> int
+        {
+            if (index >= arguments.size())
+            {
+                return 0;
+            }
+            const auto mode = current_set_state().find("numericbehavior");
+            const auto flags = checked_bindevent_flags_argument(arguments[index],
+                mode != current_set_state().end() && normalize_identifier(mode->second) == "vfp9"
+                    ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
+            if (!flags)
+            {
+                throw PrgCompatibilityError(runtime_text(
+                    "Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+            }
+            return *flags;
+        };
 
         auto target_object = arguments.size() >= 4U ? resolve_ole_object(arguments[2]) : std::optional<RuntimeOleObjectState *>{};
         if (arguments.size() >= 4U && target_object.has_value())
@@ -415,9 +434,7 @@
             binding.target_is_routine = false;
             binding.target_handle = (*target_object)->handle;
             binding.delegate_name = delegate_name;
-            binding.flags = arguments.size() >= 5U
-                                ? static_cast<int>(std::llround(value_as_number(arguments[4]))) & 3
-                                : 0;
+            binding.flags = flags_argument(4U);
         }
         else
         {
@@ -436,11 +453,10 @@
             binding.target_is_routine = true;
             binding.target_program_path = found->program->path;
             binding.delegate_name = found->routine->name;
-            binding.flags = arguments.size() >= 4U
-                                ? static_cast<int>(std::llround(value_as_number(arguments[3]))) & 3
-                                : 0;
+            binding.flags = flags_argument(3U);
         }
 
+        binding.ordinal = next_native_event_binding_ordinal++;
         const auto duplicate = std::find_if(
             native_event_bindings.begin(),
             native_event_bindings.end(),

@@ -55,78 +55,87 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-JTOD/JTOT numeric conversion PR #7068 merged 2026-10-08 00:18:14 UTC as
-adfbec00d90ae99583b6d4221fe710aaf8582d74, signed/DCO exact head
-c20b9f32b72dada43ced754139de847af03d7c12. All 11 required checks SUCCESS,
-31/33 hosted checks SUCCESS; optional Linux GCC/Windows MSVC still running,
-no failure at merge. Complete REST reviews/inline and GraphQL threads and
-closing references empty, all hasNextPage false. Exact-head authorized
-Codex review6049164745 completed23:50:44.546246Z, connector thumbs552642593.
-Claude-first6049162946 eyes435219089 only, no quota/setup notice; not clean
-evidence. Proof6049192578. Parents#5611/#6776 remain unfinished OPEN.
+FV/PV excess-arity numeric-conversion slice PR #7069 merged 2026-10-08
+01:16:03 UTC as b00a4758b6fbd790cb381aa9505499b726cc5079 at signed/DCO
+head 2bc3e9eec0dc7812acfc89150177d69384639a54. All 11 required checks
+SUCCESS, 32/33 hosted checks SUCCESS; only optional Windows MSVC running,
+no failures. Complete REST reviews/inline and GraphQL threads/closing
+references empty, all pagination exhausted. Authorized Codex PR-open review
+6049758868 completed 00:41:53.124693Z for the exact head; verified connector
+thumbs 552729547. Claude-first 6049756797 eyes 435253124 only, no quota/setup
+notice; not clean-review evidence. Merge proof 6050152759.
 
-Derived checked signed64 admission/safe narrowing and typed empty out-of-
-calendar values; 236 direct calls/156 fresh cases/648 PRG rows, three matching
-47-line VFP runs,22 equivalent calendar comparisons/zero mismatches,22 native
-extension errors. Original GCC120selectedassertions (96direct/24script);
-Clang actual2^31float-cast-overflow0.03s, not completed Numeric baseline.
-Fixed GCC5/5 117.35s and ClangASan/UBSan/float-cast-overflow5/5 358.56s;
-post-pushNumeric79.74s/contracts6/6 4.38s,169fragments. README/docs32 retain
-RQ/VR/DQ/DV/hazards/negative-log hashes and development self-review/walkthrough/
-rollback, not independent-human/native-extension/type-arity/release evidence.
+RQ-CF-PRG-FINANCIAL-OPTIONAL-ARITY-001 retains #5878's admitted native
+excess-arity contract, not a ban on modern extensions. Three matching native
+37-line runs; 512 direct calls and 240 fresh guarded cases/1200 PRG rows.
+Original full GCC 776 selected failures (468 arity,20 NULL,240 script,
+48 FE_INVALID), zero state/cleanup mismatches; original focused Clang same
+776, no sanitizer diagnostic. Fixed full GCC Numeric/three neighbors 4/4
+84.76s; focused Clang 174.67s and three neighbors 3/3 3.73s, no diagnostics.
+Post-push focused Numeric 40.86s/contracts 6/6 4.55s,170 fragments.
+Focused sanitizer is not full Numeric; detect_leaks=0. README/docs22/docs32
+retain RQ/VR/DQ/DV, native hashes, negative audit and completed medium-misuse
+development self-review/walkthrough/rollback. Not independent-human, complete
+financial compatibility or release/platform qualification. #5611/#6776/#5878
+remain unfinished OPEN; three-argument FV/PV order/sign/domain remain separate.
 
-Main synchronized. Completed WT/local/remote branch removed;484MB/943MB
-builds and generated probe.FXP in recoverable trash. Scoped canonical pre-sync
-stashe672bbce48e4e16913c8120c22ba58cf98332ace retained alongside all earlier
-stashes and unrelated files/detached WTs. Watch71402 completed exit0.
-Previous#7066 optionalWindowsMSVC SUCCESS23:49:18UTC, all33SUCCESS.
-No previous unresolved CI failure identified. Live channel re-read empty.
-EPOCH/CENTURY complete,#3698closed;#6879 retained after numeric work.
+Main synchronized. Completed worktree/local/remote branch removed;
+454MB/868MB builds and generated FXP in recoverable trash. Scoped pre-sync
+stash 3e299568f3a72ab4943607364a5e2813013aa822 retained alongside all prior
+stashes. Required watcher 82604 completed exit0. Unrelated files and detached
+worktrees preserved. Live channel re-read empty. EPOCH/CENTURY complete,
+#3698 closed; #6879 retained after numeric work.
 
 ## Selected active bounded slice
 
-FV/PV unsupported fourth/fifth optional-argument conversion rejection under
-#5611/#6776 and explicitly owner-approved #5878 arity acceptance. Native7423
-three matching37-line probes:26 excess-arity calls ERR1230,8 three-argument
-recovery controls,guard41unchanged. Existing#6944 already tracks wrong
-signature; no duplicate or expanded production fix. Microsoft .NET annuity
-timing is useful extension provenance, but not authority to override #5878's
-explicit native-builtin contract. Extension absence alone is not the reason
-for rejection; non-conflicting modern financial extension design remains open.
+BINDEVENT object-event optional Numeric/exact-integer flags conversion under
+admitted #5611/#6776, RQ-CF-PRG-BINDEVENT-FLAGS-NUMERIC-001.
+Base origin/main b00a4758b6fbd790cb381aa9505499b726cc5079.
+WT /home/rich/.codex/worktrees/bindevent-flags-5611/Project-Copperfin;
+branch fix/bindevent-flags-numeric-5611. App WT creation returned Not a git
+repository (chat CWD); dedicated git worktree from origin/main used instead.
 
-Base origin/mainadfbec00d90ae99583b6d4221fe710aaf8582d74;
-WT /home/rich/.codex/worktrees/annuity-timing-5611/Project-Copperfin;
-branch fix/annuity-timing-5611. RQ-CF-PRG-FINANCIAL-OPTIONAL-ARITY-001
-documented before production changes in fixture README. Numeric dispatcher rejection implemented; no commit or PR yet. Scope: error1230 before optional coercion/llround/narrowing,
-remove unsupported two conversion paths; preserve all three-argument arithmetic.
-Order/sign/zero-rate/domain/type/too-few/routing/PAYMENT remain #5878 or separate.
+Only object-method fifth/routine-extension fourth flag sites are migrated.
+Numeric/exact flags truncate and check nonnegative signed32 by default;
+explicit VFP9 uses defined low32/indefinite-zero aliases and rejects negative
+converted flags; bits0/1 exposed. Helper validates before duplicate insert/
+replacement, ordinal allocation and success events, with localized error11.
+Other coercions preserved with checked half-away signed32 admission.
+Window handles/messages, UNBINDEVENTS, property-read/lifetime, routing/arity/
+general type/Currency policy remain separate. No native-absence demotion of
+the routine extension; requirements documented before dispatch changes.
 
-512 direct calls/240 fresh guarded cases/1200 PRG rows. Original GCC full
-Numeric776selectedassertions (468arity/20NULL/240script/48FE_INVALID),
-zero state/cleanup/call-state mismatches; older rows/three neighbors pass,
-Numeric119.99s,total121.00s. Original focused Clang same776, no sanitizer
-diagnostics; three neighbors3/3 3.40s. Focused flag is not full Numeric
-sanitizer acceptance; ASAN detect_leaks=0, no leak-check qualification.
-Negative audit/source/output hashes retained in fixture README/audit.
-Existing test accessor compile typo repaired before original execution.
+Three matching49-line installed VFP9 7423 runs:43 operands,four rebind
+preservation controls,routine syntax ERR11. 132 direct checks and176 script
+cases across four form/mode runs. Original dispatcher byte-identical to main;
+new helper linked but unused:98 failures in each compiler (90rows/8events),
+zero cursor/session/mode suffix mismatches, all helper/setup/cleanup/coercion
+controls pass. GCC0.71s,Clang3.08s, no sanitizer diagnostic; no invented cast
+or fenv claim. Native non-Numeric/Currency gap separately filed as #7070
+against the exact main, with no implementation-admission label.
 
-Fixed GCC full Numeric/three neighbors4/4 84.76s (Numeric83.84).
-Fixed focused Clang512direct/240freshcases/1200PRGrows passes174.67s,
-three neighbors3/3 3.73s, no sanitizer diagnostics. Six contracts6/6 5.28s,
-170fragments; all runtime checks serial/privateTMPDIR. Source only adds
-native excess-arity1230 before coercion and removes unsupported two conversions.
-README/docs22/docs32 retain completed RQ/VR/DQ/DV medium-misuse development
-self-review/walkthrough/rollback and condensed negative audit SHA256
-5f3b63c28166341d1cc6376370e46a57984201c597adf80083475882acdd5787.
-Not independent-human/full financial compatibility/release/platform evidence.
+Fixed GCC6/6 87.87s (full older Numeric86.15s,newflags0.73s);
+focused ClangASan/UBSan/float-cast-overflow5/5 8.07s(newflags4.01s), no
+diagnostics; full older Numeric excluded,detect_leaks=0. All runtime tests
+serial/privateTMPDIR. Six contracts6/6 5.15s and final-doc6/6 4.28s;
+171 fragments validate. New test isolation source-backed, test-owned scratch
+roots/scoped-restored locale/no children-network-samples/serial.
+README/docs22/docs32/changelog retain RQ/VR/DQ/DV and completed medium-misuse
+development self-review/walkthrough/rollback; not independent-human, complete
+native type/return/event parity or release/platform qualification.
+Native source/output/negative-audit SHA256 retained in fixture README.
+
 Owned builds retained until merge:
- /home/rich/temp/copperfin-annuity-5611-build
- /home/rich/temp/copperfin-annuity-5611-sanitize
-No build/test/probe/watch running; ignored probe.FXP owned by this slice.
-Next: final-doc contracts, signed commit/push, main PR Claude-first exact-head
-review and post-push focused verification. All required checks and resolved
-conversations gate merge; parents and#5878 remain unfinished.
-No owner decision needed. Unrelated files/stashes/detached WTs preserved.
+ /home/rich/temp/copperfin-bindevent-flags-5611-build
+ /home/rich/temp/copperfin-bindevent-flags-5611-sanitize
+All build/test/probe sessions completed; ignored probe.FXP owned.
+Next: signed/DCO commit, push, PR/main and Claude-first review request,
+post-push exact-head verification; inspect all checks/comments/conversations,
+fix actionable failures and merge only all11requiredgreen/cleanexacthead/
+resolved conversations. Parents#5611/#6776 and gap#7070 remain unfinished.
+No owner decision or automation pause needed; unrelated files/stashes/
+detached worktrees preserved. Prior#7068 optionalWindowsMSVC subsequently
+SUCCESS; #7069 optionalWindowsMSVC still running with no failure observed.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.

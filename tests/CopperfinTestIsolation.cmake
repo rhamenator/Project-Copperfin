@@ -934,6 +934,19 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
 
+    # #5611/#6776 BINDEVENT flags: four test-owned mode/form scratch roots;
+    # scoped/restored locale; no child process, network, source sample or shared
+    # resource. Runtime execution stays serial; duplicate instances unsupported.
+    copperfin_set_test_isolation(test_prg_engine_bindevent_flags_numeric
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT scoped-process
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+
     # #5611/#6776: the numeric suite now scopes/restores COPPERFIN_LOCALE.
     # Its shared fixed temporary roots still require serial scheduling.
     copperfin_set_test_isolation(test_prg_engine_numeric_behavior

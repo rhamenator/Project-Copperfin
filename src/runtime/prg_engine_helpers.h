@@ -139,6 +139,11 @@ std::int64_t numeric_count_argument(double value, NumericBehavior behavior);
 // Truncate toward zero only when `value` is finite and representable as int64. This is the fail-closed conversion for
 // array positions/selectors and other arguments where saturation would turn invalid input into an ordinary value.
 std::optional<std::int64_t> checked_truncated_numeric_to_int64(double value);
+// RQ-CF-PRG-BINDEVENT-FLAGS-NUMERIC-001: Numeric/exact integers truncate
+// to nonnegative signed32 flags; only VFP9 admits exact low32/indefinite-zero
+// aliases. Return bits 0/1. Other coercions retain checked signed32 rounding.
+// Missing result means localized 11 before binding/ordinal/event mutation.
+std::optional<std::int32_t> checked_bindevent_flags_argument(const PrgValue& value, NumericBehavior behavior);
 // RQ-CF-PRG-ALINES-FLAGS-NUMERIC-001: Numeric/exact-integer flags truncate to
 // 0..31. COPPERFIN checks admission before conversion; only VFP9 retains
 // signed-low-32-bit aliases and integer-indefinite zero. Other coercions keep
