@@ -1,0 +1,21 @@
+RQ-CF-PRG-SKIP-COUNT-NUMERIC-001 baseline before dispatcher wiring.
+main 6b584de65d1cb60e4c90829edc63a6195b99499d
+original dispatcher blob b3a9d865739cc2c766fd3647b6afc24d6cd8d5a6
+Working dispatcher verified byte-identical to HEAD before both compiler builds.
+New helper/direct checks exist, but no selected SKIP dispatch/locales change.
+Both GCC/Clang complete with exactly292 selected failures:
+272 guarded rows,12 successful-event counts,4 dirty snapshots,4 dirty events.
+98 direct checks, all count/alias/session/mode suffixes, cleanup, four disk
+persistence controls and four old navigation/pending neighbors pass.
+GCC older Numeric passes87.38s; baseline total88.87s.
+Clang new6.98s/neighbor1.30s/total8.29s; ASan detect_leaks0/abort1,
+UBSan halt_on_error0/print_stacktrace1 for negative observation only.
+Clang reports signed-negation UB at unchanged records.inl:728 for LLONG_MIN
+reached from huge SKIP operand; not a separate shared-navigation fix.
+No other failure or setup expectation correction in this baseline.
+Actual Currency/Character success versus native type10 is separate#7083.
++eb77488c066b48780fd4441cd2743adcc288ee4467352e585c374bdf7fc8be2d  src/runtime/prg_engine_dispatch.inl
+2d95a95b07880a6eb9c7fa038c0ae5ed617453f149db12d9be315b71c89fae31  tests/test_prg_engine_skip_count_numeric.cpp
+ed5784f379da1504cede92a25f3c9a98b056be5bce435532aa9a70e8f09711f8  src/runtime/prg_engine_helpers.cpp
+5a79389041115bb16adbf64a22f0e67367961c9f5195b0bb7c9b487d08e652fb  /home/rich/temp/copperfin-skip-count-5611-build/baseline.log
+724a8260c653156cd00a2bd8f0b0432e8f1e224f17e31ae27348cdd5415995a1  /home/rich/temp/copperfin-skip-count-5611-sanitize/baseline.log
