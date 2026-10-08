@@ -1,0 +1,33 @@
+RQ-CF-PRG-SET-MARK-BAR-NUMERIC-001, admitted #5611/#6776/#5868.
+Base main53f66b4f9686e98a92c33cf6fa672526a6826719.
+Original dispatcher bloba33b9ef7d263d99b2b5df3f1b7849730c0f79513;
+SHA2562bc749d81c8211dfcbc5c7f97b7929416b9a4d05af2649aeae10eaff2fe44fd5.
+HelperSHAf0b1105c42e71877516d0ee1d8550fec33ed4285cab94948500365c1e0c96786.
+Final testSHA8f909efe4f42759638b68b9754254362378abd07c8eb3172408d64a257edfe39.
+GCC15.2 Debug original-dispatch negative:372 selected failures,
+76code/76continuation/76failure-atomic eventcount/32converted telemetry/
+40seeded mark flags/72locale metadata-message-state. Zero unrelated:
+70direct, independent skip policy/repeated host selection/callback identity,
+prompts/count/cursor/session/seed events/explicit cleanup/reset and three
+old neighbors pass. Numeric2.11s/neighbors0.11s, total2.23s exit8.
+GCC logSHAb44070d377771926187a6d1edeacb2698239fdaa4021bbd4073ed81c4755ecb8.
+Clang21.1.8 Debug -O1 ASan/UBSan/float-cast-overflow final original-dispatch
+replay: identical372 selected failures, zero unrelated/no diagnostics.
+Numeric2.31s/neighbors0.09s,total2.42s exit8;
+logSHA0a793c5419cda2117cb78cf1e7fbd5dfa3671ea594631c37f6ff4f63b14f5e60.
+ASANdetect_leaks0/abort1;UBSANhalt0/stack1. Private TMPDIR, strictly serial.
+No original-domain crash finding is claimed from llround alone.
+Reconstruct in a disposable worktree: retain helper/tests/CMake, restore ONLY
+dispatch.inl from the recorded base, rebuild two targets and run matching
+CTest regex-j1/private TMPDIR. Keep final numeric assertions unchanged.
+
+Construction: initial testSHAf1e757ecdb50c0f4dc7af9bbae3d610ea2e6a34c2dceaa436e5463ee15b06282
+produced the same372 selected failures/zero unrelated on GCC in2.11s.
+LogSHA24ef85e3979c0edb01a71fd32079ed8f88af3864b252fc6254cf400a987b7821.
+Then test-only braces/line breaks removed a misleading-indentation warning,
+without changing assertions; both compilers rebuilt final test and replayed
+the original dispatcher above. No failing harness run was excluded.
+Native source/output hashes and three matching paired runs retained in README,
+mapped before helper creation. Generated probe.FXP moved to recoverable trash.
+General positive missing-target gap #7093 stays separate; source-path evidence
+in that issue is not an independently executed Copperfin baseline claim.

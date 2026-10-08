@@ -1347,6 +1347,13 @@ std::optional<std::int32_t> checked_set_skip_bar_number_argument(
     return checked_on_bar_number_argument(value, behavior);
 }
 
+// RQ-CF-PRG-SET-MARK-BAR-NUMERIC-001: independent paired native mark controls
+// recover this conversion; command admission differs from SET SKIP.
+std::optional<std::int32_t> checked_set_mark_bar_number_argument(
+    const double value, const NumericBehavior behavior) {
+    return checked_on_bar_number_argument(value, behavior);
+}
+
 // RQ-CF-PRG-SKIP-COUNT-NUMERIC-001 (#5611/#6776): count conversion only,
 // not shared navigation or native type admission. Widened int32 counts make
 // the existing long-long abs operation defined, including INT32_MIN.

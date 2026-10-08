@@ -1,5 +1,22 @@
 # VFP Language Reference Coverage
 
+- SET MARK OF BAR Numeric-literal conversion (#5611/#6776/#5868,2026-10-08):
+  RQ-CF-PRG-SET-MARK-BAR-NUMERIC-001 mapped before migration to three matching
+  installed VFP9 7423 paired125-line singleton1/2/MAX controls, one bar/noactivation.
+  Fractions truncate; negative-wide positive aliases/positive>=2^32 MAX;
+  converted-1/-2 raises1612 here, not SET SKIP's accepted no-op. Other invalid
+  admitted Numeric167; default finite converted1..MAX.
+  [Fixture](../tests/fixtures/vfp9-set-mark-bar-numeric/README.md) retains
+  source/output hashes/help/scope. General positive missing-target gap#7093,
+  queries/type/expression/system-menu/lifecycle separate. Checked conversion
+  precedes flag evaluation/state/event, with localized167/1612 in four catalogs.
+  70direct/124guarded/32locale cases and three old neighbors; original
+  dispatcher372 selected failures per GCC/Clang, zero unrelated/no diagnostics.
+  Fixed GCC11/11 PASS459.68s; Clang sanitizers2/2 PASS2.68s/no diagnostics
+  (detect_leaks0). Medium-misuse development DQ/DV self-review/walkthrough
+  complete, not independent human/full type/GUI/leak/platform/release
+  qualification; bounded requirement defined.
+
 - SET SKIP OF BAR Numeric-literal conversion (#5611/#6776/#5868,2026-10-08):
   RQ-CF-PRG-SET-SKIP-BAR-NUMERIC-001 mapped before migration to three matching
   native125-line/40-operand singleton1/2/MAX controls, one bar/noactivation.

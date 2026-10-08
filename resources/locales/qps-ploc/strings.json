@@ -1473,6 +1473,8 @@
   "Runtime.Prg.Dispatch.Error.OnBarNumberNotFound": "[!! ÓN BÁR: bár nót fóúnd !!]",
   "Runtime.Prg.Dispatch.Error.OnSelectionBarNumberInvalid": "[!! ÓN SÉLÉCTÍÓN BÁR: ínválíd bár ídéntífíér !!]",
   "Runtime.Prg.Dispatch.Error.SetSkipBarNumberInvalid": "[!! SÉT SKÍP ÓF BÁR: ínválíd bár ídéntífíér !!]",
+  "Runtime.Prg.Dispatch.Error.SetMarkBarNumberInvalid": "[!! SÉT MÁRK ÓF BÁR: ínválíd bár ídéntífíér !!]",
+  "Runtime.Prg.Dispatch.Error.SetMarkBarNumberNotFound": "[!! SÉT MÁRK ÓF BÁR: bár nót fóúnd !!]",
   "Runtime.Prg.Dispatch.Error.OnSelectionBarNumberNotFound": "[!! ÓN SÉLÉCTÍÓN BÁR: bár nót fóúnd !!]",
   "Runtime.Prg.Dispatch.Error.UserRaisedErrorWithParameter": "Error {code}: '{parameter}'.",
   "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed": "Unable to resolve {command} target: {target}",
