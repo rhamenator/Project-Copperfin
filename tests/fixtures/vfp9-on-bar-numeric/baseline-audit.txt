@@ -1,0 +1,48 @@
+RQ-CF-PRG-ON-BAR-NUMERIC-001, admitted #5611/#6776/#5868.
+Base main fdf7d4999e57a5ba43c7507b085611a6f26d8504.
+Original dispatcher blob2bd244bb6f35b94ad871a4a707771c9c3b0e2c45.
+Original dispatcher SHA256:
+24fd72a7e528f76c42817ace86c5baacc8672efe41010badb5a078d38d38c60b.
+Unchanged provisional/final helper SHA256:
+07f2f1610f3125dac871c3b7d7434f5476f394befc2c10dac616cb3bc878d903.
+Unchanged final test SHA256:
+b741ee0bfbcbf8a575798ac0410116ff539dc39f83641f8e4744bdef29141d01.
+Final original-dispatch baseline:128 selected failures per compiler:
+38 catchable-code,38 continuation,20 independent seeded routing and
+32 four-locale metadata/message failures. Zero unrelated failures;
+70 direct helper checks, unchanged prompts/count/session/cursor, no immediate
+activation, callback cleanup/reset and both old menu neighbors pass.
+No crash or ASan/UBSan/float-cast-overflow diagnostic observed; llround domain
+failure alone is NOT claimed as a sanitizer finding.
+GCC15.2.0 Debug: numeric1.04s/neighbors0.09s; CTest2 total1.15s, exit8.
+Clang21.1.8 Debug -O1 ASan/UBSan/float-cast-overflow:
+numeric1.18s/neighbors0.07s; CTest2 total1.27s, exit8.
+ASAN detect_leaks0/abort_on_error1; UBSAN halt_on_error0/print_stacktrace1.
+Private TMPDIR in each build and strictly serial runtime verification.
+GCC finalized baseline CTest log SHA256:
+184a320069c5bf830a721b6439a30d655e529324be6b59b8a928c374f915a5f1.
+Clang finalized baseline CTest log SHA256:
+885f3badfeda16bce965398ae0c629d02a28a59252ba5c4fe64a67cfcbaf7d0c.
+Reconstruct: retain helper/tests/CMake and restore ONLY dispatch.inl from base,
+rebuild the two targets in a disposable worktree, run their regex-j1/private
+TMPDIR with stated instrumentation. No numeric oracle/assertion changes after
+this finalized negative evidence. The four session2 cases are included.
+
+Preliminary failed runs are excluded from acceptance/negative evidence:
+initial test object predates16-locale/reset additions (174 failures includes62
+fixture cleanup); next252 includes124 fixture cleanup/reset; corrected130
+per compiler still includes2 fixture session1-reset assumptions. The harness
+was repaired while dispatcher remained byte-identical: cleanup inside callback,
+PUBLIC cleanup snapshots, reset selected session and origin explicitly,
+then cancel/reap test-owned waiting session. Callback return/event-loop ending
+is separate existing #4630 work, not changed or claimed by this slice.
+GCC preliminary logs SHA256:
+e2161d49b8feb27d1c30ae70a99707225e5c5459ce7244bdfa6c5458a01d289c;
+3b6be4bed49db8be0ea04fd74fed9182489a4fb43b15be0ff8765f47279b22da;
+793a72d09e8844ebb125bcdbfd5358a453e686c00109147a6f13233bb7b73575.
+Clang preliminary130 log:
+aad910289fe0748e9f27a691a7650bf1320e922e74ab431763b9b1569dc5ab9f.
+Initial CMake classification placement caused recursion before configuration;
+corrected into its registration section before builds/tests. Failed configure
+is not passing evidence or a production regression. Builds are exclusive per
+directory; compilation may overlap across directories, native tests never do.

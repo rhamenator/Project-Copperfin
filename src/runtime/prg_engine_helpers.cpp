@@ -1319,6 +1319,20 @@ std::optional<std::int32_t> checked_define_bar_number_argument(
     return static_cast<std::int32_t>(*converted);
 }
 
+// RQ-CF-PRG-ON-BAR-NUMERIC-001: independent singleton native controls recover
+// the same positive conversion as DEFINE BAR, plus -1/-2 lookup sentinels.
+// Do not bind a sentinel as a user bar or infer system-menu support from it.
+std::optional<std::int32_t> checked_on_bar_number_argument(
+    const double value, const NumericBehavior behavior) {
+    if (behavior == NumericBehavior::vfp9 && std::isfinite(value) && value < 4294967296.0) {
+        const auto converted = vfp9_numeric_to_int32(value);
+        if (converted == -1 || converted == -2) {
+            return static_cast<std::int32_t>(converted);
+        }
+    }
+    return checked_define_bar_number_argument(value, behavior);
+}
+
 // RQ-CF-PRG-SKIP-COUNT-NUMERIC-001 (#5611/#6776): count conversion only,
 // not shared navigation or native type admission. Widened int32 counts make
 // the existing long-long abs operation defined, including INT32_MIN.
