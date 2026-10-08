@@ -3178,14 +3178,32 @@
                     unquote_identifier(trim_copy(statement.identifier)));
                 const std::string submenu_name = normalize_identifier(
                     unquote_identifier(trim_copy(statement.expression)));
-                if (!bar_number.has_value() || *bar_number < 1.0 ||
+                if (!bar_number.has_value() ||
                     popup_name.empty() || submenu_name.empty())
                 {
                     return {};
                 }
 
-                current_session_state().popup_bar_activation_targets[popup_name][
-                    static_cast<long long>(std::llround(*bar_number))] = submenu_name;
+                // RQ-CF-PRG-ON-BAR-NUMERIC-001: current-session policy and
+                // numeric admission before any activation binding mutation.
+                const auto &set_state = current_set_state();
+                const auto mode = set_state.find("numericbehavior");
+                const auto converted_bar = checked_on_bar_number_argument(*bar_number,
+                    mode != set_state.end() && normalize_identifier(mode->second) == "vfp9"
+                        ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
+                if (!converted_bar.has_value())
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Dispatch.Error.OnBarNumberInvalid"), 167);
+                }
+                if (*converted_bar < 0)
+                {
+                    // Native -1/-2 conversion sentinels do not identify a
+                    // selectable bar in this supported user-popup lane.
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Dispatch.Error.OnBarNumberNotFound"), 1612);
+                }
+                current_session_state().popup_bar_activation_targets[popup_name][*converted_bar] = submenu_name;
                 return {};
             }
             case StatementKind::on_selection_bar_command:

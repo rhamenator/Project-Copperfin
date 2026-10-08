@@ -55,91 +55,104 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-SLEEP explicit-duration numeric conversion PR #7088 merged2026-10-08T09:48:31Z
-as 4a1c6b2bf98fb3304be780d5ace3397ccaabb68e from signed/DCO G head
-a46749cbd6584aa3a8417649f1b8d81aab7d8c02. All11 required SUCCESS;
-34/36 reported checks SUCCESS at merge, Linux/Windows optional Native pending.
-Clean exact-head authorized Codex PR-open fallback summary6056779319 completed
-09:24:21.402482Z; verified connector rootthumb55351777409:24:24Z.
-Claude-first6056778842 no completed response/quota/setup notice, not approval.
+DEFINE BAR parsed Numeric-literal identifier PR #7089 merged
+2026-10-08T11:16:12Z as fdf7d4999e57a5ba43c7507b085611a6f26d8504 from
+signed/DCO G head 47f5d27aff4366b1a104b4f07513230afc4d26a6. All 11 required
+SUCCESS; 34/36 checks SUCCESS, CodeQL NEUTRAL, optional Windows Native pending.
+Clean exact-head authorized Codex PR-open fallback summary6057903397 completed
+10:32:17.860281Z; verified connector root thumb553641046 at10:32:22Z.
+Claude-first6057906379 no completed response/quota/setup notice, not approval.
 Fresh REST reviews/inline and Graph threads/closing refs empty, pagination
-exhausted. Merge proof6057214941; exact post-push8/8 6.09s proof6056802580.
-Only explicit duration site; both modes checked finite/raw nonnegative,
-half-away rounded nonnegative signed64-and-size_t domain with exact integers,
-localized catchable11 before yield/wait/blocking/success event; no invented
-native alias, latency cap or scheduler/cancellation/critical-policy redesign.
-Three matching safe VFP9 five-line syntax observations are NOT a duration oracle;
-owner-derived extension policy remains available. Byte-identical original
-dispatcher48 selected failures per GCC/Clang, zero others/no diagnostics.
-Fixed34 direct/68 fresh guarded/eight locale/two default-resume/four additional
-resumed callbacks and four old neighbors; GCC4/4 263.77s includes older Numeric/
-localization; Clang2/2 21.53s ASan/UBSan/float-cast-overflow/detect_leaks0, no
-diagnostics. Seven contracts7/7 380.80s;177 fragments valid. Fixture/docs22/32
-retain RQ/VR/DQ/DV medium-misuse development self-review/walkthrough/rollback,
-not independent-human/full native/type/clock/leak/release assurance.
-Canonical main synchronized exact merge; clean completed SLEEP WT/local/remote
-branch normally removed, owned320MB/609MB builds moved to recoverable trash.
-Scoped continuity stashd9ebad61924afbe96995c7ed540e990ac5935da9 retained with older
-stashes, unrelated files and detached WTs. Channel empty. EPOCH/CENTURY complete/
-#3698 closed; #6879 retained after numeric. #5611/#6776 OPEN/owner/agent-approved.
-#7085/#7086 remain OPEN/unadmitted; no scope expansion.
+exhausted. Merge proof6058677300. Final post-push8/8 6.17s proof6057973014;
+initial post-push isolation inventory stale after comment edit, both runtimes
+passed but gate failed; exclusive regeneration gave unchanged-head8/8.
+Final pass log SHA2569b6f0031b1b04a90abf564a546ac21d4dd419fb649e45d08302fc28d4057c4c0.
 
-Post-merge optional #7088 Native at exacta46749c:
-Linux37756107640/job113240933338 SUCCESS446/446462.53s, watcher59172;
-macOS37756107599/job113240932948 SUCCESS446/446338.64s plus four repeated2/2
-(21.87/21.64/23.25/22.60s), watcher21417 finished0.
-Windows37756107669/job113240933957 still IN_PROGRESS, watcher60988; pending
-does not count as completed evidence. Required watcher54646 finished0.
-Prior #7087 Windows37749389217/job113218601418 SUCCESS445/4451131.75s,
-watcher77770 finished0; proof6057215235. Its Linux/macOS and prior monitors done.
-Inspect actual failures without scope expansion, never invent root causes.
+RQ-CF-PRG-DEFINE-BAR-NUMERIC-001: default finite truncation, converted1..INT32_MAX;
+VFP9 low32 negative aliases and raw-positive>=2^32 saturation INT32_MAX,
+localized catchable167 before PROMPT/map mutation. Nonfinite rejection derived
+from owner safety policy. Only define_bar_command; no other menu/type/ordinal
+changes. Three matching complete67-line/32-operand VFP9 RELATIVE sparse runs;
+at most4 bars, seeded1/2/MAX proves identity. Historical nonrelative huge
+attempts timed out25s, NOT evidence/NEVER REPEAT; bounded1/2/20 completed control
+shows ordinal20 versusRELATIVE3 under existing #6152. #6225 broader expression
+admission/#5868 other menu consumers remain unfinished; no distinct new issue.
+
+68 direct/56 fresh guarded/eight locale/four later inline-PROMPT mode/session
+cases and two old neighbors. Byte-identical original dispatcher150 selected
+failures per GCC/Clang, zero others/no diagnostics (later4 cases excluded).
+Final Clang2/2 38.08s ASan/UBSan/float-cast-overflow/detect_leaks0 no diagnostics;
+earlier GCC4/4 101.82s older Numeric86.24/localization14.40 BEFORE added4.
+Final GCC two focused plus seven contracts9/9 369.91s (safety357.32/new0.80/
+neighbors0.10);178 fragments valid. Fixture/docs22/32 contain DQ/DV medium
+development maintainer self-review/walkthrough/rollback, not independent human,
+full ordinal/type/GUI/leak/platform/release assurance.
+Post-merge Linux Native37763869835/job113266616688 SUCCESS448/448492.65s;
+macOS37763869867/job113266615965 SUCCESS448/448464.76s plus four repeated2/2
+21.05/20.42/20.01/20.54s. Windows37763869670/job113266615775 SUCCESS449/449
+1128.44s at exact47f5d27 (numeric1.47s/neighbors0.06s), completed11:42:16Z;
+watcher40870 finished0. All three Native monitors complete.
+Prior #7088 Windows37756107669/job113240933957 SUCCESS447/4471151.40s,
+all three platforms complete; proof6057991697. Prior #7087 monitors complete.
+
+Canonical main synchronized exact fdf7d4999e57a5ba43c7507b085611a6f26d8504.
+Completed DEFINE BAR WT/local/remote branch removed normally after verified
+merge. Owned800MB GCC/893MB sanitizer builds moved to recoverable trash;
+generated owned native FXP trashed. Scoped continuity stash
+4e1d740db7e20f1cfd409c71536f88c19a660ad7 retained, older stashes/unrelated files/
+detached WTs preserved. Channel reread empty. EPOCH/CENTURY complete/#3698 closed;
+#6879 retained after numeric. #5611/#6776/#5868 fresh OPEN/owner/agent-approved.
+#7085/#7086 remain OPEN/unadmitted. No scope expansion.
 
 ## Selected active bounded slice
 
-DEFINE BAR parsed Numeric-literal identifier conversion under #5611/#6776,
-base origin/main4a1c6b2bf98fb3304be780d5ace3397ccaabb68e.
-Dedicated WT /home/rich/.codex/worktrees/define-bar-numeric-5611/Project-Copperfin,
-branch fix/define-bar-numeric-5611. Only define_bar_command conversion; popup
-activation/query/selection/skip/mark and broader parser/types/ordinal allocation
-are NOT selected. Three matching67-line installed VFP9 7423 RELATIVE sparse
-runs independently recover truncation/error167, negative1/2 low32 aliases and
-positive>=2^32 INT32_MAX saturation, NOT positive small aliases. Both modes
-reject nonfinite/NaN by owner-derived safety policy. Default converted1..INT32_MAX.
-At most4 native sparse bars, seeded1/2/MAX proves actual replacement identities.
-Prior non-RELATIVE attempts timed out25s, NOT complete evidence; retained
-partial transcription/source (non-runnable.prg.txt) is marked never-repeat.
-Unchanged wrapper SLEEP control passed. Separate completed bounded bars1/2/20
-control confirms ordinalcount20 versusRELATIVE3; existing #6152 retains that
-metadata/count/order gap. #6225 retains expression admission. Freshly admitted
-#5868 covers other menu consumers; native ordinary fraction admission
-contradicts its reject-fraction expectation. No new distinct issue/expansion.
-
-RQ-CF-PRG-DEFINE-BAR-NUMERIC-001 mapped in docs32/fixture before production.
-Provisional helper68 direct checks plus56 fresh both-mode guarded prompts,
-eight four-locale metadata cases and two old popup/list neighbors.
-Byte-identical original dispatcher blobc0f44466bf5ded4aea79457e3cce2adcc19993d7
-fails150 selected assertions per GCC/Clang, zero others/no diagnostics. Audit
-retains source/log hashes, count categories and reconstruction. Initial compile
-include-path and overlapping GCC archive failures corrected with exclusive
-rebuild before baseline; never passing evidence/product defects.
-Dispatcher now uses checked helper/localized167 before PROMPT/map mutation;
-four locales added. Final Clang2/2 38.08s passes with no
-ASan/UBSan/float-cast-overflow diagnostics/detect_leaks0; includes four additional
-inline-PROMPT current-session/captured-mode cases added AFTER baseline.
-GCC earlier fixed4/4 101.82s (older Numeric86.24s/localization14.40s)
-passed BEFORE those four additional cases; not their evidence. Final GCC
-two focused plus seven contracts pass9/9 369.91s, serial/privateTMPDIR
-(numeric0.80s/neighbors0.10s/safety357.32s), watcher71914 completed0.
-Development maintainer self-review/walkthrough completed, not independent.
-Own builds /home/rich/temp/copperfin-define-bar-5611-{build,sanitize},
-privateTMPDIR in each. Docs32 defined with retained final results;178 fragments
-valid. Pending signed commit/push/PR,
-Claude-first exact-head review, focused post-push and all11 required gates.
-No commit/push/PR yet. No owner input or automation pause.
-Preserve unrelated files/stashes/detached WTs; native/PRG/runtime strictly
-serial/privateTMPDIR, no VM/template/system/ODBC/backend/network mutation.
-Merge only all11 required SUCCESS, clean exact-head authorized Claude/Codex/
-owner-terminal review and all conversations resolved.
+ON BAR parsed Numeric-literal identifier for ACTIVATE POPUP under #5611/#6776
+and admitted #5868, base origin/main fdf7d4999e57a5ba43c7507b085611a6f26d8504.
+Dedicated WT /home/rich/.codex/worktrees/on-bar-numeric-5611/Project-Copperfin,
+branch fix/on-bar-numeric-5611. Only on_bar_activate_popup_command conversion; ON SELECTION/skip/mark/query,
+missing native bar/target admission, parser/type/ordinal/lifecycle changes are
+not selected. Three matching final installed VFP9 7423 runs complete125lines,
+40 operands each across singleton parent seeds1/2/MAX, at most2 bars/noactivation.
+Source30b3500cb00f6f590f5f2f92a008a12f4dfc4dc6d8fee743f613a79fba64abce;
+out8127255a56e8f67bd58d3316caf182ffe32840c16318722251b8131f2b0417ec.
+Initial probe107 VERSION(5) type/36 oversized literal are failed recovery,
+not passes. Final split strings/VERSION() source completed; ownedFXP trashed.
+Native confirms positive conversion as DEFINE BAR and converted-1/-2 gives1612
+for these user popups; other nonpositive167. Parent default finite1..MAX,
+nonfinite rejection both modes, VFP9 low32 aliases/positive>=2^32 MAX.
+RQ-CF-PRG-ON-BAR-NUMERIC-001 mapped gap in docs32/fixture BEFORE provisional
+helper; negative baseline used byte-identical base dispatcher
+SHA25624fd72a7e528f76c42817ace86c5baacc8672efe41010badb5a078d38d38c60b.
+70 direct helper checks/58 fresh guarded+4 session2 cases/16 locale cases,
+old ON BAR/menu neighbors. Final byte-identical original dispatcher128 selected
+failures per GCC/Clang, zero unrelated/no diagnostics. Audit retains original
+blob/source/helper/test/log hashes and reconstruction. Preliminary fixture
+cleanup/source/reset failures174/252/130 are excluded, not product findings.
+Final baseline test hashb741ee0bfbcbf8a575798ac0410116ff539dc39f83641f8e4744bdef29141d01;
+fixed tests unchanged. Selected dispatch now checked before binding, localized
+167/1612 four locales; no other consumer migration. Final fixed GCC11/11
+PASS472.21s (seven contracts/new focused2/older Numeric/localization), watcher79609
+finished0; Clang ASan/UBSan/float-cast-overflow2/2 PASS1.20s, watcher16284
+finished0, detect_leaks0/no diagnostics. GCC fixed log
+8cbf59fc721b21ad71ed45b4bccec78bea4c1a9e518cad7d16a24e22e369404a;
+Clang fixed logea8abfa0f3c986d6a45b39f06df4184e063afd4af88562d7fb2db8919aef2490.
+179 changelog fragments valid. DQ/DV medium-misuse development maintainer
+self-review/walkthrough/rollback completed, NOT independent human review.
+Bounded requirement now defined; no full type/GUI/system-menu/leak/release claim.
+Own builds /home/rich/temp/copperfin-on-bar-5611-{build,sanitize}, privateTMPDIR.
+Initial CMake placement recursion fixed before configure/build/test; not proof.
+Next: signed/DCO push/PR/Claude-first exact-head
+review, post-push focused/contracts and all11 required gates. No commit/PR yet.
+Fresh admitted #6227 retains expression/admission/missing-target diagnostics;
+independent native singleton controls show positive missing-bar1612 not being
+fixed by this conversion-only slice. No distinct new issue or scope expansion.
+Shipped ON BAR help3eecfefb-7685-4d43-8cec-6812216bd05e names item assignment;
+ON() help421c6247-80e9-478a-a7a3-2f2bd4d816c0 supports ERROR/ESCAPE/KEY/PAGE
+only, NOT a binding query. Do not fabricate ON('BAR') identity evidence.
+No owner input/automation pause. Preserve unrelated files/stashes/detached WTs;
+native/PRG/runtime strictly serial/privateTMPDIR; no VM/template/system/backend
+mutation. All11 required SUCCESS, clean exact-head authorized Claude/Codex/
+owner-terminal review and all conversations resolved remain merge gates.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
@@ -890,9 +903,10 @@ Owner-directed workstream order before the #6879 assignment was:
      SKIP count conversion (PR#7084), UNLOCK RECORD conversion (PR#7087)
      and SLEEP explicit-duration conversion (PR#7088). General record/type
      gap#7081, SKIP type#7083 and UNLOCK gaps#7085/#7086 remain separate.
-   - Active: DEFINE BAR parsed Numeric-literal identifier conversion.
+   - Completed after those: DEFINE BAR Numeric-literal identifiers (PR#7089).
+   - Active: ON BAR ... ACTIVATE POPUP Numeric-literal identifier conversion.
      Other bar consumers#5868, popup order/count#6152 and expression admission
-     #6225 remain unfinished.
+     #6225/#6227 remain unfinished.
    - Remaining after it: the other `llround(value_as_number(...))` sites in
      this and other modules (#5611 umbrella).
 2. **Remaining cluster 15 allocation issues** (`docs/81` cluster 15): `FILETOSTR`

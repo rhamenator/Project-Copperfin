@@ -1,5 +1,27 @@
 # VFP Language Reference Coverage
 
+- ON BAR ... ACTIVATE POPUP Numeric-literal conversion (#5611/#6776/#5868,
+  2026-10-08): RQ-CF-PRG-ON-BAR-NUMERIC-001 is mapped before migration to
+  independent VFP9 7423 singleton RELATIVE parent seeds1/2/MAX, at mosttwo
+  total bars/noactivation. Three matching complete125-line native runs recover
+  truncation, negative-wide aliases1/2 and positive>=2^32 MAX saturation.
+  Default finite converted1..INT32_MAX; invalid admitted Numeric localized167
+  before binding mutation. Nonfinite rejection is direct helper containment;
+  unchanged parser does not admit NaN/inf/overflowed exponent spellings, so
+  these tests do not claim catchable167 for unparsed syntax. VFP9 -1/-2 gives1612,
+  never binds an unselectable negative key; no native system-menu claim.
+  Original dispatcher128 selected failures per GCC/Clang with zero unrelated
+  failures/no sanitizer diagnostics.70 direct/58 fresh guarded/four session2/
+  16 four-locale cases plus existing ON BAR/menu neighbors. Fixed GCC11/11
+  passed472.21s (focused, older Numeric/localization and seven contracts);
+  Clang sanitizer focused2/2 passed1.20s without diagnostics/detect_leaks0.
+  [Fixture README](../tests/fixtures/vfp9-on-bar-numeric/README.md) retains
+  completed development DQ/DV medium-misuse self-review/walkthrough and
+  checksummed baseline audit; this bounded requirement is defined.
+  #6227 expression/general missing-bar/target admission and #4630 event-loop
+  lifecycle remain unfinished. This does not migrate ON SELECTION/skip/mark/
+  query or popup ordinal/relative ordering #6152. No full type/GUI/release claim.
+
 - DEFINE BAR Numeric-literal conversion (#5611/#6776,2026-10-08):
   RQ-CF-PRG-DEFINE-BAR-NUMERIC-001 maps installed VFP9 7423 RELATIVE sparse
   popup observations, including seeded small/maximum identities, to a checked
