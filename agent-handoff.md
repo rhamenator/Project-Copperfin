@@ -55,111 +55,98 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-GO/GOTO record numeric conversion PR #7082 merged 2026-10-08 06:16:44 UTC
-as 6b584de65d1cb60e4c90829edc63a6195b99499d, signed/DCO exact head
-3a194945e56e2c95e66039389c36f9f6d330985a. All 11 required checks SUCCESS;
-Codex summary6052948067 completed05:24:53.647621Z on exact3a19494 and
-verified connector root thumbs553131242. Claude-first6052950278 has no
-completed response/quota/setup notice, not approval. REST reviews/inline and
-Graph conversations/closing refs empty, pagination exhausted. Post-push proof
-6052950760:8/8 7.37s. Required macOS initial existing R duplicate-member
-control returned launch-failed/exit-1; unchanged-head job-only retry
-run37732065424/job113169589971 passed34/34 shared native and7/7 private
-workspace/parser. No R/process/workflow source change or root-cause claim.
-At merge35/36 reported checks SUCCESS, optional Windows native still running.
+SKIP count numeric conversion PR #7084 merged 2026-10-08 07:46:22 UTC
+as eeae9e0b6a729d3bac5ec55db0beeb834a65c6c6, signed/DCO exact head
+f317e487a06b102a6991f9eb80c9720f87daddca. All11 required SUCCESS;35/36
+reported checks SUCCESS, optional Windows Native still running at merge;
+that unchanged-head job subsequently passed443/443827.72s, proof6055435502.
+Clean exact-head Codex PR-open fallback summary6054489692 completed07:07:22Z,
+verified connector thumbs553277961. Claude-first6054498335 no completed
+response/quota/setup notice, not approval. Paginated REST reviews/inline and
+Graph threads/closing refs empty, pagination exhausted. Merge proof6055233316.
+Post-push8/8 7.38s proof6054548867 at unchanged signed head; initial local
+stale CMake isolation inventory was regenerated and all8 passed without
+source/head change.
 
-RQ-CF-PRG-GO-RECORD-NUMERIC-001: only explicit GO/GOTO record conversion,
-checked signed32 truncation/exact integer, VFP9-only oversized negative
-positive-low32 aliases, checked retained non-Numeric coercions. Localized
-error5 before navigation/row-buffer/relation/success-event mutations on
-missing conversion. Other navigation/existence/type/lifetime behavior not
-expanded. Native three matching82-line and three matching34-line pending
-runs; unchanged dispatcher340 selected failures per GCC/Clang, zero others.
-122 direct/588 guarded/four dirty-row disk/eight locale cases and four
-neighbors pass. GCC3/3 89.66s includes older Numeric87.59s; focused Clang
-ASan/UBSan/float-cast-overflow2/2 8.47s, no diagnostics/detect_leaks0.
-Six contracts6/6 7.22s, safety-workflow358.49s,174 fragments valid.
-Completed medium-misuse RQ/VR/DQ/DV development self-review/walkthrough/
-rollback retained; not independent-human/full-type/message/platform/leak/
-release qualification. Gap#7081 remains OPEN/unadmitted; parents unfinished.
+RQ-CF-PRG-SKIP-COUNT-NUMERIC-001: only count conversion; default checked
+signed32 truncation/exact comparison, explicit VFP9 both-sign low32/huge0,
+NaN rejects both. Other safe coercions checked half-away. Localized11 before
+navigation/buffer commits/relations/success event. Preserve default/zero,
+resumable evaluation/generation revalidation/session routing/shared movement.
+Native three matching100-line and three matching40-line pending4/5 runs;
+original byte-identical dispatcher292 selected failures each GCC/Clang, zero
+others. Fixed98 direct/480 guarded/four dirty-disk/twelve locale/two default
+sessions/four existing neighbors pass. GCC4/4 105.90s includes localization
+and full older Numeric; focused Clang2/2 8.25s ASan/UBSan/float-cast-overflow,
+no diagnostics/detect_leaks0. Seven contracts7/7 378.76s,175 fragments valid.
+Fixture README/docs22/32/changelog retain checksummed baseline and RQ/VR/DQ/DV
+medium-misuse development self-review/walkthrough/rollback; not independent
+human/full native/type/navigation/platform/leak/release qualification.
+Type gap#7083 remains OPEN/unadmitted; parents unfinished.
 
-Canonical main synchronized to exact merge. Completed GO WT/local/remote
-branch removed; owned425MB/702MB builds and generatedFXPs moved to recoverable
-trash. Scoped continuity stash842123848a9f3f2dbddd745354cf380617c8d05e retained
-with older stashes, unrelated untracked files and detached WTs. Channel empty.
-#5611/#6776 remain OPEN/owner/agent-approved. EPOCH/CENTURY complete,
-#3698 closed; #6879 retained after numeric.
+Canonical main synchronized to exact merge. Completed SKIP WT/local/remote
+branch removed; owned320MB/602MB builds and generated probe/pendingFXPs moved
+to recoverable trash. Scoped continuity stash
+e222f1dda60bba51e86509f38b3e4a0f95124a89 retained with older stashes/unrelated
+files/detached WTs. Channel empty. EPOCH/CENTURY complete/#3698 closed;
+#6879 retained after numeric. #5611/#6776 OPEN/owner/exactagent-approved.
 
 ## Selected active bounded slice
 
-SKIP count Numeric/exact-integer conversion under admitted #5611/#6776,
-base origin/main6b584de65d1cb60e4c90829edc63a6195b99499d, dedicated WT
-/home/rich/.codex/worktrees/skip-count-numeric-5611/Project-Copperfin,
-branch fix/skip-count-numeric-5611. RQ-CF-PRG-SKIP-COUNT-NUMERIC-001 now
-implemented at only skip_command's count llround site, using checked helper
-and four locale catalogs. Preserve default/zero syntax, resumable evaluation/
-generation revalidation, target session selection and shared navigation.
-GO/UNLOCK/aggregate/filter/relation/buffering/lifetime/routing unchanged.
+UNLOCK RECORD operand Numeric/exact-integer conversion under admitted
+#5611/#6776, base origin/main eeae9e0b6a729d3bac5ec55db0beeb834a65c6c6.
+Dedicated WT /home/rich/.codex/worktrees/unlock-record-numeric-5611/Project-Copperfin,
+branch fix/unlock-record-numeric-5611. Selected only unlock_command's explicit
+record llround site; preserve non-record UNLOCK/ALL, lock storage/ownership,
+general record existence/type policy, evaluator lifetime/session routing and
+all other conversions. RQ-CF-PRG-UNLOCK-RECORD-NUMERIC-001 is implemented,
+uncommitted/no PR. Three matching74-line installed VFP9 shared-table runs
+verify all3locks before every operand, selected/IN release/pointer/session/
+continuation and complete owned-DBF cleanup. Retained fixture source/output.
+Default checked nonnegative signed32 Numeric truncation/exact comparison;
+VFP9 negative positive-low32 aliases only; oversized positives never alias
+small records (checked wide target, beyond int64model0). NaN rejects both;
+other safe coercions retain checked half-away. Localized10 before release/
+success event; captured target-session mode/restored callback session.
+Original byte-identical main dispatcher76 selected failures each GCC/Clang,
+zero others/no sanitizer diagnostics, checksummed baseline-audit.txt.
+Final124 guarded operands use fresh sessions: grouped tests exposed existing
+stale explicit-error metadata on later missing-record failures. #7085 owns
+that missing-record/type/lifecycle gap; #7086 owns ISRLOCKED second-argument
+alias routing. Both OPEN/unadmitted; no production fixes for either.
+Clang fixed2/2 8.80s passes82 direct/124 guarded/twelve locale/two resumed
+session/four dirty-disk cases plus6 existing neighbor functions, ASan/UBSan/
+float-cast-overflow halt1/no diagnostics/detect_leaks0. GCC4/4 151.88s,
+older Numeric134.25s/localization14.99s/new2.31s/neighbors.32s. Seven contracts
+7/7 360.35s, safety-workflow348.84s;176 fragments valid. Completed medium-
+misuse self-review/walkthrough/rollback and reverse RQ/VR/DQ/DV in fixture
+README/docs22/32/changelog; not independent-human/native-type/OS-lock/platform/
+leak/release qualification. All local processes finished. Next sign/DCO commit,
+push/PRmain, Claude-first review and exact post-push verification. Resolve actual
+PR/head from branch on continuation; merge only all11 required SUCCESS, clean
+exact-head authorized review and resolved conversations. Owned builds retained:
+/home/rich/temp/copperfin-unlock-record-5611-build and -sanitize, privateTMPDIR.
+Initial cursor-only recovery excluded (no observable native cursor locks);
+first shared-table attempt wrong alias setup timed out25s without diagnostic,
+no root-cause or cleanup claim for that failed preliminary scratch table.
+Do not infer full native lock/existence/type policy from Copperfin code.
+No owner input/automation pause; preserve unrelated files/stashes/detached WTs.
 
-Three matching100-line native selected/IN runs and three matching40-line
-pending4/5 runs/source/output hashes retained in WT tests/fixtures/
-vfp9-skip-count-numeric-observation. Native fractions truncate; both signs
-wrap; huge/infinite counts alias0. Default checks signed32/exact comparison;
-explicit VFP9 retains both-sign low32/huge0 only; NaN rejects both modes.
-Other safe coercions remain checked half-away. Missing raises localized11
-before navigation/dirty commits/relations/success events. Existing Numeric
-diagnostic formatter safely retains original values. Type parity #7083 is
-OPEN/owner/unlabeled/unadmitted; no active production expansion.
+Post-merge optional SKIP Windows run37741297979/job113192376365 remains
+SUCCESS at exact f317e487a06b102a6991f9eb80c9720f87daddca:
+443/443827.72s, SKIP1.08s/GO1.10s, proof6055435502. Watcher72202 finished0;
+old required watcher4307 finished0. No remaining SKIP check monitor.
 
-Original byte-identical dispatcher b3a9d865739cc2c766fd3647b6afc24d6cd8d5a6
-fails292 selected assertions on GCC and Clang:272 guarded rows/12 events/
-four dirty snapshots/four dirty events, zero others.98 helper/suffix/setup/
-cleanup/four disk controls/four old neighbors pass. GCC older Numeric87.38s,
-total88.87s. Clang total8.29s reports signed-negation UB at records.inl728
-from huge operand reaching LLONG_MIN; baseline UBSANhalt0 only. No shared
-navigation change. Checksummed baseline-audit retains source/test/raw logs.
-
-Fixed GCC4/4 105.90s: full localization15.66/older Numeric88.28/new1.65/
-neighbors.30. Focused Clang2/2 8.25s:new6.95/neighbors1.29, ASan/UBSan/
-float-cast-overflow, no diagnostics, detect_leaks0/UBSANhalt1.98 direct/
-480 guarded/four dirty-disk/twelve locale/two default-zero sessions and four
-existing neighbors pass. README/docs22/32/changelog retain reverse RQ/VR/DQ/DV
-and completed medium-misuse development self-review/walkthrough/rollback.
-Not independent-human/full native/type/navigation/platform/leak/release proof.
-
-Both builds finished; no native/local runtime process active. Seven contracts
-pass378.76s, short six16.07s/safety-workflow362.67s; watcher13279 finished0.
-175 fragments valid. Owned builds /home/rich/temp/
-copperfin-skip-count-5611-build and ...-sanitize; FXPs scratch untracked.
-Next final diff/fragment/channel checks, signed/DCO
-commit/push/PRmain, Claude-first review and exact post-push verification.
-Resolve actual PR/head from branch on continuation rather than inferring
-them from this pre-commit record. Merge only all11 required SUCCESS, clean
-exact-head Claude/authorized Codex/owner-terminal review and resolved threads.
-Preserve optional #7082 Windows retry below; no owner input/automation pause.
-
-Post-merge optional Windows #7080: run37726066119 initial job113144391607
-failed existing test_dbf_table and test_visual_asset_editor timeouts180;
-ERROR numeric/neighbors/older Numeric/build passed. Unchanged-head job-only
-retry attempt2/job113160232264 at a2242a92f46149f9441b10de786201eeaf691363
-completed SUCCESS:440/440 native tests1025.43s; previously timed-out DBF and
-visual asset tests passed54.34s/82.57s. Watcher32691 finished0, post-merge
-proof6053801217; no source/workflow change/root-cause claim.
-#7082 optional Windows run37732065417/job113163217235 failed441/442 passes:
-existing Access SaveAsText missing-source classification/exit1/stderr controls,
-32.90s against a30000ms bounded process, actual process status/exit/stderr not
-logged. GO numeric2.40s/neighbors.59s/older Numeric129.89s and build passed.
-No Access/process/workflow changes. One unchanged-head job-only retry
-attempt2/job113180316438 is IN_PROGRESS at exact
-3a194945e56e2c95e66039389c36f9f6d330985a; watcher98323 interval60,
-continuity6053805678. No broader fix/clean-retry/root-cause claim. If this
-reproduces, investigate retained logs before independent scope expansion.
-GO merge proof6053738892. External validation is not owner-input block.
-
-Native/runtime tests strictly serial with privateTMPDIR. No local runtime
-process active, no owner input or automation pause; no VM/system/ODBC/network
-changes. Merge future slice only all11 required SUCCESS, clean exact-head
-Claude/Codex/owner-terminal review and every conversation resolved.
+GO#7082 optional Windows retry run37732065417 attempt2/job113180316438
+completed SUCCESS at exact3a194945e56e2c95e66039389c36f9f6d330985a:
+442/442 native tests1292.87s; previously failing Access SaveAsText controls
+pass18.81s, GO numeric2.15s. Watcher98323 finished0, proof6055232866.
+No Access/process/workflow source changes or specific root-cause claim.
+Earlier ERROR#7080 unchanged-head retry440/4401025.43s/proof6053801217 done.
+No remaining old Windows retry monitor. All native/runtime tests strictly
+serial/privateTMPDIR. No VM/system/ODBC/network changes. Future merge requires
+all11 required SUCCESS, clean exact-head Claude/authorizedCodex/owner-terminal
+review and every conversation resolved.
 
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.

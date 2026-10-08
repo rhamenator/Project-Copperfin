@@ -1332,6 +1332,54 @@ std::optional<std::int32_t> checked_skip_count_argument(
     return static_cast<std::int32_t>(*converted);
 }
 
+// RQ-CF-PRG-UNLOCK-RECORD-NUMERIC-001 (#5611/#6776): installed native
+// shared-table observations. Keep record-existence/type/lock policy separate.
+std::optional<std::uint64_t> checked_unlock_record_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    const bool numeric = value.kind == PrgValueKind::number ||
+        value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
+    if (value.kind == PrgValueKind::number && std::isnan(value.number_value)) {
+        return std::nullopt;
+    }
+    std::optional<std::int64_t> converted;
+    if (value.kind == PrgValueKind::int64) {
+        converted = value.int64_value;
+    } else if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value <= static_cast<std::uint64_t>(INT32_MAX)) {
+            converted = static_cast<std::int64_t>(value.uint64_value);
+        }
+    } else {
+        converted = checked_truncated_numeric_to_int64(
+            numeric ? value.number_value : std::round(value_as_number(value)));
+    }
+    if (converted && *converted >= 0 && *converted <= INT32_MAX) {
+        return static_cast<std::uint64_t>(*converted);
+    }
+    if (!numeric || behavior != NumericBehavior::vfp9) {
+        return std::nullopt;
+    }
+    const bool negative = (value.kind == PrgValueKind::int64 && value.int64_value < 0) ||
+        (value.kind == PrgValueKind::number && value.number_value < 0);
+    if (negative) {
+        const auto alias = vfp9_numeric_to_int32(value);
+        return alias > 0 ? std::optional<std::uint64_t>(static_cast<std::uint64_t>(alias))
+                         : std::nullopt;
+    }
+    // Native positive 2^31..2^32-1 rejects, but positive >=2^32 never
+    // releases a wrapped small record. Retain the wide target when possible;
+    // beyond the shared int64 model use zero (a non-record, never a lock ID).
+    const bool below_uint32_wrap = value.kind == PrgValueKind::uint64
+        ? value.uint64_value < UINT64_C(4294967296)
+        : converted && *converted < INT64_C(4294967296);
+    if (below_uint32_wrap) {
+        return std::nullopt;
+    }
+    if (value.kind == PrgValueKind::uint64) {
+        return value.uint64_value;
+    }
+    return converted ? static_cast<std::uint64_t>(*converted) : UINT64_C(0);
+}
+
 // RQ-CF-PRG-GO-RECORD-NUMERIC-001 (#5611/#6776): conversion only,
 // not record existence/type admission (#7081). Preserve pending negatives.
 std::optional<std::int32_t> checked_go_record_argument(

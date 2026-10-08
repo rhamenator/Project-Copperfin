@@ -934,9 +934,9 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
 
-    # GO record/SKIP count tests use private-TMPDIR owned roots, scoped locale, strictly
+    # GO record/SKIP count/UNLOCK RECORD tests use private-TMPDIR owned roots, scoped locale, strictly
     # serial runtime and existing focused navigation/buffering scratch roots.
-    foreach(go_test IN ITEMS test_prg_engine_go_record_numeric test_prg_engine_go_record_neighbors test_prg_engine_skip_count_numeric)
+    foreach(go_test IN ITEMS test_prg_engine_go_record_numeric test_prg_engine_go_record_neighbors test_prg_engine_skip_count_numeric test_prg_engine_unlock_record_numeric test_prg_engine_unlock_record_neighbors)
         copperfin_set_test_isolation(${go_test}
             FILESYSTEM test-owned-unique
             ENVIRONMENT scoped-process

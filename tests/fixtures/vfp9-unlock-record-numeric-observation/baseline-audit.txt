@@ -1,0 +1,55 @@
+RQ-CF-PRG-UNLOCK-RECORD-NUMERIC-001 original-dispatch negative audit
+Base main: eeae9e0b6a729d3bac5ec55db0beeb834a65c6c6
+Original dispatcher blob: 983d35ec9ad126eca4690c6a35dcd6f27292647f
+Original dispatcher SHA256: 17f78a82f99e8a47391f8464343ccc2d0ff63147f4ab2d87a83178987ecf0863
+Provisional helper source SHA256: a332e57a02d76ea5141f57ae206de72469e75ba2bf5700239c89238293e1efc8
+Corrected baseline test SHA256: 5a30c145b6417cf02b31f0117e9ced7a728992688b3e6eccb4d3cae4fe21f1f1
+GCC15.2 Debug -O0 -g0 original dispatcher: 76 assertions, all selected.
+74 guarded rows and2 success-event counts fail, zero other failures.
+82 independent helper calls;124 setup/pointer/session suffixes; cleanup;
+four pre-existing navigation/buffering neighbor functions all pass.
+Older full Numeric test passes85.42s; new0.59s/neighbor0.30s/total86.32s.
+GCC raw CTest log SHA256: 746d5e055021b4bd1c4b83f87e83b5ce048f6766769909cfc16c2149398ee80b
+Clang21.1.8 same byte-identical original dispatcher: same76 selected failures.
+New2.54s/neighbor1.14s/total3.70s; no sanitizer diagnostics.
+ASan/UBSan/float-cast-overflow; ASAN detect_leaks0/abort1,
+UBSAN halt0/printstack1 for complete negative execution; fixed uses halt1.
+Clang corrected raw log SHA256: d4021fd52765559b954803b4e8dbea940b8674fe62ff14ebfdf15a93cac2c723
+Initial preliminary Clang run had118 failures including incorrect expected
+existing missing-record code0 (actual1), and a separate ISRLOCKED second-
+argument routing gap. It is NOT the accepted negative execution. Corrected
+preservation code1 and target-selected one-argument lock observations,
+then reran the original dispatcher in BOTH compilers before implementation.
+Initial preliminary raw log SHA256: 290189f0f842ce9dee0d23ce1d1eed9d081f769a0caa617d7522faad678cece5
+Separate unchanged-main gaps7085/7086: no active production fixes.
+Metadata/locale/target-session/dirty-disk and additional old lock neighbors
+were added after this negative execution and are not claimed as baseline runs.
+Fixed guarded tests also use a fresh runtime session for each operand. The
+original baseline grouped31 operands per selected/IN session; after explicit
+conversion error10 was introduced, later existing .ok=false missing-record
+failures inherited that earlier error code. This existing error-lifecycle
+gap is not changed here and is retained under7085; final isolation avoids
+claiming that stale error metadata is the recovered missing-record contract.
+Retained actual controls (columns: code,after,lock1/2/3,pointer,payload,
+caller alias,session,mode,all-locks setup):
+DIRECTCOUNT 82
+CONTROL COPPERFIN0 1.5 0|T|T|F|T|2|two|UNLOCKGUARD|1|COPPERFIN|T
+CONTROL COPPERFIN0 4294967297 1|F|T|T|T|2|two|UNLOCKGUARD|1|COPPERFIN|T
+CONTROL COPPERFIN0 -4294967295 1|F|T|T|T|2|two|UNLOCKGUARD|1|COPPERFIN|T
+CONTROL COPPERFIN0 $1.5 0|T|T|F|T|2|two|UNLOCKGUARD|1|COPPERFIN|T
+CONTROL COPPERFIN0 '1e300' 1|F|T|T|T|2|two|UNLOCKGUARD|1|COPPERFIN|T
+CONTROL COPPERFIN1 1.5 0|T|T|F|T|2|two|OBSERVER|1|COPPERFIN|T
+CONTROL COPPERFIN1 4294967297 1|F|T|T|T|2|two|OBSERVER|1|COPPERFIN|T
+CONTROL COPPERFIN1 -4294967295 1|F|T|T|T|2|two|OBSERVER|1|COPPERFIN|T
+CONTROL COPPERFIN1 $1.5 0|T|T|F|T|2|two|OBSERVER|1|COPPERFIN|T
+CONTROL COPPERFIN1 '1e300' 1|F|T|T|T|2|two|OBSERVER|1|COPPERFIN|T
+CONTROL VFP90 1.5 0|T|T|F|T|2|two|UNLOCKGUARD|1|VFP9|T
+CONTROL VFP90 4294967297 1|F|T|T|T|2|two|UNLOCKGUARD|1|VFP9|T
+CONTROL VFP90 -4294967295 1|F|T|T|T|2|two|UNLOCKGUARD|1|VFP9|T
+CONTROL VFP90 $1.5 0|T|T|F|T|2|two|UNLOCKGUARD|1|VFP9|T
+CONTROL VFP90 '1e300' 1|F|T|T|T|2|two|UNLOCKGUARD|1|VFP9|T
+CONTROL VFP91 1.5 0|T|T|F|T|2|two|OBSERVER|1|VFP9|T
+CONTROL VFP91 4294967297 1|F|T|T|T|2|two|OBSERVER|1|VFP9|T
+CONTROL VFP91 -4294967295 1|F|T|T|T|2|two|OBSERVER|1|VFP9|T
+CONTROL VFP91 $1.5 0|T|T|F|T|2|two|OBSERVER|1|VFP9|T
+CONTROL VFP91 '1e300' 1|F|T|T|T|2|two|OBSERVER|1|VFP9|T

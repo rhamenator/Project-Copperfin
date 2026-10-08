@@ -144,6 +144,12 @@ std::optional<std::int64_t> checked_truncated_numeric_to_int64(double value);
 // NaN rejects both modes; safe other coercions remain checked half-away.
 std::optional<std::int32_t> checked_skip_count_argument(
     const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-UNLOCK-RECORD-NUMERIC-001: conversion, not record existence.
+// Default checked nonnegative signed32; VFP9 negative aliases must be
+// positive, and oversized positive targets must never alias an existing row.
+// Other safe coercions stay checked half-away; NaN rejects both modes.
+std::optional<std::uint64_t> checked_unlock_record_argument(
+    const PrgValue& value, NumericBehavior behavior);
 // RQ-CF-PRG-GO-RECORD-NUMERIC-001: checked signed32 truncation preserves
 // valid pending negative identities; explicit VFP9 overflow aliases must be
 // positive. Safe other coercions stay half-away; existence/type is #7081.
