@@ -1,0 +1,74 @@
+RQ-CF-PRG-FINANCIAL-OPTIONAL-ARITY-001 negative-baseline audit
+Original production: origin/main adfbec00d90ae99583b6d4221fe710aaf8582d74
+Tests added before production edits; GCC initial compile accessor typo repaired before execution.
+GCC complete Numeric: failed 119.99s; three neighbors passed; total121.00s.
+GCC: 468 excess-arity +20 NULL-precedence +240 script-rejection +48 FE_INVALID assertions =776.
+Focused Clang21.1.8 ASan/UBSan/float-cast-overflow: same776 failures; three neighbors3/3 3.40s.
+Focused sanitizer is not a full Numeric suite; detect_leaks=0; no sanitizer diagnostics.
+Both logs: all240 fresh cases have matching setup, post-state, call-state suffix and cleanup.
+24 three-argument arithmetic controls and older GCC rows pass; not native order/sign compatibility.
+Library llround range errors are FE_INVALID evidence, not a claimed float-cast-overflow report.
+Original full GCC generated log SHA256 cb30b4374a39482f31d849f67baf3310e9c73f18afde44c2394ebc9d1e7fde14.
+Raw logs retained in owned builds until merged cleanup (recoverable trash thereafter).
+Below are all48 original direct floating-exception failures, indexed into the committed test table:
+FAIL: fv unsupported COPPERFIN arity5 case17 conversion/settings side effect
+FAIL: fv unsupported COPPERFIN arity5 case18 conversion/settings side effect
+FAIL: fv unsupported COPPERFIN arity5 case19 conversion/settings side effect
+FAIL: fv unsupported COPPERFIN arity5 case20 conversion/settings side effect
+FAIL: fv unsupported COPPERFIN arity5 case21 conversion/settings side effect
+FAIL: fv unsupported COPPERFIN arity5 case22 conversion/settings side effect
+FAIL: fv unsupported COPPERFIN arity5 case23 conversion/settings side effect
+FAIL: fv unsupported COPPERFIN arity5 case25 conversion/settings side effect
+FAIL: fv unsupported COPPERFIN arity5 case28 conversion/settings side effect
+FAIL: fv unsupported COPPERFIN arity5 case30 conversion/settings side effect
+FAIL: fv unsupported COPPERFIN arity5 case31 conversion/settings side effect
+FAIL: fv unsupported COPPERFIN arity5 case35 conversion/settings side effect
+FAIL: pv unsupported COPPERFIN arity5 case17 conversion/settings side effect
+FAIL: pv unsupported COPPERFIN arity5 case18 conversion/settings side effect
+FAIL: pv unsupported COPPERFIN arity5 case19 conversion/settings side effect
+FAIL: pv unsupported COPPERFIN arity5 case20 conversion/settings side effect
+FAIL: pv unsupported COPPERFIN arity5 case21 conversion/settings side effect
+FAIL: pv unsupported COPPERFIN arity5 case22 conversion/settings side effect
+FAIL: pv unsupported COPPERFIN arity5 case23 conversion/settings side effect
+FAIL: pv unsupported COPPERFIN arity5 case25 conversion/settings side effect
+FAIL: pv unsupported COPPERFIN arity5 case28 conversion/settings side effect
+FAIL: pv unsupported COPPERFIN arity5 case30 conversion/settings side effect
+FAIL: pv unsupported COPPERFIN arity5 case31 conversion/settings side effect
+FAIL: pv unsupported COPPERFIN arity5 case35 conversion/settings side effect
+FAIL: fv unsupported VFP9 arity5 case17 conversion/settings side effect
+FAIL: fv unsupported VFP9 arity5 case18 conversion/settings side effect
+FAIL: fv unsupported VFP9 arity5 case19 conversion/settings side effect
+FAIL: fv unsupported VFP9 arity5 case20 conversion/settings side effect
+FAIL: fv unsupported VFP9 arity5 case21 conversion/settings side effect
+FAIL: fv unsupported VFP9 arity5 case22 conversion/settings side effect
+FAIL: fv unsupported VFP9 arity5 case23 conversion/settings side effect
+FAIL: fv unsupported VFP9 arity5 case25 conversion/settings side effect
+FAIL: fv unsupported VFP9 arity5 case28 conversion/settings side effect
+FAIL: fv unsupported VFP9 arity5 case30 conversion/settings side effect
+FAIL: fv unsupported VFP9 arity5 case31 conversion/settings side effect
+FAIL: fv unsupported VFP9 arity5 case35 conversion/settings side effect
+FAIL: pv unsupported VFP9 arity5 case17 conversion/settings side effect
+FAIL: pv unsupported VFP9 arity5 case18 conversion/settings side effect
+FAIL: pv unsupported VFP9 arity5 case19 conversion/settings side effect
+FAIL: pv unsupported VFP9 arity5 case20 conversion/settings side effect
+FAIL: pv unsupported VFP9 arity5 case21 conversion/settings side effect
+FAIL: pv unsupported VFP9 arity5 case22 conversion/settings side effect
+FAIL: pv unsupported VFP9 arity5 case23 conversion/settings side effect
+FAIL: pv unsupported VFP9 arity5 case25 conversion/settings side effect
+FAIL: pv unsupported VFP9 arity5 case28 conversion/settings side effect
+FAIL: pv unsupported VFP9 arity5 case30 conversion/settings side effect
+FAIL: pv unsupported VFP9 arity5 case31 conversion/settings side effect
+FAIL: pv unsupported VFP9 arity5 case35 conversion/settings side effect
+
+Representative native-arity mismatch:
+FAIL: FV unsupported COPPERFIN [0.05,2,-100,0,1E300] expected [C:financialguard:1:1:guard:1:COPPERFIN
+C:1230:[unassigned]:financialguard:1:1:guard:1:COPPERFIN
+C:Too many arguments.
+C:financialguard:1:1:guard:1:COPPERFIN
+C:COPPERFIN:F:
+], got [C:financialguard:1:1:guard:1:COPPERFIN
+C:0:[N:205]:financialguard:1:1:guard:1:COPPERFIN
+C:
+C:financialguard:1:1:guard:1:COPPERFIN
+C:COPPERFIN:F:
+]

@@ -13,6 +13,7 @@
 #include "test_environment_support.h"
 
 #include <cmath>
+#include <cfenv>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -3278,6 +3279,154 @@ void test_key_ordinal_numeric_behavior_script_rows() {
 }
 
 
+// RQ-CF-PRG-FINANCIAL-OPTIONAL-ARITY-001 (#5611/#6776, #5878).
+// Native excess arity rejects before coercion; wrong-order three-argument
+// calculations are explicitly preservation controls, not compatibility evidence.
+void test_financial_optional_arity_direct_boundaries() {
+    using namespace copperfin::runtime;
+    const double infinity = std::numeric_limits<double>::infinity();
+    const std::vector<PrgValue> values{
+        make_number_value(0), make_number_value(1), make_number_value(-1),
+        make_number_value(2), make_number_value(0.49), make_number_value(0.5),
+        make_number_value(1.5), make_number_value(-0.5),
+        make_number_value(std::nextafter(0.0, -1.0)),
+        make_number_value(std::nextafter(1.0, 0.0)),
+        make_number_value(std::nextafter(1.0, 2.0)),
+        make_number_value(2147483647), make_number_value(2147483648),
+        make_number_value(-2147483648), make_number_value(-2147483649),
+        make_number_value(4294967297), make_number_value(-4294967295),
+        make_number_value(1E20), make_number_value(-1E20),
+        make_number_value(1E300), make_number_value(-1E300),
+        make_number_value(infinity), make_number_value(-infinity),
+        make_number_value(std::numeric_limits<double>::quiet_NaN()),
+        make_number_value(-9223372036854775808.0),
+        make_number_value(9223372036854775808.0),
+        make_number_value(std::nextafter(9223372036854775808.0, 0.0)),
+        make_int64_value(INT64_MIN), make_int64_value(INT64_MAX),
+        make_int64_value(9007199254740993LL), make_uint64_value(UINT64_MAX),
+        make_uint64_value(static_cast<std::uint64_t>(INT64_MAX)+1U),
+        make_boolean_value(true), make_boolean_value(false),
+        make_string_value("1"), make_string_value("1E300"),
+        make_currency_value(10000), make_currency_value(5000), make_null_value(),
+    };
+    for (const char* mode : {"COPPERFIN", "VFP9"}) for (const char* function : {"fv", "pv"}) {
+        for (std::size_t arity : {4U, 5U, 6U}) for (std::size_t i = 0; i < values.size(); ++i) {
+            std::vector<PrgValue> arguments{make_number_value(0.05), make_number_value(2),
+                                          make_number_value(-100)};
+            arguments.resize(arity, make_number_value(0));
+            arguments.back() = values[i];
+            int setting_calls = 0;
+            const auto settings = [mode, &setting_calls](const std::string&) {
+                ++setting_calls;
+                return std::string(mode);
+            };
+            int error = 0;
+            std::string message;
+            std::feclearexcept(FE_ALL_EXCEPT);
+            try {
+                (void)evaluate_numeric_function(function, arguments, settings);
+            } catch (const PrgCompatibilityError& ex) {
+                error = ex.error_code();
+                message = ex.what();
+            }
+            const bool invalid_conversion = std::fetestexcept(FE_INVALID) != 0;
+            expect(error == 1230 && message == "Too many arguments.",
+                   std::string(function)+" unsupported "+mode+" arity"+
+                   std::to_string(arity)+" case"+std::to_string(i)+" must reject localized1230");
+            expect(!invalid_conversion && setting_calls == 0,
+                   std::string(function)+" unsupported "+mode+" arity"+
+                   std::to_string(arity)+" case"+std::to_string(i)+" conversion/settings side effect");
+        }
+        // Rejection precedes even coercion of the required/optional arguments.
+        for (std::size_t position : {0U, 1U, 2U, 3U, 4U}) {
+            std::vector<PrgValue> arguments(5U, make_number_value(1E300));
+            arguments[position] = make_null_value();
+            int error = 0;
+            try {
+                (void)evaluate_numeric_function(function, arguments, {});
+            } catch (const PrgCompatibilityError& ex) {
+                error = ex.error_code();
+            }
+            expect(error == 1230, std::string(function)+" unsupported NULL precedence "+
+                   std::to_string(position));
+        }
+        // Preserve small three-argument arithmetic independently of optional admission.
+        struct Control { double rate, periods, payment, fv, pv; };
+        const std::vector<Control> controls{
+            {0, 2, -100, 200, 200}, {0, 2, 100, -200, -200},
+            {0.5, 2, -100, 250, 100.0/1.5+100.0/2.25},
+            {0.5, 2, 100, -250, -100.0/1.5-100.0/2.25},
+            {0.5, 1, -100, 100, 100.0/1.5},
+            {0.5, 0, -100, 0, 0},
+        };
+        for (const auto& row : controls) {
+            const auto result = evaluate_numeric_function(function,
+                {make_number_value(row.rate), make_number_value(row.periods),
+                 make_number_value(row.payment)}, {});
+            const double wanted = std::string(function) == "fv" ? row.fv : row.pv;
+            expect(result && result->kind == PrgValueKind::number &&
+                   std::abs(result->number_value-wanted) < 1E-10,
+                   std::string(function)+" three-argument arithmetic preservation "+mode);
+        }
+    }
+}
+
+void test_financial_optional_arity_script_rows() {
+    const fs::path dir = fs::temp_directory_path() / "copperfin_financial_optional_arity";
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+    fs::create_directories(dir);
+    const std::vector<std::string> optional_values{
+        "0", "1", "2", "-1", "0.5", "1.5", "-0.5",
+        "2147483647", "2147483648", "-2147483649", "4294967297", "-4294967295",
+        "1E20", "-1E20", "1E300", "-1E300", "9223372036854775808",
+        "-9223372036854775808", "(1E300*1E300)", "(-1E300*1E300)",
+        "'1'", "'1E300'", ".T.", ".F.", "$1", "$0.5", ".NULL.",
+    };
+    std::vector<std::string> arguments;
+    for (const auto& value : optional_values) {
+        arguments.push_back("0.05,2,-100,"+value);
+        arguments.push_back("0.05,2,-100,0,"+value);
+    }
+    arguments.push_back("0.05,2,-100,0,1,1E300");
+    for (std::size_t null_position : {0U, 1U, 2U, 3U, 4U}) {
+        std::string text;
+        for (std::size_t position = 0; position < 5U; ++position) {
+            if (position) text += ",";
+            text += position == null_position ? ".NULL." : "1E300";
+        }
+        arguments.push_back(text);
+    }
+    for (const char* mode : {"COPPERFIN", "VFP9"}) for (const char* function : {"FV", "PV"})
+        for (const auto& args : arguments) {
+        const std::string setup = std::string("SET NUMERICBEHAVIOR TO ")+mode+
+            "\nCREATE CURSOR financialguard (marker C(12))\nINSERT INTO financialguard VALUES ('guard')";
+        const std::string state = "ALIAS()+':'+ALLTRIM(STR(RECCOUNT()))+':'+ALLTRIM(STR(RECNO()))+':'+"
+            "ALLTRIM(marker)+':'+ALLTRIM(STR(VAL(TRANSFORM(SET('DATASESSION')))))+':'+SET('NUMERICBEHAVIOR')";
+        const std::string unchanged = std::string("financialguard:1:1:guard:1:")+mode;
+        const std::string call = "nFinancialError=0\ncFinancialResult='unassigned'\ncFinancialMessage=''\n"
+            "TRY\nuFinancialResult="+std::string(function)+"("+args+")\n"
+            "cFinancialResult=VARTYPE(uFinancialResult)+':'+TRANSFORM(uFinancialResult)\n"
+            "CATCH TO oEx\nnFinancialError=oEx.ErrorNo\ncFinancialMessage=oEx.Message\nENDTRY";
+        const std::vector<Row> rows{
+            {setup, state, "C:"+unchanged},
+            {call, "ALLTRIM(STR(nFinancialError))+':['+cFinancialResult+']:'+ "+state,
+             "C:1230:[unassigned]:"+unchanged},
+            {"", "cFinancialMessage", "C:Too many arguments."},
+            {"", state, "C:"+unchanged},
+            {"USE IN financialguard\nSET NUMERICBEHAVIOR TO COPPERFIN",
+             "SET('NUMERICBEHAVIOR')+':'+IIF(USED('financialguard'),'T','F')+':'+ALIAS()",
+             "C:COPPERFIN:F:"},
+        };
+        std::string expected;
+        for (const auto& row : rows) expected += row.expected+"\n";
+        const auto actual = run_rows(dir, rows);
+        expect(actual == expected, std::string(function)+" unsupported "+mode+" ["+args+
+               "] expected ["+expected+"], got ["+actual+"]");
+    }
+    fs::remove_all(dir, ignored);
+}
+
 // RQ-CF-PRG-JULIAN-NUMERIC-001: independent civil-day literals and native
 // equivalent Date/DateTime controls; not nonexistent native Julian aliases.
 void test_julian_direct_numeric_boundaries() {
@@ -5971,7 +6120,14 @@ void test_sql_property_handle_direct_numeric_boundaries(
 
 }  // namespace
 
-int main() {
+int main(int argc, char* argv[]) {
+    test_financial_optional_arity_direct_boundaries();
+    test_financial_optional_arity_script_rows();
+    // Focused reproduction avoids re-running unrelated numeric workstreams.
+    // CTest's default invocation still executes the complete inventory below.
+    if (argc == 2 && std::string(argv[1]) == "--financial-optional-arity-only") {
+        return test_failures() == 0 ? 0 : 1;
+    }
     test_julian_direct_numeric_boundaries();
     test_julian_numeric_behavior_script_rows();
     test_isleapyear_direct_numeric_boundaries();

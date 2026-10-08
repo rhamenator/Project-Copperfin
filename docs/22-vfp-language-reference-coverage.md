@@ -1,5 +1,19 @@
 # VFP Language Reference Coverage
 
+- FV/PV unsupported optional-argument conversion boundary (#5611/#6776 and
+  admitted #5878, 2026-10-08): RQ-CF-PRG-FINANCIAL-OPTIONAL-ARITY-001 uses
+  three matching37-line installed VFP9 7423 probes to recover excess-arity
+  rejection1230. Both numeric modes now reject more than three evaluated
+  arguments before coercion/llround/narrowing; the two optional integral paths
+  are removed. 512 direct calls and240fresh guarded cases/1200PRGrows pin
+  errors/messages, exact integers/non-finite bounds, floating exceptions,
+  unchanged cursor/session/mode and cleanup. Fixture README/docs32 retain
+  negative/fixed evidence and explicitly separate this partial arity fix
+  from native three-argument order/sign/zero-rate/domain compatibility gaps
+  still tracked by #5878/#6944. Microsoft's modern annuity signature is
+  useful extension provenance, not a reason to override the admitted VFP
+  builtin contract; future non-conflicting extension design remains separate.
+
 - JTOD/JTOT shared Numeric/exact-integer Julian-day conversion (#5611/#6776,
   2026-10-07): RQ-CF-PRG-JULIAN-NUMERIC-001 derives checked signed64 admission
   and the Gregorian civil-day/midnight interpretation from owner extension
