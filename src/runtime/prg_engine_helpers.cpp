@@ -1301,6 +1301,31 @@ std::optional<std::int64_t> checked_truncated_numeric_to_int64(const double valu
     return static_cast<std::int64_t>(value);
 }
 
+// RQ-CF-PRG-CURSORSETPROP-BUFFERING-NUMERIC-001 (#5611/#6776);
+// native Numeric oracle and exact-extension policy retained in its fixture.
+std::optional<std::int32_t> checked_cursor_buffering_mode_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    const bool numeric = value.kind == PrgValueKind::number ||
+        value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
+    std::optional<std::int64_t> mode;
+    if (numeric && behavior == NumericBehavior::vfp9) {
+        mode = vfp9_numeric_to_int32(value);
+    } else if (value.kind == PrgValueKind::int64) {
+        mode = value.int64_value;
+    } else if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value >= 1U && value.uint64_value <= 5U) {
+            mode = static_cast<std::int64_t>(value.uint64_value);
+        }
+    } else {
+        mode = checked_truncated_numeric_to_int64(numeric ? value.number_value :
+            std::round(value_as_number(value)));
+    }
+    if (!mode || *mode < 1 || *mode > 5) {
+        return std::nullopt;
+    }
+    return static_cast<std::int32_t>(*mode);
+}
+
 // RQ-CF-PRG-BINDEVENT-FLAGS-NUMERIC-001 (#5611/#6776); native method
 // observations and derived routine-extension equivalence in the fixture.
 std::optional<std::int32_t> checked_bindevent_flags_argument(

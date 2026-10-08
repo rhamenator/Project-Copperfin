@@ -1,0 +1,15 @@
+RQ-CF-PRG-CURSORSETPROP-BUFFERING-NUMERIC-001 original-dispatch audit
+Base main: 0f679faf71d1c2346e8500272b521dbab84a5a0e
+Records dispatcher Git blob: e8cda9617d25ba3b95693cd56c8fd3fae439f35c
+Records dispatcher SHA256: a43776800ca41e38b371c90bf523c25edce892959b5391eefffcdc297488007a
+Dispatcher byte-identical to main; new helper linked but not dispatched.
+GCC: 120 script-row failures, zero other failures, flags suite1.49s.
+Clang ASan/UBSan/float-cast-overflow: same120 rows, suite44.62s.
+124 independent direct helper checks and all16 other-type script controls pass.
+Cursor row/count/payload, session and active-mode suffixes: zero mismatches.
+Script completion/cleanup/reset pass; existing buffering neighbor passes.
+GCC neighbor0.94s/combined2.45s; Clang neighbor2.65s/combined47.29s.
+No original sanitizer diagnostic; no full older Numeric baseline claim.
+GCC raw log SHA256: 5983fbe556f47b9355f782e60fb8a43b56ea8e584b0b8a4ecc22e1eac94cebb1
+Clang raw log SHA256: 1b907151acf28af4ac1ff737f8a995f717721c100260a7512ab8acc50a6bfac5
+Native NULL/Character/Currency gap separately filed as7077, not implemented.

@@ -5953,6 +5953,11 @@ copperfin_add_test(test_prg_engine_bindevent_flags_numeric cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
+copperfin_add_test(test_prg_engine_cursor_buffering_numeric cf_xbase_runtime
+    test_prg_engine_cursor_buffering_numeric.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_prg_engine_numeric_behavior cf_xbase_runtime
     test_prg_engine_numeric_behavior.cpp
     prg_engine_test_support.cpp
