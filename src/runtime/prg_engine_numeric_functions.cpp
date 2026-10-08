@@ -628,6 +628,12 @@ std::optional<PrgValue> evaluate_numeric_function(
     const std::string& function,
     const std::vector<PrgValue>& arguments,
     const std::function<std::string(const std::string&)>& set_callback) {
+    // RQ-CF-PRG-FINANCIAL-OPTIONAL-ARITY-001 (#5611/#6776, #5878):
+    // installed VFP9 rejects optional annuity arguments before coercion.
+    // Three-argument order/sign/domain compatibility remains separate #5878 work.
+    if ((function == "fv" || function == "pv") && arguments.size() > 3U) {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Dll.Error.TooManyArguments"), 1230);
+    }
     if (!arguments.empty() && is_currency_argument(arguments[0])) {
         const std::int64_t scaled = arguments[0].currency_value;
         if (function == "int" || function == "floor") {
@@ -799,37 +805,33 @@ std::optional<PrgValue> evaluate_numeric_function(
         oss << std::uppercase << std::hex << n;
         return make_string_value(oss.str());
     }
-    // FV(nRate, nPeriods, nPayment [, nPV [, nType]])
-    // Future value of an annuity.  nType 0 = end-of-period (default), 1 = beginning.
+    // FV: three-argument arithmetic retained pending #5878 order/sign/domain work.
     if (function == "fv" && arguments.size() >= 3U) {
         const double rate    = value_as_number(arguments[0]);
         const double nper    = value_as_number(arguments[1]);
         const double payment = value_as_number(arguments[2]);
-        const double pv      = arguments.size() >= 4U ? value_as_number(arguments[3]) : 0.0;
-        const int    type    = arguments.size() >= 5U ? static_cast<int>(std::llround(value_as_number(arguments[4]))) : 0;
+        const double pv      = 0.0;
         double fv = 0.0;
         if (std::abs(rate) < 1e-15) {
             fv = -(pv + payment * nper);
         } else {
             const double factor = std::pow(1.0 + rate, nper);
-            fv = -(pv * factor + payment * (type == 1 ? (1.0 + rate) : 1.0) * (factor - 1.0) / rate);
+            fv = -(pv * factor + payment * (factor - 1.0) / rate);
         }
         return make_number_value(fv);
     }
-    // PV(nRate, nPeriods, nPayment [, nFV [, nType]])
-    // Present value of an annuity.  nType 0 = end-of-period (default), 1 = beginning.
+    // PV: three-argument arithmetic retained pending #5878 order/sign/domain work.
     if (function == "pv" && arguments.size() >= 3U) {
         const double rate    = value_as_number(arguments[0]);
         const double nper    = value_as_number(arguments[1]);
         const double payment = value_as_number(arguments[2]);
-        const double fv      = arguments.size() >= 4U ? value_as_number(arguments[3]) : 0.0;
-        const int    type    = arguments.size() >= 5U ? static_cast<int>(std::llround(value_as_number(arguments[4]))) : 0;
+        const double fv      = 0.0;
         double pv = 0.0;
         if (std::abs(rate) < 1e-15) {
             pv = -(fv + payment * nper);
         } else {
             const double factor = std::pow(1.0 + rate, nper);
-            pv = -(fv / factor + payment * (type == 1 ? (1.0 + rate) : 1.0) * (1.0 - 1.0 / factor) / rate);
+            pv = -(fv / factor + payment * (1.0 - 1.0 / factor) / rate);
         }
         return make_number_value(pv);
     }
