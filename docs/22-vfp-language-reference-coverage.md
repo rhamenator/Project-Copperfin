@@ -1,5 +1,23 @@
 # VFP Language Reference Coverage
 
+- JTOD/JTOT shared Numeric/exact-integer Julian-day conversion (#5611/#6776,
+  2026-10-07): RQ-CF-PRG-JULIAN-NUMERIC-001 derives checked signed64 admission
+  and the Gregorian civil-day/midnight interpretation from owner extension
+  intent, public USNO provenance and the Microsoft DateTime0001..9999 envelope.
+  Both modes reject non-finite/outside-signed64 with localized catchable11;
+  admitted out-of-calendar integers return typed empty without low32 aliases.
+  Safe int narrowing retains the existing bounded converter/formatting callbacks.
+  Three matching47-line installed VFP9 7423 runs in
+  tests/fixtures/vfp9-julian-numeric-observation/ corroborate22 equivalent
+  Date/midnight DateTime/empty controls, not native extension semantics.
+  236 direct calls and156fresh guarded cases/648PRGrows verify calendar/type/
+  payload/results/errors/coercions/globalNULL and unchanged cursor/settings/
+  session/cleanup. GCC and ClangASan/UBSan/float-cast-overflow five focused
+  suites pass5/5; sixcontracts pass6/6. README VR/DQ/DV and docs/32 retain
+  independent/derived requirements, negative baseline and completed development
+  self-review. DTOJ/TTOJ arithmetic/storage, Date constructors/settings/ranges,
+  formatting, routing/type/arity and release qualification stay separate.
+
 - ISLEAPYEAR Numeric/exact-integer year conversion (#5611/#6776,
   2026-10-07): RQ-CF-PRG-ISLEAPYEAR-NUMERIC-001 derives a checked signed-64
   proleptic Gregorian mathematical predicate in both modes from owner extension

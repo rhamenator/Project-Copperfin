@@ -17,6 +17,7 @@
 #include <set>
 #include <functional>
 #include <iomanip>
+#include <limits>
 #include <map>
 #include <sstream>
 
@@ -1558,7 +1559,21 @@ std::optional<PrgValue> evaluate_date_time_function(
         return make_number_value(static_cast<double>(date_to_julian(year, month, day)));
     }
     if ((function == "jtot" || function == "jtod") && !arguments.empty()) {
-        int julian = static_cast<int>(value_as_number(arguments[0]));
+        // RQ-CF-PRG-JULIAN-NUMERIC-001: identical checked extension policy
+        // in both modes; native VFP has no Julian built-in aliases to copy.
+        const auto admitted = checked_declared_int64_argument(arguments[0]);
+        if (!admitted) {
+            throw PrgCompatibilityError(runtime_text(
+                "Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        // An admitted integer outside the civil-date envelope is a typed
+        // empty value, not an error or a low-32 alias. Prove safe narrowing
+        // before retaining the bounded Gregorian converter below.
+        if (*admitted < std::numeric_limits<int>::min() ||
+            *admitted > std::numeric_limits<int>::max()) {
+            return function == "jtot" ? make_datetime_value(std::string{}) : make_date_value(std::string{});
+        }
+        const int julian = static_cast<int>(*admitted);
         int year = 0;
         int month = 0;
         int day = 0;
