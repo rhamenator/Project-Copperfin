@@ -53,7 +53,8 @@ jobs:
           }
           ./scripts/test-windows-vsix-lifecycle.ps1 `
             -VsixPath $vsix[0].FullName `
-            -EvidenceDirectory (Join-Path $env:RUNNER_TEMP "copperfin-vsix-lifecycle-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT")
+            -EvidenceDirectory (Join-Path $env:RUNNER_TEMP "copperfin-vsix-lifecycle-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT") `
+            -InstallerTimeoutSeconds 2400
 
       - name: Verify localized command resources
         shell: pwsh

@@ -163,6 +163,9 @@ std::optional<std::int32_t> checked_set_mark_bar_number_argument(double value, N
 // Other existing coercions retain checked signed64 half-away rounding.
 // Missing means existing false fallback, not native lookup-error parity#7095.
 std::optional<std::int64_t> checked_mrkbar_number_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-SKPBAR-NUMERIC-001: independent paired native skip queries
+// recover the same conversion, not SET SKIP saturation or lookup-error parity#7098.
+std::optional<std::int64_t> checked_skpbar_number_argument(const PrgValue& value, NumericBehavior behavior);
 // RQ-CF-PRG-SKIP-COUNT-NUMERIC-001: default signed32 truncation/exact
 // comparison; VFP9 alone retains both-sign low32/indefinite-zero aliases.
 // NaN rejects both modes; safe other coercions remain checked half-away.
