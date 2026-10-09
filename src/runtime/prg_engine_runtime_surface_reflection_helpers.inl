@@ -8,34 +8,22 @@ void sync_native_collection_count(RuntimeOleObjectState& runtime_object) {
 
 std::optional<std::size_t> resolve_native_collection_slot(
     const RuntimeOleObjectState& runtime_object,
-    const PrgValue& selector) {
+    const PrgValue& selector,
+    const NumericBehavior behavior) {
     switch (selector.kind) {
-        case PrgValueKind::number: {
-            const long long index = std::llround(selector.number_value);
-            if (index >= 1LL && static_cast<std::size_t>(index) <= runtime_object.collection_items.size()) {
-                return static_cast<std::size_t>(index - 1LL);
-            }
-            return std::nullopt;
-        }
-        case PrgValueKind::currency: {
-            const long long index = std::llround(value_as_number(selector));
-            if (index >= 1LL && static_cast<std::size_t>(index) <= runtime_object.collection_items.size()) {
-                return static_cast<std::size_t>(index - 1LL);
-            }
-            return std::nullopt;
-        }
+        case PrgValueKind::number:
         case PrgValueKind::int64:
-            if (selector.int64_value >= 1LL &&
-                static_cast<std::size_t>(selector.int64_value) <= runtime_object.collection_items.size()) {
-                return static_cast<std::size_t>(selector.int64_value - 1LL);
-            }
-            return std::nullopt;
         case PrgValueKind::uint64:
-            if (selector.uint64_value >= 1ULL &&
-                static_cast<std::size_t>(selector.uint64_value) <= runtime_object.collection_items.size()) {
-                return static_cast<std::size_t>(selector.uint64_value - 1ULL);
+        case PrgValueKind::currency: {
+            // RQ-CF-PRG-COLLECTION-SELECTOR-NUMERIC-001: checked conversion
+            // precedes count/size narrowing; key lookup stays separate below.
+            const auto index = checked_collection_selector_argument(selector, behavior);
+            if (index && *index >= 1LL &&
+                static_cast<std::uint64_t>(*index) <= runtime_object.collection_items.size()) {
+                return static_cast<std::size_t>(*index - 1LL);
             }
             return std::nullopt;
+        }
         case PrgValueKind::boolean:
         case PrgValueKind::string:
         case PrgValueKind::empty:

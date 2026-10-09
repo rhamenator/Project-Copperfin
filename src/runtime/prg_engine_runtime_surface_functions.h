@@ -14,6 +14,8 @@
 
 namespace copperfin::runtime {
 
+enum class NumericBehavior;
+
 struct RuntimeSurfaceCursorField {
     std::string name;
     char type = 'C';
@@ -323,7 +325,8 @@ bool is_native_collection_readonly_member_name(const RuntimeOleObjectState& runt
 std::optional<PrgValue> read_native_collection_member(RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 std::optional<PrgValue> invoke_native_collection_method(RuntimeOleObjectState& runtime_object,
                                                         const std::string& normalized_method_name,
-                                                        const std::vector<PrgValue>& arguments);
+                                                        const std::vector<PrgValue>& arguments,
+                                                        NumericBehavior behavior);
 std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState& runtime_object,
                                                           const std::string& normalized_method_name,
                                                           const std::vector<PrgValue>& arguments,

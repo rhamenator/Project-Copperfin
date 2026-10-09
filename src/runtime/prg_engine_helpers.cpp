@@ -1409,6 +1409,26 @@ std::optional<std::int64_t> checked_getbar_position_argument(
     return checked_mrkbar_number_argument(value, behavior);
 }
 
+// RQ-CF-PRG-COLLECTION-SELECTOR-NUMERIC-001 (#5611/#6776). Independently
+// observed Collection Item/Remove truncation and both-sign positive aliases
+// match the checked query model. Currency keeps checked half-away behavior;
+// native Currency/errors/Remove(-1) remain the separate #7104 residual.
+std::optional<std::int64_t> checked_collection_selector_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    switch (value.kind) {
+        case PrgValueKind::number:
+        case PrgValueKind::int64:
+        case PrgValueKind::uint64:
+        case PrgValueKind::currency:
+            return checked_mrkbar_number_argument(value, behavior);
+        case PrgValueKind::boolean:
+        case PrgValueKind::string:
+        case PrgValueKind::empty:
+            return std::nullopt; // The resolver's existing key path owns these.
+    }
+    return std::nullopt;
+}
+
 // RQ-CF-PRG-SKIP-COUNT-NUMERIC-001 (#5611/#6776): count conversion only,
 // not shared navigation or native type admission. Widened int32 counts make
 // the existing long-long abs operation defined, including INT32_MIN.

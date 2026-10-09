@@ -1,0 +1,20 @@
+Test project /home/rich/temp/copperfin-collection-selector-5611-sanitize
+    Start 399: test_prg_engine_collection_selector_numeric
+1/2 Test #399: test_prg_engine_collection_selector_numeric .....   Passed    2.76 sec
+    Start 400: test_prg_engine_collection_selector_neighbors
+2/2 Test #400: test_prg_engine_collection_selector_neighbors ...   Passed    0.12 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =   2.88 sec*proc (2 tests)
+copperfin-isolation:child-processes=none            =   2.88 sec*proc (2 tests)
+copperfin-isolation:environment=scoped-process      =   2.88 sec*proc (2 tests)
+copperfin-isolation:filesystem=test-owned-unique    =   2.88 sec*proc (2 tests)
+copperfin-isolation:network=none                    =   2.88 sec*proc (2 tests)
+copperfin-isolation:platform=portable               =   2.88 sec*proc (2 tests)
+copperfin-isolation:resources=none                  =   2.88 sec*proc (2 tests)
+copperfin-isolation:samples=none                    =   2.88 sec*proc (2 tests)
+copperfin-isolation:schedule=serial                 =   2.88 sec*proc (2 tests)
+
+Total Test time (real) =   2.90 sec

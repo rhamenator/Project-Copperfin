@@ -1367,7 +1367,14 @@
         events.push_back({.category = "ole.invoke",
                           .detail = target_object->prog_id + "." + effective_member_path,
                           .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-        if (auto collection_result = invoke_native_collection_method(*target_object, leaf, arguments);
+        // RQ-CF-PRG-COLLECTION-SELECTOR-NUMERIC-001: explicit methods use
+        // the selected data session, just like expression default-item access.
+        const auto& collection_set_state = current_set_state();
+        const auto collection_mode = collection_set_state.find("numericbehavior");
+        const auto collection_behavior = collection_mode != collection_set_state.end() &&
+            normalize_identifier(collection_mode->second) == "vfp9"
+            ? NumericBehavior::vfp9 : NumericBehavior::copperfin;
+        if (auto collection_result = invoke_native_collection_method(*target_object, leaf, arguments, collection_behavior);
             collection_result.has_value())
         {
             return *collection_result;

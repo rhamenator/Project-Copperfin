@@ -1,5 +1,21 @@
 # VFP Language Reference Coverage
 
+- Collection Numeric/exact selector recovery (#5611/#6776,2026-10-09):
+  RQ-CF-PRG-COLLECTION-SELECTOR-NUMERIC-001 mapped before helper/tests/migration.
+  Three matching78-line installed-VFP9 observations recover ordinary fractional
+  truncation and both-sign legacy positive aliases with independent Item/Remove
+  identities and surviving Count/order. [Fixture](../tests/fixtures/vfp9-collection-selector-numeric/README.md)
+  retains source/output hashes, shipped Collection Item/Remove help and actual
+  verification plan. Both frozen original baselines retained before migration:
+  GNU/Clang398 identical selected failures/zero other, old neighbors PASS,
+  totals2.39s/2.96s and no sanitizer diagnostics (leaks disabled). Narrow
+  resolver/caller mode migration: fixed GNU15/15 PASS460.79s, Clang sanitizers
+  3/3 PASS74.92s/no diagnostics/leaks disabled, earlier focused2/2 PASS2.90s
+  retained without a performance/cause claim. Medium-misuse development DQDV
+  self-review/walkthrough/rollback retained; exact-head external gates pending. Native error2061,
+  Remove(-1) clear-all and Currency parity remain separately unadmitted#7104;
+  soft empty/false is a compatibility gap, not a recovered native requirement.
+
 - GETBAR Numeric/exact-integer position conversion (#5611/#6776/#7096,2026-10-08):
   RQ-CF-PRG-GETBAR-NUMERIC-001 mapped BEFORE helper/production migration.
   Independent installed VFP9 7423 three matching134-line/43-operand controls

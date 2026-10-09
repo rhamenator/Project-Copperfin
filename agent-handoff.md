@@ -55,127 +55,136 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-PRMBAR Numeric/exact-integer PR#7101 merged2026-10-09T00:46:05Z as
-7d5bbbac5e7096e5132792197a1144dc3dbaae1c from signed/DCO G exacthead
-feeeb61d4cc71d3a72e876c37d6f6998a5117891. All11 required PASS;
-35/36 total SUCCESS at merge, only optional Windows Native37863307432/
-job113603965971 still running, no failures. Verified authorized Codex clean
-review6071565369 and summary6071539803 Completed00:11:50.150843Z/manual request
-match exact head. Claude-first6071540991 no completed response, NOT approval;
-fallback6071549743. Fresh paginated REST reviews/inline and exhausted Graph
-review threads/closing refs empty. Gate6071941863; no parent/gap issue closure.
+GETBAR Numeric/exact-integer PR#7103 merged2026-10-09T02:16:08Z as
+8a9f8f61a5e4267df769bb84ce7d5652fe024364 from signed/DCO G exacthead
+1c196d05029007f19bfcc96909326f3b66294075.
+https://github.com/rhamenator/Project-Copperfin/pull/7103
+All11 live required contexts PASS;35/36 total SUCCESS at merge, only optional
+Windows Native37870390323/job113626888498 still running, no failures.
+Claude-FIRST6072450239; no completed response, NOT approval/no quota assertion.
+Verified authorized Codex clean review6072484167 (01:37:59Z), exacthead1c196d0502,
+summary6072444876 manual Completed01:38:00.447424Z. Fresh paginated REST
+reviews/inline empty; Graph threads/closingrefs total0/hasNextfalse. Gate6072878703.
+No parent/gap issue closure;#5611/#6776/#5868/#7096 remain OPEN.
 
-RQ-CF-PRG-PRMBAR-NUMERIC-001: independent installed Wine VFP9 7423 three
-identical125-line/40-operand singleton RELATIVE1/2/MAX controls; native source/
-output hashes and separate Windows-COM provenance in fixture README. Default
-finite truncated1..MAX, explicit VFP9 both-sign low32 positive aliases, parent-
-derived exact64/nonfinite containment and checked preserved other coercions.
-Empty fallback/prefix normalization, selected session/cursor/mark/skip/callback
-state preserved; native1612/GETBAR#7096 remain unfinished.96direct/372guards/
-12inactive cases/three old neighbors; original GNU/Clang exactly110 selected
-identity failures each, zero unrelated/no diagnostics. Frozen hashes and full
-original/fixed logs in fixture baseline-audit.md. Fixed GNU13/13 PASS537.34s,
-Clang ASan/UBSan/float-cast-overflow4/4 PASS13.93s/no diagnostics/detect_leaks0;
-post-push10/10 PASS14.79s, proof6071549955/log
-b4c72408f237f3cad19bfaf492b8fa9b1a891aaf0c46905af7dc5b27114feb04.
-Actual old-Numeric/traceability durations retained without guessed cause.
-Bounded DQ/DV development self-review/walkthrough/rollback complete, not full
-error/type/system-menu/GUI/leak/platform/release qualification.
+RQ-CF-PRG-GETBAR-NUMERIC-001: three identical134-line installed WineVFP9 7423
+observations; default finite Numeric/exact truncation1..MAX, explicit both-sign
+signed-low32 positive aliases; exact64/nonfinite containment and checked other
+coercions. Preserved zero/order/lookup/session/cursor/flags/callback state.
+Known order#6152 retained separately/comment6072009479; native1612#7096 unfinished.
+Frozen112direct/468guarded/148inactive/3old neighbors. Both unchanged originals
+exactly172 identical selected identity failures, zero unrelated/no diagnostics,
+GNU5.76s/Clang6.21s. FixedGNU14/14 PASS455.76s, ClangASan/UBSan/
+float-cast-overflow5/5 PASS18.84s/no diagnostics/detect_leaks0; shared menu/
+olderNumeric/localization/sevencontracts included. Full native/frozen hashes/
+original/fixed logs in tests/fixtures/vfp9-getbar-numeric/README.md and
+baseline-audit.md. Medium-misuse development DQDV self-review/walkthrough/
+rollback complete, not independent-human/high-hazard/leak/GUI/platform/release.
+Postpush exacthead11/11 PASS55.87s/proof6072470236; logSHA
+42b23d020234110a6b462561768b0fdaf9cf89f82dc7932f20d793ebd12d9e05,
+retained in recoverable build trash. Actual slower shared times not explained.
 
-Exact-head Linux Native37863307462/job113603965475 SUCCESS462/462523.09s
-(new1.10/neighbors0.01); logSHA
-68aa0ccf1eb1e3f22b693c8889959f0a49ec46e65e7dabb518cdd5dd33033d0c.
-macOS Native37863307443/job113603965673 SUCCESS462/462324.55s
-(new0.92/neighbors0.04), four2/2 locale repeats20.40/21.20/22.18/20.97s;
-logSHA f004544f2cd084f865238b0e82e40bfd0113fa5ce95c77e1896d5fa2ff1d8aaa.
-Windows Native remains monitored by checks watch36409/60s until completion.
-
-Main synchronized7d5bbbac5. Completed PRMBAR WT/local/remote branch removed
-normally; owned353MB GNU/215MB sanitizer builds moved to recoverable trash
-/home/rich/.local/share/Trash/files/copperfin-prmbar-5611-build and
-copperfin-prmbar-5611-sanitize, retaining hosted/local/prior7099 evidence.
-Own pre-sync continuity stash7e9d69bbef505efaa296d0ecf246079ce9c548d7 and
-completed-WT continuity stash retained; older stashes/foreign files/detached
-WTs preserved. Channel reread empty. Attachment cap100: old merged#6656
-unlinked only, GitHub unchanged; current#7101 attached.
-EPOCH/CENTURY complete/#3698 closed;#6879 retained after numeric.
-
-Previous PR#7099 ships the owner-directed hosted VSIX2400s install/uninstall
-budget. Standalone600/public IDE360-default ceiling600 unchanged. Exact-head
-b2ebbf0 VSIX37847314284 SUCCESS install210.973/uninstall26.316s; artifact/source/
-JSON identity proof6069595236 and original600s failures retained. Forty minutes
-is owner policy, not measured optimum or proven explanation. Local VSIX timing
-remains explicitly deferred pending safe independent clone and disk capacity;
-not complete/cancelled. Interrupted clone partials retained in recoverable
-copperfin-skpbar-5611-build trash; NEVER boot. No clone defined/booted. Original
-VMs/firmware/backups/pristine template preserved; small offline NVRAM/TPM
-preparation retained. All36 SKPBAR checks subsequently SUCCESS.
+Main FF synchronized8a9f8f61a. Completed GETBAR WT/local/remote branch removed
+normally; owned367MB GNU/235MB sanitizer builds recoverably trashed at
+/home/rich/.local/share/Trash/files/copperfin-getbar-5611-build and
+copperfin-getbar-5611-sanitize. Main continuity stash
+b142e7048bfadc1bad2617c9e43d9b1094406f02 and completed-WT stash
+6547b8f6b799858713addcbcdab8200b548732b0 retained; all older/foreign state preserved.
+Final optional Windows Native37870390323/job113626888498 SUCCESS at exacthead
+1c196d0502 confirmed02:45Z; all36/36 SUCCESS, proof6073261563. No inferred full
+suite count/duration. Watch10430 harvested exit0. Attached7103; cap100 old
+verifiedmerged6657 unlinked only.
+Previous PRMBAR7101 all36/36 SUCCESS; evidence remains tracked/in recoverable
+copperfin-prmbar-5611-build/sanitize trash. EPOCH/CENTURY complete/#3698 closed.
+#6879 remains after numeric. HostedVSIX40min owner policy ships7099, not measured
+optimum/proven root cause; localVSIX timing still deferred pending safe full
+independent clone and capacity. Interrupted partials in SKPBAR build trash,
+NEVER boot. Originals/template/firmware/backups preserved.
 
 ## Selected active bounded slice
 
-GETBAR second-argument Numeric/exact-integer position conversion selected next
-under OPEN/rhamenator/agent-approved#5611/#6776/#5868/#7096 revalidated00:45Z.
-Base origin/main7d5bbbac5e7096e5132792197a1144dc3dbaae1c;
-branch fix/getbar-numeric-5611,
-WT /home/rich/.codex/worktrees/getbar-numeric-5611/Project-Copperfin.
-Bounded position conversion only; preserve existing zero fallback, sparse
-bar order/lookup, selected session/cursor/menu flags/callbacks. Native1612,
-missing-popup/type/system-menu policy and ordering#6152 remain separate.
-Shipped GETBAR help ad12f85b-767f-4a7a-9b65-c6f26364fcd5 read fully: one-based
-position1..count returns that position's bar identifier, not identifier input.
-RQ-CF-PRG-GETBAR-NUMERIC-001 mapped BEFORE helper/test migration in fixture
-README, docs22/32 and single2026-10-08 release fragment. Installed Wine VFP9
-7423: three identical134-line final runs/43operands across singleton,
-sparse13/47/MAX and aligned4/13/47/100/MAX positions. Final sourceSHA
-5fa9c438fd8f5af50900f5affa09d467058ab3c8b152bcce955010ab3d91ffcf;
-all outputSHA53241cbf9a6cc2a03d0db25561a89f7e0838090558794681ac017dd264300119.
-Earlier five-bar definition-order counterexample retained separately as
-order-observation.prg/out; known admitted#6152, comment6072009479, no ordering
-implementation or new issue. All probes serial/bounded, no VM.
-Unused checked_getbar_position_argument and assertions/CMake frozen BEFORE
-first configuration in fixture baseline-audit.md.112direct/468guarded/
-148inactive cases/3old neighbors; independent native identities and preserved
-session/cursor/flags/actions/cleanup, not correlated setter expectations.
-GNU original one-job Debug-g0 completed: CTest exit8/5.76s, numeric5.64s
-failed172 selected identities (144guarded/28inactive), old neighbors0.10s PASS;
-zero unrelated/direct/setup/state/callback/cleanup failures. Full original-gcc.log
-retained byte-identically in fixture; SHA
-c7d880ea3dc01402cfdda7fb1b68a815ebbe27bab4cdeee9456eeca7c1c493f8.
-Build stdout SHA7656172c2573a00a97202a4cc30e944d6158fb91ae1425f01fd4b062da18f33f;
-known unrelated compiler warnings on stderr not claimed fully archived there.
-GNU build/home/rich/temp/copperfin-getbar-5611-build retained.
-Clang21.1.8 original one-job ASan/UBSan/float-cast-overflow Debug-O1-g0
-completed: CTest exit8/6.21s, numeric6.10s failed exactly same172 selected lines,
-old neighbors0.10s PASS, zero unrelated assertions/no sanitizer diagnostics.
-Original logSHA2cceeb0fbbc31d0b0fc921f1c80fd9c7fe00cee8605e97f41c925fe898f95392;
-combined build logSHA75f5b4e664070ae8e535a807051bc5564850a3dff6c4e34d13e5dd36ddb83faf.
-Retained byte-identical fixture logs/baseline-audit; all frozen hashes matched,
-no helper/assertion/CMake repair, both originals BEFORE callback migration.
-Only GETBAR callback now migrated to selected-session checked optional position,
-checked count comparison and unchanged zero/order/lookup; runtimeSHA
-530c04f6043e9d261f25702a38a6f59112d63e5c890daacebe2413d02a057ec7.
-Fixed GNU14/14 PASS455.76s: GETBAR5.58s/neighbors0.11s, sharedSKPBAR4.28s/
-PRMBAR4.32s/MRKBAR4.44s, oldNumeric79.56s/localization14.63s plus7contracts,
-safety340.92s. Retain actual times, no guessed cause. Byte-identical fixture
-fixed-gcc.log SHAad64368c8ba09fa9d6644cb99abe70601dddd68c3ac337b0e56f7ff3496d6421;
-combined buildSHAc153beeaffa98ae7ca0f6daebeb8e99d69891a630b249c78e61f2d78f1942cfd.
-Fixed Clang5/5 PASS18.84s, GETBAR5.59s/neighbors0.09s, SKPBAR4.32s/
-PRMBAR4.29s/MRKBAR4.53s; no ASan/UBSan/float-cast-overflow diagnostics,
-serial/private TMPDIR/180s cap/ASANdetect_leaks0/abort1/UBSANhalt1/stacktrace1.
-Byte-identical fixture fixed-clang.log SHA
-ae5dcca536b267a32c462edb9ec66b098ec7890e6d8b0e903320149e055e6711;
-combined buildSHAae5eacae580933474127836b4b9023152d47b0cb2b398ac9933fc0afed75d92c.
-All frozen helper/test/CMake hashes still match, only runtime delta530c04f6.
-Docs22/32/fixture baseline/README/singlefragment completed, bounded requirement
-defined and medium-misuse development DQDV self-review/walkthrough/rollback
-complete (not independent-human/high-hazard/leak/GUI/platform/release evidence).
-Guards verify later registered callback identities, not query-time invocation
-counting; code review confirms query remains read-only. Remaining#7096/#6152/
-type/system-menu/parent work explicit. No concurrent build/test/VM.
-NEXT signedcommit/push/PR, ClaudeFIRST, verified authorizedCodexfallback as needed,
-postpush exacthead verification/hosted checks/review/conversation gates.
-No commit/PR yet; slice NOT integrated. Admission fresh01:15Z/ownerOPENapproved.
-Continue this bounded owner-priority numeric slice; umbrella/#7096 remain open.
+Collection Numeric/exact-integer selector conversion under owner-directed
+OPEN/rhamenator/agent-approved#5611/#6776, freshly revalidated02:15Z.
+Base origin/main8a9f8f61a5e4267df769bb84ce7d5652fe024364;
+branch fix/collection-selector-numeric-5611,
+WT /home/rich/.codex/worktrees/collection-selector-numeric-5611/Project-Copperfin.
+RQ-CF-PRG-COLLECTION-SELECTOR-NUMERIC-001 mapped BEFORE helper/tests/migration
+in fixture README/docs22/docs32/single2026-10-09 fragment, statusgap/pending.
+Only shared resolve_native_collection_slot Numeric/exact conversion selected:
+Item/default-item/Remove; preserve string keys/order/Count/lifetime/selected
+session and hidden read-only guards. Initially-unused checked helper plus Numeric/
+neighbors targets/isolation added, frozen BEFORE first GNU configuration.
+Resolver/method declaration/expression/focus callers stayed original through
+both baselines, then migrated narrowly. No PR/commit/push for new slice yet.
+
+Shipped Collection Item3d6d88cb-99a9-4533-9667-f9213e21c448 and
+Remove2758cf89-5f74-4543-a43e-dca68c69f695 help read fully. Installed WineVFP9
+7423 three strictly serial identical78-line fresh-three-member probes:
+Numeric1.5/1.9 selects alpha,2.5/2.9 beta,3.5/3.9 gamma; both-sign
+4294967297/98/99 and -4294967295/94/93 alias1/2/3. Item/Remove identity,
+Count and survivors independently retained. SourceSHA
+ab8901caf29915a9e1d6e16e285aa2163f10dae8d14cde15bdd900b89f866428;
+probe.out/run1.out/run2.out/run3.out SHA
+fdd68ec70e0fa9f077f5754d699513a9c097b9590840d575b0cd222cdccf8447.
+Fixture tests/fixtures/vfp9-collection-selector-numeric. Initial lowercase
+FXP lookup reported nonexistent; generated uppercase probe.FXP (1595bytes)
+was subsequently identified and recoverably trashed. Source/logs retained.
+No VM/dialog/installer/large allocation.
+
+Native-error2061, Remove(-1/-1.5/4294967295) clear-all and Currency$1.5/$2.5
+truncation differ from current-main source. Focused new residual#7104 filed
+against8a9f8f61a, no label/admission/request; do not expand active conversion.
+Current Copperfin runtime reproduction not yet run, explicitly distinguished
+from source inspection. Existing empty/false fallback is a temporary preserved
+gap, NOT recovered native parity. Type/Currency/sentinel/lifecycle work separate.
+Both originals and fixed/broader evidence retained; bounded medium-misuse
+development DQDV self-review/focused walkthrough/rollback recorded in fixture,
+not independent human/high-hazard/full native/leak/platform/release acceptance.
+
+Frozen inputs and planned counts retained in fixture baseline-audit.md:
+116direct/140freshpublic scripts (five reads+Remove each),26hidden scripts
+(two member chains+read-only Remove), eight unchanged collection/pageframe/
+application-window neighbors. GNU15.2 Debug-g0 one-job/nice10/ionice2:7 build
+completed. Original GNU serial/privateTMPDIR CTest exit8/2.39s: numeric2.25s fails
+exactly398 selected assertions (280identities/100removal/18hidden), zero other/
+direct/setup/state/read-only/cleanup failures; eight old neighbors0.13s PASS,
+no runtime diagnostics. Actual counters116direct/140public/26hidden.
+Byte-identical full original-gcc.log in fixture SHA
+82ca6358088be2a3e7ee9a4bec3a1cdb03782749e5a394107a59e80edeb8f86b.
+GNUbuild /home/rich/temp/copperfin-collection-selector-5611-build retained.
+Clang21.1.8 original ASan/UBSan/float-cast-overflow serial/privateTMPDIR exit8/
+2.96s: same398 FAIL lines/categories/order as GNU, zero other failures and no
+sanitizer diagnostics (leaks disabled); old neighbors0.11s PASS. Full
+original-clang.log retained SHAcb02930ae3a489ae33c102f8c2624b4742569f105f6fe3f9889bc1fb98f98303.
+All11 frozen inputs matched before migration; no assertion/helper/CMake repair/
+removal/weakening. BOTH original baselines retained BEFORE migration.
+Narrow resolver/helper selection and explicit mode parameter now migrated:
+expression three callers use numeric_behavior(set_callback_); explicit focus
+method reads current_set_state().numericbehavior. Key/Count/read-only/erase/
+lifetime/fallback policy unchanged; no static/global. Fixed GNU two executables
+PASS2.41s (Numeric2.27s/neighbors0.12s), no assertion changes; full focused logSHA
+d7f396c61ce41ed30e94414edc725a116b12482849b4d535d9fbf454295a9f05 retained.
+Fixed Clang two executables PASS2.90s (Numeric2.76s/neighbors0.12s), no runtime
+sanitizer diagnostics/leaks disabled; full focused logSHA
+69b0d57047c220680c51cd090e408d26194a534daf1541fe5b21c40eebb43e70 retained.
+Broader GNU15/15 PASS460.79s,600s cap, safety contract342.38s/Numeric80.85s/
+localization14.31s; full fixed-gcc.log SHA
+4237efa0a4ca307d3f9e3b78223ab3c67475c007350ff7fecb2be4f34c432ad8 retained.
+Includes focused two, older Numeric, MRKBAR/SKPBAR/PRMBAR/GETBAR, localization
+and seven repository contracts. Shared Clang sanitizers3/3 PASS74.92s,
+Numeric37.78s/neighbors0.11s/MRKBAR37.01s,180s cap/no runtime diagnostics/
+leaks disabled; full fixed-clang.log SHA
+29698806fd2288ae11d55e6d708eeb320f4b57a5058aab2611557770e424fda0 retained.
+Slower than first focused pass, no inferred cause/performance qualification.
+All six frozen helper/test/CMake/isolation hashes match, no weakening/repairs.
+No overlapping Copperfin build/test/VM. Both parents stillOPEN/owner-approved,
+fresh metadata and origin/main8a9f8f61a confirmed before PR preparation.
+NEXT final diff/contract audit, signed commit/push/PR, exact-head proof,
+Claude FIRST then verified authorized Codex
+fallback, clean exacthead/all11green/allresolved before merge. No issue closure.
+Channel reread empty after cleanup; foreign files/WTs untouched.
+No Copperfin VM started; foreign soundcurrent-localization-win11-qa active at
+02:20Z, leave untouched/avoid VM overlap. No owner input needed.
 
 Audit candidates#7100 lifecycle output-drain timeout and#7102 designer-smoke
 descendant cleanup freshly confirmedOPEN/rhamenator/agent-approved00:47Z.

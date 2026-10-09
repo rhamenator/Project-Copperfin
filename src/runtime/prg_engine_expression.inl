@@ -2841,7 +2841,7 @@
                     is_native_collection_object(*runtime_object))
                 {
                     const auto item_value =
-                        invoke_native_collection_method(*runtime_object, "item", {selector});
+                        invoke_native_collection_method(*runtime_object, "item", {selector}, numeric_behavior(set_callback_));
                     return item_value.value_or(make_empty_value());
                 }
 
@@ -2962,7 +2962,7 @@
                                 is_native_collection_object(*member_object))
                             {
                                 const auto item_value =
-                                    invoke_native_collection_method(*member_object, "item", {selector});
+                                    invoke_native_collection_method(*member_object, "item", {selector}, numeric_behavior(set_callback_));
                                 if (item_value.has_value())
                                 {
                                     current = *item_value;
@@ -3076,7 +3076,7 @@
                 }
 
                 const auto item_value =
-                    invoke_native_collection_method(*runtime_object, "item", {selector});
+                    invoke_native_collection_method(*runtime_object, "item", {selector}, numeric_behavior(set_callback_));
                 return item_value.value_or(make_empty_value());
             }
 

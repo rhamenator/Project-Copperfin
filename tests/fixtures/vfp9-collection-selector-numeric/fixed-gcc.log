@@ -1,0 +1,55 @@
+Test project /home/rich/temp/copperfin-collection-selector-5611-build
+      Start  12: test_agent_issue_intake
+ 1/15 Test  #12: test_agent_issue_intake .........................   Passed    1.16 sec
+      Start  20: test_changelog_fragment_assembler
+ 2/15 Test  #20: test_changelog_fragment_assembler ...............   Passed    0.21 sec
+      Start  21: test_changelog_fragments_valid
+ 3/15 Test  #21: test_changelog_fragments_valid ..................   Passed    0.22 sec
+      Start  30: test_agent_channel_contract
+ 4/15 Test  #30: test_agent_channel_contract .....................   Passed    0.01 sec
+      Start  36: test_native_test_isolation_contract
+ 5/15 Test  #36: test_native_test_isolation_contract .............   Passed    0.44 sec
+      Start  38: test_safety_traceability_workflow_contract
+ 6/15 Test  #38: test_safety_traceability_workflow_contract ......   Passed  342.38 sec
+      Start  40: test_localization
+ 7/15 Test  #40: test_localization ...............................   Passed   14.31 sec
+      Start  52: test_focused_workflow_path_filters
+ 8/15 Test  #52: test_focused_workflow_path_filters ..............   Passed    0.02 sec
+      Start 393: test_prg_engine_numeric_behavior
+ 9/15 Test #393: test_prg_engine_numeric_behavior ................   Passed   80.85 sec
+      Start 397: test_prg_engine_skpbar_numeric
+10/15 Test #397: test_prg_engine_skpbar_numeric ..................   Passed    4.14 sec
+      Start 398: test_prg_engine_prmbar_numeric
+11/15 Test #398: test_prg_engine_prmbar_numeric ..................   Passed    4.44 sec
+      Start 399: test_prg_engine_collection_selector_numeric
+12/15 Test #399: test_prg_engine_collection_selector_numeric .....   Passed    2.38 sec
+      Start 400: test_prg_engine_collection_selector_neighbors
+13/15 Test #400: test_prg_engine_collection_selector_neighbors ...   Passed    0.14 sec
+      Start 401: test_prg_engine_getbar_numeric
+14/15 Test #401: test_prg_engine_getbar_numeric ..................   Passed    5.47 sec
+      Start 405: test_prg_engine_mrkbar_numeric
+15/15 Test #405: test_prg_engine_mrkbar_numeric ..................   Passed    4.58 sec
+
+100% tests passed, 0 tests failed out of 15
+
+Label Time Summary:
+copperfin-isolation:audit=complete                     = 460.77 sec*proc (15 tests)
+copperfin-isolation:child-processes=bounded            = 356.69 sec*proc (2 tests)
+copperfin-isolation:child-processes=none               = 104.07 sec*proc (13 tests)
+copperfin-isolation:environment=child-scoped           = 342.38 sec*proc (1 test)
+copperfin-isolation:environment=none                   =   2.07 sec*proc (6 tests)
+copperfin-isolation:environment=scoped-process         = 116.32 sec*proc (8 tests)
+copperfin-isolation:filesystem=process-owned           =  81.06 sec*proc (2 tests)
+copperfin-isolation:filesystem=read-only               = 344.24 sec*proc (6 tests)
+copperfin-isolation:filesystem=test-owned-unique       =  35.47 sec*proc (7 tests)
+copperfin-isolation:network=disabled-probes            = 342.38 sec*proc (1 test)
+copperfin-isolation:network=none                       = 118.39 sec*proc (14 tests)
+copperfin-isolation:platform=configured                =   0.43 sec*proc (2 tests)
+copperfin-isolation:platform=portable                  = 117.95 sec*proc (12 tests)
+copperfin-isolation:platform=powershell-conditional    = 342.38 sec*proc (1 test)
+copperfin-isolation:resources=none                     = 460.77 sec*proc (15 tests)
+copperfin-isolation:samples=none                       = 460.77 sec*proc (15 tests)
+copperfin-isolation:schedule=parallel-safe             = 358.76 sec*proc (8 tests)
+copperfin-isolation:schedule=serial                    = 102.00 sec*proc (7 tests)
+
+Total Test time (real) = 460.79 sec
