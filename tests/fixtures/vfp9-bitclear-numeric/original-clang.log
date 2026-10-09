@@ -1,0 +1,603 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/bitclear-numeric-5611/Project-Copperfin/build/bitclear-clang/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/bitclear-numeric-5611/Project-Copperfin/build/bitclear-clang
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 399
+    Start 399: test_prg_engine_bitclear_numeric
+
+399: Test command: /home/rich/.codex/worktrees/bitclear-numeric-5611/Project-Copperfin/build/bitclear-clang/tests/test_prg_engine_bitclear_numeric
+399: Working Directory: /home/rich/.codex/worktrees/bitclear-numeric-5611/Project-Copperfin/build/bitclear-clang/tests
+399: Environment variables: 
+399:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitclear-numeric-5611/Project-Copperfin/resources/locales
+399: Test timeout computed to be: 600
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0.5,1 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0.9,1 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session1 1.5,0 got 2
+399: FAIL: BITCLEAR selected result COPPERFIN session1 1.5,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 1.9,0 got 2
+399: FAIL: BITCLEAR selected result COPPERFIN session1 1.9,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -0.5,0 got -2
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -0.5,1 got -3
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -0.9,0 got -2
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -0.9,1 got -3
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1.5,1 got -4
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1.9,1 got -4
+399: FAIL: BITCLEAR selected result COPPERFIN session1 2.5,1 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -2.5,0 got -4
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -2.5,1 got -3
+399: FAIL: BITCLEAR selected result COPPERFIN session1 2147483647.9,0 got -2147483648
+399: FAIL: BITCLEAR selected result COPPERFIN session1 2147483647.9,1 got -2147483648
+399: FAIL: BITCLEAR selected error COPPERFIN session1 2147483648,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 2147483648,0 got -2147483648
+399: FAIL: BITCLEAR selected error COPPERFIN session1 2147483648,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 2147483648,1 got -2147483648
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -2147483648.9,0 got 2147483646
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -2147483648.9,1 got 2147483645
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -2147483649,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -2147483649,0 got 2147483646
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -2147483649,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -2147483649,1 got 2147483645
+399: FAIL: BITCLEAR selected error COPPERFIN session1 4294967295,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 4294967295,0 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session1 4294967295,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 4294967295,1 got -3
+399: FAIL: BITCLEAR selected error COPPERFIN session1 4294967296,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 4294967296,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 4294967296,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 4294967296,1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 4294967297,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 4294967297,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 4294967297,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 4294967297,1 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -4294967295,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -4294967295,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -4294967295,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -4294967295,1 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -4294967296,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -4294967296,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -4294967296,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -4294967296,1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -4294967297,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -4294967297,0 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -4294967297,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -4294967297,1 got -3
+399: FAIL: BITCLEAR selected error COPPERFIN session1 9007199254740992,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 9007199254740992,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 9007199254740992,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 9007199254740992,1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 1E20,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 1E20,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 1E20,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 1E20,1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1E20,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1E20,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1E20,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1E20,1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 1E300,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 1E300,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 1E300,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 1E300,1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1E300,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1E300,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1E300,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1E300,1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 EXP(1000),0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 EXP(1000),0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 EXP(1000),1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 EXP(1000),1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -EXP(1000),0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -EXP(1000),0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -EXP(1000),1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -EXP(1000),1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,-1.9 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,-1.9 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,-1 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,-1 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,-0.9 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,-0.9 got 12345
+399: FAIL: BITCLEAR result kind COPPERFIN session1 0,-0.9
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,-0.9 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,-0.9 got 12345
+399: FAIL: BITCLEAR result kind COPPERFIN session1 -1,-0.9
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,-0.5 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,-0.5 got 12345
+399: FAIL: BITCLEAR result kind COPPERFIN session1 0,-0.5
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,-0.5 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,-0.5 got 12345
+399: FAIL: BITCLEAR result kind COPPERFIN session1 -1,-0.5
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,0.5 got -3
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,0.9 got -3
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,1.5 got -5
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,1.9 got -5
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,2.5 got -9
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,30.9 got 2147483647
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,31.9 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,31.9 got 12345
+399: FAIL: BITCLEAR result kind COPPERFIN session1 0,31.9
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,31.9 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,31.9 got 12345
+399: FAIL: BITCLEAR result kind COPPERFIN session1 -1,31.9
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,32 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,32 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,32.1 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,32.1 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,2147483647 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,2147483647 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,2147483648 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,2147483648 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,-2147483648 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,-2147483648 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,-2147483649 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,-2147483649 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,4294967295 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,4294967295 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,4294967296 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,4294967296 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,4294967296 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,4294967296 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,4294967297 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,4294967297 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,4294967297 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,4294967297 got -3
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,4294967327 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,4294967327 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,4294967327 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,4294967327 got 2147483647
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,-4294967295 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,-4294967295 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,-4294967295 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,-4294967295 got -3
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,-4294967296 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,-4294967296 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,-4294967296 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,-4294967296 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,-4294967297 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,-4294967297 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,-4294967265 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,-4294967265 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,-4294967265 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,-4294967265 got 2147483647
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,9007199254740992 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,9007199254740992 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,9007199254740992 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,9007199254740992 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,1E20 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,1E20 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,1E20 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,1E20 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,-1E20 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,-1E20 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,-1E20 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,-1E20 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,1E300 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,1E300 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,1E300 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,1E300 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,-1E300 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,-1E300 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,-1E300 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,-1E300 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,EXP(1000) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,EXP(1000) got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,EXP(1000) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,EXP(1000) got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,-EXP(1000) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,-EXP(1000) got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,-EXP(1000) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,-EXP(1000) got -2
+399: FAIL: BITCLEAR selected result COPPERFIN session1 7.9,1.9 got 8
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -2.9,0.9 got -3
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,31.9 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,31.9 got 12345
+399: FAIL: BITCLEAR result kind COPPERFIN session1 0,31.9
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,32 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,1E300 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,1E300 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,32 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 7,1E20 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 7,1E20 got 6
+399: FAIL: BITCLEAR selected error COPPERFIN session1 4294967297,4294967297 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 4294967297,4294967297 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 EXP(1000),EXP(1000) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 EXP(1000),EXP(1000) got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,(CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,(CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,(CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,(CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session1 CAST(4294967297 AS UINT64),1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 CAST(4294967297 AS UINT64),1 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,CAST(4294967297 AS UINT64) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 0,CAST(4294967297 AS UINT64) got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session1 -1,CAST(4294967297 AS UINT64) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session1 -1,CAST(4294967297 AS UINT64) got -3
+399: FAIL: BITCLEAR selected error COPPERFIN session1 0,CAST(32 AS UINT64) got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0.5,1 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0.9,1 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session2 1.5,0 got 2
+399: FAIL: BITCLEAR selected result COPPERFIN session2 1.5,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 1.9,0 got 2
+399: FAIL: BITCLEAR selected result COPPERFIN session2 1.9,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -0.5,0 got -2
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -0.5,1 got -3
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -0.9,0 got -2
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -0.9,1 got -3
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1.5,1 got -4
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1.9,1 got -4
+399: FAIL: BITCLEAR selected result COPPERFIN session2 2.5,1 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -2.5,0 got -4
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -2.5,1 got -3
+399: FAIL: BITCLEAR selected result COPPERFIN session2 2147483647.9,0 got -2147483648
+399: FAIL: BITCLEAR selected result COPPERFIN session2 2147483647.9,1 got -2147483648
+399: FAIL: BITCLEAR selected error COPPERFIN session2 2147483648,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 2147483648,0 got -2147483648
+399: FAIL: BITCLEAR selected error COPPERFIN session2 2147483648,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 2147483648,1 got -2147483648
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -2147483648.9,0 got 2147483646
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -2147483648.9,1 got 2147483645
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -2147483649,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -2147483649,0 got 2147483646
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -2147483649,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -2147483649,1 got 2147483645
+399: FAIL: BITCLEAR selected error COPPERFIN session2 4294967295,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 4294967295,0 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session2 4294967295,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 4294967295,1 got -3
+399: FAIL: BITCLEAR selected error COPPERFIN session2 4294967296,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 4294967296,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 4294967296,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 4294967296,1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 4294967297,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 4294967297,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 4294967297,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 4294967297,1 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -4294967295,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -4294967295,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -4294967295,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -4294967295,1 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -4294967296,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -4294967296,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -4294967296,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -4294967296,1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -4294967297,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -4294967297,0 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -4294967297,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -4294967297,1 got -3
+399: FAIL: BITCLEAR selected error COPPERFIN session2 9007199254740992,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 9007199254740992,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 9007199254740992,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 9007199254740992,1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 1E20,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 1E20,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 1E20,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 1E20,1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1E20,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1E20,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1E20,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1E20,1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 1E300,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 1E300,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 1E300,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 1E300,1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1E300,0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1E300,0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1E300,1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1E300,1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 EXP(1000),0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 EXP(1000),0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 EXP(1000),1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 EXP(1000),1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -EXP(1000),0 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -EXP(1000),0 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -EXP(1000),1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -EXP(1000),1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,-1.9 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,-1.9 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,-1 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,-1 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,-0.9 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,-0.9 got 12345
+399: FAIL: BITCLEAR result kind COPPERFIN session2 0,-0.9
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,-0.9 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,-0.9 got 12345
+399: FAIL: BITCLEAR result kind COPPERFIN session2 -1,-0.9
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,-0.5 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,-0.5 got 12345
+399: FAIL: BITCLEAR result kind COPPERFIN session2 0,-0.5
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,-0.5 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,-0.5 got 12345
+399: FAIL: BITCLEAR result kind COPPERFIN session2 -1,-0.5
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,0.5 got -3
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,0.9 got -3
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,1.5 got -5
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,1.9 got -5
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,2.5 got -9
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,30.9 got 2147483647
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,31.9 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,31.9 got 12345
+399: FAIL: BITCLEAR result kind COPPERFIN session2 0,31.9
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,31.9 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,31.9 got 12345
+399: FAIL: BITCLEAR result kind COPPERFIN session2 -1,31.9
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,32 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,32 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,32.1 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,32.1 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,2147483647 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,2147483647 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,2147483648 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,2147483648 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,-2147483648 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,-2147483648 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,-2147483649 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,-2147483649 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,4294967295 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,4294967295 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,4294967296 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,4294967296 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,4294967296 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,4294967296 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,4294967297 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,4294967297 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,4294967297 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,4294967297 got -3
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,4294967327 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,4294967327 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,4294967327 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,4294967327 got 2147483647
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,-4294967295 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,-4294967295 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,-4294967295 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,-4294967295 got -3
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,-4294967296 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,-4294967296 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,-4294967296 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,-4294967296 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,-4294967297 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,-4294967297 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,-4294967265 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,-4294967265 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,-4294967265 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,-4294967265 got 2147483647
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,9007199254740992 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,9007199254740992 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,9007199254740992 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,9007199254740992 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,1E20 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,1E20 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,1E20 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,1E20 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,-1E20 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,-1E20 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,-1E20 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,-1E20 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,1E300 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,1E300 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,1E300 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,1E300 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,-1E300 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,-1E300 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,-1E300 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,-1E300 got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,EXP(1000) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,EXP(1000) got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,EXP(1000) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,EXP(1000) got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,-EXP(1000) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,-EXP(1000) got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,-EXP(1000) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,-EXP(1000) got -2
+399: FAIL: BITCLEAR selected result COPPERFIN session2 7.9,1.9 got 8
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -2.9,0.9 got -3
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,31.9 got 1
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,31.9 got 12345
+399: FAIL: BITCLEAR result kind COPPERFIN session2 0,31.9
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,32 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,1E300 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,1E300 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,32 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 7,1E20 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 7,1E20 got 6
+399: FAIL: BITCLEAR selected error COPPERFIN session2 4294967297,4294967297 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 4294967297,4294967297 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 EXP(1000),EXP(1000) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 EXP(1000),EXP(1000) got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),1 got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,(CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,(CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,(CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,(CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got -2
+399: FAIL: BITCLEAR selected error COPPERFIN session2 CAST(4294967297 AS UINT64),1 got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 CAST(4294967297 AS UINT64),1 got 1
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,CAST(4294967297 AS UINT64) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 0,CAST(4294967297 AS UINT64) got 0
+399: FAIL: BITCLEAR selected error COPPERFIN session2 -1,CAST(4294967297 AS UINT64) got 0
+399: FAIL: BITCLEAR selected result COPPERFIN session2 -1,CAST(4294967297 AS UINT64) got -3
+399: FAIL: BITCLEAR selected error COPPERFIN session2 0,CAST(32 AS UINT64) got 1
+399: FAIL: BITCLEAR selected result VFP9 session1 0.5,1 got 1
+399: FAIL: BITCLEAR selected result VFP9 session1 0.9,1 got 1
+399: FAIL: BITCLEAR selected result VFP9 session1 1.5,0 got 2
+399: FAIL: BITCLEAR selected result VFP9 session1 1.5,1 got 0
+399: FAIL: BITCLEAR selected result VFP9 session1 1.9,0 got 2
+399: FAIL: BITCLEAR selected result VFP9 session1 1.9,1 got 0
+399: FAIL: BITCLEAR selected result VFP9 session1 -0.5,0 got -2
+399: FAIL: BITCLEAR selected result VFP9 session1 -0.5,1 got -3
+399: FAIL: BITCLEAR selected result VFP9 session1 -0.9,0 got -2
+399: FAIL: BITCLEAR selected result VFP9 session1 -0.9,1 got -3
+399: FAIL: BITCLEAR selected result VFP9 session1 -1.5,1 got -4
+399: FAIL: BITCLEAR selected result VFP9 session1 -1.9,1 got -4
+399: FAIL: BITCLEAR selected result VFP9 session1 2.5,1 got 1
+399: FAIL: BITCLEAR selected result VFP9 session1 -2.5,0 got -4
+399: FAIL: BITCLEAR selected result VFP9 session1 -2.5,1 got -3
+399: FAIL: BITCLEAR selected result VFP9 session1 2147483647.9,0 got -2147483648
+399: FAIL: BITCLEAR selected result VFP9 session1 2147483647.9,1 got -2147483648
+399: FAIL: BITCLEAR selected result VFP9 session1 -2147483648.9,0 got 2147483646
+399: FAIL: BITCLEAR selected result VFP9 session1 -2147483648.9,1 got 2147483645
+399: FAIL: BITCLEAR selected error VFP9 session1 0,-1.9 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 -1,-1.9 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 0,-1 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 -1,-1 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 0,-0.9 got 1
+399: FAIL: BITCLEAR selected result VFP9 session1 0,-0.9 got 12345
+399: FAIL: BITCLEAR result kind VFP9 session1 0,-0.9
+399: FAIL: BITCLEAR selected error VFP9 session1 -1,-0.9 got 1
+399: FAIL: BITCLEAR selected result VFP9 session1 -1,-0.9 got 12345
+399: FAIL: BITCLEAR result kind VFP9 session1 -1,-0.9
+399: FAIL: BITCLEAR selected error VFP9 session1 0,-0.5 got 1
+399: FAIL: BITCLEAR selected result VFP9 session1 0,-0.5 got 12345
+399: FAIL: BITCLEAR result kind VFP9 session1 0,-0.5
+399: FAIL: BITCLEAR selected error VFP9 session1 -1,-0.5 got 1
+399: FAIL: BITCLEAR selected result VFP9 session1 -1,-0.5 got 12345
+399: FAIL: BITCLEAR result kind VFP9 session1 -1,-0.5
+399: FAIL: BITCLEAR selected result VFP9 session1 -1,0.5 got -3
+399: FAIL: BITCLEAR selected result VFP9 session1 -1,0.9 got -3
+399: FAIL: BITCLEAR selected result VFP9 session1 -1,1.5 got -5
+399: FAIL: BITCLEAR selected result VFP9 session1 -1,1.9 got -5
+399: FAIL: BITCLEAR selected result VFP9 session1 -1,2.5 got -9
+399: FAIL: BITCLEAR selected result VFP9 session1 -1,30.9 got 2147483647
+399: FAIL: BITCLEAR selected error VFP9 session1 0,31.9 got 1
+399: FAIL: BITCLEAR selected result VFP9 session1 0,31.9 got 12345
+399: FAIL: BITCLEAR result kind VFP9 session1 0,31.9
+399: FAIL: BITCLEAR selected error VFP9 session1 -1,31.9 got 1
+399: FAIL: BITCLEAR selected result VFP9 session1 -1,31.9 got 12345
+399: FAIL: BITCLEAR result kind VFP9 session1 -1,31.9
+399: FAIL: BITCLEAR selected error VFP9 session1 0,32 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 -1,32 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 0,32.1 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 -1,32.1 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 0,2147483647 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 -1,2147483647 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 0,2147483648 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 -1,2147483648 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 0,-2147483648 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 -1,-2147483648 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 0,-2147483649 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 -1,-2147483649 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 0,4294967295 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 -1,4294967295 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 0,-4294967297 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 -1,-4294967297 got 1
+399: FAIL: BITCLEAR selected result VFP9 session1 7.9,1.9 got 8
+399: FAIL: BITCLEAR selected result VFP9 session1 -2.9,0.9 got -3
+399: FAIL: BITCLEAR selected error VFP9 session1 0,31.9 got 1
+399: FAIL: BITCLEAR selected result VFP9 session1 0,31.9 got 12345
+399: FAIL: BITCLEAR result kind VFP9 session1 0,31.9
+399: FAIL: BITCLEAR selected error VFP9 session1 0,32 got 1
+399: FAIL: BITCLEAR selected error VFP9 session1 -1,32 got 1
+399: FAIL: BITCLEAR selected result VFP9 session1 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),1 got 0
+399: FAIL: BITCLEAR selected result VFP9 session1 -1,(CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got -2
+399: FAIL: BITCLEAR selected error VFP9 session1 0,CAST(32 AS UINT64) got 1
+399: FAIL: BITCLEAR selected result VFP9 session2 0.5,1 got 1
+399: FAIL: BITCLEAR selected result VFP9 session2 0.9,1 got 1
+399: FAIL: BITCLEAR selected result VFP9 session2 1.5,0 got 2
+399: FAIL: BITCLEAR selected result VFP9 session2 1.5,1 got 0
+399: FAIL: BITCLEAR selected result VFP9 session2 1.9,0 got 2
+399: FAIL: BITCLEAR selected result VFP9 session2 1.9,1 got 0
+399: FAIL: BITCLEAR selected result VFP9 session2 -0.5,0 got -2
+399: FAIL: BITCLEAR selected result VFP9 session2 -0.5,1 got -3
+399: FAIL: BITCLEAR selected result VFP9 session2 -0.9,0 got -2
+399: FAIL: BITCLEAR selected result VFP9 session2 -0.9,1 got -3
+399: FAIL: BITCLEAR selected result VFP9 session2 -1.5,1 got -4
+399: FAIL: BITCLEAR selected result VFP9 session2 -1.9,1 got -4
+399: FAIL: BITCLEAR selected result VFP9 session2 2.5,1 got 1
+399: FAIL: BITCLEAR selected result VFP9 session2 -2.5,0 got -4
+399: FAIL: BITCLEAR selected result VFP9 session2 -2.5,1 got -3
+399: FAIL: BITCLEAR selected result VFP9 session2 2147483647.9,0 got -2147483648
+399: FAIL: BITCLEAR selected result VFP9 session2 2147483647.9,1 got -2147483648
+399: FAIL: BITCLEAR selected result VFP9 session2 -2147483648.9,0 got 2147483646
+399: FAIL: BITCLEAR selected result VFP9 session2 -2147483648.9,1 got 2147483645
+399: FAIL: BITCLEAR selected error VFP9 session2 0,-1.9 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 -1,-1.9 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 0,-1 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 -1,-1 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 0,-0.9 got 1
+399: FAIL: BITCLEAR selected result VFP9 session2 0,-0.9 got 12345
+399: FAIL: BITCLEAR result kind VFP9 session2 0,-0.9
+399: FAIL: BITCLEAR selected error VFP9 session2 -1,-0.9 got 1
+399: FAIL: BITCLEAR selected result VFP9 session2 -1,-0.9 got 12345
+399: FAIL: BITCLEAR result kind VFP9 session2 -1,-0.9
+399: FAIL: BITCLEAR selected error VFP9 session2 0,-0.5 got 1
+399: FAIL: BITCLEAR selected result VFP9 session2 0,-0.5 got 12345
+399: FAIL: BITCLEAR result kind VFP9 session2 0,-0.5
+399: FAIL: BITCLEAR selected error VFP9 session2 -1,-0.5 got 1
+399: FAIL: BITCLEAR selected result VFP9 session2 -1,-0.5 got 12345
+399: FAIL: BITCLEAR result kind VFP9 session2 -1,-0.5
+399: FAIL: BITCLEAR selected result VFP9 session2 -1,0.5 got -3
+399: FAIL: BITCLEAR selected result VFP9 session2 -1,0.9 got -3
+399: FAIL: BITCLEAR selected result VFP9 session2 -1,1.5 got -5
+399: FAIL: BITCLEAR selected result VFP9 session2 -1,1.9 got -5
+399: FAIL: BITCLEAR selected result VFP9 session2 -1,2.5 got -9
+399: FAIL: BITCLEAR selected result VFP9 session2 -1,30.9 got 2147483647
+399: FAIL: BITCLEAR selected error VFP9 session2 0,31.9 got 1
+399: FAIL: BITCLEAR selected result VFP9 session2 0,31.9 got 12345
+399: FAIL: BITCLEAR result kind VFP9 session2 0,31.9
+399: FAIL: BITCLEAR selected error VFP9 session2 -1,31.9 got 1
+399: FAIL: BITCLEAR selected result VFP9 session2 -1,31.9 got 12345
+399: FAIL: BITCLEAR result kind VFP9 session2 -1,31.9
+399: FAIL: BITCLEAR selected error VFP9 session2 0,32 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 -1,32 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 0,32.1 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 -1,32.1 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 0,2147483647 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 -1,2147483647 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 0,2147483648 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 -1,2147483648 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 0,-2147483648 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 -1,-2147483648 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 0,-2147483649 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 -1,-2147483649 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 0,4294967295 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 -1,4294967295 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 0,-4294967297 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 -1,-4294967297 got 1
+399: FAIL: BITCLEAR selected result VFP9 session2 7.9,1.9 got 8
+399: FAIL: BITCLEAR selected result VFP9 session2 -2.9,0.9 got -3
+399: FAIL: BITCLEAR selected error VFP9 session2 0,31.9 got 1
+399: FAIL: BITCLEAR selected result VFP9 session2 0,31.9 got 12345
+399: FAIL: BITCLEAR result kind VFP9 session2 0,31.9
+399: FAIL: BITCLEAR selected error VFP9 session2 0,32 got 1
+399: FAIL: BITCLEAR selected error VFP9 session2 -1,32 got 1
+399: FAIL: BITCLEAR selected result VFP9 session2 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),1 got 0
+399: FAIL: BITCLEAR selected result VFP9 session2 -1,(CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got -2
+399: FAIL: BITCLEAR selected error VFP9 session2 0,CAST(32 AS UINT64) got 1
+399: BITCLEAR frozen cases: direct=206 public=800
+1/2 Test #399: test_prg_engine_bitclear_numeric .....***Failed   25.30 sec
+test 400
+    Start 400: test_prg_engine_bitclear_neighbors
+
+400: Test command: /home/rich/.codex/worktrees/bitclear-numeric-5611/Project-Copperfin/build/bitclear-clang/tests/test_prg_engine_bitclear_neighbors
+400: Working Directory: /home/rich/.codex/worktrees/bitclear-numeric-5611/Project-Copperfin/build/bitclear-clang/tests
+400: Environment variables: 
+400:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitclear-numeric-5611/Project-Copperfin/resources/locales
+400: Test timeout computed to be: 600
+2/2 Test #400: test_prg_engine_bitclear_neighbors ...   Passed    0.10 sec
+
+The following tests passed:
+	test_prg_engine_bitclear_neighbors
+
+50% tests passed, 1 tests failed out of 2
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =  25.40 sec*proc (2 tests)
+copperfin-isolation:child-processes=none            =  25.40 sec*proc (2 tests)
+copperfin-isolation:environment=scoped-process      =  25.40 sec*proc (2 tests)
+copperfin-isolation:filesystem=test-owned-unique    =  25.40 sec*proc (2 tests)
+copperfin-isolation:network=none                    =  25.40 sec*proc (2 tests)
+copperfin-isolation:platform=portable               =  25.40 sec*proc (2 tests)
+copperfin-isolation:resources=none                  =  25.40 sec*proc (2 tests)
+copperfin-isolation:samples=none                    =  25.40 sec*proc (2 tests)
+copperfin-isolation:schedule=serial                 =  25.40 sec*proc (2 tests)
+
+Total Test time (real) =  25.42 sec
+
+The following tests FAILED:
+	399 - test_prg_engine_bitclear_numeric (Failed)         copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+Errors while running CTest
+Output from these tests are in: /home/rich/.codex/worktrees/bitclear-numeric-5611/Project-Copperfin/build/bitclear-clang/Testing/Temporary/LastTest.log
+Use "--rerun-failed --output-on-failure" to re-run the failed cases verbosely.

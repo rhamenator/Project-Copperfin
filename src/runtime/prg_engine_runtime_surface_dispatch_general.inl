@@ -760,9 +760,21 @@
         return make_int64_value(-1LL - static_cast<std::int64_t>(*operand));
     }
     if (function == "bitclear" && arguments.size() >= 2U) {
-        const std::uint32_t value = bitwise_value(arguments[0]);
-        const std::uint32_t mask = 1U << bit_position(arguments[1]);
-        return make_int64_value(signed_bitwise_result(value & ~mask));
+        // RQ-CF-PRG-BITCLEAR-NUMERIC-001: independent clear-bit observations.
+        // Check the position even when the value has no bits left to clear.
+        const NumericBehavior behavior = numeric_behavior(set_callback);
+        const auto value = checked_bitclear_value_argument(arguments[0], behavior);
+        const auto position = checked_bitclear_position_argument(arguments[1], behavior);
+        if (!value || !position) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        const std::uint32_t mask = std::uint32_t{1} << static_cast<std::uint32_t>(*position);
+        const std::uint32_t result = static_cast<std::uint32_t>(*value) & ~mask;
+        // Widen first: defined signed32 arithmetic, existing int64 result kind.
+        const auto signed_result = result <= static_cast<std::uint32_t>(INT32_MAX)
+            ? static_cast<std::int64_t>(result)
+            : static_cast<std::int64_t>(result) - 4294967296LL;
+        return make_int64_value(signed_result);
     }
     if (function == "bitset" && arguments.size() >= 2U) {
         // RQ-CF-PRG-BITSET-NUMERIC-001: independently recovered value/position.

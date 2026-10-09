@@ -2335,6 +2335,32 @@ std::optional<std::int32_t> checked_bitset_position_argument(
     return converted;
 }
 
+// RQ-CF-PRG-BITCLEAR-NUMERIC-001: independent clear-bit0/1 observations
+// recover conversion matching checked BITAND; unused through BOTH originals.
+std::optional<std::int32_t> checked_bitclear_value_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    return checked_bitand_argument(value, behavior);
+}
+
+std::optional<std::int32_t> checked_bitclear_position_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    const bool numeric = value.kind == PrgValueKind::number ||
+                         value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
+    if (!numeric) {
+        // Safe original half-away coercion only; not native type parity.
+        const auto rounded = checked_truncated_numeric_to_int64(std::round(value_as_number(value)));
+        if (!rounded || *rounded < 0 || *rounded > 31) {
+            return std::nullopt;
+        }
+        return static_cast<std::int32_t>(*rounded);
+    }
+    const auto converted = checked_bitclear_value_argument(value, behavior);
+    if (!converted || *converted < 0 || *converted > 31) {
+        return std::nullopt;
+    }
+    return converted;
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {
