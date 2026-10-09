@@ -2307,6 +2307,34 @@ std::optional<std::int32_t> checked_bitxor_argument(
     return checked_bitand_argument(value, behavior);
 }
 
+// RQ-CF-PRG-BITSET-NUMERIC-001: independent positions0/1 expose value bits;
+// native finite/low32/huge/infinity0 observations match checked BITAND conversion.
+// Kept unused by BITSET through BOTH frozen original compiler baselines.
+std::optional<std::int32_t> checked_bitset_value_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    return checked_bitand_argument(value, behavior);
+}
+
+std::optional<std::int32_t> checked_bitset_position_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    const bool numeric = value.kind == PrgValueKind::number ||
+                         value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
+    if (!numeric) {
+        // Preserve safe existing half-away coercion, not native type parity.
+        // Check the position before narrowing; never wrap other-type positions.
+        const auto rounded = checked_truncated_numeric_to_int64(std::round(value_as_number(value)));
+        if (!rounded || *rounded < 0 || *rounded > 31) {
+            return std::nullopt;
+        }
+        return static_cast<std::int32_t>(*rounded);
+    }
+    const auto converted = checked_bitset_value_argument(value, behavior);
+    if (!converted || *converted < 0 || *converted > 31) {
+        return std::nullopt;
+    }
+    return converted;
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {
