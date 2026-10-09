@@ -794,9 +794,15 @@
         return make_int64_value(signed_result);
     }
     if (function == "bittest" && arguments.size() >= 2U) {
-        const std::uint32_t value = bitwise_value(arguments[0]);
-        const std::uint32_t mask = 1U << bit_position(arguments[1]);
-        return make_boolean_value((value & mask) != 0U);
+        // RQ-CF-PRG-BITTEST-NUMERIC-001: check both operands, even after value0.
+        const NumericBehavior behavior = numeric_behavior(set_callback);
+        const auto value = checked_bittest_value_argument(arguments[0], behavior);
+        const auto position = checked_bittest_position_argument(arguments[1], behavior);
+        if (!value || !position) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        const std::uint32_t mask = std::uint32_t{1} << static_cast<std::uint32_t>(*position);
+        return make_boolean_value((static_cast<std::uint32_t>(*value) & mask) != 0U);
     }
     if (function == "bitlshift" && arguments.size() >= 2U) {
         const NumericBehavior behavior = numeric_behavior(set_callback);

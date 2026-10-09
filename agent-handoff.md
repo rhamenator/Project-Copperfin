@@ -55,123 +55,167 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-BITSET Numeric/exact PR#7119 merged2026-10-09T16:46:15Z as
-1d23bd7a9c63238a6966e9503c32a94a5e89b639 from signed/DCO G head
-e4d422a7236bebad9c31eb24a05a491a5cc6a564.
-https://github.com/rhamenator/Project-Copperfin/pull/7119
-Exact-head merge gate6085250636: fresh active/strict ruleset20356131,
-all11 required SUCCESS, all34 completed checks SUCCESS; optional Windows Native
-37954206389/job113900434072 and linux-deb-rpm installer
-37954206752/job113900437150 still in progress, not failed.
-Actual clean Codex6084799834 at16:17:55Z names e4d422a723, following
-ClaudeFIRST6084282562 at15:47:06Z and owner-authorized fallback6084767324
-at16:15:54Z after bounded28-minute no-usable-review wait. Claude[bot] eyes
-reaction verified, no usable Claude review or explicit quota/setup failure known.
-Summary6084272684/reactions alone were NOT used as clean review evidence.
-Fresh paginated RESTreviews/inlineempty, Graphthreads0/closingrefs0/hasNextfalse.
-Parents5611/6776/family6871 OPEN/rhamenator/agent-approved16:45Z; no closure.
+BITCLEAR Numeric/exact PR#7121 merged2026-10-09T20:16:11Z as
+53cf42c99e61491598ee4ae307d6c10ca5ccdd7d from signed/DCO G head
+25c49fa32b5eb1cb01583b1620ff0f93fd4bb6f5.
+https://github.com/rhamenator/Project-Copperfin/pull/7121
+Merge gate6088531116: fresh active/strict ruleset20356131, all11 requiredSUCCESS,
+all35 completedchecksSUCCESS; sole optional Windows Native37979321071/
+job113985504327 remainedpending, notfailed. Gate checks ran20:15-20:16Z beforemerge;
+gatecomment timestamp corrected to thatactual interval aftermerge.
+Actual clean Codex6088134043 at19:49:55Z names25c49fa32b, following
+ClaudeFIRST6087658191 at19:18:57Z and owner-authorized fallback6088108815
+at19:48:13Z after bounded29-minute no-usable-review wait. Claude[bot] eyesonly;
+no explicit Claude quota/setup failure known. Summary6087653212/reactions were
+NOTused as clean evidence. Paginated RESTreviews/inlineempty, Graphthreads0/
+closingrefs0/hasNextfalse; parents5611/6776/family6871 OPEN/owner/agent-approved.
+No family/parent closure: BITTEST Numeric/exact remains next.
 
-Independent installed WineVFP9 7423/shipped BITSEThelp BEFORE mappedRQ/helpers/
-tests; initial+3matching186-line/184call native outputs. Frozen206direct/792public;
-BOTH complete GNU15.15s/Clang30.00s originals540 byte-identical selected failures/
-zeroother BEFORE BITSET-only migration. Earlier disk-backed GNU attempt
-interrupted130/DN/jbd2_log_wait_commit, incomplete198-line log retained separately,
-not all-scenario/rootcause/timeout evidence. Unchanged binaries/frozen inputs,
-privateRAMTMPDIR operational repeat; no workflow/testdefinition timeout change
-or persistence/disk qualification. No frozen input repair/removal/weakening.
-BITSET-only selectedmode/valueANDposition validation even after-1/localized11/
-defineduint32shiftOR/int64signed32 result; siblings/type/binary/arity/NULL unchanged.
-FixedGNU focused2/2PASS14.88s/broader17/17PASS503.65s includinglocalization/seven
-contracts; ClangASan/UBSan/float-cast-overflow9/9PASS167.39s/no diagnostics/
-leaksdisabled. Frozenheaders/helpers/tests/CMake/isolation/sharedplatform unchanged.
-RQ/VR/native/original/fixed logs+hashes/completed boundedmedium DQ/DV development
-self-review/walkthrough/rollback in tests/fixtures/vfp9-bitset-numeric.
-Not independenthuman/highhazard/fullnative/type/platform/leak/release/family/
-parentacceptance. Signedpostpush14/14PASS112.04s actual206direct/792public
-proof6084333446; full181-line raw log SHA
-3a94300f97b6cc592aa5f5c581265e2213d11b1cee4f0b3a232768cc78a7a12b.
-PRattached; onlyolder verifiedMERGED6663taskreference unlinked atattachmentcap,
-no GitHub PR/data mutation; historical evidence retained.
+Independent WineVFP9 7423/shipped BITCLEARhelp BEFORE mappedRQ/helpers/tests;
+five matching188-line/186call outputs. Frozen206direct/800freshpublic bothmodes/
+sessions+2unchangedneighbors; BOTH complete GNU14.56s/Clang25.42s originals
+552byteidenticalselectedFAIL/zeroother BEFORE BITCLEAR-only migration.
+No frozenrepair/removal/weakening/refreeze. Checked selectedmode/valueANDposition
+evenafter0/localized11/defineduint32ANDcomplement/int64signed32result.
+FixedGNU2/2PASS14.72s/broader19/19PASS461.97s includinglocalization/safety/seven
+contracts, safety1200cap preserved. ClangASan/UBSan/float-cast-overflow11/11PASS
+190.94s/zero diagnostics/leaksdisabled. RQ-CF-PRG-BITCLEAR-NUMERIC-001/native/
+frozen/rawresults/hashes and completedboundedmedium DQ/DV developmentself-review/
+walkthrough/rollback retained in tests/fixtures/vfp9-bitclear-numeric.
+Signedpostpush16/16PASS119.83s actual206/800 proof6087695637; full201-line raw
+log SHA4dee15590bbf1487c9fb673be8d9db79a0b59dab8e90f89555dbffe7a3cf99ca.
+Not independenthuman/highhazard/type/Currency/binary/arity/fullnative/platform/
+leak/release/family/parentacceptance. NoKBX/apparentargument-drivenwork; activehazardsremain.
 
-Main FF synchronized1d23bd7a9; completed WT/local/remote branch removed.
-443MB GNU/355MB Clang build trees recoverablytrashed:
- /home/rich/.local/share/Trash/files/bitset-gcc
- /home/rich/.local/share/Trash/files/bitset-clang
-Signedpostpush rawlog hash verified in Trash. Own pre-sync handoff pathstash
-bcb4ffa425bcafcbed71b2c06cd735578ebc916a retained; allolderstashes/foreignfiles/WTs
-preserved. Requiredwatch33108 harvestedexit0/all11PASS. Oldoptionalwatch79427
-stopped143 ONLY for worktreecleanup, no hostedrun cancellation; rawlog in Trash.
-Replacement optionalwatch17765 running from canonical build/bitset-hosted-watch/
-all-checks-watch.log; harvest remaining exact-head jobs and investigate any failure
-before further slice changes. Windows Native SUCCESS17:04:52Z/in1h18m28s;
-all35completedSUCCESS18:45Z, solepending Linuxinstaller Install RPM tooling step,
-not a failure. Remove this scratch after completion.
-NoVMused/noowner-inputblocker; livechannel reread empty after merge.
-Prior BITXOR7116 merged8b2a28ac4/all36SUCCESS proof6082816795/gate6082720941/
-clean6082286175; native/frozen/fixed proof in tests/fixtures/vfp9-bitxor-numeric,
-Trash bitxor-gcc/-clang and stasha035b275cfe25b3224d9cf93480848dda2b5f654 retained.
-PriorBITOR7112 all36SUCCESS proof6080220178/gate6079783442/clean6079409420;
-BITAND7110/BITNOT7107/Collection7105/GETBAR7103/PRMBAR7101 retained.
-7115/7111/7108/7106/7104 unadmitted. EPOCH/CENTURYcomplete/#3698closed.
+MainFF53cf42c99e; completedWT/local/remote branch removed. GNU445MB/Clang368MB/
+nativeFXP scratch recoverablytrashed under
+/home/rich/.local/share/Trash/files/bitclear-gcc, bitclear-clang, bitclear-native.
+Signedpostpushhash verifiedinTrash. EmptyownedRAMTMPDIR
+/tmp/copperfin-bitclear-5611-wt0HXH removed after emptydirectory check.
+Ownpre-sync handoffpathstash159e09dc4d0d1d3090e123ae1a34e5869483fe16 retained;
+allolderstashes/foreignfiles/WTs preserved. Requiredwatch90485exit0/all11PASS.
+Oldallcheckwatch38929 stopped143 ONLYforWTcleanup, nohostedcancellation,
+rawloginTrash. Replacementwatch97374 completedexit0/all36SUCCESS20:45Z,
+hostedproof6088967587 published; canonical build/bitclear-hosted-watch scratch
+recoverablytrashed. Zero newconversations/failures; hosted boundedproof complete.
+PRattached; onlyolder verifiedMERGED6664 taskreference unlinkedat100cap,
+noGitHubPR/datamutation. NoVMused/noownerinputblocker.
+
+PriorBITSET7119 merged1d23bd7a9 fromsignedhead e4d422a7236bebad9c31eb24a05a491a5cc6a564;
+clean6084799834/gate6085250636/postpush6084333446 and committedfixtureproof retained.
+All35otherchecksSUCCESS; optional Linux37954206752/job113900437150 cancelled
+21:47:01Z after6h0m37s. Annotation: The job has exceeded the maximum execution
+time of6h0m0s. Raw193-line linux-installer-cancelled.log in canonical
+build/bitset-hosted-watch SHAcb8be04b5b3409e75053d526145cc46600cc9bc1a185ac64d8922dbc1c78424e.
+APTupdate lastoutput15:46:47Z/ignoredAzuremirrorindices; next21:46:59Z cancelled,
+beforeANYCopperfinconfigure/build/package/lifecycle. Mirror/networkrootcause
+unconfirmed. Watch17765 completedexit0butexplicitfailtable NOTsuccess evidence.
+SpecificsameheadLinux-only rerun requested21:49Z; attempt2 job114041218199
+started21:49:33Z/SUCCESS22:07:30Z. Freshsameheadall36checksSUCCESS22:23Z;
+proof6090251177. Windows/macOS oldsuccessfulexecutions retained, notrerun.
+Watch59504 harvestedexit0; all3rawlogs/hashverified recoverablytrashed as
+/home/rich/.local/share/Trash/files/bitset-hosted-watch.
+Rerunraw6862a9be311b663f5890a50300d203e937ec4b1e64bcd11a04d07c4dcbf9f18f;
+first193-line cancellationhashunchanged. Focusedunadmittedissue7122 filedagainst
+main53cf42c99e/workflowblob82090da1c675cebfa9638821b85d2720fb381e6b;
+OPEN/rhamenator/nolabels. Noinstallerproductionchange/activeBITTESTexpansion.
+Incident/rerun PRcomment6089861705 at21:51:40Z. Trashbitset-gcc/-clang and
+stashbcb4ffa425bcafcbed71b2c06cd735578ebc916a retained.
+PriorBITXOR7116 merged8b2a28ac4/all36SUCCESS proof6082816795/gate6082720941/
+clean6082286175; BITOR7112 all36SUCCESS proof6080220178/gate6079783442/
+clean6079409420; BITAND7110/BITNOT7107/Collection7105/GETBAR7103/PRMBAR7101 complete.
+7115/7111/7108/7106/7104 remainunadmitted. EPOCH/CENTURYcomplete/#3698closed.
 
 ## Selected active bounded slice
 
-BITCLEAR Numeric/exact value and position under admitted5611/6776/6871.
-Parent metadata OPEN/rhamenator/agent-approved19:15Z; channel empty.
-Branch fix/bitclear-numeric-5611 in
-/home/rich/.codex/worktrees/bitclear-numeric-5611/Project-Copperfin
-fromorigin/main1d23bd7a9c63238a6966e9503c32a94a5e89b639; uncommitted/noPR.
-
-Independent WineVFP9 7423/shippedhelp c3c6ff91-a5c0-47a8-b979-cb9020f13d5a
-BEFORE mappedRQ/helpers/tests. Initial+3matching188-line/186call native outputs;
-clear-bit0AND1 value observations, zeroAND-1 positions, all32observablebits/
-tenmixedcontrols. Source18271cd89693e5359910c11ed84bfa6151cf83778a61898e2ff93d33d4c5345b;
-allfiveoutputs6fb3c8db573d7c39e4d84cdb8e25e92ffd863201b85126e6bb4db2ee5efa7723.
-RQ-CF-PRG-BITCLEAR-NUMERIC-001 mapped BEFORE distinct unused helpers/tests,
-nowdefined with bounded localVR and completedmediumDQ/DV development
-self-review/automatedwalkthrough/rollback in fixtureREADME/audit.
-Frozen206direct/800freshpublic bothmodes/sessions+2unchangedneighbors.
-Both complete originals BEFORE BITCLEAR-only migration: GNU14.56s/Clang25.42s,
-552byteidenticalselectedFAIL(252error/272result/28kind;406COPPERFIN/146VFP9),
-zeroother/no sanitizerdiagnostics. Full603-line originals hashes
-GNU9994e36dddeaa2d9a17b04b7c35a534d89054b9f1da0fb15346550a716667e5d;
-Clang53baab6171813e260cf070abc3de1588b6d45b637d64f8f2730cccbdd769311d.
-No frozeninputrepair/removal/weakening/refreeze; allsixinputs/sharedplatform
-unchanged. Exact64/NaN/defaultsafety parent-derived, safeothercontrols
-preservation only. Selectedmode/valueANDposition even after0/localized11/
-defineduint32ANDcomplement/int64result; onlyBITCLEARdispatch migrated.
-Fixeddispatcher87a001886d21f880b204f5153e313f634db510302b005458ab4ac545f5b8bf84;
-sharedplatform639778a08a38ef7d89a53d8f04a7daec99faf32c0077867cb9cf12a277225ffe.
-
-GNU focused38388 2/2PASS14.72s actual206/800; full46-line log
-7e5f8e53685238b7237a093248cdc394ab84239af19b560389366cbf6d65e089.
-GNU broader56277 19/19PASS461.97s (Numeric/NULL/bit siblings/Collection/
-localization/sevencontracts), safety326.95s kept1200s cap; full237-line
-log1aa353f40b7c4fd5e32542a7b6bd632ff17421e48180c82a07e5763c4f37818e.
-Clang61064 complete11/11PASS190.94s ASan/UBSan/float-cast-overflow,
-Numeric102.10s/BITCLEAR26.27s/neighbors0.10s, siblingcounters retained,
-zero diagnostics/leaksdisabled; full144-line fixed-clang.log
-9bcb8a74e472d175b49073d41afdac830c102e5aa8bfcc7bb59b5b8076f8f28d.
-Six frozeninputs/sharedplatform/fixeddispatcher reverified unchanged.
-Changelog fragment validates. All rawlogs/sourcehashes/chronology in
-tests/fixtures/vfp9-bitclear-numeric. Not independenthuman/highhazard/
-type/Currency/binary/arity/full-native/platform/leak/release/family/parent
-acceptance; activehazardsremain. NoKBX applied/noargument-drivenwork.
-
-Next signedcommit/push/PR, ClaudeFIRST verified@claude review exacthead;
-signedpostpush GNU16-test proof, actualcleanexactheadreview/all11requiredgreen/
-resolvedthreads beforemerge. Authorized verified@codex fallback if Claude
-unavailable, noresponse/summary/quota/reaction NOTcleanreview. Do not independently
-launchterminalClaude ormessageanotherchat. Preservecanonicalownedhandoff
-beforemainFF; cleanupownWT/builds/branch aftermerge. BITTESTunfinished,
-parents/familyremainopen. Remaining7119optionalinstallerpending19:15Z,
-35completedSUCCESS/0bad; existingwatch17765 remainsrunning, investigateactualfailure.
-Noowner-inputblocker/noVMused. No VMs during unconfirmedbackup-resetcompletion.
-Serialnice10/ionice2:7 -j1 builds/tests; privateRAMTMPDIR
-/tmp/copperfin-bitclear-5611-wt0HXH reusedthroughbothoriginalsandfixed.
-CLI600s/nonpersistencefixtures, noworkflow/testdefinitiontimeoutchange;
-timings notdisk/persistence/timeout-optimumqualification. NativeFXP own
-build/bitclear-native scratch, notcommitted.
+BITTEST Numeric/exact value and position under admitted5611/6776/6871.
+Parentmetadata OPEN/rhamenator/agent-approved22:15Z; admittedbodies reread21:15Z,
+livechannel empty22:15Z. Dedicatedbranch fix/bittest-numeric-5611 from
+origin/main53cf42c99e61491598ee4ae307d6c10ca5ccdd7d in
+/home/rich/.codex/worktrees/bittest-numeric-5611/Project-Copperfin.
+BITTEST-onlymigration nowapplied AFTERBOTHcomplete refrozenoriginals; no commit/PRyet.
+ScopeONLY selected
+Numeric/exact valueandposition consumers; type/Currency/binary/arity/sharedoldbit
+helpers/siblings/globalNULL andfamily/parentacceptance remainseparate.
+Independent WineVFP9 7423/shippedBITTESThelp55285ec7 recoveredfirst: five
+matching1304-line/1302call outputs (initial+3fresh+copy), all32bits of36values,
+zero/-1/alternatingpositions andmixedcontrols. NativeSource4debd560d80feeff9c9f71731261433a7ba8ee09524b449e65897ca9a9278f82;
+outpute42dc284409db35d008269cb1e181f637ae7c4e3bcfcfe5e7283ea8cd3fbda99.
+RQ-CF-PRG-BITTEST-NUMERIC-001 gapmapped BEFORE distinct unusedhelpers/tests,
+then206direct/5264freshpublic/helperheader/CMake/isolation frozenBEFORE config.
+Allhashes/initialREADME/audit in tests/fixtures/vfp9-bittest-numeric.
+GNUoriginal build88839 exit0; completeCTest84631 expectedexit8,493.42s,
+actual206direct/5264public/2954selectedFAIL (1230error/1684result/40kind),
+zeroother/direct/control/context/reset failures; neighborsPASS0.12s.
+Full3005-line raw original-gcc-unsharded.log SHA9726dd21446ace386a8ad4bdceae42535e2d5a330a0f16ab497477b3e20f48c4.
+Allfrozen/shared/ORIGINALdispatcher hashes unchanged. Clang21.1.8
+configure/bothbuilds succeeded, matchingC/CXX/EXE/SHARED ASan/UBSan/
+float-cast-overflow/framepointer/leaksdisabled. OriginalCTest91546 exit8:
+NumericTIMEOUT1200.18s/total1200.29s; finalcounterNOTreached, notvalidbaseline.
+Observed2883selectedFAIL/zeroother/zero sanitizerdiagnostics; neighborsPASS0.10s.
+Full2933-line original-clang-timeout1200.log retainedSHA
+b11359449e605a5d1820e1d53d383842b7cf46cb5d273e22e6a86d72564b678b.
+Unchangedrepeat61627 deliberatelystopped onlyverifiedownPID1922839 at33:04/
+33:03CPU; subprocess terminated/exit8/1984.46s total, neighborsPASS0.09s.
+No finalcounter; incompleteNOTbaseline.2657-line unedited
+original-clang-unsharded-cancelled.log SHA88f4e2a70132c36c76eeac89f6932a06a932ada0aa9693465c5427aafe621cd6.
+CPU-bound/privateRAM/availablememory observed, rootcause/diskunqualified.
+ExplicitHARNESS-ONLYrefreeze22:23Z BEFOREnewconfig:206directoneprocess,
+4x1316public CTestprocesses bymode/session, exactcounts failclosed, invalidargs2.
+Everyliteralinput/expectedresult/existingassertion/freshsession unchanged;
+sourceprefix1..1469 hash1e7e70f09b28a4384af2401d356ba363297e32709b1954a0b4301992102c3605 before/after.
+Newtest/CMake/isolationhashes in baseline-audit.md; helpers/header/native/
+neighbors/shared/ORIGINALdispatcherhashunchanged; no migration.
+GNUrefrozenconfigure/bothbuilds28785exit0; all6CTestregistered/isolationcomplete.
+CompletefreshGNUoriginal26323exit8 expectedselectedonly/144.36s, all206+4x1316
+casescomplete, direct/neighborsPASS.2954 byteidenticalselectedFAIL tooldGNU,
+zeroother, raw3049lines SHA8d8bc64e1aacc583e58fb1a2674daa07fbceb89b1eb06dab9b7edf86a0d15080.
+Clangrefrozenconfigure/bothbuilds28658exit0; all6registered/matchingflagsverified;
+CompleterefrozenClangoriginal48008exit8 selectedonly/324.57s, direct206PASS,
+all4x1316publiccomplete/neighborPASS/2954selectedFAIL byteidenticaltobothGNUlogs,
+zeroother/nosanitizerdiagnostics/leaksdisabled.3049-line rawSHA
+367f73aa0564257f3af68013dfcc172400946053abed7c4754d82b850ceafcd1.
+Retain BOTH COMPLETE refrozenGNUandClang originals and byteidentical2954
+selectedFAIL/zeroother BEFOREmigration; oldpartialruns neverclean evidence.
+Exact64/NaN/defaultsafety derivedfromownerparent; safeothercontrols preservationonly.
+Bothcompleteoriginals retained BEFOREmigration; parentsrevalidated22:34Z.
+OnlyBITTEST selectsbehavior/checksvalueANDpositionevenafter0/localized11/
+defineduint32shiftAND/Logicalresult. FixeddispatcherSHA
+0fe605bef5934d32318c2401d092a62a6bf54f3d03935e82ae603b3d0d6b2b09;
+all6refrozeninputs/native/sharedplatformunchanged. Newchangelogfragmentrecorded.
+FixedGNUrebuild/focused85647exit0/full6PASS149.78s/actual206+4x1316,
+zeroassertionfailures, raw90lines SHAe89aca918f3c2bdb3bfa1b364b79471f4b10e66028973889461129adf07caf24.
+BroaderGNU82444exit0/25of25PASS631.19s, actual206+4x1316complete again.
+Safety350.81s existing1200cap preserved; localization14.36s/olderNumeric67.51s/
+NULL/bitfamily/sevencontractsPASS. Raw302lines SHA
+69aadf457880d331e23f809ef5eeaf68918f3f5fec8790630e29b3183a397ce9.
+Supplementalinstalled-onlyposition-indexprobe AFTERGNU: same36positions x32
+literalonehotmasks/1152calls/1154lines. Fourfreshserialbounded25sWineoutputs
+matchall26admittedexactindices/10all32maskerror11; existingfrozenexpectations
+unchanged. Sourcee52b32a84e6ef6ee2758bce86bf2fcf4954efa4e8608d569588d3c93bee27d63;
+all4output68d87cd9511bbbf4c039ddbfa18b3068cbaa01fc7e330d2327d9c0849b6220cb.
+NoVM/concurrentbuild/tests. NativeFXPscratchonly; explicit chronologyinaudit.
+FixedClang90913exit0/full17PASS526.10s, actual206+4x1316complete/noassertionfailures
+orASan/UBSan/float-cast-overflow diagnostics; matchingflags/leaksdisabled/
+sameprivateRAM/CLI1200 operationalcap. Raw209lines SHA
+dbee98ccdcdc33117af48462ca70e7a122a4653856d145541db3f713b215eeed.
+CompletedboundedmediumDQ/DV delegateddevelopmentself-review/automatedGNU25+
+Clang17walkthrough/rollback inaudit; noindependent-human/highhazardqualification.
+RQdefinedforboundedlocalNumeric/exactscope, native/shared/frozenhashesunchanged;
+no family/parent/fullnative/type/Currency/binary/arity/platform/leak/releaseacceptance.
+Originmainstill53cf42c99e/freshfetch23:05Z, nobranchPR, livechannel empty.
+Next: signed/DCOcommit/push/PRbase main, ClaudeFIRST, signedpostpushfocus,
+requiredhostedchecks/exactheadreview/conversations. No localbuild/testrunning.
+ClaudeFIRST thenverifiedauthorized@codexfallback; cleanexacthead review/
+all11requiredgreen/resolvedconversations beforemerge.
+BITSETinstaller reruncomplete/all36SUCCESS, rawpreserved/cleanupcomplete;
+incident7122 stillOPEN/separate/unadmitted; missingbootstrapboundNOTfixedbyrerun.
+Noownerinputneeded. PrivateRAMTMPDIR /tmp/copperfin-bittest-5611-iqIncd,
+newGNUCLI600s/ClangCLI1200s PER SHARD operationalcaps only. Focusedregex
+^test_prg_engine_bittest_(numeric.*|neighbors)$ coversall6; no workflow/testdefinition
+timeoutchange/disk/persistence/timeout-optimumqualification. NativeFXP build/bittest-native.
+NoVMstart/recreate whilebackupreset completionunconfirmed. Wineprobe available;
+noownerinputblocker. Allcompleted BITCLEAR work recoverable asabove.
 
 ## Retained owner steering / deferred work
 

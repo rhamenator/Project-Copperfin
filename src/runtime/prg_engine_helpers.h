@@ -357,6 +357,10 @@ std::optional<std::int32_t> checked_bitset_position_argument(const PrgValue& val
 // exact64/NaN safety parent-derived; validate position even after value0.
 std::optional<std::int32_t> checked_bitclear_value_argument(const PrgValue& value, NumericBehavior behavior);
 std::optional<std::int32_t> checked_bitclear_position_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-BITTEST-NUMERIC-001: independent all32 value bits/positions;
+// exact64/NaN safety parent-derived; position checked even after zero value.
+std::optional<std::int32_t> checked_bittest_value_argument(const PrgValue& value, NumericBehavior behavior);
+std::optional<std::int32_t> checked_bittest_position_argument(const PrgValue& value, NumericBehavior behavior);
 std::optional<std::int32_t> checked_declared_int32_argument(const PrgValue& value, NumericBehavior behavior);
 std::optional<std::int64_t> checked_declared_int64_argument(const PrgValue& value);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the

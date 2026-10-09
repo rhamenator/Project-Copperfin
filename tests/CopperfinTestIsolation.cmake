@@ -934,6 +934,24 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
 
+    # BITTEST: private TMPDIR roots, scoped locale, serial runtime.
+    foreach(bittest_test IN ITEMS
+        test_prg_engine_bittest_numeric
+        test_prg_engine_bittest_numeric_copperfin_session1
+        test_prg_engine_bittest_numeric_copperfin_session2
+        test_prg_engine_bittest_numeric_vfp9_session1
+        test_prg_engine_bittest_numeric_vfp9_session2
+        test_prg_engine_bittest_neighbors)
+        copperfin_set_test_isolation(${bittest_test}
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT scoped-process
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            AUDIT complete
+        )
+    endforeach()
     # BITCLEAR: private TMPDIR roots, scoped locale, serial runtime.
     foreach(bitclear_test IN ITEMS test_prg_engine_bitclear_numeric test_prg_engine_bitclear_neighbors)
         copperfin_set_test_isolation(${bitclear_test}
