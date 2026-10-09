@@ -1,0 +1,2 @@
+# Preserve literal empty prompt output in the checksummed original CTest logs.
+original-*.log whitespace=-blank-at-eol
