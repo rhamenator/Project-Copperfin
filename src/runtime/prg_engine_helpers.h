@@ -346,6 +346,9 @@ std::optional<std::int32_t> checked_bitand_argument(const PrgValue& value, Numer
 // RQ-CF-PRG-BITOR-NUMERIC-001: independently observed identity0 conversion;
 // native infinity0 in explicit VFP9, exact64/NaN safety parent-derived.
 std::optional<std::int32_t> checked_bitor_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-BITXOR-NUMERIC-001: independently observed identity0 conversion;
+// native infinity0 in explicit VFP9, exact64/NaN safety parent-derived.
+std::optional<std::int32_t> checked_bitxor_argument(const PrgValue& value, NumericBehavior behavior);
 std::optional<std::int32_t> checked_declared_int32_argument(const PrgValue& value, NumericBehavior behavior);
 std::optional<std::int64_t> checked_declared_int64_argument(const PrgValue& value);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the

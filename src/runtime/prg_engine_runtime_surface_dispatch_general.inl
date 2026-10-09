@@ -732,11 +732,22 @@
         return make_int64_value(signed_result);
     }
     if (function == "bitxor" && arguments.size() >= 2U) {
-        std::uint32_t result = bitwise_value(arguments[0]);
-        for (std::size_t index = 1U; index < arguments.size(); ++index) {
-            result ^= bitwise_value(arguments[index]);
+        // RQ-CF-PRG-BITXOR-NUMERIC-001: selected-session checked conversion;
+        // validate every operand, including after equal-prefix cancellation.
+        const auto behavior = numeric_behavior(set_callback);
+        std::uint32_t result = 0U;
+        for (const auto& argument : arguments) {
+            const auto operand = checked_bitxor_argument(argument, behavior);
+            if (!operand) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+            }
+            result ^= static_cast<std::uint32_t>(*operand);
         }
-        return make_int64_value(signed_bitwise_result(result));
+        // Defined signed32 arithmetic, preserving the existing int64 result kind.
+        const auto signed_result = result <= static_cast<std::uint32_t>(INT32_MAX)
+            ? static_cast<std::int64_t>(result)
+            : static_cast<std::int64_t>(result) - 4294967296LL;
+        return make_int64_value(signed_result);
     }
     if (function == "bitnot" && !arguments.empty()) {
         // RQ-CF-PRG-BITNOT-NUMERIC-001: selected-session checked conversion;

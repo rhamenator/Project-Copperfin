@@ -934,6 +934,18 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
 
+    # BITXOR: private TMPDIR roots, scoped locale, serial runtime.
+    foreach(bitxor_test IN ITEMS test_prg_engine_bitxor_numeric test_prg_engine_bitxor_neighbors)
+        copperfin_set_test_isolation(${bitxor_test}
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT scoped-process
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            AUDIT complete
+        )
+    endforeach()
     # BITOR: private TMPDIR roots, scoped locale, serial runtime.
     foreach(bitor_test IN ITEMS test_prg_engine_bitor_numeric test_prg_engine_bitor_neighbors)
         copperfin_set_test_isolation(${bitor_test}

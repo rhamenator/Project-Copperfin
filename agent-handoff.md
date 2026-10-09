@@ -55,126 +55,105 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-BITAND Numeric/exact PR#7110 merged2026-10-09T08:46:16Z as
-a9cd973ce144595e04df9ab30d41438eb9f36639 from signed/DCO G head
-f2f04af2c7039c4f4ce3001c0981e8823ce277b4.
-https://github.com/rhamenator/Project-Copperfin/pull/7110
-Gate6077580073: all11 live required contexts SUCCESS/strict;35/36 totalSUCCESS
-atmerge, only optional Windows Native37902669813/job113728624446 running then.
-Final Windows SUCCESS08:54:04Z confirmed; all36/36 SUCCESS exactheadf2f04af2c7,
-proof6077724390. Required watcher65121 and optional watcher12389 harvested exit0.
-Actual clean Codex6077084324 at08:11:34Z for f2f04af2c7 follows
-Claude-FIRST6076986099 and authorized fallback6077053116. No Claude response/
-setup/quota failure known; Summary6076978100 alone NOT clean evidence.
-Fresh paginated RESTreviews/inline empty; Graphthreads0/closingrefs0/hasNextfalse.
-Parents5611/6776/family6871 OPEN/rhamenator/agent-approved, no closures.
+BITOR Numeric/exact PR#7112 merged2026-10-09T11:16:33Z as
+b4cd165e39ac64f5e474d88a141d991c206efcae from signed/DCO G head
+d190d18b1a7684938bb086b96af76717d062196d.
+https://github.com/rhamenator/Project-Copperfin/pull/7112
+Exact-head merge gate6079783442: live ruleset20356131 all11 required contexts
+SUCCESS/strict;35/36 totalSUCCESS atmerge, optional Windows Native37917231785/
+job113776290595 stillrunning then. Final WindowsSUCCESS11:36:24Z/in1h13m33s;
+all36/36SUCCESS exacthead, proof6080220178; watcher27083 harvestedexit0.
+macOS Native succeeded10:52:49Z; no actionable hostedfailure/timingcauseclaim.
+Actual clean Codex6079409420 at10:51:04Z reviewed d190d18b1a, following
+Claude-FIRST6079004222 and authorized fallback6079385928. No explicit Claude
+setup/quota failure known; Summary6079001325 alone NOT clean review evidence.
+Paginated REST reviews/inline empty; Graphthreads0/closingrefs0/hasNextfalse.
+Parents5611/6776/family6871 OPEN/rhamenator/agent-approved fresh11:15Z, no closure.
 
-Independent installed WineVFP9 7423: three matching108-line/106call runs and
-shipped help; default checked signed32/truncation/error11, explicitVFP9 low32/
-huge/infinity0; exact64/NaN safety parentderived. Validate all operands after0,
-defined int64 signed32 result. Shared other-bit helpers/NULL/arity unchanged;
-type/Currency/binary not parity,7108arity unadmitted.
-Frozen104direct/472public plus2unchangedneighbors, BOTH originals beforemigration:
-GNU5.56s/Clang10.70s,368identical selectedFAIL/zeroother/no diagnostics.
-Fixed GNU14/14PASS426.82s; Clang sanitizer6/6PASS117.38s/no diagnostics/leaksdisabled.
-No frozeninput repair/removal/weakening. Native/original/fixed hashes, RQ/VR/
-DQDV bounded medium-misuse development self-review/walkthrough/rollback in
-tests/fixtures/vfp9-bitand-numeric/README.md and baseline-audit.md.
-Not independenthuman/highhazard/fullnative/platform/leak/release/parent acceptance.
-Postpush11/11PASS10.48s proof6077006823, rawlogSHA
-f20c1c3840fb025220570be9dd3aa01be2a799de84e39153568e00e293467b2d.
+Independent installed WineVFP9 7423/shipped help; three matching108-line/106call
+runs. Frozen104direct/472public plus2unchangedneighbors; BOTH originals before
+BITOR-only migration372identicalselectedFAIL/zeroother/no diagnostics, GNU6.03s/
+Clang10.80s. FixedGNU15/15PASS429.38s/Clangsanitizers7/7PASS131.91s,
+leaksdisabled/no diagnostics. No frozeninput repairs. Source/native/original/
+fixed hashes, RQ/VR and completed bounded medium-misuse development DQ/DV
+self-review/walkthrough/rollback in tests/fixtures/vfp9-bitor-numeric/README.md
+and baseline-audit.md. Not independenthuman/highhazard/fullnative/platform/leak/
+release/parent acceptance. Signedpostpush12/12PASS16.82s proof6079022532,
+rawlogSHA82395526bb56b419512b945ae5e92f0b1478839e7cc88fa97314c4d00ac3908f.
+Shared helpers/siblings/type/Currency/binary/arity/NULL unchanged;
+7111arity remains unadmitted/unimplemented.
 
-Main FF synchronizeda9cd973ce; completed WT/local/remote branch removed.
-366MB GNU/263MB Clang builds recoverablytrashed:
-/home/rich/.local/share/Trash/files/bitand-gcc and bitand-clang.
-Postpush log preserved/hashverified there. Canonical pre-sync ownhandoff stash
-86b65aeaed5d451d35b0a564ad3c3433053189eb retained; olderstashes/foreignfiles/WTs
-preserved. Livechannel reread empty. NoVM/owner-input blocker.
-Prior BITNOT7107 all36/36 SUCCESS, actualclean6075548473/gate6075878413;
-buildtrash bitnot-gcc/bitnot-clang, stash51c741c52f54394f4e285d309b5f8eb72a221378.
-Collection7105 all36/36 SUCCESS; GETBAR7103/PRMBAR7101 all36green, priorproof/
-stashes/trash retained. EPOCH/CENTURY complete/#3698closed;#6879 after numeric.
+Main FF synchronizedb4cd165e3; completed WT/local/remote branch removed.
+410MB GNU/313MB Clang builds recoverablytrashed at
+/home/rich/.local/share/Trash/files/bitor-gcc and bitor-clang; postpush log
+preserved/hashverified there. Own pre-sync handoff pathstash
+218036382bdcc290551ed62351e2fec5c7dc38e3 retained; olderstashes/foreignfiles/WTs
+preserved. Livechannel rereadempty. NoVM or owner-input blocker.
+Prior BITAND7110 all36SUCCESS proof6077724390/gate6077580073; actualclean6077084324;
+trashbitand-gcc/-clang/stash86b65aeaed5d451d35b0a564ad3c3433053189eb retained.
+BITNOT7107/Collection7105/GETBAR7103/PRMBAR7101 prior proof/stashes/trash retained.
+EPOCH/CENTURY complete/#3698closed;#6879 after numeric. 7108/7106/7104 unadmitted.
 
 ## Selected active bounded slice
 
-BITOR Numeric/exact operands under admitted5611/6776/6871; metadata fresh10:15Z:
-OPEN/rhamenator/agent-approved. Derived next unfinished family conversion, not
-independent defect hunt. Baseorigin/maina9cd973ce144595e04df9ab30d41438eb9f36639.
-Branch fix/bitor-numeric-5611; dedicated WT
-/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin.
-Created by gitworktree fromorigin/main; appattach reported not managed, so no
-managed attachment/cleanup assumption. No commit/push/PR yet.
-Native recovery BEFORE
-helper/tests: shipped BITORhelp09ff58b4-463e-424e-b3a6-b49349ec84a7.htm fullyread.
-First installedWineVFP9 7423 result108lines/106calls, identity0 first/second,
-26fractional slots/eightmixed/absorbing controls. Three correctly targeted serial
-repeats all108lines byteidentical (source b9ddb977e1472af6a23d5f68eda6deacd07a616095f75d1631d9b8959202a6a6;
-probe.out/initial.out/run1..3 SHA8e5db3ed35b039b4e30367af46849efe3b54c70f717e0f9016da88da78fd05bf).
-Earlier10460/72884 timeout25s/empty partialoutput requested run1.out that PRG
-does not write; no native result/rootcause inferred. Corrected invocation13160/
-89764 targets probe.out then copies generated bytes; all harvested exit0.
-No VM/credentials/nativebinaryinspection; nice10/ionice2:7 existing25s harness.
-RQ-CF-PRG-BITOR-NUMERIC-001 mapped in docs32/fixtureREADME BEFORE helpers/tests.
-New checked_bitor_argument independently matches/delegates BITAND conversion,
-UNUSED by BITOR through both originals. Frozen104direct/472public and2unchanged
-neighbors; sixhelper/test/CMake/isolation hashes and originaldispatcher/platform
-in fixture/baseline-audit.md, BEFORE configuration. No frozeninput repair/
-removal/weakening. GNU15.2 Debugg0 configuration/build34744 harvested exit0.
-Original CTest48758 harvested exit8: Numeric5.89sFAILED/neighbors0.12sPASS,
-total6.03s; all104direct/472public,372selectedFAIL (80error/292result,
-264COPPERFIN/108VFP9), zeroother/context/continuation/reset/direct failures.
-Unedited423-line original-gcc.log SHA0868e6fcbcaa4570c0668aaa1a09c194afcca57b8c8cd18e7f29ff9154e5ef84;
-all six frozen/originaldispatcher/platform hashes unchanged. Generated2093byte
-FXP recoverablytrashed. No frozen-input repair.
-Selected scope: Numeric/exact conversion and defined signed32 OR only; validate
-all operands even after-1 saturation. Do not migrate sharedbitwise_value/
-bit_position or siblings; type/Currency/binary/arity/globalNULL remain separate.
-Source BITOR NULL-propagation2..255/dispatch>=2/no26cap versus shippedhelp
-filed focused residual7111 againsta9cd973ce; unadmitted/unimplemented, source
-prediction only, no completed native/runtime invalid-arity error matrix.
+BITXOR Numeric/exact derived from admitted5611/6776/6871, metadata fresh13:02Z
+OPEN/rhamenator/agent-approved. Baseorigin/main unchanged:
+b4cd165e39ac64f5e474d88a141d991c206efcae. Branch fix/bitxor-numeric-5611;
+dedicated gitworktree /home/rich/.codex/worktrees/bitxor-numeric-5611/Project-Copperfin
+createdfromorigin/main. No newcommit/push/PR yet; no managedattachment assumption.
 
-Clang21.1.8 configuration succeeded; matching O1-g0 C/CXX/EXE/SHARED
-ASan/UBSan/float-cast-overflow/framepointer flags verified in CMakeCache.
-Original build25472 harvested exit0, original CTest33580 exit8: Numeric10.68s
-FAILED/neighbors0.10sPASS,total10.80s, same104direct/472public/372byte-identical
-selectedFAIL asGNU; zeroother assertions/ASan/UBSan/float-cast-overflow diagnostics,
-leaksdisabled. Unedited423-line original-clang.log SHA
-ba255c06ff787dc744c13c5094194c12406a6e9742604443063138ad3cb86c2e.
-All frozen/originaldispatcher/platform hashes verified unchanged afterBOTH
-original runs, which were recorded BEFORE BITOR-only migration. NewdispatchSHA
-70ce05c99bdbe5d0489e8ae0191fad1fe17edc2dbf89016015d61488e74512f4;
-sharedplatform639778a08a38ef7d89a53d8f04a7daec99faf32c0077867cb9cf12a277225ffe
-unchanged. OnlyBITORbranch changed: readmodeonce/everyoperand checked including
-after-1/uint32OR/definedsigned32int64kind/localized11. No sibling/globalchanges.
-GNU fixed build43254 and focusedCTest31048 harvested exit0,2/2PASS5.65s
-(numeric5.53s/neighbors0.11s),104direct/472public, full46-line logSHA
-047412fdc15036616dd10ce79a16bc36aeb71e20448a1dfea0af500fc3ce2aa1.
-Bounded medium-misuse delegated development self-review and first GNU automated
-walkthrough recorded in fixtureREADME; not independenthuman/highhazard acceptance.
-BroaderGNU build+CTest35456 harvested exit0,15/15PASS429.38s includes olderNumeric
-65.95s/NULL/BITAND/BITNOT/Collection/localization14.21s/sevencontracts.
-Serialnice10/ionice2:7/privateTMPDIR/CLI600s, safetycontract331.01s retained1200s.
-All actualcounters in unedited193-line fixed-gcc.log SHA
-4935a76be04774dcb4dd75b0787d0e27170823b02ad8916695e13059760ac9c8;
-zero assertionfailures, allsixfrozen/sharedplatform hashes unchanged.
-FixedClang build+CTest30492 harvested exit0,7/7PASS131.91s (BITORnumeric10.65s/
-neighbors0.10s, BITAND10.59s, BITNOT1.89s, Collection2.34s, NULL0.13s,
-olderNumeric106.19s). Same frozenflags/leaksdisabled/privateTMPDIR/CLI600s;
-allactualcounters, no assertion/ASan/UBSan/float-cast-overflow diagnostics.
-Full unedited101-line fixed-clang.log SHA
-91c4cd8a1c61256fddf10bd219eb0dff48e4ac607bd963ecf6b10ba695355c19.
-All six frozen/sharedplatform hashes unchanged; no repairs/removal/weakening.
-RQ-CF-PRG-BITOR-NUMERIC-001 nowdefined, VRlocalproof/medium-misuse delegated
-development self-review/walkthrough/rollback complete in docs32/docs22/fixture
-README/audit. Not independenthuman/fullnative/highhazard/platform/leak/release/
-family/parent acceptance. No active build/test sessions or VM.
-NEXT sync ONLY owncanonicalhandoffprefix toWT preservinghistoricalsuffix,
-signedDCOcommit/push/PR; requestClaudeFIRST, exactheadpostpush proof and external
-gates. No commit/PR yet; integration acceptance is not claimed by localproof.
-No frozeninput repair/removal/weakening without explicit re-freeze/BOTH originals.
-ClaudeFIRST/authorized Codexfallback, actualcleanexacthead/all11green/resolved
-conversations required beforemerge.
-No owner-input blocker; family/parents remain open.
+Independent installed WineVFP9 7423/shipped BITXOR help
+b7858458-a38e-492c-b8b6-0d6c42324fb6.htm recovered BEFOREhelper/tests:
+initial plus3matching112-line/110call native runs,36Numeric first/second
+identity0, all26fractional slots,12mixed/cancellation controls. Exact64/NaN/
+default safety parent-derived, not nativeextension syntax. Full source/outputs/
+hashes in tests/fixtures/vfp9-bitxor-numeric/README.md and baseline-audit.md.
+NoVM/credentials/binaryinspection; existing25sharness/nice10/ionice2:7/serial.
+RQ-CF-PRG-BITXOR-NUMERIC-001 mapped docs32 BEFOREhelper/tests/migration.
+
+Six helper/header/assertion/test/CMake/isolation inputs frozen BEFOREconfig,
+newcheckedhelper UNUSED byBITXOR throughBOTHcomplete originals. No frozeninput
+repair/removal/weakening. Both104direct/488public,388byte-identical selectedFAIL
+(86error/302result;278COPPERFIN/110VFP9), zero unrelated/no sanitizerdiagnostics:
+GNU16467 exit8,total8.13s; Clangrepeat56048 exit8,total365.45s.
+Full439-line logs hashes c06ac791f68484c267c5c648c2e9418a9ef179a4dc6b6decedfc9cadd5c6849b
+and a10fea1c2f9cf513a8f72c68244fd2ae68e15e0711f65201293485bae7c11eb2.
+FirstClang50846 TIMEOUT180.38s/incomplete retained separately, SHA
+6b413db0647be9a3a90c0414c928f9ebc08a17653d313da4fd745ec099cd3ff4;
+not complete evidence/rootcause/optimum claim. SAMEbinary/flags/inputs repeat
+CLI600s only; no workflow/test-definition timeout change.
+
+THEN BITXOR-only selectedsession mode/everyoperandchecked/uint32XOR/
+definedsigned32int64/localized11 migration. DispatcherSHA
+21bf6be3e0e4245e8653c1a1dc1011d254e66d98c6d44b3aa8795f53d7b96667.
+Sharedhelpers/siblings/type/Currency/binary/arity/NULL unchanged; safe other-type
+controls NOTnativeparity. Allsix/sharedplatform hashes unchanged throughfixed.
+FocusedGNU89562 exit0,2/2PASS348.05s/104direct488public; journalwaitsample
+retained without timeoutcauseclaim. FullfixedfocusedlogSHA
+1a85690d96e52d93e5438e477c3a014c30052cd152e53b50c178b919ed30b04d.
+BroaderGNU63626 exit0,16/16PASS449.11s, olderNumeric/NULL/BITOR/BITAND/BITNOT/
+Collection/localization/7contracts. Safety324.55s existing1200s cap unchanged.
+Full204-line fixed-gcc.log SHA
+be02a6656a7a3d1927609750fcd517fb273a0691d560722104e2f0bb7b52e053.
+THEN strictlyserialClang73151 exit0,8/8PASS180.93s/no diagnostics/leaksdisabled,
+actualBITXOR104/488/BITORandBITAND104/472/BITNOT104/156/Collection116/140/26.
+Full112-line fixed-clang.log SHA
+88fc6383f8e99f724c6f731d1d53dc7d0698c50f521cf922c80fe3d0b3142e58.
+MatchingC/CXX/EXE/SHAREDASan/UBSan/float-cast-overflow/O1g0/framepointers,
+privateTMPDIR/nice10/ionice2:7/-j1/CLI600s/abort/halt/stacktrace. No activejob.
+DQ/DV boundedmedium-misuse developmentself-review/GNU-Clangwalkthrough/rollback
+complete, not independenthuman/highhazard/fullnative/type/binary/arity/platform/
+leak/release/family/parent acceptance. Docs22/32/fragment updated; source
+whitespace/changelog/channel checks passed. #7115arity source/help mismatch
+filedagainstmain, OPEN/owner/bug/runtime/NOagent-approved, unadmitted/
+unimplemented; native26 verified, not27rejection/errornumber. No active scope expansion.
+
+NEXT signed/DCOcommit/push/PRbase main, ClaudeFIRST; signed exact-head local
+proof then actualcleanClaude or authorizedverifiedCodexfallback review,
+all11requiredgreen and allconversationsresolved beforemerge. No parentclosure.
+Completed reviewfixes require exactchangeverification beforeconversationresolution.
+Main remainsb4cd165e3/foreignfiles/WTs/stashes preserved; noowner-input blocker.
+PriorPR7112 all36SUCCESS proof6080220178; no activehostedwatcher.
 
 ## Retained owner steering / deferred work
 
