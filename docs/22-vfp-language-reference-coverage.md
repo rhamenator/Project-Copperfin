@@ -1,5 +1,25 @@
 # VFP Language Reference Coverage
 
+- BITSET Numeric/exact recovery (#5611/#6776/#6871,2026-10-09):
+  RQ-CF-PRG-BITSET-NUMERIC-001 mapped before helpers/tests/migration.
+  Independent initial plus3 matching186-line/184call installed VFP9 7423
+  observations recover value via positions0/1, position via values0/-1,
+  all32 bits, fractional truncation and low32/huge/infinity0 before range checks.
+  [Fixture](../tests/fixtures/vfp9-bitset-numeric/README.md) distinguishes
+  parent-derived default signed32/error11 and exact64/NaN containment.
+  Frozen206direct/792public; BOTH complete originals15.15s/30.00s retain540
+  byte-identical selected failures and zero unrelated before BITSET-only migration.
+  Earlier disk-backed GNU interruption remains incomplete, separately retained.
+  Fixed GNU focused2/2 and broader17/17 PASS503.65s, including localization and
+  seven contracts; fixed Clang ASan/UBSan/float-cast-overflow9/9 PASS167.39s,
+  no diagnostics/leaks disabled, include older Numeric/NULL/bit siblings/Collection.
+  Private RAM-backed test storage reduces fixture disk writes, not persistence/
+  disk or timeout-optimum qualification. Validate both arguments even after-1;
+  defined signed32 int64 result, all frozen inputs/shared helpers unchanged.
+  Bounded medium-misuse development self-review/walkthrough/rollback complete;
+  not independent-human/high-hazard or full-native/type/binary/arity/platform/
+  leak/release/family/parent acceptance. Exact-head review/hosted gates remain.
+
 - BITXOR Numeric/exact recovery (#5611/#6776/#6871,2026-10-09):
   RQ-CF-PRG-BITXOR-NUMERIC-001 mapped BEFORE helper/tests/migration.
   Initial plus three matching112-line/110call installed VFP9 7423 observations
