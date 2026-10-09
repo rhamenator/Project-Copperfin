@@ -338,6 +338,8 @@ int default_set_century_epoch();
 // accepts only values representable as signed int64. A missing result means
 // the caller must raise localized, catchable error 11 before invoking native
 // or managed code.
+// RQ-CF-PRG-BITNOT-NUMERIC-001 (#5611/#6776); only BITNOT, not other bit functions.
+std::optional<std::int32_t> checked_bitnot_argument(const PrgValue& value, NumericBehavior behavior);
 std::optional<std::int32_t> checked_declared_int32_argument(const PrgValue& value, NumericBehavior behavior);
 std::optional<std::int64_t> checked_declared_int64_argument(const PrgValue& value);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the

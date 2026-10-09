@@ -1,0 +1,171 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 12
+      Start  12: test_agent_issue_intake
+
+12: Test command: /snap/bin/pwsh "-NoLogo" "-NoProfile" "-NonInteractive" "-File" "/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/tests/test_agent_issue_intake.ps1" "-ModulePath" "/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/scripts/Copperfin.AgentIssueIntake.psm1" "-DriverPath" "/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/scripts/drive-codex.ps1" "-AgentGuidancePath" "/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/agents.md" "-RuntimeAgentPath" "/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/.github/agents/copperfin-vfp-runtime.agent.md" "-SafetyReportPath" "/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/docs/safety/traceability-report-2026-08-10-agent-intake-scope-approval.md"
+12: Working Directory: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests
+12: Environment variables: 
+12:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/resources/locales
+12: Test timeout computed to be: 600
+12: Agent issue intake contract passed.
+ 1/13 Test  #12: test_agent_issue_intake .......................   Passed    0.95 sec
+test 20
+      Start  20: test_changelog_fragment_assembler
+
+20: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--self-test"
+20: Working Directory: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests
+20: Environment variables: 
+20:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/resources/locales
+20: Test timeout computed to be: 600
+20: assemble_changelog self-test passed
+ 2/13 Test  #20: test_changelog_fragment_assembler .............   Passed    0.24 sec
+test 21
+      Start  21: test_changelog_fragments_valid
+
+21: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--check" "--root" "/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin"
+21: Working Directory: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests
+21: Environment variables: 
+21:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/resources/locales
+21: Test timeout computed to be: 600
+21: 188 changelog fragment(s) valid
+ 3/13 Test  #21: test_changelog_fragments_valid ................   Passed    0.23 sec
+test 30
+      Start  30: test_agent_channel_contract
+
+30: Test command: /usr/bin/cmake "-DSOURCE_DIR=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin" "-P" "/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/tests/run_agent_channel_contract_check.cmake"
+30: Working Directory: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests
+30: Environment variables: 
+30:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/resources/locales
+30: Test timeout computed to be: 600
+ 4/13 Test  #30: test_agent_channel_contract ...................   Passed    0.01 sec
+test 36
+      Start  36: test_native_test_isolation_contract
+
+36: Test command: /usr/bin/cmake "-DINVENTORY_PATH=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/native-test-isolation.tsv" "-DISOLATION_SOURCE_PATH=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/tests/CopperfinTestIsolation.cmake" "-DTEST_REGISTRATION_SOURCE_PATH=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/tests/CMakeLists.txt" "-P" "/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/tests/run_native_test_isolation_contract_check.cmake"
+36: Working Directory: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests
+36: Environment variables: 
+36:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/resources/locales
+36: Test timeout computed to be: 600
+36: -- Native test isolation inventory contract passed for 468 tests
+ 5/13 Test  #36: test_native_test_isolation_contract ...........   Passed    0.42 sec
+test 38
+      Start  38: test_safety_traceability_workflow_contract
+
+38: Test command: /usr/bin/cmake "-DSOURCE_DIR=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin" "-P" "/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/tests/run_safety_traceability_workflow_contract_check.cmake"
+38: Working Directory: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests
+38: Environment variables: 
+38:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/resources/locales
+38: Test timeout computed to be: 1200
+38: -- Safety traceability workflow contract check passed
+ 6/13 Test  #38: test_safety_traceability_workflow_contract ....   Passed  327.29 sec
+test 40
+      Start  40: test_localization
+
+40: Test command: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests/test_localization "/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/copperfin_inspect"
+40: Working Directory: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests
+40: Environment variables: 
+40:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/resources/locales
+40: Test timeout computed to be: 600
+ 7/13 Test  #40: test_localization .............................   Passed   14.39 sec
+test 52
+      Start  52: test_focused_workflow_path_filters
+
+52: Test command: /usr/bin/cmake "-DCOPPERFIN_SOURCE_DIR=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin" "-P" "/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/cmake/validate_focused_workflow_path_filters.cmake"
+52: Working Directory: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests
+52: Environment variables: 
+52:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/resources/locales
+52: Test timeout computed to be: 600
+ 8/13 Test  #52: test_focused_workflow_path_filters ............   Passed    0.02 sec
+test 379
+      Start 379: test_prg_engine_null_semantics
+
+379: Test command: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests/test_prg_engine_null_semantics
+379: Working Directory: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests
+379: Environment variables: 
+379:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/resources/locales
+379: Test timeout computed to be: 600
+ 9/13 Test #379: test_prg_engine_null_semantics ................   Passed    0.13 sec
+test 393
+      Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 600
+10/13 Test #393: test_prg_engine_numeric_behavior ..............   Passed   65.83 sec
+test 399
+      Start 399: test_prg_engine_bitnot_numeric
+
+399: Test command: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests/test_prg_engine_bitnot_numeric
+399: Working Directory: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests
+399: Environment variables: 
+399:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/resources/locales
+399: Test timeout computed to be: 600
+399: BITNOT frozen cases: direct=104 public=156
+11/13 Test #399: test_prg_engine_bitnot_numeric ................   Passed    1.15 sec
+test 400
+      Start 400: test_prg_engine_bitnot_neighbors
+
+400: Test command: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests/test_prg_engine_bitnot_neighbors
+400: Working Directory: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests
+400: Environment variables: 
+400:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/resources/locales
+400: Test timeout computed to be: 600
+12/13 Test #400: test_prg_engine_bitnot_neighbors ..............   Passed    0.11 sec
+test 401
+      Start 401: test_prg_engine_collection_selector_numeric
+
+401: Test command: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests/test_prg_engine_collection_selector_numeric
+401: Working Directory: /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc/tests
+401: Environment variables: 
+401:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/resources/locales
+401: Test timeout computed to be: 600
+401: Collection frozen cases: direct=116 public=140 hidden=26
+13/13 Test #401: test_prg_engine_collection_selector_numeric ...   Passed    1.84 sec
+
+The following tests passed:
+	test_agent_issue_intake
+	test_changelog_fragment_assembler
+	test_changelog_fragments_valid
+	test_agent_channel_contract
+	test_native_test_isolation_contract
+	test_safety_traceability_workflow_contract
+	test_localization
+	test_focused_workflow_path_filters
+	test_prg_engine_null_semantics
+	test_prg_engine_numeric_behavior
+	test_prg_engine_bitnot_numeric
+	test_prg_engine_bitnot_neighbors
+	test_prg_engine_collection_selector_numeric
+
+100% tests passed, 0 tests failed out of 13
+
+Label Time Summary:
+copperfin-isolation:audit=complete                     = 412.62 sec*proc (13 tests)
+copperfin-isolation:child-processes=bounded            = 341.68 sec*proc (2 tests)
+copperfin-isolation:child-processes=none               =  70.94 sec*proc (11 tests)
+copperfin-isolation:environment=child-scoped           = 327.29 sec*proc (1 test)
+copperfin-isolation:environment=none                   =   2.01 sec*proc (7 tests)
+copperfin-isolation:environment=scoped-process         =  83.33 sec*proc (5 tests)
+copperfin-isolation:filesystem=process-owned           =  66.20 sec*proc (3 tests)
+copperfin-isolation:filesystem=read-only               = 328.92 sec*proc (6 tests)
+copperfin-isolation:filesystem=test-owned-unique       =  17.50 sec*proc (4 tests)
+copperfin-isolation:network=disabled-probes            = 327.29 sec*proc (1 test)
+copperfin-isolation:network=none                       =  85.34 sec*proc (12 tests)
+copperfin-isolation:platform=configured                =   0.47 sec*proc (2 tests)
+copperfin-isolation:platform=portable                  =  84.86 sec*proc (10 tests)
+copperfin-isolation:platform=powershell-conditional    = 327.29 sec*proc (1 test)
+copperfin-isolation:resources=none                     = 412.62 sec*proc (13 tests)
+copperfin-isolation:samples=none                       = 412.62 sec*proc (13 tests)
+copperfin-isolation:schedule=parallel-safe             = 343.56 sec*proc (8 tests)
+copperfin-isolation:schedule=serial                    =  69.07 sec*proc (5 tests)
+
+Total Test time (real) = 412.64 sec

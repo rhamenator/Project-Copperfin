@@ -1,5 +1,19 @@
 # VFP Language Reference Coverage
 
+- BITNOT Numeric/exact recovery (#5611/#6776,2026-10-09): installed VFP9
+  truncates Numeric fractions before signed32 complement and returns low32
+  aliases/huge-indefinite complements. Default checked signed32 admission and
+  explicit VFP9 aliases derive from the owner policy. [Fixture](../tests/fixtures/vfp9-bitnot-numeric/README.md)
+  mapped requirements before helper/tests/migration. Frozen original GNU/Clang
+  baselines have110 identical selected failures/zero unrelated, totals1.25s/
+  1.92s, no sanitizer diagnostics. Only BITNOT's selected-session dispatch
+  migrated; shared other-bit helpers unchanged. Fixed GNU13/13 PASS412.64s,
+  Clang ASan/UBSan/float-cast-overflow5/5 PASS106.62s/no diagnostics/leaks
+  disabled;104direct/156public cases, old neighbors, older Numeric/NULL/
+  Collection/localization/contracts and medium-misuse development self-review/
+  walkthrough/rollback retained. External exact-head review/CI remain gates.
+  Currency/type residual#7106, binary signatures and other bit functions remain
+  separate; no full native/platform/release/parent acceptance claim.
 - Collection Numeric/exact selector recovery (#5611/#6776,2026-10-09):
   RQ-CF-PRG-COLLECTION-SELECTOR-NUMERIC-001 mapped before helper/tests/migration.
   Three matching78-line installed-VFP9 observations recover ordinary fractional

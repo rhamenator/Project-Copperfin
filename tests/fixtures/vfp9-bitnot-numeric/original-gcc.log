@@ -1,0 +1,136 @@
+Test project /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc
+    Start 399: test_prg_engine_bitnot_numeric
+1/2 Test #399: test_prg_engine_bitnot_numeric .....***Failed    1.13 sec
+FAIL: BITNOT selected complement COPPERFIN session1 0.5 got -2
+FAIL: BITNOT selected complement COPPERFIN session1 0.9 got -2
+FAIL: BITNOT selected complement COPPERFIN session1 1.5 got -3
+FAIL: BITNOT selected complement COPPERFIN session1 1.9 got -3
+FAIL: BITNOT selected complement COPPERFIN session1 -0.5 got 0
+FAIL: BITNOT selected complement COPPERFIN session1 -0.9 got 0
+FAIL: BITNOT selected complement COPPERFIN session1 -1.5 got 1
+FAIL: BITNOT selected complement COPPERFIN session1 -1.9 got 1
+FAIL: BITNOT selected complement COPPERFIN session1 2.5 got -4
+FAIL: BITNOT selected complement COPPERFIN session1 -2.5 got 2
+FAIL: BITNOT selected complement COPPERFIN session1 2147483647.9 got 2147483647
+FAIL: BITNOT selected error COPPERFIN session1 2147483648 got 0
+FAIL: BITNOT selected complement COPPERFIN session1 2147483648 got 2147483647
+FAIL: BITNOT selected complement COPPERFIN session1 -2147483648.9 got -2147483648
+FAIL: BITNOT selected error COPPERFIN session1 -2147483649 got 0
+FAIL: BITNOT selected complement COPPERFIN session1 -2147483649 got -2147483648
+FAIL: BITNOT selected error COPPERFIN session1 4294967295 got 0
+FAIL: BITNOT selected complement COPPERFIN session1 4294967295 got 0
+FAIL: BITNOT selected error COPPERFIN session1 4294967296 got 0
+FAIL: BITNOT selected complement COPPERFIN session1 4294967296 got -1
+FAIL: BITNOT selected error COPPERFIN session1 4294967297 got 0
+FAIL: BITNOT selected complement COPPERFIN session1 4294967297 got -2
+FAIL: BITNOT selected error COPPERFIN session1 -4294967295 got 0
+FAIL: BITNOT selected complement COPPERFIN session1 -4294967295 got -2
+FAIL: BITNOT selected error COPPERFIN session1 -4294967296 got 0
+FAIL: BITNOT selected complement COPPERFIN session1 -4294967296 got -1
+FAIL: BITNOT selected error COPPERFIN session1 -4294967297 got 0
+FAIL: BITNOT selected complement COPPERFIN session1 -4294967297 got 0
+FAIL: BITNOT selected error COPPERFIN session1 9007199254740992 got 0
+FAIL: BITNOT selected complement COPPERFIN session1 9007199254740992 got -1
+FAIL: BITNOT selected error COPPERFIN session1 1E20 got 0
+FAIL: BITNOT selected complement COPPERFIN session1 1E20 got -1
+FAIL: BITNOT selected error COPPERFIN session1 -1E20 got 0
+FAIL: BITNOT selected complement COPPERFIN session1 -1E20 got -1
+FAIL: BITNOT selected error COPPERFIN session1 1E300 got 0
+FAIL: BITNOT selected complement COPPERFIN session1 1E300 got -1
+FAIL: BITNOT selected error COPPERFIN session1 -1E300 got 0
+FAIL: BITNOT selected complement COPPERFIN session1 -1E300 got -1
+FAIL: BITNOT selected error COPPERFIN session1 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got 0
+FAIL: BITNOT selected complement COPPERFIN session1 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got -1
+FAIL: BITNOT selected error COPPERFIN session1 CAST(4294967297 AS UINT64) got 0
+FAIL: BITNOT selected complement COPPERFIN session1 CAST(4294967297 AS UINT64) got -2
+FAIL: BITNOT selected complement COPPERFIN session2 0.5 got -2
+FAIL: BITNOT selected complement COPPERFIN session2 0.9 got -2
+FAIL: BITNOT selected complement COPPERFIN session2 1.5 got -3
+FAIL: BITNOT selected complement COPPERFIN session2 1.9 got -3
+FAIL: BITNOT selected complement COPPERFIN session2 -0.5 got 0
+FAIL: BITNOT selected complement COPPERFIN session2 -0.9 got 0
+FAIL: BITNOT selected complement COPPERFIN session2 -1.5 got 1
+FAIL: BITNOT selected complement COPPERFIN session2 -1.9 got 1
+FAIL: BITNOT selected complement COPPERFIN session2 2.5 got -4
+FAIL: BITNOT selected complement COPPERFIN session2 -2.5 got 2
+FAIL: BITNOT selected complement COPPERFIN session2 2147483647.9 got 2147483647
+FAIL: BITNOT selected error COPPERFIN session2 2147483648 got 0
+FAIL: BITNOT selected complement COPPERFIN session2 2147483648 got 2147483647
+FAIL: BITNOT selected complement COPPERFIN session2 -2147483648.9 got -2147483648
+FAIL: BITNOT selected error COPPERFIN session2 -2147483649 got 0
+FAIL: BITNOT selected complement COPPERFIN session2 -2147483649 got -2147483648
+FAIL: BITNOT selected error COPPERFIN session2 4294967295 got 0
+FAIL: BITNOT selected complement COPPERFIN session2 4294967295 got 0
+FAIL: BITNOT selected error COPPERFIN session2 4294967296 got 0
+FAIL: BITNOT selected complement COPPERFIN session2 4294967296 got -1
+FAIL: BITNOT selected error COPPERFIN session2 4294967297 got 0
+FAIL: BITNOT selected complement COPPERFIN session2 4294967297 got -2
+FAIL: BITNOT selected error COPPERFIN session2 -4294967295 got 0
+FAIL: BITNOT selected complement COPPERFIN session2 -4294967295 got -2
+FAIL: BITNOT selected error COPPERFIN session2 -4294967296 got 0
+FAIL: BITNOT selected complement COPPERFIN session2 -4294967296 got -1
+FAIL: BITNOT selected error COPPERFIN session2 -4294967297 got 0
+FAIL: BITNOT selected complement COPPERFIN session2 -4294967297 got 0
+FAIL: BITNOT selected error COPPERFIN session2 9007199254740992 got 0
+FAIL: BITNOT selected complement COPPERFIN session2 9007199254740992 got -1
+FAIL: BITNOT selected error COPPERFIN session2 1E20 got 0
+FAIL: BITNOT selected complement COPPERFIN session2 1E20 got -1
+FAIL: BITNOT selected error COPPERFIN session2 -1E20 got 0
+FAIL: BITNOT selected complement COPPERFIN session2 -1E20 got -1
+FAIL: BITNOT selected error COPPERFIN session2 1E300 got 0
+FAIL: BITNOT selected complement COPPERFIN session2 1E300 got -1
+FAIL: BITNOT selected error COPPERFIN session2 -1E300 got 0
+FAIL: BITNOT selected complement COPPERFIN session2 -1E300 got -1
+FAIL: BITNOT selected error COPPERFIN session2 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got 0
+FAIL: BITNOT selected complement COPPERFIN session2 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got -1
+FAIL: BITNOT selected error COPPERFIN session2 CAST(4294967297 AS UINT64) got 0
+FAIL: BITNOT selected complement COPPERFIN session2 CAST(4294967297 AS UINT64) got -2
+FAIL: BITNOT selected complement VFP9 session1 0.5 got -2
+FAIL: BITNOT selected complement VFP9 session1 0.9 got -2
+FAIL: BITNOT selected complement VFP9 session1 1.5 got -3
+FAIL: BITNOT selected complement VFP9 session1 1.9 got -3
+FAIL: BITNOT selected complement VFP9 session1 -0.5 got 0
+FAIL: BITNOT selected complement VFP9 session1 -0.9 got 0
+FAIL: BITNOT selected complement VFP9 session1 -1.5 got 1
+FAIL: BITNOT selected complement VFP9 session1 -1.9 got 1
+FAIL: BITNOT selected complement VFP9 session1 2.5 got -4
+FAIL: BITNOT selected complement VFP9 session1 -2.5 got 2
+FAIL: BITNOT selected complement VFP9 session1 2147483647.9 got 2147483647
+FAIL: BITNOT selected complement VFP9 session1 -2147483648.9 got -2147483648
+FAIL: BITNOT selected complement VFP9 session1 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got -1
+FAIL: BITNOT selected complement VFP9 session2 0.5 got -2
+FAIL: BITNOT selected complement VFP9 session2 0.9 got -2
+FAIL: BITNOT selected complement VFP9 session2 1.5 got -3
+FAIL: BITNOT selected complement VFP9 session2 1.9 got -3
+FAIL: BITNOT selected complement VFP9 session2 -0.5 got 0
+FAIL: BITNOT selected complement VFP9 session2 -0.9 got 0
+FAIL: BITNOT selected complement VFP9 session2 -1.5 got 1
+FAIL: BITNOT selected complement VFP9 session2 -1.9 got 1
+FAIL: BITNOT selected complement VFP9 session2 2.5 got -4
+FAIL: BITNOT selected complement VFP9 session2 -2.5 got 2
+FAIL: BITNOT selected complement VFP9 session2 2147483647.9 got 2147483647
+FAIL: BITNOT selected complement VFP9 session2 -2147483648.9 got -2147483648
+FAIL: BITNOT selected complement VFP9 session2 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got -1
+BITNOT frozen cases: direct=104 public=156
+
+    Start 400: test_prg_engine_bitnot_neighbors
+2/2 Test #400: test_prg_engine_bitnot_neighbors ...   Passed    0.11 sec
+
+50% tests passed, 1 tests failed out of 2
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =   1.23 sec*proc (2 tests)
+copperfin-isolation:child-processes=none            =   1.23 sec*proc (2 tests)
+copperfin-isolation:environment=scoped-process      =   1.23 sec*proc (2 tests)
+copperfin-isolation:filesystem=test-owned-unique    =   1.23 sec*proc (2 tests)
+copperfin-isolation:network=none                    =   1.23 sec*proc (2 tests)
+copperfin-isolation:platform=portable               =   1.23 sec*proc (2 tests)
+copperfin-isolation:resources=none                  =   1.23 sec*proc (2 tests)
+copperfin-isolation:samples=none                    =   1.23 sec*proc (2 tests)
+copperfin-isolation:schedule=serial                 =   1.23 sec*proc (2 tests)
+
+Total Test time (real) =   1.25 sec
+
+The following tests FAILED:
+	399 - test_prg_engine_bitnot_numeric (Failed)           copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+Errors while running CTest
