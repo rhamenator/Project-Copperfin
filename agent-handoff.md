@@ -55,138 +55,150 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-SKPBAR Numeric/exact-integer PR #7099 merged 2026-10-08T22:16:08Z as
-3ed4ff15f3ad270a810e5a3dab688de6a42d01f4 from signed/DCO G exact head
-b2ebbf0e992d1879170770a8ef888fa84d48c9d4 (original runtime commit27523a8).
-All11 required PASS;35/36 total SUCCESS at merge, only optional Windows
-Native37847314236/job113551298135 still running, no failures.
-Clean verified owner-authorized Codex manual review6069474065 and summary
-6064874292 Completed21:33:25.813827Z at b2ebbf0; Claude-first6069442989
-has no completed response and is NOT approval. Fresh paginated REST reviews/
-inline and exhausted Graph review threads/closing references empty.
-Merge gate6070125052; no parent/general-gap issue closure.
+PRMBAR Numeric/exact-integer PR#7101 merged2026-10-09T00:46:05Z as
+7d5bbbac5e7096e5132792197a1144dc3dbaae1c from signed/DCO G exacthead
+feeeb61d4cc71d3a72e876c37d6f6998a5117891. All11 required PASS;
+35/36 total SUCCESS at merge, only optional Windows Native37863307432/
+job113603965971 still running, no failures. Verified authorized Codex clean
+review6071565369 and summary6071539803 Completed00:11:50.150843Z/manual request
+match exact head. Claude-first6071540991 no completed response, NOT approval;
+fallback6071549743. Fresh paginated REST reviews/inline and exhausted Graph
+review threads/closing refs empty. Gate6071941863; no parent/gap issue closure.
 
-RQ-CF-PRG-SKPBAR-NUMERIC-001: independent installed VFP9 7423 three matching
-125-line/40-operand singleton1/2/MAX paired enabled/disabled queries.
-Source432fec290b3d743e188b5347e49feb4328c8453acba8d01339f7629e9622efc4,
-output050559431a92cd1e83c78de95abc0ed42b018c4c11f38397455e57e7bac7ed61.
-Default finite truncated1..MAX/otherwise preserved false; explicit VFP9
-both-sign low32 positive aliases, not setter saturation. Extended integers
-preserve precision by owner parent policy; checked other coercions, selected
-session/state unchanged.96direct/372guards/three old neighbors; original
-callback exactly55 selected identity failures per GCC/Clang, zero unrelated/
-no diagnostics. Fixed GCC12/12 PASS468.93s; Clang sanitizers3/3 PASS95.56s,
-unchanged repeat3/3 PASS9.03s/no diagnostics/detect_leaks0. All hashes/failures
-retained in fixture README/baseline audit and PR evidence. General native1612
-lookup gap#7098 remains separate; no full type/system-menu/GUI/leak/release
-qualification claimed. Old27523a8 hosted Linux460/460447.15s, macOS460/460
-489.86s plus four locale repeats, Windows461/4611123.14s retained separately.
-Revised b2ebbf0 Linux/macOS Native checks SUCCESS; Windows Native37847314236
-also completed SUCCESS22:40Z,461/461 tests1090.92s. All36 checks SUCCESS.
-Watch48657 completed; Windows logSHA
-aa4b911f8b7f561b091e79b303bbcd2b7992695d369309b2207a43f0ea526185 retained
-as pr7099-windows-native.log in the active PRMBAR build (not nightly audit).
+RQ-CF-PRG-PRMBAR-NUMERIC-001: independent installed Wine VFP9 7423 three
+identical125-line/40-operand singleton RELATIVE1/2/MAX controls; native source/
+output hashes and separate Windows-COM provenance in fixture README. Default
+finite truncated1..MAX, explicit VFP9 both-sign low32 positive aliases, parent-
+derived exact64/nonfinite containment and checked preserved other coercions.
+Empty fallback/prefix normalization, selected session/cursor/mark/skip/callback
+state preserved; native1612/GETBAR#7096 remain unfinished.96direct/372guards/
+12inactive cases/three old neighbors; original GNU/Clang exactly110 selected
+identity failures each, zero unrelated/no diagnostics. Frozen hashes and full
+original/fixed logs in fixture baseline-audit.md. Fixed GNU13/13 PASS537.34s,
+Clang ASan/UBSan/float-cast-overflow4/4 PASS13.93s/no diagnostics/detect_leaks0;
+post-push10/10 PASS14.79s, proof6071549955/log
+b4c72408f237f3cad19bfaf492b8fa9b1a891aaf0c46905af7dc5b27114feb04.
+Actual old-Numeric/traceability durations retained without guessed cause.
+Bounded DQ/DV development self-review/walkthrough/rollback complete, not full
+error/type/system-menu/GUI/leak/platform/release qualification.
 
-Owner-directed hosted VSIX per-operation install/uninstall budget2400s ships
-in the same PR. Standalone600/public IDE360-default ceiling600 unchanged.
-Original-script negative contract and fixed7/7 serial/private-TMPDIR contracts
-PASS366.60s retained in6069443303; post-push9/9 PASS34.04s/logSHA
-6f710dade23ae42e3c837039abae03023a4391f12c3afadd3b896aa6479b8b3c,
-proof6069457722. Exact-head VSIX37847314284/job113551298525 SUCCESS21:38:47Z:
-install210.973s/uninstall26.316s, full lifecycle/localized/managed gates PASS.
-Shipping VSIXSHA10dfb82b8b1e0c42046d7b18eaf9b8ce45b6290e063ced64dcedf274d029e271
-matches installer/lifecycle JSONs, which hash respectively
-32d4c8c5c07d19961a90c96c4f3c80b6df0f48bdbd79661ddbe7a809f648d446 and
-142be345be5f03871f20fb56b19d434c19ba5ee79eea23059e52ea294b709d71.
-Source archive synthetic merge5eb07fec4d89d1df42bef73980333df49b5d8adb
-SHA8627355984eb5ee1a6904dabc01d8ec3d7f0d309e3950c255dc95e38d04982c9;
-parents main89fd9ee/headb2ebbf0, tested tree equals reviewed head.
-Detailed artifacts/identity proof6069595236; prior600s timeout failures remain
-negative evidence, not explained by this pass. Forty minutes is owner policy,
-not a measured optimum. No local VM measurement/release qualification claimed.
+Exact-head Linux Native37863307462/job113603965475 SUCCESS462/462523.09s
+(new1.10/neighbors0.01); logSHA
+68aa0ccf1eb1e3f22b693c8889959f0a49ec46e65e7dabb518cdd5dd33033d0c.
+macOS Native37863307443/job113603965673 SUCCESS462/462324.55s
+(new0.92/neighbors0.04), four2/2 locale repeats20.40/21.20/22.18/20.97s;
+logSHA f004544f2cd084f865238b0e82e40bfd0113fa5ce95c77e1896d5fa2ff1d8aaa.
+Windows Native remains monitored by checks watch36409/60s until completion.
 
-Main synchronized3ed4ff15f. Completed SKPBAR WT/local/remote branch removed
-normally; owned11GB build and642MB sanitizer directories moved to recoverable
-trash at /home/rich/.local/share/Trash/files/copperfin-skpbar-5611-build and
-copperfin-skpbar-5611-sanitize. Interrupted clone partials and measurement
-script/XML are retained there; NEVER boot partial disks. No clone was defined/
-booted. Small dedicated clone NVRAM/offline TPM preparation remains preserved
-under its recorded20261008 name/UUID; original disks/firmware/backups/pristine
-template untouched. Scoped pre-sync continuity stash
-8e842d68f3781990f51bb17254fd68e670520f3c retained, as are older stashes/
-foreign files/detached WTs. Live channel empty before next selection.
+Main synchronized7d5bbbac5. Completed PRMBAR WT/local/remote branch removed
+normally; owned353MB GNU/215MB sanitizer builds moved to recoverable trash
+/home/rich/.local/share/Trash/files/copperfin-prmbar-5611-build and
+copperfin-prmbar-5611-sanitize, retaining hosted/local/prior7099 evidence.
+Own pre-sync continuity stash7e9d69bbef505efaa296d0ecf246079ce9c548d7 and
+completed-WT continuity stash retained; older stashes/foreign files/detached
+WTs preserved. Channel reread empty. Attachment cap100: old merged#6656
+unlinked only, GitHub unchanged; current#7101 attached.
 EPOCH/CENTURY complete/#3698 closed;#6879 retained after numeric.
+
+Previous PR#7099 ships the owner-directed hosted VSIX2400s install/uninstall
+budget. Standalone600/public IDE360-default ceiling600 unchanged. Exact-head
+b2ebbf0 VSIX37847314284 SUCCESS install210.973/uninstall26.316s; artifact/source/
+JSON identity proof6069595236 and original600s failures retained. Forty minutes
+is owner policy, not measured optimum or proven explanation. Local VSIX timing
+remains explicitly deferred pending safe independent clone and disk capacity;
+not complete/cancelled. Interrupted clone partials retained in recoverable
+copperfin-skpbar-5611-build trash; NEVER boot. No clone defined/booted. Original
+VMs/firmware/backups/pristine template preserved; small offline NVRAM/TPM
+preparation retained. All36 SKPBAR checks subsequently SUCCESS.
 
 ## Selected active bounded slice
 
-PRMBAR second-argument Numeric/exact-integer query conversion under admitted
-OPEN/rhamenator/agent-approved#5611/#6776/#5868/#7096. Fresh admission23:45Z;
-base origin/main3ed4ff15f3ad270a810e5a3dab688de6a42d01f4,
-branch fix/prmbar-numeric-5611,
-WT /home/rich/.codex/worktrees/prmbar-numeric-5611/Project-Copperfin.
-Only selected callback/helper migrated: safe default finite truncated1..MAX,
-explicit VFP9 independently recovered both-sign low32 positive aliases, exact
-extended-integer precision and nonfinite containment by parent derivation.
-Checked existing other coercions, lookup/prefix normalization/selected session/
-menu/callback/cursor/mark/skip state preserved. GETBAR/native1612 under#7096,
-order#6152/type/system-menu/GUI remain later slices;#7096 stays OPEN.
+GETBAR second-argument Numeric/exact-integer position conversion selected next
+under OPEN/rhamenator/agent-approved#5611/#6776/#5868/#7096 revalidated00:45Z.
+Base origin/main7d5bbbac5e7096e5132792197a1144dc3dbaae1c;
+branch fix/getbar-numeric-5611,
+WT /home/rich/.codex/worktrees/getbar-numeric-5611/Project-Copperfin.
+Bounded position conversion only; preserve existing zero fallback, sparse
+bar order/lookup, selected session/cursor/menu flags/callbacks. Native1612,
+missing-popup/type/system-menu policy and ordering#6152 remain separate.
+Shipped GETBAR help ad12f85b-767f-4a7a-9b65-c6f26364fcd5 read fully: one-based
+position1..count returns that position's bar identifier, not identifier input.
+RQ-CF-PRG-GETBAR-NUMERIC-001 mapped BEFORE helper/test migration in fixture
+README, docs22/32 and single2026-10-08 release fragment. Installed Wine VFP9
+7423: three identical134-line final runs/43operands across singleton,
+sparse13/47/MAX and aligned4/13/47/100/MAX positions. Final sourceSHA
+5fa9c438fd8f5af50900f5affa09d467058ab3c8b152bcce955010ab3d91ffcf;
+all outputSHA53241cbf9a6cc2a03d0db25561a89f7e0838090558794681ac017dd264300119.
+Earlier five-bar definition-order counterexample retained separately as
+order-observation.prg/out; known admitted#6152, comment6072009479, no ordering
+implementation or new issue. All probes serial/bounded, no VM.
+Unused checked_getbar_position_argument and assertions/CMake frozen BEFORE
+first configuration in fixture baseline-audit.md.112direct/468guarded/
+148inactive cases/3old neighbors; independent native identities and preserved
+session/cursor/flags/actions/cleanup, not correlated setter expectations.
+GNU original one-job Debug-g0 completed: CTest exit8/5.76s, numeric5.64s
+failed172 selected identities (144guarded/28inactive), old neighbors0.10s PASS;
+zero unrelated/direct/setup/state/callback/cleanup failures. Full original-gcc.log
+retained byte-identically in fixture; SHA
+c7d880ea3dc01402cfdda7fb1b68a815ebbe27bab4cdeee9456eeca7c1c493f8.
+Build stdout SHA7656172c2573a00a97202a4cc30e944d6158fb91ae1425f01fd4b062da18f33f;
+known unrelated compiler warnings on stderr not claimed fully archived there.
+GNU build/home/rich/temp/copperfin-getbar-5611-build retained.
+Clang21.1.8 original one-job ASan/UBSan/float-cast-overflow Debug-O1-g0
+completed: CTest exit8/6.21s, numeric6.10s failed exactly same172 selected lines,
+old neighbors0.10s PASS, zero unrelated assertions/no sanitizer diagnostics.
+Original logSHA2cceeb0fbbc31d0b0fc921f1c80fd9c7fe00cee8605e97f41c925fe898f95392;
+combined build logSHA75f5b4e664070ae8e535a807051bc5564850a3dff6c4e34d13e5dd36ddb83faf.
+Retained byte-identical fixture logs/baseline-audit; all frozen hashes matched,
+no helper/assertion/CMake repair, both originals BEFORE callback migration.
+Only GETBAR callback now migrated to selected-session checked optional position,
+checked count comparison and unchanged zero/order/lookup; runtimeSHA
+530c04f6043e9d261f25702a38a6f59112d63e5c890daacebe2413d02a057ec7.
+Fixed GNU14/14 PASS455.76s: GETBAR5.58s/neighbors0.11s, sharedSKPBAR4.28s/
+PRMBAR4.32s/MRKBAR4.44s, oldNumeric79.56s/localization14.63s plus7contracts,
+safety340.92s. Retain actual times, no guessed cause. Byte-identical fixture
+fixed-gcc.log SHAad64368c8ba09fa9d6644cb99abe70601dddd68c3ac337b0e56f7ff3496d6421;
+combined buildSHAc153beeaffa98ae7ca0f6daebeb8e99d69891a630b249c78e61f2d78f1942cfd.
+Fixed Clang5/5 PASS18.84s, GETBAR5.59s/neighbors0.09s, SKPBAR4.32s/
+PRMBAR4.29s/MRKBAR4.53s; no ASan/UBSan/float-cast-overflow diagnostics,
+serial/private TMPDIR/180s cap/ASANdetect_leaks0/abort1/UBSANhalt1/stacktrace1.
+Byte-identical fixture fixed-clang.log SHA
+ae5dcca536b267a32c462edb9ec66b098ec7890e6d8b0e903320149e055e6711;
+combined buildSHAae5eacae580933474127836b4b9023152d47b0cb2b398ac9933fc0afed75d92c.
+All frozen helper/test/CMake hashes still match, only runtime delta530c04f6.
+Docs22/32/fixture baseline/README/singlefragment completed, bounded requirement
+defined and medium-misuse development DQDV self-review/walkthrough/rollback
+complete (not independent-human/high-hazard/leak/GUI/platform/release evidence).
+Guards verify later registered callback identities, not query-time invocation
+counting; code review confirms query remains read-only. Remaining#7096/#6152/
+type/system-menu/parent work explicit. No concurrent build/test/VM.
+NEXT signedcommit/push/PR, ClaudeFIRST, verified authorizedCodexfallback as needed,
+postpush exacthead verification/hosted checks/review/conversation gates.
+No commit/PR yet; slice NOT integrated. Admission fresh01:15Z/ownerOPENapproved.
+Continue this bounded owner-priority numeric slice; umbrella/#7096 remain open.
 
-RQ-CF-PRG-PRMBAR-NUMERIC-001 mapped BEFORE helper/callback migration from shipped
-PRMBAR help and independent installed Wine VFP9 7423 three identical125-line/
-40-operand singleton RELATIVE1/2/MAX controls. Source/output hashes and read-only
-Access365 fractional/native-error provenance in fixture README; no new VM.
-Help ordinal/count wording does not govern independently observed sparse keys.
-96direct/372guarded/12inactive normalization cases plus three old neighbors;
-unchanged original callback9ec338536657ab687ea297225ae96fb672cbac32529f8a16eecff80
-bf3cb6acc produces110 identical selected identity failure lines per GNU/Clang
-(102guarded/8inactive), zero unrelated and no runtime sanitizer diagnostics.
-Original totals4.29s/4.47s, full logs and frozen helper/test/CMake hashes in
-tests/fixtures/vfp9-prmbar-numeric/baseline-audit.md.
+Audit candidates#7100 lifecycle output-drain timeout and#7102 designer-smoke
+descendant cleanup freshly confirmedOPEN/rhamenator/agent-approved00:47Z.
+Bodies read as facts at this work-selection point; exact probes retained by
+audit, no VM/installer/source change here. Both require distinct portable/
+hosted-Windows process-tree acceptance. Deferred until next authorized
+selection point after bounded numeric work unless owner redirects or active
+CI reveals an actionable related failure. Not fixes or explanation for#7053,
+and increasing timeout is not their acceptance. No immediate interruption
+requested. Revalidate before future intake; no defect-hunt expansion.
 
-Only PRMBAR callback then migrated via current_set_state numericbehavior;
-fixed runtime SHA62e83e8503787deff146e4464eb7a4bb25243832e2f7fb23d1bc0d705794e6b9.
-GNU13/13 PASS537.34s (six runtime/shared MRKBAR/SKPBAR/older Numeric/localization
-plus seven repository contracts); Clang sanitizers4/4 PASS13.93s/no diagnostics.
-LogSHA3681893daa365efa9e1f3d36a4d3902c92d7d46dcf91803fd059e05c6b3534f2 /
-ced2f9948736ec880d52c128976fec3e4cda79494341a16f2ad41d9cbfe46d5c retained
-in fixture. Actual slower Numeric156.06s/traceability350.67s retained without
-guessing cause. Debug/-g0,Clang/-O1 ASan/UBSan/float-cast-overflow/frame pointers;
-detect_leaks0/abort_on_error1/UBSANhalt1/stacktrace1. One-job builds and runtime
-tests strictly serial/private TMPDIR, no VM. All frozen helper/assertion/CMake
-hashes still match; no assertions weakened. Development medium-misuse DQ/DV
-self-review/automated walkthrough/rollback complete, not independent human/full
-native-error/type/system-menu/GUI/leak/platform/release qualification.
-GNU session75826 and Clang51164 complete. Owned builds retained at
-/home/rich/temp/copperfin-prmbar-5611-build and copperfin-prmbar-5611-sanitize.
-
-Next signed DCO commit/push/open non-draft PR against main, request Claude FIRST
-via documented trigger, then verified owner-authorized Codex fallback if needed.
-No commit/push/PR yet. Require all11 required checks green, clean exact-head
-Claude/Codex/owner-terminal-Claude review and resolved conversations before
-merge. Keep umbrella/general-gap issues open. No owner-input blocker.
-
-Audit chat reported host-side lifecycle timeout issue#7100, no immediate
-interruption requested. Live metadata23:45Z confirmsOPEN/rhamenator/agent-approved;
-body not ingested for implementation here. Candidate at next authorized
-work-selection point; revalidate before intake. No lifecycle helper production
-change or defect-hunt expansion in this PRMBAR slice.
-
-Owner reports VM activity caused disk contention and host reboot was necessary.
-Latest direct owner steering2026-10-08 permits starting a VM when necessary,
-but keep usage brief and mindful of disk contention. Check running VM state
-immediately before starting; avoid starting another when any VM is active,
-do not interrupt another task's VM, and shut down our VM after the focused
-check. Prefer non-VM/hosted evidence when equivalent. This replaces the blanket
-VM suspension, not the original-preservation/full-independent-clone policy.
-Large cloning and local VSIX timing remain explicitly deferred, NOT complete
-or cancelled: re-enter only after contention clears and a full independent
-clone can be completed/verified. Do not boot partial disks. Original VMs/
-pristine template remain preserved. No VM was needed or started for this update.
-Audit chat owns /home/rich/.codex/defect-discovery/project-copperfin/ metadata
-index and scheduled Cloud Defect Hunt reviews, including green runs; do not
-modify its files or duplicate routine acknowledgments. Confirmed findings
-still require live owner/admission checks; no new production authority follows
-from audit messages. Current implementation PR gates remain live.
+Latest owner VM policy permits starting one when needed, briefly; check active
+VMs first, avoid starting another while any is active, do not interrupt another
+task's VM, shut down ours after focused use. Prefer equivalent hosted/non-VM
+evidence. Disk contention required owner reboot; large clones/local VSIX timing
+remain deferred pending safe complete independent clone and capacity. Never
+boot partials; preserve originals/template. No VM used for this continuation.
+Audit chat owns defect-discovery metadata and scheduled Cloud Defect Hunt
+reviews including green runs; do not edit its files/duplicate acknowledgments.
+All new/revised PRs request Claude FIRST via verified/documented trigger then
+authorized verified Codex fallback when unavailable. No response/skipped/quota
+notice is clean-review evidence: all11 required green, clean exact-head review,
+all conversations resolved before merge. No owner-input blocker.
 PR #6926 (`fix/array-dimension-overflow-5594`) merged into `main` as
 `2c56331d57c0ef459ae55d38236a012b77c129b1` on 2026-10-04 and closed #5594.
 It completed the array-dimension safety slice under #5611/#6776 with checked
@@ -943,7 +955,8 @@ Owner-directed workstream order before the #6879 assignment was:
    - Completed after it: SET MARK OF BAR identifiers (PR#7094).
    - Completed after it: MRKBAR Numeric/exact-integer identifiers (PR#7097).
    - Completed after it: SKPBAR Numeric/exact-integer identifiers (PR#7099).
-   - Active: PRMBAR second-argument Numeric/exact-integer identifiers.
+   - Completed after it: PRMBAR Numeric/exact-integer identifiers (PR#7101).
+   - Active: GETBAR second-argument Numeric/exact-integer positions.
      Other bar consumers#5868, popup order/count#6152 and expression admission
      #6225/#6227 remain unfinished.
    - Remaining after it: the other `llround(value_as_number(...))` sites in

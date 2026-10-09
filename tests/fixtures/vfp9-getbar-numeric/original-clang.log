@@ -1,0 +1,197 @@
+Test project /home/rich/temp/copperfin-getbar-5611-sanitize
+    Start 399: test_prg_engine_getbar_numeric
+1/2 Test #399: test_prg_engine_getbar_numeric .....***Failed    6.10 sec
+FAIL: GETBAR query identity COPPERFIN 0.5 seed13 session1 ENABLED got 4
+FAIL: GETBAR query identity COPPERFIN 0.9 seed13 session1 ENABLED got 4
+FAIL: GETBAR query identity COPPERFIN 1.5 seed13 session1 ENABLED got 13
+FAIL: GETBAR query identity COPPERFIN 1.9 seed13 session1 ENABLED got 13
+FAIL: GETBAR query identity COPPERFIN 2.9 seed13 session1 ENABLED got 47
+FAIL: GETBAR query identity COPPERFIN 3.9 seed13 session1 ENABLED got 100
+FAIL: GETBAR query identity COPPERFIN 4.9 seed13 session1 ENABLED got 2147483647
+FAIL: GETBAR query identity COPPERFIN 5.9 seed13 session1 ENABLED got 0
+FAIL: GETBAR query identity COPPERFIN 0.5 seed47 session1 ENABLED got 4
+FAIL: GETBAR query identity COPPERFIN 0.9 seed47 session1 ENABLED got 4
+FAIL: GETBAR query identity COPPERFIN 1.5 seed47 session1 ENABLED got 13
+FAIL: GETBAR query identity COPPERFIN 1.9 seed47 session1 ENABLED got 13
+FAIL: GETBAR query identity COPPERFIN 2.9 seed47 session1 ENABLED got 47
+FAIL: GETBAR query identity COPPERFIN 3.9 seed47 session1 ENABLED got 100
+FAIL: GETBAR query identity COPPERFIN 4.9 seed47 session1 ENABLED got 2147483647
+FAIL: GETBAR query identity COPPERFIN 5.9 seed47 session1 ENABLED got 0
+FAIL: GETBAR query identity COPPERFIN 0.5 seed2147483647 session1 ENABLED got 4
+FAIL: GETBAR query identity COPPERFIN 0.9 seed2147483647 session1 ENABLED got 4
+FAIL: GETBAR query identity COPPERFIN 1.5 seed2147483647 session1 ENABLED got 13
+FAIL: GETBAR query identity COPPERFIN 1.9 seed2147483647 session1 ENABLED got 13
+FAIL: GETBAR query identity COPPERFIN 2.9 seed2147483647 session1 ENABLED got 47
+FAIL: GETBAR query identity COPPERFIN 3.9 seed2147483647 session1 ENABLED got 100
+FAIL: GETBAR query identity COPPERFIN 4.9 seed2147483647 session1 ENABLED got 2147483647
+FAIL: GETBAR query identity COPPERFIN 5.9 seed2147483647 session1 ENABLED got 0
+FAIL: GETBAR query identity COPPERFIN 0.5 seed13 session1 DISABLED got 4
+FAIL: GETBAR query identity COPPERFIN 0.9 seed13 session1 DISABLED got 4
+FAIL: GETBAR query identity COPPERFIN 1.5 seed13 session1 DISABLED got 13
+FAIL: GETBAR query identity COPPERFIN 1.9 seed13 session1 DISABLED got 13
+FAIL: GETBAR query identity COPPERFIN 2.9 seed13 session1 DISABLED got 47
+FAIL: GETBAR query identity COPPERFIN 3.9 seed13 session1 DISABLED got 100
+FAIL: GETBAR query identity COPPERFIN 4.9 seed13 session1 DISABLED got 2147483647
+FAIL: GETBAR query identity COPPERFIN 5.9 seed13 session1 DISABLED got 0
+FAIL: GETBAR query identity COPPERFIN 0.5 seed47 session1 DISABLED got 4
+FAIL: GETBAR query identity COPPERFIN 0.9 seed47 session1 DISABLED got 4
+FAIL: GETBAR query identity COPPERFIN 1.5 seed47 session1 DISABLED got 13
+FAIL: GETBAR query identity COPPERFIN 1.9 seed47 session1 DISABLED got 13
+FAIL: GETBAR query identity COPPERFIN 2.9 seed47 session1 DISABLED got 47
+FAIL: GETBAR query identity COPPERFIN 3.9 seed47 session1 DISABLED got 100
+FAIL: GETBAR query identity COPPERFIN 4.9 seed47 session1 DISABLED got 2147483647
+FAIL: GETBAR query identity COPPERFIN 5.9 seed47 session1 DISABLED got 0
+FAIL: GETBAR query identity COPPERFIN 0.5 seed2147483647 session1 DISABLED got 4
+FAIL: GETBAR query identity COPPERFIN 0.9 seed2147483647 session1 DISABLED got 4
+FAIL: GETBAR query identity COPPERFIN 1.5 seed2147483647 session1 DISABLED got 13
+FAIL: GETBAR query identity COPPERFIN 1.9 seed2147483647 session1 DISABLED got 13
+FAIL: GETBAR query identity COPPERFIN 2.9 seed2147483647 session1 DISABLED got 47
+FAIL: GETBAR query identity COPPERFIN 3.9 seed2147483647 session1 DISABLED got 100
+FAIL: GETBAR query identity COPPERFIN 4.9 seed2147483647 session1 DISABLED got 2147483647
+FAIL: GETBAR query identity COPPERFIN 5.9 seed2147483647 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 0.5 seed13 session1 ENABLED got 4
+FAIL: GETBAR query identity VFP9 0.9 seed13 session1 ENABLED got 4
+FAIL: GETBAR query identity VFP9 1.5 seed13 session1 ENABLED got 13
+FAIL: GETBAR query identity VFP9 1.9 seed13 session1 ENABLED got 13
+FAIL: GETBAR query identity VFP9 2.9 seed13 session1 ENABLED got 47
+FAIL: GETBAR query identity VFP9 3.9 seed13 session1 ENABLED got 100
+FAIL: GETBAR query identity VFP9 4.9 seed13 session1 ENABLED got 2147483647
+FAIL: GETBAR query identity VFP9 5.9 seed13 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 4294967297 seed13 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 4294967298 seed13 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 4294967299 seed13 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967295 seed13 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967294 seed13 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967293 seed13 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 4294967297 seed13 session2 ENABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967295 seed13 session2 ENABLED got 0
+FAIL: GETBAR query identity VFP9 0.5 seed47 session1 ENABLED got 4
+FAIL: GETBAR query identity VFP9 0.9 seed47 session1 ENABLED got 4
+FAIL: GETBAR query identity VFP9 1.5 seed47 session1 ENABLED got 13
+FAIL: GETBAR query identity VFP9 1.9 seed47 session1 ENABLED got 13
+FAIL: GETBAR query identity VFP9 2.9 seed47 session1 ENABLED got 47
+FAIL: GETBAR query identity VFP9 3.9 seed47 session1 ENABLED got 100
+FAIL: GETBAR query identity VFP9 4.9 seed47 session1 ENABLED got 2147483647
+FAIL: GETBAR query identity VFP9 5.9 seed47 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 4294967297 seed47 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 4294967298 seed47 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 4294967299 seed47 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967295 seed47 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967294 seed47 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967293 seed47 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 4294967297 seed47 session2 ENABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967295 seed47 session2 ENABLED got 0
+FAIL: GETBAR query identity VFP9 0.5 seed2147483647 session1 ENABLED got 4
+FAIL: GETBAR query identity VFP9 0.9 seed2147483647 session1 ENABLED got 4
+FAIL: GETBAR query identity VFP9 1.5 seed2147483647 session1 ENABLED got 13
+FAIL: GETBAR query identity VFP9 1.9 seed2147483647 session1 ENABLED got 13
+FAIL: GETBAR query identity VFP9 2.9 seed2147483647 session1 ENABLED got 47
+FAIL: GETBAR query identity VFP9 3.9 seed2147483647 session1 ENABLED got 100
+FAIL: GETBAR query identity VFP9 4.9 seed2147483647 session1 ENABLED got 2147483647
+FAIL: GETBAR query identity VFP9 5.9 seed2147483647 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 4294967297 seed2147483647 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 4294967298 seed2147483647 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 4294967299 seed2147483647 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967295 seed2147483647 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967294 seed2147483647 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967293 seed2147483647 session1 ENABLED got 0
+FAIL: GETBAR query identity VFP9 4294967297 seed2147483647 session2 ENABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967295 seed2147483647 session2 ENABLED got 0
+FAIL: GETBAR query identity VFP9 0.5 seed13 session1 DISABLED got 4
+FAIL: GETBAR query identity VFP9 0.9 seed13 session1 DISABLED got 4
+FAIL: GETBAR query identity VFP9 1.5 seed13 session1 DISABLED got 13
+FAIL: GETBAR query identity VFP9 1.9 seed13 session1 DISABLED got 13
+FAIL: GETBAR query identity VFP9 2.9 seed13 session1 DISABLED got 47
+FAIL: GETBAR query identity VFP9 3.9 seed13 session1 DISABLED got 100
+FAIL: GETBAR query identity VFP9 4.9 seed13 session1 DISABLED got 2147483647
+FAIL: GETBAR query identity VFP9 5.9 seed13 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 4294967297 seed13 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 4294967298 seed13 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 4294967299 seed13 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967295 seed13 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967294 seed13 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967293 seed13 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 4294967297 seed13 session2 DISABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967295 seed13 session2 DISABLED got 0
+FAIL: GETBAR query identity VFP9 0.5 seed47 session1 DISABLED got 4
+FAIL: GETBAR query identity VFP9 0.9 seed47 session1 DISABLED got 4
+FAIL: GETBAR query identity VFP9 1.5 seed47 session1 DISABLED got 13
+FAIL: GETBAR query identity VFP9 1.9 seed47 session1 DISABLED got 13
+FAIL: GETBAR query identity VFP9 2.9 seed47 session1 DISABLED got 47
+FAIL: GETBAR query identity VFP9 3.9 seed47 session1 DISABLED got 100
+FAIL: GETBAR query identity VFP9 4.9 seed47 session1 DISABLED got 2147483647
+FAIL: GETBAR query identity VFP9 5.9 seed47 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 4294967297 seed47 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 4294967298 seed47 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 4294967299 seed47 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967295 seed47 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967294 seed47 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967293 seed47 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 4294967297 seed47 session2 DISABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967295 seed47 session2 DISABLED got 0
+FAIL: GETBAR query identity VFP9 0.5 seed2147483647 session1 DISABLED got 4
+FAIL: GETBAR query identity VFP9 0.9 seed2147483647 session1 DISABLED got 4
+FAIL: GETBAR query identity VFP9 1.5 seed2147483647 session1 DISABLED got 13
+FAIL: GETBAR query identity VFP9 1.9 seed2147483647 session1 DISABLED got 13
+FAIL: GETBAR query identity VFP9 2.9 seed2147483647 session1 DISABLED got 47
+FAIL: GETBAR query identity VFP9 3.9 seed2147483647 session1 DISABLED got 100
+FAIL: GETBAR query identity VFP9 4.9 seed2147483647 session1 DISABLED got 2147483647
+FAIL: GETBAR query identity VFP9 5.9 seed2147483647 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 4294967297 seed2147483647 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 4294967298 seed2147483647 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 4294967299 seed2147483647 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967295 seed2147483647 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967294 seed2147483647 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967293 seed2147483647 session1 DISABLED got 0
+FAIL: GETBAR query identity VFP9 4294967297 seed2147483647 session2 DISABLED got 0
+FAIL: GETBAR query identity VFP9 -4294967295 seed2147483647 session2 DISABLED got 0
+FAIL: GETBAR inactive identity COPPERFIN 0.5 singleton
+FAIL: GETBAR inactive identity COPPERFIN 0.9 singleton
+FAIL: GETBAR inactive identity COPPERFIN 1.5 singleton
+FAIL: GETBAR inactive identity COPPERFIN 1.9 singleton
+FAIL: GETBAR inactive identity COPPERFIN 0.5 sparse
+FAIL: GETBAR inactive identity COPPERFIN 0.9 sparse
+FAIL: GETBAR inactive identity COPPERFIN 1.5 sparse
+FAIL: GETBAR inactive identity COPPERFIN 1.9 sparse
+FAIL: GETBAR inactive identity COPPERFIN 2.9 sparse
+FAIL: GETBAR inactive identity COPPERFIN 3.9 sparse
+FAIL: GETBAR inactive identity VFP9 0.5 singleton
+FAIL: GETBAR inactive identity VFP9 0.9 singleton
+FAIL: GETBAR inactive identity VFP9 1.5 singleton
+FAIL: GETBAR inactive identity VFP9 1.9 singleton
+FAIL: GETBAR inactive identity VFP9 4294967297 singleton
+FAIL: GETBAR inactive identity VFP9 -4294967295 singleton
+FAIL: GETBAR inactive identity VFP9 0.5 sparse
+FAIL: GETBAR inactive identity VFP9 0.9 sparse
+FAIL: GETBAR inactive identity VFP9 1.5 sparse
+FAIL: GETBAR inactive identity VFP9 1.9 sparse
+FAIL: GETBAR inactive identity VFP9 2.9 sparse
+FAIL: GETBAR inactive identity VFP9 3.9 sparse
+FAIL: GETBAR inactive identity VFP9 4294967297 sparse
+FAIL: GETBAR inactive identity VFP9 4294967298 sparse
+FAIL: GETBAR inactive identity VFP9 4294967299 sparse
+FAIL: GETBAR inactive identity VFP9 -4294967295 sparse
+FAIL: GETBAR inactive identity VFP9 -4294967294 sparse
+FAIL: GETBAR inactive identity VFP9 -4294967293 sparse
+
+    Start 400: test_prg_engine_getbar_neighbors
+2/2 Test #400: test_prg_engine_getbar_neighbors ...   Passed    0.10 sec
+
+50% tests passed, 1 tests failed out of 2
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =   6.20 sec*proc (2 tests)
+copperfin-isolation:child-processes=none            =   6.20 sec*proc (2 tests)
+copperfin-isolation:environment=scoped-process      =   6.20 sec*proc (2 tests)
+copperfin-isolation:filesystem=test-owned-unique    =   6.20 sec*proc (2 tests)
+copperfin-isolation:network=none                    =   6.20 sec*proc (2 tests)
+copperfin-isolation:platform=portable               =   6.20 sec*proc (2 tests)
+copperfin-isolation:resources=none                  =   6.20 sec*proc (2 tests)
+copperfin-isolation:samples=none                    =   6.20 sec*proc (2 tests)
+copperfin-isolation:schedule=serial                 =   6.20 sec*proc (2 tests)
+
+Total Test time (real) =   6.21 sec
+
+The following tests FAILED:
+	399 - test_prg_engine_getbar_numeric (Failed)           copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+Errors while running CTest

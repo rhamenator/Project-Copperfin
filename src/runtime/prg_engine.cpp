@@ -3419,21 +3419,27 @@ namespace copperfin::runtime
                 }
 
                 const std::string popup_name = normalize_identifier(value_as_string(arguments[0]));
-                const long long position = static_cast<long long>(std::llround(value_as_number(arguments[1])));
-                if (popup_name.empty() || position < 1LL)
+                // RQ-CF-PRG-GETBAR-NUMERIC-001: selected-session checked
+                // position conversion only; zero fallback/order remain separate.
+                const auto &set_state = current_set_state();
+                const auto mode = set_state.find("numericbehavior");
+                const auto position = checked_getbar_position_argument(arguments[1],
+                    mode != set_state.end() && normalize_identifier(mode->second) == "vfp9"
+                        ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
+                if (popup_name.empty() || !position.has_value())
                 {
                     return std::nullopt;
                 }
 
                 const auto popup = current_session_state().popup_bar_prompts.find(popup_name);
                 if (popup == current_session_state().popup_bar_prompts.end() ||
-                    position > static_cast<long long>(popup->second.size()))
+                    static_cast<std::uint64_t>(*position) > popup->second.size())
                 {
                     return std::nullopt;
                 }
 
                 auto bar = popup->second.begin();
-                std::advance(bar, position - 1LL);
+                std::advance(bar, *position - 1LL);
                 return make_number_value(static_cast<double>(bar->first));
             },
             [this](const std::vector<PrgValue> &arguments) -> std::optional<PrgValue>

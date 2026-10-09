@@ -1,0 +1,26 @@
+Test project /home/rich/temp/copperfin-getbar-5611-sanitize
+    Start 397: test_prg_engine_skpbar_numeric
+1/5 Test #397: test_prg_engine_skpbar_numeric .....   Passed    4.32 sec
+    Start 398: test_prg_engine_prmbar_numeric
+2/5 Test #398: test_prg_engine_prmbar_numeric .....   Passed    4.29 sec
+    Start 399: test_prg_engine_getbar_numeric
+3/5 Test #399: test_prg_engine_getbar_numeric .....   Passed    5.59 sec
+    Start 400: test_prg_engine_getbar_neighbors
+4/5 Test #400: test_prg_engine_getbar_neighbors ...   Passed    0.09 sec
+    Start 403: test_prg_engine_mrkbar_numeric
+5/5 Test #403: test_prg_engine_mrkbar_numeric .....   Passed    4.53 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =  18.82 sec*proc (5 tests)
+copperfin-isolation:child-processes=none            =  18.82 sec*proc (5 tests)
+copperfin-isolation:environment=scoped-process      =  18.82 sec*proc (5 tests)
+copperfin-isolation:filesystem=test-owned-unique    =  18.82 sec*proc (5 tests)
+copperfin-isolation:network=none                    =  18.82 sec*proc (5 tests)
+copperfin-isolation:platform=portable               =  18.82 sec*proc (5 tests)
+copperfin-isolation:resources=none                  =  18.82 sec*proc (5 tests)
+copperfin-isolation:samples=none                    =  18.82 sec*proc (5 tests)
+copperfin-isolation:schedule=serial                 =  18.82 sec*proc (5 tests)
+
+Total Test time (real) =  18.84 sec
