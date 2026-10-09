@@ -1,0 +1,193 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 12
+      Start  12: test_agent_issue_intake
+
+12: Test command: /snap/bin/pwsh "-NoLogo" "-NoProfile" "-NonInteractive" "-File" "/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/tests/test_agent_issue_intake.ps1" "-ModulePath" "/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/scripts/Copperfin.AgentIssueIntake.psm1" "-DriverPath" "/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/scripts/drive-codex.ps1" "-AgentGuidancePath" "/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/agents.md" "-RuntimeAgentPath" "/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/.github/agents/copperfin-vfp-runtime.agent.md" "-SafetyReportPath" "/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/docs/safety/traceability-report-2026-08-10-agent-intake-scope-approval.md"
+12: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests
+12: Environment variables: 
+12:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+12: Test timeout computed to be: 600
+12: Agent issue intake contract passed.
+ 1/15 Test  #12: test_agent_issue_intake .......................   Passed    2.43 sec
+test 20
+      Start  20: test_changelog_fragment_assembler
+
+20: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--self-test"
+20: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests
+20: Environment variables: 
+20:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+20: Test timeout computed to be: 600
+20: assemble_changelog self-test passed
+ 2/15 Test  #20: test_changelog_fragment_assembler .............   Passed    0.21 sec
+test 21
+      Start  21: test_changelog_fragments_valid
+
+21: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--check" "--root" "/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin"
+21: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests
+21: Environment variables: 
+21:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+21: Test timeout computed to be: 600
+21: 190 changelog fragment(s) valid
+ 3/15 Test  #21: test_changelog_fragments_valid ................   Passed    0.21 sec
+test 30
+      Start  30: test_agent_channel_contract
+
+30: Test command: /usr/bin/cmake "-DSOURCE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin" "-P" "/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/tests/run_agent_channel_contract_check.cmake"
+30: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests
+30: Environment variables: 
+30:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+30: Test timeout computed to be: 600
+ 4/15 Test  #30: test_agent_channel_contract ...................   Passed    0.02 sec
+test 36
+      Start  36: test_native_test_isolation_contract
+
+36: Test command: /usr/bin/cmake "-DINVENTORY_PATH=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/native-test-isolation.tsv" "-DISOLATION_SOURCE_PATH=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/tests/CopperfinTestIsolation.cmake" "-DTEST_REGISTRATION_SOURCE_PATH=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/tests/CMakeLists.txt" "-P" "/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/tests/run_native_test_isolation_contract_check.cmake"
+36: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests
+36: Environment variables: 
+36:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+36: Test timeout computed to be: 600
+36: -- Native test isolation inventory contract passed for 472 tests
+ 5/15 Test  #36: test_native_test_isolation_contract ...........   Passed    0.44 sec
+test 38
+      Start  38: test_safety_traceability_workflow_contract
+
+38: Test command: /usr/bin/cmake "-DSOURCE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin" "-P" "/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/tests/run_safety_traceability_workflow_contract_check.cmake"
+38: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests
+38: Environment variables: 
+38:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+38: Test timeout computed to be: 1200
+38: -- Safety traceability workflow contract check passed
+ 6/15 Test  #38: test_safety_traceability_workflow_contract ....   Passed  331.01 sec
+test 40
+      Start  40: test_localization
+
+40: Test command: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests/test_localization "/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/copperfin_inspect"
+40: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests
+40: Environment variables: 
+40:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+40: Test timeout computed to be: 600
+ 7/15 Test  #40: test_localization .............................   Passed   14.21 sec
+test 52
+      Start  52: test_focused_workflow_path_filters
+
+52: Test command: /usr/bin/cmake "-DCOPPERFIN_SOURCE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin" "-P" "/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/cmake/validate_focused_workflow_path_filters.cmake"
+52: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests
+52: Environment variables: 
+52:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+52: Test timeout computed to be: 600
+ 8/15 Test  #52: test_focused_workflow_path_filters ............   Passed    0.02 sec
+test 379
+      Start 379: test_prg_engine_null_semantics
+
+379: Test command: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests/test_prg_engine_null_semantics
+379: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests
+379: Environment variables: 
+379:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+379: Test timeout computed to be: 600
+ 9/15 Test #379: test_prg_engine_null_semantics ................   Passed    0.13 sec
+test 393
+      Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 600
+10/15 Test #393: test_prg_engine_numeric_behavior ..............   Passed   65.95 sec
+test 399
+      Start 399: test_prg_engine_bitor_numeric
+
+399: Test command: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests/test_prg_engine_bitor_numeric
+399: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests
+399: Environment variables: 
+399:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+399: Test timeout computed to be: 600
+399: BITOR frozen cases: direct=104 public=472
+11/15 Test #399: test_prg_engine_bitor_numeric .................   Passed    5.80 sec
+test 400
+      Start 400: test_prg_engine_bitor_neighbors
+
+400: Test command: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests/test_prg_engine_bitor_neighbors
+400: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests
+400: Environment variables: 
+400:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+400: Test timeout computed to be: 600
+12/15 Test #400: test_prg_engine_bitor_neighbors ...............   Passed    0.11 sec
+test 401
+      Start 401: test_prg_engine_bitand_numeric
+
+401: Test command: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests/test_prg_engine_bitand_numeric
+401: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests
+401: Environment variables: 
+401:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+401: Test timeout computed to be: 600
+401: BITAND frozen cases: direct=104 public=472
+13/15 Test #401: test_prg_engine_bitand_numeric ................   Passed    5.79 sec
+test 403
+      Start 403: test_prg_engine_bitnot_numeric
+
+403: Test command: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests/test_prg_engine_bitnot_numeric
+403: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests
+403: Environment variables: 
+403:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+403: Test timeout computed to be: 600
+403: BITNOT frozen cases: direct=104 public=156
+14/15 Test #403: test_prg_engine_bitnot_numeric ................   Passed    1.16 sec
+test 405
+      Start 405: test_prg_engine_collection_selector_numeric
+
+405: Test command: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests/test_prg_engine_collection_selector_numeric
+405: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-gcc/tests
+405: Environment variables: 
+405:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+405: Test timeout computed to be: 600
+405: Collection frozen cases: direct=116 public=140 hidden=26
+15/15 Test #405: test_prg_engine_collection_selector_numeric ...   Passed    1.87 sec
+
+The following tests passed:
+	test_agent_issue_intake
+	test_changelog_fragment_assembler
+	test_changelog_fragments_valid
+	test_agent_channel_contract
+	test_native_test_isolation_contract
+	test_safety_traceability_workflow_contract
+	test_localization
+	test_focused_workflow_path_filters
+	test_prg_engine_null_semantics
+	test_prg_engine_numeric_behavior
+	test_prg_engine_bitor_numeric
+	test_prg_engine_bitor_neighbors
+	test_prg_engine_bitand_numeric
+	test_prg_engine_bitnot_numeric
+	test_prg_engine_collection_selector_numeric
+
+100% tests passed, 0 tests failed out of 15
+
+Label Time Summary:
+copperfin-isolation:audit=complete                     = 429.36 sec*proc (15 tests)
+copperfin-isolation:child-processes=bounded            = 345.22 sec*proc (2 tests)
+copperfin-isolation:child-processes=none               =  84.14 sec*proc (13 tests)
+copperfin-isolation:environment=child-scoped           = 331.01 sec*proc (1 test)
+copperfin-isolation:environment=none                   =   3.45 sec*proc (7 tests)
+copperfin-isolation:environment=scoped-process         =  94.90 sec*proc (7 tests)
+copperfin-isolation:filesystem=process-owned           =  66.29 sec*proc (3 tests)
+copperfin-isolation:filesystem=read-only               = 334.12 sec*proc (6 tests)
+copperfin-isolation:filesystem=test-owned-unique       =  28.95 sec*proc (6 tests)
+copperfin-isolation:network=disabled-probes            = 331.01 sec*proc (1 test)
+copperfin-isolation:network=none                       =  98.35 sec*proc (14 tests)
+copperfin-isolation:platform=configured                =   0.42 sec*proc (2 tests)
+copperfin-isolation:platform=portable                  =  97.93 sec*proc (12 tests)
+copperfin-isolation:platform=powershell-conditional    = 331.01 sec*proc (1 test)
+copperfin-isolation:resources=none                     = 429.36 sec*proc (15 tests)
+copperfin-isolation:samples=none                       = 429.36 sec*proc (15 tests)
+copperfin-isolation:schedule=parallel-safe             = 348.54 sec*proc (8 tests)
+copperfin-isolation:schedule=serial                    =  80.82 sec*proc (7 tests)
+
+Total Test time (real) = 429.38 sec
