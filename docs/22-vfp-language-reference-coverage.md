@@ -1,5 +1,23 @@
 # VFP Language Reference Coverage
 
+- BITOR Numeric/exact recovery (#5611/#6776/#6871,2026-10-09):
+  RQ-CF-PRG-BITOR-NUMERIC-001 mapped BEFORE helper/tests/migration.
+  Three matching108-line installed VFP9 7423 observations recover truncation,
+  both-sign low32/huge/infinity0, signed OR and all26 fractional operand slots.
+  [Fixture](../tests/fixtures/vfp9-bitor-numeric/README.md) distinguishes derived
+  default signed32/error11 and exact64/NaN safety. Frozen104direct/472public
+  plus unchanged neighbors; both original GNU/Clang logs retained BEFORE
+  BITOR-only migration:372 identical selected failures/zero unrelated,
+  6.03s/10.80s/no diagnostics. Fixed GNU15/15 PASS429.38s and Clang sanitizers
+  7/7 PASS131.91s/no diagnostics/leaks disabled include older Numeric/NULL/
+  BITAND/BITNOT/Collection; GNU localization/seven contracts. Every operand
+  checked after absorbing -1; defined signed32 int64 result; shared bit helpers
+  and siblings unchanged. Bounded medium-misuse development self-review/
+  walkthrough/rollback complete, not independent-human qualification.
+  Postpush exact-head review/hosted checks/resolved conversations remain gates.
+  Type/Currency/binary/other functions and unadmitted arity#7111 separate;
+  no full-native/platform/leak/release/family/parent acceptance.
+
 - BITAND Numeric/exact recovery (#5611/#6776/#6871,2026-10-09):
   RQ-CF-PRG-BITAND-NUMERIC-001 mapped BEFORE helper/tests/migration.
   Three matching108-line installed VFP9 7423 observations recover truncation,

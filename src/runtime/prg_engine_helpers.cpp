@@ -2291,6 +2291,14 @@ std::optional<std::int32_t> checked_bitand_argument(
     return checked_bitnot_argument(value, behavior);
 }
 
+// RQ-CF-PRG-BITOR-NUMERIC-001: independent BITOR identity0 observations match
+// BITAND's finite/low32/huge/infinity0 conversion, not its AND operation.
+// Exact64/NaN safety parent-derived; unused through BOTH original baselines.
+std::optional<std::int32_t> checked_bitor_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    return checked_bitand_argument(value, behavior);
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {

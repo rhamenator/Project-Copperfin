@@ -1,0 +1,101 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-clang/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-clang
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 379
+    Start 379: test_prg_engine_null_semantics
+
+379: Test command: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-clang/tests/test_prg_engine_null_semantics
+379: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-clang/tests
+379: Environment variables: 
+379:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+379: Test timeout computed to be: 600
+1/7 Test #379: test_prg_engine_null_semantics ................   Passed    0.13 sec
+test 393
+    Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-clang/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-clang/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 600
+2/7 Test #393: test_prg_engine_numeric_behavior ..............   Passed  106.19 sec
+test 399
+    Start 399: test_prg_engine_bitor_numeric
+
+399: Test command: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-clang/tests/test_prg_engine_bitor_numeric
+399: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-clang/tests
+399: Environment variables: 
+399:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+399: Test timeout computed to be: 600
+399: BITOR frozen cases: direct=104 public=472
+3/7 Test #399: test_prg_engine_bitor_numeric .................   Passed   10.65 sec
+test 400
+    Start 400: test_prg_engine_bitor_neighbors
+
+400: Test command: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-clang/tests/test_prg_engine_bitor_neighbors
+400: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-clang/tests
+400: Environment variables: 
+400:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+400: Test timeout computed to be: 600
+4/7 Test #400: test_prg_engine_bitor_neighbors ...............   Passed    0.10 sec
+test 401
+    Start 401: test_prg_engine_bitand_numeric
+
+401: Test command: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-clang/tests/test_prg_engine_bitand_numeric
+401: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-clang/tests
+401: Environment variables: 
+401:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+401: Test timeout computed to be: 600
+401: BITAND frozen cases: direct=104 public=472
+5/7 Test #401: test_prg_engine_bitand_numeric ................   Passed   10.59 sec
+test 403
+    Start 403: test_prg_engine_bitnot_numeric
+
+403: Test command: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-clang/tests/test_prg_engine_bitnot_numeric
+403: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-clang/tests
+403: Environment variables: 
+403:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+403: Test timeout computed to be: 600
+403: BITNOT frozen cases: direct=104 public=156
+6/7 Test #403: test_prg_engine_bitnot_numeric ................   Passed    1.89 sec
+test 405
+    Start 405: test_prg_engine_collection_selector_numeric
+
+405: Test command: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-clang/tests/test_prg_engine_collection_selector_numeric
+405: Working Directory: /home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/build/bitor-clang/tests
+405: Environment variables: 
+405:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitor-numeric-5611/Project-Copperfin/resources/locales
+405: Test timeout computed to be: 600
+405: Collection frozen cases: direct=116 public=140 hidden=26
+7/7 Test #405: test_prg_engine_collection_selector_numeric ...   Passed    2.34 sec
+
+The following tests passed:
+	test_prg_engine_null_semantics
+	test_prg_engine_numeric_behavior
+	test_prg_engine_bitor_numeric
+	test_prg_engine_bitor_neighbors
+	test_prg_engine_bitand_numeric
+	test_prg_engine_bitnot_numeric
+	test_prg_engine_collection_selector_numeric
+
+100% tests passed, 0 tests failed out of 7
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  = 131.89 sec*proc (7 tests)
+copperfin-isolation:child-processes=none            = 131.89 sec*proc (7 tests)
+copperfin-isolation:environment=none                =   0.13 sec*proc (1 test)
+copperfin-isolation:environment=scoped-process      = 131.76 sec*proc (6 tests)
+copperfin-isolation:filesystem=process-owned        = 106.32 sec*proc (2 tests)
+copperfin-isolation:filesystem=test-owned-unique    =  25.57 sec*proc (5 tests)
+copperfin-isolation:network=none                    = 131.89 sec*proc (7 tests)
+copperfin-isolation:platform=portable               = 131.89 sec*proc (7 tests)
+copperfin-isolation:resources=none                  = 131.89 sec*proc (7 tests)
+copperfin-isolation:samples=none                    = 131.89 sec*proc (7 tests)
+copperfin-isolation:schedule=serial                 = 131.89 sec*proc (7 tests)
+
+Total Test time (real) = 131.91 sec
