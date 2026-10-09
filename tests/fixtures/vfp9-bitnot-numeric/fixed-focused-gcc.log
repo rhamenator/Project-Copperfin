@@ -1,0 +1,20 @@
+Test project /home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin/build/bitnot-gcc
+    Start 399: test_prg_engine_bitnot_numeric
+1/2 Test #399: test_prg_engine_bitnot_numeric .....   Passed    1.12 sec
+    Start 400: test_prg_engine_bitnot_neighbors
+2/2 Test #400: test_prg_engine_bitnot_neighbors ...   Passed    0.13 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =   1.25 sec*proc (2 tests)
+copperfin-isolation:child-processes=none            =   1.25 sec*proc (2 tests)
+copperfin-isolation:environment=scoped-process      =   1.25 sec*proc (2 tests)
+copperfin-isolation:filesystem=test-owned-unique    =   1.25 sec*proc (2 tests)
+copperfin-isolation:network=none                    =   1.25 sec*proc (2 tests)
+copperfin-isolation:platform=portable               =   1.25 sec*proc (2 tests)
+copperfin-isolation:resources=none                  =   1.25 sec*proc (2 tests)
+copperfin-isolation:samples=none                    =   1.25 sec*proc (2 tests)
+copperfin-isolation:schedule=serial                 =   1.25 sec*proc (2 tests)
+
+Total Test time (real) =   1.26 sec

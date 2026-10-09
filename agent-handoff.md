@@ -55,136 +55,159 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-GETBAR Numeric/exact-integer PR#7103 merged2026-10-09T02:16:08Z as
-8a9f8f61a5e4267df769bb84ce7d5652fe024364 from signed/DCO G exacthead
-1c196d05029007f19bfcc96909326f3b66294075.
-https://github.com/rhamenator/Project-Copperfin/pull/7103
-All11 live required contexts PASS;35/36 total SUCCESS at merge, only optional
-Windows Native37870390323/job113626888498 still running, no failures.
-Claude-FIRST6072450239; no completed response, NOT approval/no quota assertion.
-Verified authorized Codex clean review6072484167 (01:37:59Z), exacthead1c196d0502,
-summary6072444876 manual Completed01:38:00.447424Z. Fresh paginated REST
-reviews/inline empty; Graph threads/closingrefs total0/hasNextfalse. Gate6072878703.
-No parent/gap issue closure;#5611/#6776/#5868/#7096 remain OPEN.
+Collection Numeric/exact selector PR#7105 merged2026-10-09T04:16:10Z as
+419390ac7a88dbd68a1cfbcae4d464b8176857c9 from signed/DCO G head
+e7c87ff5aa5dd490c61499bbef2bb26541251760.
+https://github.com/rhamenator/Project-Copperfin/pull/7105
+All11 live ruleset-required contexts PASS/strict enabled;35/36 total SUCCESS
+at merge, only optional Windows Native37879687080/job113656265478 running,
+no failures. Final optional Windows Native SUCCESS04:44:45Z confirmed04:45Z:
+all36/36 SUCCESS, proof6074447646. Both watchers47000/50667 harvested exit0.
+Gate6074145109. Claude-FIRST6073711091 had no delivered review,
+NOT approval/no quota assertion. Authorized verified Codex fallback6073760366
+delivered actual clean review6073777898 at03:38:59Z, reviewed e7c87ff5aa.
+Summary6073709067 alone is not approval. Fresh paginated reviews/inline empty;
+Graph review threads/closingrefs0/hasNextfalse. No issue closure; parents
+#5611/#6776 stay OPEN/rhamenator/agent-approved, metadata revalidated04:45Z.
 
-RQ-CF-PRG-GETBAR-NUMERIC-001: three identical134-line installed WineVFP9 7423
-observations; default finite Numeric/exact truncation1..MAX, explicit both-sign
-signed-low32 positive aliases; exact64/nonfinite containment and checked other
-coercions. Preserved zero/order/lookup/session/cursor/flags/callback state.
-Known order#6152 retained separately/comment6072009479; native1612#7096 unfinished.
-Frozen112direct/468guarded/148inactive/3old neighbors. Both unchanged originals
-exactly172 identical selected identity failures, zero unrelated/no diagnostics,
-GNU5.76s/Clang6.21s. FixedGNU14/14 PASS455.76s, ClangASan/UBSan/
-float-cast-overflow5/5 PASS18.84s/no diagnostics/detect_leaks0; shared menu/
-olderNumeric/localization/sevencontracts included. Full native/frozen hashes/
-original/fixed logs in tests/fixtures/vfp9-getbar-numeric/README.md and
-baseline-audit.md. Medium-misuse development DQDV self-review/walkthrough/
-rollback complete, not independent-human/high-hazard/leak/GUI/platform/release.
-Postpush exacthead11/11 PASS55.87s/proof6072470236; logSHA
-42b23d020234110a6b462561768b0fdaf9cf89f82dc7932f20d793ebd12d9e05,
-retained in recoverable build trash. Actual slower shared times not explained.
+RQ-CF-PRG-COLLECTION-SELECTOR-NUMERIC-001: installed WineVFP9 7423 three
+byte-identical78-line observations; shipped Item/Remove help; Numeric fractions
+truncate, explicit VFP9 both-sign signed-low32 positive aliases. Exact64 and
+nonfinite containment is parent-derived. Preserve keys/member identity/order/
+Count/key alignment/session context/read-only guards/lifetime/soft fallback.
+Native errors2061/type/Currency truncation and Remove(-1) clear-all remain
+unadmitted residual#7104 against8a9f8f61a; do not implement it or claim parity.
+Residual runtime reproduction unfinished, distinct from source inspection.
+Generated uppercase probe.FXP was identified and recoverably trashed.
+Frozen116direct/140freshpublic/26hidden plus8 unchanged neighbors. BOTH
+unchanged-original GNU/Clang baselines BEFORE migration:398 identical FAIL
+lines (280identity/100removal/18hidden), zero unrelated failures/diagnostics;
+GNU2.39s/Clang2.96s. No assertion/helper/CMake repair/removal/weakening.
+Fixed GNU focused2/2 PASS2.41s, broader15/15 PASS460.79s (shared menus,
+olderNumeric/localization/seven contracts); Clang ASan/UBSan/float-cast-overflow
+focused2/2 PASS2.90s/shared3/3 PASS74.92s, no diagnostics/leaks disabled.
+Slower shared timings retained without cause/performance claim.
+Full requirements/hashes/native/original/fixed logs in
+tests/fixtures/vfp9-collection-selector-numeric/README.md and baseline-audit.md;
+original diagnostic trailing spaces retained byte-for-byte. Medium-misuse
+development DQDV self-review/walkthrough/rollback complete, not independent
+human/high-hazard/full-native/lifecycle/leak/GUI/platform/release qualification.
+Postpush exactheadGNU12/12 PASS22.85s, serial/privateTMPDIR/180s cap;
+proof6073726605/logSHA4e2b65fbc03ed17ce5db6bf6910086d047c7b41036fd9620a25789ba590ff4e5.
+Tracked187 fragments valid/channel verify clean before push.
 
-Main FF synchronized8a9f8f61a. Completed GETBAR WT/local/remote branch removed
-normally; owned367MB GNU/235MB sanitizer builds recoverably trashed at
-/home/rich/.local/share/Trash/files/copperfin-getbar-5611-build and
-copperfin-getbar-5611-sanitize. Main continuity stash
-b142e7048bfadc1bad2617c9e43d9b1094406f02 and completed-WT stash
-6547b8f6b799858713addcbcdab8200b548732b0 retained; all older/foreign state preserved.
-Final optional Windows Native37870390323/job113626888498 SUCCESS at exacthead
-1c196d0502 confirmed02:45Z; all36/36 SUCCESS, proof6073261563. No inferred full
-suite count/duration. Watch10430 harvested exit0. Attached7103; cap100 old
-verifiedmerged6657 unlinked only.
-Previous PRMBAR7101 all36/36 SUCCESS; evidence remains tracked/in recoverable
-copperfin-prmbar-5611-build/sanitize trash. EPOCH/CENTURY complete/#3698 closed.
-#6879 remains after numeric. HostedVSIX40min owner policy ships7099, not measured
-optimum/proven root cause; localVSIX timing still deferred pending safe full
-independent clone and capacity. Interrupted partials in SKPBAR build trash,
-NEVER boot. Originals/template/firmware/backups preserved.
+Main FF synchronized419390ac7. Completed Collection WT/local/remote branch
+removed normally;383MB GNU/197MB sanitizer build directories recoverably
+trashed at /home/rich/.local/share/Trash/files/copperfin-collection-selector-5611-build
+and copperfin-collection-selector-5611-sanitize (postpush log preserved there).
+Canonical pre-sync continuity stash1da24688c160c8b2fa0d40e3496b3817da9daaae
+retained recoverable; all older/foreign files/WTs preserved. Live channel reread
+empty after cleanup. No VM used/no owner-input blocker.
+
+Previous GETBAR7103 all36/36 SUCCESS, final optional Windows Native confirmed/
+proof6073261563; full frozen/native/original/fixed evidence tracked and builds
+recoverable in copperfin-getbar-5611-build/sanitize trash. Canonical stash
+b142e7048bfadc1bad2617c9e43d9b1094406f02 and WT stash
+6547b8f6b799858713addcbcdab8200b548732b0 retained. PRMBAR7101 all36/36 SUCCESS.
+EPOCH/CENTURY complete/#3698 closed;#6879 remains after numeric.
+HostedVSIX40min owner policy shipped7099, not measured optimum/proven root
+cause. LocalVSIX timing still deferred until safe full independent clone and
+capacity; interrupted SKPBAR partials remain recoverable, NEVER boot.
+Originals/template/firmware/backups preserved.
 
 ## Selected active bounded slice
 
-Collection Numeric/exact-integer selector conversion under owner-directed
-OPEN/rhamenator/agent-approved#5611/#6776, freshly revalidated02:15Z.
-Base origin/main8a9f8f61a5e4267df769bb84ce7d5652fe024364;
-branch fix/collection-selector-numeric-5611,
-WT /home/rich/.codex/worktrees/collection-selector-numeric-5611/Project-Copperfin.
-RQ-CF-PRG-COLLECTION-SELECTOR-NUMERIC-001 mapped BEFORE helper/tests/migration
-in fixture README/docs22/docs32/single2026-10-09 fragment, statusgap/pending.
-Only shared resolve_native_collection_slot Numeric/exact conversion selected:
-Item/default-item/Remove; preserve string keys/order/Count/lifetime/selected
-session and hidden read-only guards. Initially-unused checked helper plus Numeric/
-neighbors targets/isolation added, frozen BEFORE first GNU configuration.
-Resolver/method declaration/expression/focus callers stayed original through
-both baselines, then migrated narrowly. No PR/commit/push for new slice yet.
+BITNOT first-operand Numeric/exact conversion under revalidated admitted
+#5611/#6776; base origin/main419390ac7a88dbd68a1cfbcae4d464b8176857c9.
+Branch fix/bitnot-numeric-5611; WT
+/home/rich/.codex/worktrees/bitnot-numeric-5611/Project-Copperfin.
+No commit/push/PR yet. Checked helper and independent tests added only AFTER
+requirement recovery/mapping; BITNOT-only migration followed both originals.
+Selection is inventory within the admitted numeric umbrella, not defect hunt.
+Original BITNOT routed its first operand through bitwise_value's llround then
+signed32 conversion in runtime_surface_platform_helpers.inl. Only BITNOT's
+dispatcher now uses checked_bitnot_argument with selected-session mode,
+catchable localized11, signed32 complement as -1-int64(operand), no unsigned
+narrowing. Migrated dispatcher SHA
+f8dee07b722c2faeaf61a68a7ea9d2738198c6fa135b5c52f49601b7f5e10314.
+RQ-CF-PRG-BITNOT-NUMERIC-001 mapped in docs22/docs32 and fixture BEFORE
+helper/tests; bounded rowdefined after verification/migration. Keep BITAND/BITOR/BITXOR/BITCLEAR/BITSET/BITTEST,
+bit_position, already-shipped BITLSHIFT/BITRSHIFT and other coercions outside
+this first bounded slice unless recovered evidence proves an unavoidable seam.
+Do not silently migrate their shared helper.
 
-Shipped Collection Item3d6d88cb-99a9-4533-9667-f9213e21c448 and
-Remove2758cf89-5f74-4543-a43e-dca68c69f695 help read fully. Installed WineVFP9
-7423 three strictly serial identical78-line fresh-three-member probes:
-Numeric1.5/1.9 selects alpha,2.5/2.9 beta,3.5/3.9 gamma; both-sign
-4294967297/98/99 and -4294967295/94/93 alias1/2/3. Item/Remove identity,
-Count and survivors independently retained. SourceSHA
-ab8901caf29915a9e1d6e16e285aa2163f10dae8d14cde15bdd900b89f866428;
-probe.out/run1.out/run2.out/run3.out SHA
-fdd68ec70e0fa9f077f5754d699513a9c097b9590840d575b0cd222cdccf8447.
-Fixture tests/fixtures/vfp9-collection-selector-numeric. Initial lowercase
-FXP lookup reported nonexistent; generated uppercase probe.FXP (1595bytes)
-was subsequently identified and recoverably trashed. Source/logs retained.
-No VM/dialog/installer/large allocation.
+Shipped BITNOT help9881350f-b6bb-4a73-9772-95d448de5397 read fully. Installed
+WineVFP9 7423 three byte-identical49-line/47call native runs in
+tests/fixtures/vfp9-bitnot-numeric; sourceSHAfcf60777b31070d1bd8842af5574371c30edc8586f5a9fc614a1daa8a49fa51d,
+all4outputSHAbc16398ccfe93b30ce02a324698319136902fc68429da45c06358f9b621f9263.
+Fractions truncate before signed32 complement; bothsignlow32 aliases and huge
+finite indefinite0 ->-1 observed. Exact64 precision and NaN/infinity rejection
+derive from parent safety policy; default checked truncated signed32 or error11.
+Native Currency$0.5/error11, Currencyfraction truncation/other-type11 conflict
+with current source; focused residual#7106 filed against419390ac7, unadmitted,
+no scope expansion. Native evidence is complete; the original frozen .T.,
+'1.9' and $1.5 preservation controls passed both modes/sessions and conflict
+with native type/truncation. Rest of independent Copperfin residual matrix
+unfinished, distinct from the filing's original source prediction. Binary signatures
+not probed/implemented; NULL/arity untouched. Initial oversized-source error36
+and TRANSFORM stars corrected BEFORE final retention (not Copperfin defects),
+recorded README. Generated1574byte probe.FXP recoverably trashed; source/logs
+retained. No VM/credentials/native binary inspection.
 
-Native-error2061, Remove(-1/-1.5/4294967295) clear-all and Currency$1.5/$2.5
-truncation differ from current-main source. Focused new residual#7104 filed
-against8a9f8f61a, no label/admission/request; do not expand active conversion.
-Current Copperfin runtime reproduction not yet run, explicitly distinguished
-from source inspection. Existing empty/false fallback is a temporary preserved
-gap, NOT recovered native parity. Type/Currency/sentinel/lifecycle work separate.
-Both originals and fixed/broader evidence retained; bounded medium-misuse
-development DQDV self-review/focused walkthrough/rollback recorded in fixture,
-not independent human/high-hazard/full native/leak/platform/release acceptance.
+Frozen BEFORE firstconfiguration: planned104direct/156freshpublic and2 unchanged
+old neighbor functions; helper/test/CMake/isolation hashes in baseline-audit.md.
+Exact2^53+1 public operand built with two exact64 seeds, not rounded literal.
+New helper was UNUSED and both dispatch sources byte-identical to origin/main
+through BOTH original baselines; shared platform helper remains unchanged.
+GNU15.2 Debug-g0 configure/buildPASS; exec83440 harvested exit0.
+OriginalGNU serial/privateTMPDIR CTest89727 completed exit8: exactly110 selected
+assertion failures(84COPPERFIN/26VFP9;30error/80complement), zero direct or
+unrelated failures. All104direct/156freshpublic executed, context/continuation/
+reset passed; unchangedneighborPASS. Numeric1.13s/neighbor0.11s/total1.25s.
+Full136line original-gcc.log retained in fixture, SHA
+203c0e3331bec6d211f5ea4cce6ae91a857b62cb9f2e9263c4952f5b593e9975.
+All6frozeninputs/originaldispatcher/platformhelper hashes unchanged.
+Clang21.1.8 Debug-O1-g0 matching C/CXX/EXE/SHARED ASan/UBSan/
+float-cast-overflow/frame-pointer configure/buildPASS,67274 harvested exit0.
+OriginalClang35154 completed exit8: same110 byte-identical FAIL lines asGNU,
+zero direct/unrelated failures or sanitizer diagnostics,104direct/156public
+executed and controlsPASS. Numeric1.81s/neighbor0.10s/total1.92s.
+Full136line original-clang.log SHA
+046a6c23f65580af95f904e925208a912afb6e3eb165d309b1d86a59928988c6.
+BOTH original logs retained BEFORE migration; no frozeninputrepair/weakening.
+FixedGNUbuild13770 PASS, focused42556 PASS2/2 total1.26s(numeric1.12/neighbor0.13);
+fixed-focused-gcc.log SHA5eaf2c0abf1d9d49fa9500a94a8e7ccf45b9ebb2189907d27e1bc787ae7b9f02.
+Initial GNU fixed-build command rejected nonexistent menu_queries target before
+compilation; corrected command only, no source/inputrepair. Clangfixedbuild
+96039 PASS; verboseCTest26655 PASS5/5 total106.62s: olderNumeric102.46s,
+NULL0.12, BITNOTnumeric1.74/neighbor0.09, Collection2.19. Full79line
+fixed-clang.log SHA4fcf20de278fdbe69ee1e69b60011027b82b32593c74ed50d2ea85423015843a;
+104direct/156public counters/no diagnostics/leaksdisabled/180s cap.
+GNUverbose25162 PASS13/13 total412.64s, olderNumeric65.83/localization14.39/
+safetycontract327.29/NULL0.13/BITNOT1.15+0.11/Collection1.84 and7contracts.
+Full171line fixed-gcc.log SHA5414581dd9575ce38356b45bf036d781278db25aeb847eb78ecf097eb2a73071.
+Counters104direct/156public; no failures. GNUdefaultcap600, safetyregistered1200
+unchanged. Alllocalbuilds/tests complete; no concurrentCopperfinbuild/test/VM.
+All6frozeninputs/platformhelper hashes unchanged, no repair/weakening. Rawlog
+trailingCTest spaces preserved. Actualtimings no performance/rootcauseclaim.
+RQ/VR/DQ/DV fixture/audit/docs22/docs32/changelog updated; medium-misuse
+implementation-agent development self-review/walkthrough/rollback complete,
+not independenthuman/high-hazard/leak/fullnative/platform/release/parent acceptance.
+Owned builds INSIDE WT build/bitnot-gcc and build/bitnot-clang (ignored);
+both completed and retained; no overlap builds/tests. No commit/PR yet.
+Currentcanonical channel reread empty. Accidental WT-local channel read printed
+historical messages; no instructions/actions taken, canonical cursor unchanged.
+Main foreign files/WTs untouched. Canonical overlay is current; WT tracked
+handoff still prePR Collection snapshot and must be updated before commit.
 
-Frozen inputs and planned counts retained in fixture baseline-audit.md:
-116direct/140freshpublic scripts (five reads+Remove each),26hidden scripts
-(two member chains+read-only Remove), eight unchanged collection/pageframe/
-application-window neighbors. GNU15.2 Debug-g0 one-job/nice10/ionice2:7 build
-completed. Original GNU serial/privateTMPDIR CTest exit8/2.39s: numeric2.25s fails
-exactly398 selected assertions (280identities/100removal/18hidden), zero other/
-direct/setup/state/read-only/cleanup failures; eight old neighbors0.13s PASS,
-no runtime diagnostics. Actual counters116direct/140public/26hidden.
-Byte-identical full original-gcc.log in fixture SHA
-82ca6358088be2a3e7ee9a4bec3a1cdb03782749e5a394107a59e80edeb8f86b.
-GNUbuild /home/rich/temp/copperfin-collection-selector-5611-build retained.
-Clang21.1.8 original ASan/UBSan/float-cast-overflow serial/privateTMPDIR exit8/
-2.96s: same398 FAIL lines/categories/order as GNU, zero other failures and no
-sanitizer diagnostics (leaks disabled); old neighbors0.11s PASS. Full
-original-clang.log retained SHAcb02930ae3a489ae33c102f8c2624b4742569f105f6fe3f9889bc1fb98f98303.
-All11 frozen inputs matched before migration; no assertion/helper/CMake repair/
-removal/weakening. BOTH original baselines retained BEFORE migration.
-Narrow resolver/helper selection and explicit mode parameter now migrated:
-expression three callers use numeric_behavior(set_callback_); explicit focus
-method reads current_set_state().numericbehavior. Key/Count/read-only/erase/
-lifetime/fallback policy unchanged; no static/global. Fixed GNU two executables
-PASS2.41s (Numeric2.27s/neighbors0.12s), no assertion changes; full focused logSHA
-d7f396c61ce41ed30e94414edc725a116b12482849b4d535d9fbf454295a9f05 retained.
-Fixed Clang two executables PASS2.90s (Numeric2.76s/neighbors0.12s), no runtime
-sanitizer diagnostics/leaks disabled; full focused logSHA
-69b0d57047c220680c51cd090e408d26194a534daf1541fe5b21c40eebb43e70 retained.
-Broader GNU15/15 PASS460.79s,600s cap, safety contract342.38s/Numeric80.85s/
-localization14.31s; full fixed-gcc.log SHA
-4237efa0a4ca307d3f9e3b78223ab3c67475c007350ff7fecb2be4f34c432ad8 retained.
-Includes focused two, older Numeric, MRKBAR/SKPBAR/PRMBAR/GETBAR, localization
-and seven repository contracts. Shared Clang sanitizers3/3 PASS74.92s,
-Numeric37.78s/neighbors0.11s/MRKBAR37.01s,180s cap/no runtime diagnostics/
-leaks disabled; full fixed-clang.log SHA
-29698806fd2288ae11d55e6d708eeb320f4b57a5058aab2611557770e424fda0 retained.
-Slower than first focused pass, no inferred cause/performance qualification.
-All six frozen helper/test/CMake/isolation hashes match, no weakening/repairs.
-No overlapping Copperfin build/test/VM. Both parents stillOPEN/owner-approved,
-fresh metadata and origin/main8a9f8f61a confirmed before PR preparation.
-NEXT final diff/contract audit, signed commit/push/PR, exact-head proof,
-Claude FIRST then verified authorized Codex
-fallback, clean exacthead/all11green/allresolved before merge. No issue closure.
-Channel reread empty after cleanup; foreign files/WTs untouched.
-No Copperfin VM started; foreign soundcurrent-localization-win11-qa active at
-02:20Z, leave untouched/avoid VM overlap. No owner input needed.
+NEXT finalsource/docs/frozenhash/channel/changelog verification; copy canonical
+ownedcontinuity prefix into WT handoff through apply_patch, preservehistory.
+Bothoriginals/fixed are COMPLETE; donotrerun/overwrite original logs. Do not
+repair/remove/weaken frozen helper/tests/CMake without documented re-freeze
+and repeatingbothoriginals. Signed/DCO commit/push/PR, exact-head proof, Claude FIRST
+and authorized verified Codex fallback if needed. Clean actual exact-head
+review/all11required green/allconversations resolved before merge; no parent
+or residual closure. VM use only if necessary, brief and no concurrent VM.
 
 Audit candidates#7100 lifecycle output-drain timeout and#7102 designer-smoke
 descendant cleanup freshly confirmedOPEN/rhamenator/agent-approved00:47Z.

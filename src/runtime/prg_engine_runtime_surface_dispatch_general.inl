@@ -717,7 +717,14 @@
         return make_int64_value(signed_bitwise_result(result));
     }
     if (function == "bitnot" && !arguments.empty()) {
-        return make_int64_value(signed_bitwise_result(~bitwise_value(arguments[0])));
+        // RQ-CF-PRG-BITNOT-NUMERIC-001: selected-session checked conversion;
+        // leave the shared coercion for other bit functions unchanged.
+        const auto operand = checked_bitnot_argument(arguments[0], numeric_behavior(set_callback));
+        if (!operand) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        // Signed32 complement, calculated in int64 without unsigned narrowing.
+        return make_int64_value(-1LL - static_cast<std::int64_t>(*operand));
     }
     if (function == "bitclear" && arguments.size() >= 2U) {
         const std::uint32_t value = bitwise_value(arguments[0]);

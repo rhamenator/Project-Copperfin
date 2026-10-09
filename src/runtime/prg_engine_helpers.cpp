@@ -2253,6 +2253,30 @@ int default_set_century_epoch() {
     return default_set_century_epoch_for_year(local.tm_year + 1900);
 }
 
+// RQ-CF-PRG-BITNOT-NUMERIC-001: independently recovered truncation/low32,
+// exact extension and nonfinite containment derive from #5611/#6776.
+std::optional<std::int32_t> checked_bitnot_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    const bool numeric = value.kind == PrgValueKind::number ||
+                         value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
+    if (!numeric) {
+        // Temporary checked half-away coercion gap #7106, not native type parity.
+        const auto rounded = checked_truncated_numeric_to_int64(std::round(value_as_number(value)));
+        return rounded ? std::optional<std::int32_t>(declared_int32_from_int64(*rounded)) : std::nullopt;
+    }
+    if (value.kind == PrgValueKind::number && !std::isfinite(value.number_value)) {
+        return std::nullopt;
+    }
+    if (behavior == NumericBehavior::vfp9) {
+        return static_cast<std::int32_t>(vfp9_numeric_to_int32(value));
+    }
+    const auto converted = checked_declared_int64_argument(value);
+    if (!converted || *converted < INT32_MIN || *converted > INT32_MAX) {
+        return std::nullopt;
+    }
+    return static_cast<std::int32_t>(*converted);
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {
