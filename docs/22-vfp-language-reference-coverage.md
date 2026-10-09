@@ -1,5 +1,25 @@
 # VFP Language Reference Coverage
 
+- GETBAR Numeric/exact-integer position conversion (#5611/#6776/#7096,2026-10-08):
+  RQ-CF-PRG-GETBAR-NUMERIC-001 mapped BEFORE helper/production migration.
+  Independent installed VFP9 7423 three matching134-line/43-operand controls
+  over one/three/five-bar RELATIVE layouts recover truncation and both-sign
+  low32 positive aliases. [Fixture](../tests/fixtures/vfp9-getbar-numeric/README.md)
+  retains hashes, shipped-help one-based-position contract and encountered
+  known structural-order gap#6152. Default safe Numeric/exact1..MAX, explicit
+  legacy aliases, parent-derived exact64/nonfinite containment and checked
+  other coercions. Preserve zero fallback/lookup/order/session/state; native1612
+  remains#7096. Frozen original GNU/Clang have172 identical selected identity
+  failures/zero unrelated assertions,5.76s/6.21s; old neighbors passed/no
+  sanitizer diagnostics. Only selected-session GETBAR callback migrated.
+  Fixed GNU14/14 PASS455.76s and Clang sanitizers5/5 PASS18.84s/no diagnostics;
+  frozen112direct/468guarded/148inactive cases/three old neighbors plus shared
+  queries, older Numeric/localization/seven contracts. Retained full logs,
+  medium-misuse development DQ/DV self-review/walkthrough/rollback complete;
+  later callback identities guarded, not an independent invocation counter.
+  Bounded requirement defined; exact-head hosted/review gates still apply;
+  no broad GETBAR/error/type/system-menu/GUI/release acceptance claim.
+
 - PRMBAR Numeric/exact-integer query conversion (#5611/#6776/#5868/#7096,2026-10-08):
   RQ-CF-PRG-PRMBAR-NUMERIC-001 mapped before helper/production migration.
   Independent installed VFP9 7423 three matching125-line singleton RELATIVE

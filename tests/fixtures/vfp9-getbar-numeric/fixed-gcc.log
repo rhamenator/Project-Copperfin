@@ -1,0 +1,53 @@
+Test project /home/rich/temp/copperfin-getbar-5611-build
+      Start  12: test_agent_issue_intake
+ 1/14 Test  #12: test_agent_issue_intake ......................   Passed    0.99 sec
+      Start  20: test_changelog_fragment_assembler
+ 2/14 Test  #20: test_changelog_fragment_assembler ............   Passed    0.22 sec
+      Start  21: test_changelog_fragments_valid
+ 3/14 Test  #21: test_changelog_fragments_valid ...............   Passed    0.23 sec
+      Start  30: test_agent_channel_contract
+ 4/14 Test  #30: test_agent_channel_contract ..................   Passed    0.02 sec
+      Start  36: test_native_test_isolation_contract
+ 5/14 Test  #36: test_native_test_isolation_contract ..........   Passed    0.44 sec
+      Start  38: test_safety_traceability_workflow_contract
+ 6/14 Test  #38: test_safety_traceability_workflow_contract ...   Passed  340.92 sec
+      Start  40: test_localization
+ 7/14 Test  #40: test_localization ............................   Passed   14.63 sec
+      Start  52: test_focused_workflow_path_filters
+ 8/14 Test  #52: test_focused_workflow_path_filters ...........   Passed    0.02 sec
+      Start 393: test_prg_engine_numeric_behavior
+ 9/14 Test #393: test_prg_engine_numeric_behavior .............   Passed   79.56 sec
+      Start 397: test_prg_engine_skpbar_numeric
+10/14 Test #397: test_prg_engine_skpbar_numeric ...............   Passed    4.28 sec
+      Start 398: test_prg_engine_prmbar_numeric
+11/14 Test #398: test_prg_engine_prmbar_numeric ...............   Passed    4.32 sec
+      Start 399: test_prg_engine_getbar_numeric
+12/14 Test #399: test_prg_engine_getbar_numeric ...............   Passed    5.58 sec
+      Start 400: test_prg_engine_getbar_neighbors
+13/14 Test #400: test_prg_engine_getbar_neighbors .............   Passed    0.11 sec
+      Start 403: test_prg_engine_mrkbar_numeric
+14/14 Test #403: test_prg_engine_mrkbar_numeric ...............   Passed    4.44 sec
+
+100% tests passed, 0 tests failed out of 14
+
+Label Time Summary:
+copperfin-isolation:audit=complete                     = 455.74 sec*proc (14 tests)
+copperfin-isolation:child-processes=bounded            = 355.54 sec*proc (2 tests)
+copperfin-isolation:child-processes=none               = 100.20 sec*proc (12 tests)
+copperfin-isolation:environment=child-scoped           = 340.92 sec*proc (1 test)
+copperfin-isolation:environment=none                   =   1.91 sec*proc (6 tests)
+copperfin-isolation:environment=scoped-process         = 112.91 sec*proc (7 tests)
+copperfin-isolation:filesystem=process-owned           =  79.78 sec*proc (2 tests)
+copperfin-isolation:filesystem=read-only               = 342.61 sec*proc (6 tests)
+copperfin-isolation:filesystem=test-owned-unique       =  33.35 sec*proc (6 tests)
+copperfin-isolation:network=disabled-probes            = 340.92 sec*proc (1 test)
+copperfin-isolation:network=none                       = 114.82 sec*proc (13 tests)
+copperfin-isolation:platform=configured                =   0.44 sec*proc (2 tests)
+copperfin-isolation:platform=portable                  = 114.38 sec*proc (11 tests)
+copperfin-isolation:platform=powershell-conditional    = 340.92 sec*proc (1 test)
+copperfin-isolation:resources=none                     = 455.74 sec*proc (14 tests)
+copperfin-isolation:samples=none                       = 455.74 sec*proc (14 tests)
+copperfin-isolation:schedule=parallel-safe             = 357.46 sec*proc (8 tests)
+copperfin-isolation:schedule=serial                    =  98.28 sec*proc (6 tests)
+
+Total Test time (real) = 455.76 sec

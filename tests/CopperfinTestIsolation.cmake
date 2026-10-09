@@ -934,6 +934,19 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
 
+    # GETBAR: private TMPDIR roots, scoped locale, serial runtime.
+    foreach(getbar_test IN ITEMS test_prg_engine_getbar_numeric test_prg_engine_getbar_neighbors)
+        copperfin_set_test_isolation(${getbar_test}
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT scoped-process
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            AUDIT complete
+        )
+    endforeach()
+
     # PRMBAR: private TMPDIR roots, scoped locale, serial runtime.
     foreach(prmbar_test IN ITEMS test_prg_engine_prmbar_numeric test_prg_engine_prmbar_neighbors)
         copperfin_set_test_isolation(${prmbar_test}
