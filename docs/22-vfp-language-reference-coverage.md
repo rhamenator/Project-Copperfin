@@ -1,5 +1,23 @@
 # VFP Language Reference Coverage
 
+- BITAND Numeric/exact recovery (#5611/#6776/#6871,2026-10-09):
+  RQ-CF-PRG-BITAND-NUMERIC-001 mapped BEFORE helper/tests/migration.
+  Three matching108-line installed VFP9 7423 observations recover truncation,
+  both-sign low32/huge-indefinite0/infinity0, mixed signed masks and all26
+  fractional operand positions. [Fixture](../tests/fixtures/vfp9-bitand-numeric/README.md)
+  distinguishes derived default signed32/error11 and exact64/NaN containment.
+  New unused helper and104direct/472public tests frozen before configuration;
+  Both unchanged-dispatch originals retained before BITAND-only migration:
+  GNU/Clang368identical selected failures/zero unrelated,5.56s/10.70s,
+  no sanitizer diagnostics/leaks disabled. Fixed GNU14/14 PASS426.82s and
+  Clang sanitizers6/6 PASS117.38s/no diagnostics include frozen104direct/472public,
+  unchanged neighbors, older Numeric/NULL/BITNOT/Collection; GNU also covers
+  localization/seven contracts. Shared other-bit helper unchanged. Bounded
+  medium-misuse development DQ/DV self-review/walkthrough/rollback retained;
+  postpush/exact-head review/hosted checks remain gates. Type/Currency/binary/
+  other functions stay separate; arity#7108 unadmitted. No independent-human/
+  full-native/platform/leak/release/family/parent acceptance claim.
+
 - BITNOT Numeric/exact recovery (#5611/#6776,2026-10-09): installed VFP9
   truncates Numeric fractions before signed32 complement and returns low32
   aliases/huge-indefinite complements. Default checked signed32 admission and

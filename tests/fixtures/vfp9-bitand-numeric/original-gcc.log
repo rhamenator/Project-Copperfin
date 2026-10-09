@@ -1,0 +1,394 @@
+Test project /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-gcc
+    Start 399: test_prg_engine_bitand_numeric
+1/2 Test #399: test_prg_engine_bitand_numeric .....***Failed    5.42 sec
+FAIL: BITAND selected result COPPERFIN session1 0.5,-1 got 1
+FAIL: BITAND selected result COPPERFIN session1 -1,0.5 got 1
+FAIL: BITAND selected result COPPERFIN session1 0.9,-1 got 1
+FAIL: BITAND selected result COPPERFIN session1 -1,0.9 got 1
+FAIL: BITAND selected result COPPERFIN session1 1.5,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,1.5 got 2
+FAIL: BITAND selected result COPPERFIN session1 1.9,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,1.9 got 2
+FAIL: BITAND selected result COPPERFIN session1 -0.5,-1 got -1
+FAIL: BITAND selected result COPPERFIN session1 -1,-0.5 got -1
+FAIL: BITAND selected result COPPERFIN session1 -0.9,-1 got -1
+FAIL: BITAND selected result COPPERFIN session1 -1,-0.9 got -1
+FAIL: BITAND selected result COPPERFIN session1 -1.5,-1 got -2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1.5 got -2
+FAIL: BITAND selected result COPPERFIN session1 -1.9,-1 got -2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1.9 got -2
+FAIL: BITAND selected result COPPERFIN session1 2.5,-1 got 3
+FAIL: BITAND selected result COPPERFIN session1 -1,2.5 got 3
+FAIL: BITAND selected result COPPERFIN session1 -2.5,-1 got -3
+FAIL: BITAND selected result COPPERFIN session1 -1,-2.5 got -3
+FAIL: BITAND selected result COPPERFIN session1 2147483647.9,-1 got -2147483648
+FAIL: BITAND selected result COPPERFIN session1 -1,2147483647.9 got -2147483648
+FAIL: BITAND selected error COPPERFIN session1 2147483648,-1 got 0
+FAIL: BITAND selected result COPPERFIN session1 2147483648,-1 got -2147483648
+FAIL: BITAND selected error COPPERFIN session1 -1,2147483648 got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,2147483648 got -2147483648
+FAIL: BITAND selected result COPPERFIN session1 -2147483648.9,-1 got 2147483647
+FAIL: BITAND selected result COPPERFIN session1 -1,-2147483648.9 got 2147483647
+FAIL: BITAND selected error COPPERFIN session1 -2147483649,-1 got 0
+FAIL: BITAND selected result COPPERFIN session1 -2147483649,-1 got 2147483647
+FAIL: BITAND selected error COPPERFIN session1 -1,-2147483649 got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,-2147483649 got 2147483647
+FAIL: BITAND selected error COPPERFIN session1 4294967295,-1 got 0
+FAIL: BITAND selected result COPPERFIN session1 4294967295,-1 got -1
+FAIL: BITAND selected error COPPERFIN session1 -1,4294967295 got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,4294967295 got -1
+FAIL: BITAND selected error COPPERFIN session1 4294967296,-1 got 0
+FAIL: BITAND selected result COPPERFIN session1 4294967296,-1 got 0
+FAIL: BITAND selected error COPPERFIN session1 -1,4294967296 got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,4294967296 got 0
+FAIL: BITAND selected error COPPERFIN session1 4294967297,-1 got 0
+FAIL: BITAND selected result COPPERFIN session1 4294967297,-1 got 1
+FAIL: BITAND selected error COPPERFIN session1 -1,4294967297 got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,4294967297 got 1
+FAIL: BITAND selected error COPPERFIN session1 -4294967295,-1 got 0
+FAIL: BITAND selected result COPPERFIN session1 -4294967295,-1 got 1
+FAIL: BITAND selected error COPPERFIN session1 -1,-4294967295 got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,-4294967295 got 1
+FAIL: BITAND selected error COPPERFIN session1 -4294967296,-1 got 0
+FAIL: BITAND selected result COPPERFIN session1 -4294967296,-1 got 0
+FAIL: BITAND selected error COPPERFIN session1 -1,-4294967296 got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,-4294967296 got 0
+FAIL: BITAND selected error COPPERFIN session1 -4294967297,-1 got 0
+FAIL: BITAND selected result COPPERFIN session1 -4294967297,-1 got -1
+FAIL: BITAND selected error COPPERFIN session1 -1,-4294967297 got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,-4294967297 got -1
+FAIL: BITAND selected error COPPERFIN session1 9007199254740992,-1 got 0
+FAIL: BITAND selected result COPPERFIN session1 9007199254740992,-1 got 0
+FAIL: BITAND selected error COPPERFIN session1 -1,9007199254740992 got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,9007199254740992 got 0
+FAIL: BITAND selected error COPPERFIN session1 1E20,-1 got 0
+FAIL: BITAND selected result COPPERFIN session1 1E20,-1 got 0
+FAIL: BITAND selected error COPPERFIN session1 -1,1E20 got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,1E20 got 0
+FAIL: BITAND selected error COPPERFIN session1 -1E20,-1 got 0
+FAIL: BITAND selected result COPPERFIN session1 -1E20,-1 got 0
+FAIL: BITAND selected error COPPERFIN session1 -1,-1E20 got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,-1E20 got 0
+FAIL: BITAND selected error COPPERFIN session1 1E300,-1 got 0
+FAIL: BITAND selected result COPPERFIN session1 1E300,-1 got 0
+FAIL: BITAND selected error COPPERFIN session1 -1,1E300 got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,1E300 got 0
+FAIL: BITAND selected error COPPERFIN session1 -1E300,-1 got 0
+FAIL: BITAND selected result COPPERFIN session1 -1E300,-1 got 0
+FAIL: BITAND selected error COPPERFIN session1 -1,-1E300 got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,-1E300 got 0
+FAIL: BITAND selected error COPPERFIN session1 EXP(1000),-1 got 0
+FAIL: BITAND selected result COPPERFIN session1 EXP(1000),-1 got 0
+FAIL: BITAND selected error COPPERFIN session1 -1,EXP(1000) got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,EXP(1000) got 0
+FAIL: BITAND selected error COPPERFIN session1 -EXP(1000),-1 got 0
+FAIL: BITAND selected result COPPERFIN session1 -EXP(1000),-1 got 0
+FAIL: BITAND selected error COPPERFIN session1 -1,-EXP(1000) got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,-EXP(1000) got 0
+FAIL: BITAND selected result COPPERFIN session1 1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1 got 2
+FAIL: BITAND selected result COPPERFIN session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9 got 2
+FAIL: BITAND selected result COPPERFIN session1 7.9,3.9,1.9 got 0
+FAIL: BITAND selected error COPPERFIN session1 0,1E300 got 0
+FAIL: BITAND selected result COPPERFIN session1 0,1E300 got 0
+FAIL: BITAND selected error COPPERFIN session1 -1,0,1E300 got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,0,1E300 got 0
+FAIL: BITAND selected error COPPERFIN session1 1E300,0 got 0
+FAIL: BITAND selected result COPPERFIN session1 1E300,0 got 0
+FAIL: BITAND selected error COPPERFIN session1 -1,4294967297,3 got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,4294967297,3 got 1
+FAIL: BITAND selected error COPPERFIN session1 0,EXP(1000) got 0
+FAIL: BITAND selected result COPPERFIN session1 0,EXP(1000) got 0
+FAIL: BITAND selected error COPPERFIN session1 -1,0,EXP(1000) got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,0,EXP(1000) got 0
+FAIL: BITAND selected error COPPERFIN session1 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),-1 got 0
+FAIL: BITAND selected result COPPERFIN session1 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),-1 got 0
+FAIL: BITAND selected error COPPERFIN session1 -1,(CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,(CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got 0
+FAIL: BITAND selected error COPPERFIN session1 CAST(4294967297 AS UINT64),-1 got 0
+FAIL: BITAND selected result COPPERFIN session1 CAST(4294967297 AS UINT64),-1 got 1
+FAIL: BITAND selected error COPPERFIN session1 -1,CAST(4294967297 AS UINT64) got 0
+FAIL: BITAND selected result COPPERFIN session1 -1,CAST(4294967297 AS UINT64) got 1
+FAIL: BITAND selected result COPPERFIN session2 0.5,-1 got 1
+FAIL: BITAND selected result COPPERFIN session2 -1,0.5 got 1
+FAIL: BITAND selected result COPPERFIN session2 0.9,-1 got 1
+FAIL: BITAND selected result COPPERFIN session2 -1,0.9 got 1
+FAIL: BITAND selected result COPPERFIN session2 1.5,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,1.5 got 2
+FAIL: BITAND selected result COPPERFIN session2 1.9,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,1.9 got 2
+FAIL: BITAND selected result COPPERFIN session2 -0.5,-1 got -1
+FAIL: BITAND selected result COPPERFIN session2 -1,-0.5 got -1
+FAIL: BITAND selected result COPPERFIN session2 -0.9,-1 got -1
+FAIL: BITAND selected result COPPERFIN session2 -1,-0.9 got -1
+FAIL: BITAND selected result COPPERFIN session2 -1.5,-1 got -2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1.5 got -2
+FAIL: BITAND selected result COPPERFIN session2 -1.9,-1 got -2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1.9 got -2
+FAIL: BITAND selected result COPPERFIN session2 2.5,-1 got 3
+FAIL: BITAND selected result COPPERFIN session2 -1,2.5 got 3
+FAIL: BITAND selected result COPPERFIN session2 -2.5,-1 got -3
+FAIL: BITAND selected result COPPERFIN session2 -1,-2.5 got -3
+FAIL: BITAND selected result COPPERFIN session2 2147483647.9,-1 got -2147483648
+FAIL: BITAND selected result COPPERFIN session2 -1,2147483647.9 got -2147483648
+FAIL: BITAND selected error COPPERFIN session2 2147483648,-1 got 0
+FAIL: BITAND selected result COPPERFIN session2 2147483648,-1 got -2147483648
+FAIL: BITAND selected error COPPERFIN session2 -1,2147483648 got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,2147483648 got -2147483648
+FAIL: BITAND selected result COPPERFIN session2 -2147483648.9,-1 got 2147483647
+FAIL: BITAND selected result COPPERFIN session2 -1,-2147483648.9 got 2147483647
+FAIL: BITAND selected error COPPERFIN session2 -2147483649,-1 got 0
+FAIL: BITAND selected result COPPERFIN session2 -2147483649,-1 got 2147483647
+FAIL: BITAND selected error COPPERFIN session2 -1,-2147483649 got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,-2147483649 got 2147483647
+FAIL: BITAND selected error COPPERFIN session2 4294967295,-1 got 0
+FAIL: BITAND selected result COPPERFIN session2 4294967295,-1 got -1
+FAIL: BITAND selected error COPPERFIN session2 -1,4294967295 got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,4294967295 got -1
+FAIL: BITAND selected error COPPERFIN session2 4294967296,-1 got 0
+FAIL: BITAND selected result COPPERFIN session2 4294967296,-1 got 0
+FAIL: BITAND selected error COPPERFIN session2 -1,4294967296 got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,4294967296 got 0
+FAIL: BITAND selected error COPPERFIN session2 4294967297,-1 got 0
+FAIL: BITAND selected result COPPERFIN session2 4294967297,-1 got 1
+FAIL: BITAND selected error COPPERFIN session2 -1,4294967297 got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,4294967297 got 1
+FAIL: BITAND selected error COPPERFIN session2 -4294967295,-1 got 0
+FAIL: BITAND selected result COPPERFIN session2 -4294967295,-1 got 1
+FAIL: BITAND selected error COPPERFIN session2 -1,-4294967295 got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,-4294967295 got 1
+FAIL: BITAND selected error COPPERFIN session2 -4294967296,-1 got 0
+FAIL: BITAND selected result COPPERFIN session2 -4294967296,-1 got 0
+FAIL: BITAND selected error COPPERFIN session2 -1,-4294967296 got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,-4294967296 got 0
+FAIL: BITAND selected error COPPERFIN session2 -4294967297,-1 got 0
+FAIL: BITAND selected result COPPERFIN session2 -4294967297,-1 got -1
+FAIL: BITAND selected error COPPERFIN session2 -1,-4294967297 got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,-4294967297 got -1
+FAIL: BITAND selected error COPPERFIN session2 9007199254740992,-1 got 0
+FAIL: BITAND selected result COPPERFIN session2 9007199254740992,-1 got 0
+FAIL: BITAND selected error COPPERFIN session2 -1,9007199254740992 got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,9007199254740992 got 0
+FAIL: BITAND selected error COPPERFIN session2 1E20,-1 got 0
+FAIL: BITAND selected result COPPERFIN session2 1E20,-1 got 0
+FAIL: BITAND selected error COPPERFIN session2 -1,1E20 got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,1E20 got 0
+FAIL: BITAND selected error COPPERFIN session2 -1E20,-1 got 0
+FAIL: BITAND selected result COPPERFIN session2 -1E20,-1 got 0
+FAIL: BITAND selected error COPPERFIN session2 -1,-1E20 got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,-1E20 got 0
+FAIL: BITAND selected error COPPERFIN session2 1E300,-1 got 0
+FAIL: BITAND selected result COPPERFIN session2 1E300,-1 got 0
+FAIL: BITAND selected error COPPERFIN session2 -1,1E300 got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,1E300 got 0
+FAIL: BITAND selected error COPPERFIN session2 -1E300,-1 got 0
+FAIL: BITAND selected result COPPERFIN session2 -1E300,-1 got 0
+FAIL: BITAND selected error COPPERFIN session2 -1,-1E300 got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,-1E300 got 0
+FAIL: BITAND selected error COPPERFIN session2 EXP(1000),-1 got 0
+FAIL: BITAND selected result COPPERFIN session2 EXP(1000),-1 got 0
+FAIL: BITAND selected error COPPERFIN session2 -1,EXP(1000) got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,EXP(1000) got 0
+FAIL: BITAND selected error COPPERFIN session2 -EXP(1000),-1 got 0
+FAIL: BITAND selected result COPPERFIN session2 -EXP(1000),-1 got 0
+FAIL: BITAND selected error COPPERFIN session2 -1,-EXP(1000) got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,-EXP(1000) got 0
+FAIL: BITAND selected result COPPERFIN session2 1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1 got 2
+FAIL: BITAND selected result COPPERFIN session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9 got 2
+FAIL: BITAND selected result COPPERFIN session2 7.9,3.9,1.9 got 0
+FAIL: BITAND selected error COPPERFIN session2 0,1E300 got 0
+FAIL: BITAND selected result COPPERFIN session2 0,1E300 got 0
+FAIL: BITAND selected error COPPERFIN session2 -1,0,1E300 got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,0,1E300 got 0
+FAIL: BITAND selected error COPPERFIN session2 1E300,0 got 0
+FAIL: BITAND selected result COPPERFIN session2 1E300,0 got 0
+FAIL: BITAND selected error COPPERFIN session2 -1,4294967297,3 got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,4294967297,3 got 1
+FAIL: BITAND selected error COPPERFIN session2 0,EXP(1000) got 0
+FAIL: BITAND selected result COPPERFIN session2 0,EXP(1000) got 0
+FAIL: BITAND selected error COPPERFIN session2 -1,0,EXP(1000) got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,0,EXP(1000) got 0
+FAIL: BITAND selected error COPPERFIN session2 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),-1 got 0
+FAIL: BITAND selected result COPPERFIN session2 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),-1 got 0
+FAIL: BITAND selected error COPPERFIN session2 -1,(CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,(CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got 0
+FAIL: BITAND selected error COPPERFIN session2 CAST(4294967297 AS UINT64),-1 got 0
+FAIL: BITAND selected result COPPERFIN session2 CAST(4294967297 AS UINT64),-1 got 1
+FAIL: BITAND selected error COPPERFIN session2 -1,CAST(4294967297 AS UINT64) got 0
+FAIL: BITAND selected result COPPERFIN session2 -1,CAST(4294967297 AS UINT64) got 1
+FAIL: BITAND selected result VFP9 session1 0.5,-1 got 1
+FAIL: BITAND selected result VFP9 session1 -1,0.5 got 1
+FAIL: BITAND selected result VFP9 session1 0.9,-1 got 1
+FAIL: BITAND selected result VFP9 session1 -1,0.9 got 1
+FAIL: BITAND selected result VFP9 session1 1.5,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,1.5 got 2
+FAIL: BITAND selected result VFP9 session1 1.9,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,1.9 got 2
+FAIL: BITAND selected result VFP9 session1 -0.5,-1 got -1
+FAIL: BITAND selected result VFP9 session1 -1,-0.5 got -1
+FAIL: BITAND selected result VFP9 session1 -0.9,-1 got -1
+FAIL: BITAND selected result VFP9 session1 -1,-0.9 got -1
+FAIL: BITAND selected result VFP9 session1 -1.5,-1 got -2
+FAIL: BITAND selected result VFP9 session1 -1,-1.5 got -2
+FAIL: BITAND selected result VFP9 session1 -1.9,-1 got -2
+FAIL: BITAND selected result VFP9 session1 -1,-1.9 got -2
+FAIL: BITAND selected result VFP9 session1 2.5,-1 got 3
+FAIL: BITAND selected result VFP9 session1 -1,2.5 got 3
+FAIL: BITAND selected result VFP9 session1 -2.5,-1 got -3
+FAIL: BITAND selected result VFP9 session1 -1,-2.5 got -3
+FAIL: BITAND selected result VFP9 session1 2147483647.9,-1 got -2147483648
+FAIL: BITAND selected result VFP9 session1 -1,2147483647.9 got -2147483648
+FAIL: BITAND selected result VFP9 session1 -2147483648.9,-1 got 2147483647
+FAIL: BITAND selected result VFP9 session1 -1,-2147483648.9 got 2147483647
+FAIL: BITAND selected result VFP9 session1 1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1 got 2
+FAIL: BITAND selected result VFP9 session1 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9 got 2
+FAIL: BITAND selected result VFP9 session1 7.9,3.9,1.9 got 0
+FAIL: BITAND selected result VFP9 session1 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),-1 got 0
+FAIL: BITAND selected result VFP9 session1 -1,(CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got 0
+FAIL: BITAND selected result VFP9 session2 0.5,-1 got 1
+FAIL: BITAND selected result VFP9 session2 -1,0.5 got 1
+FAIL: BITAND selected result VFP9 session2 0.9,-1 got 1
+FAIL: BITAND selected result VFP9 session2 -1,0.9 got 1
+FAIL: BITAND selected result VFP9 session2 1.5,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,1.5 got 2
+FAIL: BITAND selected result VFP9 session2 1.9,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,1.9 got 2
+FAIL: BITAND selected result VFP9 session2 -0.5,-1 got -1
+FAIL: BITAND selected result VFP9 session2 -1,-0.5 got -1
+FAIL: BITAND selected result VFP9 session2 -0.9,-1 got -1
+FAIL: BITAND selected result VFP9 session2 -1,-0.9 got -1
+FAIL: BITAND selected result VFP9 session2 -1.5,-1 got -2
+FAIL: BITAND selected result VFP9 session2 -1,-1.5 got -2
+FAIL: BITAND selected result VFP9 session2 -1.9,-1 got -2
+FAIL: BITAND selected result VFP9 session2 -1,-1.9 got -2
+FAIL: BITAND selected result VFP9 session2 2.5,-1 got 3
+FAIL: BITAND selected result VFP9 session2 -1,2.5 got 3
+FAIL: BITAND selected result VFP9 session2 -2.5,-1 got -3
+FAIL: BITAND selected result VFP9 session2 -1,-2.5 got -3
+FAIL: BITAND selected result VFP9 session2 2147483647.9,-1 got -2147483648
+FAIL: BITAND selected result VFP9 session2 -1,2147483647.9 got -2147483648
+FAIL: BITAND selected result VFP9 session2 -2147483648.9,-1 got 2147483647
+FAIL: BITAND selected result VFP9 session2 -1,-2147483648.9 got 2147483647
+FAIL: BITAND selected result VFP9 session2 1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9,-1 got 2
+FAIL: BITAND selected result VFP9 session2 -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1.9 got 2
+FAIL: BITAND selected result VFP9 session2 7.9,3.9,1.9 got 0
+FAIL: BITAND selected result VFP9 session2 (CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),-1 got 0
+FAIL: BITAND selected result VFP9 session2 -1,(CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) got 0
+BITAND frozen cases: direct=104 public=472
+
+    Start 400: test_prg_engine_bitand_neighbors
+2/2 Test #400: test_prg_engine_bitand_neighbors ...   Passed    0.13 sec
+
+50% tests passed, 1 tests failed out of 2
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =   5.54 sec*proc (2 tests)
+copperfin-isolation:child-processes=none            =   5.54 sec*proc (2 tests)
+copperfin-isolation:environment=scoped-process      =   5.54 sec*proc (2 tests)
+copperfin-isolation:filesystem=test-owned-unique    =   5.54 sec*proc (2 tests)
+copperfin-isolation:network=none                    =   5.54 sec*proc (2 tests)
+copperfin-isolation:platform=portable               =   5.54 sec*proc (2 tests)
+copperfin-isolation:resources=none                  =   5.54 sec*proc (2 tests)
+copperfin-isolation:samples=none                    =   5.54 sec*proc (2 tests)
+copperfin-isolation:schedule=serial                 =   5.54 sec*proc (2 tests)
+
+Total Test time (real) =   5.56 sec
+
+The following tests FAILED:
+	399 - test_prg_engine_bitand_numeric (Failed)           copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+Errors while running CTest

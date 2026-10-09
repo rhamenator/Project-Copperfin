@@ -340,6 +340,9 @@ int default_set_century_epoch();
 // or managed code.
 // RQ-CF-PRG-BITNOT-NUMERIC-001 (#5611/#6776); only BITNOT, not other bit functions.
 std::optional<std::int32_t> checked_bitnot_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-BITAND-NUMERIC-001: native infinity0 only in explicit VFP9;
+// otherwise the independently recovered signed32/truncation boundary.
+std::optional<std::int32_t> checked_bitand_argument(const PrgValue& value, NumericBehavior behavior);
 std::optional<std::int32_t> checked_declared_int32_argument(const PrgValue& value, NumericBehavior behavior);
 std::optional<std::int64_t> checked_declared_int64_argument(const PrgValue& value);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the

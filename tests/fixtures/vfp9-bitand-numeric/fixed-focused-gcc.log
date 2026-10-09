@@ -1,0 +1,46 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 399
+    Start 399: test_prg_engine_bitand_numeric
+
+399: Test command: /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-gcc/tests/test_prg_engine_bitand_numeric
+399: Working Directory: /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-gcc/tests
+399: Environment variables: 
+399:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/resources/locales
+399: Test timeout computed to be: 180
+399: BITAND frozen cases: direct=104 public=472
+1/2 Test #399: test_prg_engine_bitand_numeric .....   Passed    5.78 sec
+test 400
+    Start 400: test_prg_engine_bitand_neighbors
+
+400: Test command: /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-gcc/tests/test_prg_engine_bitand_neighbors
+400: Working Directory: /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-gcc/tests
+400: Environment variables: 
+400:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/resources/locales
+400: Test timeout computed to be: 180
+2/2 Test #400: test_prg_engine_bitand_neighbors ...   Passed    0.11 sec
+
+The following tests passed:
+	test_prg_engine_bitand_numeric
+	test_prg_engine_bitand_neighbors
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =   5.89 sec*proc (2 tests)
+copperfin-isolation:child-processes=none            =   5.89 sec*proc (2 tests)
+copperfin-isolation:environment=scoped-process      =   5.89 sec*proc (2 tests)
+copperfin-isolation:filesystem=test-owned-unique    =   5.89 sec*proc (2 tests)
+copperfin-isolation:network=none                    =   5.89 sec*proc (2 tests)
+copperfin-isolation:platform=portable               =   5.89 sec*proc (2 tests)
+copperfin-isolation:resources=none                  =   5.89 sec*proc (2 tests)
+copperfin-isolation:samples=none                    =   5.89 sec*proc (2 tests)
+copperfin-isolation:schedule=serial                 =   5.89 sec*proc (2 tests)
+
+Total Test time (real) =   5.91 sec
