@@ -1,5 +1,23 @@
 # VFP Language Reference Coverage
 
+- PRMBAR Numeric/exact-integer query conversion (#5611/#6776/#5868/#7096,2026-10-08):
+  RQ-CF-PRG-PRMBAR-NUMERIC-001 mapped before helper/production migration.
+  Independent installed VFP9 7423 three matching125-line singleton RELATIVE
+  prompt controls recover truncation and both-sign low32 positive aliases,
+  not setter saturation. [Fixture](../tests/fixtures/vfp9-prmbar-numeric/README.md)
+  retains hashes and shipped-help interpretation. Default safe Numeric/exact
+  domain1..MAX; explicit legacy aliases; parent-derived nonfinite containment
+  and checked other coercions. Preserve lookup/normalization/session/state;
+  native1612 and GETBAR under#7096 remain separate. Frozen original GCC/Clang
+  callbacks exactly110 matching selected identity failures/zero unrelated,
+  4.29s/4.47s/no diagnostics. Only selected-session PRMBAR callback migrated;
+  fixed GNU13/13 PASS537.34s and Clang sanitizers4/4 PASS13.93s/no diagnostics,
+  shared MRKBAR/SKPBAR/old Numeric/localization/contracts included. Frozen
+  helper/tests/CMake, retained logs, completed medium-misuse development
+  DQ/DV self-review/walkthrough/rollback; not independent human/full native-
+  error/type/GUI/leak/platform/release qualification. Bounded requirement
+  defined; hosted CI/exact-head review/resolved conversations remain PR gates.
+
 - SKPBAR Numeric/exact-integer identifier conversion (#5611/#6776/#5868,2026-10-08):
   RQ-CF-PRG-SKPBAR-NUMERIC-001 mapped before migration. Independent installed
   VFP9 7423 three matching paired125-line singleton1/2/MAX enabled/disabled controls

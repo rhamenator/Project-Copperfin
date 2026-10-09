@@ -1,0 +1,135 @@
+Test project /home/rich/temp/copperfin-prmbar-5611-sanitize
+    Start 398: test_prg_engine_prmbar_numeric
+1/2 Test #398: test_prg_engine_prmbar_numeric .....***Failed    4.36 sec
+FAIL: PRMBAR query identity COPPERFIN 0.5 seed1 session1 ENABLED got one
+FAIL: PRMBAR query identity COPPERFIN 0.9 seed1 session1 ENABLED got one
+FAIL: PRMBAR query identity COPPERFIN 1.5 seed1 session1 ENABLED got two
+FAIL: PRMBAR query identity COPPERFIN 1.9 seed1 session1 ENABLED got two
+FAIL: PRMBAR query identity COPPERFIN 2.9 seed1 session1 ENABLED got 
+FAIL: PRMBAR query identity COPPERFIN 2147483647.9 seed1 session1 ENABLED got 
+FAIL: PRMBAR query identity COPPERFIN 0.5 seed2 session1 ENABLED got one
+FAIL: PRMBAR query identity COPPERFIN 0.9 seed2 session1 ENABLED got one
+FAIL: PRMBAR query identity COPPERFIN 1.5 seed2 session1 ENABLED got two
+FAIL: PRMBAR query identity COPPERFIN 1.9 seed2 session1 ENABLED got two
+FAIL: PRMBAR query identity COPPERFIN 2.9 seed2 session1 ENABLED got 
+FAIL: PRMBAR query identity COPPERFIN 2147483647.9 seed2 session1 ENABLED got 
+FAIL: PRMBAR query identity COPPERFIN 0.5 seed2147483647 session1 ENABLED got one
+FAIL: PRMBAR query identity COPPERFIN 0.9 seed2147483647 session1 ENABLED got one
+FAIL: PRMBAR query identity COPPERFIN 1.5 seed2147483647 session1 ENABLED got two
+FAIL: PRMBAR query identity COPPERFIN 1.9 seed2147483647 session1 ENABLED got two
+FAIL: PRMBAR query identity COPPERFIN 2.9 seed2147483647 session1 ENABLED got 
+FAIL: PRMBAR query identity COPPERFIN 2147483647.9 seed2147483647 session1 ENABLED got 
+FAIL: PRMBAR query identity COPPERFIN 0.5 seed1 session1 DISABLED got one
+FAIL: PRMBAR query identity COPPERFIN 0.9 seed1 session1 DISABLED got one
+FAIL: PRMBAR query identity COPPERFIN 1.5 seed1 session1 DISABLED got two
+FAIL: PRMBAR query identity COPPERFIN 1.9 seed1 session1 DISABLED got two
+FAIL: PRMBAR query identity COPPERFIN 2.9 seed1 session1 DISABLED got 
+FAIL: PRMBAR query identity COPPERFIN 2147483647.9 seed1 session1 DISABLED got 
+FAIL: PRMBAR query identity COPPERFIN 0.5 seed2 session1 DISABLED got one
+FAIL: PRMBAR query identity COPPERFIN 0.9 seed2 session1 DISABLED got one
+FAIL: PRMBAR query identity COPPERFIN 1.5 seed2 session1 DISABLED got two
+FAIL: PRMBAR query identity COPPERFIN 1.9 seed2 session1 DISABLED got two
+FAIL: PRMBAR query identity COPPERFIN 2.9 seed2 session1 DISABLED got 
+FAIL: PRMBAR query identity COPPERFIN 2147483647.9 seed2 session1 DISABLED got 
+FAIL: PRMBAR query identity COPPERFIN 0.5 seed2147483647 session1 DISABLED got one
+FAIL: PRMBAR query identity COPPERFIN 0.9 seed2147483647 session1 DISABLED got one
+FAIL: PRMBAR query identity COPPERFIN 1.5 seed2147483647 session1 DISABLED got two
+FAIL: PRMBAR query identity COPPERFIN 1.9 seed2147483647 session1 DISABLED got two
+FAIL: PRMBAR query identity COPPERFIN 2.9 seed2147483647 session1 DISABLED got 
+FAIL: PRMBAR query identity COPPERFIN 2147483647.9 seed2147483647 session1 DISABLED got 
+FAIL: PRMBAR query identity VFP9 0.5 seed1 session1 ENABLED got one
+FAIL: PRMBAR query identity VFP9 0.9 seed1 session1 ENABLED got one
+FAIL: PRMBAR query identity VFP9 1.5 seed1 session1 ENABLED got two
+FAIL: PRMBAR query identity VFP9 1.9 seed1 session1 ENABLED got two
+FAIL: PRMBAR query identity VFP9 2.9 seed1 session1 ENABLED got 
+FAIL: PRMBAR query identity VFP9 2147483647.9 seed1 session1 ENABLED got 
+FAIL: PRMBAR query identity VFP9 4294967297 seed1 session1 ENABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967295 seed1 session1 ENABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967294 seed1 session1 ENABLED got 
+FAIL: PRMBAR query identity VFP9 4294967297 seed1 session2 ENABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967295 seed1 session2 ENABLED got 
+FAIL: PRMBAR query identity VFP9 0.5 seed2 session1 ENABLED got one
+FAIL: PRMBAR query identity VFP9 0.9 seed2 session1 ENABLED got one
+FAIL: PRMBAR query identity VFP9 1.5 seed2 session1 ENABLED got two
+FAIL: PRMBAR query identity VFP9 1.9 seed2 session1 ENABLED got two
+FAIL: PRMBAR query identity VFP9 2.9 seed2 session1 ENABLED got 
+FAIL: PRMBAR query identity VFP9 2147483647.9 seed2 session1 ENABLED got 
+FAIL: PRMBAR query identity VFP9 4294967297 seed2 session1 ENABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967295 seed2 session1 ENABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967294 seed2 session1 ENABLED got 
+FAIL: PRMBAR query identity VFP9 4294967297 seed2 session2 ENABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967295 seed2 session2 ENABLED got 
+FAIL: PRMBAR query identity VFP9 0.5 seed2147483647 session1 ENABLED got one
+FAIL: PRMBAR query identity VFP9 0.9 seed2147483647 session1 ENABLED got one
+FAIL: PRMBAR query identity VFP9 1.5 seed2147483647 session1 ENABLED got two
+FAIL: PRMBAR query identity VFP9 1.9 seed2147483647 session1 ENABLED got two
+FAIL: PRMBAR query identity VFP9 2.9 seed2147483647 session1 ENABLED got 
+FAIL: PRMBAR query identity VFP9 2147483647.9 seed2147483647 session1 ENABLED got 
+FAIL: PRMBAR query identity VFP9 4294967297 seed2147483647 session1 ENABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967295 seed2147483647 session1 ENABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967294 seed2147483647 session1 ENABLED got 
+FAIL: PRMBAR query identity VFP9 4294967297 seed2147483647 session2 ENABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967295 seed2147483647 session2 ENABLED got 
+FAIL: PRMBAR query identity VFP9 0.5 seed1 session1 DISABLED got one
+FAIL: PRMBAR query identity VFP9 0.9 seed1 session1 DISABLED got one
+FAIL: PRMBAR query identity VFP9 1.5 seed1 session1 DISABLED got two
+FAIL: PRMBAR query identity VFP9 1.9 seed1 session1 DISABLED got two
+FAIL: PRMBAR query identity VFP9 2.9 seed1 session1 DISABLED got 
+FAIL: PRMBAR query identity VFP9 2147483647.9 seed1 session1 DISABLED got 
+FAIL: PRMBAR query identity VFP9 4294967297 seed1 session1 DISABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967295 seed1 session1 DISABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967294 seed1 session1 DISABLED got 
+FAIL: PRMBAR query identity VFP9 4294967297 seed1 session2 DISABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967295 seed1 session2 DISABLED got 
+FAIL: PRMBAR query identity VFP9 0.5 seed2 session1 DISABLED got one
+FAIL: PRMBAR query identity VFP9 0.9 seed2 session1 DISABLED got one
+FAIL: PRMBAR query identity VFP9 1.5 seed2 session1 DISABLED got two
+FAIL: PRMBAR query identity VFP9 1.9 seed2 session1 DISABLED got two
+FAIL: PRMBAR query identity VFP9 2.9 seed2 session1 DISABLED got 
+FAIL: PRMBAR query identity VFP9 2147483647.9 seed2 session1 DISABLED got 
+FAIL: PRMBAR query identity VFP9 4294967297 seed2 session1 DISABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967295 seed2 session1 DISABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967294 seed2 session1 DISABLED got 
+FAIL: PRMBAR query identity VFP9 4294967297 seed2 session2 DISABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967295 seed2 session2 DISABLED got 
+FAIL: PRMBAR query identity VFP9 0.5 seed2147483647 session1 DISABLED got one
+FAIL: PRMBAR query identity VFP9 0.9 seed2147483647 session1 DISABLED got one
+FAIL: PRMBAR query identity VFP9 1.5 seed2147483647 session1 DISABLED got two
+FAIL: PRMBAR query identity VFP9 1.9 seed2147483647 session1 DISABLED got two
+FAIL: PRMBAR query identity VFP9 2.9 seed2147483647 session1 DISABLED got 
+FAIL: PRMBAR query identity VFP9 2147483647.9 seed2147483647 session1 DISABLED got 
+FAIL: PRMBAR query identity VFP9 4294967297 seed2147483647 session1 DISABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967295 seed2147483647 session1 DISABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967294 seed2147483647 session1 DISABLED got 
+FAIL: PRMBAR query identity VFP9 4294967297 seed2147483647 session2 DISABLED got 
+FAIL: PRMBAR query identity VFP9 -4294967295 seed2147483647 session2 DISABLED got 
+FAIL: PRMBAR preserved prefix normalization COPPERFIN plain
+FAIL: PRMBAR preserved prefix normalization COPPERFIN \<access
+FAIL: PRMBAR preserved prefix normalization COPPERFIN \disabled
+FAIL: PRMBAR preserved prefix normalization COPPERFIN a\<inside
+FAIL: PRMBAR preserved prefix normalization VFP9 plain
+FAIL: PRMBAR preserved prefix normalization VFP9 \<access
+FAIL: PRMBAR preserved prefix normalization VFP9 \disabled
+FAIL: PRMBAR preserved prefix normalization VFP9 a\<inside
+
+    Start 399: test_prg_engine_prmbar_neighbors
+2/2 Test #399: test_prg_engine_prmbar_neighbors ...   Passed    0.10 sec
+
+50% tests passed, 1 tests failed out of 2
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =   4.46 sec*proc (2 tests)
+copperfin-isolation:child-processes=none            =   4.46 sec*proc (2 tests)
+copperfin-isolation:environment=scoped-process      =   4.46 sec*proc (2 tests)
+copperfin-isolation:filesystem=test-owned-unique    =   4.46 sec*proc (2 tests)
+copperfin-isolation:network=none                    =   4.46 sec*proc (2 tests)
+copperfin-isolation:platform=portable               =   4.46 sec*proc (2 tests)
+copperfin-isolation:resources=none                  =   4.46 sec*proc (2 tests)
+copperfin-isolation:samples=none                    =   4.46 sec*proc (2 tests)
+copperfin-isolation:schedule=serial                 =   4.46 sec*proc (2 tests)
+
+Total Test time (real) =   4.47 sec
+
+The following tests FAILED:
+	398 - test_prg_engine_prmbar_numeric (Failed)           copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+Errors while running CTest

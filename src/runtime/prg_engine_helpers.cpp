@@ -1391,6 +1391,15 @@ std::optional<std::int64_t> checked_skpbar_number_argument(
     return checked_mrkbar_number_argument(value, behavior);
 }
 
+// RQ-CF-PRG-PRMBAR-NUMERIC-001 (#5611/#6776/#7096): independently observed
+// singleton prompt identities match the query conversion, not setter saturation.
+// Parent-derived exact-integer/nonfinite/coercion safety shares this helper;
+// general native1612 errors and GETBAR position conversion remain separate.
+std::optional<std::int64_t> checked_prmbar_number_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    return checked_mrkbar_number_argument(value, behavior);
+}
+
 // RQ-CF-PRG-SKIP-COUNT-NUMERIC-001 (#5611/#6776): count conversion only,
 // not shared navigation or native type admission. Widened int32 counts make
 // the existing long-long abs operation defined, including INT32_MIN.

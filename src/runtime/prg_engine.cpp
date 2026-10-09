@@ -3353,8 +3353,14 @@ namespace copperfin::runtime
                 }
 
                 const std::string popup_name = normalize_identifier(value_as_string(arguments[0]));
-                const long long bar_number = static_cast<long long>(std::llround(value_as_number(arguments[1])));
-                if (popup_name.empty() || bar_number < 1LL)
+                // RQ-CF-PRG-PRMBAR-NUMERIC-001: query conversion only;
+                // preserve empty fallback, lookup and prefix normalization.
+                const auto &set_state = current_set_state();
+                const auto mode = set_state.find("numericbehavior");
+                const auto bar_number = checked_prmbar_number_argument(arguments[1],
+                    mode != set_state.end() && normalize_identifier(mode->second) == "vfp9"
+                        ? NumericBehavior::vfp9 : NumericBehavior::copperfin);
+                if (popup_name.empty() || !bar_number)
                 {
                     return std::nullopt;
                 }
@@ -3364,7 +3370,7 @@ namespace copperfin::runtime
                 {
                     return std::nullopt;
                 }
-                const auto bar = popup->second.find(bar_number);
+                const auto bar = popup->second.find(*bar_number);
                 if (bar == popup->second.end())
                 {
                     return std::nullopt;
