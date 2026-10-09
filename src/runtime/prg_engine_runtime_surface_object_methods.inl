@@ -13,7 +13,8 @@ std::optional<PrgValue> read_native_collection_member(RuntimeOleObjectState& run
 
 std::optional<PrgValue> invoke_native_collection_method(RuntimeOleObjectState& runtime_object,
                                                         const std::string& normalized_method_name,
-                                                        const std::vector<PrgValue>& arguments)
+                                                        const std::vector<PrgValue>& arguments,
+                                                        const NumericBehavior behavior)
 {
     if (!is_native_collection_object(runtime_object)) {
         return std::nullopt;
@@ -47,12 +48,12 @@ std::optional<PrgValue> invoke_native_collection_method(RuntimeOleObjectState& r
     }
 
     if (normalized_method_name == "item" && !arguments.empty()) {
-        const auto slot = resolve_native_collection_slot(runtime_object, arguments[0]);
+        const auto slot = resolve_native_collection_slot(runtime_object, arguments[0], behavior);
         return slot.has_value() ? runtime_object.collection_items[*slot] : make_empty_value();
     }
 
     if (normalized_method_name == "remove" && !arguments.empty()) {
-        const auto slot = resolve_native_collection_slot(runtime_object, arguments[0]);
+        const auto slot = resolve_native_collection_slot(runtime_object, arguments[0], behavior);
         if (!slot.has_value()) {
             return make_boolean_value(false);
         }

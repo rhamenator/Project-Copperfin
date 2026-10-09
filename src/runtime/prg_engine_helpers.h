@@ -172,6 +172,8 @@ std::optional<std::int64_t> checked_prmbar_number_argument(const PrgValue& value
 // RQ-CF-PRG-GETBAR-NUMERIC-001: independently observed position conversion;
 // lookup/order/zero fallback and native1612 gap#7096 remain separate.
 std::optional<std::int64_t> checked_getbar_position_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-COLLECTION-SELECTOR-NUMERIC-001: numeric slots only; keys stay separate.
+std::optional<std::int64_t> checked_collection_selector_argument(const PrgValue& value, NumericBehavior behavior);
 // RQ-CF-PRG-SKIP-COUNT-NUMERIC-001: default signed32 truncation/exact
 // comparison; VFP9 alone retains both-sign low32/indefinite-zero aliases.
 // NaN rejects both modes; safe other coercions remain checked half-away.

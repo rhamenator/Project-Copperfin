@@ -1,0 +1,424 @@
+Test project /home/rich/temp/copperfin-collection-selector-5611-build
+    Start 399: test_prg_engine_collection_selector_numeric
+1/2 Test #399: test_prg_engine_collection_selector_numeric .....***Failed    2.25 sec
+FAIL: Collection selected identity COPPERFIN session1 0.5 vexplicit got alpha
+FAIL: Collection selected identity COPPERFIN session1 0.5 vbare got alpha
+FAIL: Collection selected identity COPPERFIN session1 0.5 vbracket got alpha
+FAIL: Collection selected identity COPPERFIN session1 0.5 vmember got alpha
+FAIL: Collection selected identity COPPERFIN session1 0.5 vmemberbracket got alpha
+FAIL: Collection selected removal result COPPERFIN session1 0.5
+FAIL: Collection selected removal count COPPERFIN session1 0.5
+FAIL: Collection selected identity COPPERFIN session1 0.5 key-survivor vfirst got 
+FAIL: Collection selected removal survivor order COPPERFIN session1 0.5
+FAIL: Collection selected identity COPPERFIN session1 0.9 vexplicit got alpha
+FAIL: Collection selected identity COPPERFIN session1 0.9 vbare got alpha
+FAIL: Collection selected identity COPPERFIN session1 0.9 vbracket got alpha
+FAIL: Collection selected identity COPPERFIN session1 0.9 vmember got alpha
+FAIL: Collection selected identity COPPERFIN session1 0.9 vmemberbracket got alpha
+FAIL: Collection selected removal result COPPERFIN session1 0.9
+FAIL: Collection selected removal count COPPERFIN session1 0.9
+FAIL: Collection selected identity COPPERFIN session1 0.9 key-survivor vfirst got 
+FAIL: Collection selected removal survivor order COPPERFIN session1 0.9
+FAIL: Collection selected identity COPPERFIN session1 1.5 vexplicit got beta
+FAIL: Collection selected identity COPPERFIN session1 1.5 vbare got beta
+FAIL: Collection selected identity COPPERFIN session1 1.5 vbracket got beta
+FAIL: Collection selected identity COPPERFIN session1 1.5 vmember got beta
+FAIL: Collection selected identity COPPERFIN session1 1.5 vmemberbracket got beta
+FAIL: Collection selected identity COPPERFIN session1 1.5 key-survivor vfirst got alpha
+FAIL: Collection selected identity COPPERFIN session1 1.5 key-survivor vsecond got 
+FAIL: Collection selected removal survivor order COPPERFIN session1 1.5
+FAIL: Collection selected identity COPPERFIN session1 1.9 vexplicit got beta
+FAIL: Collection selected identity COPPERFIN session1 1.9 vbare got beta
+FAIL: Collection selected identity COPPERFIN session1 1.9 vbracket got beta
+FAIL: Collection selected identity COPPERFIN session1 1.9 vmember got beta
+FAIL: Collection selected identity COPPERFIN session1 1.9 vmemberbracket got beta
+FAIL: Collection selected identity COPPERFIN session1 1.9 key-survivor vfirst got alpha
+FAIL: Collection selected identity COPPERFIN session1 1.9 key-survivor vsecond got 
+FAIL: Collection selected removal survivor order COPPERFIN session1 1.9
+FAIL: Collection selected identity COPPERFIN session1 2.5 vexplicit got gamma
+FAIL: Collection selected identity COPPERFIN session1 2.5 vbare got gamma
+FAIL: Collection selected identity COPPERFIN session1 2.5 vbracket got gamma
+FAIL: Collection selected identity COPPERFIN session1 2.5 vmember got gamma
+FAIL: Collection selected identity COPPERFIN session1 2.5 vmemberbracket got gamma
+FAIL: Collection selected identity COPPERFIN session1 2.5 key-survivor vsecond got beta
+FAIL: Collection selected identity COPPERFIN session1 2.5 key-survivor vthird got 
+FAIL: Collection selected removal survivor order COPPERFIN session1 2.5
+FAIL: Collection selected identity COPPERFIN session1 2.9 vexplicit got gamma
+FAIL: Collection selected identity COPPERFIN session1 2.9 vbare got gamma
+FAIL: Collection selected identity COPPERFIN session1 2.9 vbracket got gamma
+FAIL: Collection selected identity COPPERFIN session1 2.9 vmember got gamma
+FAIL: Collection selected identity COPPERFIN session1 2.9 vmemberbracket got gamma
+FAIL: Collection selected identity COPPERFIN session1 2.9 key-survivor vsecond got beta
+FAIL: Collection selected identity COPPERFIN session1 2.9 key-survivor vthird got 
+FAIL: Collection selected removal survivor order COPPERFIN session1 2.9
+FAIL: Collection selected identity COPPERFIN session1 3.5 vexplicit got 
+FAIL: Collection selected identity COPPERFIN session1 3.5 vbare got 
+FAIL: Collection selected identity COPPERFIN session1 3.5 vbracket got 
+FAIL: Collection selected identity COPPERFIN session1 3.5 vmember got 
+FAIL: Collection selected identity COPPERFIN session1 3.5 vmemberbracket got 
+FAIL: Collection selected removal result COPPERFIN session1 3.5
+FAIL: Collection selected removal count COPPERFIN session1 3.5
+FAIL: Collection selected identity COPPERFIN session1 3.5 key-survivor vthird got gamma
+FAIL: Collection selected removal survivor order COPPERFIN session1 3.5
+FAIL: Collection selected identity COPPERFIN session1 3.9 vexplicit got 
+FAIL: Collection selected identity COPPERFIN session1 3.9 vbare got 
+FAIL: Collection selected identity COPPERFIN session1 3.9 vbracket got 
+FAIL: Collection selected identity COPPERFIN session1 3.9 vmember got 
+FAIL: Collection selected identity COPPERFIN session1 3.9 vmemberbracket got 
+FAIL: Collection selected removal result COPPERFIN session1 3.9
+FAIL: Collection selected removal count COPPERFIN session1 3.9
+FAIL: Collection selected identity COPPERFIN session1 3.9 key-survivor vthird got gamma
+FAIL: Collection selected removal survivor order COPPERFIN session1 3.9
+FAIL: Collection selected identity COPPERFIN session2 0.5 vexplicit got alpha
+FAIL: Collection selected identity COPPERFIN session2 0.5 vbare got alpha
+FAIL: Collection selected identity COPPERFIN session2 0.5 vbracket got alpha
+FAIL: Collection selected identity COPPERFIN session2 0.5 vmember got alpha
+FAIL: Collection selected identity COPPERFIN session2 0.5 vmemberbracket got alpha
+FAIL: Collection selected removal result COPPERFIN session2 0.5
+FAIL: Collection selected removal count COPPERFIN session2 0.5
+FAIL: Collection selected identity COPPERFIN session2 0.5 key-survivor vfirst got 
+FAIL: Collection selected removal survivor order COPPERFIN session2 0.5
+FAIL: Collection selected identity COPPERFIN session2 0.9 vexplicit got alpha
+FAIL: Collection selected identity COPPERFIN session2 0.9 vbare got alpha
+FAIL: Collection selected identity COPPERFIN session2 0.9 vbracket got alpha
+FAIL: Collection selected identity COPPERFIN session2 0.9 vmember got alpha
+FAIL: Collection selected identity COPPERFIN session2 0.9 vmemberbracket got alpha
+FAIL: Collection selected removal result COPPERFIN session2 0.9
+FAIL: Collection selected removal count COPPERFIN session2 0.9
+FAIL: Collection selected identity COPPERFIN session2 0.9 key-survivor vfirst got 
+FAIL: Collection selected removal survivor order COPPERFIN session2 0.9
+FAIL: Collection selected identity COPPERFIN session2 1.5 vexplicit got beta
+FAIL: Collection selected identity COPPERFIN session2 1.5 vbare got beta
+FAIL: Collection selected identity COPPERFIN session2 1.5 vbracket got beta
+FAIL: Collection selected identity COPPERFIN session2 1.5 vmember got beta
+FAIL: Collection selected identity COPPERFIN session2 1.5 vmemberbracket got beta
+FAIL: Collection selected identity COPPERFIN session2 1.5 key-survivor vfirst got alpha
+FAIL: Collection selected identity COPPERFIN session2 1.5 key-survivor vsecond got 
+FAIL: Collection selected removal survivor order COPPERFIN session2 1.5
+FAIL: Collection selected identity COPPERFIN session2 1.9 vexplicit got beta
+FAIL: Collection selected identity COPPERFIN session2 1.9 vbare got beta
+FAIL: Collection selected identity COPPERFIN session2 1.9 vbracket got beta
+FAIL: Collection selected identity COPPERFIN session2 1.9 vmember got beta
+FAIL: Collection selected identity COPPERFIN session2 1.9 vmemberbracket got beta
+FAIL: Collection selected identity COPPERFIN session2 1.9 key-survivor vfirst got alpha
+FAIL: Collection selected identity COPPERFIN session2 1.9 key-survivor vsecond got 
+FAIL: Collection selected removal survivor order COPPERFIN session2 1.9
+FAIL: Collection selected identity COPPERFIN session2 2.5 vexplicit got gamma
+FAIL: Collection selected identity COPPERFIN session2 2.5 vbare got gamma
+FAIL: Collection selected identity COPPERFIN session2 2.5 vbracket got gamma
+FAIL: Collection selected identity COPPERFIN session2 2.5 vmember got gamma
+FAIL: Collection selected identity COPPERFIN session2 2.5 vmemberbracket got gamma
+FAIL: Collection selected identity COPPERFIN session2 2.5 key-survivor vsecond got beta
+FAIL: Collection selected identity COPPERFIN session2 2.5 key-survivor vthird got 
+FAIL: Collection selected removal survivor order COPPERFIN session2 2.5
+FAIL: Collection selected identity COPPERFIN session2 2.9 vexplicit got gamma
+FAIL: Collection selected identity COPPERFIN session2 2.9 vbare got gamma
+FAIL: Collection selected identity COPPERFIN session2 2.9 vbracket got gamma
+FAIL: Collection selected identity COPPERFIN session2 2.9 vmember got gamma
+FAIL: Collection selected identity COPPERFIN session2 2.9 vmemberbracket got gamma
+FAIL: Collection selected identity COPPERFIN session2 2.9 key-survivor vsecond got beta
+FAIL: Collection selected identity COPPERFIN session2 2.9 key-survivor vthird got 
+FAIL: Collection selected removal survivor order COPPERFIN session2 2.9
+FAIL: Collection selected identity COPPERFIN session2 3.5 vexplicit got 
+FAIL: Collection selected identity COPPERFIN session2 3.5 vbare got 
+FAIL: Collection selected identity COPPERFIN session2 3.5 vbracket got 
+FAIL: Collection selected identity COPPERFIN session2 3.5 vmember got 
+FAIL: Collection selected identity COPPERFIN session2 3.5 vmemberbracket got 
+FAIL: Collection selected removal result COPPERFIN session2 3.5
+FAIL: Collection selected removal count COPPERFIN session2 3.5
+FAIL: Collection selected identity COPPERFIN session2 3.5 key-survivor vthird got gamma
+FAIL: Collection selected removal survivor order COPPERFIN session2 3.5
+FAIL: Collection selected identity COPPERFIN session2 3.9 vexplicit got 
+FAIL: Collection selected identity COPPERFIN session2 3.9 vbare got 
+FAIL: Collection selected identity COPPERFIN session2 3.9 vbracket got 
+FAIL: Collection selected identity COPPERFIN session2 3.9 vmember got 
+FAIL: Collection selected identity COPPERFIN session2 3.9 vmemberbracket got 
+FAIL: Collection selected removal result COPPERFIN session2 3.9
+FAIL: Collection selected removal count COPPERFIN session2 3.9
+FAIL: Collection selected identity COPPERFIN session2 3.9 key-survivor vthird got gamma
+FAIL: Collection selected removal survivor order COPPERFIN session2 3.9
+FAIL: Collection selected identity VFP9 session1 0.5 vexplicit got alpha
+FAIL: Collection selected identity VFP9 session1 0.5 vbare got alpha
+FAIL: Collection selected identity VFP9 session1 0.5 vbracket got alpha
+FAIL: Collection selected identity VFP9 session1 0.5 vmember got alpha
+FAIL: Collection selected identity VFP9 session1 0.5 vmemberbracket got alpha
+FAIL: Collection selected removal result VFP9 session1 0.5
+FAIL: Collection selected removal count VFP9 session1 0.5
+FAIL: Collection selected identity VFP9 session1 0.5 key-survivor vfirst got 
+FAIL: Collection selected removal survivor order VFP9 session1 0.5
+FAIL: Collection selected identity VFP9 session1 0.9 vexplicit got alpha
+FAIL: Collection selected identity VFP9 session1 0.9 vbare got alpha
+FAIL: Collection selected identity VFP9 session1 0.9 vbracket got alpha
+FAIL: Collection selected identity VFP9 session1 0.9 vmember got alpha
+FAIL: Collection selected identity VFP9 session1 0.9 vmemberbracket got alpha
+FAIL: Collection selected removal result VFP9 session1 0.9
+FAIL: Collection selected removal count VFP9 session1 0.9
+FAIL: Collection selected identity VFP9 session1 0.9 key-survivor vfirst got 
+FAIL: Collection selected removal survivor order VFP9 session1 0.9
+FAIL: Collection selected identity VFP9 session1 1.5 vexplicit got beta
+FAIL: Collection selected identity VFP9 session1 1.5 vbare got beta
+FAIL: Collection selected identity VFP9 session1 1.5 vbracket got beta
+FAIL: Collection selected identity VFP9 session1 1.5 vmember got beta
+FAIL: Collection selected identity VFP9 session1 1.5 vmemberbracket got beta
+FAIL: Collection selected identity VFP9 session1 1.5 key-survivor vfirst got alpha
+FAIL: Collection selected identity VFP9 session1 1.5 key-survivor vsecond got 
+FAIL: Collection selected removal survivor order VFP9 session1 1.5
+FAIL: Collection selected identity VFP9 session1 1.9 vexplicit got beta
+FAIL: Collection selected identity VFP9 session1 1.9 vbare got beta
+FAIL: Collection selected identity VFP9 session1 1.9 vbracket got beta
+FAIL: Collection selected identity VFP9 session1 1.9 vmember got beta
+FAIL: Collection selected identity VFP9 session1 1.9 vmemberbracket got beta
+FAIL: Collection selected identity VFP9 session1 1.9 key-survivor vfirst got alpha
+FAIL: Collection selected identity VFP9 session1 1.9 key-survivor vsecond got 
+FAIL: Collection selected removal survivor order VFP9 session1 1.9
+FAIL: Collection selected identity VFP9 session1 2.5 vexplicit got gamma
+FAIL: Collection selected identity VFP9 session1 2.5 vbare got gamma
+FAIL: Collection selected identity VFP9 session1 2.5 vbracket got gamma
+FAIL: Collection selected identity VFP9 session1 2.5 vmember got gamma
+FAIL: Collection selected identity VFP9 session1 2.5 vmemberbracket got gamma
+FAIL: Collection selected identity VFP9 session1 2.5 key-survivor vsecond got beta
+FAIL: Collection selected identity VFP9 session1 2.5 key-survivor vthird got 
+FAIL: Collection selected removal survivor order VFP9 session1 2.5
+FAIL: Collection selected identity VFP9 session1 2.9 vexplicit got gamma
+FAIL: Collection selected identity VFP9 session1 2.9 vbare got gamma
+FAIL: Collection selected identity VFP9 session1 2.9 vbracket got gamma
+FAIL: Collection selected identity VFP9 session1 2.9 vmember got gamma
+FAIL: Collection selected identity VFP9 session1 2.9 vmemberbracket got gamma
+FAIL: Collection selected identity VFP9 session1 2.9 key-survivor vsecond got beta
+FAIL: Collection selected identity VFP9 session1 2.9 key-survivor vthird got 
+FAIL: Collection selected removal survivor order VFP9 session1 2.9
+FAIL: Collection selected identity VFP9 session1 3.5 vexplicit got 
+FAIL: Collection selected identity VFP9 session1 3.5 vbare got 
+FAIL: Collection selected identity VFP9 session1 3.5 vbracket got 
+FAIL: Collection selected identity VFP9 session1 3.5 vmember got 
+FAIL: Collection selected identity VFP9 session1 3.5 vmemberbracket got 
+FAIL: Collection selected removal result VFP9 session1 3.5
+FAIL: Collection selected removal count VFP9 session1 3.5
+FAIL: Collection selected identity VFP9 session1 3.5 key-survivor vthird got gamma
+FAIL: Collection selected removal survivor order VFP9 session1 3.5
+FAIL: Collection selected identity VFP9 session1 3.9 vexplicit got 
+FAIL: Collection selected identity VFP9 session1 3.9 vbare got 
+FAIL: Collection selected identity VFP9 session1 3.9 vbracket got 
+FAIL: Collection selected identity VFP9 session1 3.9 vmember got 
+FAIL: Collection selected identity VFP9 session1 3.9 vmemberbracket got 
+FAIL: Collection selected removal result VFP9 session1 3.9
+FAIL: Collection selected removal count VFP9 session1 3.9
+FAIL: Collection selected identity VFP9 session1 3.9 key-survivor vthird got gamma
+FAIL: Collection selected removal survivor order VFP9 session1 3.9
+FAIL: Collection selected identity VFP9 session1 4294967297 vexplicit got 
+FAIL: Collection selected identity VFP9 session1 4294967297 vbare got 
+FAIL: Collection selected identity VFP9 session1 4294967297 vbracket got 
+FAIL: Collection selected identity VFP9 session1 4294967297 vmember got 
+FAIL: Collection selected identity VFP9 session1 4294967297 vmemberbracket got 
+FAIL: Collection selected removal result VFP9 session1 4294967297
+FAIL: Collection selected removal count VFP9 session1 4294967297
+FAIL: Collection selected identity VFP9 session1 4294967297 key-survivor vfirst got alpha
+FAIL: Collection selected removal survivor order VFP9 session1 4294967297
+FAIL: Collection selected identity VFP9 session1 4294967298 vexplicit got 
+FAIL: Collection selected identity VFP9 session1 4294967298 vbare got 
+FAIL: Collection selected identity VFP9 session1 4294967298 vbracket got 
+FAIL: Collection selected identity VFP9 session1 4294967298 vmember got 
+FAIL: Collection selected identity VFP9 session1 4294967298 vmemberbracket got 
+FAIL: Collection selected removal result VFP9 session1 4294967298
+FAIL: Collection selected removal count VFP9 session1 4294967298
+FAIL: Collection selected identity VFP9 session1 4294967298 key-survivor vsecond got beta
+FAIL: Collection selected removal survivor order VFP9 session1 4294967298
+FAIL: Collection selected identity VFP9 session1 4294967299 vexplicit got 
+FAIL: Collection selected identity VFP9 session1 4294967299 vbare got 
+FAIL: Collection selected identity VFP9 session1 4294967299 vbracket got 
+FAIL: Collection selected identity VFP9 session1 4294967299 vmember got 
+FAIL: Collection selected identity VFP9 session1 4294967299 vmemberbracket got 
+FAIL: Collection selected removal result VFP9 session1 4294967299
+FAIL: Collection selected removal count VFP9 session1 4294967299
+FAIL: Collection selected identity VFP9 session1 4294967299 key-survivor vthird got gamma
+FAIL: Collection selected removal survivor order VFP9 session1 4294967299
+FAIL: Collection selected identity VFP9 session1 -4294967295 vexplicit got 
+FAIL: Collection selected identity VFP9 session1 -4294967295 vbare got 
+FAIL: Collection selected identity VFP9 session1 -4294967295 vbracket got 
+FAIL: Collection selected identity VFP9 session1 -4294967295 vmember got 
+FAIL: Collection selected identity VFP9 session1 -4294967295 vmemberbracket got 
+FAIL: Collection selected removal result VFP9 session1 -4294967295
+FAIL: Collection selected removal count VFP9 session1 -4294967295
+FAIL: Collection selected identity VFP9 session1 -4294967295 key-survivor vfirst got alpha
+FAIL: Collection selected removal survivor order VFP9 session1 -4294967295
+FAIL: Collection selected identity VFP9 session1 -4294967294 vexplicit got 
+FAIL: Collection selected identity VFP9 session1 -4294967294 vbare got 
+FAIL: Collection selected identity VFP9 session1 -4294967294 vbracket got 
+FAIL: Collection selected identity VFP9 session1 -4294967294 vmember got 
+FAIL: Collection selected identity VFP9 session1 -4294967294 vmemberbracket got 
+FAIL: Collection selected removal result VFP9 session1 -4294967294
+FAIL: Collection selected removal count VFP9 session1 -4294967294
+FAIL: Collection selected identity VFP9 session1 -4294967294 key-survivor vsecond got beta
+FAIL: Collection selected removal survivor order VFP9 session1 -4294967294
+FAIL: Collection selected identity VFP9 session1 -4294967293 vexplicit got 
+FAIL: Collection selected identity VFP9 session1 -4294967293 vbare got 
+FAIL: Collection selected identity VFP9 session1 -4294967293 vbracket got 
+FAIL: Collection selected identity VFP9 session1 -4294967293 vmember got 
+FAIL: Collection selected identity VFP9 session1 -4294967293 vmemberbracket got 
+FAIL: Collection selected removal result VFP9 session1 -4294967293
+FAIL: Collection selected removal count VFP9 session1 -4294967293
+FAIL: Collection selected identity VFP9 session1 -4294967293 key-survivor vthird got gamma
+FAIL: Collection selected removal survivor order VFP9 session1 -4294967293
+FAIL: Collection selected identity VFP9 session2 0.5 vexplicit got alpha
+FAIL: Collection selected identity VFP9 session2 0.5 vbare got alpha
+FAIL: Collection selected identity VFP9 session2 0.5 vbracket got alpha
+FAIL: Collection selected identity VFP9 session2 0.5 vmember got alpha
+FAIL: Collection selected identity VFP9 session2 0.5 vmemberbracket got alpha
+FAIL: Collection selected removal result VFP9 session2 0.5
+FAIL: Collection selected removal count VFP9 session2 0.5
+FAIL: Collection selected identity VFP9 session2 0.5 key-survivor vfirst got 
+FAIL: Collection selected removal survivor order VFP9 session2 0.5
+FAIL: Collection selected identity VFP9 session2 0.9 vexplicit got alpha
+FAIL: Collection selected identity VFP9 session2 0.9 vbare got alpha
+FAIL: Collection selected identity VFP9 session2 0.9 vbracket got alpha
+FAIL: Collection selected identity VFP9 session2 0.9 vmember got alpha
+FAIL: Collection selected identity VFP9 session2 0.9 vmemberbracket got alpha
+FAIL: Collection selected removal result VFP9 session2 0.9
+FAIL: Collection selected removal count VFP9 session2 0.9
+FAIL: Collection selected identity VFP9 session2 0.9 key-survivor vfirst got 
+FAIL: Collection selected removal survivor order VFP9 session2 0.9
+FAIL: Collection selected identity VFP9 session2 1.5 vexplicit got beta
+FAIL: Collection selected identity VFP9 session2 1.5 vbare got beta
+FAIL: Collection selected identity VFP9 session2 1.5 vbracket got beta
+FAIL: Collection selected identity VFP9 session2 1.5 vmember got beta
+FAIL: Collection selected identity VFP9 session2 1.5 vmemberbracket got beta
+FAIL: Collection selected identity VFP9 session2 1.5 key-survivor vfirst got alpha
+FAIL: Collection selected identity VFP9 session2 1.5 key-survivor vsecond got 
+FAIL: Collection selected removal survivor order VFP9 session2 1.5
+FAIL: Collection selected identity VFP9 session2 1.9 vexplicit got beta
+FAIL: Collection selected identity VFP9 session2 1.9 vbare got beta
+FAIL: Collection selected identity VFP9 session2 1.9 vbracket got beta
+FAIL: Collection selected identity VFP9 session2 1.9 vmember got beta
+FAIL: Collection selected identity VFP9 session2 1.9 vmemberbracket got beta
+FAIL: Collection selected identity VFP9 session2 1.9 key-survivor vfirst got alpha
+FAIL: Collection selected identity VFP9 session2 1.9 key-survivor vsecond got 
+FAIL: Collection selected removal survivor order VFP9 session2 1.9
+FAIL: Collection selected identity VFP9 session2 2.5 vexplicit got gamma
+FAIL: Collection selected identity VFP9 session2 2.5 vbare got gamma
+FAIL: Collection selected identity VFP9 session2 2.5 vbracket got gamma
+FAIL: Collection selected identity VFP9 session2 2.5 vmember got gamma
+FAIL: Collection selected identity VFP9 session2 2.5 vmemberbracket got gamma
+FAIL: Collection selected identity VFP9 session2 2.5 key-survivor vsecond got beta
+FAIL: Collection selected identity VFP9 session2 2.5 key-survivor vthird got 
+FAIL: Collection selected removal survivor order VFP9 session2 2.5
+FAIL: Collection selected identity VFP9 session2 2.9 vexplicit got gamma
+FAIL: Collection selected identity VFP9 session2 2.9 vbare got gamma
+FAIL: Collection selected identity VFP9 session2 2.9 vbracket got gamma
+FAIL: Collection selected identity VFP9 session2 2.9 vmember got gamma
+FAIL: Collection selected identity VFP9 session2 2.9 vmemberbracket got gamma
+FAIL: Collection selected identity VFP9 session2 2.9 key-survivor vsecond got beta
+FAIL: Collection selected identity VFP9 session2 2.9 key-survivor vthird got 
+FAIL: Collection selected removal survivor order VFP9 session2 2.9
+FAIL: Collection selected identity VFP9 session2 3.5 vexplicit got 
+FAIL: Collection selected identity VFP9 session2 3.5 vbare got 
+FAIL: Collection selected identity VFP9 session2 3.5 vbracket got 
+FAIL: Collection selected identity VFP9 session2 3.5 vmember got 
+FAIL: Collection selected identity VFP9 session2 3.5 vmemberbracket got 
+FAIL: Collection selected removal result VFP9 session2 3.5
+FAIL: Collection selected removal count VFP9 session2 3.5
+FAIL: Collection selected identity VFP9 session2 3.5 key-survivor vthird got gamma
+FAIL: Collection selected removal survivor order VFP9 session2 3.5
+FAIL: Collection selected identity VFP9 session2 3.9 vexplicit got 
+FAIL: Collection selected identity VFP9 session2 3.9 vbare got 
+FAIL: Collection selected identity VFP9 session2 3.9 vbracket got 
+FAIL: Collection selected identity VFP9 session2 3.9 vmember got 
+FAIL: Collection selected identity VFP9 session2 3.9 vmemberbracket got 
+FAIL: Collection selected removal result VFP9 session2 3.9
+FAIL: Collection selected removal count VFP9 session2 3.9
+FAIL: Collection selected identity VFP9 session2 3.9 key-survivor vthird got gamma
+FAIL: Collection selected removal survivor order VFP9 session2 3.9
+FAIL: Collection selected identity VFP9 session2 4294967297 vexplicit got 
+FAIL: Collection selected identity VFP9 session2 4294967297 vbare got 
+FAIL: Collection selected identity VFP9 session2 4294967297 vbracket got 
+FAIL: Collection selected identity VFP9 session2 4294967297 vmember got 
+FAIL: Collection selected identity VFP9 session2 4294967297 vmemberbracket got 
+FAIL: Collection selected removal result VFP9 session2 4294967297
+FAIL: Collection selected removal count VFP9 session2 4294967297
+FAIL: Collection selected identity VFP9 session2 4294967297 key-survivor vfirst got alpha
+FAIL: Collection selected removal survivor order VFP9 session2 4294967297
+FAIL: Collection selected identity VFP9 session2 4294967298 vexplicit got 
+FAIL: Collection selected identity VFP9 session2 4294967298 vbare got 
+FAIL: Collection selected identity VFP9 session2 4294967298 vbracket got 
+FAIL: Collection selected identity VFP9 session2 4294967298 vmember got 
+FAIL: Collection selected identity VFP9 session2 4294967298 vmemberbracket got 
+FAIL: Collection selected removal result VFP9 session2 4294967298
+FAIL: Collection selected removal count VFP9 session2 4294967298
+FAIL: Collection selected identity VFP9 session2 4294967298 key-survivor vsecond got beta
+FAIL: Collection selected removal survivor order VFP9 session2 4294967298
+FAIL: Collection selected identity VFP9 session2 4294967299 vexplicit got 
+FAIL: Collection selected identity VFP9 session2 4294967299 vbare got 
+FAIL: Collection selected identity VFP9 session2 4294967299 vbracket got 
+FAIL: Collection selected identity VFP9 session2 4294967299 vmember got 
+FAIL: Collection selected identity VFP9 session2 4294967299 vmemberbracket got 
+FAIL: Collection selected removal result VFP9 session2 4294967299
+FAIL: Collection selected removal count VFP9 session2 4294967299
+FAIL: Collection selected identity VFP9 session2 4294967299 key-survivor vthird got gamma
+FAIL: Collection selected removal survivor order VFP9 session2 4294967299
+FAIL: Collection selected identity VFP9 session2 -4294967295 vexplicit got 
+FAIL: Collection selected identity VFP9 session2 -4294967295 vbare got 
+FAIL: Collection selected identity VFP9 session2 -4294967295 vbracket got 
+FAIL: Collection selected identity VFP9 session2 -4294967295 vmember got 
+FAIL: Collection selected identity VFP9 session2 -4294967295 vmemberbracket got 
+FAIL: Collection selected removal result VFP9 session2 -4294967295
+FAIL: Collection selected removal count VFP9 session2 -4294967295
+FAIL: Collection selected identity VFP9 session2 -4294967295 key-survivor vfirst got alpha
+FAIL: Collection selected removal survivor order VFP9 session2 -4294967295
+FAIL: Collection selected identity VFP9 session2 -4294967294 vexplicit got 
+FAIL: Collection selected identity VFP9 session2 -4294967294 vbare got 
+FAIL: Collection selected identity VFP9 session2 -4294967294 vbracket got 
+FAIL: Collection selected identity VFP9 session2 -4294967294 vmember got 
+FAIL: Collection selected identity VFP9 session2 -4294967294 vmemberbracket got 
+FAIL: Collection selected removal result VFP9 session2 -4294967294
+FAIL: Collection selected removal count VFP9 session2 -4294967294
+FAIL: Collection selected identity VFP9 session2 -4294967294 key-survivor vsecond got beta
+FAIL: Collection selected removal survivor order VFP9 session2 -4294967294
+FAIL: Collection selected identity VFP9 session2 -4294967293 vexplicit got 
+FAIL: Collection selected identity VFP9 session2 -4294967293 vbare got 
+FAIL: Collection selected identity VFP9 session2 -4294967293 vbracket got 
+FAIL: Collection selected identity VFP9 session2 -4294967293 vmember got 
+FAIL: Collection selected identity VFP9 session2 -4294967293 vmemberbracket got 
+FAIL: Collection selected removal result VFP9 session2 -4294967293
+FAIL: Collection selected removal count VFP9 session2 -4294967293
+FAIL: Collection selected identity VFP9 session2 -4294967293 key-survivor vthird got gamma
+FAIL: Collection selected removal survivor order VFP9 session2 -4294967293
+FAIL: Collection hidden selected identity COPPERFIN 1.5
+FAIL: Collection hidden selected identity COPPERFIN 1.9
+FAIL: Collection hidden selected identity COPPERFIN 2.5
+FAIL: Collection hidden selected identity COPPERFIN 2.9
+FAIL: Collection hidden selected identity COPPERFIN 3.5
+FAIL: Collection hidden selected identity COPPERFIN 3.9
+FAIL: Collection hidden selected identity VFP9 1.5
+FAIL: Collection hidden selected identity VFP9 1.9
+FAIL: Collection hidden selected identity VFP9 2.5
+FAIL: Collection hidden selected identity VFP9 2.9
+FAIL: Collection hidden selected identity VFP9 3.5
+FAIL: Collection hidden selected identity VFP9 3.9
+FAIL: Collection hidden selected identity VFP9 4294967297
+FAIL: Collection hidden selected identity VFP9 4294967298
+FAIL: Collection hidden selected identity VFP9 4294967299
+FAIL: Collection hidden selected identity VFP9 -4294967295
+FAIL: Collection hidden selected identity VFP9 -4294967294
+FAIL: Collection hidden selected identity VFP9 -4294967293
+Collection frozen cases: direct=116 public=140 hidden=26
+
+    Start 400: test_prg_engine_collection_selector_neighbors
+2/2 Test #400: test_prg_engine_collection_selector_neighbors ...   Passed    0.13 sec
+
+50% tests passed, 1 tests failed out of 2
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =   2.38 sec*proc (2 tests)
+copperfin-isolation:child-processes=none            =   2.38 sec*proc (2 tests)
+copperfin-isolation:environment=scoped-process      =   2.38 sec*proc (2 tests)
+copperfin-isolation:filesystem=test-owned-unique    =   2.38 sec*proc (2 tests)
+copperfin-isolation:network=none                    =   2.38 sec*proc (2 tests)
+copperfin-isolation:platform=portable               =   2.38 sec*proc (2 tests)
+copperfin-isolation:resources=none                  =   2.38 sec*proc (2 tests)
+copperfin-isolation:samples=none                    =   2.38 sec*proc (2 tests)
+copperfin-isolation:schedule=serial                 =   2.38 sec*proc (2 tests)
+
+Total Test time (real) =   2.39 sec
+
+The following tests FAILED:
+	399 - test_prg_engine_collection_selector_numeric (Failed) copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+Errors while running CTest
