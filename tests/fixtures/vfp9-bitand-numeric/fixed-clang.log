@@ -1,0 +1,90 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-clang/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-clang
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 379
+    Start 379: test_prg_engine_null_semantics
+
+379: Test command: /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-clang/tests/test_prg_engine_null_semantics
+379: Working Directory: /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-clang/tests
+379: Environment variables: 
+379:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/resources/locales
+379: Test timeout computed to be: 600
+1/6 Test #379: test_prg_engine_null_semantics ................   Passed    0.12 sec
+test 393
+    Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-clang/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-clang/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 600
+2/6 Test #393: test_prg_engine_numeric_behavior ..............   Passed  102.58 sec
+test 399
+    Start 399: test_prg_engine_bitand_numeric
+
+399: Test command: /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-clang/tests/test_prg_engine_bitand_numeric
+399: Working Directory: /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-clang/tests
+399: Environment variables: 
+399:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/resources/locales
+399: Test timeout computed to be: 600
+399: BITAND frozen cases: direct=104 public=472
+3/6 Test #399: test_prg_engine_bitand_numeric ................   Passed   10.56 sec
+test 400
+    Start 400: test_prg_engine_bitand_neighbors
+
+400: Test command: /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-clang/tests/test_prg_engine_bitand_neighbors
+400: Working Directory: /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-clang/tests
+400: Environment variables: 
+400:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/resources/locales
+400: Test timeout computed to be: 600
+4/6 Test #400: test_prg_engine_bitand_neighbors ..............   Passed    0.10 sec
+test 401
+    Start 401: test_prg_engine_bitnot_numeric
+
+401: Test command: /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-clang/tests/test_prg_engine_bitnot_numeric
+401: Working Directory: /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-clang/tests
+401: Environment variables: 
+401:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/resources/locales
+401: Test timeout computed to be: 600
+401: BITNOT frozen cases: direct=104 public=156
+5/6 Test #401: test_prg_engine_bitnot_numeric ................   Passed    1.88 sec
+test 403
+    Start 403: test_prg_engine_collection_selector_numeric
+
+403: Test command: /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-clang/tests/test_prg_engine_collection_selector_numeric
+403: Working Directory: /home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/build/bitand-clang/tests
+403: Environment variables: 
+403:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/bitand-numeric-5611/Project-Copperfin/resources/locales
+403: Test timeout computed to be: 600
+403: Collection frozen cases: direct=116 public=140 hidden=26
+6/6 Test #403: test_prg_engine_collection_selector_numeric ...   Passed    2.13 sec
+
+The following tests passed:
+	test_prg_engine_null_semantics
+	test_prg_engine_numeric_behavior
+	test_prg_engine_bitand_numeric
+	test_prg_engine_bitand_neighbors
+	test_prg_engine_bitnot_numeric
+	test_prg_engine_collection_selector_numeric
+
+100% tests passed, 0 tests failed out of 6
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  = 117.36 sec*proc (6 tests)
+copperfin-isolation:child-processes=none            = 117.36 sec*proc (6 tests)
+copperfin-isolation:environment=none                =   0.12 sec*proc (1 test)
+copperfin-isolation:environment=scoped-process      = 117.24 sec*proc (5 tests)
+copperfin-isolation:filesystem=process-owned        = 102.70 sec*proc (2 tests)
+copperfin-isolation:filesystem=test-owned-unique    =  14.66 sec*proc (4 tests)
+copperfin-isolation:network=none                    = 117.36 sec*proc (6 tests)
+copperfin-isolation:platform=portable               = 117.36 sec*proc (6 tests)
+copperfin-isolation:resources=none                  = 117.36 sec*proc (6 tests)
+copperfin-isolation:samples=none                    = 117.36 sec*proc (6 tests)
+copperfin-isolation:schedule=serial                 = 117.36 sec*proc (6 tests)
+
+Total Test time (real) = 117.38 sec

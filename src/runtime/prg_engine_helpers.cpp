@@ -2277,6 +2277,20 @@ std::optional<std::int32_t> checked_bitnot_argument(
     return static_cast<std::int32_t>(*converted);
 }
 
+// RQ-CF-PRG-BITAND-NUMERIC-001: independently recovered in all operand slots.
+// Infinity is observed0 in VFP9, unlike BITNOT's unrecovered boundary;
+// exact64/NaN safety derives from #5611/#6776. Kept unused during originals.
+std::optional<std::int32_t> checked_bitand_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    if (value.kind == PrgValueKind::number && std::isinf(value.number_value) &&
+        behavior == NumericBehavior::vfp9) {
+        return 0;
+    }
+    // Independent finite evidence matches BITNOT's conversion, not complement.
+    // Preserve its checked non-Numeric coercion boundary without claiming parity.
+    return checked_bitnot_argument(value, behavior);
+}
+
 std::optional<std::int32_t> checked_declared_int32_argument(
     const PrgValue& value,
     const NumericBehavior behavior) {
