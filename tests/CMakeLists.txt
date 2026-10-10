@@ -5985,6 +5985,23 @@ copperfin_add_test(test_prg_engine_prmbar_numeric cf_xbase_runtime
     test_prg_engine_prmbar_numeric.cpp
     prg_engine_test_support.cpp
 )
+copperfin_add_test(test_prg_engine_bittest_numeric cf_xbase_runtime
+    test_prg_engine_bittest_numeric.cpp
+    prg_engine_test_support.cpp
+)
+foreach(bittest_mode IN ITEMS COPPERFIN VFP9)
+    string(TOLOWER "${bittest_mode}" bittest_mode_lower)
+    foreach(bittest_session IN ITEMS 1 2)
+        add_test(NAME test_prg_engine_bittest_numeric_${bittest_mode_lower}_session${bittest_session}
+            COMMAND $<TARGET_FILE:test_prg_engine_bittest_numeric> ${bittest_mode} ${bittest_session})
+    endforeach()
+endforeach()
+copperfin_add_test(test_prg_engine_bittest_neighbors cf_xbase_runtime
+    test_prg_engine_bittest_neighbors.cpp
+    test_prg_engine_runtime_surface_functions_expressions_01.cpp
+    prg_engine_test_support.cpp
+)
+target_include_directories(test_prg_engine_bittest_neighbors PRIVATE ${CMAKE_SOURCE_DIR}/src/runtime)
 copperfin_add_test(test_prg_engine_bitclear_numeric cf_xbase_runtime
     test_prg_engine_bitclear_numeric.cpp
     prg_engine_test_support.cpp
