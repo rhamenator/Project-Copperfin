@@ -1,0 +1,69 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 379
+    Start 379: test_prg_engine_null_semantics
+
+379: Test command: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_null_semantics
+379: Working Directory: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests
+379: Environment variables: 
+379:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/resources/locales
+379: Test timeout computed to be: 1200
+1/4 Test #379: test_prg_engine_null_semantics ..........   Passed    0.12 sec
+test 393
+    Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 1200
+2/4 Test #393: test_prg_engine_numeric_behavior ........   Passed  105.95 sec
+test 451
+    Start 451: test_prg_engine_typed_null
+
+451: Test command: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_typed_null
+451: Working Directory: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests
+451: Environment variables: 
+451:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/resources/locales
+451: Test timeout computed to be: 1200
+3/4 Test #451: test_prg_engine_typed_null ..............   Passed    0.15 sec
+test 478
+    Start 478: test_prg_engine_string_math_functions
+
+478: Test command: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_string_math_functions
+478: Working Directory: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests
+478: Environment variables: 
+478:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/resources/locales
+478: Test timeout computed to be: 1200
+478: All tests passed.
+4/4 Test #478: test_prg_engine_string_math_functions ...   Passed    0.43 sec
+
+The following tests passed:
+	test_prg_engine_null_semantics
+	test_prg_engine_numeric_behavior
+	test_prg_engine_typed_null
+	test_prg_engine_string_math_functions
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  = 106.65 sec*proc (4 tests)
+copperfin-isolation:child-processes=none            = 106.65 sec*proc (4 tests)
+copperfin-isolation:environment=none                =   0.70 sec*proc (3 tests)
+copperfin-isolation:environment=scoped-process      = 105.95 sec*proc (1 test)
+copperfin-isolation:filesystem=process-owned        = 106.22 sec*proc (3 tests)
+copperfin-isolation:filesystem=test-owned-unique    =   0.43 sec*proc (1 test)
+copperfin-isolation:network=none                    = 106.65 sec*proc (4 tests)
+copperfin-isolation:platform=portable               = 106.65 sec*proc (4 tests)
+copperfin-isolation:resources=none                  = 106.65 sec*proc (4 tests)
+copperfin-isolation:samples=none                    = 106.65 sec*proc (4 tests)
+copperfin-isolation:schedule=parallel-safe          =   0.43 sec*proc (1 test)
+copperfin-isolation:schedule=serial                 = 106.22 sec*proc (3 tests)
+
+Total Test time (real) = 106.67 sec

@@ -55,167 +55,164 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-BITCLEAR Numeric/exact PR#7121 merged2026-10-09T20:16:11Z as
-53cf42c99e61491598ee4ae307d6c10ca5ccdd7d from signed/DCO G head
-25c49fa32b5eb1cb01583b1620ff0f93fd4bb6f5.
-https://github.com/rhamenator/Project-Copperfin/pull/7121
-Merge gate6088531116: fresh active/strict ruleset20356131, all11 requiredSUCCESS,
-all35 completedchecksSUCCESS; sole optional Windows Native37979321071/
-job113985504327 remainedpending, notfailed. Gate checks ran20:15-20:16Z beforemerge;
-gatecomment timestamp corrected to thatactual interval aftermerge.
-Actual clean Codex6088134043 at19:49:55Z names25c49fa32b, following
-ClaudeFIRST6087658191 at19:18:57Z and owner-authorized fallback6088108815
-at19:48:13Z after bounded29-minute no-usable-review wait. Claude[bot] eyesonly;
-no explicit Claude quota/setup failure known. Summary6087653212/reactions were
-NOTused as clean evidence. Paginated RESTreviews/inlineempty, Graphthreads0/
-closingrefs0/hasNextfalse; parents5611/6776/family6871 OPEN/owner/agent-approved.
-No family/parent closure: BITTEST Numeric/exact remains next.
+BITTEST Numeric/exact PR#7123 merged2026-10-10T00:16:07Z as
+8311e7af8c9a0c676e532a5a43c3934a785dbd0e from signed/DCO G head
+19dbf88f7b6ff306b60e792452f821ae83080621.
+https://github.com/rhamenator/Project-Copperfin/pull/7123
+Finalgate6091489159 verified00:15-00:16Z: freshactive/strict mainruleset20356131,
+all11requiredSUCCESS; all35completedchecksSUCCESS, soleoptional WindowsNative
+38002924601/job114065026296 inprogress, notfailed. ActualcleanCodex6091212066
+at2026-10-09T23:47:36Z names19dbf88f7b. ClaudeFIRST6090806433 at23:09:17Z,
+verifiedclaude[bot] eyesonly/nousablereview/noexplicitquota-setupfailure;
+authorized@codexfallback6091195806 at23:46:00Z. Summary6090801661/reactions NOT
+usedascleanreviewevidence. PaginatedRESTreviews/inlineempty, Graphthreads0/
+closingrefs0/hasNextfalse. Parents5611/6776/6871 OPEN/rhamenator/agent-approved.
+No family/parent closure, no fullnative/type/Currency/binary/arity/release acceptance.
 
-Independent WineVFP9 7423/shipped BITCLEARhelp BEFORE mappedRQ/helpers/tests;
-five matching188-line/186call outputs. Frozen206direct/800freshpublic bothmodes/
-sessions+2unchangedneighbors; BOTH complete GNU14.56s/Clang25.42s originals
-552byteidenticalselectedFAIL/zeroother BEFORE BITCLEAR-only migration.
-No frozenrepair/removal/weakening/refreeze. Checked selectedmode/valueANDposition
-evenafter0/localized11/defineduint32ANDcomplement/int64signed32result.
-FixedGNU2/2PASS14.72s/broader19/19PASS461.97s includinglocalization/safety/seven
-contracts, safety1200cap preserved. ClangASan/UBSan/float-cast-overflow11/11PASS
-190.94s/zero diagnostics/leaksdisabled. RQ-CF-PRG-BITCLEAR-NUMERIC-001/native/
-frozen/rawresults/hashes and completedboundedmedium DQ/DV developmentself-review/
-walkthrough/rollback retained in tests/fixtures/vfp9-bitclear-numeric.
-Signedpostpush16/16PASS119.83s actual206/800 proof6087695637; full201-line raw
-log SHA4dee15590bbf1487c9fb673be8d9db79a0b59dab8e90f89555dbffe7a3cf99ca.
-Not independenthuman/highhazard/type/Currency/binary/arity/fullnative/platform/
-leak/release/family/parentacceptance. NoKBX/apparentargument-drivenwork; activehazardsremain.
+IndependentinstalledWineVFP97423/shippedhelp BEFORE RQ/helpers/tests;
+five identical1304-line/1302call outputs. Supplementalexactindexprobe same36
+positions x32 literalonehotmasks, fourmatching1154-line/1152call outputs,
+afterfixedGNU and beforefixedClang; chronologyexplicit, notusedtorepair tests.
+RQ-CF-PRG-BITTEST-NUMERIC-001 mapped BEFORE distincthelpers/frozen206direct/
+5264freshpublic bothmodes/sessions. InitialGNUoriginal complete2954selectedFAIL,
+oldClang1200timeout/1984deliberatepartialstop retained NOTbaseline/cleanproof.
+ExplicitHARNESS-ONLYrefreeze22:23Z BEFOREnewconfig and BOTHcompleteoriginals:
+206direct +4x1316public separateCTestprocesses; everyliteralexpected/input/
+existingassertion unchanged, sourceprefix1..1469SHA
+1e7e70f09b28a4384af2401d356ba363297e32709b1954a0b4301992102c3605 unchanged.
+BOTHcomplete refrozen originals GNU144.36s/Clang324.57s: actual206+4x1316,
+2954 byteidentical selectedFAIL/zeroother/direct/neighborsPASS/noSanDiagnostics.
+Onlythen BITTEST-onlymigration. CheckedvalueANDpositionevenafter0,
+selectedsessionmode/localizedcatchable11/defineduint32shiftAND/Logicalkind.
+FixedGNU6/6PASS149.78s, broader25/25PASS631.19s (safety1200cap preserved);
+ClangASan/UBSan/float-cast-overflow17/17PASS526.10s/nodiagnostics/leaksdisabled.
+Allactual206+4x1316 counts complete. Native/frozen/fullraworiginal/fixedlogs/
+SHA/evidenced boundedmediumDQ/DVdevelopmentself-review/walkthrough/rollback in
+tests/fixtures/vfp9-bittest-numeric. Notindependenthuman/highhazardqualification.
+NoKBX; HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01 remainactive.
 
-MainFF53cf42c99e; completedWT/local/remote branch removed. GNU445MB/Clang368MB/
-nativeFXP scratch recoverablytrashed under
-/home/rich/.local/share/Trash/files/bitclear-gcc, bitclear-clang, bitclear-native.
-Signedpostpushhash verifiedinTrash. EmptyownedRAMTMPDIR
-/tmp/copperfin-bitclear-5611-wt0HXH removed after emptydirectory check.
-Ownpre-sync handoffpathstash159e09dc4d0d1d3090e123ae1a34e5869483fe16 retained;
-allolderstashes/foreignfiles/WTs preserved. Requiredwatch90485exit0/all11PASS.
-Oldallcheckwatch38929 stopped143 ONLYforWTcleanup, nohostedcancellation,
-rawloginTrash. Replacementwatch97374 completedexit0/all36SUCCESS20:45Z,
-hostedproof6088967587 published; canonical build/bitclear-hosted-watch scratch
-recoverablytrashed. Zero newconversations/failures; hosted boundedproof complete.
-PRattached; onlyolder verifiedMERGED6664 taskreference unlinkedat100cap,
-noGitHubPR/datamutation. NoVMused/noownerinputblocker.
+Signedpostpush6/6PASS145.62s actual206+4x1316 proof6090852503;
+fullunedited90-line signed-postpush-focused-gcc.log SHA
+2ed259c1582ec33fb413c4358426c634b5a08ee4b6a067186218f1cc6d478b71.
+MainFF8311e7af8; completedownWT/local/remote branch removed.
+GNU505MB/Clang442MB/native32MB scratch recoverablytrashed under
+/home/rich/.local/share/Trash/files/bittest-gcc, bittest-clang, bittest-native.
+Postpushhash verifiedinTrash. PrivateRAMscratch
+/tmp/copperfin-bittest-5611-iqIncd moved to bittest-native/private-ram-scratch
+after exactowned/noactiveprocess audit; gio didnot support tmpfsmount,
+so explicitmove preservedits query/runtime-tempevidence instead.
+Owncanonicalstash645306f32c0db2509082e2029e822901e4d098b9 andownWTstash
+6de0a1726cced3c12e60d132fcc001e3f9cbd956 retained; foreignfiles/WTs/allstashes preserved.
+Requiredwatch61331 exit0/all11PASS; oldallwatch65209 stopped143 onlyforWTcleanup,
+not hostedcancellation, rawretainedinTrash. Replacementallwatch22693 ran in
+canonical build/bittest-hosted-watch/all-checks-watch.log for optionalWindows;
+Fresh00:45Z35SUCCESS/oneFAILURE; watch22693exit1 harvested. OptionalWindows
+38002924601/job114065026296 failed00:19:10Z,484/485 testsPASS. All6BITTESTPASS,
+onlyunchanged test_access_saveastext_export firstmissing-databasecase failed32.58s:
+manifest_missing/exit1/Database not found assertions. Requestbudget30000ms,
+actualresult/error/stdout/stderr missing, so timeout/startup/rootcauseunconfirmed.
+Focusedincident7124 filedcurrentmain8311e7af8, OPEN/rhamenator/nolabels/separate;
+testblobf19c5e43647036b552f40b38b32d05d692d61bf3 sameatreviewedhead/main.
+Full3563-line raw windows-native-failed.log SHA
+7651856e0f01a4aa6e97657935cc5599ae1b13b7a3702a43038b5d7c9260e02d retainedin
+canonical build/bittest-hosted-watch; PRincidentcomment6091795854 published.
+Windows-onlysameheadretry attempt2/job114089089213 started00:46:34Z;
+other35checksnotrerun. Blockingwatch66863 --exit-status/60s active in
+windows-native-retry-watch.log. Harvest/investigateactualfailure andcleanownscratch
+afterpreservingproof; retry/noresponse/exitcodealone isnotfix/rootcauseevidence.
+NoVMusedforfailuretriage. PRattached; onlyolderMERGED6666 appreference unlinked
+at100cap, noGitHubPR/datamutation.
 
-PriorBITSET7119 merged1d23bd7a9 fromsignedhead e4d422a7236bebad9c31eb24a05a491a5cc6a564;
-clean6084799834/gate6085250636/postpush6084333446 and committedfixtureproof retained.
-All35otherchecksSUCCESS; optional Linux37954206752/job113900437150 cancelled
-21:47:01Z after6h0m37s. Annotation: The job has exceeded the maximum execution
-time of6h0m0s. Raw193-line linux-installer-cancelled.log in canonical
-build/bitset-hosted-watch SHAcb8be04b5b3409e75053d526145cc46600cc9bc1a185ac64d8922dbc1c78424e.
-APTupdate lastoutput15:46:47Z/ignoredAzuremirrorindices; next21:46:59Z cancelled,
-beforeANYCopperfinconfigure/build/package/lifecycle. Mirror/networkrootcause
-unconfirmed. Watch17765 completedexit0butexplicitfailtable NOTsuccess evidence.
-SpecificsameheadLinux-only rerun requested21:49Z; attempt2 job114041218199
-started21:49:33Z/SUCCESS22:07:30Z. Freshsameheadall36checksSUCCESS22:23Z;
-proof6090251177. Windows/macOS oldsuccessfulexecutions retained, notrerun.
-Watch59504 harvestedexit0; all3rawlogs/hashverified recoverablytrashed as
-/home/rich/.local/share/Trash/files/bitset-hosted-watch.
-Rerunraw6862a9be311b663f5890a50300d203e937ec4b1e64bcd11a04d07c4dcbf9f18f;
-first193-line cancellationhashunchanged. Focusedunadmittedissue7122 filedagainst
-main53cf42c99e/workflowblob82090da1c675cebfa9638821b85d2720fb381e6b;
-OPEN/rhamenator/nolabels. Noinstallerproductionchange/activeBITTESTexpansion.
-Incident/rerun PRcomment6089861705 at21:51:40Z. Trashbitset-gcc/-clang and
-stashbcb4ffa425bcafcbed71b2c06cd735578ebc916a retained.
-PriorBITXOR7116 merged8b2a28ac4/all36SUCCESS proof6082816795/gate6082720941/
-clean6082286175; BITOR7112 all36SUCCESS proof6080220178/gate6079783442/
-clean6079409420; BITAND7110/BITNOT7107/Collection7105/GETBAR7103/PRMBAR7101 complete.
+PriorBITCLEAR7121 merged53cf42c99e/all36SUCCESS proof6088967587,
+gate6088531116/clean6088134043/postpush6087695637 retainedincommittedfixture.
+ItsWT/branches removed/builds inrecoverableTrash; postpushSHA
+4dee15590bbf1487c9fb673be8d9db79a0b59dab8e90f89555dbffe7a3cf99ca retained.
+PriorBITSET7119 all36SUCCESS aftersameheadLinux-only rerun22:07Z,
+proof6090251177. First6hAPTstall193-line rawSHA
+cb8be04b5b3409e75053d526145cc46600cc9bc1a185ac64d8922dbc1c78424e retainedin
+Trash/bitset-hosted-watch; noCopperfinbuild/package ran in firstattempt.
+Focusedincident7122 OPEN/unadmitted/separate; missingbootstrapbound NOTfixedby
+rerunsuccess. No installerproductionchange/newadmission. BITXOR7116/BITOR7112/
+BITAND7110/BITNOT7107/Collection7105/GETBAR7103/PRMBAR7101 complete.
 7115/7111/7108/7106/7104 remainunadmitted. EPOCH/CENTURYcomplete/#3698closed.
 
 ## Selected active bounded slice
 
-BITTEST Numeric/exact value and position under admitted5611/6776/6871.
-Parentmetadata OPEN/rhamenator/agent-approved22:15Z; admittedbodies reread21:15Z,
-livechannel empty22:15Z. Dedicatedbranch fix/bittest-numeric-5611 from
-origin/main53cf42c99e61491598ee4ae307d6c10ca5ccdd7d in
-/home/rich/.codex/worktrees/bittest-numeric-5611/Project-Copperfin.
-BITTEST-onlymigration nowapplied AFTERBOTHcomplete refrozenoriginals; no commit/PRyet.
-ScopeONLY selected
-Numeric/exact valueandposition consumers; type/Currency/binary/arity/sharedoldbit
-helpers/siblings/globalNULL andfamily/parentacceptance remainseparate.
-Independent WineVFP9 7423/shippedBITTESThelp55285ec7 recoveredfirst: five
-matching1304-line/1302call outputs (initial+3fresh+copy), all32bits of36values,
-zero/-1/alternatingpositions andmixedcontrols. NativeSource4debd560d80feeff9c9f71731261433a7ba8ee09524b449e65897ca9a9278f82;
-outpute42dc284409db35d008269cb1e181f637ae7c4e3bcfcfe5e7283ea8cd3fbda99.
-RQ-CF-PRG-BITTEST-NUMERIC-001 gapmapped BEFORE distinct unusedhelpers/tests,
-then206direct/5264freshpublic/helperheader/CMake/isolation frozenBEFORE config.
-Allhashes/initialREADME/audit in tests/fixtures/vfp9-bittest-numeric.
-GNUoriginal build88839 exit0; completeCTest84631 expectedexit8,493.42s,
-actual206direct/5264public/2954selectedFAIL (1230error/1684result/40kind),
-zeroother/direct/control/context/reset failures; neighborsPASS0.12s.
-Full3005-line raw original-gcc-unsharded.log SHA9726dd21446ace386a8ad4bdceae42535e2d5a330a0f16ab497477b3e20f48c4.
-Allfrozen/shared/ORIGINALdispatcher hashes unchanged. Clang21.1.8
-configure/bothbuilds succeeded, matchingC/CXX/EXE/SHARED ASan/UBSan/
-float-cast-overflow/framepointer/leaksdisabled. OriginalCTest91546 exit8:
-NumericTIMEOUT1200.18s/total1200.29s; finalcounterNOTreached, notvalidbaseline.
-Observed2883selectedFAIL/zeroother/zero sanitizerdiagnostics; neighborsPASS0.10s.
-Full2933-line original-clang-timeout1200.log retainedSHA
-b11359449e605a5d1820e1d53d383842b7cf46cb5d273e22e6a86d72564b678b.
-Unchangedrepeat61627 deliberatelystopped onlyverifiedownPID1922839 at33:04/
-33:03CPU; subprocess terminated/exit8/1984.46s total, neighborsPASS0.09s.
-No finalcounter; incompleteNOTbaseline.2657-line unedited
-original-clang-unsharded-cancelled.log SHA88f4e2a70132c36c76eeac89f6932a06a932ada0aa9693465c5427aafe621cd6.
-CPU-bound/privateRAM/availablememory observed, rootcause/diskunqualified.
-ExplicitHARNESS-ONLYrefreeze22:23Z BEFOREnewconfig:206directoneprocess,
-4x1316public CTestprocesses bymode/session, exactcounts failclosed, invalidargs2.
-Everyliteralinput/expectedresult/existingassertion/freshsession unchanged;
-sourceprefix1..1469 hash1e7e70f09b28a4384af2401d356ba363297e32709b1954a0b4301992102c3605 before/after.
-Newtest/CMake/isolationhashes in baseline-audit.md; helpers/header/native/
-neighbors/shared/ORIGINALdispatcherhashunchanged; no migration.
-GNUrefrozenconfigure/bothbuilds28785exit0; all6CTestregistered/isolationcomplete.
-CompletefreshGNUoriginal26323exit8 expectedselectedonly/144.36s, all206+4x1316
-casescomplete, direct/neighborsPASS.2954 byteidenticalselectedFAIL tooldGNU,
-zeroother, raw3049lines SHA8d8bc64e1aacc583e58fb1a2674daa07fbceb89b1eb06dab9b7edf86a0d15080.
-Clangrefrozenconfigure/bothbuilds28658exit0; all6registered/matchingflagsverified;
-CompleterefrozenClangoriginal48008exit8 selectedonly/324.57s, direct206PASS,
-all4x1316publiccomplete/neighborPASS/2954selectedFAIL byteidenticaltobothGNUlogs,
-zeroother/nosanitizerdiagnostics/leaksdisabled.3049-line rawSHA
-367f73aa0564257f3af68013dfcc172400946053abed7c4754d82b850ceafcd1.
-Retain BOTH COMPLETE refrozenGNUandClang originals and byteidentical2954
-selectedFAIL/zeroother BEFOREmigration; oldpartialruns neverclean evidence.
-Exact64/NaN/defaultsafety derivedfromownerparent; safeothercontrols preservationonly.
-Bothcompleteoriginals retained BEFOREmigration; parentsrevalidated22:34Z.
-OnlyBITTEST selectsbehavior/checksvalueANDpositionevenafter0/localized11/
-defineduint32shiftAND/Logicalresult. FixeddispatcherSHA
-0fe605bef5934d32318c2401d092a62a6bf54f3d03935e82ae603b3d0d6b2b09;
-all6refrozeninputs/native/sharedplatformunchanged. Newchangelogfragmentrecorded.
-FixedGNUrebuild/focused85647exit0/full6PASS149.78s/actual206+4x1316,
-zeroassertionfailures, raw90lines SHAe89aca918f3c2bdb3bfa1b364b79471f4b10e66028973889461129adf07caf24.
-BroaderGNU82444exit0/25of25PASS631.19s, actual206+4x1316complete again.
-Safety350.81s existing1200cap preserved; localization14.36s/olderNumeric67.51s/
-NULL/bitfamily/sevencontractsPASS. Raw302lines SHA
-69aadf457880d331e23f809ef5eeaf68918f3f5fec8790630e29b3183a397ce9.
-Supplementalinstalled-onlyposition-indexprobe AFTERGNU: same36positions x32
-literalonehotmasks/1152calls/1154lines. Fourfreshserialbounded25sWineoutputs
-matchall26admittedexactindices/10all32maskerror11; existingfrozenexpectations
-unchanged. Sourcee52b32a84e6ef6ee2758bce86bf2fcf4954efa4e8608d569588d3c93bee27d63;
-all4output68d87cd9511bbbf4c039ddbfa18b3068cbaa01fc7e330d2327d9c0849b6220cb.
-NoVM/concurrentbuild/tests. NativeFXPscratchonly; explicit chronologyinaudit.
-FixedClang90913exit0/full17PASS526.10s, actual206+4x1316complete/noassertionfailures
-orASan/UBSan/float-cast-overflow diagnostics; matchingflags/leaksdisabled/
-sameprivateRAM/CLI1200 operationalcap. Raw209lines SHA
-dbee98ccdcdc33117af48462ca70e7a122a4653856d145541db3f713b215eeed.
-CompletedboundedmediumDQ/DV delegateddevelopmentself-review/automatedGNU25+
-Clang17walkthrough/rollback inaudit; noindependent-human/highhazardqualification.
-RQdefinedforboundedlocalNumeric/exactscope, native/shared/frozenhashesunchanged;
-no family/parent/fullnative/type/Currency/binary/arity/platform/leak/releaseacceptance.
-Originmainstill53cf42c99e/freshfetch23:05Z, nobranchPR, livechannel empty.
-Next: signed/DCOcommit/push/PRbase main, ClaudeFIRST, signedpostpushfocus,
-requiredhostedchecks/exactheadreview/conversations. No localbuild/testrunning.
-ClaudeFIRST thenverifiedauthorized@codexfallback; cleanexacthead review/
-all11requiredgreen/resolvedconversations beforemerge.
-BITSETinstaller reruncomplete/all36SUCCESS, rawpreserved/cleanupcomplete;
-incident7122 stillOPEN/separate/unadmitted; missingbootstrapboundNOTfixedbyrerun.
-Noownerinputneeded. PrivateRAMTMPDIR /tmp/copperfin-bittest-5611-iqIncd,
-newGNUCLI600s/ClangCLI1200s PER SHARD operationalcaps only. Focusedregex
-^test_prg_engine_bittest_(numeric.*|neighbors)$ coversall6; no workflow/testdefinition
-timeoutchange/disk/persistence/timeout-optimumqualification. NativeFXP build/bittest-native.
-NoVMstart/recreate whilebackupreset completionunconfirmed. Wineprobe available;
-noownerinputblocker. Allcompleted BITCLEAR work recoverable asabove.
+CAST signed64 Numeric/exact conversion for AS INT64/LONGLONG/BIGINT only,
+derived from admitted5611/6776 andownerextensionintent, selectedafterBITTEST.
+Freshparents OPEN/rhamenator/agent-approved00:15Z; bodiesreread00:17Z,
+livechannel emptyaftermerge. Branch fix/cast-int64-numeric-5611 from
+origin/main8311e7af8c9a0c676e532a5a43c3934a785dbd0e in
+/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin.
+Appcreate_worktree returned Not a git repository (chatcwd isoutsidecanonical);
+normal scoped gitworktree add succeeded. No PR yet; selected migration is
+implemented after both complete original baselines, local validation complete.
+Onlyselectedsigned64 dispatcherbranch (currentline668) isintended;
+UINT64/INT32/INT16/BYTE/otherCASTtypes/coercions/arity/sharedarithmetic remainseparate.
+Existing exact-expression requirement RQ-CF-PRG-INT64-EXACT-EXPRESSION-001
+andtests are provenance/neighbor evidence, nottheir ownrequirementoracle.
+Nativeboundaryrecovered BEFORE RQ/helper/tests: shippedMicrosoft CAST help55c599e9
+SHA8bf6b2a5a06b705090f6597d63e14b359e91146ebe255120923ac0a11404a21d;
+threefreshboundedserialWine runs32lines/30calls each,15ordinary INTEGER/INT/I
+truncationcontrolsPASS and15 INT64/LONGLONG/BIGINT unsupportedtargetERR11.
+Source09dba0553343c294b37fc90bc5f96b4387a7416f55e1916a0e7d96c8bf2ec032;
+all3outputs2d2e0d79855859167db6cd73f990f42bb42b364651d3c55e3c0be8cb969e4f71.
+No native64semantics inferred; fixtureREADME separates owner-derived extension
+contract signed64 finite truncation/exactidentity/unsignedbound/error11 BOTHmodes,
+integer/nextaftermathematics independentlyconfirmed. No low32native64policy.
+RQ-CF-PRG-CAST-INT64-NUMERIC-001/architecture/hazards mapped BEFOREhelpers/tests.
+Freeze00:55Z: distinct checked_cast_int64_argument adapter usesUNCHANGED
+checked_declared_int64_argument, UNUSEDbyCAST. New56direct/4x141freshpublic
+frozen bothmodes/sessions/all3aliases/exactkind/catchability/sentinel/context/
+reset/all4catalogs; twoUNCHANGEDneighbors. Hashes in fixturebaseline-audit.md.
+Originaldispatcher/sharedplatform matchedmain8311 through both baselines.
+GNUconfigure/build72824 exit0.
+InitialGNUCTest19264 incomplete: directtest incorrectlyassumed Character'x'=>0
+andaborted;4x141publiccomplete/2neighborsPASS,708assertionsinclude36wrong
+preservationchecks. Full816line initiallogce381ff7423f801b71d0f2d1f89d5f63ce51b041ec348513c3bf55c4e25069fb retained,
+NOTbaseline/acceptance. No productiondefect/requirementcreatedfromharnessmistake.
+Explicit01:17Zrefreeze BEFOREGNUrepeat/Clangconfig: sameinputs/counts, ONLY
+Characterpreservation nowchecks unchanged directinvalid_argument/publicerror1/
+sentinel. ALLNumeric/exact64 inputs/expectations/assertions untouched (table
+SHA d0ad42528b220a2041e6e4fa8f8b7a4fd5155b3c95ae4f6a656234505664d34e/
+5d75fd44a188b07de0e7c47ea60e9cd2878e9e29e9cbf61fcffbcd51071d58c3 beforeANDafter).
+NewtestSHA cff432fb15e3c1435dd74243376027b64c5a991e91674c7e7a6bdf49584b1a93;
+allotherfrozenhashesunchanged. CompleteGNUrepeat72689 build0/CTest8,7.25s:
+56direct/4x141public/2neighborsallcomplete;672selectedassertions
+(180error/180kind/264result/48localized), zeroother. Full779line original-gcc.log
+e0c739c977d507b6f1c55d9b6abf832e5b2965a92e4bbd8570f8b815c34b0946 retainedbyteidenticalinfixture.
+Clangconfigure/build/original52565 completedbuild0/CTest8,13.57s:
+56direct/4x141public/2neighborscomplete; same672selected/zeroother, fouractual
+UBSanfloat-cast-overflowreports atoriginal selectedline668. Full875line
+original-clang.log07a1adf22372e8bd8a59e607fadd2107c98fa1ac80e5a9ab187cb617c29cd2ff
+retainedcmp-identical BEFOREmigration; diagnostic-bearingoriginal NOTcleanproof.
+Onlythen signed64dispatcherbranch migrated; helpers/tests/frozeninputsunchanged.
+FixedGNU47156 build0/CTest0,7/7PASS7.54s; Clang10419 build0/CTest0,
+7/7PASS9.55s ASan/UBSan/float-cast-overflowhalt1/nodiagnostics/leaksdisabled.
+Actual56direct/4x141publiccounts complete;102linerawfixedlogs retainedinfixture.
+GCC SHAeaf509949c789b7b1ae432eda262e7261a719eb972c186cb17cd992b56648ea4;
+Clang SHA1be26a860f54a6b281fd6596a9986172e2d848c8f8cb60a12baf627f4e414ac5.
+BroaderGNU80498 build0/CTest0,11/11PASS421.84s: numeric/null/typed-null/
+string-math/localization plus sixcontracts. SeparatetrueportableCLRcontract
+90647 phase1 1/1PASS0.04s (initialregexmissedactualname), allsevencontractsPASS.
+Clang90647 build0/CTest0,4/4PASS106.67s olderNumeric/NULL/typed-NULL/string-math,
+sameASan/UBSan/float-cast-overflowhalt1/nodiagnostics/leaksdisabled.
+Full162/35/69linerawlogsretainedinfixture/SHAinbaseline-audit.md;
+expectedlocaleinstallnegative-subprocessdiagnosticretained, notunexpectedfailure.
+CompletedboundedmediumDQ/DVdelegateddevself-review/automatedwalkthrough/rollback,
+notindependenthuman/highhazard; activehazards/nofulltype-platform-releaseclaim.
+ReverseRQ/docs22/matrixdefined/changelog updated; sourcefrozenhashesunchanged.
+Fresh01:46Zparents OPEN/rhamenator/agent-approved/main8311/livechannelempty.
+PrivateRAMTMPDIR /tmp/copperfin-cast-int64-5611-njEHatNT; noactive localtests/builds.
+Next: signedcommit/push/PRClaudeFIRSTfallback; exactheadcleanreview/allrequired/
+resolved beforemerge. NoPRyet; noacceptancebeyondretainedlocalboundedproof.
+Any frozenassertionchange requires explicitrefreeze/BOTHoriginalrepeats.
+Canonical livechannel empty00:58Z; read canonical channel, not a fresh worktree's
+historical unread cursor. No acceptance claim/ownerinput blocker.
+PR7123Windowsretrywatch66863 retained;
+incident7124 separateunadmitted, NOTexplainedorfixedbytiming/retry alone.
+NoVMstart/recreate whilebackupreset completionunconfirmed; useWine ifneeded.
+Do not expand into unadmittedtypeparity ordiscover unrelateddefects.
 
 ## Retained owner steering / deferred work
 

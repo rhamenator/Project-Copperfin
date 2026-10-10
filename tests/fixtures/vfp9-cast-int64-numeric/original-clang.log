@@ -1,0 +1,875 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 390
+    Start 390: test_prg_engine_int64_exact_expression
+
+390: Test command: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_int64_exact_expression
+390: Working Directory: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests
+390: Environment variables: 
+390:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/resources/locales
+390: Test timeout computed to be: 1200
+1/7 Test #390: test_prg_engine_int64_exact_expression ..................   Passed    0.09 sec
+test 399
+    Start 399: test_prg_engine_cast_int64_numeric
+
+399: Test command: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric
+399: Working Directory: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests
+399: Environment variables: 
+399:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/resources/locales
+399: Test timeout computed to be: 1200
+399: CAST frozen cases: direct=56 public=0
+2/7 Test #399: test_prg_engine_cast_int64_numeric ......................   Passed    0.01 sec
+test 400
+    Start 400: test_prg_engine_cast_int64_numeric_copperfin_session1
+
+400: Test command: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric "COPPERFIN" "1"
+400: Working Directory: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests
+400: Environment variables: 
+400:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/resources/locales
+400: Test timeout computed to be: 1200
+400: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_dispatch_general.inl:668:63: runtime error: 9.22337e+18 is outside the range of representable values of type 'long'
+400:     #0 0x5c826177f712 in copperfin::runtime::evaluate_runtime_surface_function(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&, std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, unsigned long, std::function<std::optional<copperfin::runtime::RuntimeProgramStackFrame> (long long)> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::function<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<int (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<copperfin::runtime::PrgValue (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<std::optional<copperfin::runtime::RuntimeSurfaceCursorSnapshot> (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<std::optional<unsigned long> (copperfin::runtime::RuntimeSurfaceCursorSnapshot const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, bool, std::function<std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>> (std::filesystem::__cxx11::path const&)> const&, std::function<copperfin::runtime::RuntimeOleObjectState* (copperfin::runtime::PrgValue const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (copperfin::runtime::PrgValue const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<bool (copperfin::runtime::PrgValue const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, copperfin::runtime::PrgValue const&)> const&, std::function<std::optional<long> (long)> const&, std::function<std::optional<long> (long)> const&, std::function<std::optional<bool> (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>>)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&) (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0xb29712) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+400:     #1 0x5c826127b982 in copperfin::runtime::(anonymous namespace)::ExpressionParser::evaluate_function(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&, std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>> const&, std::vector<std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>, std::allocator<std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>>> const&, unsigned long, unsigned long) prg_engine.cpp
+400:     #2 0x5c8261257698 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_primary_uncached() prg_engine.cpp
+400:     #3 0x5c826124ea89 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_primary() prg_engine.cpp
+400:     #4 0x5c826124c7c0 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_unary() prg_engine.cpp
+400:     #5 0x5c826124941f in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_multiplicative() prg_engine.cpp
+400:     #6 0x5c8261245525 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_additive() prg_engine.cpp
+400:     #7 0x5c8261240ac7 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_comparison() prg_engine.cpp
+400:     #8 0x5c826123f806 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_and() prg_engine.cpp
+400:     #9 0x5c826123e640 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_expression() prg_engine.cpp
+400:     #10 0x5c826107bcf5 in copperfin::runtime::PrgRuntimeSession::Impl::evaluate_expression(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, copperfin::runtime::(anonymous namespace)::Frame const&, copperfin::runtime::(anonymous namespace)::CursorState const*, std::optional<copperfin::runtime::(anonymous namespace)::CursorExpressionReference>) prg_engine.cpp
+400:     #11 0x5c82610ac427 in copperfin::runtime::PrgRuntimeSession::Impl::evaluate_expression(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, copperfin::runtime::(anonymous namespace)::Frame const&) prg_engine.cpp
+400:     #12 0x5c82612891fc in copperfin::runtime::PrgRuntimeSession::Impl::evaluate_resumable_expression(copperfin::runtime::(anonymous namespace)::Frame&, copperfin::runtime::Statement const&, copperfin::runtime::(anonymous namespace)::CursorState const*) prg_engine.cpp
+400:     #13 0x5c8260fc94b5 in copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement() prg_engine.cpp
+400:     #14 0x5c82610b03ee in copperfin::runtime::PrgRuntimeSession::Impl::run(copperfin::runtime::DebugResumeAction) (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0x45a3ee) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+400:     #15 0x5c82610bf2e3 in copperfin::runtime::PrgRuntimeSession::run(copperfin::runtime::DebugResumeAction) (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0x4692e3) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+400:     #16 0x5c8260f6e824 in (anonymous namespace)::public_case(std::filesystem::__cxx11::path const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::optional<long>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, int) test_prg_engine_cast_int64_numeric.cpp
+400:     #17 0x5c8260f69969 in main (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0x313969) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+400:     #18 0x78d06a22a600 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:59:16
+400:     #19 0x78d06a22a717 in __libc_start_main csu/../csu/libc-start.c:360:3
+400:     #20 0x5c8260e707c4 in _start (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0x21a7c4) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+400: 
+400: SUMMARY: UndefinedBehaviorSanitizer: undefined-behavior /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_dispatch_general.inl:668:63 
+400: FAIL: CAST selected error COPPERFIN session1 CAST(9223372036854775807 AS INT64) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(9223372036854775807 AS INT64) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(9223372036854775807 AS INT64)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(9223372036854775808 AS INT64) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(9223372036854775808 AS INT64) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(9223372036854775808 AS INT64)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(-9223372036854777856 AS INT64) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(-9223372036854777856 AS INT64) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-9223372036854777856 AS INT64)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E20 AS INT64) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E20 AS INT64) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E20 AS INT64)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(-1E20 AS INT64) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(-1E20 AS INT64) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-1E20 AS INT64)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INT64) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INT64) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT64)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(-1E300 AS INT64) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(-1E300 AS INT64) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-1E300 AS INT64)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(EXP(1000) AS INT64) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(EXP(1000) AS INT64) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(EXP(1000) AS INT64)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(-EXP(1000) AS INT64) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(-EXP(1000) AS INT64) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-EXP(1000) AS INT64)
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT64) got 9007199254740992
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT64) got -9007199254740992
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT64) got -9223372036854775808
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1022 AS INT64)) AS INT64) got -9223372036854775808
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT64) got -9223372036854775808
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT64) got 9007199254740992
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS INT64) got -9223372036854775808
+400: FAIL: CAST selected error COPPERFIN session1 CAST(CAST(9223372036854775808 AS UINT64) AS INT64) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(CAST(9223372036854775808 AS UINT64) AS INT64) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(CAST(9223372036854775808 AS UINT64) AS INT64)
+400: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS INT64) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS INT64) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS INT64)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INT64) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INT64) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT64)
+400: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS INT64)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INT64) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INT64) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT64)
+400: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS INT64)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INT64) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INT64) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT64)
+400: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS INT64)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INT64) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INT64) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT64)
+400: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS INT64)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(9223372036854775807 AS LONGLONG) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(9223372036854775807 AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(9223372036854775807 AS LONGLONG)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(9223372036854775808 AS LONGLONG) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(9223372036854775808 AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(9223372036854775808 AS LONGLONG)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(-9223372036854777856 AS LONGLONG) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(-9223372036854777856 AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-9223372036854777856 AS LONGLONG)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E20 AS LONGLONG) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E20 AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E20 AS LONGLONG)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(-1E20 AS LONGLONG) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(-1E20 AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-1E20 AS LONGLONG)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS LONGLONG) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS LONGLONG)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(-1E300 AS LONGLONG) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(-1E300 AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-1E300 AS LONGLONG)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(EXP(1000) AS LONGLONG) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(EXP(1000) AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(EXP(1000) AS LONGLONG)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(-EXP(1000) AS LONGLONG) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(-EXP(1000) AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-EXP(1000) AS LONGLONG)
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS LONGLONG) got 9007199254740992
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS LONGLONG) got -9007199254740992
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1022 AS INT64)) AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS LONGLONG) got 9007199254740992
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected error COPPERFIN session1 CAST(CAST(9223372036854775808 AS UINT64) AS LONGLONG) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(CAST(9223372036854775808 AS UINT64) AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(CAST(9223372036854775808 AS UINT64) AS LONGLONG)
+400: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS LONGLONG) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS LONGLONG)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS LONGLONG) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS LONGLONG)
+400: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS LONGLONG)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS LONGLONG) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS LONGLONG)
+400: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS LONGLONG)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS LONGLONG) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS LONGLONG)
+400: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS LONGLONG)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS LONGLONG) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS LONGLONG) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS LONGLONG)
+400: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS LONGLONG)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(9223372036854775807 AS BIGINT) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(9223372036854775807 AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(9223372036854775807 AS BIGINT)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(9223372036854775808 AS BIGINT) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(9223372036854775808 AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(9223372036854775808 AS BIGINT)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(-9223372036854777856 AS BIGINT) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(-9223372036854777856 AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-9223372036854777856 AS BIGINT)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E20 AS BIGINT) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E20 AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E20 AS BIGINT)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(-1E20 AS BIGINT) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(-1E20 AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-1E20 AS BIGINT)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS BIGINT) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS BIGINT)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(-1E300 AS BIGINT) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(-1E300 AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-1E300 AS BIGINT)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(EXP(1000) AS BIGINT) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(EXP(1000) AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(EXP(1000) AS BIGINT)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(-EXP(1000) AS BIGINT) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(-EXP(1000) AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-EXP(1000) AS BIGINT)
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS BIGINT) got 9007199254740992
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS BIGINT) got -9007199254740992
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1022 AS INT64)) AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS BIGINT) got 9007199254740992
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected error COPPERFIN session1 CAST(CAST(9223372036854775808 AS UINT64) AS BIGINT) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(CAST(9223372036854775808 AS UINT64) AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(CAST(9223372036854775808 AS UINT64) AS BIGINT)
+400: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS BIGINT) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS BIGINT)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS BIGINT) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS BIGINT)
+400: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS BIGINT)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS BIGINT) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS BIGINT)
+400: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS BIGINT)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS BIGINT) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS BIGINT)
+400: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS BIGINT)
+400: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS BIGINT) got 0
+400: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS BIGINT) got -9223372036854775808
+400: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS BIGINT)
+400: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS BIGINT)
+400: CAST frozen cases: direct=0 public=141
+3/7 Test #400: test_prg_engine_cast_int64_numeric_copperfin_session1 ...***Failed    3.83 sec
+test 401
+    Start 401: test_prg_engine_cast_int64_numeric_copperfin_session2
+
+401: Test command: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric "COPPERFIN" "2"
+401: Working Directory: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests
+401: Environment variables: 
+401:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/resources/locales
+401: Test timeout computed to be: 1200
+401: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_dispatch_general.inl:668:63: runtime error: 9.22337e+18 is outside the range of representable values of type 'long'
+401:     #0 0x584df099a712 in copperfin::runtime::evaluate_runtime_surface_function(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&, std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, unsigned long, std::function<std::optional<copperfin::runtime::RuntimeProgramStackFrame> (long long)> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::function<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<int (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<copperfin::runtime::PrgValue (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<std::optional<copperfin::runtime::RuntimeSurfaceCursorSnapshot> (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<std::optional<unsigned long> (copperfin::runtime::RuntimeSurfaceCursorSnapshot const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, bool, std::function<std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>> (std::filesystem::__cxx11::path const&)> const&, std::function<copperfin::runtime::RuntimeOleObjectState* (copperfin::runtime::PrgValue const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (copperfin::runtime::PrgValue const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<bool (copperfin::runtime::PrgValue const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, copperfin::runtime::PrgValue const&)> const&, std::function<std::optional<long> (long)> const&, std::function<std::optional<long> (long)> const&, std::function<std::optional<bool> (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>>)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&) (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0xb29712) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+401:     #1 0x584df0496982 in copperfin::runtime::(anonymous namespace)::ExpressionParser::evaluate_function(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&, std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>> const&, std::vector<std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>, std::allocator<std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>>> const&, unsigned long, unsigned long) prg_engine.cpp
+401:     #2 0x584df0472698 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_primary_uncached() prg_engine.cpp
+401:     #3 0x584df0469a89 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_primary() prg_engine.cpp
+401:     #4 0x584df04677c0 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_unary() prg_engine.cpp
+401:     #5 0x584df046441f in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_multiplicative() prg_engine.cpp
+401:     #6 0x584df0460525 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_additive() prg_engine.cpp
+401:     #7 0x584df045bac7 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_comparison() prg_engine.cpp
+401:     #8 0x584df045a806 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_and() prg_engine.cpp
+401:     #9 0x584df0459640 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_expression() prg_engine.cpp
+401:     #10 0x584df0296cf5 in copperfin::runtime::PrgRuntimeSession::Impl::evaluate_expression(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, copperfin::runtime::(anonymous namespace)::Frame const&, copperfin::runtime::(anonymous namespace)::CursorState const*, std::optional<copperfin::runtime::(anonymous namespace)::CursorExpressionReference>) prg_engine.cpp
+401:     #11 0x584df02c7427 in copperfin::runtime::PrgRuntimeSession::Impl::evaluate_expression(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, copperfin::runtime::(anonymous namespace)::Frame const&) prg_engine.cpp
+401:     #12 0x584df04a41fc in copperfin::runtime::PrgRuntimeSession::Impl::evaluate_resumable_expression(copperfin::runtime::(anonymous namespace)::Frame&, copperfin::runtime::Statement const&, copperfin::runtime::(anonymous namespace)::CursorState const*) prg_engine.cpp
+401:     #13 0x584df01e44b5 in copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement() prg_engine.cpp
+401:     #14 0x584df02cb3ee in copperfin::runtime::PrgRuntimeSession::Impl::run(copperfin::runtime::DebugResumeAction) (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0x45a3ee) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+401:     #15 0x584df02da2e3 in copperfin::runtime::PrgRuntimeSession::run(copperfin::runtime::DebugResumeAction) (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0x4692e3) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+401:     #16 0x584df0189824 in (anonymous namespace)::public_case(std::filesystem::__cxx11::path const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::optional<long>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, int) test_prg_engine_cast_int64_numeric.cpp
+401:     #17 0x584df0184969 in main (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0x313969) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+401:     #18 0x77252e02a600 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:59:16
+401:     #19 0x77252e02a717 in __libc_start_main csu/../csu/libc-start.c:360:3
+401:     #20 0x584df008b7c4 in _start (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0x21a7c4) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+401: 
+401: SUMMARY: UndefinedBehaviorSanitizer: undefined-behavior /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_dispatch_general.inl:668:63 
+401: FAIL: CAST selected error COPPERFIN session2 CAST(9223372036854775807 AS INT64) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(9223372036854775807 AS INT64) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(9223372036854775807 AS INT64)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(9223372036854775808 AS INT64) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(9223372036854775808 AS INT64) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(9223372036854775808 AS INT64)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(-9223372036854777856 AS INT64) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(-9223372036854777856 AS INT64) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-9223372036854777856 AS INT64)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E20 AS INT64) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E20 AS INT64) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E20 AS INT64)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(-1E20 AS INT64) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(-1E20 AS INT64) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-1E20 AS INT64)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INT64) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INT64) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT64)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(-1E300 AS INT64) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(-1E300 AS INT64) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-1E300 AS INT64)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(EXP(1000) AS INT64) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(EXP(1000) AS INT64) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(EXP(1000) AS INT64)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(-EXP(1000) AS INT64) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(-EXP(1000) AS INT64) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-EXP(1000) AS INT64)
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT64) got 9007199254740992
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT64) got -9007199254740992
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT64) got -9223372036854775808
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1022 AS INT64)) AS INT64) got -9223372036854775808
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT64) got -9223372036854775808
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT64) got 9007199254740992
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS INT64) got -9223372036854775808
+401: FAIL: CAST selected error COPPERFIN session2 CAST(CAST(9223372036854775808 AS UINT64) AS INT64) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(CAST(9223372036854775808 AS UINT64) AS INT64) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(CAST(9223372036854775808 AS UINT64) AS INT64)
+401: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS INT64) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS INT64) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS INT64)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INT64) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INT64) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT64)
+401: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS INT64)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INT64) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INT64) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT64)
+401: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS INT64)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INT64) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INT64) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT64)
+401: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS INT64)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INT64) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INT64) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT64)
+401: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS INT64)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(9223372036854775807 AS LONGLONG) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(9223372036854775807 AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(9223372036854775807 AS LONGLONG)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(9223372036854775808 AS LONGLONG) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(9223372036854775808 AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(9223372036854775808 AS LONGLONG)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(-9223372036854777856 AS LONGLONG) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(-9223372036854777856 AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-9223372036854777856 AS LONGLONG)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E20 AS LONGLONG) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E20 AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E20 AS LONGLONG)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(-1E20 AS LONGLONG) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(-1E20 AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-1E20 AS LONGLONG)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS LONGLONG) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS LONGLONG)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(-1E300 AS LONGLONG) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(-1E300 AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-1E300 AS LONGLONG)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(EXP(1000) AS LONGLONG) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(EXP(1000) AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(EXP(1000) AS LONGLONG)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(-EXP(1000) AS LONGLONG) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(-EXP(1000) AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-EXP(1000) AS LONGLONG)
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS LONGLONG) got 9007199254740992
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS LONGLONG) got -9007199254740992
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1022 AS INT64)) AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS LONGLONG) got 9007199254740992
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected error COPPERFIN session2 CAST(CAST(9223372036854775808 AS UINT64) AS LONGLONG) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(CAST(9223372036854775808 AS UINT64) AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(CAST(9223372036854775808 AS UINT64) AS LONGLONG)
+401: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS LONGLONG) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS LONGLONG)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS LONGLONG) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS LONGLONG)
+401: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS LONGLONG)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS LONGLONG) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS LONGLONG)
+401: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS LONGLONG)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS LONGLONG) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS LONGLONG)
+401: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS LONGLONG)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS LONGLONG) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS LONGLONG) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS LONGLONG)
+401: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS LONGLONG)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(9223372036854775807 AS BIGINT) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(9223372036854775807 AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(9223372036854775807 AS BIGINT)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(9223372036854775808 AS BIGINT) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(9223372036854775808 AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(9223372036854775808 AS BIGINT)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(-9223372036854777856 AS BIGINT) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(-9223372036854777856 AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-9223372036854777856 AS BIGINT)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E20 AS BIGINT) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E20 AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E20 AS BIGINT)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(-1E20 AS BIGINT) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(-1E20 AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-1E20 AS BIGINT)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS BIGINT) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS BIGINT)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(-1E300 AS BIGINT) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(-1E300 AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-1E300 AS BIGINT)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(EXP(1000) AS BIGINT) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(EXP(1000) AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(EXP(1000) AS BIGINT)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(-EXP(1000) AS BIGINT) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(-EXP(1000) AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-EXP(1000) AS BIGINT)
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS BIGINT) got 9007199254740992
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS BIGINT) got -9007199254740992
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1022 AS INT64)) AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS BIGINT) got 9007199254740992
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected error COPPERFIN session2 CAST(CAST(9223372036854775808 AS UINT64) AS BIGINT) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(CAST(9223372036854775808 AS UINT64) AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(CAST(9223372036854775808 AS UINT64) AS BIGINT)
+401: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS BIGINT) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS BIGINT)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS BIGINT) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS BIGINT)
+401: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS BIGINT)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS BIGINT) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS BIGINT)
+401: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS BIGINT)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS BIGINT) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS BIGINT)
+401: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS BIGINT)
+401: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS BIGINT) got 0
+401: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS BIGINT) got -9223372036854775808
+401: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS BIGINT)
+401: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS BIGINT)
+401: CAST frozen cases: direct=0 public=141
+4/7 Test #401: test_prg_engine_cast_int64_numeric_copperfin_session2 ...***Failed    3.38 sec
+test 402
+    Start 402: test_prg_engine_cast_int64_numeric_vfp9_session1
+
+402: Test command: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric "VFP9" "1"
+402: Working Directory: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests
+402: Environment variables: 
+402:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/resources/locales
+402: Test timeout computed to be: 1200
+402: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_dispatch_general.inl:668:63: runtime error: 9.22337e+18 is outside the range of representable values of type 'long'
+402:     #0 0x5644a04d6712 in copperfin::runtime::evaluate_runtime_surface_function(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&, std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, unsigned long, std::function<std::optional<copperfin::runtime::RuntimeProgramStackFrame> (long long)> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::function<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<int (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<copperfin::runtime::PrgValue (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<std::optional<copperfin::runtime::RuntimeSurfaceCursorSnapshot> (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<std::optional<unsigned long> (copperfin::runtime::RuntimeSurfaceCursorSnapshot const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, bool, std::function<std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>> (std::filesystem::__cxx11::path const&)> const&, std::function<copperfin::runtime::RuntimeOleObjectState* (copperfin::runtime::PrgValue const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (copperfin::runtime::PrgValue const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<bool (copperfin::runtime::PrgValue const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, copperfin::runtime::PrgValue const&)> const&, std::function<std::optional<long> (long)> const&, std::function<std::optional<long> (long)> const&, std::function<std::optional<bool> (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>>)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&) (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0xb29712) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+402:     #1 0x56449ffd2982 in copperfin::runtime::(anonymous namespace)::ExpressionParser::evaluate_function(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&, std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>> const&, std::vector<std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>, std::allocator<std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>>> const&, unsigned long, unsigned long) prg_engine.cpp
+402:     #2 0x56449ffae698 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_primary_uncached() prg_engine.cpp
+402:     #3 0x56449ffa5a89 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_primary() prg_engine.cpp
+402:     #4 0x56449ffa37c0 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_unary() prg_engine.cpp
+402:     #5 0x56449ffa041f in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_multiplicative() prg_engine.cpp
+402:     #6 0x56449ff9c525 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_additive() prg_engine.cpp
+402:     #7 0x56449ff97ac7 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_comparison() prg_engine.cpp
+402:     #8 0x56449ff96806 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_and() prg_engine.cpp
+402:     #9 0x56449ff95640 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_expression() prg_engine.cpp
+402:     #10 0x56449fdd2cf5 in copperfin::runtime::PrgRuntimeSession::Impl::evaluate_expression(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, copperfin::runtime::(anonymous namespace)::Frame const&, copperfin::runtime::(anonymous namespace)::CursorState const*, std::optional<copperfin::runtime::(anonymous namespace)::CursorExpressionReference>) prg_engine.cpp
+402:     #11 0x56449fe03427 in copperfin::runtime::PrgRuntimeSession::Impl::evaluate_expression(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, copperfin::runtime::(anonymous namespace)::Frame const&) prg_engine.cpp
+402:     #12 0x56449ffe01fc in copperfin::runtime::PrgRuntimeSession::Impl::evaluate_resumable_expression(copperfin::runtime::(anonymous namespace)::Frame&, copperfin::runtime::Statement const&, copperfin::runtime::(anonymous namespace)::CursorState const*) prg_engine.cpp
+402:     #13 0x56449fd204b5 in copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement() prg_engine.cpp
+402:     #14 0x56449fe073ee in copperfin::runtime::PrgRuntimeSession::Impl::run(copperfin::runtime::DebugResumeAction) (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0x45a3ee) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+402:     #15 0x56449fe162e3 in copperfin::runtime::PrgRuntimeSession::run(copperfin::runtime::DebugResumeAction) (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0x4692e3) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+402:     #16 0x56449fcc5824 in (anonymous namespace)::public_case(std::filesystem::__cxx11::path const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::optional<long>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, int) test_prg_engine_cast_int64_numeric.cpp
+402:     #17 0x56449fcc0969 in main (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0x313969) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+402:     #18 0x7ae3e2c2a600 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:59:16
+402:     #19 0x7ae3e2c2a717 in __libc_start_main csu/../csu/libc-start.c:360:3
+402:     #20 0x56449fbc77c4 in _start (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0x21a7c4) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+402: 
+402: SUMMARY: UndefinedBehaviorSanitizer: undefined-behavior /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_dispatch_general.inl:668:63 
+402: FAIL: CAST selected error VFP9 session1 CAST(9223372036854775807 AS INT64) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(9223372036854775807 AS INT64) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(9223372036854775807 AS INT64)
+402: FAIL: CAST selected error VFP9 session1 CAST(9223372036854775808 AS INT64) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(9223372036854775808 AS INT64) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(9223372036854775808 AS INT64)
+402: FAIL: CAST selected error VFP9 session1 CAST(-9223372036854777856 AS INT64) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(-9223372036854777856 AS INT64) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(-9223372036854777856 AS INT64)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E20 AS INT64) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E20 AS INT64) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E20 AS INT64)
+402: FAIL: CAST selected error VFP9 session1 CAST(-1E20 AS INT64) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(-1E20 AS INT64) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(-1E20 AS INT64)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E300 AS INT64) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS INT64) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E300 AS INT64)
+402: FAIL: CAST selected error VFP9 session1 CAST(-1E300 AS INT64) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(-1E300 AS INT64) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(-1E300 AS INT64)
+402: FAIL: CAST selected error VFP9 session1 CAST(EXP(1000) AS INT64) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(EXP(1000) AS INT64) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(EXP(1000) AS INT64)
+402: FAIL: CAST selected error VFP9 session1 CAST(-EXP(1000) AS INT64) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(-EXP(1000) AS INT64) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(-EXP(1000) AS INT64)
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT64) got 9007199254740992
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT64) got -9007199254740992
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT64) got -9223372036854775808
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1022 AS INT64)) AS INT64) got -9223372036854775808
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT64) got -9223372036854775808
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT64) got 9007199254740992
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS INT64) got -9223372036854775808
+402: FAIL: CAST selected error VFP9 session1 CAST(CAST(9223372036854775808 AS UINT64) AS INT64) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(CAST(9223372036854775808 AS UINT64) AS INT64) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(CAST(9223372036854775808 AS UINT64) AS INT64)
+402: FAIL: CAST selected error VFP9 session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS INT64) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS INT64) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS INT64)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E300 AS INT64) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS INT64) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E300 AS INT64)
+402: FAIL: CAST selected localized message VFP9 session1 CAST(1E300 AS INT64)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E300 AS INT64) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS INT64) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E300 AS INT64)
+402: FAIL: CAST selected localized message VFP9 session1 CAST(1E300 AS INT64)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E300 AS INT64) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS INT64) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E300 AS INT64)
+402: FAIL: CAST selected localized message VFP9 session1 CAST(1E300 AS INT64)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E300 AS INT64) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS INT64) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E300 AS INT64)
+402: FAIL: CAST selected localized message VFP9 session1 CAST(1E300 AS INT64)
+402: FAIL: CAST selected error VFP9 session1 CAST(9223372036854775807 AS LONGLONG) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(9223372036854775807 AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(9223372036854775807 AS LONGLONG)
+402: FAIL: CAST selected error VFP9 session1 CAST(9223372036854775808 AS LONGLONG) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(9223372036854775808 AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(9223372036854775808 AS LONGLONG)
+402: FAIL: CAST selected error VFP9 session1 CAST(-9223372036854777856 AS LONGLONG) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(-9223372036854777856 AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(-9223372036854777856 AS LONGLONG)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E20 AS LONGLONG) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E20 AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E20 AS LONGLONG)
+402: FAIL: CAST selected error VFP9 session1 CAST(-1E20 AS LONGLONG) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(-1E20 AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(-1E20 AS LONGLONG)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E300 AS LONGLONG) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E300 AS LONGLONG)
+402: FAIL: CAST selected error VFP9 session1 CAST(-1E300 AS LONGLONG) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(-1E300 AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(-1E300 AS LONGLONG)
+402: FAIL: CAST selected error VFP9 session1 CAST(EXP(1000) AS LONGLONG) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(EXP(1000) AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(EXP(1000) AS LONGLONG)
+402: FAIL: CAST selected error VFP9 session1 CAST(-EXP(1000) AS LONGLONG) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(-EXP(1000) AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(-EXP(1000) AS LONGLONG)
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS LONGLONG) got 9007199254740992
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS LONGLONG) got -9007199254740992
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1022 AS INT64)) AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS LONGLONG) got 9007199254740992
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected error VFP9 session1 CAST(CAST(9223372036854775808 AS UINT64) AS LONGLONG) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(CAST(9223372036854775808 AS UINT64) AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(CAST(9223372036854775808 AS UINT64) AS LONGLONG)
+402: FAIL: CAST selected error VFP9 session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS LONGLONG) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS LONGLONG)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E300 AS LONGLONG) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E300 AS LONGLONG)
+402: FAIL: CAST selected localized message VFP9 session1 CAST(1E300 AS LONGLONG)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E300 AS LONGLONG) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E300 AS LONGLONG)
+402: FAIL: CAST selected localized message VFP9 session1 CAST(1E300 AS LONGLONG)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E300 AS LONGLONG) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E300 AS LONGLONG)
+402: FAIL: CAST selected localized message VFP9 session1 CAST(1E300 AS LONGLONG)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E300 AS LONGLONG) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS LONGLONG) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E300 AS LONGLONG)
+402: FAIL: CAST selected localized message VFP9 session1 CAST(1E300 AS LONGLONG)
+402: FAIL: CAST selected error VFP9 session1 CAST(9223372036854775807 AS BIGINT) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(9223372036854775807 AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(9223372036854775807 AS BIGINT)
+402: FAIL: CAST selected error VFP9 session1 CAST(9223372036854775808 AS BIGINT) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(9223372036854775808 AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(9223372036854775808 AS BIGINT)
+402: FAIL: CAST selected error VFP9 session1 CAST(-9223372036854777856 AS BIGINT) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(-9223372036854777856 AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(-9223372036854777856 AS BIGINT)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E20 AS BIGINT) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E20 AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E20 AS BIGINT)
+402: FAIL: CAST selected error VFP9 session1 CAST(-1E20 AS BIGINT) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(-1E20 AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(-1E20 AS BIGINT)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E300 AS BIGINT) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E300 AS BIGINT)
+402: FAIL: CAST selected error VFP9 session1 CAST(-1E300 AS BIGINT) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(-1E300 AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(-1E300 AS BIGINT)
+402: FAIL: CAST selected error VFP9 session1 CAST(EXP(1000) AS BIGINT) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(EXP(1000) AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(EXP(1000) AS BIGINT)
+402: FAIL: CAST selected error VFP9 session1 CAST(-EXP(1000) AS BIGINT) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(-EXP(1000) AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(-EXP(1000) AS BIGINT)
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS BIGINT) got 9007199254740992
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS BIGINT) got -9007199254740992
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1022 AS INT64)) AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS BIGINT) got 9007199254740992
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected error VFP9 session1 CAST(CAST(9223372036854775808 AS UINT64) AS BIGINT) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(CAST(9223372036854775808 AS UINT64) AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(CAST(9223372036854775808 AS UINT64) AS BIGINT)
+402: FAIL: CAST selected error VFP9 session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS BIGINT) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS BIGINT)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E300 AS BIGINT) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E300 AS BIGINT)
+402: FAIL: CAST selected localized message VFP9 session1 CAST(1E300 AS BIGINT)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E300 AS BIGINT) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E300 AS BIGINT)
+402: FAIL: CAST selected localized message VFP9 session1 CAST(1E300 AS BIGINT)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E300 AS BIGINT) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E300 AS BIGINT)
+402: FAIL: CAST selected localized message VFP9 session1 CAST(1E300 AS BIGINT)
+402: FAIL: CAST selected error VFP9 session1 CAST(1E300 AS BIGINT) got 0
+402: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS BIGINT) got -9223372036854775808
+402: FAIL: CAST selected kind/assignment VFP9 session1 CAST(1E300 AS BIGINT)
+402: FAIL: CAST selected localized message VFP9 session1 CAST(1E300 AS BIGINT)
+402: CAST frozen cases: direct=0 public=141
+5/7 Test #402: test_prg_engine_cast_int64_numeric_vfp9_session1 ........***Failed    3.02 sec
+test 403
+    Start 403: test_prg_engine_cast_int64_numeric_vfp9_session2
+
+403: Test command: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric "VFP9" "2"
+403: Working Directory: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests
+403: Environment variables: 
+403:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/resources/locales
+403: Test timeout computed to be: 1200
+403: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_dispatch_general.inl:668:63: runtime error: 9.22337e+18 is outside the range of representable values of type 'long'
+403:     #0 0x5950fad0e712 in copperfin::runtime::evaluate_runtime_surface_function(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&, std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, unsigned long, std::function<std::optional<copperfin::runtime::RuntimeProgramStackFrame> (long long)> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::function<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<int (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<copperfin::runtime::PrgValue (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<std::optional<copperfin::runtime::RuntimeSurfaceCursorSnapshot> (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<std::optional<unsigned long> (copperfin::runtime::RuntimeSurfaceCursorSnapshot const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, bool, std::function<std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>> (std::filesystem::__cxx11::path const&)> const&, std::function<copperfin::runtime::RuntimeOleObjectState* (copperfin::runtime::PrgValue const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (copperfin::runtime::PrgValue const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<bool (copperfin::runtime::PrgValue const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, copperfin::runtime::PrgValue const&)> const&, std::function<std::optional<long> (long)> const&, std::function<std::optional<long> (long)> const&, std::function<std::optional<bool> (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&, std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>>)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<std::optional<copperfin::runtime::PrgValue> (std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&)> const&, std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)> const&) (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0xb29712) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+403:     #1 0x5950fa80a982 in copperfin::runtime::(anonymous namespace)::ExpressionParser::evaluate_function(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::vector<copperfin::runtime::PrgValue, std::allocator<copperfin::runtime::PrgValue>> const&, std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>> const&, std::vector<std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>, std::allocator<std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>>> const&, unsigned long, unsigned long) prg_engine.cpp
+403:     #2 0x5950fa7e6698 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_primary_uncached() prg_engine.cpp
+403:     #3 0x5950fa7dda89 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_primary() prg_engine.cpp
+403:     #4 0x5950fa7db7c0 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_unary() prg_engine.cpp
+403:     #5 0x5950fa7d841f in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_multiplicative() prg_engine.cpp
+403:     #6 0x5950fa7d4525 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_additive() prg_engine.cpp
+403:     #7 0x5950fa7cfac7 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_comparison() prg_engine.cpp
+403:     #8 0x5950fa7ce806 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_and() prg_engine.cpp
+403:     #9 0x5950fa7cd640 in copperfin::runtime::(anonymous namespace)::ExpressionParser::parse_expression() prg_engine.cpp
+403:     #10 0x5950fa60acf5 in copperfin::runtime::PrgRuntimeSession::Impl::evaluate_expression(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, copperfin::runtime::(anonymous namespace)::Frame const&, copperfin::runtime::(anonymous namespace)::CursorState const*, std::optional<copperfin::runtime::(anonymous namespace)::CursorExpressionReference>) prg_engine.cpp
+403:     #11 0x5950fa63b427 in copperfin::runtime::PrgRuntimeSession::Impl::evaluate_expression(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, copperfin::runtime::(anonymous namespace)::Frame const&) prg_engine.cpp
+403:     #12 0x5950fa8181fc in copperfin::runtime::PrgRuntimeSession::Impl::evaluate_resumable_expression(copperfin::runtime::(anonymous namespace)::Frame&, copperfin::runtime::Statement const&, copperfin::runtime::(anonymous namespace)::CursorState const*) prg_engine.cpp
+403:     #13 0x5950fa5584b5 in copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement() prg_engine.cpp
+403:     #14 0x5950fa63f3ee in copperfin::runtime::PrgRuntimeSession::Impl::run(copperfin::runtime::DebugResumeAction) (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0x45a3ee) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+403:     #15 0x5950fa64e2e3 in copperfin::runtime::PrgRuntimeSession::run(copperfin::runtime::DebugResumeAction) (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0x4692e3) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+403:     #16 0x5950fa4fd824 in (anonymous namespace)::public_case(std::filesystem::__cxx11::path const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, std::optional<long>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, int) test_prg_engine_cast_int64_numeric.cpp
+403:     #17 0x5950fa4f8969 in main (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0x313969) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+403:     #18 0x78523262a600 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:59:16
+403:     #19 0x78523262a717 in __libc_start_main csu/../csu/libc-start.c:360:3
+403:     #20 0x5950fa3ff7c4 in _start (/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_cast_int64_numeric+0x21a7c4) (BuildId: f435a1b23ec93ecced302ef34d2bf316b38c86e7)
+403: 
+403: SUMMARY: UndefinedBehaviorSanitizer: undefined-behavior /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_dispatch_general.inl:668:63 
+403: FAIL: CAST selected error VFP9 session2 CAST(9223372036854775807 AS INT64) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(9223372036854775807 AS INT64) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(9223372036854775807 AS INT64)
+403: FAIL: CAST selected error VFP9 session2 CAST(9223372036854775808 AS INT64) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(9223372036854775808 AS INT64) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(9223372036854775808 AS INT64)
+403: FAIL: CAST selected error VFP9 session2 CAST(-9223372036854777856 AS INT64) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(-9223372036854777856 AS INT64) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(-9223372036854777856 AS INT64)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E20 AS INT64) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E20 AS INT64) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E20 AS INT64)
+403: FAIL: CAST selected error VFP9 session2 CAST(-1E20 AS INT64) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(-1E20 AS INT64) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(-1E20 AS INT64)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E300 AS INT64) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E300 AS INT64) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E300 AS INT64)
+403: FAIL: CAST selected error VFP9 session2 CAST(-1E300 AS INT64) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(-1E300 AS INT64) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(-1E300 AS INT64)
+403: FAIL: CAST selected error VFP9 session2 CAST(EXP(1000) AS INT64) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(EXP(1000) AS INT64) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(EXP(1000) AS INT64)
+403: FAIL: CAST selected error VFP9 session2 CAST(-EXP(1000) AS INT64) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(-EXP(1000) AS INT64) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(-EXP(1000) AS INT64)
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT64) got 9007199254740992
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT64) got -9007199254740992
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT64) got -9223372036854775808
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1022 AS INT64)) AS INT64) got -9223372036854775808
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT64) got -9223372036854775808
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT64) got 9007199254740992
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS INT64) got -9223372036854775808
+403: FAIL: CAST selected error VFP9 session2 CAST(CAST(9223372036854775808 AS UINT64) AS INT64) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(CAST(9223372036854775808 AS UINT64) AS INT64) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(CAST(9223372036854775808 AS UINT64) AS INT64)
+403: FAIL: CAST selected error VFP9 session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS INT64) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS INT64) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS INT64)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E300 AS INT64) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E300 AS INT64) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E300 AS INT64)
+403: FAIL: CAST selected localized message VFP9 session2 CAST(1E300 AS INT64)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E300 AS INT64) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E300 AS INT64) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E300 AS INT64)
+403: FAIL: CAST selected localized message VFP9 session2 CAST(1E300 AS INT64)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E300 AS INT64) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E300 AS INT64) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E300 AS INT64)
+403: FAIL: CAST selected localized message VFP9 session2 CAST(1E300 AS INT64)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E300 AS INT64) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E300 AS INT64) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E300 AS INT64)
+403: FAIL: CAST selected localized message VFP9 session2 CAST(1E300 AS INT64)
+403: FAIL: CAST selected error VFP9 session2 CAST(9223372036854775807 AS LONGLONG) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(9223372036854775807 AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(9223372036854775807 AS LONGLONG)
+403: FAIL: CAST selected error VFP9 session2 CAST(9223372036854775808 AS LONGLONG) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(9223372036854775808 AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(9223372036854775808 AS LONGLONG)
+403: FAIL: CAST selected error VFP9 session2 CAST(-9223372036854777856 AS LONGLONG) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(-9223372036854777856 AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(-9223372036854777856 AS LONGLONG)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E20 AS LONGLONG) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E20 AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E20 AS LONGLONG)
+403: FAIL: CAST selected error VFP9 session2 CAST(-1E20 AS LONGLONG) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(-1E20 AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(-1E20 AS LONGLONG)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E300 AS LONGLONG) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E300 AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E300 AS LONGLONG)
+403: FAIL: CAST selected error VFP9 session2 CAST(-1E300 AS LONGLONG) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(-1E300 AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(-1E300 AS LONGLONG)
+403: FAIL: CAST selected error VFP9 session2 CAST(EXP(1000) AS LONGLONG) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(EXP(1000) AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(EXP(1000) AS LONGLONG)
+403: FAIL: CAST selected error VFP9 session2 CAST(-EXP(1000) AS LONGLONG) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(-EXP(1000) AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(-EXP(1000) AS LONGLONG)
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS LONGLONG) got 9007199254740992
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS LONGLONG) got -9007199254740992
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1022 AS INT64)) AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS LONGLONG) got 9007199254740992
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected error VFP9 session2 CAST(CAST(9223372036854775808 AS UINT64) AS LONGLONG) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(CAST(9223372036854775808 AS UINT64) AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(CAST(9223372036854775808 AS UINT64) AS LONGLONG)
+403: FAIL: CAST selected error VFP9 session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS LONGLONG) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS LONGLONG)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E300 AS LONGLONG) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E300 AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E300 AS LONGLONG)
+403: FAIL: CAST selected localized message VFP9 session2 CAST(1E300 AS LONGLONG)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E300 AS LONGLONG) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E300 AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E300 AS LONGLONG)
+403: FAIL: CAST selected localized message VFP9 session2 CAST(1E300 AS LONGLONG)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E300 AS LONGLONG) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E300 AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E300 AS LONGLONG)
+403: FAIL: CAST selected localized message VFP9 session2 CAST(1E300 AS LONGLONG)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E300 AS LONGLONG) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E300 AS LONGLONG) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E300 AS LONGLONG)
+403: FAIL: CAST selected localized message VFP9 session2 CAST(1E300 AS LONGLONG)
+403: FAIL: CAST selected error VFP9 session2 CAST(9223372036854775807 AS BIGINT) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(9223372036854775807 AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(9223372036854775807 AS BIGINT)
+403: FAIL: CAST selected error VFP9 session2 CAST(9223372036854775808 AS BIGINT) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(9223372036854775808 AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(9223372036854775808 AS BIGINT)
+403: FAIL: CAST selected error VFP9 session2 CAST(-9223372036854777856 AS BIGINT) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(-9223372036854777856 AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(-9223372036854777856 AS BIGINT)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E20 AS BIGINT) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E20 AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E20 AS BIGINT)
+403: FAIL: CAST selected error VFP9 session2 CAST(-1E20 AS BIGINT) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(-1E20 AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(-1E20 AS BIGINT)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E300 AS BIGINT) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E300 AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E300 AS BIGINT)
+403: FAIL: CAST selected error VFP9 session2 CAST(-1E300 AS BIGINT) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(-1E300 AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(-1E300 AS BIGINT)
+403: FAIL: CAST selected error VFP9 session2 CAST(EXP(1000) AS BIGINT) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(EXP(1000) AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(EXP(1000) AS BIGINT)
+403: FAIL: CAST selected error VFP9 session2 CAST(-EXP(1000) AS BIGINT) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(-EXP(1000) AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(-EXP(1000) AS BIGINT)
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS BIGINT) got 9007199254740992
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS BIGINT) got -9007199254740992
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1022 AS INT64)) AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS BIGINT) got 9007199254740992
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected error VFP9 session2 CAST(CAST(9223372036854775808 AS UINT64) AS BIGINT) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(CAST(9223372036854775808 AS UINT64) AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(CAST(9223372036854775808 AS UINT64) AS BIGINT)
+403: FAIL: CAST selected error VFP9 session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS BIGINT) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST((CAST(9223372036854775808 AS UINT64)+CAST(9223372036854774784 AS UINT64)+CAST(1023 AS UINT64)) AS BIGINT)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E300 AS BIGINT) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E300 AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E300 AS BIGINT)
+403: FAIL: CAST selected localized message VFP9 session2 CAST(1E300 AS BIGINT)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E300 AS BIGINT) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E300 AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E300 AS BIGINT)
+403: FAIL: CAST selected localized message VFP9 session2 CAST(1E300 AS BIGINT)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E300 AS BIGINT) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E300 AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E300 AS BIGINT)
+403: FAIL: CAST selected localized message VFP9 session2 CAST(1E300 AS BIGINT)
+403: FAIL: CAST selected error VFP9 session2 CAST(1E300 AS BIGINT) got 0
+403: FAIL: CAST selected result VFP9 session2 CAST(1E300 AS BIGINT) got -9223372036854775808
+403: FAIL: CAST selected kind/assignment VFP9 session2 CAST(1E300 AS BIGINT)
+403: FAIL: CAST selected localized message VFP9 session2 CAST(1E300 AS BIGINT)
+403: CAST frozen cases: direct=0 public=141
+6/7 Test #403: test_prg_engine_cast_int64_numeric_vfp9_session2 ........***Failed    3.11 sec
+test 409
+    Start 409: test_prg_engine_bittest_neighbors
+
+409: Test command: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests/test_prg_engine_bittest_neighbors
+409: Working Directory: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/tests
+409: Environment variables: 
+409:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/resources/locales
+409: Test timeout computed to be: 1200
+7/7 Test #409: test_prg_engine_bittest_neighbors .......................   Passed    0.09 sec
+
+The following tests passed:
+	test_prg_engine_int64_exact_expression
+	test_prg_engine_cast_int64_numeric
+	test_prg_engine_bittest_neighbors
+
+43% tests passed, 4 tests failed out of 7
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =  13.54 sec*proc (7 tests)
+copperfin-isolation:child-processes=none            =  13.54 sec*proc (7 tests)
+copperfin-isolation:environment=none                =   0.09 sec*proc (1 test)
+copperfin-isolation:environment=scoped-process      =  13.45 sec*proc (6 tests)
+copperfin-isolation:filesystem=process-owned        =   0.09 sec*proc (1 test)
+copperfin-isolation:filesystem=test-owned-unique    =  13.45 sec*proc (6 tests)
+copperfin-isolation:network=none                    =  13.54 sec*proc (7 tests)
+copperfin-isolation:platform=portable               =  13.54 sec*proc (7 tests)
+copperfin-isolation:resources=none                  =  13.54 sec*proc (7 tests)
+copperfin-isolation:samples=none                    =  13.54 sec*proc (7 tests)
+copperfin-isolation:schedule=serial                 =  13.54 sec*proc (7 tests)
+
+Total Test time (real) =  13.57 sec
+
+The following tests FAILED:
+	400 - test_prg_engine_cast_int64_numeric_copperfin_session1 (Failed) copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+	401 - test_prg_engine_cast_int64_numeric_copperfin_session2 (Failed) copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+	402 - test_prg_engine_cast_int64_numeric_vfp9_session1 (Failed) copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+	403 - test_prg_engine_cast_int64_numeric_vfp9_session2 (Failed) copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+Errors while running CTest
+Output from these tests are in: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-clang/Testing/Temporary/LastTest.log
+Use "--rerun-failed --output-on-failure" to re-run the failed cases verbosely.
