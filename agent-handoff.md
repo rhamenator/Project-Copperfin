@@ -55,58 +55,62 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-Unsigned64 CAST Numeric/exact PR#7126 merged2026-10-10T06:15:56Z as
-8988225cf9bd34ac14b560a4b0edd44bb27fcb87 from signed/DCO GoodG head
-d10f223f358ed885e3a43babb037e042c6038381.
-https://github.com/rhamenator/Project-Copperfin/pull/7126
-Finalgate6094561264: fresh active strictmainruleset20356131, all11required
-and all36hostedchecks SUCCESS; non-draft/MERGEABLE/CLEAN. ActualcleanCodex
-6094132735 at05:17:19Z explicitlynamesd10f223f35 after ClaudeFIRST6093789111
-at04:31:24Z eyesonly/no usable review/noexplicitquota-setupnotice and authorized
-fallback6094120872 at05:15:49Z. Summary/reactions NOTcleanproof.
-RESTreviews/inlineempty; Graphthreads0/closingrefs0/hasNextfalse.
-Parents5611/6776 freshlyOPEN/rhamenator/exactagent-approved; bodies reread06:16Z.
-Only AS UINT64/ULONGLONG/UBIGINT Numeric/exact conversion completes; no parent,
-CASTfamily/type/Currency/arity/leak/platform/persistence/release acceptance.
+Signed32 CAST Numeric/exact PR#7127 merged2026-10-10T09:46:34Z as
+c1a6eef528c1d621196a6c7e232cf8e399174ea0 from signed/DCO GoodG exacthead
+022813bd31c55e61497a18a46f74f891a6beea1a.
+https://github.com/rhamenator/Project-Copperfin/pull/7127
+Finalgate6096259853: fresh active strictmainruleset20356131, all11required
+and all36hostedchecks SUCCESS, non-draft/MERGEABLE/CLEAN. ClaudeFIRST6095547601
+08:10:32Z yieldedeyesonly/noexplicitquota-setupnotice; authorizedCodexfallback
+6095809897 at08:46:08Z yieldedactualclean6095821139 at08:47:38Z naming022813bd31.
+Summary/reactions NOTcleanproof. RESTreviews/inlineempty; Graphthreads0/
+closingrefs0/noNextPage. Parents5611/6776 freshlyOPEN/rhamenator/agent-approved,
+bodies reread09:45Z. Only INT/INT32/INTEGER/LONG Numeric/exact conversion
+complete; non-Numeric/INT16/SHORT/BYTE/otherCAST/parser/sharedsettings unchanged.
+No family/type/Currency/arity/leak/platform/persistence/release/parent acceptance.
 
-RQ-CF-PRG-CAST-UINT64-NUMERIC-001 / VR-5611-CAST-UINT64-NUMERIC-001/002:
-native/shippedhelp and independentmath BEFORE requirement/helper/tests;
-four matching38line/36call installedWineVFP97423 outputs,18ordinaryINTEGER/INT/I
-controlsPASS and18unsignedunsupportedERR11 each, notnativeunsigned64semantics.
-Firstobservation overlappedforeignauditbuild, transparentlyretainedNOTperformance;
-threefreshserialrepeats afterforeignbuildended. Noforeignprocesschanged/noVM.
-FiniteNumerictruncateddomain[0,2^64), negativefraction(-1,0)=>0, exactuint64
-fullidentity/nonnegativeexactsigned admission; localizedatomic11 bothmodes.
-Distincthelper frozenunusedbyCAST through BOTHcompleteoriginals, noinput/
-assertion/helper repairs. Actual62direct/4x159public new,56direct/4x141old
-signedneighbors/exact-expressioncomplete;960selectedfailures/zeroother;
-Clang four actualfloat-cast-overflow reports originalunsignedbranch.
-Onlythen unsigneddispatcher migrated. FixedGNU11/11PASS15.93s and Clang
-ASan/UBSan/float-cast-overflow11/11PASS19.71s/halt1/nosanDiagnostics/leaksdisabled.
-BroaderGNU12/12PASS425.47s includingall7contracts; Clang4/4PASS94.61s.
-Fullfrozen/native/original/fixed/broader rawlogs/hashes/chronology and completed
-boundedmediumDQ/DVdevelopmentself-review/automatedwalkthrough/rollback retained
-in tests/fixtures/vfp9-cast-uint64-numeric; notindependenthuman/highhazard.
-HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01 remainactive/noKBX.
+RQ-CF-PRG-CAST-INT32-NUMERIC-001/VR001+002/HZ/DQ-DV evidence retained in
+tests/fixtures/vfp9-cast-int32-numeric/README.md and baseline-audit.md.
+Independent installedWineVFP97423/shippedhelp BEFORE code/tests:
+three matching147line/145call runs +12supplemental constructed controls;
+native INTEGER/INT/I truncation/low32/huge0, native INT32/LONG absent,
+literal/STRprecision and parent-derived modern exact64/NaN boundaries explicit.
+Freeze06:59Z146direct/4x264public, BOTH complete GNU/Clang originals retained
+byte-identical BEFOREmigration:1216selected/zeroother each, Clangfouractual
+recoverablefloatcastUB reports. No assertion/input/helper/header/CMake/isolation
+repair/refreeze. Only then four-alias Numeric-only dispatch migrated.
+Defaultsigned32localizedatomic11; explicitVFP9definedlow32/huge0/exact64noDouble.
+FixedGNU16/16PASS30.33s and Clangsan16/16PASS38.16s, allnew+signed56/4x141+
+unsigned62/4x159/exact-expressioncounterscomplete/noSan/leaksdisabled.
+BroaderGNU11/12solefragment-datefailure fullyretained, thenfragmentrepair/
+check+assembler2/2PASS:all12subjects/all7contractsverifiedacrossruns,
+NOT a single12/12invocation. BroaderClang4/4PASS97.84s/noSan.
+All incomplete runner/capacity attempts/fullpausechronology retained NOTacceptance.
+Bounded mediumDQ/DVdevelopmentself-review/automatedwalkthrough/rollback
+complete; registeredHZ remainactive/noKBX/notindependenthuman/highhazard.
 
-Signedpostpush12908 11/11PASS16.35s/exit0 all62/4x159new and56/4x141old
-counterscomplete/exact-expressionPASS; proof6093795187.
-Full148line signed-postpush-gcc.log SHA
-4af29aa4377504b1435de2b8a89b4c2cfeb2c6cb30e5b299bf46be47195e04b5
-verifiedin /home/rich/.local/share/Trash/files/cast-uint64-gcc.
-WindowsNative38024352624/job114131887895 SUCCESS05:53:08Z:
-495/495PASS1642.54s, allfive newunsignedCASTshardsPASS. Full3731line raw
-windows-native-success.log SHAe1f2b69e25c10719a33edb2d01477b83dca1c005ea1b6ec4b1e0c9bf5bdf45f5
-retainedin /home/rich/.local/share/Trash/files/cast-uint64-native.
-Allhostedwatch11837 harvestedexit0; nohostedcancel/retry.
-MainFF8988225cf; owncompletedWT/local/remotebranch removed.
-GNU412MB/Clang315MB/native1.1MB scratch recoverablytrashed ascast-uint64-gcc,
-cast-uint64-clang,cast-uint64-native; bothlateevidencehashes verifiedinTrash.
-Emptyowned privateRAM /tmp/copperfin-cast-uint64-5611-gJqkxsCy removedafter
-noactiveprocess/exactpathaudit. OwnWTstash9919a3aea86c43f45dd8159d05f32cfea14023ae
-andcanonicalstash931bafd1fe89ed0d0c4152562a553a3caf19a6f4 retained.
-Foreignfiles/WTs/stashes preserved. PRattached; onlyoldverifiedMERGED6670
+Signedpostpush76581 16/16PASS30.02s/exit0/allfrozencounters, proof6095557992.
+Full206line postpush-gcc.log SHA
+55edd4b88ac0e8da69386c0b49483e6fa1313e02b5b844cd2935bf42f8ab0cd7.
+WindowsNative38036958916/job114169277216 attempt1 SUCCESS09:31:56Z:
+500/500PASS1562.76s/allfive newshardsPASS; full3768line windows-native-success.log
+SHA2d031eb6c3b26dc15153144f2110b17529fefe1466c63d7e676798f95fa95288.
+NonfatalMSVCC4244testoptionalconstructionwarning retained, NOTwarning-freeclaim.
+Watch81509 harvested0; noCIretry/cancel. CanonicalmainFFc1a6eef52.
+CompletedWT/local/remotebranch removed. Entire705MBbuild+interruptedRAMfixtures
+recoverablytrashed to /home/rich/.local/share/Trash/files/cast-int32-5611-build;
+bothlateproofhashes verifiedthere. RAMRupFhIMR removedafterownedfixturepreserved,
+exactdeadpwshPID2635649/2647420+noopenusersaudit; only8stalesockets removed.
+Canonicalcontinuitystashfae4fccc0ce53bef5907a433150f8ea9077be7b1 retained;
+foreignfiles/WTs/stashes preserved. NewPRattached; oldverifiedMERGED6678 only
 appbookmarkunlinkedat100cap, GitHubhistoryunchanged.
+
+Priorunsigned64CAST7126 merged8988225cf fromsignedd10f223f35, all36/all11green,
+clean6094132735/finalgate6094561264/threads0; onlyunsigned64CASTcomplete.
+Fullfrozenoriginal/fixed/native/broader evidence in vfp9-cast-uint64-numeric;
+latepostpush/Windowsraws verifiedin Trash/cast-uint64-gcc/native.
+Priorstashes9919a3aea86c43f45dd8159d05f32cfea14023ae/
+931bafd1fe89ed0d0c4152562a553a3caf19a6f4 retained.
 
 Prior signed64CAST7125 merged e2c16c3c2 fromsigned672d344768, all36/all11
 green, actualclean6092967948/finalgate6093226220, allconversationsresolved.
@@ -129,59 +133,77 @@ GETBAR7103/PRMBAR7101 complete. EPOCH/CENTURYcomplete/#3698closed; don'trevisit.
 
 ## Selected active bounded slice
 
-Admitted #5611/#6776: CAST AS INT/INT32/INTEGER/LONG Numeric/exact only.
-Branch fix/cast-int32-numeric-5611 from origin/main8988225cf9bd34ac14b560a4b0edd44bb27fcb87:
- /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin.
-07:46 heartbeat rules/handoff/canonical unread channel(empty) reread; fetch
-unchangedmain898, parentsOPEN/owner/exactagent-approved and bodies reread.
-Prior7126MERGED/all36green/cleanexact6094132735/zeroGraphthreads/RESTinline+
-reviews empty; noPR/commit/push yet for active branch.
+Admitted #5611/#6776: next CAST AS BYTE/UINT8 Numeric/exact only.
+Branch fix/cast-byte-numeric-5611 from origin/main
+c1a6eef528c1d621196a6c7e232cf8e399174ea0:
+ /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin.
+11:45rules/handoff/channelreread(empty), originfetchunchangedc1a6eef52,
+parentsfreshlyOPEN/owner/agent-approved beforecontent; activebranchPRlistempty.
+Previous7127 freshMERGED/all36SUCCESS/RESTinline0/Graphthreads0/noNextPage.
+No newPR/commit/push. Canonical+WThandoffowned.
 
-RQ-CF-PRG-CAST-INT32-NUMERIC-001/VR001+002/HZ/DQ-DV mapped BEFORE code/tests.
-Full native3matching147line/145call VFP9 7423 runs +12supplemental controls,
-literal/STRprecision and extension boundaries, freeze06:59Z146direct/4x264public,
-original/fixed fullraw logs/counters/hashes and all incomplete/pause chronology:
-tests/fixtures/vfp9-cast-int32-numeric/README.md and baseline-audit.md.
-BOTH complete original GNU12/16PASS30.25s and Clang12/16PASS42.47s retained
-byte-identical BEFORE migration: identical1216selected/zeroother each; Clang
-four actual recoverable floatcastUB reports. Numeric inputs/helper/header/
-tests/CMake/isolation frozen unchanged; no repair/refreeze. Only then four
-Numeric/exact aliases migrated to frozen helper/selected-session mode/error11.
-Default signed32 bounds; explicitVFP9 definedlow32/huge0, exact64/NaNparentderived.
-Non-Numeric/INT16/SHORT/BYTE/otherCAST/sharedconversions/parser/settings unchanged.
-DispatcherSHA8ce0b020b824876a868ba9dbda7450e3a54981fee0346baa4a57121047d3f7ec.
-FixedGNU53489 16/16PASS30.33s and Clang66850 16/16PASS38.16s; all146/4x264new,
-56/4x141signed,62/4x159unsigned/exact-expression complete/noSandiagnostics.
-Full218/219line fixedraws retained/cmp-verified; leaks disabled/no platformclaim.
+RQ-CF-PRG-CAST-BYTE-NUMERIC-001 mapped BEFOREhelper/tests in newfixtureREADME/
+durablematrix/HZlink. ShippedCASThelp fullyread; two matching installedWine7423
+77line/75call observations:25INTEGERtruncationcontrols/50unsupportedBYTE+UINT8
+ERR11, includingzero. Fullsources/results/stdout/stderr/hashes retained/cmp.
+Native2 timeout55s/exit124/no newoutput/oldmtime NOTacceptance, rootcauseunknown;
+native3 freshbasename/output/-t exit0, not timeout-optimum/rootcauseproof.
+Owner-derived unsigned8 extension BOTHmodes: finite truncate/admit[0,256),
+exactsigned/unsigned0..255 noDouble; localizedatomic11 otherwise. Noinvented
+native8mask/wrap/quirk. Non-Numeric/NULL/otherCAST/parser/settings untouched.
 
-Broader first runner failed before build/tests: mistyped null target, full3line
-raw retained before correcting ONLY ignored runner target/regex to null_semantics.
-73183/48740 builds0, capacity-interrupted143/five preliminarycontractsPASS/
-safety-workflowpartial/runtime notrun; full136/82line raws retained separately,
-NOT acceptance. Their owned wrappers/descendants harvested, none active/paused.
-BroaderGNU19236 completebuild0/CTest8,11/12PASS544.16s incl ownedcapacitypause
-07:49:58..07:52:10 after foreignDAWCTest; noforeignchanged/nopausedsurvivors.
-Allruntime/localization/sixcontractsPASS; solefailure our missingdatedfragment
-prefix. Full181line fragment-failure raw retained/cmp-verified. Readfragment
-format and fixedONLYourfragment date/singlebullet/indentedcontinuation; no
-numericalfrozeninput/production/testchanges. Check+assembler2/2PASS0.41s,
-full48line fragment-fix raw retained/cmp. All12plannedGNUsubjects verified
-across these runs, NOT a single12PASSinvocation; fullhashes/chronologyinaudit.
-BroaderClang32896 build0/CTest0,4/4PASS97.84s, noSandiagnostics; full80line raw
-retained/cmp-verified SHA012d4baa203839b3e75acf17ca0261ce6d830d7886eada90ca4084527f356ccf.
-Bounded DQ/DVdevelopmentself-review/automatedwalkthrough completeinaudit,
-notindependenthuman/highhazard/leak/platform/release/family/parentacceptance.
-PrivateRAM TMPDIR=/tmp/copperfin-cast-int32-5611-RupFhIMR,
-nice10/ionice2:7/-j1; no foreignprocess changed or suspendedtest acrossheartbeats.
-Allownedunifiedsessionsharvested; noownedactive/pausedbuild/test.
-Next signedcommit/DCO/push/PR/
-mandatoryattach/ClaudeFIRST, signedpostpush proof and exact-head hosted/review
-gates. Actualclean exact-head Claude or authorizedCodexfallback, requiredgreen
-and resolvedconversations mandatory. No frozen inputrepair without refreeze/
-BOTH complete original repeats BEFOREmigration. No parent/family acceptance.
-Completed signed/unsigned64tests are neighbors, NOTrequirementoracles.
-No ownerinputblocker. NoVMstart/recreate whilebackupresetcompletionunconfirmed.
-Deferred7100/7102/6879 remainafter numeric unlessdirectsteering/actionableCI.
+10:25Z preconfigurationfreeze140direct/4x126public, independent literalmath/
+nextafter/exact64/locale/session/cursor/retention/continuation/reset expectations.
+Distinctchecked_cast_byte_numeric_argument UNUSEDbyCAST through BOTHoriginals.
+Helper/header/tests/CMake/isolation hashes/countderivation retainedbaselineaudit;
+precompile factory-name/count/lowerneighbor edits explicitlybeforefreeze.
+Complete GNU original41173 harvestedexit8:configure0/build0/CTest8,
+17/21PASS36.80s/all140/four126 and oldsigned32(146/four264)/signed64(56/four141)/
+unsigned64(62/four159)/exact-expression counters complete;872selected/zeroother
+assertions (280error+280result+280kind+32locale), allcontext/continuation/cleanup
+passed. Full1431line raw copied/cmpverified in fixtureBEFOREClangconfiguration
+or migration, SHA84fd27c539909432612778ec52e754eda33b694e0f3147a63fe9b959d5dc9c71.
+All5frozenhashes unchanged; dispatcherdiffempty. Originalnegative NOTacceptance.
+Clang original63504 harvestedexit8 in11:15heartbeat:configure0/build0/CTest8,
+17/21PASS50.56s/samecompletecounters/872selected-zeroother; fouractualrecoverable
+floatcastUBreports at originalBYTE705:44 for -1. Full1526line raw copied/cmp
+retained BEFOREmigration SHA5d221d744f7cd57061a3a5490882bb5be0edf1c5ff07570815def5a28fe98e97.
+All5freezehashes unchanged; dispatcherdiffempty then. Bothnegative NOTacceptance.
+OnlyBYTE/UINT8 Numeric gate migrated11:19Z; originalnonNumericfallback retained.
+Fixed GNU39207 harvested0:build0/CTest0/21/21PASS36.63s/allfrozencounters,
+zeroassertions. Full274line fixed-gcc.log copied/cmp in fixture,
+SHA045b6f3f5473fde7185f0cacd88b0d275a2e614d63ac758622465a6128c6df79.
+All5freezehashes unchanged. Fixed Clang24637 harvested0:build0/CTest0,
+21/21PASS46.05s/allfrozencounters/zeroassertions/noSan; UBSANhalt1/leaksdisabled.
+Full275line raw copied/cmp in fixture,
+SHA960ce45e5ec04d1b680c220eb4c35f36c8e280d94026434b0d08413337951a10.
+Bothfixedlogsshowdispatch-containingruntime-surfaceobjectrebuilt/allfiveexe
+relinked; existingunusedfunctionwarnings retained NOTwarning-freequalification.
+Sameflags/frozeninputs; noassertrepair/refreeze.
+BroaderGNU1669 logbirth11:22:00.972049071Z, nice10/ionice2:7/-j1; privateRAMTMPDIR
+/dev/shm/copperfin-cast-byte-5611-k2k91nVu, rawbuild/cast-byte-native/broader-gcc.log,
+runner run-broader-gcc.sh/build/cast-byte-gcc. No otherlocalbuild/test/Wine atlaunch.
+BroaderGNU1669 harvested0:build0/CTest0/12/12PASS417.07s, fourruntime+
+localization/sevencontracts inONEinvocation; safetycontract333.65s/completePS
+fixtures, nofailure/retry. Full230line raw copied/cmp in fixture,
+SHA828c1b93c0d581ba723fa41a329ec8fee6c47ea60f18234ec8abcdca3665d666.
+BroaderClang32447 harvested0:build0/CTest0/4/4PASS114.85s/noSan,
+full80line raw copied/cmp in fixture,
+SHAb0ee40a756a6abf22e836783151ee7f42853a264a8514cdf51ae62d1d0684859.
+SameprivateRAM/halt1/leaksdisabled/seriallowpriority; no localprocessleft afterharvest.
+BoundedmediumDQ/DVdevelopmentself-review/walkthrough/rollback complete inaudit,
+no independenthuman/highhazard orfamily/parentacceptance. NoVMstarted.
+Datedsinglefragment/assembler198valid/nonrawdiffcheck
+passed. Unchangedsigned32/signed64/unsigned64/exact-expression neighbors included.
+Any assertion/inputrepair requires explicitrefreeze+BOTHoriginalrepeats.
+Focused/broader runtime/localization/sevencontracts/sanitizers/DV localcomplete.
+Signedcommit/DCO/push/mandatoryattach/ClaudeFIRST/authorizedCodexfallback,
+signedpostpush/actualcleanexactheadreview/allrequiredgreen/resolvedconversations
+gate integration; no parent/family acceptance. No ownerinputblocker.
+Serialnice10/ionice2:7/-j1/privateRAM; no localbuild/test/Wineoverlap or
+suspendedownedtests acrossheartbeats. NoVMstart/recreate whilebackupreset
+completionunconfirmed. Deferred7100/7102/6879 remainafter numeric unless
+directsteering/actionableCI.
 
 ## Retained owner steering / deferred work
 

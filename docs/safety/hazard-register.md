@@ -43,6 +43,18 @@ own system and domain assurance.
 | HZ-runtime-debug-01 | Incorrect fault recovery procedure | Runtime debug operations | Operator executes incorrect continue/retry sequence after runtime fault | Runtime resumes in unexpected state; downstream unsafe decisions possible | high | Require explicit pause-state inspection and validated recovery steps in docs | Linked DV evidence in issue and walkthrough artifact | TBD | active | 2026-05-03 |
 | HZ-doc-command-01 | Ambiguous command guidance | Operator command documentation | Documentation omits critical preconditions or target context for commands | User executes destructive or incorrect command sequence | high | Procedural delta review, misuse analysis, and independent review before publish | Linked DV evidence in issue | TBD | active | 2026-05-03 |
 
+## Bounded numeric-conversion linkage
+
+RQ-CF-PRG-CAST-BYTE-NUMERIC-001 / DQ-DV-5611-CAST-BYTE-NUMERIC-001 links
+HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01 to the
+[unsigned8 extension boundary and verification plan](../../tests/fixtures/vfp9-cast-byte-numeric/README.md).
+Numeric/exact range admission prevents undefined conversion/silent low-bit
+aliases; both modes agree because native VFP lacks these aliases. Bounded
+documentation misuse is medium; registered hazard severities/status remain
+unchanged. Development walkthrough and full original/fixed/broader evidence
+are retained in the fixture; exact-head integration remains gated. This is
+not independent-human/high-hazard qualification.
+
 ## Investigation Checklist
 
 When investigating an incident potentially related to product behavior or documentation:

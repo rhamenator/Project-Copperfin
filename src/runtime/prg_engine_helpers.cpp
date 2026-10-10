@@ -2455,6 +2455,26 @@ std::optional<std::uint64_t> checked_cast_uint64_argument(const PrgValue& value)
     return static_cast<std::uint64_t>(truncated);
 }
 
+// RQ-CF-PRG-CAST-BYTE-NUMERIC-001 (#5611/#6776): owner-derived unsigned8
+// extension, identical in both modes. Numeric kinds only; exact64 avoids
+// Double rounding. UNUSED by CAST through BOTH complete original baselines.
+std::optional<std::uint64_t> checked_cast_byte_numeric_argument(const PrgValue& value) {
+    if (value.kind == PrgValueKind::int64) {
+        if (value.int64_value < 0 || value.int64_value > 255) return std::nullopt;
+        return static_cast<std::uint64_t>(value.int64_value);
+    }
+    if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value > 255) return std::nullopt;
+        return value.uint64_value;
+    }
+    if (value.kind != PrgValueKind::number || !std::isfinite(value.number_value)) {
+        return std::nullopt;
+    }
+    const double truncated = std::trunc(value.number_value);
+    if (truncated < 0.0 || truncated >= 256.0) return std::nullopt;
+    return static_cast<std::uint64_t>(truncated);
+}
+
 // RQ-CF-PRG-CAST-INT32-NUMERIC-001 (#5611/#6776): independent native CAST
 // observations recover low32/huge0, not other functions' conversion policies.
 // Exact-kind/NaN boundaries are parent-derived. Kept UNUSED by CAST through
