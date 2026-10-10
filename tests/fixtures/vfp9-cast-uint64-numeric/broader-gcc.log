@@ -1,0 +1,294 @@
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_security
+[ 33%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 55%] Built target cf_runtime_text
+[ 66%] Built target cf_prg_analysis
+[ 88%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_behavior.dir/test_prg_engine_numeric_behavior.cpp.o
+[100%] Linking CXX executable test_prg_engine_numeric_behavior
+[100%] Built target test_prg_engine_numeric_behavior
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_security
+[ 33%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 55%] Built target cf_runtime_text
+[ 66%] Built target cf_prg_analysis
+[ 88%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_null_semantics.dir/test_prg_engine_null_semantics.cpp.o
+[100%] Linking CXX executable test_prg_engine_null_semantics
+[100%] Built target test_prg_engine_null_semantics
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_security
+[ 33%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 55%] Built target cf_runtime_text
+[ 66%] Built target cf_prg_analysis
+[ 88%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_typed_null.dir/test_prg_engine_typed_null.cpp.o
+[100%] Linking CXX executable test_prg_engine_typed_null
+[100%] Built target test_prg_engine_typed_null
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_security
+[ 33%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 55%] Built target cf_runtime_text
+[ 66%] Built target cf_prg_analysis
+[ 88%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_string_math_functions.dir/test_prg_engine_string_math_functions.cpp.o
+[100%] Linking CXX executable test_prg_engine_string_math_functions
+[100%] Built target test_prg_engine_string_math_functions
+[  8%] Built target cf_platform_support
+[  8%] Building CXX object CMakeFiles/cf_licensing.dir/src/licensing/base64.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_licensing.dir/src/licensing/canonical_payload_serializer.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_licensing.dir/src/licensing/ed25519_verify.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_licensing.dir/src/licensing/license_classifier.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_licensing.dir/src/licensing/license_payload_parser.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_licensing.dir/src/licensing/license_status.cpp.o
+[  8%] Building C object CMakeFiles/cf_licensing.dir/src/licensing/third_party/ed25519_ref/fe.c.o
+[  8%] Building C object CMakeFiles/cf_licensing.dir/src/licensing/third_party/ed25519_ref/ge.c.o
+[ 16%] Building C object CMakeFiles/cf_licensing.dir/src/licensing/third_party/ed25519_ref/sc.c.o
+[ 16%] Building C object CMakeFiles/cf_licensing.dir/src/licensing/third_party/ed25519_ref/sha512.c.o
+[ 16%] Building C object CMakeFiles/cf_licensing.dir/src/licensing/third_party/ed25519_ref/verify.c.o
+[ 16%] Linking CXX static library libcf_licensing.a
+[ 16%] Built target cf_licensing
+[ 16%] Built target cf_localization
+[ 25%] Built target cf_security
+[ 33%] Built target cf_platform_profile
+[ 50%] Built target cf_vfp_assets
+[ 50%] Built target cf_runtime_text
+[ 58%] Built target cf_prg_analysis
+[ 75%] Built target cf_design_model
+[ 83%] Built target cf_xbase_runtime
+[ 83%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_text_and_identifier_utils.cpp.o
+[ 83%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_file_io_and_classification.cpp.o
+[ 83%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_metadata.cpp.o
+[ 83%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_artifacts.cpp.o
+[ 83%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_preamble.cpp.o
+[ 83%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_host_authentication.cpp.o
+[ 83%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_bridge_model.cpp.o
+[ 83%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_request_serialization.cpp.o
+[ 83%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_process_launch.cpp.o
+[ 83%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_response_handling.cpp.o
+[ 83%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_entrypoints.cpp.o
+[ 83%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_manifest.cpp.o
+[ 83%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_native_wrapper_process.cpp.o
+[ 91%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_fxp_and_archive_manifest.cpp.o
+[ 91%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_ast_ir_manifest.cpp.o
+[ 91%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_csharp_and_launcher.cpp.o
+[ 91%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_launcher_artifact_inventory.cpp.o
+[ 91%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_fd_file_io.cpp.o
+[ 91%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_package_content_io.cpp.o
+[ 91%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_manifest_pair.cpp.o
+[ 91%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_manifest_pair_io.cpp.o
+[ 91%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_package_plan_manifest.cpp.o
+[ 91%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_package_transaction.cpp.o
+[ 91%] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_public_api.cpp.o
+[ 91%] Linking CXX static library libcf_runtime_pipeline.a
+[ 91%] Built target cf_runtime_pipeline
+[ 91%] Building CXX object CMakeFiles/copperfin_inspect.dir/apps/copperfin_inspect/main.cpp.o
+[100%] Linking CXX executable copperfin_inspect
+[100%] Built target copperfin_inspect
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_localization.dir/test_localization_catalog.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_localization.dir/test_localization_runtime_session.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_localization.dir/test_localization_runtime_dispatch.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_localization.dir/test_localization_runtime_io.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_localization.dir/test_localization_runtime_misc.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_localization.dir/test_localization_host_inspect.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_localization.dir/test_localization_main.cpp.o
+[100%] Linking CXX executable test_localization
+[100%] Built target test_localization
+[ 14%] Built target cf_platform_support
+[ 28%] Built target cf_licensing
+[ 28%] Built target cf_localization
+[ 42%] Built target cf_security
+[ 57%] Built target cf_platform_profile
+[ 85%] Built target cf_vfp_assets
+[100%] Built target copperfin_inspect
+BUILD_EXIT=0
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 6
+      Start   6: test_locale_catalog_install_contract
+
+6: Test command: /usr/bin/cmake "-DTEST_ROOT=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/locale-catalog-install-contract" "-P" "/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/tests/run_locale_catalog_install_contract_test.cmake"
+6: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+6: Environment variables: 
+6:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+6: Test timeout computed to be: 10000000
+6: -- Installed locale catalog contract passed: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/locale-catalog-install-contract/share/copperfin/locales
+6: CMake Error at /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/tests/run_locale_catalog_install_contract_check.cmake:13 (message):
+6:   Installed locale catalog is missing or not a regular file:
+6:   /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/locale-catalog-install-contract/share/copperfin/locales/pt-BR/strings.json
+6: 
+6: 
+6: -- Locale catalog install contract test passed
+ 1/12 Test   #6: test_locale_catalog_install_contract .........   Passed    0.05 sec
+test 20
+      Start  20: test_changelog_fragment_assembler
+
+20: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--self-test"
+20: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+20: Environment variables: 
+20:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+20: Test timeout computed to be: 10000000
+20: assemble_changelog self-test passed
+ 2/12 Test  #20: test_changelog_fragment_assembler ............   Passed    0.21 sec
+test 21
+      Start  21: test_changelog_fragments_valid
+
+21: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--check" "--root" "/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin"
+21: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+21: Environment variables: 
+21:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+21: Test timeout computed to be: 10000000
+21: 196 changelog fragment(s) valid
+ 3/12 Test  #21: test_changelog_fragments_valid ...............   Passed    0.22 sec
+test 23
+      Start  23: test_powershell_discovery_contract
+
+23: Test command: /usr/bin/cmake "-DBINARY_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests" "-DDISCOVERY_MODULE=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/tests/CopperfinPowerShellDiscovery.cmake" "-P" "/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/tests/run_powershell_discovery_contract_check.cmake"
+23: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+23: Environment variables: 
+23:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+23: Test timeout computed to be: 10000000
+23: -- PowerShell host '/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/powershell-discovery-contract/bin/pwsh-dangling' does not resolve to a regular file; omitting the PowerShell-dependent tests (#5809)
+23: -- PowerShell host '/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/PowerShell.sh' does not resolve to a regular file; omitting the PowerShell-dependent tests (#5809)
+23: -- PowerShell host '/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/PowerShell.sh' does not resolve to a regular file; omitting the PowerShell-dependent tests (#5809)
+23: -- PowerShell host '/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/PowerShell.sh' does not resolve to a regular file; omitting the PowerShell-dependent tests (#5809)
+23: -- No PowerShell host found; omitting the PowerShell-dependent tests
+23: -- PowerShell discovery contract passed
+ 4/12 Test  #23: test_powershell_discovery_contract ...........   Passed    0.01 sec
+test 36
+      Start  36: test_native_test_isolation_contract
+
+36: Test command: /usr/bin/cmake "-DINVENTORY_PATH=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/native-test-isolation.tsv" "-DISOLATION_SOURCE_PATH=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/tests/CopperfinTestIsolation.cmake" "-DTEST_REGISTRATION_SOURCE_PATH=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/tests/CMakeLists.txt" "-P" "/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/tests/run_native_test_isolation_contract_check.cmake"
+36: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+36: Environment variables: 
+36:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+36: Test timeout computed to be: 10000000
+36: -- Native test isolation inventory contract passed for 494 tests
+ 5/12 Test  #36: test_native_test_isolation_contract ..........   Passed    0.49 sec
+test 38
+      Start  38: test_safety_traceability_workflow_contract
+
+38: Test command: /usr/bin/cmake "-DSOURCE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin" "-P" "/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/tests/run_safety_traceability_workflow_contract_check.cmake"
+38: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+38: Environment variables: 
+38:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+38: Test timeout computed to be: 1200
+38: -- Safety traceability workflow contract check passed
+ 6/12 Test  #38: test_safety_traceability_workflow_contract ...   Passed  341.42 sec
+test 40
+      Start  40: test_localization
+
+40: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/test_localization "/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/copperfin_inspect"
+40: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+40: Environment variables: 
+40:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+40: Test timeout computed to be: 10000000
+ 7/12 Test  #40: test_localization ............................   Passed   14.37 sec
+test 325
+      Start 325: test_portable_clr_host_boundary_contract
+
+325: Test command: /usr/bin/cmake "-DSOURCE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin" "-P" "/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/tests/run_portable_clr_host_boundary_contract_check.cmake"
+325: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+325: Environment variables: 
+325:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+325: Test timeout computed to be: 10000000
+ 8/12 Test #325: test_portable_clr_host_boundary_contract .....   Passed    0.03 sec
+test 379
+      Start 379: test_prg_engine_null_semantics
+
+379: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/test_prg_engine_null_semantics
+379: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+379: Environment variables: 
+379:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+379: Test timeout computed to be: 10000000
+ 9/12 Test #379: test_prg_engine_null_semantics ...............   Passed    0.13 sec
+test 393
+      Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 10000000
+10/12 Test #393: test_prg_engine_numeric_behavior .............   Passed   67.76 sec
+test 456
+      Start 456: test_prg_engine_typed_null
+
+456: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/test_prg_engine_typed_null
+456: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+456: Environment variables: 
+456:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+456: Test timeout computed to be: 10000000
+11/12 Test #456: test_prg_engine_typed_null ...................   Passed    0.16 sec
+test 483
+      Start 483: test_prg_engine_string_math_functions
+
+483: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/test_prg_engine_string_math_functions
+483: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+483: Environment variables: 
+483:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+483: Test timeout computed to be: 10000000
+483: All tests passed.
+12/12 Test #483: test_prg_engine_string_math_functions ........   Passed    0.60 sec
+
+The following tests passed:
+	test_locale_catalog_install_contract
+	test_changelog_fragment_assembler
+	test_changelog_fragments_valid
+	test_powershell_discovery_contract
+	test_native_test_isolation_contract
+	test_safety_traceability_workflow_contract
+	test_localization
+	test_portable_clr_host_boundary_contract
+	test_prg_engine_null_semantics
+	test_prg_engine_numeric_behavior
+	test_prg_engine_typed_null
+	test_prg_engine_string_math_functions
+
+100% tests passed, 0 tests failed out of 12
+
+Label Time Summary:
+copperfin-isolation:audit=complete                     = 425.45 sec*proc (12 tests)
+copperfin-isolation:child-processes=bounded            = 355.83 sec*proc (3 tests)
+copperfin-isolation:child-processes=none               =  69.61 sec*proc (9 tests)
+copperfin-isolation:environment=child-scoped           = 341.42 sec*proc (1 test)
+copperfin-isolation:environment=none                   =   1.90 sec*proc (9 tests)
+copperfin-isolation:environment=scoped-process         =  82.12 sec*proc (2 tests)
+copperfin-isolation:filesystem=process-owned           =  68.28 sec*proc (5 tests)
+copperfin-isolation:filesystem=read-only               = 342.16 sec*proc (4 tests)
+copperfin-isolation:filesystem=test-owned-unique       =  15.01 sec*proc (3 tests)
+copperfin-isolation:network=disabled-probes            = 341.42 sec*proc (1 test)
+copperfin-isolation:network=none                       =  84.02 sec*proc (11 tests)
+copperfin-isolation:platform=configured                =   0.43 sec*proc (2 tests)
+copperfin-isolation:platform=portable                  =  83.59 sec*proc (9 tests)
+copperfin-isolation:platform=powershell-conditional    = 341.42 sec*proc (1 test)
+copperfin-isolation:resources=none                     = 425.45 sec*proc (12 tests)
+copperfin-isolation:samples=none                       = 425.45 sec*proc (12 tests)
+copperfin-isolation:schedule=parallel-safe             = 357.39 sec*proc (9 tests)
+copperfin-isolation:schedule=serial                    =  68.05 sec*proc (3 tests)
+
+Total Test time (real) = 425.47 sec
+CTEST_EXIT=0

@@ -1,0 +1,123 @@
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 11%] Built target cf_runtime_text
+[ 22%] Built target cf_security
+[ 33%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 66%] Built target cf_prg_analysis
+[ 88%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_behavior.dir/test_prg_engine_numeric_behavior.cpp.o
+[100%] Linking CXX executable test_prg_engine_numeric_behavior
+[100%] Built target test_prg_engine_numeric_behavior
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 11%] Built target cf_runtime_text
+[ 22%] Built target cf_security
+[ 33%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 66%] Built target cf_prg_analysis
+[ 88%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_null_semantics.dir/test_prg_engine_null_semantics.cpp.o
+[100%] Linking CXX executable test_prg_engine_null_semantics
+[100%] Built target test_prg_engine_null_semantics
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 11%] Built target cf_runtime_text
+[ 22%] Built target cf_security
+[ 33%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 66%] Built target cf_prg_analysis
+[ 88%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_typed_null.dir/test_prg_engine_typed_null.cpp.o
+[100%] Linking CXX executable test_prg_engine_typed_null
+[100%] Built target test_prg_engine_typed_null
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 11%] Built target cf_runtime_text
+[ 22%] Built target cf_security
+[ 33%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 66%] Built target cf_prg_analysis
+[ 88%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_string_math_functions.dir/test_prg_engine_string_math_functions.cpp.o
+[100%] Linking CXX executable test_prg_engine_string_math_functions
+[100%] Built target test_prg_engine_string_math_functions
+BUILD_EXIT=0
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-clang/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-clang
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 379
+    Start 379: test_prg_engine_null_semantics
+
+379: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-clang/tests/test_prg_engine_null_semantics
+379: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-clang/tests
+379: Environment variables: 
+379:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+379: Test timeout computed to be: 10000000
+1/4 Test #379: test_prg_engine_null_semantics ..........   Passed    0.12 sec
+test 393
+    Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-clang/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-clang/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 10000000
+2/4 Test #393: test_prg_engine_numeric_behavior ........   Passed   93.90 sec
+test 456
+    Start 456: test_prg_engine_typed_null
+
+456: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-clang/tests/test_prg_engine_typed_null
+456: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-clang/tests
+456: Environment variables: 
+456:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+456: Test timeout computed to be: 10000000
+3/4 Test #456: test_prg_engine_typed_null ..............   Passed    0.15 sec
+test 483
+    Start 483: test_prg_engine_string_math_functions
+
+483: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-clang/tests/test_prg_engine_string_math_functions
+483: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-clang/tests
+483: Environment variables: 
+483:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+483: Test timeout computed to be: 10000000
+483: All tests passed.
+4/4 Test #483: test_prg_engine_string_math_functions ...   Passed    0.42 sec
+
+The following tests passed:
+	test_prg_engine_null_semantics
+	test_prg_engine_numeric_behavior
+	test_prg_engine_typed_null
+	test_prg_engine_string_math_functions
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =  94.59 sec*proc (4 tests)
+copperfin-isolation:child-processes=none            =  94.59 sec*proc (4 tests)
+copperfin-isolation:environment=none                =   0.69 sec*proc (3 tests)
+copperfin-isolation:environment=scoped-process      =  93.90 sec*proc (1 test)
+copperfin-isolation:filesystem=process-owned        =  94.17 sec*proc (3 tests)
+copperfin-isolation:filesystem=test-owned-unique    =   0.42 sec*proc (1 test)
+copperfin-isolation:network=none                    =  94.59 sec*proc (4 tests)
+copperfin-isolation:platform=portable               =  94.59 sec*proc (4 tests)
+copperfin-isolation:resources=none                  =  94.59 sec*proc (4 tests)
+copperfin-isolation:samples=none                    =  94.59 sec*proc (4 tests)
+copperfin-isolation:schedule=parallel-safe          =   0.42 sec*proc (1 test)
+copperfin-isolation:schedule=serial                 =  94.17 sec*proc (3 tests)
+
+Total Test time (real) =  94.61 sec
+CTEST_EXIT=0

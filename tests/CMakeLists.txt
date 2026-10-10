@@ -5996,6 +5996,17 @@ foreach(cast_int64_mode IN ITEMS COPPERFIN VFP9)
             COMMAND $<TARGET_FILE:test_prg_engine_cast_int64_numeric> ${cast_int64_mode} ${cast_int64_session})
     endforeach()
 endforeach()
+copperfin_add_test(test_prg_engine_cast_uint64_numeric cf_xbase_runtime
+    test_prg_engine_cast_uint64_numeric.cpp
+    prg_engine_test_support.cpp
+)
+foreach(cast_uint64_mode IN ITEMS COPPERFIN VFP9)
+    string(TOLOWER "${cast_uint64_mode}" cast_uint64_mode_lower)
+    foreach(cast_uint64_session IN ITEMS 1 2)
+        add_test(NAME test_prg_engine_cast_uint64_numeric_${cast_uint64_mode_lower}_session${cast_uint64_session}
+            COMMAND $<TARGET_FILE:test_prg_engine_cast_uint64_numeric> ${cast_uint64_mode} ${cast_uint64_session})
+    endforeach()
+endforeach()
 copperfin_add_test(test_prg_engine_bittest_numeric cf_xbase_runtime
     test_prg_engine_bittest_numeric.cpp
     prg_engine_test_support.cpp

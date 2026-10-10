@@ -366,6 +366,9 @@ std::optional<std::int64_t> checked_declared_int64_argument(const PrgValue& valu
 // RQ-CF-PRG-CAST-INT64-NUMERIC-001: owner-derived signed64 CAST extension;
 // exact identity/unsigned bounds and finite Numeric truncation, in both modes.
 std::optional<std::int64_t> checked_cast_int64_argument(const PrgValue& value);
+// RQ-CF-PRG-CAST-UINT64-NUMERIC-001: owner-derived unsigned64 extension;
+// exact identity/nonnegative signed admission, finite representable truncation.
+std::optional<std::uint64_t> checked_cast_uint64_argument(const PrgValue& value);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the
 // value is out of range). A size or count: truncated toward zero, never below `minimum`, saturating at the largest
 // value this build supports: INT64_MAX, or SIZE_MAX where size_t is narrower (NaN gives `minimum`). A rounded int64 (llround semantics for in-range values; NaN is 0 and

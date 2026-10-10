@@ -1,5 +1,24 @@
 # VFP Language Reference Coverage
 
+- Unsigned64 CAST Numeric/exact extension (#5611/#6776,2026-10-10):
+  RQ-CF-PRG-CAST-UINT64-NUMERIC-001 mapped before helper/tests/migration.
+  Installed VFP9 controls establish ordinary INTEGER truncation and absence of
+  UINT64/ULONGLONG/UBIGINT, not native unsigned64 semantics.
+  [Fixture](../tests/fixtures/vfp9-cast-uint64-numeric/README.md) records the
+  parent-derived finite truncated Numeric domain[0,2^64), full exact unsigned
+  identity/nonnegative signed admission, and localized atomic error11 in both
+  modes. Negative fractions in(-1,0) truncate to0; negative exact integers do
+  not wrap. Frozen62direct/4x159fresh public literal cases; the distinct helper
+  remained unused through BOTH complete originals (960selected/zero other;
+  Clang four actual unsafe-cast reports) before unsigned-only migration.
+  Fixed GNU11/11 and Clang sanitizer11/11 PASS; all62/4x159 new and56/4x141
+  old counters/exact-expression complete. Broader GNU12/12(all7contracts) and
+  Clang4/4 PASS, no sanitizer diagnostics/leaks disabled. Full raw hashes and
+  completed bounded medium DQ/DV development self-review/automated walkthrough/
+  rollback retained. Not native unsigned64/type/Currency/arity/platform/leak/
+  independent-human/high-hazard/release/family/parent acceptance. Exact-head
+  hosted/clean-review/resolved-conversation gates remain pending.
+
 - Signed64 CAST Numeric/exact extension (#5611/#6776,2026-10-10):
   RQ-CF-PRG-CAST-INT64-NUMERIC-001 mapped before helper/tests/migration.
   Three matching installed VFP9 runs establish ordinary INTEGER truncation and
@@ -16,7 +35,9 @@
   medium-misuse delegated self-review/walkthrough/rollback retained. Not native
   signed64/type/Currency/unsigned CAST/arity/persistence/leak/full-platform/
   independent-human/high-hazard/release/family/parent acceptance. Exact-head
-  review/hosted checks/resolved conversations remain integration gates.
+  review/hosted gates passed for signed672d344768: PR#7125 merged e2c16c3c2
+  with all36checks/all11required green, actual clean Codex6092967948 after
+  Claude-first/fallback, and zero unresolved conversations (gate6093226220).
 
 - BITSET Numeric/exact recovery (#5611/#6776/#6871,2026-10-09):
   RQ-CF-PRG-BITSET-NUMERIC-001 mapped before helpers/tests/migration.
