@@ -97,6 +97,20 @@ Broader GNU12/12PASS417.07s (four runtime/localization/seven contracts) and
 Clang sanitizer4/4PASS114.85s; full230/80-line raws/cmp/hashes retained, no
 sanitizer reports. Hosted/review integration acceptance remains pending.
 
+Review finding4237581146 and hosted Linux/macOS failures exposed an existing
+shared smoke script expecting Numeric513 to wrap to1. That expectation is
+not the governing unsigned8 requirement. Revision2 explicitly refreezes its
+success input to admitted1 with the expected result1 unchanged; all dedicated
+140/four126 boundary cases and five original frozen hashes remain unchanged.
+Both complete original comparisons and seven affected bit neighbors repeated
+before fixed verification: GNU24/28PASS38.03s and Clang24/28PASS51.97s,
+same872selected-zeroother/four original Clang UB reports; seven neighbors pass.
+Restored identical pushed dispatcher; fixed GNU28/28PASS38.42s and Clang
+28/28PASS48.63s with no sanitizer report. Full1246/1343/355/356-line raw
+results, hashes, refreeze and chronology are retained in
+baseline-audit.md. The hosted main runtime-surface/full native suites and fresh
+exact-head review remain integration gates. No production policy expansion.
+
 DQ-5611-CAST-BYTE-NUMERIC-001 procedural delta: reject Numeric/exact unsigned8
 overflow instead of undefined conversion or low-bit masking; preserve exact
 kinds and negative-fraction truncation; both modes agree for this extension.

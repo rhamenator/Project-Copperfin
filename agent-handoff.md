@@ -133,6 +133,21 @@ GETBAR7103/PRMBAR7101 complete. EPOCH/CENTURYcomplete/#3698closed; don'trevisit.
 
 ## Selected active bounded slice
 
+PR#7128 reviewrepair: Codex finding4237581146 on signedhead152d8f8f0b
+and hostedLinux/macOS496/504 failures exposed oldsharedsmokeCAST(513 AS BYTE)
+wrapexpectation. Changeonlysuccessinputtoadmitted1/expected1 unchanged;
+dedicated140/four126boundaryexpectations andall5frozenhashes unchanged.
+Revision2refreeze12:49:49Z includes sharedfixturehashd4ae72a20273c73a38471c61838434324cf16f0813156c87b4f856cc890b7b0a.
+Bothfulloriginal21+7neighbors repeatedbeforeidenticalBYTEgaterestoration:
+GNU24/28PASS38.03s/Clang24/28PASS51.97s,872selected-zeroother each,
+fouroriginalClangfloatcastUBreports/7neighborsPASS; full1246/1343line raws
+copied/cmp/hash infixtureaudit. Dispatcheragainidenticalpushed152d; no
+productionchange inreviewfix. FixedGNU28/28PASS38.42s/Clang28/28PASS48.63s/noSan;
+full355/356line fixedraws retained/cmp/hashes inaudit, all6freezehashesunchanged.
+BoundedDVrepairwalkthrough12:57Zcomplete/developmentself-review notindependent.
+Mainruntime-surface/fullhostednative andfreshreviewintegration remain gates;
+canonical agent-handoff.md retains exactlive sessions/state, no ownerblocker.
+
 Admitted #5611/#6776: next CAST AS BYTE/UINT8 Numeric/exact only.
 Branch fix/cast-byte-numeric-5611 from origin/main
 c1a6eef528c1d621196a6c7e232cf8e399174ea0:

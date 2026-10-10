@@ -132,7 +132,9 @@ namespace copperfin::runtime_surface_tests
             "cTypeArray = TYPE('aValues')\n"
             "cTypeUnknown = TYPE('notDefinedAnywhere')\n"
             "nCastInt = CAST(7.9 AS INTEGER)\n"
-            "nCastByte = CAST(513 AS BYTE)\n"
+            // RQ-CF-PRG-CAST-BYTE-NUMERIC-001: this smoke path needs an
+            // admitted value; overflow rejection has dedicated frozen coverage.
+            "nCastByte = CAST(1 AS BYTE)\n"
             "cCastString = CAST(123 AS STRING)\n"
             "lCastBool = CAST(0 AS LOGICAL)\n"
             "nBitAnd = BITAND(6, 3)\n"

@@ -1,0 +1,60 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 20
+    Start 20: test_changelog_fragment_assembler
+
+20: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--self-test"
+20: Working Directory: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests
+20: Environment variables: 
+20:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/resources/locales
+20: Test timeout computed to be: 1200
+20: assemble_changelog self-test passed
+1/3 Test #20: test_changelog_fragment_assembler .....   Passed    0.22 sec
+test 21
+    Start 21: test_changelog_fragments_valid
+
+21: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--check" "--root" "/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin"
+21: Working Directory: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests
+21: Environment variables: 
+21:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/resources/locales
+21: Test timeout computed to be: 1200
+21: 198 changelog fragment(s) valid
+2/3 Test #21: test_changelog_fragments_valid ........   Passed    0.28 sec
+test 36
+    Start 36: test_native_test_isolation_contract
+
+36: Test command: /usr/bin/cmake "-DINVENTORY_PATH=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/native-test-isolation.tsv" "-DISOLATION_SOURCE_PATH=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/tests/CopperfinTestIsolation.cmake" "-DTEST_REGISTRATION_SOURCE_PATH=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/tests/CMakeLists.txt" "-P" "/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/tests/run_native_test_isolation_contract_check.cmake"
+36: Working Directory: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests
+36: Environment variables: 
+36:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/resources/locales
+36: Test timeout computed to be: 1200
+36: -- Native test isolation inventory contract passed for 504 tests
+3/3 Test #36: test_native_test_isolation_contract ...   Passed    0.48 sec
+
+The following tests passed:
+	test_changelog_fragment_assembler
+	test_changelog_fragments_valid
+	test_native_test_isolation_contract
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+copperfin-isolation:audit=complete              =   0.98 sec*proc (3 tests)
+copperfin-isolation:child-processes=none        =   0.98 sec*proc (3 tests)
+copperfin-isolation:environment=none            =   0.98 sec*proc (3 tests)
+copperfin-isolation:filesystem=process-owned    =   0.22 sec*proc (1 test)
+copperfin-isolation:filesystem=read-only        =   0.76 sec*proc (2 tests)
+copperfin-isolation:network=none                =   0.98 sec*proc (3 tests)
+copperfin-isolation:platform=configured         =   0.50 sec*proc (2 tests)
+copperfin-isolation:platform=portable           =   0.48 sec*proc (1 test)
+copperfin-isolation:resources=none              =   0.98 sec*proc (3 tests)
+copperfin-isolation:samples=none                =   0.98 sec*proc (3 tests)
+copperfin-isolation:schedule=parallel-safe      =   0.98 sec*proc (3 tests)
+
+Total Test time (real) =   1.00 sec

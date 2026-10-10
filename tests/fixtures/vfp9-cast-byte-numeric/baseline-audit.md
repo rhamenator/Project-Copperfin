@@ -181,6 +181,104 @@ actual clean exact-head Claude-first/Codex-fallback review and resolved
 conversations remain integration gates. No family/parent/type/arity/leak/
 platform/release acceptance is claimed by this local development evidence.
 
+## Review repair refreeze, 2026-10-10T12:49:49Z
+
+Exact pushed head152d8f8f0b7b09113a82b4f903c5526e2820ca7c received
+Codex finding4237581146: the existing shared runtime-surface success script
+still used Numeric513 and expected low8 result1. This contradicts the already
+recovered unsigned8 domain; it is not a new production defect or permission
+to restore wrapping. Linux run38049896945/job114206740904 and macOS
+run38049896940/job114206740964 each completed496/504, failing the main
+runtime-surface test and all seven bit-neighbor binaries at that shared script.
+Full unedited host logs retained at build/cast-byte-native/linux-native-failure.log
+(4254lines, SHA345bd3dbe85bafc784dbc252d07a5da44c731a2a4c4263a5aab19324d4b45099)
+and macos-native-failure.log
+(4096lines, SHA1e9b2cc3fea90fa8e87497647c6e2d52ce0e3d309066293a9c75166c82c3f2ea).
+These failures are negative integration evidence, not clean acceptance.
+
+The shared success-path input changes513 to1, retaining its expected exact
+result1 and all later bit/coercion assertions. The dedicated frozen boundary
+suite still rejects256 and larger Numeric/exact values with atomic11; none
+of its expectations/counts change. Reverse link added to the smoke input.
+Explicit revision2 refreeze BEFORE original repeats: shared fixture SHA
+d4ae72a20273c73a38471c61838434324cf16f0813156c87b4f856cc890b7b0a;
+all five original frozen helper/header/test/CMake/isolation hashes above
+remain unchanged. Repeat both complete original focused21 plus seven affected
+bit neighbors before restoring the Numeric gate; retain full results, not
+repair assertions to match output. Main runtime-surface/full504+ tests remain
+hosted integration gates. No production policy, helper, dedicated test,
+configuration, isolation or non-Numeric path changes in the review repair.
+
+GNU revision2 original83383 harvestedexit8 at12:52Z: configure0/build0,
+24/28PASS38.03s. All21 focused shards completed with unchanged counters;
+only four BYTE public shards failed with the same872selected/zeroother
+assertions. All seven bit-neighbor binaries passed with admitted1, preserving
+their subsequent expressions/property checks. Full1246-line raw
+review-original-gcc.log copied/cmp-verified into this fixture BEFORE Clang
+configuration or gate restoration, SHA-256
+4cae4ef9708864f23c316338870f1546302dbba523ed011ecb5500e2f899355b.
+Negative original comparison, not fixed acceptance. Six frozen hashes unchanged.
+
+Clang revision2 original23664 harvestedexit8 at12:54:17Z: configure0/build0,
+24/28PASS51.97s, same complete counters/872selected-zeroother assertions and
+seven passing bit neighbors. Four actual recoverable float-cast-overflow
+reports at original705:44 for -1; no additional sanitizer report. Full1343-line
+review-original-clang.log copied/cmp-verified BEFORE gate restoration, SHA-256
+953765a23964963555b5ae0eec1279ec6dd9c5768f54e5a617cbdb3e18cda5ed.
+All six frozen hashes unchanged. Original dispatcher SHA
+8ce0b020b824876a868ba9dbda7450e3a54981fee0346baa4a57121047d3f7ec
+matched origin/main byte-for-byte through both repeats. Restored only the
+identical pushed152d BYTE gate at12:54:31Z after both raw logs were retained;
+dispatcher now has zero diff against pushed head. No production change in fix.
+
+GNU revision2 fixed84136 harvestedexit0 at12:55:33Z: configure0/build0/CTest0,
+28/28PASS38.42s, all frozen new/neighbor counters complete, zero assertions.
+Full355-line review-fixed-gcc.log copied/cmp-verified into the fixture,
+SHA514f65a6670c9b6e8965ea164ac29bcff9df404a5923af5c9c6e797e50e1196f.
+Six frozen inputs unchanged; the log explicitly rebuilds the dispatch-containing
+runtime-surface object and relinks all twelve tested binaries. The main
+runtime-surface binary is not locally rebuilt here; its identical shared
+function is covered by all seven neighbor binaries, and the full hosted main
+test remains an integration gate. No full-platform acceptance inferred.
+
+Clang revision2 fixed48573 harvestedexit0 at12:57:10Z: configure0/build0/CTest0,
+28/28PASS48.63s, all frozen counters/zero assertions/no sanitizer report,
+UBSANhalt1/leaksdisabled. Full356-line review-fixed-clang.log copied/cmp-verified,
+SHAc3bb5141f32c6b91bfe2ed514e2f762c90cffedf004f68572827159cda40bafb.
+Both fixed logs show the dispatch-containing object rebuild/library and all
+twelve binary relinks; existing unused-function warnings retained, not
+warning-free qualification. Dispatcher/helper/header/dedicated test/CMake/
+isolation have zero diff against152d; shared refreeze hash unchanged.
+
+DV review-repair walkthrough completed2026-10-10T12:57Z as delegated bounded
+development self-review plus automated verification, not independent human
+qualification. New admitted1 success result is already prescribed by the
+unsigned8 mathematics; all seven shared-script consumers continue through
+later bit/property assertions. Unchanged dedicated overflow shards still
+prove localized atomic11 in both modes/sessions. The initial four-runtime
+broader selection did NOT execute this shared smoke function; the first
+full hosted suites exposed that missed integration dependency. Seven local
+affected neighbors now supplement, not replace, full hosted main/platform
+gates. No assertion changed to reproduce old wrapping, no policy expansion,
+no hazard downgrade, no family/parent/release qualification. Preserve all
+negative originals and failed CI raws; rollback/field-notification plan above
+still applies. Fresh signed-head review/checks/resolved threads remain gates.
+
+Revision2 reproduction adds targets test_prg_engine_bit{test,clear,set,xor,or,
+and,not}_neighbors to the original five focused targets, and extends the
+same CTest regex with bit(test|clear|set|xor|or|and|not)_neighbors. All four
+repeat suites use cached GNU/Clang flags above, configure before build,
+-j1/CTest--parallel1/-V/timeout1200; original Clang halt0, fixed halt1,
+ASANleaksdisabled, nice10/ionice2:7 and the same private RAM TMPDIR. Full
+28-test raw logs retain exact registered commands and environment. No VM.
+
+Revision2 assembler/fragment/isolation contracts87698 harvested0 at12:58Z:
+3/3PASS1.00s. Full60-line review-contracts.log copied/cmp-verified, SHA
+bb261ca506f3662d3994fc71fa3e60dd568b0c2c3c02999d518043d51198a3ea.
+Nonraw changed source/docs whitespace checks passed. All runtime source,
+dedicated frozen test, CMake and isolation have zero diff against152d.
+
+
 ## Reproduction configuration
 
 Configure separate GNU/Clang Ninja Debug build trees. GNU C/CXX compiler
