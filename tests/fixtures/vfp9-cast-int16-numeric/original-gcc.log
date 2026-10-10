@@ -1,0 +1,1627 @@
+-- The CXX compiler identification is GNU 15.2.0
+-- The C compiler identification is GNU 15.2.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/g++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/gcc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Performing Test Iconv_IS_BUILT_IN
+-- Performing Test Iconv_IS_BUILT_IN - Success
+-- Found Iconv: built in to C library
+-- Performing Test COPPERFIN_HAS_FZERO_INIT_PADDING_BITS
+-- Performing Test COPPERFIN_HAS_FZERO_INIT_PADDING_BITS - Success
+-- Configuring done (1.4s)
+-- Generating done (0.5s)
+-- Build files have been written to: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc
+gcc configure exit: 0
+[0/2] Re-checking globbed directories...
+[1/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/bounded_process.cpp.o
+[2/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/code_page.cpp.o
+[3/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/disk_space.cpp.o
+[4/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/environment.cpp.o
+[5/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/exclusive_file.cpp.o
+[6/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/executable_path.cpp.o
+[7/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/file_stream.cpp.o
+[8/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/file_version.cpp.o
+[9/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/font_directories.cpp.o
+[10/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/invariant_numeric.cpp.o
+[11/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/json.cpp.o
+[12/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/path.cpp.o
+[13/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/private_directory.cpp.o
+[14/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/private_executable_image.cpp.o
+[15/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/process_arguments.cpp.o
+[16/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/process_environment.cpp.o
+[17/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/safe_regex.cpp.o
+[18/185] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/windows_pe_image.cpp.o
+[19/185] Linking CXX static library libcf_platform_support.a
+[20/185] Building CXX object CMakeFiles/cf_localization.dir/src/localization/localization.cpp.o
+[21/185] Linking CXX static library libcf_localization.a
+[22/185] Building CXX object CMakeFiles/cf_security.dir/src/security/audit_stream.cpp.o
+[23/185] Building CXX object CMakeFiles/cf_security.dir/src/security/authorization.cpp.o
+[24/185] Building CXX object CMakeFiles/cf_security.dir/src/security/external_process_policy.cpp.o
+[25/185] Building CXX object CMakeFiles/cf_security.dir/src/security/localized_text.cpp.o
+[26/185] Building CXX object CMakeFiles/cf_security.dir/src/security/payload_crypto.cpp.o
+[27/185] Building CXX object CMakeFiles/cf_security.dir/src/security/physical_path_containment.cpp.o
+[28/185] Building CXX object CMakeFiles/cf_security.dir/src/security/process_hardening.cpp.o
+[29/185] Building CXX object CMakeFiles/cf_security.dir/src/security/secret_provider.cpp.o
+[30/185] Building CXX object CMakeFiles/cf_security.dir/src/security/sha256.cpp.o
+[31/185] Building CXX object CMakeFiles/cf_security.dir/src/security/security_model.cpp.o
+[32/185] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_policy.cpp.o
+[33/185] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_audit_sink.cpp.o
+[34/185] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_environment.cpp.o
+[35/185] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_process_containment.cpp.o
+[36/185] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_process_parser.cpp.o
+[37/185] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_session.cpp.o
+[38/185] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_target_containment.cpp.o
+[39/185] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_tool_registry.cpp.o
+[40/185] Linking CXX static library libcf_security.a
+[41/185] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/printer.cpp.o
+[42/185] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_benchmark.cpp.o
+[43/185] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/database_model.cpp.o
+[44/185] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/extensibility_model.cpp.o
+[45/185] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/federation_execution.cpp.o
+[46/185] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/localized_text.cpp.o
+[47/185] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_artifact_admission.cpp.o
+[48/185] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_artifact_adapter.cpp.o
+[49/185] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_supporting_artifact_admission.cpp.o
+[50/185] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_bridge_invocation.cpp.o
+[51/185] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_interop_envelope.cpp.o
+[52/185] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_migration_telemetry.cpp.o
+[53/185] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_parity_comparator.cpp.o
+[54/185] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_route_impact.cpp.o
+[55/185] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_route_execution.cpp.o
+[56/185] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_route_registry.cpp.o
+[57/185] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/query_translator.cpp.o
+[58/185] Building CXX object CMakeFiles/cf_runtime_text.dir/src/runtime/localized_text.cpp.o
+[59/185] Linking CXX static library libcf_platform_profile.a
+[60/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_container.cpp.o
+[61/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_long_value.cpp.o
+[62/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_msysobjects.cpp.o
+[63/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_saveastext_design.cpp.o
+[64/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_saveastext_export.cpp.o
+[65/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_saved_queries.cpp.o
+[66/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_table_definition.cpp.o
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp: In function ‘copperfin::vfp::AccessTableDefinition copperfin::vfp::parse_access_table_definition_page(const std::vector<unsigned char>&, AccessContainerGeneration, uint32_t)’:
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:324:120: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::name’ [-Wmissing-field-initializers]
+  324 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.UnknownGeneration")};
+      |                                                                                                                        ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:324:120: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::columns’ [-Wmissing-field-initializers]
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:334:19: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::name’ [-Wmissing-field-initializers]
+  334 |                 })};
+      |                   ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:334:19: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::columns’ [-Wmissing-field-initializers]
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:344:59: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::name’ [-Wmissing-field-initializers]
+  344 |                 {{"pageType", std::to_string(page_type)}})};
+      |                                                           ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:344:59: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::columns’ [-Wmissing-field-initializers]
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:350:127: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::name’ [-Wmissing-field-initializers]
+  350 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.MultiPageTdefUnsupported")};
+      |                                                                                                                               ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:350:127: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::columns’ [-Wmissing-field-initializers]
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:394:123: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::name’ [-Wmissing-field-initializers]
+  394 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.StructureOutOfBounds")};
+      |                                                                                                                           ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:394:123: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::columns’ [-Wmissing-field-initializers]
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:408:61: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::name’ [-Wmissing-field-initializers]
+  408 |                 {{"tableType", std::to_string(table_type)}})};
+      |                                                             ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:408:61: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::columns’ [-Wmissing-field-initializers]
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:417:123: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::name’ [-Wmissing-field-initializers]
+  417 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.StructureOutOfBounds")};
+      |                                                                                                                           ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:417:123: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::columns’ [-Wmissing-field-initializers]
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:426:123: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::name’ [-Wmissing-field-initializers]
+  426 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.StructureOutOfBounds")};
+      |                                                                                                                           ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:426:123: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::columns’ [-Wmissing-field-initializers]
+[67/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/asset_inspector.cpp.o
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp: In function ‘copperfin::vfp::{anonymous}::TableRowExtractionResult copperfin::vfp::{anonymous}::extract_import_table_rows(const copperfin::vfp::DatabaseJsonImportTablePlan&)’:
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:5994:42: warning: missing initializer for member ‘copperfin::vfp::{anonymous}::TableRowExtractionResult::rows’ [-Wmissing-field-initializers]
+ 5994 |             {{"table", table_plan.name}})};
+      |                                          ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6007:46: warning: missing initializer for member ‘copperfin::vfp::{anonymous}::TableRowExtractionResult::rows’ [-Wmissing-field-initializers]
+ 6007 |                 {{"table", table_plan.name}})};
+      |                                              ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6029:54: warning: missing initializer for member ‘copperfin::vfp::{anonymous}::TableRowExtractionResult::rows’ [-Wmissing-field-initializers]
+ 6029 |                         {{"table", table_plan.name}})};
+      |                                                      ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6036:54: warning: missing initializer for member ‘copperfin::vfp::{anonymous}::TableRowExtractionResult::rows’ [-Wmissing-field-initializers]
+ 6036 |                         {{"table", table_plan.name}})};
+      |                                                      ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6043:54: warning: missing initializer for member ‘copperfin::vfp::{anonymous}::TableRowExtractionResult::rows’ [-Wmissing-field-initializers]
+ 6043 |                         {{"table", table_plan.name}})};
+      |                                                      ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp: In lambda function:
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6080:100: warning: missing initializer for member ‘copperfin::vfp::DatabaseJsonImportResult::cleanup_warning’ [-Wmissing-field-initializers]
+ 6080 |         return DatabaseJsonImportResult{.ok = false, .error = std::move(message), .table_count = 0U};
+      |                                                                                                    ^
+[68/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/cdx_header.cpp.o
+[69/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/cdx_writer.cpp.o
+[70/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_header.cpp.o
+[71/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_import.cpp.o
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp: In function ‘copperfin::vfp::DbfImportResult copperfin::vfp::import_xbase_table_to_vfp_native(const std::string&, const std::string&, const std::string&)’:
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:293:51: warning: missing initializer for member ‘copperfin::vfp::DbfImportResult::field_mappings’ [-Wmissing-field-initializers]
+  293 |         return {.ok = false, .error = source.error};
+      |                                                   ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:297:49: warning: missing initializer for member ‘copperfin::vfp::DbfImportResult::field_mappings’ [-Wmissing-field-initializers]
+  297 |         return {.ok = false, .error = plan.error};
+      |                                                 ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:305:95: warning: missing initializer for member ‘copperfin::vfp::DbfImportResult::field_mappings’ [-Wmissing-field-initializers]
+  305 |         return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.DestinationExists")};
+      |                                                                                               ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:321:99: warning: missing initializer for member ‘copperfin::vfp::DbfImportResult::field_mappings’ [-Wmissing-field-initializers]
+  321 |             return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.DestinationExists")};
+      |                                                                                                   ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:339:17: warning: missing initializer for member ‘copperfin::vfp::DbfImportResult::field_mappings’ [-Wmissing-field-initializers]
+  339 |                 };
+      |                 ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:381:58: warning: missing initializer for member ‘copperfin::vfp::DbfImportResult::field_mappings’ [-Wmissing-field-initializers]
+  381 |         return {.ok = false, .error = create_result.error};
+      |                                                          ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:406:64: warning: missing initializer for member ‘copperfin::vfp::DbfImportResult::field_mappings’ [-Wmissing-field-initializers]
+  406 |                 return {.ok = false, .error = memo_result.error};
+      |                                                                ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp: In function ‘copperfin::vfp::DbfImportPreviewResult copperfin::vfp::preview_xbase_table_import(const std::string&, const std::string&)’:
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:427:51: warning: missing initializer for member ‘copperfin::vfp::DbfImportPreviewResult::field_mappings’ [-Wmissing-field-initializers]
+  427 |         return {.ok = false, .error = source.error};
+      |                                                   ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:427:51: warning: missing initializer for member ‘copperfin::vfp::DbfImportPreviewResult::field_issues’ [-Wmissing-field-initializers]
+[72/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_text_encoding.cpp.o
+[73/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_table.cpp.o
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/dbf_table.cpp: In function ‘copperfin::vfp::DbfFieldsOnlyParseResult copperfin::vfp::parse_dbf_fields_from_file(const std::string&)’:
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/dbf_table.cpp:2426:91: warning: missing initializer for member ‘copperfin::vfp::DbfFieldsOnlyParseResult::fields’ [-Wmissing-field-initializers]
+ 2426 |         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
+      |                                                                                           ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/dbf_table.cpp:2437:91: warning: missing initializer for member ‘copperfin::vfp::DbfFieldsOnlyParseResult::fields’ [-Wmissing-field-initializers]
+ 2437 |         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
+      |                                                                                           ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/vfp/dbf_table.cpp:2441:58: warning: missing initializer for member ‘copperfin::vfp::DbfFieldsOnlyParseResult::fields’ [-Wmissing-field-initializers]
+ 2441 |         return {.ok = false, .error = header_result.error};
+      |                                                          ^
+[74/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/index_probe.cpp.o
+[75/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/sidecar_path.cpp.o
+[76/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/staged_import_publish.cpp.o
+[77/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/xbase_relation_inference.cpp.o
+[78/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_shared_helpers.cpp.o
+[79/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_method_blobs.cpp.o
+[80/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_blobs.cpp.o
+[81/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_record_and_snapshot.cpp.o
+[82/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_undo.cpp.o
+[83/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_object_lifecycle.cpp.o
+[84/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_setters_behavior.cpp.o
+[85/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_setters_appearance.cpp.o
+[86/185] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_setters_data.cpp.o
+[87/185] Building CXX object CMakeFiles/cf_prg_analysis.dir/src/runtime/prg_engine_static_analysis.cpp.o
+[88/185] Linking CXX static library libcf_runtime_text.a
+[89/185] Linking CXX static library libcf_vfp_assets.a
+[90/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/builder_dispatch.cpp.o
+[91/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/builder_invocation_admission.cpp.o
+[92/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/builder_registry.cpp.o
+[93/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/context_editor_actions.cpp.o
+[94/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_context.cpp.o
+[95/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_dispatch.cpp.o
+[96/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_invocation_admission.cpp.o
+[97/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_launch_surfaces.cpp.o
+[98/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/document_model.cpp.o
+[99/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/editor_action_dispatch.cpp.o
+[100/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/editor_action_invocation_admission.cpp.o
+[101/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/project_workspace.cpp.o
+[102/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/product_subsystems.cpp.o
+[103/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/report_layout.cpp.o
+[104/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_creation.cpp.o
+[105/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_dispatch.cpp.o
+[106/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_invocation_admission.cpp.o
+[107/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_palette.cpp.o
+[108/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract.cpp.o
+[109/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_value_parsing.cpp.o
+[110/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_error_messages.cpp.o
+[111/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_argument_parsers.cpp.o
+[112/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_request_validators.cpp.o
+[113/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_diagnostics_and_session.cpp.o
+[114/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_diagnostics_and_session_validate.cpp.o
+[115/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_selection_context.cpp.o
+[116/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_property_commands.cpp.o
+[117/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_property_commands_validate.cpp.o
+[118/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_object_lifecycle.cpp.o
+[119/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_object_lifecycle_validate.cpp.o
+[120/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_layout_actions.cpp.o
+[121/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_layout_actions_validate.cpp.o
+[122/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_behavior.cpp.o
+[123/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_behavior_validate.cpp.o
+[124/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_appearance.cpp.o
+[125/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_appearance_validate.cpp.o
+[126/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_data.cpp.o
+[127/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_data_validate.cpp.o
+[128/185] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_positional_and_fallback.cpp.o
+[129/185] Linking CXX static library libcf_prg_analysis.a
+[130/185] Linking CXX static library libcf_design_model.a
+[131/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/runtime_external_event_queue.cpp.o
+[132/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_command_helpers.cpp.o
+[133/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_date_time_functions.cpp.o
+[134/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_file_io_functions.cpp.o
+[135/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine.cpp.o
+In file included from /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:8589:
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl: In member function ‘copperfin::runtime::{anonymous}::ExecutionOutcome copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()’:
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:11317:62: warning: missing initializer for member ‘copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()::TemporaryAppendSource::reference’ [-Wmissing-field-initializers]
+11317 |                     TemporaryAppendSource append_source{*this};
+      |                                                              ^
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:12449:58: warning: missing initializer for member ‘copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()::TemporaryAppendSource::reference’ [-Wmissing-field-initializers]
+12449 |                 TemporaryAppendSource append_source{*this};
+      |                                                          ^
+[136/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_native_object_helpers.cpp.o
+[137/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/polyglot_runtime_host.cpp.o
+[138/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/index_seek_optimizer.cpp.o
+[139/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_helpers.cpp.o
+[140/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_locale_code_page.cpp.o
+[141/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_numeric_functions.cpp.o
+[142/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_path_functions.cpp.o
+[143/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_parser.cpp.o
+[144/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_surface_functions.cpp.o
+In file included from /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_functions.cpp:193:
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:13:5: warning: ‘int copperfin::runtime::{anonymous}::bit_position(const copperfin::runtime::PrgValue&)’ defined but not used [-Wunused-function]
+   13 | int bit_position(const PrgValue& value) {
+      |     ^~~~~~~~~~~~
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:5:15: warning: ‘uint32_t copperfin::runtime::{anonymous}::bitwise_value(const copperfin::runtime::PrgValue&)’ defined but not used [-Wunused-function]
+    5 | std::uint32_t bitwise_value(const PrgValue& value) {
+      |               ^~~~~~~~~~~~~
+[145/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_config.cpp.o
+[146/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_string_functions.cpp.o
+In file included from /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/runtime/prg_engine_string_functions.cpp:28:
+/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/src/runtime/prg_engine_string_function_helpers.inl:251:29: warning: ‘std::optional<long int> copperfin::runtime::{anonymous}::parse_currency_scaled_value(const std::string&)’ defined but not used [-Wunused-function]
+  251 | std::optional<std::int64_t> parse_currency_scaled_value(const std::string& text) {
+      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+[147/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_table_structure_helpers.cpp.o
+[148/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_type_functions.cpp.o
+[149/185] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/xasset_methods.cpp.o
+[150/185] Linking CXX static library libcf_xbase_runtime.a
+[151/185] Building CXX object tests/CMakeFiles/cf_prg_engine_test_support.dir/prg_engine_test_support.cpp.o
+[152/185] Building CXX object tests/CMakeFiles/test_prg_engine_int64_exact_expression.dir/test_prg_engine_int64_exact_expression.cpp.o
+[153/185] Building CXX object tests/CMakeFiles/test_prg_engine_cast_int64_numeric.dir/test_prg_engine_cast_int64_numeric.cpp.o
+[154/185] Building CXX object tests/CMakeFiles/test_prg_engine_cast_byte_numeric.dir/test_prg_engine_cast_byte_numeric.cpp.o
+[155/185] Building CXX object tests/CMakeFiles/test_prg_engine_cast_int16_numeric.dir/test_prg_engine_cast_int16_numeric.cpp.o
+[156/185] Building CXX object tests/CMakeFiles/test_prg_engine_cast_int32_numeric.dir/test_prg_engine_cast_int32_numeric.cpp.o
+[157/185] Building CXX object tests/CMakeFiles/test_prg_engine_cast_uint64_numeric.dir/test_prg_engine_cast_uint64_numeric.cpp.o
+[158/185] Building CXX object tests/CMakeFiles/test_prg_engine_bittest_neighbors.dir/test_prg_engine_bittest_neighbors.cpp.o
+[159/185] Building CXX object tests/CMakeFiles/test_prg_engine_bittest_neighbors.dir/test_prg_engine_runtime_surface_functions_expressions_01.cpp.o
+[160/185] Building CXX object tests/CMakeFiles/test_prg_engine_bitclear_neighbors.dir/test_prg_engine_bitclear_neighbors.cpp.o
+[161/185] Building CXX object tests/CMakeFiles/test_prg_engine_bitclear_neighbors.dir/test_prg_engine_runtime_surface_functions_expressions_01.cpp.o
+[162/185] Building CXX object tests/CMakeFiles/test_prg_engine_bitset_neighbors.dir/test_prg_engine_bitset_neighbors.cpp.o
+[163/185] Building CXX object tests/CMakeFiles/test_prg_engine_bitset_neighbors.dir/test_prg_engine_runtime_surface_functions_expressions_01.cpp.o
+[164/185] Building CXX object tests/CMakeFiles/test_prg_engine_bitxor_neighbors.dir/test_prg_engine_bitxor_neighbors.cpp.o
+[165/185] Building CXX object tests/CMakeFiles/test_prg_engine_bitxor_neighbors.dir/test_prg_engine_runtime_surface_functions_expressions_01.cpp.o
+[166/185] Building CXX object tests/CMakeFiles/test_prg_engine_bitor_neighbors.dir/test_prg_engine_bitor_neighbors.cpp.o
+[167/185] Building CXX object tests/CMakeFiles/test_prg_engine_bitor_neighbors.dir/test_prg_engine_runtime_surface_functions_expressions_01.cpp.o
+[168/185] Building CXX object tests/CMakeFiles/test_prg_engine_bitand_neighbors.dir/test_prg_engine_bitand_neighbors.cpp.o
+[169/185] Building CXX object tests/CMakeFiles/test_prg_engine_bitand_neighbors.dir/test_prg_engine_runtime_surface_functions_expressions_01.cpp.o
+[170/185] Building CXX object tests/CMakeFiles/test_prg_engine_bitnot_neighbors.dir/test_prg_engine_bitnot_neighbors.cpp.o
+[171/185] Building CXX object tests/CMakeFiles/test_prg_engine_bitnot_neighbors.dir/test_prg_engine_runtime_surface_functions_expressions_01.cpp.o
+[172/185] Linking CXX executable tests/test_prg_engine_int64_exact_expression
+[173/185] Linking CXX executable tests/test_prg_engine_cast_int64_numeric
+[174/185] Linking CXX executable tests/test_prg_engine_cast_byte_numeric
+[175/185] Linking CXX executable tests/test_prg_engine_cast_int16_numeric
+[176/185] Linking CXX executable tests/test_prg_engine_cast_int32_numeric
+[177/185] Linking CXX executable tests/test_prg_engine_cast_uint64_numeric
+[178/185] Linking CXX executable tests/test_prg_engine_bittest_neighbors
+[179/185] Linking CXX executable tests/test_prg_engine_bitclear_neighbors
+[180/185] Linking CXX executable tests/test_prg_engine_bitset_neighbors
+[181/185] Linking CXX executable tests/test_prg_engine_bitxor_neighbors
+[182/185] Linking CXX executable tests/test_prg_engine_bitor_neighbors
+[183/185] Linking CXX executable tests/test_prg_engine_bitand_neighbors
+[184/185] Linking CXX executable tests/test_prg_engine_bitnot_neighbors
+gcc build exit: 0
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 390
+      Start 390: test_prg_engine_int64_exact_expression
+
+390: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_int64_exact_expression
+390: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+390: Environment variables: 
+390:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+390: Test timeout computed to be: 1200
+ 1/33 Test #390: test_prg_engine_int64_exact_expression ...................   Passed    0.10 sec
+test 399
+      Start 399: test_prg_engine_cast_int64_numeric
+
+399: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_int64_numeric
+399: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+399: Environment variables: 
+399:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+399: Test timeout computed to be: 1200
+399: CAST frozen cases: direct=56 public=0
+ 2/33 Test #399: test_prg_engine_cast_int64_numeric .......................   Passed    0.01 sec
+test 400
+      Start 400: test_prg_engine_cast_int64_numeric_copperfin_session1
+
+400: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_int64_numeric "COPPERFIN" "1"
+400: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+400: Environment variables: 
+400:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+400: Test timeout computed to be: 1200
+400: CAST frozen cases: direct=0 public=141
+ 3/33 Test #400: test_prg_engine_cast_int64_numeric_copperfin_session1 ....   Passed    1.85 sec
+test 401
+      Start 401: test_prg_engine_cast_int64_numeric_copperfin_session2
+
+401: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_int64_numeric "COPPERFIN" "2"
+401: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+401: Environment variables: 
+401:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+401: Test timeout computed to be: 1200
+401: CAST frozen cases: direct=0 public=141
+ 4/33 Test #401: test_prg_engine_cast_int64_numeric_copperfin_session2 ....   Passed    1.88 sec
+test 402
+      Start 402: test_prg_engine_cast_int64_numeric_vfp9_session1
+
+402: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_int64_numeric "VFP9" "1"
+402: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+402: Environment variables: 
+402:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+402: Test timeout computed to be: 1200
+402: CAST frozen cases: direct=0 public=141
+ 5/33 Test #402: test_prg_engine_cast_int64_numeric_vfp9_session1 .........   Passed    1.86 sec
+test 403
+      Start 403: test_prg_engine_cast_int64_numeric_vfp9_session2
+
+403: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_int64_numeric "VFP9" "2"
+403: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+403: Environment variables: 
+403:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+403: Test timeout computed to be: 1200
+403: CAST frozen cases: direct=0 public=141
+ 6/33 Test #403: test_prg_engine_cast_int64_numeric_vfp9_session2 .........   Passed    1.88 sec
+test 404
+      Start 404: test_prg_engine_cast_byte_numeric
+
+404: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_byte_numeric
+404: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+404: Environment variables: 
+404:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+404: Test timeout computed to be: 1200
+404: BYTE frozen cases: direct=140 public=0
+ 7/33 Test #404: test_prg_engine_cast_byte_numeric ........................   Passed    0.01 sec
+test 405
+      Start 405: test_prg_engine_cast_byte_numeric_copperfin_session1
+
+405: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_byte_numeric "COPPERFIN" "1"
+405: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+405: Environment variables: 
+405:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+405: Test timeout computed to be: 1200
+405: BYTE frozen cases: direct=0 public=126
+ 8/33 Test #405: test_prg_engine_cast_byte_numeric_copperfin_session1 .....   Passed    1.47 sec
+test 406
+      Start 406: test_prg_engine_cast_byte_numeric_copperfin_session2
+
+406: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_byte_numeric "COPPERFIN" "2"
+406: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+406: Environment variables: 
+406:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+406: Test timeout computed to be: 1200
+406: BYTE frozen cases: direct=0 public=126
+ 9/33 Test #406: test_prg_engine_cast_byte_numeric_copperfin_session2 .....   Passed    1.51 sec
+test 407
+      Start 407: test_prg_engine_cast_byte_numeric_vfp9_session1
+
+407: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_byte_numeric "VFP9" "1"
+407: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+407: Environment variables: 
+407:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+407: Test timeout computed to be: 1200
+407: BYTE frozen cases: direct=0 public=126
+10/33 Test #407: test_prg_engine_cast_byte_numeric_vfp9_session1 ..........   Passed    1.56 sec
+test 408
+      Start 408: test_prg_engine_cast_byte_numeric_vfp9_session2
+
+408: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_byte_numeric "VFP9" "2"
+408: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+408: Environment variables: 
+408:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+408: Test timeout computed to be: 1200
+408: BYTE frozen cases: direct=0 public=126
+11/33 Test #408: test_prg_engine_cast_byte_numeric_vfp9_session2 ..........   Passed    1.49 sec
+test 409
+      Start 409: test_prg_engine_cast_int16_numeric
+
+409: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_int16_numeric
+409: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+409: Environment variables: 
+409:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+409: Test timeout computed to be: 1200
+409: INT16 frozen cases: direct=162 public=0
+12/33 Test #409: test_prg_engine_cast_int16_numeric .......................   Passed    0.01 sec
+test 410
+      Start 410: test_prg_engine_cast_int16_numeric_copperfin_session1
+
+410: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_int16_numeric "COPPERFIN" "1"
+410: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+410: Environment variables: 
+410:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+410: Test timeout computed to be: 1200
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(32768 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(32768 AS INT16) got 32768
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(32768 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(32768.00000000001 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(32768.00000000001 AS INT16) got 32768
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(32768.00000000001 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(32768.9 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(32768.9 AS INT16) got 32768
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(32768.9 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(-32769 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(-32769 AS INT16) got -32769
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(-32769 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(-32769.00000000001 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(-32769.00000000001 AS INT16) got -32769
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(-32769.00000000001 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(-32769.9 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(-32769.9 AS INT16) got -32769
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(-32769.9 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(65535 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(65535 AS INT16) got 65535
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(65535 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(65536 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(65536 AS INT16) got 65536
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(65536 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(-65536 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(-65536 AS INT16) got -65536
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(-65536 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(2147483647 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(2147483647 AS INT16) got 2147483647
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(2147483647 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(2147483648 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(2147483648 AS INT16) got 2147483648
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(2147483648 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(-2147483649 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(-2147483649 AS INT16) got -2147483649
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(-2147483649 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(9007199254740992 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(9007199254740992 AS INT16) got 9007199254740992
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(9007199254740992 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(9007199254740993 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(9007199254740993 AS INT16) got 9007199254740992
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(9007199254740993 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(1E20 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(1E20 AS INT16) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(1E20 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(-1E20 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(-1E20 AS INT16) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(-1E20 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(1E300 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(1E300 AS INT16) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(-1E300 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(-1E300 AS INT16) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(-1E300 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(EXP(1000) AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(EXP(1000) AS INT16) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(EXP(1000) AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(-EXP(1000) AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(-EXP(1000) AS INT16) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(-EXP(1000) AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(CAST(32768 AS INT64) AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(CAST(32768 AS INT64) AS INT16) got 32768
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(CAST(32768 AS INT64) AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(CAST(-32769 AS INT64) AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(CAST(-32769 AS INT64) AS INT16) got -32769
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(CAST(-32769 AS INT64) AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(CAST(32768 AS UINT64) AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(CAST(32768 AS UINT64) AS INT16) got 32768
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(CAST(32768 AS UINT64) AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(CAST(65536 AS INT64) AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(CAST(65536 AS INT64) AS INT16) got 65536
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(CAST(65536 AS INT64) AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(CAST(-65536 AS INT64) AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(CAST(-65536 AS INT64) AS INT16) got -65536
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(CAST(-65536 AS INT64) AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(CAST(65536 AS UINT64) AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(CAST(65536 AS UINT64) AS INT16) got 65536
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(CAST(65536 AS UINT64) AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT16) got 9007199254740992
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT16) got -9007199254740992
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT16) got 9007199254740992
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT16) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS INT16) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT16) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT16) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(1E300 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(1E300 AS INT16) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT16)
+410: FAIL: INT16 selected localized message COPPERFIN session1 CAST(1E300 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(1E300 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(1E300 AS INT16) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT16)
+410: FAIL: INT16 selected localized message COPPERFIN session1 CAST(1E300 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(1E300 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(1E300 AS INT16) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT16)
+410: FAIL: INT16 selected localized message COPPERFIN session1 CAST(1E300 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(1E300 AS INT16) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(1E300 AS INT16) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT16)
+410: FAIL: INT16 selected localized message COPPERFIN session1 CAST(1E300 AS INT16)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(32768 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(32768 AS SHORT) got 32768
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(32768 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(32768.00000000001 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(32768.00000000001 AS SHORT) got 32768
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(32768.00000000001 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(32768.9 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(32768.9 AS SHORT) got 32768
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(32768.9 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(-32769 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(-32769 AS SHORT) got -32769
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(-32769 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(-32769.00000000001 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(-32769.00000000001 AS SHORT) got -32769
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(-32769.00000000001 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(-32769.9 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(-32769.9 AS SHORT) got -32769
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(-32769.9 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(65535 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(65535 AS SHORT) got 65535
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(65535 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(65536 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(65536 AS SHORT) got 65536
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(65536 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(-65536 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(-65536 AS SHORT) got -65536
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(-65536 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(2147483647 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(2147483647 AS SHORT) got 2147483647
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(2147483647 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(2147483648 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(2147483648 AS SHORT) got 2147483648
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(2147483648 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(-2147483649 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(-2147483649 AS SHORT) got -2147483649
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(-2147483649 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(9007199254740992 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(9007199254740992 AS SHORT) got 9007199254740992
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(9007199254740992 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(9007199254740993 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(9007199254740993 AS SHORT) got 9007199254740992
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(9007199254740993 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(1E20 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(1E20 AS SHORT) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(1E20 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(-1E20 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(-1E20 AS SHORT) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(-1E20 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(1E300 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(1E300 AS SHORT) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(1E300 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(-1E300 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(-1E300 AS SHORT) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(-1E300 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(EXP(1000) AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(EXP(1000) AS SHORT) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(EXP(1000) AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(-EXP(1000) AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(-EXP(1000) AS SHORT) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(-EXP(1000) AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(CAST(32768 AS INT64) AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(CAST(32768 AS INT64) AS SHORT) got 32768
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(CAST(32768 AS INT64) AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(CAST(-32769 AS INT64) AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(CAST(-32769 AS INT64) AS SHORT) got -32769
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(CAST(-32769 AS INT64) AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(CAST(32768 AS UINT64) AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(CAST(32768 AS UINT64) AS SHORT) got 32768
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(CAST(32768 AS UINT64) AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(CAST(65536 AS INT64) AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(CAST(65536 AS INT64) AS SHORT) got 65536
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(CAST(65536 AS INT64) AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(CAST(-65536 AS INT64) AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(CAST(-65536 AS INT64) AS SHORT) got -65536
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(CAST(-65536 AS INT64) AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(CAST(65536 AS UINT64) AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(CAST(65536 AS UINT64) AS SHORT) got 65536
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(CAST(65536 AS UINT64) AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS SHORT) got 9007199254740992
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS SHORT) got -9007199254740992
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS SHORT) got 9007199254740992
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS SHORT) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS SHORT) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS SHORT) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS SHORT) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(1E300 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(1E300 AS SHORT) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(1E300 AS SHORT)
+410: FAIL: INT16 selected localized message COPPERFIN session1 CAST(1E300 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(1E300 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(1E300 AS SHORT) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(1E300 AS SHORT)
+410: FAIL: INT16 selected localized message COPPERFIN session1 CAST(1E300 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(1E300 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(1E300 AS SHORT) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(1E300 AS SHORT)
+410: FAIL: INT16 selected localized message COPPERFIN session1 CAST(1E300 AS SHORT)
+410: FAIL: INT16 selected error COPPERFIN session1 CAST(1E300 AS SHORT) got 0
+410: FAIL: INT16 selected result COPPERFIN session1 CAST(1E300 AS SHORT) got -9223372036854775808
+410: FAIL: INT16 selected kind/assignment COPPERFIN session1 CAST(1E300 AS SHORT)
+410: FAIL: INT16 selected localized message COPPERFIN session1 CAST(1E300 AS SHORT)
+410: INT16 frozen cases: direct=0 public=152
+13/33 Test #410: test_prg_engine_cast_int16_numeric_copperfin_session1 ....***Failed    1.67 sec
+test 411
+      Start 411: test_prg_engine_cast_int16_numeric_copperfin_session2
+
+411: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_int16_numeric "COPPERFIN" "2"
+411: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+411: Environment variables: 
+411:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+411: Test timeout computed to be: 1200
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(32768 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(32768 AS INT16) got 32768
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(32768 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(32768.00000000001 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(32768.00000000001 AS INT16) got 32768
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(32768.00000000001 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(32768.9 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(32768.9 AS INT16) got 32768
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(32768.9 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(-32769 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(-32769 AS INT16) got -32769
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(-32769 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(-32769.00000000001 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(-32769.00000000001 AS INT16) got -32769
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(-32769.00000000001 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(-32769.9 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(-32769.9 AS INT16) got -32769
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(-32769.9 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(65535 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(65535 AS INT16) got 65535
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(65535 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(65536 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(65536 AS INT16) got 65536
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(65536 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(-65536 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(-65536 AS INT16) got -65536
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(-65536 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(2147483647 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(2147483647 AS INT16) got 2147483647
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(2147483647 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(2147483648 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(2147483648 AS INT16) got 2147483648
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(2147483648 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(-2147483649 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(-2147483649 AS INT16) got -2147483649
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(-2147483649 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(9007199254740992 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(9007199254740992 AS INT16) got 9007199254740992
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(9007199254740992 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(9007199254740993 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(9007199254740993 AS INT16) got 9007199254740992
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(9007199254740993 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(1E20 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(1E20 AS INT16) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(1E20 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(-1E20 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(-1E20 AS INT16) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(-1E20 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(1E300 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(1E300 AS INT16) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(-1E300 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(-1E300 AS INT16) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(-1E300 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(EXP(1000) AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(EXP(1000) AS INT16) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(EXP(1000) AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(-EXP(1000) AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(-EXP(1000) AS INT16) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(-EXP(1000) AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(CAST(32768 AS INT64) AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(CAST(32768 AS INT64) AS INT16) got 32768
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(CAST(32768 AS INT64) AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(CAST(-32769 AS INT64) AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(CAST(-32769 AS INT64) AS INT16) got -32769
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(CAST(-32769 AS INT64) AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(CAST(32768 AS UINT64) AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(CAST(32768 AS UINT64) AS INT16) got 32768
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(CAST(32768 AS UINT64) AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(CAST(65536 AS INT64) AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(CAST(65536 AS INT64) AS INT16) got 65536
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(CAST(65536 AS INT64) AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(CAST(-65536 AS INT64) AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(CAST(-65536 AS INT64) AS INT16) got -65536
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(CAST(-65536 AS INT64) AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(CAST(65536 AS UINT64) AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(CAST(65536 AS UINT64) AS INT16) got 65536
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(CAST(65536 AS UINT64) AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT16) got 9007199254740992
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT16) got -9007199254740992
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT16) got 9007199254740992
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT16) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS INT16) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT16) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT16) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(1E300 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(1E300 AS INT16) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT16)
+411: FAIL: INT16 selected localized message COPPERFIN session2 CAST(1E300 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(1E300 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(1E300 AS INT16) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT16)
+411: FAIL: INT16 selected localized message COPPERFIN session2 CAST(1E300 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(1E300 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(1E300 AS INT16) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT16)
+411: FAIL: INT16 selected localized message COPPERFIN session2 CAST(1E300 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(1E300 AS INT16) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(1E300 AS INT16) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT16)
+411: FAIL: INT16 selected localized message COPPERFIN session2 CAST(1E300 AS INT16)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(32768 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(32768 AS SHORT) got 32768
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(32768 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(32768.00000000001 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(32768.00000000001 AS SHORT) got 32768
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(32768.00000000001 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(32768.9 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(32768.9 AS SHORT) got 32768
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(32768.9 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(-32769 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(-32769 AS SHORT) got -32769
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(-32769 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(-32769.00000000001 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(-32769.00000000001 AS SHORT) got -32769
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(-32769.00000000001 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(-32769.9 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(-32769.9 AS SHORT) got -32769
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(-32769.9 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(65535 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(65535 AS SHORT) got 65535
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(65535 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(65536 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(65536 AS SHORT) got 65536
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(65536 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(-65536 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(-65536 AS SHORT) got -65536
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(-65536 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(2147483647 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(2147483647 AS SHORT) got 2147483647
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(2147483647 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(2147483648 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(2147483648 AS SHORT) got 2147483648
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(2147483648 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(-2147483649 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(-2147483649 AS SHORT) got -2147483649
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(-2147483649 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(9007199254740992 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(9007199254740992 AS SHORT) got 9007199254740992
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(9007199254740992 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(9007199254740993 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(9007199254740993 AS SHORT) got 9007199254740992
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(9007199254740993 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(1E20 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(1E20 AS SHORT) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(1E20 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(-1E20 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(-1E20 AS SHORT) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(-1E20 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(1E300 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(1E300 AS SHORT) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(1E300 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(-1E300 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(-1E300 AS SHORT) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(-1E300 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(EXP(1000) AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(EXP(1000) AS SHORT) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(EXP(1000) AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(-EXP(1000) AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(-EXP(1000) AS SHORT) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(-EXP(1000) AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(CAST(32768 AS INT64) AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(CAST(32768 AS INT64) AS SHORT) got 32768
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(CAST(32768 AS INT64) AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(CAST(-32769 AS INT64) AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(CAST(-32769 AS INT64) AS SHORT) got -32769
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(CAST(-32769 AS INT64) AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(CAST(32768 AS UINT64) AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(CAST(32768 AS UINT64) AS SHORT) got 32768
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(CAST(32768 AS UINT64) AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(CAST(65536 AS INT64) AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(CAST(65536 AS INT64) AS SHORT) got 65536
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(CAST(65536 AS INT64) AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(CAST(-65536 AS INT64) AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(CAST(-65536 AS INT64) AS SHORT) got -65536
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(CAST(-65536 AS INT64) AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(CAST(65536 AS UINT64) AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(CAST(65536 AS UINT64) AS SHORT) got 65536
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(CAST(65536 AS UINT64) AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS SHORT) got 9007199254740992
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS SHORT) got -9007199254740992
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS SHORT) got 9007199254740992
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS SHORT) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS SHORT) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS SHORT) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS SHORT) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(1E300 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(1E300 AS SHORT) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(1E300 AS SHORT)
+411: FAIL: INT16 selected localized message COPPERFIN session2 CAST(1E300 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(1E300 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(1E300 AS SHORT) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(1E300 AS SHORT)
+411: FAIL: INT16 selected localized message COPPERFIN session2 CAST(1E300 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(1E300 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(1E300 AS SHORT) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(1E300 AS SHORT)
+411: FAIL: INT16 selected localized message COPPERFIN session2 CAST(1E300 AS SHORT)
+411: FAIL: INT16 selected error COPPERFIN session2 CAST(1E300 AS SHORT) got 0
+411: FAIL: INT16 selected result COPPERFIN session2 CAST(1E300 AS SHORT) got -9223372036854775808
+411: FAIL: INT16 selected kind/assignment COPPERFIN session2 CAST(1E300 AS SHORT)
+411: FAIL: INT16 selected localized message COPPERFIN session2 CAST(1E300 AS SHORT)
+411: INT16 frozen cases: direct=0 public=152
+14/33 Test #411: test_prg_engine_cast_int16_numeric_copperfin_session2 ....***Failed    1.71 sec
+test 412
+      Start 412: test_prg_engine_cast_int16_numeric_vfp9_session1
+
+412: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_int16_numeric "VFP9" "1"
+412: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+412: Environment variables: 
+412:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+412: Test timeout computed to be: 1200
+412: FAIL: INT16 selected error VFP9 session1 CAST(32768 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(32768 AS INT16) got 32768
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(32768 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(32768.00000000001 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(32768.00000000001 AS INT16) got 32768
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(32768.00000000001 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(32768.9 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(32768.9 AS INT16) got 32768
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(32768.9 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(-32769 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(-32769 AS INT16) got -32769
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(-32769 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(-32769.00000000001 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(-32769.00000000001 AS INT16) got -32769
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(-32769.00000000001 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(-32769.9 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(-32769.9 AS INT16) got -32769
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(-32769.9 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(65535 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(65535 AS INT16) got 65535
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(65535 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(65536 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(65536 AS INT16) got 65536
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(65536 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(-65536 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(-65536 AS INT16) got -65536
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(-65536 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(2147483647 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(2147483647 AS INT16) got 2147483647
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(2147483647 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(2147483648 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(2147483648 AS INT16) got 2147483648
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(2147483648 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(-2147483649 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(-2147483649 AS INT16) got -2147483649
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(-2147483649 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(9007199254740992 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(9007199254740992 AS INT16) got 9007199254740992
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(9007199254740992 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(9007199254740993 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(9007199254740993 AS INT16) got 9007199254740992
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(9007199254740993 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(1E20 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(1E20 AS INT16) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(1E20 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(-1E20 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(-1E20 AS INT16) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(-1E20 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(1E300 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(1E300 AS INT16) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(1E300 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(-1E300 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(-1E300 AS INT16) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(-1E300 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(EXP(1000) AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(EXP(1000) AS INT16) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(EXP(1000) AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(-EXP(1000) AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(-EXP(1000) AS INT16) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(-EXP(1000) AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(CAST(32768 AS INT64) AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(CAST(32768 AS INT64) AS INT16) got 32768
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(CAST(32768 AS INT64) AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(CAST(-32769 AS INT64) AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(CAST(-32769 AS INT64) AS INT16) got -32769
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(CAST(-32769 AS INT64) AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(CAST(32768 AS UINT64) AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(CAST(32768 AS UINT64) AS INT16) got 32768
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(CAST(32768 AS UINT64) AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(CAST(65536 AS INT64) AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(CAST(65536 AS INT64) AS INT16) got 65536
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(CAST(65536 AS INT64) AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(CAST(-65536 AS INT64) AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(CAST(-65536 AS INT64) AS INT16) got -65536
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(CAST(-65536 AS INT64) AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(CAST(65536 AS UINT64) AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(CAST(65536 AS UINT64) AS INT16) got 65536
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(CAST(65536 AS UINT64) AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT16) got 9007199254740992
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT16) got -9007199254740992
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT16) got 9007199254740992
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT16) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(CAST(-9223372036854775808 AS INT64) AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(CAST(-9223372036854775808 AS INT64) AS INT16) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(CAST(-9223372036854775808 AS INT64) AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT16) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT16) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(1E300 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(1E300 AS INT16) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(1E300 AS INT16)
+412: FAIL: INT16 selected localized message VFP9 session1 CAST(1E300 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(1E300 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(1E300 AS INT16) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(1E300 AS INT16)
+412: FAIL: INT16 selected localized message VFP9 session1 CAST(1E300 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(1E300 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(1E300 AS INT16) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(1E300 AS INT16)
+412: FAIL: INT16 selected localized message VFP9 session1 CAST(1E300 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(1E300 AS INT16) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(1E300 AS INT16) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(1E300 AS INT16)
+412: FAIL: INT16 selected localized message VFP9 session1 CAST(1E300 AS INT16)
+412: FAIL: INT16 selected error VFP9 session1 CAST(32768 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(32768 AS SHORT) got 32768
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(32768 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(32768.00000000001 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(32768.00000000001 AS SHORT) got 32768
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(32768.00000000001 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(32768.9 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(32768.9 AS SHORT) got 32768
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(32768.9 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(-32769 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(-32769 AS SHORT) got -32769
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(-32769 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(-32769.00000000001 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(-32769.00000000001 AS SHORT) got -32769
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(-32769.00000000001 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(-32769.9 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(-32769.9 AS SHORT) got -32769
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(-32769.9 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(65535 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(65535 AS SHORT) got 65535
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(65535 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(65536 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(65536 AS SHORT) got 65536
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(65536 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(-65536 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(-65536 AS SHORT) got -65536
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(-65536 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(2147483647 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(2147483647 AS SHORT) got 2147483647
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(2147483647 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(2147483648 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(2147483648 AS SHORT) got 2147483648
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(2147483648 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(-2147483649 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(-2147483649 AS SHORT) got -2147483649
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(-2147483649 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(9007199254740992 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(9007199254740992 AS SHORT) got 9007199254740992
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(9007199254740992 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(9007199254740993 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(9007199254740993 AS SHORT) got 9007199254740992
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(9007199254740993 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(1E20 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(1E20 AS SHORT) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(1E20 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(-1E20 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(-1E20 AS SHORT) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(-1E20 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(1E300 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(1E300 AS SHORT) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(1E300 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(-1E300 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(-1E300 AS SHORT) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(-1E300 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(EXP(1000) AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(EXP(1000) AS SHORT) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(EXP(1000) AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(-EXP(1000) AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(-EXP(1000) AS SHORT) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(-EXP(1000) AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(CAST(32768 AS INT64) AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(CAST(32768 AS INT64) AS SHORT) got 32768
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(CAST(32768 AS INT64) AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(CAST(-32769 AS INT64) AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(CAST(-32769 AS INT64) AS SHORT) got -32769
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(CAST(-32769 AS INT64) AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(CAST(32768 AS UINT64) AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(CAST(32768 AS UINT64) AS SHORT) got 32768
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(CAST(32768 AS UINT64) AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(CAST(65536 AS INT64) AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(CAST(65536 AS INT64) AS SHORT) got 65536
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(CAST(65536 AS INT64) AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(CAST(-65536 AS INT64) AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(CAST(-65536 AS INT64) AS SHORT) got -65536
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(CAST(-65536 AS INT64) AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(CAST(65536 AS UINT64) AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(CAST(65536 AS UINT64) AS SHORT) got 65536
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(CAST(65536 AS UINT64) AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS SHORT) got 9007199254740992
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS SHORT) got -9007199254740992
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS SHORT) got 9007199254740992
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS SHORT) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(CAST(-9223372036854775808 AS INT64) AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(CAST(-9223372036854775808 AS INT64) AS SHORT) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(CAST(-9223372036854775808 AS INT64) AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS SHORT) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS SHORT) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(1E300 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(1E300 AS SHORT) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(1E300 AS SHORT)
+412: FAIL: INT16 selected localized message VFP9 session1 CAST(1E300 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(1E300 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(1E300 AS SHORT) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(1E300 AS SHORT)
+412: FAIL: INT16 selected localized message VFP9 session1 CAST(1E300 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(1E300 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(1E300 AS SHORT) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(1E300 AS SHORT)
+412: FAIL: INT16 selected localized message VFP9 session1 CAST(1E300 AS SHORT)
+412: FAIL: INT16 selected error VFP9 session1 CAST(1E300 AS SHORT) got 0
+412: FAIL: INT16 selected result VFP9 session1 CAST(1E300 AS SHORT) got -9223372036854775808
+412: FAIL: INT16 selected kind/assignment VFP9 session1 CAST(1E300 AS SHORT)
+412: FAIL: INT16 selected localized message VFP9 session1 CAST(1E300 AS SHORT)
+412: INT16 frozen cases: direct=0 public=152
+15/33 Test #412: test_prg_engine_cast_int16_numeric_vfp9_session1 .........***Failed    1.68 sec
+test 413
+      Start 413: test_prg_engine_cast_int16_numeric_vfp9_session2
+
+413: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_int16_numeric "VFP9" "2"
+413: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+413: Environment variables: 
+413:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+413: Test timeout computed to be: 1200
+413: FAIL: INT16 selected error VFP9 session2 CAST(32768 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(32768 AS INT16) got 32768
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(32768 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(32768.00000000001 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(32768.00000000001 AS INT16) got 32768
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(32768.00000000001 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(32768.9 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(32768.9 AS INT16) got 32768
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(32768.9 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(-32769 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(-32769 AS INT16) got -32769
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(-32769 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(-32769.00000000001 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(-32769.00000000001 AS INT16) got -32769
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(-32769.00000000001 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(-32769.9 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(-32769.9 AS INT16) got -32769
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(-32769.9 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(65535 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(65535 AS INT16) got 65535
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(65535 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(65536 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(65536 AS INT16) got 65536
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(65536 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(-65536 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(-65536 AS INT16) got -65536
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(-65536 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(2147483647 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(2147483647 AS INT16) got 2147483647
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(2147483647 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(2147483648 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(2147483648 AS INT16) got 2147483648
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(2147483648 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(-2147483649 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(-2147483649 AS INT16) got -2147483649
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(-2147483649 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(9007199254740992 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(9007199254740992 AS INT16) got 9007199254740992
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(9007199254740992 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(9007199254740993 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(9007199254740993 AS INT16) got 9007199254740992
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(9007199254740993 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(1E20 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(1E20 AS INT16) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(1E20 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(-1E20 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(-1E20 AS INT16) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(-1E20 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(1E300 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(1E300 AS INT16) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(1E300 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(-1E300 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(-1E300 AS INT16) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(-1E300 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(EXP(1000) AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(EXP(1000) AS INT16) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(EXP(1000) AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(-EXP(1000) AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(-EXP(1000) AS INT16) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(-EXP(1000) AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(CAST(32768 AS INT64) AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(CAST(32768 AS INT64) AS INT16) got 32768
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(CAST(32768 AS INT64) AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(CAST(-32769 AS INT64) AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(CAST(-32769 AS INT64) AS INT16) got -32769
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(CAST(-32769 AS INT64) AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(CAST(32768 AS UINT64) AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(CAST(32768 AS UINT64) AS INT16) got 32768
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(CAST(32768 AS UINT64) AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(CAST(65536 AS INT64) AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(CAST(65536 AS INT64) AS INT16) got 65536
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(CAST(65536 AS INT64) AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(CAST(-65536 AS INT64) AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(CAST(-65536 AS INT64) AS INT16) got -65536
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(CAST(-65536 AS INT64) AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(CAST(65536 AS UINT64) AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(CAST(65536 AS UINT64) AS INT16) got 65536
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(CAST(65536 AS UINT64) AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT16) got 9007199254740992
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT16) got -9007199254740992
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT16) got 9007199254740992
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT16) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(CAST(-9223372036854775808 AS INT64) AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(CAST(-9223372036854775808 AS INT64) AS INT16) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(CAST(-9223372036854775808 AS INT64) AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT16) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT16) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(1E300 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(1E300 AS INT16) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(1E300 AS INT16)
+413: FAIL: INT16 selected localized message VFP9 session2 CAST(1E300 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(1E300 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(1E300 AS INT16) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(1E300 AS INT16)
+413: FAIL: INT16 selected localized message VFP9 session2 CAST(1E300 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(1E300 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(1E300 AS INT16) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(1E300 AS INT16)
+413: FAIL: INT16 selected localized message VFP9 session2 CAST(1E300 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(1E300 AS INT16) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(1E300 AS INT16) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(1E300 AS INT16)
+413: FAIL: INT16 selected localized message VFP9 session2 CAST(1E300 AS INT16)
+413: FAIL: INT16 selected error VFP9 session2 CAST(32768 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(32768 AS SHORT) got 32768
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(32768 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(32768.00000000001 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(32768.00000000001 AS SHORT) got 32768
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(32768.00000000001 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(32768.9 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(32768.9 AS SHORT) got 32768
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(32768.9 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(-32769 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(-32769 AS SHORT) got -32769
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(-32769 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(-32769.00000000001 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(-32769.00000000001 AS SHORT) got -32769
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(-32769.00000000001 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(-32769.9 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(-32769.9 AS SHORT) got -32769
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(-32769.9 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(65535 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(65535 AS SHORT) got 65535
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(65535 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(65536 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(65536 AS SHORT) got 65536
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(65536 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(-65536 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(-65536 AS SHORT) got -65536
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(-65536 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(2147483647 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(2147483647 AS SHORT) got 2147483647
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(2147483647 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(2147483648 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(2147483648 AS SHORT) got 2147483648
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(2147483648 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(-2147483649 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(-2147483649 AS SHORT) got -2147483649
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(-2147483649 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(9007199254740992 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(9007199254740992 AS SHORT) got 9007199254740992
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(9007199254740992 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(9007199254740993 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(9007199254740993 AS SHORT) got 9007199254740992
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(9007199254740993 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(1E20 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(1E20 AS SHORT) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(1E20 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(-1E20 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(-1E20 AS SHORT) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(-1E20 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(1E300 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(1E300 AS SHORT) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(1E300 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(-1E300 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(-1E300 AS SHORT) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(-1E300 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(EXP(1000) AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(EXP(1000) AS SHORT) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(EXP(1000) AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(-EXP(1000) AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(-EXP(1000) AS SHORT) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(-EXP(1000) AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(CAST(32768 AS INT64) AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(CAST(32768 AS INT64) AS SHORT) got 32768
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(CAST(32768 AS INT64) AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(CAST(-32769 AS INT64) AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(CAST(-32769 AS INT64) AS SHORT) got -32769
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(CAST(-32769 AS INT64) AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(CAST(32768 AS UINT64) AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(CAST(32768 AS UINT64) AS SHORT) got 32768
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(CAST(32768 AS UINT64) AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(CAST(65536 AS INT64) AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(CAST(65536 AS INT64) AS SHORT) got 65536
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(CAST(65536 AS INT64) AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(CAST(-65536 AS INT64) AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(CAST(-65536 AS INT64) AS SHORT) got -65536
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(CAST(-65536 AS INT64) AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(CAST(65536 AS UINT64) AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(CAST(65536 AS UINT64) AS SHORT) got 65536
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(CAST(65536 AS UINT64) AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS SHORT) got 9007199254740992
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS SHORT) got -9007199254740992
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS SHORT) got 9007199254740992
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS SHORT) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(CAST(-9223372036854775808 AS INT64) AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(CAST(-9223372036854775808 AS INT64) AS SHORT) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(CAST(-9223372036854775808 AS INT64) AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS SHORT) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS SHORT) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(1E300 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(1E300 AS SHORT) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(1E300 AS SHORT)
+413: FAIL: INT16 selected localized message VFP9 session2 CAST(1E300 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(1E300 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(1E300 AS SHORT) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(1E300 AS SHORT)
+413: FAIL: INT16 selected localized message VFP9 session2 CAST(1E300 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(1E300 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(1E300 AS SHORT) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(1E300 AS SHORT)
+413: FAIL: INT16 selected localized message VFP9 session2 CAST(1E300 AS SHORT)
+413: FAIL: INT16 selected error VFP9 session2 CAST(1E300 AS SHORT) got 0
+413: FAIL: INT16 selected result VFP9 session2 CAST(1E300 AS SHORT) got -9223372036854775808
+413: FAIL: INT16 selected kind/assignment VFP9 session2 CAST(1E300 AS SHORT)
+413: FAIL: INT16 selected localized message VFP9 session2 CAST(1E300 AS SHORT)
+413: INT16 frozen cases: direct=0 public=152
+16/33 Test #413: test_prg_engine_cast_int16_numeric_vfp9_session2 .........***Failed    1.74 sec
+test 414
+      Start 414: test_prg_engine_cast_int32_numeric
+
+414: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_int32_numeric
+414: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+414: Environment variables: 
+414:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+414: Test timeout computed to be: 1200
+414: CAST frozen cases: direct=146 public=0
+17/33 Test #414: test_prg_engine_cast_int32_numeric .......................   Passed    0.00 sec
+test 415
+      Start 415: test_prg_engine_cast_int32_numeric_copperfin_session1
+
+415: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_int32_numeric "COPPERFIN" "1"
+415: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+415: Environment variables: 
+415:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+415: Test timeout computed to be: 1200
+415: CAST frozen cases: direct=0 public=264
+18/33 Test #415: test_prg_engine_cast_int32_numeric_copperfin_session1 ....   Passed    3.65 sec
+test 416
+      Start 416: test_prg_engine_cast_int32_numeric_copperfin_session2
+
+416: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_int32_numeric "COPPERFIN" "2"
+416: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+416: Environment variables: 
+416:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+416: Test timeout computed to be: 1200
+416: CAST frozen cases: direct=0 public=264
+19/33 Test #416: test_prg_engine_cast_int32_numeric_copperfin_session2 ....   Passed    3.81 sec
+test 417
+      Start 417: test_prg_engine_cast_int32_numeric_vfp9_session1
+
+417: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_int32_numeric "VFP9" "1"
+417: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+417: Environment variables: 
+417:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+417: Test timeout computed to be: 1200
+417: CAST frozen cases: direct=0 public=264
+20/33 Test #417: test_prg_engine_cast_int32_numeric_vfp9_session1 .........   Passed    3.55 sec
+test 418
+      Start 418: test_prg_engine_cast_int32_numeric_vfp9_session2
+
+418: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_int32_numeric "VFP9" "2"
+418: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+418: Environment variables: 
+418:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+418: Test timeout computed to be: 1200
+418: CAST frozen cases: direct=0 public=264
+21/33 Test #418: test_prg_engine_cast_int32_numeric_vfp9_session2 .........   Passed    3.58 sec
+test 419
+      Start 419: test_prg_engine_cast_uint64_numeric
+
+419: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_uint64_numeric
+419: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+419: Environment variables: 
+419:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+419: Test timeout computed to be: 1200
+419: CAST frozen cases: direct=62 public=0
+22/33 Test #419: test_prg_engine_cast_uint64_numeric ......................   Passed    0.00 sec
+test 420
+      Start 420: test_prg_engine_cast_uint64_numeric_copperfin_session1
+
+420: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_uint64_numeric "COPPERFIN" "1"
+420: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+420: Environment variables: 
+420:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+420: Test timeout computed to be: 1200
+420: CAST frozen cases: direct=0 public=159
+23/33 Test #420: test_prg_engine_cast_uint64_numeric_copperfin_session1 ...   Passed    2.11 sec
+test 421
+      Start 421: test_prg_engine_cast_uint64_numeric_copperfin_session2
+
+421: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_uint64_numeric "COPPERFIN" "2"
+421: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+421: Environment variables: 
+421:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+421: Test timeout computed to be: 1200
+421: CAST frozen cases: direct=0 public=159
+24/33 Test #421: test_prg_engine_cast_uint64_numeric_copperfin_session2 ...   Passed    2.12 sec
+test 422
+      Start 422: test_prg_engine_cast_uint64_numeric_vfp9_session1
+
+422: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_uint64_numeric "VFP9" "1"
+422: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+422: Environment variables: 
+422:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+422: Test timeout computed to be: 1200
+422: CAST frozen cases: direct=0 public=159
+25/33 Test #422: test_prg_engine_cast_uint64_numeric_vfp9_session1 ........   Passed    2.09 sec
+test 423
+      Start 423: test_prg_engine_cast_uint64_numeric_vfp9_session2
+
+423: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_cast_uint64_numeric "VFP9" "2"
+423: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+423: Environment variables: 
+423:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+423: Test timeout computed to be: 1200
+423: CAST frozen cases: direct=0 public=159
+26/33 Test #423: test_prg_engine_cast_uint64_numeric_vfp9_session2 ........   Passed    2.10 sec
+test 429
+      Start 429: test_prg_engine_bittest_neighbors
+
+429: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_bittest_neighbors
+429: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+429: Environment variables: 
+429:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+429: Test timeout computed to be: 1200
+27/33 Test #429: test_prg_engine_bittest_neighbors ........................   Passed    0.11 sec
+test 431
+      Start 431: test_prg_engine_bitclear_neighbors
+
+431: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_bitclear_neighbors
+431: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+431: Environment variables: 
+431:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+431: Test timeout computed to be: 1200
+28/33 Test #431: test_prg_engine_bitclear_neighbors .......................   Passed    0.10 sec
+test 433
+      Start 433: test_prg_engine_bitset_neighbors
+
+433: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_bitset_neighbors
+433: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+433: Environment variables: 
+433:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+433: Test timeout computed to be: 1200
+29/33 Test #433: test_prg_engine_bitset_neighbors .........................   Passed    0.10 sec
+test 435
+      Start 435: test_prg_engine_bitxor_neighbors
+
+435: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_bitxor_neighbors
+435: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+435: Environment variables: 
+435:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+435: Test timeout computed to be: 1200
+30/33 Test #435: test_prg_engine_bitxor_neighbors .........................   Passed    0.10 sec
+test 437
+      Start 437: test_prg_engine_bitor_neighbors
+
+437: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_bitor_neighbors
+437: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+437: Environment variables: 
+437:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+437: Test timeout computed to be: 1200
+31/33 Test #437: test_prg_engine_bitor_neighbors ..........................   Passed    0.10 sec
+test 439
+      Start 439: test_prg_engine_bitand_neighbors
+
+439: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_bitand_neighbors
+439: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+439: Environment variables: 
+439:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+439: Test timeout computed to be: 1200
+32/33 Test #439: test_prg_engine_bitand_neighbors .........................   Passed    0.10 sec
+test 441
+      Start 441: test_prg_engine_bitnot_neighbors
+
+441: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests/test_prg_engine_bitnot_neighbors
+441: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/tests
+441: Environment variables: 
+441:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+441: Test timeout computed to be: 1200
+33/33 Test #441: test_prg_engine_bitnot_neighbors .........................   Passed    0.11 sec
+
+The following tests passed:
+	test_prg_engine_int64_exact_expression
+	test_prg_engine_cast_int64_numeric
+	test_prg_engine_cast_int64_numeric_copperfin_session1
+	test_prg_engine_cast_int64_numeric_copperfin_session2
+	test_prg_engine_cast_int64_numeric_vfp9_session1
+	test_prg_engine_cast_int64_numeric_vfp9_session2
+	test_prg_engine_cast_byte_numeric
+	test_prg_engine_cast_byte_numeric_copperfin_session1
+	test_prg_engine_cast_byte_numeric_copperfin_session2
+	test_prg_engine_cast_byte_numeric_vfp9_session1
+	test_prg_engine_cast_byte_numeric_vfp9_session2
+	test_prg_engine_cast_int16_numeric
+	test_prg_engine_cast_int32_numeric
+	test_prg_engine_cast_int32_numeric_copperfin_session1
+	test_prg_engine_cast_int32_numeric_copperfin_session2
+	test_prg_engine_cast_int32_numeric_vfp9_session1
+	test_prg_engine_cast_int32_numeric_vfp9_session2
+	test_prg_engine_cast_uint64_numeric
+	test_prg_engine_cast_uint64_numeric_copperfin_session1
+	test_prg_engine_cast_uint64_numeric_copperfin_session2
+	test_prg_engine_cast_uint64_numeric_vfp9_session1
+	test_prg_engine_cast_uint64_numeric_vfp9_session2
+	test_prg_engine_bittest_neighbors
+	test_prg_engine_bitclear_neighbors
+	test_prg_engine_bitset_neighbors
+	test_prg_engine_bitxor_neighbors
+	test_prg_engine_bitor_neighbors
+	test_prg_engine_bitand_neighbors
+	test_prg_engine_bitnot_neighbors
+
+88% tests passed, 4 tests failed out of 33
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =  44.17 sec*proc (33 tests)
+copperfin-isolation:child-processes=none            =  44.17 sec*proc (33 tests)
+copperfin-isolation:environment=none                =   0.10 sec*proc (1 test)
+copperfin-isolation:environment=scoped-process      =  44.07 sec*proc (32 tests)
+copperfin-isolation:filesystem=process-owned        =   0.10 sec*proc (1 test)
+copperfin-isolation:filesystem=test-owned-unique    =  44.07 sec*proc (32 tests)
+copperfin-isolation:network=none                    =  44.17 sec*proc (33 tests)
+copperfin-isolation:platform=portable               =  44.17 sec*proc (33 tests)
+copperfin-isolation:resources=none                  =  44.17 sec*proc (33 tests)
+copperfin-isolation:samples=none                    =  44.17 sec*proc (33 tests)
+copperfin-isolation:schedule=serial                 =  44.17 sec*proc (33 tests)
+
+Total Test time (real) =  44.21 sec
+
+The following tests FAILED:
+	410 - test_prg_engine_cast_int16_numeric_copperfin_session1 (Failed) copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+	411 - test_prg_engine_cast_int16_numeric_copperfin_session2 (Failed) copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+	412 - test_prg_engine_cast_int16_numeric_vfp9_session1 (Failed) copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+	413 - test_prg_engine_cast_int16_numeric_vfp9_session2 (Failed) copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+Errors while running CTest
+Output from these tests are in: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-gcc/Testing/Temporary/LastTest.log
+Use "--rerun-failed --output-on-failure" to re-run the failed cases verbosely.
+gcc CTest exit: 8

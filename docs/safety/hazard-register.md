@@ -45,6 +45,16 @@ own system and domain assurance.
 
 ## Bounded numeric-conversion linkage
 
+RQ-CF-PRG-CAST-INT16-NUMERIC-001 / DQ-DV-5611-CAST-INT16-NUMERIC-001 links
+HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01 to the
+[signed16 extension boundary and verification plan](../../tests/fixtures/vfp9-cast-int16-numeric/README.md).
+Both modes use checked Numeric/exact signed16 admission and localized atomic11;
+native target absence is not a wrapping oracle. Bounded documentation misuse
+is medium; registered severities/status remain unchanged. Full original/fixed
+focused/broader evidence and completed development walkthrough are retained
+in the fixture; exact-head integration remains gated, no
+independent-human/high-hazard qualification claim.
+
 RQ-CF-PRG-CAST-BYTE-NUMERIC-001 / DQ-DV-5611-CAST-BYTE-NUMERIC-001 links
 HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01 to the
 [unsigned8 extension boundary and verification plan](../../tests/fixtures/vfp9-cast-byte-numeric/README.md).
