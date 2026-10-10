@@ -951,6 +951,23 @@ function(copperfin_configure_native_test_isolation)
             AUDIT complete
         )
     endforeach()
+    # Unsigned64 CAST: unique scratch, scoped locale, serial fresh sessions.
+    foreach(cast_uint64_test IN ITEMS
+        test_prg_engine_cast_uint64_numeric
+        test_prg_engine_cast_uint64_numeric_copperfin_session1
+        test_prg_engine_cast_uint64_numeric_copperfin_session2
+        test_prg_engine_cast_uint64_numeric_vfp9_session1
+        test_prg_engine_cast_uint64_numeric_vfp9_session2)
+        copperfin_set_test_isolation(${cast_uint64_test}
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT scoped-process
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            AUDIT complete
+        )
+    endforeach()
     # BITTEST: private TMPDIR roots, scoped locale, serial runtime.
     foreach(bittest_test IN ITEMS
         test_prg_engine_bittest_numeric

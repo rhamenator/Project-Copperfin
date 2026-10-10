@@ -674,7 +674,13 @@
             return make_int64_value(*converted);
         }
         if (type_name == "UINT64" || type_name == "ULONGLONG" || type_name == "UBIGINT") {
-            return make_uint64_value(static_cast<std::uint64_t>(value_as_number(source)));
+            // RQ-CF-PRG-CAST-UINT64-NUMERIC-001: exact identity and checked
+            // representable Numeric truncation; no wrap in either mode.
+            const auto converted = checked_cast_uint64_argument(source);
+            if (!converted) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+            }
+            return make_uint64_value(*converted);
         }
         if (type_name == "INT" || type_name == "INT32" || type_name == "INTEGER" ||
             type_name == "LONG" || type_name == "INT16" || type_name == "SHORT") {

@@ -1,0 +1,194 @@
+[ 10%] Built target cf_platform_support
+[ 10%] Built target cf_localization
+[ 20%] Built target cf_security
+[ 30%] Built target cf_platform_profile
+[ 50%] Built target cf_vfp_assets
+[ 50%] Built target cf_runtime_text
+[ 60%] Built target cf_prg_analysis
+[ 80%] Built target cf_design_model
+[ 80%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_surface_functions.cpp.o
+In file included from /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_functions.cpp:193:
+/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:13:5: warning: ‘int copperfin::runtime::{anonymous}::bit_position(const copperfin::runtime::PrgValue&)’ defined but not used [-Wunused-function]
+   13 | int bit_position(const PrgValue& value) {
+      |     ^~~~~~~~~~~~
+/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:5:15: warning: ‘uint32_t copperfin::runtime::{anonymous}::bitwise_value(const copperfin::runtime::PrgValue&)’ defined but not used [-Wunused-function]
+    5 | std::uint32_t bitwise_value(const PrgValue& value) {
+      |               ^~~~~~~~~~~~~
+[ 80%] Linking CXX static library libcf_xbase_runtime.a
+[ 90%] Built target cf_xbase_runtime
+[ 90%] Built target cf_prg_engine_test_support
+[ 90%] Linking CXX executable test_prg_engine_cast_uint64_numeric
+[100%] Built target test_prg_engine_cast_uint64_numeric
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_security
+[ 33%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 55%] Built target cf_runtime_text
+[ 66%] Built target cf_prg_analysis
+[ 88%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Linking CXX executable test_prg_engine_cast_int64_numeric
+[100%] Built target test_prg_engine_cast_int64_numeric
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_security
+[ 33%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 55%] Built target cf_runtime_text
+[ 66%] Built target cf_prg_analysis
+[ 88%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Linking CXX executable test_prg_engine_int64_exact_expression
+[100%] Built target test_prg_engine_int64_exact_expression
+BUILD_EXIT=0
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 390
+      Start 390: test_prg_engine_int64_exact_expression
+
+390: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/test_prg_engine_int64_exact_expression
+390: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+390: Environment variables: 
+390:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+390: Test timeout computed to be: 10000000
+ 1/11 Test #390: test_prg_engine_int64_exact_expression ...................   Passed    0.10 sec
+test 399
+      Start 399: test_prg_engine_cast_int64_numeric
+
+399: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/test_prg_engine_cast_int64_numeric
+399: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+399: Environment variables: 
+399:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+399: Test timeout computed to be: 10000000
+399: CAST frozen cases: direct=56 public=0
+ 2/11 Test #399: test_prg_engine_cast_int64_numeric .......................   Passed    0.00 sec
+test 400
+      Start 400: test_prg_engine_cast_int64_numeric_copperfin_session1
+
+400: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/test_prg_engine_cast_int64_numeric "COPPERFIN" "1"
+400: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+400: Environment variables: 
+400:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+400: Test timeout computed to be: 10000000
+400: CAST frozen cases: direct=0 public=141
+ 3/11 Test #400: test_prg_engine_cast_int64_numeric_copperfin_session1 ....   Passed    1.89 sec
+test 401
+      Start 401: test_prg_engine_cast_int64_numeric_copperfin_session2
+
+401: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/test_prg_engine_cast_int64_numeric "COPPERFIN" "2"
+401: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+401: Environment variables: 
+401:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+401: Test timeout computed to be: 10000000
+401: CAST frozen cases: direct=0 public=141
+ 4/11 Test #401: test_prg_engine_cast_int64_numeric_copperfin_session2 ....   Passed    1.92 sec
+test 402
+      Start 402: test_prg_engine_cast_int64_numeric_vfp9_session1
+
+402: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/test_prg_engine_cast_int64_numeric "VFP9" "1"
+402: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+402: Environment variables: 
+402:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+402: Test timeout computed to be: 10000000
+402: CAST frozen cases: direct=0 public=141
+ 5/11 Test #402: test_prg_engine_cast_int64_numeric_vfp9_session1 .........   Passed    1.86 sec
+test 403
+      Start 403: test_prg_engine_cast_int64_numeric_vfp9_session2
+
+403: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/test_prg_engine_cast_int64_numeric "VFP9" "2"
+403: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+403: Environment variables: 
+403:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+403: Test timeout computed to be: 10000000
+403: CAST frozen cases: direct=0 public=141
+ 6/11 Test #403: test_prg_engine_cast_int64_numeric_vfp9_session2 .........   Passed    1.85 sec
+test 404
+      Start 404: test_prg_engine_cast_uint64_numeric
+
+404: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/test_prg_engine_cast_uint64_numeric
+404: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+404: Environment variables: 
+404:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+404: Test timeout computed to be: 10000000
+404: CAST frozen cases: direct=62 public=0
+ 7/11 Test #404: test_prg_engine_cast_uint64_numeric ......................   Passed    0.00 sec
+test 405
+      Start 405: test_prg_engine_cast_uint64_numeric_copperfin_session1
+
+405: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/test_prg_engine_cast_uint64_numeric "COPPERFIN" "1"
+405: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+405: Environment variables: 
+405:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+405: Test timeout computed to be: 10000000
+405: CAST frozen cases: direct=0 public=159
+ 8/11 Test #405: test_prg_engine_cast_uint64_numeric_copperfin_session1 ...   Passed    2.07 sec
+test 406
+      Start 406: test_prg_engine_cast_uint64_numeric_copperfin_session2
+
+406: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/test_prg_engine_cast_uint64_numeric "COPPERFIN" "2"
+406: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+406: Environment variables: 
+406:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+406: Test timeout computed to be: 10000000
+406: CAST frozen cases: direct=0 public=159
+ 9/11 Test #406: test_prg_engine_cast_uint64_numeric_copperfin_session2 ...   Passed    2.06 sec
+test 407
+      Start 407: test_prg_engine_cast_uint64_numeric_vfp9_session1
+
+407: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/test_prg_engine_cast_uint64_numeric "VFP9" "1"
+407: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+407: Environment variables: 
+407:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+407: Test timeout computed to be: 10000000
+407: CAST frozen cases: direct=0 public=159
+10/11 Test #407: test_prg_engine_cast_uint64_numeric_vfp9_session1 ........   Passed    2.09 sec
+test 408
+      Start 408: test_prg_engine_cast_uint64_numeric_vfp9_session2
+
+408: Test command: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests/test_prg_engine_cast_uint64_numeric "VFP9" "2"
+408: Working Directory: /home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/build/cast-uint64-gcc/tests
+408: Environment variables: 
+408:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-uint64-numeric-5611/Project-Copperfin/resources/locales
+408: Test timeout computed to be: 10000000
+408: CAST frozen cases: direct=0 public=159
+11/11 Test #408: test_prg_engine_cast_uint64_numeric_vfp9_session2 ........   Passed    2.07 sec
+
+The following tests passed:
+	test_prg_engine_int64_exact_expression
+	test_prg_engine_cast_int64_numeric
+	test_prg_engine_cast_int64_numeric_copperfin_session1
+	test_prg_engine_cast_int64_numeric_copperfin_session2
+	test_prg_engine_cast_int64_numeric_vfp9_session1
+	test_prg_engine_cast_int64_numeric_vfp9_session2
+	test_prg_engine_cast_uint64_numeric
+	test_prg_engine_cast_uint64_numeric_copperfin_session1
+	test_prg_engine_cast_uint64_numeric_copperfin_session2
+	test_prg_engine_cast_uint64_numeric_vfp9_session1
+	test_prg_engine_cast_uint64_numeric_vfp9_session2
+
+100% tests passed, 0 tests failed out of 11
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =  15.91 sec*proc (11 tests)
+copperfin-isolation:child-processes=none            =  15.91 sec*proc (11 tests)
+copperfin-isolation:environment=none                =   0.10 sec*proc (1 test)
+copperfin-isolation:environment=scoped-process      =  15.81 sec*proc (10 tests)
+copperfin-isolation:filesystem=process-owned        =   0.10 sec*proc (1 test)
+copperfin-isolation:filesystem=test-owned-unique    =  15.81 sec*proc (10 tests)
+copperfin-isolation:network=none                    =  15.91 sec*proc (11 tests)
+copperfin-isolation:platform=portable               =  15.91 sec*proc (11 tests)
+copperfin-isolation:resources=none                  =  15.91 sec*proc (11 tests)
+copperfin-isolation:samples=none                    =  15.91 sec*proc (11 tests)
+copperfin-isolation:schedule=serial                 =  15.91 sec*proc (11 tests)
+
+Total Test time (real) =  15.93 sec
+CTEST_EXIT=0

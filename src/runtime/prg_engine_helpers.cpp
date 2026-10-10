@@ -2431,6 +2431,30 @@ std::optional<std::int64_t> checked_cast_int64_argument(const PrgValue& value) {
     return checked_declared_int64_argument(value);
 }
 
+// RQ-CF-PRG-CAST-UINT64-NUMERIC-001 (#5611/#6776): check before conversion;
+// preserve exact kinds without a Double round trip. Both modes share this
+// extension policy. Frozen unused by CAST through both original baselines.
+std::optional<std::uint64_t> checked_cast_uint64_argument(const PrgValue& value) {
+    if (value.kind == PrgValueKind::uint64) {
+        return value.uint64_value;
+    }
+    if (value.kind == PrgValueKind::int64) {
+        if (value.int64_value < 0) {
+            return std::nullopt;
+        }
+        return static_cast<std::uint64_t>(value.int64_value);
+    }
+    const double numeric = value_as_number(value);
+    if (!std::isfinite(numeric)) {
+        return std::nullopt;
+    }
+    const double truncated = std::trunc(numeric);
+    if (truncated < 0.0 || truncated >= 18446744073709551616.0) {
+        return std::nullopt;
+    }
+    return static_cast<std::uint64_t>(truncated);
+}
+
 std::size_t saturating_size_argument(const double value, const std::size_t minimum) {
     const std::int64_t truncated = saturating_numeric_to_int64(value);
     if (truncated <= 0 || static_cast<std::uint64_t>(truncated) < minimum) {
