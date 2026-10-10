@@ -1,5 +1,23 @@
 # VFP Language Reference Coverage
 
+- Signed64 CAST Numeric/exact extension (#5611/#6776,2026-10-10):
+  RQ-CF-PRG-CAST-INT64-NUMERIC-001 mapped before helper/tests/migration.
+  Three matching installed VFP9 runs establish ordinary INTEGER truncation and
+  absence of INT64/LONGLONG/BIGINT, not native64 semantics. Owner-derived
+  finite Numeric truncation in[-2^63,2^63), exact signed64 identity/unsigned
+  admission throughINT64_MAX and localized atomic error11 apply in both modes.
+  [Fixture](../tests/fixtures/vfp9-cast-int64-numeric/README.md) retains explicit
+  preservation-control refreeze/incomplete attempt and BOTH complete originals
+  with672 selected failures/zero other before signed64-only migration; Clang
+  original records four real unsafe-cast diagnostics, not clean acceptance.
+  Fixed GNU7/7 and Clang sanitizer7/7 PASS, actual56direct/4x141public each;
+  broader GNU11/11 plus portable CLR1/1 and Clang4/4 PASS, no unexpected failures
+  or sanitizer diagnostics/leaks disabled. Raw logs/hashes and completed bounded
+  medium-misuse delegated self-review/walkthrough/rollback retained. Not native
+  signed64/type/Currency/unsigned CAST/arity/persistence/leak/full-platform/
+  independent-human/high-hazard/release/family/parent acceptance. Exact-head
+  review/hosted checks/resolved conversations remain integration gates.
+
 - BITSET Numeric/exact recovery (#5611/#6776/#6871,2026-10-09):
   RQ-CF-PRG-BITSET-NUMERIC-001 mapped before helpers/tests/migration.
   Independent initial plus3 matching186-line/184call installed VFP9 7423

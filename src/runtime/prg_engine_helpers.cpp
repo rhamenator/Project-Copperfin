@@ -2423,6 +2423,14 @@ std::optional<std::int64_t> checked_declared_int64_argument(const PrgValue& valu
     return checked_truncated_numeric_to_int64(value_as_number(value));
 }
 
+// RQ-CF-PRG-CAST-INT64-NUMERIC-001 (#5611/#6776): distinct adapter so this
+// extension does not change DECLARE or other callers' admission policy.
+// Neither Numeric mode invents native64 aliases; no floating round trip for
+// exact integers. Frozen unused by CAST until both original baselines complete.
+std::optional<std::int64_t> checked_cast_int64_argument(const PrgValue& value) {
+    return checked_declared_int64_argument(value);
+}
+
 std::size_t saturating_size_argument(const double value, const std::size_t minimum) {
     const std::int64_t truncated = saturating_numeric_to_int64(value);
     if (truncated <= 0 || static_cast<std::uint64_t>(truncated) < minimum) {

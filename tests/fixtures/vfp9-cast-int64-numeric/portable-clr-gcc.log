@@ -1,0 +1,35 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 325
+    Start 325: test_portable_clr_host_boundary_contract
+
+325: Test command: /usr/bin/cmake "-DSOURCE_DIR=/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin" "-P" "/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/tests/run_portable_clr_host_boundary_contract_check.cmake"
+325: Working Directory: /home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/build/cast-int64-gcc/tests
+325: Environment variables: 
+325:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int64-numeric-5611/Project-Copperfin/resources/locales
+325: Test timeout computed to be: 1200
+1/1 Test #325: test_portable_clr_host_boundary_contract ...   Passed    0.03 sec
+
+The following tests passed:
+	test_portable_clr_host_boundary_contract
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+copperfin-isolation:audit=complete            =   0.03 sec*proc (1 test)
+copperfin-isolation:child-processes=none      =   0.03 sec*proc (1 test)
+copperfin-isolation:environment=none          =   0.03 sec*proc (1 test)
+copperfin-isolation:filesystem=read-only      =   0.03 sec*proc (1 test)
+copperfin-isolation:network=none              =   0.03 sec*proc (1 test)
+copperfin-isolation:platform=portable         =   0.03 sec*proc (1 test)
+copperfin-isolation:resources=none            =   0.03 sec*proc (1 test)
+copperfin-isolation:samples=none              =   0.03 sec*proc (1 test)
+copperfin-isolation:schedule=parallel-safe    =   0.03 sec*proc (1 test)
+
+Total Test time (real) =   0.04 sec
