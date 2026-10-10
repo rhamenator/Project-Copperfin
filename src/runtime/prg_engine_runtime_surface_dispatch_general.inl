@@ -701,6 +701,16 @@
             return make_int64_value(static_cast<std::int64_t>(std::trunc(value_as_number(source))));
         }
         if (type_name == "BYTE" || type_name == "UINT8") {
+            // RQ-CF-PRG-CAST-BYTE-NUMERIC-001: both modes share this unsigned8
+            // extension domain; non-Numeric coercions keep their original path.
+            if (source.kind == PrgValueKind::number || source.kind == PrgValueKind::int64 ||
+                source.kind == PrgValueKind::uint64) {
+                const auto converted = checked_cast_byte_numeric_argument(source);
+                if (!converted) {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                }
+                return make_uint64_value(*converted);
+            }
             return make_uint64_value(
                 static_cast<std::uint64_t>(value_as_number(source)) & 0xFFULL);
         }

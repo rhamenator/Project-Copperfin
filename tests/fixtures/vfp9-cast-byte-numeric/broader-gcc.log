@@ -1,0 +1,230 @@
+[0/2] Re-checking globbed directories...
+[1/56] Building CXX object CMakeFiles/cf_licensing.dir/src/licensing/base64.cpp.o
+[2/56] Building CXX object CMakeFiles/cf_licensing.dir/src/licensing/canonical_payload_serializer.cpp.o
+[3/56] Building CXX object CMakeFiles/cf_licensing.dir/src/licensing/ed25519_verify.cpp.o
+[4/56] Building CXX object CMakeFiles/cf_licensing.dir/src/licensing/license_classifier.cpp.o
+[5/56] Building CXX object CMakeFiles/cf_licensing.dir/src/licensing/license_payload_parser.cpp.o
+[6/56] Building CXX object CMakeFiles/cf_licensing.dir/src/licensing/license_status.cpp.o
+[7/56] Building C object CMakeFiles/cf_licensing.dir/src/licensing/third_party/ed25519_ref/fe.c.o
+[8/56] Building C object CMakeFiles/cf_licensing.dir/src/licensing/third_party/ed25519_ref/ge.c.o
+[9/56] Building C object CMakeFiles/cf_licensing.dir/src/licensing/third_party/ed25519_ref/sc.c.o
+[10/56] Building C object CMakeFiles/cf_licensing.dir/src/licensing/third_party/ed25519_ref/sha512.c.o
+[11/56] Building C object CMakeFiles/cf_licensing.dir/src/licensing/third_party/ed25519_ref/verify.c.o
+[12/56] Linking CXX static library libcf_licensing.a
+[13/56] Building CXX object CMakeFiles/copperfin_inspect.dir/apps/copperfin_inspect/main.cpp.o
+[14/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_text_and_identifier_utils.cpp.o
+[15/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_file_io_and_classification.cpp.o
+[16/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_metadata.cpp.o
+[17/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_artifacts.cpp.o
+[18/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_preamble.cpp.o
+[19/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_host_authentication.cpp.o
+[20/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_bridge_model.cpp.o
+[21/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_request_serialization.cpp.o
+[22/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_process_launch.cpp.o
+[23/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_response_handling.cpp.o
+[24/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_entrypoints.cpp.o
+[25/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_library_export_manifest.cpp.o
+[26/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_native_wrapper_process.cpp.o
+[27/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_fxp_and_archive_manifest.cpp.o
+[28/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_ast_ir_manifest.cpp.o
+[29/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_csharp_and_launcher.cpp.o
+[30/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_launcher_artifact_inventory.cpp.o
+[31/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_fd_file_io.cpp.o
+[32/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_package_content_io.cpp.o
+[33/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_manifest_pair.cpp.o
+[34/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_manifest_pair_io.cpp.o
+[35/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_package_plan_manifest.cpp.o
+[36/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_package_transaction.cpp.o
+[37/56] Building CXX object CMakeFiles/cf_runtime_pipeline.dir/src/runtime/runtime_pipeline_public_api.cpp.o
+[38/56] Linking CXX executable copperfin_inspect
+[39/56] Linking CXX static library libcf_runtime_pipeline.a
+[40/56] Building CXX object tests/CMakeFiles/test_localization.dir/test_localization_catalog.cpp.o
+[41/56] Building CXX object tests/CMakeFiles/test_localization.dir/test_localization_runtime_session.cpp.o
+[42/56] Building CXX object tests/CMakeFiles/test_localization.dir/test_localization_runtime_dispatch.cpp.o
+[43/56] Building CXX object tests/CMakeFiles/test_localization.dir/test_localization_runtime_io.cpp.o
+[44/56] Building CXX object tests/CMakeFiles/test_localization.dir/test_localization_runtime_misc.cpp.o
+[45/56] Building CXX object tests/CMakeFiles/test_localization.dir/test_localization_host_inspect.cpp.o
+[46/56] Building CXX object tests/CMakeFiles/test_localization.dir/test_localization_main.cpp.o
+[47/56] Building CXX object tests/CMakeFiles/test_prg_engine_null_semantics.dir/test_prg_engine_null_semantics.cpp.o
+[48/56] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_behavior.dir/test_prg_engine_numeric_behavior.cpp.o
+[49/56] Building CXX object tests/CMakeFiles/test_prg_engine_typed_null.dir/test_prg_engine_typed_null.cpp.o
+[50/56] Building CXX object tests/CMakeFiles/test_prg_engine_string_math_functions.dir/test_prg_engine_string_math_functions.cpp.o
+[51/56] Linking CXX executable tests/test_localization
+[52/56] Linking CXX executable tests/test_prg_engine_null_semantics
+[53/56] Linking CXX executable tests/test_prg_engine_numeric_behavior
+[54/56] Linking CXX executable tests/test_prg_engine_typed_null
+[55/56] Linking CXX executable tests/test_prg_engine_string_math_functions
+GNU broader build exit: 0
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 6
+      Start   6: test_locale_catalog_install_contract
+
+6: Test command: /usr/bin/cmake "-DTEST_ROOT=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests/locale-catalog-install-contract" "-P" "/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/tests/run_locale_catalog_install_contract_test.cmake"
+6: Working Directory: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests
+6: Environment variables: 
+6:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/resources/locales
+6: Test timeout computed to be: 1200
+6: -- Installed locale catalog contract passed: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests/locale-catalog-install-contract/share/copperfin/locales
+6: CMake Error at /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/tests/run_locale_catalog_install_contract_check.cmake:13 (message):
+6:   Installed locale catalog is missing or not a regular file:
+6:   /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests/locale-catalog-install-contract/share/copperfin/locales/pt-BR/strings.json
+6: 
+6: 
+6: -- Locale catalog install contract test passed
+ 1/12 Test   #6: test_locale_catalog_install_contract .........   Passed    0.04 sec
+test 20
+      Start  20: test_changelog_fragment_assembler
+
+20: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--self-test"
+20: Working Directory: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests
+20: Environment variables: 
+20:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/resources/locales
+20: Test timeout computed to be: 1200
+20: assemble_changelog self-test passed
+ 2/12 Test  #20: test_changelog_fragment_assembler ............   Passed    0.23 sec
+test 21
+      Start  21: test_changelog_fragments_valid
+
+21: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--check" "--root" "/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin"
+21: Working Directory: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests
+21: Environment variables: 
+21:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/resources/locales
+21: Test timeout computed to be: 1200
+21: 198 changelog fragment(s) valid
+ 3/12 Test  #21: test_changelog_fragments_valid ...............   Passed    0.29 sec
+test 23
+      Start  23: test_powershell_discovery_contract
+
+23: Test command: /usr/bin/cmake "-DBINARY_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests" "-DDISCOVERY_MODULE=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/tests/CopperfinPowerShellDiscovery.cmake" "-P" "/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/tests/run_powershell_discovery_contract_check.cmake"
+23: Working Directory: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests
+23: Environment variables: 
+23:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/resources/locales
+23: Test timeout computed to be: 1200
+23: -- PowerShell host '/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests/powershell-discovery-contract/bin/pwsh-dangling' does not resolve to a regular file; omitting the PowerShell-dependent tests (#5809)
+23: -- PowerShell host '/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/PowerShell.sh' does not resolve to a regular file; omitting the PowerShell-dependent tests (#5809)
+23: -- PowerShell host '/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/PowerShell.sh' does not resolve to a regular file; omitting the PowerShell-dependent tests (#5809)
+23: -- PowerShell host '/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/PowerShell.sh' does not resolve to a regular file; omitting the PowerShell-dependent tests (#5809)
+23: -- No PowerShell host found; omitting the PowerShell-dependent tests
+23: -- PowerShell discovery contract passed
+ 4/12 Test  #23: test_powershell_discovery_contract ...........   Passed    0.02 sec
+test 36
+      Start  36: test_native_test_isolation_contract
+
+36: Test command: /usr/bin/cmake "-DINVENTORY_PATH=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/native-test-isolation.tsv" "-DISOLATION_SOURCE_PATH=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/tests/CopperfinTestIsolation.cmake" "-DTEST_REGISTRATION_SOURCE_PATH=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/tests/CMakeLists.txt" "-P" "/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/tests/run_native_test_isolation_contract_check.cmake"
+36: Working Directory: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests
+36: Environment variables: 
+36:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/resources/locales
+36: Test timeout computed to be: 1200
+36: -- Native test isolation inventory contract passed for 504 tests
+ 5/12 Test  #36: test_native_test_isolation_contract ..........   Passed    0.45 sec
+test 38
+      Start  38: test_safety_traceability_workflow_contract
+
+38: Test command: /usr/bin/cmake "-DSOURCE_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin" "-P" "/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/tests/run_safety_traceability_workflow_contract_check.cmake"
+38: Working Directory: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests
+38: Environment variables: 
+38:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/resources/locales
+38: Test timeout computed to be: 1200
+38: -- Safety traceability workflow contract check passed
+ 6/12 Test  #38: test_safety_traceability_workflow_contract ...   Passed  333.65 sec
+test 40
+      Start  40: test_localization
+
+40: Test command: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests/test_localization "/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/copperfin_inspect"
+40: Working Directory: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests
+40: Environment variables: 
+40:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/resources/locales
+40: Test timeout computed to be: 1200
+ 7/12 Test  #40: test_localization ............................   Passed   14.33 sec
+test 325
+      Start 325: test_portable_clr_host_boundary_contract
+
+325: Test command: /usr/bin/cmake "-DSOURCE_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin" "-P" "/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/tests/run_portable_clr_host_boundary_contract_check.cmake"
+325: Working Directory: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests
+325: Environment variables: 
+325:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/resources/locales
+325: Test timeout computed to be: 1200
+ 8/12 Test #325: test_portable_clr_host_boundary_contract .....   Passed    0.03 sec
+test 379
+      Start 379: test_prg_engine_null_semantics
+
+379: Test command: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests/test_prg_engine_null_semantics
+379: Working Directory: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests
+379: Environment variables: 
+379:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/resources/locales
+379: Test timeout computed to be: 1200
+ 9/12 Test #379: test_prg_engine_null_semantics ...............   Passed    0.13 sec
+test 393
+      Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 1200
+10/12 Test #393: test_prg_engine_numeric_behavior .............   Passed   67.14 sec
+test 466
+      Start 466: test_prg_engine_typed_null
+
+466: Test command: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests/test_prg_engine_typed_null
+466: Working Directory: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests
+466: Environment variables: 
+466:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/resources/locales
+466: Test timeout computed to be: 1200
+11/12 Test #466: test_prg_engine_typed_null ...................   Passed    0.15 sec
+test 493
+      Start 493: test_prg_engine_string_math_functions
+
+493: Test command: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests/test_prg_engine_string_math_functions
+493: Working Directory: /home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/build/cast-byte-gcc/tests
+493: Environment variables: 
+493:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-byte-numeric-5611/Project-Copperfin/resources/locales
+493: Test timeout computed to be: 1200
+493: All tests passed.
+12/12 Test #493: test_prg_engine_string_math_functions ........   Passed    0.58 sec
+
+The following tests passed:
+	test_locale_catalog_install_contract
+	test_changelog_fragment_assembler
+	test_changelog_fragments_valid
+	test_powershell_discovery_contract
+	test_native_test_isolation_contract
+	test_safety_traceability_workflow_contract
+	test_localization
+	test_portable_clr_host_boundary_contract
+	test_prg_engine_null_semantics
+	test_prg_engine_numeric_behavior
+	test_prg_engine_typed_null
+	test_prg_engine_string_math_functions
+
+100% tests passed, 0 tests failed out of 12
+
+Label Time Summary:
+copperfin-isolation:audit=complete                     = 417.05 sec*proc (12 tests)
+copperfin-isolation:child-processes=bounded            = 348.02 sec*proc (3 tests)
+copperfin-isolation:child-processes=none               =  69.03 sec*proc (9 tests)
+copperfin-isolation:environment=child-scoped           = 333.65 sec*proc (1 test)
+copperfin-isolation:environment=none                   =   1.93 sec*proc (9 tests)
+copperfin-isolation:environment=scoped-process         =  81.47 sec*proc (2 tests)
+copperfin-isolation:filesystem=process-owned           =  67.68 sec*proc (5 tests)
+copperfin-isolation:filesystem=read-only               = 334.42 sec*proc (4 tests)
+copperfin-isolation:filesystem=test-owned-unique       =  14.95 sec*proc (3 tests)
+copperfin-isolation:network=disabled-probes            = 333.65 sec*proc (1 test)
+copperfin-isolation:network=none                       =  83.40 sec*proc (11 tests)
+copperfin-isolation:platform=configured                =   0.52 sec*proc (2 tests)
+copperfin-isolation:platform=portable                  =  82.88 sec*proc (9 tests)
+copperfin-isolation:platform=powershell-conditional    = 333.65 sec*proc (1 test)
+copperfin-isolation:resources=none                     = 417.05 sec*proc (12 tests)
+copperfin-isolation:samples=none                       = 417.05 sec*proc (12 tests)
+copperfin-isolation:schedule=parallel-safe             = 349.62 sec*proc (9 tests)
+copperfin-isolation:schedule=serial                    =  67.43 sec*proc (3 tests)
+
+Total Test time (real) = 417.07 sec
+GNU broader CTest exit: 0
