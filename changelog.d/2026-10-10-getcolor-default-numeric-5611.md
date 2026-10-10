@@ -1,0 +1,1 @@
+- 2026-10-10: Check GETCOLOR Numeric/exact default colors against the RGB domain, with explicit VFP9 low-bit compatibility and failure-atomic localized errors (#5611, #6776).

@@ -1,0 +1,3 @@
+RESOURCE=OFF
+SCREEN=OFF
+COMMAND=DO Z:\home\rich\.codex\worktrees\getcolor-default-numeric-5611\Project-Copperfin\tests\fixtures\vfp9-getcolor-default-numeric\probe.prg

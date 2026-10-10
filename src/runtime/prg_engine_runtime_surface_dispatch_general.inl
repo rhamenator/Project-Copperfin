@@ -995,7 +995,24 @@
     // GETCOLOR([nDefaultColor [, cTitle]]) — headless contract: emit payload and
     // preserve the provided default color when the host does not override it.
     if (function == "getcolor") {
-        const double default_color = arguments.empty() ? 0.0 : value_as_number(arguments[0]);
+        double default_color = 0.0;
+        if (!arguments.empty()) {
+            const auto& color = arguments[0];
+            if (color.kind == PrgValueKind::number || color.kind == PrgValueKind::int64 ||
+                color.kind == PrgValueKind::uint64) {
+                // RQ-CF-PRG-GETCOLOR-DEFAULT-NUMERIC-001: checked initial RGB
+                // request/result, not native dialog/Cancel parity. RGB24 is
+                // exact in Double, so the existing event formatter is safe.
+                const auto converted = checked_getcolor_default_numeric_argument(
+                    color, numeric_behavior(set_callback));
+                if (!converted.has_value()) {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                }
+                default_color = static_cast<double>(*converted);
+            } else {
+                default_color = value_as_number(color);
+            }
+        }
         const std::string title = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
         if (record_event_callback) {
             std::ostringstream detail;

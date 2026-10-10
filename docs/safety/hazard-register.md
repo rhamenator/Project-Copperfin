@@ -45,6 +45,19 @@ own system and domain assurance.
 
 ## Bounded numeric-conversion linkage
 
+RQ-CF-PRG-GETCOLOR-DEFAULT-NUMERIC-001 / DQ-DV-5611-GETCOLOR-DEFAULT-NUMERIC-001
+links active HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01
+to the [pre-code RGB/headless/native boundary](../../tests/fixtures/vfp9-getcolor-default-numeric/README.md).
+Checked default unsigned24 RGB admission avoids accidental aliases; explicit
+VFP9 low24 projection is independently observed and parent-defined for exact
+extended kinds/NaN. Medium bounded documentation misuse does not alter the
+registered severities/status. Both full originals were retained before
+Numeric-only migration; fixed GNU/Clang bounded walkthroughs pass, all frozen
+inputs unchanged. Documentation contracts pass with disclosed fragment-format
+failure/repair and retained full raws. Exact-head hosted/review integration
+gates remain pending; no independent-human/high-hazard or release qualification
+is claimed.
+
 RQ-CF-PRG-GETFONT-SIZE-NUMERIC-001 / DQ-DV-5611-GETFONT-SIZE-NUMERIC-001 links
 HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01 to the
 [pre-code GETFONT input/extension boundary](../../tests/fixtures/vfp9-getfont-size-numeric/README.md).

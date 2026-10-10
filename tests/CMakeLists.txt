@@ -6018,6 +6018,17 @@ foreach(cast_int16_mode IN ITEMS COPPERFIN VFP9)
             COMMAND $<TARGET_FILE:test_prg_engine_cast_int16_numeric> ${cast_int16_mode} ${cast_int16_session})
     endforeach()
 endforeach()
+copperfin_add_test(test_prg_engine_getcolor_default_numeric cf_xbase_runtime
+    test_prg_engine_getcolor_default_numeric.cpp
+    prg_engine_test_support.cpp
+)
+foreach(getcolor_default_mode IN ITEMS COPPERFIN VFP9)
+    string(TOLOWER "${getcolor_default_mode}" getcolor_default_mode_lower)
+    foreach(getcolor_default_session IN ITEMS 1 2)
+        add_test(NAME test_prg_engine_getcolor_default_numeric_${getcolor_default_mode_lower}_session${getcolor_default_session}
+            COMMAND $<TARGET_FILE:test_prg_engine_getcolor_default_numeric> ${getcolor_default_mode} ${getcolor_default_session})
+    endforeach()
+endforeach()
 copperfin_add_test(test_prg_engine_getfont_size_numeric cf_xbase_runtime
     test_prg_engine_getfont_size_numeric.cpp
     prg_engine_test_support.cpp
