@@ -1,5 +1,21 @@
 # VFP Language Reference Coverage
 
+- Signed32 CAST Numeric/exact recovery (#5611/#6776,2026-10-10):
+  RQ-CF-PRG-CAST-INT32-NUMERIC-001 mapped BEFORE helpers/tests/migration.
+  [Native fixture](../tests/fixtures/vfp9-cast-int32-numeric/README.md) recovers
+  INTEGER/INT/I truncation/low32/huge0 and documents native INT32/LONG absence,
+  extension/exact64 derivation and numeric-literal/STR precision boundaries.
+  Default signed32/error11 versus explicit VFP9 quirks; four-alias Numeric-only
+  architecture, preservation neighbors, hazard/DQ-DV mapping and BOTH original
+  baseline gates are defined. BOTH complete originals retained1216selected/zero
+  other each (Clang four actual unsafe-cast reports) before Numeric-only dispatch
+  migration. Fixed GNU16/16 and Clang sanitizers16/16 PASS with frozen146/4x264
+  and all signed64/unsigned64/exact-expression neighbor counters complete.
+  Broader GNU11/12 plus dated-fragment repair/check+assembler2/2 verify all12
+  planned subjects across runs (not one12/12 invocation); Clang4/4 PASS.
+  Bounded development self-review/walkthrough complete; signed-head external
+  integration gates remain pending.
+
 - Unsigned64 CAST Numeric/exact extension (#5611/#6776,2026-10-10):
   RQ-CF-PRG-CAST-UINT64-NUMERIC-001 mapped before helper/tests/migration.
   Installed VFP9 controls establish ordinary INTEGER truncation and absence of
@@ -17,7 +33,10 @@
   completed bounded medium DQ/DV development self-review/automated walkthrough/
   rollback retained. Not native unsigned64/type/Currency/arity/platform/leak/
   independent-human/high-hazard/release/family/parent acceptance. Exact-head
-  hosted/clean-review/resolved-conversation gates remain pending.
+  hosted/clean-review/resolved-conversation gates passed for signedd10f223f35:
+  PR#7126 merged8988225cf9 with all36checks/all11required green, actual clean
+  Codex6094132735 after Claude-first/fallback and zero unresolved conversations
+  (gate6094561264). Windows495/495PASS; signed postpush11/11PASS.
 
 - Signed64 CAST Numeric/exact extension (#5611/#6776,2026-10-10):
   RQ-CF-PRG-CAST-INT64-NUMERIC-001 mapped before helper/tests/migration.

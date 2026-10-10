@@ -1,0 +1,1393 @@
+-- The CXX compiler identification is GNU 15.2.0
+-- The C compiler identification is GNU 15.2.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/g++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/gcc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Performing Test Iconv_IS_BUILT_IN
+-- Performing Test Iconv_IS_BUILT_IN - Success
+-- Found Iconv: built in to C library
+-- Performing Test COPPERFIN_HAS_FZERO_INIT_PADDING_BITS
+-- Performing Test COPPERFIN_HAS_FZERO_INIT_PADDING_BITS - Success
+-- Configuring done (1.3s)
+-- Generating done (0.5s)
+-- Build files have been written to: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc
+GNU configure exit: 0
+[0/2] Re-checking globbed directories...
+[1/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/bounded_process.cpp.o
+[2/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/code_page.cpp.o
+[3/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/disk_space.cpp.o
+[4/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/environment.cpp.o
+[5/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/exclusive_file.cpp.o
+[6/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/executable_path.cpp.o
+[7/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/file_stream.cpp.o
+[8/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/file_version.cpp.o
+[9/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/font_directories.cpp.o
+[10/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/invariant_numeric.cpp.o
+[11/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/json.cpp.o
+[12/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/path.cpp.o
+[13/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/private_directory.cpp.o
+[14/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/private_executable_image.cpp.o
+[15/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/process_arguments.cpp.o
+[16/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/process_environment.cpp.o
+[17/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/safe_regex.cpp.o
+[18/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/windows_pe_image.cpp.o
+[19/160] Linking CXX static library libcf_platform_support.a
+[20/160] Building CXX object CMakeFiles/cf_localization.dir/src/localization/localization.cpp.o
+[21/160] Linking CXX static library libcf_localization.a
+[22/160] Building CXX object CMakeFiles/cf_security.dir/src/security/audit_stream.cpp.o
+[23/160] Building CXX object CMakeFiles/cf_security.dir/src/security/authorization.cpp.o
+[24/160] Building CXX object CMakeFiles/cf_security.dir/src/security/external_process_policy.cpp.o
+[25/160] Building CXX object CMakeFiles/cf_security.dir/src/security/localized_text.cpp.o
+[26/160] Building CXX object CMakeFiles/cf_security.dir/src/security/payload_crypto.cpp.o
+[27/160] Building CXX object CMakeFiles/cf_security.dir/src/security/physical_path_containment.cpp.o
+[28/160] Building CXX object CMakeFiles/cf_security.dir/src/security/process_hardening.cpp.o
+[29/160] Building CXX object CMakeFiles/cf_security.dir/src/security/secret_provider.cpp.o
+[30/160] Building CXX object CMakeFiles/cf_security.dir/src/security/sha256.cpp.o
+[31/160] Building CXX object CMakeFiles/cf_security.dir/src/security/security_model.cpp.o
+[32/160] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_policy.cpp.o
+[33/160] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_audit_sink.cpp.o
+[34/160] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_environment.cpp.o
+[35/160] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_process_containment.cpp.o
+[36/160] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_process_parser.cpp.o
+[37/160] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_session.cpp.o
+[38/160] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_target_containment.cpp.o
+[39/160] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_tool_registry.cpp.o
+[40/160] Linking CXX static library libcf_security.a
+[41/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/printer.cpp.o
+[42/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_benchmark.cpp.o
+[43/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/database_model.cpp.o
+[44/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/extensibility_model.cpp.o
+[45/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/federation_execution.cpp.o
+[46/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/localized_text.cpp.o
+[47/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_artifact_admission.cpp.o
+[48/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_artifact_adapter.cpp.o
+[49/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_supporting_artifact_admission.cpp.o
+[50/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_bridge_invocation.cpp.o
+[51/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_interop_envelope.cpp.o
+[52/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_migration_telemetry.cpp.o
+[53/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_parity_comparator.cpp.o
+[54/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_route_impact.cpp.o
+[55/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_route_execution.cpp.o
+[56/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_route_registry.cpp.o
+[57/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/query_translator.cpp.o
+[58/160] Building CXX object CMakeFiles/cf_runtime_text.dir/src/runtime/localized_text.cpp.o
+[59/160] Linking CXX static library libcf_platform_profile.a
+[60/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_container.cpp.o
+[61/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_long_value.cpp.o
+[62/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_msysobjects.cpp.o
+[63/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_saveastext_design.cpp.o
+[64/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_saveastext_export.cpp.o
+[65/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_saved_queries.cpp.o
+[66/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_table_definition.cpp.o
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp: In function ‘copperfin::vfp::AccessTableDefinition copperfin::vfp::parse_access_table_definition_page(const std::vector<unsigned char>&, AccessContainerGeneration, uint32_t)’:
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:324:120: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::name’ [-Wmissing-field-initializers]
+  324 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.UnknownGeneration")};
+      |                                                                                                                        ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:324:120: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::columns’ [-Wmissing-field-initializers]
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:334:19: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::name’ [-Wmissing-field-initializers]
+  334 |                 })};
+      |                   ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:334:19: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::columns’ [-Wmissing-field-initializers]
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:344:59: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::name’ [-Wmissing-field-initializers]
+  344 |                 {{"pageType", std::to_string(page_type)}})};
+      |                                                           ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:344:59: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::columns’ [-Wmissing-field-initializers]
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:350:127: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::name’ [-Wmissing-field-initializers]
+  350 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.MultiPageTdefUnsupported")};
+      |                                                                                                                               ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:350:127: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::columns’ [-Wmissing-field-initializers]
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:394:123: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::name’ [-Wmissing-field-initializers]
+  394 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.StructureOutOfBounds")};
+      |                                                                                                                           ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:394:123: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::columns’ [-Wmissing-field-initializers]
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:408:61: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::name’ [-Wmissing-field-initializers]
+  408 |                 {{"tableType", std::to_string(table_type)}})};
+      |                                                             ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:408:61: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::columns’ [-Wmissing-field-initializers]
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:417:123: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::name’ [-Wmissing-field-initializers]
+  417 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.StructureOutOfBounds")};
+      |                                                                                                                           ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:417:123: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::columns’ [-Wmissing-field-initializers]
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:426:123: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::name’ [-Wmissing-field-initializers]
+  426 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.StructureOutOfBounds")};
+      |                                                                                                                           ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:426:123: warning: missing initializer for member ‘copperfin::vfp::AccessTableDefinition::columns’ [-Wmissing-field-initializers]
+[67/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/asset_inspector.cpp.o
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp: In function ‘copperfin::vfp::{anonymous}::TableRowExtractionResult copperfin::vfp::{anonymous}::extract_import_table_rows(const copperfin::vfp::DatabaseJsonImportTablePlan&)’:
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:5994:42: warning: missing initializer for member ‘copperfin::vfp::{anonymous}::TableRowExtractionResult::rows’ [-Wmissing-field-initializers]
+ 5994 |             {{"table", table_plan.name}})};
+      |                                          ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6007:46: warning: missing initializer for member ‘copperfin::vfp::{anonymous}::TableRowExtractionResult::rows’ [-Wmissing-field-initializers]
+ 6007 |                 {{"table", table_plan.name}})};
+      |                                              ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6029:54: warning: missing initializer for member ‘copperfin::vfp::{anonymous}::TableRowExtractionResult::rows’ [-Wmissing-field-initializers]
+ 6029 |                         {{"table", table_plan.name}})};
+      |                                                      ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6036:54: warning: missing initializer for member ‘copperfin::vfp::{anonymous}::TableRowExtractionResult::rows’ [-Wmissing-field-initializers]
+ 6036 |                         {{"table", table_plan.name}})};
+      |                                                      ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6043:54: warning: missing initializer for member ‘copperfin::vfp::{anonymous}::TableRowExtractionResult::rows’ [-Wmissing-field-initializers]
+ 6043 |                         {{"table", table_plan.name}})};
+      |                                                      ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp: In lambda function:
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6080:100: warning: missing initializer for member ‘copperfin::vfp::DatabaseJsonImportResult::cleanup_warning’ [-Wmissing-field-initializers]
+ 6080 |         return DatabaseJsonImportResult{.ok = false, .error = std::move(message), .table_count = 0U};
+      |                                                                                                    ^
+[68/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/cdx_header.cpp.o
+[69/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/cdx_writer.cpp.o
+[70/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_header.cpp.o
+[71/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_import.cpp.o
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp: In function ‘copperfin::vfp::DbfImportResult copperfin::vfp::import_xbase_table_to_vfp_native(const std::string&, const std::string&, const std::string&)’:
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:293:51: warning: missing initializer for member ‘copperfin::vfp::DbfImportResult::field_mappings’ [-Wmissing-field-initializers]
+  293 |         return {.ok = false, .error = source.error};
+      |                                                   ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:297:49: warning: missing initializer for member ‘copperfin::vfp::DbfImportResult::field_mappings’ [-Wmissing-field-initializers]
+  297 |         return {.ok = false, .error = plan.error};
+      |                                                 ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:305:95: warning: missing initializer for member ‘copperfin::vfp::DbfImportResult::field_mappings’ [-Wmissing-field-initializers]
+  305 |         return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.DestinationExists")};
+      |                                                                                               ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:321:99: warning: missing initializer for member ‘copperfin::vfp::DbfImportResult::field_mappings’ [-Wmissing-field-initializers]
+  321 |             return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.DestinationExists")};
+      |                                                                                                   ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:339:17: warning: missing initializer for member ‘copperfin::vfp::DbfImportResult::field_mappings’ [-Wmissing-field-initializers]
+  339 |                 };
+      |                 ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:381:58: warning: missing initializer for member ‘copperfin::vfp::DbfImportResult::field_mappings’ [-Wmissing-field-initializers]
+  381 |         return {.ok = false, .error = create_result.error};
+      |                                                          ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:406:64: warning: missing initializer for member ‘copperfin::vfp::DbfImportResult::field_mappings’ [-Wmissing-field-initializers]
+  406 |                 return {.ok = false, .error = memo_result.error};
+      |                                                                ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp: In function ‘copperfin::vfp::DbfImportPreviewResult copperfin::vfp::preview_xbase_table_import(const std::string&, const std::string&)’:
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:427:51: warning: missing initializer for member ‘copperfin::vfp::DbfImportPreviewResult::field_mappings’ [-Wmissing-field-initializers]
+  427 |         return {.ok = false, .error = source.error};
+      |                                                   ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:427:51: warning: missing initializer for member ‘copperfin::vfp::DbfImportPreviewResult::field_issues’ [-Wmissing-field-initializers]
+[72/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_text_encoding.cpp.o
+[73/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_table.cpp.o
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/dbf_table.cpp: In function ‘copperfin::vfp::DbfFieldsOnlyParseResult copperfin::vfp::parse_dbf_fields_from_file(const std::string&)’:
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/dbf_table.cpp:2426:91: warning: missing initializer for member ‘copperfin::vfp::DbfFieldsOnlyParseResult::fields’ [-Wmissing-field-initializers]
+ 2426 |         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
+      |                                                                                           ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/dbf_table.cpp:2437:91: warning: missing initializer for member ‘copperfin::vfp::DbfFieldsOnlyParseResult::fields’ [-Wmissing-field-initializers]
+ 2437 |         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
+      |                                                                                           ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/vfp/dbf_table.cpp:2441:58: warning: missing initializer for member ‘copperfin::vfp::DbfFieldsOnlyParseResult::fields’ [-Wmissing-field-initializers]
+ 2441 |         return {.ok = false, .error = header_result.error};
+      |                                                          ^
+[74/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/index_probe.cpp.o
+[75/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/sidecar_path.cpp.o
+[76/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/staged_import_publish.cpp.o
+[77/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/xbase_relation_inference.cpp.o
+[78/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_shared_helpers.cpp.o
+[79/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_method_blobs.cpp.o
+[80/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_blobs.cpp.o
+[81/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_record_and_snapshot.cpp.o
+[82/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_undo.cpp.o
+[83/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_object_lifecycle.cpp.o
+[84/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_setters_behavior.cpp.o
+[85/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_setters_appearance.cpp.o
+[86/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_setters_data.cpp.o
+[87/160] Building CXX object CMakeFiles/cf_prg_analysis.dir/src/runtime/prg_engine_static_analysis.cpp.o
+[88/160] Linking CXX static library libcf_runtime_text.a
+[89/160] Linking CXX static library libcf_vfp_assets.a
+[90/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/builder_dispatch.cpp.o
+[91/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/builder_invocation_admission.cpp.o
+[92/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/builder_registry.cpp.o
+[93/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/context_editor_actions.cpp.o
+[94/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_context.cpp.o
+[95/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_dispatch.cpp.o
+[96/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_invocation_admission.cpp.o
+[97/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_launch_surfaces.cpp.o
+[98/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/document_model.cpp.o
+[99/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/editor_action_dispatch.cpp.o
+[100/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/editor_action_invocation_admission.cpp.o
+[101/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/project_workspace.cpp.o
+[102/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/product_subsystems.cpp.o
+[103/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/report_layout.cpp.o
+[104/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_creation.cpp.o
+[105/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_dispatch.cpp.o
+[106/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_invocation_admission.cpp.o
+[107/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_palette.cpp.o
+[108/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract.cpp.o
+[109/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_value_parsing.cpp.o
+[110/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_error_messages.cpp.o
+[111/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_argument_parsers.cpp.o
+[112/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_request_validators.cpp.o
+[113/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_diagnostics_and_session.cpp.o
+[114/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_diagnostics_and_session_validate.cpp.o
+[115/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_selection_context.cpp.o
+[116/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_property_commands.cpp.o
+[117/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_property_commands_validate.cpp.o
+[118/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_object_lifecycle.cpp.o
+[119/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_object_lifecycle_validate.cpp.o
+[120/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_layout_actions.cpp.o
+[121/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_layout_actions_validate.cpp.o
+[122/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_behavior.cpp.o
+[123/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_behavior_validate.cpp.o
+[124/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_appearance.cpp.o
+[125/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_appearance_validate.cpp.o
+[126/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_data.cpp.o
+[127/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_data_validate.cpp.o
+[128/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_positional_and_fallback.cpp.o
+[129/160] Linking CXX static library libcf_prg_analysis.a
+[130/160] Linking CXX static library libcf_design_model.a
+[131/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/runtime_external_event_queue.cpp.o
+[132/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_command_helpers.cpp.o
+[133/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_date_time_functions.cpp.o
+[134/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_file_io_functions.cpp.o
+[135/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine.cpp.o
+In file included from /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:8589:
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl: In member function ‘copperfin::runtime::{anonymous}::ExecutionOutcome copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()’:
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:11317:62: warning: missing initializer for member ‘copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()::TemporaryAppendSource::reference’ [-Wmissing-field-initializers]
+11317 |                     TemporaryAppendSource append_source{*this};
+      |                                                              ^
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:12449:58: warning: missing initializer for member ‘copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()::TemporaryAppendSource::reference’ [-Wmissing-field-initializers]
+12449 |                 TemporaryAppendSource append_source{*this};
+      |                                                          ^
+[136/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_native_object_helpers.cpp.o
+[137/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/polyglot_runtime_host.cpp.o
+[138/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/index_seek_optimizer.cpp.o
+[139/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_helpers.cpp.o
+[140/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_locale_code_page.cpp.o
+[141/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_numeric_functions.cpp.o
+[142/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_path_functions.cpp.o
+[143/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_parser.cpp.o
+[144/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_surface_functions.cpp.o
+In file included from /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_functions.cpp:193:
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:13:5: warning: ‘int copperfin::runtime::{anonymous}::bit_position(const copperfin::runtime::PrgValue&)’ defined but not used [-Wunused-function]
+   13 | int bit_position(const PrgValue& value) {
+      |     ^~~~~~~~~~~~
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:5:15: warning: ‘uint32_t copperfin::runtime::{anonymous}::bitwise_value(const copperfin::runtime::PrgValue&)’ defined but not used [-Wunused-function]
+    5 | std::uint32_t bitwise_value(const PrgValue& value) {
+      |               ^~~~~~~~~~~~~
+[145/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_config.cpp.o
+[146/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_string_functions.cpp.o
+In file included from /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/runtime/prg_engine_string_functions.cpp:28:
+/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/src/runtime/prg_engine_string_function_helpers.inl:251:29: warning: ‘std::optional<long int> copperfin::runtime::{anonymous}::parse_currency_scaled_value(const std::string&)’ defined but not used [-Wunused-function]
+  251 | std::optional<std::int64_t> parse_currency_scaled_value(const std::string& text) {
+      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+[147/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_table_structure_helpers.cpp.o
+[148/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_type_functions.cpp.o
+[149/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/xasset_methods.cpp.o
+[150/160] Linking CXX static library libcf_xbase_runtime.a
+[151/160] Building CXX object tests/CMakeFiles/cf_prg_engine_test_support.dir/prg_engine_test_support.cpp.o
+[152/160] Building CXX object tests/CMakeFiles/test_prg_engine_int64_exact_expression.dir/test_prg_engine_int64_exact_expression.cpp.o
+[153/160] Building CXX object tests/CMakeFiles/test_prg_engine_cast_int64_numeric.dir/test_prg_engine_cast_int64_numeric.cpp.o
+[154/160] Building CXX object tests/CMakeFiles/test_prg_engine_cast_int32_numeric.dir/test_prg_engine_cast_int32_numeric.cpp.o
+[155/160] Building CXX object tests/CMakeFiles/test_prg_engine_cast_uint64_numeric.dir/test_prg_engine_cast_uint64_numeric.cpp.o
+[156/160] Linking CXX executable tests/test_prg_engine_int64_exact_expression
+[157/160] Linking CXX executable tests/test_prg_engine_cast_int64_numeric
+[158/160] Linking CXX executable tests/test_prg_engine_cast_int32_numeric
+[159/160] Linking CXX executable tests/test_prg_engine_cast_uint64_numeric
+GNU build exit: 0
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 390
+      Start 390: test_prg_engine_int64_exact_expression
+
+390: Test command: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/test_prg_engine_int64_exact_expression
+390: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+390: Environment variables: 
+390:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+390: Test timeout computed to be: 600
+ 1/16 Test #390: test_prg_engine_int64_exact_expression ...................   Passed    0.10 sec
+test 399
+      Start 399: test_prg_engine_cast_int64_numeric
+
+399: Test command: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/test_prg_engine_cast_int64_numeric
+399: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+399: Environment variables: 
+399:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+399: Test timeout computed to be: 600
+399: CAST frozen cases: direct=56 public=0
+ 2/16 Test #399: test_prg_engine_cast_int64_numeric .......................   Passed    0.01 sec
+test 400
+      Start 400: test_prg_engine_cast_int64_numeric_copperfin_session1
+
+400: Test command: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/test_prg_engine_cast_int64_numeric "COPPERFIN" "1"
+400: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+400: Environment variables: 
+400:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+400: Test timeout computed to be: 600
+400: CAST frozen cases: direct=0 public=141
+ 3/16 Test #400: test_prg_engine_cast_int64_numeric_copperfin_session1 ....   Passed    1.86 sec
+test 401
+      Start 401: test_prg_engine_cast_int64_numeric_copperfin_session2
+
+401: Test command: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/test_prg_engine_cast_int64_numeric "COPPERFIN" "2"
+401: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+401: Environment variables: 
+401:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+401: Test timeout computed to be: 600
+401: CAST frozen cases: direct=0 public=141
+ 4/16 Test #401: test_prg_engine_cast_int64_numeric_copperfin_session2 ....   Passed    1.84 sec
+test 402
+      Start 402: test_prg_engine_cast_int64_numeric_vfp9_session1
+
+402: Test command: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/test_prg_engine_cast_int64_numeric "VFP9" "1"
+402: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+402: Environment variables: 
+402:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+402: Test timeout computed to be: 600
+402: CAST frozen cases: direct=0 public=141
+ 5/16 Test #402: test_prg_engine_cast_int64_numeric_vfp9_session1 .........   Passed    1.82 sec
+test 403
+      Start 403: test_prg_engine_cast_int64_numeric_vfp9_session2
+
+403: Test command: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/test_prg_engine_cast_int64_numeric "VFP9" "2"
+403: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+403: Environment variables: 
+403:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+403: Test timeout computed to be: 600
+403: CAST frozen cases: direct=0 public=141
+ 6/16 Test #403: test_prg_engine_cast_int64_numeric_vfp9_session2 .........   Passed    1.86 sec
+test 404
+      Start 404: test_prg_engine_cast_int32_numeric
+
+404: Test command: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/test_prg_engine_cast_int32_numeric
+404: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+404: Environment variables: 
+404:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+404: Test timeout computed to be: 600
+404: CAST frozen cases: direct=146 public=0
+ 7/16 Test #404: test_prg_engine_cast_int32_numeric .......................   Passed    0.00 sec
+test 405
+      Start 405: test_prg_engine_cast_int32_numeric_copperfin_session1
+
+405: Test command: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/test_prg_engine_cast_int32_numeric "COPPERFIN" "1"
+405: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+405: Environment variables: 
+405:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+405: Test timeout computed to be: 600
+405: FAIL: CAST selected error COPPERFIN session1 CAST(2147483648 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(2147483648 AS INT) got 2147483648
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(2147483648 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(2147483648.0000005 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(2147483648.0000005 AS INT) got 2147483648
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(2147483648.0000005 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(2147483648.9 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(2147483648.9 AS INT) got 2147483648
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(2147483648.9 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-2147483649 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-2147483649 AS INT) got -2147483649
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-2147483649 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-2147483649.0000005 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-2147483649.0000005 AS INT) got -2147483649
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-2147483649.0000005 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(4294967295 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(4294967295 AS INT) got 4294967295
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(4294967295 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(4294967296 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(4294967296 AS INT) got 4294967296
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(4294967296 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(4294967297 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(4294967297 AS INT) got 4294967297
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(4294967297 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-4294967295 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-4294967295 AS INT) got -4294967295
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-4294967295 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-4294967296 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-4294967296 AS INT) got -4294967296
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-4294967296 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-4294967297 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-4294967297 AS INT) got -4294967297
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-4294967297 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(9007199254740992 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(9007199254740992 AS INT) got 9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(9007199254740992 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(9007199254740993 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(9007199254740993 AS INT) got 9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(9007199254740993 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((2^63-1024) AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((2^63-1024) AS INT) got 9223372036854774784
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((2^63-1024) AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((2^63) AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((2^63) AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((2^63) AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((-2^63) AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((-2^63) AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((-2^63) AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((-2^63-2048) AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((-2^63-2048) AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((-2^63-2048) AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E20 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E20 AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E20 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-1E20 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-1E20 AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-1E20 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-1E300 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-1E300 AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-1E300 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(EXP(1000) AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(EXP(1000) AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(EXP(1000) AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-EXP(1000) AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-EXP(1000) AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-EXP(1000) AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(CAST(2147483648 AS INT64) AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(CAST(2147483648 AS INT64) AS INT) got 2147483648
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(CAST(2147483648 AS INT64) AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(CAST(-2147483649 AS INT64) AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(CAST(-2147483649 AS INT64) AS INT) got -2147483649
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(CAST(-2147483649 AS INT64) AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT) got 9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT) got -9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT) got 9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT)
+405: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT)
+405: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT)
+405: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INT) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INT) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT)
+405: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS INT)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(2147483648 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(2147483648 AS INT32) got 2147483648
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(2147483648 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(2147483648.0000005 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(2147483648.0000005 AS INT32) got 2147483648
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(2147483648.0000005 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(2147483648.9 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(2147483648.9 AS INT32) got 2147483648
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(2147483648.9 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-2147483649 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-2147483649 AS INT32) got -2147483649
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-2147483649 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-2147483649.0000005 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-2147483649.0000005 AS INT32) got -2147483649
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-2147483649.0000005 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(4294967295 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(4294967295 AS INT32) got 4294967295
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(4294967295 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(4294967296 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(4294967296 AS INT32) got 4294967296
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(4294967296 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(4294967297 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(4294967297 AS INT32) got 4294967297
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(4294967297 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-4294967295 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-4294967295 AS INT32) got -4294967295
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-4294967295 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-4294967296 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-4294967296 AS INT32) got -4294967296
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-4294967296 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-4294967297 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-4294967297 AS INT32) got -4294967297
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-4294967297 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(9007199254740992 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(9007199254740992 AS INT32) got 9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(9007199254740992 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(9007199254740993 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(9007199254740993 AS INT32) got 9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(9007199254740993 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((2^63-1024) AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((2^63-1024) AS INT32) got 9223372036854774784
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((2^63-1024) AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((2^63) AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((2^63) AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((2^63) AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((-2^63) AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((-2^63) AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((-2^63) AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((-2^63-2048) AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((-2^63-2048) AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((-2^63-2048) AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E20 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E20 AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E20 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-1E20 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-1E20 AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-1E20 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-1E300 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-1E300 AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-1E300 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(EXP(1000) AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(EXP(1000) AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(EXP(1000) AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-EXP(1000) AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-EXP(1000) AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-EXP(1000) AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(CAST(2147483648 AS INT64) AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(CAST(2147483648 AS INT64) AS INT32) got 2147483648
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(CAST(2147483648 AS INT64) AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(CAST(-2147483649 AS INT64) AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(CAST(-2147483649 AS INT64) AS INT32) got -2147483649
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(CAST(-2147483649 AS INT64) AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT32) got 9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT32) got -9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT32) got 9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT32)
+405: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT32)
+405: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT32)
+405: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INT32) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INT32) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INT32)
+405: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS INT32)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(2147483648 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(2147483648 AS INTEGER) got 2147483648
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(2147483648 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(2147483648.0000005 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(2147483648.0000005 AS INTEGER) got 2147483648
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(2147483648.0000005 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(2147483648.9 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(2147483648.9 AS INTEGER) got 2147483648
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(2147483648.9 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-2147483649 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-2147483649 AS INTEGER) got -2147483649
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-2147483649 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-2147483649.0000005 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-2147483649.0000005 AS INTEGER) got -2147483649
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-2147483649.0000005 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(4294967295 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(4294967295 AS INTEGER) got 4294967295
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(4294967295 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(4294967296 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(4294967296 AS INTEGER) got 4294967296
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(4294967296 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(4294967297 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(4294967297 AS INTEGER) got 4294967297
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(4294967297 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-4294967295 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-4294967295 AS INTEGER) got -4294967295
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-4294967295 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-4294967296 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-4294967296 AS INTEGER) got -4294967296
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-4294967296 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-4294967297 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-4294967297 AS INTEGER) got -4294967297
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-4294967297 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(9007199254740992 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(9007199254740992 AS INTEGER) got 9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(9007199254740992 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(9007199254740993 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(9007199254740993 AS INTEGER) got 9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(9007199254740993 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((2^63-1024) AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((2^63-1024) AS INTEGER) got 9223372036854774784
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((2^63-1024) AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((2^63) AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((2^63) AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((2^63) AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((-2^63) AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((-2^63) AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((-2^63) AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((-2^63-2048) AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((-2^63-2048) AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((-2^63-2048) AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E20 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E20 AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E20 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-1E20 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-1E20 AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-1E20 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-1E300 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-1E300 AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-1E300 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(EXP(1000) AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(EXP(1000) AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(EXP(1000) AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-EXP(1000) AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-EXP(1000) AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-EXP(1000) AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(CAST(2147483648 AS INT64) AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(CAST(2147483648 AS INT64) AS INTEGER) got 2147483648
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(CAST(2147483648 AS INT64) AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(CAST(-2147483649 AS INT64) AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(CAST(-2147483649 AS INT64) AS INTEGER) got -2147483649
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(CAST(-2147483649 AS INT64) AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INTEGER) got 9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INTEGER) got -9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INTEGER) got 9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INTEGER)
+405: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INTEGER)
+405: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INTEGER)
+405: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS INTEGER) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS INTEGER) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS INTEGER)
+405: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS INTEGER)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(2147483648 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(2147483648 AS LONG) got 2147483648
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(2147483648 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(2147483648.0000005 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(2147483648.0000005 AS LONG) got 2147483648
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(2147483648.0000005 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(2147483648.9 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(2147483648.9 AS LONG) got 2147483648
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(2147483648.9 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-2147483649 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-2147483649 AS LONG) got -2147483649
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-2147483649 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-2147483649.0000005 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-2147483649.0000005 AS LONG) got -2147483649
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-2147483649.0000005 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(4294967295 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(4294967295 AS LONG) got 4294967295
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(4294967295 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(4294967296 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(4294967296 AS LONG) got 4294967296
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(4294967296 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(4294967297 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(4294967297 AS LONG) got 4294967297
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(4294967297 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-4294967295 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-4294967295 AS LONG) got -4294967295
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-4294967295 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-4294967296 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-4294967296 AS LONG) got -4294967296
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-4294967296 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-4294967297 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-4294967297 AS LONG) got -4294967297
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-4294967297 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(9007199254740992 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(9007199254740992 AS LONG) got 9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(9007199254740992 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(9007199254740993 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(9007199254740993 AS LONG) got 9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(9007199254740993 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((2^63-1024) AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((2^63-1024) AS LONG) got 9223372036854774784
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((2^63-1024) AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((2^63) AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((2^63) AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((2^63) AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((-2^63) AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((-2^63) AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((-2^63) AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((-2^63-2048) AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((-2^63-2048) AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((-2^63-2048) AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E20 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E20 AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E20 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-1E20 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-1E20 AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-1E20 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-1E300 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-1E300 AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-1E300 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(EXP(1000) AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(EXP(1000) AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(EXP(1000) AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(-EXP(1000) AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(-EXP(1000) AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(-EXP(1000) AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(CAST(2147483648 AS INT64) AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(CAST(2147483648 AS INT64) AS LONG) got 2147483648
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(CAST(2147483648 AS INT64) AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(CAST(-2147483649 AS INT64) AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(CAST(-2147483649 AS INT64) AS LONG) got -2147483649
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(CAST(-2147483649 AS INT64) AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS LONG) got 9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS LONG) got -9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS LONG) got 9007199254740992
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(CAST(-9223372036854775808 AS INT64) AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS LONG)
+405: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS LONG)
+405: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS LONG)
+405: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS LONG)
+405: FAIL: CAST selected error COPPERFIN session1 CAST(1E300 AS LONG) got 0
+405: FAIL: CAST selected result COPPERFIN session1 CAST(1E300 AS LONG) got -9223372036854775808
+405: FAIL: CAST selected kind/assignment COPPERFIN session1 CAST(1E300 AS LONG)
+405: FAIL: CAST selected localized message COPPERFIN session1 CAST(1E300 AS LONG)
+405: CAST frozen cases: direct=0 public=264
+ 8/16 Test #405: test_prg_engine_cast_int32_numeric_copperfin_session1 ....***Failed    3.53 sec
+test 406
+      Start 406: test_prg_engine_cast_int32_numeric_copperfin_session2
+
+406: Test command: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/test_prg_engine_cast_int32_numeric "COPPERFIN" "2"
+406: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+406: Environment variables: 
+406:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+406: Test timeout computed to be: 600
+406: FAIL: CAST selected error COPPERFIN session2 CAST(2147483648 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(2147483648 AS INT) got 2147483648
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(2147483648 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(2147483648.0000005 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(2147483648.0000005 AS INT) got 2147483648
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(2147483648.0000005 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(2147483648.9 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(2147483648.9 AS INT) got 2147483648
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(2147483648.9 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-2147483649 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-2147483649 AS INT) got -2147483649
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-2147483649 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-2147483649.0000005 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-2147483649.0000005 AS INT) got -2147483649
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-2147483649.0000005 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(4294967295 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(4294967295 AS INT) got 4294967295
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(4294967295 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(4294967296 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(4294967296 AS INT) got 4294967296
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(4294967296 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(4294967297 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(4294967297 AS INT) got 4294967297
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(4294967297 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-4294967295 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-4294967295 AS INT) got -4294967295
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-4294967295 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-4294967296 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-4294967296 AS INT) got -4294967296
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-4294967296 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-4294967297 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-4294967297 AS INT) got -4294967297
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-4294967297 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(9007199254740992 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(9007199254740992 AS INT) got 9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(9007199254740992 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(9007199254740993 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(9007199254740993 AS INT) got 9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(9007199254740993 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((2^63-1024) AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((2^63-1024) AS INT) got 9223372036854774784
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((2^63-1024) AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((2^63) AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((2^63) AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((2^63) AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((-2^63) AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((-2^63) AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((-2^63) AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((-2^63-2048) AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((-2^63-2048) AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((-2^63-2048) AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E20 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E20 AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E20 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-1E20 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-1E20 AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-1E20 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-1E300 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-1E300 AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-1E300 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(EXP(1000) AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(EXP(1000) AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(EXP(1000) AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-EXP(1000) AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-EXP(1000) AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-EXP(1000) AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(CAST(2147483648 AS INT64) AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(CAST(2147483648 AS INT64) AS INT) got 2147483648
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(CAST(2147483648 AS INT64) AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(CAST(-2147483649 AS INT64) AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(CAST(-2147483649 AS INT64) AS INT) got -2147483649
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(CAST(-2147483649 AS INT64) AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT) got 9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT) got -9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT) got 9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT)
+406: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT)
+406: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT)
+406: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INT) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INT) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT)
+406: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS INT)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(2147483648 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(2147483648 AS INT32) got 2147483648
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(2147483648 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(2147483648.0000005 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(2147483648.0000005 AS INT32) got 2147483648
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(2147483648.0000005 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(2147483648.9 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(2147483648.9 AS INT32) got 2147483648
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(2147483648.9 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-2147483649 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-2147483649 AS INT32) got -2147483649
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-2147483649 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-2147483649.0000005 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-2147483649.0000005 AS INT32) got -2147483649
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-2147483649.0000005 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(4294967295 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(4294967295 AS INT32) got 4294967295
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(4294967295 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(4294967296 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(4294967296 AS INT32) got 4294967296
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(4294967296 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(4294967297 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(4294967297 AS INT32) got 4294967297
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(4294967297 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-4294967295 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-4294967295 AS INT32) got -4294967295
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-4294967295 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-4294967296 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-4294967296 AS INT32) got -4294967296
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-4294967296 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-4294967297 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-4294967297 AS INT32) got -4294967297
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-4294967297 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(9007199254740992 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(9007199254740992 AS INT32) got 9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(9007199254740992 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(9007199254740993 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(9007199254740993 AS INT32) got 9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(9007199254740993 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((2^63-1024) AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((2^63-1024) AS INT32) got 9223372036854774784
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((2^63-1024) AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((2^63) AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((2^63) AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((2^63) AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((-2^63) AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((-2^63) AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((-2^63) AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((-2^63-2048) AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((-2^63-2048) AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((-2^63-2048) AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E20 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E20 AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E20 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-1E20 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-1E20 AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-1E20 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-1E300 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-1E300 AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-1E300 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(EXP(1000) AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(EXP(1000) AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(EXP(1000) AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-EXP(1000) AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-EXP(1000) AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-EXP(1000) AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(CAST(2147483648 AS INT64) AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(CAST(2147483648 AS INT64) AS INT32) got 2147483648
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(CAST(2147483648 AS INT64) AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(CAST(-2147483649 AS INT64) AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(CAST(-2147483649 AS INT64) AS INT32) got -2147483649
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(CAST(-2147483649 AS INT64) AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT32) got 9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT32) got -9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT32) got 9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT32)
+406: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT32)
+406: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT32)
+406: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INT32) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INT32) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INT32)
+406: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS INT32)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(2147483648 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(2147483648 AS INTEGER) got 2147483648
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(2147483648 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(2147483648.0000005 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(2147483648.0000005 AS INTEGER) got 2147483648
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(2147483648.0000005 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(2147483648.9 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(2147483648.9 AS INTEGER) got 2147483648
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(2147483648.9 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-2147483649 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-2147483649 AS INTEGER) got -2147483649
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-2147483649 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-2147483649.0000005 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-2147483649.0000005 AS INTEGER) got -2147483649
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-2147483649.0000005 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(4294967295 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(4294967295 AS INTEGER) got 4294967295
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(4294967295 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(4294967296 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(4294967296 AS INTEGER) got 4294967296
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(4294967296 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(4294967297 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(4294967297 AS INTEGER) got 4294967297
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(4294967297 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-4294967295 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-4294967295 AS INTEGER) got -4294967295
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-4294967295 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-4294967296 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-4294967296 AS INTEGER) got -4294967296
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-4294967296 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-4294967297 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-4294967297 AS INTEGER) got -4294967297
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-4294967297 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(9007199254740992 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(9007199254740992 AS INTEGER) got 9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(9007199254740992 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(9007199254740993 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(9007199254740993 AS INTEGER) got 9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(9007199254740993 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((2^63-1024) AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((2^63-1024) AS INTEGER) got 9223372036854774784
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((2^63-1024) AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((2^63) AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((2^63) AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((2^63) AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((-2^63) AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((-2^63) AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((-2^63) AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((-2^63-2048) AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((-2^63-2048) AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((-2^63-2048) AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E20 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E20 AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E20 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-1E20 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-1E20 AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-1E20 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-1E300 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-1E300 AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-1E300 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(EXP(1000) AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(EXP(1000) AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(EXP(1000) AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-EXP(1000) AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-EXP(1000) AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-EXP(1000) AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(CAST(2147483648 AS INT64) AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(CAST(2147483648 AS INT64) AS INTEGER) got 2147483648
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(CAST(2147483648 AS INT64) AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(CAST(-2147483649 AS INT64) AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(CAST(-2147483649 AS INT64) AS INTEGER) got -2147483649
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(CAST(-2147483649 AS INT64) AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INTEGER) got 9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INTEGER) got -9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INTEGER) got 9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INTEGER)
+406: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INTEGER)
+406: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INTEGER)
+406: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS INTEGER) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS INTEGER) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS INTEGER)
+406: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS INTEGER)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(2147483648 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(2147483648 AS LONG) got 2147483648
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(2147483648 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(2147483648.0000005 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(2147483648.0000005 AS LONG) got 2147483648
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(2147483648.0000005 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(2147483648.9 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(2147483648.9 AS LONG) got 2147483648
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(2147483648.9 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-2147483649 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-2147483649 AS LONG) got -2147483649
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-2147483649 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-2147483649.0000005 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-2147483649.0000005 AS LONG) got -2147483649
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-2147483649.0000005 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(4294967295 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(4294967295 AS LONG) got 4294967295
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(4294967295 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(4294967296 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(4294967296 AS LONG) got 4294967296
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(4294967296 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(4294967297 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(4294967297 AS LONG) got 4294967297
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(4294967297 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-4294967295 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-4294967295 AS LONG) got -4294967295
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-4294967295 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-4294967296 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-4294967296 AS LONG) got -4294967296
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-4294967296 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-4294967297 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-4294967297 AS LONG) got -4294967297
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-4294967297 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(9007199254740992 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(9007199254740992 AS LONG) got 9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(9007199254740992 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(9007199254740993 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(9007199254740993 AS LONG) got 9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(9007199254740993 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((2^63-1024) AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((2^63-1024) AS LONG) got 9223372036854774784
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((2^63-1024) AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((2^63) AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((2^63) AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((2^63) AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((-2^63) AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((-2^63) AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((-2^63) AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((-2^63-2048) AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((-2^63-2048) AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((-2^63-2048) AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E20 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E20 AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E20 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-1E20 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-1E20 AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-1E20 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-1E300 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-1E300 AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-1E300 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(EXP(1000) AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(EXP(1000) AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(EXP(1000) AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(-EXP(1000) AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(-EXP(1000) AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(-EXP(1000) AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(CAST(2147483648 AS INT64) AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(CAST(2147483648 AS INT64) AS LONG) got 2147483648
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(CAST(2147483648 AS INT64) AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(CAST(-2147483649 AS INT64) AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(CAST(-2147483649 AS INT64) AS LONG) got -2147483649
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(CAST(-2147483649 AS INT64) AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS LONG) got 9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS LONG) got -9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS LONG) got 9007199254740992
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(CAST(-9223372036854775808 AS INT64) AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS LONG)
+406: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS LONG)
+406: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS LONG)
+406: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS LONG)
+406: FAIL: CAST selected error COPPERFIN session2 CAST(1E300 AS LONG) got 0
+406: FAIL: CAST selected result COPPERFIN session2 CAST(1E300 AS LONG) got -9223372036854775808
+406: FAIL: CAST selected kind/assignment COPPERFIN session2 CAST(1E300 AS LONG)
+406: FAIL: CAST selected localized message COPPERFIN session2 CAST(1E300 AS LONG)
+406: CAST frozen cases: direct=0 public=264
+ 9/16 Test #406: test_prg_engine_cast_int32_numeric_copperfin_session2 ....***Failed    3.59 sec
+test 407
+      Start 407: test_prg_engine_cast_int32_numeric_vfp9_session1
+
+407: Test command: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/test_prg_engine_cast_int32_numeric "VFP9" "1"
+407: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+407: Environment variables: 
+407:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+407: Test timeout computed to be: 600
+407: FAIL: CAST selected result VFP9 session1 CAST(2147483648 AS INT) got 2147483648
+407: FAIL: CAST selected result VFP9 session1 CAST(2147483648.0000005 AS INT) got 2147483648
+407: FAIL: CAST selected result VFP9 session1 CAST(2147483648.9 AS INT) got 2147483648
+407: FAIL: CAST selected result VFP9 session1 CAST(-2147483649 AS INT) got -2147483649
+407: FAIL: CAST selected result VFP9 session1 CAST(-2147483649.0000005 AS INT) got -2147483649
+407: FAIL: CAST selected result VFP9 session1 CAST(4294967295 AS INT) got 4294967295
+407: FAIL: CAST selected result VFP9 session1 CAST(4294967296 AS INT) got 4294967296
+407: FAIL: CAST selected result VFP9 session1 CAST(4294967297 AS INT) got 4294967297
+407: FAIL: CAST selected result VFP9 session1 CAST(-4294967295 AS INT) got -4294967295
+407: FAIL: CAST selected result VFP9 session1 CAST(-4294967296 AS INT) got -4294967296
+407: FAIL: CAST selected result VFP9 session1 CAST(-4294967297 AS INT) got -4294967297
+407: FAIL: CAST selected result VFP9 session1 CAST(9007199254740992 AS INT) got 9007199254740992
+407: FAIL: CAST selected result VFP9 session1 CAST(9007199254740993 AS INT) got 9007199254740992
+407: FAIL: CAST selected result VFP9 session1 CAST((2^63-1024) AS INT) got 9223372036854774784
+407: FAIL: CAST selected result VFP9 session1 CAST((2^63) AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST((-2^63) AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST((-2^63-2048) AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(1E20 AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(-1E20 AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(-1E300 AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(EXP(1000) AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(-EXP(1000) AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(CAST(2147483648 AS INT64) AS INT) got 2147483648
+407: FAIL: CAST selected result VFP9 session1 CAST(CAST(-2147483649 AS INT64) AS INT) got -2147483649
+407: FAIL: CAST selected result VFP9 session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT) got 9007199254740992
+407: FAIL: CAST selected result VFP9 session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT) got -9007199254740992
+407: FAIL: CAST selected result VFP9 session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT) got 9007199254740992
+407: FAIL: CAST selected result VFP9 session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(CAST(-9223372036854775808 AS INT64) AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS INT) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(2147483648 AS INT32) got 2147483648
+407: FAIL: CAST selected result VFP9 session1 CAST(2147483648.0000005 AS INT32) got 2147483648
+407: FAIL: CAST selected result VFP9 session1 CAST(2147483648.9 AS INT32) got 2147483648
+407: FAIL: CAST selected result VFP9 session1 CAST(-2147483649 AS INT32) got -2147483649
+407: FAIL: CAST selected result VFP9 session1 CAST(-2147483649.0000005 AS INT32) got -2147483649
+407: FAIL: CAST selected result VFP9 session1 CAST(4294967295 AS INT32) got 4294967295
+407: FAIL: CAST selected result VFP9 session1 CAST(4294967296 AS INT32) got 4294967296
+407: FAIL: CAST selected result VFP9 session1 CAST(4294967297 AS INT32) got 4294967297
+407: FAIL: CAST selected result VFP9 session1 CAST(-4294967295 AS INT32) got -4294967295
+407: FAIL: CAST selected result VFP9 session1 CAST(-4294967296 AS INT32) got -4294967296
+407: FAIL: CAST selected result VFP9 session1 CAST(-4294967297 AS INT32) got -4294967297
+407: FAIL: CAST selected result VFP9 session1 CAST(9007199254740992 AS INT32) got 9007199254740992
+407: FAIL: CAST selected result VFP9 session1 CAST(9007199254740993 AS INT32) got 9007199254740992
+407: FAIL: CAST selected result VFP9 session1 CAST((2^63-1024) AS INT32) got 9223372036854774784
+407: FAIL: CAST selected result VFP9 session1 CAST((2^63) AS INT32) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST((-2^63) AS INT32) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST((-2^63-2048) AS INT32) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(1E20 AS INT32) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(-1E20 AS INT32) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS INT32) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(-1E300 AS INT32) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(EXP(1000) AS INT32) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(-EXP(1000) AS INT32) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(CAST(2147483648 AS INT64) AS INT32) got 2147483648
+407: FAIL: CAST selected result VFP9 session1 CAST(CAST(-2147483649 AS INT64) AS INT32) got -2147483649
+407: FAIL: CAST selected result VFP9 session1 CAST((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)) AS INT32) got 9007199254740992
+407: FAIL: CAST selected result VFP9 session1 CAST((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)) AS INT32) got -9007199254740992
+407: FAIL: CAST selected result VFP9 session1 CAST((CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64)) AS INT32) got 9007199254740992
+407: FAIL: CAST selected result VFP9 session1 CAST((CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64)) AS INT32) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(CAST(-9223372036854775808 AS INT64) AS INT32) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST((CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64)) AS INT32) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)) AS INT32) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST((CAST(18446744073709549568 AS UINT64)+CAST(2046 AS UINT64)) AS INT32) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS INT32) got -9223372036854775808
+407: FAIL: CAST selected result VFP9 session1 CAST(1E300 AS INT32) got -9223372036854775808
+Terminated                 ctest --test-dir /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc -R '^test_prg_engine_(cast_int32_numeric.*|cast_int64_numeric.*|cast_uint64_numeric.*|int64_exact_expression)$' --parallel 1 --timeout 600 -V
+GNU original CTest exit: 143
