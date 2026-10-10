@@ -1,0 +1,81 @@
+Idle local build/test/Wine inventory before broader Clang launch: 2026-10-10T16:48:17Z
+[0/2] Re-checking globbed directories...
+[1/9] Building CXX object tests/CMakeFiles/test_prg_engine_null_semantics.dir/test_prg_engine_null_semantics.cpp.o
+[2/9] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_behavior.dir/test_prg_engine_numeric_behavior.cpp.o
+[3/9] Building CXX object tests/CMakeFiles/test_prg_engine_typed_null.dir/test_prg_engine_typed_null.cpp.o
+[4/9] Building CXX object tests/CMakeFiles/test_prg_engine_string_math_functions.dir/test_prg_engine_string_math_functions.cpp.o
+[5/9] Linking CXX executable tests/test_prg_engine_null_semantics
+[6/9] Linking CXX executable tests/test_prg_engine_numeric_behavior
+[7/9] Linking CXX executable tests/test_prg_engine_typed_null
+[8/9] Linking CXX executable tests/test_prg_engine_string_math_functions
+broader clang build exit: 0
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-clang/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-clang
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 379
+    Start 379: test_prg_engine_null_semantics
+
+379: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-clang/tests/test_prg_engine_null_semantics
+379: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-clang/tests
+379: Environment variables: 
+379:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+379: Test timeout computed to be: 1200
+1/4 Test #379: test_prg_engine_null_semantics ..........   Passed    0.13 sec
+test 393
+    Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-clang/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-clang/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 1200
+2/4 Test #393: test_prg_engine_numeric_behavior ........   Passed  102.08 sec
+test 471
+    Start 471: test_prg_engine_typed_null
+
+471: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-clang/tests/test_prg_engine_typed_null
+471: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-clang/tests
+471: Environment variables: 
+471:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+471: Test timeout computed to be: 1200
+3/4 Test #471: test_prg_engine_typed_null ..............   Passed    0.16 sec
+test 498
+    Start 498: test_prg_engine_string_math_functions
+
+498: Test command: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-clang/tests/test_prg_engine_string_math_functions
+498: Working Directory: /home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/build/cast-int16-clang/tests
+498: Environment variables: 
+498:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int16-numeric-5611/Project-Copperfin/resources/locales
+498: Test timeout computed to be: 1200
+498: All tests passed.
+4/4 Test #498: test_prg_engine_string_math_functions ...   Passed    0.44 sec
+
+The following tests passed:
+	test_prg_engine_null_semantics
+	test_prg_engine_numeric_behavior
+	test_prg_engine_typed_null
+	test_prg_engine_string_math_functions
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  = 102.81 sec*proc (4 tests)
+copperfin-isolation:child-processes=none            = 102.81 sec*proc (4 tests)
+copperfin-isolation:environment=none                =   0.73 sec*proc (3 tests)
+copperfin-isolation:environment=scoped-process      = 102.08 sec*proc (1 test)
+copperfin-isolation:filesystem=process-owned        = 102.37 sec*proc (3 tests)
+copperfin-isolation:filesystem=test-owned-unique    =   0.44 sec*proc (1 test)
+copperfin-isolation:network=none                    = 102.81 sec*proc (4 tests)
+copperfin-isolation:platform=portable               = 102.81 sec*proc (4 tests)
+copperfin-isolation:resources=none                  = 102.81 sec*proc (4 tests)
+copperfin-isolation:samples=none                    = 102.81 sec*proc (4 tests)
+copperfin-isolation:schedule=parallel-safe          =   0.44 sec*proc (1 test)
+copperfin-isolation:schedule=serial                 = 102.37 sec*proc (3 tests)
+
+Total Test time (real) = 102.83 sec
+broader clang CTest exit: 0

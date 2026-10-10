@@ -968,6 +968,23 @@ function(copperfin_configure_native_test_isolation)
             AUDIT complete
         )
     endforeach()
+    # Signed16 extension: unique scratch, scoped locale, fresh sessions.
+    foreach(cast_int16_test IN ITEMS
+        test_prg_engine_cast_int16_numeric
+        test_prg_engine_cast_int16_numeric_copperfin_session1
+        test_prg_engine_cast_int16_numeric_copperfin_session2
+        test_prg_engine_cast_int16_numeric_vfp9_session1
+        test_prg_engine_cast_int16_numeric_vfp9_session2)
+        copperfin_set_test_isolation(${cast_int16_test}
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT scoped-process
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            AUDIT complete
+        )
+    endforeach()
     # Signed32 CAST: unique scratch, scoped locale, serial fresh sessions.
     foreach(cast_int32_test IN ITEMS
         test_prg_engine_cast_int32_numeric

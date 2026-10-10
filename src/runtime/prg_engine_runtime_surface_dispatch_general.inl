@@ -698,6 +698,16 @@
             return make_int64_value(static_cast<std::int64_t>(std::trunc(value_as_number(source))));
         }
         if (type_name == "INT16" || type_name == "SHORT") {
+            // RQ-CF-PRG-CAST-INT16-NUMERIC-001: both modes share this signed16
+            // extension domain; non-Numeric coercions keep their original path.
+            if (source.kind == PrgValueKind::number || source.kind == PrgValueKind::int64 ||
+                source.kind == PrgValueKind::uint64) {
+                const auto converted = checked_cast_int16_numeric_argument(source);
+                if (!converted) {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                }
+                return make_int64_value(*converted);
+            }
             return make_int64_value(static_cast<std::int64_t>(std::trunc(value_as_number(source))));
         }
         if (type_name == "BYTE" || type_name == "UINT8") {
