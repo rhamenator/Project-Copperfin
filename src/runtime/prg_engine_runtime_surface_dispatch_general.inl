@@ -683,7 +683,21 @@
             return make_uint64_value(*converted);
         }
         if (type_name == "INT" || type_name == "INT32" || type_name == "INTEGER" ||
-            type_name == "LONG" || type_name == "INT16" || type_name == "SHORT") {
+            type_name == "LONG") {
+            // RQ-CF-PRG-CAST-INT32-NUMERIC-001: selected-session Numeric/exact
+            // admission; other coercions retain their original path below.
+            if (source.kind == PrgValueKind::number || source.kind == PrgValueKind::int64 ||
+                source.kind == PrgValueKind::uint64) {
+                const auto converted = checked_cast_int32_numeric_argument(
+                    source, numeric_behavior(set_callback));
+                if (!converted) {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                }
+                return make_int64_value(*converted);
+            }
+            return make_int64_value(static_cast<std::int64_t>(std::trunc(value_as_number(source))));
+        }
+        if (type_name == "INT16" || type_name == "SHORT") {
             return make_int64_value(static_cast<std::int64_t>(std::trunc(value_as_number(source))));
         }
         if (type_name == "BYTE" || type_name == "UINT8") {

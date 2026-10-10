@@ -1,0 +1,181 @@
+[0/2] Re-checking globbed directories...
+ninja: no work to do.
+GNU broader build exit: 0
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 6
+      Start   6: test_locale_catalog_install_contract
+
+6: Test command: /usr/bin/cmake "-DTEST_ROOT=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/locale-catalog-install-contract" "-P" "/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/tests/run_locale_catalog_install_contract_test.cmake"
+6: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+6: Environment variables: 
+6:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+6: Test timeout computed to be: 1200
+6: -- Installed locale catalog contract passed: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/locale-catalog-install-contract/share/copperfin/locales
+6: CMake Error at /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/tests/run_locale_catalog_install_contract_check.cmake:13 (message):
+6:   Installed locale catalog is missing or not a regular file:
+6:   /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/locale-catalog-install-contract/share/copperfin/locales/pt-BR/strings.json
+6: 
+6: 
+6: -- Locale catalog install contract test passed
+ 1/12 Test   #6: test_locale_catalog_install_contract .........   Passed    0.03 sec
+test 20
+      Start  20: test_changelog_fragment_assembler
+
+20: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--self-test"
+20: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+20: Environment variables: 
+20:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+20: Test timeout computed to be: 1200
+20: assemble_changelog self-test passed
+ 2/12 Test  #20: test_changelog_fragment_assembler ............   Passed    0.22 sec
+test 21
+      Start  21: test_changelog_fragments_valid
+
+21: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--check" "--root" "/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin"
+21: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+21: Environment variables: 
+21:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+21: Test timeout computed to be: 1200
+21: error: 2026-10-10-5611-cast-int32-numeric.md: first line must start with '- 2026-10-10:'
+ 3/12 Test  #21: test_changelog_fragments_valid ...............***Failed    0.21 sec
+test 23
+      Start  23: test_powershell_discovery_contract
+
+23: Test command: /usr/bin/cmake "-DBINARY_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests" "-DDISCOVERY_MODULE=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/tests/CopperfinPowerShellDiscovery.cmake" "-P" "/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/tests/run_powershell_discovery_contract_check.cmake"
+23: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+23: Environment variables: 
+23:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+23: Test timeout computed to be: 1200
+23: -- PowerShell host '/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/powershell-discovery-contract/bin/pwsh-dangling' does not resolve to a regular file; omitting the PowerShell-dependent tests (#5809)
+23: -- PowerShell host '/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/PowerShell.sh' does not resolve to a regular file; omitting the PowerShell-dependent tests (#5809)
+23: -- PowerShell host '/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/PowerShell.sh' does not resolve to a regular file; omitting the PowerShell-dependent tests (#5809)
+23: -- PowerShell host '/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/powershell-discovery-contract/bundle/powershell.app/Contents/MacOS/PowerShell.sh' does not resolve to a regular file; omitting the PowerShell-dependent tests (#5809)
+23: -- No PowerShell host found; omitting the PowerShell-dependent tests
+23: -- PowerShell discovery contract passed
+ 4/12 Test  #23: test_powershell_discovery_contract ...........   Passed    0.02 sec
+test 36
+      Start  36: test_native_test_isolation_contract
+
+36: Test command: /usr/bin/cmake "-DINVENTORY_PATH=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/native-test-isolation.tsv" "-DISOLATION_SOURCE_PATH=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/tests/CopperfinTestIsolation.cmake" "-DTEST_REGISTRATION_SOURCE_PATH=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/tests/CMakeLists.txt" "-P" "/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/tests/run_native_test_isolation_contract_check.cmake"
+36: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+36: Environment variables: 
+36:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+36: Test timeout computed to be: 1200
+36: -- Native test isolation inventory contract passed for 499 tests
+ 5/12 Test  #36: test_native_test_isolation_contract ..........   Passed    0.45 sec
+test 38
+      Start  38: test_safety_traceability_workflow_contract
+
+38: Test command: /usr/bin/cmake "-DSOURCE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin" "-P" "/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/tests/run_safety_traceability_workflow_contract_check.cmake"
+38: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+38: Environment variables: 
+38:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+38: Test timeout computed to be: 1200
+38: -- Safety traceability workflow contract check passed
+ 6/12 Test  #38: test_safety_traceability_workflow_contract ...   Passed  462.07 sec
+test 40
+      Start  40: test_localization
+
+40: Test command: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/test_localization "/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/copperfin_inspect"
+40: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+40: Environment variables: 
+40:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+40: Test timeout computed to be: 1200
+ 7/12 Test  #40: test_localization ............................   Passed   13.72 sec
+test 325
+      Start 325: test_portable_clr_host_boundary_contract
+
+325: Test command: /usr/bin/cmake "-DSOURCE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin" "-P" "/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/tests/run_portable_clr_host_boundary_contract_check.cmake"
+325: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+325: Environment variables: 
+325:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+325: Test timeout computed to be: 1200
+ 8/12 Test #325: test_portable_clr_host_boundary_contract .....   Passed    0.03 sec
+test 379
+      Start 379: test_prg_engine_null_semantics
+
+379: Test command: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/test_prg_engine_null_semantics
+379: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+379: Environment variables: 
+379:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+379: Test timeout computed to be: 1200
+ 9/12 Test #379: test_prg_engine_null_semantics ...............   Passed    0.14 sec
+test 393
+      Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 1200
+10/12 Test #393: test_prg_engine_numeric_behavior .............   Passed   66.47 sec
+test 461
+      Start 461: test_prg_engine_typed_null
+
+461: Test command: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/test_prg_engine_typed_null
+461: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+461: Environment variables: 
+461:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+461: Test timeout computed to be: 1200
+11/12 Test #461: test_prg_engine_typed_null ...................   Passed    0.16 sec
+test 488
+      Start 488: test_prg_engine_string_math_functions
+
+488: Test command: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests/test_prg_engine_string_math_functions
+488: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+488: Environment variables: 
+488:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+488: Test timeout computed to be: 1200
+488: All tests passed.
+12/12 Test #488: test_prg_engine_string_math_functions ........   Passed    0.62 sec
+
+The following tests passed:
+	test_locale_catalog_install_contract
+	test_changelog_fragment_assembler
+	test_powershell_discovery_contract
+	test_native_test_isolation_contract
+	test_safety_traceability_workflow_contract
+	test_localization
+	test_portable_clr_host_boundary_contract
+	test_prg_engine_null_semantics
+	test_prg_engine_numeric_behavior
+	test_prg_engine_typed_null
+	test_prg_engine_string_math_functions
+
+92% tests passed, 1 tests failed out of 12
+
+Label Time Summary:
+copperfin-isolation:audit=complete                     = 544.14 sec*proc (12 tests)
+copperfin-isolation:child-processes=bounded            = 475.83 sec*proc (3 tests)
+copperfin-isolation:child-processes=none               =  68.31 sec*proc (9 tests)
+copperfin-isolation:environment=child-scoped           = 462.07 sec*proc (1 test)
+copperfin-isolation:environment=none                   =   1.87 sec*proc (9 tests)
+copperfin-isolation:environment=scoped-process         =  80.19 sec*proc (2 tests)
+copperfin-isolation:filesystem=process-owned           =  67.00 sec*proc (5 tests)
+copperfin-isolation:filesystem=read-only               = 462.76 sec*proc (4 tests)
+copperfin-isolation:filesystem=test-owned-unique       =  14.37 sec*proc (3 tests)
+copperfin-isolation:network=disabled-probes            = 462.07 sec*proc (1 test)
+copperfin-isolation:network=none                       =  82.06 sec*proc (11 tests)
+copperfin-isolation:platform=configured                =   0.43 sec*proc (2 tests)
+copperfin-isolation:platform=portable                  =  81.63 sec*proc (9 tests)
+copperfin-isolation:platform=powershell-conditional    = 462.07 sec*proc (1 test)
+copperfin-isolation:resources=none                     = 544.14 sec*proc (12 tests)
+copperfin-isolation:samples=none                       = 544.14 sec*proc (12 tests)
+copperfin-isolation:schedule=parallel-safe             = 477.37 sec*proc (9 tests)
+copperfin-isolation:schedule=serial                    =  66.76 sec*proc (3 tests)
+
+Total Test time (real) = 544.16 sec
+
+The following tests FAILED:
+	 21 - test_changelog_fragments_valid (Failed)           copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=none copperfin-isolation:filesystem=read-only copperfin-isolation:network=none copperfin-isolation:platform=configured copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=parallel-safe
+Errors while running CTest
+Output from these tests are in: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/Testing/Temporary/LastTest.log
+Use "--rerun-failed --output-on-failure" to re-run the failed cases verbosely.
+GNU broader CTest exit: 8

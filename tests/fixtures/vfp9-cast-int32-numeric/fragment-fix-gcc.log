@@ -1,0 +1,48 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 20
+    Start 20: test_changelog_fragment_assembler
+
+20: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--self-test"
+20: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+20: Environment variables: 
+20:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+20: Test timeout computed to be: 1200
+20: assemble_changelog self-test passed
+1/2 Test #20: test_changelog_fragment_assembler ...   Passed    0.20 sec
+test 21
+    Start 21: test_changelog_fragments_valid
+
+21: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--check" "--root" "/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin"
+21: Working Directory: /home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/build/cast-int32-gcc/tests
+21: Environment variables: 
+21:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/cast-int32-numeric-5611/Project-Copperfin/resources/locales
+21: Test timeout computed to be: 1200
+21: 197 changelog fragment(s) valid
+2/2 Test #21: test_changelog_fragments_valid ......   Passed    0.20 sec
+
+The following tests passed:
+	test_changelog_fragment_assembler
+	test_changelog_fragments_valid
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+copperfin-isolation:audit=complete              =   0.40 sec*proc (2 tests)
+copperfin-isolation:child-processes=none        =   0.40 sec*proc (2 tests)
+copperfin-isolation:environment=none            =   0.40 sec*proc (2 tests)
+copperfin-isolation:filesystem=process-owned    =   0.20 sec*proc (1 test)
+copperfin-isolation:filesystem=read-only        =   0.20 sec*proc (1 test)
+copperfin-isolation:network=none                =   0.40 sec*proc (2 tests)
+copperfin-isolation:platform=configured         =   0.40 sec*proc (2 tests)
+copperfin-isolation:resources=none              =   0.40 sec*proc (2 tests)
+copperfin-isolation:samples=none                =   0.40 sec*proc (2 tests)
+copperfin-isolation:schedule=parallel-safe      =   0.40 sec*proc (2 tests)
+
+Total Test time (real) =   0.41 sec

@@ -2455,6 +2455,38 @@ std::optional<std::uint64_t> checked_cast_uint64_argument(const PrgValue& value)
     return static_cast<std::uint64_t>(truncated);
 }
 
+// RQ-CF-PRG-CAST-INT32-NUMERIC-001 (#5611/#6776): independent native CAST
+// observations recover low32/huge0, not other functions' conversion policies.
+// Exact-kind/NaN boundaries are parent-derived. Kept UNUSED by CAST through
+// BOTH complete original baselines. Non-Numeric coercions are not selected.
+std::optional<std::int32_t> checked_cast_int32_numeric_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    if (value.kind != PrgValueKind::number && value.kind != PrgValueKind::int64 &&
+        value.kind != PrgValueKind::uint64) {
+        return std::nullopt;
+    }
+    if (value.kind == PrgValueKind::number && std::isnan(value.number_value)) {
+        return std::nullopt;
+    }
+    if (behavior == NumericBehavior::vfp9) {
+        // Defined primitive checks nonfinite/signed64 bounds before conversion,
+        // then extracts signed low32. Exact64 does not pass through Double.
+        return static_cast<std::int32_t>(vfp9_numeric_to_int32(value));
+    }
+    if (value.kind == PrgValueKind::int64) {
+        if (value.int64_value < INT32_MIN || value.int64_value > INT32_MAX) return std::nullopt;
+        return static_cast<std::int32_t>(value.int64_value);
+    }
+    if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value > static_cast<std::uint64_t>(INT32_MAX)) return std::nullopt;
+        return static_cast<std::int32_t>(value.uint64_value);
+    }
+    if (!std::isfinite(value.number_value)) return std::nullopt;
+    const double truncated = std::trunc(value.number_value);
+    if (truncated < -2147483648.0 || truncated >= 2147483648.0) return std::nullopt;
+    return static_cast<std::int32_t>(truncated);
+}
+
 std::size_t saturating_size_argument(const double value, const std::size_t minimum) {
     const std::int64_t truncated = saturating_numeric_to_int64(value);
     if (truncated <= 0 || static_cast<std::uint64_t>(truncated) < minimum) {
