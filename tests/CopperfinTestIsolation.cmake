@@ -969,6 +969,24 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
     # Signed16 extension: unique scratch, scoped locale, fresh sessions.
+    # RQ-CF-PRG-GETFONT-SIZE-NUMERIC-001: scoped locale and per-process unique
+    # public-session scripts/cursors; no native dialog or external process.
+    foreach(getfont_size_test IN ITEMS
+        test_prg_engine_getfont_size_numeric
+        test_prg_engine_getfont_size_numeric_copperfin_session1
+        test_prg_engine_getfont_size_numeric_copperfin_session2
+        test_prg_engine_getfont_size_numeric_vfp9_session1
+        test_prg_engine_getfont_size_numeric_vfp9_session2)
+        copperfin_set_test_isolation(${getfont_size_test}
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT scoped-process
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            RESOURCES none
+            AUDIT complete)
+    endforeach()
     foreach(cast_int16_test IN ITEMS
         test_prg_engine_cast_int16_numeric
         test_prg_engine_cast_int16_numeric_copperfin_session1

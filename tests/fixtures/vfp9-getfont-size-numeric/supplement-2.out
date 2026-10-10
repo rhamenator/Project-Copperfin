@@ -1,0 +1,97 @@
+VERSION|Visual FoxPro 09.00.0000.7423 for Windows
+FONT|Adwaita Sans
+BEGIN|GETFONT('Adwaita Sans',12,'B')|Return
+RESULT|GETFONT('Adwaita Sans',12,'B')|C:Adwaita Sans,12,B
+BEGIN|GETFONT('Adwaita Sans',12.49,'B')|Return
+RESULT|GETFONT('Adwaita Sans',12.49,'B')|C:Adwaita Sans,12,B
+BEGIN|GETFONT('Adwaita Sans',12.5,'B')|Return
+RESULT|GETFONT('Adwaita Sans',12.5,'B')|C:Adwaita Sans,12,B
+BEGIN|GETFONT('Adwaita Sans',12.9,'B')|Return
+RESULT|GETFONT('Adwaita Sans',12.9,'B')|C:Adwaita Sans,12,B
+BEGIN|GETFONT('Adwaita Sans',4,'B')|Return
+RESULT|GETFONT('Adwaita Sans',4,'B')|C:Adwaita Sans,4,B
+BEGIN|GETFONT('Adwaita Sans',127,'B')|Return
+RESULT|GETFONT('Adwaita Sans',127,'B')|C:Adwaita Sans,127,B
+BEGIN|GETFONT('Adwaita Sans',0,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',0,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',-1,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',-1,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',3,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',3,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',128,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',128,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',1E20,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',1E20,'B')|ERR11
+BEGIN|GETFONT('Adwaita Sans',EXP(1000),'B')|Escape
+RESULT|GETFONT('Adwaita Sans',EXP(1000),'B')|ERR11
+BEGIN|GETFONT('Adwaita Sans',2147483647,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',2147483647,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',2147483647.49,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',2147483647.49,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',2147483647.5,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',2147483647.5,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',2147483647.9,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',2147483647.9,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',2147483648,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',2147483648,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',-2147483648,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',-2147483648,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',-2147483648.9,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',-2147483648.9,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',-2147483649,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',-2147483649,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',4294967295,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',4294967295,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',4294967296,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',4294967296,'B')|ERR11
+BEGIN|GETFONT('Adwaita Sans',-4294967296,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',-4294967296,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',1E300,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',1E300,'B')|ERR11
+BEGIN|GETFONT('Adwaita Sans',-1E300,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',-1E300,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',-EXP(1000),'B')|Escape
+RESULT|GETFONT('Adwaita Sans',-EXP(1000),'B')|C:
+BEGIN|GETFONT('Adwaita Sans',.T.,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',.T.,'B')|ERR11
+BEGIN|GETFONT('Adwaita Sans',.NULL.,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',.NULL.,'B')|ERR11
+BEGIN|GETFONT('Adwaita Sans',0,'B')|Return
+RESULT|GETFONT('Adwaita Sans',0,'B')|C:Adwaita Sans,10,B
+BEGIN|GETFONT('Adwaita Sans',-1,'B')|Return
+RESULT|GETFONT('Adwaita Sans',-1,'B')|C:Adwaita Sans,10,B
+BEGIN|GETFONT('Adwaita Sans',-1E300,'B')|Return
+RESULT|GETFONT('Adwaita Sans',-1E300,'B')|C:Adwaita Sans,10,B
+BEGIN|GETFONT('Adwaita Sans',-EXP(1000),'B')|Return
+RESULT|GETFONT('Adwaita Sans',-EXP(1000),'B')|C:Adwaita Sans,10,B
+BEGIN|GETFONT('Adwaita Sans',0.5,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',0.5,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',0.9,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',0.9,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',4294967295.1,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',4294967295.1,'B')|ERR11
+BEGIN|GETFONT('Adwaita Sans',4294967295.5,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',4294967295.5,'B')|ERR11
+BEGIN|GETFONT('Adwaita Sans',4294967295.9,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',4294967295.9,'B')|ERR11
+BEGIN|GETFONT('Adwaita Sans',4294967296.1,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',4294967296.1,'B')|ERR11
+BEGIN|GETFONT('Adwaita Sans',4294967295.9999995,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',4294967295.9999995,'B')|ERR11
+BEGIN|GETFONT('Adwaita Sans',-0.5,'B')|Return
+RESULT|GETFONT('Adwaita Sans',-0.5,'B')|C:Adwaita Sans,10,B
+BEGIN|GETFONT('Adwaita Sans',-0.9,'B')|Return
+RESULT|GETFONT('Adwaita Sans',-0.9,'B')|C:Adwaita Sans,10,B
+BEGIN|GETFONT('Adwaita Sans',-2147483649,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',-2147483649,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',-4294967284,'B')|Return
+RESULT|GETFONT('Adwaita Sans',-4294967284,'B')|C:Adwaita Sans,12,B
+BEGIN|GETFONT('Adwaita Sans',-4294967283.5,'B')|Return
+RESULT|GETFONT('Adwaita Sans',-4294967283.5,'B')|C:Adwaita Sans,13,B
+BEGIN|GETFONT('Adwaita Sans',4294967295,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',4294967295,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',2147483648,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',2147483648,'B')|C:
+BEGIN|GETFONT('Adwaita Sans',2147483648.5,'B')|Escape
+RESULT|GETFONT('Adwaita Sans',2147483648.5,'B')|C:
+DONE

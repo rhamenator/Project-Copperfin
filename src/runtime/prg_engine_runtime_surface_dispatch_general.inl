@@ -1011,8 +1011,23 @@
     // payload and preserve the provided current font when the host does not override it.
     if (function == "getfont") {
         const std::string font_name = !arguments.empty() ? value_as_string(arguments[0]) : std::string{};
-        const long long font_size =
-            arguments.size() >= 2U ? std::llround(value_as_number(arguments[1])) : 0LL;
+        long long font_size = 0LL;
+        if (arguments.size() >= 2U) {
+            const auto& size = arguments[1];
+            if (size.kind == PrgValueKind::number || size.kind == PrgValueKind::int64 ||
+                size.kind == PrgValueKind::uint64) {
+                // RQ-CF-PRG-GETFONT-SIZE-NUMERIC-001: checked initial request,
+                // not native Font-dialog/backend point arithmetic.
+                const auto converted = checked_getfont_size_numeric_argument(
+                    size, numeric_behavior(set_callback));
+                if (!converted.has_value()) {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                }
+                font_size = *converted;
+            } else {
+                font_size = std::llround(value_as_number(size));
+            }
+        }
         const std::string font_style = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
         if (record_event_callback) {
             std::ostringstream detail;
