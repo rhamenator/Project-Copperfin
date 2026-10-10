@@ -1739,6 +1739,50 @@ std::optional<std::int32_t> checked_afont_size_argument(
     return static_cast<std::int32_t>(*size);
 }
 
+// RQ-CF-PRG-GETFONT-SIZE-NUMERIC-001 (#5611/#6776): checked initial request,
+// not native Font-dialog/backend point arithmetic. See retained GETFONT fixture.
+std::optional<std::int32_t> checked_getfont_size_numeric_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    if (value.kind != PrgValueKind::number && value.kind != PrgValueKind::int64 &&
+        value.kind != PrgValueKind::uint64) {
+        return std::nullopt;
+    }
+    if (behavior == NumericBehavior::vfp9) {
+        constexpr std::uint64_t ceiling = 4294967295ULL;
+        // Native positive ceiling is checked on the raw value, not its truncation.
+        const bool oversized = value.kind == PrgValueKind::int64
+            ? value.int64_value > static_cast<std::int64_t>(ceiling)
+            : value.kind == PrgValueKind::uint64 ? value.uint64_value > ceiling
+            : value.number_value > 4294967295.0;
+        if (oversized) {
+            return std::nullopt;
+        }
+        const auto converted = vfp9_numeric_to_int32(value);
+        return converted > 0 ? static_cast<std::int32_t>(converted) : 10;
+    }
+    if (value.kind == PrgValueKind::number) {
+        if (!std::isfinite(value.number_value)) {
+            return std::nullopt;
+        }
+        if (value.number_value < 1.0) {
+            return 10;
+        }
+        if (value.number_value >= 2147483648.0) {
+            return std::nullopt;
+        }
+        return static_cast<std::int32_t>(value.number_value);
+    }
+    if (value.kind == PrgValueKind::int64 && value.int64_value <= 0) {
+        return 10;
+    }
+    const auto positive = value.kind == PrgValueKind::int64
+        ? static_cast<std::uint64_t>(value.int64_value) : value.uint64_value;
+    if (positive > static_cast<std::uint64_t>(std::numeric_limits<std::int32_t>::max())) {
+        return std::nullopt;
+    }
+    return positive == 0 ? 10 : static_cast<std::int32_t>(positive);
+}
+
 // RQ-CF-PRG-FIELD-INDEX-NUMERIC-001 (#5611/#6776). The retained native
 // FIELD fixture distinguishes negative wrapping from positive empty results.
 std::optional<std::size_t> checked_field_index_argument(

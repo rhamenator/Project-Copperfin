@@ -1,0 +1,184 @@
+[0/2] Re-checking globbed directories...
+[1/7] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_surface_functions.cpp.o
+In file included from /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_functions.cpp:193:
+/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:13:5: warning: ‘int copperfin::runtime::{anonymous}::bit_position(const copperfin::runtime::PrgValue&)’ defined but not used [-Wunused-function]
+   13 | int bit_position(const PrgValue& value) {
+      |     ^~~~~~~~~~~~
+/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:5:15: warning: ‘uint32_t copperfin::runtime::{anonymous}::bitwise_value(const copperfin::runtime::PrgValue&)’ defined but not used [-Wunused-function]
+    5 | std::uint32_t bitwise_value(const PrgValue& value) {
+      |               ^~~~~~~~~~~~~
+[2/7] Linking CXX static library libcf_xbase_runtime.a
+[3/7] Linking CXX executable tests/test_prg_engine_int64_exact_expression
+[4/7] Linking CXX executable tests/test_prg_engine_numeric_behavior
+[5/7] Linking CXX executable tests/test_prg_engine_cast_int16_numeric
+[6/7] Linking CXX executable tests/test_prg_engine_getfont_size_numeric
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 36
+      Start  36: test_native_test_isolation_contract
+
+36: Test command: /usr/bin/cmake "-DINVENTORY_PATH=/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/native-test-isolation.tsv" "-DISOLATION_SOURCE_PATH=/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/tests/CopperfinTestIsolation.cmake" "-DTEST_REGISTRATION_SOURCE_PATH=/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/tests/CMakeLists.txt" "-P" "/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/tests/run_native_test_isolation_contract_check.cmake"
+36: Working Directory: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests
+36: Environment variables: 
+36:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/resources/locales
+36: Test timeout computed to be: 180
+36: -- Native test isolation inventory contract passed for 514 tests
+ 1/13 Test  #36: test_native_test_isolation_contract .......................   Passed    0.47 sec
+test 390
+      Start 390: test_prg_engine_int64_exact_expression
+
+390: Test command: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests/test_prg_engine_int64_exact_expression
+390: Working Directory: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests
+390: Environment variables: 
+390:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/resources/locales
+390: Test timeout computed to be: 180
+ 2/13 Test #390: test_prg_engine_int64_exact_expression ....................   Passed    0.10 sec
+test 393
+      Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 180
+ 3/13 Test #393: test_prg_engine_numeric_behavior ..........................   Passed   67.40 sec
+test 409
+      Start 409: test_prg_engine_cast_int16_numeric
+
+409: Test command: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests/test_prg_engine_cast_int16_numeric
+409: Working Directory: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests
+409: Environment variables: 
+409:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/resources/locales
+409: Test timeout computed to be: 180
+409: INT16 frozen cases: direct=162 public=0
+ 4/13 Test #409: test_prg_engine_cast_int16_numeric ........................   Passed    0.01 sec
+test 410
+      Start 410: test_prg_engine_cast_int16_numeric_copperfin_session1
+
+410: Test command: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests/test_prg_engine_cast_int16_numeric "COPPERFIN" "1"
+410: Working Directory: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests
+410: Environment variables: 
+410:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/resources/locales
+410: Test timeout computed to be: 180
+410: INT16 frozen cases: direct=0 public=152
+ 5/13 Test #410: test_prg_engine_cast_int16_numeric_copperfin_session1 .....   Passed    1.72 sec
+test 411
+      Start 411: test_prg_engine_cast_int16_numeric_copperfin_session2
+
+411: Test command: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests/test_prg_engine_cast_int16_numeric "COPPERFIN" "2"
+411: Working Directory: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests
+411: Environment variables: 
+411:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/resources/locales
+411: Test timeout computed to be: 180
+411: INT16 frozen cases: direct=0 public=152
+ 6/13 Test #411: test_prg_engine_cast_int16_numeric_copperfin_session2 .....   Passed    1.71 sec
+test 412
+      Start 412: test_prg_engine_cast_int16_numeric_vfp9_session1
+
+412: Test command: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests/test_prg_engine_cast_int16_numeric "VFP9" "1"
+412: Working Directory: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests
+412: Environment variables: 
+412:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/resources/locales
+412: Test timeout computed to be: 180
+412: INT16 frozen cases: direct=0 public=152
+ 7/13 Test #412: test_prg_engine_cast_int16_numeric_vfp9_session1 ..........   Passed    1.70 sec
+test 413
+      Start 413: test_prg_engine_cast_int16_numeric_vfp9_session2
+
+413: Test command: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests/test_prg_engine_cast_int16_numeric "VFP9" "2"
+413: Working Directory: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests
+413: Environment variables: 
+413:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/resources/locales
+413: Test timeout computed to be: 180
+413: INT16 frozen cases: direct=0 public=152
+ 8/13 Test #413: test_prg_engine_cast_int16_numeric_vfp9_session2 ..........   Passed    1.73 sec
+test 414
+      Start 414: test_prg_engine_getfont_size_numeric
+
+414: Test command: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests/test_prg_engine_getfont_size_numeric
+414: Working Directory: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests
+414: Environment variables: 
+414:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/resources/locales
+414: Test timeout computed to be: 180
+414: GETFONT frozen cases: direct=172 public=0
+ 9/13 Test #414: test_prg_engine_getfont_size_numeric ......................   Passed    0.01 sec
+test 415
+      Start 415: test_prg_engine_getfont_size_numeric_copperfin_session1
+
+415: Test command: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests/test_prg_engine_getfont_size_numeric "COPPERFIN" "1"
+415: Working Directory: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests
+415: Environment variables: 
+415:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/resources/locales
+415: Test timeout computed to be: 180
+415: GETFONT frozen cases: direct=0 public=79
+10/13 Test #415: test_prg_engine_getfont_size_numeric_copperfin_session1 ...   Passed    0.80 sec
+test 416
+      Start 416: test_prg_engine_getfont_size_numeric_copperfin_session2
+
+416: Test command: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests/test_prg_engine_getfont_size_numeric "COPPERFIN" "2"
+416: Working Directory: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests
+416: Environment variables: 
+416:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/resources/locales
+416: Test timeout computed to be: 180
+416: GETFONT frozen cases: direct=0 public=79
+11/13 Test #416: test_prg_engine_getfont_size_numeric_copperfin_session2 ...   Passed    0.81 sec
+test 417
+      Start 417: test_prg_engine_getfont_size_numeric_vfp9_session1
+
+417: Test command: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests/test_prg_engine_getfont_size_numeric "VFP9" "1"
+417: Working Directory: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests
+417: Environment variables: 
+417:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/resources/locales
+417: Test timeout computed to be: 180
+417: GETFONT frozen cases: direct=0 public=79
+12/13 Test #417: test_prg_engine_getfont_size_numeric_vfp9_session1 ........   Passed    0.78 sec
+test 418
+      Start 418: test_prg_engine_getfont_size_numeric_vfp9_session2
+
+418: Test command: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests/test_prg_engine_getfont_size_numeric "VFP9" "2"
+418: Working Directory: /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/build/getfont-size-gcc/tests
+418: Environment variables: 
+418:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin/resources/locales
+418: Test timeout computed to be: 180
+418: GETFONT frozen cases: direct=0 public=79
+13/13 Test #418: test_prg_engine_getfont_size_numeric_vfp9_session2 ........   Passed    0.81 sec
+
+The following tests passed:
+	test_native_test_isolation_contract
+	test_prg_engine_int64_exact_expression
+	test_prg_engine_numeric_behavior
+	test_prg_engine_cast_int16_numeric
+	test_prg_engine_cast_int16_numeric_copperfin_session1
+	test_prg_engine_cast_int16_numeric_copperfin_session2
+	test_prg_engine_cast_int16_numeric_vfp9_session1
+	test_prg_engine_cast_int16_numeric_vfp9_session2
+	test_prg_engine_getfont_size_numeric
+	test_prg_engine_getfont_size_numeric_copperfin_session1
+	test_prg_engine_getfont_size_numeric_copperfin_session2
+	test_prg_engine_getfont_size_numeric_vfp9_session1
+	test_prg_engine_getfont_size_numeric_vfp9_session2
+
+100% tests passed, 0 tests failed out of 13
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =  78.06 sec*proc (13 tests)
+copperfin-isolation:child-processes=none            =  78.06 sec*proc (13 tests)
+copperfin-isolation:environment=none                =   0.57 sec*proc (2 tests)
+copperfin-isolation:environment=scoped-process      =  77.49 sec*proc (11 tests)
+copperfin-isolation:filesystem=process-owned        =  67.50 sec*proc (2 tests)
+copperfin-isolation:filesystem=read-only            =   0.47 sec*proc (1 test)
+copperfin-isolation:filesystem=test-owned-unique    =  10.08 sec*proc (10 tests)
+copperfin-isolation:network=none                    =  78.06 sec*proc (13 tests)
+copperfin-isolation:platform=portable               =  78.06 sec*proc (13 tests)
+copperfin-isolation:resources=none                  =  78.06 sec*proc (13 tests)
+copperfin-isolation:samples=none                    =  78.06 sec*proc (13 tests)
+copperfin-isolation:schedule=parallel-safe          =   0.47 sec*proc (1 test)
+copperfin-isolation:schedule=serial                 =  77.59 sec*proc (12 tests)
+
+Total Test time (real) =  78.08 sec

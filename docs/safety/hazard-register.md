@@ -45,6 +45,18 @@ own system and domain assurance.
 
 ## Bounded numeric-conversion linkage
 
+RQ-CF-PRG-GETFONT-SIZE-NUMERIC-001 / DQ-DV-5611-GETFONT-SIZE-NUMERIC-001 links
+HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01 to the
+[pre-code GETFONT input/extension boundary](../../tests/fixtures/vfp9-getfont-size-numeric/README.md).
+Default checked positive signed32 request admission prevents accidental wraps;
+legacy aliases and native positive admission ceiling are explicit VFP9 policy.
+Headless request events are not native Font-dialog/backend parity. Bounded
+documentation misuse is medium; registered severities/status remain unchanged.
+Both frozen original/fixed compiler results and the completed bounded
+development walkthrough are retained in the fixture. Broader/exact-head
+integration remains gated; no independent-human/high-hazard or release
+qualification claim.
+
 RQ-CF-PRG-CAST-INT16-NUMERIC-001 / DQ-DV-5611-CAST-INT16-NUMERIC-001 links
 HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01 to the
 [signed16 extension boundary and verification plan](../../tests/fixtures/vfp9-cast-int16-numeric/README.md).

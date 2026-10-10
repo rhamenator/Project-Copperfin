@@ -1,0 +1,26 @@
+VERSION|Visual FoxPro 09.00.0000.7423 for Windows
+BEGIN|GETFONT('Arial',12,'B')|Return
+RESULT|GETFONT('Arial',12,'B')|C:@Droid Sans Fallback,6,N
+BEGIN|GETFONT('Arial',12.49,'B')|Return
+RESULT|GETFONT('Arial',12.49,'B')|C:@Droid Sans Fallback,6,N
+BEGIN|GETFONT('Arial',12.5,'B')|Return
+RESULT|GETFONT('Arial',12.5,'B')|C:@Droid Sans Fallback,6,N
+BEGIN|GETFONT('Arial',12.9,'B')|Return
+RESULT|GETFONT('Arial',12.9,'B')|C:@Droid Sans Fallback,6,N
+BEGIN|GETFONT('Arial',4,'B')|Return
+RESULT|GETFONT('Arial',4,'B')|C:@Droid Sans Fallback,6,N
+BEGIN|GETFONT('Arial',127,'B')|Return
+RESULT|GETFONT('Arial',127,'B')|C:@Droid Sans Fallback,6,N
+BEGIN|GETFONT('Arial',0,'B')|Escape
+RESULT|GETFONT('Arial',0,'B')|C:
+BEGIN|GETFONT('Arial',-1,'B')|Escape
+RESULT|GETFONT('Arial',-1,'B')|C:
+BEGIN|GETFONT('Arial',3,'B')|Escape
+RESULT|GETFONT('Arial',3,'B')|C:
+BEGIN|GETFONT('Arial',128,'B')|Escape
+RESULT|GETFONT('Arial',128,'B')|C:
+BEGIN|GETFONT('Arial',1E20,'B')|Escape
+RESULT|GETFONT('Arial',1E20,'B')|ERR11
+BEGIN|GETFONT('Arial',EXP(1000),'B')|Escape
+RESULT|GETFONT('Arial',EXP(1000),'B')|ERR11
+DONE

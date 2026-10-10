@@ -6018,6 +6018,17 @@ foreach(cast_int16_mode IN ITEMS COPPERFIN VFP9)
             COMMAND $<TARGET_FILE:test_prg_engine_cast_int16_numeric> ${cast_int16_mode} ${cast_int16_session})
     endforeach()
 endforeach()
+copperfin_add_test(test_prg_engine_getfont_size_numeric cf_xbase_runtime
+    test_prg_engine_getfont_size_numeric.cpp
+    prg_engine_test_support.cpp
+)
+foreach(getfont_size_mode IN ITEMS COPPERFIN VFP9)
+    string(TOLOWER "${getfont_size_mode}" getfont_size_mode_lower)
+    foreach(getfont_size_session IN ITEMS 1 2)
+        add_test(NAME test_prg_engine_getfont_size_numeric_${getfont_size_mode_lower}_session${getfont_size_session}
+            COMMAND $<TARGET_FILE:test_prg_engine_getfont_size_numeric> ${getfont_size_mode} ${getfont_size_session})
+    endforeach()
+endforeach()
 copperfin_add_test(test_prg_engine_cast_int32_numeric cf_xbase_runtime
     test_prg_engine_cast_int32_numeric.cpp
     prg_engine_test_support.cpp

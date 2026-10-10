@@ -378,6 +378,9 @@ std::optional<std::uint64_t> checked_cast_byte_numeric_argument(const PrgValue& 
 // RQ-CF-PRG-CAST-INT16-NUMERIC-001: Numeric/exact kinds only; common
 // signed16 extension range after finite truncation or exact comparison.
 std::optional<std::int64_t> checked_cast_int16_numeric_argument(const PrgValue& value);
+// RQ-CF-PRG-GETFONT-SIZE-NUMERIC-001: Numeric/exact initial request only;
+// default checked positive signed32/default10, explicit legacy admission/wrap.
+std::optional<std::int32_t> checked_getfont_size_numeric_argument(const PrgValue& value, NumericBehavior behavior);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the
 // value is out of range). A size or count: truncated toward zero, never below `minimum`, saturating at the largest
 // value this build supports: INT64_MAX, or SIZE_MAX where size_t is narrower (NaN gives `minimum`). A rounded int64 (llround semantics for in-range values; NaN is 0 and
