@@ -176,7 +176,20 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
         }
 
         sync_native_list_control_selected_state_size(runtime_object);
-        const long long requested_item_id = std::llround(value_as_number(arguments[0]));
+        // RQ-CF-PRG-SELECTEDID-NUMERIC-001: independently recovered
+        // Numeric/exact item-ID READ conversion, not row-index addressing.
+        const auto& item_id = arguments.front();
+        long long requested_item_id = 0;
+        if (!item_id.is_null && (item_id.kind == PrgValueKind::number ||
+            item_id.kind == PrgValueKind::int64 || item_id.kind == PrgValueKind::uint64)) {
+            const auto checked_item_id = checked_selectedid_numeric_argument(item_id, behavior);
+            if (!checked_item_id.has_value()) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
+            }
+            requested_item_id = *checked_item_id;
+        } else {
+            requested_item_id = std::llround(value_as_number(item_id));
+        }
         if (requested_item_id < 1LL) {
             return make_boolean_value(false);
         }

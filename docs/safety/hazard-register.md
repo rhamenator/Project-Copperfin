@@ -45,6 +45,21 @@ own system and domain assurance.
 
 ## Bounded numeric-conversion linkage
 
+RQ-CF-PRG-SELECTEDID-NUMERIC-001 / DQ-DV-5611-SELECTEDID-NUMERIC-001
+links active HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01
+to the [pre-code SelectedID item-ID mapping](../../tests/fixtures/vfp9-selectedid-numeric/README.md).
+Default checked admission avoids unintended aliases; independently observed
+negative aliases are explicit VFP9 policy. Sparse identity controls prevent a
+row-index requirement from being substituted for an item-ID requirement.
+Bounded documentation misuse medium does not alter registered severity/status.
+Both full originals retained before migration; fixed GNU23/23 and Clang
+sanitizer23/23 complete the bounded walkthrough with frozen inputs unchanged.
+Six unchanged preservation groups pass both builds; delegated development
+self-review complete, not independent-human signoff. Documentation contracts
+pass5/5 at the retained checkpoint; exact-head external integration remains
+gated. No whole-call callback/materialization atomicity,
+persistence, independent-human/high-hazard or release qualification claim.
+
 RQ-CF-PRG-SELECTED-INDEX-NUMERIC-001 / DQ-DV-5611-SELECTED-INDEX-NUMERIC-001
 links active HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01
 to the [pre-code Selected read-index mapping](../../tests/fixtures/vfp9-selected-index-numeric/README.md).
