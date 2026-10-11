@@ -1,0 +1,401 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 36
+      Start  36: test_native_test_isolation_contract
+
+36: Test command: /usr/bin/cmake "-DINVENTORY_PATH=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/native-test-isolation.tsv" "-DISOLATION_SOURCE_PATH=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/tests/CopperfinTestIsolation.cmake" "-DTEST_REGISTRATION_SOURCE_PATH=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/tests/CMakeLists.txt" "-P" "/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/tests/run_native_test_isolation_contract_check.cmake"
+36: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+36: Environment variables: 
+36:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+36: Test timeout computed to be: 600
+36: -- Native test isolation inventory contract passed for 544 tests
+ 1/34 Test  #36: test_native_test_isolation_contract ...........................   Passed    0.47 sec
+test 390
+      Start 390: test_prg_engine_int64_exact_expression
+
+390: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_int64_exact_expression
+390: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+390: Environment variables: 
+390:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+390: Test timeout computed to be: 600
+ 2/34 Test #390: test_prg_engine_int64_exact_expression ........................   Passed    0.10 sec
+test 393
+      Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 600
+ 3/34 Test #393: test_prg_engine_numeric_behavior ..............................   Passed  142.28 sec
+test 414
+      Start 414: test_prg_engine_itemidtoindex_numeric
+
+414: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_itemidtoindex_numeric
+414: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+414: Environment variables: 
+414:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+414: Test timeout computed to be: 600
+414: ItemIDToIndex frozen cases: direct=248 public=0
+ 4/34 Test #414: test_prg_engine_itemidtoindex_numeric .........................   Passed    0.02 sec
+test 415
+      Start 415: test_prg_engine_itemidtoindex_numeric_copperfin_session1
+
+415: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_itemidtoindex_numeric "COPPERFIN" "1"
+415: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+415: Environment variables: 
+415:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+415: Test timeout computed to be: 600
+415: ItemIDToIndex frozen cases: direct=0 public=944
+ 5/34 Test #415: test_prg_engine_itemidtoindex_numeric_copperfin_session1 ......   Passed   64.51 sec
+test 416
+      Start 416: test_prg_engine_itemidtoindex_numeric_copperfin_session2
+
+416: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_itemidtoindex_numeric "COPPERFIN" "2"
+416: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+416: Environment variables: 
+416:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+416: Test timeout computed to be: 600
+416: ItemIDToIndex frozen cases: direct=0 public=944
+ 6/34 Test #416: test_prg_engine_itemidtoindex_numeric_copperfin_session2 ......   Passed   68.15 sec
+test 417
+      Start 417: test_prg_engine_itemidtoindex_numeric_vfp9_session1
+
+417: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_itemidtoindex_numeric "VFP9" "1"
+417: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+417: Environment variables: 
+417:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+417: Test timeout computed to be: 600
+417: ItemIDToIndex frozen cases: direct=0 public=944
+ 7/34 Test #417: test_prg_engine_itemidtoindex_numeric_vfp9_session1 ...........   Passed   61.18 sec
+test 418
+      Start 418: test_prg_engine_itemidtoindex_numeric_vfp9_session2
+
+418: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_itemidtoindex_numeric "VFP9" "2"
+418: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+418: Environment variables: 
+418:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+418: Test timeout computed to be: 600
+418: ItemIDToIndex frozen cases: direct=0 public=944
+ 8/34 Test #418: test_prg_engine_itemidtoindex_numeric_vfp9_session2 ...........   Passed   61.84 sec
+test 419
+      Start 419: test_prg_engine_indextoitemid_numeric
+
+419: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_indextoitemid_numeric
+419: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+419: Environment variables: 
+419:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+419: Test timeout computed to be: 600
+419: IndexToItemID frozen cases: direct=194 public=0
+ 9/34 Test #419: test_prg_engine_indextoitemid_numeric .........................   Passed    0.01 sec
+test 420
+      Start 420: test_prg_engine_indextoitemid_numeric_copperfin_session1
+
+420: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_indextoitemid_numeric "COPPERFIN" "1"
+420: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+420: Environment variables: 
+420:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+420: Test timeout computed to be: 600
+420: IndexToItemID frozen cases: direct=0 public=400
+10/34 Test #420: test_prg_engine_indextoitemid_numeric_copperfin_session1 ......   Passed   13.42 sec
+test 421
+      Start 421: test_prg_engine_indextoitemid_numeric_copperfin_session2
+
+421: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_indextoitemid_numeric "COPPERFIN" "2"
+421: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+421: Environment variables: 
+421:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+421: Test timeout computed to be: 600
+421: IndexToItemID frozen cases: direct=0 public=400
+11/34 Test #421: test_prg_engine_indextoitemid_numeric_copperfin_session2 ......   Passed   13.35 sec
+test 422
+      Start 422: test_prg_engine_indextoitemid_numeric_vfp9_session1
+
+422: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_indextoitemid_numeric "VFP9" "1"
+422: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+422: Environment variables: 
+422:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+422: Test timeout computed to be: 600
+422: IndexToItemID frozen cases: direct=0 public=400
+12/34 Test #422: test_prg_engine_indextoitemid_numeric_vfp9_session1 ...........   Passed   13.19 sec
+test 423
+      Start 423: test_prg_engine_indextoitemid_numeric_vfp9_session2
+
+423: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_indextoitemid_numeric "VFP9" "2"
+423: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+423: Environment variables: 
+423:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+423: Test timeout computed to be: 600
+423: IndexToItemID frozen cases: direct=0 public=400
+13/34 Test #423: test_prg_engine_indextoitemid_numeric_vfp9_session2 ...........   Passed   13.32 sec
+test 424
+      Start 424: test_prg_engine_selectedid_numeric
+
+424: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_selectedid_numeric
+424: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+424: Environment variables: 
+424:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+424: Test timeout computed to be: 600
+424: SelectedID frozen cases: direct=200 public=0
+14/34 Test #424: test_prg_engine_selectedid_numeric ............................   Passed    0.01 sec
+test 425
+      Start 425: test_prg_engine_selectedid_numeric_copperfin_session1
+
+425: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_selectedid_numeric "COPPERFIN" "1"
+425: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+425: Environment variables: 
+425:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+425: Test timeout computed to be: 600
+425: SelectedID frozen cases: direct=0 public=476
+15/34 Test #425: test_prg_engine_selectedid_numeric_copperfin_session1 .........   Passed   17.51 sec
+test 426
+      Start 426: test_prg_engine_selectedid_numeric_copperfin_session2
+
+426: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_selectedid_numeric "COPPERFIN" "2"
+426: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+426: Environment variables: 
+426:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+426: Test timeout computed to be: 600
+426: SelectedID frozen cases: direct=0 public=476
+16/34 Test #426: test_prg_engine_selectedid_numeric_copperfin_session2 .........   Passed   17.61 sec
+test 427
+      Start 427: test_prg_engine_selectedid_numeric_vfp9_session1
+
+427: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_selectedid_numeric "VFP9" "1"
+427: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+427: Environment variables: 
+427:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+427: Test timeout computed to be: 600
+427: SelectedID frozen cases: direct=0 public=476
+17/34 Test #427: test_prg_engine_selectedid_numeric_vfp9_session1 ..............   Passed   19.63 sec
+test 428
+      Start 428: test_prg_engine_selectedid_numeric_vfp9_session2
+
+428: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_selectedid_numeric "VFP9" "2"
+428: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+428: Environment variables: 
+428:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+428: Test timeout computed to be: 600
+428: SelectedID frozen cases: direct=0 public=476
+18/34 Test #428: test_prg_engine_selectedid_numeric_vfp9_session2 ..............   Passed   18.07 sec
+test 429
+      Start 429: test_prg_engine_selected_index_numeric
+
+429: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_selected_index_numeric
+429: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+429: Environment variables: 
+429:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+429: Test timeout computed to be: 600
+429: Selected frozen cases: direct=190 public=0
+19/34 Test #429: test_prg_engine_selected_index_numeric ........................   Passed    0.02 sec
+test 430
+      Start 430: test_prg_engine_selected_index_numeric_copperfin_session1
+
+430: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_selected_index_numeric "COPPERFIN" "1"
+430: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+430: Environment variables: 
+430:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+430: Test timeout computed to be: 600
+430: Selected frozen cases: direct=0 public=368
+20/34 Test #430: test_prg_engine_selected_index_numeric_copperfin_session1 .....   Passed   12.22 sec
+test 431
+      Start 431: test_prg_engine_selected_index_numeric_copperfin_session2
+
+431: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_selected_index_numeric "COPPERFIN" "2"
+431: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+431: Environment variables: 
+431:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+431: Test timeout computed to be: 600
+431: Selected frozen cases: direct=0 public=368
+21/34 Test #431: test_prg_engine_selected_index_numeric_copperfin_session2 .....   Passed   12.06 sec
+test 432
+      Start 432: test_prg_engine_selected_index_numeric_vfp9_session1
+
+432: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_selected_index_numeric "VFP9" "1"
+432: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+432: Environment variables: 
+432:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+432: Test timeout computed to be: 600
+432: Selected frozen cases: direct=0 public=368
+22/34 Test #432: test_prg_engine_selected_index_numeric_vfp9_session1 ..........   Passed   11.72 sec
+test 433
+      Start 433: test_prg_engine_selected_index_numeric_vfp9_session2
+
+433: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_selected_index_numeric "VFP9" "2"
+433: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+433: Environment variables: 
+433:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+433: Test timeout computed to be: 600
+433: Selected frozen cases: direct=0 public=368
+23/34 Test #433: test_prg_engine_selected_index_numeric_vfp9_session2 ..........   Passed   12.95 sec
+test 434
+      Start 434: test_prg_engine_itemdata_index_numeric
+
+434: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_itemdata_index_numeric
+434: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+434: Environment variables: 
+434:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+434: Test timeout computed to be: 600
+434: ItemData frozen cases: direct=188 public=0
+24/34 Test #434: test_prg_engine_itemdata_index_numeric ........................   Passed    0.02 sec
+test 435
+      Start 435: test_prg_engine_itemdata_index_numeric_copperfin_session1
+
+435: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_itemdata_index_numeric "COPPERFIN" "1"
+435: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+435: Environment variables: 
+435:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+435: Test timeout computed to be: 600
+435: ItemData frozen cases: direct=0 public=368
+25/34 Test #435: test_prg_engine_itemdata_index_numeric_copperfin_session1 .....   Passed   11.78 sec
+test 436
+      Start 436: test_prg_engine_itemdata_index_numeric_copperfin_session2
+
+436: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_itemdata_index_numeric "COPPERFIN" "2"
+436: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+436: Environment variables: 
+436:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+436: Test timeout computed to be: 600
+436: ItemData frozen cases: direct=0 public=368
+26/34 Test #436: test_prg_engine_itemdata_index_numeric_copperfin_session2 .....   Passed   11.88 sec
+test 437
+      Start 437: test_prg_engine_itemdata_index_numeric_vfp9_session1
+
+437: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_itemdata_index_numeric "VFP9" "1"
+437: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+437: Environment variables: 
+437:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+437: Test timeout computed to be: 600
+437: ItemData frozen cases: direct=0 public=368
+27/34 Test #437: test_prg_engine_itemdata_index_numeric_vfp9_session1 ..........   Passed   12.62 sec
+test 438
+      Start 438: test_prg_engine_itemdata_index_numeric_vfp9_session2
+
+438: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_itemdata_index_numeric "VFP9" "2"
+438: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+438: Environment variables: 
+438:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+438: Test timeout computed to be: 600
+438: ItemData frozen cases: direct=0 public=368
+28/34 Test #438: test_prg_engine_itemdata_index_numeric_vfp9_session2 ..........   Passed   12.14 sec
+test 439
+      Start 439: test_prg_engine_getcolor_default_numeric
+
+439: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_getcolor_default_numeric
+439: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+439: Environment variables: 
+439:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+439: Test timeout computed to be: 600
+439: GETCOLOR frozen cases: direct=174 public=0
+29/34 Test #439: test_prg_engine_getcolor_default_numeric ......................   Passed    0.01 sec
+test 440
+      Start 440: test_prg_engine_getcolor_default_numeric_copperfin_session1
+
+440: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_getcolor_default_numeric "COPPERFIN" "1"
+440: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+440: Environment variables: 
+440:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+440: Test timeout computed to be: 600
+440: GETCOLOR frozen cases: direct=0 public=80
+30/34 Test #440: test_prg_engine_getcolor_default_numeric_copperfin_session1 ...   Passed    1.38 sec
+test 441
+      Start 441: test_prg_engine_getcolor_default_numeric_copperfin_session2
+
+441: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_getcolor_default_numeric "COPPERFIN" "2"
+441: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+441: Environment variables: 
+441:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+441: Test timeout computed to be: 600
+441: GETCOLOR frozen cases: direct=0 public=80
+31/34 Test #441: test_prg_engine_getcolor_default_numeric_copperfin_session2 ...   Passed    1.37 sec
+test 442
+      Start 442: test_prg_engine_getcolor_default_numeric_vfp9_session1
+
+442: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_getcolor_default_numeric "VFP9" "1"
+442: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+442: Environment variables: 
+442:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+442: Test timeout computed to be: 600
+442: GETCOLOR frozen cases: direct=0 public=80
+32/34 Test #442: test_prg_engine_getcolor_default_numeric_vfp9_session1 ........   Passed    1.26 sec
+test 443
+      Start 443: test_prg_engine_getcolor_default_numeric_vfp9_session2
+
+443: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_getcolor_default_numeric "VFP9" "2"
+443: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+443: Environment variables: 
+443:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+443: Test timeout computed to be: 600
+443: GETCOLOR frozen cases: direct=0 public=80
+33/34 Test #443: test_prg_engine_getcolor_default_numeric_vfp9_session2 ........   Passed    1.31 sec
+test 525
+      Start 525: test_prg_engine_runtime_surface_itemid_selectors
+
+525: Test command: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests/test_prg_engine_runtime_surface_itemid_selectors
+525: Working Directory: /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/build/itemidtoindex-clang/tests
+525: Environment variables: 
+525:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/resources/locales
+525: Test timeout computed to be: 600
+525: All tests passed.
+34/34 Test #525: test_prg_engine_runtime_surface_itemid_selectors ..............   Passed    0.08 sec
+
+The following tests passed:
+	test_native_test_isolation_contract
+	test_prg_engine_int64_exact_expression
+	test_prg_engine_numeric_behavior
+	test_prg_engine_itemidtoindex_numeric
+	test_prg_engine_itemidtoindex_numeric_copperfin_session1
+	test_prg_engine_itemidtoindex_numeric_copperfin_session2
+	test_prg_engine_itemidtoindex_numeric_vfp9_session1
+	test_prg_engine_itemidtoindex_numeric_vfp9_session2
+	test_prg_engine_indextoitemid_numeric
+	test_prg_engine_indextoitemid_numeric_copperfin_session1
+	test_prg_engine_indextoitemid_numeric_copperfin_session2
+	test_prg_engine_indextoitemid_numeric_vfp9_session1
+	test_prg_engine_indextoitemid_numeric_vfp9_session2
+	test_prg_engine_selectedid_numeric
+	test_prg_engine_selectedid_numeric_copperfin_session1
+	test_prg_engine_selectedid_numeric_copperfin_session2
+	test_prg_engine_selectedid_numeric_vfp9_session1
+	test_prg_engine_selectedid_numeric_vfp9_session2
+	test_prg_engine_selected_index_numeric
+	test_prg_engine_selected_index_numeric_copperfin_session1
+	test_prg_engine_selected_index_numeric_copperfin_session2
+	test_prg_engine_selected_index_numeric_vfp9_session1
+	test_prg_engine_selected_index_numeric_vfp9_session2
+	test_prg_engine_itemdata_index_numeric
+	test_prg_engine_itemdata_index_numeric_copperfin_session1
+	test_prg_engine_itemdata_index_numeric_copperfin_session2
+	test_prg_engine_itemdata_index_numeric_vfp9_session1
+	test_prg_engine_itemdata_index_numeric_vfp9_session2
+	test_prg_engine_getcolor_default_numeric
+	test_prg_engine_getcolor_default_numeric_copperfin_session1
+	test_prg_engine_getcolor_default_numeric_copperfin_session2
+	test_prg_engine_getcolor_default_numeric_vfp9_session1
+	test_prg_engine_getcolor_default_numeric_vfp9_session2
+	test_prg_engine_runtime_surface_itemid_selectors
+
+100% tests passed, 0 tests failed out of 34
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  = 627.48 sec*proc (34 tests)
+copperfin-isolation:child-processes=none            = 627.48 sec*proc (34 tests)
+copperfin-isolation:environment=none                =   0.65 sec*proc (3 tests)
+copperfin-isolation:environment=scoped-process      = 626.83 sec*proc (31 tests)
+copperfin-isolation:filesystem=process-owned        = 142.38 sec*proc (2 tests)
+copperfin-isolation:filesystem=read-only            =   0.47 sec*proc (1 test)
+copperfin-isolation:filesystem=test-owned-unique    = 484.63 sec*proc (31 tests)
+copperfin-isolation:network=none                    = 627.48 sec*proc (34 tests)
+copperfin-isolation:platform=portable               = 627.48 sec*proc (34 tests)
+copperfin-isolation:resources=none                  = 627.48 sec*proc (34 tests)
+copperfin-isolation:samples=none                    = 627.48 sec*proc (34 tests)
+copperfin-isolation:schedule=parallel-safe          =   0.55 sec*proc (2 tests)
+copperfin-isolation:schedule=serial                 = 626.93 sec*proc (32 tests)
+
+Total Test time (real) = 627.52 sec

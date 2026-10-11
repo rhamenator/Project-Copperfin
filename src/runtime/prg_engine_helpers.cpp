@@ -2756,6 +2756,39 @@ std::optional<std::int32_t> checked_indextoitemid_numeric_argument(
     return static_cast<std::int32_t>(truncated);
 }
 
+// RQ-CF-PRG-ITEMIDTOINDEX-NUMERIC-001 / VR-5611-ITEMIDTOINDEX-NUMERIC-001.
+// Independent native sparse/dense recovery: both-sign aliases, no positive
+// ceiling. Kept UNUSED by production until both complete original suites.
+std::optional<std::int32_t> checked_itemidtoindex_numeric_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    if (value.is_null || (value.kind != PrgValueKind::number &&
+        value.kind != PrgValueKind::int64 && value.kind != PrgValueKind::uint64)) {
+        return std::nullopt;
+    }
+    if (value.kind == PrgValueKind::number && std::isnan(value.number_value)) {
+        return std::nullopt; // Parent-derived, not a native NaN syntax claim.
+    }
+    if (behavior == NumericBehavior::vfp9) {
+        return static_cast<std::int32_t>(vfp9_numeric_to_int32(value));
+    }
+    constexpr auto lower = std::numeric_limits<std::int32_t>::min();
+    constexpr auto upper = std::numeric_limits<std::int32_t>::max();
+    if (value.kind == PrgValueKind::int64) {
+        if (value.int64_value < lower || value.int64_value > upper) return std::nullopt;
+        return static_cast<std::int32_t>(value.int64_value);
+    }
+    if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value > static_cast<std::uint64_t>(upper)) return std::nullopt;
+        return static_cast<std::int32_t>(value.uint64_value);
+    }
+    if (!std::isfinite(value.number_value)) return std::nullopt;
+    const double truncated = std::trunc(value.number_value);
+    if (truncated < static_cast<double>(lower) || truncated > static_cast<double>(upper)) {
+        return std::nullopt;
+    }
+    return static_cast<std::int32_t>(truncated);
+}
+
 std::size_t saturating_size_argument(const double value, const std::size_t minimum) {
     const std::int64_t truncated = saturating_numeric_to_int64(value);
     if (truncated <= 0 || static_cast<std::uint64_t>(truncated) < minimum) {

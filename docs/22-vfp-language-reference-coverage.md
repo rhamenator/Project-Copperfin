@@ -1,5 +1,23 @@
 # VFP Language Reference Coverage
 
+- ItemIDToIndex Numeric/exact item-ID READ recovery (#5611/#6776,2026-10-11):
+  RQ-CF-PRG-ITEMIDTOINDEX-NUMERIC-001 mapped before helper/assertions/config.
+  [Independent installed VFP9/help recovery](../tests/fixtures/vfp9-itemidtoindex-numeric/README.md)
+  retains matching302-line/300-call sparse11/22/33 and dense1/2/3 observations.
+  Input is a unique item ID, returned Numeric is its one-based display row;
+  fractions truncate, ordinary negative/zero/missing IDs return0. Native
+  both-sign low32 aliases and huge/Infinity0 are explicit VFP9 only; default
+  signed32/localized31/exact64/NaN boundaries are parent-derived.
+  Distinct helper stayed UNUSED through both full original suites: GNU30/34
+  and Clang30/34, onlyfournewpublicfail, frozen248/four944 counters complete.
+  Bounded method/raw-selector migration follows retained evidence; fixed GNU
+  34/34/348.49s and Clang sanitizer34/34/627.52s pass with all counters complete.
+  Both pass six unchanged preservation groups. Boundedmedium development DQ/DV
+  walkthrough/self-review complete; five documentation contracts PASS334.24s.
+  Exact-head integration remains pending. Type gap#7149 is separate.
+  No type/write/
+  RowSource/lifecycle/general parser/parent or release qualification claim.
+
 - IndexToItemID Numeric/exact row-index read recovery (#5611/#6776,2026-10-11):
   RQ-CF-PRG-INDEXTOITEMID-NUMERIC-001 mapped before code/config.
   [Independent VFP9/help recovery and phase audit](../tests/fixtures/vfp9-indextoitemid-numeric/README.md)

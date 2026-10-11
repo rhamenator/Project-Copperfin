@@ -7,5 +7,10 @@
   runs, preserving frozen inputs and phase evidence. GNU29/29, Clang sanitizer
   29/29 and six unchanged preservation groups per compiler pass; bounded
   development documentation walkthrough/self-review and five documentation
-  contracts pass. Exact-head integration/review remains pending; unsupported
+  contracts pass. PR #7148 merged after all 11 required checks passed, a clean
+  exact-head authorized Codex review followed Claude-first routing, and all
+  conversations were resolved. Optional broad native CI was still running at
+  merge; all three late native jobs subsequently passed at the exact head
+  (Linux/macOS 539 tests each, Windows 540), with full raw evidence retained.
+  Unsupported
   type admission, writes, lifecycle and parent completion remain separate.

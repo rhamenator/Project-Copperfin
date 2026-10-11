@@ -395,6 +395,9 @@ std::optional<std::int32_t> checked_selectedid_numeric_argument(const PrgValue& 
 // RQ-CF-PRG-INDEXTOITEMID-NUMERIC-001: independently recovered row READ;
 // default checked signed32; VFP9 signed-low32, no SelectedID ceiling gate.
 std::optional<std::int32_t> checked_indextoitemid_numeric_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-ITEMIDTOINDEX-NUMERIC-001: independently recovered item-ID READ;
+// checked signed32 default; explicit both-sign low32/huge0, NaN containment.
+std::optional<std::int32_t> checked_itemidtoindex_numeric_argument(const PrgValue& value, NumericBehavior behavior);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the
 // value is out of range). A size or count: truncated toward zero, never below `minimum`, saturating at the largest
 // value this build supports: INT64_MAX, or SIZE_MAX where size_t is narrower (NaN gives `minimum`). A rounded int64 (llround semantics for in-range values; NaN is 0 and
