@@ -99,6 +99,15 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
         }
     }
 
+    // RQ-CF-PRG-LIST-INDEX-NUMERIC-001: one-argument display-row READ only.
+    // Explicit columns and unsupported types retain their existing paths.
+    if (normalized_method_name == "list" && arguments.size() == 1U) {
+        if (auto result = read_native_list_control_cell_numeric(
+                runtime_object, arguments.front(), behavior); result.has_value()) {
+            return result;
+        }
+    }
+
     materialize_native_list_control_rows(runtime_object);
 
     if (normalized_method_name == "list") {
@@ -639,6 +648,33 @@ std::optional<PrgValue> read_native_list_control_cell(
     }
 
     return make_string_value(value_as_string(row[column_slot]));
+}
+
+// RQ-CF-PRG-LIST-INDEX-NUMERIC-001; VR-5611-LIST-INDEX-NUMERIC-001/002.
+// List addresses display rows, not stable item IDs. Materialization precedes
+// conversion; stable RowSourceType0 evidence does not qualify callback atomicity.
+std::optional<PrgValue> read_native_list_control_cell_numeric(
+    RuntimeOleObjectState& runtime_object,
+    const PrgValue& index,
+    NumericBehavior behavior)
+{
+    if (!is_native_list_control_runtime_object(runtime_object) || index.is_null ||
+        (index.kind != PrgValueKind::number && index.kind != PrgValueKind::int64 &&
+         index.kind != PrgValueKind::uint64)) {
+        return std::nullopt;
+    }
+
+    materialize_native_list_control_rows(runtime_object);
+    const auto checked_index = checked_list_index_numeric_argument(index, behavior);
+    if (!checked_index.has_value()) {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
+    }
+    if (*checked_index == 0 ||
+        static_cast<std::size_t>(*checked_index) > runtime_object.list_rows.size()) {
+        return make_string_value("");
+    }
+    const auto& row = runtime_object.list_rows[static_cast<std::size_t>(*checked_index - 1)];
+    return make_string_value(row.empty() ? std::string{} : value_as_string(row.front()));
 }
 
 std::optional<PrgValue> read_native_list_control_item_cell(

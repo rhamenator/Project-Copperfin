@@ -2821,6 +2821,43 @@ std::optional<std::int32_t> checked_listitem_numeric_argument(
         ? std::optional<std::int32_t>(static_cast<std::int32_t>(exact)) : std::nullopt;
 }
 
+// RQ-CF-PRG-LIST-INDEX-NUMERIC-001 / VR-5611-LIST-INDEX-NUMERIC-001.
+// Independent List display-row probe, not a ListItem identity policy oracle.
+// UNUSED by production through BOTH complete original compiler suites.
+std::optional<std::int32_t> checked_list_index_numeric_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    if (value.is_null || (value.kind != PrgValueKind::number &&
+        value.kind != PrgValueKind::int64 && value.kind != PrgValueKind::uint64)) {
+        return std::nullopt;
+    }
+    constexpr auto upper = std::numeric_limits<std::int32_t>::max();
+    if (value.kind == PrgValueKind::number && std::isnan(value.number_value)) {
+        return std::nullopt; // Parent-derived containment, not native NaN syntax.
+    }
+    if (behavior == NumericBehavior::vfp9) {
+        const bool above_raw_ceiling = value.kind == PrgValueKind::number
+            ? value.number_value > static_cast<double>(upper)
+            : value.kind == PrgValueKind::int64 ? value.int64_value > upper
+            : value.uint64_value > static_cast<std::uint64_t>(upper);
+        if (above_raw_ceiling) return std::nullopt;
+        const auto row = vfp9_numeric_to_int32(value);
+        if (row < 0) return std::nullopt;
+        return static_cast<std::int32_t>(row);
+    }
+    if (value.kind == PrgValueKind::number) {
+        if (!std::isfinite(value.number_value)) return std::nullopt;
+        const double row = std::trunc(value.number_value);
+        if (row < 0.0 || row > static_cast<double>(upper)) return std::nullopt;
+        return static_cast<std::int32_t>(row);
+    }
+    if (value.kind == PrgValueKind::int64) {
+        if (value.int64_value < 0 || value.int64_value > upper) return std::nullopt;
+        return static_cast<std::int32_t>(value.int64_value);
+    }
+    if (value.uint64_value > static_cast<std::uint64_t>(upper)) return std::nullopt;
+    return static_cast<std::int32_t>(value.uint64_value);
+}
+
 std::size_t saturating_size_argument(const double value, const std::size_t minimum) {
     const std::int64_t truncated = saturating_numeric_to_int64(value);
     if (truncated <= 0 || static_cast<std::uint64_t>(truncated) < minimum) {

@@ -1,5 +1,26 @@
 # VFP Language Reference Coverage
 
+- One-argument List Numeric/exact display-row READ recovery (#5611/#6776,
+  2026-10-11): RQ-CF-PRG-LIST-INDEX-NUMERIC-001 mapped16:21Z BEFORE helper/
+  assertions/configuration. [Independent native/help map](../tests/fixtures/vfp9-list-index-numeric/README.md)
+  retains matching302-line/300-call installedVFP9 pairs. Both sparse/dense
+  2.9=>second,22.9=>empty; display row is not item identity. Native positiveRAW
+  ceiling/negative signed-low32/nonnegative admission are explicit VFP9 only;
+  default checked0..INT32_MAX and lossless exact64/NaN are parent-derived.
+  VR001/002 and boundedmedium DQ/DV/HZ map precede code. Frozen248/four944,
+  BOTH full44-subject originals40/44 retained BEFORE migration, with identical
+  3552 selected assertions and onlyfournewNumericpublicfail. Narrow one-argument
+  method/raw-property adapter now wired, parser/frozen tests unchanged; identical
+  fixed GNU44/44/594.91s and Clangsanitizer44/44/1068.61s PASS with all248/
+  four944 and sevenneighborcounts complete, zeroFAIL/no sanitizerreport.
+  Both six unchanged preservationgroups PASS. State/types/neighbors preserved; focused
+  Logical/NULL admission gap#7153 separate/unadmitted. Five documentation
+  contracts5/5/347.85s PASS; boundedmedium development DQ/DV walkthrough and
+  delegated self-review complete, not independenthuman/high-hazard signoff.
+  Signed exact-head hosted/review/conversation gates remain pending.
+  Explicit columns/types/writes/lifecycle/parser/callback atomicity excluded;
+  no whole family, parent, hazard or release completion claim.
+
 - One-argument ListItem Numeric/exact READ recovery (#5611/#6776,2026-10-11):
   RQ-CF-PRG-LISTITEM-NUMERIC-001 mapped13:18Z before helper/assertions/config.
   [Independent VFP9/help map](../tests/fixtures/vfp9-listitem-numeric/README.md)
@@ -15,7 +36,10 @@
   fixed GNU39/39/468.01s and Clangsanitizer39/39/821.67s pass with all counts.
   Both six unchanged preservation groups pass. Boundedmedium development DQ/DV
   walkthrough/delegated self-review complete; five documentation contracts
-  PASS5/5/333.19s, full raw/hash retained; exact-head review/CI pending.
+  PASS5/5/333.19s, full raw/hash retained. PR7152 mergedmainf77021174 with
+  all11requiredgreen/actualcleanexact-headCodex6110506059/resolvedconversations;
+  signed-head postpush39/39 PASS460.36s. Optional fullLinux/macOS549/549 PASS;
+  fullWindows pending atmerge, not retroactivegreen.
   Type gap#7151 is separate/unadmitted. No whole-call/high-hazard/release/parent
   closure.
 

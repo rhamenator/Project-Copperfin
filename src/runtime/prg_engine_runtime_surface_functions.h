@@ -354,6 +354,10 @@ std::optional<long long> parse_native_list_control_itemidtoindex_member_item_id(
 std::optional<PrgValue> read_native_list_control_cell(RuntimeOleObjectState& runtime_object,
                                                       std::size_t row_slot,
                                                       std::size_t column_slot);
+std::optional<PrgValue> read_native_list_control_cell_numeric(
+    RuntimeOleObjectState& runtime_object,
+    const PrgValue& index,
+    NumericBehavior behavior);
 std::optional<PrgValue> read_native_list_control_item_cell(
     RuntimeOleObjectState& runtime_object,
     long long item_id,
