@@ -984,6 +984,24 @@ function(copperfin_configure_native_test_isolation)
     # unique scripts/scoped locale; no children/shared resources.
     # RQ-CF-PRG-LISTITEM-NUMERIC-001: one-selector reads, fresh native
     # sparse/dense controls, unique scripts/scoped locale; no shared resources.
+    # RQ-CF-PRG-LIST-INDEX-NUMERIC-001: fresh native display-row reads;
+    # unique scripts/scoped locale, no child processes or shared resources.
+    foreach(list_index_test IN ITEMS
+        test_prg_engine_list_index_numeric
+        test_prg_engine_list_index_numeric_copperfin_session1
+        test_prg_engine_list_index_numeric_copperfin_session2
+        test_prg_engine_list_index_numeric_vfp9_session1
+        test_prg_engine_list_index_numeric_vfp9_session2)
+        copperfin_set_test_isolation(${list_index_test}
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT scoped-process
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            RESOURCES none
+            AUDIT complete)
+    endforeach()
     foreach(listitem_test IN ITEMS
         test_prg_engine_listitem_numeric
         test_prg_engine_listitem_numeric_copperfin_session1

@@ -45,6 +45,22 @@ own system and domain assurance.
 
 ## Bounded numeric-conversion linkage
 
+RQ-CF-PRG-LIST-INDEX-NUMERIC-001 / DQ-DV-5611-LIST-INDEX-NUMERIC-001 links
+active HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01 to the
+[pre-code one-argument display-row map](../../tests/fixtures/vfp9-list-index-numeric/README.md).
+Independent dense/sparse observations distinguish display rows from item IDs;
+default checked nonnegative32 admission and explicit VFP9 low32/raw-ceiling
+policy are mapped BEFORE helper/assertions/configuration. Bounded documentation
+misuse medium does not alter registered severity/status. BOTH full originals
+were retained before bounded migration, each40/44 with identical3552 selected
+failures and all39 unchanged subjects passing. Identical fixed GNU44/44 and
+Clangsanitizer44/44 PASS/all counts complete/zeroFAIL/no sanitizerreport;
+both six unchanged preservationgroups and fivecontracts PASS. Boundedmedium
+delegated development walkthrough/self-review complete in retained phase audit,
+not independent-human signoff. Exact-head integration gates pending; no independent-human,
+persistence, callback atomicity, high-hazard,
+parent/KBX/hazard closure or release qualification claim.
+
 RQ-CF-PRG-LISTITEM-NUMERIC-001 / DQ-DV-5611-LISTITEM-NUMERIC-001 links
 active HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01 to the
 [pre-code one-argument item-ID map](../../tests/fixtures/vfp9-listitem-numeric/README.md).
@@ -56,7 +72,9 @@ Both full originals were retained before migration; fixed GNU39/39 and Clang
 sanitizer39/39 plus both six unchanged preservation groups substantiate the
 completed development walkthrough/delegated maintainer self-review, not
 independent-human sign-off. Documentation contracts pass5/5/333.19s with full
-raw/hash retained; signed exact-head review/CI remain gates. Type gap#7151 is
+raw/hash retained. PR7152 merged after signed-head postpush39/39/all11required/
+actualcleanexact-headCodex6110506059/resolvedconversations; optional fullWindows
+pending atmerge. Type gap#7151 is
 separate/unadmitted. No persistence,
 whole-call callback/materialization atomicity, high-hazard qualification,
 parent/KBX/hazard closure or release qualification claim.
