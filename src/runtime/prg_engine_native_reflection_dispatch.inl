@@ -1,7 +1,8 @@
     std::optional<PrgValue> PrgRuntimeSession::Impl::read_native_property_if_present(
         RuntimeOleObjectState &runtime_object,
         const std::string &property_name,
-        const Frame &source_frame)
+        const Frame &source_frame,
+        const PrgValue *raw_selector)
     {
         const std::string normalized_property_name = normalize_identifier(property_name);
         if (normalized_property_name.empty())
@@ -349,6 +350,25 @@
                     runtime_object,
                     item_cell->item_id,
                     item_cell->column_slot);
+            }
+            // RQ-CF-PRG-ITEMDATA-INDEX-NUMERIC-001: preserve property-first
+            // routing, but do not recover Numeric indices from formatted text.
+            const auto selector_open = normalized_property_name.find_first_of("([");
+            if (raw_selector != nullptr && selector_open != std::string::npos &&
+                is_native_itemdata_member_name(runtime_object,
+                    normalized_property_name.substr(0U, selector_open)))
+            {
+                const auto& set_state = current_set_state();
+                const auto mode = set_state.find("numericbehavior");
+                const auto behavior = mode != set_state.end() &&
+                    normalize_identifier(mode->second) == "vfp9"
+                    ? NumericBehavior::vfp9 : NumericBehavior::copperfin;
+                if (auto typed_value = read_native_list_control_item_data_numeric(
+                        runtime_object, *raw_selector, behavior);
+                    typed_value.has_value())
+                {
+                    return *typed_value;
+                }
             }
             if (const auto item_data_slot =
                     parse_native_list_control_itemdata_member_slot(runtime_object, property_name);

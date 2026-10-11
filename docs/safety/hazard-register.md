@@ -45,6 +45,18 @@ own system and domain assurance.
 
 ## Bounded numeric-conversion linkage
 
+RQ-CF-PRG-ITEMDATA-INDEX-NUMERIC-001 / DQ-DV-5611-ITEMDATA-INDEX-NUMERIC-001
+links active HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01
+to the [pre-code read-index mapping](../../tests/fixtures/vfp9-itemdata-index-numeric/README.md).
+Default checked nonnegative signed32 admission avoids aliases; explicit VFP9
+positive raw ceiling/negative low32 aliases are observed independently.
+Bounded documentation misuse medium does not alter registered severity/status.
+Both final originals retained before migration; GNU13/13 and Clang sanitizer
+13/13 verify the bounded walkthrough, not arbitrary callback/materialization
+atomicity. Documentation contracts5/5 pass with checkpoint limitations in the
+audit; hosted exact-head regression/review gates remain pending;
+no independent-human/high-hazard/release or parent acceptance claim.
+
 RQ-CF-PRG-GETCOLOR-DEFAULT-NUMERIC-001 / DQ-DV-5611-GETCOLOR-DEFAULT-NUMERIC-001
 links active HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01
 to the [pre-code RGB/headless/native boundary](../../tests/fixtures/vfp9-getcolor-default-numeric/README.md).

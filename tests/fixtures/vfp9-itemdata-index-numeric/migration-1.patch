@@ -1,0 +1,284 @@
+diff --git a/src/runtime/prg_engine.cpp b/src/runtime/prg_engine.cpp
+index 821af1ed4..5d033e03c 100644
+--- a/src/runtime/prg_engine.cpp
++++ b/src/runtime/prg_engine.cpp
+@@ -1325,7 +1325,8 @@ namespace copperfin::runtime
+         std::optional<PrgValue> read_native_property_if_present(
+             RuntimeOleObjectState &runtime_object,
+             const std::string &property_name,
+-            const Frame &source_frame);
++            const Frame &source_frame,
++            const PrgValue *raw_selector = nullptr);
+         std::optional<std::string> read_native_property_expression_if_present(
+             RuntimeOleObjectState &runtime_object,
+             const std::string &property_name);
+@@ -3191,7 +3192,8 @@ namespace copperfin::runtime
+                 auto object = resolve_ole_object(resolved_property->second);
+                 return object.has_value() ? *object : nullptr;
+             },
+-            [this, &frame](const PrgValue &value, const std::string &member_name) -> std::optional<PrgValue>
++            [this, &frame](const PrgValue &value, const std::string &member_name,
++                           const PrgValue *raw_selector) -> std::optional<PrgValue>
+             {
+                 auto object = resolve_ole_object(value);
+                 if (!object.has_value())
+@@ -3267,7 +3269,7 @@ namespace copperfin::runtime
+                             "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead",
+                             {{"memberIdentifier", detail}}));
+                 }
+-                return read_native_property_if_present(*target_object, leaf_member_name, frame);
++                return read_native_property_if_present(*target_object, leaf_member_name, frame, raw_selector);
+             },
+             [this, &frame](
+                 const PrgValue &value,
+diff --git a/src/runtime/prg_engine_expression.inl b/src/runtime/prg_engine_expression.inl
+index 09cbd3de0..20145956a 100644
+--- a/src/runtime/prg_engine_expression.inl
++++ b/src/runtime/prg_engine_expression.inl
+@@ -312,7 +312,7 @@
+                 std::function<void(const std::string &, const std::string &)> record_event_callback,
+                 std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback,
+                 std::function<RuntimeOleObjectState*(const std::string &)> resolve_object_path_callback,
+-                std::function<std::optional<PrgValue>(const PrgValue &, const std::string &)> read_native_member_callback,
++                std::function<std::optional<PrgValue>(const PrgValue &, const std::string &, const PrgValue *)> read_native_member_callback,
+                 std::function<std::optional<PrgValue>(const PrgValue &, const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> invoke_native_member_callback,
+                 std::function<bool(const PrgValue &, const std::string &, const PrgValue &)> write_native_member_callback,
+                 std::function<std::optional<std::int64_t>(std::int64_t)> whandle_from_hwnd_callback,
+@@ -1513,7 +1513,8 @@
+                         }
+                         selector_member_name.push_back(')');
+                         if (const auto selector_value =
+-                                read_native_member_callback_(current, selector_member_name);
++                                read_native_member_callback_(current, selector_member_name,
++                                    arguments.size() == 1U ? &arguments.front() : nullptr);
+                             selector_value.has_value())
+                         {
+                             return *selector_value;
+@@ -2728,7 +2729,10 @@
+                                                           require_verified_file_byte_overrides_,
+                                                           read_verified_file_callback_,
+                                                           resolve_object_callback_,
+-                                                          read_native_member_callback_,
++                                                          [this](const PrgValue& value, const std::string& member_name)
++                                                          {
++                                                              return read_native_member_callback_(value, member_name, nullptr);
++                                                          },
+                                                           write_native_member_callback_,
+                                                           whandle_from_hwnd_callback_,
+                                                           hwnd_from_whandle_callback_,
+@@ -2865,7 +2869,8 @@
+                         }
+                         selector_member_name.push_back(']');
+                         if (const auto selector_value =
+-                                read_native_member_callback_(current, selector_member_name);
++                                read_native_member_callback_(current, selector_member_name,
++                                    secondary_selector.has_value() ? nullptr : &selector);
+                             selector_value.has_value())
+                         {
+                             return *selector_value;
+@@ -2945,7 +2950,8 @@
+                         selector_member_name.push_back(']');
+ 
+                         const auto selector_value =
+-                            read_native_member_callback_(current, selector_member_name);
++                            read_native_member_callback_(current, selector_member_name,
++                                secondary_selector.has_value() ? nullptr : &selector);
+                         if (selector_value.has_value())
+                         {
+                             current = *selector_value;
+@@ -2953,7 +2959,7 @@
+                         }
+ 
+                         const auto member_value =
+-                            read_native_member_callback_(current, member_name);
++                            read_native_member_callback_(current, member_name, nullptr);
+                         if (member_value.has_value())
+                         {
+                             RuntimeOleObjectState *member_object =
+@@ -2995,7 +3001,7 @@
+ 
+                     if (peek() == '(')
+                     {
+-                        const auto member_value = read_native_member_callback_(current, member_name);
++                        const auto member_value = read_native_member_callback_(current, member_name, nullptr);
+                         if (member_value.has_value())
+                         {
+                             RuntimeOleObjectState *member_object = resolve_object_callback_(*member_value);
+@@ -3025,7 +3031,7 @@
+                         continue;
+                     }
+ 
+-                    const auto member_value = read_native_member_callback_(current, member_name);
++                    const auto member_value = read_native_member_callback_(current, member_name, nullptr);
+                     if (!member_value.has_value())
+                     {
+                         return {};
+@@ -4511,7 +4517,9 @@
+             std::function<void(const std::string &, const std::string &)> record_event_callback_;
+             std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback_;
+             std::function<RuntimeOleObjectState*(const std::string &)> resolve_object_path_callback_;
+-            std::function<std::optional<PrgValue>(const PrgValue &, const std::string &)> read_native_member_callback_;
++            // RQ-CF-PRG-ITEMDATA-INDEX-NUMERIC-001: retain the original value
++            // through selector text formatting; borrowed only for this call.
++            std::function<std::optional<PrgValue>(const PrgValue &, const std::string &, const PrgValue *)> read_native_member_callback_;
+             std::function<std::optional<PrgValue>(const PrgValue &, const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> invoke_native_member_callback_;
+             std::function<bool(const PrgValue &, const std::string &, const PrgValue &)> write_native_member_callback_;
+             std::function<std::optional<std::int64_t>(std::int64_t)> whandle_from_hwnd_callback_;
+diff --git a/src/runtime/prg_engine_native_object_focus_dispatch.inl b/src/runtime/prg_engine_native_object_focus_dispatch.inl
+index bba762fa6..2e34cbb12 100644
+--- a/src/runtime/prg_engine_native_object_focus_dispatch.inl
++++ b/src/runtime/prg_engine_native_object_focus_dispatch.inl
+@@ -1026,11 +1026,19 @@
+         }
+         const auto before_list_control_signature =
+             native_list_control_selection_signature(*target_object);
++        // RQ-CF-PRG-ITEMDATA-INDEX-NUMERIC-001: the selected data session owns
++        // the mode for native ItemData method reads as well as property reads.
++        const auto& list_set_state = current_set_state();
++        const auto list_mode = list_set_state.find("numericbehavior");
++        const auto list_behavior = list_mode != list_set_state.end() &&
++            normalize_identifier(list_mode->second) == "vfp9"
++            ? NumericBehavior::vfp9 : NumericBehavior::copperfin;
+         if (auto list_control_result = invoke_native_list_control_method(
+                 *target_object,
+                 leaf,
+                 arguments,
+-                before_list_control_move);
++                before_list_control_move,
++                list_behavior);
+             list_control_result.has_value())
+         {
+             if (leaf == "additem" || leaf == "addlistitem" || leaf == "clear" ||
+diff --git a/src/runtime/prg_engine_native_reflection_dispatch.inl b/src/runtime/prg_engine_native_reflection_dispatch.inl
+index b0a9927d7..5f3fa2139 100644
+--- a/src/runtime/prg_engine_native_reflection_dispatch.inl
++++ b/src/runtime/prg_engine_native_reflection_dispatch.inl
+@@ -1,7 +1,8 @@
+     std::optional<PrgValue> PrgRuntimeSession::Impl::read_native_property_if_present(
+         RuntimeOleObjectState &runtime_object,
+         const std::string &property_name,
+-        const Frame &source_frame)
++        const Frame &source_frame,
++        const PrgValue *raw_selector)
+     {
+         const std::string normalized_property_name = normalize_identifier(property_name);
+         if (normalized_property_name.empty())
+@@ -350,6 +351,25 @@
+                     item_cell->item_id,
+                     item_cell->column_slot);
+             }
++            // RQ-CF-PRG-ITEMDATA-INDEX-NUMERIC-001: preserve property-first
++            // routing, but do not recover Numeric indices from formatted text.
++            const auto selector_open = normalized_property_name.find_first_of("([");
++            if (raw_selector != nullptr && selector_open != std::string::npos &&
++                is_native_itemdata_member_name(runtime_object,
++                    normalized_property_name.substr(0U, selector_open)))
++            {
++                const auto& set_state = current_set_state();
++                const auto mode = set_state.find("numericbehavior");
++                const auto behavior = mode != set_state.end() &&
++                    normalize_identifier(mode->second) == "vfp9"
++                    ? NumericBehavior::vfp9 : NumericBehavior::copperfin;
++                if (auto typed_value = read_native_list_control_item_data_numeric(
++                        runtime_object, *raw_selector, behavior);
++                    typed_value.has_value())
++                {
++                    return *typed_value;
++                }
++            }
+             if (const auto item_data_slot =
+                     parse_native_list_control_itemdata_member_slot(runtime_object, property_name);
+                 item_data_slot.has_value())
+diff --git a/src/runtime/prg_engine_runtime_surface_functions.h b/src/runtime/prg_engine_runtime_surface_functions.h
+index 8af61472e..91ba5ec44 100644
+--- a/src/runtime/prg_engine_runtime_surface_functions.h
++++ b/src/runtime/prg_engine_runtime_surface_functions.h
+@@ -331,6 +331,11 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
+                                                           const std::string& normalized_method_name,
+                                                           const std::vector<PrgValue>& arguments,
+                                                           const std::function<bool(const std::vector<PrgValue>&)>& before_move = {});
++std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState& runtime_object,
++                                                          const std::string& normalized_method_name,
++                                                          const std::vector<PrgValue>& arguments,
++                                                          const std::function<bool(const std::vector<PrgValue>&)>& before_move,
++                                                          NumericBehavior behavior);
+ std::optional<NativeListControlCellReference> parse_native_list_control_list_member_cell(
+     const RuntimeOleObjectState& runtime_object,
+     const std::string& member_name);
+@@ -359,6 +364,10 @@ std::optional<PrgValue> read_native_list_control_item_id_for_slot(
+ std::optional<PrgValue> read_native_list_control_item_data(
+     RuntimeOleObjectState& runtime_object,
+     std::size_t row_slot);
++std::optional<PrgValue> read_native_list_control_item_data_numeric(
++    RuntimeOleObjectState& runtime_object,
++    const PrgValue& index,
++    NumericBehavior behavior);
+ void sync_native_list_control_top_item_id(RuntimeOleObjectState& runtime_object);
+ std::optional<PrgValue> read_native_list_control_index_for_item_id(
+     RuntimeOleObjectState& runtime_object,
+diff --git a/src/runtime/prg_engine_runtime_surface_object_methods.inl b/src/runtime/prg_engine_runtime_surface_object_methods.inl
+index 4a32698cd..34b038a47 100644
+--- a/src/runtime/prg_engine_runtime_surface_object_methods.inl
++++ b/src/runtime/prg_engine_runtime_surface_object_methods.inl
+@@ -77,11 +77,28 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
+                                                           const std::string& normalized_method_name,
+                                                           const std::vector<PrgValue>& arguments,
+                                                           const std::function<bool(const std::vector<PrgValue>&)>& before_move)
++{
++    return invoke_native_list_control_method(runtime_object, normalized_method_name,
++        arguments, before_move, NumericBehavior::copperfin);
++}
++
++std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState& runtime_object,
++                                                          const std::string& normalized_method_name,
++                                                          const std::vector<PrgValue>& arguments,
++                                                          const std::function<bool(const std::vector<PrgValue>&)>& before_move,
++                                                          NumericBehavior behavior)
+ {
+     if (!is_native_list_control_runtime_object(runtime_object)) {
+         return std::nullopt;
+     }
+ 
++    if (normalized_method_name == "itemdata" && !arguments.empty()) {
++        if (auto result = read_native_list_control_item_data_numeric(
++                runtime_object, arguments.front(), behavior); result.has_value()) {
++            return result;
++        }
++    }
++
+     materialize_native_list_control_rows(runtime_object);
+ 
+     if (normalized_method_name == "list") {
+@@ -534,6 +551,32 @@ std::optional<PrgValue> read_native_list_control_item_data(
+     return runtime_object.list_item_data[row_slot];
+ }
+ 
++// RQ-CF-PRG-ITEMDATA-INDEX-NUMERIC-001; VR-5611-ITEMDATA-INDEX-NUMERIC-001/002.
++// Unsupported types/NULL retain the existing caller path. Numeric rejection
++// occurs before row access, destination assignment or method success publication.
++std::optional<PrgValue> read_native_list_control_item_data_numeric(
++    RuntimeOleObjectState& runtime_object,
++    const PrgValue& index,
++    NumericBehavior behavior)
++{
++    if (!is_native_list_control_runtime_object(runtime_object) || index.is_null ||
++        (index.kind != PrgValueKind::number && index.kind != PrgValueKind::int64 &&
++         index.kind != PrgValueKind::uint64)) {
++        return std::nullopt;
++    }
++    const auto checked_index = checked_itemdata_index_numeric_argument(index, behavior);
++    if (!checked_index.has_value()) {
++        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
++    }
++    if (*checked_index == 0) {
++        materialize_native_list_control_rows(runtime_object);
++        sync_native_list_control_selected_state_size(runtime_object);
++        return make_number_value(0.0);
++    }
++    return read_native_list_control_item_data(runtime_object,
++        static_cast<std::size_t>(*checked_index - 1));
++}
++
+ std::optional<PrgValue> read_native_list_control_cell(
+     RuntimeOleObjectState& runtime_object,
+     std::size_t row_slot,

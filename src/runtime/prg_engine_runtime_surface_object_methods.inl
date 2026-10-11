@@ -78,8 +78,25 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
                                                           const std::vector<PrgValue>& arguments,
                                                           const std::function<bool(const std::vector<PrgValue>&)>& before_move)
 {
+    return invoke_native_list_control_method(runtime_object, normalized_method_name,
+        arguments, before_move, NumericBehavior::copperfin);
+}
+
+std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState& runtime_object,
+                                                          const std::string& normalized_method_name,
+                                                          const std::vector<PrgValue>& arguments,
+                                                          const std::function<bool(const std::vector<PrgValue>&)>& before_move,
+                                                          NumericBehavior behavior)
+{
     if (!is_native_list_control_runtime_object(runtime_object)) {
         return std::nullopt;
+    }
+
+    if (normalized_method_name == "itemdata" && !arguments.empty()) {
+        if (auto result = read_native_list_control_item_data_numeric(
+                runtime_object, arguments.front(), behavior); result.has_value()) {
+            return result;
+        }
     }
 
     materialize_native_list_control_rows(runtime_object);
@@ -532,6 +549,32 @@ std::optional<PrgValue> read_native_list_control_item_data(
         return make_number_value(0.0);
     }
     return runtime_object.list_item_data[row_slot];
+}
+
+// RQ-CF-PRG-ITEMDATA-INDEX-NUMERIC-001; VR-5611-ITEMDATA-INDEX-NUMERIC-001/002.
+// Unsupported types/NULL retain the existing caller path. Numeric rejection
+// occurs before row access, destination assignment or method success publication.
+std::optional<PrgValue> read_native_list_control_item_data_numeric(
+    RuntimeOleObjectState& runtime_object,
+    const PrgValue& index,
+    NumericBehavior behavior)
+{
+    if (!is_native_list_control_runtime_object(runtime_object) || index.is_null ||
+        (index.kind != PrgValueKind::number && index.kind != PrgValueKind::int64 &&
+         index.kind != PrgValueKind::uint64)) {
+        return std::nullopt;
+    }
+    const auto checked_index = checked_itemdata_index_numeric_argument(index, behavior);
+    if (!checked_index.has_value()) {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
+    }
+    if (*checked_index == 0) {
+        materialize_native_list_control_rows(runtime_object);
+        sync_native_list_control_selected_state_size(runtime_object);
+        return make_number_value(0.0);
+    }
+    return read_native_list_control_item_data(runtime_object,
+        static_cast<std::size_t>(*checked_index - 1));
 }
 
 std::optional<PrgValue> read_native_list_control_cell(

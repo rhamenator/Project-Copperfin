@@ -1,0 +1,92 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/build/itemdata-index-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/build/itemdata-index-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 5
+    Start  5: test_package_document_install
+
+5: Test command: /usr/bin/cmake "-DSOURCE_DIR=/home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin" "-DBINARY_DIR=/home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/build/itemdata-index-gcc" "-DTEST_ROOT_BASE=/home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/build/itemdata-index-gcc/tests/package-document-install" "-DTEST_CONFIGURATION=Debug" "-P" "/home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/tests/run_package_document_install_check.cmake"
+5: Working Directory: /home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/build/itemdata-index-gcc/tests
+5: Environment variables: 
+5:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/resources/locales
+5: Test timeout computed to be: 1200
+1/5 Test  #5: test_package_document_install ................   Passed    0.04 sec
+test 6
+    Start  6: test_locale_catalog_install_contract
+
+6: Test command: /usr/bin/cmake "-DTEST_ROOT=/home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/build/itemdata-index-gcc/tests/locale-catalog-install-contract" "-P" "/home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/tests/run_locale_catalog_install_contract_test.cmake"
+6: Working Directory: /home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/build/itemdata-index-gcc/tests
+6: Environment variables: 
+6:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/resources/locales
+6: Test timeout computed to be: 1200
+6: -- Installed locale catalog contract passed: /home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/build/itemdata-index-gcc/tests/locale-catalog-install-contract/share/copperfin/locales
+6: CMake Error at /home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/tests/run_locale_catalog_install_contract_check.cmake:13 (message):
+6:   Installed locale catalog is missing or not a regular file:
+6:   /home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/build/itemdata-index-gcc/tests/locale-catalog-install-contract/share/copperfin/locales/pt-BR/strings.json
+6: 
+6: 
+6: -- Locale catalog install contract test passed
+2/5 Test  #6: test_locale_catalog_install_contract .........   Passed    0.04 sec
+test 20
+    Start 20: test_changelog_fragment_assembler
+
+20: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--self-test"
+20: Working Directory: /home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/build/itemdata-index-gcc/tests
+20: Environment variables: 
+20:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/resources/locales
+20: Test timeout computed to be: 1200
+20: assemble_changelog self-test passed
+3/5 Test #20: test_changelog_fragment_assembler ............   Passed    0.20 sec
+test 21
+    Start 21: test_changelog_fragments_valid
+
+21: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--check" "--root" "/home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin"
+21: Working Directory: /home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/build/itemdata-index-gcc/tests
+21: Environment variables: 
+21:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/resources/locales
+21: Test timeout computed to be: 1200
+21: 202 changelog fragment(s) valid
+4/5 Test #21: test_changelog_fragments_valid ...............   Passed    0.22 sec
+test 38
+    Start 38: test_safety_traceability_workflow_contract
+
+38: Test command: /usr/bin/cmake "-DSOURCE_DIR=/home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin" "-P" "/home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/tests/run_safety_traceability_workflow_contract_check.cmake"
+38: Working Directory: /home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/build/itemdata-index-gcc/tests
+38: Environment variables: 
+38:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/itemdata-index-numeric-5611/Project-Copperfin/resources/locales
+38: Test timeout computed to be: 1200
+38: -- Safety traceability workflow contract check passed
+5/5 Test #38: test_safety_traceability_workflow_contract ...   Passed  328.66 sec
+
+The following tests passed:
+	test_package_document_install
+	test_locale_catalog_install_contract
+	test_changelog_fragment_assembler
+	test_changelog_fragments_valid
+	test_safety_traceability_workflow_contract
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+copperfin-isolation:audit=complete                     = 329.15 sec*proc (5 tests)
+copperfin-isolation:child-processes=bounded            = 328.73 sec*proc (3 tests)
+copperfin-isolation:child-processes=none               =   0.42 sec*proc (2 tests)
+copperfin-isolation:environment=child-scoped           = 328.66 sec*proc (1 test)
+copperfin-isolation:environment=none                   =   0.49 sec*proc (4 tests)
+copperfin-isolation:filesystem=process-owned           =   0.23 sec*proc (2 tests)
+copperfin-isolation:filesystem=read-only               = 328.88 sec*proc (2 tests)
+copperfin-isolation:filesystem=test-owned-unique       =   0.04 sec*proc (1 test)
+copperfin-isolation:network=disabled-probes            = 328.66 sec*proc (1 test)
+copperfin-isolation:network=none                       =   0.49 sec*proc (4 tests)
+copperfin-isolation:platform=configured                =   0.42 sec*proc (2 tests)
+copperfin-isolation:platform=portable                  =   0.07 sec*proc (2 tests)
+copperfin-isolation:platform=powershell-conditional    = 328.66 sec*proc (1 test)
+copperfin-isolation:resources=none                     = 329.15 sec*proc (5 tests)
+copperfin-isolation:samples=none                       = 329.15 sec*proc (5 tests)
+copperfin-isolation:schedule=parallel-safe             = 329.15 sec*proc (5 tests)
+
+Total Test time (real) = 329.17 sec
