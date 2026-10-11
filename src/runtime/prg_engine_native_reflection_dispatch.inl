@@ -376,6 +376,23 @@
             {
                 return read_native_list_control_item_data(runtime_object, *item_data_slot);
             }
+            // RQ-CF-PRG-INDEXTOITEMID-NUMERIC-001: keep property-first routing
+            // and exact raw Numeric identity; textual GETPEM keeps its old path.
+            if (raw_selector != nullptr && selector_open != std::string::npos &&
+                normalized_property_name.substr(0U, selector_open) == "indextoitemid")
+            {
+                const auto& set_state = current_set_state();
+                const auto mode = set_state.find("numericbehavior");
+                const auto behavior = mode != set_state.end() &&
+                    normalize_identifier(mode->second) == "vfp9"
+                    ? NumericBehavior::vfp9 : NumericBehavior::copperfin;
+                if (auto typed_value = read_native_list_control_item_id_numeric(
+                        runtime_object, *raw_selector, behavior);
+                    typed_value.has_value())
+                {
+                    return *typed_value;
+                }
+            }
             if (const auto item_id_slot = resolve_indextoitemid_member_slot();
                 item_id_slot.has_value())
             {

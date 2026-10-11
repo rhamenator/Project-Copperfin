@@ -207,6 +207,10 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
             return make_number_value(0.0);
         }
 
+        if (auto result = read_native_list_control_item_id_numeric(
+                runtime_object, arguments.front(), behavior); result.has_value()) {
+            return result;
+        }
         materialize_native_list_control_rows(runtime_object);
         const long long requested_index = std::llround(value_as_number(arguments[0]));
         if (requested_index < 1LL ||
@@ -658,6 +662,36 @@ std::optional<PrgValue> read_native_list_control_item_id_for_slot(
 
     const auto item_id = copperfin::platform::try_parse_invariant_integer<long long>(
         runtime_object.collection_item_keys[row_slot]);
+    return make_number_value(
+        item_id.has_value() && *item_id >= 1LL ? static_cast<double>(*item_id) : 0.0);
+}
+
+// RQ-CF-PRG-INDEXTOITEMID-NUMERIC-001; VR-5611-INDEXTOITEMID-NUMERIC-001/002.
+// Only Numeric/exact READ selectors. Preserve other coercions and the existing
+// materialization-before-lookup order; upstream callbacks are not atomic here.
+std::optional<PrgValue> read_native_list_control_item_id_numeric(
+    RuntimeOleObjectState& runtime_object,
+    const PrgValue& index,
+    NumericBehavior behavior)
+{
+    if (!is_native_list_control_runtime_object(runtime_object) || index.is_null ||
+        (index.kind != PrgValueKind::number && index.kind != PrgValueKind::int64 &&
+         index.kind != PrgValueKind::uint64)) {
+        return std::nullopt;
+    }
+
+    materialize_native_list_control_rows(runtime_object);
+    const auto checked_index = checked_indextoitemid_numeric_argument(index, behavior);
+    if (!checked_index.has_value()) {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
+    }
+    if (*checked_index < 1 ||
+        static_cast<std::size_t>(*checked_index) > runtime_object.collection_item_keys.size()) {
+        return make_number_value(0.0);
+    }
+
+    const auto item_id = copperfin::platform::try_parse_invariant_integer<long long>(
+        runtime_object.collection_item_keys[static_cast<std::size_t>(*checked_index - 1)]);
     return make_number_value(
         item_id.has_value() && *item_id >= 1LL ? static_cast<double>(*item_id) : 0.0);
 }
