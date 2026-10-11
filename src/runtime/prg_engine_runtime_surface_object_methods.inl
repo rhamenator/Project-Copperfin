@@ -250,6 +250,14 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
             return make_string_value("");
         }
 
+        // RQ-CF-PRG-LISTITEM-NUMERIC-001: implicit column 1 READ only.
+        // Explicit columns and unsupported types retain the legacy path.
+        if (arguments.size() == 1U) {
+            if (auto result = read_native_list_control_item_cell_numeric(
+                    runtime_object, arguments.front(), behavior); result.has_value()) {
+                return result;
+            }
+        }
         materialize_native_list_control_rows(runtime_object);
         const long long requested_item_id = std::llround(value_as_number(arguments[0]));
         if (requested_item_id < 1LL) {
@@ -649,6 +657,32 @@ std::optional<PrgValue> read_native_list_control_item_cell(
     }
 
     return read_native_list_control_cell(runtime_object, *row_slot, column_slot);
+}
+
+// RQ-CF-PRG-LISTITEM-NUMERIC-001; VR-5611-LISTITEM-NUMERIC-001/002.
+// One-argument Numeric/exact item-ID READ, not display-row addressing.
+// Materialization precedes conversion; arbitrary RowSource callbacks are not
+// covered by the stable RowSourceType=0 verification or atomicity claims.
+std::optional<PrgValue> read_native_list_control_item_cell_numeric(
+    RuntimeOleObjectState& runtime_object,
+    const PrgValue& item_id,
+    NumericBehavior behavior)
+{
+    if (!is_native_list_control_runtime_object(runtime_object) || item_id.is_null ||
+        (item_id.kind != PrgValueKind::number && item_id.kind != PrgValueKind::int64 &&
+         item_id.kind != PrgValueKind::uint64)) {
+        return std::nullopt;
+    }
+
+    materialize_native_list_control_rows(runtime_object);
+    const auto checked_item_id = checked_listitem_numeric_argument(item_id, behavior);
+    if (!checked_item_id.has_value()) {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
+    }
+    if (*checked_item_id == 0) {
+        return make_string_value("");
+    }
+    return read_native_list_control_item_cell(runtime_object, *checked_item_id, 0U);
 }
 
 std::optional<PrgValue> read_native_list_control_item_id_for_slot(

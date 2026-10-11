@@ -343,6 +343,24 @@
                     list_cell->row_slot,
                     list_cell->column_slot);
             }
+            // RQ-CF-PRG-LISTITEM-NUMERIC-001: raw one-selector identity,
+            // implicit column 1; textual GETPEM and explicit columns stay old.
+            const auto selector_open = normalized_property_name.find_first_of("([");
+            if (raw_selector != nullptr && selector_open != std::string::npos &&
+                normalized_property_name.substr(0U, selector_open) == "listitem")
+            {
+                const auto& set_state = current_set_state();
+                const auto mode = set_state.find("numericbehavior");
+                const auto behavior = mode != set_state.end() &&
+                    normalize_identifier(mode->second) == "vfp9"
+                    ? NumericBehavior::vfp9 : NumericBehavior::copperfin;
+                if (auto typed_value = read_native_list_control_item_cell_numeric(
+                        runtime_object, *raw_selector, behavior);
+                    typed_value.has_value())
+                {
+                    return *typed_value;
+                }
+            }
             if (const auto item_cell = resolve_listitem_member_cell();
                 item_cell.has_value())
             {
@@ -353,7 +371,6 @@
             }
             // RQ-CF-PRG-ITEMDATA-INDEX-NUMERIC-001: preserve property-first
             // routing, but do not recover Numeric indices from formatted text.
-            const auto selector_open = normalized_property_name.find_first_of("([");
             if (raw_selector != nullptr && selector_open != std::string::npos &&
                 is_native_itemdata_member_name(runtime_object,
                     normalized_property_name.substr(0U, selector_open)))

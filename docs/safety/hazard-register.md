@@ -45,6 +45,22 @@ own system and domain assurance.
 
 ## Bounded numeric-conversion linkage
 
+RQ-CF-PRG-LISTITEM-NUMERIC-001 / DQ-DV-5611-LISTITEM-NUMERIC-001 links
+active HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01 to the
+[pre-code one-argument item-ID map](../../tests/fixtures/vfp9-listitem-numeric/README.md).
+Default checked nonnegative signed32 admission avoids unintended aliases;
+native positive raw ceiling/negative low32 aliases are independently observed
+explicit VFP9 policy. Sparse identity controls distinguish item IDs from rows.
+Bounded documentation misuse medium does not alter registered severity/status.
+Both full originals were retained before migration; fixed GNU39/39 and Clang
+sanitizer39/39 plus both six unchanged preservation groups substantiate the
+completed development walkthrough/delegated maintainer self-review, not
+independent-human sign-off. Documentation contracts pass5/5/333.19s with full
+raw/hash retained; signed exact-head review/CI remain gates. Type gap#7151 is
+separate/unadmitted. No persistence,
+whole-call callback/materialization atomicity, high-hazard qualification,
+parent/KBX/hazard closure or release qualification claim.
+
 RQ-CF-PRG-INDEXTOITEMID-NUMERIC-001 / DQ-DV-5611-INDEXTOITEMID-NUMERIC-001
 links active HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01
 to the [pre-code IndexToItemID row mapping](../../tests/fixtures/vfp9-indextoitemid-numeric/README.md).
