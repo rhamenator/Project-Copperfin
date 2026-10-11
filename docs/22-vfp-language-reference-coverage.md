@@ -1,5 +1,19 @@
 # VFP Language Reference Coverage
 
+- Selected Numeric/exact read-index recovery (#5611/#6776,2026-10-11):
+  RQ-CF-PRG-SELECTED-INDEX-NUMERIC-001 mapped before helper/assertions/config.
+  [Independent installed VFP9/help recovery and full audit](../tests/fixtures/vfp9-selected-index-numeric/README.md)
+  distinguish native raw positive ceiling/negative aliases from parent-derived
+  default truncation, exact64 and NaN boundaries. Both final originals retained
+  before the method-only Numeric/exact read migration; all five frozen inputs
+  unchanged. Fixed GNU18/18 and Clang sanitizers18/18 pass with190direct/four368
+  public cases and untouched ItemData/GETCOLOR/numeric/exact/isolation controls.
+  The earlier original Clang neighbor timeout remains retained and unexplained.
+  Bounded medium DQ/DV development self-review/walkthrough complete; contracts
+  pass5/5 at the retained checkpoint, exact-head external integration pending. Writes, other
+  types/NULL/Currency/arity, SelectedID, general grammar, whole-call row
+  materialization, native extended64 and release/parent closure are excluded.
+
 - Signed32 CAST Numeric/exact recovery (#5611/#6776,2026-10-10):
   RQ-CF-PRG-CAST-INT32-NUMERIC-001 mapped BEFORE helpers/tests/migration.
   [Native fixture](../tests/fixtures/vfp9-cast-int32-numeric/README.md) recovers

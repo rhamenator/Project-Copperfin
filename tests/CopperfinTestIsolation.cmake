@@ -974,6 +974,24 @@ function(copperfin_configure_native_test_isolation)
     # RQ-CF-PRG-GETCOLOR-DEFAULT-NUMERIC-001: fresh scripts/cursors and scoped locale.
     # RQ-CF-PRG-ITEMDATA-INDEX-NUMERIC-001: unique scripts, scoped locale,
     # fresh native in-process list controls, no children/shared resources.
+    # RQ-CF-PRG-SELECTED-INDEX-NUMERIC-001: unique scripts, scoped locale,
+    # fresh in-process native controls; no children or shared resources.
+    foreach(selected_index_test IN ITEMS
+        test_prg_engine_selected_index_numeric
+        test_prg_engine_selected_index_numeric_copperfin_session1
+        test_prg_engine_selected_index_numeric_copperfin_session2
+        test_prg_engine_selected_index_numeric_vfp9_session1
+        test_prg_engine_selected_index_numeric_vfp9_session2)
+        copperfin_set_test_isolation(${selected_index_test}
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT scoped-process
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            RESOURCES none
+            AUDIT complete)
+    endforeach()
     foreach(itemdata_index_test IN ITEMS
         test_prg_engine_itemdata_index_numeric
         test_prg_engine_itemdata_index_numeric_copperfin_session1
