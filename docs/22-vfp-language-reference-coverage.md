@@ -1,5 +1,24 @@
 # VFP Language Reference Coverage
 
+- SelectedID Numeric/exact item-ID read recovery (#5611/#6776,2026-10-11):
+  RQ-CF-PRG-SELECTEDID-NUMERIC-001 mapped before helper/assertions/config.
+  [Independent installed VFP9/help recovery and phase audit](../tests/fixtures/vfp9-selectedid-numeric/README.md)
+  distinguish sparse item IDs from row indices and native raw positive ceiling/
+  negative aliases from parent-derived default truncation, exact64 and NaN.
+  Frozen200direct/four476public; distinct helper UNUSED through both full
+  originals, each19/23 with only four new public runs failing and all counters
+  complete. Full raw retained before method-only Numeric/exact read migration;
+  fixed GNU23/23 and Clang sanitizers23/23 pass with all200direct/four476public
+  and untouched Selected/ItemData/GETCOLOR/numeric/exact/isolation counters.
+  Six unchanged preservation groups pass in both builds; bounded medium DQ/DV
+  delegated development self-review/walkthrough complete, not independent-human
+  signoff. Documentation contracts pass5/5 at the retained checkpoint;
+  exact-head external integration remains gated.
+  Writes, other types/NULL/Currency/arity,
+  ID creation/mutation/lifecycle/general grammar/upstream materialization,
+  native extended64 and parent/release closure remain excluded; type gap#7145
+  is separate and unadmitted.
+
 - Selected Numeric/exact read-index recovery (#5611/#6776,2026-10-11):
   RQ-CF-PRG-SELECTED-INDEX-NUMERIC-001 mapped before helper/assertions/config.
   [Independent installed VFP9/help recovery and full audit](../tests/fixtures/vfp9-selected-index-numeric/README.md)

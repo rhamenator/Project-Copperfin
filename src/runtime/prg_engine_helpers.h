@@ -389,6 +389,9 @@ std::optional<std::int32_t> checked_itemdata_index_numeric_argument(const PrgVal
 // RQ-CF-PRG-SELECTED-INDEX-NUMERIC-001: Numeric/exact READ index only;
 // independently recovered Selected ceiling/truncation/low32 domain.
 std::optional<std::int32_t> checked_selected_index_numeric_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-SELECTEDID-NUMERIC-001: Numeric/exact item-ID READ only;
+// independently recovered raw ceiling/truncation/low32, not row addressing.
+std::optional<std::int32_t> checked_selectedid_numeric_argument(const PrgValue& value, NumericBehavior behavior);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the
 // value is out of range). A size or count: truncated toward zero, never below `minimum`, saturating at the largest
 // value this build supports: INT64_MAX, or SIZE_MAX where size_t is narrower (NaN gives `minimum`). A rounded int64 (llround semantics for in-range values; NaN is 0 and
