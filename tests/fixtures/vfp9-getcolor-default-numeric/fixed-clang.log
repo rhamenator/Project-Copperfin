@@ -1,0 +1,185 @@
+[0/2] Re-checking globbed directories...
+[1/7] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_surface_functions.cpp.o
+In file included from /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_functions.cpp:193:
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:5:15: warning: unused function 'bitwise_value' [-Wunused-function]
+    5 | std::uint32_t bitwise_value(const PrgValue& value) {
+      |               ^~~~~~~~~~~~~
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:13:5: warning: unused function 'bit_position' [-Wunused-function]
+   13 | int bit_position(const PrgValue& value) {
+      |     ^~~~~~~~~~~~
+2 warnings generated.
+[2/7] Linking CXX static library libcf_xbase_runtime.a
+[3/7] Linking CXX executable tests/test_prg_engine_int64_exact_expression
+[4/7] Linking CXX executable tests/test_prg_engine_numeric_behavior
+[5/7] Linking CXX executable tests/test_prg_engine_getcolor_default_numeric
+[6/7] Linking CXX executable tests/test_prg_engine_getfont_size_numeric
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 36
+      Start  36: test_native_test_isolation_contract
+
+36: Test command: /usr/bin/cmake "-DINVENTORY_PATH=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/native-test-isolation.tsv" "-DISOLATION_SOURCE_PATH=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/tests/CopperfinTestIsolation.cmake" "-DTEST_REGISTRATION_SOURCE_PATH=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/tests/CMakeLists.txt" "-P" "/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/tests/run_native_test_isolation_contract_check.cmake"
+36: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+36: Environment variables: 
+36:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+36: Test timeout computed to be: 180
+36: -- Native test isolation inventory contract passed for 519 tests
+ 1/13 Test  #36: test_native_test_isolation_contract ...........................   Passed    0.50 sec
+test 390
+      Start 390: test_prg_engine_int64_exact_expression
+
+390: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_int64_exact_expression
+390: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+390: Environment variables: 
+390:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+390: Test timeout computed to be: 180
+ 2/13 Test #390: test_prg_engine_int64_exact_expression ........................   Passed    0.09 sec
+test 393
+      Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 180
+ 3/13 Test #393: test_prg_engine_numeric_behavior ..............................   Passed  104.16 sec
+test 414
+      Start 414: test_prg_engine_getcolor_default_numeric
+
+414: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getcolor_default_numeric
+414: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+414: Environment variables: 
+414:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+414: Test timeout computed to be: 180
+414: GETCOLOR frozen cases: direct=174 public=0
+ 4/13 Test #414: test_prg_engine_getcolor_default_numeric ......................   Passed    0.02 sec
+test 415
+      Start 415: test_prg_engine_getcolor_default_numeric_copperfin_session1
+
+415: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getcolor_default_numeric "COPPERFIN" "1"
+415: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+415: Environment variables: 
+415:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+415: Test timeout computed to be: 180
+415: GETCOLOR frozen cases: direct=0 public=80
+ 5/13 Test #415: test_prg_engine_getcolor_default_numeric_copperfin_session1 ...   Passed    1.05 sec
+test 416
+      Start 416: test_prg_engine_getcolor_default_numeric_copperfin_session2
+
+416: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getcolor_default_numeric "COPPERFIN" "2"
+416: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+416: Environment variables: 
+416:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+416: Test timeout computed to be: 180
+416: GETCOLOR frozen cases: direct=0 public=80
+ 6/13 Test #416: test_prg_engine_getcolor_default_numeric_copperfin_session2 ...   Passed    1.05 sec
+test 417
+      Start 417: test_prg_engine_getcolor_default_numeric_vfp9_session1
+
+417: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getcolor_default_numeric "VFP9" "1"
+417: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+417: Environment variables: 
+417:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+417: Test timeout computed to be: 180
+417: GETCOLOR frozen cases: direct=0 public=80
+ 7/13 Test #417: test_prg_engine_getcolor_default_numeric_vfp9_session1 ........   Passed    0.95 sec
+test 418
+      Start 418: test_prg_engine_getcolor_default_numeric_vfp9_session2
+
+418: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getcolor_default_numeric "VFP9" "2"
+418: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+418: Environment variables: 
+418:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+418: Test timeout computed to be: 180
+418: GETCOLOR frozen cases: direct=0 public=80
+ 8/13 Test #418: test_prg_engine_getcolor_default_numeric_vfp9_session2 ........   Passed    0.96 sec
+test 419
+      Start 419: test_prg_engine_getfont_size_numeric
+
+419: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getfont_size_numeric
+419: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+419: Environment variables: 
+419:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+419: Test timeout computed to be: 180
+419: GETFONT frozen cases: direct=172 public=0
+ 9/13 Test #419: test_prg_engine_getfont_size_numeric ..........................   Passed    0.02 sec
+test 420
+      Start 420: test_prg_engine_getfont_size_numeric_copperfin_session1
+
+420: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getfont_size_numeric "COPPERFIN" "1"
+420: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+420: Environment variables: 
+420:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+420: Test timeout computed to be: 180
+420: GETFONT frozen cases: direct=0 public=79
+10/13 Test #420: test_prg_engine_getfont_size_numeric_copperfin_session1 .......   Passed    0.98 sec
+test 421
+      Start 421: test_prg_engine_getfont_size_numeric_copperfin_session2
+
+421: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getfont_size_numeric "COPPERFIN" "2"
+421: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+421: Environment variables: 
+421:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+421: Test timeout computed to be: 180
+421: GETFONT frozen cases: direct=0 public=79
+11/13 Test #421: test_prg_engine_getfont_size_numeric_copperfin_session2 .......   Passed    0.98 sec
+test 422
+      Start 422: test_prg_engine_getfont_size_numeric_vfp9_session1
+
+422: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getfont_size_numeric "VFP9" "1"
+422: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+422: Environment variables: 
+422:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+422: Test timeout computed to be: 180
+422: GETFONT frozen cases: direct=0 public=79
+12/13 Test #422: test_prg_engine_getfont_size_numeric_vfp9_session1 ............   Passed    0.95 sec
+test 423
+      Start 423: test_prg_engine_getfont_size_numeric_vfp9_session2
+
+423: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getfont_size_numeric "VFP9" "2"
+423: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+423: Environment variables: 
+423:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+423: Test timeout computed to be: 180
+423: GETFONT frozen cases: direct=0 public=79
+13/13 Test #423: test_prg_engine_getfont_size_numeric_vfp9_session2 ............   Passed    1.00 sec
+
+The following tests passed:
+	test_native_test_isolation_contract
+	test_prg_engine_int64_exact_expression
+	test_prg_engine_numeric_behavior
+	test_prg_engine_getcolor_default_numeric
+	test_prg_engine_getcolor_default_numeric_copperfin_session1
+	test_prg_engine_getcolor_default_numeric_copperfin_session2
+	test_prg_engine_getcolor_default_numeric_vfp9_session1
+	test_prg_engine_getcolor_default_numeric_vfp9_session2
+	test_prg_engine_getfont_size_numeric
+	test_prg_engine_getfont_size_numeric_copperfin_session1
+	test_prg_engine_getfont_size_numeric_copperfin_session2
+	test_prg_engine_getfont_size_numeric_vfp9_session1
+	test_prg_engine_getfont_size_numeric_vfp9_session2
+
+100% tests passed, 0 tests failed out of 13
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  = 112.69 sec*proc (13 tests)
+copperfin-isolation:child-processes=none            = 112.69 sec*proc (13 tests)
+copperfin-isolation:environment=none                =   0.58 sec*proc (2 tests)
+copperfin-isolation:environment=scoped-process      = 112.11 sec*proc (11 tests)
+copperfin-isolation:filesystem=process-owned        = 104.25 sec*proc (2 tests)
+copperfin-isolation:filesystem=read-only            =   0.50 sec*proc (1 test)
+copperfin-isolation:filesystem=test-owned-unique    =   7.95 sec*proc (10 tests)
+copperfin-isolation:network=none                    = 112.69 sec*proc (13 tests)
+copperfin-isolation:platform=portable               = 112.69 sec*proc (13 tests)
+copperfin-isolation:resources=none                  = 112.69 sec*proc (13 tests)
+copperfin-isolation:samples=none                    = 112.69 sec*proc (13 tests)
+copperfin-isolation:schedule=parallel-safe          =   0.50 sec*proc (1 test)
+copperfin-isolation:schedule=serial                 = 112.19 sec*proc (12 tests)
+
+Total Test time (real) = 112.72 sec

@@ -1,0 +1,40 @@
+DIALOG|10485775|Return
+SOURCE|BEGIN|GETCOLOR(0)|Return
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+DIALOG|10485776|Return
+SOURCE|BEGIN|GETCOLOR(255)|Return
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+DIALOG|10485777|Return
+SOURCE|BEGIN|GETCOLOR(255.49)|Return
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+DIALOG|10485778|Return
+SOURCE|BEGIN|GETCOLOR(255.5)|Return
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+DIALOG|10485779|Return
+SOURCE|BEGIN|GETCOLOR(255.9)|Return
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+DIALOG|10485780|Return
+SOURCE|BEGIN|GETCOLOR(65535)|Return
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+DIALOG|10485781|Return
+SOURCE|BEGIN|GETCOLOR(16777215)|Return
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+DIALOG|10485782|Return
+SOURCE|BEGIN|GETCOLOR(16777215.9)|Return
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+DIALOG|10485783|Return
+SOURCE|BEGIN|GETCOLOR(16777216)|Return
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+DIALOG|10485784|Return
+SOURCE|BEGIN|GETCOLOR(-1)|Return
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.
+XGetInputFocus returned the focused window of 1. This is likely a bug in the X server.

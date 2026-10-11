@@ -1,0 +1,1224 @@
+-- The CXX compiler identification is Clang 21.1.8
+-- The C compiler identification is Clang 21.1.8
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/clang++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/clang - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Performing Test Iconv_IS_BUILT_IN
+-- Performing Test Iconv_IS_BUILT_IN - Success
+-- Found Iconv: built in to C library
+-- Configuring done (2.4s)
+-- Generating done (0.5s)
+-- Build files have been written to: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang
+[0/2] Re-checking globbed directories...
+[1/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/bounded_process.cpp.o
+[2/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/code_page.cpp.o
+[3/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/disk_space.cpp.o
+[4/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/environment.cpp.o
+[5/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/exclusive_file.cpp.o
+[6/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/executable_path.cpp.o
+[7/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/file_stream.cpp.o
+[8/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/file_version.cpp.o
+[9/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/font_directories.cpp.o
+[10/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/invariant_numeric.cpp.o
+[11/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/json.cpp.o
+[12/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/path.cpp.o
+[13/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/private_directory.cpp.o
+[14/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/private_executable_image.cpp.o
+[15/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/process_arguments.cpp.o
+[16/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/process_environment.cpp.o
+[17/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/safe_regex.cpp.o
+[18/160] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/windows_pe_image.cpp.o
+[19/160] Linking CXX static library libcf_platform_support.a
+[20/160] Building CXX object CMakeFiles/cf_localization.dir/src/localization/localization.cpp.o
+[21/160] Linking CXX static library libcf_localization.a
+[22/160] Building CXX object CMakeFiles/cf_security.dir/src/security/audit_stream.cpp.o
+[23/160] Building CXX object CMakeFiles/cf_security.dir/src/security/authorization.cpp.o
+[24/160] Building CXX object CMakeFiles/cf_security.dir/src/security/external_process_policy.cpp.o
+[25/160] Building CXX object CMakeFiles/cf_security.dir/src/security/localized_text.cpp.o
+[26/160] Building CXX object CMakeFiles/cf_security.dir/src/security/payload_crypto.cpp.o
+[27/160] Building CXX object CMakeFiles/cf_security.dir/src/security/physical_path_containment.cpp.o
+[28/160] Building CXX object CMakeFiles/cf_security.dir/src/security/process_hardening.cpp.o
+[29/160] Building CXX object CMakeFiles/cf_security.dir/src/security/secret_provider.cpp.o
+[30/160] Building CXX object CMakeFiles/cf_security.dir/src/security/sha256.cpp.o
+[31/160] Building CXX object CMakeFiles/cf_security.dir/src/security/security_model.cpp.o
+[32/160] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_policy.cpp.o
+[33/160] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_audit_sink.cpp.o
+[34/160] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_environment.cpp.o
+[35/160] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_process_containment.cpp.o
+[36/160] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_process_parser.cpp.o
+[37/160] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_session.cpp.o
+[38/160] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_target_containment.cpp.o
+[39/160] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_tool_registry.cpp.o
+[40/160] Linking CXX static library libcf_security.a
+[41/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/printer.cpp.o
+[42/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_benchmark.cpp.o
+[43/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/database_model.cpp.o
+[44/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/extensibility_model.cpp.o
+[45/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/federation_execution.cpp.o
+[46/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/localized_text.cpp.o
+[47/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_artifact_admission.cpp.o
+[48/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_artifact_adapter.cpp.o
+[49/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_supporting_artifact_admission.cpp.o
+[50/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_bridge_invocation.cpp.o
+[51/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_interop_envelope.cpp.o
+[52/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_migration_telemetry.cpp.o
+[53/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_parity_comparator.cpp.o
+[54/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_route_impact.cpp.o
+[55/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_route_execution.cpp.o
+[56/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_route_registry.cpp.o
+[57/160] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/query_translator.cpp.o
+[58/160] Building CXX object CMakeFiles/cf_runtime_text.dir/src/runtime/localized_text.cpp.o
+[59/160] Linking CXX static library libcf_platform_profile.a
+[60/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_container.cpp.o
+[61/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_long_value.cpp.o
+[62/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_msysobjects.cpp.o
+[63/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_saveastext_design.cpp.o
+[64/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_saveastext_export.cpp.o
+[65/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_saved_queries.cpp.o
+[66/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_table_definition.cpp.o
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:324:120: warning: missing field 'name' initializer [-Wmissing-designated-field-initializers]
+  324 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.UnknownGeneration")};
+      |                                                                                                                        ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:334:19: warning: missing field 'name' initializer [-Wmissing-designated-field-initializers]
+  334 |                 })};
+      |                   ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:344:59: warning: missing field 'name' initializer [-Wmissing-designated-field-initializers]
+  344 |                 {{"pageType", std::to_string(page_type)}})};
+      |                                                           ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:350:127: warning: missing field 'name' initializer [-Wmissing-designated-field-initializers]
+  350 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.MultiPageTdefUnsupported")};
+      |                                                                                                                               ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:394:123: warning: missing field 'name' initializer [-Wmissing-designated-field-initializers]
+  394 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.StructureOutOfBounds")};
+      |                                                                                                                           ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:408:61: warning: missing field 'name' initializer [-Wmissing-designated-field-initializers]
+  408 |                 {{"tableType", std::to_string(table_type)}})};
+      |                                                             ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:417:123: warning: missing field 'name' initializer [-Wmissing-designated-field-initializers]
+  417 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.StructureOutOfBounds")};
+      |                                                                                                                           ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:426:123: warning: missing field 'name' initializer [-Wmissing-designated-field-initializers]
+  426 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.StructureOutOfBounds")};
+      |                                                                                                                           ^
+8 warnings generated.
+[67/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/asset_inspector.cpp.o
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:5994:42: warning: missing field 'rows' initializer [-Wmissing-designated-field-initializers]
+ 5994 |             {{"table", table_plan.name}})};
+      |                                          ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6007:46: warning: missing field 'rows' initializer [-Wmissing-designated-field-initializers]
+ 6007 |                 {{"table", table_plan.name}})};
+      |                                              ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6029:54: warning: missing field 'rows' initializer [-Wmissing-designated-field-initializers]
+ 6029 |                         {{"table", table_plan.name}})};
+      |                                                      ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6036:54: warning: missing field 'rows' initializer [-Wmissing-designated-field-initializers]
+ 6036 |                         {{"table", table_plan.name}})};
+      |                                                      ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6043:54: warning: missing field 'rows' initializer [-Wmissing-designated-field-initializers]
+ 6043 |                         {{"table", table_plan.name}})};
+      |                                                      ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6080:100: warning: missing field 'cleanup_warning' initializer [-Wmissing-designated-field-initializers]
+ 6080 |         return DatabaseJsonImportResult{.ok = false, .error = std::move(message), .table_count = 0U};
+      |                                                                                                    ^
+6 warnings generated.
+[68/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/cdx_header.cpp.o
+[69/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/cdx_writer.cpp.o
+[70/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_header.cpp.o
+[71/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_import.cpp.o
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:293:51: warning: missing field 'field_mappings' initializer [-Wmissing-designated-field-initializers]
+  293 |         return {.ok = false, .error = source.error};
+      |                                                   ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:297:49: warning: missing field 'field_mappings' initializer [-Wmissing-designated-field-initializers]
+  297 |         return {.ok = false, .error = plan.error};
+      |                                                 ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:305:95: warning: missing field 'field_mappings' initializer [-Wmissing-designated-field-initializers]
+  305 |         return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.DestinationExists")};
+      |                                                                                               ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:321:99: warning: missing field 'field_mappings' initializer [-Wmissing-designated-field-initializers]
+  321 |             return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.DestinationExists")};
+      |                                                                                                   ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:339:17: warning: missing field 'field_mappings' initializer [-Wmissing-designated-field-initializers]
+  339 |                 };
+      |                 ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:381:58: warning: missing field 'field_mappings' initializer [-Wmissing-designated-field-initializers]
+  381 |         return {.ok = false, .error = create_result.error};
+      |                                                          ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:406:64: warning: missing field 'field_mappings' initializer [-Wmissing-designated-field-initializers]
+  406 |                 return {.ok = false, .error = memo_result.error};
+      |                                                                ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:427:51: warning: missing field 'field_mappings' initializer [-Wmissing-designated-field-initializers]
+  427 |         return {.ok = false, .error = source.error};
+      |                                                   ^
+8 warnings generated.
+[72/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_text_encoding.cpp.o
+[73/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_table.cpp.o
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/dbf_table.cpp:2426:91: warning: missing field 'fields' initializer [-Wmissing-designated-field-initializers]
+ 2426 |         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
+      |                                                                                           ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/dbf_table.cpp:2437:91: warning: missing field 'fields' initializer [-Wmissing-designated-field-initializers]
+ 2437 |         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
+      |                                                                                           ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/vfp/dbf_table.cpp:2441:58: warning: missing field 'fields' initializer [-Wmissing-designated-field-initializers]
+ 2441 |         return {.ok = false, .error = header_result.error};
+      |                                                          ^
+3 warnings generated.
+[74/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/index_probe.cpp.o
+[75/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/sidecar_path.cpp.o
+[76/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/staged_import_publish.cpp.o
+[77/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/xbase_relation_inference.cpp.o
+[78/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_shared_helpers.cpp.o
+[79/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_method_blobs.cpp.o
+[80/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_blobs.cpp.o
+[81/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_record_and_snapshot.cpp.o
+[82/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_undo.cpp.o
+[83/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_object_lifecycle.cpp.o
+[84/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_setters_behavior.cpp.o
+[85/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_setters_appearance.cpp.o
+[86/160] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_setters_data.cpp.o
+[87/160] Building CXX object CMakeFiles/cf_prg_analysis.dir/src/runtime/prg_engine_static_analysis.cpp.o
+[88/160] Linking CXX static library libcf_runtime_text.a
+[89/160] Linking CXX static library libcf_vfp_assets.a
+[90/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/builder_dispatch.cpp.o
+[91/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/builder_invocation_admission.cpp.o
+[92/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/builder_registry.cpp.o
+[93/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/context_editor_actions.cpp.o
+[94/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_context.cpp.o
+[95/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_dispatch.cpp.o
+[96/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_invocation_admission.cpp.o
+[97/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_launch_surfaces.cpp.o
+[98/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/document_model.cpp.o
+[99/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/editor_action_dispatch.cpp.o
+[100/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/editor_action_invocation_admission.cpp.o
+[101/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/project_workspace.cpp.o
+[102/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/product_subsystems.cpp.o
+[103/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/report_layout.cpp.o
+[104/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_creation.cpp.o
+[105/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_dispatch.cpp.o
+[106/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_invocation_admission.cpp.o
+[107/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_palette.cpp.o
+[108/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract.cpp.o
+[109/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_value_parsing.cpp.o
+[110/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_error_messages.cpp.o
+[111/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_argument_parsers.cpp.o
+[112/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_request_validators.cpp.o
+[113/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_diagnostics_and_session.cpp.o
+[114/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_diagnostics_and_session_validate.cpp.o
+[115/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_selection_context.cpp.o
+[116/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_property_commands.cpp.o
+[117/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_property_commands_validate.cpp.o
+[118/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_object_lifecycle.cpp.o
+[119/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_object_lifecycle_validate.cpp.o
+[120/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_layout_actions.cpp.o
+[121/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_layout_actions_validate.cpp.o
+[122/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_behavior.cpp.o
+[123/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_behavior_validate.cpp.o
+[124/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_appearance.cpp.o
+[125/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_appearance_validate.cpp.o
+[126/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_data.cpp.o
+[127/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_data_validate.cpp.o
+[128/160] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_positional_and_fallback.cpp.o
+[129/160] Linking CXX static library libcf_prg_analysis.a
+[130/160] Linking CXX static library libcf_design_model.a
+[131/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/runtime_external_event_queue.cpp.o
+[132/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_command_helpers.cpp.o
+[133/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_date_time_functions.cpp.o
+[134/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_file_io_functions.cpp.o
+[135/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine.cpp.o
+In file included from /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:1262:
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/runtime/prg_engine_flow.inl:285:51: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  285 |             const auto object_handle_for_value = [this](const PrgValue &value) -> std::optional<int>
+      |                                                   ^~~~
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:1838:14: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+ 1838 |             [this]()
+      |              ^~~~
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:1842:14: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+ 1842 |             [this]()
+      |              ^~~~
+In file included from /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:8589:
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:11317:62: warning: missing field 'reference' initializer [-Wmissing-field-initializers]
+ 11317 |                     TemporaryAppendSource append_source{*this};
+       |                                                              ^
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:12449:58: warning: missing field 'reference' initializer [-Wmissing-field-initializers]
+ 12449 |                 TemporaryAppendSource append_source{*this};
+       |                                                          ^
+5 warnings generated.
+[136/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_native_object_helpers.cpp.o
+[137/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/polyglot_runtime_host.cpp.o
+[138/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/index_seek_optimizer.cpp.o
+[139/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_helpers.cpp.o
+[140/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_locale_code_page.cpp.o
+[141/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_numeric_functions.cpp.o
+[142/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_path_functions.cpp.o
+[143/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_parser.cpp.o
+[144/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_surface_functions.cpp.o
+In file included from /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_functions.cpp:193:
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:5:15: warning: unused function 'bitwise_value' [-Wunused-function]
+    5 | std::uint32_t bitwise_value(const PrgValue& value) {
+      |               ^~~~~~~~~~~~~
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:13:5: warning: unused function 'bit_position' [-Wunused-function]
+   13 | int bit_position(const PrgValue& value) {
+      |     ^~~~~~~~~~~~
+2 warnings generated.
+[145/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_config.cpp.o
+[146/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_string_functions.cpp.o
+In file included from /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/runtime/prg_engine_string_functions.cpp:28:
+/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/src/runtime/prg_engine_string_function_helpers.inl:251:29: warning: unused function 'parse_currency_scaled_value' [-Wunused-function]
+  251 | std::optional<std::int64_t> parse_currency_scaled_value(const std::string& text) {
+      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+1 warning generated.
+[147/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_table_structure_helpers.cpp.o
+[148/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_type_functions.cpp.o
+[149/160] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/xasset_methods.cpp.o
+[150/160] Linking CXX static library libcf_xbase_runtime.a
+[151/160] Building CXX object tests/CMakeFiles/cf_prg_engine_test_support.dir/prg_engine_test_support.cpp.o
+[152/160] Building CXX object tests/CMakeFiles/test_prg_engine_int64_exact_expression.dir/test_prg_engine_int64_exact_expression.cpp.o
+[153/160] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_behavior.dir/test_prg_engine_numeric_behavior.cpp.o
+[154/160] Building CXX object tests/CMakeFiles/test_prg_engine_getcolor_default_numeric.dir/test_prg_engine_getcolor_default_numeric.cpp.o
+[155/160] Building CXX object tests/CMakeFiles/test_prg_engine_getfont_size_numeric.dir/test_prg_engine_getfont_size_numeric.cpp.o
+[156/160] Linking CXX executable tests/test_prg_engine_int64_exact_expression
+[157/160] Linking CXX executable tests/test_prg_engine_numeric_behavior
+[158/160] Linking CXX executable tests/test_prg_engine_getcolor_default_numeric
+[159/160] Linking CXX executable tests/test_prg_engine_getfont_size_numeric
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 36
+      Start  36: test_native_test_isolation_contract
+
+36: Test command: /usr/bin/cmake "-DINVENTORY_PATH=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/native-test-isolation.tsv" "-DISOLATION_SOURCE_PATH=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/tests/CopperfinTestIsolation.cmake" "-DTEST_REGISTRATION_SOURCE_PATH=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/tests/CMakeLists.txt" "-P" "/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/tests/run_native_test_isolation_contract_check.cmake"
+36: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+36: Environment variables: 
+36:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+36: Test timeout computed to be: 180
+36: -- Native test isolation inventory contract passed for 519 tests
+ 1/13 Test  #36: test_native_test_isolation_contract ...........................   Passed    0.49 sec
+test 390
+      Start 390: test_prg_engine_int64_exact_expression
+
+390: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_int64_exact_expression
+390: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+390: Environment variables: 
+390:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+390: Test timeout computed to be: 180
+ 2/13 Test #390: test_prg_engine_int64_exact_expression ........................   Passed    0.09 sec
+test 393
+      Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 180
+ 3/13 Test #393: test_prg_engine_numeric_behavior ..............................   Passed   98.55 sec
+test 414
+      Start 414: test_prg_engine_getcolor_default_numeric
+
+414: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getcolor_default_numeric
+414: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+414: Environment variables: 
+414:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+414: Test timeout computed to be: 180
+414: GETCOLOR frozen cases: direct=174 public=0
+ 4/13 Test #414: test_prg_engine_getcolor_default_numeric ......................   Passed    0.01 sec
+test 415
+      Start 415: test_prg_engine_getcolor_default_numeric_copperfin_session1
+
+415: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getcolor_default_numeric "COPPERFIN" "1"
+415: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+415: Environment variables: 
+415:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+415: Test timeout computed to be: 180
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(0.49,'numeric')
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(0.5,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(0.5,'numeric') got mode=headless default=1 title="numeric" result=1
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(0.9,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(0.9,'numeric') got mode=headless default=1 title="numeric" result=1
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(255.49,'numeric')
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(255.5,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(255.5,'numeric') got mode=headless default=256 title="numeric" result=256
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(255.9,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(255.9,'numeric') got mode=headless default=256 title="numeric" result=256
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(256.9,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(256.9,'numeric') got mode=headless default=257 title="numeric" result=257
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(16777215.5,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(16777215.5,'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(16777215.9,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(16777215.9,'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(16777216,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(16777216,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(16777216,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(16777216,'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(16777216,'numeric')
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(-0.49,'numeric')
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(-0.5,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(-0.5,'numeric') got mode=headless default=-1 title="numeric" result=-1
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(-0.9,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(-0.9,'numeric') got mode=headless default=-1 title="numeric" result=-1
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(-1,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(-1,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(-1,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(-1,'numeric') got mode=headless default=-1 title="numeric" result=-1
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(-1,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(-1.49,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(-1.49,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(-1.49,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(-1.49,'numeric') got mode=headless default=-1 title="numeric" result=-1
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(-1.49,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(-1.5,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(-1.5,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(-1.5,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(-1.5,'numeric') got mode=headless default=-2 title="numeric" result=-2
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(-1.5,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(-1.9,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(-1.9,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(-1.9,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(-1.9,'numeric') got mode=headless default=-2 title="numeric" result=-2
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(-1.9,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(2147483647,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(2147483647,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(2147483647,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(2147483647,'numeric') got mode=headless default=2147483647 title="numeric" result=2147483647
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(2147483647,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(2147483647.9,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(2147483647.9,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(2147483647.9,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(2147483647.9,'numeric') got mode=headless default=2147483648 title="numeric" result=2147483648
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(2147483647.9,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(2147483648,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(2147483648,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(2147483648,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(2147483648,'numeric') got mode=headless default=2147483648 title="numeric" result=2147483648
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(2147483648,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(-2147483648,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(-2147483648,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(-2147483648,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(-2147483648,'numeric') got mode=headless default=-2147483648 title="numeric" result=-2147483648
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(-2147483648,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(-2147483648.9,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(-2147483648.9,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(-2147483648.9,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(-2147483648.9,'numeric') got mode=headless default=-2147483649 title="numeric" result=-2147483649
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(-2147483648.9,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(-2147483649,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(-2147483649,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(-2147483649,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(-2147483649,'numeric') got mode=headless default=-2147483649 title="numeric" result=-2147483649
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(-2147483649,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(4294967295,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(4294967295,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(4294967295,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(4294967295,'numeric') got mode=headless default=4294967295 title="numeric" result=4294967295
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(4294967295,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(4294967295.1,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(4294967295.1,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(4294967295.1,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(4294967295.1,'numeric') got mode=headless default=4294967295 title="numeric" result=4294967295
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(4294967295.1,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(4294967295.5,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(4294967295.5,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(4294967295.5,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(4294967295.5,'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(4294967295.5,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(4294967295.9,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(4294967295.9,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(4294967295.9,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(4294967295.9,'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(4294967295.9,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(4294967296,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(4294967296,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(4294967296,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(4294967296,'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(4294967296,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(-4294967296,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(-4294967296,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(-4294967296,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(-4294967296,'numeric') got mode=headless default=-4294967296 title="numeric" result=-4294967296
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(-4294967296,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(-4294967041,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(-4294967041,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(-4294967041,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(-4294967041,'numeric') got mode=headless default=-4294967041 title="numeric" result=-4294967041
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(-4294967041,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(-4294967040.5,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(-4294967040.5,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(-4294967040.5,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(-4294967040.5,'numeric') got mode=headless default=-4294967041 title="numeric" result=-4294967041
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(-4294967040.5,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(9007199254740992,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(9007199254740992,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(9007199254740992,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(9007199254740992,'numeric') got mode=headless default=9007199254740992 title="numeric" result=9007199254740992
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(9007199254740992,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(-9007199254740992,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(-9007199254740992,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(-9007199254740992,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(-9007199254740992,'numeric') got mode=headless default=-9007199254740992 title="numeric" result=-9007199254740992
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(-9007199254740992,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(1E20,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(1E20,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(1E20,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(1E20,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(1E20,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(-1E20,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(-1E20,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(-1E20,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(-1E20,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(-1E20,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(1E300,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(-1E300,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(-1E300,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(-1E300,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(-1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(-1E300,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(EXP(1000),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(EXP(1000),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(EXP(1000),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(EXP(1000),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(EXP(1000),'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(-EXP(1000),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(-EXP(1000),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(-EXP(1000),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(-EXP(1000),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(-EXP(1000),'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(CAST(-1 AS INT64),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(CAST(-1 AS INT64),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(CAST(-1 AS INT64),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(CAST(-1 AS INT64),'numeric') got mode=headless default=-1 title="numeric" result=-1
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(CAST(-1 AS INT64),'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(CAST(16777216 AS INT64),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(CAST(16777216 AS INT64),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(CAST(16777216 AS INT64),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(CAST(16777216 AS INT64),'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(CAST(16777216 AS INT64),'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(CAST(-2147483648 AS INT64),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(CAST(-2147483648 AS INT64),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(CAST(-2147483648 AS INT64),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(CAST(-2147483648 AS INT64),'numeric') got mode=headless default=-2147483648 title="numeric" result=-2147483648
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(CAST(-2147483648 AS INT64),'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR((CAST(-2147483648 AS INT64)-CAST(1 AS INT64)),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR((CAST(-2147483648 AS INT64)-CAST(1 AS INT64)),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR((CAST(-2147483648 AS INT64)-CAST(1 AS INT64)),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR((CAST(-2147483648 AS INT64)-CAST(1 AS INT64)),'numeric') got mode=headless default=-2147483649 title="numeric" result=-2147483649
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR((CAST(-2147483648 AS INT64)-CAST(1 AS INT64)),'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(CAST(4294967295 AS INT64),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(CAST(4294967295 AS INT64),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(CAST(4294967295 AS INT64),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(CAST(4294967295 AS INT64),'numeric') got mode=headless default=4294967295 title="numeric" result=4294967295
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(CAST(4294967295 AS INT64),'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(CAST(4294967296 AS INT64),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(CAST(4294967296 AS INT64),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(CAST(4294967296 AS INT64),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(CAST(4294967296 AS INT64),'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(CAST(4294967296 AS INT64),'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(CAST(-4294967041 AS INT64),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(CAST(-4294967041 AS INT64),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(CAST(-4294967041 AS INT64),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(CAST(-4294967041 AS INT64),'numeric') got mode=headless default=-4294967041 title="numeric" result=-4294967041
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(CAST(-4294967041 AS INT64),'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(CAST(16777216 AS UINT64),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(CAST(16777216 AS UINT64),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(CAST(16777216 AS UINT64),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(CAST(16777216 AS UINT64),'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(CAST(16777216 AS UINT64),'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(CAST(4294967295 AS UINT64),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(CAST(4294967295 AS UINT64),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(CAST(4294967295 AS UINT64),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(CAST(4294967295 AS UINT64),'numeric') got mode=headless default=4294967295 title="numeric" result=4294967295
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(CAST(4294967295 AS UINT64),'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(CAST(4294967296 AS UINT64),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(CAST(4294967296 AS UINT64),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(CAST(4294967296 AS UINT64),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(CAST(4294967296 AS UINT64),'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(CAST(4294967296 AS UINT64),'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),'numeric') got mode=headless default=9007199254740992 title="numeric" result=9007199254740992
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(255 AS INT64)),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(255 AS INT64)),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(255 AS INT64)),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(255 AS INT64)),'numeric') got mode=headless default=9007199254741248 title="numeric" result=9007199254741248
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(255 AS INT64)),'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)),'numeric') got mode=headless default=-9007199254740992 title="numeric" result=-9007199254740992
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)),'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(CAST(-9223372036854775808 AS INT64),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(CAST(-9223372036854775808 AS INT64),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(CAST(-9223372036854775808 AS INT64),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(CAST(-9223372036854775808 AS INT64),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(CAST(-9223372036854775808 AS INT64),'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR((CAST(-9223372036854775808 AS INT64)+CAST(255 AS INT64)),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR((CAST(-9223372036854775808 AS INT64)+CAST(255 AS INT64)),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR((CAST(-9223372036854775808 AS INT64)+CAST(255 AS INT64)),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR((CAST(-9223372036854775808 AS INT64)+CAST(255 AS INT64)),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR((CAST(-9223372036854775808 AS INT64)+CAST(255 AS INT64)),'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)),'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)),'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)),'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)),'numeric')
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(255.9)
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(255.9) got mode=headless default=256 title="" result=256
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(1E300,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR localized11 COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(1E300,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR localized11 COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(1E300,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR localized11 COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR selected error COPPERFIN session1 GETCOLOR(1E300,'numeric') got 0
+415: FAIL: GETCOLOR selected assignment COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR kind COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR localized11 COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: FAIL: GETCOLOR selected event COPPERFIN session1 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+415: FAIL: GETCOLOR event atomicity/count COPPERFIN session1 GETCOLOR(1E300,'numeric')
+415: GETCOLOR frozen cases: direct=0 public=80
+ 5/13 Test #415: test_prg_engine_getcolor_default_numeric_copperfin_session1 ...***Failed    0.92 sec
+test 416
+      Start 416: test_prg_engine_getcolor_default_numeric_copperfin_session2
+
+416: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getcolor_default_numeric "COPPERFIN" "2"
+416: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+416: Environment variables: 
+416:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+416: Test timeout computed to be: 180
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(0.49,'numeric')
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(0.5,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(0.5,'numeric') got mode=headless default=1 title="numeric" result=1
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(0.9,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(0.9,'numeric') got mode=headless default=1 title="numeric" result=1
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(255.49,'numeric')
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(255.5,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(255.5,'numeric') got mode=headless default=256 title="numeric" result=256
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(255.9,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(255.9,'numeric') got mode=headless default=256 title="numeric" result=256
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(256.9,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(256.9,'numeric') got mode=headless default=257 title="numeric" result=257
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(16777215.5,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(16777215.5,'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(16777215.9,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(16777215.9,'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(16777216,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(16777216,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(16777216,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(16777216,'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(16777216,'numeric')
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(-0.49,'numeric')
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(-0.5,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(-0.5,'numeric') got mode=headless default=-1 title="numeric" result=-1
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(-0.9,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(-0.9,'numeric') got mode=headless default=-1 title="numeric" result=-1
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(-1,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(-1,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(-1,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(-1,'numeric') got mode=headless default=-1 title="numeric" result=-1
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(-1,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(-1.49,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(-1.49,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(-1.49,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(-1.49,'numeric') got mode=headless default=-1 title="numeric" result=-1
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(-1.49,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(-1.5,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(-1.5,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(-1.5,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(-1.5,'numeric') got mode=headless default=-2 title="numeric" result=-2
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(-1.5,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(-1.9,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(-1.9,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(-1.9,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(-1.9,'numeric') got mode=headless default=-2 title="numeric" result=-2
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(-1.9,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(2147483647,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(2147483647,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(2147483647,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(2147483647,'numeric') got mode=headless default=2147483647 title="numeric" result=2147483647
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(2147483647,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(2147483647.9,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(2147483647.9,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(2147483647.9,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(2147483647.9,'numeric') got mode=headless default=2147483648 title="numeric" result=2147483648
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(2147483647.9,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(2147483648,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(2147483648,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(2147483648,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(2147483648,'numeric') got mode=headless default=2147483648 title="numeric" result=2147483648
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(2147483648,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(-2147483648,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(-2147483648,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(-2147483648,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(-2147483648,'numeric') got mode=headless default=-2147483648 title="numeric" result=-2147483648
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(-2147483648,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(-2147483648.9,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(-2147483648.9,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(-2147483648.9,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(-2147483648.9,'numeric') got mode=headless default=-2147483649 title="numeric" result=-2147483649
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(-2147483648.9,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(-2147483649,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(-2147483649,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(-2147483649,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(-2147483649,'numeric') got mode=headless default=-2147483649 title="numeric" result=-2147483649
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(-2147483649,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(4294967295,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(4294967295,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(4294967295,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(4294967295,'numeric') got mode=headless default=4294967295 title="numeric" result=4294967295
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(4294967295,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(4294967295.1,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(4294967295.1,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(4294967295.1,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(4294967295.1,'numeric') got mode=headless default=4294967295 title="numeric" result=4294967295
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(4294967295.1,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(4294967295.5,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(4294967295.5,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(4294967295.5,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(4294967295.5,'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(4294967295.5,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(4294967295.9,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(4294967295.9,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(4294967295.9,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(4294967295.9,'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(4294967295.9,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(4294967296,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(4294967296,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(4294967296,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(4294967296,'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(4294967296,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(-4294967296,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(-4294967296,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(-4294967296,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(-4294967296,'numeric') got mode=headless default=-4294967296 title="numeric" result=-4294967296
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(-4294967296,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(-4294967041,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(-4294967041,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(-4294967041,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(-4294967041,'numeric') got mode=headless default=-4294967041 title="numeric" result=-4294967041
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(-4294967041,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(-4294967040.5,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(-4294967040.5,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(-4294967040.5,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(-4294967040.5,'numeric') got mode=headless default=-4294967041 title="numeric" result=-4294967041
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(-4294967040.5,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(9007199254740992,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(9007199254740992,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(9007199254740992,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(9007199254740992,'numeric') got mode=headless default=9007199254740992 title="numeric" result=9007199254740992
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(9007199254740992,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(-9007199254740992,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(-9007199254740992,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(-9007199254740992,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(-9007199254740992,'numeric') got mode=headless default=-9007199254740992 title="numeric" result=-9007199254740992
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(-9007199254740992,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(1E20,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(1E20,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(1E20,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(1E20,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(1E20,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(-1E20,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(-1E20,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(-1E20,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(-1E20,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(-1E20,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(1E300,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(-1E300,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(-1E300,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(-1E300,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(-1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(-1E300,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(EXP(1000),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(EXP(1000),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(EXP(1000),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(EXP(1000),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(EXP(1000),'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(-EXP(1000),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(-EXP(1000),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(-EXP(1000),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(-EXP(1000),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(-EXP(1000),'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(CAST(-1 AS INT64),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(CAST(-1 AS INT64),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(CAST(-1 AS INT64),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(CAST(-1 AS INT64),'numeric') got mode=headless default=-1 title="numeric" result=-1
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(CAST(-1 AS INT64),'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(CAST(16777216 AS INT64),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(CAST(16777216 AS INT64),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(CAST(16777216 AS INT64),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(CAST(16777216 AS INT64),'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(CAST(16777216 AS INT64),'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(CAST(-2147483648 AS INT64),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(CAST(-2147483648 AS INT64),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(CAST(-2147483648 AS INT64),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(CAST(-2147483648 AS INT64),'numeric') got mode=headless default=-2147483648 title="numeric" result=-2147483648
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(CAST(-2147483648 AS INT64),'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR((CAST(-2147483648 AS INT64)-CAST(1 AS INT64)),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR((CAST(-2147483648 AS INT64)-CAST(1 AS INT64)),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR((CAST(-2147483648 AS INT64)-CAST(1 AS INT64)),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR((CAST(-2147483648 AS INT64)-CAST(1 AS INT64)),'numeric') got mode=headless default=-2147483649 title="numeric" result=-2147483649
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR((CAST(-2147483648 AS INT64)-CAST(1 AS INT64)),'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(CAST(4294967295 AS INT64),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(CAST(4294967295 AS INT64),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(CAST(4294967295 AS INT64),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(CAST(4294967295 AS INT64),'numeric') got mode=headless default=4294967295 title="numeric" result=4294967295
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(CAST(4294967295 AS INT64),'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(CAST(4294967296 AS INT64),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(CAST(4294967296 AS INT64),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(CAST(4294967296 AS INT64),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(CAST(4294967296 AS INT64),'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(CAST(4294967296 AS INT64),'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(CAST(-4294967041 AS INT64),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(CAST(-4294967041 AS INT64),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(CAST(-4294967041 AS INT64),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(CAST(-4294967041 AS INT64),'numeric') got mode=headless default=-4294967041 title="numeric" result=-4294967041
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(CAST(-4294967041 AS INT64),'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(CAST(16777216 AS UINT64),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(CAST(16777216 AS UINT64),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(CAST(16777216 AS UINT64),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(CAST(16777216 AS UINT64),'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(CAST(16777216 AS UINT64),'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(CAST(4294967295 AS UINT64),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(CAST(4294967295 AS UINT64),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(CAST(4294967295 AS UINT64),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(CAST(4294967295 AS UINT64),'numeric') got mode=headless default=4294967295 title="numeric" result=4294967295
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(CAST(4294967295 AS UINT64),'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(CAST(4294967296 AS UINT64),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(CAST(4294967296 AS UINT64),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(CAST(4294967296 AS UINT64),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(CAST(4294967296 AS UINT64),'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(CAST(4294967296 AS UINT64),'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),'numeric') got mode=headless default=9007199254740992 title="numeric" result=9007199254740992
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(255 AS INT64)),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(255 AS INT64)),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(255 AS INT64)),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(255 AS INT64)),'numeric') got mode=headless default=9007199254741248 title="numeric" result=9007199254741248
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(255 AS INT64)),'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)),'numeric') got mode=headless default=-9007199254740992 title="numeric" result=-9007199254740992
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)),'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(CAST(-9223372036854775808 AS INT64),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(CAST(-9223372036854775808 AS INT64),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(CAST(-9223372036854775808 AS INT64),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(CAST(-9223372036854775808 AS INT64),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(CAST(-9223372036854775808 AS INT64),'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR((CAST(-9223372036854775808 AS INT64)+CAST(255 AS INT64)),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR((CAST(-9223372036854775808 AS INT64)+CAST(255 AS INT64)),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR((CAST(-9223372036854775808 AS INT64)+CAST(255 AS INT64)),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR((CAST(-9223372036854775808 AS INT64)+CAST(255 AS INT64)),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR((CAST(-9223372036854775808 AS INT64)+CAST(255 AS INT64)),'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)),'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)),'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)),'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)),'numeric')
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(255.9)
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(255.9) got mode=headless default=256 title="" result=256
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(1E300,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR localized11 COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(1E300,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR localized11 COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(1E300,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR localized11 COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR selected error COPPERFIN session2 GETCOLOR(1E300,'numeric') got 0
+416: FAIL: GETCOLOR selected assignment COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR kind COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR localized11 COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: FAIL: GETCOLOR selected event COPPERFIN session2 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+416: FAIL: GETCOLOR event atomicity/count COPPERFIN session2 GETCOLOR(1E300,'numeric')
+416: GETCOLOR frozen cases: direct=0 public=80
+ 6/13 Test #416: test_prg_engine_getcolor_default_numeric_copperfin_session2 ...***Failed    0.97 sec
+test 417
+      Start 417: test_prg_engine_getcolor_default_numeric_vfp9_session1
+
+417: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getcolor_default_numeric "VFP9" "1"
+417: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+417: Environment variables: 
+417:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+417: Test timeout computed to be: 180
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(0.49,'numeric')
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(0.5,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(0.5,'numeric') got mode=headless default=1 title="numeric" result=1
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(0.9,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(0.9,'numeric') got mode=headless default=1 title="numeric" result=1
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(255.49,'numeric')
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(255.5,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(255.5,'numeric') got mode=headless default=256 title="numeric" result=256
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(255.9,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(255.9,'numeric') got mode=headless default=256 title="numeric" result=256
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(256.9,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(256.9,'numeric') got mode=headless default=257 title="numeric" result=257
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(16777215.5,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(16777215.5,'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(16777215.9,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(16777215.9,'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(16777216,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(16777216,'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(-0.49,'numeric')
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(-0.5,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(-0.5,'numeric') got mode=headless default=-1 title="numeric" result=-1
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(-0.9,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(-0.9,'numeric') got mode=headless default=-1 title="numeric" result=-1
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(-1,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(-1,'numeric') got mode=headless default=-1 title="numeric" result=-1
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(-1.49,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(-1.49,'numeric') got mode=headless default=-1 title="numeric" result=-1
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(-1.5,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(-1.5,'numeric') got mode=headless default=-2 title="numeric" result=-2
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(-1.9,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(-1.9,'numeric') got mode=headless default=-2 title="numeric" result=-2
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(2147483647,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(2147483647,'numeric') got mode=headless default=2147483647 title="numeric" result=2147483647
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(2147483647.9,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(2147483647.9,'numeric') got mode=headless default=2147483648 title="numeric" result=2147483648
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(2147483648,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(2147483648,'numeric') got mode=headless default=2147483648 title="numeric" result=2147483648
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(-2147483648,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(-2147483648,'numeric') got mode=headless default=-2147483648 title="numeric" result=-2147483648
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(-2147483648.9,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(-2147483648.9,'numeric') got mode=headless default=-2147483649 title="numeric" result=-2147483649
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(-2147483649,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(-2147483649,'numeric') got mode=headless default=-2147483649 title="numeric" result=-2147483649
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(4294967295,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(4294967295,'numeric') got mode=headless default=4294967295 title="numeric" result=4294967295
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(4294967295.1,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(4294967295.1,'numeric') got mode=headless default=4294967295 title="numeric" result=4294967295
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(4294967295.5,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(4294967295.5,'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(4294967295.9,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(4294967295.9,'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(4294967296,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(4294967296,'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(-4294967296,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(-4294967296,'numeric') got mode=headless default=-4294967296 title="numeric" result=-4294967296
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(-4294967041,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(-4294967041,'numeric') got mode=headless default=-4294967041 title="numeric" result=-4294967041
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(-4294967040.5,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(-4294967040.5,'numeric') got mode=headless default=-4294967041 title="numeric" result=-4294967041
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(9007199254740992,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(9007199254740992,'numeric') got mode=headless default=9007199254740992 title="numeric" result=9007199254740992
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(-9007199254740992,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(-9007199254740992,'numeric') got mode=headless default=-9007199254740992 title="numeric" result=-9007199254740992
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(1E20,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(1E20,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(-1E20,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(-1E20,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(1E300,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(-1E300,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(-1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(EXP(1000),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(EXP(1000),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(-EXP(1000),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(-EXP(1000),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(CAST(-1 AS INT64),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(CAST(-1 AS INT64),'numeric') got mode=headless default=-1 title="numeric" result=-1
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(CAST(16777216 AS INT64),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(CAST(16777216 AS INT64),'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(CAST(-2147483648 AS INT64),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(CAST(-2147483648 AS INT64),'numeric') got mode=headless default=-2147483648 title="numeric" result=-2147483648
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR((CAST(-2147483648 AS INT64)-CAST(1 AS INT64)),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR((CAST(-2147483648 AS INT64)-CAST(1 AS INT64)),'numeric') got mode=headless default=-2147483649 title="numeric" result=-2147483649
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(CAST(4294967295 AS INT64),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(CAST(4294967295 AS INT64),'numeric') got mode=headless default=4294967295 title="numeric" result=4294967295
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(CAST(4294967296 AS INT64),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(CAST(4294967296 AS INT64),'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(CAST(-4294967041 AS INT64),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(CAST(-4294967041 AS INT64),'numeric') got mode=headless default=-4294967041 title="numeric" result=-4294967041
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(CAST(16777216 AS UINT64),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(CAST(16777216 AS UINT64),'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(CAST(4294967295 AS UINT64),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(CAST(4294967295 AS UINT64),'numeric') got mode=headless default=4294967295 title="numeric" result=4294967295
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(CAST(4294967296 AS UINT64),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(CAST(4294967296 AS UINT64),'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),'numeric') got mode=headless default=9007199254740992 title="numeric" result=9007199254740992
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(255 AS INT64)),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(255 AS INT64)),'numeric') got mode=headless default=9007199254741248 title="numeric" result=9007199254741248
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)),'numeric') got mode=headless default=-9007199254740992 title="numeric" result=-9007199254740992
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(CAST(-9223372036854775808 AS INT64),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(CAST(-9223372036854775808 AS INT64),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR((CAST(-9223372036854775808 AS INT64)+CAST(255 AS INT64)),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR((CAST(-9223372036854775808 AS INT64)+CAST(255 AS INT64)),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)),'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(255.9)
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(255.9) got mode=headless default=256 title="" result=256
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(1E300,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(1E300,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(1E300,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+417: FAIL: GETCOLOR selected assignment VFP9 session1 GETCOLOR(1E300,'numeric')
+417: FAIL: GETCOLOR selected event VFP9 session1 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+417: GETCOLOR frozen cases: direct=0 public=80
+ 7/13 Test #417: test_prg_engine_getcolor_default_numeric_vfp9_session1 ........***Failed    0.93 sec
+test 418
+      Start 418: test_prg_engine_getcolor_default_numeric_vfp9_session2
+
+418: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getcolor_default_numeric "VFP9" "2"
+418: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+418: Environment variables: 
+418:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+418: Test timeout computed to be: 180
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(0.49,'numeric')
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(0.5,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(0.5,'numeric') got mode=headless default=1 title="numeric" result=1
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(0.9,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(0.9,'numeric') got mode=headless default=1 title="numeric" result=1
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(255.49,'numeric')
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(255.5,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(255.5,'numeric') got mode=headless default=256 title="numeric" result=256
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(255.9,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(255.9,'numeric') got mode=headless default=256 title="numeric" result=256
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(256.9,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(256.9,'numeric') got mode=headless default=257 title="numeric" result=257
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(16777215.5,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(16777215.5,'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(16777215.9,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(16777215.9,'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(16777216,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(16777216,'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(-0.49,'numeric')
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(-0.5,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(-0.5,'numeric') got mode=headless default=-1 title="numeric" result=-1
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(-0.9,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(-0.9,'numeric') got mode=headless default=-1 title="numeric" result=-1
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(-1,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(-1,'numeric') got mode=headless default=-1 title="numeric" result=-1
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(-1.49,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(-1.49,'numeric') got mode=headless default=-1 title="numeric" result=-1
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(-1.5,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(-1.5,'numeric') got mode=headless default=-2 title="numeric" result=-2
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(-1.9,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(-1.9,'numeric') got mode=headless default=-2 title="numeric" result=-2
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(2147483647,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(2147483647,'numeric') got mode=headless default=2147483647 title="numeric" result=2147483647
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(2147483647.9,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(2147483647.9,'numeric') got mode=headless default=2147483648 title="numeric" result=2147483648
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(2147483648,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(2147483648,'numeric') got mode=headless default=2147483648 title="numeric" result=2147483648
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(-2147483648,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(-2147483648,'numeric') got mode=headless default=-2147483648 title="numeric" result=-2147483648
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(-2147483648.9,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(-2147483648.9,'numeric') got mode=headless default=-2147483649 title="numeric" result=-2147483649
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(-2147483649,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(-2147483649,'numeric') got mode=headless default=-2147483649 title="numeric" result=-2147483649
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(4294967295,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(4294967295,'numeric') got mode=headless default=4294967295 title="numeric" result=4294967295
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(4294967295.1,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(4294967295.1,'numeric') got mode=headless default=4294967295 title="numeric" result=4294967295
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(4294967295.5,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(4294967295.5,'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(4294967295.9,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(4294967295.9,'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(4294967296,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(4294967296,'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(-4294967296,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(-4294967296,'numeric') got mode=headless default=-4294967296 title="numeric" result=-4294967296
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(-4294967041,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(-4294967041,'numeric') got mode=headless default=-4294967041 title="numeric" result=-4294967041
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(-4294967040.5,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(-4294967040.5,'numeric') got mode=headless default=-4294967041 title="numeric" result=-4294967041
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(9007199254740992,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(9007199254740992,'numeric') got mode=headless default=9007199254740992 title="numeric" result=9007199254740992
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(-9007199254740992,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(-9007199254740992,'numeric') got mode=headless default=-9007199254740992 title="numeric" result=-9007199254740992
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(1E20,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(1E20,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(-1E20,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(-1E20,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(1E300,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(-1E300,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(-1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(EXP(1000),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(EXP(1000),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(-EXP(1000),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(-EXP(1000),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(CAST(-1 AS INT64),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(CAST(-1 AS INT64),'numeric') got mode=headless default=-1 title="numeric" result=-1
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(CAST(16777216 AS INT64),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(CAST(16777216 AS INT64),'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(CAST(-2147483648 AS INT64),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(CAST(-2147483648 AS INT64),'numeric') got mode=headless default=-2147483648 title="numeric" result=-2147483648
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR((CAST(-2147483648 AS INT64)-CAST(1 AS INT64)),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR((CAST(-2147483648 AS INT64)-CAST(1 AS INT64)),'numeric') got mode=headless default=-2147483649 title="numeric" result=-2147483649
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(CAST(4294967295 AS INT64),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(CAST(4294967295 AS INT64),'numeric') got mode=headless default=4294967295 title="numeric" result=4294967295
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(CAST(4294967296 AS INT64),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(CAST(4294967296 AS INT64),'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(CAST(-4294967041 AS INT64),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(CAST(-4294967041 AS INT64),'numeric') got mode=headless default=-4294967041 title="numeric" result=-4294967041
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(CAST(16777216 AS UINT64),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(CAST(16777216 AS UINT64),'numeric') got mode=headless default=16777216 title="numeric" result=16777216
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(CAST(4294967295 AS UINT64),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(CAST(4294967295 AS UINT64),'numeric') got mode=headless default=4294967295 title="numeric" result=4294967295
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(CAST(4294967296 AS UINT64),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(CAST(4294967296 AS UINT64),'numeric') got mode=headless default=4294967296 title="numeric" result=4294967296
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(1 AS INT64)),'numeric') got mode=headless default=9007199254740992 title="numeric" result=9007199254740992
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(255 AS INT64)),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR((CAST(9007199254740992 AS INT64)+CAST(255 AS INT64)),'numeric') got mode=headless default=9007199254741248 title="numeric" result=9007199254741248
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR((CAST(-9007199254740992 AS INT64)-CAST(1 AS INT64)),'numeric') got mode=headless default=-9007199254740992 title="numeric" result=-9007199254740992
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(CAST(-9223372036854775808 AS INT64),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(CAST(-9223372036854775808 AS INT64),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR((CAST(-9223372036854775808 AS INT64)+CAST(255 AS INT64)),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR((CAST(-9223372036854775808 AS INT64)+CAST(255 AS INT64)),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)),'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR((CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64)),'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(255.9)
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(255.9) got mode=headless default=256 title="" result=256
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(1E300,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(1E300,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(1E300,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+418: FAIL: GETCOLOR selected assignment VFP9 session2 GETCOLOR(1E300,'numeric')
+418: FAIL: GETCOLOR selected event VFP9 session2 GETCOLOR(1E300,'numeric') got mode=headless default=-9223372036854775808 title="numeric" result=-9223372036854775808
+418: GETCOLOR frozen cases: direct=0 public=80
+ 8/13 Test #418: test_prg_engine_getcolor_default_numeric_vfp9_session2 ........***Failed    0.96 sec
+test 419
+      Start 419: test_prg_engine_getfont_size_numeric
+
+419: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getfont_size_numeric
+419: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+419: Environment variables: 
+419:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+419: Test timeout computed to be: 180
+419: GETFONT frozen cases: direct=172 public=0
+ 9/13 Test #419: test_prg_engine_getfont_size_numeric ..........................   Passed    0.02 sec
+test 420
+      Start 420: test_prg_engine_getfont_size_numeric_copperfin_session1
+
+420: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getfont_size_numeric "COPPERFIN" "1"
+420: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+420: Environment variables: 
+420:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+420: Test timeout computed to be: 180
+420: GETFONT frozen cases: direct=0 public=79
+10/13 Test #420: test_prg_engine_getfont_size_numeric_copperfin_session1 .......   Passed    0.94 sec
+test 421
+      Start 421: test_prg_engine_getfont_size_numeric_copperfin_session2
+
+421: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getfont_size_numeric "COPPERFIN" "2"
+421: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+421: Environment variables: 
+421:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+421: Test timeout computed to be: 180
+421: GETFONT frozen cases: direct=0 public=79
+11/13 Test #421: test_prg_engine_getfont_size_numeric_copperfin_session2 .......   Passed    0.99 sec
+test 422
+      Start 422: test_prg_engine_getfont_size_numeric_vfp9_session1
+
+422: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getfont_size_numeric "VFP9" "1"
+422: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+422: Environment variables: 
+422:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+422: Test timeout computed to be: 180
+422: GETFONT frozen cases: direct=0 public=79
+12/13 Test #422: test_prg_engine_getfont_size_numeric_vfp9_session1 ............   Passed    0.96 sec
+test 423
+      Start 423: test_prg_engine_getfont_size_numeric_vfp9_session2
+
+423: Test command: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests/test_prg_engine_getfont_size_numeric "VFP9" "2"
+423: Working Directory: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/tests
+423: Environment variables: 
+423:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/resources/locales
+423: Test timeout computed to be: 180
+423: GETFONT frozen cases: direct=0 public=79
+13/13 Test #423: test_prg_engine_getfont_size_numeric_vfp9_session2 ............   Passed    0.99 sec
+
+The following tests passed:
+	test_native_test_isolation_contract
+	test_prg_engine_int64_exact_expression
+	test_prg_engine_numeric_behavior
+	test_prg_engine_getcolor_default_numeric
+	test_prg_engine_getfont_size_numeric
+	test_prg_engine_getfont_size_numeric_copperfin_session1
+	test_prg_engine_getfont_size_numeric_copperfin_session2
+	test_prg_engine_getfont_size_numeric_vfp9_session1
+	test_prg_engine_getfont_size_numeric_vfp9_session2
+
+69% tests passed, 4 tests failed out of 13
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  = 106.82 sec*proc (13 tests)
+copperfin-isolation:child-processes=none            = 106.82 sec*proc (13 tests)
+copperfin-isolation:environment=none                =   0.58 sec*proc (2 tests)
+copperfin-isolation:environment=scoped-process      = 106.24 sec*proc (11 tests)
+copperfin-isolation:filesystem=process-owned        =  98.64 sec*proc (2 tests)
+copperfin-isolation:filesystem=read-only            =   0.49 sec*proc (1 test)
+copperfin-isolation:filesystem=test-owned-unique    =   7.69 sec*proc (10 tests)
+copperfin-isolation:network=none                    = 106.82 sec*proc (13 tests)
+copperfin-isolation:platform=portable               = 106.82 sec*proc (13 tests)
+copperfin-isolation:resources=none                  = 106.82 sec*proc (13 tests)
+copperfin-isolation:samples=none                    = 106.82 sec*proc (13 tests)
+copperfin-isolation:schedule=parallel-safe          =   0.49 sec*proc (1 test)
+copperfin-isolation:schedule=serial                 = 106.33 sec*proc (12 tests)
+
+Total Test time (real) = 106.85 sec
+
+The following tests FAILED:
+	415 - test_prg_engine_getcolor_default_numeric_copperfin_session1 (Failed) copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+	416 - test_prg_engine_getcolor_default_numeric_copperfin_session2 (Failed) copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+	417 - test_prg_engine_getcolor_default_numeric_vfp9_session1 (Failed) copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+	418 - test_prg_engine_getcolor_default_numeric_vfp9_session2 (Failed) copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=serial
+Errors while running CTest
+Output from these tests are in: /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin/build/getcolor-default-clang/Testing/Temporary/LastTest.log
+Use "--rerun-failed --output-on-failure" to re-run the failed cases verbosely.

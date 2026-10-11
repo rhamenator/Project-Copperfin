@@ -1,0 +1,72 @@
+LOCAL lcOut, lcExpr, luResult, loError, i
+LOCAL ARRAY aValues[51]
+SET SAFETY OFF
+lcOut='Z:\home\rich\.codex\worktrees\getcolor-default-numeric-5611\Project-Copperfin\build\getcolor-native\probe.out'
+=STRTOFILE('VERSION|'+VERSION()+CHR(13)+CHR(10),lcOut,0)
+aValues[1]='0'
+aValues[2]='255'
+aValues[3]='255.49'
+aValues[4]='255.5'
+aValues[5]='255.9'
+aValues[6]='65535'
+aValues[7]='16777215'
+aValues[8]='16777215.9'
+aValues[9]='16777216'
+aValues[10]='-1'
+aValues[11]='-0.49'
+aValues[12]='-0.5'
+aValues[13]='-0.9'
+aValues[14]='-1.49'
+aValues[15]='-1.5'
+aValues[16]='-1.9'
+aValues[17]='2147483647'
+aValues[18]='2147483647.9'
+aValues[19]='2147483648'
+aValues[20]='-2147483648'
+aValues[21]='-2147483648.9'
+aValues[22]='-2147483649'
+aValues[23]='4294967295'
+aValues[24]='4294967295.1'
+aValues[25]='4294967295.5'
+aValues[26]='4294967295.9'
+aValues[27]='4294967296'
+aValues[28]='-4294967296'
+aValues[29]='-4294967041'
+aValues[30]='-4294967040.5'
+aValues[31]='9007199254740992'
+aValues[32]='-9007199254740992'
+aValues[33]='1E20'
+aValues[34]='-1E20'
+aValues[35]='1E300'
+aValues[36]='-1E300'
+aValues[37]='EXP(1000)'
+aValues[38]='-EXP(1000)'
+aValues[39]='.T.'
+aValues[40]='.F.'
+aValues[41]='.NULL.'
+aValues[42]="'255.9'"
+aValues[43]='$255.9'
+aValues[44]='0.49'
+aValues[45]='0.5'
+aValues[46]='0.9'
+aValues[47]='256'
+aValues[48]='256.9'
+aValues[49]='65280'
+aValues[50]='16711680'
+aValues[51]=''
+FOR i=1 TO ALEN(aValues)
+    lcExpr='GETCOLOR('+aValues[i]+')'
+    =STRTOFILE('BEGIN|'+lcExpr+'|Return'+CHR(13)+CHR(10),lcOut,1)
+    TRY
+        luResult=EVALUATE(lcExpr)
+        =STRTOFILE('RESULT|'+lcExpr+'|'+VARTYPE(luResult)+':'+TRANSFORM(luResult)+CHR(13)+CHR(10),lcOut,1)
+    CATCH TO loError
+        =STRTOFILE('RESULT|'+lcExpr+'|ERR'+TRANSFORM(loError.ErrorNo)+CHR(13)+CHR(10),lcOut,1)
+    ENDTRY
+ENDFOR
+lcExpr='GETCOLOR(255)'
+=STRTOFILE('BEGIN|'+lcExpr+'|Escape'+CHR(13)+CHR(10),lcOut,1)
+luResult=EVALUATE(lcExpr)
+=STRTOFILE('RESULT|'+lcExpr+'|'+VARTYPE(luResult)+':'+TRANSFORM(luResult)+CHR(13)+CHR(10),lcOut,1)
+=STRTOFILE('DONE'+CHR(13)+CHR(10),lcOut,1)
+QUIT

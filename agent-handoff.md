@@ -55,169 +55,152 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
-INT16/SHORT CAST Numeric/exact PR #7131 merged2026-10-10T18:46:13Z as
-14e6188406a8e4289eccee5b6fe50614eba07792 from signed/DCO GoodG exact head
-d5e5084e63d9426494d8f06bcd7928de0a0bf576.
-https://github.com/rhamenator/Project-Copperfin/pull/7131
-Final gate6100950182: fresh active strict-main ruleset20356131, all11 required
+GETFONT optional Numeric/exact second-argument PR #7133 merged2026-10-10T22:16:03Z
+as7a97ac526d0d9b684fac9c08835b267a3c659fd9 from signed/DCO GoodG exact head
+a8d77164c8b1b73d335abae33b3cb719223e9712.
+https://github.com/rhamenator/Project-Copperfin/pull/7133
+Final gate6102756680: fresh active strict-main ruleset20356131, all11 required
 and all36 hosted checks SUCCESS, non-draft/main/MERGEABLE/CLEAN.
-Actual clean Codex6100179209 at17:20:54Z names exact d5e5084e63, after
-Claude-FIRST6099930131 and authorized fallback6100156336. No explicit
-quota/setup failure or quota assumption; summary/reactions not acceptance.
-Fresh full Graph closing refs0/threads0/no pagination gaps. Parents5611/6776
-remain OPEN/rhamenator/agent-approved; freshly revalidated before content.
-Merge command63856 returned504/exit1, but read-only fresh PR/fetch confirmed
-MERGED/exact merge commit; no duplicate merge attempt or failure inference.
-Only INT16/SHORT Numeric/exact complete; non-Numeric/NULL/other CAST/type/
-Currency/arity/parser/settings unchanged. No family/parent/release qualification.
+Actual clean Codex6102266672 at21:17:04Z names exact a8d77164c8, after
+Claude-FIRST6101867117 and authorized explicit fallback6102255792. No explicit
+quota/setup failure; Claude installation/quota status unconfirmed. Automatic
+summary/reactions are not acceptance. Full Graph threads0/reviews0/closing
+refs0/no pagination gaps. Merge32388 harvested0; fresh actualMERGED/merge SHA
+and exact head ancestor confirmed after fetch. Parents5611/6776 remain OPEN.
 
-RQ-CF-PRG-CAST-INT16-NUMERIC-001/VR001+002 and medium DQ/DV/HZ mapping
-preceded helper/tests/configuration15:17Z. Independent installed Wine7423
-matching89-line/87-call observations and shipped CAST help: INTEGER truncation
-controls, unsupported INT16/SHORT ERR11 including0, not native16 range/wrap.
-Both-mode owner-derived signed16 extension: finite truncation[-32768,32768),
-direct exact64 range/no Double, exact int64 result or localized atomic11.
-Full native/raw/freeze/count chronology in tests/fixtures/vfp9-cast-int16-numeric/
-README.md and baseline-audit.md; medium development DQ/DV walkthrough complete,
-not independent-human/high-hazard/platform/release or parent acceptance.
+Only Numeric/exact GETFONT second input migrated. Default finite positive
+truncation signed32 admission, finite <=0/sub-unit10, nonfinite/oversized
+localized atomic11. Explicit VFP9 native positive raw4294967295 ceiling before
+low32/default10; NaN/exact64 are parent-derived, not invented native evidence.
+Non-Numeric/NULL/type/Currency/arity/name/style/headless result/other consumers
+unchanged. No Font dialog/backend/family/parent/release qualification claim.
+RQ-CF-PRG-GETFONT-SIZE-NUMERIC-001/VR001+002 and medium DQ/DV/HZ mapping
+preceded helper/tests/configuration19:26Z. Installed Wine VFP9 7423 and shipped
+GETFONT help: matching59-line/28-call and97-line/47-call native pairs, sources/
+observers/three screenshots in tests/fixtures/vfp9-getfont-size-numeric/.
+Excluded fallback/timeout/overlap/invalid-OK attempts retain full raws.
+README.md/baseline-audit.md retain complete counts/hashes/chronology and
+medium development self-review/walkthrough, not independent-human acceptance.
 
-Five hashes frozen15:19:50Z, helper UNUSED through BOTH complete originals:
-GNU6412/Clang79642 harvested8,29/33 each,162direct/four152public and unchanged
-neighbor counts complete;920selected/zero other each, four original ClangUB.
-Full1627/1634-line raws copied/cmp BEFORE Numeric-only migration16:15:58Z.
-No frozen assertion/input repair/refreeze. Preliminary GNU52048 foreign compile
-overlap disclosed/full411-line raw retained, not clean timing comparison.
-Separate idle-launch GNU82019 fixed33/33 42.68s; Clang64377 fixed33/33 54.22s,
-no fixed sanitizer reports. BroaderGNU63803 12/12 ONE invocation424.01s and
-Clang55225 4/4 102.83s/noSan, full230/81-line raws. Serial nice10/ionice2:7/-j1,
-private700 RAM scratch, halt1/leaksdisabled; foreign work untouched.
-Signed postpush50504 harvested0,33/33 45.24s/five frozen hashes unchanged,
-full390-line postpush-gcc.log SHA
-2514be83521d826da89a65b30ea647d18653dab8c721b54cb36317db414d54f0;
-actual verification6099947312. No production/test/assertion change after push.
+Five hashes frozen19:50:57Z; helper UNUSED through BOTH originals GNU11867/
+Clang86812 harvested8,9/13 each,172 direct/four79 public plus neighbors complete,
+486 selected assertions/zero other. Full953/952-line raw copied/cmp BEFORE
+Numeric-only migration20:15:39Z; original Clang has no sanitizer report.
+No frozen input/assertion repair/retry. Fixed GNU73659 13/13 PASS78.08s,
+Clang25268 13/13 PASS111.17s/no sanitizer reports, full184/185-line raws.
+Documentation44943 5/5 PASS337.41s/full86-line raw. Serial nice10/ionice2:7/-j1,
+private700 RAM, ASan/UBSan/float-cast-overflow halt1/leaksdisabled.
+Signed-head postpush74675 13/13 PASS78.70s/full189-line raw, unchanged five
+hashes/dispatcher/WT; verification6101886487. No postpush production/test change.
 
-Exact-head native attempt1 full unedited platform raws retained:
-Linux38069571834/job114264049777 509/509 PASS598.46s/full3671-line
-hosted-linux-native-success.log SHA
-0d0d8bf3b6f722b98cc10451278b4d855f5d489b01904da439b48e6f5f6e4ab6.
-macOS38069571782/job114264049227 509/509 PASS543.27s plus four supplemental
-SETPOINT matrices2/2 each/full3617-line hosted-macos-native-success.log SHA
-95729ef3116199c8cd1905f515dfb8fa791a4517d4087fd6e4ddd25248f7dcfc.
-Windows38069571783/job114264049014 510/510 PASS1583.88s/full3796-line
-hosted-windows-native-success.log SHA
-9055c851481c446be849944abcb38ac3b82f48a8b7d60583f0ab754424186021.
-All five INT16 shards/seven bit-neighbors PASS across platforms.
-Warnings/full raw whitespace retained, not warning-free qualification.
-Download93057/78000 and watcher25185 harvested0. No manual CI retry/cancel.
+Exact-head hosted native attempt1 complete unedited results retained:
+Linux38083946595/job114306401747 514/514 PASS620.43s/full3684-line raw SHA
+2bd899eb55dd0b164782060de4f453b58a221aad69b38a2827c2a544d4f99c64.
+macOS38083946579/job114306401708 514/514 PASS500.20s plus four supplemental
+SETPOINT matrices2/2 each/full3631-line raw SHA
+759aecbcd11501c17a061f617361937f1ddafe8712fbf8c4e21145a7cb75fffa.
+Windows38083946638/job114306401845 515/515 PASS1730.78s/full3805-line raw SHA
+d845e90590a5c2083d3262018ec489358967011a5ce105e80c482c871911222c.
+All five GETFONT shards/untouched broader regression PASS; full warnings retained,
+not warning-free qualification. Downloads63155/63841/24313 harvested0.
+No manual CI retry/cancel. All owned local workloads harvested, no suspension.
 
-Canonical main FF14e618840; completed own WT/local/remote branch removed after
-exact head ancestor check. Entire1.1GB build moved recoverably to
-/home/rich/.local/share/Trash/files/cast-int16-5611-build.
-All four late postpush/platform raw hashes verified after move.
-Own700 RAM ZppA8glG empty/no open users/no local build/test/Wine, removedrmdir.
-Continuity stash028790366163efb7bb665b9e4a72ff07f35fadf5 retained, not popped.
-Foreign untracked files/two WTs/older stashes preserved. App7131 attachment
-retained; earlier only MERGED6681 bookmark unlinked at100 cap, GitHub unchanged.
-No VM used or recreated; backup reset completion still unconfirmed.
-
-Prior BYTE7128 merged3d78c5a3a/exactda2e63c37b/all36+11green/actualclean6097782528,
-gate6098703395/resolvedPRRT_kwDOR7wYLc6rD3Cn. Full fixture evidence committed;
-late raws Trash/cast-byte-5611-build, stash413ac9fb23b0f3e50591398418c3c5fde18f0321.
-Prior signed32/unsigned64/signed64 slices7127/7126/7125 complete, full fixture/
-Trash raws and continuity stashes retained; no parent closure.
-7124 AccessSaveAsText/7122 APT diagnostic gaps remain separate/unadmitted;
-passing retries not root-cause fixes. EPOCH/CENTURY complete/#3698 closed.
+Canonical main FF7a97ac526. Clean completed own WT/local/remote branch removed,
+exact head ancestor checked. Entire524MB build moved recoverably to
+/home/rich/.local/share/Trash/files/getfont-size-5611-build.
+All four late postpush/platform *-retained.log hashes verified after move in
+getfont-size-native; postpush SHA
+bed2500a0129beb0eb49f9e00df6b7ed6486b64baabc3725c487c2c74041e749.
+Own700 RAM SJIXBLYl empty/no open users, removedrmdir. Continuity stash
+f7f8d387c58a9ce45dce3023d509965055069c5e retained, not popped.
+Foreign untracked files/two WTs/older stashes preserved. App7133 retained;
+only verifiedMERGED6683 older bookmark unlinked at100 cap, GitHub unchanged.
+No VM used/recreated; backup reset completion remains unconfirmed.
+Prior INT16/SHORT7131 merged14e618840/exactd5e5084e63/all36+11green/
+actualclean6100179209/gate6100950182; fixture committed and late raws in
+Trash/cast-int16-5611-build, stash028790366163efb7bb665b9e4a72ff07f35fadf5.
+Prior BYTE7128/signed32/unsigned64/signed64 complete with full fixtures/Trash/stashes.
+7124 AccessSaveAsText/7122 APT gaps remain separate/unadmitted; passing retries
+are not root-cause fixes. EPOCH/CENTURY complete/#3698 closed.
 
 ## Selected active bounded slice
 
-Next admitted #5611/#6776 slice: GETFONT optional second-argument Numeric/exact
-font-size conversion only, within the parent's remaining runtime-surface
-llround inventory. Existing conversion is verification context, not its
-requirement source. No GETCOLOR, native dialog implementation, global NULL,
-type/Currency/arity, other functions or shared conversion migration in scope.
-Branch fix/getfont-size-numeric-5611 from exact origin/main
-14e6188406a8e4289eccee5b6fe50614eba07792:
- /home/rich/.codex/worktrees/getfont-size-numeric-5611/Project-Copperfin.
-19:45 rules/handoff/channel read empty; fresh admission OPEN/rhamenator/
-agent-approved BEFORE content; origin/main remains14e618840. Active branch
-PR list empty, prior7131 fresh MERGED/all36SUCCESS/threads0. No new competing
-GETFONT branch, no owner-input blocker. Distinct helper and independent
-direct/public tests plus serial isolation/CMake registrations now frozen;
-GETFONT production dispatch now migrated ONLY for Numeric/exact second input,
-AFTER BOTH complete originals retained. No commit, push or PR yet.
-Native fixture and pre-code requirement mapping
-were retained before helper/tests/configuration.
-
-Independent recovery completed using installed VFP9 7423 under isolated Wine/
-Xvfb (not a VM), shipped GETFONT help read completely. Fixture
-tests/fixtures/vfp9-getfont-size-numeric/README.md maps governing
-RQ-CF-PRG-GETFONT-SIZE-NUMERIC-001, planned architecture/VR001+002 and medium
-DQ/DV/HZ BEFORE helper/tests/configuration, also linked in matrix (gap pending
-runtime verification) and hazard register. Exact headless request/event versus
-native selection/backend boundary explicit; no current llround-derived policy.
-Native59-line/28-call pair identical SHA
-6ec310d8e895e67155a9694e121f1a96b0ee4fa9f0accbd45d5e7c00ae70f1a1;
-supplement97-line/47-call pair identical SHA
-d84990084a74e870b334ecd6d4b6043857cbb7fc6f27127ce12d01c5f83eb9ec.
-Full source/config/observer logs and three relevant native screenshots retained.
-Supplement PRG ccfaf61a570e3ae8822324f9a9fe96b2ab473f20b3e17588e5c17dff840dfa74.
-Native12.49/.5/.9=>12; zero/negative ordinary/huge negative/negativeInfinity=>10;
-negative wrap -4294967284/-4294967283.5=>12/13; positive raw UINT32_MAX admitted,
-every positive fraction above it/2^32/huge/positiveInfinity ERR11. Sub-unit0.5
-and positive signed32 overflow screenshots show10. Cancel isn't exact-value
-proof; native giant font/backend arithmetic is not headless event parity.
-Fallback Arial size6 first run excluded as fraction oracle; overwrite-confirm
-timeouts2/3, accidentally overlapping4 (both terminated/harvested143), and
-invalid-OK supplement7 timeout124 explicitly excluded and full raws preserved
-in build/getfont-native. Native harness fixed BEFORE runtime tests: SET SAFETY
-OFF session-only and invalid huge OK changed to Escape; clean serial5/6,8/9
-yield complete pairs. Final58568 harvested0, no Wine/Xvfb/test/build remains.
-
-Derived default: finite <=0/sub-unit10, positive trunc signed32 admission,
-nonfinite/oversized atomic11; VFP9 only defined low32/default10 with native
-positive raw ceiling4294967295 checked before conversion. NaN/exact64 are
-explicit parent-derived, not invented native evidence; exact values avoidDouble.
-Non-Numeric/NULL/type/Currency/arity/name/style/charset/headless result and all
-other consumers unchanged. No Font dialog implementation/global wrapper change.
-
-19:50:57Z five inputs frozen (hashes in fixture baseline-audit.md), before
-configuration:172 direct and four79 public cases,13 registered focused tests
-including unchanged neighbors. Original GNU11867 harvested8 at20:00Z,9/13
-PASS/four selected public failures,486 selected assertions/zero other; all
-literal counters complete. Full953-line raw copied/cmp/hash f9d0b7ace38bf510b17ee2741dc9b07069a54886bb5a3454d2e5312cc03d9d16
-in fixture/original-gcc.log BEFORE Clang configuration; no dispatcher change.
-Original Clang86812 harvested8 at20:15:39Z,9/13 PASS/four selected failures,
-486 selected assertions/zero other, all counters complete/no sanitizer report.
-Full952-line copied/cmp raw in fixture/original-clang.log SHA
-2e8dcda67cb327077796a1c24591dfde66a51461c6b11713e78453c7f24fd687.
-BOTH originals retained BEFORE migration; no frozen input repair/retry, hashes
-unchanged. Only then Numeric-only dispatch migrated. Fixed GNU73659 harvested0,
-13/13 PASS78.08s/full184-line copied/cmp fixed-gcc.log SHA
-44d79087cafb0e4e33202a61e4193c5c7a7c300b0d08f9f3646f2d70fbae0006.
-Fixed Clang25268 harvested0,13/13 PASS111.17s/full185-line copied/cmp
-fixed-clang.log SHA5cd041ea852eaae9d26c67e092cfd607db64bfa22a45f5d79a83f00890526af4,
-halt1 ASan/UBSan/float-cast-overflow/no sanitizer report. All frozen counters/
-five hashes unchanged, no input repair/retry. Dispatcher SHA
-94a13179d4c87373d1964f580119e23e683cb8057392fa4fb184d2272a0d68a9.
-All original/fixed workloads harvested; no suspension. Bounded medium DQ/DV
-development walkthrough complete, no independent-human/high-hazard claim.
-Documentation contracts44943 harvested0 at20:27Z,5/5 PASS337.41s, full86-line
-copied/cmp documentation-contracts.log SHA
-0b6f14dccb1116f48f38947db751d768ccd2641f28e5ae628e4e73449e49d642.
-No broader/hosted/review acceptance claimed. Standard native composite runs the full CTest inventory,
-including untouched GETFONT smoke/localization, on all three hosted platforms.
-RAM TMPDIR /dev/shm/copperfin-getfont-size-5611-SJIXBLYl.
-Next: signed/DCO commit, push, non-draft main PR and app attachment, Claude-FIRST documented
-trigger. Broader untouched GETFONT smoke/localization/contracts are assigned
-to standard exact-head hosted full regression; retain complete raw platform
-results before merging. Clean exact-head Claude/authorized-Codex review,
-all11 required checks/all conversations resolved remain mandatory gates.
-Any frozen input repair requires refreeze+BOTH originals repeat.
-Serial low-priority/private RAM/idle inventory; no owned workload suspension.
-No VM start/recreate until backup-reset completion confirmed. No owner-input
-blocker currently; do not guess if independent policy recovery requires one.
-Deferred7100/7102/6879 remain after numeric unless direct steering/actionableCI.
-Keep Claude-FIRST/actual exact-head clean fallback/check/resolved-thread gates.
+Next bounded #5611/#6776 slice: GETCOLOR optional first-argument Numeric/exact
+default-color conversion only, from the remaining runtime-surface llround
+inventory. Existing code is verification context, never requirement source.
+No GETFONT reopening, native dialog, global NULL/type/Currency/arity/title,
+other functions or shared conversion migration in scope. Fresh22:16Z
+OPEN/rhamenator/exact-agent-approved metadata admission before selection,
+unread channel empty, no open GETCOLOR PR.
+Clean dedicated worktree from origin/main7a97ac526d0d9b684fac9c08835b267a3c659fd9:
+ /home/rich/.codex/worktrees/getcolor-default-numeric-5611/Project-Copperfin
+branch fix/getcolor-default-numeric-5611. Active PR none; no commit/push.
+22:45 rules/handoff/channel read; unread empty, fresh owner-approved OPEN
+5611/6776 metadata admitted before content. Fetch/main unchanged7a97ac526.
+Independent installed Wine VFP9 7423/shipped GETCOLOR help recovered BEFORE
+helper/tests/config; two matching106-line/52-call outputs SHA
+780bcb175588b2178f9e03caf4f70e969b48dae0574b95c9562f220959154ffa.
+Excluded native off-screen/overlap/stall attempts retain full raws in
+build/getcolor-native; all native workloads harvested. Two native images and
+source/config/observer retained, warnings not erased. No VM/system maintenance.
+Pre-code mapping22:51Z RQ-CF-PRG-GETCOLOR-DEFAULT-NUMERIC-001/VR001+002/medium
+DQ/DV/HZ: default finite truncated RGB0..16777215/exact checks/atomic11;
+VFP9 parent-defined low32 then low24 projection, NaN/exact parent-derived.
+Checked headless initial-request result/event is not native dialog/Cancel
+parity. Other types/title/arity/consumers unchanged. Fixture README/matrix/
+hazard register retain mapping and pending verification; no completion claim.
+Five input hashes frozen22:53:34Z before configuration, in baseline-audit.md:
+174 direct/four80 public cases and13 registered focused tests with untouched
+GETFONT/exact/numeric/isolation neighbors. Helper UNUSED by production;
+GETCOLOR dispatcher still exactly main. No assertion/input repairs so far.
+Original GNU59302 harvested8: launch mistakenly overlapped foreign DAW build
+3211518/3211584 (inventory did not gate), foreign processes untouched.
+Full preliminary1225-line raw SHA9c3223612db retained/excluded from idle proof.
+Idle inventory then complete original GNU6191 harvested8,9/13/758 selected
+GETCOLOR failures/zero other,174 direct/four80 and untouched GETFONT172/four79
+counters complete,76.07s. Full938-line raw copied/cmp SHA685fe8f88dd before
+ANY Clang configuration. Five frozen inputs/dispatcher unchanged.
+Original Clang31956 harvested8 at23:20Z,9/13/758 selected/zero other failures,
+174 direct/four80 and neighbors complete,106.85s. Full1224-line raw copied/cmp
+SHA2ae0d1aefc3 BEFORE migration; no original sanitizer reports, warnings retained.
+BOTH complete originals retained and frozen inputs rechecked BEFORE production
+GETCOLOR Numeric-only migration23:21Z. CheckedRGB24 is exact in Double, making
+existing event formatting safe; non-Numeric/title/other consumers untouched.
+Fixed GNU29602 harvested0 at23:23Z,13/13 PASS77.24s/zero assertions failing,
+174 direct/four80/untouched GETFONT172/four79 counters complete. Full187-line
+raw copied/cmp SHAfd0e67e1155202f830af82303a71843464c57f7b2da71eb6773b7a7ac88358c5.
+Foreign DAW build3235421/3235525 started23:22:05Z while fixed GNU was already
+running; no foreign process touched, no idle/performance claim. Stop further
+local starts until inventory is idle; ALL owned workloads are harvested.
+Next: fixed Clang via build/getcolor-native/fixed-clang.sh (halt1/leaksdisabled,
+existing -O1/ASan/UBSan/float-cast-overflow configuration); retain full raw,
+then five documentation contracts via build/getcolor-native/documentation.sh
+and safe untouched broader hosted regression.
+Five frozen hashes unchanged; dispatcher SHA
+8ea3f7fb8443726dc6f2dea6a80a590ec148d79b34013b750c3a59c1c34658ea.
+Idle host inventory23:25Z then fixed Clang98776 harvested0 at23:27Z,13/13
+PASS112.72s/full185-line raw copied/cmp SHA
+84edb6181fcae2e580bf041910d2cbd336d71d97f8750cc48279814f4d8cc8d3.
+All counters complete/zero failures/no ASan/UBSan/float-cast-overflow reports.
+Foreign ctest3240599 appeared late in this owned run and had exited by the
+post-run idle inventory; no foreign process touched, no performance claim.
+Documentation40226 harvested8,4/5 PASS331.79s; sole missing-date-prefix
+fragment failure. Full91-line initial raw retained SHA298be1817fb3. Only this
+fragment text repaired; assembler+fragment checks2/2 PASS0.49s/full48-line raw
+SHAc0c04d822a19. Intake/isolation/safety already passed; combined evidence is
+not a single5/5 run. CLI timeout600, registered safety effective1200. All owned
+workloads harvested; frozen five inputs+dispatcher unchanged. No frozen repair.
+Fixed GNU/Clang bounded DQ/DV walkthroughs pass; hosted/review gates pending.
+Next: signed/DCO commit, push/main PR, Claude-FIRST and
+actual clean exact-head review/all required green/resolved threads before merge.
+Any frozen input/assertion/helper/config repair requires explicit refreeze+
+BOTH originals repeat; no invented native/sanitizer evidence.
+Serial low-priority/private700 RAM/idle inventory; preserve foreign work.
+No VM start/recreate until backup-reset completion confirmed. If policy
+recovery requires owner input, preserve state then pause heartbeat and ask.
+Claude-FIRST/actual exact-head authorized fallback review/allrequiredgreen/
+resolvedconversation gates remain mandatory. Deferred7100/7102/6879 stay after
+numeric unless direct steering/actionable CI.
 
 ## Retained owner steering / deferred work
 

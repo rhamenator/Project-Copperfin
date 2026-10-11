@@ -1783,6 +1783,39 @@ std::optional<std::int32_t> checked_getfont_size_numeric_argument(
     return positive == 0 ? 10 : static_cast<std::int32_t>(positive);
 }
 
+// RQ-CF-PRG-GETCOLOR-DEFAULT-NUMERIC-001 (#5611/#6776), retained GETCOLOR
+// fixture: checked unsigned24 RGB request, not a native dialog/Cancel path.
+std::optional<std::uint32_t> checked_getcolor_default_numeric_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    if (value.kind != PrgValueKind::number && value.kind != PrgValueKind::int64 &&
+        value.kind != PrgValueKind::uint64) {
+        return std::nullopt;
+    }
+    constexpr std::uint32_t rgb_mask = 0x00ffffffU;
+    if (behavior == NumericBehavior::vfp9) {
+        // Native observations support low24 projection; exact/NaN are
+        // explicitly derived from the parent's defined low32 conversion.
+        return static_cast<std::uint32_t>(vfp9_numeric_to_int32(value)) & rgb_mask;
+    }
+    if (value.kind == PrgValueKind::number) {
+        if (!std::isfinite(value.number_value)) {
+            return std::nullopt;
+        }
+        const auto color = std::trunc(value.number_value);
+        if (color < 0.0 || color > static_cast<double>(rgb_mask)) {
+            return std::nullopt;
+        }
+        return static_cast<std::uint32_t>(color);
+    }
+    if (value.kind == PrgValueKind::int64 && value.int64_value < 0) {
+        return std::nullopt;
+    }
+    const auto exact = value.kind == PrgValueKind::int64
+        ? static_cast<std::uint64_t>(value.int64_value) : value.uint64_value;
+    return exact <= rgb_mask ? std::optional<std::uint32_t>(static_cast<std::uint32_t>(exact))
+                             : std::nullopt;
+}
+
 // RQ-CF-PRG-FIELD-INDEX-NUMERIC-001 (#5611/#6776). The retained native
 // FIELD fixture distinguishes negative wrapping from positive empty results.
 std::optional<std::size_t> checked_field_index_argument(
