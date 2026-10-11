@@ -1,0 +1,26 @@
+diff --git a/src/runtime/prg_engine_runtime_surface_object_methods.inl b/src/runtime/prg_engine_runtime_surface_object_methods.inl
+index 34b038a47..b15558e53 100644
+--- a/src/runtime/prg_engine_runtime_surface_object_methods.inl
++++ b/src/runtime/prg_engine_runtime_surface_object_methods.inl
+@@ -147,7 +147,20 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
+         }
+ 
+         sync_native_list_control_selected_state_size(runtime_object);
+-        const long long requested_index = std::llround(value_as_number(arguments[0]));
++        // RQ-CF-PRG-SELECTED-INDEX-NUMERIC-001: independently recovered
++        // Numeric/exact READ indices; preserve other coercions and writes.
++        const auto& index = arguments.front();
++        long long requested_index = 0;
++        if (!index.is_null && (index.kind == PrgValueKind::number ||
++            index.kind == PrgValueKind::int64 || index.kind == PrgValueKind::uint64)) {
++            const auto checked_index = checked_selected_index_numeric_argument(index, behavior);
++            if (!checked_index.has_value()) {
++                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
++            }
++            requested_index = *checked_index;
++        } else {
++            requested_index = std::llround(value_as_number(index));
++        }
+         if (requested_index < 1LL ||
+             static_cast<std::size_t>(requested_index) > runtime_object.list_selected.size()) {
+             return make_boolean_value(false);

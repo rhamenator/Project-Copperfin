@@ -45,6 +45,19 @@ own system and domain assurance.
 
 ## Bounded numeric-conversion linkage
 
+RQ-CF-PRG-SELECTED-INDEX-NUMERIC-001 / DQ-DV-5611-SELECTED-INDEX-NUMERIC-001
+links active HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01
+to the [pre-code Selected read-index mapping](../../tests/fixtures/vfp9-selected-index-numeric/README.md).
+Independently observed VFP9 raw ceiling/negative aliases are available only in
+explicit compatibility mode; default checked admission is parent-derived.
+Bounded documentation misuse medium does not alter registered severity/status.
+Both full originals retained before migration; fixed GNU18/18 and Clang
+sanitizer18/18 complete the bounded walkthrough with frozen inputs unchanged.
+Delegated development self-review is not independent-human signoff.
+Documentation contracts5/5 pass at the retained precommit checkpoint;
+exact-head hosted/review evidence remains pending. No whole-call callback/
+materialization atomicity, persistence, independent-human or release claim.
+
 RQ-CF-PRG-ITEMDATA-INDEX-NUMERIC-001 / DQ-DV-5611-ITEMDATA-INDEX-NUMERIC-001
 links active HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01
 to the [pre-code read-index mapping](../../tests/fixtures/vfp9-itemdata-index-numeric/README.md).

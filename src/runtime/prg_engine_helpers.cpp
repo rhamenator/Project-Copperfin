@@ -1855,6 +1855,45 @@ std::optional<std::int32_t> checked_itemdata_index_numeric_argument(
         ? std::optional<std::int32_t>(static_cast<std::int32_t>(exact)) : std::nullopt;
 }
 
+// RQ-CF-PRG-SELECTED-INDEX-NUMERIC-001 (#5611/#6776). Independently
+// recovered Selected fixture; exact/NaN boundaries are parent-derived.
+std::optional<std::int32_t> checked_selected_index_numeric_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    if (value.is_null || (value.kind != PrgValueKind::number && value.kind != PrgValueKind::int64 &&
+        value.kind != PrgValueKind::uint64)) {
+        return std::nullopt;
+    }
+    constexpr auto ceiling = std::numeric_limits<std::int32_t>::max();
+    if (behavior == NumericBehavior::vfp9) {
+        const bool oversized = value.kind == PrgValueKind::int64
+            ? value.int64_value > ceiling
+            : value.kind == PrgValueKind::uint64 ? value.uint64_value > static_cast<std::uint64_t>(ceiling)
+            : std::isnan(value.number_value) || value.number_value > static_cast<double>(ceiling);
+        if (oversized) {
+            return std::nullopt;
+        }
+        const auto index = vfp9_numeric_to_int32(value);
+        return index >= 0 ? std::optional<std::int32_t>(static_cast<std::int32_t>(index)) : std::nullopt;
+    }
+    if (value.kind == PrgValueKind::number) {
+        if (!std::isfinite(value.number_value)) {
+            return std::nullopt;
+        }
+        const auto index = std::trunc(value.number_value);
+        if (index < 0.0 || index > static_cast<double>(ceiling)) {
+            return std::nullopt;
+        }
+        return static_cast<std::int32_t>(index);
+    }
+    if (value.kind == PrgValueKind::int64 && value.int64_value < 0) {
+        return std::nullopt;
+    }
+    const auto exact = value.kind == PrgValueKind::int64
+        ? static_cast<std::uint64_t>(value.int64_value) : value.uint64_value;
+    return exact <= static_cast<std::uint64_t>(ceiling)
+        ? std::optional<std::int32_t>(static_cast<std::int32_t>(exact)) : std::nullopt;
+}
+
 // RQ-CF-PRG-FIELD-INDEX-NUMERIC-001 (#5611/#6776). The retained native
 // FIELD fixture distinguishes negative wrapping from positive empty results.
 std::optional<std::size_t> checked_field_index_argument(
