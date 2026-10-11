@@ -331,6 +331,11 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
                                                           const std::string& normalized_method_name,
                                                           const std::vector<PrgValue>& arguments,
                                                           const std::function<bool(const std::vector<PrgValue>&)>& before_move = {});
+std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState& runtime_object,
+                                                          const std::string& normalized_method_name,
+                                                          const std::vector<PrgValue>& arguments,
+                                                          const std::function<bool(const std::vector<PrgValue>&)>& before_move,
+                                                          NumericBehavior behavior);
 std::optional<NativeListControlCellReference> parse_native_list_control_list_member_cell(
     const RuntimeOleObjectState& runtime_object,
     const std::string& member_name);
@@ -359,6 +364,10 @@ std::optional<PrgValue> read_native_list_control_item_id_for_slot(
 std::optional<PrgValue> read_native_list_control_item_data(
     RuntimeOleObjectState& runtime_object,
     std::size_t row_slot);
+std::optional<PrgValue> read_native_list_control_item_data_numeric(
+    RuntimeOleObjectState& runtime_object,
+    const PrgValue& index,
+    NumericBehavior behavior);
 void sync_native_list_control_top_item_id(RuntimeOleObjectState& runtime_object);
 std::optional<PrgValue> read_native_list_control_index_for_item_id(
     RuntimeOleObjectState& runtime_object,

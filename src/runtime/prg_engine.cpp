@@ -1325,7 +1325,8 @@ namespace copperfin::runtime
         std::optional<PrgValue> read_native_property_if_present(
             RuntimeOleObjectState &runtime_object,
             const std::string &property_name,
-            const Frame &source_frame);
+            const Frame &source_frame,
+            const PrgValue *raw_selector = nullptr);
         std::optional<std::string> read_native_property_expression_if_present(
             RuntimeOleObjectState &runtime_object,
             const std::string &property_name);
@@ -3191,7 +3192,8 @@ namespace copperfin::runtime
                 auto object = resolve_ole_object(resolved_property->second);
                 return object.has_value() ? *object : nullptr;
             },
-            [this, &frame](const PrgValue &value, const std::string &member_name) -> std::optional<PrgValue>
+            [this, &frame](const PrgValue &value, const std::string &member_name,
+                           const PrgValue *raw_selector) -> std::optional<PrgValue>
             {
                 auto object = resolve_ole_object(value);
                 if (!object.has_value())
@@ -3267,7 +3269,7 @@ namespace copperfin::runtime
                             "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead",
                             {{"memberIdentifier", detail}}));
                 }
-                return read_native_property_if_present(*target_object, leaf_member_name, frame);
+                return read_native_property_if_present(*target_object, leaf_member_name, frame, raw_selector);
             },
             [this, &frame](
                 const PrgValue &value,

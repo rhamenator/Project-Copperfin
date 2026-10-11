@@ -312,7 +312,7 @@
                 std::function<void(const std::string &, const std::string &)> record_event_callback,
                 std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback,
                 std::function<RuntimeOleObjectState*(const std::string &)> resolve_object_path_callback,
-                std::function<std::optional<PrgValue>(const PrgValue &, const std::string &)> read_native_member_callback,
+                std::function<std::optional<PrgValue>(const PrgValue &, const std::string &, const PrgValue *)> read_native_member_callback,
                 std::function<std::optional<PrgValue>(const PrgValue &, const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> invoke_native_member_callback,
                 std::function<bool(const PrgValue &, const std::string &, const PrgValue &)> write_native_member_callback,
                 std::function<std::optional<std::int64_t>(std::int64_t)> whandle_from_hwnd_callback,
@@ -1513,7 +1513,8 @@
                         }
                         selector_member_name.push_back(')');
                         if (const auto selector_value =
-                                read_native_member_callback_(current, selector_member_name);
+                                read_native_member_callback_(current, selector_member_name,
+                                    arguments.size() == 1U ? &arguments.front() : nullptr);
                             selector_value.has_value())
                         {
                             return *selector_value;
@@ -2728,7 +2729,10 @@
                                                           require_verified_file_byte_overrides_,
                                                           read_verified_file_callback_,
                                                           resolve_object_callback_,
-                                                          read_native_member_callback_,
+                                                          [this](const PrgValue& value, const std::string& member_name)
+                                                          {
+                                                              return read_native_member_callback_(value, member_name, nullptr);
+                                                          },
                                                           write_native_member_callback_,
                                                           whandle_from_hwnd_callback_,
                                                           hwnd_from_whandle_callback_,
@@ -2865,7 +2869,8 @@
                         }
                         selector_member_name.push_back(']');
                         if (const auto selector_value =
-                                read_native_member_callback_(current, selector_member_name);
+                                read_native_member_callback_(current, selector_member_name,
+                                    secondary_selector.has_value() ? nullptr : &selector);
                             selector_value.has_value())
                         {
                             return *selector_value;
@@ -2945,7 +2950,8 @@
                         selector_member_name.push_back(']');
 
                         const auto selector_value =
-                            read_native_member_callback_(current, selector_member_name);
+                            read_native_member_callback_(current, selector_member_name,
+                                secondary_selector.has_value() ? nullptr : &selector);
                         if (selector_value.has_value())
                         {
                             current = *selector_value;
@@ -2953,7 +2959,7 @@
                         }
 
                         const auto member_value =
-                            read_native_member_callback_(current, member_name);
+                            read_native_member_callback_(current, member_name, nullptr);
                         if (member_value.has_value())
                         {
                             RuntimeOleObjectState *member_object =
@@ -2995,7 +3001,7 @@
 
                     if (peek() == '(')
                     {
-                        const auto member_value = read_native_member_callback_(current, member_name);
+                        const auto member_value = read_native_member_callback_(current, member_name, nullptr);
                         if (member_value.has_value())
                         {
                             RuntimeOleObjectState *member_object = resolve_object_callback_(*member_value);
@@ -3025,7 +3031,7 @@
                         continue;
                     }
 
-                    const auto member_value = read_native_member_callback_(current, member_name);
+                    const auto member_value = read_native_member_callback_(current, member_name, nullptr);
                     if (!member_value.has_value())
                     {
                         return {};
@@ -4511,7 +4517,9 @@
             std::function<void(const std::string &, const std::string &)> record_event_callback_;
             std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback_;
             std::function<RuntimeOleObjectState*(const std::string &)> resolve_object_path_callback_;
-            std::function<std::optional<PrgValue>(const PrgValue &, const std::string &)> read_native_member_callback_;
+            // RQ-CF-PRG-ITEMDATA-INDEX-NUMERIC-001: retain the original value
+            // through selector text formatting; borrowed only for this call.
+            std::function<std::optional<PrgValue>(const PrgValue &, const std::string &, const PrgValue *)> read_native_member_callback_;
             std::function<std::optional<PrgValue>(const PrgValue &, const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> invoke_native_member_callback_;
             std::function<bool(const PrgValue &, const std::string &, const PrgValue &)> write_native_member_callback_;
             std::function<std::optional<std::int64_t>(std::int64_t)> whandle_from_hwnd_callback_;

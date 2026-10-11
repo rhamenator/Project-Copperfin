@@ -383,6 +383,9 @@ std::optional<std::int64_t> checked_cast_int16_numeric_argument(const PrgValue& 
 std::optional<std::int32_t> checked_getfont_size_numeric_argument(const PrgValue& value, NumericBehavior behavior);
 // RQ-CF-PRG-GETCOLOR-DEFAULT-NUMERIC-001: bounded RGB initial request.
 std::optional<std::uint32_t> checked_getcolor_default_numeric_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-ITEMDATA-INDEX-NUMERIC-001: Numeric/exact READ index only;
+// default checked nonnegative signed32, explicit native raw ceiling/low32.
+std::optional<std::int32_t> checked_itemdata_index_numeric_argument(const PrgValue& value, NumericBehavior behavior);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the
 // value is out of range). A size or count: truncated toward zero, never below `minimum`, saturating at the largest
 // value this build supports: INT64_MAX, or SIZE_MAX where size_t is narrower (NaN gives `minimum`). A rounded int64 (llround semantics for in-range values; NaN is 0 and

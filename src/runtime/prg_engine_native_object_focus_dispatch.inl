@@ -1026,11 +1026,19 @@
         }
         const auto before_list_control_signature =
             native_list_control_selection_signature(*target_object);
+        // RQ-CF-PRG-ITEMDATA-INDEX-NUMERIC-001: the selected data session owns
+        // the mode for native ItemData method reads as well as property reads.
+        const auto& list_set_state = current_set_state();
+        const auto list_mode = list_set_state.find("numericbehavior");
+        const auto list_behavior = list_mode != list_set_state.end() &&
+            normalize_identifier(list_mode->second) == "vfp9"
+            ? NumericBehavior::vfp9 : NumericBehavior::copperfin;
         if (auto list_control_result = invoke_native_list_control_method(
                 *target_object,
                 leaf,
                 arguments,
-                before_list_control_move);
+                before_list_control_move,
+                list_behavior);
             list_control_result.has_value())
         {
             if (leaf == "additem" || leaf == "addlistitem" || leaf == "clear" ||
