@@ -402,6 +402,10 @@ std::optional<std::int32_t> checked_listitem_numeric_argument(const PrgValue& va
 // RQ-CF-PRG-LIST-INDEX-NUMERIC-001: independently recovered display-row READ.
 // Distinct operation policy; UNUSED through BOTH full original suites.
 std::optional<std::int32_t> checked_list_index_numeric_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-LISTINDEX-NUMERIC-001 / VR-5611-LISTINDEX-NUMERIC-001:
+// assignment, not indexed List READ. Explicit native UINT32 raw ceiling then
+// signed-low32; checked signed32 default. UNUSED through BOTH full originals.
+std::optional<std::int32_t> checked_listindex_numeric_argument(const PrgValue& value, NumericBehavior behavior);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the
 // value is out of range). A size or count: truncated toward zero, never below `minimum`, saturating at the largest
 // value this build supports: INT64_MAX, or SIZE_MAX where size_t is narrower (NaN gives `minimum`). A rounded int64 (llround semantics for in-range values; NaN is 0 and

@@ -986,6 +986,24 @@ function(copperfin_configure_native_test_isolation)
     # sparse/dense controls, unique scripts/scoped locale; no shared resources.
     # RQ-CF-PRG-LIST-INDEX-NUMERIC-001: fresh native display-row reads;
     # unique scripts/scoped locale, no child processes or shared resources.
+    # RQ-CF-PRG-LISTINDEX-NUMERIC-001: fresh native assignment/state controls,
+    # unique scripts/scoped locale, no child processes or shared resources.
+    foreach(listindex_test IN ITEMS
+        test_prg_engine_listindex_numeric
+        test_prg_engine_listindex_numeric_copperfin_session1
+        test_prg_engine_listindex_numeric_copperfin_session2
+        test_prg_engine_listindex_numeric_vfp9_session1
+        test_prg_engine_listindex_numeric_vfp9_session2)
+        copperfin_set_test_isolation(${listindex_test}
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT scoped-process
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            RESOURCES none
+            AUDIT complete)
+    endforeach()
     foreach(list_index_test IN ITEMS
         test_prg_engine_list_index_numeric
         test_prg_engine_list_index_numeric_copperfin_session1

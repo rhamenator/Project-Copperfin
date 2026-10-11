@@ -1,5 +1,29 @@
 # VFP Language Reference Coverage
 
+- ListIndex Numeric/exact assignment requirements (#5611/#6776,2026-10-11):
+  [Independent installed-VFP9/help map](../tests/fixtures/vfp9-listindex-numeric/README.md)
+  recorded19:28Z BEFORE helper/assertions/configuration. Three matching native
+  pairs distinguish ListBox absentfocus0, ComboBox ListCount+1 sentinel,
+  MultiSelect retained bits, positiveUINT32 raw ceiling/error46 and signed-
+  boundary aliases. RQ-CF-PRG-LISTINDEX-NUMERIC-001 maps checked signed32 default,
+  lossless exact64/NaN derived policy, VR001/002 and boundedmedium DQ/DV/HZ.
+  Direct/SETPEM Numeric assignment only; frozen274direct/four1184public and
+  BOTH full49 originals retained BEFORE migration: GNU45/49/759.68s and
+  Clangsanitizer45/49/1393.60s, onlyfournewpublicfail/identical16704 assertions,
+  all44oldsubjects/newdirect pass. [Phase audit](../tests/fixtures/vfp9-listindex-numeric/baseline-audit.md)
+  records bounded native assignment adapter, unchanged frozen inputs/shared
+  synchronizer; fixed attempt2 GNU45/49/839.34s retained, all direct cases pass
+  with8556 SETPEM-only assertions failing. Bounded SETPEM Numeric/exact callback
+  routing repaired without frozen changes; identical full49/sixgroups
+  driver46697 subsequently completed: GNU49/49 PASS760.09s and Clang
+  ASan/UBSan/float-cast-overflow49/49 PASS1409.70s, all274/four1184 counters
+  complete, both six unchanged preservationgroups PASS/all24 hashes checked.
+  Boundedmedium delegated development DQ/DV self-review/walkthrough complete,
+  not independenthuman/high-hazard qualification. Five contracts PASS332.88s;
+  signed
+  exact-head hosted/review gates remain pending, not slice integration.
+  Types/lifecycle/parser/reflection expansion/callbacks/persistence excluded.
+
 - One-argument List Numeric/exact display-row READ recovery (#5611/#6776,
   2026-10-11): RQ-CF-PRG-LIST-INDEX-NUMERIC-001 mapped16:21Z BEFORE helper/
   assertions/configuration. [Independent native/help map](../tests/fixtures/vfp9-list-index-numeric/README.md)
@@ -17,7 +41,12 @@
   Logical/NULL admission gap#7153 separate/unadmitted. Five documentation
   contracts5/5/347.85s PASS; boundedmedium development DQ/DV walkthrough and
   delegated self-review complete, not independenthuman/high-hazard signoff.
-  Signed exact-head hosted/review/conversation gates remain pending.
+  PR7154 merged into main252f70bec after all11required uniquelySUCCESS,
+  actual clean exact-head Codex6112438131 (head2b8bb142ea), Claude-FIRST and
+  authorized fallback, and zero unresolved conversations. Exact signed-head
+  postpush44/44 PASS591.09s; full Linux/macOS554/554 PASS. Optional Windows
+  was pending atmerge, not retroactively green; later exact-head555/555
+  PASS1838.02s/raw/hash retained, completedwatcher recoverably cleaned.
   Explicit columns/types/writes/lifecycle/parser/callback atomicity excluded;
   no whole family, parent, hazard or release completion claim.
 

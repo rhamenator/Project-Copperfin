@@ -1,0 +1,22 @@
+[0/2] Re-checking globbed directories...
+[1/15] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_surface_functions.cpp.o
+In file included from /home/rich/.codex/worktrees/listindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_functions.cpp:193:
+/home/rich/.codex/worktrees/listindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:13:5: warning: ‘int copperfin::runtime::{anonymous}::bit_position(const copperfin::runtime::PrgValue&)’ defined but not used [-Wunused-function]
+   13 | int bit_position(const PrgValue& value) {
+      |     ^~~~~~~~~~~~
+/home/rich/.codex/worktrees/listindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:5:15: warning: ‘uint32_t copperfin::runtime::{anonymous}::bitwise_value(const copperfin::runtime::PrgValue&)’ defined but not used [-Wunused-function]
+    5 | std::uint32_t bitwise_value(const PrgValue& value) {
+      |               ^~~~~~~~~~~~~
+[2/15] Linking CXX static library libcf_xbase_runtime.a
+[3/15] Linking CXX executable tests/test_prg_engine_int64_exact_expression
+[4/15] Linking CXX executable tests/test_prg_engine_numeric_behavior
+[5/15] Linking CXX executable tests/test_prg_engine_listindex_numeric
+[6/15] Linking CXX executable tests/test_prg_engine_list_index_numeric
+[7/15] Linking CXX executable tests/test_prg_engine_listitem_numeric
+[8/15] Linking CXX executable tests/test_prg_engine_itemidtoindex_numeric
+[9/15] Linking CXX executable tests/test_prg_engine_indextoitemid_numeric
+[10/15] Linking CXX executable tests/test_prg_engine_selectedid_numeric
+[11/15] Linking CXX executable tests/test_prg_engine_selected_index_numeric
+[12/15] Linking CXX executable tests/test_prg_engine_itemdata_index_numeric
+[13/15] Linking CXX executable tests/test_prg_engine_getcolor_default_numeric
+[14/15] Linking CXX executable tests/test_prg_engine_runtime_surface_itemid_selectors

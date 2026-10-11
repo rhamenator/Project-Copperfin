@@ -661,6 +661,16 @@
                 write_native_member_callback &&
                 write_native_member_callback(arguments[0], member_name, arguments[2]));
         }
+        if (function == "setpem" &&
+            is_native_listindex_member_name(*runtime_object, member_name) &&
+            !arguments[2].is_null &&
+            (arguments[2].kind == PrgValueKind::number ||
+             arguments[2].kind == PrgValueKind::int64 ||
+             arguments[2].kind == PrgValueKind::uint64)) {
+            return make_boolean_value(
+                write_native_member_callback &&
+                write_native_member_callback(arguments[0], member_name, arguments[2]));
+        }
         if (is_native_activepage_member_name(*runtime_object, member_name)) {
             runtime_object->properties[member_name] = arguments[2];
             normalize_native_pageframe_activepage_invariant(*runtime_object);
