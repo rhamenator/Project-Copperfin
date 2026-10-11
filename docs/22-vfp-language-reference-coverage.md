@@ -1,5 +1,24 @@
 # VFP Language Reference Coverage
 
+- One-argument ListItem Numeric/exact READ recovery (#5611/#6776,2026-10-11):
+  RQ-CF-PRG-LISTITEM-NUMERIC-001 mapped13:18Z before helper/assertions/config.
+  [Independent VFP9/help map](../tests/fixtures/vfp9-listitem-numeric/README.md)
+  retains matching302-line/300-call dense/sparse controls. Character lookup is
+  by unique ID, not row position. Native positiveRAW ceiling and converted-
+  negative rejection distinguish ListItem from ItemIDToIndex; negative low32
+  aliases/negative huge and Infinity zero are explicit VFP9 only. Default
+  checked0..INT32_MAX/exact64/NaN policy is parent-derived. Implicit column1
+  only; explicit columns/types/writes/lifecycle/parser remain separate.
+  Both full39-subject originals retained before migration, GNU35/39 and Clang
+  sanitizer35/39, onlyfournewpublicfail, complete248/four944 counts. Narrow
+  one-argument method/raw-property adapter wired; no parser edit. Identical
+  fixed GNU39/39/468.01s and Clangsanitizer39/39/821.67s pass with all counts.
+  Both six unchanged preservation groups pass. Boundedmedium development DQ/DV
+  walkthrough/delegated self-review complete; five documentation contracts
+  PASS5/5/333.19s, full raw/hash retained; exact-head review/CI pending.
+  Type gap#7151 is separate/unadmitted. No whole-call/high-hazard/release/parent
+  closure.
+
 - ItemIDToIndex Numeric/exact item-ID READ recovery (#5611/#6776,2026-10-11):
   RQ-CF-PRG-ITEMIDTOINDEX-NUMERIC-001 mapped before helper/assertions/config.
   [Independent installed VFP9/help recovery](../tests/fixtures/vfp9-itemidtoindex-numeric/README.md)

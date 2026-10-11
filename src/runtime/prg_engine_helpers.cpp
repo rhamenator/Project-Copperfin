@@ -2789,6 +2789,38 @@ std::optional<std::int32_t> checked_itemidtoindex_numeric_argument(
     return static_cast<std::int32_t>(truncated);
 }
 
+// RQ-CF-PRG-LISTITEM-NUMERIC-001 / VR-5611-LISTITEM-NUMERIC-001.
+// Independently recovered one-argument ListItem: positive RAW ceiling,
+// converted nonnegative IDs. UNUSED until BOTH complete original suites.
+std::optional<std::int32_t> checked_listitem_numeric_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    if (value.is_null || (value.kind != PrgValueKind::number &&
+        value.kind != PrgValueKind::int64 && value.kind != PrgValueKind::uint64)) {
+        return std::nullopt;
+    }
+    constexpr auto ceiling = std::numeric_limits<std::int32_t>::max();
+    if (behavior == NumericBehavior::vfp9) {
+        const bool oversized = value.kind == PrgValueKind::int64
+            ? value.int64_value > ceiling
+            : value.kind == PrgValueKind::uint64 ? value.uint64_value > static_cast<std::uint64_t>(ceiling)
+            : std::isnan(value.number_value) || value.number_value > static_cast<double>(ceiling);
+        if (oversized) return std::nullopt;
+        const auto id = vfp9_numeric_to_int32(value);
+        return id >= 0 ? std::optional<std::int32_t>(static_cast<std::int32_t>(id)) : std::nullopt;
+    }
+    if (value.kind == PrgValueKind::number) {
+        if (!std::isfinite(value.number_value)) return std::nullopt;
+        const auto id = std::trunc(value.number_value);
+        if (id < 0.0 || id > static_cast<double>(ceiling)) return std::nullopt;
+        return static_cast<std::int32_t>(id);
+    }
+    if (value.kind == PrgValueKind::int64 && value.int64_value < 0) return std::nullopt;
+    const auto exact = value.kind == PrgValueKind::int64
+        ? static_cast<std::uint64_t>(value.int64_value) : value.uint64_value;
+    return exact <= static_cast<std::uint64_t>(ceiling)
+        ? std::optional<std::int32_t>(static_cast<std::int32_t>(exact)) : std::nullopt;
+}
+
 std::size_t saturating_size_argument(const double value, const std::size_t minimum) {
     const std::int64_t truncated = saturating_numeric_to_int64(value);
     if (truncated <= 0 || static_cast<std::uint64_t>(truncated) < minimum) {

@@ -1,0 +1,41 @@
+[0/2] Re-checking globbed directories...
+[1/15] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine.cpp.o
+In file included from /home/rich/.codex/worktrees/listitem-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:1262:
+/home/rich/.codex/worktrees/listitem-numeric-5611/Project-Copperfin/src/runtime/prg_engine_flow.inl:285:51: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  285 |             const auto object_handle_for_value = [this](const PrgValue &value) -> std::optional<int>
+      |                                                   ^~~~
+/home/rich/.codex/worktrees/listitem-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:1839:14: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+ 1839 |             [this]()
+      |              ^~~~
+/home/rich/.codex/worktrees/listitem-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:1843:14: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+ 1843 |             [this]()
+      |              ^~~~
+In file included from /home/rich/.codex/worktrees/listitem-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:8591:
+/home/rich/.codex/worktrees/listitem-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:11317:62: warning: missing field 'reference' initializer [-Wmissing-field-initializers]
+ 11317 |                     TemporaryAppendSource append_source{*this};
+       |                                                              ^
+/home/rich/.codex/worktrees/listitem-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:12449:58: warning: missing field 'reference' initializer [-Wmissing-field-initializers]
+ 12449 |                 TemporaryAppendSource append_source{*this};
+       |                                                          ^
+5 warnings generated.
+[2/15] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_surface_functions.cpp.o
+In file included from /home/rich/.codex/worktrees/listitem-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_functions.cpp:193:
+/home/rich/.codex/worktrees/listitem-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:5:15: warning: unused function 'bitwise_value' [-Wunused-function]
+    5 | std::uint32_t bitwise_value(const PrgValue& value) {
+      |               ^~~~~~~~~~~~~
+/home/rich/.codex/worktrees/listitem-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:13:5: warning: unused function 'bit_position' [-Wunused-function]
+   13 | int bit_position(const PrgValue& value) {
+      |     ^~~~~~~~~~~~
+2 warnings generated.
+[3/15] Linking CXX static library libcf_xbase_runtime.a
+[4/15] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_behavior.dir/test_prg_engine_numeric_behavior.cpp.o
+[5/15] Linking CXX executable tests/test_prg_engine_int64_exact_expression
+[6/15] Linking CXX executable tests/test_prg_engine_numeric_behavior
+[7/15] Linking CXX executable tests/test_prg_engine_listitem_numeric
+[8/15] Linking CXX executable tests/test_prg_engine_itemidtoindex_numeric
+[9/15] Linking CXX executable tests/test_prg_engine_indextoitemid_numeric
+[10/15] Linking CXX executable tests/test_prg_engine_selectedid_numeric
+[11/15] Linking CXX executable tests/test_prg_engine_selected_index_numeric
+[12/15] Linking CXX executable tests/test_prg_engine_itemdata_index_numeric
+[13/15] Linking CXX executable tests/test_prg_engine_getcolor_default_numeric
+[14/15] Linking CXX executable tests/test_prg_engine_runtime_surface_itemid_selectors
