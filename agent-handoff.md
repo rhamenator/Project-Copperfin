@@ -55,6 +55,69 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
+IndexToItemID first-argument Numeric/exact row-index READ conversion PR #7148
+merged2026-10-11T09:48:19Z as13281678def7e8f77fcd8d7385abe09600697bf2 from
+signed/DCO GoodG head6b7365433afe7098c1e22afd29a69ade26274db4.
+https://github.com/rhamenator/Project-Copperfin/pull/7148
+Gate6107736031: active strictmain ruleset20356131 all11required present exactly
+once/SUCCESS; all33completedchecksSUCCESS. Actual clean Codex6107616538 reviews
+6b7365433a, unique single PRcommit/fullhead, after Claude-FIRST6107575166 and
+authorizedfallback6107601406. No Claude review/setup/quota response; availability
+unconfirmed. Activitysummary/reaction alone not acceptance. Graphthreads0/
+reviews0/closingrefs0/no paginationgaps/main/non-draft/MERGEABLE/UNSTABLE.
+Parents5611/6776 remain OPEN/rhamenator/exact-agent-approved; gap7147 separate,
+unadmitted. No parent/family/hazard/KBX/release closure. Signature locallyGoodG,
+no claim of GitHub-verified signing-key registration.
+
+RQ-CF-PRG-INDEXTOITEMID-NUMERIC-001/VR001+002 and boundedmedium DQ/DV development
+self-review/proceduraldelta/walkthrough/HZmap retained in fixture README/audit.
+Independent VFP9 7423 matching120line/118call pair and shippedhelp, pre-code
+08:23map/08:25freeze, both original29subjects retained BEFORE migration:
+GNU25/29/231.64s and Clang25/29/378.38s, onlyfournewpublicfail/allcountercomplete.
+No refreeze/repair; frozen194direct/four400public. Fixed GNU29/29/234.05s,
+Clangsanitizer29/29/378.05s; both sixunchanged preservationgroups PASS.
+Documentation5/5/335.83s; full raw/hash/counters retained. Postpush exactsigned
+head29/29/240.60s, full346line raw SHA
+1d24cb92e9d7836f2e9065b6224fd7219974cd2e0379a1946869a6424fa34f27.
+Only Numeric/exact method/raw-selector adapter changed; unsupportedtypes,
+textualGETPEM/parser/writes/othermethods preserved. Nonpositive raw property
+reads no longer fall through to method's two materializations; stableRowSource0
+only, no arbitrary callback/materialization-count/whole-call atomicity claim.
+Rawspacing retained; source/docs check excludes ONLYfixture raw.log/.out.
+
+Optional broad native Linux38128376414/job114437392722, macOS38128376431/
+job114437392670, Windows38128376380/job114437392379 were inprogress at merge,
+not retroactively green. Exact6b7365433afe head verified independently for each.
+Old all-PRwatch74392/PID4108216 exactcwd/command verified then TERM143 before
+cleanup, without cancellingCI. Replacement --repo/--exit-status watches from
+canonical: Linux14199/PID4118979, macOS61414/PID4119061, Windows12628/PID4119144.
+Full live logs build/indextoitemid-late-platform-7148. Linux14199 and macOS61414
+harvested0 at10:15Z; exacthead metadata SUCCESS and full unedited jobraw retained.
+Linux539/539 PASS572.27s SHA5dd658a9e7badc0c2e79c9b9eb92f9ee440d5f7c4443c19010d584b2814561c8;
+macOS539/539 PASS565.82s plus four2/2 groups20.83/22.88/22.40/20.13s,
+SHA27ea9e3734c745079819250a617c1473a999ba1d8e9e8cd409f817a1fd8d0429.
+Windows12628/download43002 harvested0: exacthead completedSUCCESS10:52:36Z,
+540/540 PASS1786.19s, allfiveIndexToItemID/boundedneighbors pass. Full3902line
+rawSHA2cc14e668d1b556f4f2e11efcd69ee5ef7b98a9d433f54df1213f5c612b4c903;
+freshrollup36completedSUCCESS, threads0, latereport6108466508.
+Allthree fullraws/metadata/watchlogs movedrecoverably afterwriterscomplete
+to Trash/indextoitemid-numeric-5611-build/indextoitemid-late-platform-7148;
+Windows hashreverified, scopedlsof onlyownreportdescriptors/tracefswarning.
+completion-cleanup.md retains exactscope; noCIrerun/cancel/timeoutpolicychange.
+
+Main fetched/FF synchronized13281678d; exacthead ancestor proven. Cleanup23583
+completed0: WT/local/remote branch removed, entire699MB build movedrecoverably
+to /home/rich/.local/share/Trash/files/indextoitemid-numeric-5611-build.
+Full probes/FXP/configure/compile warnings/original/fixed/contracts/postpush/
+merge-gate/review/watch/spacing/lsof/completion-cleanup evidence retained in
+indextoitemid-native; postpush hash reverifiedaftermove. Scopedlsof only its own
+report descriptors, tracefswarning retained, not hostglobalcertification.
+Ownedcanonicalcontinuity stash005b6095d56ca7eb5f90c6e4bb9111db07dc998b retained,
+not popped; all olderstashes/foreignfiles/twoWTs preserved. Appattach failed100
+identitycap, no unrelatedattachments removed. No VM or backupreset assumption.
+
+## Prior shipped slice
+
 SelectedID first-argument Numeric/exact item-ID READ conversion PR #7146 merged
 2026-10-11T07:47:05Z as a803eb0243121858db987d2021702c4a25135eb3 from signed/DCO
 GoodG head1049efbf85ae0214c79578cee2f30a888de35fb2.
@@ -115,7 +178,7 @@ not a host-global guarantee. Canonical handoff continuity stash
 stashes, foreign files/twoWTs preserved. App attach failed100-identity cap;
 no unrelated attachments removed. No VM activity or backup-reset assumption.
 
-## Prior shipped slice
+## Earlier shipped slice
 
 Selected first-argument Numeric/exact read-index PR #7144 merged
 2026-10-11T05:49:27Z as 2cec530ddeb06abf70c7c30ffc83e8c04264c456 from
@@ -206,74 +269,74 @@ No VM started/recreated; backup-reset completion still unconfirmed.
 
 ## Selected active bounded slice
 
-Next bounded #5611/#6776 slice: native ComboBox/ListBox IndexToItemID
-first-argument Numeric/exact READ row-index conversion, from the remaining
-llround inventory in src/runtime/prg_engine_runtime_surface_object_methods.inl.
-Main is a803eb0243121858db987d2021702c4a25135eb3. Both parents revalidated
-OPEN/rhamenator/exact-agent-approved; canonical livechannel empty after cleanup.
-Active WT /home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin,
-branch fix/indextoitemid-numeric-5611 created from exact origin/main. No PR yet.
-Independent matching installed VFP9 pair120lines/118calls, sparse11/22/33;
-SHAaada55aef903ed9903113ea60932f4728cb2a820e5612fade83ebd086c7abed5.
-Both controls Numeric2.9=>22/22=>0; positive and negative low32 aliases address
-rows, no SelectedID raw ceiling/nonnegative gate. Unsupported types native27,
-preserved Copperfin policy excluded. Shipped IndexToItemID help fully read.
-Pre-code RQ/VR/DQ/DV/HZ map08:23Z, initial freeze08:25Z in fixture README/audit.
-Default finite truncation then checked SIGNED32; negative/missing=>Numeric0,
-invalid/nonfinite31. VFP9 signed-low32/Infinity0; NaN rejection/exact64 derived.
-194direct/four400public inputs; distinct helper UNUSED by production through
-both originals. Property-first reflection also needs narrow raw Numeric adapter;
-all four routes already retain raw PrgValue. No parser/type/lifecycle widening.
-GNU17433 harvested8:25/29 PASS231.64s, onlyfournewpublicfail/allcounters complete.
-Full3301line original-gcc.log retained/copied/cmp BEFORE Clang started, SHA
-932ab0985e2a120192437cb9adeefa4e9c6c283108eb1b9f0067da05d8f8215f.
-2944 rawownFAILdiagnostics including repetitions, zerootherFAIL; all frozen/base
-hashes unchanged. Unsupported .T./.F./.NULL. preserved11/0/0 code0 controls pass,
-native sameinputs27. Focusedgap7147 filed against a803eb024 exactmain/no labels,
-outside Numeric scope; do not implement it or invent native type parity.
-Clang67365 harvested8:25/29 PASS378.38s, onlyfournewpublicfail/allcounters/
-neighbors complete,2944 ownrawFAIL/zeroother/no sanitizer report.
-Full3301line original-clang.log retained/copied/cmp at08:57:22Z BEFORE migration,
-SHAaf59cbdcb916cb31337b654cb951cd98280f0163ed44c58dfc569630c77e9324.
-All five frozen/bothbase hashes unchanged; no repair/refreeze.
-Only Numeric/exact method and property-first raw-selector adapter now wired;
-non-Numeric/NULL/Currency/textualGETPEM/parser/writes/othermethods unchanged.
-Method materialization order retained; raw nonpositive property reads no longer
-fall through method's two materializations. StableRowSource0 qualification
-only, no arbitrary callback/materialization-count/whole-call atomicity claim.
-GNU18877 harvested0:29/29 PASS234.05s, all frozen/neighbor counters complete/
-zeroFAIL. Full346line fixed-gcc.log copied/cmp/SHA
-736b27852fff6ee704280242629619e23d7f487322dfc31487f126b8bc061e1b.
-GNU preservation36938 harvested0: sixunchanged groups/zeroFAIL; fullone-line
-raw copied/cmp/SHAbefec198fb62d7e5fdae2e816aff3dc0ebde67970c187f3c7c013a1a377e3f19.
-Fixed Clang98524 harvested0:29/29 PASS378.05s, all frozen/neighbor counters
-complete/zeroFAIL/no sanitizer report; full346line raw copied/cmp/SHA
-23810b407dc7cbe8706aced13a37fbf4771e45947d287851396ea3827941ec1e.
-Clang preservation23372 harvested0: sixunchanged groups/zeroFAIL; fullone-line
-raw copied/cmp/sameSHA as GNU preservation above. Frozenfive/productionhashes
-unchanged; ASan-UBSan-floatcast/halt1/leaksdisabled/600sLOCAL, noCIpolicychange.
-Boundedmedium DQ/DV development self-review/proceduraldelta walkthrough complete
-in baseline-audit; not independenthuman/highhazard/release qualification.
-Documentation30004 harvested0:5/5 PASS335.83s, safetyworkflow332.07s; full86line
-raw copied/cmp/SHA3fba5c60f619ee3f3cbd675d7c90c4882388a7c7ee919dc4ce22aae60b39babb.
-Resultwording follows that checkpoint; no exactfinalhead localcontractclaim.
-Staged spacing flags onlyfixture raw.log/.out; full1192line diagnostics retained
-SHA358db1a3bbff7d9471f0ae1cb0a4683654ab986dfd095469fe31e24d1dff5257.
-Source/docs/PRG/driver/runner check passes excludingONLYthose exactrawextensions;
-not whole-tree pass. Raw/frozen/source/CIpolicy unchanged for spacing.
-Next signedcommit/push/postpush29/PR/Claude-FIRST review and exacthead gates.
-No frozen expectation/helper/registration/isolation repair or acceptance claim.
+Next bounded #5611/#6776 slice: native ComboBox/ListBox ItemIDToIndex
+first-argument Numeric/exact READ item-ID conversion only. Main13281678def7e8f77fcd8d7385abe09600697bf2;
+parents freshly revalidated OPEN/rhamenator/exact-agent-approved. Channel re-read
+after cleanup; only own shipped IndexToItemID message, no new owner steering.
+Dedicated WT /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin,
+branch fix/itemidtoindex-numeric-5611 from exact origin/main13281678d, initially
+clean. Independent installed VFP9 7423 matching302-line/300-call sparse+dense
+pair retained in tests/fixtures/vfp9-itemidtoindex-numeric; help SHA6ae417066f39.
+Sparse22.9=>row2, input2.9=>missing0; both-sign low32 aliases, huge/Infinity0.
+Initial TRANSFORM identity'*' controls discarded as evidence, raw/source retained;
+final explicitSTR controls11/22/33 or1/2/3 match. RQ/VR/DQ/DV/HZ map README
+and docs/22/docs/32 recorded10:22Z BEFORE helper/assertions/configuration.
+Default truncated signed32/localized31, exact64/NaN parent-derived, not native
+error31/extended-syntax claims. Four raw routes traced; no parser edit.
+Initialfreeze10:25:48Z:248direct/four944public, five hashes in baseline-audit.md.
+Compile-only namespace ambiguity retained; initial GNU79420 stopped143 after
+exactowned PGID/cwd/command check, no original tests executed/accepted.
+Harness-only qualified lowercase_copy repair and explicitrefreeze10:29:35Z;
+newtesthashd96a169fdf42, all other frozen/base hashes unchanged, no expectation/
+case/count weakening. BOTH full originals required on final refrozen source.
+Distinct checked_itemidtoindex_numeric_argument stayed UNUSED through both
+full originals; method/reflection/expression/declarations byte-identical base
+until both complete results retained. Bounded migration now follows them.
+GNU16321 harvested8:30/34 PASS345.32s, onlyfournewpublic fail; actualprefixed
+assertions COPPERFIN1268/session,VFP9 220/session, all248/four944 own and
+194/four400 IndexToItemID,200/four476 SelectedID,190/four368 Selected,
+188/four368 ItemData,174/four80 GETCOLOR counters complete; otherfour pass.
+Full6364line raw/status retained, SHAceccb5070da1d17fa523d7d61ffceb9ad47bd6866cc1c4d4be109ca234060b41;
+configure/compile warnings/hashes in baseline-audit.md, no warningfree claim.
+Clang97906 harvested8:30/34 PASS624.15s, samefournewpublicfail/assertioncounts;
+allfrozenown+neighborcounters complete/otherfourpass/no sanitizerdiagnostic.
+Full6364line raw SHAee52f77166528350b8579de0336d028572d4f7e3f4d42a376e75bff430094b80;
+statuswritten11:13:06Z, fullconfigure/compile warnings/hashes retained.
+Allfivefrozen hashes reverified afterboth; BOTH originals retained BEFORE
+three-file method/raw-selector migration. Expression/textualGETPEM/unsupported
+coercions/writes unchanged; localized31/current-session map, existinglookup.
+InitialSET-state memberdraft corrected toexistingmap beforefixedbuild.
+Productionhashes8bb105fcd8c8/9dd380fa415c/324b4ffed0b3 in baseline-audit.md.
+FixedGNU69279 harvested0:34/34 PASS348.49s, all248/four944 and everyneighbor
+countercomplete/zeroassertions. Full401line fixture/build raw SHA
+6c2552a6b70833a7b37d65796ffe0408bc7dc4c69c8b7e02faab9b581004e96c.
+GNU preservation47571 harvested0:sixunchangedgroups/zerofailures; fullrawSHA
+befec198fb62d7e5fdae2e816aff3dc0ebde67970c187f3c7c013a1a377e3f19.
+Fivefrozen/sourcehashes reverified; fulloriginal/configure/compile/refreeze
+raws copied/cmp into fixture withoutnormalization. No expectation weakening.
+FixedClang44350 harvested0, statuswritten11:39:24Z:34/34 PASS627.52s,
+all248/four944 own and every frozen neighbor counter complete, zeroFAIL/
+sanitizerdiagnostics. Full401line raw copied/cmp fixture, SHA256
+cf598fc092f80c1de025c0af0217a0fbce91d09cec8510564145f8271495e2c5;
+fullcompile warnings retained SHAea81e69ec2817f9e7153d0c14c536b0bbe11ad0790fd5a01032a48f1c808db47.
+Clangpreservation65843 harvested0:sixunchangedgroups/zerofailures/fullraw
+SHA befec198fb62d7e5fdae2e816aff3dc0ebde67970c187f3c7c013a1a377e3f19.
+Fivefrozen/parser/preservationsource unchanged. Boundedmedium delegated
+development DQ/DV self-review/proceduraldelta/walkthrough complete in README;
+not independenthuman/releasequalification, hazardseverity/status unchanged.
+Fivecontracts19640 harvested0:5/5 PASS334.24s,206 validfragments/full safety
+workflownegativecases. FullrawSHAde3f22191b6b3d235295d843887784f8c9897ba091da0437c5681d1b7c9b642f;
+retained build/fixture. Next signedcommit/push/PR/Claude-FIRST/review/postpush.
+Private700 TMP,nice10/ionice2:7/-j1/local600s; noCI/leak/performancepolicychange.
 Any frozen repair requires explicit refreeze and BOTH originals repeated.
-Only this Numeric/exact first-argument conversion is selected. New return or
-absent-row behavior, writes, item-ID creation/mutation, RowSource/materialization lifecycle,
-non-Numeric/NULL/Currency/arity, other methods and grammar remain outside scope.
-If independent recovery exposes a genuinely new gap, file against exact main
-without broadening the slice. No VM until cleanup/backup-reset completion is
-confirmed; installed Wine is separate from the VM restriction.
-Carried optional SelectedID Windows38120643079 completedSUCCESS,535/535, exact
-1049efbf85ae head/all36PRchecksSUCCESS; report6107227487 and recoverable raw above.
-Watch33661/download59582 completed0 and small canonical late-watch directory
-moved into priorTrashbuild. No active prior CIwatch remains; do not recreate it.
+Remaining: signedcommit/push/postpush verification and exact-head
+Claude-FIRST/authorized Codex review/all11required/resolvedthreads gates.
+Nativeunsupportedcontrols27 versus same-input originalscoercions verified;
+separategap7149 filed againstexactbase withoutagentapproved, no type change.
+Writes/ID creation/mutation, other methods, non-Numeric/NULL/Currency/arity,
+RowSource/lifecycle/whole-call atomicity and generic reflection/parser excluded.
+All7148 lateplatformCI complete/retainedrecoverably as above. No VM until
+cleanup/backup-reset completion confirmed; Wine separate.
 Deferred7100/7102/6879 retained after numeric; EPOCH/CENTURY already complete.
 
 ## Retained owner steering / deferred work

@@ -1,0 +1,23 @@
+tests/test_prg_engine_itemidtoindex_numeric.cpp: In function ‘void {anonymous}::public_case(const std::filesystem::__cxx11::path&, const std::string&, int, const std::string&, bool, bool, const std::string&, std::optional<int>, const std::string&, bool)’:
+tests/test_prg_engine_itemidtoindex_numeric.cpp:250:61: error: call of overloaded ‘lowercase_copy(const std::string&)’ is ambiguous
+  250 |  for(const auto& object:state.ole_objects) if(lowercase_copy(object.base_class_name)==lowercase_copy(cls)) {
+      |                                               ~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~
+tests/test_prg_engine_itemidtoindex_numeric.cpp:250:61: note: there are 2 candidates
+In file included from tests/test_prg_engine_itemidtoindex_numeric.cpp:5:
+tests/../src/runtime/prg_engine_helpers.h:24:13: note: candidate 1: ‘std::string copperfin::runtime::lowercase_copy(std::string)’
+   24 | std::string lowercase_copy(std::string value);
+      |             ^~~~~~~~~~~~~~
+In file included from tests/test_prg_engine_itemidtoindex_numeric.cpp:6:
+tests/prg_engine_test_support.h:22:13: note: candidate 2: ‘std::string copperfin::test_support::lowercase_copy(std::string)’
+   22 | std::string lowercase_copy(std::string value);
+      |             ^~~~~~~~~~~~~~
+tests/test_prg_engine_itemidtoindex_numeric.cpp:250:101: error: call of overloaded ‘lowercase_copy(const std::string&)’ is ambiguous
+  250 |  for(const auto& object:state.ole_objects) if(lowercase_copy(object.base_class_name)==lowercase_copy(cls)) {
+      |                                                                                       ~~~~~~~~~~~~~~^~~~~
+tests/test_prg_engine_itemidtoindex_numeric.cpp:250:101: note: there are 2 candidates
+tests/../src/runtime/prg_engine_helpers.h:24:13: note: candidate 1: ‘std::string copperfin::runtime::lowercase_copy(std::string)’
+   24 | std::string lowercase_copy(std::string value);
+      |             ^~~~~~~~~~~~~~
+tests/prg_engine_test_support.h:22:13: note: candidate 2: ‘std::string copperfin::test_support::lowercase_copy(std::string)’
+   22 | std::string lowercase_copy(std::string value);
+      |             ^~~~~~~~~~~~~~

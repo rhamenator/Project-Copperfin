@@ -1,0 +1,84 @@
+[0/2] Re-checking globbed directories...
+[1/49] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_behavior.cpp.o
+[2/49] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_behavior_validate.cpp.o
+[3/49] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_appearance.cpp.o
+[4/49] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_appearance_validate.cpp.o
+[5/49] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_data.cpp.o
+[6/49] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_data_validate.cpp.o
+[7/49] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_positional_and_fallback.cpp.o
+[8/49] Linking CXX static library libcf_prg_analysis.a
+[9/49] Linking CXX static library libcf_design_model.a
+[10/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/runtime_external_event_queue.cpp.o
+[11/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_command_helpers.cpp.o
+[12/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_date_time_functions.cpp.o
+[13/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_file_io_functions.cpp.o
+[14/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine.cpp.o
+In file included from /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:8591:
+/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl: In member function ‘copperfin::runtime::{anonymous}::ExecutionOutcome copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()’:
+/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:11317:62: warning: missing initializer for member ‘copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()::TemporaryAppendSource::reference’ [-Wmissing-field-initializers]
+11317 |                     TemporaryAppendSource append_source{*this};
+      |                                                              ^
+/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:12449:58: warning: missing initializer for member ‘copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()::TemporaryAppendSource::reference’ [-Wmissing-field-initializers]
+12449 |                 TemporaryAppendSource append_source{*this};
+      |                                                          ^
+[15/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_native_object_helpers.cpp.o
+[16/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/polyglot_runtime_host.cpp.o
+[17/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/index_seek_optimizer.cpp.o
+[18/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_helpers.cpp.o
+[19/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_locale_code_page.cpp.o
+[20/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_numeric_functions.cpp.o
+[21/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_path_functions.cpp.o
+[22/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_parser.cpp.o
+[23/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_surface_functions.cpp.o
+In file included from /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_functions.cpp:193:
+/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:13:5: warning: ‘int copperfin::runtime::{anonymous}::bit_position(const copperfin::runtime::PrgValue&)’ defined but not used [-Wunused-function]
+   13 | int bit_position(const PrgValue& value) {
+      |     ^~~~~~~~~~~~
+/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:5:15: warning: ‘uint32_t copperfin::runtime::{anonymous}::bitwise_value(const copperfin::runtime::PrgValue&)’ defined but not used [-Wunused-function]
+    5 | std::uint32_t bitwise_value(const PrgValue& value) {
+      |               ^~~~~~~~~~~~~
+[24/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_config.cpp.o
+[25/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_string_functions.cpp.o
+In file included from /home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine_string_functions.cpp:28:
+/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine_string_function_helpers.inl:251:29: warning: ‘std::optional<long int> copperfin::runtime::{anonymous}::parse_currency_scaled_value(const std::string&)’ defined but not used [-Wunused-function]
+  251 | std::optional<std::int64_t> parse_currency_scaled_value(const std::string& text) {
+      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+[26/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_table_structure_helpers.cpp.o
+[27/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_type_functions.cpp.o
+[28/49] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/xasset_methods.cpp.o
+[29/49] Linking CXX static library libcf_xbase_runtime.a
+[30/49] Building CXX object tests/CMakeFiles/cf_prg_engine_test_support.dir/prg_engine_test_support.cpp.o
+[31/49] Building CXX object tests/CMakeFiles/test_prg_engine_int64_exact_expression.dir/test_prg_engine_int64_exact_expression.cpp.o
+[32/49] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_behavior.dir/test_prg_engine_numeric_behavior.cpp.o
+[33/49] Building CXX object tests/CMakeFiles/test_prg_engine_itemidtoindex_numeric.dir/test_prg_engine_itemidtoindex_numeric.cpp.o
+[34/49] Building CXX object tests/CMakeFiles/test_prg_engine_indextoitemid_numeric.dir/test_prg_engine_indextoitemid_numeric.cpp.o
+/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/tests/test_prg_engine_indextoitemid_numeric.cpp: In function ‘void {anonymous}::direct_cases()’:
+/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/tests/test_prg_engine_indextoitemid_numeric.cpp:121:68: warning: missing initializer for member ‘copperfin::runtime::PrgValue::string_value’ [-Wmissing-field-initializers]
+  121 |   check(PrgValue{.kind=PrgValueKind::currency,.currency_value=19000},{},{},"Currency adapter");
+      |                                                                    ^
+[35/49] Building CXX object tests/CMakeFiles/test_prg_engine_selectedid_numeric.dir/test_prg_engine_selectedid_numeric.cpp.o
+/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/tests/test_prg_engine_selectedid_numeric.cpp: In function ‘void {anonymous}::direct_cases()’:
+/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/tests/test_prg_engine_selectedid_numeric.cpp:98:68: warning: missing initializer for member ‘copperfin::runtime::PrgValue::string_value’ [-Wmissing-field-initializers]
+   98 |   check(PrgValue{.kind=PrgValueKind::currency,.currency_value=19000},{},{},"Currency adapter");
+      |                                                                    ^
+[36/49] Building CXX object tests/CMakeFiles/test_prg_engine_selected_index_numeric.dir/test_prg_engine_selected_index_numeric.cpp.o
+/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/tests/test_prg_engine_selected_index_numeric.cpp: In function ‘void {anonymous}::direct_cases()’:
+/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/tests/test_prg_engine_selected_index_numeric.cpp:93:68: warning: missing initializer for member ‘copperfin::runtime::PrgValue::string_value’ [-Wmissing-field-initializers]
+   93 |   check(PrgValue{.kind=PrgValueKind::currency,.currency_value=19000},{},{},"Currency adapter");
+      |                                                                    ^
+[37/49] Building CXX object tests/CMakeFiles/test_prg_engine_itemdata_index_numeric.dir/test_prg_engine_itemdata_index_numeric.cpp.o
+/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/tests/test_prg_engine_itemdata_index_numeric.cpp: In function ‘void {anonymous}::direct_cases()’:
+/home/rich/.codex/worktrees/itemidtoindex-numeric-5611/Project-Copperfin/tests/test_prg_engine_itemdata_index_numeric.cpp:93:68: warning: missing initializer for member ‘copperfin::runtime::PrgValue::string_value’ [-Wmissing-field-initializers]
+   93 |   check(PrgValue{.kind=PrgValueKind::currency,.currency_value=19000},{},{},"Currency adapter");
+      |                                                                    ^
+[38/49] Building CXX object tests/CMakeFiles/test_prg_engine_getcolor_default_numeric.dir/test_prg_engine_getcolor_default_numeric.cpp.o
+[39/49] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_itemid_selectors.dir/test_prg_engine_runtime_surface_itemid_selectors.cpp.o
+[40/49] Linking CXX executable tests/test_prg_engine_int64_exact_expression
+[41/49] Linking CXX executable tests/test_prg_engine_numeric_behavior
+[42/49] Linking CXX executable tests/test_prg_engine_itemidtoindex_numeric
+[43/49] Linking CXX executable tests/test_prg_engine_indextoitemid_numeric
+[44/49] Linking CXX executable tests/test_prg_engine_selectedid_numeric
+[45/49] Linking CXX executable tests/test_prg_engine_selected_index_numeric
+[46/49] Linking CXX executable tests/test_prg_engine_itemdata_index_numeric
+[47/49] Linking CXX executable tests/test_prg_engine_getcolor_default_numeric
+[48/49] Linking CXX executable tests/test_prg_engine_runtime_surface_itemid_selectors

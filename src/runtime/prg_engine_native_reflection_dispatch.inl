@@ -400,6 +400,23 @@
                     runtime_object,
                     *item_id_slot);
             }
+            // RQ-CF-PRG-ITEMIDTOINDEX-NUMERIC-001: preserve raw typed item ID
+            // before textual GETPEM/legacy selector coercion can round it.
+            if (raw_selector != nullptr && selector_open != std::string::npos &&
+                normalized_property_name.substr(0U, selector_open) == "itemidtoindex")
+            {
+                const auto& set_state = current_set_state();
+                const auto mode = set_state.find("numericbehavior");
+                const auto behavior = mode != set_state.end() &&
+                    normalize_identifier(mode->second) == "vfp9"
+                    ? NumericBehavior::vfp9 : NumericBehavior::copperfin;
+                if (auto typed_value = read_native_list_control_index_for_item_id_numeric(
+                        runtime_object, *raw_selector, behavior);
+                    typed_value.has_value())
+                {
+                    return *typed_value;
+                }
+            }
             if (const auto item_index_id = resolve_itemidtoindex_member_item_id();
                 item_index_id.has_value())
             {

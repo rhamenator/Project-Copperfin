@@ -230,6 +230,10 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
             return make_number_value(0.0);
         }
 
+        if (auto result = read_native_list_control_index_for_item_id_numeric(
+                runtime_object, arguments.front(), behavior); result.has_value()) {
+            return result;
+        }
         materialize_native_list_control_rows(runtime_object);
         const long long requested_item_id = std::llround(value_as_number(arguments[0]));
         if (requested_item_id < 1LL) {
@@ -694,6 +698,33 @@ std::optional<PrgValue> read_native_list_control_item_id_numeric(
         runtime_object.collection_item_keys[static_cast<std::size_t>(*checked_index - 1)]);
     return make_number_value(
         item_id.has_value() && *item_id >= 1LL ? static_cast<double>(*item_id) : 0.0);
+}
+
+// RQ-CF-PRG-ITEMIDTOINDEX-NUMERIC-001; VR-5611-ITEMIDTOINDEX-NUMERIC-001/002.
+// Numeric/exact item-ID READ conversion only, not display-index addressing.
+// Preserve upstream materialization/access ordering and unsupported coercions.
+std::optional<PrgValue> read_native_list_control_index_for_item_id_numeric(
+    RuntimeOleObjectState& runtime_object,
+    const PrgValue& item_id,
+    NumericBehavior behavior)
+{
+    if (!is_native_list_control_runtime_object(runtime_object) || item_id.is_null ||
+        (item_id.kind != PrgValueKind::number && item_id.kind != PrgValueKind::int64 &&
+         item_id.kind != PrgValueKind::uint64)) {
+        return std::nullopt;
+    }
+
+    materialize_native_list_control_rows(runtime_object);
+    const auto checked_id = checked_itemidtoindex_numeric_argument(item_id, behavior);
+    if (!checked_id.has_value()) {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
+    }
+    if (*checked_id < 1) {
+        return make_number_value(0.0);
+    }
+
+    const auto slot = find_native_list_control_row_by_item_id(runtime_object, *checked_id);
+    return make_number_value(slot.has_value() ? static_cast<double>(*slot + 1U) : 0.0);
 }
 
 std::optional<PrgValue> read_native_list_control_index_for_item_id(

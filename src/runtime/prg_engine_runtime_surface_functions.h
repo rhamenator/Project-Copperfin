@@ -365,6 +365,10 @@ std::optional<PrgValue> read_native_list_control_item_id_numeric(
     RuntimeOleObjectState& runtime_object,
     const PrgValue& index,
     NumericBehavior behavior);
+std::optional<PrgValue> read_native_list_control_index_for_item_id_numeric(
+    RuntimeOleObjectState& runtime_object,
+    const PrgValue& item_id,
+    NumericBehavior behavior);
 std::optional<PrgValue> read_native_list_control_item_data(
     RuntimeOleObjectState& runtime_object,
     std::size_t row_slot);
