@@ -1,0 +1,86 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin/build/indextoitemid-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin/build/indextoitemid-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 19
+    Start 19: test_contributor_signoff_contract
+
+19: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin/scripts/check-contributor-signoffs.py" "--self-test"
+19: Working Directory: /home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin/build/indextoitemid-gcc/tests
+19: Environment variables: 
+19:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin/resources/locales
+19: Test timeout computed to be: 1200
+19: Contributor sign-off self-test passed
+1/5 Test #19: test_contributor_signoff_contract ............   Passed    3.30 sec
+test 20
+    Start 20: test_changelog_fragment_assembler
+
+20: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--self-test"
+20: Working Directory: /home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin/build/indextoitemid-gcc/tests
+20: Environment variables: 
+20:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin/resources/locales
+20: Test timeout computed to be: 1200
+20: assemble_changelog self-test passed
+2/5 Test #20: test_changelog_fragment_assembler ............   Passed    0.21 sec
+test 21
+    Start 21: test_changelog_fragments_valid
+
+21: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--check" "--root" "/home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin"
+21: Working Directory: /home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin/build/indextoitemid-gcc/tests
+21: Environment variables: 
+21:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin/resources/locales
+21: Test timeout computed to be: 1200
+21: 205 changelog fragment(s) valid
+3/5 Test #21: test_changelog_fragments_valid ...............   Passed    0.22 sec
+test 30
+    Start 30: test_agent_channel_contract
+
+30: Test command: /usr/bin/cmake "-DSOURCE_DIR=/home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin" "-P" "/home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin/tests/run_agent_channel_contract_check.cmake"
+30: Working Directory: /home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin/build/indextoitemid-gcc/tests
+30: Environment variables: 
+30:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin/resources/locales
+30: Test timeout computed to be: 1200
+4/5 Test #30: test_agent_channel_contract ..................   Passed    0.01 sec
+test 38
+    Start 38: test_safety_traceability_workflow_contract
+
+38: Test command: /usr/bin/cmake "-DSOURCE_DIR=/home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin" "-P" "/home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin/tests/run_safety_traceability_workflow_contract_check.cmake"
+38: Working Directory: /home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin/build/indextoitemid-gcc/tests
+38: Environment variables: 
+38:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/indextoitemid-numeric-5611/Project-Copperfin/resources/locales
+38: Test timeout computed to be: 1200
+38: -- Safety traceability workflow contract check passed
+5/5 Test #38: test_safety_traceability_workflow_contract ...   Passed  332.07 sec
+
+The following tests passed:
+	test_contributor_signoff_contract
+	test_changelog_fragment_assembler
+	test_changelog_fragments_valid
+	test_agent_channel_contract
+	test_safety_traceability_workflow_contract
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+copperfin-isolation:audit=complete                     = 335.81 sec*proc (5 tests)
+copperfin-isolation:child-processes=bounded            = 335.37 sec*proc (2 tests)
+copperfin-isolation:child-processes=none               =   0.44 sec*proc (3 tests)
+copperfin-isolation:environment=child-scoped           = 332.07 sec*proc (1 test)
+copperfin-isolation:environment=none                   =   0.44 sec*proc (3 tests)
+copperfin-isolation:environment=scoped-process         =   3.30 sec*proc (1 test)
+copperfin-isolation:filesystem=process-owned           =   3.51 sec*proc (2 tests)
+copperfin-isolation:filesystem=read-only               = 332.30 sec*proc (3 tests)
+copperfin-isolation:network=disabled-probes            = 332.07 sec*proc (1 test)
+copperfin-isolation:network=none                       =   3.74 sec*proc (4 tests)
+copperfin-isolation:platform=configured                =   3.73 sec*proc (3 tests)
+copperfin-isolation:platform=portable                  =   0.01 sec*proc (1 test)
+copperfin-isolation:platform=powershell-conditional    = 332.07 sec*proc (1 test)
+copperfin-isolation:resources=none                     = 335.81 sec*proc (5 tests)
+copperfin-isolation:samples=none                       = 335.81 sec*proc (5 tests)
+copperfin-isolation:schedule=parallel-safe             = 335.81 sec*proc (5 tests)
+
+Total Test time (real) = 335.83 sec

@@ -978,6 +978,24 @@ function(copperfin_configure_native_test_isolation)
     # fresh in-process native controls; no children or shared resources.
     # RQ-CF-PRG-SELECTEDID-NUMERIC-001: fresh in-process dense/sparse-ID
     # controls, unique scripts and scoped locale; no shared resources.
+    # RQ-CF-PRG-INDEXTOITEMID-NUMERIC-001: unique scripts/scoped locale,
+    # fresh sparse-ID controls; no external/shared resources.
+    foreach(indextoitemid_test IN ITEMS
+        test_prg_engine_indextoitemid_numeric
+        test_prg_engine_indextoitemid_numeric_copperfin_session1
+        test_prg_engine_indextoitemid_numeric_copperfin_session2
+        test_prg_engine_indextoitemid_numeric_vfp9_session1
+        test_prg_engine_indextoitemid_numeric_vfp9_session2)
+        copperfin_set_test_isolation(${indextoitemid_test}
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT scoped-process
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            RESOURCES none
+            AUDIT complete)
+    endforeach()
     foreach(selectedid_test IN ITEMS
         test_prg_engine_selectedid_numeric
         test_prg_engine_selectedid_numeric_copperfin_session1

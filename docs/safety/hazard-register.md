@@ -45,6 +45,20 @@ own system and domain assurance.
 
 ## Bounded numeric-conversion linkage
 
+RQ-CF-PRG-INDEXTOITEMID-NUMERIC-001 / DQ-DV-5611-INDEXTOITEMID-NUMERIC-001
+links active HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01
+to the [pre-code IndexToItemID row mapping](../../tests/fixtures/vfp9-indextoitemid-numeric/README.md).
+Default checked signed32 avoids unintended aliases without changing ordinary
+negative/missing-row zero semantics. Both positive and negative aliases are
+independently observed explicit VFP9 policy, not SelectedID's ceiling domain.
+Sparse IDs distinguish row position from identity. Medium bounded documentation
+misuse does not alter registered severity/status; both complete originals are
+retained before bounded migration. Fixed GNU29/29 and Clang sanitizer29/29 plus
+both six unchanged preservation groups complete the bounded development
+walkthrough/self-review. Five documentation contracts PASS335.83s with full
+raw/hash retained; exact-head integration remains pending. No persistence/whole-call materialization,
+independent-human/high-hazard or release qualification claim.
+
 RQ-CF-PRG-SELECTEDID-NUMERIC-001 / DQ-DV-5611-SELECTEDID-NUMERIC-001
 links active HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01
 to the [pre-code SelectedID item-ID mapping](../../tests/fixtures/vfp9-selectedid-numeric/README.md).

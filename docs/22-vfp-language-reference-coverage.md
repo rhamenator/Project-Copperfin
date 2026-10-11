@@ -1,5 +1,24 @@
 # VFP Language Reference Coverage
 
+- IndexToItemID Numeric/exact row-index read recovery (#5611/#6776,2026-10-11):
+  RQ-CF-PRG-INDEXTOITEMID-NUMERIC-001 mapped before code/config.
+  [Independent VFP9/help recovery and phase audit](../tests/fixtures/vfp9-indextoitemid-numeric/README.md)
+  distinguish row position from sparse IDs11/22/33 and both-sign native low32
+  aliases from default checked signed32. Negative/zero/missing rows return
+  Numeric0, unlike SelectedID's invalid-negative contract. Exact64/NaN/adjacent
+  boundaries are derived, not native extended-syntax claims.
+  Frozen194direct/four400public; helper UNUSED through both complete originals:
+  GNU25/29/231.64s and Clang25/29/378.38s, onlyfournewpublicfail. Fullraws,
+  counters and hashes retained before narrow method/raw reflection migration.
+  Fixed GNU29/29 PASS234.05s and Clang sanitizer29/29 PASS378.05s; both pass
+  six unchanged preservation groups, frozen inputs/all counters unchanged,
+  zero FAIL. Bounded medium development DQ/DV walkthrough/self-review complete;
+  five documentation contracts PASS335.83s, full raw/hash retained;
+  exact-head integration remains pending.
+  Only Numeric/exact READ conversion and its raw property-first route; parser,
+  non-Numeric/NULL/Currency/arity, writes/ID lifecycle, RowSource/upstream
+  materialization/whole-call atomicity/native64/KBX/parent/release are excluded.
+
 - SelectedID Numeric/exact item-ID read recovery (#5611/#6776,2026-10-11):
   RQ-CF-PRG-SELECTEDID-NUMERIC-001 mapped before helper/assertions/config.
   [Independent installed VFP9/help recovery and phase audit](../tests/fixtures/vfp9-selectedid-numeric/README.md)
