@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -u
+cd /home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin || exit 1
+task_fixture=tests/fixtures/vfp9-listitemid-numeric
+task_raw=build/listitemid-native
+task_build=build/listitemid-gcc
+export TMPDIR=/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/build/listitemid-smoke-tmp
+mkdir -p "$TMPDIR"
+chmod 700 "$TMPDIR"
+export COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/resources/locales
+unset ASAN_OPTIONS UBSAN_OPTIONS
+task_libraries=()
+for task_library in cf_xbase_runtime cf_design_model cf_prg_analysis cf_runtime_text cf_vfp_assets cf_platform_profile cf_security cf_localization cf_platform_support; do
+ task_libraries+=("$task_build/lib$task_library.a")
+done
+for task_phase in before after; do
+ if test "$task_phase" = before; then
+  task_source="$task_fixture/fixed-attempt1/list-controls-02.before.cpp.txt"
+ else
+  task_source=tests/test_prg_engine_runtime_surface_functions_list_controls_02.cpp
+ fi
+ nice -n 10 ionice -c 2 -n 7 g++ -std=c++20 -O0 -g0 -Iinclude -Itests -Isrc/runtime -x c++ "$task_fixture/smoke-diagnostic.cpp.txt" "$task_source" -x none "$task_build/tests/CMakeFiles/cf_prg_engine_test_support.dir/prg_engine_test_support.cpp.o" "${task_libraries[@]}" -o "$task_raw/smoke-$task_phase" > "$task_raw/compile-smoke-$task_phase.log" 2>&1
+ task_status=$?
+ printf '%s\n' "$task_status" > "$task_raw/compile-smoke-$task_phase.status"
+ test "$task_status" -eq 0 || exit "$task_status"
+ nice -n 10 ionice -c 2 -n 7 "$task_raw/smoke-$task_phase" > "$task_raw/smoke-$task_phase.log" 2>&1
+ task_status=$?
+ printf '%s\n' "$task_status" > "$task_raw/smoke-$task_phase.status"
+ sha256sum "$task_raw/smoke-$task_phase.log" > "$task_raw/smoke-$task_phase.log.sha256"
+ if test "$task_phase" = before; then
+  test "$task_status" -eq 1 || exit 4
+  grep -q 'completed; failures: 2' "$task_raw/smoke-$task_phase.log" || exit 5
+ else
+  test "$task_status" -eq 0 || exit 6
+  grep -q 'completed; failures: 0' "$task_raw/smoke-$task_phase.log" || exit 7
+ fi
+done

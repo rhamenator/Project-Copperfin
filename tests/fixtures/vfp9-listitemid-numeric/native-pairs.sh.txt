@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -u
+cd /home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin || exit 1
+task_fixture=tests/fixtures/vfp9-listitemid-numeric
+task_raw=build/listitemid-native
+for task_probe in native edge boundary; do
+ task_source=probe.prg
+ test "$task_probe" = native || task_source="$task_probe-probe.prg"
+ for task_phase in first repeat; do
+  /home/rich/bin/vfp9-probe "$task_fixture/$task_source" --result "$task_raw/$task_probe.out" > "$task_raw/$task_probe-runner-$task_phase.log" 2>&1
+  task_status=$?
+  printf '%s\n' "$task_status" > "$task_raw/$task_probe-runner-$task_phase.status"
+  test "$task_status" -eq 0 || exit "$task_status"
+  cp "$task_raw/$task_probe.out" "$task_fixture/$task_probe-$task_phase.out" || exit 2
+  cp "$task_raw/$task_probe-runner-$task_phase.log" "$task_raw/$task_probe-runner-$task_phase.status" "$task_fixture/" || exit 3
+ done
+ cmp "$task_fixture/$task_probe-first.out" "$task_fixture/$task_probe-repeat.out" || exit 4
+done
+date -u '+%Y-%m-%dT%H:%M:%SZ' > "$task_fixture/native-pairs.completed-at"
+sha256sum "$task_fixture/"*-first.out "$task_fixture/"*-repeat.out "$task_fixture/"*.prg > "$task_fixture/native-evidence.sha256"

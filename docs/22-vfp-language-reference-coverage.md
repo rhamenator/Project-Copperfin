@@ -1,5 +1,29 @@
 # VFP Language Reference Coverage
 
+- ListItemID Numeric/exact assignment recovery (#5611/#6776,2026-10-12):
+  [Independent native/help/parent map](../tests/fixtures/vfp9-listitemid-numeric/README.md)
+  recorded01:51:13Z BEFORE helper/assertions/configuration. Fresh matching
+  302/300,272/270,146/144 installedVFP9 pairs and441-line shipped help separate
+  unique ID from display row; absent ID clears0 BOTH classes, no ComboBox
+  count+1 sentinel. Accepted ListBox MultiSelect assignment clears ALL bits,
+  including valid focus; error46 preserves initial bits/focus/text/payload.
+  RQ-CF-PRG-LISTITEMID-NUMERIC-001 maps signed32 checked default31, explicitVFP9
+  rawUINT32 ceiling46/defined signed-low32, lossless exact64/NaN derivations,
+  distinct UNUSED helper and frozen VR001/002 BEFORE BOTH full55 originals.
+  Only existing direct/SETPEM Numeric/exact inputs selected; full verification/
+  integration still pending, no type/lifecycle/callback/persistence/parent closure.
+  BOTH full55 originals51/55 retained before bounded setter migration; allfive
+  frozen inputs unchanged. First fixed GNU54/55 isolated TWO obsolete missing-ID77
+  literals in non-frozen list_controls_02; independent matching two-row VFP9
+  diagnostics corroborate pre-code absent0. Only those literals corrected;
+  repeated complete GNU/Clang55/sixgroups verification pending, not acceptance.
+  Repeated full55 subsequently PASS GNU994.77s/Clangsanitizers1825.00s, all284/
+  four1216 and neighbor counters/both sixgroups/all27 hashes complete; initialfive
+  frozen unchanged. Five contracts PASS337.08s/210fragments. Boundedmedium
+  delegated DQ/DV development self-review/walkthrough complete, not independent
+  human/high-hazard qualification; signed exact-head external integration gates
+  still apply, no parent/family/KBX/hazard/release closure.
+
 - ListIndex Numeric/exact assignment requirements (#5611/#6776,2026-10-11):
   [Independent installed-VFP9/help map](../tests/fixtures/vfp9-listindex-numeric/README.md)
   recorded19:28Z BEFORE helper/assertions/configuration. Three matching native
@@ -19,19 +43,20 @@
   ASan/UBSan/float-cast-overflow49/49 PASS1409.70s, all274/four1184 counters
   complete, both six unchanged preservationgroups PASS/all24 hashes checked.
   Boundedmedium delegated development DQ/DV self-review/walkthrough complete,
-  not independenthuman/high-hazard qualification. Five contracts PASS332.88s;
-  signed
-  exact-head hosted/review gates remain pending, not slice integration.
+  not independenthuman/high-hazard qualification. Five contracts PASS332.88s.
   Head967 full Linux/macOS CI subsequently found five obsolete empty-control
   expectations in a non-frozen builtin-property smoke. Corrected only those
   literals to independent ComboBox1/ListBox0 observations; both before
   diagnostics reproduce five failures and both after pass. All five initial
   frozen inputs/all24 runtime-neighbor entries unchanged; broader50-subject
-  GNU/Clang verification including full runtime_surface now pending.
+  GNU/Clang verification including full runtime_surface was then repeated.
   Expanded verification subsequently PASS: GNU50/50/769.56s and Clang
   sanitizers50/50/1445.84s, full runtime_surface/all counters/both sixgroups/
-  all25 hashes verified; repeated contracts5/5 PASS332.66s. Signed test-only
-  follow-up/postpush50/hosted CI/fresh exact-head review remain integration gates.
+  all25 hashes verified; repeated contracts5/5 PASS332.66s. PR7155 merged
+  asd8005f994 on2026-10-12 at exact signed1d6f22dbf after postpush50/50/765.73s,
+  all11required uniquelySUCCESS, clean verified Codex6115825243 after Claude-
+  FIRST/fallback and threads0. Optional fullplatform validations pending atmerge,
+  not retroactivegreen or parent/hazard/release closure.
   Types/lifecycle/parser/reflection expansion/callbacks/persistence excluded.
 
 - One-argument List Numeric/exact display-row READ recovery (#5611/#6776,

@@ -1,0 +1,3 @@
+FAIL: lsetpemmissing expected 'false' got 'true'
+FAIL: nindexaftermissing expected '1' got '0'
+Existing ListItemID smoke diagnostic completed; failures: 2

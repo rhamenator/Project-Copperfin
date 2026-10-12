@@ -1,0 +1,521 @@
+[0/2] Re-checking globbed directories...
+[1/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/bounded_process.cpp.o
+[2/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/code_page.cpp.o
+[3/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/disk_space.cpp.o
+[4/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/environment.cpp.o
+[5/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/exclusive_file.cpp.o
+[6/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/executable_path.cpp.o
+[7/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/file_stream.cpp.o
+[8/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/file_version.cpp.o
+[9/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/font_directories.cpp.o
+[10/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/invariant_numeric.cpp.o
+[11/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/json.cpp.o
+[12/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/path.cpp.o
+[13/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/private_directory.cpp.o
+[14/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/private_executable_image.cpp.o
+[15/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/process_arguments.cpp.o
+[16/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/process_environment.cpp.o
+[17/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/safe_regex.cpp.o
+[18/387] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/windows_pe_image.cpp.o
+[19/387] Linking CXX static library libcf_platform_support.a
+[20/387] Building CXX object CMakeFiles/cf_localization.dir/src/localization/localization.cpp.o
+[21/387] Linking CXX static library libcf_localization.a
+[22/387] Building CXX object CMakeFiles/cf_security.dir/src/security/audit_stream.cpp.o
+[23/387] Building CXX object CMakeFiles/cf_security.dir/src/security/authorization.cpp.o
+[24/387] Building CXX object CMakeFiles/cf_security.dir/src/security/external_process_policy.cpp.o
+[25/387] Building CXX object CMakeFiles/cf_security.dir/src/security/localized_text.cpp.o
+[26/387] Building CXX object CMakeFiles/cf_security.dir/src/security/payload_crypto.cpp.o
+[27/387] Building CXX object CMakeFiles/cf_security.dir/src/security/physical_path_containment.cpp.o
+[28/387] Building CXX object CMakeFiles/cf_security.dir/src/security/process_hardening.cpp.o
+[29/387] Building CXX object CMakeFiles/cf_security.dir/src/security/secret_provider.cpp.o
+[30/387] Building CXX object CMakeFiles/cf_security.dir/src/security/sha256.cpp.o
+[31/387] Building CXX object CMakeFiles/cf_security.dir/src/security/security_model.cpp.o
+[32/387] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_policy.cpp.o
+[33/387] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_audit_sink.cpp.o
+[34/387] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_environment.cpp.o
+[35/387] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_process_containment.cpp.o
+[36/387] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_process_parser.cpp.o
+[37/387] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_session.cpp.o
+[38/387] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_target_containment.cpp.o
+[39/387] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_tool_registry.cpp.o
+[40/387] Linking CXX static library libcf_security.a
+[41/387] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/printer.cpp.o
+[42/387] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_benchmark.cpp.o
+[43/387] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/database_model.cpp.o
+[44/387] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/extensibility_model.cpp.o
+[45/387] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/federation_execution.cpp.o
+[46/387] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/localized_text.cpp.o
+[47/387] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_artifact_admission.cpp.o
+[48/387] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_artifact_adapter.cpp.o
+[49/387] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_supporting_artifact_admission.cpp.o
+[50/387] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_bridge_invocation.cpp.o
+[51/387] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_interop_envelope.cpp.o
+[52/387] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_migration_telemetry.cpp.o
+[53/387] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_parity_comparator.cpp.o
+[54/387] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_route_impact.cpp.o
+[55/387] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_route_execution.cpp.o
+[56/387] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_route_registry.cpp.o
+[57/387] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/query_translator.cpp.o
+[58/387] Building CXX object CMakeFiles/cf_runtime_text.dir/src/runtime/localized_text.cpp.o
+[59/387] Linking CXX static library libcf_platform_profile.a
+[60/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_container.cpp.o
+[61/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_long_value.cpp.o
+[62/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_msysobjects.cpp.o
+[63/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_saveastext_design.cpp.o
+[64/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_saveastext_export.cpp.o
+[65/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_saved_queries.cpp.o
+[66/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_table_definition.cpp.o
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:324:120: warning: missing field 'name' initializer [-Wmissing-designated-field-initializers]
+  324 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.UnknownGeneration")};
+      |                                                                                                                        ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:334:19: warning: missing field 'name' initializer [-Wmissing-designated-field-initializers]
+  334 |                 })};
+      |                   ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:344:59: warning: missing field 'name' initializer [-Wmissing-designated-field-initializers]
+  344 |                 {{"pageType", std::to_string(page_type)}})};
+      |                                                           ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:350:127: warning: missing field 'name' initializer [-Wmissing-designated-field-initializers]
+  350 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.MultiPageTdefUnsupported")};
+      |                                                                                                                               ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:394:123: warning: missing field 'name' initializer [-Wmissing-designated-field-initializers]
+  394 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.StructureOutOfBounds")};
+      |                                                                                                                           ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:408:61: warning: missing field 'name' initializer [-Wmissing-designated-field-initializers]
+  408 |                 {{"tableType", std::to_string(table_type)}})};
+      |                                                             ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:417:123: warning: missing field 'name' initializer [-Wmissing-designated-field-initializers]
+  417 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.StructureOutOfBounds")};
+      |                                                                                                                           ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/access_table_definition.cpp:426:123: warning: missing field 'name' initializer [-Wmissing-designated-field-initializers]
+  426 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.StructureOutOfBounds")};
+      |                                                                                                                           ^
+8 warnings generated.
+[67/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/asset_inspector.cpp.o
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:5994:42: warning: missing field 'rows' initializer [-Wmissing-designated-field-initializers]
+ 5994 |             {{"table", table_plan.name}})};
+      |                                          ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6007:46: warning: missing field 'rows' initializer [-Wmissing-designated-field-initializers]
+ 6007 |                 {{"table", table_plan.name}})};
+      |                                              ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6029:54: warning: missing field 'rows' initializer [-Wmissing-designated-field-initializers]
+ 6029 |                         {{"table", table_plan.name}})};
+      |                                                      ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6036:54: warning: missing field 'rows' initializer [-Wmissing-designated-field-initializers]
+ 6036 |                         {{"table", table_plan.name}})};
+      |                                                      ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6043:54: warning: missing field 'rows' initializer [-Wmissing-designated-field-initializers]
+ 6043 |                         {{"table", table_plan.name}})};
+      |                                                      ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/asset_inspector.cpp:6080:100: warning: missing field 'cleanup_warning' initializer [-Wmissing-designated-field-initializers]
+ 6080 |         return DatabaseJsonImportResult{.ok = false, .error = std::move(message), .table_count = 0U};
+      |                                                                                                    ^
+6 warnings generated.
+[68/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/cdx_header.cpp.o
+[69/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/cdx_writer.cpp.o
+[70/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_header.cpp.o
+[71/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_import.cpp.o
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:293:51: warning: missing field 'field_mappings' initializer [-Wmissing-designated-field-initializers]
+  293 |         return {.ok = false, .error = source.error};
+      |                                                   ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:297:49: warning: missing field 'field_mappings' initializer [-Wmissing-designated-field-initializers]
+  297 |         return {.ok = false, .error = plan.error};
+      |                                                 ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:305:95: warning: missing field 'field_mappings' initializer [-Wmissing-designated-field-initializers]
+  305 |         return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.DestinationExists")};
+      |                                                                                               ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:321:99: warning: missing field 'field_mappings' initializer [-Wmissing-designated-field-initializers]
+  321 |             return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.DestinationExists")};
+      |                                                                                                   ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:339:17: warning: missing field 'field_mappings' initializer [-Wmissing-designated-field-initializers]
+  339 |                 };
+      |                 ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:381:58: warning: missing field 'field_mappings' initializer [-Wmissing-designated-field-initializers]
+  381 |         return {.ok = false, .error = create_result.error};
+      |                                                          ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:406:64: warning: missing field 'field_mappings' initializer [-Wmissing-designated-field-initializers]
+  406 |                 return {.ok = false, .error = memo_result.error};
+      |                                                                ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/dbf_import.cpp:427:51: warning: missing field 'field_mappings' initializer [-Wmissing-designated-field-initializers]
+  427 |         return {.ok = false, .error = source.error};
+      |                                                   ^
+8 warnings generated.
+[72/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_text_encoding.cpp.o
+[73/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_table.cpp.o
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/dbf_table.cpp:2426:91: warning: missing field 'fields' initializer [-Wmissing-designated-field-initializers]
+ 2426 |         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
+      |                                                                                           ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/dbf_table.cpp:2437:91: warning: missing field 'fields' initializer [-Wmissing-designated-field-initializers]
+ 2437 |         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
+      |                                                                                           ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/vfp/dbf_table.cpp:2441:58: warning: missing field 'fields' initializer [-Wmissing-designated-field-initializers]
+ 2441 |         return {.ok = false, .error = header_result.error};
+      |                                                          ^
+3 warnings generated.
+[74/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/index_probe.cpp.o
+[75/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/sidecar_path.cpp.o
+[76/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/staged_import_publish.cpp.o
+[77/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/xbase_relation_inference.cpp.o
+[78/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_shared_helpers.cpp.o
+[79/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_method_blobs.cpp.o
+[80/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_blobs.cpp.o
+[81/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_record_and_snapshot.cpp.o
+[82/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_undo.cpp.o
+[83/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_object_lifecycle.cpp.o
+[84/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_setters_behavior.cpp.o
+[85/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_setters_appearance.cpp.o
+[86/387] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_setters_data.cpp.o
+[87/387] Building CXX object CMakeFiles/cf_prg_analysis.dir/src/runtime/prg_engine_static_analysis.cpp.o
+[88/387] Linking CXX static library libcf_runtime_text.a
+[89/387] Linking CXX static library libcf_vfp_assets.a
+[90/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/builder_dispatch.cpp.o
+[91/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/builder_invocation_admission.cpp.o
+[92/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/builder_registry.cpp.o
+[93/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/context_editor_actions.cpp.o
+[94/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_context.cpp.o
+[95/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_dispatch.cpp.o
+[96/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_invocation_admission.cpp.o
+[97/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_launch_surfaces.cpp.o
+[98/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/document_model.cpp.o
+[99/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/editor_action_dispatch.cpp.o
+[100/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/editor_action_invocation_admission.cpp.o
+[101/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/project_workspace.cpp.o
+[102/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/product_subsystems.cpp.o
+[103/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/report_layout.cpp.o
+[104/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_creation.cpp.o
+[105/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_dispatch.cpp.o
+[106/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_invocation_admission.cpp.o
+[107/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_palette.cpp.o
+[108/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract.cpp.o
+[109/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_value_parsing.cpp.o
+[110/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_error_messages.cpp.o
+[111/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_argument_parsers.cpp.o
+[112/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_request_validators.cpp.o
+[113/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_diagnostics_and_session.cpp.o
+[114/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_diagnostics_and_session_validate.cpp.o
+[115/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_selection_context.cpp.o
+[116/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_property_commands.cpp.o
+[117/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_property_commands_validate.cpp.o
+[118/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_object_lifecycle.cpp.o
+[119/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_object_lifecycle_validate.cpp.o
+[120/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_layout_actions.cpp.o
+[121/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_layout_actions_validate.cpp.o
+[122/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_behavior.cpp.o
+[123/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_behavior_validate.cpp.o
+[124/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_appearance.cpp.o
+[125/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_appearance_validate.cpp.o
+[126/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_data.cpp.o
+[127/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_data_validate.cpp.o
+[128/387] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_positional_and_fallback.cpp.o
+[129/387] Linking CXX static library libcf_prg_analysis.a
+[130/387] Linking CXX static library libcf_design_model.a
+[131/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/runtime_external_event_queue.cpp.o
+[132/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_command_helpers.cpp.o
+[133/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_date_time_functions.cpp.o
+[134/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_file_io_functions.cpp.o
+[135/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine.cpp.o
+In file included from /home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:1262:
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine_flow.inl:285:51: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  285 |             const auto object_handle_for_value = [this](const PrgValue &value) -> std::optional<int>
+      |                                                   ^~~~
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:1839:14: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+ 1839 |             [this]()
+      |              ^~~~
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:1843:14: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+ 1843 |             [this]()
+      |              ^~~~
+In file included from /home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:8666:
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:11317:62: warning: missing field 'reference' initializer [-Wmissing-field-initializers]
+ 11317 |                     TemporaryAppendSource append_source{*this};
+       |                                                              ^
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:12449:58: warning: missing field 'reference' initializer [-Wmissing-field-initializers]
+ 12449 |                 TemporaryAppendSource append_source{*this};
+       |                                                          ^
+5 warnings generated.
+[136/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_native_object_helpers.cpp.o
+[137/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/polyglot_runtime_host.cpp.o
+[138/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/index_seek_optimizer.cpp.o
+[139/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_helpers.cpp.o
+[140/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_locale_code_page.cpp.o
+[141/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_numeric_functions.cpp.o
+[142/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_path_functions.cpp.o
+[143/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_parser.cpp.o
+[144/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_surface_functions.cpp.o
+In file included from /home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_functions.cpp:193:
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:5:15: warning: unused function 'bitwise_value' [-Wunused-function]
+    5 | std::uint32_t bitwise_value(const PrgValue& value) {
+      |               ^~~~~~~~~~~~~
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:13:5: warning: unused function 'bit_position' [-Wunused-function]
+   13 | int bit_position(const PrgValue& value) {
+      |     ^~~~~~~~~~~~
+2 warnings generated.
+[145/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_config.cpp.o
+[146/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_string_functions.cpp.o
+In file included from /home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine_string_functions.cpp:28:
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine_string_function_helpers.inl:251:29: warning: unused function 'parse_currency_scaled_value' [-Wunused-function]
+  251 | std::optional<std::int64_t> parse_currency_scaled_value(const std::string& text) {
+      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+1 warning generated.
+[147/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_table_structure_helpers.cpp.o
+[148/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_type_functions.cpp.o
+[149/387] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/xasset_methods.cpp.o
+[150/387] Linking CXX static library libcf_xbase_runtime.a
+[151/387] Building CXX object tests/CMakeFiles/cf_prg_engine_test_support.dir/prg_engine_test_support.cpp.o
+[152/387] Building CXX object tests/CMakeFiles/test_prg_engine_int64_exact_expression.dir/test_prg_engine_int64_exact_expression.cpp.o
+[153/387] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_behavior.dir/test_prg_engine_numeric_behavior.cpp.o
+[154/387] Building CXX object tests/CMakeFiles/test_prg_engine_listindex_numeric.dir/test_prg_engine_listindex_numeric.cpp.o
+[155/387] Building CXX object tests/CMakeFiles/test_prg_engine_listitemid_numeric.dir/test_prg_engine_listitemid_numeric.cpp.o
+[156/387] Building CXX object tests/CMakeFiles/test_prg_engine_list_index_numeric.dir/test_prg_engine_list_index_numeric.cpp.o
+[157/387] Building CXX object tests/CMakeFiles/test_prg_engine_listitem_numeric.dir/test_prg_engine_listitem_numeric.cpp.o
+[158/387] Building CXX object tests/CMakeFiles/test_prg_engine_itemidtoindex_numeric.dir/test_prg_engine_itemidtoindex_numeric.cpp.o
+[159/387] Building CXX object tests/CMakeFiles/test_prg_engine_indextoitemid_numeric.dir/test_prg_engine_indextoitemid_numeric.cpp.o
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/tests/test_prg_engine_indextoitemid_numeric.cpp:121:68: warning: missing field 'string_value' initializer [-Wmissing-designated-field-initializers]
+  121 |   check(PrgValue{.kind=PrgValueKind::currency,.currency_value=19000},{},{},"Currency adapter");
+      |                                                                    ^
+1 warning generated.
+[160/387] Building CXX object tests/CMakeFiles/test_prg_engine_selectedid_numeric.dir/test_prg_engine_selectedid_numeric.cpp.o
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/tests/test_prg_engine_selectedid_numeric.cpp:98:68: warning: missing field 'string_value' initializer [-Wmissing-designated-field-initializers]
+   98 |   check(PrgValue{.kind=PrgValueKind::currency,.currency_value=19000},{},{},"Currency adapter");
+      |                                                                    ^
+1 warning generated.
+[161/387] Building CXX object tests/CMakeFiles/test_prg_engine_selected_index_numeric.dir/test_prg_engine_selected_index_numeric.cpp.o
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/tests/test_prg_engine_selected_index_numeric.cpp:93:68: warning: missing field 'string_value' initializer [-Wmissing-designated-field-initializers]
+   93 |   check(PrgValue{.kind=PrgValueKind::currency,.currency_value=19000},{},{},"Currency adapter");
+      |                                                                    ^
+1 warning generated.
+[162/387] Building CXX object tests/CMakeFiles/test_prg_engine_itemdata_index_numeric.dir/test_prg_engine_itemdata_index_numeric.cpp.o
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/tests/test_prg_engine_itemdata_index_numeric.cpp:93:68: warning: missing field 'string_value' initializer [-Wmissing-designated-field-initializers]
+   93 |   check(PrgValue{.kind=PrgValueKind::currency,.currency_value=19000},{},{},"Currency adapter");
+      |                                                                    ^
+1 warning generated.
+[163/387] Building CXX object tests/CMakeFiles/test_prg_engine_getcolor_default_numeric.dir/test_prg_engine_getcolor_default_numeric.cpp.o
+[164/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_collections_01.cpp.o
+[165/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_collections_02.cpp.o
+[166/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_controls_01.cpp.o
+[167/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_controls_02.cpp.o
+[168/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_controls_03.cpp.o
+[169/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_controls_04.cpp.o
+[170/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_default_actions_01.cpp.o
+[171/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_default_actions_02.cpp.o
+[172/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_default_actions_03.cpp.o
+[173/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_default_actions_04.cpp.o
+[174/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_events_01.cpp.o
+[175/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_events_02.cpp.o
+[176/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_events_03.cpp.o
+[177/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_expressions_01.cpp.o
+[178/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_sys16.cpp.o
+[179/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_filesystem_sys.cpp.o
+[180/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_sys2012.cpp.o
+[181/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_sys2030.cpp.o
+[182/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_sys2021.cpp.o
+[183/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_expressions_02.cpp.o
+[184/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_forms_01.cpp.o
+[185/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_forms_02.cpp.o
+[186/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_inheritance_01.cpp.o
+[187/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_inheritance_02.cpp.o
+[188/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_inheritance_03.cpp.o
+[189/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_inheritance_04.cpp.o
+[190/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_inheritance_05.cpp.o
+[191/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_inheritance_06.cpp.o
+[192/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_inheritance_07.cpp.o
+[193/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_inheritance_08.cpp.o
+[194/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_inheritance_09.cpp.o
+[195/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_instantiation_01.cpp.o
+[196/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_interop_01.cpp.o
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/tests/test_prg_engine_runtime_surface_functions_interop_01.cpp:702:21: warning: enumeration value 'currency' not handled in switch [-Wswitch]
+  702 |             switch (value.kind)
+      |                     ^~~~~~~~~~
+1 warning generated.
+[197/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_interop_02.cpp.o
+/home/rich/.codex/worktrees/listitemid-numeric-5611/Project-Copperfin/tests/test_prg_engine_runtime_surface_functions_interop_02.cpp:65:21: warning: enumeration value 'currency' not handled in switch [-Wswitch]
+   65 |             switch (value.kind)
+      |                     ^~~~~~~~~~
+1 warning generated.
+[198/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_keypress.cpp.o
+[199/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_interactivechange.cpp.o
+[200/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_keypreview.cpp.o
+[201/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_click.cpp.o
+[202/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_mouse.cpp.o
+[203/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_mousemove.cpp.o
+[204/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_dblclick.cpp.o
+[205/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_rightclick.cpp.o
+[206/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_right_button_events.cpp.o
+[207/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_middleclick.cpp.o
+[208/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_middle_button_events.cpp.o
+[209/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_interop_03.cpp.o
+[210/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_interop_04.cpp.o
+[211/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_interop_05.cpp.o
+[212/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_interop_06.cpp.o
+[213/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_lifecycle_01.cpp.o
+[214/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_lifecycle_02.cpp.o
+[215/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_lifecycle_03.cpp.o
+[216/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_lifecycle_04.cpp.o
+[217/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_lifecycle_05.cpp.o
+[218/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_lifecycle_06.cpp.o
+[219/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_lifecycle_07.cpp.o
+[220/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_lifecycle_08.cpp.o
+[221/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_report_listener.cpp.o
+[222/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_report_listener_security.cpp.o
+[223/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_wvisible.cpp.o
+[224/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_01.cpp.o
+[225/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_02.cpp.o
+[226/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_03.cpp.o
+[227/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_04.cpp.o
+[228/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_05.cpp.o
+[229/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_06.cpp.o
+[230/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_07.cpp.o
+[231/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_08.cpp.o
+[232/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_09.cpp.o
+[233/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_10.cpp.o
+[234/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_11.cpp.o
+[235/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_12.cpp.o
+[236/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_13.cpp.o
+[237/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_14.cpp.o
+[238/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_15.cpp.o
+[239/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_16.cpp.o
+[240/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_17.cpp.o
+[241/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_18.cpp.o
+[242/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_19.cpp.o
+[243/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_20.cpp.o
+[244/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_main.cpp.o
+[245/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_object_graph_01.cpp.o
+[246/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_object_graph_02.cpp.o
+[247/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_object_graph_03.cpp.o
+[248/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_object_graph_04.cpp.o
+[249/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_object_graph_05.cpp.o
+[250/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_object_graph_06.cpp.o
+[251/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_object_graph_07.cpp.o
+[252/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_object_graph_08.cpp.o
+[253/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_object_graph_09.cpp.o
+[254/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_object_graph_10.cpp.o
+[255/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_object_graph_11.cpp.o
+[256/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_object_graph_12.cpp.o
+[257/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_01.cpp.o
+[258/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_02.cpp.o
+[259/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_03.cpp.o
+[260/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_04.cpp.o
+[261/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_05.cpp.o
+[262/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_06.cpp.o
+[263/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_07.cpp.o
+[264/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_08.cpp.o
+[265/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_09.cpp.o
+[266/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_10.cpp.o
+[267/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_11.cpp.o
+[268/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_12.cpp.o
+[269/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_picture.cpp.o
+[270/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_drag.cpp.o
+[271/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_button_pictures.cpp.o
+[272/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_command_button_properties.cpp.o
+[273/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_autosize.cpp.o
+[274/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_13.cpp.o
+[275/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_14.cpp.o
+[276/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_15.cpp.o
+[277/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_16.cpp.o
+[278/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_17.cpp.o
+[279/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_18.cpp.o
+[280/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_19.cpp.o
+[281/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_20.cpp.o
+[282/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_21.cpp.o
+[283/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_22.cpp.o
+[284/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_23.cpp.o
+[285/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_24.cpp.o
+[286/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_25.cpp.o
+[287/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_26.cpp.o
+[288/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_27.cpp.o
+[289/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_28.cpp.o
+[290/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_29.cpp.o
+[291/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_30.cpp.o
+[292/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_31.cpp.o
+[293/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_32.cpp.o
+[294/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_33.cpp.o
+[295/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_34.cpp.o
+[296/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_35.cpp.o
+[297/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_36.cpp.o
+[298/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_37.cpp.o
+[299/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_38.cpp.o
+[300/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_39.cpp.o
+[301/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_40.cpp.o
+[302/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_41.cpp.o
+[303/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_42.cpp.o
+[304/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_43.cpp.o
+[305/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_44.cpp.o
+[306/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_45.cpp.o
+[307/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_46.cpp.o
+[308/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_47.cpp.o
+[309/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_48.cpp.o
+[310/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_49.cpp.o
+[311/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_50.cpp.o
+[312/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_51.cpp.o
+[313/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_52.cpp.o
+[314/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_53.cpp.o
+[315/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_54.cpp.o
+[316/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_55.cpp.o
+[317/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_56.cpp.o
+[318/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_57.cpp.o
+[319/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_58.cpp.o
+[320/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_59.cpp.o
+[321/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_60.cpp.o
+[322/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_61.cpp.o
+[323/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_62.cpp.o
+[324/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_63.cpp.o
+[325/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_64.cpp.o
+[326/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_65.cpp.o
+[327/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_66.cpp.o
+[328/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_67.cpp.o
+[329/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_68.cpp.o
+[330/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_69.cpp.o
+[331/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_properties_70.cpp.o
+[332/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_form_scalemode.cpp.o
+[333/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_drawmode.cpp.o
+[334/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_backstyle.cpp.o
+[335/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_specialeffect.cpp.o
+[336/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_borderstyle.cpp.o
+[337/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_drawstyle.cpp.o
+[338/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_fillstyle.cpp.o
+[339/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_fillcolor.cpp.o
+[340/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_borderwidth.cpp.o
+[341/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_bordercolor.cpp.o
+[342/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_drawwidth.cpp.o
+[343/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_grid_rowheight.cpp.o
+[344/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_grid_headerheight.cpp.o
+[345/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_grid_scrollbars.cpp.o
+[346/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_grid_allowheadersizing.cpp.o
+[347/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_grid_allowrowsizing.cpp.o
+[348/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_grid_allowautocolumnfit.cpp.o
+[349/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_grid_gridline_properties.cpp.o
+[350/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_grid_highlight_properties.cpp.o
+[351/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_grid_view.cpp.o
+[352/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_grid_activecolumn.cpp.o
+[353/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_grid_activerow.cpp.o
+[354/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_grid_relative_focus.cpp.o
+[355/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_column_resizable.cpp.o
+[356/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_reflection_01.cpp.o
+[357/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_reflection_02.cpp.o
+[358/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_reflection_03.cpp.o
+[359/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_reflection_04.cpp.o
+[360/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_reflection_05.cpp.o
+[361/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_reflection_06.cpp.o
+[362/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_reflection_07.cpp.o
+[363/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_reflection_08.cpp.o
+[364/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_reflection_09.cpp.o
+[365/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_reflection_10.cpp.o
+[366/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_reflection_11.cpp.o
+[367/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_reflection_12.cpp.o
+[368/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_reflection_13.cpp.o
+[369/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_reflection_14.cpp.o
+[370/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_reflection_15.cpp.o
+[371/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_reflection_16.cpp.o
+[372/387] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_itemid_selectors.dir/test_prg_engine_runtime_surface_itemid_selectors.cpp.o
+[373/387] Linking CXX executable tests/test_prg_engine_int64_exact_expression
+[374/387] Linking CXX executable tests/test_prg_engine_numeric_behavior
+[375/387] Linking CXX executable tests/test_prg_engine_listindex_numeric
+[376/387] Linking CXX executable tests/test_prg_engine_listitemid_numeric
+[377/387] Linking CXX executable tests/test_prg_engine_list_index_numeric
+[378/387] Linking CXX executable tests/test_prg_engine_listitem_numeric
+[379/387] Linking CXX executable tests/test_prg_engine_itemidtoindex_numeric
+[380/387] Linking CXX executable tests/test_prg_engine_indextoitemid_numeric
+[381/387] Linking CXX executable tests/test_prg_engine_selectedid_numeric
+[382/387] Linking CXX executable tests/test_prg_engine_selected_index_numeric
+[383/387] Linking CXX executable tests/test_prg_engine_itemdata_index_numeric
+[384/387] Linking CXX executable tests/test_prg_engine_getcolor_default_numeric
+[385/387] Linking CXX executable tests/test_prg_engine_runtime_surface_functions
+[386/387] Linking CXX executable tests/test_prg_engine_runtime_surface_itemid_selectors

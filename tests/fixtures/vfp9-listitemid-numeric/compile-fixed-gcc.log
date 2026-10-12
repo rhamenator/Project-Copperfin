@@ -1,0 +1,3 @@
+[0/2] Re-checking globbed directories...
+[1/3] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_02.cpp.o
+[2/3] Linking CXX executable tests/test_prg_engine_runtime_surface_functions
