@@ -1,0 +1,743 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 36
+      Start  36: test_native_test_isolation_contract
+
+36: Test command: /usr/bin/cmake "-DINVENTORY_PATH=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/native-test-isolation.tsv" "-DISOLATION_SOURCE_PATH=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/tests/CopperfinTestIsolation.cmake" "-DTEST_REGISTRATION_SOURCE_PATH=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/tests/CMakeLists.txt" "-P" "/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/tests/run_native_test_isolation_contract_check.cmake"
+36: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+36: Environment variables: 
+36:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+36: Test timeout computed to be: 600
+36: -- Native test isolation inventory contract passed for 574 tests
+ 1/65 Test  #36: test_native_test_isolation_contract ...........................   Passed    0.53 sec
+test 390
+      Start 390: test_prg_engine_int64_exact_expression
+
+390: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_int64_exact_expression
+390: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+390: Environment variables: 
+390:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+390: Test timeout computed to be: 600
+ 2/65 Test #390: test_prg_engine_int64_exact_expression ........................   Passed    0.09 sec
+test 393
+      Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 600
+ 3/65 Test #393: test_prg_engine_numeric_behavior ..............................   Passed  130.72 sec
+test 414
+      Start 414: test_prg_engine_listindex_numeric
+
+414: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_listindex_numeric
+414: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+414: Environment variables: 
+414:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+414: Test timeout computed to be: 600
+414: ListIndex frozen cases: direct=274 public=0
+ 4/65 Test #414: test_prg_engine_listindex_numeric .............................   Passed    0.01 sec
+test 415
+      Start 415: test_prg_engine_topitemid_numeric
+
+415: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_topitemid_numeric
+415: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+415: Environment variables: 
+415:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+415: Test timeout computed to be: 600
+415: TopItemID frozen cases: direct=284 public=0
+ 5/65 Test #415: test_prg_engine_topitemid_numeric .............................   Passed    0.01 sec
+test 416
+      Start 416: test_prg_engine_topitemid_numeric_copperfin_session1
+
+416: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_topitemid_numeric "COPPERFIN" "1"
+416: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+416: Environment variables: 
+416:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+416: Test timeout computed to be: 600
+416: TopItemID frozen cases: direct=0 public=1445
+ 6/65 Test #416: test_prg_engine_topitemid_numeric_copperfin_session1 ..........   Passed  131.71 sec
+test 417
+      Start 417: test_prg_engine_topitemid_numeric_copperfin_session2
+
+417: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_topitemid_numeric "COPPERFIN" "2"
+417: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+417: Environment variables: 
+417:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+417: Test timeout computed to be: 600
+417: TopItemID frozen cases: direct=0 public=1445
+ 7/65 Test #417: test_prg_engine_topitemid_numeric_copperfin_session2 ..........   Passed  124.17 sec
+test 418
+      Start 418: test_prg_engine_topitemid_numeric_vfp9_session1
+
+418: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_topitemid_numeric "VFP9" "1"
+418: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+418: Environment variables: 
+418:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+418: Test timeout computed to be: 600
+418: TopItemID frozen cases: direct=0 public=1445
+ 8/65 Test #418: test_prg_engine_topitemid_numeric_vfp9_session1 ...............   Passed  119.96 sec
+test 419
+      Start 419: test_prg_engine_topitemid_numeric_vfp9_session2
+
+419: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_topitemid_numeric "VFP9" "2"
+419: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+419: Environment variables: 
+419:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+419: Test timeout computed to be: 600
+419: TopItemID frozen cases: direct=0 public=1445
+ 9/65 Test #419: test_prg_engine_topitemid_numeric_vfp9_session2 ...............   Passed  120.35 sec
+test 420
+      Start 420: test_prg_engine_topindex_numeric
+
+420: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_topindex_numeric
+420: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+420: Environment variables: 
+420:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+420: Test timeout computed to be: 600
+420: TopIndex frozen cases: direct=284 public=0
+10/65 Test #420: test_prg_engine_topindex_numeric ..............................   Passed    0.02 sec
+test 421
+      Start 421: test_prg_engine_topindex_numeric_copperfin_session1
+
+421: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_topindex_numeric "COPPERFIN" "1"
+421: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+421: Environment variables: 
+421:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+421: Test timeout computed to be: 600
+421: TopIndex frozen cases: direct=0 public=1445
+11/65 Test #421: test_prg_engine_topindex_numeric_copperfin_session1 ...........   Passed  119.71 sec
+test 422
+      Start 422: test_prg_engine_topindex_numeric_copperfin_session2
+
+422: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_topindex_numeric "COPPERFIN" "2"
+422: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+422: Environment variables: 
+422:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+422: Test timeout computed to be: 600
+422: TopIndex frozen cases: direct=0 public=1445
+12/65 Test #422: test_prg_engine_topindex_numeric_copperfin_session2 ...........   Passed  139.96 sec
+test 423
+      Start 423: test_prg_engine_topindex_numeric_vfp9_session1
+
+423: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_topindex_numeric "VFP9" "1"
+423: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+423: Environment variables: 
+423:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+423: Test timeout computed to be: 600
+423: TopIndex frozen cases: direct=0 public=1445
+13/65 Test #423: test_prg_engine_topindex_numeric_vfp9_session1 ................   Passed  139.19 sec
+test 424
+      Start 424: test_prg_engine_topindex_numeric_vfp9_session2
+
+424: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_topindex_numeric "VFP9" "2"
+424: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+424: Environment variables: 
+424:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+424: Test timeout computed to be: 600
+424: TopIndex frozen cases: direct=0 public=1445
+14/65 Test #424: test_prg_engine_topindex_numeric_vfp9_session2 ................   Passed  119.65 sec
+test 425
+      Start 425: test_prg_engine_listitemid_numeric
+
+425: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_listitemid_numeric
+425: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+425: Environment variables: 
+425:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+425: Test timeout computed to be: 600
+425: ListItemID frozen cases: direct=284 public=0
+15/65 Test #425: test_prg_engine_listitemid_numeric ............................   Passed    0.01 sec
+test 426
+      Start 426: test_prg_engine_listitemid_numeric_copperfin_session1
+
+426: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_listitemid_numeric "COPPERFIN" "1"
+426: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+426: Environment variables: 
+426:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+426: Test timeout computed to be: 600
+426: ListItemID frozen cases: direct=0 public=1216
+16/65 Test #426: test_prg_engine_listitemid_numeric_copperfin_session1 .........   Passed   85.40 sec
+test 427
+      Start 427: test_prg_engine_listitemid_numeric_copperfin_session2
+
+427: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_listitemid_numeric "COPPERFIN" "2"
+427: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+427: Environment variables: 
+427:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+427: Test timeout computed to be: 600
+427: ListItemID frozen cases: direct=0 public=1216
+17/65 Test #427: test_prg_engine_listitemid_numeric_copperfin_session2 .........   Passed   86.89 sec
+test 428
+      Start 428: test_prg_engine_listitemid_numeric_vfp9_session1
+
+428: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_listitemid_numeric "VFP9" "1"
+428: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+428: Environment variables: 
+428:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+428: Test timeout computed to be: 600
+428: ListItemID frozen cases: direct=0 public=1216
+18/65 Test #428: test_prg_engine_listitemid_numeric_vfp9_session1 ..............   Passed   82.88 sec
+test 429
+      Start 429: test_prg_engine_listitemid_numeric_vfp9_session2
+
+429: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_listitemid_numeric "VFP9" "2"
+429: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+429: Environment variables: 
+429:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+429: Test timeout computed to be: 600
+429: ListItemID frozen cases: direct=0 public=1216
+19/65 Test #429: test_prg_engine_listitemid_numeric_vfp9_session2 ..............   Passed   95.57 sec
+test 430
+      Start 430: test_prg_engine_listindex_numeric_copperfin_session1
+
+430: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_listindex_numeric "COPPERFIN" "1"
+430: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+430: Environment variables: 
+430:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+430: Test timeout computed to be: 600
+430: ListIndex frozen cases: direct=0 public=1184
+20/65 Test #430: test_prg_engine_listindex_numeric_copperfin_session1 ..........   Passed   83.20 sec
+test 431
+      Start 431: test_prg_engine_listindex_numeric_copperfin_session2
+
+431: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_listindex_numeric "COPPERFIN" "2"
+431: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+431: Environment variables: 
+431:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+431: Test timeout computed to be: 600
+431: ListIndex frozen cases: direct=0 public=1184
+21/65 Test #431: test_prg_engine_listindex_numeric_copperfin_session2 ..........   Passed   79.43 sec
+test 432
+      Start 432: test_prg_engine_listindex_numeric_vfp9_session1
+
+432: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_listindex_numeric "VFP9" "1"
+432: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+432: Environment variables: 
+432:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+432: Test timeout computed to be: 600
+432: ListIndex frozen cases: direct=0 public=1184
+22/65 Test #432: test_prg_engine_listindex_numeric_vfp9_session1 ...............   Passed   79.31 sec
+test 433
+      Start 433: test_prg_engine_listindex_numeric_vfp9_session2
+
+433: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_listindex_numeric "VFP9" "2"
+433: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+433: Environment variables: 
+433:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+433: Test timeout computed to be: 600
+433: ListIndex frozen cases: direct=0 public=1184
+23/65 Test #433: test_prg_engine_listindex_numeric_vfp9_session2 ...............   Passed   80.32 sec
+test 434
+      Start 434: test_prg_engine_list_index_numeric
+
+434: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_list_index_numeric
+434: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+434: Environment variables: 
+434:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+434: Test timeout computed to be: 600
+434: List frozen cases: direct=248 public=0
+24/65 Test #434: test_prg_engine_list_index_numeric ............................   Passed    0.01 sec
+test 435
+      Start 435: test_prg_engine_list_index_numeric_copperfin_session1
+
+435: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_list_index_numeric "COPPERFIN" "1"
+435: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+435: Environment variables: 
+435:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+435: Test timeout computed to be: 600
+435: List frozen cases: direct=0 public=944
+25/65 Test #435: test_prg_engine_list_index_numeric_copperfin_session1 .........   Passed   56.44 sec
+test 436
+      Start 436: test_prg_engine_list_index_numeric_copperfin_session2
+
+436: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_list_index_numeric "COPPERFIN" "2"
+436: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+436: Environment variables: 
+436:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+436: Test timeout computed to be: 600
+436: List frozen cases: direct=0 public=944
+26/65 Test #436: test_prg_engine_list_index_numeric_copperfin_session2 .........   Passed   59.53 sec
+test 437
+      Start 437: test_prg_engine_list_index_numeric_vfp9_session1
+
+437: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_list_index_numeric "VFP9" "1"
+437: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+437: Environment variables: 
+437:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+437: Test timeout computed to be: 600
+437: List frozen cases: direct=0 public=944
+27/65 Test #437: test_prg_engine_list_index_numeric_vfp9_session1 ..............   Passed   62.45 sec
+test 438
+      Start 438: test_prg_engine_list_index_numeric_vfp9_session2
+
+438: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_list_index_numeric "VFP9" "2"
+438: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+438: Environment variables: 
+438:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+438: Test timeout computed to be: 600
+438: List frozen cases: direct=0 public=944
+28/65 Test #438: test_prg_engine_list_index_numeric_vfp9_session2 ..............   Passed   55.23 sec
+test 439
+      Start 439: test_prg_engine_listitem_numeric
+
+439: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_listitem_numeric
+439: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+439: Environment variables: 
+439:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+439: Test timeout computed to be: 600
+439: ListItem frozen cases: direct=248 public=0
+29/65 Test #439: test_prg_engine_listitem_numeric ..............................   Passed    0.02 sec
+test 440
+      Start 440: test_prg_engine_listitem_numeric_copperfin_session1
+
+440: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_listitem_numeric "COPPERFIN" "1"
+440: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+440: Environment variables: 
+440:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+440: Test timeout computed to be: 600
+440: ListItem frozen cases: direct=0 public=944
+30/65 Test #440: test_prg_engine_listitem_numeric_copperfin_session1 ...........   Passed   60.93 sec
+test 441
+      Start 441: test_prg_engine_listitem_numeric_copperfin_session2
+
+441: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_listitem_numeric "COPPERFIN" "2"
+441: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+441: Environment variables: 
+441:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+441: Test timeout computed to be: 600
+441: ListItem frozen cases: direct=0 public=944
+31/65 Test #441: test_prg_engine_listitem_numeric_copperfin_session2 ...........   Passed   54.92 sec
+test 442
+      Start 442: test_prg_engine_listitem_numeric_vfp9_session1
+
+442: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_listitem_numeric "VFP9" "1"
+442: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+442: Environment variables: 
+442:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+442: Test timeout computed to be: 600
+442: ListItem frozen cases: direct=0 public=944
+32/65 Test #442: test_prg_engine_listitem_numeric_vfp9_session1 ................   Passed   54.07 sec
+test 443
+      Start 443: test_prg_engine_listitem_numeric_vfp9_session2
+
+443: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_listitem_numeric "VFP9" "2"
+443: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+443: Environment variables: 
+443:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+443: Test timeout computed to be: 600
+443: ListItem frozen cases: direct=0 public=944
+33/65 Test #443: test_prg_engine_listitem_numeric_vfp9_session2 ................   Passed   55.27 sec
+test 444
+      Start 444: test_prg_engine_itemidtoindex_numeric
+
+444: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_itemidtoindex_numeric
+444: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+444: Environment variables: 
+444:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+444: Test timeout computed to be: 600
+444: ItemIDToIndex frozen cases: direct=248 public=0
+34/65 Test #444: test_prg_engine_itemidtoindex_numeric .........................   Passed    0.01 sec
+test 445
+      Start 445: test_prg_engine_itemidtoindex_numeric_copperfin_session1
+
+445: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_itemidtoindex_numeric "COPPERFIN" "1"
+445: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+445: Environment variables: 
+445:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+445: Test timeout computed to be: 600
+445: ItemIDToIndex frozen cases: direct=0 public=944
+35/65 Test #445: test_prg_engine_itemidtoindex_numeric_copperfin_session1 ......   Passed   56.84 sec
+test 446
+      Start 446: test_prg_engine_itemidtoindex_numeric_copperfin_session2
+
+446: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_itemidtoindex_numeric "COPPERFIN" "2"
+446: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+446: Environment variables: 
+446:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+446: Test timeout computed to be: 600
+446: ItemIDToIndex frozen cases: direct=0 public=944
+36/65 Test #446: test_prg_engine_itemidtoindex_numeric_copperfin_session2 ......   Passed   57.11 sec
+test 447
+      Start 447: test_prg_engine_itemidtoindex_numeric_vfp9_session1
+
+447: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_itemidtoindex_numeric "VFP9" "1"
+447: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+447: Environment variables: 
+447:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+447: Test timeout computed to be: 600
+447: ItemIDToIndex frozen cases: direct=0 public=944
+37/65 Test #447: test_prg_engine_itemidtoindex_numeric_vfp9_session1 ...........   Passed   62.85 sec
+test 448
+      Start 448: test_prg_engine_itemidtoindex_numeric_vfp9_session2
+
+448: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_itemidtoindex_numeric "VFP9" "2"
+448: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+448: Environment variables: 
+448:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+448: Test timeout computed to be: 600
+448: ItemIDToIndex frozen cases: direct=0 public=944
+38/65 Test #448: test_prg_engine_itemidtoindex_numeric_vfp9_session2 ...........   Passed   60.89 sec
+test 449
+      Start 449: test_prg_engine_indextoitemid_numeric
+
+449: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_indextoitemid_numeric
+449: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+449: Environment variables: 
+449:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+449: Test timeout computed to be: 600
+449: IndexToItemID frozen cases: direct=194 public=0
+39/65 Test #449: test_prg_engine_indextoitemid_numeric .........................   Passed    0.01 sec
+test 450
+      Start 450: test_prg_engine_indextoitemid_numeric_copperfin_session1
+
+450: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_indextoitemid_numeric "COPPERFIN" "1"
+450: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+450: Environment variables: 
+450:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+450: Test timeout computed to be: 600
+450: IndexToItemID frozen cases: direct=0 public=400
+40/65 Test #450: test_prg_engine_indextoitemid_numeric_copperfin_session1 ......   Passed   12.76 sec
+test 451
+      Start 451: test_prg_engine_indextoitemid_numeric_copperfin_session2
+
+451: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_indextoitemid_numeric "COPPERFIN" "2"
+451: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+451: Environment variables: 
+451:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+451: Test timeout computed to be: 600
+451: IndexToItemID frozen cases: direct=0 public=400
+41/65 Test #451: test_prg_engine_indextoitemid_numeric_copperfin_session2 ......   Passed   12.78 sec
+test 452
+      Start 452: test_prg_engine_indextoitemid_numeric_vfp9_session1
+
+452: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_indextoitemid_numeric "VFP9" "1"
+452: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+452: Environment variables: 
+452:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+452: Test timeout computed to be: 600
+452: IndexToItemID frozen cases: direct=0 public=400
+42/65 Test #452: test_prg_engine_indextoitemid_numeric_vfp9_session1 ...........   Passed   12.31 sec
+test 453
+      Start 453: test_prg_engine_indextoitemid_numeric_vfp9_session2
+
+453: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_indextoitemid_numeric "VFP9" "2"
+453: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+453: Environment variables: 
+453:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+453: Test timeout computed to be: 600
+453: IndexToItemID frozen cases: direct=0 public=400
+43/65 Test #453: test_prg_engine_indextoitemid_numeric_vfp9_session2 ...........   Passed   12.49 sec
+test 454
+      Start 454: test_prg_engine_selectedid_numeric
+
+454: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_selectedid_numeric
+454: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+454: Environment variables: 
+454:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+454: Test timeout computed to be: 600
+454: SelectedID frozen cases: direct=200 public=0
+44/65 Test #454: test_prg_engine_selectedid_numeric ............................   Passed    0.01 sec
+test 455
+      Start 455: test_prg_engine_selectedid_numeric_copperfin_session1
+
+455: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_selectedid_numeric "COPPERFIN" "1"
+455: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+455: Environment variables: 
+455:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+455: Test timeout computed to be: 600
+455: SelectedID frozen cases: direct=0 public=476
+45/65 Test #455: test_prg_engine_selectedid_numeric_copperfin_session1 .........   Passed   16.64 sec
+test 456
+      Start 456: test_prg_engine_selectedid_numeric_copperfin_session2
+
+456: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_selectedid_numeric "COPPERFIN" "2"
+456: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+456: Environment variables: 
+456:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+456: Test timeout computed to be: 600
+456: SelectedID frozen cases: direct=0 public=476
+46/65 Test #456: test_prg_engine_selectedid_numeric_copperfin_session2 .........   Passed   16.62 sec
+test 457
+      Start 457: test_prg_engine_selectedid_numeric_vfp9_session1
+
+457: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_selectedid_numeric "VFP9" "1"
+457: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+457: Environment variables: 
+457:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+457: Test timeout computed to be: 600
+457: SelectedID frozen cases: direct=0 public=476
+47/65 Test #457: test_prg_engine_selectedid_numeric_vfp9_session1 ..............   Passed   16.31 sec
+test 458
+      Start 458: test_prg_engine_selectedid_numeric_vfp9_session2
+
+458: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_selectedid_numeric "VFP9" "2"
+458: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+458: Environment variables: 
+458:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+458: Test timeout computed to be: 600
+458: SelectedID frozen cases: direct=0 public=476
+48/65 Test #458: test_prg_engine_selectedid_numeric_vfp9_session2 ..............   Passed   16.48 sec
+test 459
+      Start 459: test_prg_engine_selected_index_numeric
+
+459: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_selected_index_numeric
+459: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+459: Environment variables: 
+459:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+459: Test timeout computed to be: 600
+459: Selected frozen cases: direct=190 public=0
+49/65 Test #459: test_prg_engine_selected_index_numeric ........................   Passed    0.01 sec
+test 460
+      Start 460: test_prg_engine_selected_index_numeric_copperfin_session1
+
+460: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_selected_index_numeric "COPPERFIN" "1"
+460: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+460: Environment variables: 
+460:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+460: Test timeout computed to be: 600
+460: Selected frozen cases: direct=0 public=368
+50/65 Test #460: test_prg_engine_selected_index_numeric_copperfin_session1 .....   Passed   10.96 sec
+test 461
+      Start 461: test_prg_engine_selected_index_numeric_copperfin_session2
+
+461: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_selected_index_numeric "COPPERFIN" "2"
+461: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+461: Environment variables: 
+461:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+461: Test timeout computed to be: 600
+461: Selected frozen cases: direct=0 public=368
+51/65 Test #461: test_prg_engine_selected_index_numeric_copperfin_session2 .....   Passed   11.00 sec
+test 462
+      Start 462: test_prg_engine_selected_index_numeric_vfp9_session1
+
+462: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_selected_index_numeric "VFP9" "1"
+462: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+462: Environment variables: 
+462:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+462: Test timeout computed to be: 600
+462: Selected frozen cases: direct=0 public=368
+52/65 Test #462: test_prg_engine_selected_index_numeric_vfp9_session1 ..........   Passed   10.88 sec
+test 463
+      Start 463: test_prg_engine_selected_index_numeric_vfp9_session2
+
+463: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_selected_index_numeric "VFP9" "2"
+463: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+463: Environment variables: 
+463:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+463: Test timeout computed to be: 600
+463: Selected frozen cases: direct=0 public=368
+53/65 Test #463: test_prg_engine_selected_index_numeric_vfp9_session2 ..........   Passed   11.06 sec
+test 464
+      Start 464: test_prg_engine_itemdata_index_numeric
+
+464: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_itemdata_index_numeric
+464: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+464: Environment variables: 
+464:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+464: Test timeout computed to be: 600
+464: ItemData frozen cases: direct=188 public=0
+54/65 Test #464: test_prg_engine_itemdata_index_numeric ........................   Passed    0.01 sec
+test 465
+      Start 465: test_prg_engine_itemdata_index_numeric_copperfin_session1
+
+465: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_itemdata_index_numeric "COPPERFIN" "1"
+465: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+465: Environment variables: 
+465:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+465: Test timeout computed to be: 600
+465: ItemData frozen cases: direct=0 public=368
+55/65 Test #465: test_prg_engine_itemdata_index_numeric_copperfin_session1 .....   Passed   11.00 sec
+test 466
+      Start 466: test_prg_engine_itemdata_index_numeric_copperfin_session2
+
+466: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_itemdata_index_numeric "COPPERFIN" "2"
+466: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+466: Environment variables: 
+466:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+466: Test timeout computed to be: 600
+466: ItemData frozen cases: direct=0 public=368
+56/65 Test #466: test_prg_engine_itemdata_index_numeric_copperfin_session2 .....   Passed   11.03 sec
+test 467
+      Start 467: test_prg_engine_itemdata_index_numeric_vfp9_session1
+
+467: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_itemdata_index_numeric "VFP9" "1"
+467: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+467: Environment variables: 
+467:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+467: Test timeout computed to be: 600
+467: ItemData frozen cases: direct=0 public=368
+57/65 Test #467: test_prg_engine_itemdata_index_numeric_vfp9_session1 ..........   Passed   10.91 sec
+test 468
+      Start 468: test_prg_engine_itemdata_index_numeric_vfp9_session2
+
+468: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_itemdata_index_numeric "VFP9" "2"
+468: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+468: Environment variables: 
+468:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+468: Test timeout computed to be: 600
+468: ItemData frozen cases: direct=0 public=368
+58/65 Test #468: test_prg_engine_itemdata_index_numeric_vfp9_session2 ..........   Passed   11.40 sec
+test 469
+      Start 469: test_prg_engine_getcolor_default_numeric
+
+469: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_getcolor_default_numeric
+469: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+469: Environment variables: 
+469:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+469: Test timeout computed to be: 600
+469: GETCOLOR frozen cases: direct=174 public=0
+59/65 Test #469: test_prg_engine_getcolor_default_numeric ......................   Passed    0.01 sec
+test 470
+      Start 470: test_prg_engine_getcolor_default_numeric_copperfin_session1
+
+470: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_getcolor_default_numeric "COPPERFIN" "1"
+470: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+470: Environment variables: 
+470:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+470: Test timeout computed to be: 600
+470: GETCOLOR frozen cases: direct=0 public=80
+60/65 Test #470: test_prg_engine_getcolor_default_numeric_copperfin_session1 ...   Passed    1.31 sec
+test 471
+      Start 471: test_prg_engine_getcolor_default_numeric_copperfin_session2
+
+471: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_getcolor_default_numeric "COPPERFIN" "2"
+471: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+471: Environment variables: 
+471:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+471: Test timeout computed to be: 600
+471: GETCOLOR frozen cases: direct=0 public=80
+61/65 Test #471: test_prg_engine_getcolor_default_numeric_copperfin_session2 ...   Passed    1.33 sec
+test 472
+      Start 472: test_prg_engine_getcolor_default_numeric_vfp9_session1
+
+472: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_getcolor_default_numeric "VFP9" "1"
+472: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+472: Environment variables: 
+472:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+472: Test timeout computed to be: 600
+472: GETCOLOR frozen cases: direct=0 public=80
+62/65 Test #472: test_prg_engine_getcolor_default_numeric_vfp9_session1 ........   Passed    1.24 sec
+test 473
+      Start 473: test_prg_engine_getcolor_default_numeric_vfp9_session2
+
+473: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_getcolor_default_numeric "VFP9" "2"
+473: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+473: Environment variables: 
+473:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+473: Test timeout computed to be: 600
+473: GETCOLOR frozen cases: direct=0 public=80
+63/65 Test #473: test_prg_engine_getcolor_default_numeric_vfp9_session2 ........   Passed    1.25 sec
+test 551
+      Start 551: test_prg_engine_runtime_surface_functions
+
+551: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_runtime_surface_functions
+551: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+551: Environment variables: 
+551:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+551: Test timeout computed to be: 600
+551: All tests passed.
+64/65 Test #551: test_prg_engine_runtime_surface_functions .....................   Passed    6.01 sec
+test 555
+      Start 555: test_prg_engine_runtime_surface_itemid_selectors
+
+555: Test command: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests/test_prg_engine_runtime_surface_itemid_selectors
+555: Working Directory: /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/build/topitemid-clang/tests
+555: Environment variables: 
+555:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/resources/locales
+555: Test timeout computed to be: 600
+555: All tests passed.
+65/65 Test #555: test_prg_engine_runtime_surface_itemid_selectors ..............   Passed    0.08 sec
+
+The following tests passed:
+	test_native_test_isolation_contract
+	test_prg_engine_int64_exact_expression
+	test_prg_engine_numeric_behavior
+	test_prg_engine_listindex_numeric
+	test_prg_engine_topitemid_numeric
+	test_prg_engine_topitemid_numeric_copperfin_session1
+	test_prg_engine_topitemid_numeric_copperfin_session2
+	test_prg_engine_topitemid_numeric_vfp9_session1
+	test_prg_engine_topitemid_numeric_vfp9_session2
+	test_prg_engine_topindex_numeric
+	test_prg_engine_topindex_numeric_copperfin_session1
+	test_prg_engine_topindex_numeric_copperfin_session2
+	test_prg_engine_topindex_numeric_vfp9_session1
+	test_prg_engine_topindex_numeric_vfp9_session2
+	test_prg_engine_listitemid_numeric
+	test_prg_engine_listitemid_numeric_copperfin_session1
+	test_prg_engine_listitemid_numeric_copperfin_session2
+	test_prg_engine_listitemid_numeric_vfp9_session1
+	test_prg_engine_listitemid_numeric_vfp9_session2
+	test_prg_engine_listindex_numeric_copperfin_session1
+	test_prg_engine_listindex_numeric_copperfin_session2
+	test_prg_engine_listindex_numeric_vfp9_session1
+	test_prg_engine_listindex_numeric_vfp9_session2
+	test_prg_engine_list_index_numeric
+	test_prg_engine_list_index_numeric_copperfin_session1
+	test_prg_engine_list_index_numeric_copperfin_session2
+	test_prg_engine_list_index_numeric_vfp9_session1
+	test_prg_engine_list_index_numeric_vfp9_session2
+	test_prg_engine_listitem_numeric
+	test_prg_engine_listitem_numeric_copperfin_session1
+	test_prg_engine_listitem_numeric_copperfin_session2
+	test_prg_engine_listitem_numeric_vfp9_session1
+	test_prg_engine_listitem_numeric_vfp9_session2
+	test_prg_engine_itemidtoindex_numeric
+	test_prg_engine_itemidtoindex_numeric_copperfin_session1
+	test_prg_engine_itemidtoindex_numeric_copperfin_session2
+	test_prg_engine_itemidtoindex_numeric_vfp9_session1
+	test_prg_engine_itemidtoindex_numeric_vfp9_session2
+	test_prg_engine_indextoitemid_numeric
+	test_prg_engine_indextoitemid_numeric_copperfin_session1
+	test_prg_engine_indextoitemid_numeric_copperfin_session2
+	test_prg_engine_indextoitemid_numeric_vfp9_session1
+	test_prg_engine_indextoitemid_numeric_vfp9_session2
+	test_prg_engine_selectedid_numeric
+	test_prg_engine_selectedid_numeric_copperfin_session1
+	test_prg_engine_selectedid_numeric_copperfin_session2
+	test_prg_engine_selectedid_numeric_vfp9_session1
+	test_prg_engine_selectedid_numeric_vfp9_session2
+	test_prg_engine_selected_index_numeric
+	test_prg_engine_selected_index_numeric_copperfin_session1
+	test_prg_engine_selected_index_numeric_copperfin_session2
+	test_prg_engine_selected_index_numeric_vfp9_session1
+	test_prg_engine_selected_index_numeric_vfp9_session2
+	test_prg_engine_itemdata_index_numeric
+	test_prg_engine_itemdata_index_numeric_copperfin_session1
+	test_prg_engine_itemdata_index_numeric_copperfin_session2
+	test_prg_engine_itemdata_index_numeric_vfp9_session1
+	test_prg_engine_itemdata_index_numeric_vfp9_session2
+	test_prg_engine_getcolor_default_numeric
+	test_prg_engine_getcolor_default_numeric_copperfin_session1
+	test_prg_engine_getcolor_default_numeric_copperfin_session2
+	test_prg_engine_getcolor_default_numeric_vfp9_session1
+	test_prg_engine_getcolor_default_numeric_vfp9_session2
+	test_prg_engine_runtime_surface_functions
+	test_prg_engine_runtime_surface_itemid_selectors
+
+100% tests passed, 0 tests failed out of 65
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  = 2731.60 sec*proc (65 tests)
+copperfin-isolation:child-processes=none            = 2731.60 sec*proc (65 tests)
+copperfin-isolation:environment=none                =   6.70 sec*proc (4 tests)
+copperfin-isolation:environment=scoped-process      = 2724.89 sec*proc (61 tests)
+copperfin-isolation:filesystem=process-owned        = 130.81 sec*proc (2 tests)
+copperfin-isolation:filesystem=read-only            =   0.53 sec*proc (1 test)
+copperfin-isolation:filesystem=test-owned-unique    = 2600.26 sec*proc (62 tests)
+copperfin-isolation:network=none                    = 2731.60 sec*proc (65 tests)
+copperfin-isolation:platform=configured             =   6.01 sec*proc (1 test)
+copperfin-isolation:platform=portable               = 2725.59 sec*proc (64 tests)
+copperfin-isolation:resources=none                  = 2731.60 sec*proc (65 tests)
+copperfin-isolation:samples=none                    = 2731.60 sec*proc (65 tests)
+copperfin-isolation:schedule=parallel-safe          =   6.61 sec*proc (3 tests)
+copperfin-isolation:schedule=serial                 = 2724.98 sec*proc (62 tests)
+
+Total Test time (real) = 2731.66 sec

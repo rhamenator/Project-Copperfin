@@ -6023,6 +6023,19 @@ copperfin_add_test(test_prg_engine_listindex_numeric cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 # RQ-CF-PRG-TOPINDEX-NUMERIC-001 / VR-5611-TOPINDEX-NUMERIC-001/002.
+# RQ-CF-PRG-TOPITEMID-NUMERIC-001 / VR-5611-TOPITEMID-NUMERIC-001/002.
+copperfin_add_test(test_prg_engine_topitemid_numeric cf_xbase_runtime
+    test_prg_engine_topitemid_numeric.cpp
+    prg_engine_test_support.cpp
+)
+foreach(topitemid_mode IN ITEMS COPPERFIN VFP9)
+    string(TOLOWER "${topitemid_mode}" topitemid_mode_lower)
+    foreach(topitemid_session IN ITEMS 1 2)
+        add_test(NAME test_prg_engine_topitemid_numeric_${topitemid_mode_lower}_session${topitemid_session}
+            COMMAND $<TARGET_FILE:test_prg_engine_topitemid_numeric> ${topitemid_mode} ${topitemid_session})
+    endforeach()
+endforeach()
+# RQ-CF-PRG-TOPINDEX-NUMERIC-001 / VR-5611-TOPINDEX-NUMERIC-001/002.
 copperfin_add_test(test_prg_engine_topindex_numeric cf_xbase_runtime
     test_prg_engine_topindex_numeric.cpp
     prg_engine_test_support.cpp

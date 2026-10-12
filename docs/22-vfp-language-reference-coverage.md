@@ -1,5 +1,28 @@
 # VFP Language Reference Coverage
 
+- TopItemID Numeric/exact assignment recovery (#5611/#6776,2026-10-12):
+  [Independent installedVFP9/help/parent map](../tests/fixtures/vfp9-topitemid-numeric/README.md)
+  precedes helper/assertions/configuration. Unique item-ID addressing, accepted
+  absent/empty no-op, top pair only and unchanged focus/bits/payload; readonly
+  ComboBox and bound/RowSource exclusions preserved. Default checked32/31,
+  explicit VFP9 rawUINT32 ceiling46/definedlow32; exact64/NaN parent-derived.
+  All verification/frozen original65/fixed65/integration gates pending.
+  UPDATE: BOTH frozen original65 completed61/65 GNU1386.86s/Clang ASan-UBSan-
+  float-cast-overflow2784.11s, onlyfournewpublicfail/allold60+newdirect284/
+  four1445 counts/identical5036 failures/all input hashes unchanged. ONLY after
+  both completed, bounded materialized-unbound native Numeric/exact write arm
+  and existing typed SETPEM/PUTPEM alias callback wired. Old writer/TopIndex/
+  shared synchronizer/types/excluded routes unchanged; full identicalfixed65/
+  both scope comparisons/sixgroups/contracts/DQ-DV/integration still pending.
+  Absolute empty-state gap7157 is not acceptance or scope expansion.
+  Local completion: firstfixed64/65 failure retained, one independently
+  corroborated non-frozen old invalid999 False-to-True literal corrected;
+  repeated identical65 GNU1371.49s/Clangsanitizers2731.66s PASS/all284-four1445/
+  neighbors/both144 scope comparisons/sixgroups/all31 hashes. Five contracts
+  5/5/324.11s/212fragments; bounded delegated development DQ-DV walkthrough
+  complete, not independenthuman/high-hazard. Frozen five unchanged; signed/
+  exact-head external gates remain. Full chronology/source/raws retained.
+
 - TopIndex Numeric/exact assignment recovery (#5611/#6776,2026-10-12):
   [Independent fresh VFP9/help/parent map](../tests/fixtures/vfp9-topindex-numeric/README.md)
   precedes helper/assertions/config. Relative ROW addressing, admitted invalid

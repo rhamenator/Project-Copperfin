@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -u
+task_root=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin
+cd "$task_root" || exit 1
+task_head="${1:?exact signed head required}"
+test "$(git rev-parse HEAD)" = "$task_head" || exit 2
+task_raw=build/topitemid-native
+git show -s --format='%H %G? %GS' HEAD > "$task_raw/postpush-head-signature.log"
+sha256sum -c "$task_raw/fixed.sha256" > "$task_raw/postpush-inputs-before.log" || exit 3
+export TMPDIR="$task_root/build/topitemid-tmp"
+export COPPERFIN_LOCALE_DIR="$task_root/resources/locales"
+unset ASAN_OPTIONS UBSAN_OPTIONS
+task_regex='^(test_prg_engine_(topitemid_numeric|topindex_numeric|listitemid_numeric|listindex_numeric|list_index_numeric|listitem_numeric|itemidtoindex_numeric|indextoitemid_numeric|selectedid_numeric|selected_index_numeric|itemdata_index_numeric|getcolor_default_numeric)(_(copperfin|vfp9)_session[12])?|test_prg_engine_numeric_behavior|test_prg_engine_int64_exact_expression|test_native_test_isolation_contract|test_prg_engine_runtime_surface_itemid_selectors|test_prg_engine_runtime_surface_functions)$'
+nice -n 10 ionice -c 2 -n 7 ctest --test-dir build/topitemid-gcc -V --output-on-failure --timeout 600 -j 1 -R "$task_regex" > "$task_raw/postpush-gcc.log" 2>&1
+task_status=$?
+printf '%s\n' "$task_status" > "$task_raw/postpush-gcc.status"
+date -u '+%Y-%m-%dT%H:%M:%SZ' > "$task_raw/postpush-gcc.completed-at"
+sha256sum "$task_raw/postpush-gcc.log" > "$task_raw/postpush-gcc.log.sha256"
+sha256sum -c "$task_raw/fixed.sha256" > "$task_raw/postpush-inputs-after.log" || exit 3
+test "$(git rev-parse HEAD)" = "$task_head" || exit 2
+exit "$task_status"

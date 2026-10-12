@@ -1,0 +1,76 @@
+// Verification-only scope preservation, not a native requirement oracle.
+// RQ-CF-PRG-TOPITEMID-NUMERIC-001 excludes RowSource/ControlSource consumers.
+// Compare identical diagnostic against retained current-main and slice libraries.
+#include "copperfin/runtime/prg_engine.h"
+#include "prg_engine_test_support.h"
+#include <chrono>
+#include <filesystem>
+#include <iostream>
+#include <string>
+#include <vector>
+int main(int argc, char** argv) {
+    if (argc != 2) return 2;
+    namespace fs = std::filesystem;
+    using namespace copperfin::runtime;
+    using namespace copperfin::test_support;
+    const fs::path root = argv[1];
+    fs::create_directories(root);
+    const auto path = root / "scope.prg";
+    int calls = 0, failures = 0;
+    for (const std::string mode : {"COPPERFIN", "VFP9"}) {
+        for (const int selected : {1, 2}) {
+            for (const int scope : {1, 2, 5, 0}) {
+                for (const std::string route : {"direct", "SETPEM", "PUTPEM"}) {
+                    for (const std::string input : {"1.9", "2.9", "99"}) {
+                        ++calls;
+                        const std::string setup = scope == 1
+                            ? "oList.RowSourceType=1\noList.RowSource='alpha,beta,gamma'\noList.Requery()\n"
+                            : scope == 2
+                            ? "CREATE CURSOR srcrows (caption C(8))\nINSERT INTO srcrows VALUES ('alpha')\nINSERT INTO srcrows VALUES ('beta')\nINSERT INTO srcrows VALUES ('gamma')\noList.RowSourceType=2\noList.RowSource='srcrows'\noList.Requery()\n"
+                            : scope == 5
+                            ? "PUBLIC ARRAY aSource[3]\naSource[1]='alpha'\naSource[2]='beta'\naSource[3]='gamma'\noList.RowSourceType=5\noList.RowSource='aSource'\noList.Requery()\n"
+                            : "PUBLIC cBound\ncBound=''\noList.AddItem('alpha')\noList.AddItem('beta')\noList.AddItem('gamma')\noList.ControlSource='cBound'\n";
+                        const std::string assignment = route == "direct"
+                            ? "oList.TopItemID=" + input + "\nlSetter=.T.\n"
+                            : "lSetter=" + route + "(oList,'TopItemID'," + input + ")\n";
+                        write_text(path,
+                            "SET DATASESSION TO " + std::to_string(selected) + "\nSET NUMERICBEHAVIOR TO " + mode +
+                            "\nPUBLIC oList,nCode,lSetter,nBefore,nIDBefore,nCount,nAfter,nIDAfter,nFocus,cValue,cContext\n"
+                            "nCode=0\nlSetter='sentinel'\noList=CREATEOBJECT('ListBox')\n" + setup +
+                            "nBefore=oList.TopIndex\nnIDBefore=oList.TopItemID\nnCount=oList.ListCount\n"
+                            "TRY\n" + assignment + "CATCH TO problem\nnCode=problem.ErrorNo\nENDTRY\n"
+                            "nAfter=oList.TopIndex\nnIDAfter=oList.TopItemID\nnFocus=oList.ListIndex\ncValue=oList.Value\n"
+                            "cContext=SET('DATASESSION')+'|'+SET('NUMERICBEHAVIOR')+'|'+ALIAS()\nRETURN\n");
+                        auto session = PrgRuntimeSession::create(make_runtime_session_options(path, root, false));
+                        const auto state = session.run(DebugResumeAction::continue_run);
+                        const auto get = [&](const char* key) {
+                            const auto found = state.globals.find(key);
+                            return found == state.globals.end() ? std::string("<missing>") : format_value(found->second);
+                        };
+                        if (!state.completed || get("ncount") != "3") ++failures;
+                        std::cout << mode << '|' << selected << '|' << scope << '|' << route << '|' << input
+                                  << "|completed=" << state.completed << "|code=" << get("ncode")
+                                  << "|setter=" << get("lsetter") << "|before=" << get("nbefore")
+                                  << ',' << get("nidbefore") << "|after=" << get("nafter")
+                                  << ',' << get("nidafter") << "|count=" << get("ncount")
+                                  << "|focus=" << get("nfocus") << "|value=" << get("cvalue")
+                                  << "|context=" << get("ccontext");
+                        for (const auto& object : state.ole_objects) {
+                            if (object.base_class_name != "ListBox") continue;
+                            std::cout << "|rows=" << object.list_rows.size() << "|keys=";
+                            for (const auto& key : object.collection_item_keys) std::cout << key << ',';
+                            std::cout << "|bits=";
+                            for (const bool bit : object.list_selected) std::cout << bit;
+                            std::cout << "|cells=";
+                            for (const auto& row : object.list_rows)
+                                for (const auto& cell : row) std::cout << format_value(cell) << ',';
+                        }
+                        std::cout << '\n';
+                    }
+                }
+            }
+        }
+    }
+    std::cout << "DONE|calls=" << calls << "|scaffold_failures=" << failures << '\n';
+    return failures == 0 && calls == 144 ? 0 : 1;
+}

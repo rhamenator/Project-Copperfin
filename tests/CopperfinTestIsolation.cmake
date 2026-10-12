@@ -993,6 +993,11 @@ function(copperfin_configure_native_test_isolation)
     # RQ-CF-PRG-TOPINDEX-NUMERIC-001: relative top-row/no-op/readonly gate,
     # unique scripts/scoped locale, no children/network/shared resources.
     foreach(topindex_test IN ITEMS
+        test_prg_engine_topitemid_numeric
+        test_prg_engine_topitemid_numeric_copperfin_session1
+        test_prg_engine_topitemid_numeric_copperfin_session2
+        test_prg_engine_topitemid_numeric_vfp9_session1
+        test_prg_engine_topitemid_numeric_vfp9_session2
         test_prg_engine_topindex_numeric
         test_prg_engine_topindex_numeric_copperfin_session1
         test_prg_engine_topindex_numeric_copperfin_session2
