@@ -1,0 +1,10 @@
+// RQ-CF-PRG-LISTINDEX-NUMERIC-001: diagnostic of the old empty-control smoke.
+// Existing method is called unchanged before expectation correction.
+#include "test_prg_engine_runtime_surface_functions_support.h"
+#include "test_prg_engine_runtime_surface_functions_tests.h"
+int main() {
+    copperfin::runtime_surface_tests::test_native_listindex_defaults_mutates_and_stays_builtin();
+    std::cout << "ListIndex existing smoke completed: 1; failures: "
+              << copperfin::test_support::test_failures() << '\n';
+    return copperfin::test_support::test_failures() == 0 ? 0 : 1;
+}

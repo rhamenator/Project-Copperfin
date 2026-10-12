@@ -6018,6 +6018,17 @@ foreach(cast_int16_mode IN ITEMS COPPERFIN VFP9)
             COMMAND $<TARGET_FILE:test_prg_engine_cast_int16_numeric> ${cast_int16_mode} ${cast_int16_session})
     endforeach()
 endforeach()
+copperfin_add_test(test_prg_engine_listindex_numeric cf_xbase_runtime
+    test_prg_engine_listindex_numeric.cpp
+    prg_engine_test_support.cpp
+)
+foreach(listindex_mode IN ITEMS COPPERFIN VFP9)
+    string(TOLOWER "${listindex_mode}" listindex_mode_lower)
+    foreach(listindex_session IN ITEMS 1 2)
+        add_test(NAME test_prg_engine_listindex_numeric_${listindex_mode_lower}_session${listindex_session}
+            COMMAND $<TARGET_FILE:test_prg_engine_listindex_numeric> ${listindex_mode} ${listindex_session})
+    endforeach()
+endforeach()
 copperfin_add_test(test_prg_engine_list_index_numeric cf_xbase_runtime
     test_prg_engine_list_index_numeric.cpp
     prg_engine_test_support.cpp

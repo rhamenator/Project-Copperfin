@@ -1,0 +1,18 @@
+[0/2] Re-checking globbed directories...
+[1/15] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine.cpp.o
+FAILED: [code=1] CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine.cpp.o 
+/usr/bin/c++  -I/home/rich/.codex/worktrees/listindex-numeric-5611/Project-Copperfin/include -O0 -g0 -std=c++20 -Wall -Wextra -Wpedantic -MD -MT CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine.cpp.o -MF CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine.cpp.o.d -o CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine.cpp.o -c /home/rich/.codex/worktrees/listindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp
+/home/rich/.codex/worktrees/listindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp: In lambda function:
+/home/rich/.codex/worktrees/listindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:7114:21: error: ‘is_native_listindex_member_name’ was not declared in this scope; did you mean ‘is_native_topindex_member_name’?
+ 7114 |                 if (is_native_listindex_member_name(runtime_object, normalized_property_name) &&
+      |                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                     is_native_topindex_member_name
+In file included from /home/rich/.codex/worktrees/listindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:8664:
+/home/rich/.codex/worktrees/listindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl: In member function ‘copperfin::runtime::{anonymous}::ExecutionOutcome copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()’:
+/home/rich/.codex/worktrees/listindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:11317:62: warning: missing initializer for member ‘copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()::TemporaryAppendSource::reference’ [-Wmissing-field-initializers]
+11317 |                     TemporaryAppendSource append_source{*this};
+      |                                                              ^
+/home/rich/.codex/worktrees/listindex-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:12449:58: warning: missing initializer for member ‘copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()::TemporaryAppendSource::reference’ [-Wmissing-field-initializers]
+12449 |                 TemporaryAppendSource append_source{*this};
+      |                                                          ^
+ninja: build stopped: subcommand failed.

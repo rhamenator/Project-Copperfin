@@ -1,0 +1,6 @@
+FAIL: nplainaftersetpem expected '2' got '1'
+FAIL: ncomboafterchild expected '2' got '1'
+FAIL: nlistafterchild expected '1' got '0'
+FAIL: nlistaftersetpem expected '3' got '0'
+FAIL: xlistgetpem expected '3' got '0'
+ListIndex existing smoke completed: 1; failures: 5

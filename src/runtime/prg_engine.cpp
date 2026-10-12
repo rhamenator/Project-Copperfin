@@ -7108,6 +7108,81 @@ namespace copperfin::runtime
                     }
                     return wrote;
                 }
+                // RQ-CF-PRG-LISTINDEX-NUMERIC-001 / VR-5611-LISTINDEX-NUMERIC-002.
+                // Wired only after BOTH full original suites were retained.
+                // Numeric/exact assignment, not indexed cells or other coercions.
+                if (normalized_property_name == "listindex" &&
+                    (normalize_identifier(trim_copy(runtime_object.base_class_name)) == "combobox" ||
+                     normalize_identifier(trim_copy(runtime_object.base_class_name)) == "listbox") &&
+                    !assigned_value.is_null &&
+                    (assigned_value.kind == PrgValueKind::number ||
+                     assigned_value.kind == PrgValueKind::int64 ||
+                     assigned_value.kind == PrgValueKind::uint64))
+                {
+                    const auto &set_state = current_set_state();
+                    const auto mode = set_state.find("numericbehavior");
+                    const auto behavior =
+                        mode != set_state.end() && normalize_identifier(mode->second) == "vfp9"
+                            ? NumericBehavior::vfp9 : NumericBehavior::copperfin;
+                    const auto converted = checked_listindex_numeric_argument(assigned_value, behavior);
+                    if (!converted.has_value())
+                    {
+                        const bool derived_nan = assigned_value.kind == PrgValueKind::number &&
+                            std::isnan(assigned_value.number_value);
+                        if (behavior == NumericBehavior::vfp9 && !derived_nan)
+                        {
+                            throw PrgCompatibilityError(
+                                runtime_text("Runtime.Prg.String.Error.NumericOverflow"), 46);
+                        }
+                        throw PrgCompatibilityError(
+                            runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
+                    }
+
+                    // Existing pre-write signature has materialized the rows.
+                    // Reject before modeled selection mutation; no input-sized
+                    // allocation/iteration and no callback atomicity claim.
+                    const auto count = runtime_object.collection_items.size();
+                    const bool combo = normalize_identifier(trim_copy(runtime_object.base_class_name)) == "combobox";
+                    const bool has_row = *converted > 0 &&
+                        static_cast<std::uint64_t>(*converted) <= count;
+                    std::int64_t final_index = has_row ? *converted : 0;
+                    if (combo &&
+                        ((*converted > 0 && !has_row) ||
+                         (behavior == NumericBehavior::vfp9 &&
+                          *converted == std::numeric_limits<std::int32_t>::min())))
+                    {
+                        // Native count+1 sentinel, including the observed legacy
+                        // INT32_MIN boundary. Keep it in signed32-plus-sentinel
+                        // territory rather than feed an unbounded size to llround.
+                        if (count > static_cast<std::uint64_t>(std::numeric_limits<std::int32_t>::max()))
+                        {
+                            throw PrgCompatibilityError(
+                                runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
+                        }
+                        final_index = static_cast<std::int64_t>(count) + 1;
+                    }
+                    runtime_object.properties[normalized_property_name] =
+                        make_number_value(static_cast<double>(final_index));
+                    sync_native_list_control_displayvalue_from_selection(runtime_object);
+                    const auto value = runtime_object.properties.find("value");
+                    const auto controlsource = runtime_object.properties.find("controlsource");
+                    if (!has_row && combo &&
+                        value != runtime_object.properties.end() &&
+                        value->second.kind == PrgValueKind::string &&
+                        (controlsource == runtime_object.properties.end() ||
+                         trim_copy(value_as_string(controlsource->second)).empty()))
+                    {
+                        // Bounded unbound Character Value contract only; leave
+                        // the generic synchronizer and bound-kind policy intact.
+                        value->second = make_string_value("");
+                    }
+                    if (!write_native_list_control_controlsource_target(runtime_object, source_frame))
+                    {
+                        return false;
+                    }
+                    remember_property_expression();
+                    return true;
+                }
                 if (is_native_activepage_member_name(runtime_object, normalized_property_name))
                 {
                     runtime_object.properties[normalized_property_name] = assigned_value;
