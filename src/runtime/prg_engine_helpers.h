@@ -409,6 +409,9 @@ std::optional<std::int32_t> checked_listindex_numeric_argument(const PrgValue& v
 // RQ-CF-PRG-LISTITEMID-NUMERIC-001: independently recovered unique-ID assignment;
 // conversion only, not display-row/sentinel/MultiSelect selection semantics.
 std::optional<std::int32_t> checked_listitemid_numeric_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-TOPINDEX-NUMERIC-001: independent relative top-row admission;
+// projection only; accepted invalid rows are no-op, never focus/ID addressing.
+std::optional<std::int32_t> checked_topindex_numeric_argument(const PrgValue& value, NumericBehavior behavior);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the
 // value is out of range). A size or count: truncated toward zero, never below `minimum`, saturating at the largest
 // value this build supports: INT64_MAX, or SIZE_MAX where size_t is narrower (NaN gives `minimum`). A rounded int64 (llround semantics for in-range values; NaN is 0 and

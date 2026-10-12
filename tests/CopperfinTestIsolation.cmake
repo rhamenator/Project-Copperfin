@@ -990,6 +990,24 @@ function(copperfin_configure_native_test_isolation)
     # unique scripts/scoped locale, no child processes or shared resources.
     # RQ-CF-PRG-LISTITEMID-NUMERIC-001: independent ID assignment state,
     # unique scripts/scoped locale, no child processes or shared resources.
+    # RQ-CF-PRG-TOPINDEX-NUMERIC-001: relative top-row/no-op/readonly gate,
+    # unique scripts/scoped locale, no children/network/shared resources.
+    foreach(topindex_test IN ITEMS
+        test_prg_engine_topindex_numeric
+        test_prg_engine_topindex_numeric_copperfin_session1
+        test_prg_engine_topindex_numeric_copperfin_session2
+        test_prg_engine_topindex_numeric_vfp9_session1
+        test_prg_engine_topindex_numeric_vfp9_session2)
+        copperfin_set_test_isolation(${topindex_test}
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT scoped-process
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            RESOURCES none
+            AUDIT complete)
+    endforeach()
     foreach(listitemid_test IN ITEMS
         test_prg_engine_listitemid_numeric
         test_prg_engine_listitemid_numeric_copperfin_session1

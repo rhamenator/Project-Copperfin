@@ -1,0 +1,14 @@
+[0/2] Re-checking globbed directories...
+[1/14] Linking CXX executable tests/test_prg_engine_int64_exact_expression
+[2/14] Linking CXX executable tests/test_prg_engine_numeric_behavior
+[3/14] Linking CXX executable tests/test_prg_engine_listindex_numeric
+[4/14] Linking CXX executable tests/test_prg_engine_listitemid_numeric
+[5/14] Linking CXX executable tests/test_prg_engine_list_index_numeric
+[6/14] Linking CXX executable tests/test_prg_engine_listitem_numeric
+[7/14] Linking CXX executable tests/test_prg_engine_itemidtoindex_numeric
+[8/14] Linking CXX executable tests/test_prg_engine_indextoitemid_numeric
+[9/14] Linking CXX executable tests/test_prg_engine_selectedid_numeric
+[10/14] Linking CXX executable tests/test_prg_engine_selected_index_numeric
+[11/14] Linking CXX executable tests/test_prg_engine_itemdata_index_numeric
+[12/14] Linking CXX executable tests/test_prg_engine_getcolor_default_numeric
+[13/14] Linking CXX executable tests/test_prg_engine_runtime_surface_itemid_selectors

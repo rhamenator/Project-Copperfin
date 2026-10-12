@@ -1,0 +1,13 @@
+diff --git a/tests/test_prg_engine_runtime_surface_functions_list_controls_04.cpp b/tests/test_prg_engine_runtime_surface_functions_list_controls_04.cpp
+index b713018d5..99fb30280 100644
+--- a/tests/test_prg_engine_runtime_surface_functions_list_controls_04.cpp
++++ b/tests/test_prg_engine_runtime_surface_functions_list_controls_04.cpp
+@@ -505,7 +505,7 @@ namespace copperfin::runtime_surface_tests
+         check("llistsettopindex", "true");
+         check("nlisttopafterset", "3");
+         check("nlisttopitemafterset", "20");
+-        check("llistsetinvalidtopindex", "false");
++        check("llistsetinvalidtopindex", "true");
+         check("nlisttopafterinvalidset", "3");
+         check("nlisttopaftersort", "2");
+         check("nlisttopitemaftersort", "20");

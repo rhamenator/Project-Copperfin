@@ -7173,6 +7173,81 @@ namespace copperfin::runtime
                 }
                 if (is_native_topindex_member_name(runtime_object, normalized_property_name))
                 {
+                    // RQ-CF-PRG-TOPINDEX-NUMERIC-001 / VR-5611-TOPINDEX-NUMERIC-002.
+                    // Wired AFTER BOTH complete original60 suites. TopIndex
+                    // addresses a display row, not an ID or focused selection.
+                    const auto row_source_type = runtime_object.properties.find("rowsourcetype");
+                    const auto control_source = runtime_object.properties.find("controlsource");
+                    const bool materialized_unbound =
+                        (row_source_type == runtime_object.properties.end() ||
+                         value_as_number(row_source_type->second) == 0.0) &&
+                        (control_source == runtime_object.properties.end() ||
+                         trim_copy(value_as_string(control_source->second)).empty()) &&
+                        runtime_object.collection_item_keys.size() == runtime_object.collection_items.size();
+                    // RowSource/requery and bound controls are outside the
+                    // admitted slice: keep their original writer and coercions.
+                    if (normalize_identifier(trim_copy(runtime_object.base_class_name)) == "listbox" &&
+                        materialized_unbound &&
+                        !assigned_value.is_null &&
+                        (assigned_value.kind == PrgValueKind::number ||
+                         assigned_value.kind == PrgValueKind::int64 ||
+                         assigned_value.kind == PrgValueKind::uint64))
+                    {
+                        const auto &set_state = current_set_state();
+                        const auto mode = set_state.find("numericbehavior");
+                        const auto behavior =
+                            mode != set_state.end() && normalize_identifier(mode->second) == "vfp9"
+                                ? NumericBehavior::vfp9 : NumericBehavior::copperfin;
+                        const auto converted = checked_topindex_numeric_argument(assigned_value, behavior);
+                        if (!converted.has_value())
+                        {
+                            const bool derived_nan = assigned_value.kind == PrgValueKind::number &&
+                                std::isnan(assigned_value.number_value);
+                            if (behavior == NumericBehavior::vfp9 && !derived_nan)
+                            {
+                                throw PrgCompatibilityError(
+                                    runtime_text("Runtime.Prg.String.Error.NumericOverflow"), 46);
+                            }
+                            throw PrgCompatibilityError(
+                                runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
+                        }
+
+                        // Existing pre-write signature materializes the rows.
+                        // Guard the modeled domain BEFORE top-pair mutation;
+                        // invalid admitted rows are successful no-ops, even
+                        // when empty. Leave focus, bits, text and payload alone.
+                        const auto count = runtime_object.collection_item_keys.size();
+                        if (count > static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max()))
+                        {
+                            throw PrgCompatibilityError(
+                                runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
+                        }
+                        if (*converted > 0 && static_cast<std::uint64_t>(*converted) <= count)
+                        {
+                            const auto slot = static_cast<std::size_t>(*converted - 1);
+                            const auto item_id = copperfin::platform::try_parse_invariant_integer<long long>(
+                                runtime_object.collection_item_keys[slot]);
+                            if (!item_id.has_value() || *item_id < 1LL)
+                            {
+                                return false; // Retain malformed internal-key rejection.
+                            }
+                            const double numeric_item_id = static_cast<double>(*item_id);
+                            // Do not round an existing exact ID into a different
+                            // Numeric identity. Check the strict int64 upper
+                            // bound BEFORE the round-trip float-to-int cast.
+                            if (numeric_item_id >= 0x1p63 ||
+                                static_cast<long long>(numeric_item_id) != *item_id)
+                            {
+                                throw PrgCompatibilityError(
+                                    runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
+                            }
+                            runtime_object.properties["topitemid"] = make_number_value(numeric_item_id);
+                            runtime_object.properties["topindex"] = make_number_value(
+                                static_cast<double>(*converted));
+                        }
+                        remember_property_expression();
+                        return true;
+                    }
                     const bool wrote = write_native_list_control_top_index(
                         runtime_object,
                         assigned_value);

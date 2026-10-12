@@ -45,6 +45,20 @@ own system and domain assurance.
 
 ## Bounded numeric-conversion linkage
 
+RQ-CF-PRG-TOPINDEX-NUMERIC-001 / DQ-DV-5611-TOPINDEX-NUMERIC-001 links
+active HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01 unchanged to
+[independent TopIndex map](../../tests/fixtures/vfp9-topindex-numeric/README.md).
+Relative top-row/no-op/focus preservation/readonly contract recovered before
+code; checked32/default31/native46/exact64/NaN derivations prevent unchecked
+conversion. Bounded documentation misuse medium includes falsely claiming
+absolute empty-state compatibility despite7157. Distinct unused helper/frozen
+regressions/BOTHcomplete60 originals before migration/fullfixed/sixgroups/
+contracts/explicit review walkthrough/exacthead gates required. Bounded local
+verification completed BOTH fixed60/sixgroups/all30hashes/fivecontracts and
+delegated development self-review/automated walkthrough; signed/external
+integration gates remain. No independenthuman/high-hazard/constructor/
+default-state/parent/KBX/hazard closure.
+
 RQ-CF-PRG-LISTITEMID-NUMERIC-001 / DQ-DV-5611-LISTITEMID-NUMERIC-001 links
 active HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01 to
 [independent pre-code ListItemID requirements](../../tests/fixtures/vfp9-listitemid-numeric/README.md).

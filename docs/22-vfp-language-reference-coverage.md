@@ -1,5 +1,45 @@
 # VFP Language Reference Coverage
 
+- TopIndex Numeric/exact assignment recovery (#5611/#6776,2026-10-12):
+  [Independent fresh VFP9/help/parent map](../tests/fixtures/vfp9-topindex-numeric/README.md)
+  precedes helper/assertions/config. Relative ROW addressing, admitted invalid
+  row no-op/current-top preservation, unchanged focus/bits/text/cells/payload;
+  ComboBox staysreadonly. Distinct checked default signed32/31, explicitVFP9
+  rawUINT32 ceiling46/definedlow32, exact64/NaN parent derivations. Full60
+  originals/fixed/verification stillpending; absolute empty-state mismatch
+  explicitly retained as separate gap7157, not a numeric-slice constructor fix.
+  BOTH complete originals now56/60 GNU1194.39s/Clangsanitizers2287.22s,
+  onlyfournewpublicfail/identical5228 unique prefixed assertions, all55old/
+  newdirect284 pass/four1445 counters/allfrozen+production+neighbor hashes OK.
+  Then bounded native Numeric/exact write arm/typedalias callback bridge wired;
+  original writer/TopItemID/synchronizer/types/readonly remainunchanged.
+  First fixedcompile failure preserved/private predicate corrected in engine
+  only, no frozenchange. Revised identical fixed60/sixgroups nowrunning;
+  acceptance/contracts/DQ-DV/signed/externalintegration gates remainpending.
+  First fixedGNU59/60/1157.73s passes allfive TopIndex subjects/allcounters;
+  sole oldsmoke invalidrow99 expectedFalse corrected toTrue after fresh
+  matching exact VFP top3/input99 acceptedno-op corroboration. Full failure/
+  oldsource retained, fivefrozen unchanged; repeated full60/sixgroups GNU/
+  Clangsanitizers and queued fivecontracts remainpending, not acceptance.
+  Repeated full60 nowPASS GNU1155.06s/Clangsanitizers2242.75s, all284/four1445/
+  neighbor counters/both sixgroups/all30 hashes; fivecontracts5/5/333.26s/
+  211fragments. Boundedmedium delegated development self-review/automated
+  walkthrough complete, not independenthuman/high-hazard qualification.
+  Signedpostpush/external exact-head review/allrequiredchecks/threads remain
+  integration gates, no parent/family/KBX/hazard/release closure.
+  Initial PR7159 exacthead postpush60 passed1127.23s, but actual Codex review
+  found excluded RowSource scope leak. Both entry routes now explicitly gated
+  to materialized/unbound RowSourceType0; fivefrozen unchanged. Supplemental
+  144-case excluded-scope diagnostics reproduce104 changed records against
+  retained main. BOTH compiler comparisons and full60/sixgroups/contracts
+  repeat pending before new fix push/review resolution; oldhead pass is not
+  newhead evidence. Separate7157 closing reference removed via keep-open wording.
+  Scopefix subsequently PASS both144-call preservation comparisons/full60
+  GNU1139.95s/Clangsanitizers2203.87s/all284-four1445/neighbors/both sixgroups/
+  all30hashes/fivecontracts5/5/325.06s. Fiveinitialfrozen unchanged; boundedmedium
+  delegated development walkthrough renewed. Signedfix/exactheadreview/CI/
+  postpush remainintegration gates; oldhead results retained separately.
+
 - ListItemID Numeric/exact assignment recovery (#5611/#6776,2026-10-12):
   [Independent native/help/parent map](../tests/fixtures/vfp9-listitemid-numeric/README.md)
   recorded01:51:13Z BEFORE helper/assertions/configuration. Fresh matching
@@ -23,6 +63,15 @@
   delegated DQ/DV development self-review/walkthrough complete, not independent
   human/high-hazard qualification; signed exact-head external integration gates
   still apply, no parent/family/KBX/hazard/release closure.
+  PR7156 merged2026-10-12T05:17:19Z asd3c1340c4, signed/DCO head8b2d387f21;
+  exacthead postpush55/55 PASS915.88s, all11required uniquelySUCCESS/actualclean
+  Codex6118002131 afterClaude-FIRST/fallback, threads0. Optional fullplatforms
+  pending atmerge, notretroactivegreen; parents/hazards remainopen.
+  Later exact-head fullLinux/macOS/Windows SUCCESS with retained raw/status/
+  hashes: Linux564subjects/0failed/explicitlauncherSkips/840.93s,
+  macOS564subjects/0failed/explicitlauncherSkips/569.87s and fourlocale2/2 groups;
+  Windows565/565/2560.16s completed06:31:49Z. This is late-platform evidence,
+  not a retroactive merge-gate or whole-parent/hazard qualification claim.
 
 - ListIndex Numeric/exact assignment requirements (#5611/#6776,2026-10-11):
   [Independent installed-VFP9/help map](../tests/fixtures/vfp9-listindex-numeric/README.md)

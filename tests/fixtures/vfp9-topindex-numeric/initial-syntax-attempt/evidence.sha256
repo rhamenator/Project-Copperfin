@@ -1,0 +1,6 @@
+f304daf2f097f64f09ec9119de1a72059438f14bb14c069a9f6383640760c2a9  tests/fixtures/vfp9-topindex-numeric/initial-syntax-attempt/frozen-at
+ca22443695eb47e91865508ce2be719dfafd2c2c435e705f427baa925c4f2376  tests/fixtures/vfp9-topindex-numeric/initial-syntax-attempt/frozen-preflight.log
+b007958d6d4e61e745661b0d822316db7beb2da88477cd7bffa7d61720012a56  tests/fixtures/vfp9-topindex-numeric/initial-syntax-attempt/frozen.sha256
+611653e49f092e874bc6b63553902edbe3fd28ea6769170fba8462bec34cd268  tests/fixtures/vfp9-topindex-numeric/initial-syntax-attempt/syntax.log
+4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865  tests/fixtures/vfp9-topindex-numeric/initial-syntax-attempt/syntax.status
+a715cc7b1d8bf5e9063f2557cd88d0fa68bbb0a004df8773b5e1358ee514e51c  tests/fixtures/vfp9-topindex-numeric/initial-syntax-attempt/test-before.cpp.txt

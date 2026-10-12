@@ -1,0 +1,341 @@
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
+// Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
+#include "copperfin/runtime/prg_engine.h"
+#include "../src/runtime/prg_engine_helpers.h"
+#include "prg_engine_test_support.h"
+#include "test_environment_support.h"
+#include <chrono>
+#include <cmath>
+#include <cstdint>
+#include <filesystem>
+#include <iostream>
+#include <limits>
+#include <optional>
+#include <string>
+#include <system_error>
+#include <vector>
+
+namespace {
+using namespace copperfin::runtime;
+using namespace copperfin::test_support;
+namespace fs = std::filesystem;
+using O=std::optional<std::int32_t>;
+// RQ-CF-PRG-TOPINDEX-NUMERIC-001 / VR-5611-TOPINDEX-NUMERIC-001/002.
+// Independent TopIndex native observations and named parent arithmetic.
+// Literal projected/final TOP rows, not helper-generated expectations.
+// Invalid admitted rows preserve prior top2; focus/selection NEVER changed.
+// GR-CF-PRG-EMPTY-LIST-TOP-STATE-001/#7157: empty top pair BEFORE==AFTER,
+// not a claim that the existing constructor's absolute defaults match VFP.
+struct Row {const char* expression;double raw;O modern,legacy;int modern_top,legacy_top;};
+const std::vector<Row> rows{
+ {"0",0,0,0,2,2},
+ {"-0",-0.,0,0,2,2},
+ {"0.49",.49,0,0,2,2},
+ {"0.5",.5,0,0,2,2},
+ {"0.9",.9,0,0,2,2},
+ {"1",1,1,1,1,1},
+ {"1.49",1.49,1,1,1,1},
+ {"1.5",1.5,1,1,1,1},
+ {"1.9",1.9,1,1,1,1},
+ {"2",2,2,2,2,2},
+ {"2.49",2.49,2,2,2,2},
+ {"2.5",2.5,2,2,2,2},
+ {"2.9",2.9,2,2,2,2},
+ {"3",3,3,3,3,3},
+ {"3.49",3.49,3,3,3,3},
+ {"3.5",3.5,3,3,3,3},
+ {"3.9",3.9,3,3,3,3},
+ {"4",4,4,4,2,2},
+ {"10.9",10.9,10,10,2,2},
+ {"11",11,11,11,2,2},
+ {"11.49",11.49,11,11,2,2},
+ {"11.5",11.5,11,11,2,2},
+ {"11.9",11.9,11,11,2,2},
+ {"21.9",21.9,21,21,2,2},
+ {"22",22,22,22,2,2},
+ {"22.49",22.49,22,22,2,2},
+ {"22.5",22.5,22,22,2,2},
+ {"22.9",22.9,22,22,2,2},
+ {"33",33,33,33,2,2},
+ {"33.9",33.9,33,33,2,2},
+ {"34",34,34,34,2,2},
+ {"-0.49",-.49,0,0,2,2},
+ {"-0.5",-.5,0,0,2,2},
+ {"-0.9",-.9,0,0,2,2},
+ {"-1",-1,-1,-1,2,2},
+ {"-1.9",-1.9,-1,-1,2,2},
+ {"2147483647",2147483647,INT32_MAX,INT32_MAX,2,2},
+ {"2147483647.1",2147483647.1,INT32_MAX,INT32_MAX,2,2},
+ {"2147483647.5",2147483647.5,INT32_MAX,INT32_MAX,2,2},
+ {"2147483647.9",2147483647.9,INT32_MAX,INT32_MAX,2,2},
+ {"2147483648",2147483648,{},INT32_MIN,2,2},
+ {"-2147483648",-2147483648,INT32_MIN,INT32_MIN,2,2},
+ {"-2147483648.9",-2147483648.9,INT32_MIN,INT32_MIN,2,2},
+ {"-2147483649",-2147483649,{},INT32_MAX,2,2},
+ {"-2147483649.9",-2147483649.9,{},INT32_MAX,2,2},
+ {"4294967295",4294967295,{},-1,2,2},
+ {"4294967296",4294967296,{},{},2,2},
+ {"4294967297",4294967297,{},{},2,2},
+ {"4294967297.9",4294967297.9,{},{},2,2},
+ {"4294967307",4294967307,{},{},2,2},
+ {"4294967318.9",4294967318.9,{},{},2,2},
+ {"-4294967295",-4294967295,{},1,2,1},
+ {"-4294967295.9",-4294967295.9,{},1,2,1},
+ {"-4294967294.5",-4294967294.5,{},2,2,2},
+ {"-4294967293",-4294967293,{},3,2,3},
+ {"-4294967285",-4294967285,{},11,2,2},
+ {"-4294967274.9",-4294967274.9,{},22,2,2},
+ {"-4294967263",-4294967263,{},33,2,2},
+ {"-4294967296",-4294967296,{},0,2,2},
+ {"-4294967296.5",-4294967296.5,{},0,2,2},
+ {"-4294967297",-4294967297,{},-1,2,2},
+ {"9007199254740992",9007199254740992,{},{},2,2},
+ {"1E20",1E20,{},{},2,2},
+ {"1E300",1E300,{},{},2,2},
+ {"-9007199254740992",-9007199254740992,{},0,2,2},
+ {"-1E20",-1E20,{},0,2,2},
+ {"-1E300",-1E300,{},0,2,2},
+ {"EXP(1000)",std::numeric_limits<double>::infinity(),{},{},2,2},
+ {"-EXP(1000)",-std::numeric_limits<double>::infinity(),{},0,2,2},
+ {"1E-300",1E-300,0,0,2,2},
+ {"-1E-300",-1E-300,0,0,2,2},
+ {"2147483648.9",2147483648.9,{},INT32_MIN,2,2},
+ {"2147483649",2147483649,{},INT32_MIN+1,2,2},
+ {"2147483649.9",2147483649.9,{},INT32_MIN+1,2,2},
+ {"4294967293",4294967293,{},-3,2,2},
+ {"4294967294",4294967294,{},-2,2,2},
+ {"4294967295.1",4294967295.1,{},{},2,2},
+ {"4294967295.5",4294967295.5,{},{},2,2},
+ {"4294967295.9",4294967295.9,{},{},2,2},
+ {"-2147483647",-2147483647,-INT32_MAX,-INT32_MAX,2,2},
+ {"-6442450944",-6442450944,{},INT32_MIN,2,2},
+ {"-6442450943",-6442450943,{},INT32_MIN+1,2,2},
+ {"-6442450945",-6442450945,{},INT32_MAX,2,2},
+ {"-8589934590",-8589934590,{},2,2,2},
+ {"-8589934591.9",-8589934591.9,{},1,2,1},
+ {"8589934593",8589934593,{},{},2,2},
+};
+int direct_count=0,public_count=0;
+void direct_cases() {
+ expect(rows.size()==86,"TopIndex frozen Numeric count");
+ for(const auto mode:{NumericBehavior::copperfin,NumericBehavior::vfp9}) {
+  const auto check=[&](const PrgValue& v,O modern,O legacy,const char* label) {
+   ++direct_count;
+   expect(checked_topindex_numeric_argument(v,mode)==(mode==NumericBehavior::vfp9?legacy:modern),
+          std::string("TopIndex direct ")+(mode==NumericBehavior::vfp9?"VFP9 ":"COPPERFIN ")+label);
+  };
+  for(const auto& r:rows) check(make_number_value(r.raw),r.modern,r.legacy,r.expression);
+  check(make_number_value(std::numeric_limits<double>::quiet_NaN()),{},{},"derived NaN");
+  check(make_number_value(std::nextafter(2147483648.,0.)),INT32_MAX,INT32_MAX,"signed upper inner");
+  check(make_number_value(std::nextafter(2147483648.,INFINITY)),{},INT32_MIN,"signed upper outer");
+  check(make_number_value(std::nextafter(-2147483649.,0.)),INT32_MIN,INT32_MIN,"signed lower inner");
+  check(make_number_value(std::nextafter(-2147483649.,-INFINITY)),{},INT32_MAX,"signed lower outer");
+  check(make_number_value(std::nextafter(4294967295.,0.)),{},-2,"raw uint32 ceiling inner");
+  check(make_number_value(std::nextafter(4294967295.,INFINITY)),{},{},"raw uint32 ceiling outer");
+  check(make_number_value(std::nextafter(1.,0.)),0,0,"one inner");
+  check(make_number_value(std::nextafter(-1.,0.)),0,0,"negative one inner");
+  check(make_number_value(std::nextafter(0.,1.)),0,0,"positive subnormal");
+  check(make_number_value(std::nextafter(0.,-1.)),0,0,"negative subnormal");
+  check(make_number_value(std::nextafter(3.,0.)),2,2,"three inner");
+  struct Signed {std::int64_t raw;O modern,legacy;};
+  for(const auto& r:std::vector<Signed>{
+   {0,0,0},{1,1,1},{2,2,2},{3,3,3},{11,11,11},{22,22,22},{33,33,33},
+   {-1,-1,-1},{INT32_MAX,INT32_MAX,INT32_MAX},
+   {2147483648LL,{},INT32_MIN},{INT32_MIN,INT32_MIN,INT32_MIN},
+   {-2147483649LL,{},INT32_MAX},{4294967295LL,{},-1},{4294967296LL,{},{}},
+   {-4294967294LL,{},2},{-9007199254740990LL,{},2},
+   {INT64_MIN,{},0},{INT64_MIN+2,{},2},{INT64_MIN+3,{},3},
+   {INT64_MIN+11,{},11},{INT64_MIN+22,{},22},{INT64_MIN+33,{},33},
+   {INT64_MIN+2147483648LL,{},INT32_MIN},{INT64_MAX,{},{}},
+   {-6442450943LL,{},INT32_MIN+1},{-8589934590LL,{},2}})
+   check(make_int64_value(r.raw),r.modern,r.legacy,"exact signed64");
+  struct Unsigned {std::uint64_t raw;O modern,legacy;};
+  for(const auto& r:std::vector<Unsigned>{
+   {0,0,0},{1,1,1},{2,2,2},{3,3,3},{11,11,11},{22,22,22},{33,33,33},
+   {2147483647ULL,INT32_MAX,INT32_MAX},{2147483648ULL,{},INT32_MIN},
+   {4294967295ULL,{},-1},{4294967296ULL,{},{}},
+   {9223372036854775810ULL,{},{}},{UINT64_MAX,{},{}}})
+   check(make_uint64_value(r.raw),r.modern,r.legacy,"exact unsigned64");
+  auto typed_null=make_number_value(2.9);typed_null.is_null=true;
+  check(typed_null,{},{},"typed Numeric NULL adapter");
+  check(make_currency_value(29000),{},{},"Currency adapter");
+  check(make_boolean_value(true),{},{},"Logical adapter");
+  check(make_string_value("2.9"),{},{},"Character adapter");
+  check(make_null_value(),{},{},"NULL adapter");
+ }
+}
+struct Exact {const char* expression;O modern,legacy;int modern_top,legacy_top;};
+const std::vector<Exact> exacts{
+ {"CAST(0 AS INT64)",0,0,2,2},
+ {"CAST(1 AS INT64)",1,1,1,1},
+ {"CAST(2 AS INT64)",2,2,2,2},
+ {"CAST(3 AS INT64)",3,3,3,3},
+ {"CAST(11 AS INT64)",11,11,2,2},
+ {"CAST(22 AS INT64)",22,22,2,2},
+ {"CAST(33 AS INT64)",33,33,2,2},
+ {"CAST(-1 AS INT64)",-1,-1,2,2},
+ {"CAST(2147483647 AS INT64)",INT32_MAX,INT32_MAX,2,2},
+ {"CAST(2147483648 AS INT64)",{},INT32_MIN,2,2},
+ {"CAST(-2147483648 AS INT64)",INT32_MIN,INT32_MIN,2,2},
+ {"(CAST(-2147483648 AS INT64)-CAST(1 AS INT64))",{},INT32_MAX,2,2},
+ {"CAST(4294967295 AS INT64)",{},-1,2,2},
+ {"CAST(4294967296 AS INT64)",{},{},2,2},
+ {"CAST(-4294967294 AS INT64)",{},2,2,2},
+ {"(CAST(-9007199254740992 AS INT64)+CAST(2 AS INT64))",{},2,2,2},
+ {"(CAST(-9223372036854775808 AS INT64)+CAST(2 AS INT64))",{},2,2,2},
+ {"(CAST(-9223372036854775808 AS INT64)+CAST(3 AS INT64))",{},3,2,3},
+ {"(CAST(-9223372036854775808 AS INT64)+CAST(11 AS INT64))",{},11,2,2},
+ {"(CAST(-9223372036854775808 AS INT64)+CAST(22 AS INT64))",{},22,2,2},
+ {"(CAST(-9223372036854775808 AS INT64)+CAST(33 AS INT64))",{},33,2,2},
+ {"(CAST(-9223372036854775808 AS INT64)+CAST(2147483648 AS INT64))",{},INT32_MIN,2,2},
+ {"CAST(0 AS UINT64)",0,0,2,2},
+ {"CAST(2 AS UINT64)",2,2,2,2},
+ {"CAST(4294967295 AS UINT64)",{},-1,2,2},
+ {"CAST(4294967296 AS UINT64)",{},{},2,2},
+ {"(CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64))",{},{},2,2},
+ {"(CAST(9223372036854775808 AS UINT64)+CAST(2 AS UINT64))",{},{},2,2},
+};
+std::string get(const RuntimePauseState& s,const char* key) {
+ auto i=s.globals.find(key);return i==s.globals.end()?"<missing>":format_value(i->second);
+}
+void public_case(const fs::path& path,const std::string& mode,int selected,bool dense,bool reflection,
+                 const std::string& input,O projection,int final_top,bool empty=false,bool multi=false,
+                 const std::string& message={},int reject_code=0,bool readonly=false) {
+ ++public_count;
+ const std::string cls=readonly?"ComboBox":"ListBox";
+ const auto other=mode=="VFP9"?"COPPERFIN":"VFP9";
+ const auto tag=mode+" session"+std::to_string(selected)+" "+cls+(dense?" dense":" sparse")+
+  (empty?" empty":"")+(multi?" multi":" single")+(reflection?" SETPEM ":" direct ")+input;
+ const std::string populate=empty?"":dense?
+  "oList.AddItem('first')\noList.AddItem('second')\noList.AddItem('third')\n":
+  "oList.AddListItem('first',11)\noList.AddListItem('second',22)\noList.AddListItem('third',33)\n";
+ const auto assignment=reflection?"lSetter=SETPEM(oList,'TopIndex',"+input+")\n":
+  "oList.TopIndex="+input+"\nlSetter=.T.\n";
+ write_text(path,(selected==2?"SET NUMERICBEHAVIOR TO "+std::string(other)+"\nSET DATASESSION TO 2\n":"")+
+  "SET NUMERICBEHAVIOR TO "+mode+"\nPUBLIC nCode,cMessage,lAfter,cBefore,cAfter,cOther,cReset,nGuard,oList,lSetter,nTopBefore,nIDBefore,lReadOnly\n"
+  "nCode=0\ncMessage=''\nlAfter=.F.\nlSetter='sentinel'\n"
+  "CREATE CURSOR guard (label C(8))\nINSERT INTO guard VALUES ('guard')\n"
+  "oList=CREATEOBJECT('"+cls+"')\n"+populate+
+  (empty?"":"oList.ItemData(1)=101\noList.ItemData(2)=202\noList.ItemData(3)=303\n")+
+  (multi?"oList.MultiSelect=.T.\noList.Selected(1)=.T.\noList.Selected(2)=.T.\n":"")+
+  "oList.ListIndex="+(empty?std::string("0"):std::string("2"))+"\n"+
+  (!readonly&&!empty?"oList.TopIndex=2\n":"")+
+  "nTopBefore=oList.TopIndex\nnIDBefore=oList.TopItemID\nlReadOnly=PEMSTATUS(oList,'TopIndex',5)\n"
+  "cBefore=SET('DATASESSION')+'|'+SET('NUMERICBEHAVIOR')+'|'+UPPER(ALIAS())+'|'+TRANSFORM(RECNO())+'|'+ALLTRIM(label)\n"
+  "TRY\n"+assignment+"CATCH TO problem\nnCode=problem.ErrorNo\ncMessage=problem.Message\nENDTRY\n"
+  "lAfter=.T.\nnGuard=CAST(1.9 AS INTEGER)\n"
+  "cAfter=SET('DATASESSION')+'|'+SET('NUMERICBEHAVIOR')+'|'+UPPER(ALIAS())+'|'+TRANSFORM(RECNO())+'|'+ALLTRIM(label)\n"
+  "USE IN guard\nSET DATASESSION TO 1\ncOther=SET('NUMERICBEHAVIOR')\nSET NUMERICBEHAVIOR TO COPPERFIN\n"
+  "cReset=SET('DATASESSION')+'|'+SET('NUMERICBEHAVIOR')+'|'+ALIAS()\nRETURN\n");
+ auto session=PrgRuntimeSession::create(make_runtime_session_options(path,path.parent_path(),false));
+ const auto state=session.run(DebugResumeAction::continue_run);
+ const int code=readonly?0:projection?0:reject_code?reject_code:mode=="VFP9"?46:31;
+ expect(state.completed,"TopIndex completion "+tag+": "+state.message);
+ expect(get(state,"ncode")==std::to_string(code),"TopIndex error "+tag+" got "+get(state,"ncode"));
+ expect(get(state,"lsetter")==(readonly?"false":projection?"true":"sentinel"),"TopIndex setter/sentinel "+tag);
+ expect(get(state,"lreadonly")==(readonly?"true":"false"),"TopIndex metadata gate "+tag);
+ expect(get(state,"lafter")=="true"&&get(state,"nguard")=="1","TopIndex continuation "+tag);
+ const auto context=std::to_string(selected)+"|"+mode+"|GUARD|1|guard";
+ expect(get(state,"cbefore")==context&&get(state,"cafter")==context,"TopIndex context "+tag);
+ expect(get(state,"cother")==(selected==2?other:mode)&&get(state,"creset")=="1|COPPERFIN|","TopIndex isolation/reset "+tag);
+ if(code==0) expect(get(state,"cmessage").empty(),"TopIndex successful message "+tag);
+ if(!message.empty()) expect(get(state,"cmessage")==message,"TopIndex localized error "+tag);
+ const int wanted=readonly?1:projection?final_top:2;
+ const int focus=empty?0:2;
+ bool seen=false;
+ for(const auto& object:state.ole_objects) if(lowercase_copy(object.base_class_name)==lowercase_copy(cls)) {
+  seen=true;
+  const auto prop=[&](const char* key,const std::string& expected,PrgValueKind kind) {
+   auto i=object.properties.find(key);
+   expect(i!=object.properties.end()&&i->second.kind==kind&&format_value(i->second)==expected,
+          std::string("TopIndex state ")+key+" "+tag+(i==object.properties.end()?" missing":" got "+format_value(i->second)));
+  };
+  if(!empty) {
+   expect(get(state,"ntopbefore")==(readonly?"1":"2"),"TopIndex independent nonempty before-top "+tag);
+   expect(get(state,"nidbefore")==std::to_string((readonly?1:2)*(dense?1:11)),"TopIndex independent nonempty before-ID "+tag);
+  } else {
+   // Independent native no-op relationship, not an absolute constructor oracle.
+   expect(get(state,"ntopbefore")!="<missing>"&&get(state,"nidbefore")!="<missing>","TopIndex empty pre-state captured "+tag);
+  }
+  prop("topindex",empty?get(state,"ntopbefore"):std::to_string(wanted),PrgValueKind::number);
+  prop("topitemid",empty?get(state,"nidbefore"):std::to_string(wanted*(dense?1:11)),PrgValueKind::number);
+  prop("listindex",std::to_string(focus),PrgValueKind::number);
+  prop("listitemid",std::to_string(focus*(dense?1:11)),PrgValueKind::number);
+  prop("value",empty?"":"second",PrgValueKind::string);
+  prop("displayvalue",empty?"":"second",PrgValueKind::string);
+  prop("listcount",empty?"0":"3",PrgValueKind::number);
+  prop("newindex",empty?"0":"3",PrgValueKind::number);
+  prop("newitemid",empty?"0":dense?"3":"33",PrgValueKind::number);
+  expect(object.list_rows.size()==(empty?0U:3U)&&object.list_item_data.size()==(empty?0U:3U),"TopIndex bounded count "+tag);
+  if(!empty&&object.list_rows.size()==3) {
+   const std::vector<std::string> cells{"first","second","third"};
+   for(std::size_t slot=0;slot<3;++slot)
+    expect(object.list_rows[slot].size()==1&&format_value(object.list_rows[slot][0])==cells[slot],"TopIndex preserved cell "+tag);
+  }
+  if(!empty&&object.list_item_data.size()==3)
+   expect(format_value(object.list_item_data[0])=="101"&&format_value(object.list_item_data[1])=="202"&&format_value(object.list_item_data[2])=="303","TopIndex preserved payload "+tag);
+  const auto bits=empty?std::vector<bool>{}:multi?std::vector<bool>{true,true,false}:std::vector<bool>{false,true,false};
+  expect(object.list_selected==bits,"TopIndex unchanged selection bits "+tag);
+  const auto keys=empty?std::vector<std::string>{}:dense?std::vector<std::string>{"1","2","3"}:std::vector<std::string>{"11","22","33"};
+  expect(object.collection_item_keys==keys,"TopIndex preserved identities "+tag);
+ }
+ expect(seen,"TopIndex native object captured "+tag);
+ for(const auto& event:state.events) expect(event.category!="ole.invoke","TopIndex no external invocation "+tag);
+}
+void public_cases(const std::string& mode,int selected) {
+ expect(rows.size()==86&&exacts.size()==28,"TopIndex frozen public input counts");
+ const auto unique=std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+ const auto dir=fs::temp_directory_path()/("copperfin_topindex_numeric_5611_"+mode+"_"+std::to_string(selected)+"_"+unique);
+ fs::create_directories(dir);const auto path=dir/"query.prg";const bool legacy=mode=="VFP9";
+ for(const bool dense:{false,true}) for(const bool multi:{false,true}) for(const bool reflection:{false,true}) {
+  for(const auto& r:rows) public_case(path,mode,selected,dense,reflection,r.expression,legacy?r.legacy:r.modern,
+                                    legacy?r.legacy_top:r.modern_top,false,multi);
+  for(const auto& r:exacts) public_case(path,mode,selected,dense,reflection,r.expression,legacy?r.legacy:r.modern,
+                                      legacy?r.legacy_top:r.modern_top,false,multi);
+  public_case(path,mode,selected,dense,reflection,"(EXP(1000)-EXP(1000))",{},2,false,multi,{},31);
+ }
+ const std::vector<std::string> edges{"0","0.9","1","1.9","2.9","3.9","4","22.9","-0.9","-1.9",
+  "2147483647.9","2147483648","4294967294","4294967295","4294967295.1","4294967295.5",
+  "4294967295.9","4294967296","-2147483649","-4294967293","-4294967294.5","-4294967295.9",
+  "-4294967296","-4294967297","-8589934590","-8589934591.9","8589934593","-1E300","-EXP(1000)"};
+ expect(edges.size()==29,"TopIndex frozen edge count");
+ for(const auto& text:edges) {
+  const Row* chosen=nullptr;for(const auto& r:rows) if(r.expression==text) chosen=&r;
+  expect(chosen!=nullptr,"TopIndex enumerated edge "+text);if(!chosen) continue;
+  for(const bool reflection:{false,true}) for(const bool multi:{false,true})
+   public_case(path,mode,selected,true,reflection,text,legacy?chosen->legacy:chosen->modern,2,true,multi);
+ }
+ // Existing ComboBox readonly SETPEM gate, not a new numeric/write extension.
+ // Native direct1743 is retained as provenance, not claimed native SETPEM syntax.
+ for(int shape=0;shape<3;++shape) {
+  for(const auto& r:rows) public_case(path,mode,selected,shape==2,true,r.expression,r.legacy,1,shape==0,false,{},0,true);
+  for(const auto& r:exacts) public_case(path,mode,selected,shape==2,true,r.expression,r.legacy,1,shape==0,false,{},0,true);
+  public_case(path,mode,selected,shape==2,true,"(EXP(1000)-EXP(1000))",{},1,shape==0,false,{},31,true);
+ }
+ for(const auto& locale:std::vector<std::vector<std::string>>{
+  {"en-US","Subscript is outside defined range.","Numeric overflow."},
+  {"es-419","El subíndice está fuera del intervalo definido.","Desbordamiento numérico."},
+  {"pt-BR","O subscrito está fora do intervalo definido.","Estouro numérico."},
+  {"qps-ploc","[!! Šµþšçŕïþţ ïš øµţšïðë ðëƒïñëð ŕåñğë. !!]","[!! Ñµmëŕïç øṽëŕƒlöω. !!]"}}) {
+  set_env_value("COPPERFIN_LOCALE",locale[0],true);
+  for(const bool dense:{false,true}) for(const bool multi:{false,true}) for(const bool reflection:{false,true}) {
+   public_case(path,mode,selected,dense,reflection,legacy?"4294967295.1":"2147483648",{},2,false,multi,locale[legacy?2:1]);
+   public_case(path,mode,selected,dense,reflection,"2.9",2,2,false,multi);
+  }
+ }
+ set_env_value("COPPERFIN_LOCALE","en-US",true);
+ std::error_code ignored;fs::remove_all(dir,ignored);
+}
+}
+int main(int argc,char** argv) {
+ ScopedEnvironmentValue locale("COPPERFIN_LOCALE");set_env_value("COPPERFIN_LOCALE","en-US",true);
+ if(argc==1) {direct_cases();expect(direct_count==284&&public_count==0,"TopIndex complete direct count");}
+ else if(argc==3&&(std::string(argv[1])=="COPPERFIN"||std::string(argv[1])=="VFP9")&&
+         (std::string(argv[2])=="1"||std::string(argv[2])=="2")) {
+  public_cases(argv[1],std::string(argv[2])=="1"?1:2);
+  expect(direct_count==0&&public_count==1445,"TopIndex complete public count");
+ } else {std::cerr<<"Expected no args or COPPERFIN|VFP9 1|2\n";return 2;}
+ std::cout<<"TopIndex frozen cases: direct="<<direct_count<<" public="<<public_count<<'\n';
+ return test_failures()==0?0:1;
+}

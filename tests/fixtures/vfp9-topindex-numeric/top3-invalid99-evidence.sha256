@@ -1,0 +1,9 @@
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-topindex-numeric/top3-invalid99-cmp.status
+8f154413ada488bcd880cc06298e2089b294e27226a366856285dcb87b2f566f  tests/fixtures/vfp9-topindex-numeric/top3-invalid99-first.out
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-topindex-numeric/top3-invalid99-first.status
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-topindex-numeric/top3-invalid99-first.stderr
+8f154413ada488bcd880cc06298e2089b294e27226a366856285dcb87b2f566f  tests/fixtures/vfp9-topindex-numeric/top3-invalid99-repeat.out
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-topindex-numeric/top3-invalid99-repeat.status
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-topindex-numeric/top3-invalid99-repeat.stderr
+955f6560633643db4b2c279b81608a54a1c556b291141c03d5ae799ce45b7eca  tests/fixtures/vfp9-topindex-numeric/top3-invalid99-smoke.FXP
+c9b1c201438db7e5aca961e0a27b8c339696bc2c4b26ac8bba032ea8485e3b91  tests/fixtures/vfp9-topindex-numeric/top3-invalid99-smoke.prg
