@@ -7077,6 +7077,80 @@ namespace copperfin::runtime
                 }
                 if (is_native_listitemid_member_name(runtime_object, normalized_property_name))
                 {
+                    // RQ-CF-PRG-LISTITEMID-NUMERIC-001 / VR-5611-LISTITEMID-NUMERIC-002.
+                    // Wired only AFTER BOTH complete original55 suites.
+                    // Existing direct/SETPEM native callback, Numeric/exact only.
+                    if (!assigned_value.is_null &&
+                        (assigned_value.kind == PrgValueKind::number ||
+                         assigned_value.kind == PrgValueKind::int64 ||
+                         assigned_value.kind == PrgValueKind::uint64))
+                    {
+                        const auto &set_state = current_set_state();
+                        const auto mode = set_state.find("numericbehavior");
+                        const auto behavior =
+                            mode != set_state.end() && normalize_identifier(mode->second) == "vfp9"
+                                ? NumericBehavior::vfp9 : NumericBehavior::copperfin;
+                        const auto converted = checked_listitemid_numeric_argument(assigned_value, behavior);
+                        if (!converted.has_value())
+                        {
+                            const bool derived_nan = assigned_value.kind == PrgValueKind::number &&
+                                std::isnan(assigned_value.number_value);
+                            if (behavior == NumericBehavior::vfp9 && !derived_nan)
+                            {
+                                throw PrgCompatibilityError(
+                                    runtime_text("Runtime.Prg.String.Error.NumericOverflow"), 46);
+                            }
+                            throw PrgCompatibilityError(
+                                runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
+                        }
+
+                        // The pre-write signature already materialized existing
+                        // rows. Bound their display domain before any selection
+                        // mutation; never allocate/iterate by the caller's ID.
+                        const auto count = runtime_object.collection_items.size();
+                        if (count > static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max()))
+                        {
+                            throw PrgCompatibilityError(
+                                runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
+                        }
+                        const auto &keys = runtime_object.collection_item_keys;
+                        const auto found = *converted > 0
+                            ? std::find(keys.begin(), keys.end(), std::to_string(*converted))
+                            : keys.end();
+                        const auto slot = found == keys.end() ? count
+                            : static_cast<std::size_t>(std::distance(keys.begin(), found));
+                        const bool has_row = slot < count;
+                        runtime_object.properties["listindex"] = make_number_value(
+                            has_row ? static_cast<double>(slot + 1U) : 0.0);
+                        sync_native_list_control_displayvalue_from_selection(runtime_object);
+
+                        const auto base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+                        const auto value = runtime_object.properties.find("value");
+                        const auto controlsource = runtime_object.properties.find("controlsource");
+                        if (!has_row && base_class == "combobox" &&
+                            value != runtime_object.properties.end() &&
+                            value->second.kind == PrgValueKind::string &&
+                            (controlsource == runtime_object.properties.end() ||
+                             trim_copy(value_as_string(controlsource->second)).empty()))
+                        {
+                            value->second = make_string_value("");
+                        }
+                        const auto multi = runtime_object.properties.find("multiselect");
+                        if (base_class == "listbox" &&
+                            multi != runtime_object.properties.end() && value_as_bool(multi->second))
+                        {
+                            // Existing MultiSelect invariant normalizes the flag
+                            // to0/1. Native ListItemID clears ALL bits, even with
+                            // valid focus; ListIndex's bit semantics stay intact.
+                            std::fill(runtime_object.list_selected.begin(), runtime_object.list_selected.end(), false);
+                        }
+                        if (!write_native_list_control_controlsource_target(runtime_object, source_frame))
+                        {
+                            return false;
+                        }
+                        remember_property_expression();
+                        return true;
+                    }
                     const bool wrote =
                         write_native_list_control_item_id(runtime_object, assigned_value) &&
                         write_native_list_control_controlsource_target(runtime_object, source_frame);

@@ -603,8 +603,11 @@ namespace copperfin::runtime_surface_tests
         check("nindexaftersetpem", "1");
         check("cdisplayaftersetpem", "Alpha");
         check("xlistitemidaftersetpem", "1");
-        check("lsetpemmissing", "false");
-        check("nindexaftermissing", "1");
+        // RQ-CF-PRG-LISTITEMID-NUMERIC-001: the independent VFP9 two-row
+        // smoke-missing probe accepts ID77 and clears focus; SETPEM derives
+        // success from that admitted native setter, not native SETPEM syntax.
+        check("lsetpemmissing", "true");
+        check("nindexaftermissing", "0");
         check("lsetpemzero", "true");
         check("nindexafterzero", "0");
         check("cdisplayafterzero", "");

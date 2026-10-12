@@ -1,0 +1,8 @@
+30f6aae3c27736c13dc39927d63df93edc0236111e897c25561319169fdeb8f3  tests/fixtures/vfp9-listitemid-numeric/smoke-missing-first.out
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-listitemid-numeric/smoke-missing-first.status
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-listitemid-numeric/smoke-missing-first.stderr
+3f9a387e2a713f9078092cce6183a15dac16f1d325913ddd83db337d906855d6  tests/fixtures/vfp9-listitemid-numeric/smoke-missing-probe.FXP
+62282d048f13e2e55b5526d5cea7283426598ffb28bae36abd8f7a88c9b1c942  tests/fixtures/vfp9-listitemid-numeric/smoke-missing-probe.prg
+30f6aae3c27736c13dc39927d63df93edc0236111e897c25561319169fdeb8f3  tests/fixtures/vfp9-listitemid-numeric/smoke-missing-repeat.out
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-listitemid-numeric/smoke-missing-repeat.status
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-listitemid-numeric/smoke-missing-repeat.stderr

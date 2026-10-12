@@ -45,6 +45,22 @@ own system and domain assurance.
 
 ## Bounded numeric-conversion linkage
 
+RQ-CF-PRG-LISTITEMID-NUMERIC-001 / DQ-DV-5611-LISTITEMID-NUMERIC-001 links
+active HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01 to
+[independent pre-code ListItemID requirements](../../tests/fixtures/vfp9-listitemid-numeric/README.md).
+Fresh native pairs/help recover ID addressing, absent0 BOTH classes, no
+ComboBox sentinel and accepted MultiSelect clearing ALL bits. Rejection46
+preserves full state; checked default signed32/31, exact64/NaN are explicit
+parent derivations. Bounded documentation misuse medium does not change hazard
+severity/status. Distinct unused helper/frozen assertions, BOTH full55 originals
+and repeated fixed/sanitizer/preservation/contracts/exact-head integration
+evidence required before completion. BOTH fixed55 suites PASS GNU994.77s/
+Clangsanitizers1825.00s; all284/four1216/both sixgroups/all27hashes complete,
+initialfivefrozen unchanged. Five contracts PASS337.08s/210fragments;
+linked boundedmedium delegated development self-review/walkthrough complete,
+not independent-human/high-hazard signoff. Signed exact-head external gates
+remain; no parent/KBX/hazard/release qualification claim.
+
 RQ-CF-PRG-LISTINDEX-NUMERIC-001 / DQ-DV-5611-LISTINDEX-NUMERIC-001 links
 active HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01 to the
 [pre-code ListIndex assignment map](../../tests/fixtures/vfp9-listindex-numeric/README.md).
@@ -61,9 +77,7 @@ repaired with frozen expectations unchanged, full suites repeated. Identical
 fixed GNU49/49 PASS760.09s and Clang ASan/UBSan/float-cast-overflow49/49
 PASS1409.70s/all counters complete; both six preservationgroups PASS,
 frozen/source/neighbor hashes checked. Boundedmedium delegated development
-DQ/DV self-review and automated walkthrough complete; five contracts PASS332.88s;
-signed
-exact-head hosted/review/conversation gates remain integration gates. No
+DQ/DV self-review and automated walkthrough complete; five contracts PASS332.88s. No
 independent-human, persistence, callback atomicity, high-hazard, parent/KBX/hazard
 closure or release qualification claim.
 
@@ -71,13 +85,16 @@ Head967 hosted full Linux/macOS failure is isolated to five obsolete
 non-frozen empty-control smoke expectations; corrections use the pre-code
 native ComboBox1/ListBox0 map. Both unchanged before diagnostics reproduce
 five failures, both after pass; no assertions/setup/production/frozen inputs
-removed or changed. Expanded50-subject GNU/Clang verification/CI/fresh exact-head
-review remain pending. This does not change hazard classification or closure.
+removed or changed. Expanded50-subject GNU/Clang verification and integration
+gates subsequently passed. This does not change hazard classification or closure.
 Expanded GNU50/50 PASS769.56s and Clang sanitizers50/50 PASS1445.84s,
 full runtime_surface/all counts/both sixgroups/all25 hashes checked; repeated
 contracts5/5 PASS332.66s. Development self-review rechecked without procedural,
-production, setup/assertion or original-freeze change. Signed follow-up/
-postpush50/hosted CI/fresh exact-head review remain gates, not hazard closure.
+production, setup/assertion or original-freeze change. PR7155 mergedd8005f994
+at signed1d6f22dbf after postpush50/50/765.73s/all25hashes, all11required
+uniquelySUCCESS, actual clean verified Codex6115825243 after Claude-FIRST/
+fallback and threads0. Optional fullplatform pending atmerge, not retroactive
+green, independent-human/high-hazard qualification or hazard closure.
 
 RQ-CF-PRG-LIST-INDEX-NUMERIC-001 / DQ-DV-5611-LIST-INDEX-NUMERIC-001 links
 active HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01 to the
