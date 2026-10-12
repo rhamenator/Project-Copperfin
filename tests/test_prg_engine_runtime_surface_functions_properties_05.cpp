@@ -311,23 +311,27 @@ namespace copperfin::runtime_surface_tests
         check("xplaingetpembefore", "0");
         check("nplainafterdirectassign", "1");
         check("lplainsetpem", "true");
-        check("nplainaftersetpem", "2");
+        // RQ-CF-PRG-LISTINDEX-NUMERIC-001 / VR-5611-LISTINDEX-NUMERIC-002:
+        // No AddItem/RowSource rows exist here. Independent installed-VFP9
+        // edge pairs give empty ComboBox ListCount+1 == 1 and ListBox == 0.
+        // Keep construction/metadata checks; do not invent selectable rows.
+        check("nplainaftersetpem", "1");
         check("lplainaddproperty", "false");
         check("lplainremoveproperty", "false");
         check("ncombobefore", "3");
         check("nlistbefore", "2");
         check("ncomboread", "3");
         check("nlistread", "2");
-        check("ncomboafterchild", "2");
-        check("nlistafterchild", "1");
+        check("ncomboafterchild", "1");
+        check("nlistafterchild", "0");
         check("lcombosetpem", "true");
         check("ncomboaftersetpem", "1");
         check("xcombogetpem", "1");
         check("lcombohaslistindex", "true");
         check("lcombolistindexreadonly", "false");
         check("llistsetpem", "true");
-        check("nlistaftersetpem", "3");
-        check("xlistgetpem", "3");
+        check("nlistaftersetpem", "0");
+        check("xlistgetpem", "0");
         check("llisthaslistindex", "true");
         check("llistlistindexreadonly", "false");
         check("lprophaslistindex", "true");

@@ -1,18 +1,18 @@
-- 2026-10-11: Bound native ComboBox/ListBox ListIndex Numeric/exact assignment
-  conversion under #5611/#6776 on direct and SETPEM routes. Default finite
-  truncation checks signed32 and raises localized catchable31 before modeled
-  selection mutation; explicit VFP9 retains independently observed rawUINT32
-  ceiling/46, signed-low32 and ComboBox's bounded absent-row/boundary sentinel.
-  Focus remains separate from MultiSelect bits and sparse item identity.
-  Fresh installed-VFP9 paired probes/shipped help and pre-code RQ/VR/DQ/DV/HZ
-  map, initial frozen274direct/four1184public inputs, BOTH full49 originals
-  and failed implementation attempts retained without expectation weakening.
-  Identical fixed GNU49/49 PASS760.09s and Clang ASan/UBSan/float-cast-overflow
-  49/49 PASS1409.70s, both six unchanged preservationgroups PASS, all counters
-  and frozen/source/neighbor hashes verified. Boundedmedium delegated
-  development documentation self-review/walkthrough complete, not independent
-  human/high-hazard qualification. All five documentation contracts PASS332.88s;
-  signed exact-head postpush/CI/review remain integration gates.
-  Types/indexed writes/lifecycle/parser expansion/
-  arbitrary callbacks/ControlSource persistence/whole-call atomicity and
-  parent/family/KBX/hazard/release closure remain outside this slice.
+- 2026-10-11: Bound native ComboBox/ListBox ListIndex Numeric/exact assignments
+  under #5611/#6776 on direct and SETPEM routes. Default finite truncation checks
+  signed32/localized31; explicit VFP9 retains observed rawUINT32 ceiling/46,
+  signed-low32 and bounded ComboBox absent-row/boundary sentinel. Focus remains
+  separate from MultiSelect bits and sparse identity. Independent installed-VFP9
+  paired probes/shipped help and pre-code RQ/VR/DQ/DV/HZ map, initial frozen
+  274direct/four1184public, BOTH full49 originals and all failed attempts retained.
+  Five obsolete non-frozen empty-control smoke expectations corrected to the
+  pre-code ComboBox1/ListBox0 observations; no assertion/setup/production or
+  initial frozen-input change. Both before diagnostics fail5 and after pass.
+  Expanded GNU50/50 PASS769.56s and Clang ASan/UBSan/float-cast-overflow50/50
+  PASS1445.84s, full runtime_surface included, all counters/both sixgroups/all25
+  hashes verified. Repeated five documentation contracts PASS332.66s/209fragments.
+  Boundedmedium delegated development DQ/DV walkthrough/self-review complete,
+  not independent-human/high-hazard qualification. Signed follow-up/postpush/
+  hosted CI/fresh exact-head review remain integration gates. Types/indexed
+  writes/lifecycle/parser expansion/arbitrary callbacks/ControlSource persistence/
+  whole-call atomicity and parent/family/KBX/hazard/release closure excluded.

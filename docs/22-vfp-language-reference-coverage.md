@@ -22,6 +22,16 @@
   not independenthuman/high-hazard qualification. Five contracts PASS332.88s;
   signed
   exact-head hosted/review gates remain pending, not slice integration.
+  Head967 full Linux/macOS CI subsequently found five obsolete empty-control
+  expectations in a non-frozen builtin-property smoke. Corrected only those
+  literals to independent ComboBox1/ListBox0 observations; both before
+  diagnostics reproduce five failures and both after pass. All five initial
+  frozen inputs/all24 runtime-neighbor entries unchanged; broader50-subject
+  GNU/Clang verification including full runtime_surface now pending.
+  Expanded verification subsequently PASS: GNU50/50/769.56s and Clang
+  sanitizers50/50/1445.84s, full runtime_surface/all counters/both sixgroups/
+  all25 hashes verified; repeated contracts5/5 PASS332.66s. Signed test-only
+  follow-up/postpush50/hosted CI/fresh exact-head review remain integration gates.
   Types/lifecycle/parser/reflection expansion/callbacks/persistence excluded.
 
 - One-argument List Numeric/exact display-row READ recovery (#5611/#6776,

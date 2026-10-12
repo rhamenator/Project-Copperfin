@@ -221,3 +221,44 @@ Signed exact-head postpush/hosted/review/resolved conversations remain merge
 gates. [Evidence checksum manifest](evidence.sha256) names actual retained
 artifact paths, including renamed failed attempts; their original emitted
 log.sha256 records retain the original build pathname as historical data.
+
+## Hosted CI smoke correction in progress
+
+Exacthead967 hosted Linux/macOS full559 runs fail ONLY runtime_surface_functions
+with the same five empty-control smoke expectations. The non-frozen existing
+properties_05 test expected arbitrary positive selection on zero rows, contrary
+to the pre-code matching native edge pair (empty ComboBox1/ListBox0). Five
+literal expectations are corrected with the requirement link; no assertions,
+setup, constructor/metadata checks, production code or frozen inputs change.
+Both isolated GNU/Clang before diagnostics reproduce five failures, and both
+after diagnostics pass. The [phase audit](baseline-audit.md) retains full hosted
+raws/metadata, exact before-source snapshot/SHA and diagnostic hashes.
+[Expanded driver](ci-expanded-suites.sh.txt) now runs all prior49 PLUS the
+full runtime_surface subject (50 total) and both six preservationgroups.
+Driver95583 pending; no follow-up pushed or expanded/CI acceptance yet.
+
+00:15Z checkpoint: expanded GNU50/50 PASS769.56s/status0 completed00:07:33Z,
+full runtime_surface PASS6.03s/all274/four1184 counts and sixgroups complete.
+Full rawSHAf9d08ab2572947be43a8df7b818bf40b9b7fbc3fc985612615566e7f38275beb;
+all25 hashes checked before/after. Clang
+expanded compile remains running in95583; contractdriver62588 chains after
+both full expanded suites/preservation statuses, not concurrent runtime runs.
+No follow-up push or final expanded/CI/review acceptance yet.
+
+Both expanded suites now complete: GNU50/50 PASS769.56s and Clang
+ASan/UBSan/float-cast-overflow50/50 PASS1445.84s, full runtime_surface included.
+All274/four1184 counters and both six unchanged preservationgroups complete;
+all25 before/after hashes checkedOK, five original frozen inputs unchanged.
+Full578-line expanded raws/compile/status/timestamps/hashes are retained in
+fixture; [phase audit](baseline-audit.md) records exact hashes. Old Windows
+head967 failed the SAME five smoke expectations (one of560); full raw/metadata
+retained, not acceptance. Contracts62588 running before signed test-only push/
+postpush50/hosted CI and fresh actual clean exact-head review.
+
+Repeated five contracts PASS332.66s/status0 completed2026-10-12T00:47:08Z,
+209 valid fragments, full rawSHA354b5ee5b4ba6b0faed4c14be4c75ee5af607ddb0a1e6557e7ddc5b85ce19c56.
+All25 before/after input hashes checkedOK; initial frozen inputs unchanged.
+Bounded development self-review confirms the smoke correction uses independent
+empty-control requirements, not code-derived expectations. No procedural,
+production, assertion/setup or original-freeze change. Signed follow-up and
+exact-head postpush50/CI/fresh actual review still required.

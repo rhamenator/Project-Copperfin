@@ -67,6 +67,18 @@ exact-head hosted/review/conversation gates remain integration gates. No
 independent-human, persistence, callback atomicity, high-hazard, parent/KBX/hazard
 closure or release qualification claim.
 
+Head967 hosted full Linux/macOS failure is isolated to five obsolete
+non-frozen empty-control smoke expectations; corrections use the pre-code
+native ComboBox1/ListBox0 map. Both unchanged before diagnostics reproduce
+five failures, both after pass; no assertions/setup/production/frozen inputs
+removed or changed. Expanded50-subject GNU/Clang verification/CI/fresh exact-head
+review remain pending. This does not change hazard classification or closure.
+Expanded GNU50/50 PASS769.56s and Clang sanitizers50/50 PASS1445.84s,
+full runtime_surface/all counts/both sixgroups/all25 hashes checked; repeated
+contracts5/5 PASS332.66s. Development self-review rechecked without procedural,
+production, setup/assertion or original-freeze change. Signed follow-up/
+postpush50/hosted CI/fresh exact-head review remain gates, not hazard closure.
+
 RQ-CF-PRG-LIST-INDEX-NUMERIC-001 / DQ-DV-5611-LIST-INDEX-NUMERIC-001 links
 active HZ-runtime-crash-01, HZ-data-corruption-01 and HZ-doc-command-01 to the
 [pre-code one-argument display-row map](../../tests/fixtures/vfp9-list-index-numeric/README.md).

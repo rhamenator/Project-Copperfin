@@ -192,3 +192,92 @@ evidence manifest instead names attempt2-fixed-gcc.log without modifying raw.
 Source/docs spacing passes excluding ONLY raw fixture.log/.out; no raw
 normalization, frozen/source change or high-hazard/independent-human claim.
 Signed exact-head postpush/hosted/review/resolved-conversation gates remain.
+
+## Head967 hosted failure and non-frozen empty-control smoke correction
+
+Full hosted Linux38182241129/job114597051411 and macOS38182241126/
+job114597051364 on exact967e262966 failed one of559 subjects, with two other
+subjects skipped. Full test_prg_engine_runtime_surface_functions failed the
+same FIVE assertions on both platforms; all five selected ListIndex subjects
+pass. Complete unedited platform logs/metadata retained:
+ci-head967-linux-full.log SHA294af9fa4e07f190e622be9891853169e63679d8564e4885fea499ff4b756e6e
+(507.66s reported suite);
+ci-head967-macos-full.log SHA92dd6cbf93aa2c1dfc0e001b581612afbff5ccc17027bec5d074e859e98c4bd1
+(626.46s reported suite). Neither failed CI run is acceptance; no rerun/cancel
+or timeout-policy change, and macOS locale follow-on did not run.
+
+The old builtin-property smoke constructs controls without AddItem/RowSource
+rows but expects arbitrary positive ListIndex assignment values to persist.
+Its five expected values contradict the PRE-CODE independent empty-control
+VFP9 pairs: edge-first.out/edge-repeat.out both399eed0adb7bce698b70cce6c187a6e30e6e7f98b1fcb71c95f7f6796a4a848e;
+ListBox empty positive1/2.9/3.9=>0, ComboBox=>1 (ListCount+1), no selectedrow.
+This is selected assignment behavior, not a newly admitted production defect.
+
+Old properties_05 SHA6380c2af366d10131c16b48c1c3fc5b33de446261a194998e273aac27b65da00
+is retained as ci-smoke-properties05-before.cpp.txt. BEFORE correcting this
+NON-FROZEN existing smoke file, isolated unchanged method diagnostics reproduced
+exactly the same five failures under GNU and Clang sanitizers (status1, full
+raw bothc59c4df699563b4c9210e330bf1a4ae25a5a6406661214d02a9ae8e58a619fa9).
+Only five literal expectations change,2/2/1/3/3=>1/1/0/0/0, with an independent
+requirement reverse link. No assertions removed, setup/constructor/metadata/
+other members/production behavior changed. Construction readbacks are retained
+as unchanged preservation checks, not fresh native-construction requirements.
+New properties_05 SHA7f50ebb1c6ce07f30a359c53eb521ec640bc8aa814745f1b603499c2fe2f18a3.
+After diagnostics PASS on BOTH/status0, same full raw
+fdfe2ca1558c093913f28ec4b91c88b981f20c4975f59eeebcf25ba592cf1ca6.
+
+ALL FIVE initial frozen helper/newtest/registration/isolation bytes and ALL24
+fixed source/neighbor inputs remain unchanged. properties_05 was NOT in either
+manifest; this is not a frozen repair/refreeze, and BOTH full49 original audits
+remain intact. Broader verification now adds the previously hosted-only full
+runtime_surface subject to the same49, yielding50 subjects, plus both six
+unchanged preservationgroups. The new25-input ci-expanded manifest adds ONLY
+the corrected smoke source. Driver95583 runs GNU then Clang serially, not
+substituting isolated diagnostics for full suites. Expanded results, contracts,
+signed follow-up push/exact-head review/postpush/CI/conversations remain pending.
+
+Expanded GNU completed2026-10-12T00:07:33Z:50/50 PASS769.56s/status0; whole
+runtime_surface PASS6.03s, all274/four1184 counters complete, six unchanged
+preservationgroups complete/failures0. Full rawSHA
+f9d08ab2572947be43a8df7b818bf40b9b7fbc3fc985612615566e7f38275beb.
+Before/after all25 hashes checkedOK, initial5frozen/all24runtime-neighbor inputs
+unchanged. Clang sanitizer expanded compile still running00:15Z in95583.
+Chained contracts62588 validates exact ownedPID/cwd/command496856 before waiting
+and allfour expanded/preservation statuses before contracts; no parallel suite
+or acceptance claim while pending. No new source/test change or follow-up push.
+
+## Expanded both-toolchain verification complete
+
+Driver95583 harvestedexit0 on2026-10-12T00:45Z. Expanded GNU50/50 PASS769.56s,
+completed00:07:33Z/status0/full578-line raw
+SHAf9d08ab2572947be43a8df7b818bf40b9b7fbc3fc985612615566e7f38275beb.
+Clang ASan/UBSan/float-cast-overflow50/50 PASS1445.84s, completed00:41:23Z/
+status0/full578-line rawSHA532ced29a64776a3808c8a380dfc88c812b8945f6facf154b52ecdde1a30ddce.
+Both whole runtime_surface PASS (GNU6.03s/Clang12.45s), all274/four1184
+counters complete, both six unchanged preservationgroups complete/failures0.
+All25 before/after expanded input hashes checkedOK; initial five frozen/all24
+runtime-neighbor entries unchanged. No FAIL or sanitizer report/leaksdisabled,
+compiler warnings/raw spacing retained. Full compile/CTest/status/timestamp/
+SHA/manifests retained in fixture without overwriting any prior phase.
+
+Old exacthead967 Windows38182241134/job114597051385 completedFAILURE with the
+SAME five obsolete smoke expectations; one of560 subjects failed, all new
+ListIndex subjects pass. Full rawci-head967-windows-full.log SHA256
+9a85778496fde8f7e25cc29b2b0085d73b5532d7196b81cf37fb6505ffcd3bc8,
+reported2359.55s suite; metadata retained. Watch5258 harvested1/download0.
+No new defect or timeout-policy inference. Allthree failed old-head platform
+runs remain failed evidence, not acceptance for the pending test-only repair.
+Chained five-contract driver62588 is running; fresh signed-head push/postpush50,
+hosted CI and clean exact-head Claude-FIRST/fallback review remain merge gates.
+
+Repeated contracts62588 harvestedexit0:5/5 PASS332.66s/status0 completed
+2026-10-12T00:47:08Z,209 valid fragments/full rawSHA
+354b5ee5b4ba6b0faed4c14be4c75ee5af607ddb0a1e6557e7ddc5b85ce19c56.
+All25 before/after hashes checkedOK. Full expanded/failed-platform/diagnostic/
+contract records retained under actual filenames and checksum manifest.
+Documentation self-review rechecked: the five smoke literals independently
+align with the original empty-control map; no procedural rule, setup, assertion
+count, production, initial five frozen inputs or24existingmanifest entry changes.
+This is bounded delegated development verification, not independenthuman,
+high-hazard or release qualification. Signed follow-up/push/postpush50/fresh
+Claude-FIRST/fallback review/hosted CI/resolved conversations remain pending.

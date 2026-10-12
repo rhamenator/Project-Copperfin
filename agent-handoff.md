@@ -603,6 +603,136 @@ Latest7b348da8-11ff-4e3f-b81b-5f04e7d13182 mirroredseq2031 in bothroots:
 both identical fixed suites/preservation/contracts/complete DQ-DV evidence,
 frozen inputs unchanged; signed integration next.
 
+PR7155 opened2026-10-11T22:54Z/non-draft/main at exact signed/DCO localGoodG
+head967e262966d777756af9caa2677484bf74b4e2b0; push/upstream exacthead verified.
+https://github.com/rhamenator/Project-Copperfin/pull/7155
+Claude-FIRST documented top-level request6114816299 posted22:54:24Z; no
+Claude response/quota/setup failure inferred. Automatic Codex summary6114816116
+reports running from PR-open; summary/reaction alone NOT clean review or explicit
+fallback request. Actual clean exact-head review remains required beforemerge.
+Graph threads/reviews/closingrefs0/no pagination gaps atopen, mergeBLOCKED/CI
+inprogress. Active strictmainruleset20356131 still11required; countall11exactly
+once/SUCCESS explicitly, not merely watcherexit0. GitHub signature unknown_key
+retained, not signing-key registration claim. Appattach failed100identitycap;
+no unrelated attachment removed or GitHub blocker.
+Exact-head postpush49 GNU driver44693 active from cleanWT, manifest/signature
+verified beforetests. Requiredchecks watch70257 active; full logs/raw/status/
+PR-open metadata/ruleset snapshots in ownedWT build/listindex-native. WT remains
+clean and fixed/frozen inputs unchanged. NEXT: harvest44693 and70257, inspect
+exact-head checks/comments/review conversations. Address actionable findings;
+if Claude unavailable/notworking request verified owner-authorized Codex fallback,
+never treat no response/summary/quota as clean evidence. All11required/clean
+exactheadreview/resolvedconversations/postpush acceptance gates remain.
+Canonical publication continuity is local for next signed carryover commit;
+do not dirty activeWT or change head merely for pending-state reporting. Main
+still252f70bec; no merge/parent closure/VM/backup-reset assumption or owner input.
+
+Publication d9408a6f-b3c1-42e0-adf6-d9515c288ccf mirroredseq2032 in canonical
+only for signed carryover; activeWT/head intentionally remains clean/unchanged.
+
+2026-10-11T23:15Z checkpoint: postpush44693 and requiredwatch70257 harvested0.
+Exact signedhead967e262966 postpushGNU49/49 PASS749.45s/status0 completed
+23:06:44Z, all274/four1184 counters/full566line rawSHA
+30651cd819af7731c833d616923efbeb959e26f8ca0088420252cdb9b4591a66;
+all24 before/after hashes OK. Fullraw/status/timestamps/signature/manifest and
+PR2315/ruleset snapshots retained in ownedWT build/listindex-native.
+All11required strictmainruleset20356131 present exactlyonce/SUCCESS; all33
+completedchecksSUCCESS, optional fullnative Linux/macOS/Windows3 stillrunning.
+Graph exacthead/solecommit/threads0/reviews0/closingrefs0/no paginationgaps.
+Claude-FIRST6114816299 acknowledged EYES by verified claude[bot]; no actual
+review/check result yet. Automatic Codex summary completed but no actualclean
+result, and summary/reaction alone neveraccepted. Claude acknowledged/pending,
+not a diagnosed quota/setup failure; no fallback request issued this checkpoint.
+Sole merge blocker is actual clean exact-head review. Stayquiet pending it;
+request owner-authorized Codex fallback if Claude becomes unavailable/notworking,
+not because its acknowledgment is mistaken for review. Allsources/frozeninputs/
+WT/upstream exacthead unchanged/clean; no PR merge or parent closure yet.
+
+Postpush/gate report6115011216 records exact-head evidence without changing
+source/head. Optional fullnative watches started23:18Z from canonical with
+explicit --repo/--exit-status/60sinterval and exacthead validation beforewatch:
+Linux38182241129/job114597051411 session39839; macOS38182241126/
+job114597051364 session24837; Windows38182241134/job114597051385 session5258.
+Allthree beforemetadata showhead967e262966/IN_PROGRESS. Full watch/raw/completed
+metadata/status/SHA will be retained in canonical build/listindex-late-platform-7155;
+no CI cancel/rerun/timeout-policy change. Harvest each aftercompletion, preserve
+evidence before completed-WT/build cleanup and transfer/move owned followups
+only when writers are finished. Next heartbeat inspect actual review and
+exacthead gates; no merge solely on summary/acknowledgment. No owner input.
+
+2026-10-11T23:45Z actionableCI: full exacthead967 Linux38182241129/
+job114597051411 and macOS38182241126/job114597051364 failed ONLY
+runtime_surface_functions (one of559, twootherSkipped), samefive assertions.
+Complete raw download0 and watchers39839/24837 harvested1; raw hashes
+294af9fa4e07f190e622be9891853169e63679d8564e4885fea499ff4b756e6e/Linux507.66s;
+92dd6cbf93aa2c1dfc0e001b581612afbff5ccc17027bec5d074e859e98c4bd1/Mac626.46s.
+All new ListIndex subjects pass; failed CI not acceptance. Windows5258 remains
+watched; no CIcancel/rerun/timeout-policy change. No cleanreview yet.
+Cause: non-frozen test properties_05 constructs empty controls then expects
+arbitrary positive ListIndex assignments, contrary to pre-code matching native
+empty-control edgepairs399eed0a (ComboBox1/ListBox0). Isolated unchanged-method
+GNU/Clang beforediagnostics55773 harvested0, both actualstatus1/exactly5failures,
+fullrawc59c4df699563b4c9210e330bf1a4ae25a5a6406661214d02a9ae8e58a619fa9.
+Old source snapshotSHA6380c2af366d10131c16b48c1c3fc5b33de446261a194998e273aac27b65da00
+retainedbeforecorrection. Only five non-frozen expectations2/2/1/3/3=>1/1/0/0/0
+and RQ reverse-link change, no assertions/setup/construction/metadata/production
+change. NewpropsSHA7f50ebb1c6ce07f30a359c53eb521ec640bc8aa814745f1b603499c2fe2f18a3.
+Both afterdiagnostics67544 harvested0, status0/rawfdfe2ca1558c093913f28ec4b91c88b981f20c4975f59eeebcf25ba592cf1ca6.
+ALL initial5frozen/all24existingmanifest entries unchanged; properties_05 was
+not frozen/in either manifest, so not a frozenrepair/refreeze. Original both49
+audits remain intact, no expectationweakening in274/four1184. New25-input
+ci-expanded manifest addsONLY correctedprops. Expanded full50 prior49+whole
+runtime_surface and both sixgroups driver95583 nowGNUcompile running, thenClang
+serial nice10/ionice2:7/-j1/privateTMP700. Fullraw/status/SHA/native/oldsource/
+diagnostic evidence retained in activefixture/build. No follow-up pushedyet:
+PR stillhead967; WTdirty ONLYtest/docs/evidence pendingverification.
+NEXT harvest95583, investigate without changingfrozeninputs, contracts/signed
+test-onlyfollowup/push, exact-headpostpush and freshClaude-FIRST/CI/review.
+Record/resolve conversations onlyafter exactfixverified. No owner input/scope
+expansion/parent closure/VM/backup-reset assumption.
+
+CI repair e8cd680d-ee04-46b9-9038-9a30e1e6f10a mirroredseq2033 canonical-only
+pending signed related follow-up; preserve publication2032/e8 immutable bytes.
+
+2026-10-12T00:15Z repair verification: expandedGNU50/50 PASS769.56s,
+completed00:07:33Z/status0/fullrawSHA
+f9d08ab2572947be43a8df7b818bf40b9b7fbc3fc985612615566e7f38275beb.
+Whole runtime_surface PASS6.03s, all274/four1184 counters complete; GNU six
+preservationgroups complete/failures0. Before/after expanded25 input checksOK;
+all initial5frozen/all24runtime-neighbor entries unchanged. No new source/test
+change after five non-frozen literals. Expanded driver95583/PID496856 continues
+Clang sanitizer compile171/210 atinspection; no Clang expanded completion yet.
+Chained contractdriver62588 waits for exactPID/cwd/command496856, fail-closed
+allfour expanded/preservation statuses0 before allfive contracts,25hashchecks,
+privateTMP/nice10/serial. Do not run parallel runtime suites or overwrite raw.
+NEXT harvest95583 AND62588/fullraw/counters/status/SHA; if allpass prepare
+signed test-only follow-up, push and fresh exact-head Claude-FIRST/postpush50/
+CI/review gates. PR remainshead967, no follow-up pushed, existing Linux/Mac
+failure explained/reported6115302855; Windows5258 stillpending, no cleanreview.
+Main/origin252f70bec unchanged/parents5611/6776 open-owner-agent-approved.
+No owner input, scope expansion, VM or backup-reset completion assumption.
+
+2026-10-12T00:47:08Z CI repair ready for signed follow-up: expanded95583
+harvested0, GNU50/50 PASS769.56s/full578line f9d08ab2572947be43a8df7b818bf40b9b7fbc3fc985612615566e7f38275beb;
+Clangsanitizers50/50 PASS1445.84s/full578line
+532ced29a64776a3808c8a380dfc88c812b8945f6facf154b52ecdde1a30ddce, completed00:41:23Z.
+Whole runtime_surface GNU6.03s/Clang12.45s PASS, all274/four1184/both sixgroups
+complete; all25 before/after hashesOK/initial5frozen/all24prior entries unchanged.
+Repeated contracts62588 harvested0,5/5 PASS332.66s/209fragments/fullraw
+354b5ee5b4ba6b0faed4c14be4c75ee5af607ddb0a1e6557e7ddc5b85ce19c56.
+Development self-review rechecked with independent original empty-control map.
+OldWindows5258 harvested1/download0, exacthead967 oneof560 failed the SAME5
+smoke assertions/allnewsubjects pass; raw9a85778496fde8f7e25cc29b2b0085d73b5532d7196b81cf37fb6505ffcd3bc8,
+reported2359.55s. Allthree failedoldhead raws/metadata preserved, not acceptance.
+No production/initial-frozen/assertion removal/setup/sourceconstruction change.
+NEXT signed test-onlyfollowup/push, exact-headpostpush50/CI/freshClaude-FIRST;
+oldClaude acknowledgedbut no actualresult after~113min, use owner-authorized
+verifiedCodex fallback after requestingClaude first onnewhead. No quota/setup
+failure diagnosed or old summary/acknowledgment treated asclean. No mergeyet.
+
+Ready aa5fcd6e-f3be-4d2c-ac31-4f00d18fc269 mirroredseq2034 in bothroots;
+publication2032/CIrepair2033 immutable records included in related follow-up.
+
 ## Retained owner steering / deferred work
 
 Audit candidates7100 lifecycle output-drain timeout and7102 designer-smoke
