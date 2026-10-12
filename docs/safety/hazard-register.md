@@ -53,6 +53,16 @@ misstate rejected-state preservation, or claim native successful focus/text/
 top/return despite7163 or type parity despite7164. Both-sign VFP9 projection,
 finite/exact default and NaN containment derive from measured/named parents;
 argument-domain11 and admitted-absent1234 are independently observed.
+Review4252485330 trimmed-empty binding boundary is independently confirmed
+by paired36-call native observations; separate supplemental72 literals froze
+before BOTH120-failure pre-fix runs and one-line guard correction. Initial
+five frozen and old assertions unchanged. Revised GNU70/70/516.71s and Clang
+sanitizer70/70/3213.58s/supplemental72/both144cmp/bothsixgroups/all34hashes/
+fivecontracts5/5/345.35s PASS; bounded delegated DQ-DV renewed inREADME, not
+independenthuman/high-hazard qualification. Failed relative-root driver attempts
+retained, only nonfrozen argument normalized; initial incorrect assessment
+explicitly superseded. Signed-fix exact-head integration gates remain;7169
+old-head Mac polyglot failure is unadmitted/not repaired, no scope expansion.
 Distinct UNUSED helper/frozen tests/BOTH complete original70 suites preceded
 one bounded admission arm; shared remover/types/arity/other routes unchanged.
 Full fixed70/sanitizers/both144-call NON-NATIVE scope comparisons/contracts/

@@ -15,6 +15,18 @@
   RST0/emptyControlSource/coherent storage/one-argument Numeric/exact arm wired,
   current-session behavior reused. Shared removal/focus/text/top/return,
   types/omitted/extras/bound/RowSource/RemoveListItem and parser unchanged.
+  Review4252485330 clarifies unbound as trimmed-empty ControlSource: fresh
+  paired36-call installedVFP9 observation confirms empty/space/tab-spaces
+  equivalence; separate supplemental72 frozen/pre-fix GNU+Clang120failures
+  precede one-line guard correction/additive07 hook. Initial five frozen and
+  old assertions unchanged. Revised GNU70/70 PASS516.71s/Clang sanitizer70/70
+  PASS3213.58s/all34hashes/supplemental72/both144rawcmp/bothsixgroups PASS;
+  contracts5/5 PASS345.35s/213fragments, bounded delegated DQ-DV renewed in
+  README, not independenthuman/high-hazard. Two relative-root driver failures
+  retained; only nonfrozen command corrected, no source/assertion weakening.
+  Signedfix/freshactual exactheadreview/postpush70/CI still integration gates.
+  Old-head macOS polyglot failure7169 remains separate/unadmitted; native
+  selected RemoveItem subjects passed, no rootcause or old-failure erasure.
   Separate7163 successful-state/return and7164 type-admission gaps remain
   unadmitted; neither is hidden as native acceptance or repaired here.
   Fresh144-call excluded-scope baseline is NON-NATIVE preservation only.

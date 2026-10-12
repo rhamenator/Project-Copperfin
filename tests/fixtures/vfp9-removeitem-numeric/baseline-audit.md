@@ -165,3 +165,69 @@ Final repeated five contracts completed2026-10-12T21:24:59Z/status0/5of5
 PASS340.08s/213valid fragments; full86-line rawSHA
 0395f13f9d620d178c97c23faa571b886825ce3e0f869c5bebc82db7e78a0439.
 All33 fixed scoped input hashes unchanged before-after. No frozen weakening.
+
+Review4252485330 on exacthead4c83738685 identified space-only ControlSource
+guard mismatch. Fresh independent paired native36-case observations (all
+runner0/cmp0/DONE36/raw73a15ab8) precede a separate supplemental72-case literal
+module/freeze and BOTH complete pre-fix GNU/Clang sanitizer runs: compile0/
+run1/72complete/identical120 failures/full122-line rawd99315f9/all33hashes.
+Only then raw-empty guard replaced by trimmed-empty and additive07 include/
+call added; all old07 assertions and initial five frozen unchanged.
+Revised full70 serialGNU/Clang driver95432 nowRUNNING, no new fixed-suite or
+new-head acceptance claim. New34-input manifest retains separate supplemental
+freeze, old33/input/fail/native raws remain intact. Existing scope/sixgroup/
+contract/DQ-DV/push/exactheadreview gates must repeat before integration.
+Early revised GNU supplemental compile0/run0/72complete/failures0 at21:51:25Z,
+full2-line rawbeb34879dfcb557df994cbe44faa32920baf0121cfd91b2ae4c7cf110a8362cf,
+not full70 or sanitizer completion. Initial five frozen unchanged.
+
+Revised GNU full70/70 PASS516.71s/status0 at2026-10-12T21:57:34Z,
+all198/four556/all65prior/supplemental72/all34before-afterhashes;
+full799-line rawae525dd60bca810a20db56c54fac792998bb33c2e85b64a5b5eca6cd06ea0eac.
+Revised Clang sanitizer full70 still running95432; both-scope/supplemental/
+sixgroups/contracts queued98493, no BOTH revised completion or fix-push yet.
+Old-head macOS full579 failed ONLY unchanged polyglot_runtime_host identity/
+counts assertion; allfiveRemoveItem PASS. Focused7169 filed exactmain6fe579,
+unadmitted/no production expansion/rootcause or flake claim. Full3702-line
+raw d6065519c7ed4a8a55b863fe33be01a23bc8c12caadbc4570823c57aac718425
+retained in build/removeitem-native/oldhead-platforms; sameheadLinux579/579
+PASS986.12s/localGNU10/10PASS8.00s do not clear nativeMac failure. Follow
+revised-head platform evidence without rewriting this historical failure.
+
+## Review-fixed local completion
+
+Revised GNU70/70 PASS516.71s/status0 at21:57:34Z and Clang ASan/UBSan/
+float-cast-overflow70/70 PASS3213.58s/status0 completed22:51:47Z;
+full799-line Clang rawSHA738ff2cdd7879f8a7bae8a4ba4c3f363902451f9fef83f474297ac427ea2cc5b,
+GNUae525dd60bca810a20db56c54fac792998bb33c2e85b64a5b5eca6cd06ea0eac.
+All198direct/four556public/all65prior plus supplemental72 pass; all34 input
+hashes before-after. Initial five frozen/supplemental freeze unchanged.
+Both144 excluded-scope compile/run/cmp0/DONE144/scaffold0/raw513560f4,
+both supplemental72 compile/run0/failures0/rawbeb34879 and both six unchanged
+list-control groups compile/run0/failures0/rawbefec198. Verification driver
+attempts98493/80383 ran144 with24 RowSourceType2 setup failures from RELATIVE
+scratch-root arguments; no source or assertion failure repair. Initial missing-
+argument diagnosis was incorrect and is superseded in retained attempts1/2.
+Only NON-FROZEN driver argument normalized to ABSOLUTE owned root; SAME binary/
+source/literals fullrawcmp0. Corrected attempt3/89836 completed0.
+Five contracts5/5 PASS345.35s/status0 completed2026-10-12T23:24:49Z/213fragments;
+full86-line rawdfc7f205c0abf6a2702f959f4642cb83d70d124abe16988b75d3b4a42d082392,
+all34 before-after hashes. No warning-free/leak/performance/global-atomicity claim;
+no sanitizer diagnostic, leak detection disabled.
+
+DQ/DV-5611-REMOVEITEM-ROW-NUMERIC-001 renewed by Codex delegated development
+self-review/automated walkthrough completed2026-10-12T23:26:21Z. Bounded medium
+procedure/misuse/rollback/field-notification review checks the newly confirmed
+empty/space/tab-spaces binding equivalence against the independent paired36
+source/raw/status and named default parent policy; supplemental72 and BOTH
+full70/preservation/contracts verify 2.9 row2,0 invalid11,4 absent1234,32769
+invalid11 and both-sign aliases/default rejection. Surviving IDs/cells/payload
+and rejected before-after state remain distinct from7163 shared state/return
+and7164 types. The guard change is one line, old07 assertions unchanged with
+only an additive hook; helper/CMake/isolation/original numeric test unchanged.
+This is NOT independenthuman/high-hazard/system/release qualification. Active
+hazards/parents/7163/7164/7169 remain open/unadmitted as applicable. Existing
+rollback/notification plans remain: revert only admission and preserve evidence,
+notify numeric-policy consumers through changelog/coverage/handoff.
+Signed fix push/exact remote verification/4252485330 resolution and fresh
+actual clean exact-head review/postpush70/all11 required checks remain gates.

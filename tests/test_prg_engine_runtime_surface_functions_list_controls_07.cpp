@@ -1,10 +1,12 @@
 #include "test_prg_engine_runtime_surface_functions_support.h"
 #include "prg_engine_runtime_surface_functions.h"
+#include "test_prg_engine_runtime_surface_removeitem_blank_controlsource.inl"
 
 namespace copperfin::runtime_surface_tests
 {
     void test_native_list_control_selectors_reject_partial_integer_tokens()
     {
+        test_native_removeitem_blank_controlsource_admission();
         namespace fs = std::filesystem;
         const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_list_selector_integer_tokens";
         std::error_code ignored;

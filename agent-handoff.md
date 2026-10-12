@@ -638,15 +638,60 @@ No VM started/recreated; backup-reset completion still unconfirmed.
 
 ## Selected active bounded slice
 
-Native ListBox/ComboBox RemoveItem non-NULL Numeric/int64/uint64 first display-row
-argument admission under OPEN/rhamenator/exact-agent-approved #5611/#6776,
-revalidated19:45Z. Dedicated WT
-/home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin,
-branch fix/removeitem-numeric-5611/base origin/main
-6fe579e32dcf80e77e0c66e9b07845c908ebecef; HEAD stillbase/uncommitted/no PR yet.
-App create_worktree reported Not a git repository from chat directory; normal
-dedicated git worktree created from verified origin/main instead. Foreign
-files/4436and49aeWTs and main source unchanged; own continuity copied explicitly.
+Native ListBox/ComboBox RemoveItem Numeric/int64/uint64 display-row admission
+under OPEN/rhamenator/exact-agent-approved #5611/#6776, revalidated23:15Z.
+WT /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin,
+branch fix/removeitem-numeric-5611/base main6fe579e32dcf80e77e0c66e9b07845c908ebecef.
+PR7168 OPEN/main, published old signed+DCO head4c83738685eee01f3824e3b122fc3e336f38416b,
+localGoodG/DCO0/remoteexact; GitHubunknown_key not registered-key claim.
+Claude-FIRST6132906140 no actualresponse; authorized Codex6132912786 actual
+oldheadreview4252485330/PRRT_kwDOR7wYLc6roHRc identified whitespace-only
+ControlSource guard mismatch. Reviewfix remains local/uncommitted now READY
+for signed+DCO commit/push: one-line trim_copy(...).empty(), additive07 hook/
+NEWsupplemental72 module. Initial fivefrozen/helper/CMake/isolation/numeric
+assertions unchanged; old07 assertions unchanged, no refreeze or weakening.
+Fresh independent paired36 native blank-space-tabspaces observations preceded
+supplemental freeze21:47:50Z/9cf1ad04 and BOTH pre-fix compile0/run1/72complete/
+identical120failures/rawd99315f9/all33hashes. Only then guard21:48:37Z wired.
+
+Review-fixed full70 GNU70/70/516.71s21:57:34Z/799rawae525dd6 and Clang ASan/
+UBSan/float-cast-overflow70/70/3213.58s22:51:47Z/799raw738ff2cd PASS/status0,
+all198/four556/all65prior+supplemental72/all34before-afterhashes,95432 harvested0.
+Both144 excluded-scope compile-run-cmp0/raw513560f4; bothsupp72 compile-run0/
+failures0/rawbeb34879, bothsixgroups0/rawbefec198. Queued98493 and repeat80383
+ran144 with24 RST2 setup failures from relative scratch root (not missing
+argument; initial incorrect diagnosis superseded/retained). ONLYnonfrozen
+rootargument normalizedABSOLUTE; SAMEsource/binary/literals fullrawcmp0.
+Attempt3/89836 harvested0/allpreservation+fivecontracts5/5 PASS345.35s/status0
+23:24:49Z/213fragments/full86rawdfc7f205/all34hashes. Boundedmedium DQ/DV
+renewed 2026-10-12T23:26:21Z in README, delegated self-review/walkthrough,
+NOT independenthuman/high-hazard/system/release qualification. No sanitizer
+diagnostic/leaksdisabled/notwarning-free/performance/globalatomicity proof.
+Next: sign+DCO commit/push fix, verify exact remote change, reply/resolve
+4252485330 ONLY when fully addressed, fresh Claude-FIRST/authorizedCodex
+actualclean exacthead review, newheadpostpush70/all11uniquelySUCCESS before
+exactheadmerge. No silence/summary/quota acceptance, no adminbypass.
+
+Oldhead all36checks complete35SUCCESS/oneoptionalMacFAIL, all11requiredgreen.
+Mac38310572850/job115015006769 only unchanged polyglot_host combined identity/
+counts assertion0.95s;579selected/576PASS/oneFAIL/twoSkipped/847.96s. Allfive
+RemoveItemPASS. Separate7169 OPEN/rhamenator/bug-runtime/noapproval filedmain
+6fe579e32, no out-of-scope fix or rootcause/flake claim. Full3702rawd6065519
+and source-delta metadata retained oldhead-platforms/report6133657779.
+Linux38310572797/job115015008307 zero failuresout579/986.12s/3869raw218c5987,
+Windows38310572754/job115015006732 580selected/100%/2834.23s SUCCESS23:10:45Z/
+rawae9f7919/allfiveRemoveItemPASS; localGNUhost10/10PASS8.00s/raw67da7a97
+NOT Mac acceptance or old failure erasure. Follow newhead CI without7169
+scope expansion/closure. Oldheadpostpush70/70/522.12s21:34:47Z/raw1abe8177
+retained, NOT revised-head acceptance. Review remainsunresolved/no freshclean.
+
+Appattach7168 failed identitycount exceeds100; existingattachments unchanged/
+GitHubunblocked. Canonical+WT own localcontinuity preserved; foreign files/
+4436and49aeWTs untouched. Scopedstash5119d91c53179501344964aa1ae50d63958801fd
+retained/notpopped. No ownerinput/VMstart/reset confirmation/parent/hazard/
+release closure.7163/7164/7169 unadmitted, shared-state-return/types untouched.
+Full original/native/frozen/reviewcorrectedraws/failedharnesses retained in
+fixture+build/removeitem-native; original chronological phases below.
 
 Independent pre-code map2026-10-12T17:53:05Z BEFORE helper/assertions/config:
 full shipped RemoveItem help995c88c6 SHAb65238ab; installed VFP9 7423 through

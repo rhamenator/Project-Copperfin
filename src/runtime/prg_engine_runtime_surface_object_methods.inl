@@ -380,7 +380,7 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
             (control_source == runtime_object.properties.end() ||
              (!control_source->second.is_null &&
               control_source->second.kind == PrgValueKind::string &&
-              control_source->second.string_value.empty())) &&
+              trim_copy(control_source->second.string_value).empty())) &&
             runtime_object.collection_item_keys.size() == runtime_object.collection_items.size() &&
             runtime_object.list_rows.size() == runtime_object.collection_items.size();
         const auto& index = arguments.front();
