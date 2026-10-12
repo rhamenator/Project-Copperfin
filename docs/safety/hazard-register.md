@@ -45,6 +45,30 @@ own system and domain assurance.
 
 ## Bounded numeric-conversion linkage
 
+RQ-CF-PRG-REMOVEITEM-ROW-NUMERIC-001 / DQ-DV-5611-REMOVEITEM-ROW-NUMERIC-001
+links active HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01
+unchanged to the [independent RemoveItem map](../../tests/fixtures/vfp9-removeitem-numeric/README.md).
+Bounded documentation misuse medium: remove the wrong display row/identity,
+misstate rejected-state preservation, or claim native successful focus/text/
+top/return despite7163 or type parity despite7164. Both-sign VFP9 projection,
+finite/exact default and NaN containment derive from measured/named parents;
+argument-domain11 and admitted-absent1234 are independently observed.
+Distinct UNUSED helper/frozen tests/BOTH complete original70 suites preceded
+one bounded admission arm; shared remover/types/arity/other routes unchanged.
+Full fixed70/sanitizers/both144-call NON-NATIVE scope comparisons/contracts/
+bounded delegated development walkthrough completed; signed exact-head
+post-push/hosted checks/actual clean external review remain integration gates.
+No independenthuman/high-hazard/system/parent/hazard/KBX/
+release closure or whole-call/callback atomicity claim.
+Current documented walkthrough/self-review is complete under the owner's
+bounded-medium delegated development allowance: full GNU70/70/521.24s,
+both144 scope comparisons/both six groups/all33hashes/fivecontracts5/5/339.63s
+and independent native/parent boundary checks retained. It is not independent
+human/high-hazard qualification. Subsequent full fixedClang70/70 PASS3230.17s
+completed20:50:11Z/all198-four556 counters/all33hashes/no diagnostic (leaks
+disabled). Signed exact-head integration gates remain, registered hazards
+active/unchanged; separate7163/7164 unadmitted, no shared-state/type repair.
+
 RQ-CF-PRG-TOPITEMID-NUMERIC-001 / DQ-DV-5611-TOPITEMID-NUMERIC-001 links active
 HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01 unchanged to the
 [independent pre-code TopItemID map](../../tests/fixtures/vfp9-topitemid-numeric/README.md).

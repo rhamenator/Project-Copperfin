@@ -1,5 +1,33 @@
 # VFP Language Reference Coverage
 
+- RemoveItem Numeric/exact display-row admission recovery (#5611/#6776,2026-10-12):
+  [Independent installed VFP9/help/parent map](../tests/fixtures/vfp9-removeitem-numeric/README.md)
+  precedes helper/assertions/configuration. Both native controls, dense/sparse
+  identities, two-column cells/payload, fractions truncating to display rows,
+  inclusive1..32768 admission/invalid11/absent1234 and BOTH-sign VFP9 low32
+  aliases measured in three matching423/297/180-call pairs. Default finite
+  truncation/exact1..32768 and NaN11/exact extended integers derive from named
+  owner numeric policy/hazards; no native CAST/NaN syntax claim.
+  Initial fivefrozen198direct/four556public unchanged. BOTH complete original70
+  GNU66/70/516.19s and Clang ASan/UBSan/float-cast-overflow66/70/3218.18s,
+  onlyfournewpublicfail/all65previous+newdirect pass/identical4600 failures/
+  all33 before-after hashes. Only afterwards bounded materialized-unbound
+  RST0/emptyControlSource/coherent storage/one-argument Numeric/exact arm wired,
+  current-session behavior reused. Shared removal/focus/text/top/return,
+  types/omitted/extras/bound/RowSource/RemoveListItem and parser unchanged.
+  Separate7163 successful-state/return and7164 type-admission gaps remain
+  unadmitted; neither is hidden as native acceptance or repaired here.
+  Fresh144-call excluded-scope baseline is NON-NATIVE preservation only.
+  Local bounded verification complete: fixed GNU70/70 PASS521.24s and Clang
+  ASan/UBSan/float-cast-overflow70/70 PASS3230.17s/all198-four556 counters/
+  all33 hashes; both144-call NON-NATIVE excluded-scope fullrawcmp0/bothsix
+  unchanged listgroupsPASS. Fivecontracts5/5/339.63s/213 valid fragments;
+  bounded delegated development documentation self-review/automated walkthrough
+  complete, not independenthuman/high-hazard. No frozen weakening/refreeze or
+  old assertion correction. Signed exact-head post-push70/hosted checks/
+  actual clean external review remain integration gates; separate7163/7164,
+  parents/family/hazards/release remain open and outside this completion.
+
 - TopItemID Numeric/exact assignment recovery (#5611/#6776,2026-10-12):
   [Independent installedVFP9/help/parent map](../tests/fixtures/vfp9-topitemid-numeric/README.md)
   precedes helper/assertions/configuration. Unique item-ID addressing, accepted

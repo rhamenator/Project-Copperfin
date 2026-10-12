@@ -1045,6 +1045,22 @@ function(copperfin_configure_native_test_isolation)
             RESOURCES none
             AUDIT complete)
     endforeach()
+    foreach(removeitem_test IN ITEMS
+        test_prg_engine_removeitem_numeric
+        test_prg_engine_removeitem_numeric_copperfin_session1
+        test_prg_engine_removeitem_numeric_copperfin_session2
+        test_prg_engine_removeitem_numeric_vfp9_session1
+        test_prg_engine_removeitem_numeric_vfp9_session2)
+        copperfin_set_test_isolation(${removeitem_test}
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT scoped-process
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            RESOURCES none
+            AUDIT complete)
+    endforeach()
     foreach(list_index_test IN ITEMS
         test_prg_engine_list_index_numeric
         test_prg_engine_list_index_numeric_copperfin_session1
