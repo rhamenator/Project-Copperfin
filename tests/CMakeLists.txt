@@ -6022,6 +6022,18 @@ copperfin_add_test(test_prg_engine_listindex_numeric cf_xbase_runtime
     test_prg_engine_listindex_numeric.cpp
     prg_engine_test_support.cpp
 )
+# RQ-CF-PRG-TOPINDEX-NUMERIC-001 / VR-5611-TOPINDEX-NUMERIC-001/002.
+copperfin_add_test(test_prg_engine_topindex_numeric cf_xbase_runtime
+    test_prg_engine_topindex_numeric.cpp
+    prg_engine_test_support.cpp
+)
+foreach(topindex_mode IN ITEMS COPPERFIN VFP9)
+    string(TOLOWER "${topindex_mode}" topindex_mode_lower)
+    foreach(topindex_session IN ITEMS 1 2)
+        add_test(NAME test_prg_engine_topindex_numeric_${topindex_mode_lower}_session${topindex_session}
+            COMMAND $<TARGET_FILE:test_prg_engine_topindex_numeric> ${topindex_mode} ${topindex_session})
+    endforeach()
+endforeach()
 # RQ-CF-PRG-LISTITEMID-NUMERIC-001 / VR-5611-LISTITEMID-NUMERIC-001/002.
 copperfin_add_test(test_prg_engine_listitemid_numeric cf_xbase_runtime
     test_prg_engine_listitemid_numeric.cpp

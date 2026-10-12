@@ -1,0 +1,11 @@
+--- tests/fixtures/vfp9-topindex-numeric/initial-syntax-attempt/test-before.cpp.txt	2026-10-12 02:04:39.032662895 -0400
++++ tests/test_prg_engine_topindex_numeric.cpp	2026-10-12 02:09:19.935489766 -0400
+@@ -244,7 +244,7 @@
+  const int wanted=readonly?1:projection?final_top:2;
+  const int focus=empty?0:2;
+  bool seen=false;
+- for(const auto& object:state.ole_objects) if(lowercase_copy(object.base_class_name)==lowercase_copy(cls)) {
++ for(const auto& object:state.ole_objects) if(copperfin::runtime::lowercase_copy(object.base_class_name)==copperfin::runtime::lowercase_copy(cls)) {
+   seen=true;
+   const auto prop=[&](const char* key,const std::string& expected,PrgValueKind kind) {
+    auto i=object.properties.find(key);

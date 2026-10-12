@@ -24,3 +24,11 @@
   PASS337.08s/210fragments; boundedmedium delegated development walkthrough/
   self-review complete, not independent-human/high-hazard qualification.
   Signed exact-head postpush/external review/required-check gates still apply.
+  PR7156 subsequently merged asd3c1340c4 after exact signedhead8b2d387f21
+  postpush55/55 PASS915.88s, all11required uniquelySUCCESS/actual cleanCodex
+  review6118002131 afterClaude-FIRST/fallback and zerounresolvedthreads.
+  Optional fullplatforms pending atmerge; parent/hazard/family closure excluded.
+  Late exact-head fullplatforms now SUCCESS: Linux564subjects/0failed/
+  twoexplicit launcherSkips/840.93s, macOS564subjects/0failed/explicitlauncher
+  Skips/569.87s, Windows565/565/2560.16s completed06:31:49Z. Fullraws/status/
+  hashes retained in recoverablebuild; pending-atmerge record not rewritten.

@@ -606,6 +606,18 @@
                 write_native_list_control_top_item_id(*runtime_object, arguments[2]));
         }
         if (is_native_topindex_member_name(*runtime_object, member_name)) {
+            // RQ-CF-PRG-TOPINDEX-NUMERIC-001 / VR-5611-TOPINDEX-NUMERIC-002.
+            // Existing SETPEM/PUTPEM alias arm, selected ListBox Numeric/exact
+            // inputs only; preserve ComboBox read-only and all other coercions.
+            if (is_native_listbox_runtime_object(*runtime_object) &&
+                !arguments[2].is_null &&
+                (arguments[2].kind == PrgValueKind::number ||
+                 arguments[2].kind == PrgValueKind::int64 ||
+                 arguments[2].kind == PrgValueKind::uint64)) {
+                return make_boolean_value(
+                    write_native_member_callback &&
+                    write_native_member_callback(arguments[0], member_name, arguments[2]));
+            }
             return make_boolean_value(
                 write_native_list_control_top_index(*runtime_object, arguments[2]));
         }

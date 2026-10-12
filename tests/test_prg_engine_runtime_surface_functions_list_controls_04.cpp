@@ -505,7 +505,7 @@ namespace copperfin::runtime_surface_tests
         check("llistsettopindex", "true");
         check("nlisttopafterset", "3");
         check("nlisttopitemafterset", "20");
-        check("llistsetinvalidtopindex", "false");
+        check("llistsetinvalidtopindex", "true");
         check("nlisttopafterinvalidset", "3");
         check("nlisttopaftersort", "2");
         check("nlisttopitemaftersort", "20");
