@@ -609,7 +609,16 @@
             // RQ-CF-PRG-TOPINDEX-NUMERIC-001 / VR-5611-TOPINDEX-NUMERIC-002.
             // Existing SETPEM/PUTPEM alias arm, selected ListBox Numeric/exact
             // inputs only; preserve ComboBox read-only and all other coercions.
+            const auto row_source_type = runtime_object->properties.find("rowsourcetype");
+            const auto control_source = runtime_object->properties.find("controlsource");
+            const bool materialized_unbound =
+                (row_source_type == runtime_object->properties.end() ||
+                 value_as_number(row_source_type->second) == 0.0) &&
+                (control_source == runtime_object->properties.end() ||
+                 trim_copy(value_as_string(control_source->second)).empty()) &&
+                runtime_object->collection_item_keys.size() == runtime_object->collection_items.size();
             if (is_native_listbox_runtime_object(*runtime_object) &&
+                materialized_unbound &&
                 !arguments[2].is_null &&
                 (arguments[2].kind == PrgValueKind::number ||
                  arguments[2].kind == PrgValueKind::int64 ||

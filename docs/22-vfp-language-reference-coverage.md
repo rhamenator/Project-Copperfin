@@ -27,6 +27,18 @@
   walkthrough complete, not independenthuman/high-hazard qualification.
   Signedpostpush/external exact-head review/allrequiredchecks/threads remain
   integration gates, no parent/family/KBX/hazard/release closure.
+  Initial PR7159 exacthead postpush60 passed1127.23s, but actual Codex review
+  found excluded RowSource scope leak. Both entry routes now explicitly gated
+  to materialized/unbound RowSourceType0; fivefrozen unchanged. Supplemental
+  144-case excluded-scope diagnostics reproduce104 changed records against
+  retained main. BOTH compiler comparisons and full60/sixgroups/contracts
+  repeat pending before new fix push/review resolution; oldhead pass is not
+  newhead evidence. Separate7157 closing reference removed via keep-open wording.
+  Scopefix subsequently PASS both144-call preservation comparisons/full60
+  GNU1139.95s/Clangsanitizers2203.87s/all284-four1445/neighbors/both sixgroups/
+  all30hashes/fivecontracts5/5/325.06s. Fiveinitialfrozen unchanged; boundedmedium
+  delegated development walkthrough renewed. Signedfix/exactheadreview/CI/
+  postpush remainintegration gates; oldhead results retained separately.
 
 - ListItemID Numeric/exact assignment recovery (#5611/#6776,2026-10-12):
   [Independent native/help/parent map](../tests/fixtures/vfp9-listitemid-numeric/README.md)

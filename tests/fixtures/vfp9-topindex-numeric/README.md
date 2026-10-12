@@ -212,3 +212,20 @@ synchronizer/genericreflection/types/lifecycle/ControlSource/callback atomicity
 expansion, no parent/family/KBX/hazard/release/VM-reset completion claim.
 Signed postpush/external exact-head review/all required checks/resolved
 conversations remain integration gates, not supplied by this self-review.
+
+Reviewfix assurance renewal2026-10-12T11:45Z: review4246693029 scope leak
+is addressed only by restricting both entry arms to materialized/unbound
+RowSourceType0/equal keys-items count/empty ControlSource. No shared requery/
+writer/normalizer or initial five frozen input change. Misuse analysis/delta
+clarifies that RowSourceType1/2/5 and bound controls do NOT acquire this slice's
+new numeric policy. Current-main diagnostic output is excluded-scope preservation
+evidence under owner scope policy, not a new requirement/native oracle.
+Both supplemental144-call GNU/Clang diagnostics exactly match main; oldPR104
+changed records retained. Repeated full60 GNU1139.95s/Clangsanitizers2203.87s,
+all284/four1445/neighbors/both sixgroups/all30hashes and fivecontracts5/5/
+325.06s PASS. Reviewed actual full raw/status/counters/scope diff and before-after
+manifests; operator walkthrough preserves excluded old routes while admitted
+row/no-op/error/state semantics remain unchanged. Boundedmedium delegated
+development self-review, not independenthuman/high-hazard/system qualification.
+Rollback and field-notification plan unchanged. Exact signedfix review/required
+CI/postpush gates remain; #7157/parents/family/hazards stay outside completion.

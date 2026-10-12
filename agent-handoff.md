@@ -523,7 +523,62 @@ Native ListBox TopIndex nonNULL Numeric/int64/uint64 assignment admission under
 OPEN/rhamenator/exact-agent-approved5611/6776 revalidated2026-10-12T09:45Z.
 DedicatedWT /home/rich/.codex/worktrees/topindex-numeric-5611/Project-Copperfin,
 branch fix/topindex-numeric-5611/base origin/main d3c1340c478393a89560e90c9d9810a02c168f65.
-No push/newPR yet; next signedcommit/push/publication/Claude-FIRST review.
+PR7159 OPEN/main/non-draft/MERGEABLE/BLOCKED at09:51Z, pushed exact signed/DCO
+head bc4333725d93d6591c9fdc0a138e5758d906f06c/localGoodG/remotehead matches.
+https://github.com/rhamenator/Project-Copperfin/pull/7159
+Claude-FIRST6121847149 requested09:51:24Z, no actualreview yet; automaticCodex
+summary6121844457 RUNNING is not cleanreview or authorized manualfallback.
+Exactheadpostpush identicalGNU60 driver99507 running; required-checkwatch12699
+running. Active strictmainruleset20356131 all11contexts revalidated, pending.
+Reviews0/threads0/solecommitexacthead/paginationcomplete atpublication.
+Appattach attempted100identitycap; no unrelatedattachment removed.
+Scoped authoredsource/docs whitespacecheck0; original native CRLF/CTest
+raw whitespace preserved as evidence, not normalized or warningfree claim.
+NEXT actualexactheadreview/all11uniquelySUCCESS/threadsresolved + completed
+postpush60 before exact-headmerge; no ownerinput or acceptance inferred.
+
+2026-10-12T10:25Z actionable REVIEW continuation:
+Oldheadbc4333725 exactpostpush GNU60/60/1127.23s/status0 at10:09:58Z/fullraw
+1eb8ed2cc7dd796f5ab7cf2f054faefa324fece3868e33d551c675afc5ca4e82,
+all30 inputs/counters verified; drivers99507/12699 harvested0/all11requiredgreen.
+Actual Codex review4246693029/PRRT_kwDOR7wYLc6raCCR on exactoldhead found
+scope leak: RowSource-populated controls enter new arm with emptykeys.
+NOT cleanreview; conversation unresolved, no merge. Claude onlyeyes/no actual
+response/no explicitquota orsetup failure inferred.
+Only two owned production arms now dirty: guard materialized-unbound RST0/
+emptyControlSource/equalkey-itemcounts; excluded controls retain oldroutes.
+Allfive frozen helper/assertions/config unchanged, no refreeze/originalrepeat.
+Supplemental verification-only144 calls cover RST1/2/5 and RST0boundControls,
+direct/SETPEM/PUTPEM,two modes/sessions,1.9/2.9/99. Retained exactcurrentmain
+libraries compile0/run0/DONE144/scaffold0 (same signed7156/merge tree); oldPR
+same diagnostic0 butcmp1/104changedrecords confirms drift. This is excluded-
+scope PRESERVATION evidence, not a native/newrequirement oracle.
+Mainrawa40c5cf6..., oldPRraw6c788228.../library16453756... verified inaudit.
+GNU guardcompile74777 harvested0; reviewverification98803 running BOTH
+supplement comparisons then repeat identical full60/sixgroups/fivecontracts.
+New fixed30 manifest records only guard delta; oldhead fullfixed/postpush/raws
+preserved review-scope/pr-head-bc. No fixedpush/newheadacceptance yet.
+PR body negative closing phrase inadvertently linked7157; REST keep-open
+correction verified liveclosingrefs0/paginationcomplete (CLIedit classicProject
+deprecation failed, no statechange).7157 remainsoutside/unadmitted/open.
+NEXT harvest98803 actualraws/hashes/counters, sign/pushverifiedfix, reply/resolve
+thread ONLYwhen exactchange fullyverified; requestfresh Claude-FIRST/exacthead
+review/postpush60/all11green beforemerge. No ownerinput/VMreset assumption.
+
+2026-10-12T11:45Z reviewfix verification completed98803/exit0:
+BOTH supplemental144-call diagnostics GNU/Clang run0/cmp0/DONE144/scaffold0
+match currentmain rawa40c5cf6... exactly, including excluded RST1/2/5 and
+RST0bound/direct-SETPEM-PUTPEM/modes-sessions/1.9-2.9-99/fullcapturedstate.
+Repeated admitted60 GNU1139.95s at10:45:57Z/raw30bb2cb9... and Clang
+ASan/UBSan/float-cast-overflow2203.87s at11:22:54Z/raw1b102c7f... PASS.
+All284direct/four1445public/neighbors/both sixgroups/all30hashes complete;
+fiveoriginalfrozen unchanged. Fivecontracts5/5/325.06s at11:28:25Z/
+211fragments/raw51adc0b8... PASS. No sanitizerreport/leaksdisabled/notwarningfree.
+Reviewfix delegated DQ-DV development walkthrough renewed, notindependenthuman.
+Oldhead fullfixed/postpush evidence retained fixture review-scope/pr-head-bc.
+NEXT signedfix/push/exactdiff verification/reply-resolve existingthread and
+fresh Claude-FIRST/exactheadreview/postpush60/all11required beforemerge;
+oldhead36checksSUCCESS is NOT newhead evidence. No ownerinput/VMreset assumption.
 
 Independent pre-code map05:56:20Z beforehelper05:58:37Z/assertions06:04:39Z:
 shipped TopIndex help/SHA81ea587f..., fresh matching installedVFP7423 pairs

@@ -34,3 +34,14 @@
   211fragments. Boundedmedium delegated development self-review/walkthrough
   complete, not independenthuman/high-hazard qualification. Signed/exacthead
   external integration gates remain; no parent/family/KBX/hazard closure.
+  PR7159 review found out-of-scope RowSource admission on initial signedhead;
+  narrow both routes to materialized-unbound RowSourceType0 without changing
+  frozen inputs/shared writers. Supplemental144-case excluded-scope comparison
+  reproduces drift against retained main; new GNU/Clang diagnostics/full60/
+  sixgroups/contracts nowrepeating before fix push/conversation resolution.
+  Correct PR keep-open wording so separate gap7157 has no closing reference.
+  Scopefix now verified: both supplemental144-call diagnostics exactly match
+  retained main, complete60 PASS GNU1139.95s/Clangsanitizers2203.87s/all284/
+  four1445/neighbors/both sixgroups/all30hashes; contracts5/5/325.06s.
+  Initialfivefrozen unchanged; delegated DQ/DV development walkthrough renewed.
+  Signedfix/exactheadreview/CI/postpush gates remain beforeintegration.

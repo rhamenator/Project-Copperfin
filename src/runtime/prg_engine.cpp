@@ -7176,7 +7176,18 @@ namespace copperfin::runtime
                     // RQ-CF-PRG-TOPINDEX-NUMERIC-001 / VR-5611-TOPINDEX-NUMERIC-002.
                     // Wired AFTER BOTH complete original60 suites. TopIndex
                     // addresses a display row, not an ID or focused selection.
+                    const auto row_source_type = runtime_object.properties.find("rowsourcetype");
+                    const auto control_source = runtime_object.properties.find("controlsource");
+                    const bool materialized_unbound =
+                        (row_source_type == runtime_object.properties.end() ||
+                         value_as_number(row_source_type->second) == 0.0) &&
+                        (control_source == runtime_object.properties.end() ||
+                         trim_copy(value_as_string(control_source->second)).empty()) &&
+                        runtime_object.collection_item_keys.size() == runtime_object.collection_items.size();
+                    // RowSource/requery and bound controls are outside the
+                    // admitted slice: keep their original writer and coercions.
                     if (normalize_identifier(trim_copy(runtime_object.base_class_name)) == "listbox" &&
+                        materialized_unbound &&
                         !assigned_value.is_null &&
                         (assigned_value.kind == PrgValueKind::number ||
                          assigned_value.kind == PrgValueKind::int64 ||

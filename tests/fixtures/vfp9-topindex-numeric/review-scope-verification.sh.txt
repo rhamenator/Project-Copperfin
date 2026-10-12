@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -u
+task_root=/home/rich/.codex/worktrees/topindex-numeric-5611/Project-Copperfin
+cd "$task_root" || exit 1
+task_raw=build/topindex-native/review-scope
+export TMPDIR="$task_root/build/topindex-tmp"
+export COPPERFIN_LOCALE_DIR="$task_root/resources/locales"
+for task_compiler in gcc clang; do
+ task_build="build/topindex-$task_compiler"
+ if test "$task_compiler" = gcc; then
+  task_cxx=g++
+  task_flags=(-O0 -g0)
+  unset ASAN_OPTIONS UBSAN_OPTIONS
+ else
+  task_cxx=clang++
+  task_flags=(-O1 -g0 -fsanitize=address,undefined,float-cast-overflow -fno-omit-frame-pointer)
+  export ASAN_OPTIONS=detect_leaks=0:halt_on_error=1
+  export UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1
+ fi
+ nice -n 10 ionice -c 2 -n 7 cmake --build "$task_build" -j 1 --target test_prg_engine_topindex_numeric test_prg_engine_runtime_surface_functions > "$task_raw/compile-scope-$task_compiler.log" 2>&1
+ task_status=$?
+ printf '%s\n' "$task_status" > "$task_raw/compile-scope-$task_compiler.status"
+ test "$task_status" -eq 0 || exit "$task_status"
+ task_libraries=()
+ for task_library in cf_xbase_runtime cf_design_model cf_prg_analysis cf_runtime_text cf_vfp_assets cf_platform_profile cf_security cf_localization cf_platform_support; do
+  task_libraries+=("$task_build/lib$task_library.a")
+ done
+ nice -n 10 ionice -c 2 -n 7 "$task_cxx" -std=c++20 "${task_flags[@]}" -Iinclude -Itests -Isrc/runtime -x c++ tests/fixtures/vfp9-topindex-numeric/rowsource-scope-preservation.cpp.txt -x none "$task_build/tests/CMakeFiles/cf_prg_engine_test_support.dir/prg_engine_test_support.cpp.o" "${task_libraries[@]}" -o "$task_raw/fixed-diagnostic-$task_compiler" > "$task_raw/compile-diagnostic-$task_compiler.log" 2>&1
+ task_status=$?
+ printf '%s\n' "$task_status" > "$task_raw/compile-diagnostic-$task_compiler.status"
+ test "$task_status" -eq 0 || exit "$task_status"
+ nice -n 10 ionice -c 2 -n 7 "$task_raw/fixed-diagnostic-$task_compiler" "$task_root/$task_raw/fixed-$task_compiler-scripts" > "$task_raw/fixed-$task_compiler.out" 2>&1
+ task_status=$?
+ printf '%s\n' "$task_status" > "$task_raw/fixed-$task_compiler.status"
+ test "$task_status" -eq 0 || exit "$task_status"
+ cmp "$task_raw/main.out" "$task_raw/fixed-$task_compiler.out" > "$task_raw/fixed-$task_compiler-cmp.log" 2>&1
+ task_status=$?
+ printf '%s\n' "$task_status" > "$task_raw/fixed-$task_compiler-cmp.status"
+ test "$task_status" -eq 0 || exit "$task_status"
+ sha256sum "$task_raw/fixed-$task_compiler.out" > "$task_raw/fixed-$task_compiler.out.sha256"
+done
+# Scope preservation must pass BOTH toolchains before repeating the admitted
+# full frozen suite/preservation/contracts. No original/frozen inputs changed.
+bash tests/fixtures/vfp9-topindex-numeric/fixed-suites.sh.txt

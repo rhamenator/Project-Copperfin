@@ -110,3 +110,60 @@ All30 contract before/after inputs verified. DQ/DV development walkthrough and
 delegated self-review completed in README; not independenthuman/high-hazard
 qualification. Signedpostpush/actual exact-head externalreview/all11required/
 resolvedconversation gates remain required; no merged/family/hazard closure.
+
+PR7159 headbc4333725d93d6591c9fdc0a138e5758d906f06c signed/DCO/localGoodG
+published after localverification; Claude-FIRST6121847149. Oldhead exactpostpush
+GNU60/60 PASS1127.23s/status0 completed10:09:58Z, fullrawSHA
+1eb8ed2cc7dd796f5ab7cf2f054faefa324fece3868e33d551c675afc5ca4e82;
+all30 inputs/counters verified, driver99507/requiredwatch12699 harvested0.
+This verifies ONLY oldhead, not a later review fix. Initial CodeQL transient
+neutral becameSUCCESS once remaining analyses uploaded; no setupfailure inferred.
+
+Actual Codex review4246693029 at exactbc4333725 found out-of-scope RowSource
+admission; threadPRRT_kwDOR7wYLc6raCCR remains unresolved until exact fix is
+pushed/verified. Restrict both engine and reflection routes to materialized,
+unbound RowSourceType0 (or absent default0), matching existing keys/items count,
+and empty ControlSource; all excluded controls fall through original routes.
+NO shared writer/requery/synchronizer/type/metadata normalization change;
+no initialfive frozen input or oldneighbor assertion change.
+
+Verification-only rowsource-scope-preservation.cpp.txt enumerates144 calls:
+two modes/two sessions, RowSourceTypes1(value list),2(cursor),5(array),bound
+ControlSource with RowSourceType0; direct/SETPEM/PUTPEM and1.9/2.9/99.
+Retained main/signed7156 identicaltree libraries compile0/run0/DONE144/
+scaffold_failures0; mainrawSHAa40c5cf6ef9590fa89db1b16c491a36a3dcbfc8d9b093ce66721d4ba7318847e.
+Runtime librarySHA16453756b5a403f0ec3295166d265945fde4b4e23ad1e025f7fa7f34fc2bae0e
+reverified; mergecurrentmain tree identity already retained in empty-gap audit.
+OldPRhead same diagnostic compile0/run0/DONE144/scaffold0, but cmp1:
+rawSHA6c78822880a72def80f405cb5fe416ec23ad9c917a1c2d15c341aab1f0673906.
+Old-main behavior is PRESERVATION EVIDENCE for an explicitly excluded scope,
+never a new requirement/native compatibility oracle. These are supplemental
+diagnostics, not edits to frozen284/four1445 assertions or subject inventory.
+New guard GNU compile0; BOTH scope diagnostic comparisons and repeated full60/
+sixgroups/contracts still pending in review-scope-verification driver.
+Oldhead postpush/review cannot stand in for newhead acceptance.
+
+PR body wording inadvertently produced closingIssuesReference7157 despite
+negative wording. REST body correction uses explicit keep-open wording; live
+GraphQL closing references now0/paginationcomplete. No issue state changed or
+scope admission inferred. Future merge still requires this connection empty.
+
+Reviewfix driver98803 harvested0 after BOTH supplemental comparisons and
+identical full60/sixgroups/fivecontracts. Scope diagnostics GNU/Clang run0/
+cmp0/DONE144/scaffold0, both match exact old-main rawa40c5cf6... (all rows/
+keys/bits/cells/top/focus/value/context/error/setter records). OldPR104changed
+records retained; scope preservation is not a native compatibility requirement.
+GNU60/60 PASS1139.95s completed10:45:57Z, fullrawSHA
+30bb2cb9e641c58c9b9e9ead98e40f0607a4ca5421ba9165808d20cc25eb4540.
+Clang ASan/UBSan/float-cast-overflow60/60 PASS2203.87s completed11:22:54Z,
+fullrawSHA1b102c7f2d8f99b20386b8171585af085672e5b4ebff6d1526f7cc76eaa2cd3b.
+All284/four1445/neighbor counters complete, both sixgroups failures0, all30
+before-after inputs verified; five original frozen inputs still unchanged.
+Fivecontracts5/5 PASS325.06s completed11:28:25Z/211validfragments, fullrawSHA
+51adc0b8a04f448346584afaa16167f8fd0991e69e1b72a8f6e947255140f1a2.
+No sanitizer report/leaksdisabled, not warningfree/leak/performance qualification.
+Oldhead fullverification/postpush/github evidence retained pr-head-bc, never
+rewritten as newhead evidence. Reviewfix delegated DQ/DV development walkthrough/
+self-review renewed in README, not independenthuman/high-hazard qualification.
+NEXT signedfix/push/exactdiff verification/reply/conversation resolution,
+fresh Claude-FIRST exact-head review/all11requiredgreen/postpush60 before merge.
