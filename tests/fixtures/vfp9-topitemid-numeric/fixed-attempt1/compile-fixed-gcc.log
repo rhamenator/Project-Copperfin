@@ -1,0 +1,35 @@
+[0/2] Re-checking globbed directories...
+[1/20] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine.cpp.o
+In file included from /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine.cpp:8879:
+/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl: In member function ‘copperfin::runtime::{anonymous}::ExecutionOutcome copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()’:
+/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:11317:62: warning: missing initializer for member ‘copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()::TemporaryAppendSource::reference’ [-Wmissing-field-initializers]
+11317 |                     TemporaryAppendSource append_source{*this};
+      |                                                              ^
+/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:12449:58: warning: missing initializer for member ‘copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()::TemporaryAppendSource::reference’ [-Wmissing-field-initializers]
+12449 |                 TemporaryAppendSource append_source{*this};
+      |                                                          ^
+[2/20] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_surface_functions.cpp.o
+In file included from /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_functions.cpp:193:
+/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:13:5: warning: ‘int copperfin::runtime::{anonymous}::bit_position(const copperfin::runtime::PrgValue&)’ defined but not used [-Wunused-function]
+   13 | int bit_position(const PrgValue& value) {
+      |     ^~~~~~~~~~~~
+/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:5:15: warning: ‘uint32_t copperfin::runtime::{anonymous}::bitwise_value(const copperfin::runtime::PrgValue&)’ defined but not used [-Wunused-function]
+    5 | std::uint32_t bitwise_value(const PrgValue& value) {
+      |               ^~~~~~~~~~~~~
+[3/20] Linking CXX static library libcf_xbase_runtime.a
+[4/20] Linking CXX executable tests/test_prg_engine_int64_exact_expression
+[5/20] Linking CXX executable tests/test_prg_engine_numeric_behavior
+[6/20] Linking CXX executable tests/test_prg_engine_listindex_numeric
+[7/20] Linking CXX executable tests/test_prg_engine_topitemid_numeric
+[8/20] Linking CXX executable tests/test_prg_engine_topindex_numeric
+[9/20] Linking CXX executable tests/test_prg_engine_listitemid_numeric
+[10/20] Linking CXX executable tests/test_prg_engine_list_index_numeric
+[11/20] Linking CXX executable tests/test_prg_engine_listitem_numeric
+[12/20] Linking CXX executable tests/test_prg_engine_itemidtoindex_numeric
+[13/20] Linking CXX executable tests/test_prg_engine_indextoitemid_numeric
+[14/20] Linking CXX executable tests/test_prg_engine_selectedid_numeric
+[15/20] Linking CXX executable tests/test_prg_engine_selected_index_numeric
+[16/20] Linking CXX executable tests/test_prg_engine_itemdata_index_numeric
+[17/20] Linking CXX executable tests/test_prg_engine_getcolor_default_numeric
+[18/20] Linking CXX executable tests/test_prg_engine_runtime_surface_functions
+[19/20] Linking CXX executable tests/test_prg_engine_runtime_surface_itemid_selectors

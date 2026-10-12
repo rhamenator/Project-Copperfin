@@ -602,6 +602,27 @@
                     arguments[2]));
         }
         if (is_native_topitemid_member_name(*runtime_object, member_name)) {
+            // RQ-CF-PRG-TOPITEMID-NUMERIC-001 / VR-5611-TOPITEMID-NUMERIC-002.
+            // Existing SETPEM/PUTPEM alias: only selected unbound ListBox
+            // Numeric/exact input reaches the current-session checked writer.
+            const auto row_source_type = runtime_object->properties.find("rowsourcetype");
+            const auto control_source = runtime_object->properties.find("controlsource");
+            const bool materialized_unbound =
+                (row_source_type == runtime_object->properties.end() ||
+                 value_as_number(row_source_type->second) == 0.0) &&
+                (control_source == runtime_object->properties.end() ||
+                 trim_copy(value_as_string(control_source->second)).empty()) &&
+                runtime_object->collection_item_keys.size() == runtime_object->collection_items.size();
+            if (is_native_listbox_runtime_object(*runtime_object) &&
+                materialized_unbound &&
+                !arguments[2].is_null &&
+                (arguments[2].kind == PrgValueKind::number ||
+                 arguments[2].kind == PrgValueKind::int64 ||
+                 arguments[2].kind == PrgValueKind::uint64)) {
+                return make_boolean_value(
+                    write_native_member_callback &&
+                    write_native_member_callback(arguments[0], member_name, arguments[2]));
+            }
             return make_boolean_value(
                 write_native_list_control_top_item_id(*runtime_object, arguments[2]));
         }

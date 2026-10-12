@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+set -u
+task_root=/home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin
+cd "$task_root" || exit 1
+task_raw=build/topitemid-native
+# BOTH complete original65 runs and unchanged frozen inputs precede migration.
+for task_compiler in gcc clang; do
+ test -f "$task_raw/original-$task_compiler.completed-at" || exit 8
+ test "$(<"$task_raw/original-$task_compiler.status")" = 8 || exit 8
+ rg -q '4 tests failed out of 65' "$task_raw/original-$task_compiler.log" || exit 9
+ sha256sum -c "$task_raw/original-$task_compiler.log.sha256" > "$task_raw/original-verified-before-fixed-$task_compiler.log" || exit 10
+done
+sha256sum -c "$task_raw/frozen.sha256" > "$task_raw/frozen-verified-before-fixed.log" || exit 2
+export TMPDIR="$task_root/build/topitemid-tmp"
+export COPPERFIN_LOCALE_DIR="$task_root/resources/locales"
+task_targets=(test_prg_engine_topitemid_numeric test_prg_engine_topindex_numeric test_prg_engine_listitemid_numeric test_prg_engine_listindex_numeric
+ test_prg_engine_list_index_numeric test_prg_engine_listitem_numeric
+ test_prg_engine_itemidtoindex_numeric test_prg_engine_indextoitemid_numeric
+ test_prg_engine_selectedid_numeric test_prg_engine_selected_index_numeric
+ test_prg_engine_itemdata_index_numeric test_prg_engine_getcolor_default_numeric
+ test_prg_engine_numeric_behavior test_prg_engine_int64_exact_expression
+ test_prg_engine_runtime_surface_itemid_selectors test_prg_engine_runtime_surface_functions)
+task_regex='^(test_prg_engine_(topitemid_numeric|topindex_numeric|listitemid_numeric|listindex_numeric|list_index_numeric|listitem_numeric|itemidtoindex_numeric|indextoitemid_numeric|selectedid_numeric|selected_index_numeric|itemdata_index_numeric|getcolor_default_numeric)(_(copperfin|vfp9)_session[12])?|test_prg_engine_numeric_behavior|test_prg_engine_int64_exact_expression|test_native_test_isolation_contract|test_prg_engine_runtime_surface_itemid_selectors|test_prg_engine_runtime_surface_functions)$'
+for task_compiler in gcc clang; do
+ task_build="build/topitemid-$task_compiler"
+ if test "$task_compiler" = gcc; then
+  task_cxx=g++
+  task_flags=(-O0 -g0)
+  unset ASAN_OPTIONS UBSAN_OPTIONS
+ else
+  task_cxx=clang++
+  task_flags=(-O1 -g0 -fsanitize=address,undefined,float-cast-overflow -fno-omit-frame-pointer)
+  export ASAN_OPTIONS=detect_leaks=0:halt_on_error=1
+  export UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1
+ fi
+ sha256sum -c "$task_raw/fixed.sha256" > "$task_raw/fixed-before-$task_compiler.log" || exit 2
+ nice -n 10 ionice -c 2 -n 7 cmake --build "$task_build" -j 1 --target "${task_targets[@]}" > "$task_raw/compile-fixed-$task_compiler.log" 2>&1
+ task_status=$?
+ printf '%s\n' "$task_status" > "$task_raw/compile-fixed-$task_compiler.status"
+ test "$task_status" -eq 0 || exit "$task_status"
+ nice -n 10 ionice -c 2 -n 7 ctest --test-dir "$task_build" -V --output-on-failure --timeout 600 -j 1 -R "$task_regex" > "$task_raw/fixed-$task_compiler.log" 2>&1
+ task_status=$?
+ printf '%s\n' "$task_status" > "$task_raw/fixed-$task_compiler.status"
+ date -u '+%Y-%m-%dT%H:%M:%SZ' > "$task_raw/fixed-$task_compiler.completed-at"
+ sha256sum "$task_raw/fixed-$task_compiler.log" > "$task_raw/fixed-$task_compiler.log.sha256"
+ test "$task_status" -eq 0 || exit "$task_status"
+ # Verification-only excluded-scope preservation: the original baseline was
+ # recorded before migration with an ABSOLUTE script-root argument.
+ task_libraries=()
+ for task_library in cf_xbase_runtime cf_design_model cf_prg_analysis cf_runtime_text cf_vfp_assets cf_platform_profile cf_security cf_localization cf_platform_support; do
+  task_libraries+=("$task_build/lib$task_library.a")
+ done
+ nice -n 10 ionice -c 2 -n 7 "$task_cxx" -std=c++20 "${task_flags[@]}" -Iinclude -Itests -Isrc/runtime -x c++ tests/fixtures/vfp9-topitemid-numeric/rowsource-scope-preservation.cpp.txt -x none "$task_build/tests/CMakeFiles/cf_prg_engine_test_support.dir/prg_engine_test_support.cpp.o" "${task_libraries[@]}" -o "$task_raw/scope-fixed-$task_compiler" > "$task_raw/scope-fixed-compile-$task_compiler.log" 2>&1
+ task_status=$?
+ printf '%s\n' "$task_status" > "$task_raw/scope-fixed-compile-$task_compiler.status"
+ test "$task_status" -eq 0 || exit "$task_status"
+ nice -n 10 ionice -c 2 -n 7 "$task_raw/scope-fixed-$task_compiler" "$task_root/$task_raw/scope-fixed-scripts-$task_compiler" > "$task_raw/scope-fixed-$task_compiler.out" 2> "$task_raw/scope-fixed-$task_compiler.stderr"
+ task_status=$?
+ printf '%s\n' "$task_status" > "$task_raw/scope-fixed-$task_compiler.status"
+ test "$task_status" -eq 0 || exit "$task_status"
+ cmp "$task_raw/scope-baseline-absolute.out" "$task_raw/scope-fixed-$task_compiler.out" > "$task_raw/scope-fixed-cmp-$task_compiler.log" 2>&1
+ task_status=$?
+ printf '%s\n' "$task_status" > "$task_raw/scope-fixed-cmp-$task_compiler.status"
+ sha256sum "$task_raw/scope-fixed-$task_compiler.out" > "$task_raw/scope-fixed-$task_compiler.out.sha256"
+ test "$task_status" -eq 0 || exit "$task_status"
+ nice -n 10 ionice -c 2 -n 7 "$task_cxx" -std=c++20 "${task_flags[@]}" -Iinclude -Itests -Isrc/runtime -x c++ tests/fixtures/vfp9-topitemid-numeric/preservation-driver.cpp.txt -x none tests/test_prg_engine_runtime_surface_functions_list_controls_03.cpp "$task_build/tests/CMakeFiles/cf_prg_engine_test_support.dir/prg_engine_test_support.cpp.o" "${task_libraries[@]}" -o "$task_raw/preservation-$task_compiler" > "$task_raw/compile-preservation-$task_compiler.log" 2>&1
+ task_status=$?
+ printf '%s\n' "$task_status" > "$task_raw/compile-preservation-$task_compiler.status"
+ test "$task_status" -eq 0 || exit "$task_status"
+ nice -n 10 ionice -c 2 -n 7 "$task_raw/preservation-$task_compiler" > "$task_raw/preservation-$task_compiler.log" 2>&1
+ task_status=$?
+ printf '%s\n' "$task_status" > "$task_raw/preservation-$task_compiler.status"
+ sha256sum "$task_raw/preservation-$task_compiler.log" > "$task_raw/preservation-$task_compiler.log.sha256"
+ test "$task_status" -eq 0 || exit "$task_status"
+ sha256sum -c "$task_raw/fixed.sha256" > "$task_raw/fixed-after-$task_compiler.log" || exit 2
+done
+for task_compiler in gcc clang; do
+ test "$(<"$task_raw/fixed-$task_compiler.status")" = 0 || exit 2
+ test "$(<"$task_raw/preservation-$task_compiler.status")" = 0 || exit 3
+ sha256sum -c "$task_raw/fixed-$task_compiler.log.sha256" || exit 4
+done
+sha256sum -c "$task_raw/fixed.sha256" > "$task_raw/contracts-inputs-before.log" || exit 5
+nice -n 10 ionice -c 2 -n 7 ctest --test-dir build/topitemid-gcc -V --output-on-failure --timeout 600 -j 1 -R '^(test_contributor_signoff_contract|test_changelog_fragment_assembler|test_changelog_fragments_valid|test_agent_channel_contract|test_safety_traceability_workflow_contract)$' > "$task_raw/contracts.log" 2>&1
+task_status=$?
+printf '%s\n' "$task_status" > "$task_raw/contracts.status"
+date -u '+%Y-%m-%dT%H:%M:%SZ' > "$task_raw/contracts.completed-at"
+sha256sum "$task_raw/contracts.log" > "$task_raw/contracts.log.sha256"
+sha256sum -c "$task_raw/fixed.sha256" > "$task_raw/contracts-inputs-after.log" || exit 5
+exit "$task_status"

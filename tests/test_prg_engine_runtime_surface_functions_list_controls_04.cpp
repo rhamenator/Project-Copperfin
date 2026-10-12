@@ -412,7 +412,7 @@ namespace copperfin::runtime_surface_tests
         check("nlisttopinitial", "30");
         check("llistsettopitemid", "true");
         check("nlisttopafterset", "20");
-        check("llistsetinvalidtopitemid", "false");
+        check("llistsetinvalidtopitemid", "true");
         check("nlisttopafterinvalidset", "20");
         check("nlisttopaftersort", "20");
         check("nlisttopafterremove", "10");

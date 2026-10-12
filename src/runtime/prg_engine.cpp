@@ -7162,6 +7162,70 @@ namespace copperfin::runtime
                 }
                 if (is_native_topitemid_member_name(runtime_object, normalized_property_name))
                 {
+                    // RQ-CF-PRG-TOPITEMID-NUMERIC-001 / VR-5611-TOPITEMID-NUMERIC-002.
+                    // Wired AFTER BOTH complete original65 suites. Unique-ID
+                    // top assignment is distinct from display-row/focus input.
+                    const auto row_source_type = runtime_object.properties.find("rowsourcetype");
+                    const auto control_source = runtime_object.properties.find("controlsource");
+                    const bool materialized_unbound =
+                        (row_source_type == runtime_object.properties.end() ||
+                         value_as_number(row_source_type->second) == 0.0) &&
+                        (control_source == runtime_object.properties.end() ||
+                         trim_copy(value_as_string(control_source->second)).empty()) &&
+                        runtime_object.collection_item_keys.size() == runtime_object.collection_items.size();
+                    if (normalize_identifier(trim_copy(runtime_object.base_class_name)) == "listbox" &&
+                        materialized_unbound &&
+                        !assigned_value.is_null &&
+                        (assigned_value.kind == PrgValueKind::number ||
+                         assigned_value.kind == PrgValueKind::int64 ||
+                         assigned_value.kind == PrgValueKind::uint64))
+                    {
+                        const auto &set_state = current_set_state();
+                        const auto mode = set_state.find("numericbehavior");
+                        const auto behavior =
+                            mode != set_state.end() && normalize_identifier(mode->second) == "vfp9"
+                                ? NumericBehavior::vfp9 : NumericBehavior::copperfin;
+                        const auto converted = checked_topitemid_numeric_argument(assigned_value, behavior);
+                        if (!converted.has_value())
+                        {
+                            const bool derived_nan = assigned_value.kind == PrgValueKind::number &&
+                                std::isnan(assigned_value.number_value);
+                            if (behavior == NumericBehavior::vfp9 && !derived_nan)
+                            {
+                                throw PrgCompatibilityError(
+                                    runtime_text("Runtime.Prg.String.Error.NumericOverflow"), 46);
+                            }
+                            throw PrgCompatibilityError(
+                                runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
+                        }
+
+                        // Existing pre-write signature materializes the rows.
+                        // Bound the existing display domain before top mutation;
+                        // never allocate or iterate by the caller's item ID.
+                        const auto &keys = runtime_object.collection_item_keys;
+                        const auto count = keys.size();
+                        if (count > static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max()))
+                        {
+                            throw PrgCompatibilityError(
+                                runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
+                        }
+                        const auto found = *converted > 0
+                            ? std::find(keys.begin(), keys.end(), std::to_string(*converted))
+                            : keys.end();
+                        if (found != keys.end())
+                        {
+                            const auto slot = static_cast<std::size_t>(std::distance(keys.begin(), found));
+                            runtime_object.properties["topitemid"] = make_number_value(
+                                static_cast<double>(*converted));
+                            runtime_object.properties["topindex"] = make_number_value(
+                                static_cast<double>(slot + 1U));
+                        }
+                        // Admitted absent/empty IDs are successful no-ops.
+                        // Do not touch focus, selection bits, text or payload.
+                        remember_property_expression();
+                        return true;
+                    }
+                    // Bound/RowSource controls and other types keep old routes.
                     const bool wrote = write_native_list_control_top_item_id(
                         runtime_object,
                         assigned_value);

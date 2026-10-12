@@ -1,0 +1,11 @@
+--- build/topitemid-native/fixed-attempt1/old-list-controls-04.cpp.txt	2026-10-12 11:16:32.127071847 -0400
++++ tests/test_prg_engine_runtime_surface_functions_list_controls_04.cpp	2026-10-12 11:18:01.794080736 -0400
+@@ -412,7 +412,7 @@
+         check("nlisttopinitial", "30");
+         check("llistsettopitemid", "true");
+         check("nlisttopafterset", "20");
+-        check("llistsetinvalidtopitemid", "false");
++        check("llistsetinvalidtopitemid", "true");
+         check("nlisttopafterinvalidset", "20");
+         check("nlisttopaftersort", "20");
+         check("nlisttopafterremove", "10");
