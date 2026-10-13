@@ -307,7 +307,42 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
         if (requested_column == 1LL) {
             long long item_id = next_native_list_control_item_id(runtime_object);
             if (arguments.size() >= 2U) {
-                item_id = std::llround(value_as_number(arguments[1]));
+                // RQ-CF-PRG-ADDLISTITEM-ID-NUMERIC-001 / VR-5611-ADDLISTITEM-ID-NUMERIC-001/002.
+                // BOTH full original80 suites/failures/hashes audited before wiring.
+                // Bound only a supplied numeric ID with Character item/omitted column.
+                // Preserve duplicate no-op (#7173), insertion/shared state and other routes.
+                const auto row_source_type = runtime_object.properties.find("rowsourcetype");
+                const auto control_source = runtime_object.properties.find("controlsource");
+                const bool materialized_unbound =
+                    (row_source_type == runtime_object.properties.end() ||
+                     (!row_source_type->second.is_null &&
+                      ((row_source_type->second.kind == PrgValueKind::number &&
+                        row_source_type->second.number_value == 0.0) ||
+                       (row_source_type->second.kind == PrgValueKind::int64 &&
+                        row_source_type->second.int64_value == 0) ||
+                       (row_source_type->second.kind == PrgValueKind::uint64 &&
+                        row_source_type->second.uint64_value == 0U)))) &&
+                    (control_source == runtime_object.properties.end() ||
+                     (!control_source->second.is_null &&
+                      control_source->second.kind == PrgValueKind::string &&
+                      trim_copy(control_source->second.string_value).empty())) &&
+                    runtime_object.collection_item_keys.size() == runtime_object.collection_items.size() &&
+                    runtime_object.list_rows.size() == runtime_object.collection_items.size();
+                const auto& supplied_id = arguments[1];
+                if (arguments.size() == 2U && materialized_unbound &&
+                    !arguments[0].is_null && arguments[0].kind == PrgValueKind::string &&
+                    !supplied_id.is_null &&
+                    (supplied_id.kind == PrgValueKind::number ||
+                     supplied_id.kind == PrgValueKind::int64 ||
+                     supplied_id.kind == PrgValueKind::uint64)) {
+                    const auto checked_id = checked_addlistitem_id_argument(supplied_id, behavior);
+                    if (!checked_id.has_value()) {
+                        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                    }
+                    item_id = *checked_id;
+                } else {
+                    item_id = std::llround(value_as_number(supplied_id));
+                }
                 if (item_id < 1LL ||
                     find_native_list_control_row_by_item_id(runtime_object, item_id).has_value()) {
                     return make_number_value(0.0);

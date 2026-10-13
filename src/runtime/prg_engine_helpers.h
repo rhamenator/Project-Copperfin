@@ -424,6 +424,9 @@ std::optional<std::int32_t> checked_removeitem_row_argument(const PrgValue& valu
 // RQ-CF-PRG-REMOVELISTITEM-ID-NUMERIC-001 / VR-5611-REMOVELISTITEM-ID-NUMERIC-001.
 // Independent stable-ID domain 1..32767, not RemoveItem's display-row domain.
 std::optional<std::int32_t> checked_removelistitem_id_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-ADDLISTITEM-ID-NUMERIC-001 / VR-5611-ADDLISTITEM-ID-NUMERIC-001.
+// Independently recovered supplied stable-ID admission; UNUSED through both originals.
+std::optional<std::int32_t> checked_addlistitem_id_argument(const PrgValue& value, NumericBehavior behavior);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the
 // value is out of range). A size or count: truncated toward zero, never below `minimum`, saturating at the largest
 // value this build supports: INT64_MAX, or SIZE_MAX where size_t is narrower (NaN gives `minimum`). A rounded int64 (llround semantics for in-range values; NaN is 0 and

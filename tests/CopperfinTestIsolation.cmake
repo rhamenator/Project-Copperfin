@@ -1046,6 +1046,14 @@ function(copperfin_configure_native_test_isolation)
             AUDIT complete)
     endforeach()
     foreach(removeitem_test IN ITEMS
+        # AddListItem source audit: private generated PRGs/workareas, unique
+        # owned temp directory, scoped locale restore; no child/network/sample
+        # or external resource use. Retain conservative serial scheduling.
+        test_prg_engine_addlistitem_numeric
+        test_prg_engine_addlistitem_numeric_copperfin_session1
+        test_prg_engine_addlistitem_numeric_copperfin_session2
+        test_prg_engine_addlistitem_numeric_vfp9_session1
+        test_prg_engine_addlistitem_numeric_vfp9_session2
         test_prg_engine_removelistitem_numeric
         test_prg_engine_removelistitem_numeric_copperfin_session1
         test_prg_engine_removelistitem_numeric_copperfin_session2

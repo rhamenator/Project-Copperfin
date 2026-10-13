@@ -1,0 +1,6 @@
+648ab020e5688772069ee4ed86c1339aa0140299783e2664f0e7b593e7699834  tests/fixtures/vfp9-addlistitem-numeric/baseline-audit.md
+6d129a805aaea379c1dfc8d5f09b3c16f32a88b1d1d6457912006d1803cdd256  tests/fixtures/vfp9-addlistitem-numeric/audit-frozen-native-literals.cjs
+f8a7afea1fb7b6aa546ece21a7a08cdab7ec8da3b02d14d9a72f145aef795304  tests/fixtures/vfp9-addlistitem-numeric/frozen-native-literal-audit.jsonl
+55a7550efd3d5be0d10783c9140196862736cedce89eab37e0a3396e2e6ffca5  tests/fixtures/vfp9-addlistitem-numeric/initial-five-frozen.sha256
+558b262ad780c01351dbb6e37c75f859d955e3a3e9e54ba81615bba718565966  tests/fixtures/vfp9-addlistitem-numeric/original-inputs.sha256
+1e8bfc94d6b2de8d591511c735bec3f479d8028891bd875847837c2210567bca  tests/fixtures/vfp9-addlistitem-numeric/run-originals.sh

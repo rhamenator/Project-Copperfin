@@ -1,0 +1,70 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/build/addlistitem-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/build/addlistitem-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 12
+    Start 12: test_agent_issue_intake
+
+12: Test command: /snap/bin/pwsh "-NoLogo" "-NoProfile" "-NonInteractive" "-File" "/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/tests/test_agent_issue_intake.ps1" "-ModulePath" "/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/scripts/Copperfin.AgentIssueIntake.psm1" "-DriverPath" "/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/scripts/drive-codex.ps1" "-AgentGuidancePath" "/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/agents.md" "-RuntimeAgentPath" "/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/.github/agents/copperfin-vfp-runtime.agent.md" "-SafetyReportPath" "/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/docs/safety/traceability-report-2026-08-10-agent-intake-scope-approval.md"
+12: Working Directory: /home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/build/addlistitem-gcc/tests
+12: Environment variables: 
+12:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/resources/locales
+12: Test timeout computed to be: 10000000
+12: Agent issue intake contract passed.
+1/4 Test #12: test_agent_issue_intake .............   Passed    0.98 sec
+test 20
+    Start 20: test_changelog_fragment_assembler
+
+20: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--self-test"
+20: Working Directory: /home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/build/addlistitem-gcc/tests
+20: Environment variables: 
+20:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/resources/locales
+20: Test timeout computed to be: 10000000
+20: assemble_changelog self-test passed
+2/4 Test #20: test_changelog_fragment_assembler ...   Passed    0.23 sec
+test 21
+    Start 21: test_changelog_fragments_valid
+
+21: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--check" "--root" "/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin"
+21: Working Directory: /home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/build/addlistitem-gcc/tests
+21: Environment variables: 
+21:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/resources/locales
+21: Test timeout computed to be: 10000000
+21: 215 changelog fragment(s) valid
+3/4 Test #21: test_changelog_fragments_valid ......   Passed    0.25 sec
+test 30
+    Start 30: test_agent_channel_contract
+
+30: Test command: /usr/bin/cmake "-DSOURCE_DIR=/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin" "-P" "/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/tests/run_agent_channel_contract_check.cmake"
+30: Working Directory: /home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/build/addlistitem-gcc/tests
+30: Environment variables: 
+30:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/resources/locales
+30: Test timeout computed to be: 10000000
+4/4 Test #30: test_agent_channel_contract .........   Passed    0.02 sec
+
+The following tests passed:
+	test_agent_issue_intake
+	test_changelog_fragment_assembler
+	test_changelog_fragments_valid
+	test_agent_channel_contract
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+copperfin-isolation:audit=complete              =   1.48 sec*proc (4 tests)
+copperfin-isolation:child-processes=none        =   1.48 sec*proc (4 tests)
+copperfin-isolation:environment=none            =   1.48 sec*proc (4 tests)
+copperfin-isolation:filesystem=process-owned    =   0.23 sec*proc (1 test)
+copperfin-isolation:filesystem=read-only        =   1.25 sec*proc (3 tests)
+copperfin-isolation:network=none                =   1.48 sec*proc (4 tests)
+copperfin-isolation:platform=configured         =   0.48 sec*proc (2 tests)
+copperfin-isolation:platform=portable           =   1.00 sec*proc (2 tests)
+copperfin-isolation:resources=none              =   1.48 sec*proc (4 tests)
+copperfin-isolation:samples=none                =   1.48 sec*proc (4 tests)
+copperfin-isolation:schedule=parallel-safe      =   1.48 sec*proc (4 tests)
+
+Total Test time (real) =   1.49 sec

@@ -1,0 +1,1 @@
+{"path":"build/addlistitem-native/fixed-clang.log","pass":true,"subjects":80,"counters":[[198,0],[0,810],[0,810],[0,810],[0,810]],"diagnostics":[],"rawSHA256":"e6181a660d3aef2665331ee7a00dabd9b3d38dc87fdc55483d76d1f9e308b215","note":"ONE compiler completion only; other compiler, input hashes, preservation and integration gates remain separate."}
