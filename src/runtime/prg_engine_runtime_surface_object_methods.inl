@@ -375,8 +375,12 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
         const bool materialized_unbound =
             (row_source_type == runtime_object.properties.end() ||
              (!row_source_type->second.is_null &&
-              row_source_type->second.kind == PrgValueKind::number &&
-              row_source_type->second.number_value == 0.0)) &&
+              ((row_source_type->second.kind == PrgValueKind::number &&
+                row_source_type->second.number_value == 0.0) ||
+               (row_source_type->second.kind == PrgValueKind::int64 &&
+                row_source_type->second.int64_value == 0) ||
+               (row_source_type->second.kind == PrgValueKind::uint64 &&
+                row_source_type->second.uint64_value == 0U)))) &&
             (control_source == runtime_object.properties.end() ||
              (!control_source->second.is_null &&
               control_source->second.kind == PrgValueKind::string &&

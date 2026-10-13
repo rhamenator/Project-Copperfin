@@ -25,6 +25,24 @@
   README, not independenthuman/high-hazard. Two relative-root driver failures
   retained; only nonfrozen command corrected, no source/assertion weakening.
   Signedfix/freshactual exactheadreview/postpush70/CI still integration gates.
+  Second review4253248168 exact-zero RowSourceType recovery: fresh paired36
+  explicit nativeRST0 before NEW72 extension literals. First freeze had16
+  object-count scaffold errors/120selected failures; premature local migration
+  stopped/restoredf16, evidence retained. Only new scaffold counts matching
+  control, explicitrefreeze/BOTH repeats ONLY120 selectedfailures before typed
+  Number/int64/uint64 zero guard/additive07 hook. Initialfive/first72 unchanged.
+  Revised GNU70/70 PASS514.10s/Clang sanitizer70/70 PASS3202.31s, both144cmp/
+  both72 supplemental pairs/sixgroups/all35hashes/contracts5of5 PASS339.04s;
+  bounded delegated DQ-DV renewed01:17:02Z, not independenthuman/high-hazard.
+  Signed exacthead integration gates remain; no logical/string/Currency/
+  nonzeroRS expansion.
+  Audit correction01:24Z: original review2 paired36 was EMPTY after postpopulation
+  RST0 assignment; it does NOT prove populated removal. Corrected native
+  configuration-before-population pair36/before3/rawc92fe8e1 corroborates
+  original pre-code literals LATE, without assertion/production changes.
+  Separate7171 records native RST0 reassignment clearing versus main retention,
+  unadmitted/no lifecycle parity claim. DQ-DV renewed with explicit setup order;
+  final current-document contracts remain an integration gate.
   Old-head macOS polyglot failure7169 remains separate/unadmitted; native
   selected RemoveItem subjects passed, no rootcause or old-failure erasure.
   Separate7163 successful-state/return and7164 type-admission gaps remain

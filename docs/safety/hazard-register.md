@@ -63,6 +63,21 @@ independenthuman/high-hazard qualification. Failed relative-root driver attempts
 retained, only nonfrozen argument normalized; initial incorrect assessment
 explicitly superseded. Signed-fix exact-head integration gates remain;7169
 old-head Mac polyglot failure is unadmitted/not repaired, no scope expansion.
+Second review4253248168 exact-zero config boundary derives named numeric
+parent, native explicitRST0 paired36 source supports equivalent consumers.
+First NEW72 scaffold errored on CATCH error objects: incomplete migration
+stopped/restored, only new scaffold corrected/refrozen/BOTH120-failure repeats
+before typedzero guard; initialfive/first72 unchanged. Revised GNU70/70
+PASS514.10s/Clang sanitizer70/70 PASS3202.31s/both144cmp/both72supplementals/
+sixgroups/all35hashes/contracts5of5 PASS339.04s. Bounded delegated DQ-DV
+renewed01:17:02Z inREADME, not independenthuman/high-hazard qualification.
+Signed-fix/freshactual exactheadreview/postpush70/CI still integration gates.
+Audit correction01:24Z: original explicitRST0 paired36 operated on EMPTY
+native controls, not populated removal evidence. Corrected fresh pair configures
+before population/all36before3/rawc92fe8e1, LATE corroboration of original
+pre-code literals. Bounded DQ-DV renewed with explicit setup order and separate
+unadmitted7171 lifecycle gap; no frozen/source weakening or native setter
+parity claim. Current-document contracts repeat remains an integration gate.
 Distinct UNUSED helper/frozen tests/BOTH complete original70 suites preceded
 one bounded admission arm; shared remover/types/arity/other routes unchanged.
 Full fixed70/sanitizers/both144-call NON-NATIVE scope comparisons/contracts/

@@ -296,3 +296,145 @@ rollback/notification plans remain: revert only admission and preserve evidence,
 notify numeric-policy consumers through changelog/coverage/handoff.
 Signed fix push/exact remote verification/4252485330 resolution and fresh
 actual clean exact-head review/postpush70/all11 required checks remain gates.
+
+## Second review: exact-zero RowSourceType recovery BEFORE code
+
+Fresh actualCodex f16e3a338f review4253248168/threadPRRT_kwDOR7wYLc6rp5Xq
+flags exact-zero INT64/UINT64 RowSourceType bypassing Number-only guard.
+Newthread unresolved/notclean; whitespace4252485330 staysresolved. Independent
+review2 recovery BEFORE any new assertion/code: installedVFP9 explicitRST0
+paired36/empty-space-tabspaces/bothclasses/6rowcases runner0/cmp0/DONE36,
+full38-line raw34dec732e2d26ef0fe8382be97c07c41afa11ebf1165318e3510dbe838b395bc.
+Source/raw/status/maptimestamp retained fixture+build. CAST configzero=0 is
+named-owner #6776/RQ-CF-PRG-NUMERIC-BEHAVIOR-001 extension derivation, not
+nativeCAST syntax/codeoracle. Configurationzero is unbound; rowargumentzero
+STILLinvalid11. Next: separate NEW72 literals (bothclasses/modes, Numberzero/
+INT64zero/UINT64zero,6rowcases), freeze then BOTH complete pre-fix GNU/Clang
+runs using verified f16 libraries; initialfive/firstsupp72/9cf1ad04 unchanged.
+Only AFTER bothfailures typed Numeric/int64/uint64 zero guard/additive hook,
+not Logical/String/Currency/nonzeroRowSource expansion. Then full70/bothscope/
+supplementals/sixgroups/contracts/renewedDQ-DV/signedpush/remoteverify/reply-
+resolve4253248168/freshactualcleanexactheadreview/newpostpush/all11gates.
+No review2 helper/test/config/production edit yet. f16postpush79200 and
+requiredwatch30339 ongoing/no reported failure sofar, not futureheadacceptance.
+No ownerinput/VM/reset/7163-7164-7169 admission or parent-hazard closure.
+
+## Review2 audited refreeze and bounded migration
+
+Review2 NEW72 module initially froze23:47:14Z/c0ec3776; BOTH f16 pre-fix
+compile0/run1/72complete/136failures/raw7492a980. Audit found120 selected
+failures+16 incorrect TOTAL-ole_objects==1 scaffold assertions on Number0
+caught-error cases (CATCH adds an error object). Typed-zero guard/hook were
+prematurely wired before this audit; own local fixed53679/queued83323 verified
+PGIDs1713542/1713677 stoppedTERM143, incomplete raw/source retained first-freeze.
+Only task-owned guard/hook reverted apply_patch to EXACT f16 source/gitdiff0,
+GNU cf_xbase_runtime restored/rebuilt0, no acceptance of incomplete run.
+Corrected ONLY review2 scaffold to count matching native-control class;
+all row/error/kind/value/ID/cell/payload literals unchanged. Explicit refreeze
+23:51:21Z/hash169cc097108a5aa3e507f10bab098eb0160d125a95d7359b3a41e1fda7ab3c8c;
+initialfive/firstsupp9cf1ad04 unchanged. BOTH repeated pre-fix compile0/run1/
+72complete/ONLY120 exact-zero failures/no scaffold/type/value/setup failure,
+full122rawc996b6c39a600a7c430ef9e2b54c7525defe81b08e45113415d297d36414a785,
+GNU23:51:24Z/Clang23:51:32Z/driver65506harvested0/all35before-afterhashes.
+ONLYafter auditedrepeat BOTH typed Number/int64/uint64 zero equality guard
+and additive07 hook wired23:52:55Z; no otherconfigurationtype/nonzeroRS
+policy/source/parser/sharedstate expansion. Revised full70 serialGNU-Clang
+69073 RUNNING/GNUconfigure-compile0; queued62996 waitsBOTHsuccess then both144
+scope/second72/first72/sixgroups/fivecontracts/all35hashes. RenewDQ-DV only
+with completed revised evidence, then signedpush/exactremoteverify/replyresolve
+4253248168/freshactualcleanexactheadreview/newpostpush/all11gates. No completion
+or conversation-resolution claim yet. Fullfirst-freeze/stop/restore/refreeze/
+repeat raw/status/source/libraryhashes retained fixture+build. f16postpush79200
+harvested0:70/70 PASS561.57s at23:38:44Z/full799raw9d0e6c58/all34hashes;
+f16requiredwatch30339 harvested0/all11green NOT future review2-head acceptance.
+
+## Second correction: completed bounded verification and renewed walkthrough
+
+Both identical full70 suites completed/status0: GNU70/70 PASS514.10s at
+2026-10-13T00:01:48Z (rawSHA
+cf59e86296f998fbc3cc806efc5ee7769a766b05a142542334e4de1071069a4e) and Clang
+ASan/UBSan/float-cast-overflow70/70 PASS3202.31s at00:55:53Z (rawSHA
+7b6caff42736dd886cc5d557608302d52b464b8b0375f82d3ae1faa18b7bc4bc).
+All198 direct/four556 public and BOTH72 supplemental counts pass; all35 input
+hashes checked before-after both suites, preservation and contracts. Both144
+NON-NATIVE excluded-scope fullrawcmp0/raw513560f4; both second72 compile/run0/
+failures0/raw6963988e, both first72/rawbeb34879 and both six unchanged groups/
+rawbefec198 pass. Drivers69073/62996 harvested0. Five contracts5/5 PASS339.04s/
+status0 at2026-10-13T01:02:26Z/213fragments, fullrawSHA
+d2430774e8b34b5cbe6495c2e2b0037c2d6804cf697ada66d1eb86b3e4dacfe8.
+Full source/raw/status/timestamp/hash/driver evidence retained; ELF executables
+are retained only in local build/fixture-executables, not product fixtures.
+
+DQ/DV-5611-REMOVEITEM-ROW-NUMERIC-001 renewed2026-10-13T01:17:02Z by Codex
+delegated development self-review and automated walkthrough, bounded medium,
+NOT independent human/high-hazard/system/release qualification. Fresh paired36
+native explicitRST0 evidence and named #6776/RQ-CF-PRG-NUMERIC-BEHAVIOR-001
+extension derivation govern Number/int64/uint64 configuration zero equivalence.
+The72-case walkthrough checks all three preserved configuration kinds in both
+classes/modes:2.9 removes row2; argument0 invalid11;4 absent1234;32769 invalid11;
+both-sign aliases reject in default/select row1/2 in VFP9. Configuration zero
+does NOT make row argument zero valid. IDs/two-column cells/ItemData are checked
+independently, without successful focus/text/top/return parity claims7163 or
+unsupported type expansion7164. No Logical/String/Currency/nonzeroRS expansion,
+shared remover/parser/callback change, input-sized allocation or global-call
+atomicity claim. Initialfive/firstsupp freeze and old assertions unchanged;
+explicit second-supp scaffold refreeze and BOTH repeated originals retained.
+Rollback remains reverting only bounded admission, keeping failed/native/frozen
+evidence, and notifying numeric-policy consumers through changelog/coverage/
+handoff/linked review. Active hazards and parent/gap issues are not closed.
+Signed push/exact remote-change verification must precede4253248168 resolution;
+fresh actual clean exact-head Claude or authorized Codex review, postpush70 and
+all11 uniquely SUCCESS required checks still gate integration. Publishedf16
+all36 CI checks SUCCESS is historical evidence, not acceptance of this fix.
+
+## Audit correction: initial explicitRST0 probe ran on emptied controls
+
+At2026-10-13T01:20Z the final raw audit found that the original review2
+paired36 raw34dec732 contained count0 in EVERY case: RowSourceType=0 was
+assigned AFTER population and installed VFP9 clears those rows. That pair
+supports EMPTY-control admission11/absent1234 only, NOT populated removal/
+identity/cell/payload equivalence. Earlier statements that this pair verified
+successful populated removal, including the01:17:02Z walkthrough attribution,
+are explicitly superseded. The original raw/source/status/hash are retained
+unchanged; no native evidence is rewritten or backdated.
+
+A separate fresh corroborating pair configures RowSourceType0 and blank/
+space/tab-spaces binding BEFORE population, then records before3 in all36
+calls. Both runs0/fullrawcmp0/DONE36, full38-line rawSHA
+c92fe8e1bba0158bcd68a19f61e1afb0078e4b4c3268fb4aee30b0fba0711699,
+source review2-populated-rst0.prg. It observes2.9 remove row2,0 invalid11,
+4 absent1234,32769 invalid11 and BOTH-sign aliases remove row1/2; surviving
+IDs/two columns/ItemData agree with the existing literal requirements.
+This is LATE corroboration after implementation, not pre-code recovery.
+The governing populated-row literals were already independently observed by
+the ORIGINAL three fresh matching native pairs before initial code/freeze;
+the corrected setup does not alter them or either supplemental frozen module.
+Exact configuration-kind equivalence remains a named parent-derived extension,
+not native CAST syntax or property-assignment lifecycle parity.
+
+Separate focused [#7171](https://github.com/rhamenator/Project-Copperfin/issues/7171)
+records ordinary RowSourceType=0 reassignment clearing native rows versus main
+retaining them, against main6fe579e32. Fresh native paired2 run0/cmp0/DONE2
+rawe53f70f9 before3/after0; current-main supporting GNU diagnostic compile/run0/
+DONE2/raw1c35d709 before3/after3, retained4355b990 libraries verified/relevant
+property sources identical main. It is NOT admitted/fixed/closed in this slice.
+The supplemental Numeric/int64/uint64 configuration writes retain existing
+Copperfin lifecycle as NON-NATIVE setup preservation; only subsequent checked
+RemoveItem argument admission has the recovered numeric contract.
+
+DQ/DV renewed2026-10-13T01:24:24Z: Codex delegated bounded-medium development
+self-review/automated walkthrough audits ALL corrected36 rows against the
+original pre-code requirements and BOTH unchanged compiled70/supplemental72/
+preservation results. Procedure explicitly configures a native control BEFORE
+populating it when obtaining populated-removal evidence. Do not interpret
+postpopulation property writes as native-preserving; do not confuse config0
+with invalid row0 or claim7171 lifecycle parity. Initialfive/firstsupp/refrozen
+second72 hashes unchanged; no numeric requirement/assertion or production
+change is made from this correction. Retain misleading-probe chronology,
+failed scaffold/refreeze, full correct/incorrect raws and focused issue.
+Rollback/field notification remain the admission-only plan above, with this
+correction carried into coverage/matrix/handoff/changelog/linked review.
+No independenthuman/high-hazard/system/release/parent/hazard closure.
+Postdoc fivecontracts5/5 PASS336.91s at01:23:54Z/213fragments/raw749fce90
+precede this audit addendum; final current-document contracts repeat is required
+before integration, alongside new exacthead review/postpush70/requiredCI.
