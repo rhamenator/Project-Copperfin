@@ -351,3 +351,24 @@ No independenthuman/high-hazard/system/release/parent/hazard closure.
 Postdoc fivecontracts5/5 PASS336.91s at01:23:54Z/213fragments/raw749fce90
 precede this audit addendum; final current-document contracts repeat is required
 before integration, alongside new exacthead review/postpush70/requiredCI.
+
+## Formatting-only finalization failure and correction
+
+Current-document contracts66723 completed at2026-10-13T01:32:43Z/status8,
+4/5 PASS345.50s. ONLY changelog fragment validation failed: added second
+unindented bullet violated changelog.d/README.md single-bullet/two-space
+continuation format. All other contracts, including safety workflow, passed.
+Full failedrawSHA a19a7cfa9630d04be61b615708d2fa345aae5284036c1995c98b86885cd03fef
+and invalid fragment retained; do not describe this run as5/5.
+Correction changes ONLY the added audit line into a two-space continuation;
+no prose meaning, production/test/frozen input or workflow source changes.
+Immediate assemble_changelog --check passes213fragments; repeated five-contract
+suite44416 is underway and must pass before integration.
+
+Published998776f277 exact-head postpush70 completed0/70of70 PASS521.16s at
+01:36:37Z/full800rawSHA3c9eb1febf76a237f8f53032e1f78b5606b8f3bff8d366ab034a6fb37b040863,
+headbefore-after identical/all35hashes/counters. Actual verified Codex clean
+review6136124879 names998776f277 after Claude-FIRST6136078797/fallback6136091558;
+all11required green/watch3187 completed0/both threadsresolved. These are
+OLDHEAD evidence only after the format-only fix is signed/pushed: fresh exacthead
+review/postpush70/requiredchecks/resolved conversations remain merge gates.

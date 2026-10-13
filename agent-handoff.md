@@ -640,6 +640,24 @@ No VM started/recreated; backup-reset completion still unconfirmed.
 
 Native ListBox/ComboBox RemoveItem Numeric/int64/uint64 display-row admission
 under OPEN/rhamenator/exact-agent-approved #5611/#6776, revalidated01:15Z.
+LATEST continuation01:48Z: published signed/DCO head
+998776f277d688f9ea1b7b383d08241635a87309 to PR7168/main, localGoodG/
+threecommitDCO0/exactremotehead and tested guardbf8df3f0/test8f620641/
+hookbf245288 blobs verified. Reply4253839420/thread4253248168 resolved ONLY
+afterpush/verification; fullthreads pagination0/both resolved/outdated.
+FreshClaude-FIRST6136078797 noactualresponse; authorizedCodex6136091558
+requested. Actualclean Codex6136124879 names998776f277/no findings at01:32:05Z.
+Exactheadpostpush66998 harvested0/70of70 PASS521.16s at01:36:37Z/raw3c9eb1fe/
+all35hashes/headbefore-afterequal; requiredwatch3187 harvested0/all11green.
+BUT current-document contracts66723 FAILED4of5/status8/345.50s at01:32:43Z,
+ONLY changelog fragment second unindented bullet; fullrawa19a7cfa preserved.
+No merge. Format-only correction uses required two-space continuation;
+assemble_changelog --check0/213fragments, production/tests/frozen35 unchanged.
+Full corrected fivecontracts44416 RUNNING. Next sign/push formatting-onlyfix,
+exactremoteverify/freshClaude-FIRST/authorizedCodex actualcleannewheadreview/
+newpostpush70/all11requiredgreen/resolvedthreads/currentdoccontracts before
+merge. No oldhead CI substituted/ownerinput/VMstart/reset/parent-gap closure.
+All chronology below is retained evidence, not current pending-state guidance.
 WT /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin,
 branch fix/removeitem-numeric-5611/base main6fe579e32dcf80e77e0c66e9b07845c908ebecef.
 PR7168 OPEN/main, published old signed+DCO head4c83738685eee01f3824e3b122fc3e336f38416b,
