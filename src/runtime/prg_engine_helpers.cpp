@@ -3120,6 +3120,43 @@ std::optional<std::int32_t> checked_addlistitem_id_argument(
     return static_cast<std::int32_t>(truncated);
 }
 
+// RQ-CF-PRG-ADDITEM-POSITION-NUMERIC-001 / VR-5611-ADDITEM-POSITION-NUMERIC-001.
+// Independent AddItem pairs: finite truncation, BOTH-sign low32 aliases,
+// count-dependent position1..count+1. Exact64/NaN/host limits derive from parent.
+// UNUSED by production through BOTH complete original compiler suites.
+std::optional<std::size_t> checked_additem_position_argument(
+    const PrgValue& value, const NumericBehavior behavior, const std::size_t item_count) {
+    if (item_count == std::numeric_limits<std::size_t>::max() || value.is_null ||
+        (value.kind != PrgValueKind::number && value.kind != PrgValueKind::int64 &&
+         value.kind != PrgValueKind::uint64)) return std::nullopt;
+    const auto upper = item_count + 1U; // Overflow ruled out before arithmetic.
+    if (value.kind == PrgValueKind::number && !std::isfinite(value.number_value)) {
+        return std::nullopt;
+    }
+    if (behavior == NumericBehavior::vfp9) {
+        const auto projected = vfp9_numeric_to_int32(value);
+        if (projected < 1 || static_cast<std::uint64_t>(projected) > upper) return std::nullopt;
+        return static_cast<std::size_t>(projected);
+    }
+    if (value.kind == PrgValueKind::int64) {
+        if (value.int64_value < 1 || static_cast<std::uint64_t>(value.int64_value) > upper) {
+            return std::nullopt;
+        }
+        return static_cast<std::size_t>(value.int64_value);
+    }
+    if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value < 1U || value.uint64_value > upper) return std::nullopt;
+        return static_cast<std::size_t>(value.uint64_value);
+    }
+    const double truncated = std::trunc(value.number_value);
+    // Unlike double(SIZE_MAX), this exclusive boundary cannot round upward
+    // into a value whose cast is undefined on the target size_t width.
+    const double exclusive_limit = std::ldexp(1.0, std::numeric_limits<std::size_t>::digits);
+    if (truncated < 1.0 || truncated >= exclusive_limit) return std::nullopt;
+    const auto position = static_cast<std::size_t>(truncated);
+    return position <= upper ? std::optional<std::size_t>(position) : std::nullopt;
+}
+
 std::size_t saturating_size_argument(const double value, const std::size_t minimum) {
     const std::int64_t truncated = saturating_numeric_to_int64(value);
     if (truncated <= 0 || static_cast<std::uint64_t>(truncated) < minimum) {

@@ -1,0 +1,3 @@
+f287ccc029c32e0c702abf66b76c1c0acd5e125914b6033aabdbe5b27ef2c775  tests/fixtures/vfp9-additem-numeric/preservation-crash-phase.md
+49dee46feae2159525ad23763b5131fa38763344ae4dd3acdd426e207b5da26b  tests/fixtures/vfp9-additem-numeric/audit-originals-complete.cjs
+4de232f0c40038c8bfdcba3a5a71cefe96361173723744d243e2f7f3a75564cf  tests/fixtures/vfp9-additem-numeric/failed312-preservation.sha256

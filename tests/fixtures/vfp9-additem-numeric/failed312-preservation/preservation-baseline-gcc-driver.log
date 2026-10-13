@@ -1,0 +1,1 @@
+build/additem-native/run-preservation.sh: line 29: 2708123 Segmentation fault         (core dumped) nice -n 10 ionice -c 2 -n 7 "$evidence/preservation-$phase-$name" "/home/rich/.codex/worktrees/additem-numeric-5611/Project-Copperfin/$evidence/preservation-$phase-$name-scripts" > "$evidence/preservation-$phase-$name.out" 2> "$evidence/preservation-$phase-$name.stderr"

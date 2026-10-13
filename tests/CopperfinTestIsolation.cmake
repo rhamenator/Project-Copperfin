@@ -1046,6 +1046,14 @@ function(copperfin_configure_native_test_isolation)
             AUDIT complete)
     endforeach()
     foreach(removeitem_test IN ITEMS
+        # AddItem source audit: only private generated PRGs/workareas, unique
+        # owned temporary paths, scoped locale restore; no child/network/sample
+        # or external resources. Conservative serial classification, not DV.
+        test_prg_engine_additem_numeric
+        test_prg_engine_additem_numeric_copperfin_session1
+        test_prg_engine_additem_numeric_copperfin_session2
+        test_prg_engine_additem_numeric_vfp9_session1
+        test_prg_engine_additem_numeric_vfp9_session2
         # AddListItem source audit: private generated PRGs/workareas, unique
         # owned temp directory, scoped locale restore; no child/network/sample
         # or external resource use. Retain conservative serial scheduling.

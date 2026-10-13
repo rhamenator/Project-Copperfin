@@ -1,0 +1,3 @@
+ae02ef6958a10b9d830cec83d42d57f92a036aa19a9f7d3daf8e2fd20cd85960  tests/fixtures/vfp9-additem-numeric/fixed-gnu-complete-phase.md
+e15b7c00fed8b5c1121d769d2b88f87b4ee38b7907f5e51eabc256b0905880b0  tests/fixtures/vfp9-additem-numeric/fixed-gcc-complete-evidence.sha256
+a08b6404a134426d60b5c4d14b10a896a561ce7f7c3c44766a6d34cb929f9583  tests/fixtures/vfp9-additem-numeric/audit-fixed-gnu.cjs

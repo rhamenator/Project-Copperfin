@@ -427,6 +427,10 @@ std::optional<std::int32_t> checked_removelistitem_id_argument(const PrgValue& v
 // RQ-CF-PRG-ADDLISTITEM-ID-NUMERIC-001 / VR-5611-ADDLISTITEM-ID-NUMERIC-001.
 // Independently recovered supplied stable-ID admission; UNUSED through both originals.
 std::optional<std::int32_t> checked_addlistitem_id_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-ADDITEM-POSITION-NUMERIC-001 / VR-5611-ADDITEM-POSITION-NUMERIC-001.
+// Independent count-dependent insertion position, NOT a supplied stable-ID domain.
+std::optional<std::size_t> checked_additem_position_argument(
+    const PrgValue& value, NumericBehavior behavior, std::size_t item_count);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the
 // value is out of range). A size or count: truncated toward zero, never below `minimum`, saturating at the largest
 // value this build supports: INT64_MAX, or SIZE_MAX where size_t is narrower (NaN gives `minimum`). A rounded int64 (llround semantics for in-range values; NaN is 0 and

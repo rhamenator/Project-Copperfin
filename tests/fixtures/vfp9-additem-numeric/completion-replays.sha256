@@ -1,0 +1,6 @@
+61894ca76dddca89e2379ec7caedf8512ccf4d084e3bf308cfe87d25117c39b6  tests/fixtures/vfp9-additem-numeric/test-literal-audit-completion.jsonl
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-additem-numeric/test-literal-audit-completion.status
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-additem-numeric/test-literal-audit-completion.stderr
+2f52637cf3391e0a8af637bfab49bc0c3f0811859368b6427387ecea39b405e6  tests/fixtures/vfp9-additem-numeric/native-audit-completion.jsonl
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-additem-numeric/native-audit-completion.status
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-additem-numeric/native-audit-completion.stderr

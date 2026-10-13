@@ -635,7 +635,43 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
         }
     }
 
-    const auto insert_slot = resolve_native_list_control_insert_slot(runtime_object, arguments);
+    // RQ-CF-PRG-ADDITEM-POSITION-NUMERIC-001 / VR-5611-ADDITEM-POSITION-NUMERIC-001/002.
+    // BOTH complete original85 suites/full failures/hashes audited before wiring.
+    // Check only supplied numeric position with Character item/omitted column.
+    // Shared insertion, generated IDs and all excluded routes remain unchanged.
+    const auto row_source_type = runtime_object.properties.find("rowsourcetype");
+    const auto control_source = runtime_object.properties.find("controlsource");
+    const bool materialized_unbound =
+        (row_source_type == runtime_object.properties.end() ||
+         (!row_source_type->second.is_null &&
+          ((row_source_type->second.kind == PrgValueKind::number &&
+            row_source_type->second.number_value == 0.0) ||
+           (row_source_type->second.kind == PrgValueKind::int64 &&
+            row_source_type->second.int64_value == 0) ||
+           (row_source_type->second.kind == PrgValueKind::uint64 &&
+            row_source_type->second.uint64_value == 0U)))) &&
+        (control_source == runtime_object.properties.end() ||
+         (!control_source->second.is_null &&
+          control_source->second.kind == PrgValueKind::string &&
+          trim_copy(control_source->second.string_value).empty())) &&
+        runtime_object.collection_item_keys.size() == runtime_object.collection_items.size() &&
+        runtime_object.list_rows.size() == runtime_object.collection_items.size();
+    std::optional<std::size_t> insert_slot;
+    if (arguments.size() == 2U && materialized_unbound &&
+        !arguments[0].is_null && arguments[0].kind == PrgValueKind::string &&
+        !arguments[1].is_null &&
+        (arguments[1].kind == PrgValueKind::number ||
+         arguments[1].kind == PrgValueKind::int64 ||
+         arguments[1].kind == PrgValueKind::uint64)) {
+        const auto position = checked_additem_position_argument(
+            arguments[1], behavior, runtime_object.collection_items.size());
+        if (!position.has_value()) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        insert_slot = *position - 1U;
+    } else {
+        insert_slot = resolve_native_list_control_insert_slot(runtime_object, arguments);
+    }
     if (!insert_slot.has_value()) {
         return make_number_value(0.0);
     }

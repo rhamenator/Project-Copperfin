@@ -1,0 +1,15 @@
+f2fc9584e20dc006705715545045603a5d5dafce8d296febee6c7716fb5425be  tests/fixtures/vfp9-additem-numeric/fixed-gcc-complete-audit.jsonl
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-additem-numeric/fixed-gcc-complete-audit.status
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-additem-numeric/fixed-gcc-complete-audit.stderr
+ffb79c02f4626c02891b1c284fab58e2be388221e8d448bb40a062053416ef94  tests/fixtures/vfp9-additem-numeric/fixed-gcc-inputs-after.log
+ffb79c02f4626c02891b1c284fab58e2be388221e8d448bb40a062053416ef94  tests/fixtures/vfp9-additem-numeric/fixed-gcc-inputs-before.log
+a79bf0568f8575a1a5470e7da90fe96ad860b1a6289a0a67a8e06a5765561e32  tests/fixtures/vfp9-additem-numeric/fixed-gcc-test-list.log
+2a493ac2f0951998ff0930ae98dd66554f2321256760af457f209984b8a5cec2  tests/fixtures/vfp9-additem-numeric/fixed-gcc.completed-at
+0952867f87057e4e033484550a8cceb6ac9389c4963fe01ac36b0654d26394c7  tests/fixtures/vfp9-additem-numeric/fixed-gcc.log
+71246c95386f6df2083751ef3ec65f66c673d79e18f0f90dc710d85ef108ef05  tests/fixtures/vfp9-additem-numeric/fixed-gcc.log.sha256
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-additem-numeric/fixed-gcc.status
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-additem-numeric/preservation-supplemental-fixed-gcc.cmp.log
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-additem-numeric/preservation-supplemental-fixed-gcc.cmp.status
+8a56e54d47e2e68737e35a48cdac5d403b15878049a85c429ee03a1e817d1f0f  tests/fixtures/vfp9-additem-numeric/preservation-supplemental-fixed-gcc.out
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-additem-numeric/preservation-supplemental-fixed-gcc.status
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-additem-numeric/preservation-supplemental-fixed-gcc.stderr

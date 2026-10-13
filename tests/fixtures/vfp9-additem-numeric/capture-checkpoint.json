@@ -1,0 +1,14 @@
+{
+  "rows": 440,
+  "phases": [
+    "invoke"
+  ],
+  "errors": {
+    "0": 116,
+    "11": 324
+  },
+  "rejectionsUnchanged": true,
+  "acceptedCountDeltas": [
+    1
+  ]
+}

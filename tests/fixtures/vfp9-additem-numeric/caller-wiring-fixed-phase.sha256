@@ -1,0 +1,4 @@
+8aedebb2e0637202f1911ee10a4f318b5ee9022c5db7cebebb1967c19e001378  tests/fixtures/vfp9-additem-numeric/caller-wiring-fixed-phase.md
+1f859316163b64194951dd3a1da273fb84d9c1eae9cb301a2a4567970875c98b  tests/fixtures/vfp9-additem-numeric/fixed-inputs.sha256
+3ad7f88590bcc7df8cd471d3b1231b48ff04c19c3306d1e2becc5eb7cc353b9d  tests/fixtures/vfp9-additem-numeric/other252-original-inputs.sha256
+bf375e600e0a530fdcf2e74ce6a78aed2577153729dc9bdaaa8bfdcdb27938bf  tests/fixtures/vfp9-additem-numeric/run-fixed.sh
