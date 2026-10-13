@@ -1,0 +1,122 @@
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/' '/2.9: nid2 expected 33 got 22
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/' '/2.9: csecond expected third got second
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/' '/2.9: ccell2 expected cell3 got cell2
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/' '/2.9: ndata2 expected 303 got 202
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/' '/0: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/' '/4: nerror expected 1234 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/' '/32769: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/' '/4294967297: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/' '/-4294967294.5: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/CHR(9) + '  '/2.9: nid2 expected 33 got 22
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/CHR(9) + '  '/2.9: csecond expected third got second
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/CHR(9) + '  '/2.9: ccell2 expected cell3 got cell2
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/CHR(9) + '  '/2.9: ndata2 expected 303 got 202
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/CHR(9) + '  '/0: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/CHR(9) + '  '/4: nerror expected 1234 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/CHR(9) + '  '/32769: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/CHR(9) + '  '/4294967297: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ListBox/CHR(9) + '  '/-4294967294.5: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/' '/2.9: nid2 expected 33 got 22
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/' '/2.9: csecond expected third got second
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/' '/2.9: ccell2 expected cell3 got cell2
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/' '/2.9: ndata2 expected 303 got 202
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/' '/0: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/' '/4: nerror expected 1234 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/' '/32769: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/' '/4294967297: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/' '/-4294967294.5: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/CHR(9) + '  '/2.9: nid2 expected 33 got 22
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/CHR(9) + '  '/2.9: csecond expected third got second
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/CHR(9) + '  '/2.9: ccell2 expected cell3 got cell2
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/CHR(9) + '  '/2.9: ndata2 expected 303 got 202
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/CHR(9) + '  '/0: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/CHR(9) + '  '/4: nerror expected 1234 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/CHR(9) + '  '/32769: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/CHR(9) + '  '/4294967297: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource COPPERFIN/ComboBox/CHR(9) + '  '/-4294967294.5: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/2.9: nid2 expected 33 got 22
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/2.9: csecond expected third got second
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/2.9: ccell2 expected cell3 got cell2
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/2.9: ndata2 expected 303 got 202
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/0: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/4: nerror expected 1234 got 0
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/32769: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/4294967297: ncount expected 2 got 3
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/4294967297: nid1 expected 22 got 11
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/4294967297: nid2 expected 33 got 22
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/4294967297: cfirst expected second got first
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/4294967297: csecond expected third got second
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/4294967297: ccell1 expected cell2 got cell1
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/4294967297: ccell2 expected cell3 got cell2
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/4294967297: ndata1 expected 202 got 101
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/4294967297: ndata2 expected 303 got 202
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/-4294967294.5: ncount expected 2 got 3
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/-4294967294.5: nid2 expected 33 got 22
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/-4294967294.5: csecond expected third got second
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/-4294967294.5: ccell2 expected cell3 got cell2
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/' '/-4294967294.5: ndata2 expected 303 got 202
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/2.9: nid2 expected 33 got 22
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/2.9: csecond expected third got second
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/2.9: ccell2 expected cell3 got cell2
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/2.9: ndata2 expected 303 got 202
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/0: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/4: nerror expected 1234 got 0
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/32769: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/4294967297: ncount expected 2 got 3
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/4294967297: nid1 expected 22 got 11
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/4294967297: nid2 expected 33 got 22
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/4294967297: cfirst expected second got first
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/4294967297: csecond expected third got second
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/4294967297: ccell1 expected cell2 got cell1
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/4294967297: ccell2 expected cell3 got cell2
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/4294967297: ndata1 expected 202 got 101
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/4294967297: ndata2 expected 303 got 202
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/-4294967294.5: ncount expected 2 got 3
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/-4294967294.5: nid2 expected 33 got 22
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/-4294967294.5: csecond expected third got second
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/-4294967294.5: ccell2 expected cell3 got cell2
+FAIL: RemoveItem blank ControlSource VFP9/ListBox/CHR(9) + '  '/-4294967294.5: ndata2 expected 303 got 202
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/2.9: nid2 expected 33 got 22
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/2.9: csecond expected third got second
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/2.9: ccell2 expected cell3 got cell2
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/2.9: ndata2 expected 303 got 202
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/0: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/4: nerror expected 1234 got 0
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/32769: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/4294967297: ncount expected 2 got 3
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/4294967297: nid1 expected 22 got 11
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/4294967297: nid2 expected 33 got 22
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/4294967297: cfirst expected second got first
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/4294967297: csecond expected third got second
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/4294967297: ccell1 expected cell2 got cell1
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/4294967297: ccell2 expected cell3 got cell2
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/4294967297: ndata1 expected 202 got 101
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/4294967297: ndata2 expected 303 got 202
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/-4294967294.5: ncount expected 2 got 3
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/-4294967294.5: nid2 expected 33 got 22
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/-4294967294.5: csecond expected third got second
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/-4294967294.5: ccell2 expected cell3 got cell2
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/' '/-4294967294.5: ndata2 expected 303 got 202
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/2.9: nid2 expected 33 got 22
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/2.9: csecond expected third got second
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/2.9: ccell2 expected cell3 got cell2
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/2.9: ndata2 expected 303 got 202
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/0: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/4: nerror expected 1234 got 0
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/32769: nerror expected 11 got 0
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/4294967297: ncount expected 2 got 3
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/4294967297: nid1 expected 22 got 11
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/4294967297: nid2 expected 33 got 22
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/4294967297: cfirst expected second got first
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/4294967297: csecond expected third got second
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/4294967297: ccell1 expected cell2 got cell1
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/4294967297: ccell2 expected cell3 got cell2
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/4294967297: ndata1 expected 202 got 101
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/4294967297: ndata2 expected 303 got 202
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/-4294967294.5: ncount expected 2 got 3
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/-4294967294.5: nid2 expected 33 got 22
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/-4294967294.5: csecond expected third got second
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/-4294967294.5: ccell2 expected cell3 got cell2
+FAIL: RemoveItem blank ControlSource VFP9/ComboBox/CHR(9) + '  '/-4294967294.5: ndata2 expected 303 got 202
+RemoveItem blank ControlSource supplemental cases: 72
+Supplemental failures: 120

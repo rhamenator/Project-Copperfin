@@ -1,0 +1,41 @@
+// Fresh selected-scope current-main diagnostic, NOT a requirement oracle.
+#include "copperfin/runtime/prg_engine.h"
+#include "prg_engine_test_support.h"
+#include <filesystem>
+#include <iostream>
+#include <string>
+int main(int argc,char** argv) {
+ if(argc!=2) return 2;
+ using namespace copperfin::runtime;
+ using namespace copperfin::test_support;
+ const std::filesystem::path root=argv[1];std::filesystem::create_directories(root);
+ const auto path=root/"diagnostic.prg";int calls=0,bad=0;
+ for(const std::string cls:{"ListBox","ComboBox"}) for(const std::string mode:{"COPPERFIN","VFP9"})
+ for(const std::string input:{"1","2","3",".T.",".NULL.","'2'","$2.5"}) {
+  ++calls;
+  write_text(path,"SET NUMERICBEHAVIOR TO "+mode+
+   "\nPUBLIC o,nCount,nFocus,nID,cValue,cDisplay,nTop,nTopID,nCode,vResult\n"
+   "o=CREATEOBJECT('"+cls+"')\no.ColumnCount=2\no.AddListItem('first',11)\no.AddListItem('second',22)\no.AddListItem('third',33)\n"
+   "o.List(1,2)='cell1'\no.List(2,2)='cell2'\no.List(3,2)='cell3'\no.ItemData(1)=101\no.ItemData(2)=202\no.ItemData(3)=303\no.ListIndex=2\n"+
+   (cls=="ListBox"?"o.TopIndex=2\n":"")+
+   "nCode=0\nvResult='not-returned'\nTRY\nvResult=o.RemoveItem("+input+
+   ")\nCATCH TO problem\nnCode=problem.ErrorNo\nENDTRY\nnCount=o.ListCount\nnFocus=o.ListIndex\nnID=o.ListItemID\ncValue=o.Value\ncDisplay=o.DisplayValue\n"+
+   (cls=="ListBox"?"nTop=o.TopIndex\nnTopID=o.TopItemID\n":"")+
+   "RETURN\n");
+  auto session=PrgRuntimeSession::create(make_runtime_session_options(path,root,false));
+  const auto state=session.run(DebugResumeAction::continue_run);
+  if(!state.completed) ++bad;
+  std::cout<<cls<<'|'<<mode<<'|'<<input<<"|completed="<<state.completed;
+  for(const auto key:{"ncode","vresult","ncount","nfocus","nid","cvalue","cdisplay","ntop","ntopid"}) {
+   const auto it=state.globals.find(key);std::cout<<'|'<<key<<'='<<(it==state.globals.end()?"<missing>":format_value(it->second));
+  }
+  for(const auto& object:state.ole_objects) if(object.base_class_name==cls) {
+   std::cout<<"|ids=";for(const auto& key:object.collection_item_keys)std::cout<<key<<',';
+   std::cout<<"|bits=";for(bool bit:object.list_selected)std::cout<<bit;
+   std::cout<<"|cells=";for(const auto& row:object.list_rows)for(const auto& cell:row)std::cout<<format_value(cell)<<',';
+   std::cout<<"|data=";for(const auto& v:object.list_item_data)std::cout<<format_value(v)<<',';
+  }
+  std::cout<<'\n';
+ }
+ std::cout<<"DONE|calls="<<calls<<"|scaffold_failures="<<bad<<'\n';return bad?1:0;
+}

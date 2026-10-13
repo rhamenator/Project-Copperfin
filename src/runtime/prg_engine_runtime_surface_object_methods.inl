@@ -366,6 +366,43 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
             return make_empty_value();
         }
 
+        // RQ-CF-PRG-REMOVEITEM-ROW-NUMERIC-001 / VR-5611-REMOVEITEM-ROW-NUMERIC-001/002.
+        // Both full original70 suites completed before this bounded admission.
+        // Preserve extra args/types/RowSource/binding and shared state/return
+        // (#7163/#7164); materialization still precedes this conversion.
+        const auto row_source_type = runtime_object.properties.find("rowsourcetype");
+        const auto control_source = runtime_object.properties.find("controlsource");
+        const bool materialized_unbound =
+            (row_source_type == runtime_object.properties.end() ||
+             (!row_source_type->second.is_null &&
+              ((row_source_type->second.kind == PrgValueKind::number &&
+                row_source_type->second.number_value == 0.0) ||
+               (row_source_type->second.kind == PrgValueKind::int64 &&
+                row_source_type->second.int64_value == 0) ||
+               (row_source_type->second.kind == PrgValueKind::uint64 &&
+                row_source_type->second.uint64_value == 0U)))) &&
+            (control_source == runtime_object.properties.end() ||
+             (!control_source->second.is_null &&
+              control_source->second.kind == PrgValueKind::string &&
+              trim_copy(control_source->second.string_value).empty())) &&
+            runtime_object.collection_item_keys.size() == runtime_object.collection_items.size() &&
+            runtime_object.list_rows.size() == runtime_object.collection_items.size();
+        const auto& index = arguments.front();
+        if (arguments.size() == 1U && materialized_unbound && !index.is_null &&
+            (index.kind == PrgValueKind::number || index.kind == PrgValueKind::int64 ||
+             index.kind == PrgValueKind::uint64)) {
+            const auto checked_index = checked_removeitem_row_argument(index, behavior);
+            if (!checked_index.has_value()) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+            }
+            const auto slot = static_cast<std::size_t>(*checked_index - 1);
+            if (slot >= runtime_object.collection_items.size()) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 1234);
+            }
+            (void)remove_native_list_control_slot(runtime_object, slot);
+            return make_empty_value();
+        }
+
         const long long requested_index = std::llround(value_as_number(arguments[0]));
         if (requested_index < 1LL ||
             static_cast<std::size_t>(requested_index) > runtime_object.collection_items.size()) {

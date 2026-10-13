@@ -1,0 +1,3 @@
+gcc fixed complete with actual ctest status 0
+clang fixed complete with actual ctest status 0
+Both identical fixed suites complete; preservation/contracts/integration still required.

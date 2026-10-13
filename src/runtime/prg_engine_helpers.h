@@ -416,6 +416,10 @@ std::optional<std::int32_t> checked_topindex_numeric_argument(const PrgValue& va
 // projection only, absent ID is a top-only no-op, never row/focus addressing.
 // Distinct UNUSED operation adapter through BOTH complete original65 suites.
 std::optional<std::int32_t> checked_topitemid_numeric_argument(const PrgValue& value, NumericBehavior behavior);
+
+// RQ-CF-PRG-REMOVEITEM-ROW-NUMERIC-001 / VR-5611-REMOVEITEM-ROW-NUMERIC-001.
+// Distinct admission helper; UNUSED by production through both originals.
+std::optional<std::int32_t> checked_removeitem_row_argument(const PrgValue& value, NumericBehavior behavior);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the
 // value is out of range). A size or count: truncated toward zero, never below `minimum`, saturating at the largest
 // value this build supports: INT64_MAX, or SIZE_MAX where size_t is narrower (NaN gives `minimum`). A rounded int64 (llround semantics for in-range values; NaN is 0 and

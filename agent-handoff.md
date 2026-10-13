@@ -55,6 +55,56 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
+TopItemID Numeric/exact assignment PR7161 merged2026-10-12T17:19:55Z as
+6fe579e32dcf80e77e0c66e9b07845c908ebecef, exact signed/DCO localGoodG head
+4355b9904a4c0597eb19f369ca43190986d3d06f.
+https://github.com/rhamenator/Project-Copperfin/pull/7161
+Fresh active strictmain ruleset20356131 all11 required uniquelySUCCESS;
+all33 completed checksSUCCESS/36total, three optional native fullplatform
+runs pending atmerge. Actual clean verified Codex6128777445 explicitly names
+4355b9904a after Claude-FIRST6128698519/authorizedfallback6128723881.
+Reviews/threads/closingrefs0/fullpagination; gate6129125495/exactheadmerge,
+no admin bypass. No summary/reaction/silence/quota notice asreview, no explicit
+Claude quota/setup failure inferred. GitHubunknown_key retained, not signing
+key registration. Parents5611/6776 OPEN/admitted, no parent/hazard closure.
+
+Independent installedVFP9 7423/help/four fresh matching pairs and pre-code
+RQ/VR/DQ/DV/HZ map12:49:47Z before helper/assertions/configuration. Initial
+fivefreeze284direct/four1445public unchanged; BOTH complete originals65 GNU
+61/65/1386.86s and Clangsanitizers61/65/2784.11s onlyfournewpublicfail/allold60+
+newdirect pass/identical5036 assertions. Only afterwards bounded engine
+TopItemID and selected typedSETPEM/PUTPEM callback admissions migrated with
+materialized-unbound RST0/emptyControlSource/coherentkeys gates. ID-not-row
+lookup/absent no-op/defaultchecked32/31/VFP9RAWUINT32ceiling46/definedlow32/
+exact64/NaN parent-derived; only top pair changes. High-ID setup rejects NOT
+positivehighIDlookup oracle; emptyabsolute7157 excluded. Originalwriter/
+TopIndex/synchronizer/types/lifecycle/parser unchanged. Firstfixed64/65/1369.10s
+retained; ONE non-frozen oldinvalidID999 smokeFalse-to-True after independent
+exact30-10-20 row native corroboration. No frozen weakening/refreeze.
+Repeated GNU65/65/1371.49s and Clang ASan/UBSan/float-cast-overflow65/65/2731.66s
+PASS/all284/four1445/all31 before-afterhashes/both144 excluded-scope comparisons/
+bothsixpreservationgroups; fivecontracts5/5/324.11s/212fragments. Boundedmedium
+delegated DQ-DV self-review/automatedwalkthrough complete, not independenthuman
+or high-hazard/system/release qualification. Full failed/source/raw/status/hash
+history retained tests/fixtures/vfp9-topitemid-numeric; no leak/warningfree/
+performance/whole-call-atomicity claim.
+
+Exact signed-head postpush GNU65/65 PASS1379.42s/status0 at17:14:43Z,
+driver42897/requiredwatch91017 harvested0/allcounters/31before-afterhashes.
+Full743-line rawSHA5c0730b7ea35da6ac5e0df033aa2063ec48bb4158a54fbad47bf4dc9d8999f55.
+Main fetched/FF synchronized exactmerge/signedhead ancestor proven. Owned
+clean WT/local/remotebranch removed normally with exact-head remote lease.
+Entire1.2GB build/evidence movedrecoverably to
+/home/rich/.local/share/Trash/files/topitemid-numeric-5611-build;
+postpushhash unchanged aftermove, cleanuprecord/continuity snapshots retained
+under topitemid-native. Scopedlsof only reportfds/tracefswarning, notglobalidle.
+Ownscopedstash5119d91c53179501344964aa1ae50d63958801fd retainednotpopped;
+earlierstashes/foreignfiles/4436and49aeWTs preserved. Published2a78413e/mirror2058
+restored unchanged canonically. Appattachment100identitycap/no othersremoved.
+Livechannel rereadempty aftercleanup; no VM/backupreset completion assumption.
+
+## Prior shipped slice
+
 TopIndex Numeric/exact assignment PR7159 merged 2026-10-12T12:18:18Z as
 bb31a11ef6d7724dcebb1f4cc30f8d685cb9f726; exact signed/DCO local GoodG head
 679cbe9078da0b4991229b8fd683c179e1919779.
@@ -588,61 +638,294 @@ No VM started/recreated; backup-reset completion still unconfirmed.
 
 ## Selected active bounded slice
 
-Native ListBox TopItemID non-NULL Numeric/int64/uint64 assignment admission under
-OPEN/rhamenator/exact-agent-approved #5611/#6776, revalidated16:45Z.
-WT /home/rich/.codex/worktrees/topitemid-numeric-5611/Project-Copperfin,
-branch fix/topitemid-numeric-5611/base origin/main
-bb31a11ef6d7724dcebb1f4cc30f8d685cb9f726. No PR yet; local verification complete.
+Native ListBox/ComboBox RemoveItem Numeric/int64/uint64 display-row admission
+under OPEN/rhamenator/exact-agent-approved #5611/#6776, revalidated01:15Z.
+LATEST continuation01:48Z: published signed/DCO head
+998776f277d688f9ea1b7b383d08241635a87309 to PR7168/main, localGoodG/
+threecommitDCO0/exactremotehead and tested guardbf8df3f0/test8f620641/
+hookbf245288 blobs verified. Reply4253839420/thread4253248168 resolved ONLY
+afterpush/verification; fullthreads pagination0/both resolved/outdated.
+FreshClaude-FIRST6136078797 noactualresponse; authorizedCodex6136091558
+requested. Actualclean Codex6136124879 names998776f277/no findings at01:32:05Z.
+Exactheadpostpush66998 harvested0/70of70 PASS521.16s at01:36:37Z/raw3c9eb1fe/
+all35hashes/headbefore-afterequal; requiredwatch3187 harvested0/all11green.
+BUT current-document contracts66723 FAILED4of5/status8/345.50s at01:32:43Z,
+ONLY changelog fragment second unindented bullet; fullrawa19a7cfa preserved.
+No merge. Format-only correction uses required two-space continuation;
+assemble_changelog --check0/213fragments, production/tests/frozen35 unchanged.
+Full corrected fivecontracts44416 RUNNING. Next sign/push formatting-onlyfix,
+exactremoteverify/freshClaude-FIRST/authorizedCodex actualcleannewheadreview/
+newpostpush70/all11requiredgreen/resolvedthreads/currentdoccontracts before
+merge. No oldhead CI substituted/ownerinput/VMstart/reset/parent-gap closure.
+All chronology below is retained evidence, not current pending-state guidance.
+WT /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin,
+branch fix/removeitem-numeric-5611/base main6fe579e32dcf80e77e0c66e9b07845c908ebecef.
+PR7168 OPEN/main, published old signed+DCO head4c83738685eee01f3824e3b122fc3e336f38416b,
+localGoodG/DCO0/remoteexact; GitHubunknown_key not registered-key claim.
+Claude-FIRST6132906140 no actualresponse; authorized Codex6132912786 actual
+oldheadreview4252485330/PRRT_kwDOR7wYLc6roHRc identified whitespace-only
+ControlSource guard mismatch. Reviewfix now published; continuation state:
+Published reviewfix signed+DCO headf16e3a338fe225eefafb5ccf2c94a2a30d1d4e43 to PR7168/main;
+localGoodG/twocommitDCO0/remoteexact, guardblob e3212fff675d62bc649e22c5eebb1c251d39c64b
+and newtestblob6fd377162ed5350fb8ce61a157f436677fc4b23a remote/localequal.
+Reply4253231369 posted and threadPRRT_kwDOR7wYLc6roHRc resolved ONLY after
+push+exactverification. FreshClaude-FIRST6134596454 noactualresponse;
+owner-authorized verifiedCodexfallback6134610636 requested. Require actual
+clean exacthead review, not summary/reaction/silence/quota. Published-f16
+postpush79200 and requiredwatch30339 completed0 (details below); these do not
+qualify the unpushed second correction. No freshclean exacthead review:
+Fresh actualCodex f16e3a338f review4253248168/threadPRRT_kwDOR7wYLc6rp5Xq
+flags exact-zero INT64/UINT64 RowSourceType bypassing Number-only guard.
+Newthread unresolved/notclean; whitespace4252485330 staysresolved. Independent
+review2 recovery BEFORE any new assertion/code: installedVFP9 explicitRST0
+paired36/empty-space-tabspaces/bothclasses/6rowcases runner0/cmp0/DONE36,
+full38-line raw34dec732e2d26ef0fe8382be97c07c41afa11ebf1165318e3510dbe838b395bc.
+Source/raw/status/maptimestamp retained fixture+build. CAST configzero=0 is
+named-owner #6776/RQ-CF-PRG-NUMERIC-BEHAVIOR-001 extension derivation, not
+nativeCAST syntax/codeoracle. Configurationzero is unbound; rowargumentzero
+STILLinvalid11. NEW72 literals/refreeze/BOTH pre-fix runs and typed Numeric/
+int64/uint64 zero guard/additive hook are recorded below; initialfive and
+firstsupp72/9cf1ad04 unchanged. No Logical/String/Currency/nonzeroRowSource
+expansion. Next: harvest both revisedfull70/bothscope/supplementals/sixgroups/
+contracts, renewDQ-DV, signpush/remoteverify/replyresolve4253248168, freshactual
+cleanexactheadreview/newpostpush/all11gates.
+Current review2 exact implementation/verification chronology:
+Review2 NEW72 module initially froze23:47:14Z/c0ec3776; BOTH f16 pre-fix
+compile0/run1/72complete/136failures/raw7492a980. Audit found120 selected
+failures+16 incorrect TOTAL-ole_objects==1 scaffold assertions on Number0
+caught-error cases (CATCH adds an error object). Typed-zero guard/hook were
+prematurely wired before this audit; own local fixed53679/queued83323 verified
+PGIDs1713542/1713677 stoppedTERM143, incomplete raw/source retained first-freeze.
+Only task-owned guard/hook reverted apply_patch to EXACT f16 source/gitdiff0,
+GNU cf_xbase_runtime restored/rebuilt0, no acceptance of incomplete run.
+Corrected ONLY review2 scaffold to count matching native-control class;
+all row/error/kind/value/ID/cell/payload literals unchanged. Explicit refreeze
+23:51:21Z/hash169cc097108a5aa3e507f10bab098eb0160d125a95d7359b3a41e1fda7ab3c8c;
+initialfive/firstsupp9cf1ad04 unchanged. BOTH repeated pre-fix compile0/run1/
+72complete/ONLY120 exact-zero failures/no scaffold/type/value/setup failure,
+full122rawc996b6c39a600a7c430ef9e2b54c7525defe81b08e45113415d297d36414a785,
+GNU23:51:24Z/Clang23:51:32Z/driver65506harvested0/all35before-afterhashes.
+ONLYafter auditedrepeat BOTH typed Number/int64/uint64 zero equality guard
+and additive07 hook wired23:52:55Z; no otherconfigurationtype/nonzeroRS
+policy/source/parser/sharedstate expansion. Revised full70 serialGNU-Clang
+69073 completed/harvested0: revisedGNU70/70 PASS514.10s/status0 at2026-10-13T00:01:48Z,
+rawSHA cf59e86296f998fbc3cc806efc5ee7769a766b05a142542334e4de1071069a4e,
+all198/four556/both72 supplemental counts/all35 before-afterhashes. Revised
+Clang ASan/UBSan/float-cast-overflow70/70 PASS3202.31s/status0 at00:55:53Z,
+raw7b6caff4; all198/four556/both72/all35hashes. Queued62996 completed/harvested0:
+both144 scope fullrawcmp0/raw513560f4, second72/raw6963988e, first72/rawbeb34879,
+bothsixgroups/rawbefec198 compile/run0; contracts5/5 PASS339.04s/status0 at
+01:02:26Z/213fragments/raw d2430774/all35beforeafter. Fulllogs/status/hash/
+drivers retained fixture; ELF executables retained localbuild only.
+Boundedmedium DQ-DV renewed01:17:02Z inREADME, delegated self-review/automated
+walkthrough, not independenthuman/high-hazard qualification. Publishedf16
+all36checksSUCCESS/all11requiredgreen NOT futuresecondfixhead acceptance.
+Next: finalcontracts afterdocs/signpush/exactremoteverify/replyresolve4253248168,
+freshactualcleanexactheadreview/newpostpush/all11gates. No integration or
+conversation-resolution claim yet. Fullfirst-freeze/stop/restore/refreeze/
+repeat raw/status/source/libraryhashes retained fixture+build. f16postpush79200
+harvested0:70/70 PASS561.57s at23:38:44Z/full799raw9d0e6c58/all34hashes;
+f16requiredwatch30339 harvested0/all11green NOT future review2-head acceptance.
+Audit01:20Z found original review2 native36/raw34dec732 count0 throughout:
+native RST0 assignment AFTER population cleared rows. Earlier successful-
+populated attribution/01:17:02Z walkthrough source claim is superseded,
+original raw preserved. Corrected configuration-BEFORE-population pair36/
+allbefore3/cmp0/rawc92fe8e1 LATE corroborates original three pre-code native
+populated-row literals; NO frozen/assertion/production change required.
+Separate7171 filed exactmain6fe579: native paired2 before3-after0/rawe53f70f9,
+currentmain supporting verified4355libs diagnostic before3-after3/raw1c35d709,
+source/delta hashes retained. Unadmitted/no lifecycle repair or parity claim.
+DQ-DV renewed01:24:24Z with explicit native configuration-before-population
+procedure/misuse/source correction, not independenthuman/backdated recovery.
+Postdoc contracts5/5 PASS336.91s at01:23:54Z/raw749fce90 precede this correction;
+final current-document repeat required before integration. Preserve raw native
+setup error/first scaffold/refreeze/failed driver chronology. Next signpush
+verified production fix, exactremoteverify/replyresolve4253248168, fresh
+Claude-FIRST/authorizedCodex actualcleanexactheadreview/newpostpush70/all11
+checks/current-doc contracts before merge. No ownerinput or scope expansion.
+No ownerinput/VM/reset/7163-7164-7169 admission or parent-hazard closure.
+PRbody CLIedit hit obsolete classicProjects GraphQL field, APIbodyPATCH
+fallback applied without setup change. Oldhead35SUCCESS/optionalMac7169FAIL
+not newheadacceptance. Own postpublicationcontinuity kept local/uncommitted.
+One-line trim_copy(...).empty(), additive07 hook/
+NEWsupplemental72 module. Initial fivefrozen/helper/CMake/isolation/numeric
+assertions unchanged; old07 assertions unchanged, no refreeze or weakening.
+Fresh independent paired36 native blank-space-tabspaces observations preceded
+supplemental freeze21:47:50Z/9cf1ad04 and BOTH pre-fix compile0/run1/72complete/
+identical120failures/rawd99315f9/all33hashes. Only then guard21:48:37Z wired.
 
-Independent pre-code map12:49:47Z before helper/assertions/config: installed
-VFP9 7423/help42101d16/runner1e64d290 snapshot; four fresh matching pairs
-main677/675 raw15dccf06,edge350/348 eaf8dd06,boundary146/144 57ee9558,
-setupdiagnostic194/96 59557684/allrunner0/cmp0/DONE. Unique ID (not row/focus),
-accepted absent top2 no-op, unchangedfocus/bits/text/cells/payload; explicit
-VFP9 RAWUINT32 ceiling46/definedlow32 vs defaultchecked32/31, exact64/NaN
-parent-derived. Native empty1/-1 gap7157 excluded; high-ID setup rejects not
-positive high-ID lookup oracle. Full README/audit/source/raw/status/hashes in
-tests/fixtures/vfp9-topitemid-numeric, no code/helper/generated oracle.
+Review-fixed full70 GNU70/70/516.71s21:57:34Z/799rawae525dd6 and Clang ASan/
+UBSan/float-cast-overflow70/70/3213.58s22:51:47Z/799raw738ff2cd PASS/status0,
+all198/four556/all65prior+supplemental72/all34before-afterhashes,95432 harvested0.
+Both144 excluded-scope compile-run-cmp0/raw513560f4; bothsupp72 compile-run0/
+failures0/rawbeb34879, bothsixgroups0/rawbefec198. Queued98493 and repeat80383
+ran144 with24 RST2 setup failures from relative scratch root (not missing
+argument; initial incorrect diagnosis superseded/retained). ONLYnonfrozen
+rootargument normalizedABSOLUTE; SAMEsource/binary/literals fullrawcmp0.
+Attempt3/89836 harvested0/allpreservation+fivecontracts5/5 PASS345.35s/status0
+23:24:49Z/213fragments/full86rawdfc7f205/all34hashes. Boundedmedium DQ/DV
+renewed 2026-10-12T23:26:21Z in README, delegated self-review/walkthrough,
+NOT independenthuman/high-hazard/system/release qualification. No sanitizer
+diagnostic/leaksdisabled/notwarning-free/performance/globalatomicity proof.
+First correction f16 was signed/pushed/remoteverified and4252485330 resolved;
+second correction4253248168 remains unpushed/unresolved pending verification
+above. Fresh Claude-FIRST/authorizedCodex actualclean exacthead review,
+newheadpostpush70/all11uniquelySUCCESS remain required before exactheadmerge.
+No silence/summary/quota acceptance, no adminbypass.
 
-Initial fivefreeze12:52:45Z,284direct/four1445 public literal dense+sparse;
-172 independent native status/top-row comparisons match. Frozen5/7production/
-19neighbor original hashes unchanged before-after BOTH complete original65:
-GNU61/65/1386.86s at13:28:45Z/raw52755e38; Clang ASan-UBSan-float-cast-overflow
-61/65/2784.11s at14:37:42Z/raw179e64cb. ONLYfournewpublicfail/allold60+newdirect
-pass/identical5036 prefixed failures; full10826line raws/source snapshots.
-14807 harvested0; distinct helper UNUSED until BOTH complete, no refreeze.
+Oldhead all36checks complete35SUCCESS/oneoptionalMacFAIL, all11requiredgreen.
+Mac38310572850/job115015006769 only unchanged polyglot_host combined identity/
+counts assertion0.95s;579selected/576PASS/oneFAIL/twoSkipped/847.96s. Allfive
+RemoveItemPASS. Separate7169 OPEN/rhamenator/bug-runtime/noapproval filedmain
+6fe579e32, no out-of-scope fix or rootcause/flake claim. Full3702rawd6065519
+and source-delta metadata retained oldhead-platforms/report6133657779.
+Linux38310572797/job115015008307 zero failuresout579/986.12s/3869raw218c5987,
+Windows38310572754/job115015006732 580selected/100%/2834.23s SUCCESS23:10:45Z/
+rawae9f7919/allfiveRemoveItemPASS; localGNUhost10/10PASS8.00s/raw67da7a97
+NOT Mac acceptance or old failure erasure. Follow newhead CI without7169
+scope expansion/closure. Oldheadpostpush70/70/522.12s21:34:47Z/raw1abe8177
+retained, NOT revised-head acceptance. Review remainsunresolved/no freshclean.
 
-ONLY afterwards bounded TopItemID/current-session engine write arm and selected
-typedSETPEM/PUTPEM alias callback wired; bothmaterialized-unbound RST0/
-emptyControlSource/coherentkeys gates. IDlookup sets onlytop pair, absent/empty
-no-op/localized31-46/NaN31/countguard permap. Oldwriter/TopIndex/sync/types/
-constructor/RowSource/bound routes unchanged; no wholecallatomicity claim.
+Appattach7168 failed identitycount exceeds100; existingattachments unchanged/
+GitHubunblocked. Canonical+WT own localcontinuity preserved; foreign files/
+4436and49aeWTs untouched. Scopedstash5119d91c53179501344964aa1ae50d63958801fd
+retained/notpopped. No ownerinput/VMstart/reset confirmation/parent/hazard/
+release closure.7163/7164/7169 unadmitted, shared-state-return/types untouched.
+Full original/native/frozen/reviewcorrectedraws/failedharnesses retained in
+fixture+build/removeitem-native; original chronological phases below.
 
-Firstfixed19526 harvested8:GNU64/65/1369.10s at15:11:03Z/allfive newpass;
-soleold llistsetinvalidtopitemid expectsFalse gotTrue. Full750line rawdcd63d21/
-compile0/oldsource/manifest retainedfixed-attempt1. Pre-code absent-ID no-op
-plus fresh exact30-10-20 IDs/seed20/input999 nativepair0/cmp0/OK/top3-ID20-focus0-
-count3/raw8de9ae22 corroborates ONE non-frozen old list_controls_04 False-to-True
-literal; no setup/state/count/production/fivefrozen change, other18neighbors
-unchanged. Newfixed31manifest exactdelta; original19 preserved/no refreeze.
+Independent pre-code map2026-10-12T17:53:05Z BEFORE helper/assertions/config:
+full shipped RemoveItem help995c88c6 SHAb65238ab; installed VFP9 7423 through
+unchanged private Wine runner1e64d290/snapshot. Three fresh matching pairs
+main423/425 rawf1de30db,boundary297/299 ae7ea531,range180/182 b8a9f04a,
+allrunner0/cmp0/DONE. Both controls/dense+sparse/empty/ListBoxmulti; 1.9/2.9/3.9
+remove displayrow1/2/3, BOTH-sign low32 aliases, inclusive1..32768 admission
+then absent1234; invaliddomain/nonfinite11, rejected native state unchanged.
+Defaultfinite trunc/lossless exact1..32768, explicitVFP9definedlow32 thenrange,
+NaN11both/exact64 namedparent-derived extension boundaries. No TopItemIDraw
+positiveceiling reused. Full source/raw/status/hash/README/audit retained
+tests/fixtures/vfp9-removeitem-numeric. RQ-CF-PRG-REMOVEITEM-ROW-NUMERIC-001,
+VR-5611-REMOVEITEM-ROW-NUMERIC-001/002,DQ/DV-5611-REMOVEITEM-ROW-NUMERIC-001;
+boundedmedium delegated development documentation self-review/automated
+walkthrough completed2026-10-12T20:48:05Z inREADME, not independenthuman/
+high-hazard/system/release qualification; whole runtime integration stillpending.
 
-Repeated12187 harvested0: GNU65/65/1371.49s at15:40:56Z/raw224adf39,
-Clangsanitizers65/65/2731.66s at16:29:49Z/rawce93f637; all284/four1445/
-neighbor counters/both144 excluded-scope comparisons/both sixgroups/all31
-before-afterhashes complete. Scope rawa40c5cf6/preservationbefec198 both0.
-Fivecontracts5/5/324.11s at16:35:24Z/212fragments/raw188966c1.
-Boundedmedium delegated development DQ-DV self-review/automated walkthrough
-complete inREADME, not independenthuman/high-hazard. Frozenfive unchanged.
-Supplement initialrelative-root compile0/run1/scaffold36 retained; SAMEbinary/
-source ONLYabsolute invocation4325 run0/DONE144/scaffold0 is baseline.
-Preservation evidence not native oracle or pristine-main archive-byte claim.
+Fresh main diagnostic28calls compile0/run0/scaffold0/raw4a149011, relevant
+source identical signed4355b990 retained GNU libraries/fullhashes (not pristine
+archive/tree byte claim) exposed separate focused7163 successful state/return
+and7164 typeerror27 vscoercion gaps. Filed against exact currentmain6fe579e32,
+OPEN/rhamenator/bug/runtime/no agent-approved label; no scope expansion or
+fix. Preserve shared removal focus/text/top/return and unsupportedtype routes;
+successful state controls are non-native preservation ONLY. Independent
+selected row/cell/ID/payload/error assertions do not hide these gaps.
 
-NEXT: sign/DCO/push verified exactdiff, PRbase main/Claude-FIRST then authorized
-fallback if unavailable; actualclean exact-head review/all11required green/
-allthreadsresolved/exact signed-head postpushfull65 beforemerge. Preserve failed
-and original evidence, source hashes and historical suffix. No ownerinput.
-No parent/family/KBX/hazard/release closure; separate7157/7153/7145 unadmitted,
-deferred7100/7102/6879 unchanged. EPOCH/CENTURY done; no VM/backupreset assumption.
+Initial fivefreeze2026-10-12T17:58:49Z,198direct/four556public literals.
+Beforefreeze syntax0/fourcatalog InvalidArgument spelling assembly corrections;
+59 independent legacy Numeric status comparisons match native/zero mismatches.
+No postfreeze repair/refreeze. Fivefrozen/eightproduction/twentyneighbor=33
+originalinput hashes/source snapshots/preflight retained. Distinct helper
+checked_removeitem_row_argument was ONLY declaration/definition/newtest and
+UNUSED by production until BOTH original70 completed/audited (below).
+Engine invocation already receives current-session behavior; no signature/
+parser widening.
+
+Original selection driver23196 harvested5 BEFORE CTest: regex omitted the
+existing isolationcontract and selected69, not70. Replacement84238 also
+harvested5/69 beforeCTest due wrongcontractname. Full harness/configure/build/
+list/status/raws/33 unchanged hashes retained selection-attempt1/2. Only
+NON-FROZEN driverregex corrected to actual test_native_test_isolation_contract;
+no helper/test/config/production/neighbor change or refreeze. Stale5 marker
+movedintoattempt2, not current completion. Third full70 driver7373 RUNNING:
+serial GNU-O1-g0 then Clang-O1-g0 ASan/UBSan/float-cast-overflow,
+17targets/privateTMP700/nice10/ionice2:7/-j1. GNUconfigure-build0, full70completed
+2026-10-12T18:25:53Z/status8/66of70pass/516.19s; ONLYfournewpublicfail,
+all65prior+newdirect198 PASS/allfour556counters/only4600 uniquelyprefixed
+RemoveItemfailures1108/1108/1192/1192. Full5403-line rawSHA
+73fe0aacda33620bbffedb849595d6b0b243d3e25214ddcfaa3207da9eeb4323,
+fullstatus/source/33before-afterhashes retained. Expectedfailure notacceptance.
+Clangconfigure-build0, full70 completed2026-10-12T19:42:01Z/status8/66of70/
+3218.18s. ONLYfournewpublicfail/all65prior+newdirect198 PASS/four556 counters/
+identical4600 selectedfailures1108/1108/1192/1192; full5403-line rawSHA
+8a12cb053013812c4d9d3b7e13a82e89efe29cc1d6b6b1e0ed51ff933db7233d.
+Driver7373 harvested0/BOTH completeoriginals, fullraws/source/status/all33
+before-afterhashes checked AGAIN before migration; no sanitizerdiagnostics,
+leaksdisabled/notwarningfree/performanceproof. Failed selection-attempts
+remain historical, not baselinecompletion or acceptance.
+
+ONLYafterwards selected production admission at2026-10-12T19:46:45Z:
+one supplied Numeric/exact argument, materialized-unbound RST0/default0/
+emptyControlSource/coherentkeys-items-rows. Checked11 and absent1234 before
+sharedremove; successful checkedslot delegates UNCHANGED remover/emptyreturn.
+ONLYobject_methods.inl+33lines; initialfivefrozen/twentyneighbors/sevenother
+originalproduction unchanged. Exact bounded diff/originalsource/fixed33hash
+manifest retained; no frozen repair/refreeze. Full identical fixed70 driver
+16589 RUNNING, serialGNUthenClangsanitizers. FullGNU70/70 PASS521.24s/status0
+completed2026-10-12T19:55:43Z; all198direct/four556public/all65prior/all33
+before-afterhashes. Full798-line rawSHA
+92fbc086982ebae59417028497b38a4f625ce3412c35ff208a4125ab78211976.
+Clangfixedconfigure-compile0/full70 subsequently completed2026-10-12T20:50:11Z:
+70/70 PASS3230.17s/status0/all198direct-four556 counters/all65prior/all33
+before-afterhashes; full798-line rawSHA
+f87c8e5ab7e602181c4decefec8ee00fd08285b78e6ad195a71694fef347a559.
+Driver16589 harvested0/BOTH fixed full70 PASS. No sanitizer diagnostic/leaks
+disabled/not warning-free or performance proof. Initial fivefrozen unchanged,
+no refreeze or old assertion correction; only bounded admission changed.
+Scope comparisons now complete (below), fivecontracts73935 harvested0:
+5/5 PASS339.63s/status0 completed20:22:34Z/213fragmentsvalid,
+full86-line rawSHAb0679e0c27ab3ec51c891f28fa76653dd782dc2774592a51e8dcba13d4797c77,
+all33 before-afterhashes. DQ-DV bounded delegated self-review/walkthrough
+completed20:48:05Z against independentnative/parentmap+GNU70/bothscope/
+sixgroups/catalogs/context; NOT independenthuman/high-hazard or BOTHfixedfull70
+acceptance. Subsequent Clang completion above establishes bounded local
+runtime verification, not retroactive DQ chronology or integration acceptance.
+Docs22/32/hazard linkage/changelog updated; requirement row recovered only
+for bounded numeric admission, separate7163/7164 remain unadmitted gaps.
+Final repeated contracts42621 completed21:24:59Z/status0/5of5 PASS340.08s/
+213fragments/full86-line raw0395f13f/all33before-afterhashes. Next:
+signed+DCO commit/push/PR, Claude-FIRST or authorized
+Codex clean exact-head review, post-push70/all required checks/conversations.
+Frozen scaffold repair still requires explicit refreeze/repeatboth.
+Only materialized-unbound RST0/default0, emptyControlSource/coherentkeys/
+collection/rows; omitted/extras/types/RowSource/bound routes/RemoveListItem/
+AddItem/AddListItem/sharedsync/returns/events/parser/lifecycle excluded.
+No ownerinput required; no native successful focus/text/top/return parity,
+wholecall/callbackatomicity or allocation/performance claim.
+
+Fresh current-main excluded-scope preservation144calls compile0/run0/DONE144/
+scaffold0, full rawSHA513560f41bc1fb46742e7a9896394b7952b583b0d1ce7022e649fdd2369a5a87.
+Both controls/modes/sessions/RST1-2-5/boundControlSource0/types/omitted-extra
+args, complete return/error/row/focus/top/text/IDs/cells/data/bits/context.
+Source/raw/status/libs provenance retained. NON-NATIVE preservation only;
+require BOTH fixed compiler output fullrawcmp0, not regenerated expecteddata.
+FixedGNU andClang scope completed compile0/run0/DONE144/scaffold0/fullrawcmp0/
+sameSHA, all33 fixedbefore-afterhashes; scope driver21109 harvested0.
+Supplemental six unchanged list-control groups GNU/Clang compile-run0/
+sixcomplete/failures0/fullrawbefec198fb62d7e5fdae2e816aff3dc0ebde67970c187f3c7c013a1a377e3f19
+both/all33 beforeafterhashes. Initialstandalone compile failed beforetests due
+missing -Isrc/runtime/nonexistent support.cpp argument; fullfailedlogs/status/
+source/hashchecks retained preservation-compile-attempt1. ONLYnon-frozen
+compilecommand corrected, no assertion/helper/config/production repair or
+refreeze; repeated driver44358 harvested0. Existing current-state evidence,
+not native requirements; no shared-state/return/type parity claim.
+
+PR7161 optional exact-head follow-up: Linux38280220012/job114915443107 completed
+SUCCESS17:36:21Z,574/574/1031.21s, watch/download0/rawSHA
+76cffce930133a627b22c59e3be9eecec8137dc5607d46fef973957f95a540ec.
+macOS38280220069/job114915443859 completedSUCCESS17:35:05Z,574/574/938.77s,
+fourlocale2/2 groups20.46/20.09/20.50/20.83s, watch/download0/rawSHA
+810830570c6dc766b31455ab80bf81abb901d015d9d5b3e77a1cf5bd225279ca.
+Both exacthead4355b9904a4c0597eb19f369ca43190986d3d06f, not retroactivegreen
+atmerge. Windows38280220133/job114915445819 completedSUCCESS18:03:31Z,
+575/575/2122.98s, watch/download0/fullrawSHA
+76e987345c5442a39d0c9235fd0f46d6af3f00218e0ea971e07775fa54555a6b.
+Three-run watch driver37703 harvested0; all36 exacthead PRchecks now
+COMPLETED/SUCCESS, threads0/fullpagination. Late report6130045074 retained;
+all three optional platform runs were pending atmerge, not retroactivegreen.
+Full raws/metadata/status under
+/home/rich/.local/share/Trash/files/topitemid-numeric-5611-build/topitemid-native/late-exact-head-platforms.
+No rerun/cancellation/source/timeout-policy or release-qualification claim.
+No parent/family/KBX/hazard/releaseclosure;7163/7164 and7157/7153/7145 unadmitted,
+deferred7100/7102/6879 unchanged. EPOCH/CENTURYdone/no VM or reset assumption.
 
 ## Retained owner steering / deferred work
 

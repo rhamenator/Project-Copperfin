@@ -1,5 +1,63 @@
 # VFP Language Reference Coverage
 
+- RemoveItem Numeric/exact display-row admission recovery (#5611/#6776,2026-10-12):
+  [Independent installed VFP9/help/parent map](../tests/fixtures/vfp9-removeitem-numeric/README.md)
+  precedes helper/assertions/configuration. Both native controls, dense/sparse
+  identities, two-column cells/payload, fractions truncating to display rows,
+  inclusive1..32768 admission/invalid11/absent1234 and BOTH-sign VFP9 low32
+  aliases measured in three matching423/297/180-call pairs. Default finite
+  truncation/exact1..32768 and NaN11/exact extended integers derive from named
+  owner numeric policy/hazards; no native CAST/NaN syntax claim.
+  Initial fivefrozen198direct/four556public unchanged. BOTH complete original70
+  GNU66/70/516.19s and Clang ASan/UBSan/float-cast-overflow66/70/3218.18s,
+  onlyfournewpublicfail/all65previous+newdirect pass/identical4600 failures/
+  all33 before-after hashes. Only afterwards bounded materialized-unbound
+  RST0/emptyControlSource/coherent storage/one-argument Numeric/exact arm wired,
+  current-session behavior reused. Shared removal/focus/text/top/return,
+  types/omitted/extras/bound/RowSource/RemoveListItem and parser unchanged.
+  Review4252485330 clarifies unbound as trimmed-empty ControlSource: fresh
+  paired36-call installedVFP9 observation confirms empty/space/tab-spaces
+  equivalence; separate supplemental72 frozen/pre-fix GNU+Clang120failures
+  precede one-line guard correction/additive07 hook. Initial five frozen and
+  old assertions unchanged. Revised GNU70/70 PASS516.71s/Clang sanitizer70/70
+  PASS3213.58s/all34hashes/supplemental72/both144rawcmp/bothsixgroups PASS;
+  contracts5/5 PASS345.35s/213fragments, bounded delegated DQ-DV renewed in
+  README, not independenthuman/high-hazard. Two relative-root driver failures
+  retained; only nonfrozen command corrected, no source/assertion weakening.
+  Signedfix/freshactual exactheadreview/postpush70/CI still integration gates.
+  Second review4253248168 exact-zero RowSourceType recovery: fresh paired36
+  explicit nativeRST0 before NEW72 extension literals. First freeze had16
+  object-count scaffold errors/120selected failures; premature local migration
+  stopped/restoredf16, evidence retained. Only new scaffold counts matching
+  control, explicitrefreeze/BOTH repeats ONLY120 selectedfailures before typed
+  Number/int64/uint64 zero guard/additive07 hook. Initialfive/first72 unchanged.
+  Revised GNU70/70 PASS514.10s/Clang sanitizer70/70 PASS3202.31s, both144cmp/
+  both72 supplemental pairs/sixgroups/all35hashes/contracts5of5 PASS339.04s;
+  bounded delegated DQ-DV renewed01:17:02Z, not independenthuman/high-hazard.
+  Signed exacthead integration gates remain; no logical/string/Currency/
+  nonzeroRS expansion.
+  Audit correction01:24Z: original review2 paired36 was EMPTY after postpopulation
+  RST0 assignment; it does NOT prove populated removal. Corrected native
+  configuration-before-population pair36/before3/rawc92fe8e1 corroborates
+  original pre-code literals LATE, without assertion/production changes.
+  Separate7171 records native RST0 reassignment clearing versus main retention,
+  unadmitted/no lifecycle parity claim. DQ-DV renewed with explicit setup order;
+  final current-document contracts remain an integration gate.
+  Old-head macOS polyglot failure7169 remains separate/unadmitted; native
+  selected RemoveItem subjects passed, no rootcause or old-failure erasure.
+  Separate7163 successful-state/return and7164 type-admission gaps remain
+  unadmitted; neither is hidden as native acceptance or repaired here.
+  Fresh144-call excluded-scope baseline is NON-NATIVE preservation only.
+  Local bounded verification complete: fixed GNU70/70 PASS521.24s and Clang
+  ASan/UBSan/float-cast-overflow70/70 PASS3230.17s/all198-four556 counters/
+  all33 hashes; both144-call NON-NATIVE excluded-scope fullrawcmp0/bothsix
+  unchanged listgroupsPASS. Fivecontracts5/5/339.63s/213 valid fragments;
+  bounded delegated development documentation self-review/automated walkthrough
+  complete, not independenthuman/high-hazard. No frozen weakening/refreeze or
+  old assertion correction. Signed exact-head post-push70/hosted checks/
+  actual clean external review remain integration gates; separate7163/7164,
+  parents/family/hazards/release remain open and outside this completion.
+
 - TopItemID Numeric/exact assignment recovery (#5611/#6776,2026-10-12):
   [Independent installedVFP9/help/parent map](../tests/fixtures/vfp9-topitemid-numeric/README.md)
   precedes helper/assertions/configuration. Unique item-ID addressing, accepted

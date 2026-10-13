@@ -45,6 +45,55 @@ own system and domain assurance.
 
 ## Bounded numeric-conversion linkage
 
+RQ-CF-PRG-REMOVEITEM-ROW-NUMERIC-001 / DQ-DV-5611-REMOVEITEM-ROW-NUMERIC-001
+links active HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01
+unchanged to the [independent RemoveItem map](../../tests/fixtures/vfp9-removeitem-numeric/README.md).
+Bounded documentation misuse medium: remove the wrong display row/identity,
+misstate rejected-state preservation, or claim native successful focus/text/
+top/return despite7163 or type parity despite7164. Both-sign VFP9 projection,
+finite/exact default and NaN containment derive from measured/named parents;
+argument-domain11 and admitted-absent1234 are independently observed.
+Review4252485330 trimmed-empty binding boundary is independently confirmed
+by paired36-call native observations; separate supplemental72 literals froze
+before BOTH120-failure pre-fix runs and one-line guard correction. Initial
+five frozen and old assertions unchanged. Revised GNU70/70/516.71s and Clang
+sanitizer70/70/3213.58s/supplemental72/both144cmp/bothsixgroups/all34hashes/
+fivecontracts5/5/345.35s PASS; bounded delegated DQ-DV renewed inREADME, not
+independenthuman/high-hazard qualification. Failed relative-root driver attempts
+retained, only nonfrozen argument normalized; initial incorrect assessment
+explicitly superseded. Signed-fix exact-head integration gates remain;7169
+old-head Mac polyglot failure is unadmitted/not repaired, no scope expansion.
+Second review4253248168 exact-zero config boundary derives named numeric
+parent, native explicitRST0 paired36 source supports equivalent consumers.
+First NEW72 scaffold errored on CATCH error objects: incomplete migration
+stopped/restored, only new scaffold corrected/refrozen/BOTH120-failure repeats
+before typedzero guard; initialfive/first72 unchanged. Revised GNU70/70
+PASS514.10s/Clang sanitizer70/70 PASS3202.31s/both144cmp/both72supplementals/
+sixgroups/all35hashes/contracts5of5 PASS339.04s. Bounded delegated DQ-DV
+renewed01:17:02Z inREADME, not independenthuman/high-hazard qualification.
+Signed-fix/freshactual exactheadreview/postpush70/CI still integration gates.
+Audit correction01:24Z: original explicitRST0 paired36 operated on EMPTY
+native controls, not populated removal evidence. Corrected fresh pair configures
+before population/all36before3/rawc92fe8e1, LATE corroboration of original
+pre-code literals. Bounded DQ-DV renewed with explicit setup order and separate
+unadmitted7171 lifecycle gap; no frozen/source weakening or native setter
+parity claim. Current-document contracts repeat remains an integration gate.
+Distinct UNUSED helper/frozen tests/BOTH complete original70 suites preceded
+one bounded admission arm; shared remover/types/arity/other routes unchanged.
+Full fixed70/sanitizers/both144-call NON-NATIVE scope comparisons/contracts/
+bounded delegated development walkthrough completed; signed exact-head
+post-push/hosted checks/actual clean external review remain integration gates.
+No independenthuman/high-hazard/system/parent/hazard/KBX/
+release closure or whole-call/callback atomicity claim.
+Current documented walkthrough/self-review is complete under the owner's
+bounded-medium delegated development allowance: full GNU70/70/521.24s,
+both144 scope comparisons/both six groups/all33hashes/fivecontracts5/5/339.63s
+and independent native/parent boundary checks retained. It is not independent
+human/high-hazard qualification. Subsequent full fixedClang70/70 PASS3230.17s
+completed20:50:11Z/all198-four556 counters/all33hashes/no diagnostic (leaks
+disabled). Signed exact-head integration gates remain, registered hazards
+active/unchanged; separate7163/7164 unadmitted, no shared-state/type repair.
+
 RQ-CF-PRG-TOPITEMID-NUMERIC-001 / DQ-DV-5611-TOPITEMID-NUMERIC-001 links active
 HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01 unchanged to the
 [independent pre-code TopItemID map](../../tests/fixtures/vfp9-topitemid-numeric/README.md).

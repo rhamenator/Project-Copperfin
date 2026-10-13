@@ -1,0 +1,16 @@
+// Verification-only driver: unchanged list_controls_03 assertions.
+// RQ-CF-PRG-REMOVEITEM-ROW-NUMERIC-001 preservation, NOT native requirements.
+#include "test_prg_engine_runtime_surface_functions_support.h"
+#include "test_prg_engine_runtime_surface_functions_tests.h"
+int main() {
+    using namespace copperfin::runtime_surface_tests;
+    test_native_list_controls_selectedid_selection_stays_coherent();
+    test_native_list_controls_removelistitem_stays_coherent();
+    test_native_listbox_selected_property_stays_coherent();
+    test_native_listbox_multiselect_property_controls_selection_mode();
+    test_native_list_controls_sorted_property_stays_coherent();
+    test_native_listbox_moverbars_property_stays_gated_and_builtin();
+    std::cout << "Existing list-control preservation groups completed: 6; failures: "
+              << copperfin::test_support::test_failures() << '\n';
+    return copperfin::test_support::test_failures() == 0 ? 0 : 1;
+}

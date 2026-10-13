@@ -1,0 +1,114 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 36
+      Start  36: test_native_test_isolation_contract
+
+36: Test command: /usr/bin/cmake "-DINVENTORY_PATH=/home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/native-test-isolation.tsv" "-DISOLATION_SOURCE_PATH=/home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/tests/CopperfinTestIsolation.cmake" "-DTEST_REGISTRATION_SOURCE_PATH=/home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/tests/CMakeLists.txt" "-P" "/home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/tests/run_native_test_isolation_contract_check.cmake"
+36: Working Directory: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests
+36: Environment variables: 
+36:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/resources/locales
+36: Test timeout computed to be: 700
+36: -- Native test isolation inventory contract passed for 579 tests
+ 1/70 Test  #36: test_native_test_isolation_contract ...........................   Passed    0.50 sec
+test 390
+      Start 390: test_prg_engine_int64_exact_expression
+
+390: Test command: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests/test_prg_engine_int64_exact_expression
+390: Working Directory: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests
+390: Environment variables: 
+390:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/resources/locales
+390: Test timeout computed to be: 700
+ 2/70 Test #390: test_prg_engine_int64_exact_expression ........................   Passed    0.02 sec
+test 393
+      Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 700
+ 3/70 Test #393: test_prg_engine_numeric_behavior ..............................   Passed   26.96 sec
+test 414
+      Start 414: test_prg_engine_listindex_numeric
+
+414: Test command: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests/test_prg_engine_listindex_numeric
+414: Working Directory: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests
+414: Environment variables: 
+414:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/resources/locales
+414: Test timeout computed to be: 700
+414: ListIndex frozen cases: direct=274 public=0
+ 4/70 Test #414: test_prg_engine_listindex_numeric .............................   Passed    0.01 sec
+test 415
+      Start 415: test_prg_engine_removeitem_numeric
+
+415: Test command: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests/test_prg_engine_removeitem_numeric
+415: Working Directory: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests
+415: Environment variables: 
+415:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/resources/locales
+415: Test timeout computed to be: 700
+415: RemoveItem frozen cases: direct=198 public=0
+ 5/70 Test #415: test_prg_engine_removeitem_numeric ............................   Passed    0.00 sec
+test 416
+      Start 416: test_prg_engine_removeitem_numeric_copperfin_session1
+
+416: Test command: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests/test_prg_engine_removeitem_numeric "COPPERFIN" "1"
+416: Working Directory: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests
+416: Environment variables: 
+416:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/resources/locales
+416: Test timeout computed to be: 700
+416: RemoveItem frozen cases: direct=0 public=556
+ 6/70 Test #416: test_prg_engine_removeitem_numeric_copperfin_session1 .........   Passed    5.00 sec
+test 417
+      Start 417: test_prg_engine_removeitem_numeric_copperfin_session2
+
+417: Test command: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests/test_prg_engine_removeitem_numeric "COPPERFIN" "2"
+417: Working Directory: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests
+417: Environment variables: 
+417:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/resources/locales
+417: Test timeout computed to be: 700
+417: RemoveItem frozen cases: direct=0 public=556
+ 7/70 Test #417: test_prg_engine_removeitem_numeric_copperfin_session2 .........   Passed    4.68 sec
+test 418
+      Start 418: test_prg_engine_removeitem_numeric_vfp9_session1
+
+418: Test command: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests/test_prg_engine_removeitem_numeric "VFP9" "1"
+418: Working Directory: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests
+418: Environment variables: 
+418:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/resources/locales
+418: Test timeout computed to be: 700
+418: RemoveItem frozen cases: direct=0 public=556
+ 8/70 Test #418: test_prg_engine_removeitem_numeric_vfp9_session1 ..............   Passed    4.66 sec
+test 419
+      Start 419: test_prg_engine_removeitem_numeric_vfp9_session2
+
+419: Test command: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests/test_prg_engine_removeitem_numeric "VFP9" "2"
+419: Working Directory: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests
+419: Environment variables: 
+419:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/resources/locales
+419: Test timeout computed to be: 700
+419: RemoveItem frozen cases: direct=0 public=556
+ 9/70 Test #419: test_prg_engine_removeitem_numeric_vfp9_session2 ..............   Passed    4.86 sec
+test 420
+      Start 420: test_prg_engine_topitemid_numeric
+
+420: Test command: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests/test_prg_engine_topitemid_numeric
+420: Working Directory: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests
+420: Environment variables: 
+420:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/resources/locales
+420: Test timeout computed to be: 700
+420: TopItemID frozen cases: direct=284 public=0
+10/70 Test #420: test_prg_engine_topitemid_numeric .............................   Passed    0.01 sec
+test 421
+      Start 421: test_prg_engine_topitemid_numeric_copperfin_session1
+
+421: Test command: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests/test_prg_engine_topitemid_numeric "COPPERFIN" "1"
+421: Working Directory: /home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/build/removeitem-gcc/tests
+421: Environment variables: 
+421:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/removeitem-numeric-5611/Project-Copperfin/resources/locales
+421: Test timeout computed to be: 700
