@@ -1,0 +1,3 @@
+gcc refrozen-fixed completed with actual ctest status 0
+clang refrozen-fixed completed with actual ctest status 0
+Both refrozen-fixed suites complete; actual statuses must pass before acceptance.

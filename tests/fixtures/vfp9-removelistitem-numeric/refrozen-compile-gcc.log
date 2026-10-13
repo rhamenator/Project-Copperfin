@@ -1,0 +1,29 @@
+[0/2] Re-checking globbed directories...
+[1/22] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_surface_functions.cpp.o
+In file included from /home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_functions.cpp:193:
+/home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:13:5: warning: ‘int copperfin::runtime::{anonymous}::bit_position(const copperfin::runtime::PrgValue&)’ defined but not used [-Wunused-function]
+   13 | int bit_position(const PrgValue& value) {
+      |     ^~~~~~~~~~~~
+/home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:5:15: warning: ‘uint32_t copperfin::runtime::{anonymous}::bitwise_value(const copperfin::runtime::PrgValue&)’ defined but not used [-Wunused-function]
+    5 | std::uint32_t bitwise_value(const PrgValue& value) {
+      |               ^~~~~~~~~~~~~
+[2/22] Linking CXX static library libcf_xbase_runtime.a
+[3/22] Building CXX object tests/CMakeFiles/test_prg_engine_runtime_surface_functions.dir/test_prg_engine_runtime_surface_functions_list_controls_03.cpp.o
+[4/22] Linking CXX executable tests/test_prg_engine_int64_exact_expression
+[5/22] Linking CXX executable tests/test_prg_engine_numeric_behavior
+[6/22] Linking CXX executable tests/test_prg_engine_listindex_numeric
+[7/22] Linking CXX executable tests/test_prg_engine_removelistitem_numeric
+[8/22] Linking CXX executable tests/test_prg_engine_removeitem_numeric
+[9/22] Linking CXX executable tests/test_prg_engine_topitemid_numeric
+[10/22] Linking CXX executable tests/test_prg_engine_topindex_numeric
+[11/22] Linking CXX executable tests/test_prg_engine_listitemid_numeric
+[12/22] Linking CXX executable tests/test_prg_engine_list_index_numeric
+[13/22] Linking CXX executable tests/test_prg_engine_listitem_numeric
+[14/22] Linking CXX executable tests/test_prg_engine_itemidtoindex_numeric
+[15/22] Linking CXX executable tests/test_prg_engine_indextoitemid_numeric
+[16/22] Linking CXX executable tests/test_prg_engine_selectedid_numeric
+[17/22] Linking CXX executable tests/test_prg_engine_selected_index_numeric
+[18/22] Linking CXX executable tests/test_prg_engine_itemdata_index_numeric
+[19/22] Linking CXX executable tests/test_prg_engine_getcolor_default_numeric
+[20/22] Linking CXX executable tests/test_prg_engine_runtime_surface_functions
+[21/22] Linking CXX executable tests/test_prg_engine_runtime_surface_itemid_selectors

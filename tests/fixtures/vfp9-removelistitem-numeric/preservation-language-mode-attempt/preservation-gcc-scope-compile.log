@@ -1,0 +1,171 @@
+In file included from include/copperfin/runtime/prg_engine.h:8,
+                 from build/removelistitem-native/excluded-scope-preservation.cpp:3:
+include/copperfin/runtime/rushmore_planning.h:29:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmorePlanCost&, const RushmorePlanCost&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+   29 |     friend bool operator==(const RushmorePlanCost&, const RushmorePlanCost&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:43:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmorePredicateDescriptor&, const RushmorePredicateDescriptor&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+   43 |     friend bool operator==(const RushmorePredicateDescriptor&, const RushmorePredicateDescriptor&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:50:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreResidualPredicateDescriptor&, const RushmoreResidualPredicateDescriptor&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+   50 |     friend bool operator==(const RushmoreResidualPredicateDescriptor&, const RushmoreResidualPredicateDescriptor&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:69:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreCursorStatisticsDescriptor&, const RushmoreCursorStatisticsDescriptor&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+   69 |     friend bool operator==(
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:81:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreCursorMetadata&, const RushmoreCursorMetadata&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+   81 |     friend bool operator==(const RushmoreCursorMetadata&, const RushmoreCursorMetadata&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:160:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreCostModelOptions&, const RushmoreCostModelOptions&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  160 |     friend bool operator==(const RushmoreCostModelOptions&, const RushmoreCostModelOptions&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:169:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreCostModelInput&, const RushmoreCostModelInput&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  169 |     friend bool operator==(const RushmoreCostModelInput&, const RushmoreCostModelInput&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:189:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreRemoteProviderCapabilities&, const RushmoreRemoteProviderCapabilities&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  189 |     friend bool operator==(
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:216:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreRemotePlanningInput&, const RushmoreRemotePlanningInput&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  216 |     friend bool operator==(const RushmoreRemotePlanningInput&, const RushmoreRemotePlanningInput&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:227:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreRemotePlanningDecision&, const RushmoreRemotePlanningDecision&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  227 |     friend bool operator==(const RushmoreRemotePlanningDecision&, const RushmoreRemotePlanningDecision&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:242:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreBitmapOrderCandidate&, const RushmoreBitmapOrderCandidate&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  242 |     friend bool operator==(const RushmoreBitmapOrderCandidate&, const RushmoreBitmapOrderCandidate&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:250:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreBitmapCostOptions&, const RushmoreBitmapCostOptions&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  250 |     friend bool operator==(const RushmoreBitmapCostOptions&, const RushmoreBitmapCostOptions&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:261:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreBitmapPlanningInput&, const RushmoreBitmapPlanningInput&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  261 |     friend bool operator==(const RushmoreBitmapPlanningInput&, const RushmoreBitmapPlanningInput&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:270:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreBitmapPlanCandidate&, const RushmoreBitmapPlanCandidate&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  270 |     friend bool operator==(const RushmoreBitmapPlanCandidate&, const RushmoreBitmapPlanCandidate&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h: In function ‘bool copperfin::runtime::operator<(const RushmoreBitmapPlanCandidate&, const RushmoreBitmapPlanCandidate&)’:
+include/copperfin/runtime/rushmore_planning.h:272:23: error: no match for ‘operator!=’ (operand types are ‘const copperfin::runtime::RushmorePlanCost’ and ‘const copperfin::runtime::RushmorePlanCost’)
+  272 |         if (left.cost != right.cost) {
+      |             ~~~~~~~~~ ^~ ~~~~~~~~~~
+      |                  |             |
+      |                  |             const copperfin::runtime::RushmorePlanCost
+      |                  const copperfin::runtime::RushmorePlanCost
+include/copperfin/runtime/rushmore_planning.h: At global scope:
+include/copperfin/runtime/rushmore_planning.h:316:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreBitmapPlanningDecision&, const RushmoreBitmapPlanningDecision&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  316 |     friend bool operator==(const RushmoreBitmapPlanningDecision&, const RushmoreBitmapPlanningDecision&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h: In function ‘constexpr bool copperfin::runtime::rushmore_bitmap_operation_is_supported(const std::string&)’:
+include/copperfin/runtime/rushmore_planning.h:335:22: warning: call to non-‘constexpr’ function ‘bool std::operator==(const __cxx11::basic_string<_CharT, _Traits, _Alloc>&, const _CharT*) [with _CharT = char; _Traits = char_traits<char>; _Alloc = allocator<char>]’ [-Winvalid-constexpr]
+  335 |     return operation == "=" || operation == "==" || operation == "<" || operation == "<=" ||
+      |            ~~~~~~~~~~^~~~~~
+In file included from /usr/include/c++/15/string:56,
+                 from /usr/include/c++/15/stdexcept:41,
+                 from /usr/include/c++/15/system_error:45,
+                 from /usr/include/c++/15/bits/fs_fwd.h:35,
+                 from /usr/include/c++/15/filesystem:53,
+                 from include/copperfin/localization/localization.h:7,
+                 from include/copperfin/runtime/prg_engine.h:7:
+/usr/include/c++/15/bits/basic_string.h:4060:5: note: ‘bool std::operator==(const __cxx11::basic_string<_CharT, _Traits, _Alloc>&, const _CharT*) [with _CharT = char; _Traits = char_traits<char>; _Alloc = allocator<char>]’ declared here
+ 4060 |     operator==(const basic_string<_CharT, _Traits, _Alloc>& __lhs,
+      |     ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h: At global scope:
+include/copperfin/runtime/rushmore_planning.h:669:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmorePlanCacheKey&, const RushmorePlanCacheKey&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  669 |     friend bool operator==(const RushmorePlanCacheKey&, const RushmorePlanCacheKey&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:692:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmorePlanCandidate&, const RushmorePlanCandidate&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  692 |     friend bool operator==(const RushmorePlanCandidate&, const RushmorePlanCandidate&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:706:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreExplainRecord&, const RushmoreExplainRecord&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  706 |     friend bool operator==(const RushmoreExplainRecord&, const RushmoreExplainRecord&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:730:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreExplainPlan&, const RushmoreExplainPlan&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  730 |     friend bool operator==(const RushmoreExplainPlan&, const RushmoreExplainPlan&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:739:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmorePlanningOptions&, const RushmorePlanningOptions&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  739 |     friend bool operator==(const RushmorePlanningOptions&, const RushmorePlanningOptions&) = default;
+      |                 ^~~~~~~~
+In file included from include/copperfin/runtime/prg_engine.h:8,
+                 from tests/prg_engine_test_support.h:8,
+                 from tests/prg_engine_test_support.cpp:5:
+include/copperfin/runtime/rushmore_planning.h:29:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmorePlanCost&, const RushmorePlanCost&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+   29 |     friend bool operator==(const RushmorePlanCost&, const RushmorePlanCost&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:43:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmorePredicateDescriptor&, const RushmorePredicateDescriptor&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+   43 |     friend bool operator==(const RushmorePredicateDescriptor&, const RushmorePredicateDescriptor&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:50:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreResidualPredicateDescriptor&, const RushmoreResidualPredicateDescriptor&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+   50 |     friend bool operator==(const RushmoreResidualPredicateDescriptor&, const RushmoreResidualPredicateDescriptor&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:69:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreCursorStatisticsDescriptor&, const RushmoreCursorStatisticsDescriptor&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+   69 |     friend bool operator==(
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:81:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreCursorMetadata&, const RushmoreCursorMetadata&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+   81 |     friend bool operator==(const RushmoreCursorMetadata&, const RushmoreCursorMetadata&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:160:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreCostModelOptions&, const RushmoreCostModelOptions&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  160 |     friend bool operator==(const RushmoreCostModelOptions&, const RushmoreCostModelOptions&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:169:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreCostModelInput&, const RushmoreCostModelInput&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  169 |     friend bool operator==(const RushmoreCostModelInput&, const RushmoreCostModelInput&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:189:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreRemoteProviderCapabilities&, const RushmoreRemoteProviderCapabilities&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  189 |     friend bool operator==(
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:216:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreRemotePlanningInput&, const RushmoreRemotePlanningInput&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  216 |     friend bool operator==(const RushmoreRemotePlanningInput&, const RushmoreRemotePlanningInput&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:227:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreRemotePlanningDecision&, const RushmoreRemotePlanningDecision&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  227 |     friend bool operator==(const RushmoreRemotePlanningDecision&, const RushmoreRemotePlanningDecision&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:242:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreBitmapOrderCandidate&, const RushmoreBitmapOrderCandidate&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  242 |     friend bool operator==(const RushmoreBitmapOrderCandidate&, const RushmoreBitmapOrderCandidate&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:250:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreBitmapCostOptions&, const RushmoreBitmapCostOptions&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  250 |     friend bool operator==(const RushmoreBitmapCostOptions&, const RushmoreBitmapCostOptions&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:261:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreBitmapPlanningInput&, const RushmoreBitmapPlanningInput&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  261 |     friend bool operator==(const RushmoreBitmapPlanningInput&, const RushmoreBitmapPlanningInput&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:270:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreBitmapPlanCandidate&, const RushmoreBitmapPlanCandidate&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  270 |     friend bool operator==(const RushmoreBitmapPlanCandidate&, const RushmoreBitmapPlanCandidate&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h: In function ‘bool copperfin::runtime::operator<(const RushmoreBitmapPlanCandidate&, const RushmoreBitmapPlanCandidate&)’:
+include/copperfin/runtime/rushmore_planning.h:272:23: error: no match for ‘operator!=’ (operand types are ‘const copperfin::runtime::RushmorePlanCost’ and ‘const copperfin::runtime::RushmorePlanCost’)
+  272 |         if (left.cost != right.cost) {
+      |             ~~~~~~~~~ ^~ ~~~~~~~~~~
+      |                  |             |
+      |                  |             const copperfin::runtime::RushmorePlanCost
+      |                  const copperfin::runtime::RushmorePlanCost
+include/copperfin/runtime/rushmore_planning.h: At global scope:
+include/copperfin/runtime/rushmore_planning.h:316:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreBitmapPlanningDecision&, const RushmoreBitmapPlanningDecision&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  316 |     friend bool operator==(const RushmoreBitmapPlanningDecision&, const RushmoreBitmapPlanningDecision&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h: In function ‘constexpr bool copperfin::runtime::rushmore_bitmap_operation_is_supported(const std::string&)’:
+include/copperfin/runtime/rushmore_planning.h:335:22: warning: call to non-‘constexpr’ function ‘bool std::operator==(const __cxx11::basic_string<_CharT, _Traits, _Alloc>&, const _CharT*) [with _CharT = char; _Traits = char_traits<char>; _Alloc = allocator<char>]’ [-Winvalid-constexpr]
+  335 |     return operation == "=" || operation == "==" || operation == "<" || operation == "<=" ||
+      |            ~~~~~~~~~~^~~~~~
+In file included from /usr/include/c++/15/string:56,
+                 from /usr/include/c++/15/stdexcept:41,
+                 from /usr/include/c++/15/system_error:45,
+                 from /usr/include/c++/15/bits/fs_fwd.h:35,
+                 from /usr/include/c++/15/filesystem:53,
+                 from include/copperfin/platform/path.h:7,
+                 from tests/prg_engine_test_support.h:7:
+/usr/include/c++/15/bits/basic_string.h:4060:5: note: ‘bool std::operator==(const __cxx11::basic_string<_CharT, _Traits, _Alloc>&, const _CharT*) [with _CharT = char; _Traits = char_traits<char>; _Alloc = allocator<char>]’ declared here
+ 4060 |     operator==(const basic_string<_CharT, _Traits, _Alloc>& __lhs,
+      |     ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h: At global scope:
+include/copperfin/runtime/rushmore_planning.h:669:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmorePlanCacheKey&, const RushmorePlanCacheKey&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  669 |     friend bool operator==(const RushmorePlanCacheKey&, const RushmorePlanCacheKey&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:692:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmorePlanCandidate&, const RushmorePlanCandidate&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  692 |     friend bool operator==(const RushmorePlanCandidate&, const RushmorePlanCandidate&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:706:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreExplainRecord&, const RushmoreExplainRecord&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  706 |     friend bool operator==(const RushmoreExplainRecord&, const RushmoreExplainRecord&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:730:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmoreExplainPlan&, const RushmoreExplainPlan&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  730 |     friend bool operator==(const RushmoreExplainPlan&, const RushmoreExplainPlan&) = default;
+      |                 ^~~~~~~~
+include/copperfin/runtime/rushmore_planning.h:739:17: error: defaulted ‘bool copperfin::runtime::operator==(const RushmorePlanningOptions&, const RushmorePlanningOptions&)’ only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  739 |     friend bool operator==(const RushmorePlanningOptions&, const RushmorePlanningOptions&) = default;
+      |                 ^~~~~~~~
