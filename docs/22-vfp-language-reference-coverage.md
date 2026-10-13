@@ -1,5 +1,36 @@
 # VFP Language Reference Coverage
 
+- RemoveListItem Numeric/exact stable-ID admission (#5611/#6776,2026-10-13):
+  [Independent installed VFP9/help/parent map](../tests/fixtures/vfp9-removelistitem-numeric/README.md)
+  preceded helper/assertions/configuration. Stable IDs, NOT display rows:
+  sparse2.9 raises1234 while11.9 removesID11; inclusive1..32767 argument
+  admission, invalid/nonfinite11 vs admitted absent1234 (also empty controls),
+  BOTH-sign definedlow32 aliases only in explicit VFP9 mode. Finite/default
+  truncation, lossless exact integers/NaN/binary boundaries derive from named
+  parents; no native CAST/NaN syntax claim. Configure RST/binding BEFORE
+  population, capture before-count and distinguish evaluation/setup/invocation.
+  Native source0.9999999999999999 evaluates1, not a binary-nextafter oracle;
+  high-ID setup32768 rejects, not successful lookup evidence.
+  Both initial original75 and explicitly refrozen repeated original75 finish
+  before wiring. Only the old absent77 catch1234/control-object scaffold was
+  corrected, all old state/metadata/selection/Init assertions retained; late
+  native12-call pair corroborates original pre-code absence rule, not backdated
+  recovery. Initialfive unchanged; wrong-location interrupted130 and missing
+  CLI-C++20 compile1 evidence retained as failures, not acceptance.
+  Final bounded coherent materialized-unbound exacttypedRST0/trimmed-empty
+  binding/one selected Numeric-exact arm uses existing current-session policy
+  and unchanged shared slot remover. GNU75/75 PASS555.61s and Clang ASan/UBSan/
+  float-cast-overflow75/75 PASS3360.92s/all224direct-four776public/all248hashes;
+  both144 NON-NATIVE excluded-scope fullrawcmp0/bothsix preservationgroups0.
+  Full raw/status/source/hash chronology is retained in the linked phase audit.
+  Five documentation contracts PASS5/5/333.31s; bounded medium delegated
+  development DQ-DV self-review/automated walkthrough complete in README,
+  not independenthuman/high-hazard qualification. Final result records receive
+  a separate fast contract recheck, slow workflow source unchanged. Signed
+  exact-head review/postpush/11green/resolved conversations remain integration
+  gates. Shared successful state/return/types/binding/otherRST/lifecycle/parser,
+  separate7163/7164/7169/7171 and parent/hazard/release closure remain excluded.
+
 - RemoveItem Numeric/exact display-row admission recovery (#5611/#6776,2026-10-12):
   [Independent installed VFP9/help/parent map](../tests/fixtures/vfp9-removeitem-numeric/README.md)
   precedes helper/assertions/configuration. Both native controls, dense/sparse

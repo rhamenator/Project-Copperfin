@@ -1,0 +1,9 @@
+build/removelistitem-clang/libcf_design_model.a: OK
+build/removelistitem-clang/libcf_localization.a: OK
+build/removelistitem-clang/libcf_platform_profile.a: OK
+build/removelistitem-clang/libcf_platform_support.a: OK
+build/removelistitem-clang/libcf_prg_analysis.a: OK
+build/removelistitem-clang/libcf_runtime_text.a: OK
+build/removelistitem-clang/libcf_security.a: OK
+build/removelistitem-clang/libcf_vfp_assets.a: OK
+build/removelistitem-clang/libcf_xbase_runtime.a: OK

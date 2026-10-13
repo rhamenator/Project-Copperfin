@@ -1,0 +1,3 @@
+gcc original completed with actual ctest status 8
+clang original completed with actual ctest status 8
+Both originals complete; production migration forbidden until full raw audit.

@@ -182,7 +182,14 @@ namespace copperfin::runtime_surface_tests
             "nListItemIdAfterRemove20 = oPlainCombo.ListItemID\n"
             "cDisplayAfterRemove20 = oPlainCombo.DisplayValue\n"
             "cCol1AfterRemove20 = oPlainCombo.List(1)\n"
-            "oPlainCombo.RemoveListItem(77)\n"
+            // RQ-CF-PRG-REMOVELISTITEM-ID-NUMERIC-001: independently recovered
+            // admitted-but-absent ID is catchable1234, not a successful no-op.
+            "nMissingErrorNo = 0\n"
+            "TRY\n"
+            "    oPlainCombo.RemoveListItem(77)\n"
+            "CATCH TO oMissingError\n"
+            "    nMissingErrorNo = oMissingError.ErrorNo\n"
+            "ENDTRY\n"
             "nCountAfterMissing = oPlainCombo.ListCount\n"
             "nListItemIdAfterMissing = oPlainCombo.ListItemID\n"
             "oSeedList = CREATEOBJECT('SeededList')\n"
@@ -237,6 +244,7 @@ namespace copperfin::runtime_surface_tests
         check("ccol1afterremove20", "Gamma");
         check("ncountaftermissing", "1");
         check("nlistitemidaftermissing", "30");
+        check("nmissingerrorno", "1234");
         check("nseedcount", "2");
         check("nseedindex", "2");
         check("nseedlistitemid", "300");
@@ -253,12 +261,23 @@ namespace copperfin::runtime_surface_tests
                    "AMEMBERS(..., 2) should expose the native RemoveListItem builtin for ComboBox");
         }
 
-        expect(state.ole_objects.size() == 2U,
-               "native RemoveListItem coverage should register plain and derived list controls");
-        if (state.ole_objects.size() == 2U)
+        // Catching a compatibility error may also capture its non-control
+        // object. Count only the native controls whose old state is preserved.
+        std::vector<std::size_t> native_control_slots;
+        for (std::size_t slot = 0; slot < state.ole_objects.size(); ++slot)
         {
-            const auto &plain_combo = state.ole_objects[0];
-            const auto &seed_list = state.ole_objects[1];
+            const auto &base_class = state.ole_objects[slot].base_class_name;
+            if (base_class == "ComboBox" || base_class == "ListBox")
+            {
+                native_control_slots.push_back(slot);
+            }
+        }
+        expect(native_control_slots.size() == 2U,
+               "native RemoveListItem coverage should register plain and derived list controls");
+        if (native_control_slots.size() == 2U)
+        {
+            const auto &plain_combo = state.ole_objects[native_control_slots[0]];
+            const auto &seed_list = state.ole_objects[native_control_slots[1]];
 
             const auto plain_listitemid = plain_combo.properties.find("listitemid");
             const auto plain_listindex = plain_combo.properties.find("listindex");

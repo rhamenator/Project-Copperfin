@@ -1,0 +1,8 @@
+VERSION|Visual FoxPro 09.00.0000.7423 for Windows
+0.9999999999999999|value=          1.000000000000000000|equalsOne=.T.|lessOne=.F.|equalsUpper=.F.
+1-2^(-52)|value=          1.000000000000000000|equalsOne=.T.|lessOne=.F.|equalsUpper=.F.
+1-2^(-53)|value=          1.000000000000000000|equalsOne=.T.|lessOne=.F.|equalsUpper=.F.
+32768-2^(-38)|value=      32768.000000000000000000|equalsOne=.F.|lessOne=.F.|equalsUpper=.T.
+32768-0.00000000001|value=      32767.999999999990000000|equalsOne=.F.|lessOne=.F.|equalsUpper=.F.
+32767.9|value=      32767.900000000000000000|equalsOne=.F.|lessOne=.F.|equalsUpper=.F.
+DONE|6

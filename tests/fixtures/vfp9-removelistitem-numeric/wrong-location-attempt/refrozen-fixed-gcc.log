@@ -1,0 +1,35 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin/build/removelistitem-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin/build/removelistitem-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 36
+      Start  36: test_native_test_isolation_contract
+
+36: Test command: /usr/bin/cmake "-DINVENTORY_PATH=/home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin/build/removelistitem-gcc/native-test-isolation.tsv" "-DISOLATION_SOURCE_PATH=/home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin/tests/CopperfinTestIsolation.cmake" "-DTEST_REGISTRATION_SOURCE_PATH=/home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin/tests/CMakeLists.txt" "-P" "/home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin/tests/run_native_test_isolation_contract_check.cmake"
+36: Working Directory: /home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin/build/removelistitem-gcc/tests
+36: Environment variables: 
+36:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin/resources/locales
+36: Test timeout computed to be: 700
+36: -- Native test isolation inventory contract passed for 584 tests
+ 1/75 Test  #36: test_native_test_isolation_contract ...........................   Passed    0.53 sec
+test 390
+      Start 390: test_prg_engine_int64_exact_expression
+
+390: Test command: /home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin/build/removelistitem-gcc/tests/test_prg_engine_int64_exact_expression
+390: Working Directory: /home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin/build/removelistitem-gcc/tests
+390: Environment variables: 
+390:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin/resources/locales
+390: Test timeout computed to be: 700
+ 2/75 Test #390: test_prg_engine_int64_exact_expression ........................   Passed    0.02 sec
+test 393
+      Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin/build/removelistitem-gcc/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin/build/removelistitem-gcc/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 700

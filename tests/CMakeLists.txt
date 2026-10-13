@@ -6024,6 +6024,18 @@ copperfin_add_test(test_prg_engine_listindex_numeric cf_xbase_runtime
 )
 # RQ-CF-PRG-TOPINDEX-NUMERIC-001 / VR-5611-TOPINDEX-NUMERIC-001/002.
 # RQ-CF-PRG-REMOVEITEM-ROW-NUMERIC-001 / VR-5611-REMOVEITEM-ROW-NUMERIC-001/002.
+# RQ-CF-PRG-REMOVELISTITEM-ID-NUMERIC-001 / VR-5611-REMOVELISTITEM-ID-NUMERIC-001/002.
+copperfin_add_test(test_prg_engine_removelistitem_numeric cf_xbase_runtime
+    test_prg_engine_removelistitem_numeric.cpp
+    prg_engine_test_support.cpp
+)
+foreach(removelistitem_mode IN ITEMS COPPERFIN VFP9)
+    string(TOLOWER "${removelistitem_mode}" removelistitem_mode_lower)
+    foreach(removelistitem_session IN ITEMS 1 2)
+        add_test(NAME test_prg_engine_removelistitem_numeric_${removelistitem_mode_lower}_session${removelistitem_session}
+            COMMAND $<TARGET_FILE:test_prg_engine_removelistitem_numeric> ${removelistitem_mode} ${removelistitem_session})
+    endforeach()
+endforeach()
 copperfin_add_test(test_prg_engine_removeitem_numeric cf_xbase_runtime
     test_prg_engine_removeitem_numeric.cpp
     prg_engine_test_support.cpp

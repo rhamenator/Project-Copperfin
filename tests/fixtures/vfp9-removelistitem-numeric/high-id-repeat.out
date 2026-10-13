@@ -1,0 +1,10 @@
+VERSION|Visual FoxPro 09.00.0000.7423 for Windows
+ListBox|id=32766|setupCount=1|returned|OK|after=0
+ListBox|id=32767|setupCount=1|returned|OK|after=0
+ListBox|id=32768|setupCount=0|setup|ERR:11|after=0
+ListBox|id=2147483647|setupCount=0|setup|ERR:11|after=0
+ComboBox|id=32766|setupCount=1|returned|OK|after=0
+ComboBox|id=32767|setupCount=1|returned|OK|after=0
+ComboBox|id=32768|setupCount=0|setup|ERR:11|after=0
+ComboBox|id=2147483647|setupCount=0|setup|ERR:11|after=0
+DONE|8

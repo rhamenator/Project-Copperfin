@@ -422,6 +422,43 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
             return make_empty_value();
         }
 
+        // RQ-CF-PRG-REMOVELISTITEM-ID-NUMERIC-001 / VR-5611-REMOVELISTITEM-ID-NUMERIC-001/002.
+        // BOTH complete original75 suites audited before this bounded wiring.
+        // Stable-ID domain 1..32767 is independently recovered, not row policy.
+        // Shared successful state/return, types/arity/binding remain unchanged.
+        const auto row_source_type = runtime_object.properties.find("rowsourcetype");
+        const auto control_source = runtime_object.properties.find("controlsource");
+        const bool materialized_unbound =
+            (row_source_type == runtime_object.properties.end() ||
+             (!row_source_type->second.is_null &&
+              ((row_source_type->second.kind == PrgValueKind::number &&
+                row_source_type->second.number_value == 0.0) ||
+               (row_source_type->second.kind == PrgValueKind::int64 &&
+                row_source_type->second.int64_value == 0) ||
+               (row_source_type->second.kind == PrgValueKind::uint64 &&
+                row_source_type->second.uint64_value == 0U)))) &&
+            (control_source == runtime_object.properties.end() ||
+             (!control_source->second.is_null &&
+              control_source->second.kind == PrgValueKind::string &&
+              trim_copy(control_source->second.string_value).empty())) &&
+            runtime_object.collection_item_keys.size() == runtime_object.collection_items.size() &&
+            runtime_object.list_rows.size() == runtime_object.collection_items.size();
+        const auto& item_id = arguments.front();
+        if (arguments.size() == 1U && materialized_unbound && !item_id.is_null &&
+            (item_id.kind == PrgValueKind::number || item_id.kind == PrgValueKind::int64 ||
+             item_id.kind == PrgValueKind::uint64)) {
+            const auto checked_id = checked_removelistitem_id_argument(item_id, behavior);
+            if (!checked_id.has_value()) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+            }
+            const auto checked_slot = find_native_list_control_row_by_item_id(runtime_object, *checked_id);
+            if (!checked_slot.has_value()) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 1234);
+            }
+            (void)remove_native_list_control_slot(runtime_object, *checked_slot);
+            return make_empty_value();
+        }
+
         const long long requested_item_id = std::llround(value_as_number(arguments[0]));
         if (requested_item_id < 1LL) {
             return make_empty_value();

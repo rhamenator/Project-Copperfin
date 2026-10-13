@@ -3053,6 +3053,40 @@ std::optional<std::int32_t> checked_removeitem_row_argument(
     return static_cast<std::int32_t>(truncated);
 }
 
+// RQ-CF-PRG-REMOVELISTITEM-ID-NUMERIC-001 / VR-5611-REMOVELISTITEM-ID-NUMERIC-001.
+// Fresh installed RemoveListItem pairs recover BOTH-sign low32 and 1..32767
+// stable-ID admission. Exact64/NaN/binary edges derive from the named parent.
+// UNUSED by production through BOTH complete original compiler suites.
+std::optional<std::int32_t> checked_removelistitem_id_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    if (value.is_null || (value.kind != PrgValueKind::number &&
+        value.kind != PrgValueKind::int64 && value.kind != PrgValueKind::uint64)) {
+        return std::nullopt;
+    }
+    if (value.kind == PrgValueKind::number && std::isnan(value.number_value)) {
+        return std::nullopt;
+    }
+    constexpr std::int32_t lower = 1, upper = 32767;
+    if (behavior == NumericBehavior::vfp9) {
+        const auto projected = vfp9_numeric_to_int32(value);
+        if (projected < lower || projected > upper) return std::nullopt;
+        return projected;
+    }
+    if (value.kind == PrgValueKind::int64) {
+        if (value.int64_value < lower || value.int64_value > upper) return std::nullopt;
+        return static_cast<std::int32_t>(value.int64_value);
+    }
+    if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value < static_cast<std::uint64_t>(lower) ||
+            value.uint64_value > static_cast<std::uint64_t>(upper)) return std::nullopt;
+        return static_cast<std::int32_t>(value.uint64_value);
+    }
+    if (!std::isfinite(value.number_value)) return std::nullopt;
+    const double truncated = std::trunc(value.number_value);
+    if (truncated < lower || truncated > upper) return std::nullopt;
+    return static_cast<std::int32_t>(truncated);
+}
+
 std::size_t saturating_size_argument(const double value, const std::size_t minimum) {
     const std::int64_t truncated = saturating_numeric_to_int64(value);
     if (truncated <= 0 || static_cast<std::uint64_t>(truncated) < minimum) {
