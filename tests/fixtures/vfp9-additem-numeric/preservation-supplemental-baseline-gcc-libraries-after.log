@@ -1,0 +1,9 @@
+build/additem-gcc/libcf_design_model.a: OK
+build/additem-gcc/libcf_localization.a: OK
+build/additem-gcc/libcf_platform_profile.a: OK
+build/additem-gcc/libcf_platform_support.a: OK
+build/additem-gcc/libcf_prg_analysis.a: OK
+build/additem-gcc/libcf_runtime_text.a: OK
+build/additem-gcc/libcf_security.a: OK
+build/additem-gcc/libcf_vfp_assets.a: OK
+build/additem-gcc/libcf_xbase_runtime.a: OK

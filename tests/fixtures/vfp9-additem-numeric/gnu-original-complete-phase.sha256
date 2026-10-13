@@ -1,0 +1,6 @@
+588329f93c313050f34153fbf6b5217f27a1f3ce6c4b695530090c6bafe69485  tests/fixtures/vfp9-additem-numeric/gnu-original-complete-phase.md
+8a681240f6709ac7883773f26ddcb1801306dd12aa2b51685dc7c0ba5ca208e9  tests/fixtures/vfp9-additem-numeric/audit-gnu-original.cjs
+542806b632059012e47f97393e313014d6a222c59d759712817999dd62c61475  tests/fixtures/vfp9-additem-numeric/original-gcc-evidence.sha256
+8a56e54d47e2e68737e35a48cdac5d403b15878049a85c429ee03a1e817d1f0f  tests/fixtures/vfp9-additem-numeric/preservation-supplemental-baseline-clang.out
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-additem-numeric/preservation-supplemental-baseline-clang.status
+9b692984cf374405f0cd2e3bbd0c276484da6e43e0ec2d8694c062a5878ce640  tests/fixtures/vfp9-additem-numeric/preservation-supplemental-baseline-clang.completed-at

@@ -6025,6 +6025,18 @@ copperfin_add_test(test_prg_engine_listindex_numeric cf_xbase_runtime
 # RQ-CF-PRG-TOPINDEX-NUMERIC-001 / VR-5611-TOPINDEX-NUMERIC-001/002.
 # RQ-CF-PRG-REMOVEITEM-ROW-NUMERIC-001 / VR-5611-REMOVEITEM-ROW-NUMERIC-001/002.
 # RQ-CF-PRG-REMOVELISTITEM-ID-NUMERIC-001 / VR-5611-REMOVELISTITEM-ID-NUMERIC-001/002.
+# RQ-CF-PRG-ADDITEM-POSITION-NUMERIC-001 / VR-5611-ADDITEM-POSITION-NUMERIC-001/002.
+copperfin_add_test(test_prg_engine_additem_numeric cf_xbase_runtime
+    test_prg_engine_additem_numeric.cpp
+    prg_engine_test_support.cpp
+)
+foreach(additem_mode IN ITEMS COPPERFIN VFP9)
+    string(TOLOWER "${additem_mode}" additem_mode_lower)
+    foreach(additem_session IN ITEMS 1 2)
+        add_test(NAME test_prg_engine_additem_numeric_${additem_mode_lower}_session${additem_session}
+            COMMAND $<TARGET_FILE:test_prg_engine_additem_numeric> ${additem_mode} ${additem_session})
+    endforeach()
+endforeach()
 # RQ-CF-PRG-ADDLISTITEM-ID-NUMERIC-001 / VR-5611-ADDLISTITEM-ID-NUMERIC-001/002.
 copperfin_add_test(test_prg_engine_addlistitem_numeric cf_xbase_runtime
     test_prg_engine_addlistitem_numeric.cpp

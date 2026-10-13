@@ -1,0 +1,2 @@
+{"path":"build/additem-native/fixed-gcc.log","subjects":85,"failed":[],"assertions":[],"diagnostics":[],"counters":[[1246,0],[0,1102],[0,1102],[0,1102],[0,1102]],"complete":true,"rawSHA256":"0952867f87057e4e033484550a8cceb6ac9389c4963fe01ac36b0654d26394c7"}
+{"auditFailures":0,"note":"ONE GNU fixed85 audited only; full Clang fixed85 and BOTH fixed/comparison gates remain mandatory. Not final/native shared-success/globalcapacity/release qualification."}

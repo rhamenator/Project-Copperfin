@@ -1,0 +1,36 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/additem-numeric-5611/Project-Copperfin/build/additem-gcc/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/additem-numeric-5611/Project-Copperfin/build/additem-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 21
+    Start 21: test_changelog_fragments_valid
+
+21: Test command: /home/rich/.pyenv/shims/python3 "/home/rich/.codex/worktrees/additem-numeric-5611/Project-Copperfin/scripts/assemble_changelog.py" "--check" "--root" "/home/rich/.codex/worktrees/additem-numeric-5611/Project-Copperfin"
+21: Working Directory: /home/rich/.codex/worktrees/additem-numeric-5611/Project-Copperfin/build/additem-gcc/tests
+21: Environment variables: 
+21:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-numeric-5611/Project-Copperfin/resources/locales
+21: Test timeout computed to be: 10000000
+21: 216 changelog fragment(s) valid
+1/1 Test #21: test_changelog_fragments_valid ...   Passed    0.24 sec
+
+The following tests passed:
+	test_changelog_fragments_valid
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+copperfin-isolation:audit=complete            =   0.24 sec*proc (1 test)
+copperfin-isolation:child-processes=none      =   0.24 sec*proc (1 test)
+copperfin-isolation:environment=none          =   0.24 sec*proc (1 test)
+copperfin-isolation:filesystem=read-only      =   0.24 sec*proc (1 test)
+copperfin-isolation:network=none              =   0.24 sec*proc (1 test)
+copperfin-isolation:platform=configured       =   0.24 sec*proc (1 test)
+copperfin-isolation:resources=none            =   0.24 sec*proc (1 test)
+copperfin-isolation:samples=none              =   0.24 sec*proc (1 test)
+copperfin-isolation:schedule=parallel-safe    =   0.24 sec*proc (1 test)
+
+Total Test time (real) =   0.26 sec
