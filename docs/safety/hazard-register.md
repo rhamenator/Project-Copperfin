@@ -45,6 +45,23 @@ own system and domain assurance.
 
 ## Bounded numeric-conversion linkage
 
+RQ-CF-PRG-ADDLISTITEM-ID-NUMERIC-001 / DQ-DV-5611-ADDLISTITEM-ID-NUMERIC-001
+links active HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01
+unchanged to the [independent pre-code map](../../tests/fixtures/vfp9-addlistitem-numeric/README.md)
+and [completed bounded development walkthrough](../../tests/fixtures/vfp9-addlistitem-numeric/local-completion.md).
+Medium documentation misuse: confuse stable IDs/rows, fractional truncation,
+default/exact policy/explicit VFP9 low32 aliases, fuzzy comparisons/binary
+identity, configuration-before-population or excluded duplicate-caption behavior.
+Distinct helper remained unused through BOTH complete original80/failure/hash
+audits before one bounded second-ID admission. Both fixed80 GNU580.86s/Clang
+sanitizer3516.31s and both272 NON-NATIVE fullraw comparisons/all251 hashes/
+initialfive unchanged/five contracts5/5 PASS330.25s. Delegated development
+self-review/automated walkthrough complete, not independent-human/high-hazard
+qualification. No successful shared-state/return, setter/callback/persistence,
+whole-call atomicity, parent/hazard/KBX or release closure. Separate unadmitted
+7173 caption update/7174 old precision note remain excluded; exact-head signed
+postpush/review/hosted integration gates remain separate.
+
 RQ-CF-PRG-REMOVEITEM-ROW-NUMERIC-001 / DQ-DV-5611-REMOVEITEM-ROW-NUMERIC-001
 links active HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01
 unchanged to the [independent RemoveItem map](../../tests/fixtures/vfp9-removeitem-numeric/README.md).

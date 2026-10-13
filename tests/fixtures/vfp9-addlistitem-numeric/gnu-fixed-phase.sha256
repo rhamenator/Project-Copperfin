@@ -1,0 +1,4 @@
+d88d6ff1f5f68ffe2dd4bdbb97f6a5a92a98bf903e0f010fc0e6395a5cc93c96  tests/fixtures/vfp9-addlistitem-numeric/fixed-verification.md
+3134fddb58d0e383f41928a7104285f70b537c5af97ce0ed16d2083f48f8d151  tests/fixtures/vfp9-addlistitem-numeric/fixed-gcc.log
+40d28e6e9257ac08de6007129db9bfe17ddb308bc9fd62e4047edba608d39f82  tests/fixtures/vfp9-addlistitem-numeric/fixed-gcc-audit.jsonl
+79e37e0b77a38542ac3c9ea6741f4525ab86197a92331306cb0528aa4102d02f  tests/fixtures/vfp9-addlistitem-numeric/preservation-fixed-gcc.out

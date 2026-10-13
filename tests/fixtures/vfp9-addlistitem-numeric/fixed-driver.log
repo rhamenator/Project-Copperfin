@@ -1,0 +1,3 @@
+gcc fixed completed with actual ctest status 0
+clang fixed completed with actual ctest status 0
+Both full fixed80 executions complete; inspect actual statuses/full raw and preservation comparisons.

@@ -1,0 +1,8 @@
+VERSION|Visual FoxPro 09.00.0000.7423 for Windows
+0.9999999999999999|bytes=8|BRShex=3FF0000000000000|one=.T.|belowone=.F.|upper=.F.|belowupper=.T.
+1-2^(-52)|bytes=8|BRShex=3FEFFFFFFFFFFFFE|one=.T.|belowone=.F.|upper=.F.|belowupper=.T.
+1-2^(-53)|bytes=8|BRShex=3FEFFFFFFFFFFFFF|one=.T.|belowone=.F.|upper=.F.|belowupper=.T.
+32768-2^(-38)|bytes=8|BRShex=40DFFFFFFFFFFFFF|one=.F.|belowone=.F.|upper=.T.|belowupper=.F.
+32768-.00000000001|bytes=8|BRShex=40DFFFFFFFFFFFFD|one=.F.|belowone=.F.|upper=.F.|belowupper=.T.
+32767.999|bytes=8|BRShex=40DFFFFFEF9DB22D|one=.F.|belowone=.F.|upper=.F.|belowupper=.T.
+DONE|6

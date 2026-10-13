@@ -55,6 +55,67 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
+RemoveListItem Numeric/exact stable-ID admission PR7172 merged2026-10-13T08:48:28Z
+as06d7b54107b5b22b20300108e1e19ef01357fb59; exact signed/DCO localGoodG head
+6566040df7a9ba0e41f1f7138f2bbeed8ef15df4.
+https://github.com/rhamenator/Project-Copperfin/pull/7172
+Strictmain20356131 all11required uniquely COMPLETED/SUCCESS; actual clean
+verified Codex6141555479 explicitly6566040df7 after Claude-FIRST6141497131/
+authorizedfallback6141520229. Conversations0/closingrefs0/fullpagination;
+gate6141850611 corrects6141831090 pending snapshot. Exact-head merge/no admin
+bypass; GitHubunknown_key not registration. Optional full native platforms
+pending atmerge, not qualified as passing. Parents5611/6776 OPEN/no closure.
+
+Late exact656 Windows Native Validation38369309210/job115202027661 SUCCESS
+10:21:32Z,585/585 PASS3519.23s/allfive RemoveListItem subjects PASS.
+Full4076-line/612199-byte rawSHA34b67218055d9f974d82791077da1391efcf3e116ba4de5f5205c3e4ad61c68c,
+download0/fullhead metadata at active AddListItem build/addlistitem-native/
+pr7172-late-windows-full.log and pr7172-late-windows-metadata.json. C4456 warning
+retained; NOT warningfree/retroactive merge-gate qualification. Allplatformchecks
+complete/no actionablefailure/newconversation; LATE corroboration only.
+
+Independent installedVFP9/help/five matching pairs and pre-code RQ/VR/DQ/DV/HZ
+precede UNUSED helper/initialfive frozen224direct/four776. BOTH original75
+GNU71/75/549.25s/Clang71/75/3460.98s identical6504 selectedfailures. Firstfixed
+GNU74/75 retained; ONLY old uncaught77 catch1234/control-object scaffold
+corrected after LATE native12 corroboration, all old state/metadata/selection/
+Init retained. Explicitrefreeze/originalrestore/BOTH repeats GNU70/75/545.93s/
+Clang70/75/3550.95s identical6505 before saved bounded arm. Wrong-location
+interrupted130/CLI-language compile1 preserved as failures. Initialfive unchanged.
+Bound one selected ID on coherent materialized-unbound exacttypedRST0/trimmed-
+empty binding: independent1..32767 NOT row, finite/lossless exact default,
+explicitVFP9 BOTH-sign definedlow32, invalid11/admitted-absent1234/unchanged
+shared remover. Exact64/NaN/binary/config named-parent derived; native source
+precision/setup/invocation separated. Shared successfulstate/return/types/
+lifecycle/parser and separate7163/7164/7169/7171 remain excluded.
+
+Both fixed75 GNU555.61s/Clang ASan-UBSan-float-cast-overflow3360.92s PASS/
+all224-four776/all248before-after hashes/both144 NON-NATIVE fullrawcmp0/
+bothsixgroups0/all9libraryhashes. Fivecontracts5/5 PASS333.31s/currentdoc4/4
+PASS4.02s; boundedmedium delegated-development DQ-DV self-review/automated
+walkthrough complete, NOT independenthuman/high-hazard/persistence/global
+atomicity/leak-warningfree/performance/system/release/certification qualification.
+Exacthead postpush16317 harvested0/75of75 PASS540.30s/08:36:35Z/all248hashes/
+head unchanged; full855 rawSHA
+70c0c6f078cdadf2ab2acf99beb103624a2e083d9e43efbb8a59a0cfa0a3c18e.
+Requiredwatch23877 harvested0. Full committed fixture/ignored build retain
+native/original/refrozen/failed/fixed/source/raw/status/hash/review/merge evidence.
+
+Canonicalmain fetched/FF exactmerge/signedhead ancestor verified. Clean owned
+WT/local branch normally removed, remote exact656 lease deleted. Entire936MB
+build/evidence recoverably moved to
+/home/rich/.local/share/Trash/files/removelistitem-numeric-5611-build,
+cleanup-record.md/continuity snapshots retained; postpushSHA unchanged aftermove.
+Also preserves late7168 Windows fullrawSHAce48877b (prior slice). Scopedlsof
+no task-owned build handles, not globalidle proof. Scoped stashes
+9ae318a2ce348a2acfe1c0229d6af0a0bd1a5345 and
+7160e6dac45c97686b673e1e2d552a0e502c7608 retained/notpopped; earlierstashes/
+foreign376-AGENTS-corpus-vmGUI-pycache/4436-49aeWTs preserved. Appattachment
+100identitycap/no unrelated artifacts removed. Livechannel reread empty after
+cleanup; no VM or backup-reset completion assumption.
+
+## Prior shipped slice
+
 RemoveItem Numeric/exact display-row admission PR7168 merged2026-10-13T02:17:12Z
 as b7adc38ecb47aa3b93bc1875b7388962dbf6debb, exact signed/DCO head
 279c17f88e1517881234b7d3cf4c391b037a188b/localGoodG/fourcommitDCO0.
@@ -693,149 +754,115 @@ No VM started/recreated; backup-reset completion still unconfirmed.
 
 ## Selected active bounded slice
 
-RemoveListItem Numeric/int64/uint64 stable-ID argument admission under OPEN/
-rhamenator/exact-agent-approved #5611/#6776, metadata revalidated02:52Z.
-Dedicated WT /home/rich/.codex/worktrees/removelistitem-numeric-5611/Project-Copperfin,
-branch fix/removelistitem-numeric-5611/base origin/main
-b7adc38ecb47aa3b93bc1875b7388962dbf6debb; no new PR/push/commit yet.
-Bound ONE supplied nonNULL selected Numeric/exact argument on coherent
-materialized-unbound native ListBox/ComboBox, absent/default/exacttypedRST0
-and trimmed-empty ControlSource. Binding/other RowSource/types/arity/shared
-successful state-return/lifecycle/AddItem/RemoveItem/MoveItem/parser/events
-excluded. #7163/#7164/#7169/#7171 remain unadmitted; no parent closure.
+AddListItem second-argument Numeric/int64/uint64 stable-ID admission selected
+under OPEN/rhamenator/exact-agent-approved #5611/#6776 (revalidated this turn).
+Dedicated WT /home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin,
+branch fix/addlistitem-numeric-5611/exact origin/main
+06d7b54107b5b22b20300108e1e19ef01357fb59. No AddListItem PR/push/commit yet.
+Bound supplied second Numeric/exact ID, nonNULL Character item/exactlytwoargs/
+omittedcolumn1, coherent materialized-unbound native ListBox/ComboBox,
+default/exacttypedRST0/trimmed-emptybinding. Othertypes/omittedID/columns/extras/
+binding/otherRST/sharedsuccessfulstate-return/callbacks/lifecycle/parser and
+otherconsumers excluded; selected uncheckedID site inventory under5611 only.
 
-Independent pre-code RQ-CF-PRG-REMOVELISTITEM-ID-NUMERIC-001/VR-5611-
-REMOVELISTITEM-ID-NUMERIC-001/002/DQ-DV/HZ map02:56Z BEFORE helper/assertions/
-CMake/isolation changes, tests/fixtures/vfp9-removelistitem-numeric/README.md
-and durable requirements row currently gap. Full shipped help383lines SHA
-0fdd19c1dc6e4d58423b5a2b3d553476a4deabd86e3b3687c3deb094b8b905f5.
-Fresh installed private Wine VFP9 7423 five matching pairs ALLrunner0/cmp0:
-main144/full146/raw3d384564, boundary156/full158/raw8e6d30e1,
-state360/full362/rawb4520d50, high-IDsetup8/full10/raw3f2283ab,
-precisionONLY6/full8/rawa4c7828d. Full source/raw/status/hashes in fixture.
-Configure BEFORE populate, explicit before-count/evaluate-vs-invoke phase.
-Domain independently1..32767, unlike RemoveItem1..32768. Fractions truncate
-stableID: sparse2.9 absent1234 but11.9 removesID11; invalid/nonfinite11,
-empty admissible absent1234. BOTH-sign low32 aliases address nativeIDs.
-Populated high32767 removal confirmed; setup32768 rejects explicitly SETUP,
-not lookup oracle. State318 rejections FULLsnapshot unchanged/42 successes
-preserve surviving IDs/cells/payload; successful shared state/return excluded.
-Native decimal0.9999999999999999 evaluates EXACT1; not binary-nextafter oracle.
-Default/NaN/binaryedges/lossless64/exactzero config are named-parent derived,
-not native syntax or sibling-code expectations. No new bug admission.
+Pre-code recovery retained tests/fixtures/vfp9-addlistitem-numeric/README.md:
+installed VFP9 7423/existing privateWine, shipped AddListItem771lines and
+BINTOC564lines COMPLETELY read/fullhelp and runnerhashes. Eleven matching pairs
+440/256/96/6/6/70/70/24/30/30/256 calls; fullsource/raw/status/cmp/DONE/hashes.
+Native configure BEFORE population/all explicitbeforecounts. Audit932 calls,
+360 error11/fullstateunchanged,462 appends,110 existing-IDupdates,failures0;
+exactrecheck unchanged4c63ef5b. Finite truncationID1..32767/notrow,
+BOTHsign low32 aliases/invalidnonfinite11. Exact64/default/NaN/binary/config
+extensions named-parent derived, not native syntax or siblingcode oracle.
+Comparison equality is NOT binaryidentity: below1 arithmetic BINTOC lower
+payload/error11 despite equalityTRUE; upperbelow32768 admits32767.
 
-Currentmain NON-NATIVE excluded-scope144 compile0/run0/scaffold0/rawSHA
-9eae772092d912688111c685d6079c0d5f4119cf7458d0fd59cd86d9c2e314ff.
-Retained signed279 GNU libraries: relevant src/include/test-support diff to
-mainb7 EMPTY/allnine libraryhashes unchanged. Not pristine whole-treebuild
-or native oracle. Both FIXED compilers must compare identical full raw;
-baseline never regenerated. Before freeze only new scaffold newline/high-ID
-focus/configuration assembly corrected and explicit populated count added;
-syntax0, no frozen weakening or hidden failed original.
+New separate unadmitted OPEN issues against main06d7:
+7173 nativeexisting-ID first-columnupdate versus mainno-op; retained NON-NATIVE
+source/compile-run0/two-class state/rawd7c5db79/ninelibraryhashes/treecomparison.
+7174 older RemoveListItem precision-note attribution; nativeBINTOC9b82d239.
+IMPORTANT evidence-reading correction6143310467: earlier report of differing
+fullboundary near1 was WRONG. ALL16 original near1 calls reject11; fresh
+postcallBRS256 pair likewise, stripped258lines EXACToriginal. Original raws
+unchanged, no demonstrated call-context/FPU/parser/type/cache discrepancy.
+These gaps do not admit repair/closure/oldREADME or production expansion.
 
-Initial five inputs frozen03:03:53Z in build/removelistitem-native/frozen.sha256;
-original-inputs.sha256248 entries/source snapshots preserve helpers/newtest/
-configuration/production and prior numeric/fullruntime-surface neighbors.
-New69 Numeric/18 exact literals, direct224/four public776 expected counters,
-112 blank/exactzero guards and12 populated-high cases. Distinct
-checked_removelistitem_id_argument appears ONLY declaration/definition/newtest,
-UNUSED by production through BOTH originals; first bounded wiring validated
-newfive, then arm restored exactly for an explicit old-smoke refreeze/repeat.
-Original driver85875 ran serial GNU then Clang ASan/UBSan/
-float-cast-overflow, new5+prior70=75 subjects/18 targets, privateTMP700/
-nice10/ionice2:7/-j1. GNU configure0/compile0/original75 COMPLETE03:29:20Z,
-status8/71passed75/549.25s; ONLYfour new public fail, all prior70+newdirect224
-PASS/allfour776 counters.6504 selected1583/1583 COPPERFIN-1669/1669 VFP9
-failures, no otherFAIL or population/completion/context/catchability/reset/
-counter failure. Full9364-line rawSHA
-8dbd7378dab5b787ff3518d166fce3340cf14eb978fb64cdaaf19b407635a9e4,
-actual75list/all248before-after/fivefrozen/source statuses retained in fixture.
-Clang original75 COMPLETE04:50:08Z/71passed75/3460.98s/status8/full9364 rawSHA
-42af2f6ceed8822f8f7d826bf1bb16882ace3640cce8565a5b56a4c56692166e.
-All prior70+newdirect224 PASS/allfour776/IDENTICAL6504 selected failurelines,
-no otherFAIL/scaffold/sanitizerreport/leaksdisabled. Driver85875 harvested0,
-both248before-after and before-migration hashes pass/fivefrozen unchanged.
-Only AFTER audit one bounded object_methods RemoveListItem guard wired
-05:17:10Z: current-session/one selected arg/exacttypedRST0/trimmed-emptybinding/
-coherent storage, invalid11/admitted-absent1234/stable-ID lookup/UNCHANGED
-shared slot remover/return. Only this production input changed; initialfive/
-247 others unchanged. Fixed248 manifest/bounded diff/source snapshots retained.
-Firstfixed29224 harvested8: GNU74/75/557.08s COMPLETE05:27:42Z, ALLnewfive
-PASS/224-four776; only runtime_surface_functions fails10 assertions from
-uncaught absent77 abort/missinglaterglobals/secondcontrol. Full870-line rawSHA
-428141c4dfbb26875e64f8f63fb632d3714f13a06802881eb94204aaab64d0fa;
-all248fixedbefore-after intact. Firstfixed Clang NOT started/no acceptance.
-Full attempt/source/raw/status/hash preserved in first-fixed-attempt.
+Pre-code RQ-CF-PRG-ADDLISTITEM-ID-NUMERIC-001/VR001-002/DQ-DV001/HZ map now in
+fixture+durablematrix; planned pre-code DQ-DV now completed bounded development
+walkthrough in local-completion.md (not independenthuman/high-hazard sign-off).
+Distinct checked_addlistitem_id_argument remained UNUSED through BOTH originals;
+new test58numeric/14exact public tables,198direct/four810public planned counters.
+Initialfive froze10:26:53Z (newtestSHAfa07cd06/helper0c2fd576/headerfb05e6ad/
+testCMakee54eb9e3/rootCMake58fbc099); all251 inputs verified. At originalfreeze,
+runtime methods/prg_engine.cpp EXACTmain unchanged. Prefreeze namespace syntax1
+source/log/status preserved, qualifiedtest syntax0 BEFOREfreeze. Later
+NON-FROZEN auditor guessed672 matches, semantic488 comparisons allpassed;
+sixmatchingboundarysources listed, countonly corrected440+48=488. All initial
+five unchanged/no refreeze; failed auditor/source/raw retained.
+Postfreeze native-literal audit488/192 complete rejectionstates/296acceptedIDs/
+failures0/rawSHAf8a7afea. Default/exact64/NaN named-parent derived; excluded
+duplicate no-op checks are currentbranch preservation NOT nativeparity.
 
-03:15Z intake: parents/admission/base unchanged, no PR or externalsteering;
-allfive frozen and all248 input hashes match. Configure-time read-only
-preflight lists75 but not-yet-built executables; NOT a test run. Post-freeze
-independent raw consistency audit592 matchingcalls/64 Numeric literals/0
-status-phase-state mismatches/all318 rejected snapshots preserved; full
-JSONL/script/status retained, SHA8d675f37. Five unmatched sources2/3/-1.9/
-plus-minusEXP(1000) explicitly domain/truncation/infinity-expression derived,
-not measured native sources. Frozen helper/tests/config and production unchanged.
+Initial driver17247 GNU original80 completed75/80/583.12s/status8, rawc7faaf5d/
+11630lines;8012 selected assertion failures/no unexpectedprefix/new198direct/
+four810 complete. FourNEWpublic fail selected unchanged admission PLUS old
+nativeisolation gate fails FIVE NEW unclassified registrations. Other74oldPASS.
+InitialClangconfigure0/partialcompile100of397 ONLY; exact ownedPG2611461 verified/
+SIGINT/tool130/groupempty verified, no wrapperdriverstatus(factnotfabricated).
+Initial source/raw/hash/partialcompile/manifests retained fixture+build/
+initial-original-attempt. No completed firstClang original/production wiring.
+Source-audited ONLYfiveNEW names/comment added isolationfile: unique owned
+generated PRG/workareas/scopedlocale/nochild-network-sample-externalresource/
+CONSERVATIVEserial. Gate and oldclassifications unchanged; auditcomplete means
+isolation only, NOT behavior/DQ/high-hazard acceptance. Metadata-only explicit
+refreeze10:58:04Z/251/isolationd055e8e1; ALL INITIAL FIVE unchanged/no literal-
+helper-oldassertion change/runtimeEXACTmain. See registration-refreeze.md.
 
-Refrozen original79803 completed GNU then Clang75 with EXACT restored
-b7 unchecked arm; helper again UNUSED. Smoke now catches77/asserts1234 and
-filters native controls from caught-error objects, EVERY prior state/metadata/
-selection/derivedInit assertion retained. Syntax0/isolatedscaffold0 against
-retained firstfixedGNU libraries (not native/original acceptance). Explicit
-refreeze05:31:01Z/refrozen-original-inputs.sha256248/source snapshots;
-initialfive unchanged, ONLYold list_controls_03 differs from initial original.
-Expected repeats add ONE selected old missing-error assertion failure in
-runtime_surface_functions alongside four new public; otheroldassertions must
-pass. RefrozenGNU COMPLETE05:45:13Z/status8/70passed75/545.93s/fullrawSHA
-f1f9184411dfc21237d805c8f471e35a7a6e11b8bbf7cd126a6792ec0e88296c:
-exact6505=unchanged6504 newpublic+ONE nmissingerrorno1234-vs0; everyotherold
-assertion/newdirect224/four776 pass/no scaffoldfail/all248before-after intact.
-RefrozenClang COMPLETE06:45:09Z/status8/70passed75/3550.95s/full9365 rawSHA
-4ae413d6535b036280e9b53bfe34629125e31505917f57d4c03d545feba71396.
-Driver79803 harvested0; BOTH identical6505 selectedfailures/allotherold
-assertions/newdirect224/four776 pass/no scaffold-sanitizerreport/all248
-before-after and current hashes pass, initialfive unchanged/arm restored.
-Only AFTER audit saved bounded arm rewired. Reapplication initially landed
-in wrong earlier ID consumer; diff caught it, first wrongly launcheddriver
-48659 interrupted130 during firstsubject. Full wrongsource/diff/manifest/
-partialraw retained wrong-location-attempt; NO completedfixed acceptance.
-Explicit RemoveListItem-context correction now compares BYTE-FOR-BYTE to
-saved original bounded-migration.diff, all247other refrozeninputs/initialfive
-unchanged. Neither tests nor requirements weakened. Audit retained.
-Correct refrozen-fixed89584 harvested0 serial GNU then Clang IDENTICAL75,
-newrefrozen-fixed248manifest/source/raw/status/hash outputs. GNU COMPLETE
-06:57:25Z/status0/75passed75/555.61s/full855 rawSHA
-0d49e9f39b0240e66647692530a533b803efb2ab67796a19e4aa1d28ec039663;
-all224/four776/alloldsubjects/248before-after hashes pass/initialfive unchanged.
-Clang COMPLETE07:54:01Z/status0/75passed75/3360.92s/full855 rawSHA
-6da2fdbfe7ed206e762d21af585bb9247c38c381f889637a7c1f370e7af263fc;
-all224/four776/alloldsubjects/248before-after hashes pass/initialfive unchanged.
-Supplemental GNU144/
-sixgroups driver22904 harvested0/07:17:46Z after CLI-only explicitC++20 flag correction;
-failedcompile1/driver6/wrapper retained preservation-language-mode-attempt,
-no frozen/production/assertion change. GNU bothcompile-run0/full144cmp0/
-scaffold0/raw9eae7720/sixgroups0/rawbefec198/9libs-and248inputs unchanged.
-Clang supplemental90690 harvested0/08:16:10Z/bothcompile-run0/full144cmp0/
-sixgroups0/same rawSHAs/all9libraries-all248inputs unchanged/stderr empty.
-Fivecontracts91663 harvested0/5of5 PASS333.31s/08:22:32Z/full86rawSHA
-b52547dc9793f829a31239bdd30860135084c64712a7794461b3075912095222.
-Boundedmedium delegated development DQ-DV native-source-runtime-documentation
-walkthrough complete08:23Z in README, NOT independenthuman/high-hazard/release.
-Fast current-doc result-record/fragment/channel recheck57295 harvested0/
-4of4 PASS4.02s/08:24:48Z/fullraw111900ba; precommit248hashes0/initialfive unchanged;
-slow safety-workflow source unchanged. NEXT: signedPR/Claude-FIRST-authorizedCodex
-actualcleanexacthead review/postpush/11green/resolvedthreads. Development
-DQ-DV walkthrough complete, not independenthuman/high-hazard/release claim.
-Specific old-smoke risk: frozen list_controls_03 removes10/20 then calls absent
-77 withoutcatch. Exact fresh native pair12/full14/run0/cmp0/before3-2-1/
-raw70eca601 confirms1234 on both controls/trials, LATE corroboration of initial
-pre-code absence rule, not new recovery/workstream. Only selected old smoke
-was corrected before the explicit refreeze/BOTH repeated originals above.
-Firstfailure and selected correction now retained in baseline-audit.md;
-explicitrefreeze/originalrestore/BOTH repeats mandatory BEFORE rewire.
-Do NOT weaken initialfive or change shared state/lifecycle/types.
-No owner input, VM start/reset completion assumption or unrelated changes.
-Historical PR6926 suffix unchanged; old7168 detailed chronology remains
-recoverably archived in Trash/removeitem-numeric-5611-build.
+Corrected-original46693 harvested0: BOTH full original80 retainingallprior75.
+GNU76/80/579.98s/status8/11:07:45Z/rawb6727468; ClangASan-UBSan-float-cast-
+overflow76/80/3441.84s/status8/12:24:21Z/raw89e67eb0. Allprior75+new198direct
+PASS; ONLYfour NEW810subjects fail selectedadmission. Each8012 FULL MULTILINE
+failures/no unrelatedprefix/sanitizerdiagnostic; identical2dd2748a SHA.
+All251before-after/initialfive unchanged/runtime methods EXACTmain BEFOREwiring.
+Audit-fullmessages utility regex initially requiredexact3dots/parsedonly2rows,
+status1 preserved fullsource-output in failed-fullmessage-audit; separately
+named audit-originals-complete.cjs variabledots parsesall80/auditFailures0/
+status0/fullJSONL29b838c8. No frozenhelper/literal/config change/refreeze.
+See completed-original-audit.md; initial partialClang is NOT acceptance.
+NON-NATIVE272 excluded/currentaccepted-shared-state source3b539340 froze10:49:18Z;
+GNU andClang baseline compile-run0/DONE272/scaffold0/79e37e0b/eachnine library
+hashes/source unchanged, Clangcomplete12:56:26Z/stderrempty.
+First-secondtypes/arity/columns/otherRST-binding/sharedintegerstate captured,
+NOT native requirements/parity. ONLYaftercompletedfull audit/bothbaselines:
+selected column1 second-ID projection wired, exacttwoargs/nonNULLCharacter/
+numeric-exact/coherentmaterialized-unbound/exactzero/trimempty gates. Existing
+duplicate no-op/insertion/sharedstate/return/otherarity-types-columns untouched.
+Initialfixed manifest generator accidentallykeptleadingpathspace/emptyhashlist;
+driverpreflight3 BEFOREcompile/tests, retained failed-fixed-manifest source/
+paths/emptyhash/status/recheck. Only mechanicalpath parsing corrected/no
+runtime/frozen input change. Fixed251 verified/initialfive unchanged.
+COMPLETED fixeddriver16715 harvested0: BOTH complete80/allprior75/
+privateTMPDIR/nice/serial700s/detect_leaks0. GNU fullfixed80 completed13:09:01Z/
+status0/80of80PASS580.86s/raw3134fddb, all198/four810 counters/251beforeafter/
+initialfive unchanged/completionaudit0/no FAIL-runtimeSanitizerdiagnostic.
+GNU272 preservation67739 harvested0/compile-run-cmp0/DONE272/scaffold0/raw
+79e37e0b/source-nine-libs unchanged/stderrempty/13:16:03Z. NOT nativeparity.
+Clangfullfixed80/80 PASS3516.31s/status0/14:08:12Z/rawe6181a66/all198-four810/
+251beforeafter/initialfive unchanged/completionaudit0/no sanitizer diagnostic.
+Clang272 preservation33759 harvested0/compile-run-cmp0/DONE272/scaffold0/
+samefullraw79e37e0b/source-nine-libs unchanged/14:16:10Z/stderrempty.
+Bothfixed/preservation localverification complete; Fivecontracts11188
+harvested0/5of5 PASS330.25s/13:22:43Z/raw9f6394bd, full evidence retained;
+see contracts-verification.md superseding pending contract checkpoint only.
+Final captureaudit elevenpairs0/native-literal488/192reject/296admit/failures0,
+allinitial recovery/phase manifests/current251/five reverifyunchanged.
+Boundedmedium DQ-DV delegateddevelopment self-review/walkthrough complete in
+local-completion.md, no independenthuman/high-hazard/system/release claim.
+Current-doc55568 harvested0/4of4 PASS1.49s/14:19:14Z/raw7ace3e8e, retained.
+NEXT signedcommit/push/PR/Claude-FIRST-authorized
+Codex actualcleanexacthead review/postpush80/all11green/resolvedthreads.
+No integrated completion/PR/push/commit/ownerinput/VM/resetcompletion assumption.
+Separate7163/7164/7169/7171/7173/7174 remain unadmitted.
 
 ## Retained owner steering / deferred work
 

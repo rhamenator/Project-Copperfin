@@ -1,0 +1,19 @@
+node:internal/errors:540
+      throw error;
+      ^
+
+TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string. Received undefined
+    at Object.join (node:path:1354:7)
+    at read (/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/tests/fixtures/vfp9-addlistitem-numeric/verify-retained-capture.cjs:8:36)
+    at Object.<anonymous> (/home/rich/.codex/worktrees/addlistitem-numeric-5611/Project-Copperfin/tests/fixtures/vfp9-addlistitem-numeric/verify-retained-capture.cjs:11:14)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+
+Node.js v22.20.0

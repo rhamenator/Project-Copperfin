@@ -1,0 +1,5 @@
+Correction to the call-context paragraph in my original report: direct reinspection of the retained original boundary-first.out shows ALL sixteen 1-2^(-52)/1-2^(-53) cases (two controls, four populated/empty shapes) reject with error 11. The earlier statement that instrumented boundary calls behave differently near one was my evidence-reading error, not an observed native result.
+
+A fresh full 256-call boundary pair with post-call BINTOC byte capture also rejects those sixteen cases with error 11; its runner/repeat/cmp statuses are all zero. The original full raw remains unchanged. No call-context discrepancy or FPU/parser/type/cache mechanism is established. This correction supersedes that paragraph only.
+
+The focused documentation gap still holds independently: the six-expression BINTOC pair measures below-one Double payloads 3FEFFFFFFFFFFFFE and 3FEFFFFFFFFFFFFF while VFP equality/less-than flags report equality to one. Comparison equality alone is not proof of binary identity. No earlier production fix or active-slice scope expansion follows from this report.

@@ -1,0 +1,103 @@
+{"check":"native: full raw pair","passed":true}
+{"check":"native: first runner0","passed":true}
+{"check":"native: first stderr empty","passed":true}
+{"check":"native: repeat runner0","passed":true}
+{"check":"native: repeat stderr empty","passed":true}
+{"check":"native: cmp0","passed":true}
+{"check":"native: cmp output empty","passed":true}
+{"check":"native: version/count/DONE","passed":true}
+{"pair":"native","calls":440,"sha256":"2bd7678d5bf6d57d3e25d902f6145a3286cef83602bed165fe6e91b12bc87d18"}
+{"check":"boundary: full raw pair","passed":true}
+{"check":"boundary: first runner0","passed":true}
+{"check":"boundary: first stderr empty","passed":true}
+{"check":"boundary: repeat runner0","passed":true}
+{"check":"boundary: repeat stderr empty","passed":true}
+{"check":"boundary: cmp0","passed":true}
+{"check":"boundary: cmp output empty","passed":true}
+{"check":"boundary: version/count/DONE","passed":true}
+{"pair":"boundary","calls":256,"sha256":"be4bbe4a1dd928ae9564705d14e54b8adf301476d833eff290fad156b1ba520f"}
+{"check":"configuration: full raw pair","passed":true}
+{"check":"configuration: first runner0","passed":true}
+{"check":"configuration: first stderr empty","passed":true}
+{"check":"configuration: repeat runner0","passed":true}
+{"check":"configuration: repeat stderr empty","passed":true}
+{"check":"configuration: cmp0","passed":true}
+{"check":"configuration: cmp output empty","passed":true}
+{"check":"configuration: version/count/DONE","passed":true}
+{"pair":"configuration","calls":96,"sha256":"57b39f69b7cb48805b9c1524a64a8630c965fd0bf5c88796404a80ae4982d7bb"}
+{"check":"precision: full raw pair","passed":true}
+{"check":"precision: first runner0","passed":true}
+{"check":"precision: first stderr empty","passed":true}
+{"check":"precision: repeat runner0","passed":true}
+{"check":"precision: repeat stderr empty","passed":true}
+{"check":"precision: cmp0","passed":true}
+{"check":"precision: cmp output empty","passed":true}
+{"check":"precision: version/count/DONE","passed":true}
+{"pair":"precision","calls":6,"sha256":"276cd6493e405305e3e73a993f6d24703bd680103430a68444263f1e4068fa3d"}
+{"check":"precision-bits: full raw pair","passed":true}
+{"check":"precision-bits: first runner0","passed":true}
+{"check":"precision-bits: first stderr empty","passed":true}
+{"check":"precision-bits: repeat runner0","passed":true}
+{"check":"precision-bits: repeat stderr empty","passed":true}
+{"check":"precision-bits: cmp0","passed":true}
+{"check":"precision-bits: cmp output empty","passed":true}
+{"check":"precision-bits: version/count/DONE","passed":true}
+{"pair":"precision-bits","calls":6,"sha256":"9b82d2391924146e6e8f053a2eb16c849e6de3a31b9d1d271f1145bb08380859"}
+{"check":"binary-neighbor: full raw pair","passed":true}
+{"check":"binary-neighbor: first runner0","passed":true}
+{"check":"binary-neighbor: first stderr empty","passed":true}
+{"check":"binary-neighbor: repeat runner0","passed":true}
+{"check":"binary-neighbor: repeat stderr empty","passed":true}
+{"check":"binary-neighbor: cmp0","passed":true}
+{"check":"binary-neighbor: cmp output empty","passed":true}
+{"check":"binary-neighbor: version/count/DONE","passed":true}
+{"pair":"binary-neighbor","calls":70,"sha256":"b03c7183da3a863ea5a8bcc71178c17d283af03a3075ac42b2995f0545061298"}
+{"check":"no-touch-neighbor: full raw pair","passed":true}
+{"check":"no-touch-neighbor: first runner0","passed":true}
+{"check":"no-touch-neighbor: first stderr empty","passed":true}
+{"check":"no-touch-neighbor: repeat runner0","passed":true}
+{"check":"no-touch-neighbor: repeat stderr empty","passed":true}
+{"check":"no-touch-neighbor: cmp0","passed":true}
+{"check":"no-touch-neighbor: cmp output empty","passed":true}
+{"check":"no-touch-neighbor: version/count/DONE","passed":true}
+{"pair":"no-touch-neighbor","calls":70,"sha256":"b03c7183da3a863ea5a8bcc71178c17d283af03a3075ac42b2995f0545061298"}
+{"check":"context: full raw pair","passed":true}
+{"check":"context: first runner0","passed":true}
+{"check":"context: first stderr empty","passed":true}
+{"check":"context: repeat runner0","passed":true}
+{"check":"context: repeat stderr empty","passed":true}
+{"check":"context: cmp0","passed":true}
+{"check":"context: cmp output empty","passed":true}
+{"check":"context: version/count/DONE","passed":true}
+{"pair":"context","calls":24,"sha256":"0bf6e0d71adc587988de4b0a79f0ff601faeb0a2d6506eee60ad8f9c02e57b74"}
+{"check":"concat-context: full raw pair","passed":true}
+{"check":"concat-context: first runner0","passed":true}
+{"check":"concat-context: first stderr empty","passed":true}
+{"check":"concat-context: repeat runner0","passed":true}
+{"check":"concat-context: repeat stderr empty","passed":true}
+{"check":"concat-context: cmp0","passed":true}
+{"check":"concat-context: cmp output empty","passed":true}
+{"check":"concat-context: version/count/DONE","passed":true}
+{"pair":"concat-context","calls":30,"sha256":"59bb6ce8b2608955db90ab4927a09ecf940449f5c89c3ba712a7bb12f3aa2854"}
+{"check":"seed-context: full raw pair","passed":true}
+{"check":"seed-context: first runner0","passed":true}
+{"check":"seed-context: first stderr empty","passed":true}
+{"check":"seed-context: repeat runner0","passed":true}
+{"check":"seed-context: repeat stderr empty","passed":true}
+{"check":"seed-context: cmp0","passed":true}
+{"check":"seed-context: cmp output empty","passed":true}
+{"check":"seed-context: version/count/DONE","passed":true}
+{"pair":"seed-context","calls":30,"sha256":"3211352ec633211a13b04e1cdcb68ab9be76a1c099faa5f01c1ee4aa74e7f661"}
+{"check":"boundary-postbits: full raw pair","passed":true}
+{"check":"boundary-postbits: first runner0","passed":true}
+{"check":"boundary-postbits: first stderr empty","passed":true}
+{"check":"boundary-postbits: repeat runner0","passed":true}
+{"check":"boundary-postbits: repeat stderr empty","passed":true}
+{"check":"boundary-postbits: cmp0","passed":true}
+{"check":"boundary-postbits: cmp output empty","passed":true}
+{"check":"boundary-postbits: version/count/DONE","passed":true}
+{"pair":"boundary-postbits","calls":256,"sha256":"88755b8ce2a364f15d5fe63e324c31f1e76122208507d42829be4fe54e4aa084"}
+{"check":"post-call BRS stripped raw exactly original","passed":true}
+{"check":"all sixteen original arithmetic near-one calls reject11","passed":true}
+{"check":"932-call audit exact recheck","passed":true}
+{"pairs":11,"failures":0,"note":"Native evidence integrity only; no implementation acceptance or root-cause claim."}

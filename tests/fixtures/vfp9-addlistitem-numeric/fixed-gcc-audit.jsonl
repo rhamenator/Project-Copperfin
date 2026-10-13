@@ -1,0 +1,1 @@
+{"path":"build/addlistitem-native/fixed-gcc.log","pass":true,"subjects":80,"counters":[[198,0],[0,810],[0,810],[0,810],[0,810]],"diagnostics":[],"rawSHA256":"3134fddb58d0e383f41928a7104285f70b537c5af97ce0ed16d2083f48f8d151","note":"ONE compiler completion only; other compiler, input hashes, preservation and integration gates remain separate."}
