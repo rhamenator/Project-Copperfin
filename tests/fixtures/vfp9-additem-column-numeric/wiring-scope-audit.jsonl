@@ -1,0 +1,7 @@
+{"name":"Entire preceding module (other methods)","unchanged":true}
+{"name":"Precise unbound predicate bytes","unchanged":true}
+{"name":"Shipped second-position arm and shared insertion-slot resolver call","unchanged":true,"SHA256":"1f6be0130da8e681f6d07e0c77a76fbe294d0e3426b9471f87cbe5b0f4d9a430"}
+{"name":"Candidate and shared automatic-ID allocation","unchanged":true,"SHA256":"e35781cef90d652bca7ebd0c39f420e9d00c7443a86a93cea0266903064fba19"}
+{"name":"Shared insertion/synchronization/sort/return tail","unchanged":true,"SHA256":"ee62611e37e81821c851bc4ee16654f52204ff06df2d234a58450e4fa7caff1b"}
+{"name":"Fallback third-column llround/return body (trailing separator whitespace excluded)","unchanged":true}
+{"failures":0,"note":"Byte attribution plus selected guard/zero-index dataflow. Both fixed90, hostile542, preservation296, contracts and reviews remain required; no global atomicity or native shared-state qualification."}

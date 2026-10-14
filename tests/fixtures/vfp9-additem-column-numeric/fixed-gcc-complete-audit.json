@@ -1,0 +1,72 @@
+{
+  "compiler": "gcc",
+  "subjects": 90,
+  "counters": [
+    [
+      276,
+      0
+    ],
+    [
+      0,
+      1224
+    ],
+    [
+      0,
+      1224
+    ],
+    [
+      0,
+      1224
+    ],
+    [
+      0,
+      1224
+    ]
+  ],
+  "totalSeconds": "718.68",
+  "completedAt": "2026-10-14T01:01:32Z",
+  "rawSHA256": "0c3a1a14d8d495ba21ba7a24661b58864fde32af0f266bc1fab97161fa270aec",
+  "hostile": [
+    {
+      "mode": "COPPERFIN",
+      "session": 1,
+      "calls": 542,
+      "rawSHA256": "cf672f997408ab580b260fcfb4bc61231e9583195da09c7e2541f417e5a59f5f"
+    },
+    {
+      "mode": "COPPERFIN",
+      "session": 2,
+      "calls": 542,
+      "rawSHA256": "cf672f997408ab580b260fcfb4bc61231e9583195da09c7e2541f417e5a59f5f"
+    },
+    {
+      "mode": "VFP9",
+      "session": 1,
+      "calls": 542,
+      "rawSHA256": "cf672f997408ab580b260fcfb4bc61231e9583195da09c7e2541f417e5a59f5f"
+    },
+    {
+      "mode": "VFP9",
+      "session": 2,
+      "calls": 542,
+      "rawSHA256": "cf672f997408ab580b260fcfb4bc61231e9583195da09c7e2541f417e5a59f5f"
+    }
+  ],
+  "preservation": {
+    "rows": 296,
+    "groups": {
+      "ListBox|COPPERFIN|1": 37,
+      "ListBox|COPPERFIN|2": 37,
+      "ListBox|VFP9|1": 37,
+      "ListBox|VFP9|2": 37,
+      "ComboBox|COPPERFIN|1": 37,
+      "ComboBox|COPPERFIN|2": 37,
+      "ComboBox|VFP9|1": 37,
+      "ComboBox|VFP9|2": 37
+    },
+    "rawSHA256": "c4544b0e5c04b6e95c5053ca7a82f0c1b463ec49139167f4688519b0fa9ff1c2",
+    "sameCompilerFullRawEqual": true
+  },
+  "failures": [],
+  "note": "ONE compiler only. Fixed-only hostile corroboration is not original hostile qualification. NON-NATIVE sampled preservation is not a native oracle, full property/global atomicity/leak/warning-free/system/release qualification. Both complete compiler audits plus contracts/DQ-DV/review/CI gates remain necessary."
+}

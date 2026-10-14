@@ -1,0 +1,1020 @@
+UpdateCTestConfiguration  from :/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/DartConfiguration.tcl
+Test project /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 36
+      Start  36: test_native_test_isolation_contract
+
+36: Test command: /usr/bin/cmake "-DINVENTORY_PATH=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/native-test-isolation.tsv" "-DISOLATION_SOURCE_PATH=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/tests/CopperfinTestIsolation.cmake" "-DTEST_REGISTRATION_SOURCE_PATH=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/tests/CMakeLists.txt" "-P" "/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/tests/run_native_test_isolation_contract_check.cmake"
+36: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+36: Environment variables: 
+36:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+36: Test timeout computed to be: 700
+36: -- Native test isolation inventory contract passed for 599 tests
+ 1/90 Test  #36: test_native_test_isolation_contract ...........................   Passed    0.53 sec
+test 390
+      Start 390: test_prg_engine_int64_exact_expression
+
+390: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_int64_exact_expression
+390: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+390: Environment variables: 
+390:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+390: Test timeout computed to be: 700
+ 2/90 Test #390: test_prg_engine_int64_exact_expression ........................   Passed    0.09 sec
+test 393
+      Start 393: test_prg_engine_numeric_behavior
+
+393: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_numeric_behavior
+393: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+393: Environment variables: 
+393:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+393: Test timeout computed to be: 700
+ 3/90 Test #393: test_prg_engine_numeric_behavior ..............................   Passed  137.60 sec
+test 414
+      Start 414: test_prg_engine_listindex_numeric
+
+414: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_listindex_numeric
+414: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+414: Environment variables: 
+414:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+414: Test timeout computed to be: 700
+414: ListIndex frozen cases: direct=274 public=0
+ 4/90 Test #414: test_prg_engine_listindex_numeric .............................   Passed    0.02 sec
+test 415
+      Start 415: test_prg_engine_additem_numeric
+
+415: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_additem_numeric
+415: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+415: Environment variables: 
+415:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+415: Test timeout computed to be: 700
+415: AddItem frozen cases: direct=1246 public=0
+ 5/90 Test #415: test_prg_engine_additem_numeric ...............................   Passed    0.01 sec
+test 416
+      Start 416: test_prg_engine_additem_numeric_copperfin_session1
+
+416: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_additem_numeric "COPPERFIN" "1"
+416: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+416: Environment variables: 
+416:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+416: Test timeout computed to be: 700
+416: AddItem frozen cases: direct=0 public=1102
+ 6/90 Test #416: test_prg_engine_additem_numeric_copperfin_session1 ............   Passed  101.21 sec
+test 417
+      Start 417: test_prg_engine_additem_numeric_copperfin_session2
+
+417: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_additem_numeric "COPPERFIN" "2"
+417: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+417: Environment variables: 
+417:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+417: Test timeout computed to be: 700
+417: AddItem frozen cases: direct=0 public=1102
+ 7/90 Test #417: test_prg_engine_additem_numeric_copperfin_session2 ............   Passed   86.62 sec
+test 418
+      Start 418: test_prg_engine_additem_numeric_vfp9_session1
+
+418: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_additem_numeric "VFP9" "1"
+418: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+418: Environment variables: 
+418:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+418: Test timeout computed to be: 700
+418: AddItem frozen cases: direct=0 public=1102
+ 8/90 Test #418: test_prg_engine_additem_numeric_vfp9_session1 .................   Passed   84.24 sec
+test 419
+      Start 419: test_prg_engine_additem_numeric_vfp9_session2
+
+419: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_additem_numeric "VFP9" "2"
+419: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+419: Environment variables: 
+419:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+419: Test timeout computed to be: 700
+419: AddItem frozen cases: direct=0 public=1102
+ 9/90 Test #419: test_prg_engine_additem_numeric_vfp9_session2 .................   Passed   87.84 sec
+test 420
+      Start 420: test_prg_engine_additem_column_numeric
+
+420: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_additem_column_numeric
+420: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+420: Environment variables: 
+420:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+420: Test timeout computed to be: 700
+420: AddItem COLUMN frozen cases: direct=276 public=0
+10/90 Test #420: test_prg_engine_additem_column_numeric ........................   Passed    0.01 sec
+test 421
+      Start 421: test_prg_engine_additem_column_numeric_copperfin_session1
+
+421: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_additem_column_numeric "COPPERFIN" "1"
+421: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+421: Environment variables: 
+421:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+421: Test timeout computed to be: 700
+421: AddItem COLUMN frozen cases: direct=0 public=1224
+11/90 Test #421: test_prg_engine_additem_column_numeric_copperfin_session1 .....   Passed  126.48 sec
+test 422
+      Start 422: test_prg_engine_additem_column_numeric_copperfin_session2
+
+422: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_additem_column_numeric "COPPERFIN" "2"
+422: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+422: Environment variables: 
+422:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+422: Test timeout computed to be: 700
+422: AddItem COLUMN frozen cases: direct=0 public=1224
+12/90 Test #422: test_prg_engine_additem_column_numeric_copperfin_session2 .....   Passed  151.06 sec
+test 423
+      Start 423: test_prg_engine_additem_column_numeric_vfp9_session1
+
+423: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_additem_column_numeric "VFP9" "1"
+423: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+423: Environment variables: 
+423:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+423: Test timeout computed to be: 700
+423: AddItem COLUMN frozen cases: direct=0 public=1224
+13/90 Test #423: test_prg_engine_additem_column_numeric_vfp9_session1 ..........   Passed  113.71 sec
+test 424
+      Start 424: test_prg_engine_additem_column_numeric_vfp9_session2
+
+424: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_additem_column_numeric "VFP9" "2"
+424: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+424: Environment variables: 
+424:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+424: Test timeout computed to be: 700
+424: AddItem COLUMN frozen cases: direct=0 public=1224
+14/90 Test #424: test_prg_engine_additem_column_numeric_vfp9_session2 ..........   Passed  123.64 sec
+test 425
+      Start 425: test_prg_engine_addlistitem_numeric
+
+425: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_addlistitem_numeric
+425: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+425: Environment variables: 
+425:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+425: Test timeout computed to be: 700
+425: AddListItem frozen cases: direct=198 public=0
+15/90 Test #425: test_prg_engine_addlistitem_numeric ...........................   Passed    0.02 sec
+test 426
+      Start 426: test_prg_engine_addlistitem_numeric_copperfin_session1
+
+426: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_addlistitem_numeric "COPPERFIN" "1"
+426: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+426: Environment variables: 
+426:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+426: Test timeout computed to be: 700
+426: AddListItem frozen cases: direct=0 public=810
+16/90 Test #426: test_prg_engine_addlistitem_numeric_copperfin_session1 ........   Passed   50.29 sec
+test 427
+      Start 427: test_prg_engine_addlistitem_numeric_copperfin_session2
+
+427: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_addlistitem_numeric "COPPERFIN" "2"
+427: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+427: Environment variables: 
+427:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+427: Test timeout computed to be: 700
+427: AddListItem frozen cases: direct=0 public=810
+17/90 Test #427: test_prg_engine_addlistitem_numeric_copperfin_session2 ........   Passed   50.37 sec
+test 428
+      Start 428: test_prg_engine_addlistitem_numeric_vfp9_session1
+
+428: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_addlistitem_numeric "VFP9" "1"
+428: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+428: Environment variables: 
+428:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+428: Test timeout computed to be: 700
+428: AddListItem frozen cases: direct=0 public=810
+18/90 Test #428: test_prg_engine_addlistitem_numeric_vfp9_session1 .............   Passed   47.83 sec
+test 429
+      Start 429: test_prg_engine_addlistitem_numeric_vfp9_session2
+
+429: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_addlistitem_numeric "VFP9" "2"
+429: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+429: Environment variables: 
+429:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+429: Test timeout computed to be: 700
+429: AddListItem frozen cases: direct=0 public=810
+19/90 Test #429: test_prg_engine_addlistitem_numeric_vfp9_session2 .............   Passed   47.06 sec
+test 430
+      Start 430: test_prg_engine_removelistitem_numeric
+
+430: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_removelistitem_numeric
+430: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+430: Environment variables: 
+430:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+430: Test timeout computed to be: 700
+430: RemoveListItem frozen cases: direct=224 public=0
+20/90 Test #430: test_prg_engine_removelistitem_numeric ........................   Passed    0.01 sec
+test 431
+      Start 431: test_prg_engine_removelistitem_numeric_copperfin_session1
+
+431: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_removelistitem_numeric "COPPERFIN" "1"
+431: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+431: Environment variables: 
+431:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+431: Test timeout computed to be: 700
+431: RemoveListItem frozen cases: direct=0 public=776
+21/90 Test #431: test_prg_engine_removelistitem_numeric_copperfin_session1 .....   Passed   42.10 sec
+test 432
+      Start 432: test_prg_engine_removelistitem_numeric_copperfin_session2
+
+432: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_removelistitem_numeric "COPPERFIN" "2"
+432: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+432: Environment variables: 
+432:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+432: Test timeout computed to be: 700
+432: RemoveListItem frozen cases: direct=0 public=776
+22/90 Test #432: test_prg_engine_removelistitem_numeric_copperfin_session2 .....   Passed   41.33 sec
+test 433
+      Start 433: test_prg_engine_removelistitem_numeric_vfp9_session1
+
+433: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_removelistitem_numeric "VFP9" "1"
+433: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+433: Environment variables: 
+433:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+433: Test timeout computed to be: 700
+433: RemoveListItem frozen cases: direct=0 public=776
+23/90 Test #433: test_prg_engine_removelistitem_numeric_vfp9_session1 ..........   Passed   41.57 sec
+test 434
+      Start 434: test_prg_engine_removelistitem_numeric_vfp9_session2
+
+434: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_removelistitem_numeric "VFP9" "2"
+434: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+434: Environment variables: 
+434:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+434: Test timeout computed to be: 700
+434: RemoveListItem frozen cases: direct=0 public=776
+24/90 Test #434: test_prg_engine_removelistitem_numeric_vfp9_session2 ..........   Passed   43.81 sec
+test 435
+      Start 435: test_prg_engine_removeitem_numeric
+
+435: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_removeitem_numeric
+435: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+435: Environment variables: 
+435:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+435: Test timeout computed to be: 700
+435: RemoveItem frozen cases: direct=198 public=0
+25/90 Test #435: test_prg_engine_removeitem_numeric ............................   Passed    0.02 sec
+test 436
+      Start 436: test_prg_engine_removeitem_numeric_copperfin_session1
+
+436: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_removeitem_numeric "COPPERFIN" "1"
+436: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+436: Environment variables: 
+436:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+436: Test timeout computed to be: 700
+436: RemoveItem frozen cases: direct=0 public=556
+26/90 Test #436: test_prg_engine_removeitem_numeric_copperfin_session1 .........   Passed   22.89 sec
+test 437
+      Start 437: test_prg_engine_removeitem_numeric_copperfin_session2
+
+437: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_removeitem_numeric "COPPERFIN" "2"
+437: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+437: Environment variables: 
+437:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+437: Test timeout computed to be: 700
+437: RemoveItem frozen cases: direct=0 public=556
+27/90 Test #437: test_prg_engine_removeitem_numeric_copperfin_session2 .........   Passed   25.26 sec
+test 438
+      Start 438: test_prg_engine_removeitem_numeric_vfp9_session1
+
+438: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_removeitem_numeric "VFP9" "1"
+438: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+438: Environment variables: 
+438:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+438: Test timeout computed to be: 700
+438: RemoveItem frozen cases: direct=0 public=556
+28/90 Test #438: test_prg_engine_removeitem_numeric_vfp9_session1 ..............   Passed   22.97 sec
+test 439
+      Start 439: test_prg_engine_removeitem_numeric_vfp9_session2
+
+439: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_removeitem_numeric "VFP9" "2"
+439: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+439: Environment variables: 
+439:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+439: Test timeout computed to be: 700
+439: RemoveItem frozen cases: direct=0 public=556
+29/90 Test #439: test_prg_engine_removeitem_numeric_vfp9_session2 ..............   Passed   22.93 sec
+test 440
+      Start 440: test_prg_engine_topitemid_numeric
+
+440: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_topitemid_numeric
+440: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+440: Environment variables: 
+440:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+440: Test timeout computed to be: 700
+440: TopItemID frozen cases: direct=284 public=0
+30/90 Test #440: test_prg_engine_topitemid_numeric .............................   Passed    0.02 sec
+test 441
+      Start 441: test_prg_engine_topitemid_numeric_copperfin_session1
+
+441: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_topitemid_numeric "COPPERFIN" "1"
+441: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+441: Environment variables: 
+441:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+441: Test timeout computed to be: 700
+441: TopItemID frozen cases: direct=0 public=1445
+31/90 Test #441: test_prg_engine_topitemid_numeric_copperfin_session1 ..........   Passed  132.25 sec
+test 442
+      Start 442: test_prg_engine_topitemid_numeric_copperfin_session2
+
+442: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_topitemid_numeric "COPPERFIN" "2"
+442: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+442: Environment variables: 
+442:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+442: Test timeout computed to be: 700
+442: TopItemID frozen cases: direct=0 public=1445
+32/90 Test #442: test_prg_engine_topitemid_numeric_copperfin_session2 ..........   Passed  141.45 sec
+test 443
+      Start 443: test_prg_engine_topitemid_numeric_vfp9_session1
+
+443: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_topitemid_numeric "VFP9" "1"
+443: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+443: Environment variables: 
+443:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+443: Test timeout computed to be: 700
+443: TopItemID frozen cases: direct=0 public=1445
+33/90 Test #443: test_prg_engine_topitemid_numeric_vfp9_session1 ...............   Passed  140.09 sec
+test 444
+      Start 444: test_prg_engine_topitemid_numeric_vfp9_session2
+
+444: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_topitemid_numeric "VFP9" "2"
+444: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+444: Environment variables: 
+444:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+444: Test timeout computed to be: 700
+444: TopItemID frozen cases: direct=0 public=1445
+34/90 Test #444: test_prg_engine_topitemid_numeric_vfp9_session2 ...............   Passed  134.55 sec
+test 445
+      Start 445: test_prg_engine_topindex_numeric
+
+445: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_topindex_numeric
+445: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+445: Environment variables: 
+445:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+445: Test timeout computed to be: 700
+445: TopIndex frozen cases: direct=284 public=0
+35/90 Test #445: test_prg_engine_topindex_numeric ..............................   Passed    0.02 sec
+test 446
+      Start 446: test_prg_engine_topindex_numeric_copperfin_session1
+
+446: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_topindex_numeric "COPPERFIN" "1"
+446: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+446: Environment variables: 
+446:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+446: Test timeout computed to be: 700
+446: TopIndex frozen cases: direct=0 public=1445
+36/90 Test #446: test_prg_engine_topindex_numeric_copperfin_session1 ...........   Passed  133.68 sec
+test 447
+      Start 447: test_prg_engine_topindex_numeric_copperfin_session2
+
+447: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_topindex_numeric "COPPERFIN" "2"
+447: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+447: Environment variables: 
+447:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+447: Test timeout computed to be: 700
+447: TopIndex frozen cases: direct=0 public=1445
+37/90 Test #447: test_prg_engine_topindex_numeric_copperfin_session2 ...........   Passed  148.49 sec
+test 448
+      Start 448: test_prg_engine_topindex_numeric_vfp9_session1
+
+448: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_topindex_numeric "VFP9" "1"
+448: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+448: Environment variables: 
+448:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+448: Test timeout computed to be: 700
+448: TopIndex frozen cases: direct=0 public=1445
+38/90 Test #448: test_prg_engine_topindex_numeric_vfp9_session1 ................   Passed  134.80 sec
+test 449
+      Start 449: test_prg_engine_topindex_numeric_vfp9_session2
+
+449: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_topindex_numeric "VFP9" "2"
+449: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+449: Environment variables: 
+449:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+449: Test timeout computed to be: 700
+449: TopIndex frozen cases: direct=0 public=1445
+39/90 Test #449: test_prg_engine_topindex_numeric_vfp9_session2 ................   Passed  130.50 sec
+test 450
+      Start 450: test_prg_engine_listitemid_numeric
+
+450: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_listitemid_numeric
+450: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+450: Environment variables: 
+450:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+450: Test timeout computed to be: 700
+450: ListItemID frozen cases: direct=284 public=0
+40/90 Test #450: test_prg_engine_listitemid_numeric ............................   Passed    0.01 sec
+test 451
+      Start 451: test_prg_engine_listitemid_numeric_copperfin_session1
+
+451: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_listitemid_numeric "COPPERFIN" "1"
+451: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+451: Environment variables: 
+451:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+451: Test timeout computed to be: 700
+451: ListItemID frozen cases: direct=0 public=1216
+41/90 Test #451: test_prg_engine_listitemid_numeric_copperfin_session1 .........   Passed   99.01 sec
+test 452
+      Start 452: test_prg_engine_listitemid_numeric_copperfin_session2
+
+452: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_listitemid_numeric "COPPERFIN" "2"
+452: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+452: Environment variables: 
+452:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+452: Test timeout computed to be: 700
+452: ListItemID frozen cases: direct=0 public=1216
+42/90 Test #452: test_prg_engine_listitemid_numeric_copperfin_session2 .........   Passed   95.00 sec
+test 453
+      Start 453: test_prg_engine_listitemid_numeric_vfp9_session1
+
+453: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_listitemid_numeric "VFP9" "1"
+453: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+453: Environment variables: 
+453:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+453: Test timeout computed to be: 700
+453: ListItemID frozen cases: direct=0 public=1216
+43/90 Test #453: test_prg_engine_listitemid_numeric_vfp9_session1 ..............   Passed   92.23 sec
+test 454
+      Start 454: test_prg_engine_listitemid_numeric_vfp9_session2
+
+454: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_listitemid_numeric "VFP9" "2"
+454: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+454: Environment variables: 
+454:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+454: Test timeout computed to be: 700
+454: ListItemID frozen cases: direct=0 public=1216
+44/90 Test #454: test_prg_engine_listitemid_numeric_vfp9_session2 ..............   Passed   91.73 sec
+test 455
+      Start 455: test_prg_engine_listindex_numeric_copperfin_session1
+
+455: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_listindex_numeric "COPPERFIN" "1"
+455: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+455: Environment variables: 
+455:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+455: Test timeout computed to be: 700
+455: ListIndex frozen cases: direct=0 public=1184
+45/90 Test #455: test_prg_engine_listindex_numeric_copperfin_session1 ..........   Passed   88.85 sec
+test 456
+      Start 456: test_prg_engine_listindex_numeric_copperfin_session2
+
+456: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_listindex_numeric "COPPERFIN" "2"
+456: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+456: Environment variables: 
+456:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+456: Test timeout computed to be: 700
+456: ListIndex frozen cases: direct=0 public=1184
+46/90 Test #456: test_prg_engine_listindex_numeric_copperfin_session2 ..........   Passed   99.68 sec
+test 457
+      Start 457: test_prg_engine_listindex_numeric_vfp9_session1
+
+457: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_listindex_numeric "VFP9" "1"
+457: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+457: Environment variables: 
+457:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+457: Test timeout computed to be: 700
+457: ListIndex frozen cases: direct=0 public=1184
+47/90 Test #457: test_prg_engine_listindex_numeric_vfp9_session1 ...............   Passed   97.44 sec
+test 458
+      Start 458: test_prg_engine_listindex_numeric_vfp9_session2
+
+458: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_listindex_numeric "VFP9" "2"
+458: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+458: Environment variables: 
+458:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+458: Test timeout computed to be: 700
+458: ListIndex frozen cases: direct=0 public=1184
+48/90 Test #458: test_prg_engine_listindex_numeric_vfp9_session2 ...............   Passed   94.48 sec
+test 459
+      Start 459: test_prg_engine_list_index_numeric
+
+459: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_list_index_numeric
+459: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+459: Environment variables: 
+459:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+459: Test timeout computed to be: 700
+459: List frozen cases: direct=248 public=0
+49/90 Test #459: test_prg_engine_list_index_numeric ............................   Passed    0.01 sec
+test 460
+      Start 460: test_prg_engine_list_index_numeric_copperfin_session1
+
+460: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_list_index_numeric "COPPERFIN" "1"
+460: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+460: Environment variables: 
+460:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+460: Test timeout computed to be: 700
+460: List frozen cases: direct=0 public=944
+50/90 Test #460: test_prg_engine_list_index_numeric_copperfin_session1 .........   Passed   66.42 sec
+test 461
+      Start 461: test_prg_engine_list_index_numeric_copperfin_session2
+
+461: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_list_index_numeric "COPPERFIN" "2"
+461: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+461: Environment variables: 
+461:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+461: Test timeout computed to be: 700
+461: List frozen cases: direct=0 public=944
+51/90 Test #461: test_prg_engine_list_index_numeric_copperfin_session2 .........   Passed   69.96 sec
+test 462
+      Start 462: test_prg_engine_list_index_numeric_vfp9_session1
+
+462: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_list_index_numeric "VFP9" "1"
+462: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+462: Environment variables: 
+462:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+462: Test timeout computed to be: 700
+462: List frozen cases: direct=0 public=944
+52/90 Test #462: test_prg_engine_list_index_numeric_vfp9_session1 ..............   Passed   63.63 sec
+test 463
+      Start 463: test_prg_engine_list_index_numeric_vfp9_session2
+
+463: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_list_index_numeric "VFP9" "2"
+463: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+463: Environment variables: 
+463:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+463: Test timeout computed to be: 700
+463: List frozen cases: direct=0 public=944
+53/90 Test #463: test_prg_engine_list_index_numeric_vfp9_session2 ..............   Passed   63.96 sec
+test 464
+      Start 464: test_prg_engine_listitem_numeric
+
+464: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_listitem_numeric
+464: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+464: Environment variables: 
+464:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+464: Test timeout computed to be: 700
+464: ListItem frozen cases: direct=248 public=0
+54/90 Test #464: test_prg_engine_listitem_numeric ..............................   Passed    0.02 sec
+test 465
+      Start 465: test_prg_engine_listitem_numeric_copperfin_session1
+
+465: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_listitem_numeric "COPPERFIN" "1"
+465: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+465: Environment variables: 
+465:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+465: Test timeout computed to be: 700
+465: ListItem frozen cases: direct=0 public=944
+55/90 Test #465: test_prg_engine_listitem_numeric_copperfin_session1 ...........   Passed   68.34 sec
+test 466
+      Start 466: test_prg_engine_listitem_numeric_copperfin_session2
+
+466: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_listitem_numeric "COPPERFIN" "2"
+466: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+466: Environment variables: 
+466:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+466: Test timeout computed to be: 700
+466: ListItem frozen cases: direct=0 public=944
+56/90 Test #466: test_prg_engine_listitem_numeric_copperfin_session2 ...........   Passed   59.92 sec
+test 467
+      Start 467: test_prg_engine_listitem_numeric_vfp9_session1
+
+467: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_listitem_numeric "VFP9" "1"
+467: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+467: Environment variables: 
+467:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+467: Test timeout computed to be: 700
+467: ListItem frozen cases: direct=0 public=944
+57/90 Test #467: test_prg_engine_listitem_numeric_vfp9_session1 ................   Passed   64.94 sec
+test 468
+      Start 468: test_prg_engine_listitem_numeric_vfp9_session2
+
+468: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_listitem_numeric "VFP9" "2"
+468: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+468: Environment variables: 
+468:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+468: Test timeout computed to be: 700
+468: ListItem frozen cases: direct=0 public=944
+58/90 Test #468: test_prg_engine_listitem_numeric_vfp9_session2 ................   Passed   63.92 sec
+test 469
+      Start 469: test_prg_engine_itemidtoindex_numeric
+
+469: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_itemidtoindex_numeric
+469: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+469: Environment variables: 
+469:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+469: Test timeout computed to be: 700
+469: ItemIDToIndex frozen cases: direct=248 public=0
+59/90 Test #469: test_prg_engine_itemidtoindex_numeric .........................   Passed    0.02 sec
+test 470
+      Start 470: test_prg_engine_itemidtoindex_numeric_copperfin_session1
+
+470: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_itemidtoindex_numeric "COPPERFIN" "1"
+470: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+470: Environment variables: 
+470:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+470: Test timeout computed to be: 700
+470: ItemIDToIndex frozen cases: direct=0 public=944
+60/90 Test #470: test_prg_engine_itemidtoindex_numeric_copperfin_session1 ......   Passed   61.12 sec
+test 471
+      Start 471: test_prg_engine_itemidtoindex_numeric_copperfin_session2
+
+471: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_itemidtoindex_numeric "COPPERFIN" "2"
+471: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+471: Environment variables: 
+471:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+471: Test timeout computed to be: 700
+471: ItemIDToIndex frozen cases: direct=0 public=944
+61/90 Test #471: test_prg_engine_itemidtoindex_numeric_copperfin_session2 ......   Passed   60.98 sec
+test 472
+      Start 472: test_prg_engine_itemidtoindex_numeric_vfp9_session1
+
+472: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_itemidtoindex_numeric "VFP9" "1"
+472: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+472: Environment variables: 
+472:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+472: Test timeout computed to be: 700
+472: ItemIDToIndex frozen cases: direct=0 public=944
+62/90 Test #472: test_prg_engine_itemidtoindex_numeric_vfp9_session1 ...........   Passed   59.56 sec
+test 473
+      Start 473: test_prg_engine_itemidtoindex_numeric_vfp9_session2
+
+473: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_itemidtoindex_numeric "VFP9" "2"
+473: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+473: Environment variables: 
+473:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+473: Test timeout computed to be: 700
+473: ItemIDToIndex frozen cases: direct=0 public=944
+63/90 Test #473: test_prg_engine_itemidtoindex_numeric_vfp9_session2 ...........   Passed   59.16 sec
+test 474
+      Start 474: test_prg_engine_indextoitemid_numeric
+
+474: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_indextoitemid_numeric
+474: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+474: Environment variables: 
+474:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+474: Test timeout computed to be: 700
+474: IndexToItemID frozen cases: direct=194 public=0
+64/90 Test #474: test_prg_engine_indextoitemid_numeric .........................   Passed    0.01 sec
+test 475
+      Start 475: test_prg_engine_indextoitemid_numeric_copperfin_session1
+
+475: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_indextoitemid_numeric "COPPERFIN" "1"
+475: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+475: Environment variables: 
+475:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+475: Test timeout computed to be: 700
+475: IndexToItemID frozen cases: direct=0 public=400
+65/90 Test #475: test_prg_engine_indextoitemid_numeric_copperfin_session1 ......   Passed   13.45 sec
+test 476
+      Start 476: test_prg_engine_indextoitemid_numeric_copperfin_session2
+
+476: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_indextoitemid_numeric "COPPERFIN" "2"
+476: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+476: Environment variables: 
+476:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+476: Test timeout computed to be: 700
+476: IndexToItemID frozen cases: direct=0 public=400
+66/90 Test #476: test_prg_engine_indextoitemid_numeric_copperfin_session2 ......   Passed   14.91 sec
+test 477
+      Start 477: test_prg_engine_indextoitemid_numeric_vfp9_session1
+
+477: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_indextoitemid_numeric "VFP9" "1"
+477: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+477: Environment variables: 
+477:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+477: Test timeout computed to be: 700
+477: IndexToItemID frozen cases: direct=0 public=400
+67/90 Test #477: test_prg_engine_indextoitemid_numeric_vfp9_session1 ...........   Passed   13.09 sec
+test 478
+      Start 478: test_prg_engine_indextoitemid_numeric_vfp9_session2
+
+478: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_indextoitemid_numeric "VFP9" "2"
+478: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+478: Environment variables: 
+478:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+478: Test timeout computed to be: 700
+478: IndexToItemID frozen cases: direct=0 public=400
+68/90 Test #478: test_prg_engine_indextoitemid_numeric_vfp9_session2 ...........   Passed   13.16 sec
+test 479
+      Start 479: test_prg_engine_selectedid_numeric
+
+479: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_selectedid_numeric
+479: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+479: Environment variables: 
+479:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+479: Test timeout computed to be: 700
+479: SelectedID frozen cases: direct=200 public=0
+69/90 Test #479: test_prg_engine_selectedid_numeric ............................   Passed    0.01 sec
+test 480
+      Start 480: test_prg_engine_selectedid_numeric_copperfin_session1
+
+480: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_selectedid_numeric "COPPERFIN" "1"
+480: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+480: Environment variables: 
+480:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+480: Test timeout computed to be: 700
+480: SelectedID frozen cases: direct=0 public=476
+70/90 Test #480: test_prg_engine_selectedid_numeric_copperfin_session1 .........   Passed   17.58 sec
+test 481
+      Start 481: test_prg_engine_selectedid_numeric_copperfin_session2
+
+481: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_selectedid_numeric "COPPERFIN" "2"
+481: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+481: Environment variables: 
+481:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+481: Test timeout computed to be: 700
+481: SelectedID frozen cases: direct=0 public=476
+71/90 Test #481: test_prg_engine_selectedid_numeric_copperfin_session2 .........   Passed   17.73 sec
+test 482
+      Start 482: test_prg_engine_selectedid_numeric_vfp9_session1
+
+482: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_selectedid_numeric "VFP9" "1"
+482: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+482: Environment variables: 
+482:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+482: Test timeout computed to be: 700
+482: SelectedID frozen cases: direct=0 public=476
+72/90 Test #482: test_prg_engine_selectedid_numeric_vfp9_session1 ..............   Passed   17.38 sec
+test 483
+      Start 483: test_prg_engine_selectedid_numeric_vfp9_session2
+
+483: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_selectedid_numeric "VFP9" "2"
+483: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+483: Environment variables: 
+483:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+483: Test timeout computed to be: 700
+483: SelectedID frozen cases: direct=0 public=476
+73/90 Test #483: test_prg_engine_selectedid_numeric_vfp9_session2 ..............   Passed   18.81 sec
+test 484
+      Start 484: test_prg_engine_selected_index_numeric
+
+484: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_selected_index_numeric
+484: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+484: Environment variables: 
+484:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+484: Test timeout computed to be: 700
+484: Selected frozen cases: direct=190 public=0
+74/90 Test #484: test_prg_engine_selected_index_numeric ........................   Passed    0.02 sec
+test 485
+      Start 485: test_prg_engine_selected_index_numeric_copperfin_session1
+
+485: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_selected_index_numeric "COPPERFIN" "1"
+485: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+485: Environment variables: 
+485:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+485: Test timeout computed to be: 700
+485: Selected frozen cases: direct=0 public=368
+75/90 Test #485: test_prg_engine_selected_index_numeric_copperfin_session1 .....   Passed   11.67 sec
+test 486
+      Start 486: test_prg_engine_selected_index_numeric_copperfin_session2
+
+486: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_selected_index_numeric "COPPERFIN" "2"
+486: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+486: Environment variables: 
+486:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+486: Test timeout computed to be: 700
+486: Selected frozen cases: direct=0 public=368
+76/90 Test #486: test_prg_engine_selected_index_numeric_copperfin_session2 .....   Passed   11.72 sec
+test 487
+      Start 487: test_prg_engine_selected_index_numeric_vfp9_session1
+
+487: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_selected_index_numeric "VFP9" "1"
+487: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+487: Environment variables: 
+487:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+487: Test timeout computed to be: 700
+487: Selected frozen cases: direct=0 public=368
+77/90 Test #487: test_prg_engine_selected_index_numeric_vfp9_session1 ..........   Passed   11.74 sec
+test 488
+      Start 488: test_prg_engine_selected_index_numeric_vfp9_session2
+
+488: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_selected_index_numeric "VFP9" "2"
+488: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+488: Environment variables: 
+488:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+488: Test timeout computed to be: 700
+488: Selected frozen cases: direct=0 public=368
+78/90 Test #488: test_prg_engine_selected_index_numeric_vfp9_session2 ..........   Passed   12.34 sec
+test 489
+      Start 489: test_prg_engine_itemdata_index_numeric
+
+489: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_itemdata_index_numeric
+489: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+489: Environment variables: 
+489:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+489: Test timeout computed to be: 700
+489: ItemData frozen cases: direct=188 public=0
+79/90 Test #489: test_prg_engine_itemdata_index_numeric ........................   Passed    0.02 sec
+test 490
+      Start 490: test_prg_engine_itemdata_index_numeric_copperfin_session1
+
+490: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_itemdata_index_numeric "COPPERFIN" "1"
+490: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+490: Environment variables: 
+490:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+490: Test timeout computed to be: 700
+490: ItemData frozen cases: direct=0 public=368
+80/90 Test #490: test_prg_engine_itemdata_index_numeric_copperfin_session1 .....   Passed   11.59 sec
+test 491
+      Start 491: test_prg_engine_itemdata_index_numeric_copperfin_session2
+
+491: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_itemdata_index_numeric "COPPERFIN" "2"
+491: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+491: Environment variables: 
+491:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+491: Test timeout computed to be: 700
+491: ItemData frozen cases: direct=0 public=368
+81/90 Test #491: test_prg_engine_itemdata_index_numeric_copperfin_session2 .....   Passed   11.68 sec
+test 492
+      Start 492: test_prg_engine_itemdata_index_numeric_vfp9_session1
+
+492: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_itemdata_index_numeric "VFP9" "1"
+492: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+492: Environment variables: 
+492:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+492: Test timeout computed to be: 700
+492: ItemData frozen cases: direct=0 public=368
+82/90 Test #492: test_prg_engine_itemdata_index_numeric_vfp9_session1 ..........   Passed   11.54 sec
+test 493
+      Start 493: test_prg_engine_itemdata_index_numeric_vfp9_session2
+
+493: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_itemdata_index_numeric "VFP9" "2"
+493: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+493: Environment variables: 
+493:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+493: Test timeout computed to be: 700
+493: ItemData frozen cases: direct=0 public=368
+83/90 Test #493: test_prg_engine_itemdata_index_numeric_vfp9_session2 ..........   Passed   11.57 sec
+test 494
+      Start 494: test_prg_engine_getcolor_default_numeric
+
+494: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_getcolor_default_numeric
+494: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+494: Environment variables: 
+494:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+494: Test timeout computed to be: 700
+494: GETCOLOR frozen cases: direct=174 public=0
+84/90 Test #494: test_prg_engine_getcolor_default_numeric ......................   Passed    0.02 sec
+test 495
+      Start 495: test_prg_engine_getcolor_default_numeric_copperfin_session1
+
+495: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_getcolor_default_numeric "COPPERFIN" "1"
+495: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+495: Environment variables: 
+495:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+495: Test timeout computed to be: 700
+495: GETCOLOR frozen cases: direct=0 public=80
+85/90 Test #495: test_prg_engine_getcolor_default_numeric_copperfin_session1 ...   Passed    1.37 sec
+test 496
+      Start 496: test_prg_engine_getcolor_default_numeric_copperfin_session2
+
+496: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_getcolor_default_numeric "COPPERFIN" "2"
+496: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+496: Environment variables: 
+496:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+496: Test timeout computed to be: 700
+496: GETCOLOR frozen cases: direct=0 public=80
+86/90 Test #496: test_prg_engine_getcolor_default_numeric_copperfin_session2 ...   Passed    1.38 sec
+test 497
+      Start 497: test_prg_engine_getcolor_default_numeric_vfp9_session1
+
+497: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_getcolor_default_numeric "VFP9" "1"
+497: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+497: Environment variables: 
+497:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+497: Test timeout computed to be: 700
+497: GETCOLOR frozen cases: direct=0 public=80
+87/90 Test #497: test_prg_engine_getcolor_default_numeric_vfp9_session1 ........   Passed    1.28 sec
+test 498
+      Start 498: test_prg_engine_getcolor_default_numeric_vfp9_session2
+
+498: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_getcolor_default_numeric "VFP9" "2"
+498: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+498: Environment variables: 
+498:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+498: Test timeout computed to be: 700
+498: GETCOLOR frozen cases: direct=0 public=80
+88/90 Test #498: test_prg_engine_getcolor_default_numeric_vfp9_session2 ........   Passed    1.31 sec
+test 576
+      Start 576: test_prg_engine_runtime_surface_functions
+
+576: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_runtime_surface_functions
+576: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+576: Environment variables: 
+576:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+576: Test timeout computed to be: 700
+576: RemoveItem blank ControlSource supplemental cases: 72
+576: RemoveItem exact-zero RowSourceType supplemental cases: 72
+576: All tests passed.
+89/90 Test #576: test_prg_engine_runtime_surface_functions .....................   Passed    6.85 sec
+test 580
+      Start 580: test_prg_engine_runtime_surface_itemid_selectors
+
+580: Test command: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests/test_prg_engine_runtime_surface_itemid_selectors
+580: Working Directory: /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/build/additem-column-clang/tests
+580: Environment variables: 
+580:  COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin/resources/locales
+580: Test timeout computed to be: 700
+580: All tests passed.
+90/90 Test #580: test_prg_engine_runtime_surface_itemid_selectors ..............   Passed    0.08 sec
+
+The following tests passed:
+	test_native_test_isolation_contract
+	test_prg_engine_int64_exact_expression
+	test_prg_engine_numeric_behavior
+	test_prg_engine_listindex_numeric
+	test_prg_engine_additem_numeric
+	test_prg_engine_additem_numeric_copperfin_session1
+	test_prg_engine_additem_numeric_copperfin_session2
+	test_prg_engine_additem_numeric_vfp9_session1
+	test_prg_engine_additem_numeric_vfp9_session2
+	test_prg_engine_additem_column_numeric
+	test_prg_engine_additem_column_numeric_copperfin_session1
+	test_prg_engine_additem_column_numeric_copperfin_session2
+	test_prg_engine_additem_column_numeric_vfp9_session1
+	test_prg_engine_additem_column_numeric_vfp9_session2
+	test_prg_engine_addlistitem_numeric
+	test_prg_engine_addlistitem_numeric_copperfin_session1
+	test_prg_engine_addlistitem_numeric_copperfin_session2
+	test_prg_engine_addlistitem_numeric_vfp9_session1
+	test_prg_engine_addlistitem_numeric_vfp9_session2
+	test_prg_engine_removelistitem_numeric
+	test_prg_engine_removelistitem_numeric_copperfin_session1
+	test_prg_engine_removelistitem_numeric_copperfin_session2
+	test_prg_engine_removelistitem_numeric_vfp9_session1
+	test_prg_engine_removelistitem_numeric_vfp9_session2
+	test_prg_engine_removeitem_numeric
+	test_prg_engine_removeitem_numeric_copperfin_session1
+	test_prg_engine_removeitem_numeric_copperfin_session2
+	test_prg_engine_removeitem_numeric_vfp9_session1
+	test_prg_engine_removeitem_numeric_vfp9_session2
+	test_prg_engine_topitemid_numeric
+	test_prg_engine_topitemid_numeric_copperfin_session1
+	test_prg_engine_topitemid_numeric_copperfin_session2
+	test_prg_engine_topitemid_numeric_vfp9_session1
+	test_prg_engine_topitemid_numeric_vfp9_session2
+	test_prg_engine_topindex_numeric
+	test_prg_engine_topindex_numeric_copperfin_session1
+	test_prg_engine_topindex_numeric_copperfin_session2
+	test_prg_engine_topindex_numeric_vfp9_session1
+	test_prg_engine_topindex_numeric_vfp9_session2
+	test_prg_engine_listitemid_numeric
+	test_prg_engine_listitemid_numeric_copperfin_session1
+	test_prg_engine_listitemid_numeric_copperfin_session2
+	test_prg_engine_listitemid_numeric_vfp9_session1
+	test_prg_engine_listitemid_numeric_vfp9_session2
+	test_prg_engine_listindex_numeric_copperfin_session1
+	test_prg_engine_listindex_numeric_copperfin_session2
+	test_prg_engine_listindex_numeric_vfp9_session1
+	test_prg_engine_listindex_numeric_vfp9_session2
+	test_prg_engine_list_index_numeric
+	test_prg_engine_list_index_numeric_copperfin_session1
+	test_prg_engine_list_index_numeric_copperfin_session2
+	test_prg_engine_list_index_numeric_vfp9_session1
+	test_prg_engine_list_index_numeric_vfp9_session2
+	test_prg_engine_listitem_numeric
+	test_prg_engine_listitem_numeric_copperfin_session1
+	test_prg_engine_listitem_numeric_copperfin_session2
+	test_prg_engine_listitem_numeric_vfp9_session1
+	test_prg_engine_listitem_numeric_vfp9_session2
+	test_prg_engine_itemidtoindex_numeric
+	test_prg_engine_itemidtoindex_numeric_copperfin_session1
+	test_prg_engine_itemidtoindex_numeric_copperfin_session2
+	test_prg_engine_itemidtoindex_numeric_vfp9_session1
+	test_prg_engine_itemidtoindex_numeric_vfp9_session2
+	test_prg_engine_indextoitemid_numeric
+	test_prg_engine_indextoitemid_numeric_copperfin_session1
+	test_prg_engine_indextoitemid_numeric_copperfin_session2
+	test_prg_engine_indextoitemid_numeric_vfp9_session1
+	test_prg_engine_indextoitemid_numeric_vfp9_session2
+	test_prg_engine_selectedid_numeric
+	test_prg_engine_selectedid_numeric_copperfin_session1
+	test_prg_engine_selectedid_numeric_copperfin_session2
+	test_prg_engine_selectedid_numeric_vfp9_session1
+	test_prg_engine_selectedid_numeric_vfp9_session2
+	test_prg_engine_selected_index_numeric
+	test_prg_engine_selected_index_numeric_copperfin_session1
+	test_prg_engine_selected_index_numeric_copperfin_session2
+	test_prg_engine_selected_index_numeric_vfp9_session1
+	test_prg_engine_selected_index_numeric_vfp9_session2
+	test_prg_engine_itemdata_index_numeric
+	test_prg_engine_itemdata_index_numeric_copperfin_session1
+	test_prg_engine_itemdata_index_numeric_copperfin_session2
+	test_prg_engine_itemdata_index_numeric_vfp9_session1
+	test_prg_engine_itemdata_index_numeric_vfp9_session2
+	test_prg_engine_getcolor_default_numeric
+	test_prg_engine_getcolor_default_numeric_copperfin_session1
+	test_prg_engine_getcolor_default_numeric_copperfin_session2
+	test_prg_engine_getcolor_default_numeric_vfp9_session1
+	test_prg_engine_getcolor_default_numeric_vfp9_session2
+	test_prg_engine_runtime_surface_functions
+	test_prg_engine_runtime_surface_itemid_selectors
+
+100% tests passed, 0 tests failed out of 90
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  = 4320.12 sec*proc (90 tests)
+copperfin-isolation:child-processes=none            = 4320.12 sec*proc (90 tests)
+copperfin-isolation:environment=none                =   7.55 sec*proc (4 tests)
+copperfin-isolation:environment=scoped-process      = 4312.57 sec*proc (86 tests)
+copperfin-isolation:filesystem=process-owned        = 137.69 sec*proc (2 tests)
+copperfin-isolation:filesystem=read-only            =   0.53 sec*proc (1 test)
+copperfin-isolation:filesystem=test-owned-unique    = 4181.90 sec*proc (87 tests)
+copperfin-isolation:network=none                    = 4320.12 sec*proc (90 tests)
+copperfin-isolation:platform=configured             =   6.85 sec*proc (1 test)
+copperfin-isolation:platform=portable               = 4313.26 sec*proc (89 tests)
+copperfin-isolation:resources=none                  = 4320.12 sec*proc (90 tests)
+copperfin-isolation:samples=none                    = 4320.12 sec*proc (90 tests)
+copperfin-isolation:schedule=parallel-safe          =   7.46 sec*proc (3 tests)
+copperfin-isolation:schedule=serial                 = 4312.66 sec*proc (87 tests)
+
+Total Test time (real) = 4320.20 sec

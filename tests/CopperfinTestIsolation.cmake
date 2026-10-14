@@ -1054,6 +1054,15 @@ function(copperfin_configure_native_test_isolation)
         test_prg_engine_additem_numeric_copperfin_session2
         test_prg_engine_additem_numeric_vfp9_session1
         test_prg_engine_additem_numeric_vfp9_session2
+        # RQ-CF-PRG-ADDITEM-COLUMN-NUMERIC-001 source audit: private generated
+        # PRGs/workareas, unique task-owned temps, scoped locale restore only;
+        # no child/network/sample/external resources. Conservative serial,
+        # not independent-human DV or fixed-only hostile-corpus registration.
+        test_prg_engine_additem_column_numeric
+        test_prg_engine_additem_column_numeric_copperfin_session1
+        test_prg_engine_additem_column_numeric_copperfin_session2
+        test_prg_engine_additem_column_numeric_vfp9_session1
+        test_prg_engine_additem_column_numeric_vfp9_session2
         # AddListItem source audit: private generated PRGs/workareas, unique
         # owned temp directory, scoped locale restore; no child/network/sample
         # or external resource use. Retain conservative serial scheduling.

@@ -1,0 +1,6 @@
+35f8707e1c52a8152f69e53cd8082b3386ca2c4dbb25ec05cf06643a65eaf3ca  tests/fixtures/vfp9-additem-column-numeric/recovered-requirements.md
+9c922d27fea2e2818d1d943eb9551dbc7323d026ee2afc0752ad9a4de1d8fa04  tests/fixtures/vfp9-additem-column-numeric/corroboration-evidence.sha256
+2cff4b8340a834321394a2e1198c8c972a09ef72fddbe1b5e28ed233764fdcd3  docs/32-recovered-requirements-traceability.md
+2f05db0f59deacc011a2eaaa56d7f92aba1fc25064ec9f0ce4e855a573a469c7  docs/safety/hazard-register.md
+61bb7b5e1b22afc794143403ed73649af3fd16483d1a854d4fa78500676657b3  changelog.d/2026-10-13-additem-column-numeric-5611.md
+31db60464133e0464f718af4e6d6ceb79a53bda1e1918f1ab591718b64ddded1  agent-handoff.md

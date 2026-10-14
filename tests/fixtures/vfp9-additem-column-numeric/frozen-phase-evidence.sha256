@@ -1,0 +1,12 @@
+04216c468d0f1ca1f27275918143b3e77f2c350a0bc40118d5233fe45bf979dd  tests/fixtures/vfp9-additem-column-numeric/frozen-original-phase.md
+930843a7ae2ba6db3acf6766bda15f19eabcbc19bc28ce841b599f53dc0cfdbc  tests/fixtures/vfp9-additem-column-numeric/initial-five.sha256
+dc501142ca5031ec31505d2fc37c6d010b6eed007c87c446c8faad858533f6c7  tests/fixtures/vfp9-additem-column-numeric/untouched-callers.sha256
+395a0a438c6d1a2d3e92d7af33ae413f021bc57e7df069c5067cbb265672e750  tests/fixtures/vfp9-additem-column-numeric/frozen-original-inputs.sha256
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-additem-column-numeric/freeze-ready-syntax.log
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-additem-column-numeric/freeze-ready-syntax.status
+a6e28d8ad958cc8d75a212fcaefe7cf2f17143c10e05dd6c3987d524fc3b82eb  tests/fixtures/vfp9-additem-column-numeric/freeze-ready-literal-audit.jsonl
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-additem-column-numeric/freeze-ready-literal-audit.status
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-additem-column-numeric/freeze-ready-literal-audit.stderr
+c76c273c561e31d16b4b7e5585b37164e95d60354f7572897ce7ade4f6500c95  tests/fixtures/vfp9-additem-column-numeric/audit-test-literals.cjs
+41d9276e3f7bbe1090e1a796700d0cbf3c55340bf46e25df43dd3f416018a27c  tests/fixtures/vfp9-additem-column-numeric/run-originals.sh
+dbf7a11d812f14b8b6885fb2f441345db54c9f979b1dc040af78c64036107377  tests/fixtures/vfp9-additem-column-numeric/audit-originals-complete.cjs

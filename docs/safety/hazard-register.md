@@ -1,5 +1,53 @@
 # Hazard Register
 
+RQ-CF-PRG-ADDITEM-COLUMN-NUMERIC-001 / DQ-DV-5611-ADDITEM-COLUMN-NUMERIC-001
+links active HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01 to the
+[pre-code supplied-third-column recovery/map](../../tests/fixtures/vfp9-additem-column-numeric/recovered-requirements.md).
+Independent installedVFP9 pairs corroborate ordinary truncation, admission
+beyond configured ColumnCount and signed32-minimum/low16 blank-row quirks.
+Default1..65535 allocation bound/exact64/NaN derive from admitted5611/6776 and
+the named numeric parent, not native global capacity. Engaged zero must not
+be rejected in VFP9 mode or indexed as zero-1. Original public probes remain
+bounded to avoid unguarded billions-column allocations; full scalar helper
+boundaries/source dataflow and pre-wire-authored fixed-only hostile probes are
+separate verification layers. Bounded documentation misuse MEDIUM: conflate
+column/row/ID or default/legacy, overclaim hidden storage/shared success/native
+capacity, or misstate failed/self-comparison captures as repeated success.
+Distinct UNUSED helper/frozen inputs/BOTH complete originals/full failure-hash
+audit before wiring, fixed/sanitizer/preservation/contracts/review walkthrough
+remain PLANNED. No review/verification completion, independent-human/high-
+hazard/system/parent/release closure; all hazard severities/statuses unchanged.
+The [frozen original phase](../../tests/fixtures/vfp9-additem-column-numeric/frozen-original-phase.md)
+now records the UNUSED helper/independent literals and five serial subjects;
+planned276 direct/four1224 safe public/fixed-only542 counters, not measured
+acceptance. Native literal audit2528 rows/97 captured of98 literals/failures0;
+uncaptured integer65538 is explicitly generalized-model-derived. All prior85
+and caller/selector remain unchanged. BOTH complete original90 executions/full
+failure-hash audits are in progress and remain gates BEFORE wiring; preliminary
+source syntax0 or driver progress is not a pass or completed DV walkthrough.
+The [BOTH-original gate](../../tests/fixtures/vfp9-additem-column-numeric/both-originals-before-wire.md)
+now supersedes that pending status: both90 complete/identical6968 full failures/
+allprior85-new276direct PASS/onlyfourNEW1224 safe-public fail/all255 hashes0.
+Only afterwards the [bounded caller phase](../../tests/fixtures/vfp9-additem-column-numeric/caller-wiring-fixed-phase.md)
+wires the supplied third operand/current session/localized11 and admitted-zero
+blank row without zero-1 indexing. Original predicate, shipped position arm,
+shared insertion/allocator/state/sort/return and fallback body remain unchanged.
+Both fixed90/sanitizers/fixed-only542/both296 raw comparisons/contracts/bounded
+medium review/walkthrough/integration gates remain pending, not completed DV or
+independent-human/high-hazard/parent/hazard/release qualification.
+
+The [current local completion](../../tests/fixtures/vfp9-additem-column-numeric/local-completion.md)
+supersedes those pending verification statements: BOTH fixed90 PASS/all276-four1224/
+each four fixed-only542/both NON-NATIVE296 fullcmp/source hashes, capture/literal/
+structural audits0 and five contracts5of5 PASS329.53s. BoundedMEDIUM delegated
+development DQ-DV self-review/procedural delta/misuse/automated walkthrough and
+rollback/field-notification plan are complete, not independent human or personal
+human sign-off. Original safe-public reach and separately fixed-only hostile
+corroboration remain distinct. Signed exact-head postpush/actual Claude-FIRST or
+authorized fallback review/required11/resolved conversations remain integration
+gates. No hazard severity/status change, parent/KBX/high-hazard/system/release
+closure, global allocator/whole-call atomicity/leak/warningfree qualification.
+
 Controlled hazard linkage register for safety-relevant documentation and behavior changes.
 
 Purpose:

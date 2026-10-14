@@ -1,0 +1,3 @@
+tests/fixtures/vfp9-additem-column-numeric/excluded-scope-preservation.cpp: OK
+tests/fixtures/vfp9-additem-column-numeric/run-preservation.sh: OK
+tests/prg_engine_test_support.cpp: OK
