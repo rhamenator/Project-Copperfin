@@ -1072,6 +1072,15 @@ function(copperfin_configure_native_test_isolation)
         test_prg_engine_addlistitem_column_numeric_copperfin_session2
         test_prg_engine_addlistitem_column_numeric_vfp9_session1
         test_prg_engine_addlistitem_column_numeric_vfp9_session2
+        # RQ-CF-PRG-ADDLISTITEM-NEW-COLUMN-NUMERIC-001 source audit: private
+        # generated PRGs/workareas/unique owned temps/scoped locale; no child,
+        # network, samples or external resources. Conservative SERIAL, not DV.
+        # Fixed-only hostile vectors are NOT CTest registrations.
+        test_prg_engine_addlistitem_new_column_numeric
+        test_prg_engine_addlistitem_new_column_numeric_copperfin_session1
+        test_prg_engine_addlistitem_new_column_numeric_copperfin_session2
+        test_prg_engine_addlistitem_new_column_numeric_vfp9_session1
+        test_prg_engine_addlistitem_new_column_numeric_vfp9_session2
         # AddListItem source audit: private generated PRGs/workareas, unique
         # owned temp directory, scoped locale restore; no child/network/sample
         # or external resource use. Retain conservative serial scheduling.

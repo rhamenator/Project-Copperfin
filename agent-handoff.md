@@ -979,62 +979,58 @@ EPOCH/CENTURY/#3698 complete; doNOTrestart. No VM/start/clone/resetcompletion cl
 
 ## Selected active bounded slice
 
-OPEN owner5611/6776/exactagent-approved revalidated aftercleanup/livechannelread.
-Next bounded slice: AddListItem ordinary MISSING supplied Numeric stable-ID,
-supplied THIRD Numeric/int64/uint64 COLUMN admission/conversion. Distinguish
-native new-row effects from already-shipped existing-ID32745 policy and AddItem
-low16; do not borrow either as a requirement. Exact3/nonNULLCharacter/coherent
-unbound/default-or-exacttypedRST0/trimempty/ordinary finiteintegral SECOND1..32767
-missing beforecall is the candidate scope; recover/refine beforecoding.
+OPEN owner5611/6776/exactagent-approved revalidated2026-10-14T15:45 beforecontent;
+main/origin337156b342ff5e59db88859ededf6580066f3355, no activePR/push.
 WT /home/rich/.codex/worktrees/addlistitem-new-column-numeric-5611/Project-Copperfin,
-branch fix/addlistitem-new-column-numeric-5611 from origin/main337156b342ff5e59db88859ededf6580066f3355.
-Signedselection6d906525 G/DCO retained; no push/PR. Fullyread shippedAddListItem771/
-ColumnCount387/BINTOC564/privateWine runner164/hash1e64d290 beforefreshnative.
-Independentmatching780 pair/sourceb136a793/raw8a5d71de/runners-cmp-captureaudit0:
-12groups x65/264unchanged11/516newrowadmissions/allactualN-BRSbeforeafterequal.
-Independentmatching100 dualroute highcolumn pair/source3e352187/raw949565d5/
-runners-cmp-captureaudit0:96newrows/four11/14namedcolumns/index-stableIDagree.
-Observed missing-ID65537.9 aliasesvisible1;32745retains/32746admitsempty sampled
-readback despiteexpansion65538(TESTreach NOTcapacity). Not a borrowedexisting-ID
-or AddItem oracle/fullhiddenstorage/default-hostlimit/generalizedmodel claim.
-Fullsources-raw-status-hash in fixture/recovery-observations.md. HISTORICALseven
-coreinputs were337156b34 byte-identical before UNUSEDhelper. SignedG/DCO recoverycheckpoint
-38d04d4c7d21d0439f404daf4217d8780de3246f retains fullsource-FXP-raw-status/audits
-and38-entry first-recovery-evidence manifest0; no push/PR. Raw-inclusive staged
-whitespace2 is ONLY3536 nativeCRLF locations/eightdatafiles; allothersource-doc
-check0, fullreport/classification0 retained in ownedbuild/doNOTnormalize raw.
-Currentphase supersedes its no-helper/pending-map state without refreezing38:
-freshmatching384 config-beforepopulate and144 boundary/cycle/fraction pairs,
-allactualrunners-cmp-audits0/emptydiag/raw31720431-448faee7/source5d5af73f-fe73fb45.
-Config16x24/112unchanged11/272nativecreations; boundary4x36/140admit-four11/
-14dualroutesagree. Initialboundaryaudit printedstale25 metadata despite36
-assertions; oldsource-fulloutput-status retained/v2reportconstantONLY36, not
-retroactivecorrectmetadataqualification. Completepre-codeRQ-architecture-VR-
-DQDV-HZ/default-extension/safe-original map and durablegaplinks BEFOREhelper,
-3maphashes0/allsevenBEFOREhelper0 retained. DistinctUNUSEDhelper/header added;
-historicalselection nowexactlyTWOchanged, caller-selector-root/testCMake-
-isolation FIVEunchangedmain/allprior95. Current7-inputmanifest0/old38manifest0/
-structuralphaseaudit0/nameONLYdefinition-declaration. GCC+Clang translationunit
-syntax harvested0/emptylogs ONLY, NOT runtimebuild-tests-sanitizerqualification.
-Fullnewsource-FXP-raw-status-audits plus chronology in fixture/unused-helper-phase.md.
-No acceptanceassertions, registration/isolation/frozenoriginals/callerwiring,
-runtimequalification/push/PR/assuranceclosure yet. Preserve shared7186 fallback.
-Selectedrecovery corroborates separate nonnumeric missing-ID/nonfirstcolumn
-creation gap: native44/2.9 createsrow, priorBOTH304capturedCFreturn0/count3 and
-currentmain source preservesroute. Focused7186 OPENowner/labels[] against337156b34,
-NOTadmissionforrepair/currentfreshCFexecutionclaim/ownerinputblocker.
-NEXT independentliteral helper/four class-mode directpublic shards BOTHsessions,
-separatefixed-onlyhostile vectors, conservative5serialsubjects retainingprior95.
-Freeze/audit fulloriginal100 source-command-isolation/failures/counters for
-BOTHcompilers BEFOREwiring. UNUSEDhelper persists untilbothfulloriginalaudits.
-Retain allprior95/existing-ID predicate/sharedsecond-ID/allocator/
-insertion-state-sort-return/fallback; no shared creation-parity expansion.
-Do not expand to shared creation parity or other ID/types/arity/NULL/binding/RST/
-lifecycle/parser/unadmitted7173-7176-7177. If selected implementation reveals
-another nonnumeric gap, file focused currentmain issue without expanding slice.
-Safe original allocation reach must be explicit; never unguarded huge resize/
-nonfinite old-public runs or allocator/expectation/timeout modifications.
-No owner-input blocker; cleanup/backup-reset completion still unconfirmed.
+branch fix/addlistitem-new-column-numeric-5611, signedselection6d906525,
+recovery38d04d4c, UNUSEDhelper73b1900c13e719e3b6be20834c864348f7d6a4fc G/DCO.
+Bounded AddListItem MISSING ordinary integral Numeric SECONDstable-ID1..32767,
+supplied THIRD nonNULLNumeric-int64-uint64 COLUMN; exact3/Charactercaption/
+coherent unbound/default-or-exacttypedRST0/trim-empty binding. Preserve existing
+ID predicate/helpers/sharedsecond-ID/allocator/insertion-state-sort-return/
+fallback; no otherID-types-arity-NULL-RST-binding-lifecycle-parser expansion.
+
+RQ-CF-PRG-ADDLISTITEM-NEW-COLUMN-NUMERIC-001/VR001+002/DQ-DV001:
+fixture/recovered-requirements.md/unused-helper-phase.md/frozen-original-phase.md.
+Independent matching780/100/384/144 installedVFP9 pairs, fullhelp/privateWine
+provenance BEFOREmap/helper/assertions; actualrunners-cmp-audits0/raw8a5d71de-
+949565d5-31720431-448faee7. Missing-ID native admission signedlow32 thenlow16
+candidate1..32745 elseengaged0; defaulttrunc/lossless1..32745 derivedfromnumeric-
+allocation-HZparents, NOTnative-global/configured-limit/sharedcreationparity.
+Onlycandidate1 reaches ORIGINALcreationarm; otherpositive/zero preserves
+#7186 missing-slot0/no-row gap. Issue7186 OPENowner/labels[] NOTrepairadmission/
+freshcurrentCFexecutionclaim/ownerinputblocker. NativefullcreationisrecoveryONLY.
+Initialboundaryauditstale25report despite36assertions retained; v2ONLYreport36.
+Original38-evidence/selection7 and UNUSEDphase96/7 remainHISTORICALnotrefrozen;
+lastphase96postcommit0/structuralaudit0/syntaxGCC-Clang0 ONLYsyntaxqualification.
+NativeCRLF staged2 ONLY2128/eightdatafiles/source-doc0; doNOTnormalize.
+
+Currenttest phase: independently authored65Numeric44safe/21hostile +18exact
+12safe/sixhostile +13directboundaries/mode =>192planned direct. FOURsafe public
+class/mode/session shards EACH624:224vectors+384prepopulateconfigs+16locale/
+catchability/session cases. PRE-WIREfixed-only hostile112/shard NOTregistered/
+NEVERoldpublicexecution. Initialunexecutedscaffold counter120-540 correctedONLY
+to112-624 byindependent sourcecount; exactoldsource/syntax0 retained, nooracle/
+operand/expectedstate change. Native-literal audit0/1188source-matchedrows/
+58Numericliterals;220unmatchedrows/sevennotexact-source-match reported/parents.
+Allprior95 assertions unchanged; five conservativeSERIALsubjects added.
+Configure0/inventory100/exactprior95 retained/pre-buildmetadata0 NOcommandsyet/
+finalGCC-Clang syntax0 NOTruntime/sanitizer acceptance. OnlytestCMake-isolation/
+newtest-audits-driver changed now; caller-selector-rootCMake STILLmainunchanged.
+Fresh264 originalinputfreeze0/threecallers0; helperstillUNUSED. Docs/HZ remaingap/
+MEDIUMplanned, no parent/hazard/independent-human/system/release closure.
+
+NEXT launch fixture/run-originals.sh: sequentialfullGNU original100 thenClang
+ASan-UBSan-floatcast100; actualfullfailures/192-four624 counters/allprior95/
+builtcommands-isolation/before-after-current264 audits MUSTpassBEFOREwiring.
+No partial/compiler/scaffold/tooling failure promoted to gate; retain allraw.
+Safeoriginalfinitepositive/exact<=65538/moderatenegatives; no huge-positive/
+nonfinite-NaN-outside64 oldpublic call/allocatoroverride/skip/timeoutchange.
+ThenONLYboundedmissing-ID guard, BOTHfixed100, hostile/NONNATIVEpreservation/
+contracts/DQDV/ClaudeFIRST-cleanexacthead-review-postpush-checks-threads-merge.
+No runtimequalification/push/PR/ownerinputblocker yet; no VM-start/clone or
+backup-reset completion claim. EPOCH/CENTURY/#3698 completed, doNOTrestart.
+
 ## Retained owner steering / deferred work
 
 Audit candidates7100 lifecycle output-drain timeout and7102 designer-smoke
