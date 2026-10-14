@@ -1,0 +1,2 @@
+src/runtime/prg_engine_helpers.h:441:std::optional<std::size_t> checked_addlistitem_column_argument(const PrgValue& value, NumericBehavior behavior);
+src/runtime/prg_engine_helpers.cpp:3206:std::optional<std::size_t> checked_addlistitem_column_argument(

@@ -1,0 +1,11 @@
+Error: ENOENT: no such file or directory, open 'build/addlistitem-column-native/originals-driver.status'
+    at Object.readFileSync (node:fs:441:20)
+    at status (/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/tests/fixtures/vfp9-addlistitem-column-numeric/audit-originals-complete.cjs:63:21)
+    at auditEvidence (/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/tests/fixtures/vfp9-addlistitem-column-numeric/audit-originals-complete.cjs:64:21)
+    at Object.<anonymous> (/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/tests/fixtures/vfp9-addlistitem-column-numeric/audit-originals-complete.cjs:92:15)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)

@@ -55,6 +55,61 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
+AddItem supplied THIRD Numeric/exact column PR7180 merged2026-10-14T03:17:49Z
+as5e1b259a65f909fb4c5ce3ae30cb48e869098778, exact signedDCO/localGoodG head
+7b731ad9c56b5404033b107f1d085f5a50f6a770.
+https://github.com/rhamenator/Project-Copperfin/pull/7180
+Strictmain20356131 all11unique COMPLETED/SUCCESS; actual verifiedBot cleanCodex
+6159848252 explicitly7b731ad9c5 after ClaudeFIRST6159808526/authorizedfallback
+6159829037. Fullpagination reviews/reviewcomments/threads/closingrefs0;
+gate6160097224/exacthead merge/no admin bypass. Optional fullLinux/macOS/Windows
+and CodeQLCXX inprogress atmerge, not passing claims; late checks still require
+attention if actionable. Parents5611/6776 OPEN; no parent/hazard/KBX closure.
+
+Independent installedVFP9/help/four matching1000/432/864/432 pairs and pre-code
+map precede UNUSEDhelper/frozen255/BOTH fulloriginal90 gate: GNU86/90/722.96s/
+Clang86/90/4565.26s/actual8/allprior85-new276direct PASS/onlyfourNEW1224 fail/
+each6968 FULLmultiline identical1deb79eb/all255-initialfive hashes0 BEFOREwiring.
+Failed first runnercleanup/emptycomparison/preliminaryself-audit/pre-freeze
+syntax/archivepath errors retained honestly. Safe-original positives<=65538/
+finitewide negatives only; no originalhuge/nonfinite hostile-row qualification.
+Default truncated/lossless1..65535 bound DERIVED owner/hazards, not native
+maximum/ColumnCount/Grid255/stableID/globalcapacity; explicitVFP9 signedlow32
+positive-or-INT32MIN then unsignedlow16/engagedzero blank row/nozero-1. Exact3args/
+Character/coherentunbound/exacttypedRST0/trimempty/ordinaryintegralNumeric
+secondposition1..count+1 only. Shared resolver/allocator/successful state/sort/
+return/fallback/other types-positions/lifecycle/parser/unadmitted gaps preserved.
+
+BOTH fixed90 PASS GNU718.68s/raw0c3a1a14 and Clang ASan-UBSan-float-cast-overflow
+4320.20s/raw0537ce6e/all276-four1224/all256-initialfive unchanged/bothaudits0.
+Eachcompiler four PRE-WIRE fixed-only hostile542/status0/rawcf672f99, NOToldhostile
+qualification. BOTH NON-NATIVE296 fullsamecompilercmp0/DONE296/scaffold0/eight37/
+all3source-nine-library hashes/rawc4544b0e; sampled modeledfields, notnativeoracle/
+allproperties/globalallocator/shared-success parity. Completion capture/literal
+2528-97of98/group72-216/structural audits0/no new oracleorVM.
+Fivecontracts5/5 PASS329.53s/raw3c3c6bec/currentdoc4/4 PASS4.48s/raw320ccd8f;
+boundedMEDIUM delegated DQ-DV self-review/automatedwalkthrough/delta-misuse-
+rollback complete in fixture/local-completion.md, not independenthuman/personal
+human/high-hazard/leak-warningfree/system/release/certification qualification.
+
+Exacthead postpush26169 HARVESTED0/90of90 PASS714.08s/actual0/03:04:11Z/all276-
+four1224/all256-initialfive/headbeforeafter unchanged/fullraw
+9314e9b565e2814c7a026d3c999b7519b28c7d10a8c4a0766e6933dc8838fb00.
+Requiredwatch29864 HARVESTED0/fullgateaudit0. Main fetched/FF exactmerge/signedhead
+ancestor proven. Owned cleanWT/localbranch normally removed; exact7b731 leased
+remote branch deleted. Entire1GB build/evidence moved recoverably to
+/home/rich/.local/share/Trash/files/additem-column-numeric-5611-build;
+Trashinfo/cleanup-record.md/full native-original-failed-fixed-contract-postpush-
+review-merge-source-raw-status-hash/continuity retained; postmove SHA unchanged.
+Scopedlsof only ownreport FDs/tracefswarning, notglobalidle. Scoped canonicalstash
+1eb472f76054c0d7914e4078423773c3da86c664 and WTstash
+c735706db1969d38a6d35c553a3d980692abe05e retained/notpopped; earlierstashes/foreign
+376-AGENTS-corpus-vmGUI-pycache/4436-49aeWTs untouched. Published6084 unchanged/
+mirror2110 restored; appattach100identitycap/no unrelatedartifactremoval.
+Livechannel reread aftercleanup; VMcleanup/backupreset completion unconfirmed.
+
+## Prior shipped slice
+
 AddItem supplied second Numeric/exact insertion-position PR7179 merged
 2026-10-13T20:46:54Z ascd4489475cfb424a5c7fa48888b978d9a27eab2a;
 exact signedDCO/localGoodG headce0b68d56eed74d325cee840c2582223fee7dab6.
@@ -861,62 +916,85 @@ No VM started/recreated; backup-reset completion still unconfirmed.
 
 ## Selected active bounded slice
 
-AddItem supplied THIRD Numeric/int64/uint64 column conversion under OPEN owner-
-admitted5611/6776; not second insertion position or AddListItem stableID.
-WT /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin,
-branch fix/additem-column-numeric-5611 from exactorigin/main
-cd4489475cfb424a5c7fa48888b978d9a27eab2a. No commit/push/PR yet.
-RQ-CF-PRG-ADDITEM-COLUMN-NUMERIC-001/VR001+002; current local verification and
-boundedMEDIUM delegated DQ-DV complete in
-tests/fixtures/vfp9-additem-column-numeric/local-completion.md.
-Earlier phase records/source/raw/status/hash/failures retained, not overwritten.
+Admitted OPEN owner5611/6776/exactagent-approved revalidated; livechannel unread
+reread. Next retained slice is AddListItem EXISTING ordinary Numeric stable-ID
+supplied THIRD Numeric/int64/uint64 COLUMN, NOT missing-ID creation/second-ID
+conversion/AddItem low16/caption-sort-return parity. WT
+/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin,
+branch fix/addlistitem-column-numeric-5611, base origin/main
+5e1b259a65f909fb4c5ce3ae30cb48e869098778 after PR7180 merge/ownedcleanup.
+RQ-CF-PRG-ADDLISTITEM-COLUMN-NUMERIC-001/VR001+002/DQ-DV001/HZ links and independent
+pre-code/default/architecture map in tests/fixtures/vfp9-addlistitem-column-numeric/
+recovered-requirements.md; current local-completion.md supersedes pending phases.
+Exact3/nonNULL Character/coherent-unbound/exacttypedRST0/trimempty/ALREADY-EXISTING
+ordinary finite integralNumeric SECOND ID1..32767 only. Default truncated/lossless
+1..32745 DERIVED per-selected-row preparation bound; explicitVFP9 signedlow32
+positive-or-INT32MIN admission,1..32745 write otherwise engaged0 NO-WRITE.
+Localized11 rejects; do not resize/indexzero-1 on no-write. No global/configured
+capacity or whole-call atomicity claim; other types/IDs/arity/binding/RST/lifecycle/
+parser/shared-state/7173-7176-7177/missing creation remain excluded/unrepaired.
 
-Default finite truncation/losslessexact1..65535/localized11; DERIVED per-new-row
-argument-driven bound, NOT native maximum/ColumnCount/Grid255/stableID/global
-capacity. ExplicitVFP9 signedlow32-positive-or-INT32MIN then unsignedlow16/
-engagedzero blank row/nozero-1. Exact3args/nonNULLCharacter/coherentmaterialized-
-unbound/default-exacttypedRST0/trimempty/ordinary finite integral Numeric
-secondposition1..count+1/hostint64 only. Earlymaterialization/no whole-call
-atomicity. Shippedsecondposition/resolver/allocator/shared insertion-state-sort-
-return/fallback/selector/root/prior85 preserved; 7176/7177/earlier unadmitted
-gaps and allother positions/types/RST-binding/lifecycle/parser excluded.
+Nine matching installedVFP9 7423 pairs972/60/32/50/216/288/144/378/288 plus shipped
+help/runner provenance precede helper/assertions/configuration. Full capture
+replays0; literal948rows/67of69Numeric/832unmatched0, ±6442450945 exact source
+strings parent-generalized, not falsely native-matched. Full source/raw/status/
+hashes and failed syntax/manifest/checker chronology retained in fixture.
+BOTH complete original95 BEFORE wiring: actualCTest8/GNU853.59s/Clang4448.89s,
+allprior90-new210 directPASS/onlyfour660publicFAIL/identical5192 full failures
+c863b33d/raw591d25d3-f60a4cda/source259-before-after-current/metadata audits0.
+Only afterward TWO bounded caller regions changed; all other258 frozen. Helper/
+assertions/registration/isolation/prior90 unchanged, ordinary-ID proof beforecast,
+admittedzero skipresize/index retains old shared success/fallback/caption1 bytes.
 
-Independent installedVFP9/help/four matching1000-432-864-432 pairs/pre-code map
-precede UNUSEDhelper/frozen255/BOTH originals90. GNU86/90/722.96s and Clang86/90/
-4565.26s/actual8/allprior85+276direct PASS/onlyfourNEW1224 fail/each6968 FULL
-multiline identical1deb79eb/all255-initialfive hashes0 BEFOREwiring. Initial
-runnercleanup1/emptycomparison1/preliminaryself-audit/pre-freeze namespace
-syntax1 correctedbeforefreeze/archivepath mistakes retained honestly.
-Native65538 integer explicitlymodelderived; source-negative2^64 actualPOSITIVE,
-notparserfix. Safeoriginal positive<=65538/widenegatives only; no old hostile
-huge-row invocation or allocator shim/artificial11/assertionphase skip.
+Fixed driver20432 HARVESTED0/BOTH95 uniquePASS/full audit0: GNU746.47s/raw67e2d4c6,
+ClangASan-UBSan-floatcast4519.46s/completed09:39:50Z/rawd0a6aaa2/all210-four660.
+EACHcompiler four fixed-only182 hostile subjects0/rawdf24f4aa/emptystderr, never
+old-hostile qualification. BOTH NON-NATIVE304 fullsamecompiler cmp/audits0/
+raw657c41ef/8x38/scaffold0; modeled sampled preservation NOTnativeoracle.
+Structuralaudit0 reconstructsentirebasecaller from ONLYtwo changedregions;
+10synthetic mutations rejected. Additional licensing preflight1 detects separate
+preservation CPP notice omission; exactold331be3b7 preserved before-license.txt,
+addONLYcomment/current259unchanged0/BOTHfresh304 fullbytecmp0/newphase manifest/
+licensingfixed0. Original3-source preservation manifest remains HISTORICAL,
+not silently refrozen/currentclaimed. No expectation/executable/policy changes.
+Five development contracts all5PASS332.96s/09:51:31Z/raw45a357e2/actual0,
+safety1200s unchanged. Bounded delegated DQDV walkthrough complete, NOTindependent
+human/personalowner/high-hazard/system/release/parent closure. detect_leaks0.
 
-Fixeddriver84919 HARVESTED0/BOTH90 uniquePASS/all276-four1224/bothaudits0:
-GNU718.68s/01:01:32Z/raw0c3a1a14; Clang ASan-UBSan-float-cast-overflow4320.20s/
-02:14:46Z/raw0537ce6e. All256-initialfive unchanged/no frozenweakening. EACH
-compiler four PRE-WIRE-authored fixed-only542/status0/rawcf672f99, NOToriginal
-hostilequalification. BOTH NON-NATIVE296 fullsamecompilercmp0/DONE296/scaffold0/
-eight37groups/all3source-nine-library hashes/rawc4544b0e; sampledmodeledfields,
-notnativeoracle/allproperties/globalcapacity/allocator-success parity.
-Completion capture1000-432-864-432/literal2528-97of98/group72-216/structural
-audits0/no new oracle/VM. Both-fixed-complete.md/manifests retain full evidence.
+NEXT retain/archive exactlocal evidence, signed numeric commit. Before numeric
+push/PR, integrate the active CI repair7182 through MAIN and synchronize this
+slice preserving source259/assertions/evidence, avoiding another knowingly
+unsharded Windows cumulative-budget run. Then push/PR/ClaudeFIRST/actual clean
+exact-head review/postpush95/all11required/resolvedthreads before merge.
+No numeric PR yet; slice retaineduncancelled, no owner-input blocker.
+Missing-ID creation is a separate unfinished follow-on AFTER this existing-ID
+slice, with its own independent recovery/map/original gate. Do not restart
+completed EPOCH/CENTURY/#3698. Canonical main holds continuity only; foreignfiles/
+oldstashes/two detachedWTs preserved. Historical suffix from PR6926 unchanged.
 
-Five developmentcontracts53769 HARVESTED0/5of5 PASS329.53s/02:24:01Z/actual0/
-raw3c3c6bec/all256beforeafter; safety325.03s/existing1200s unchanged. Current
-local-completion.md/durablematrix/hazard links supersede stalependingrecords.
-Boundedmedium delegateddevelopment DQ-DV delta/misuse/self-review/automated
-walkthrough/rollback complete, NOT independenthuman/personalhuman/high-hazard/
-leak-warningfree/persistence/totalmemory/system/release/certification or
-parent/hazard/KBX closure. No VM/resetcompletion assumption or ownerinput needed.
-
-Currentdocfast4 recheck PASS4/4/4.48s/raw320ccd8f; fullsource/manifests0.
-NEXT signedDCO commit/push/PR;
-request ClaudeFIRST thenauthorizedCodex ifunavailable; exactheadpostpush90/
-all11required uniquelygreen/actualcleanexactheadreview/resolvedthreads before
-merge. Keep build/evidence/ownworktree until merge thenrecoverablecleanup.
-Canonicalhandoff/mirror2109 synced; immutableaa76a5be carries bothfixedcheckpoint.
-Foreignfiles/stashes/4436-49aeWTs preserved; do not startorcloneVMs until owner
-cleanup/backupreset completion confirmed.
+Separate actionable CI repair7181/PR7182 WT
+/home/rich/.codex/worktrees/windows-native-test-shards-7181/Project-Copperfin,
+branch ci/windows-native-test-shards-7181/base5e1b/current signed head
+a9df4e64f5430dac220f6a7bd3e1a06964222bd3; trackedclean/own__pycache__untracked.
+Retained main Windows retry38505514439 attempt2 CANCELLED120min/550of600PASS/
+raw65bcb9d3; no third unchangedretry/root-cause/full600claim. New3 fullbuilds/
+deterministic fullinventory portions+exact-once matching aggregate retain120min/
+180s/build2/test2/allassertions-isolation. Initial601913 registeredarchitecture
+contractfailure/CodexP1 corrected31423; exactpushedbytes verified and thread
+PRRT_kwDOR7wYLc6sN-Um resolved. ActualcleanCodex31423 comment6164282039 is ONLY
+historical, NOTa9df4e64 cleanreview. Exact31423 macOS599 records596PASS/two
+conditionalskips/one licensingcontractFAIL/raw6190edd6; a9df4e64 noticeONLYfix to
+sixsources/testscripts preserves executablebytes, locallicensing0/aggregate11/
+workflow7/policy22+actualtiny-default-failurepropagation0/all7pushedblobsverified.
+ClaudeFIRSTrenewed6164748898; freshreview stillpending/no quota/setupclaim.
+Newnative38539178390 blockingwatch18994 ACTIVE, requiredchecks pending; require
+ALL3shards+aggregateSUCCESS PLUSrequired11/actualcleanexactheadreview/threads0
+before merge/manual7181closure. Oldnative38535447863/watch71300 cancelledafter
+supersedingpush, NOT120min or qualification. No numericassertion/source259/VM/
+paidintegration change. CIphase README/review-contract-fix/licensing-contract-fix
+and build/ci-shard-verification retain exactfailures/fixes/fullstatus-source evidence.
+AppPRattach hit100identitycap; URL retained/no unrelatedartifactpruning.
+No VM starts/clones while owner cleanup/backupreset completion remains unconfirmed.
 ## Retained owner steering / deferred work
 
 Audit candidates7100 lifecycle output-drain timeout and7102 designer-smoke

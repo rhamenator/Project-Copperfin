@@ -1,0 +1,22 @@
+node:fs:441
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open 'build/addlistitem-column-native/originals-complete-audit.status'
+    at Object.readFileSync (node:fs:441:20)
+    at read ([stdin]:2:43)
+    at [stdin]:3:20
+    at runScriptInThisContext (node:internal/vm:209:10)
+    at node:internal/process/execution:446:12
+    at [stdin]-wrapper:6:24
+    at runScriptInContext (node:internal/process/execution:444:60)
+    at evalFunction (node:internal/process/execution:279:30)
+    at evalTypeScript (node:internal/process/execution:291:3)
+    at node:internal/main/eval_stdin:53:5 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'build/addlistitem-column-native/originals-complete-audit.status'
+}
+
+Node.js v22.20.0

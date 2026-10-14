@@ -1,0 +1,12 @@
+{"syntheticMutation":"omitted result","rejected":true}
+{"syntheticMutation":"missing summary","rejected":true}
+{"syntheticMutation":"failed test","rejected":true}
+{"syntheticMutation":"timeout","rejected":true}
+{"syntheticMutation":"duplicate result","rejected":true}
+{"syntheticMutation":"wrong start identity","rejected":true}
+{"syntheticMutation":"missing direct counter","rejected":true}
+{"syntheticMutation":"wrong public counter","rejected":true}
+{"syntheticMutation":"hidden assertion","rejected":true}
+{"syntheticMutation":"runtime diagnostic","rejected":true}
+{"syntheticMutation":"missing ordinal","rejected":true}
+{"syntheticPositive":1,"rejectedMutations":12,"note":"Future fixed audit-tool self-test only; real fixed execution and caller wiring remain unqualified."}

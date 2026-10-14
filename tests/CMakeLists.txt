@@ -6051,6 +6051,20 @@ foreach(additem_column_mode IN ITEMS COPPERFIN VFP9)
             COMMAND $<TARGET_FILE:test_prg_engine_additem_column_numeric> ${additem_column_mode} ${additem_column_session})
     endforeach()
 endforeach()
+# RQ-CF-PRG-ADDLISTITEM-COLUMN-NUMERIC-001 / VR-5611-ADDLISTITEM-COLUMN-NUMERIC-001/002.
+# Existing-ID THIRD column only. Register safe-original public shards; the
+# PRE-WIRE-authored hostile corpus is fixed-only, NEVER old resize coverage.
+copperfin_add_test(test_prg_engine_addlistitem_column_numeric cf_xbase_runtime
+    test_prg_engine_addlistitem_column_numeric.cpp
+    prg_engine_test_support.cpp
+)
+foreach(addlistitem_column_mode IN ITEMS COPPERFIN VFP9)
+    string(TOLOWER "${addlistitem_column_mode}" addlistitem_column_mode_lower)
+    foreach(addlistitem_column_session IN ITEMS 1 2)
+        add_test(NAME test_prg_engine_addlistitem_column_numeric_${addlistitem_column_mode_lower}_session${addlistitem_column_session}
+            COMMAND $<TARGET_FILE:test_prg_engine_addlistitem_column_numeric> ${addlistitem_column_mode} ${addlistitem_column_session})
+    endforeach()
+endforeach()
 # RQ-CF-PRG-ADDLISTITEM-ID-NUMERIC-001 / VR-5611-ADDLISTITEM-ID-NUMERIC-001/002.
 copperfin_add_test(test_prg_engine_addlistitem_numeric cf_xbase_runtime
     test_prg_engine_addlistitem_numeric.cpp

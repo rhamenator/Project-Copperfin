@@ -1,0 +1,11 @@
+{"syntheticMutation":"partial execution","rejected":true}
+{"syntheticMutation":"missing summary","rejected":true}
+{"syntheticMutation":"wrong count","rejected":true}
+{"syntheticMutation":"missing public counter","rejected":true}
+{"syntheticMutation":"wrong public counter","rejected":true}
+{"syntheticMutation":"unexpected direct failure","rejected":true}
+{"syntheticMutation":"unrelated selected failure","rejected":true}
+{"syntheticMutation":"runtime sanitizer diagnostic","rejected":true}
+{"syntheticMutation":"duplicate result","rejected":true}
+{"syntheticMutation":"interrupted result","rejected":true}
+{"syntheticMutation":"ordinal omission","rejected":true}

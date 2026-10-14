@@ -1,5 +1,74 @@
 # Hazard Register
 
+The [BOTH complete original95 gate](../../tests/fixtures/vfp9-addlistitem-column-numeric/both-originals-before-wire.md)
+and [bounded caller phase](../../tests/fixtures/vfp9-addlistitem-column-numeric/caller-wiring-fixed-phase.md)
+supersede the earlier pending/UNUSED statements below. Both originals/allprior90/
+new210 direct and identical5192 selected full failures/source259 audited0 BEFORE
+one caller change. Engagedzero skips resize and zero-1 indexing; existing ordinary
+ID proof precedes its bounded cast. Other258 inputs remain frozen.
+[Current local completion](../../tests/fixtures/vfp9-addlistitem-column-numeric/local-completion.md)
+retains BOTH fixed95/full audit0, four182 hostile subjects per compiler,
+NON-NATIVE304 samecompiler comparisons0, structural scope audit0 and allfive
+development contracts0/bounded delegated DQDV walkthrough. A notice-only fix to
+the separately frozen preservation fixture retains its exact original source,
+new phase manifest and byte-identical BOTH compiler304 captures. Licensing0;
+original missing-notice failure remains evidence. Numeric PR/exact-head postpush/
+review/CI/integration still pending. No whole-call atomicity/global allocation/independent
+human or hazard/parent closure; existing severities/statuses remain unchanged.
+
+RQ-CF-PRG-ADDLISTITEM-COLUMN-NUMERIC-001 now has an independently recovered
+[pre-code map](../../tests/fixtures/vfp9-addlistitem-column-numeric/recovered-requirements.md)
+from nine native pairs, including378 precision/288 configuration corroboration.
+Its bounded current scope is ALREADY-EXISTING ordinary Numeric ID only;
+missing-ID creation remains a separate unfinished follow-on. Derived default
+per-row32745-cell bound and explicitVFP9 low32 positive-or-INT32_MIN admission
+with engagedzero NO-WRITE are NOT native global capacity/physical cause,
+AddItem low16/new-row policy or configured-column limits. Do not resize or
+indexzero-1 on no-write. Distinct helper is UNUSED pending independently frozen
+assertions/BOTH fulloriginal95/full failure/hash audit; caller and allprior90
+still unchanged. BoundedMEDIUM delta/misuse/rollback defined; DV walkthrough/
+review, fixed/sanitizer/preservation/integration gates remain planned, no hazard
+severity/status change or parent/high-hazard/system/release closure. Earlier
+selection/recovery checkpoints immediately below retain their phase chronology.
+
+The [frozen original95 phase](../../tests/fixtures/vfp9-addlistitem-column-numeric/frozen-original-phase.md)
+now retains independent69 Numeric/19 exact/17 extra binary/NaN/type boundaries,
+planned210 direct/four660 safe-public/fixed-only182, literal948/67of69 audit0
+and259 frozen source/input checks0. Five new source-audited SERIAL subjects
+preserve allprior90; three caller-selector-root inputs unchanged, helper UNUSED.
+First pre-freeze syntax1 retained, namespace/declaration scaffold corrected
+without literal changes; final GNU/Clang syntax-only0. Built command audit and
+BOTH fulloriginal95/full failures/source checks pending while GNU compiles;
+not executed counters/production behavior/complete DV or hazard qualification.
+
+Candidate RQ-CF-PRG-ADDLISTITEM-COLUMN-NUMERIC-001 / DQ-DV001 links active
+HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01 to the
+[independent recovery selection gap](../../tests/fixtures/vfp9-addlistitem-column-numeric/README.md).
+Supplied third column must not inherit AddItem quirks/default bounds or a stable-
+ID domain without independent evidence. Preliminary bounded documentation misuse
+MEDIUM; source/raw/status recovery and pre-code map/review/walkthrough/rollback
+are planned, not completed verification. No helper/test configuration/caller
+change yet; all prior90/core sources preserved. Shared allocator/state/duplicate
+behavior and unadmitted gaps remain excluded; no hazard severity/status change,
+parent/KBX/high-hazard/system/release qualification or VM/reset assumption.
+
+The [current AddListItem column observations](../../tests/fixtures/vfp9-addlistitem-column-numeric/recovery-observations.md)
+now supersede the pending-native evidence checkpoint: independent972/60 matching
+pairs/source/raw/status/manifests/capture-only audits0, core/prior90 unchanged.
+Existing-ID update differs from missing-ID/new-row placement; writes beyond
+currently visible ColumnCount can become visible later. Do not borrow AddItem
+low16 behavior or clamp to current visible columns. High storage/projection and
+default allocation mapping still incomplete; no helper/test configuration/caller
+changes, completed DV walkthrough or hazard/parent/high-hazard closure.
+
+Additional [five matching32/50/216/288/144 native pairs](../../tests/fixtures/vfp9-addlistitem-column-numeric/storage-recovery-observations.md)/audits0 retain immediate
+and deferred List/ListItem high-column readback.18 existing-ID contexts across
+BOTH classes/rowcounts1-3-5/all target rows retain32745 but admit32746 with empty
+requested cells, not a physical/native global allocation limit. Fractional/
+cycle/default exact64 bounds and pre-code map still GAP; original public
+reach and fixed-only hostile allocation safeguards must be qualified before
+wiring. No hidden-cell clamp, inherited AddItem table or hazard closure.
+
 RQ-CF-PRG-ADDITEM-COLUMN-NUMERIC-001 / DQ-DV-5611-ADDITEM-COLUMN-NUMERIC-001
 links active HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01 to the
 [pre-code supplied-third-column recovery/map](../../tests/fixtures/vfp9-additem-column-numeric/recovered-requirements.md).

@@ -435,6 +435,10 @@ std::optional<std::size_t> checked_additem_position_argument(
 // Supplied THIRD column, not row/ID; engaged zero is the VFP9 blank-row sentinel.
 // UNUSED by production through BOTH complete original compiler suites.
 std::optional<std::size_t> checked_additem_column_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-ADDLISTITEM-COLUMN-NUMERIC-001 / VR-5611-ADDLISTITEM-COLUMN-NUMERIC-001/002.
+// Existing-ID THIRD column only; engaged zero admits NO WRITE, not a blank new row.
+// Independently recovered; UNUSED by production through BOTH complete originals.
+std::optional<std::size_t> checked_addlistitem_column_argument(const PrgValue& value, NumericBehavior behavior);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the
 // value is out of range). A size or count: truncated toward zero, never below `minimum`, saturating at the largest
 // value this build supports: INT64_MAX, or SIZE_MAX where size_t is narrower (NaN gives `minimum`). A rounded int64 (llround semantics for in-range values; NaN is 0 and
