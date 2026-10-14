@@ -1014,43 +1014,64 @@ EPOCH/CENTURY/#3698 complete; doNOTrestart. No VM/start/clone/resetcompletion cl
 
 ## Selected active bounded slice
 
-OPEN owner5611/6776/exactagent-approved revalidated2026-10-14T21:49 beforeintake.
+OPEN owner5611/6776/exactagent-approved revalidated2026-10-14T22:15 beforeintake.
 Main/originb6d1a7634e56435ad3326d92f13efa3f4fe241d3 after PR7187 required-gates
 merge/ownedcleanup. WT /home/rich/.codex/worktrees/listitem-column-numeric-5611/
 Project-Copperfin; branch fix/listitem-column-numeric-5611 fromorigin/main.
-Selection-only RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001/VR001+002/DQ-DV001,
-fixture tests/fixtures/vfp9-listitem-column-numeric/README.md; no activePR/push.
+RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001/VR001+002/DQ-DV001 remains in independent
+requirements recovery, no activePR/push. Selection checkpoint7bb0112897 signedG/DCO.
 
-Next bounded unfinished inventory site: ListItem FIRST ordinary finiteintegral
+Uncancelled bounded inventory site: ListItem FIRST ordinary finiteintegral
 Numeric existingstableID1..32767, supplied SECOND nonNULLNumeric/int64/uint64
 COLUMN READ/exact2/nativeListBox-ComboBox/coherent-unbound/default-or-exactRST0/
-trim-empty binding candidateboundary. NOTrowposition/first-IDconversion/
-implicit-column1/write/parser-route/absent-ID/sharedcreation migration.
-Existing one-argument ListItem/7151/7186 and othertypes-arity-NULL-RST-binding-
-lifecycle/state-return-fallback excluded. No defecthunt/new runtime reproclaim.
-Error/empty/default/bounds/explicitVFP9 policy are GAPS; doNOTborrow write32745/
-low16/outcomes/tables from AddListItem or currentcode asrequirements.
+trim-empty binding. NOTrowposition/first-IDconversion/implicit-column1/write/
+parser-route/absent-ID/sharedcreation migration. Existing one-argument ListItem/
+7151/7186 and othertypes-arity-NULL-RST-binding-lifecycle/sharedstate excluded.
 
-NEXT independently recover shipped ListItem help and fresh installedVFP9
-explicit COLUMN READ observations (actualtype/BRS/fullsource-state-raw-status/
-repeats/runner-help provenance), thencompletepre-codeRQ-VR-DQDV-HZ/default-
-extension/safe-original map BEFOREUNUSEDhelper/assertions/CMake-isolation/freeze.
-RequireBOTHcomplete fulloriginals/allprior100/fullfailures-counters-source-built
-commands BEFOREwire, then BOTHfixed/sanitizers/hostile/SAMEcompilerpreservation/
-contracts/delegatedDQDV/signedexactheadreview-postpush-checks-threads-merge.
-Onlyselection10coremaininputs0 (initialwrongisolationJSON/nine-entry artifact
-retainedNOTqualified; correctedCopperfinTestIsolation.cmake/tenentriesmatchmain).
-No helper/testexpectation/configure/build/native invocation/callerchange yet.
-Source270fromPR7187stillunchanged; olderglobal-doc manifests historicalnotrefrozen.
-No ownerinputblocker/parent-hazard-releaseclosure/VM-start-or-resetassumption.
-EPOCH/CENTURY/#3698 completed; doNOTrestart.
+Fresh allowed installedVFP9/help recovery retained in
+tests/fixtures/vfp9-listitem-column-numeric/recovery-observations.md:
+three byte-identical full native pairs224/188/360/all6actual0/empty native stderr/
+capture audits0, sources-ownFXPs/fullraw-status/BRS/setup-state-context/provenance.
+Raw5557e0bb/f10b36ce/0dadded8. Configuration0/1/9/256/defaultRST-spacebinding
+set BEFOREpopulation; stable IDs11/22 distinct fromrows1/2. Capture-only,
+not expectedconversion table, completedRQ/assurance or all-property qualification.
+InitialindependentfirstFXP not separatelysnapshotted; configfirstFXP-copy typo1
+retained/correctedcopy0/native0 unaffected. No substitute originalFXP claim.
 
-Retained late-CI dependency: optional fullWindows native PR7187 run38636352844
-exacthead8968c625a8 stillINPROGRESS at21:49, NOTpassing/full-platform qualification.
-EXISTINGblockingwatch64557 is outsidecompletedWT under canonical
-/home/rich/dev/Project-Copperfin/build/pr7187-late-native/watch.log/status.
-Harvestwatch/inspectexact artifacts/aggregate whencomplete; investigate any
-actionablefailure without unrelatedscope expansion. DoNOTduplicate/modelpoll.
+Native ordinaryfractional reads1.9->cell1;65537->empty (NOTlow16cell1).
+Negativewide-4294967295.9->cell1;positive2147483647->empty but2147483647.1->31.
+Near-integer BRS3FEFFFFFFFFFFFFF/1-2^(-53) ->cell1,1-1E-14->31;
+2-2^(-51)->cell2 but2-1E-14->cell1. Further precision recovery needed,
+not simple unconditional binarytruncation or invented tolerance fromcurrentcode.
+DoNOTborrow AddListItem32745/write/low16 outcomes. Default/error/bounds/explicit
+conversion and exact64/nonfinite owner-derived boundary map STILL GAPS.
+
+NEXT harvest immediate late-CI retry below; preserve uncancelled native recovery.
+Then finish independent near-integer/width recovery and pre-codeRQ-architecture-
+VR-DQDV-HZ/default-extension/safe-original map BEFOREUNUSEDhelper/assertions/
+CMake-isolation/freeze. BOTHcomplete fulloriginals/allprior100/fullfailures-
+counters-source-builtcommands BEFOREwire; then BOTHfixed/sanitizers/hostile/
+SAMEcompilerpreservation/contracts/delegatedDQDV/signedexactheadreview-postpush-
+checks-threads-merge-cleanup. Selection10maincoreinputs STILL0; nohelper/
+acceptance assertion/configure/build/callerchange. Source270fromPR7187 unchanged;
+old global-doc manifests historicalnotrefrozen. No ownerinputblocker/parent-
+hazard-releaseclosure/VM-start-resetassumption. EPOCH/CENTURY/#3698 DONE.
+
+Immediate retained late-CI dependency: PR7187 optionalWindows38636352844
+attempt1 head8968c625a8 finishedFAIL22:21:48Z; watch64557 HARVESTED1.
+All610 distinct tests attempted once/609pass/one numeric_behavior180.07s TIMEOUT,
+shard1 203of204; other203+203 PASS. Missingafter-inventory caused expected
+fail-closedaggregate; NOTfullplatformpass. Source/testtimeout/budget unchanged;
+past7184 same test124.635s is comparison, NOTrootcause. Focused tracking #7188
+OPEN/unadmitted, not authority to expand production. FullAPIlog/threeartifacts/
+failedcaptureaudit0/actualstatuses retained fixture/late-windows and canonical
+build/pr7187-late-native. Initialgh joblog empty/status0 retained; fullAPI379322B.
+One unchanged ALL-three rerun requested0/runattempt2 verifiedINPROGRESS samehead;
+EXISTINGblockingretrywatch31376 at canonicalbuild/pr7187-late-native/retry-watch.log
+and actualretry-watch.status whenfinished. DoNOTduplicate/modelpoll/relabel old
+failure aspass/mixattempts/raisetimeouts/weakenassertions. Onrepeat isolate
+timing/progress in admittednumeric suite before any bounded repair decision.
+
 Foreign376/AGENTS/corpus/vmGUI/pycache, detached4436-49ae/oldstashes retained.
 VMcleanup/backupreset completion remains unconfirmed; no newVM/clone/start.
 

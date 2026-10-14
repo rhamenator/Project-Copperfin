@@ -33,6 +33,17 @@ error-vs-empty/explicit-VFP9 conversion policy are STILL GAPS, not chosen here.
 Exact64/NaN/binary extensions need named owner/numeric/hazard parents, not a
 native syntax oracle or a reason to skip the extension.
 
+## Recovery progress (2026-10-14T22:15 heartbeat)
+
+Three independent matching native pairs224/188/360 now retained; all six actual
+invocations0, full byte-repeat/BRS/state/context/framing audits0. See
+[recovery observations and remaining gaps](recovery-observations.md). Near-integer
+promotion needs more recovery before conversion policy/helper/assertions; these
+captures are NOT acceptance-table or implementation completion. The ten main
+source/test/config inputs remain unchanged. No helper/assertion/build/wiring.
+The selection-only absence-of-native statement below describes checkpoint7bb,
+not the current recovery phase.
+
 ## Next concrete action and ordering
 
 Independently recover shipped Microsoft ListItem documentation and fresh actual
@@ -69,11 +80,15 @@ manifest is independently checked against origin/main, with no source changes.
 
 ## Retained hosted qualification dependency
 
-PR7187 optional full Windows native run38636352844 was still in progress after
-required-gates merge. Existing blocking watch64557/log/status live OUTSIDE this
-worktree in /home/rich/dev/Project-Copperfin/build/pr7187-late-native/.
-Harvest it and address any actionable late failure. Do not duplicate the watch,
-claim the three portions as passing before the exact-once aggregate, or lose
-the dependency when continuing this admitted numeric slice. Previous complete
+PR7187 optional full Windows native run38636352844 attempt1 failed: all610 tests
+attempted once/609pass/numeric_behavior180.07s timeout. Watch64557 harvested1;
+aggregate failed closed, NOT full platform qualification. #7188 records evidence
+at current main; no cause guessed. One unchanged full-attempt retry requested0/
+attempt2 samehead verified inprogress. Existing blocking retrywatch31376/log/
+actualstatus live OUTSIDE this worktree in canonical
+/home/rich/dev/Project-Copperfin/build/pr7187-late-native/. Attempt1 complete
+evidence copied under late-windows/; no original failure erased. Harvest retry,
+do not duplicate/modelpoll/mixattempts/raise timeout/omit tests. The uncancelled
+native recovery and explicit requirement gaps above remain retained. Previous complete
 1.1GB build/evidence is recoverable at Trash/addlistitem-new-column-numeric-5611-build;
 scoped stash350dee5e/old stashes/foreign files/worktrees are preserved.

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "kind": "windows-validation-phase",
+  "name": "Run native test suite shard 1 of 3",
+  "category": "native-test",
+  "command": "ctest",
+  "arguments": [
+    "--test-dir",
+    "build",
+    "-C",
+    "Release",
+    "--output-on-failure",
+    "--timeout",
+    "180",
+    "--parallel",
+    "2",
+    "-I",
+    "1,,3",
+    "--output-junit",
+    "D:\\a\\Project-Copperfin\\Project-Copperfin\\artifacts\\windows-native-validation-metrics\\shard-1-of-3\\results.xml"
+  ],
+  "build_jobs": null,
+  "started_at_utc": "2026-10-14T21:42:32.3241199Z",
+  "finished_at_utc": "2026-10-14T22:21:31.5428410Z",
+  "elapsed_seconds": 2339.113,
+  "exit_code": 8,
+  "sample_interval_seconds": 2,
+  "resource_sample_count": 1153,
+  "minimum_free_physical_memory_bytes": 12815142912,
+  "peak_tracked_working_set_bytes": 944013312,
+  "average_tracked_cpu_percent": 1.03,
+  "peak_tracked_cpu_percent": 86.47,
+  "runner": {
+    "operating_system": "Microsoft Windows 10.0.26100",
+    "logical_processors": 4,
+    "total_physical_memory_bytes": 17174360064
+  }
+}

@@ -1,0 +1,22 @@
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	﻿2026-10-14T22:21:48.4800068Z ##[group]Run python3 scripts/audit-native-test-shards.py artifacts/windows-native-shards
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.4800464Z [36;1mpython3 scripts/audit-native-test-shards.py artifacts/windows-native-shards[0m
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.4854371Z shell: /usr/bin/bash -e {0}
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.4854561Z ##[endgroup]
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5789097Z Traceback (most recent call last):
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5789782Z   File "/home/runner/work/Project-Copperfin/Project-Copperfin/scripts/audit-native-test-shards.py", line 92, in <module>
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5790341Z     print(json.dumps(audit(args.root), sort_keys=True))
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5790629Z                      ^^^^^^^^^^^^^^^^
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5791101Z   File "/home/runner/work/Project-Copperfin/Project-Copperfin/scripts/audit-native-test-shards.py", line 49, in audit
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5791675Z     after = read_json(folder / "selected-inventory-after.json")["tests"]
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5792032Z             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5793032Z   File "/home/runner/work/Project-Copperfin/Project-Copperfin/scripts/audit-native-test-shards.py", line 18, in read_json
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5793387Z     return json.loads(path.read_text(encoding="utf-8-sig"))
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5793628Z                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5793962Z   File "/usr/lib/python3.12/pathlib.py", line 1029, in read_text
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5794344Z     with self.open(mode='r', encoding=encoding, errors=errors) as f:
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5794679Z          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5794991Z   File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5795354Z     return io.open(self, mode, buffering, encoding, errors, newline)
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5795688Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5796543Z FileNotFoundError: [Errno 2] No such file or directory: 'artifacts/windows-native-shards/windows-native-shard-1-of-3-9e5da95786c302a36eaa4f1a71c2ba7b630a2047-attempt-1/shard-1-of-3/selected-inventory-after.json'
+Windows MSVC inventory coverage	Require exact full-inventory execution coverage	2026-10-14T22:21:48.5950645Z ##[error]Process completed with exit code 1.

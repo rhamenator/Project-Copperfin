@@ -474,7 +474,12 @@ hazards to the [selection and independent recovery gates](../../tests/fixtures/v
 Exactly-two-argument COLUMN READ for ordinary existing stable IDs only; shipped
 implicit-column1/first-ID behavior and all other routes remain untouched.
 Error-vs-empty/default/explicit conversion and bounds are still recovery gaps,
-not current-code/another-consumer requirements. MEDIUM misuse analysis and
+not current-code/another-consumer requirements. Three matching native capture
+pairs224/188/360 now retain actual type/BRS/setup/sample-state/context and
+near-integer promotion requiring further allowed recovery; capture audits0
+are not a conversion table or completed assurance. See
+[recovery checkpoint](../../tests/fixtures/vfp9-listitem-column-numeric/recovery-observations.md).
+MEDIUM misuse analysis and
 delegated walkthrough remain planned before behavior completion. No helper,
 assertion, configuration, caller migration or acceptance claim is introduced;
 no hazard severity/status, independent-human/system/release or parent closure.

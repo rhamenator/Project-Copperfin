@@ -1,0 +1,1418 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="203"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="1112"
+	timestamp="2026-10-14T22:01:57"
+	>
+	<testcase name="test_mcp_host_stdio" classname="test_mcp_host_stdio" time="0.134027" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=child-scoped;copperfin-isolation:filesystem=fixed-build-tree;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=lock;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_locale_catalog_install_contract" classname="test_locale_catalog_install_contract" time="0.0865093" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=none;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>-- Installed locale catalog contract passed: D:/a/Project-Copperfin/Project-Copperfin/build/tests/locale-catalog-install-contract/share/copperfin/locales
+CMake Error at D:/a/Project-Copperfin/Project-Copperfin/tests/run_locale_catalog_install_contract_check.cmake:13 (message):
+  Installed locale catalog is missing or not a regular file:
+  D:/a/Project-Copperfin/Project-Copperfin/build/tests/locale-catalog-install-contract/share/copperfin/locales/pt-BR/strings.json
+
+
+-- Locale catalog install contract test passed
+</system-out>
+	</testcase>
+	<testcase name="test_build_parallelism_contract" classname="test_build_parallelism_contract" time="1.88599" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=child-scoped;copperfin-isolation:filesystem=fixed-build-tree;copperfin-isolation:network=none;copperfin-isolation:platform=powershell-conditional;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_agent_issue_intake" classname="test_agent_issue_intake" time="0.659118" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>Agent issue intake contract passed.
+</system-out>
+	</testcase>
+	<testcase name="test_release_licensing_contract" classname="test_release_licensing_contract" time="0.0473488" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>-- Release licensing, source, attribution, and contributor-signoff contract passed
+</system-out>
+	</testcase>
+	<testcase name="test_rc_candidate_assembly" classname="test_rc_candidate_assembly" time="2.97041" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=configured;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>Copperfin RC candidate assembly self-test passed.
+</system-out>
+	</testcase>
+	<testcase name="test_changelog_fragments_valid" classname="test_changelog_fragments_valid" time="0.463861" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=configured;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>221 changelog fragment(s) valid
+</system-out>
+	</testcase>
+	<testcase name="test_rscript_discovery_contract" classname="test_rscript_discovery_contract" time="0.0311297" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>-- Rscript discovery contract passed
+</system-out>
+	</testcase>
+	<testcase name="test_github_actions_contract" classname="test_github_actions_contract" time="0.0475347" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>-- GitHub Actions contract passed: 69 external actions are immutably pinned and workflows are read-only
+</system-out>
+	</testcase>
+	<testcase name="test_windows_installer_lifecycle_contract" classname="test_windows_installer_lifecycle_contract" time="1.30464" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>-- Windows installer lifecycle contract passed
+</system-out>
+	</testcase>
+	<testcase name="test_macos_installer_lifecycle_contract" classname="test_macos_installer_lifecycle_contract" time="0.164617" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>-- macOS installer lifecycle contract passed
+</system-out>
+	</testcase>
+	<testcase name="test_security_supply_chain_workflow_contract" classname="test_security_supply_chain_workflow_contract" time="0.0235017" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>-- Security supply-chain workflow contract check passed
+</system-out>
+	</testcase>
+	<testcase name="test_localization" classname="test_localization" time="3.51694" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_runtime_host_audit_containment" classname="test_runtime_host_audit_containment" time="0.412574" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All runtime host audit-containment tests passed
+</system-out>
+	</testcase>
+	<testcase name="test_build_host_output" classname="test_build_host_output" time="41.6337" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_utf8_arguments" classname="test_studio_host_utf8_arguments" time="0.0735134" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_focused_workflow_path_filters" classname="test_focused_workflow_path_filters" time="0.0407904" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_toolbox_create_lifecycle" classname="test_studio_host_toolbox_create_lifecycle" time="2.30887" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=fixed-resource-locked;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=lock;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_remaining_object_lifecycle" classname="test_studio_host_remaining_object_lifecycle" time="3.26281" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=fixed-resource-locked;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=lock;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_detail_header_footer_section_lifecycle" classname="test_studio_host_detail_header_footer_section_lifecycle" time="5.05849" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=fixed-resource-locked;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=lock;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_detail_header_footer_object_lifecycle" classname="test_studio_host_detail_header_footer_object_lifecycle" time="4.80624" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=fixed-resource-locked;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=lock;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_report_direct_setting_fields" classname="test_studio_host_report_direct_setting_fields" time="6.16067" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=fixed-resource-locked;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=lock;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_report_column_width_fields" classname="test_studio_host_report_column_width_fields" time="1.33352" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=fixed-resource-locked;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=lock;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_report_font_metadata" classname="test_studio_host_report_font_metadata" time="8.51471" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=fixed-resource-locked;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=lock;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_report_settings_diagnostics" classname="test_studio_host_report_settings_diagnostics" time="4.37756" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=fixed-resource-locked;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=lock;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_report_unresolved_memo_placeholders" classname="test_studio_host_report_unresolved_memo_placeholders" time="3.89598" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=fixed-resource-locked;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=lock;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_real_sample_discovery" classname="test_studio_host_real_sample_discovery" time="0.0257896" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_real_sample_column_setup_round_trip" classname="test_studio_host_real_sample_column_setup_round_trip" time="0.0142121" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>SKIP: #3713 real VFP9 report samples were not found
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_real_sample_right_margin_round_trip" classname="test_studio_host_real_sample_right_margin_round_trip" time="0.0137709" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>SKIP: #3763 real VFP9 report samples were not found
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_real_sample_output_round_trip" classname="test_studio_host_real_sample_output_round_trip" time="0.0147157" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>SKIP: #3766 real VFP9 report samples were not found
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_real_sample_yresolution_round_trip" classname="test_studio_host_real_sample_yresolution_round_trip" time="0.0176441" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>SKIP: #3769 real VFP9 report samples were not found
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_real_sample_collate_round_trip" classname="test_studio_host_real_sample_collate_round_trip" time="0.0172495" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>SKIP: #3772 real VFP9 report samples were not found
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_real_sample_direct_margins_round_trip" classname="test_studio_host_real_sample_direct_margins_round_trip" time="0.0180092" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>SKIP: #3761 real VFP9 report samples were not found
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_real_sample_object_nudge_round_trip" classname="test_studio_host_real_sample_object_nudge_round_trip" time="0.0175648" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>SKIP: #3651 real VFP9 report samples were not found
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_real_sample_object_resize_round_trip" classname="test_studio_host_real_sample_object_resize_round_trip" time="0.0174685" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>SKIP: #3831 real VFP9 report samples were not found
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_real_sample_object_rename_round_trip" classname="test_studio_host_real_sample_object_rename_round_trip" time="0.0163241" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>SKIP: #3654 real VFP9 report samples were not found
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_real_sample_object_font_round_trip" classname="test_studio_host_real_sample_object_font_round_trip" time="0.0163204" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>SKIP: #3615 real VFP9 report samples were not found
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_real_sample_object_deleted_preview_round_trip" classname="test_studio_host_real_sample_object_deleted_preview_round_trip" time="0.0150184" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>SKIP: #3641 real VFP9 report samples were not found
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_real_sample_section_delete_restore_round_trip" classname="test_studio_host_real_sample_section_delete_restore_round_trip" time="0.0178832" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>SKIP: #3638 real VFP9 report samples were not found
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_deleted_section_geometry" classname="test_studio_host_deleted_section_geometry" time="3.12408" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=fixed-resource-locked;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=lock;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_deleted_object_restore_geometry" classname="test_studio_host_deleted_object_restore_geometry" time="2.65127" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=fixed-resource-locked;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=lock;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_report_height_top_preview_bounds" classname="test_studio_host_report_height_top_preview_bounds" time="9.01596" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=fixed-resource-locked;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=lock;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_deleted_report_visual_property_clears" classname="test_studio_host_deleted_report_visual_property_clears" time="5.27029" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=fixed-resource-locked;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=lock;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_report_geometry_defaults" classname="test_studio_host_report_geometry_defaults" time="2.45853" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=fixed-resource-locked;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=lock;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_report_selection_none" classname="test_studio_host_report_selection_none" time="2.12818" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_report_selection_deep_section_settings" classname="test_studio_host_report_selection_deep_section_settings" time="1.31773" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_report_grouping_stable_mutation" classname="test_studio_host_report_grouping_stable_mutation" time="2.67534" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_report_grouping_deleted_mutation" classname="test_studio_host_report_grouping_deleted_mutation" time="5.97926" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_geometry_live_edit_actions" classname="test_studio_host_geometry_live_edit_actions" time="17.7856" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=fixed-resource-locked;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=lock;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_studio_host_deleted_update_batch_sections" classname="test_studio_host_deleted_update_batch_sections" time="1.12591" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_update_batch" classname="test_studio_host_update_batch" time="1.39994" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_deleted_property_clear_batch_sections" classname="test_studio_host_deleted_property_clear_batch_sections" time="1.29222" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_deleted_property_move_sections" classname="test_studio_host_deleted_property_move_sections" time="1.17405" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_deleted_property_batch_rejection_sections" classname="test_studio_host_deleted_property_batch_rejection_sections" time="2.79042" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_deleted_object_duplicate_batch_sections" classname="test_studio_host_deleted_object_duplicate_batch_sections" time="0.994868" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_deleted_object_reorder_batch" classname="test_studio_host_deleted_object_reorder_batch" time="0.522093" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_deleted_object_rename_batch_errors" classname="test_studio_host_deleted_object_rename_batch_errors" time="0.330909" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_object_duplicate_batch_errors" classname="test_studio_host_object_duplicate_batch_errors" time="0.269423" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_object_rename_batch" classname="test_studio_host_object_rename_batch" time="0.553579" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_mixed_deleted_states_errors" classname="test_studio_host_mixed_deleted_states_errors" time="0.423126" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_settings_section_deleted_states" classname="test_studio_host_settings_section_deleted_states" time="0.95667" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_side_margin_record_settings" classname="test_studio_host_side_margin_record_settings" time="2.93938" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_vertical_grid_stable_settings" classname="test_studio_host_vertical_grid_stable_settings" time="1.45754" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_horizontal_grid_record_settings" classname="test_studio_host_horizontal_grid_record_settings" time="1.34953" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_paper_size_stable_settings" classname="test_studio_host_paper_size_stable_settings" time="1.4848" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_report_sort_settings_stable" classname="test_studio_host_report_sort_settings_stable" time="4.61368" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_settings_delete_record" classname="test_studio_host_settings_delete_record" time="0.757587" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_selected_sections_stable" classname="test_studio_host_selected_sections_stable" time="27.0035" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_selected_summary_objects_stable" classname="test_studio_host_selected_summary_objects_stable" time="0.594741" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_selected_title_objects_stable" classname="test_studio_host_selected_title_objects_stable" time="0.628311" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_selected_column_footer_objects_stable" classname="test_studio_host_selected_column_footer_objects_stable" time="0.597762" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_selected_page_header_objects_orphaned" classname="test_studio_host_selected_page_header_objects_orphaned" time="0.372972" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_selected_summary_sections_record" classname="test_studio_host_selected_summary_sections_record" time="0.625833" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_selected_column_footer_sections_record" classname="test_studio_host_selected_column_footer_sections_record" time="0.669549" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_selected_group_header_sections_record" classname="test_studio_host_selected_group_header_sections_record" time="0.618374" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_selected_group_footer_sections_stable" classname="test_studio_host_selected_group_footer_sections_stable" time="0.619777" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_section_deleted_object_counts" classname="test_studio_host_section_deleted_object_counts" time="1.60407" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_selected_report_settings" classname="test_studio_host_selected_report_settings" time="0.513224" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_selected_label_settings" classname="test_studio_host_selected_label_settings" time="0.358459" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_selected_column_header_sections_stable" classname="test_studio_host_selected_column_header_sections_stable" time="0.657616" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_settings_restore_stable" classname="test_studio_host_settings_restore_stable" time="0.917974" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_column_width_record_settings" classname="test_studio_host_column_width_record_settings" time="1.44679" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_column_setup_record_settings" classname="test_studio_host_column_setup_record_settings" time="1.49608" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_section_delete_stable_selection" classname="test_studio_host_section_delete_stable_selection" time="0.452446" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_subtree_deleted_state_errors" classname="test_studio_host_subtree_deleted_state_errors" time="0.211059" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_subtree_duplicate_collision_errors" classname="test_studio_host_subtree_duplicate_collision_errors" time="0.229742" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_deleted_subtree_duplicate" classname="test_studio_host_deleted_subtree_duplicate" time="0.477322" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_vfp_sidecar_path" classname="test_vfp_sidecar_path" time="0.317933" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All VFP sidecar path tests passed
+</system-out>
+	</testcase>
+	<testcase name="test_dbf_migration_fidelity" classname="test_dbf_migration_fidelity" time="0.135206" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_cloud_migration_stress" classname="test_cloud_migration_stress" time="0.0532643" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>Migration round trip passed: seed=1 rows=300 deleted_rows=4 source_bytes=63730 imported_bytes=63730
+</system-out>
+	</testcase>
+	<testcase name="test_studio_host_deleted_record_localization" classname="test_studio_host_deleted_record_localization" time="0.189124" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_product_subsystems" classname="test_product_subsystems" time="0.133294" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_toolbox_creation" classname="test_toolbox_creation" time="1.92264" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=owned-copy;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_report_layout" classname="test_report_layout" time="0.358321" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=none;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_project_workspace" classname="test_project_workspace" time="0.469827" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=none;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_polyglot_route_registry" classname="test_polyglot_route_registry" time="0.0165131" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=none;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All polyglot route registry tests passed
+</system-out>
+	</testcase>
+	<testcase name="test_polyglot_bridge_invocation" classname="test_polyglot_bridge_invocation" time="0.0156146" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=none;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All polyglot bridge invocation tests passed
+</system-out>
+	</testcase>
+	<testcase name="test_polyglot_python_sidecar" classname="test_polyglot_python_sidecar" time="0.190647" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=child-scoped;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=read-only;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>polyglot Python sidecar tests passed
+</system-out>
+	</testcase>
+	<testcase name="test_polyglot_route_execution" classname="test_polyglot_route_execution" time="0.485315" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_polyglot_interop_envelope" classname="test_polyglot_interop_envelope" time="0.0209542" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=none;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All polyglot interop envelope tests passed
+</system-out>
+	</testcase>
+	<testcase name="test_polyglot_parity_comparator" classname="test_polyglot_parity_comparator" time="0.0142131" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=none;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All polyglot parity comparator tests passed
+</system-out>
+	</testcase>
+	<testcase name="test_polyglot_benchmark_result_contract" classname="test_polyglot_benchmark_result_contract" time="0.0278549" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>-- Polyglot benchmark result v1 schema and evidence passed
+</system-out>
+	</testcase>
+	<testcase name="test_platform_disk_space" classname="test_platform_disk_space" time="0.0195775" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>Platform disk-space tests passed
+</system-out>
+	</testcase>
+	<testcase name="test_platform_font_directories" classname="test_platform_font_directories" time="0.0195235" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>Platform font-directory tests passed
+</system-out>
+	</testcase>
+	<testcase name="test_platform_executable_path_boundary_contract" classname="test_platform_executable_path_boundary_contract" time="0.0326327" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>-- Portable public executable-path boundary contract passed
+</system-out>
+	</testcase>
+	<testcase name="test_platform_disk_space_boundary_contract" classname="test_platform_disk_space_boundary_contract" time="0.0327605" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>-- Portable disk-space boundary contract passed
+</system-out>
+	</testcase>
+	<testcase name="test_workspace_agent_process_image_materialization_contract" classname="test_workspace_agent_process_image_materialization_contract" time="0.298702" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>-- Workspace-agent exact-snapshot materialization contract passed
+</system-out>
+	</testcase>
+	<testcase name="test_platform_sqlite_api_boundary_contract" classname="test_platform_sqlite_api_boundary_contract" time="0.570921" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>-- Private SQLite native API boundary contract passed
+</system-out>
+	</testcase>
+	<testcase name="test_native_declared_call_boundary_contract" classname="test_native_declared_call_boundary_contract" time="0.0561682" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_query_translator" classname="test_query_translator" time="0.169667" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_runtime_host_sqlite_federation" classname="test_runtime_host_sqlite_federation" time="0.528095" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_security_controls" classname="test_security_controls" time="1.31556" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>SKIP: #4324 Windows long-path fixture directory is unavailable.
+All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_workspace_agent_tool_registry" classname="test_workspace_agent_tool_registry" time="0.0158403" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=none;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_workspace_agent_process_parser" classname="test_workspace_agent_process_parser" time="0.0452903" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>workspace-agent process parser tests passed
+</system-out>
+	</testcase>
+	<testcase name="test_windows_com_event_adapter" classname="test_windows_com_event_adapter" time="0.0672527" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_process_environment_serialization" classname="test_process_environment_serialization" time="0.0179307" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=none;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>process-environment serialization checks passed
+</system-out>
+	</testcase>
+	<testcase name="test_windows_pe_image_boundary_contract" classname="test_windows_pe_image_boundary_contract" time="0.0382174" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>-- Windows PE-image boundary contract passed
+</system-out>
+	</testcase>
+	<testcase name="test_security_audit_concurrency" classname="test_security_audit_concurrency" time="0.546411" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_report_security" classname="test_prg_engine_report_security" time="0.850061" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_work_areas" classname="test_prg_engine_work_areas" time="41.3328" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_scope_declarations" classname="test_prg_engine_scope_declarations" time="0.0433448" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_dotnet_dispatch" classname="test_prg_engine_dotnet_dispatch" time="0.288526" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=fixed-build-tree;copperfin-isolation:network=none;copperfin-isolation:platform=dotnet-conditional;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_control_flow" classname="test_prg_engine_control_flow" time="36.8186" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_file_command_operands" classname="test_prg_engine_file_command_operands" time="0.363979" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_csv_numeric_scale" classname="test_prg_engine_csv_numeric_scale" time="2.15157" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_source_limits" classname="test_prg_engine_source_limits" time="0.147655" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_operator_types" classname="test_prg_engine_operator_types" time="0.249138" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_date_function_types" classname="test_prg_engine_date_function_types" time="0.0746372" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_transform_currency_picture" classname="test_prg_engine_transform_currency_picture" time="0.0528485" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_currency_exact_muldiv" classname="test_prg_engine_currency_exact_muldiv" time="0.111913" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cursor_buffering_numeric" classname="test_prg_engine_cursor_buffering_numeric" time="3.46828" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_skip_count_numeric" classname="test_prg_engine_skip_count_numeric" time="1.59944" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>DIRECTCOUNT 98
+CONTROL COPPERFIN00 -1.5 0|T|1|F|F|one|3|SKIPGUARD|1|COPPERFIN
+CONTROL COPPERFIN00 4294967296 11|F|2|F|F|two|3|SKIPGUARD|1|COPPERFIN
+CONTROL COPPERFIN00 -4294967295 11|F|2|F|F|two|3|SKIPGUARD|1|COPPERFIN
+CONTROL COPPERFIN00 $1.5 0|T|4|F|T||3|SKIPGUARD|1|COPPERFIN
+CONTROL COPPERFIN00 '1.5' 0|T|4|F|T||3|SKIPGUARD|1|COPPERFIN
+CONTROL COPPERFIN04 -1.5 0|T|-1|F|F|pending1|5|SKIPGUARD|1|COPPERFIN
+CONTROL COPPERFIN04 4294967296 11|F|-2|F|F|pending2|5|SKIPGUARD|1|COPPERFIN
+CONTROL COPPERFIN04 -4294967295 11|F|-2|F|F|pending2|5|SKIPGUARD|1|COPPERFIN
+CONTROL COPPERFIN04 $1.5 0|T|6|F|T||5|SKIPGUARD|1|COPPERFIN
+CONTROL COPPERFIN04 '1.5' 0|T|6|F|T||5|SKIPGUARD|1|COPPERFIN
+CONTROL COPPERFIN05 -1.5 0|T|-1|F|F|pending1|5|SKIPGUARD|1|COPPERFIN
+CONTROL COPPERFIN05 4294967296 11|F|-2|F|F|pending2|5|SKIPGUARD|1|COPPERFIN
+CONTROL COPPERFIN05 -4294967295 11|F|-2|F|F|pending2|5|SKIPGUARD|1|COPPERFIN
+CONTROL COPPERFIN05 $1.5 0|T|6|F|T||5|SKIPGUARD|1|COPPERFIN
+CONTROL COPPERFIN05 '1.5' 0|T|6|F|T||5|SKIPGUARD|1|COPPERFI...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_prmbar_numeric" classname="test_prg_engine_prmbar_numeric" time="8.86997" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_int64_numeric_copperfin_session2" classname="test_prg_engine_cast_int64_numeric_copperfin_session2" time="3.44163" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>CAST frozen cases: direct=0 public=141
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_byte_numeric" classname="test_prg_engine_cast_byte_numeric" time="0.0304816" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>BYTE frozen cases: direct=140 public=0
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_byte_numeric_vfp9_session1" classname="test_prg_engine_cast_byte_numeric_vfp9_session1" time="3.04424" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>BYTE frozen cases: direct=0 public=126
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_int16_numeric_copperfin_session1" classname="test_prg_engine_cast_int16_numeric_copperfin_session1" time="4.04329" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>INT16 frozen cases: direct=0 public=152
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_int16_numeric_vfp9_session2" classname="test_prg_engine_cast_int16_numeric_vfp9_session2" time="3.88736" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>INT16 frozen cases: direct=0 public=152
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_additem_numeric_copperfin_session1" classname="test_prg_engine_additem_numeric_copperfin_session1" time="53.8196" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>AddItem frozen cases: direct=0 public=1102
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_additem_numeric_vfp9_session2" classname="test_prg_engine_additem_numeric_vfp9_session2" time="46.4065" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>AddItem frozen cases: direct=0 public=1102
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_additem_column_numeric_copperfin_session2" classname="test_prg_engine_additem_column_numeric_copperfin_session2" time="59.7848" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>AddItem COLUMN frozen cases: direct=0 public=1224
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_addlistitem_column_numeric" classname="test_prg_engine_addlistitem_column_numeric" time="0.022322" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>AddListItem COLUMN frozen cases: direct=210 public=0
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_addlistitem_column_numeric_vfp9_session1" classname="test_prg_engine_addlistitem_column_numeric_vfp9_session1" time="24.1625" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>AddListItem COLUMN frozen cases: direct=0 public=660
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_addlistitem_new_column_numeric_copperfin_session1" classname="test_prg_engine_addlistitem_new_column_numeric_copperfin_session1" time="13.7852" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>AddListItem NEW COLUMN frozen cases: direct=0 public=432
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_addlistitem_new_column_numeric_vfp9_session2" classname="test_prg_engine_addlistitem_new_column_numeric_vfp9_session2" time="13.2408" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>AddListItem NEW COLUMN frozen cases: direct=0 public=432
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_addlistitem_numeric_copperfin_session2" classname="test_prg_engine_addlistitem_numeric_copperfin_session2" time="29.0348" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>AddListItem frozen cases: direct=0 public=810
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_removelistitem_numeric" classname="test_prg_engine_removelistitem_numeric" time="0.0232516" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>RemoveListItem frozen cases: direct=224 public=0
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_removelistitem_numeric_vfp9_session1" classname="test_prg_engine_removelistitem_numeric_vfp9_session1" time="34.2288" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>RemoveListItem frozen cases: direct=0 public=776
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_removeitem_numeric_copperfin_session1" classname="test_prg_engine_removeitem_numeric_copperfin_session1" time="17.1503" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>RemoveItem frozen cases: direct=0 public=556
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_removeitem_numeric_vfp9_session2" classname="test_prg_engine_removeitem_numeric_vfp9_session2" time="17.7402" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>RemoveItem frozen cases: direct=0 public=556
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_topitemid_numeric_copperfin_session2" classname="test_prg_engine_topitemid_numeric_copperfin_session2" time="63.9635" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>TopItemID frozen cases: direct=0 public=1445
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_topindex_numeric" classname="test_prg_engine_topindex_numeric" time="0.0215298" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>TopIndex frozen cases: direct=284 public=0
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_topindex_numeric_vfp9_session1" classname="test_prg_engine_topindex_numeric_vfp9_session1" time="68.5456" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>TopIndex frozen cases: direct=0 public=1445
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_listitemid_numeric_copperfin_session1" classname="test_prg_engine_listitemid_numeric_copperfin_session1" time="50.9515" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>ListItemID frozen cases: direct=0 public=1216
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_listitemid_numeric_vfp9_session2" classname="test_prg_engine_listitemid_numeric_vfp9_session2" time="61.5759" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>ListItemID frozen cases: direct=0 public=1216
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_listindex_numeric_vfp9_session1" classname="test_prg_engine_listindex_numeric_vfp9_session1" time="47.1996" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>ListIndex frozen cases: direct=0 public=1184
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_list_index_numeric_copperfin_session1" classname="test_prg_engine_list_index_numeric_copperfin_session1" time="33.1847" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>List frozen cases: direct=0 public=944
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_list_index_numeric_vfp9_session2" classname="test_prg_engine_list_index_numeric_vfp9_session2" time="33.5016" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>List frozen cases: direct=0 public=944
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_listitem_numeric_copperfin_session2" classname="test_prg_engine_listitem_numeric_copperfin_session2" time="33.8721" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>ListItem frozen cases: direct=0 public=944
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_itemidtoindex_numeric" classname="test_prg_engine_itemidtoindex_numeric" time="0.0216655" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>ItemIDToIndex frozen cases: direct=248 public=0
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_itemidtoindex_numeric_vfp9_session1" classname="test_prg_engine_itemidtoindex_numeric_vfp9_session1" time="33.6353" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>ItemIDToIndex frozen cases: direct=0 public=944
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_indextoitemid_numeric_copperfin_session1" classname="test_prg_engine_indextoitemid_numeric_copperfin_session1" time="11.0333" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>IndexToItemID frozen cases: direct=0 public=400
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_indextoitemid_numeric_vfp9_session2" classname="test_prg_engine_indextoitemid_numeric_vfp9_session2" time="10.8968" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>IndexToItemID frozen cases: direct=0 public=400
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_selectedid_numeric_copperfin_session2" classname="test_prg_engine_selectedid_numeric_copperfin_session2" time="13.898" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>SelectedID frozen cases: direct=0 public=476
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_selected_index_numeric" classname="test_prg_engine_selected_index_numeric" time="0.0217727" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>Selected frozen cases: direct=190 public=0
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_selected_index_numeric_vfp9_session1" classname="test_prg_engine_selected_index_numeric_vfp9_session1" time="10.0392" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>Selected frozen cases: direct=0 public=368
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_itemdata_index_numeric_copperfin_session1" classname="test_prg_engine_itemdata_index_numeric_copperfin_session1" time="10.1852" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>ItemData frozen cases: direct=0 public=368
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_itemdata_index_numeric_vfp9_session2" classname="test_prg_engine_itemdata_index_numeric_vfp9_session2" time="10.0905" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>ItemData frozen cases: direct=0 public=368
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_getcolor_default_numeric_copperfin_session2" classname="test_prg_engine_getcolor_default_numeric_copperfin_session2" time="1.86183" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>GETCOLOR frozen cases: direct=0 public=80
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_getfont_size_numeric" classname="test_prg_engine_getfont_size_numeric" time="0.0209118" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>GETFONT frozen cases: direct=172 public=0
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_getfont_size_numeric_vfp9_session1" classname="test_prg_engine_getfont_size_numeric_vfp9_session1" time="1.7685" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>GETFONT frozen cases: direct=0 public=79
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_int32_numeric_copperfin_session1" classname="test_prg_engine_cast_int32_numeric_copperfin_session1" time="6.63462" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>CAST frozen cases: direct=0 public=264
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_int32_numeric_vfp9_session2" classname="test_prg_engine_cast_int32_numeric_vfp9_session2" time="6.43017" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>CAST frozen cases: direct=0 public=264
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_uint64_numeric_copperfin_session2" classname="test_prg_engine_cast_uint64_numeric_copperfin_session2" time="3.85175" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>CAST frozen cases: direct=0 public=159
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_bittest_numeric" classname="test_prg_engine_bittest_numeric" time="0.0215075" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>BITTEST frozen cases: direct=206 public=0
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_bittest_numeric_vfp9_session1" classname="test_prg_engine_bittest_numeric_vfp9_session1" time="51.6398" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>BITTEST frozen cases: direct=0 public=1316
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_bitclear_numeric" classname="test_prg_engine_bitclear_numeric" time="21.9791" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>BITCLEAR frozen cases: direct=206 public=800
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_bitset_neighbors" classname="test_prg_engine_bitset_neighbors" time="0.0577007" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_bitor_numeric" classname="test_prg_engine_bitor_numeric" time="11.7192" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>BITOR frozen cases: direct=104 public=472
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_bitand_neighbors" classname="test_prg_engine_bitand_neighbors" time="0.0552041" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_collection_selector_numeric" classname="test_prg_engine_collection_selector_numeric" time="3.25781" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>Collection frozen cases: direct=116 public=140 hidden=26
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_getbar_neighbors" classname="test_prg_engine_getbar_neighbors" time="0.0556307" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_mrkbar_numeric" classname="test_prg_engine_mrkbar_numeric" time="8.62284" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_set_mark_bar_neighbors" classname="test_prg_engine_set_mark_bar_neighbors" time="0.0548381" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_on_selection_bar_neighbors" classname="test_prg_engine_on_selection_bar_neighbors" time="0.0505413" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_define_bar_numeric" classname="test_prg_engine_define_bar_numeric" time="1.32974" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_sleep_duration_neighbors" classname="test_prg_engine_sleep_duration_neighbors" time="0.181966" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_go_record_numeric" classname="test_prg_engine_go_record_numeric" time="1.48363" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>DIRECTCOUNT 122
+CONTROL COPPERFIN GO 0 -1 0|T|1|T|F|one|3|GOGUARD|1|COPPERFIN
+CONTROL COPPERFIN GO 0 0 0|T|1|T|F|one|3|GOGUARD|1|COPPERFIN
+CONTROL COPPERFIN GO 0 4 0|T|4|F|T||3|GOGUARD|1|COPPERFIN
+CONTROL COPPERFIN GO 0 $1.5 0|T|2|F|F|two|3|GOGUARD|1|COPPERFIN
+CONTROL COPPERFIN GO 0 '2' 0|T|2|F|F|two|3|GOGUARD|1|COPPERFIN
+CONTROL COPPERFIN GO 4 -1 0|T|-1|F|F|pending1|5|OBSERVER|1|COPPERFIN
+CONTROL COPPERFIN GO 4 0 0|T|1|T|F|one|5|OBSERVER|1|COPPERFIN
+CONTROL COPPERFIN GO 4 4 0|T|-1|F|F|pending1|5|OBSERVER|1|COPPERFIN
+CONTROL COPPERFIN GO 4 $1.5 0|T|2|F|F|two|5|OBSERVER|1|COPPERFIN
+CONTROL COPPERFIN GO 4 '2' 0|T|2|F|F|two|5|OBSERVER|1|COPPERFIN
+CONTROL COPPERFIN GO 5 -1 0|T|-1|F|F|pending1|5|OBSERVER|1|COPPERFIN
+CONTROL COPPERFIN GO 5 0 0|T|1|T|F|one|5|OBSERVER|1|COPPERFIN
+CONTROL COPPERFIN GO 5 4 0|T|-1|F|F|pending1|5|OBSERVER|1|COPPERFIN
+CONTROL COPPERFIN GO 5 $1.5 0|T|2|F|F|two|5|OBSERVER|1|COPPERFIN
+CONTROL COPPERFIN GO 5 '2' 0|T|2|F|F|two|5|OBSERVER|1|COPPERFIN
+CONTROL COPPERFIN GOTO 0 -1 0|T|1|T|F|one|3|...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_binary_conversion" classname="test_prg_engine_binary_conversion" time="0.0511422" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_aggregate_types" classname="test_prg_engine_aggregate_types" time="0.597747" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_unterminated_literals" classname="test_prg_engine_unterminated_literals" time="0.0804243" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_platform_safe_regex" classname="test_platform_safe_regex" time="0.144968" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=none;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_payload_crypto_facade" classname="test_prg_engine_payload_crypto_facade" time="0.0582166" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_on_function" classname="test_prg_engine_on_function" time="0.0542781" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_arrays" classname="test_prg_engine_arrays" time="0.636768" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=bounded;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_runtime_surface_functions_buffering" classname="test_prg_engine_runtime_surface_functions_buffering" time="2.9138" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_runtime_surface_itemid_selectors" classname="test_prg_engine_runtime_surface_itemid_selectors" time="0.0625585" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_file_io_functions" classname="test_prg_engine_file_io_functions" time="0.948502" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_transform_numeric_pictures" classname="test_prg_engine_transform_numeric_pictures" time="0.0406559" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_string_minus" classname="test_prg_engine_string_minus" time="0.101917" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_century_rollover" classname="test_prg_engine_century_rollover" time="0.734713" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=configured;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_sql_cursors_mutation" classname="test_prg_engine_sql_cursors_mutation" time="0.736971" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_table_structure" classname="test_prg_engine_table_structure" time="1.00608" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+</testsuite>
