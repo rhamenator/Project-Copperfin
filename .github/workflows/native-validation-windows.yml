@@ -30,14 +30,55 @@ concurrency:
 
 jobs:
   windows-native-validation:
-    name: Windows MSVC
+    name: Windows MSVC (shard ${{ matrix.shard }}/3)
     runs-on: windows-latest
     timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - name: Check out source
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Verify full-inventory partition policy
+        shell: pwsh
+        run: ./tests/test_native_test_sharding.ps1
 
       - name: Run shared native validation
         uses: ./.github/actions/native-validation
         with:
           platform: windows
+          windows_test_shard: ${{ matrix.shard }}
+          windows_test_shard_count: '3'
+
+      - name: Preserve native selection, execution, and phase evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-native-shard-${{ matrix.shard }}-of-3-${{ github.sha }}-attempt-${{ github.run_attempt }}
+          path: artifacts/windows-native-validation-metrics/
+          if-no-files-found: warn
+          retention-days: 14
+
+  windows-native-coverage:
+    name: Windows MSVC inventory coverage
+    needs: windows-native-validation
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Verify aggregate audit fail-closed behavior
+        run: python3 tests/test_native_test_shard_aggregate.py
+
+      - name: Download this revision and attempt's three reports
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: windows-native-shard-*-of-3-${{ github.sha }}-attempt-${{ github.run_attempt }}
+          path: artifacts/windows-native-shards
+
+      - name: Require exact full-inventory execution coverage
+        run: python3 scripts/audit-native-test-shards.py artifacts/windows-native-shards

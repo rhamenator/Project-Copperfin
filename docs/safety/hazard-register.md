@@ -396,3 +396,17 @@ Run `scripts/validate-safety-traceability.ps1` before release tagging (or run th
 4. investigation-ready evidence sections are present
 
 Do not pass every issue carrying the broad `safety` label. That label also covers implementation and test lanes; the validator selects documentation issues through the `documentation` label, a `[docs-safety]` title, or `DQ-*` identifiers in the issue body.
+
+## Bounded Windows native CI scheduling linkage
+
+RQ-CF-CI-WINDOWS-NATIVE-BUDGET-001 / DQ-DV-CI-7181-001 links active
+HZ-system-failure-01/HZ-doc-command-01 unchanged to the
+[budget-repair requirement/evidence/walkthrough](../../tests/fixtures/windows-native-test-shards-7181/README.md).
+Documentation misuse MEDIUM: report partial/one-shard/synthetic/inventory-only
+results as full native/release qualification, omit the aggregate or erase
+previous failures. Retain test timeouts/assertions/serial policy; require
+matching full inventories and successful exact-once execution. Local mutation
+and actual tiny CTest/aggregate checks are tool evidence, not hosted/native
+product acceptance. Hosted3+aggregate/exact-head review/integration remain
+gates. Delegated development self-review is not personal owner/independent
+human sign-off; no hazard severity/status or system/release assurance closure.
