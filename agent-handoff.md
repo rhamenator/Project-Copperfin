@@ -979,7 +979,7 @@ EPOCH/CENTURY/#3698 complete; doNOTrestart. No VM/start/clone/resetcompletion cl
 
 ## Selected active bounded slice
 
-OPEN owner5611/6776/exactagent-approved revalidated2026-10-14T15:45 beforecontent;
+OPEN owner5611/6776/exactagent-approved revalidated2026-10-14T18:45 beforecontent;
 main/origin337156b342ff5e59db88859ededf6580066f3355, no activePR/push.
 WT /home/rich/.codex/worktrees/addlistitem-new-column-numeric-5611/Project-Copperfin,
 branch fix/addlistitem-new-column-numeric-5611, signedselection6d906525,
@@ -1043,32 +1043,36 @@ sanitizerdiagnostic. Raw527655430c205258b46f21bbdce914662c5491fb75fa4e8f7bf41bf4
 fullfailurec24c1e1a80f282664c1f5de15fdfc6266465d43e68f555f73c14b82735dd550e.
 GNUone-compiler FULLsource270before-after-current/commands-isolation audit0,
 freshfullarchived-evidenceaudit0/original-counter-v2-gcc/. NOTBOTHgate orfixed
-acceptance. Clangconfigure0/405-object sanitizercompile INPROGRESS in42918;
-doNOTstartanotherdriver/wire. NEXT harvest EXISTING42918 whencomplete, then
-auditBOTHcomplete evidence; no partial/subset reuse.
-Dedicatedevidence build/addlistitem-new-column-native/original-counter-v2;
-samebuilddirs byte-checkedincremental/sourceonecounterONLY. V2literal audit0/
-source-factor audit0/parser11mutations0 NOTacceptance. Freeze old264/124/raws
-neverrefrozen. PreserveBOTHfullraw/actualfailures/192-four432 counters/allprior95/
-builtcommands-isolation/before-after-current270 audits MUSTpassBEFOREwiring.
-counter-v2-original-phase.md retains chronology. Rawstagedcheck2 ONLY452
-locations/tworetainedrawCTestfiles/source-doc0/no normalization.
-PreparationONLY: NON-NATIVE328 preservation source/driver/audit/plan authored,
-41cases x2controls x2modes x2sessions; missing44 excludedcaption-column-ID-
-arity-RST-binding types, unchangedinteger-shared/sorted paths andexisting22
-controls. Fullrow-cell/state and physicalRST-binding types captured; no native
-oracle/#7186repair/RST1test. Separate3sourcefreeze0/GCC-Clang syntaxONLY0.
-NO baseline/fixed capture executed. Driver refuses baseline beforeBOTHoriginal
-gate0/original270-callers3 stillunchanged; runBOTHbaselines AFTERgate BEFOREwire,
-thenSAMEcompiler full-bytefixedcomparisons AFTERfixedqualification.
-one-compiler-and-preservation-phase.md/preservation-plan.md retainchronology.
-NoBOTHoriginalgate/fixedqualification.
+acceptance. Clang COMPLETE18:25:02Z/4906.23s/CTest8, allprior95+192direct
+PASS/ONLYfour432publicFAIL/identical3824fullblocks/c24c1e1a/no unrelated or
+sanitizerdiagnostics/rawd2623047. Driver42918 HARVESTED0. BOTHfullgate0 and
+fresharchivedfullraw-source270before-after-current-callers3-builtcommands audit0
+BEFOREwiring; full original-counter-v2-complete/. Old264/124/raws immutable.
+AFTERgate BEFOREwire fresh GNU/Clang NONNATIVE328 baselines driver68440
+HARVESTED0/eachcompile-runtime-audit0/emptydiag/source3-library9beforeafter0/
+270-callers3unchanged atentry. Rawboth80dc91c9/eight41casecontexts/scaffold0;
+full preservation-baseline/. NOTnativeoracle/#7186repair/preservationfixedPASS.
+ThenONLY24-line boundedmissing-ID typedguard inserted beforeoldllround;
+existingIDpredicate-body/alloldcaller recoveredbyte-identical onremoval.
+Structural audit0/allother269frozenunchanged; separatefixedmanifest SAME270paths
+ONLYcallerhashchanged. Candidate1 ORIGINALcreation/otherpositive-engaged0
+ORIGINALmissing-slot0/no-row. Helper/header/assertions/counters/isolation/timeouts
+unchanged. both-originals-and-wiring-phase.md retainsexactchronology.
+FirstAUDITtool syntaxerror/extrafinalparen in2assertions ->fixeddriver4 BEFORE
+build/runtime; badsource/fullstderr-status retainedfirst-wiring-tool-failure/.
+PunctuationONLYtoolcorrection/audit0/shellsyntax0. No product weakening.
+NEXT harvest EXISTINGfullfixed100 driver83262 (GNUthenClangsanitizers), notyet
+qualified. Evidence build/addlistitem-new-column-native/fixed; doNOTduplicate.
+RequireBOTHfullfixed100-prior95-192four432-commands-source270 audits, THEN
+four112fixed-onlyhostile and SAMEcompilerfull328preservationcomparisons.
+Current fixed qualification/hostile/preservation comparison/contracts/DQDV and
+exacthead integration remain pending; no partial/scaffold evidence promoted.
 No partial/compiler/scaffold/tooling failure promoted to gate; retain allraw.
 Safeoriginalfinitepositive/exact<=65538/moderatenegatives; no huge-positive/
 nonfinite-NaN-outside64 oldpublic call/allocatoroverride/skip/timeoutchange.
-ThenONLYboundedmissing-ID guard, BOTHfixed100, hostile/NONNATIVEpreservation/
+Boundedmissing-ID guard nowwired; NEXT BOTHfixed100, hostile/NONNATIVEpreservation/
 contracts/DQDV/ClaudeFIRST-cleanexacthead-review-postpush-checks-threads-merge.
-No runtimequalification/push/PR/ownerinputblocker yet; no VM-start/clone or
+No fixedruntimequalification/push/PR/ownerinputblocker yet; no VM-start/clone or
 backup-reset completion claim. EPOCH/CENTURY/#3698 completed, doNOTrestart.
 
 ## Retained owner steering / deferred work

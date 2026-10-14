@@ -1,0 +1,3 @@
+tests/fixtures/vfp9-addlistitem-new-column-numeric/excluded-scope-preservation.cpp: OK
+tests/fixtures/vfp9-addlistitem-new-column-numeric/audit-preservation.cjs: OK
+tests/fixtures/vfp9-addlistitem-new-column-numeric/run-preservation.sh: OK
