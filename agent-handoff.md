@@ -1007,31 +1007,42 @@ NativeCRLF staged2 ONLY2128/eightdatafiles/source-doc0; doNOTnormalize.
 
 Currenttest phase: independently authored65Numeric44safe/21hostile +18exact
 12safe/sixhostile +13directboundaries/mode =>192planned direct. FOURsafe public
-class/mode/session shards EACH624:224vectors+384prepopulateconfigs+16locale/
+class/mode/session shards EACH432:224vectors+192prepopulateconfigs+16locale/
 catchability/session cases. PRE-WIREfixed-only hostile112/shard NOTregistered/
 NEVERoldpublicexecution. Initialunexecutedscaffold counter120-540 correctedONLY
-to112-624 byindependent sourcecount; exactoldsource/syntax0 retained, nooracle/
-operand/expectedstate change. Native-literal audit0/1188source-matchedrows/
+to112-624 was STILLwrong configarithmetic; V2counterONLY112-432 now backedby
+actualfactor enumeration4*2*6*4=192config(not384)/exactone-token sourceaudit0.
+Alloldsource/raw retained/nooracle-operand-expectedstate change.
+Native-literal audit0/1188source-matchedrows/
 58Numericliterals;220unmatchedrows/sevennotexact-source-match reported/parents.
 Allprior95 assertions unchanged; five conservativeSERIALsubjects added.
 Configure0/inventory100/exactprior95 retained/pre-buildmetadata0 NOcommandsyet/
 finalGCC-Clang syntax0 NOTruntime/sanitizer acceptance. OnlytestCMake-isolation/
 newtest-audits-driver changed now; caller-selector-rootCMake STILLmainunchanged.
-Fresh264 originalinputfreeze0/threecallers0; helperstillUNUSED. Docs/HZ remaingap/
+V1freeze264 HISTORICALonecounterchanged; freshV2freeze270/threecallers0;
+helperstillUNUSED. Docs/HZ remaingap/
 MEDIUMplanned, no parent/hazard/independent-human/system/release closure.
 
 SignedG/DCO freeze03b2b01e106fff45edced72d021d16b903db17c8; postcommit264/124
-checks0. Driver fixture/run-originals.sh LAUNCHED unifiedsession46224, GNU
-configure0/compile405objectsINPROGRESS thensequentialClangASan-UBSan-floatcast100.
-No compile/completed-suite/driver statuses yet; doNOTstartanotherdriver orwire.
+checks0. V1driver46224 STOPPED/HARVESTED143 afterread-only partialaudit exposed
+ALLfour actual432 vs authored624/FOURcomplete-public-counter failures.
+Verified exactcwd/outerPGID-SID3784770/everymemberancestry BEFOREtask-onlyTERM;
+no otherprocess/VM touched. GNUconfigure-compile0/builtmetadata0/45of100
+results ONLY/full3828failureblocks/NOcompletegate. Fullcounter-v1-interrupted/
+rawSHAc58894c1/source-metadata-all264BEFOREfix0 retained; noClang qualification.
 Postfreeze audit-originals-complete.cjs +ten parsermutationsselftest0 authored
 without changing264; syntheticTOOLrecords NOTruntime/originalfailures/acceptance.
 Rawstagedwhitespace2 ONLY307 generatedCTestJSON locations/source-doccheck0;
 initialclassification mistakenlyasserted5/actual307 FAIL1, correctedALLpaths0/
 no input-assertion change/no raw normalization. Original-launch-phase.md retains.
-NEXT harvest existing46224 whencomplete, preserveBOTHfullraw/actualfailures/
-192-four624 counters/allprior95/builtcommands-isolation/before-after-current264
-audits MUSTpassBEFOREwiring. GNU/Clang original execution stillpending.
+NEXT launch NEW fixture/run-originals-counter-v2.sh from fresh270inputfreeze;
+all100 GNUthenClangASan-UBSan-floatcast fromSTART, notselective/partialreuse.
+Dedicatedevidence build/addlistitem-new-column-native/original-counter-v2;
+samebuilddirs byte-checkedincremental/sourceonecounterONLY. V2literal audit0/
+source-factor audit0/parser11mutations0 NOTacceptance. Freeze old264/124/raws
+neverrefrozen. PreserveBOTHfullraw/actualfailures/192-four432 counters/allprior95/
+builtcommands-isolation/before-after-current270 audits MUSTpassBEFOREwiring.
+counter-v2-original-phase.md retains chronology. Nooriginalgate/runtimequalification.
 No partial/compiler/scaffold/tooling failure promoted to gate; retain allraw.
 Safeoriginalfinitepositive/exact<=65538/moderatenegatives; no huge-positive/
 nonfinite-NaN-outside64 oldpublic call/allocatoroverride/skip/timeoutchange.

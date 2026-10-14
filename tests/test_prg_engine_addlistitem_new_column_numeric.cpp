@@ -247,7 +247,7 @@ int main(int argc,char** argv){
  else if((argc==3||argc==4)&&(std::string(argv[1])=="COPPERFIN"||std::string(argv[1])=="VFP9")&&
   (std::string(argv[2])=="1"||std::string(argv[2])=="2")&&(argc==3||std::string(argv[3])=="--fixed-only-hostile")){
   public_cases(argv[1],std::string(argv[2])=="1"?1:2,argc==4);
-  expect(direct_count==0&&public_count==(argc==4?112:624),"AddListItem NEW COLUMN complete public count");
+  expect(direct_count==0&&public_count==(argc==4?112:432),"AddListItem NEW COLUMN complete public count");
  }else{std::cerr<<"Expected no args or COPPERFIN|VFP9 1|2 [--fixed-only-hostile]\n";return 2;}
  std::cout<<"AddListItem NEW COLUMN frozen cases: direct="<<direct_count<<" public="<<public_count<<'\n';
  return test_failures()==0?0:1;
