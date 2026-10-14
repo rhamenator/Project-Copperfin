@@ -483,6 +483,14 @@ MEDIUM misuse analysis and
 delegated walkthrough remain planned before behavior completion. No helper,
 assertion, configuration, caller migration or acceptance claim is introduced;
 no hazard severity/status, independent-human/system/release or parent closure.
+Further native recovery demonstrates identical observed Numeric/BRS/context/
+sample-state inputs with distinct results and32of120 outcome changes after a
+documented bit-preserving double roundtrip. This cannot be turned into an
+invented tolerance or silent native exception. Owner choice #7189 between a
+bounded canonical-binary64 contract/residual gap and a wider provenance
+prerequisite blocks pre-code requirements/helper/assertion/wiring. See
+[specific options and complete retained evidence](../../tests/fixtures/vfp9-listitem-column-numeric/numeric-origin-policy-gap.md).
+The native internal cause remains unproven; no new hazard status or closure.
 
 ## Bounded AddListItem missing-ID numeric-column linkage
 

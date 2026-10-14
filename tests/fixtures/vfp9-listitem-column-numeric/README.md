@@ -1,5 +1,11 @@
 # Selected ListItem supplied COLUMN numeric READ slice
 
+Current continuation: owner product/scope choice required under
+[#7189](https://github.com/rhamenator/Project-Copperfin/issues/7189); see
+[repeatable same-bits native counterexamples and viable options](numeric-origin-policy-gap.md).
+The earlier selection/recovery checkpoint below is retained history, not a
+claim that the newly demonstrated native origin distinction is resolved.
+
 Selection-only checkpoint from origin/main
 b6d1a7634e56435ad3326d92f13efa3f4fe241d3, after PR7187 merge and owned cleanup.
 OPEN owner-authored5611/6776/exact agent-approved revalidated before intake;
