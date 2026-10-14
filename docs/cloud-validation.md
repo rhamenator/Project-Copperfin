@@ -4,6 +4,24 @@ Project-Copperfin is public. Use standard GitHub-hosted runners for broad or
 expensive automated evidence. Keep local work to editing, navigation, small
 reproductions, and focused compile/test loops.
 
+## Windows native job-budget boundary
+
+RQ-CF-CI-WINDOWS-NATIVE-BUDGET-001 / DQ-DV-CI-7181-001:
+the ordinary Windows native workflow uses three independent hosted builds and
+deterministic CTest inventory partitions. All three `Windows MSVC (shard N/3)`
+jobs and `Windows MSVC inventory coverage` must pass to establish full native
+evidence. Each job retains120min,180s per test, two build/test workers and all
+test commands/properties/RUN_SERIAL rules. The aggregate requires matching
+full inventories and exactly one successful execution for every test name.
+Missing/skipped/failed reports cannot count as acceptance. Small selection,
+JUnit and phase artifacts are retained14 days for each revision/attempt.
+
+This scheduling repair adds full builds rather than weakening assertions,
+raising timeouts or treating a partial run as green. Other composite consumers
+default to1/1 full-suite scheduling; no release-workflow budget change is
+claimed. Its [requirement/evidence/delta/misuse/rollback record](../tests/fixtures/windows-native-test-shards-7181/README.md)
+distinguishes local tooling checks from required hosted qualification.
+
 ## Existing coverage and added lanes
 
 The native Linux GCC, Windows MSVC, and macOS Clang workflows already run the
