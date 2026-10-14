@@ -466,6 +466,19 @@ Run `scripts/validate-safety-traceability.ps1` before release tagging (or run th
 
 Do not pass every issue carrying the broad `safety` label. That label also covers implementation and test lanes; the validator selects documentation issues through the `documentation` label, a `[docs-safety]` title, or `DQ-*` identifiers in the issue body.
 
+## Selected ListItem explicit numeric-column READ linkage
+
+Candidate RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001 / VR001+002 /
+DQ-DV-5611-LISTITEM-COLUMN-NUMERIC-001 links unchanged active runtime/data/doc
+hazards to the [selection and independent recovery gates](../../tests/fixtures/vfp9-listitem-column-numeric/README.md).
+Exactly-two-argument COLUMN READ for ordinary existing stable IDs only; shipped
+implicit-column1/first-ID behavior and all other routes remain untouched.
+Error-vs-empty/default/explicit conversion and bounds are still recovery gaps,
+not current-code/another-consumer requirements. MEDIUM misuse analysis and
+delegated walkthrough remain planned before behavior completion. No helper,
+assertion, configuration, caller migration or acceptance claim is introduced;
+no hazard severity/status, independent-human/system/release or parent closure.
+
 ## Bounded AddListItem missing-ID numeric-column linkage
 
 RQ-CF-PRG-ADDLISTITEM-NEW-COLUMN-NUMERIC-001 / VR001+002 /
