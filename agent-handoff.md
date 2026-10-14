@@ -979,101 +979,75 @@ EPOCH/CENTURY/#3698 complete; doNOTrestart. No VM/start/clone/resetcompletion cl
 
 ## Selected active bounded slice
 
-OPEN owner5611/6776/exactagent-approved revalidated2026-10-14T18:45 beforecontent;
-main/origin337156b342ff5e59db88859ededf6580066f3355, no activePR/push.
+OPEN owner5611/6776/exactagent-approved revalidated2026-10-14T20:45 beforecontent.
+Main/origin337156b342ff5e59db88859ededf6580066f3355; no activePR/push yet.
 WT /home/rich/.codex/worktrees/addlistitem-new-column-numeric-5611/Project-Copperfin,
-branch fix/addlistitem-new-column-numeric-5611, signedselection6d906525,
-recovery38d04d4c, UNUSEDhelper73b1900c13e719e3b6be20834c864348f7d6a4fc G/DCO.
-Bounded AddListItem MISSING ordinary integral Numeric SECONDstable-ID1..32767,
-supplied THIRD nonNULLNumeric-int64-uint64 COLUMN; exact3/Charactercaption/
-coherent unbound/default-or-exacttypedRST0/trim-empty binding. Preserve existing
-ID predicate/helpers/sharedsecond-ID/allocator/insertion-state-sort-return/
-fallback; no otherID-types-arity-NULL-RST-binding-lifecycle-parser expansion.
-
+branch fix/addlistitem-new-column-numeric-5611; signedG/DCO wiring4022b654.
 RQ-CF-PRG-ADDLISTITEM-NEW-COLUMN-NUMERIC-001/VR001+002/DQ-DV001:
-fixture/recovered-requirements.md/unused-helper-phase.md/frozen-original-phase.md.
-Independent matching780/100/384/144 installedVFP9 pairs, fullhelp/privateWine
-provenance BEFOREmap/helper/assertions; actualrunners-cmp-audits0/raw8a5d71de-
-949565d5-31720431-448faee7. Missing-ID native admission signedlow32 thenlow16
-candidate1..32745 elseengaged0; defaulttrunc/lossless1..32745 derivedfromnumeric-
-allocation-HZparents, NOTnative-global/configured-limit/sharedcreationparity.
-Onlycandidate1 reaches ORIGINALcreationarm; otherpositive/zero preserves
-#7186 missing-slot0/no-row gap. Issue7186 OPENowner/labels[] NOTrepairadmission/
-freshcurrentCFexecutionclaim/ownerinputblocker. NativefullcreationisrecoveryONLY.
-Initialboundaryauditstale25report despite36assertions retained; v2ONLYreport36.
-Original38-evidence/selection7 and UNUSEDphase96/7 remainHISTORICALnotrefrozen;
-lastphase96postcommit0/structuralaudit0/syntaxGCC-Clang0 ONLYsyntaxqualification.
-NativeCRLF staged2 ONLY2128/eightdatafiles/source-doc0; doNOTnormalize.
+tests/fixtures/vfp9-addlistitem-new-column-numeric/local-completion.md is the
+current development result; earlier phase notes/manifests remain historical.
 
-Currenttest phase: independently authored65Numeric44safe/21hostile +18exact
-12safe/sixhostile +13directboundaries/mode =>192planned direct. FOURsafe public
-class/mode/session shards EACH432:224vectors+192prepopulateconfigs+16locale/
-catchability/session cases. PRE-WIREfixed-only hostile112/shard NOTregistered/
-NEVERoldpublicexecution. Initialunexecutedscaffold counter120-540 correctedONLY
-to112-624 was STILLwrong configarithmetic; V2counterONLY112-432 now backedby
-actualfactor enumeration4*2*6*4=192config(not384)/exactone-token sourceaudit0.
-Alloldsource/raw retained/nooracle-operand-expectedstate change.
-Native-literal audit0/1188source-matchedrows/
-58Numericliterals;220unmatchedrows/sevennotexact-source-match reported/parents.
-Allprior95 assertions unchanged; five conservativeSERIALsubjects added.
-Configure0/inventory100/exactprior95 retained/pre-buildmetadata0 NOcommandsyet/
-finalGCC-Clang syntax0 NOTruntime/sanitizer acceptance. OnlytestCMake-isolation/
-newtest-audits-driver changed now; caller-selector-rootCMake STILLmainunchanged.
-V1freeze264 HISTORICALonecounterchanged; freshV2freeze270/threecallers0;
-helperstillUNUSED. Docs/HZ remaingap/
-MEDIUMplanned, no parent/hazard/independent-human/system/release closure.
+Bounded THIRD nonNULLNumeric/int64/uint64 column, exact3/Charactercaption/
+coherent materialized-unbound/default-or-exacttypedRST0/trim-empty binding;
+SECOND ordinary finite integral Numeric stable-ID1..32767 MISSING beforecall.
+Default truncate/lossless1..32745 otherwise localized11. BoundDERIVED numeric/
+allocation-HZparents, NOTnative/configured/global capacity/new32745-cell row.
+ExplicitVFP9 signedlow32 positive-or-INTMIN then unsignedlow16 candidate1..32745
+otherwiseengaged0 ADMITTED-NO-WRITE. Candidate1 ORIGINALcreation; otherpositive/
+zero ORIGINALmissing-slot0/no-row. #7186 OPEN/unadmitted sharedcreationgap
+preserved, notnativeparity/repair. Existing-ID helper-predicate/body, second-ID/
+allocator/insertion/state-sort-return/fallback/other types-arity-NULL-RST-binding-
+lifecycle-parser/7173-7176-7177 unchanged/excluded.
 
-SignedG/DCO freeze03b2b01e106fff45edced72d021d16b903db17c8; postcommit264/124
-checks0. V1driver46224 STOPPED/HARVESTED143 afterread-only partialaudit exposed
-ALLfour actual432 vs authored624/FOURcomplete-public-counter failures.
-Verified exactcwd/outerPGID-SID3784770/everymemberancestry BEFOREtask-onlyTERM;
-no otherprocess/VM touched. GNUconfigure-compile0/builtmetadata0/45of100
-results ONLY/full3828failureblocks/NOcompletegate. Fullcounter-v1-interrupted/
-rawSHAc58894c1/source-metadata-all264BEFOREfix0 retained; noClang qualification.
-Postfreeze audit-originals-complete.cjs +ten parsermutationsselftest0 authored
-without changing264; syntheticTOOLrecords NOTruntime/originalfailures/acceptance.
-Rawstagedwhitespace2 ONLY307 generatedCTestJSON locations/source-doccheck0;
-initialclassification mistakenlyasserted5/actual307 FAIL1, correctedALLpaths0/
-no input-assertion change/no raw normalization. Original-launch-phase.md retains.
-SignedG/DCO V2checkpoint71248f41168e21f083f4b79b1ac8e1fd06ff7621;
-postcommit270inputs/166evidence0. V2driver LAUNCHED unifiedsession42918,
-GNUcomplete2026-10-14T16:39:39Z/790.00s/actualCTest8: full100/allprior95 and
-192directPASS/ONLYfour432publicFAIL/3824fullselectedblocks/no unrelated or
-sanitizerdiagnostic. Raw527655430c205258b46f21bbdce914662c5491fb75fa4e8f7bf41bf468ea6fe2,
-fullfailurec24c1e1a80f282664c1f5de15fdfc6266465d43e68f555f73c14b82735dd550e.
-GNUone-compiler FULLsource270before-after-current/commands-isolation audit0,
-freshfullarchived-evidenceaudit0/original-counter-v2-gcc/. NOTBOTHgate orfixed
-acceptance. Clang COMPLETE18:25:02Z/4906.23s/CTest8, allprior95+192direct
-PASS/ONLYfour432publicFAIL/identical3824fullblocks/c24c1e1a/no unrelated or
-sanitizerdiagnostics/rawd2623047. Driver42918 HARVESTED0. BOTHfullgate0 and
-fresharchivedfullraw-source270before-after-current-callers3-builtcommands audit0
-BEFOREwiring; full original-counter-v2-complete/. Old264/124/raws immutable.
-AFTERgate BEFOREwire fresh GNU/Clang NONNATIVE328 baselines driver68440
-HARVESTED0/eachcompile-runtime-audit0/emptydiag/source3-library9beforeafter0/
-270-callers3unchanged atentry. Rawboth80dc91c9/eight41casecontexts/scaffold0;
-full preservation-baseline/. NOTnativeoracle/#7186repair/preservationfixedPASS.
-ThenONLY24-line boundedmissing-ID typedguard inserted beforeoldllround;
-existingIDpredicate-body/alloldcaller recoveredbyte-identical onremoval.
-Structural audit0/allother269frozenunchanged; separatefixedmanifest SAME270paths
-ONLYcallerhashchanged. Candidate1 ORIGINALcreation/otherpositive-engaged0
-ORIGINALmissing-slot0/no-row. Helper/header/assertions/counters/isolation/timeouts
-unchanged. both-originals-and-wiring-phase.md retainsexactchronology.
-FirstAUDITtool syntaxerror/extrafinalparen in2assertions ->fixeddriver4 BEFORE
-build/runtime; badsource/fullstderr-status retainedfirst-wiring-tool-failure/.
-PunctuationONLYtoolcorrection/audit0/shellsyntax0. No product weakening.
-NEXT harvest EXISTINGfullfixed100 driver83262 (GNUthenClangsanitizers), notyet
-qualified. Evidence build/addlistitem-new-column-native/fixed; doNOTduplicate.
-RequireBOTHfullfixed100-prior95-192four432-commands-source270 audits, THEN
-four112fixed-onlyhostile and SAMEcompilerfull328preservationcomparisons.
-Current fixed qualification/hostile/preservation comparison/contracts/DQDV and
-exacthead integration remain pending; no partial/scaffold evidence promoted.
-No partial/compiler/scaffold/tooling failure promoted to gate; retain allraw.
-Safeoriginalfinitepositive/exact<=65538/moderatenegatives; no huge-positive/
-nonfinite-NaN-outside64 oldpublic call/allocatoroverride/skip/timeoutchange.
-Boundedmissing-ID guard nowwired; NEXT BOTHfixed100, hostile/NONNATIVEpreservation/
-contracts/DQDV/ClaudeFIRST-cleanexacthead-review-postpush-checks-threads-merge.
-No fixedruntimequalification/push/PR/ownerinputblocker yet; no VM-start/clone or
-backup-reset completion claim. EPOCH/CENTURY/#3698 completed, doNOTrestart.
+Independent installedVFP9/help matching780/100/384/144 pairs BEFOREpre-code map/
+UNUSEDhelper/assertions; complete native/literal completion replay0/1188rows/
+58of65 source-matchedNumeric;220unmatchedrows/seven spellings reported/parents.
+No new oracle/VM. Original38/96/264/270 manifests and allfailed-v1 arithmetic/
+metadata/tooling/runner records retained without refreeze or acceptance claims.
+V1driver46224 actual143/partial45of100 UNQUALIFIED. CounterONLY624to432 proved;
+actualconfig192(not384),224core+192config+16locale. Direct192/hostile112unchanged.
+
+BOTH full original100 precede wire: GNU790.00s/ClangASan-UBSan-floatcast4906.23s/
+actualCTest8 each/allprior95+new192directPASS/ONLYfour432publicFAIL/identical3824
+FULLblocks c24c1e1a/no unrelateddiagnostics/raw52765543-d2623047.
+Driver42918HARVESTED0/fullsource270before-after-current-callers3-builtcommands
+and fresharchivedBOTHaudit0/original-counter-v2-complete/. Safe originalpublic
+positive/exact<=65538/moderatenegatives; neverhugepositive/nonfinite hostile.
+
+AFTERBOTHgate BEFOREwire fresh GNU/Clang328 NONNATIVEbaselines68440harvest0.
+THENONLY24caller lines inserted beforeoldllround. Structural audit0 reconstructs
+whole oldcaller byte-for-byte onremoval/allother269frozenunchanged; fixedmanifest
+SAME270paths ONLYcallerhashchanged. Helper/header/assertions/counters/isolation/
+timeouts unchanged. Both-originals-and-wiring-phase.md retainsfullchronology.
+Firstwiring AUDITtool extra2parens ->driver4 BEFOREbuild/runtime retained;
+punctuationONLYtoolcorrection0, not productfailure or expectationweakening.
+
+BOTH fixed100 driver83262 HARVESTED0/fullcompleteandarchivedaudits0:
+GNU789.70s/19:01:40Z/raw21c68a5a; Clangsanitizers4899.77s/20:24:06Z/raw4cc3ec89.
+All100/allprior95/new192-four432 PASS/source270before-after-current/commands0.
+THENeachcompiler four PRE-WIREfixed-only112hostile shards0/emptydiag/source270/
+binaryhashes0, driver13709HARVESTED0. BOTH freshfixed328 NONNATIVEpreservation
+84534HARVESTED0/compile-run-audit-cmp0/full SAMEcompiler baselinebytes80dc91c9/
+eight41casecontexts/scaffold0/source3-library9beforeafter0. Secondaryaudit0.
+Notnative shared-success/allproperties/globalallocator/leak/systemqualification.
+
+Five developmentcontracts34767HARVESTED0/all5PASS342.28s/20:53:35Z/raweae26e5b.
+BoundedMEDIUM delegated DQDV review/walkthrough/delta-misuse-rollback complete,
+NOTindependenthuman/personalowner/high-human/system/release assurance. Licensing0;
+initialwrongSOURCE_DIR invocationfailedpreflight1 retained/correctregistered
+COPPERFIN_SOURCE_ROOT0/no sourcechange. Matrix/hazards updatedpartial; parents/
+hazardseverities-statuses remainopen. Existing phase95 evidence remainsunchanged.
+
+Currentdocumentcontracts43209HARVESTED0/all4PASS3.91s/raw49a8339e;
+livecheckpoint56ab9ad7/mirror2137. NEXT signedcheckpoint/push/PR ClaudeFIRST,
+authorizedCodexfallback onlyifunavailable/actualcleanexactheadreview, exacthead
+postpush100, all11strictmainchecks/resolvedconversations/merge/ownedcleanup.
+run-postpush.sh authored/syntax0, NOTexecuted; neverpromoteold-head evidence.
+No active local runtime driver; doNOTrepeat originals/fixed/hostile/preservation
+for unchanged progress. Allfullevidence in fixture plus ignored build/
+addlistitem-new-column-native. DoNOTmodifytrackedfiles during postpush driver.
+No ownerinputblocker or VM-start/clone/backupreset-completion claim.
+EPOCH/CENTURY/#3698 completed, doNOTrestart. Preserve foreignfiles/stashes/WTs.
 
 ## Retained owner steering / deferred work
 

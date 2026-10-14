@@ -475,8 +475,15 @@ Default32745 numeric/preparation domain is derived, not native/configured/global
 capacity or total memory qualification. Explicit VFP9 candidate normalization
 never authorizes zero-minus-one or unbounded preparation. Missing-slot no-row
 fallback and #7186 shared creation are preserved, not native parity or a repair.
-MEDIUM documentation misuse/delegated walkthrough and full original/fixed/
-source/counter/sanitizer/hostile/preservation/integration gates remain planned.
+Both full original100/source270/failure/counter gates and fresh328 baselines
+preceded the24-line bounded guard; all other269 frozen inputs/old caller bytes
+are preserved. Both full fixed100/sanitizers, each four112 fixed-only hostile
+and SAME-compiler entire328 NON-NATIVE comparisons/audits passed. See the
+[bounded development results and residual gap](../../tests/fixtures/vfp9-addlistitem-new-column-numeric/local-completion.md).
+MEDIUM misuse/delta/rollback/delegated development walkthrough is complete with
+five actual development contracts5/5 PASS342.28s. This is NOT independent human
+or personal-owner assurance; actual exact-head integration remains open.
+#7186/RST1 and native shared-state/full-capacity are not repaired.
 No hazard severity/status, independent-human/system/release or parent closure.
 
 ## Bounded Windows native CI scheduling linkage

@@ -1,0 +1,1 @@
+{"originalInputs":270,"unchangedInputs":269,"changed":["src/runtime/prg_engine_runtime_surface_object_methods.inl"],"insertedLines":24,"oldCallerRecoveredByteIdentical":true,"callerSHA256":"147109daefd128a3f64080d8bd3af069576e5218b1ea3a4185d6d80b35178665","note":"Structural scope audit, NOT runtime/fixed/hostile/preservation acceptance."}
