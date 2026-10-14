@@ -966,10 +966,16 @@ tested staged259 byte-identical/current544-entrylocal evidence manifest0. Full
 committedwhitespacecheck2 is ONLY preservednativeCRLF/capturedlog/CTestJSONdata;
 allotheractive source/docscheck0, doNOTnormalizeimmutable raw. Initialclassifier
 omittedgeneratedJSON/rejected1; finalexplicitdata-classification0/fullreport
-retained in build. No push/numericPR yet. NEXT before numeric
-push/PR, integrate the active CI repair7182 through MAIN and synchronize this
-slice preserving source259/assertions/evidence, avoiding another knowingly
-unsharded Windows cumulative-budget run. Then push/PR/ClaudeFIRST/actual clean
+retained in build. CI repair7182 is now merged through MAIN489349f82 at12:21:27Z.
+Signed main synchronization merge d4defb9b79640d863f012df3434dfa935dc41100
+retains a17c2244 and ALL259 frozen source/assertion inputs unchanged. Historical
+544-entry evidence check now reports EXACTLYtwo changed docs (CI requirement/
+hazard sections); do not refreeze or claim it current. All542 other evidence
+inputs retain their hashes; main-sync phase records the precise additions.
+Post-sync contracts7/7PASS335.56s/actual0/completed12:32:05Z/raw0c341bdc retained.
+Current phase main-sync-phase.md preserves source259/542other evidence, exacttwo
+CI-doc additions and v1ENOBUFS/v2buffer-only correction, historicalmanifest not
+refrozen. No push/numericPR yet. NEXT signedmetadata/push/PR/ClaudeFIRST/actual clean
 exact-head review/postpush95/all11required/resolvedthreads before merge.
 No numeric PR yet; slice retaineduncancelled, no owner-input blocker.
 Missing-ID creation is a separate unfinished follow-on AFTER this existing-ID
@@ -1009,12 +1015,19 @@ commands-properties-config all200unchanged0, rawuntouched. Full600 resultaudit0
 is NOTpassingaggregate. Afterrerun, oldshard1/3metadataarchives unavailable404/
 no valid artifacts; preservefailure statuses/full logs, no archiveclaim.
 ONE unchanged FULLworkflow retry request0/38539178390 attempt2 exacta9df4e64
-RUNNING/blockingwatch97555; requirefresh ALL3+aggregate/sameattempt, no failed-
-only/mixedattempt substitution. No source/assertion/timeout/isolation changes;
-7183 remainsOPEN evenifretryPASS (not rootcause/fix). Otherchecks weregreen,
-freshunique11/head/review/thread verification stillneeded. Require
-ALL3shards+aggregateSUCCESS PLUSrequired11/actualcleanexactheadreview/threads0
-before merge/manual7181closure. Oldnative38535447863/watch71300 cancelledafter
+COMPLETEDSUCCESS/watch97555 HARVESTED0. ALL3 portions200each+aggregateSUCCESS,
+ALL3 fresh sameattempt artifacts archived0; independent local aggregate600/
+unique600/exactonce complete0. Exact-head premerge gate0: all36 checksSUCCESS/
+11 strictmain uniqueSUCCESS/actualCodex6165796333/one conversation resolved.
+PR7182 MERGED12:21:27Z as489349f82ac5aa6e4cf523afb61ee5b764a17662, noadminbypass.
+Issue7181 manuallyclosed; 7183 remainsOPEN, retry is NOTrootcause/fix.
+Main FF confirmed; scopedcontinuity stashc578545 retainednotpopped, log/handoff
+restoredexact/channelverify0/historicalsuffixunchanged. OwnedCI WT/local/exact-
+head remote branch cleaned; full16MB build+raw/artifacts/gate/failures recoverable
+at /home/rich/.local/share/Trash/files/windows-native-test-shards-7181-build,
+with merged-cleanup-record.md and Trashmetadata. Foreignfiles/stashes/WTs
+untouched. Numeric synchronization scopedstash98f75dd retainednotpopped.
+Oldnative38535447863/watch71300 cancelledafter
 supersedingpush, NOT120min or qualification. No numericassertion/source259/VM/
 paidintegration change. CIphase README/review-contract-fix/licensing-contract-fix
 and build/ci-shard-verification retain exactfailures/fixes/fullstatus-source evidence.
