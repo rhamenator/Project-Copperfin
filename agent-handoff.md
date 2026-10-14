@@ -1035,14 +1035,34 @@ without changing264; syntheticTOOLrecords NOTruntime/originalfailures/acceptance
 Rawstagedwhitespace2 ONLY307 generatedCTestJSON locations/source-doccheck0;
 initialclassification mistakenlyasserted5/actual307 FAIL1, correctedALLpaths0/
 no input-assertion change/no raw normalization. Original-launch-phase.md retains.
-NEXT launch NEW fixture/run-originals-counter-v2.sh from fresh270inputfreeze;
-all100 GNUthenClangASan-UBSan-floatcast fromSTART, notselective/partialreuse.
+SignedG/DCO V2checkpoint71248f41168e21f083f4b79b1ac8e1fd06ff7621;
+postcommit270inputs/166evidence0. V2driver LAUNCHED unifiedsession42918,
+GNUcomplete2026-10-14T16:39:39Z/790.00s/actualCTest8: full100/allprior95 and
+192directPASS/ONLYfour432publicFAIL/3824fullselectedblocks/no unrelated or
+sanitizerdiagnostic. Raw527655430c205258b46f21bbdce914662c5491fb75fa4e8f7bf41bf468ea6fe2,
+fullfailurec24c1e1a80f282664c1f5de15fdfc6266465d43e68f555f73c14b82735dd550e.
+GNUone-compiler FULLsource270before-after-current/commands-isolation audit0,
+freshfullarchived-evidenceaudit0/original-counter-v2-gcc/. NOTBOTHgate orfixed
+acceptance. Clangconfigure0/405-object sanitizercompile INPROGRESS in42918;
+doNOTstartanotherdriver/wire. NEXT harvest EXISTING42918 whencomplete, then
+auditBOTHcomplete evidence; no partial/subset reuse.
 Dedicatedevidence build/addlistitem-new-column-native/original-counter-v2;
 samebuilddirs byte-checkedincremental/sourceonecounterONLY. V2literal audit0/
 source-factor audit0/parser11mutations0 NOTacceptance. Freeze old264/124/raws
 neverrefrozen. PreserveBOTHfullraw/actualfailures/192-four432 counters/allprior95/
 builtcommands-isolation/before-after-current270 audits MUSTpassBEFOREwiring.
-counter-v2-original-phase.md retains chronology. Nooriginalgate/runtimequalification.
+counter-v2-original-phase.md retains chronology. Rawstagedcheck2 ONLY452
+locations/tworetainedrawCTestfiles/source-doc0/no normalization.
+PreparationONLY: NON-NATIVE328 preservation source/driver/audit/plan authored,
+41cases x2controls x2modes x2sessions; missing44 excludedcaption-column-ID-
+arity-RST-binding types, unchangedinteger-shared/sorted paths andexisting22
+controls. Fullrow-cell/state and physicalRST-binding types captured; no native
+oracle/#7186repair/RST1test. Separate3sourcefreeze0/GCC-Clang syntaxONLY0.
+NO baseline/fixed capture executed. Driver refuses baseline beforeBOTHoriginal
+gate0/original270-callers3 stillunchanged; runBOTHbaselines AFTERgate BEFOREwire,
+thenSAMEcompiler full-bytefixedcomparisons AFTERfixedqualification.
+one-compiler-and-preservation-phase.md/preservation-plan.md retainchronology.
+NoBOTHoriginalgate/fixedqualification.
 No partial/compiler/scaffold/tooling failure promoted to gate; retain allraw.
 Safeoriginalfinitepositive/exact<=65538/moderatenegatives; no huge-positive/
 nonfinite-NaN-outside64 oldpublic call/allocatoroverride/skip/timeoutchange.
