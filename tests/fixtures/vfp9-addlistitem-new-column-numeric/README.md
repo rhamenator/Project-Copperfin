@@ -1,4 +1,13 @@
-# AddListItem missing-ID supplied third-column numeric slice: selection only
+# AddListItem missing-ID supplied third-column numeric slice
+
+Current phase: recovery-observations.md retains independently observed matching
+780-call and100-call installed-VFP9 pairs plus completely read help/runner
+provenance. No helper/acceptance corpus/configuration/wiring yet; the complete
+pre-code requirement/default policy map remains a recovery gap. Separate shared
+missing-row creation parity is tracked by unadmitted #7186, not repaired here.
+
+The initial selection record below remains historical, superseded only by that
+explicit recovery phase and its retained source/raw/status/hash evidence.
 
 Owner-admitted OPEN #5611/#6776 revalidated on 2026-10-14 after PR #7184
 integrated as main337156b342ff5e59db88859ededf6580066f3355 and owned cleanup.

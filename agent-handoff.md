@@ -988,12 +988,27 @@ unbound/default-or-exacttypedRST0/trimempty/ordinary finiteintegral SECOND1..327
 missing beforecall is the candidate scope; recover/refine beforecoding.
 WT /home/rich/.codex/worktrees/addlistitem-new-column-numeric-5611/Project-Copperfin,
 branch fix/addlistitem-new-column-numeric-5611 from origin/main337156b342ff5e59db88859ededf6580066f3355.
-Selection/pre-code only: no helper, acceptanceassertions, CMake/isolation changes,
-frozenoriginal gate, callerwiring/build/PR/push yet. Native/default/extension and
-RQ-architecture-VR-DQDV-HZ recovery remainsGAP. Fresh independent native/help
-evidence must precede expected tables; then UNUSEDhelper and frozen BOTHcomplete
-original gates before any caller wiring. Retain allprior95/existing-ID predicate/
-shared second-ID/allocation/insertion/state/sort/return/fallback semantics.
+Signedselection6d906525 G/DCO retained; no push/PR. Fullyread shippedAddListItem771/
+ColumnCount387/BINTOC564/privateWine runner164/hash1e64d290 beforefreshnative.
+Independentmatching780 pair/sourceb136a793/raw8a5d71de/runners-cmp-captureaudit0:
+12groups x65/264unchanged11/516newrowadmissions/allactualN-BRSbeforeafterequal.
+Independentmatching100 dualroute highcolumn pair/source3e352187/raw949565d5/
+runners-cmp-captureaudit0:96newrows/four11/14namedcolumns/index-stableIDagree.
+Observed missing-ID65537.9 aliasesvisible1;32745retains/32746admitsempty sampled
+readback despiteexpansion65538(TESTreach NOTcapacity). Not a borrowedexisting-ID
+or AddItem oracle/fullhiddenstorage/default-hostlimit/generalizedmodel claim.
+Fullsources-raw-status-hash in fixture/recovery-observations.md. Allseven core
+inputs remain337156b34 byte-identical. No helper, acceptanceassertions, CMake/
+isolation/frozenoriginals/callerwiring or runtimebuild yet; onlynative runner.
+Selectedrecovery corroborates separate nonnumeric missing-ID/nonfirstcolumn
+creation gap: native44/2.9 createsrow, priorBOTH304capturedCFreturn0/count3 and
+currentmain source preservesroute. Focused7186 OPENowner/labels[] against337156b34,
+NOTadmissionforrepair/currentfreshCFexecutionclaim/ownerinputblocker.
+Nextconfig-beforepopulation and exactboundary-cycle-fraction corroboration,
+pre-codeRQ-architecture-VR-DQDV-HZ/default-extension/safe-original reach map
+BEFOREhelper/assertions. Then UNUSEDhelper/frozenBOTHcompleteoriginal gates
+beforewiring. Retain allprior95/existing-ID predicate/sharedsecond-ID/allocator/
+insertion-state-sort-return/fallback; no shared creation-parity expansion.
 Do not expand to shared creation parity or other ID/types/arity/NULL/binding/RST/
 lifecycle/parser/unadmitted7173-7176-7177. If selected implementation reveals
 another nonnumeric gap, file focused currentmain issue without expanding slice.
