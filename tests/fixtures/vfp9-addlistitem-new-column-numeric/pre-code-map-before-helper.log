@@ -1,0 +1,3 @@
+tests/fixtures/vfp9-addlistitem-new-column-numeric/recovered-requirements.md: OK
+docs/32-recovered-requirements-traceability.md: OK
+docs/safety/hazard-register.md: OK

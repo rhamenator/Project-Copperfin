@@ -997,17 +997,37 @@ runners-cmp-captureaudit0:96newrows/four11/14namedcolumns/index-stableIDagree.
 Observed missing-ID65537.9 aliasesvisible1;32745retains/32746admitsempty sampled
 readback despiteexpansion65538(TESTreach NOTcapacity). Not a borrowedexisting-ID
 or AddItem oracle/fullhiddenstorage/default-hostlimit/generalizedmodel claim.
-Fullsources-raw-status-hash in fixture/recovery-observations.md. Allseven core
-inputs remain337156b34 byte-identical. No helper, acceptanceassertions, CMake/
-isolation/frozenoriginals/callerwiring or runtimebuild yet; onlynative runner.
+Fullsources-raw-status-hash in fixture/recovery-observations.md. HISTORICALseven
+coreinputs were337156b34 byte-identical before UNUSEDhelper. SignedG/DCO recoverycheckpoint
+38d04d4c7d21d0439f404daf4217d8780de3246f retains fullsource-FXP-raw-status/audits
+and38-entry first-recovery-evidence manifest0; no push/PR. Raw-inclusive staged
+whitespace2 is ONLY3536 nativeCRLF locations/eightdatafiles; allothersource-doc
+check0, fullreport/classification0 retained in ownedbuild/doNOTnormalize raw.
+Currentphase supersedes its no-helper/pending-map state without refreezing38:
+freshmatching384 config-beforepopulate and144 boundary/cycle/fraction pairs,
+allactualrunners-cmp-audits0/emptydiag/raw31720431-448faee7/source5d5af73f-fe73fb45.
+Config16x24/112unchanged11/272nativecreations; boundary4x36/140admit-four11/
+14dualroutesagree. Initialboundaryaudit printedstale25 metadata despite36
+assertions; oldsource-fulloutput-status retained/v2reportconstantONLY36, not
+retroactivecorrectmetadataqualification. Completepre-codeRQ-architecture-VR-
+DQDV-HZ/default-extension/safe-original map and durablegaplinks BEFOREhelper,
+3maphashes0/allsevenBEFOREhelper0 retained. DistinctUNUSEDhelper/header added;
+historicalselection nowexactlyTWOchanged, caller-selector-root/testCMake-
+isolation FIVEunchangedmain/allprior95. Current7-inputmanifest0/old38manifest0/
+structuralphaseaudit0/nameONLYdefinition-declaration. GCC+Clang translationunit
+syntax harvested0/emptylogs ONLY, NOT runtimebuild-tests-sanitizerqualification.
+Fullnewsource-FXP-raw-status-audits plus chronology in fixture/unused-helper-phase.md.
+No acceptanceassertions, registration/isolation/frozenoriginals/callerwiring,
+runtimequalification/push/PR/assuranceclosure yet. Preserve shared7186 fallback.
 Selectedrecovery corroborates separate nonnumeric missing-ID/nonfirstcolumn
 creation gap: native44/2.9 createsrow, priorBOTH304capturedCFreturn0/count3 and
 currentmain source preservesroute. Focused7186 OPENowner/labels[] against337156b34,
 NOTadmissionforrepair/currentfreshCFexecutionclaim/ownerinputblocker.
-Nextconfig-beforepopulation and exactboundary-cycle-fraction corroboration,
-pre-codeRQ-architecture-VR-DQDV-HZ/default-extension/safe-original reach map
-BEFOREhelper/assertions. Then UNUSEDhelper/frozenBOTHcompleteoriginal gates
-beforewiring. Retain allprior95/existing-ID predicate/sharedsecond-ID/allocator/
+NEXT independentliteral helper/four class-mode directpublic shards BOTHsessions,
+separatefixed-onlyhostile vectors, conservative5serialsubjects retainingprior95.
+Freeze/audit fulloriginal100 source-command-isolation/failures/counters for
+BOTHcompilers BEFOREwiring. UNUSEDhelper persists untilbothfulloriginalaudits.
+Retain allprior95/existing-ID predicate/sharedsecond-ID/allocator/
 insertion-state-sort-return/fallback; no shared creation-parity expansion.
 Do not expand to shared creation parity or other ID/types/arity/NULL/binding/RST/
 lifecycle/parser/unadmitted7173-7176-7177. If selected implementation reveals
