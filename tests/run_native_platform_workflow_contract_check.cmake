@@ -156,19 +156,73 @@ function(check_caller relative_path workflow_name platform runner check_name)
     require_regex_count("${relative_path}"
         "\n[ \t]+uses:[ \t]*\\./\\.github/actions/native-validation[ \t]*\n"
         1 "local shared-action reference")
-    require_regex_count("${relative_path}" "\n[ \t]+uses:[ \t]*" 2 "uses entries")
-    require_text_count("${relative_path}"
-        "uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2"
-        1 "immutable checkout action")
-
-    require_regex("${relative_path}"
-        "\n  [A-Za-z_][A-Za-z0-9_-]*:\n    name: ${check_name}\n    runs-on: ${runner}\n    timeout-minutes: 120\n    steps:"
-        "stable '${check_name}' job identity, runner, and timeout")
+    if(platform STREQUAL "windows")
+        # RQ-CF-CI-WINDOWS-NATIVE-BUDGET-001: exact new architecture, not a
+        # relaxed action-count range or removal of the registered contract.
+        require_regex_count("${relative_path}" "\n[ \t]+uses:[ \t]*" 5 "uses entries")
+        require_text_count("${relative_path}"
+            "uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2"
+            2 "immutable checkout actions")
+        require_text("${relative_path}" [=[  windows-native-validation:
+    name: Windows MSVC (shard ${{ matrix.shard }}/3)
+    runs-on: windows-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]]=]
+            "exact three-shard job identity/runner/budget and non-fail-fast matrix")
+        require_text("${relative_path}" [=[          platform: windows
+          windows_test_shard: ${{ matrix.shard }}
+          windows_test_shard_count: '3']=]
+            "exact bounded Windows shard inputs")
+        require_text("${relative_path}" [=[  windows-native-coverage:
+    name: Windows MSVC inventory coverage
+    needs: windows-native-validation
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10]=]
+            "dependent always-running full-coverage aggregate")
+        require_regex_count("${relative_path}" "\n[ \t]+run:[ \t]*" 3 "exact verification shell steps")
+        require_text("${relative_path}" "run: ./tests/test_native_test_sharding.ps1"
+            "actual CTest and fail-closed partition verification")
+        require_text("${relative_path}" [=[run: |
+          python3 tests/test_native_test_shard_aggregate.py
+          python3 tests/test_native_workflow_shard_contract.py]=]
+            "aggregate and registered-workflow mutation verification")
+        require_text("${relative_path}" "run: python3 scripts/audit-native-test-shards.py artifacts/windows-native-shards"
+            "full-inventory execution aggregate")
+        require_text_count("${relative_path}"
+            "uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1"
+            1 "pinned small-evidence upload")
+        require_text_count("${relative_path}"
+            "uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8"
+            1 "pinned current-attempt evidence download")
+        require_text("${relative_path}" [=[if: ${{ always() }}
+        uses: actions/upload-artifact@]=] "always-retained execution evidence")
+        require_text("${relative_path}" "path: artifacts/windows-native-validation-metrics/"
+            "small metrics/inventory/JUnit upload, not a build tree")
+        require_text("${relative_path}" [=[pattern: windows-native-shard-*-of-3-${{ github.sha }}-attempt-${{ github.run_attempt }}]=]
+            "exact revision/attempt artifact scope")
+        require_regex_count("${relative_path}" "\n[ \t]+path:[ \t]*" 2 "exact evidence upload/download paths")
+        validate_artifact_upload_paths("${relative_path}")
+        forbid_text("${relative_path}" "CMakeCache.txt" "CMake cache publication")
+        forbid_text("${relative_path}" "CMakeFiles" "CMake metadata publication")
+        forbid_text("${relative_path}" "continue-on-error" "masked shard or aggregate failure")
+    else()
+        require_regex_count("${relative_path}" "\n[ \t]+uses:[ \t]*" 2 "uses entries")
+        require_text_count("${relative_path}"
+            "uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2"
+            1 "immutable checkout action")
+        require_regex("${relative_path}"
+            "\n  [A-Za-z_][A-Za-z0-9_-]*:\n    name: ${check_name}\n    runs-on: ${runner}\n    timeout-minutes: 120\n    steps:"
+            "stable '${check_name}' job identity, runner, and timeout")
+        forbid_regex("${relative_path}" "\n[ \t]+run:[ \t]*" "caller shell commands")
+    endif()
     require_regex("${relative_path}"
         "\n        uses: \\./\\.github/actions/native-validation\n        with:\n          platform: ${platform}([ \t]*\n|$)"
         "exact shared-action input for ${platform}")
 
-    forbid_regex("${relative_path}" "\n[ \t]+run:[ \t]*" "caller shell commands")
     forbid_text("${relative_path}" "cmake " "duplicated CMake command")
     forbid_text("${relative_path}" "ctest " "duplicated CTest command")
 endfunction()
@@ -840,11 +894,43 @@ require_text("${shared_action}"
     [=[-CommandArguments @('--build', 'build', '--config', 'Debug', '--target', 'copperfin_mixed_mode_declared_dll_fixture', '--parallel', '2')]=]
     "bounded Windows Debug mixed-mode fixture build command")
 require_text("${shared_action}"
-    "-Name 'Run native test suite'"
-    "measured Windows CTest phase")
-require_text("${shared_action}"
-    "-CommandArguments @('--test-dir', 'build', '-C', 'Release', '--output-on-failure', '--timeout', '180', '--parallel', '2')"
-    "bounded full Windows CTest command")
+    "& ./scripts/run-windows-native-tests.ps1"
+    "verified Windows CTest execution helper")
+require_text("${shared_action}" [=[-ShardIndex ([int]'${{ inputs.windows_test_shard }}')
+        -ShardCount ([int]'${{ inputs.windows_test_shard_count }}')]=]
+    "explicit bounded Windows shard helper arguments")
+require_text("${shared_action}" [=[  windows_test_shard:
+    description: One-based Windows test shard index; other platforms are unchanged.
+    required: false
+    default: '1'
+  windows_test_shard_count:
+    description: Windows test partition count (1 or 3); default retains the full suite.
+    required: false
+    default: '1']=]
+    "backward-compatible default full Windows inventory")
+require_text("scripts/run-windows-native-tests.ps1"
+    [=[-Name "Run native test suite shard $ShardIndex of $ShardCount" -Category native-test -FilePath ctest]=]
+    "measured Windows native-test phase")
+require_text("scripts/run-windows-native-tests.ps1"
+    [=[$commonArguments = @('--test-dir', $BuildDirectory, '-C', $Configuration)]=]
+    "unchanged native CTest build/configuration arguments")
+require_text("scripts/run-windows-native-tests.ps1" [=[    [string]$BuildDirectory = 'build',
+    [string]$Configuration = 'Release',]=] "unchanged Release/build defaults")
+require_text("scripts/run-windows-native-tests.ps1"
+    [=['--output-on-failure', '--timeout', '180', '--parallel', '2',]=]
+    "unchanged bounded native CTest timeout/parallelism")
+require_text("scripts/run-windows-native-tests.ps1" "Assert-NativeTestShardSelection"
+    "actual selection and command/property preservation")
+require_text("scripts/run-windows-native-tests.ps1" "Assert-NativeTestShardResults"
+    "complete successful selected execution")
+require_text("scripts/run-windows-native-tests.ps1" "selected-inventory-after.json"
+    "retained post-execution metadata")
+require_text("scripts/audit-native-test-shards.py"
+    "Aggregate execution must cover every full-inventory test exactly once"
+    "fail-closed complete aggregate execution")
+require_text("scripts/audit-native-test-shards.py"
+    "Different full inventories across jobs cannot qualify one complete suite"
+    "cross-job full-inventory consistency")
 require_text("${shared_action}"
     "-Mode Finalize"
     "Windows metric finalization")
@@ -880,7 +966,6 @@ foreach(native_workflow IN ITEMS
         .github/actions/native-validation/action.yml
         .github/workflows/native-validation-linux.yml
         .github/workflows/native-validation-macos.yml
-        .github/workflows/native-validation-windows.yml
         .github/workflows/native-release-readiness.yml)
     forbid_text("${native_workflow}" "actions/upload-artifact" "artifact upload action")
     forbid_text("${native_workflow}" "actions/download-artifact" "artifact download action")

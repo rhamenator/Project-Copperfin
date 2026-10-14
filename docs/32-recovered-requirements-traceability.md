@@ -21,6 +21,12 @@ parent product requirement or hazard. When allowed evidence and implementation
 disagree, use `gap` or `exception`; never rewrite the requirement to describe
 whatever the code happens to do.
 
+## Windows native CI budget requirement
+
+| Requirement | Allowed parent/source | Contract and implementation | Verification/results | Hazard and status |
+| --- | --- | --- | --- | --- |
+| `RQ-CF-CI-WINDOWS-NATIVE-BUDGET-001` | Owner's actionable-CI implementation heartbeat and verification quality baseline; derived from `HZ-system-failure-01`/`HZ-doc-command-01`, not existing code as its own requirement. #7181 is tracking, not authority for production changes. | Repair observed cumulative job-budget exhaustion without omitting tests/weakening assertions. Three full hosted builds/round-robin test portions,120min/job,180s/test, retained commands/properties/serial policy and a matching-inventory/exact-once aggregate. `.github/workflows/native-validation-windows.yml`; shared native action; `scripts/native-test-shard-policy.ps1`, `run-windows-native-tests.ps1`, `audit-native-test-shards.py`. | `VR-CI-7181-001/002`; policy/aggregate mutation tests and actual tiny CTest execution; [full provenance, local results and pending hosted gate](../tests/fixtures/windows-native-test-shards-7181/README.md). Three hosted shards+aggregate, exact-head review/required11/resolved threads remain required. | BoundedMEDIUM `DQ-DV-CI-7181-001`; partial/synthetic/one-shard is not full/release evidence. Hazard severities/statuses unchanged; no independent-human/system/release or numeric-implementation closure. `derived; under verification` |
+
 ## Assurance Boundary
 
 Copperfin's DO-178C-inspired discipline is adapted to a general-purpose

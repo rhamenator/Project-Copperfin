@@ -1,5 +1,5 @@
 name: Native CMake validation
-description: Configure, build, and run the full native CTest inventory for one platform.
+description: Configure/build the native inventory and run the platform suite or a verified Windows test portion.
 
 inputs:
   platform:
@@ -13,6 +13,14 @@ inputs:
     description: Repository-relative directory for Windows phase metrics.
     required: false
     default: artifacts/windows-native-validation-metrics
+  windows_test_shard:
+    description: One-based Windows test shard index; other platforms are unchanged.
+    required: false
+    default: '1'
+  windows_test_shard_count:
+    description: Windows test partition count (1 or 3); default retains the full suite.
+    required: false
+    default: '1'
 
 runs:
   using: composite
@@ -24,6 +32,12 @@ runs:
         $buildJobs = '${{ inputs.build_jobs }}'
         if ($buildJobs -notin @('2', '3')) {
           throw "Hosted Windows native validation build_jobs must be 2 or 3."
+        }
+        $shardIndex = '${{ inputs.windows_test_shard }}'
+        $shardCount = '${{ inputs.windows_test_shard_count }}'
+        if ($shardIndex -notin @('1', '2', '3') -or $shardCount -notin @('1', '3') -or
+            [int]$shardIndex -gt [int]$shardCount) {
+          throw "Hosted Windows native validation shard index/count is invalid."
         }
         & ./scripts/measure-windows-validation.ps1 -Mode Initialize -MetricsDirectory '${{ inputs.metrics_directory }}'
 
@@ -91,14 +105,10 @@ runs:
       if: ${{ inputs.platform == 'windows' }}
       shell: pwsh
       run: >-
-        & ./scripts/measure-windows-validation.ps1
-        -Mode Run
+        & ./scripts/run-windows-native-tests.ps1
         -MetricsDirectory '${{ inputs.metrics_directory }}'
-        -Name 'Run native test suite'
-        -Category native-test
-        -FilePath ctest
-        -CommandArguments @('--test-dir', 'build', '-C', 'Release', '--output-on-failure', '--timeout', '180', '--parallel', '2')
-        -SampleResources
+        -ShardIndex ([int]'${{ inputs.windows_test_shard }}')
+        -ShardCount ([int]'${{ inputs.windows_test_shard_count }}')
 
     - name: Run macOS SET POINT locale matrix
       if: ${{ inputs.platform == 'macos' }}
