@@ -1,0 +1,4 @@
+5306a7fd8d1b88db676ae7a86565b7b691c9aa3aac55eba769f764ff9758098b  tests/fixtures/vfp9-addlistitem-column-numeric/excluded-scope-preservation.cpp
+331be3b728993b0ac6dd6eb3b13ec065eb7e8b1e25e568cf443cb6cdf9d11178  tests/fixtures/vfp9-addlistitem-column-numeric/excluded-scope-preservation.before-license.txt
+0e1ac18e3d8181a4e60cb2f5658433520fea9fcae46ede18fa3411756e3fc13d  tests/fixtures/vfp9-addlistitem-column-numeric/run-preservation-notice.sh
+fa55a6b449da13a068132ef92ce3e7a2fd5d23b00cdf9b6fbde6cbee3e5de2bd  tests/prg_engine_test_support.cpp

@@ -1,0 +1,3 @@
+331be3b728993b0ac6dd6eb3b13ec065eb7e8b1e25e568cf443cb6cdf9d11178  tests/fixtures/vfp9-addlistitem-column-numeric/excluded-scope-preservation.cpp
+c84e6f454282b336d839abf0ff41c0cc25752a1b54b4a6506d3c52b1a59cf511  tests/fixtures/vfp9-addlistitem-column-numeric/run-preservation.sh
+fa55a6b449da13a068132ef92ce3e7a2fd5d23b00cdf9b6fbde6cbee3e5de2bd  tests/prg_engine_test_support.cpp

@@ -1,0 +1,9 @@
+c1e11b3fdbf2f37101832ec45a8e4bee6d28923708d03a9137438cf79ea6156a  tests/fixtures/vfp9-addlistitem-column-numeric/README.md
+762921a4d4a7dd724e12f42957dfa67ba21592b34cef7e171f5414bb541a27d2  tests/fixtures/vfp9-addlistitem-column-numeric/selection-manifest-path-correction.md
+ed998fa40275a548094b166b5bbebb087fe43a57b5599ec0dc2a2b8c242438df  tests/fixtures/vfp9-addlistitem-column-numeric/initial-partial-core-inputs.sha256
+28113564c25ec7d127d0479e1d3290648d6c8e7203b624431088a21575aff7bb  tests/fixtures/vfp9-addlistitem-column-numeric/selection-core-inputs-check.log
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-addlistitem-column-numeric/selection-core-inputs-check.status
+877560ff4b6ebc2a3d179977a2dc912f4fde916fd7122158ae0620daddaf5365  tests/fixtures/vfp9-addlistitem-column-numeric/corrected-selection-core-inputs-check.log
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-addlistitem-column-numeric/corrected-selection-core-inputs-check.status
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-addlistitem-column-numeric/corrected-selection-hash.status
+56d0c8ec2526610862d0201d2186a389bee9a060194737ce6e33baf7796f7eb5  tests/fixtures/vfp9-addlistitem-column-numeric/untouched-main-core-inputs.sha256

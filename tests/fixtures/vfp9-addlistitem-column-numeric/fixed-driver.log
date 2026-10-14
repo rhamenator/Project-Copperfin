@@ -1,0 +1,3 @@
+gcc fixed95 completed with actual CTest status 0
+clang fixed95 completed with actual CTest status 0
+Both fixed95 complete; full raw/counter/source audit still required. Hostile182 and preservation304 are separate gates.

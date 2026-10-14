@@ -295,9 +295,57 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
         }
 
         long long requested_column = 1LL;
+        bool admitted_no_write = false;
         if (arguments.size() >= 3U) {
-            requested_column = std::llround(value_as_number(arguments[2]));
-            if (requested_column < 1LL) {
+            // RQ-CF-PRG-ADDLISTITEM-COLUMN-NUMERIC-001 / VR-5611-ADDLISTITEM-COLUMN-NUMERIC-001/002.
+            // BOTH complete original95/full failures/source259 audited before wiring.
+            // Bound THIRD column only for an already-existing ordinary Numeric ID.
+            // Missing creation, other ID/types/arity/binding and caption1 (#7173)
+            // retain their old routes; materialization still precedes this check.
+            const auto row_source_type = runtime_object.properties.find("rowsourcetype");
+            const auto control_source = runtime_object.properties.find("controlsource");
+            const bool materialized_unbound =
+                (row_source_type == runtime_object.properties.end() ||
+                 (!row_source_type->second.is_null &&
+                  ((row_source_type->second.kind == PrgValueKind::number &&
+                    row_source_type->second.number_value == 0.0) ||
+                   (row_source_type->second.kind == PrgValueKind::int64 &&
+                    row_source_type->second.int64_value == 0) ||
+                   (row_source_type->second.kind == PrgValueKind::uint64 &&
+                    row_source_type->second.uint64_value == 0U)))) &&
+                (control_source == runtime_object.properties.end() ||
+                 (!control_source->second.is_null &&
+                  control_source->second.kind == PrgValueKind::string &&
+                  trim_copy(control_source->second.string_value).empty())) &&
+                runtime_object.collection_item_keys.size() == runtime_object.collection_items.size() &&
+                runtime_object.list_rows.size() == runtime_object.collection_items.size() &&
+                runtime_object.list_item_data.size() == runtime_object.collection_items.size() &&
+                runtime_object.list_selected.size() == runtime_object.collection_items.size();
+            const auto& supplied_id = arguments[1];
+            const auto& supplied_column = arguments[2];
+            if (arguments.size() == 3U && materialized_unbound &&
+                !arguments[0].is_null && arguments[0].kind == PrgValueKind::string &&
+                !supplied_column.is_null &&
+                (supplied_column.kind == PrgValueKind::number ||
+                 supplied_column.kind == PrgValueKind::int64 ||
+                 supplied_column.kind == PrgValueKind::uint64) &&
+                !supplied_id.is_null && supplied_id.kind == PrgValueKind::number &&
+                std::isfinite(supplied_id.number_value) &&
+                supplied_id.number_value >= 1.0 && supplied_id.number_value <= 32767.0 &&
+                std::trunc(supplied_id.number_value) == supplied_id.number_value &&
+                find_native_list_control_row_by_item_id(runtime_object,
+                    static_cast<long long>(supplied_id.number_value)).has_value()) {
+                // The ordinary ID is finite/integral/bounded BEFORE its cast.
+                const auto column = checked_addlistitem_column_argument(supplied_column, behavior);
+                if (!column.has_value()) {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                }
+                requested_column = static_cast<long long>(*column); // Helper domain0..32745.
+                admitted_no_write = *column == 0U;
+            } else {
+                requested_column = std::llround(value_as_number(arguments[2]));
+            }
+            if (requested_column < 1LL && !admitted_no_write) {
                 return make_number_value(0.0);
             }
         }
@@ -371,11 +419,15 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
             return make_number_value(0.0);
         }
 
-        auto& row = runtime_object.list_rows[*slot];
-        if (row.size() < static_cast<std::size_t>(requested_column)) {
-            row.resize(static_cast<std::size_t>(requested_column), make_string_value(""));
+        // Engaged0 is an admitted existing-ID no-write, NEVER zero-1 indexing
+        // or argument-driven resize; retain the original shared success work.
+        if (!admitted_no_write) {
+            auto& row = runtime_object.list_rows[*slot];
+            if (row.size() < static_cast<std::size_t>(requested_column)) {
+                row.resize(static_cast<std::size_t>(requested_column), make_string_value(""));
+            }
+            row[static_cast<std::size_t>(requested_column - 1LL)] = inserted_item;
         }
-        row[static_cast<std::size_t>(requested_column - 1LL)] = inserted_item;
         sync_native_list_control_primary_state_from_rows(runtime_object);
         if (requested_column == 1LL) {
             sort_native_list_control_rows_if_needed(runtime_object);

@@ -1,0 +1,5045 @@
+{
+  "backtraceGraph" : 
+  {
+    "commands" : 
+    [
+      "add_test",
+      "copperfin_add_test"
+    ],
+    "files" : 
+    [
+      "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/tests/CMakeLists.txt"
+    ],
+    "nodes" : 
+    [
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 523,
+        "parent" : 0
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 5946,
+        "parent" : 2
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 3
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 5961,
+        "parent" : 5
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 6
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6021,
+        "parent" : 8
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 9
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6029,
+        "parent" : 11
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 12
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6036,
+        "parent" : 14
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6036,
+        "parent" : 16
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6036,
+        "parent" : 18
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6036,
+        "parent" : 20
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6043,
+        "parent" : 22
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 23
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6050,
+        "parent" : 25
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6050,
+        "parent" : 27
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6050,
+        "parent" : 29
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6050,
+        "parent" : 31
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6057,
+        "parent" : 33
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 34
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6064,
+        "parent" : 36
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6064,
+        "parent" : 38
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6064,
+        "parent" : 40
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6064,
+        "parent" : 42
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6069,
+        "parent" : 44
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 45
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6076,
+        "parent" : 47
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6076,
+        "parent" : 49
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6076,
+        "parent" : 51
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6076,
+        "parent" : 53
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6080,
+        "parent" : 55
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 56
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6087,
+        "parent" : 58
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6087,
+        "parent" : 60
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6087,
+        "parent" : 62
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6087,
+        "parent" : 64
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6091,
+        "parent" : 66
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 67
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6098,
+        "parent" : 69
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6098,
+        "parent" : 71
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6098,
+        "parent" : 73
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6098,
+        "parent" : 75
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6103,
+        "parent" : 77
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 78
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6110,
+        "parent" : 80
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6110,
+        "parent" : 82
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6110,
+        "parent" : 84
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6110,
+        "parent" : 86
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6115,
+        "parent" : 88
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 89
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6122,
+        "parent" : 91
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6122,
+        "parent" : 93
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6122,
+        "parent" : 95
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6122,
+        "parent" : 97
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6127,
+        "parent" : 99
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 100
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6134,
+        "parent" : 102
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6134,
+        "parent" : 104
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6134,
+        "parent" : 106
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6134,
+        "parent" : 108
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6141,
+        "parent" : 110
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6141,
+        "parent" : 112
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6141,
+        "parent" : 114
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6141,
+        "parent" : 116
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6145,
+        "parent" : 118
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 119
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6152,
+        "parent" : 121
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6152,
+        "parent" : 123
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6152,
+        "parent" : 125
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6152,
+        "parent" : 127
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6156,
+        "parent" : 129
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 130
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6163,
+        "parent" : 132
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6163,
+        "parent" : 134
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6163,
+        "parent" : 136
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6163,
+        "parent" : 138
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6167,
+        "parent" : 140
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 141
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6174,
+        "parent" : 143
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6174,
+        "parent" : 145
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6174,
+        "parent" : 147
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6174,
+        "parent" : 149
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6178,
+        "parent" : 151
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 152
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6185,
+        "parent" : 154
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6185,
+        "parent" : 156
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6185,
+        "parent" : 158
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6185,
+        "parent" : 160
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6189,
+        "parent" : 162
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 163
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6196,
+        "parent" : 165
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6196,
+        "parent" : 167
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6196,
+        "parent" : 169
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6196,
+        "parent" : 171
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6200,
+        "parent" : 173
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 174
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6207,
+        "parent" : 176
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6207,
+        "parent" : 178
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6207,
+        "parent" : 180
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6207,
+        "parent" : 182
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6211,
+        "parent" : 184
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 185
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6218,
+        "parent" : 187
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6218,
+        "parent" : 189
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6218,
+        "parent" : 191
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6218,
+        "parent" : 193
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6222,
+        "parent" : 195
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 196
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6229,
+        "parent" : 198
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6229,
+        "parent" : 200
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6229,
+        "parent" : 202
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 6229,
+        "parent" : 204
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6610,
+        "parent" : 206
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 207
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 1,
+        "file" : 0,
+        "line" : 6847,
+        "parent" : 209
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 11,
+        "parent" : 210
+      }
+    ]
+  },
+  "kind" : "ctestInfo",
+  "tests" : 
+  [
+    {
+      "backtrace" : 1,
+      "command" : 
+      [
+        "/usr/bin/cmake",
+        "-DINVENTORY_PATH=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/native-test-isolation.tsv",
+        "-DISOLATION_SOURCE_PATH=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/tests/CopperfinTestIsolation.cmake",
+        "-DTEST_REGISTRATION_SOURCE_PATH=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/tests/CMakeLists.txt",
+        "-P",
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/tests/run_native_test_isolation_contract_check.cmake"
+      ],
+      "name" : "test_native_test_isolation_contract",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=none",
+            "copperfin-isolation:filesystem=read-only",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=parallel-safe"
+          ]
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 4,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_int64_exact_expression"
+      ],
+      "name" : "test_prg_engine_int64_exact_expression",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=none",
+            "copperfin-isolation:filesystem=process-owned",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 7,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_numeric_behavior"
+      ],
+      "name" : "test_prg_engine_numeric_behavior",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=process-owned",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 10,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_listindex_numeric"
+      ],
+      "name" : "test_prg_engine_listindex_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 13,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_additem_numeric"
+      ],
+      "name" : "test_prg_engine_additem_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 15,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_additem_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_additem_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 17,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_additem_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_additem_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 19,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_additem_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_additem_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 21,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_additem_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_additem_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 24,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_additem_column_numeric"
+      ],
+      "name" : "test_prg_engine_additem_column_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 26,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_additem_column_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_additem_column_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 28,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_additem_column_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_additem_column_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 30,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_additem_column_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_additem_column_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 32,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_additem_column_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_additem_column_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 35,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_addlistitem_column_numeric"
+      ],
+      "name" : "test_prg_engine_addlistitem_column_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 37,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_addlistitem_column_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_addlistitem_column_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 39,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_addlistitem_column_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_addlistitem_column_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 41,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_addlistitem_column_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_addlistitem_column_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 43,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_addlistitem_column_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_addlistitem_column_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 46,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_addlistitem_numeric"
+      ],
+      "name" : "test_prg_engine_addlistitem_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 48,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_addlistitem_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_addlistitem_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 50,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_addlistitem_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_addlistitem_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 52,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_addlistitem_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_addlistitem_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 54,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_addlistitem_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_addlistitem_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 57,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_removelistitem_numeric"
+      ],
+      "name" : "test_prg_engine_removelistitem_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 59,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_removelistitem_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_removelistitem_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 61,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_removelistitem_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_removelistitem_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 63,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_removelistitem_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_removelistitem_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 65,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_removelistitem_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_removelistitem_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 68,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_removeitem_numeric"
+      ],
+      "name" : "test_prg_engine_removeitem_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 70,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_removeitem_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_removeitem_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 72,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_removeitem_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_removeitem_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 74,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_removeitem_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_removeitem_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 76,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_removeitem_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_removeitem_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 79,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_topitemid_numeric"
+      ],
+      "name" : "test_prg_engine_topitemid_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 81,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_topitemid_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_topitemid_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 83,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_topitemid_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_topitemid_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 85,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_topitemid_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_topitemid_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 87,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_topitemid_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_topitemid_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 90,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_topindex_numeric"
+      ],
+      "name" : "test_prg_engine_topindex_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 92,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_topindex_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_topindex_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 94,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_topindex_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_topindex_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 96,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_topindex_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_topindex_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 98,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_topindex_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_topindex_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 101,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_listitemid_numeric"
+      ],
+      "name" : "test_prg_engine_listitemid_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 103,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_listitemid_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_listitemid_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 105,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_listitemid_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_listitemid_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 107,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_listitemid_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_listitemid_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 109,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_listitemid_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_listitemid_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 111,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_listindex_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_listindex_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 113,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_listindex_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_listindex_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 115,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_listindex_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_listindex_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 117,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_listindex_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_listindex_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 120,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_list_index_numeric"
+      ],
+      "name" : "test_prg_engine_list_index_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 122,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_list_index_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_list_index_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 124,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_list_index_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_list_index_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 126,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_list_index_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_list_index_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 128,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_list_index_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_list_index_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 131,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_listitem_numeric"
+      ],
+      "name" : "test_prg_engine_listitem_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 133,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_listitem_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_listitem_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 135,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_listitem_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_listitem_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 137,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_listitem_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_listitem_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 139,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_listitem_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_listitem_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 142,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_itemidtoindex_numeric"
+      ],
+      "name" : "test_prg_engine_itemidtoindex_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 144,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_itemidtoindex_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_itemidtoindex_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 146,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_itemidtoindex_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_itemidtoindex_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 148,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_itemidtoindex_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_itemidtoindex_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 150,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_itemidtoindex_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_itemidtoindex_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 153,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_indextoitemid_numeric"
+      ],
+      "name" : "test_prg_engine_indextoitemid_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 155,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_indextoitemid_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_indextoitemid_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 157,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_indextoitemid_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_indextoitemid_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 159,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_indextoitemid_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_indextoitemid_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 161,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_indextoitemid_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_indextoitemid_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 164,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_selectedid_numeric"
+      ],
+      "name" : "test_prg_engine_selectedid_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 166,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_selectedid_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_selectedid_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 168,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_selectedid_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_selectedid_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 170,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_selectedid_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_selectedid_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 172,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_selectedid_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_selectedid_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 175,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_selected_index_numeric"
+      ],
+      "name" : "test_prg_engine_selected_index_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 177,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_selected_index_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_selected_index_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 179,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_selected_index_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_selected_index_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 181,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_selected_index_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_selected_index_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 183,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_selected_index_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_selected_index_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 186,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_itemdata_index_numeric"
+      ],
+      "name" : "test_prg_engine_itemdata_index_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 188,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_itemdata_index_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_itemdata_index_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 190,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_itemdata_index_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_itemdata_index_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 192,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_itemdata_index_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_itemdata_index_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 194,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_itemdata_index_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_itemdata_index_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 197,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_getcolor_default_numeric"
+      ],
+      "name" : "test_prg_engine_getcolor_default_numeric",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 199,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_getcolor_default_numeric",
+        "COPPERFIN",
+        "1"
+      ],
+      "name" : "test_prg_engine_getcolor_default_numeric_copperfin_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 201,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_getcolor_default_numeric",
+        "COPPERFIN",
+        "2"
+      ],
+      "name" : "test_prg_engine_getcolor_default_numeric_copperfin_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 203,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_getcolor_default_numeric",
+        "VFP9",
+        "1"
+      ],
+      "name" : "test_prg_engine_getcolor_default_numeric_vfp9_session1",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 205,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_getcolor_default_numeric",
+        "VFP9",
+        "2"
+      ],
+      "name" : "test_prg_engine_getcolor_default_numeric_vfp9_session2",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=scoped-process",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=serial"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 208,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_runtime_surface_functions"
+      ],
+      "name" : "test_prg_engine_runtime_surface_functions",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=none",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=configured",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=parallel-safe"
+          ]
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    },
+    {
+      "backtrace" : 211,
+      "command" : 
+      [
+        "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests/test_prg_engine_runtime_surface_itemid_selectors"
+      ],
+      "name" : "test_prg_engine_runtime_surface_itemid_selectors",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "COPPERFIN_LOCALE_DIR=/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/resources/locales"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "copperfin-isolation:audit=complete",
+            "copperfin-isolation:child-processes=none",
+            "copperfin-isolation:environment=none",
+            "copperfin-isolation:filesystem=test-owned-unique",
+            "copperfin-isolation:network=none",
+            "copperfin-isolation:platform=portable",
+            "copperfin-isolation:resources=none",
+            "copperfin-isolation:samples=none",
+            "copperfin-isolation:schedule=parallel-safe"
+          ]
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/home/rich/.codex/worktrees/addlistitem-column-numeric-5611/Project-Copperfin/build/addlistitem-column-clang/tests"
+        }
+      ]
+    }
+  ],
+  "version" : 
+  {
+    "major" : 1,
+    "minor" : 0
+  }
+}

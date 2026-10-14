@@ -1,0 +1,4 @@
+tests/fixtures/vfp9-addlistitem-column-numeric/excluded-scope-preservation.cpp: OK
+tests/fixtures/vfp9-addlistitem-column-numeric/excluded-scope-preservation.before-license.txt: OK
+tests/fixtures/vfp9-addlistitem-column-numeric/run-preservation-notice.sh: OK
+tests/prg_engine_test_support.cpp: OK

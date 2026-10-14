@@ -1,0 +1,1 @@
+{"base":"5e1b259a65f909fb4c5ce3ae30cb48e869098778","callerSHA256":"721e786f4ecdcc4e4ddc718ed88ad322c4669ddee872e2772bf97dd3adef7b24","onlyTwoBoundedCallerRegions":true,"unchangedOtherCallerBytes":true,"ordinaryIdProofBeforeCast":true,"protectedNoWrite":true,"note":"Structural corroboration only; complete runtime/native/source gates remain independent."}

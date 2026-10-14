@@ -1,0 +1,151 @@
+<ref *1> node:child_process:955
+    throw err;
+    ^
+
+Error: spawnSync git ENOBUFS
+    at Object.spawnSync (node:internal/child_process:1120:20)
+    at spawnSync (node:child_process:902:24)
+    at Object.execFileSync (node:child_process:945:15)
+    at get ([stdin]:12:20)
+    at [stdin]:13:13
+    at runScriptInThisContext (node:internal/vm:209:10)
+    at node:internal/process/execution:446:12
+    at [stdin]-wrapper:6:24
+    at runScriptInContext (node:internal/process/execution:444:60)
+    at evalFunction (node:internal/process/execution:279:30) {
+  errno: -105,
+  code: 'ENOBUFS',
+  syscall: 'spawnSync git',
+  path: 'git',
+  spawnargs: [
+    'show',
+    '5e1b259a65f909fb4c5ce3ae30cb48e869098778:docs/32-recovered-requirements-traceability.md'
+  ],
+  error: [Circular *1],
+  status: 0,
+  signal: null,
+  output: [
+    null,
+    '# Requirements And Verification Traceability\n' +
+      '\n' +
+      '## Purpose\n' +
+      '\n' +
+      'This document is the durable bidirectional requirements-to-architecture-to-code-\n' +
+      'to-verification matrix. It implements the Requirements Recovery Principle in\n' +
+      "`docs/01-product-charter.md` without treating Copperfin's existing behavior as\n" +
+      'its own requirement source. The historical filename remains stable because\n' +
+      'recovered compatibility requirements are one important subset of this matrix.\n' +
+      '\n' +
+      'Allowed requirement evidence is limited to observed behavior from a real,\n' +
+      'installed VFP9 environment, shipped Microsoft/VFP documentation, explicit\n' +
+      'repository-owner product policy, and registered known-bug or crash exceptions\n' +
+      'in `docs/27-known-vfp9-bug-exceptions.md`.\n' +
+      'Decompiled or disassembled VFP binaries are prohibited inputs under\n' +
+      '`docs/07-clean-room-rules.md`.\n' +
+      '\n' +
+      'Existing Copperfin implementation and tests may confirm or contradict a\n' +
+      'requirement, but may not originate one. A derived requirement must identify its\n' +
+      'parent product requirement or hazard. When allowed evidence and implementation\n' +
+      'disagree, use `gap` or `exception`; never rewrite the requirement to describe\n' +
+      'whatever the code happens to do.\n' +
+      '\n' +
+      '## Assurance Boundary\n' +
+      '\n' +
+      "Copperfin's DO-178C-inspired discipline is adapted to a general-purpose\n" +
+      'C++/.NET platform. This matrix is not evidence of formal DO-178C compliance,\n' +
+      'an assigned software level, certification, or suitability for a particular\n' +
+      'safety-critical use. Integrators retain the responsibilities stated in the\n' +
+      'product charter.\n' +
+      '\n' +
+      'Every behavior-changing slice must add or cite a governing row and preserve\n' +
+      'both directions of traceability. Higher-hazard or broader-reach work must also\n' +
+      'record misuse and boundary analysis, rollback, applicable `HZ-*` controls,\n' +
+      'focused and broader verification, retained results, and release-evidence\n' +
+      'disposition. Unknown relationships remain explicit gaps rather than inferred\n' +
+      'coverage.\n' +
+      '\n' +
+      '## Status Values\n' +
+      '\n' +
+      '- `defined`: an explicit owner product requirement or a derived requirement has\n' +
+      '  its allowed source/parent plus mapped architecture, code, tests, and retained\n' +
+      '  verification evidence.\n' +
+      '- `recovered`: the requirement has allowed source evidence and mapped code and\n' +
+      '  test evidence.\n' +
+      '- `gap`: allowed source evidence exists, but code or test evidence is missing or\n' +
+      '  contradicts the requirement. Track implementation in a separate prompt-sized\n' +
+      '  issue.\n' +
+      '- `exception`: the behavior is intentionally different and has an applied\n' +
+      '  `KBX-*` entry in `docs/27-known-vfp9-bug-exceptions.md`.\n' +
+      '\n' +
+      '## Product And Derived Requirements Matrix\n' +
+      '\n' +
+      '| Requirement ID | Parent / allowed source | Testable requirement | Architecture / code | Focused and broader verification | Retained result | Exceptions / hazards | Status |\n' +
+      '| --- | --- | --- | --- | --- | --- | --- | --- |\n' +
+      '| `RQ-CF-PRG-ADDITEM-COLUMN-NUMERIC-001` | OPEN owner-admitted5611/6776; RQ-CF-PRG-NUMERIC-BEHAVIOR-001; independent installedVFP9 7423 and completely read AddItem/ColumnCount/BINTOC help | Bounded supplied THIRD Numeric/exact column: default finite truncation/lossless exact1..65535/invalid11; explicitVFP9 signedlow32-positive-or-INT32MIN then unsignedlow16/engagedzero blank row. Derived per-new-row argument-driven bound, NOT native maximum/ColumnCount/Grid255/stableID. Exactly3args/nonNULLCharacter/coherentunbound/exacttypedRST0/trimempty/ordinary integral Numeric position1..count+1 | Distinct [checked helper/header](../src/runtime/prg_engine_helpers.h) UNUSED through BOTH complete original90/full6968 failure/hash audits; only afterwards [bounded third-column arm](../src/runtime/prg_engine_runtime_surface_object_methods.inl) current-session/localized11/engagedzero/no0-1 index. Original predicate/shipped second-position/resolver/allocator/shared-tail/fallback body preserved, structural audit0; reverse RQ/VR links and initialfive/selector/root/prior85 unchanged | VR-5611-ADDITEM-COLUMN-NUMERIC-001/002: independent98 Numeric/23 exact literals/276direct/four1224 safe public; BOTH originals86of90/GNU722.96s-Clang4565.26s/actual8/onlyfourNEWpublic fail/each6968 identical full failures/all255 hashes before wiring. BOTH fixed90of90/GNU718.68s-Clang ASan-UBSan-float-cast-overflow4320.20s/actual0/all counters/all256 before-after hashes; each four PRE-WIRE-authored fixed-only542 hostile shards0; both NON-NATIVE296 samecompiler fullcmp0/DONE296/scaffold0/source-nine-library hashes0. Five contracts5of5 PASS329.53s | [Pre-code recovered/derived map](../tests/fixtures/vfp9-additem-column-numeric/recovered-requirements.md), [BOTH-original gate](../tests/fixtures/vfp9-additem-column-numeric/both-originals-before-wire.md) and [current local completion/walkthrough](../tests/fixtures/vfp9-additem-column-numeric/local-completion.md) preserve full source/raw/status/hashes and failed chronology. Four matching1000/432/864/432 native pairs; completion literal2528rows/97of98 captured/uncaptured65538 model-derived/group72-216 audits0. Full fixed raw0c3a1a14/0537ce6e/hostilecf672f99/preservationc4544b0e/contracts3c3c6bec. Original safe-public reach vs separately fixed-only hostile evidence explicit; no frozen weakening/new oracle. Exact-head postpush/actual review/required11/resolved conversations remain integration gates | Active HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01 unchanged; DQ/DV-5611-ADDITEM-COLUMN-NUMERIC-001 boundedMEDIUM delegated-development self-review/delta-misuse-rollback/automated walkthrough complete with five contracts; NOT independent-human/high-hazard/parent/release closure. Other positions/types/RST-binding/lifecycle/parser/shared successful state/hiddenstorage/globalcapacity/unadmitted7176-7177-earlier gaps excluded | `recovered` |\n' +
+      '| `RQ-CF-PRG-ADDITEM-POSITION-NUMERIC-001` | OPEN owner-admitted5611/6776; RQ-CF-PRG-NUMERIC-BEHAVIOR-001; independent installedVFP9 7423 seven matching AddItem pairs/completely read AddItem771 and BINTOC564 help | Supplied second insertion POSITION, NOT stableID; finite truncation1..ListCount+1/localized catchable11 before modeled insertion; explicitVFP9 BOTH-sign definedlow32 then samecount domain; default/lossless exact64/NaN/binary/count-overflow/size_t containment parent-derived; exacttwoargs/nonNULLCharacter/omittedcolumn/coherent unbound default-exacttypedRST0/trimempty scope | Distinct [checked helper/header](../src/runtime/prg_engine_helpers.h) UNUSED through BOTH complete original85/full failure/hash audits; only afterwards [AddItem-only projection](../src/runtime/prg_engine_runtime_surface_object_methods.inl) wires checked one-based position directly to zero-based slot/current session/localized11. Shared resolver/insertion/allocator/success-state/other routes unchanged; reverse RQ/VR in helper/header/method/test/registration. Initialfive/isolation/OTHER252 unchanged, fixed254 snapshot18:18:52Z | VR-5611-ADDITEM-POSITION-NUMERIC-001/002 independent82 Numeric/14 exact public literals;1246direct/four1102public. BOTH original85 GNU81of85/637.05s andClang81of85/3756.59s/allprior80-direct PASS/onlyfourNEWpublic fail/each253hashes unchanged; TWO fullmultiline audit0/each17612 identical selected failures/f66b04f5 before wiring. BOTH fixed85of85 PASS/GNU641.20s/Clang ASan-UBSan-float-cast-overflow3810.34s/actual0/allcounters/fullTWO audit0/no assertions-or-sanitizer runtime diagnostics/all254-initialfive-isolation unchanged. Both samecompiler NON-NATIVE288 compile-run-fullrawcmp0/DONE288/scaffold0/source-nine-library hashes unchanged | [Current local verification/walkthrough](../tests/fixtures/vfp9-additem-numeric/local-completion.md) supersedes pending phase checkpoints: full GNU0952867f/Clang0a8b9a2f/preservation8a56e54d. [Pre-code requirement recovery](../tests/fixtures/vfp9-additem-numeric/recovered-requirements.md) and retained phases/raw/status/manifests preserve seven paired440/96/224/224postbits/48/220/228 observations, source evaluation vs actual binary payload,1256 capture audit0 and1248 literal-row audit0/462positions/8excludeddecimalparserrows. [Both-original gate](../tests/fixtures/vfp9-additem-numeric/originals-complete-before-wire.md) retains all failed path/scaffold/partialcompile/interrupt130/refreeze chronology without frozen weakening. Failed312 firstRST1 runtime139/currentmain corroboration/24PLANNED deferred vectors remain in [crash record](../tests/fixtures/vfp9-additem-numeric/preservation-crash-phase.md), not full312 qualification. Current finalfive contracts5of5 PASS334.91s/status0/19:54:02Z/raw0d000f70; complete bounded DQ-DV evidence in current record. Signed exacthead postpush/actual review/all11green/resolvedthreads remain integration gates | Active HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01 unchanged. DQ/DV-5611-ADDITEM-POSITION-NUMERIC-001 medium delegateddevelopment self-review/walkthrough/delta-misuse-rollback documented; complete with currentfive contracts, not independenthuman/high-hazard/persistence/globalatomicity/system/release qualification. Separate OPEN UNADMITTED7176 allocation/7177 RST1 crash and7163/7164/7169/7171/7173/7174 excluded/unrepaired; parents/hazards remain open | `recovered` |\n' +
+      '| `RQ-CF-PRG-ADDLISTITEM-ID-NUMERIC-001` | OPEN owner-approved5611/6776; RQ-CF-PRG-NUMERIC-BEHAVIOR-001; independent installedVFP9 7423 eleven matching native pairs and completely read AddListItem/BINTOC help | Supplied second Numeric/exact stable-ID, not row; finite truncation1..32767/invalid-nonfinite11 before modeled insertion; explicitVFP9 BOTH-sign definedlow32 aliases; default/lossless exact64/NaN/binary/config extensions parent-derived; exacttwoargs/nonNULLCharacter item/coherent materialized-unbound default-exacttypedRST0/trimmed-emptybinding only | Distinct checked_addlistitem_id_argument UNUSED through BOTH complete original80/failure/hash audits; only afterwards selected column1 second-ID admission wired in object-method module; current-session behavior, insertion/state-return/duplicate/types/columns/lifecycle/parser unchanged; reverse RQ/VR links in helper/header/method/tests/registration | VR-5611-AD'... 1059730 more characters,
+    ''
+  ],
+  pid: 3679548,
+  stdout: '# Requirements And Verification Traceability\n' +
+    '\n' +
+    '## Purpose\n' +
+    '\n' +
+    'This document is the durable bidirectional requirements-to-architecture-to-code-\n' +
+    'to-verification matrix. It implements the Requirements Recovery Principle in\n' +
+    "`docs/01-product-charter.md` without treating Copperfin's existing behavior as\n" +
+    'its own requirement source. The historical filename remains stable because\n' +
+    'recovered compatibility requirements are one important subset of this matrix.\n' +
+    '\n' +
+    'Allowed requirement evidence is limited to observed behavior from a real,\n' +
+    'installed VFP9 environment, shipped Microsoft/VFP documentation, explicit\n' +
+    'repository-owner product policy, and registered known-bug or crash exceptions\n' +
+    'in `docs/27-known-vfp9-bug-exceptions.md`.\n' +
+    'Decompiled or disassembled VFP binaries are prohibited inputs under\n' +
+    '`docs/07-clean-room-rules.md`.\n' +
+    '\n' +
+    'Existing Copperfin implementation and tests may confirm or contradict a\n' +
+    'requirement, but may not originate one. A derived requirement must identify its\n' +
+    'parent product requirement or hazard. When allowed evidence and implementation\n' +
+    'disagree, use `gap` or `exception`; never rewrite the requirement to describe\n' +
+    'whatever the code happens to do.\n' +
+    '\n' +
+    '## Assurance Boundary\n' +
+    '\n' +
+    "Copperfin's DO-178C-inspired discipline is adapted to a general-purpose\n" +
+    'C++/.NET platform. This matrix is not evidence of formal DO-178C compliance,\n' +
+    'an assigned software level, certification, or suitability for a particular\n' +
+    'safety-critical use. Integrators retain the responsibilities stated in the\n' +
+    'product charter.\n' +
+    '\n' +
+    'Every behavior-changing slice must add or cite a governing row and preserve\n' +
+    'both directions of traceability. Higher-hazard or broader-reach work must also\n' +
+    'record misuse and boundary analysis, rollback, applicable `HZ-*` controls,\n' +
+    'focused and broader verification, retained results, and release-evidence\n' +
+    'disposition. Unknown relationships remain explicit gaps rather than inferred\n' +
+    'coverage.\n' +
+    '\n' +
+    '## Status Values\n' +
+    '\n' +
+    '- `defined`: an explicit owner product requirement or a derived requirement has\n' +
+    '  its allowed source/parent plus mapped architecture, code, tests, and retained\n' +
+    '  verification evidence.\n' +
+    '- `recovered`: the requirement has allowed source evidence and mapped code and\n' +
+    '  test evidence.\n' +
+    '- `gap`: allowed source evidence exists, but code or test evidence is missing or\n' +
+    '  contradicts the requirement. Track implementation in a separate prompt-sized\n' +
+    '  issue.\n' +
+    '- `exception`: the behavior is intentionally different and has an applied\n' +
+    '  `KBX-*` entry in `docs/27-known-vfp9-bug-exceptions.md`.\n' +
+    '\n' +
+    '## Product And Derived Requirements Matrix\n' +
+    '\n' +
+    '| Requirement ID | Parent / allowed source | Testable requirement | Architecture / code | Focused and broader verification | Retained result | Exceptions / hazards | Status |\n' +
+    '| --- | --- | --- | --- | --- | --- | --- | --- |\n' +
+    '| `RQ-CF-PRG-ADDITEM-COLUMN-NUMERIC-001` | OPEN owner-admitted5611/6776; RQ-CF-PRG-NUMERIC-BEHAVIOR-001; independent installedVFP9 7423 and completely read AddItem/ColumnCount/BINTOC help | Bounded supplied THIRD Numeric/exact column: default finite truncation/lossless exact1..65535/invalid11; explicitVFP9 signedlow32-positive-or-INT32MIN then unsignedlow16/engagedzero blank row. Derived per-new-row argument-driven bound, NOT native maximum/ColumnCount/Grid255/stableID. Exactly3args/nonNULLCharacter/coherentunbound/exacttypedRST0/trimempty/ordinary integral Numeric position1..count+1 | Distinct [checked helper/header](../src/runtime/prg_engine_helpers.h) UNUSED through BOTH complete original90/full6968 failure/hash audits; only afterwards [bounded third-column arm](../src/runtime/prg_engine_runtime_surface_object_methods.inl) current-session/localized11/engagedzero/no0-1 index. Original predicate/shipped second-position/resolver/allocator/shared-tail/fallback body preserved, structural audit0; reverse RQ/VR links and initialfive/selector/root/prior85 unchanged | VR-5611-ADDITEM-COLUMN-NUMERIC-001/002: independent98 Numeric/23 exact literals/276direct/four1224 safe public; BOTH originals86of90/GNU722.96s-Clang4565.26s/actual8/onlyfourNEWpublic fail/each6968 identical full failures/all255 hashes before wiring. BOTH fixed90of90/GNU718.68s-Clang ASan-UBSan-float-cast-overflow4320.20s/actual0/all counters/all256 before-after hashes; each four PRE-WIRE-authored fixed-only542 hostile shards0; both NON-NATIVE296 samecompiler fullcmp0/DONE296/scaffold0/source-nine-library hashes0. Five contracts5of5 PASS329.53s | [Pre-code recovered/derived map](../tests/fixtures/vfp9-additem-column-numeric/recovered-requirements.md), [BOTH-original gate](../tests/fixtures/vfp9-additem-column-numeric/both-originals-before-wire.md) and [current local completion/walkthrough](../tests/fixtures/vfp9-additem-column-numeric/local-completion.md) preserve full source/raw/status/hashes and failed chronology. Four matching1000/432/864/432 native pairs; completion literal2528rows/97of98 captured/uncaptured65538 model-derived/group72-216 audits0. Full fixed raw0c3a1a14/0537ce6e/hostilecf672f99/preservationc4544b0e/contracts3c3c6bec. Original safe-public reach vs separately fixed-only hostile evidence explicit; no frozen weakening/new oracle. Exact-head postpush/actual review/required11/resolved conversations remain integration gates | Active HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01 unchanged; DQ/DV-5611-ADDITEM-COLUMN-NUMERIC-001 boundedMEDIUM delegated-development self-review/delta-misuse-rollback/automated walkthrough complete with five contracts; NOT independent-human/high-hazard/parent/release closure. Other positions/types/RST-binding/lifecycle/parser/shared successful state/hiddenstorage/globalcapacity/unadmitted7176-7177-earlier gaps excluded | `recovered` |\n' +
+    '| `RQ-CF-PRG-ADDITEM-POSITION-NUMERIC-001` | OPEN owner-admitted5611/6776; RQ-CF-PRG-NUMERIC-BEHAVIOR-001; independent installedVFP9 7423 seven matching AddItem pairs/completely read AddItem771 and BINTOC564 help | Supplied second insertion POSITION, NOT stableID; finite truncation1..ListCount+1/localized catchable11 before modeled insertion; explicitVFP9 BOTH-sign definedlow32 then samecount domain; default/lossless exact64/NaN/binary/count-overflow/size_t containment parent-derived; exacttwoargs/nonNULLCharacter/omittedcolumn/coherent unbound default-exacttypedRST0/trimempty scope | Distinct [checked helper/header](../src/runtime/prg_engine_helpers.h) UNUSED through BOTH complete original85/full failure/hash audits; only afterwards [AddItem-only projection](../src/runtime/prg_engine_runtime_surface_object_methods.inl) wires checked one-based position directly to zero-based slot/current session/localized11. Shared resolver/insertion/allocator/success-state/other routes unchanged; reverse RQ/VR in helper/header/method/test/registration. Initialfive/isolation/OTHER252 unchanged, fixed254 snapshot18:18:52Z | VR-5611-ADDITEM-POSITION-NUMERIC-001/002 independent82 Numeric/14 exact public literals;1246direct/four1102public. BOTH original85 GNU81of85/637.05s andClang81of85/3756.59s/allprior80-direct PASS/onlyfourNEWpublic fail/each253hashes unchanged; TWO fullmultiline audit0/each17612 identical selected failures/f66b04f5 before wiring. BOTH fixed85of85 PASS/GNU641.20s/Clang ASan-UBSan-float-cast-overflow3810.34s/actual0/allcounters/fullTWO audit0/no assertions-or-sanitizer runtime diagnostics/all254-initialfive-isolation unchanged. Both samecompiler NON-NATIVE288 compile-run-fullrawcmp0/DONE288/scaffold0/source-nine-library hashes unchanged | [Current local verification/walkthrough](../tests/fixtures/vfp9-additem-numeric/local-completion.md) supersedes pending phase checkpoints: full GNU0952867f/Clang0a8b9a2f/preservation8a56e54d. [Pre-code requirement recovery](../tests/fixtures/vfp9-additem-numeric/recovered-requirements.md) and retained phases/raw/status/manifests preserve seven paired440/96/224/224postbits/48/220/228 observations, source evaluation vs actual binary payload,1256 capture audit0 and1248 literal-row audit0/462positions/8excludeddecimalparserrows. [Both-original gate](../tests/fixtures/vfp9-additem-numeric/originals-complete-before-wire.md) retains all failed path/scaffold/partialcompile/interrupt130/refreeze chronology without frozen weakening. Failed312 firstRST1 runtime139/currentmain corroboration/24PLANNED deferred vectors remain in [crash record](../tests/fixtures/vfp9-additem-numeric/preservation-crash-phase.md), not full312 qualification. Current finalfive contracts5of5 PASS334.91s/status0/19:54:02Z/raw0d000f70; complete bounded DQ-DV evidence in current record. Signed exacthead postpush/actual review/all11green/resolvedthreads remain integration gates | Active HZ-runtime-crash-01/HZ-data-corruption-01/HZ-doc-command-01 unchanged. DQ/DV-5611-ADDITEM-POSITION-NUMERIC-001 medium delegateddevelopment self-review/walkthrough/delta-misuse-rollback documented; complete with currentfive contracts, not independenthuman/high-hazard/persistence/globalatomicity/system/release qualification. Separate OPEN UNADMITTED7176 allocation/7177 RST1 crash and7163/7164/7169/7171/7173/7174 excluded/unrepaired; parents/hazards remain open | `recovered` |\n' +
+    '| `RQ-CF-PRG-ADDLISTITEM-ID-NUMERIC-001` | OPEN owner-approved5611/6776; RQ-CF-PRG-NUMERIC-BEHAVIOR-001; independent installedVFP9 7423 eleven matching native pairs and completely read AddListItem/BINTOC help | Supplied second Numeric/exact stable-ID, not row; finite truncation1..32767/invalid-nonfinite11 before modeled insertion; explicitVFP9 BOTH-sign definedlow32 aliases; default/lossless exact64/NaN/binary/config extensions parent-derived; exacttwoargs/nonNULLCharacter item/coherent materialized-unbound default-exacttypedRST0/trimmed-emptybinding only | Distinct checked_addlistitem_id_argument UNUSED through BOTH complete original80/failure/hash audits; only afterwards selected column1 second-ID admission wired in object-method module; current-session behavior, insertion/state-return/duplicate/types/columns/lifecycle/parser unchanged; reverse RQ/VR links in helper/header/method/tests/registration | VR-5611-AD'... 1059730 more characters,
+  stderr: ''
+}
+
+Node.js v22.20.0
