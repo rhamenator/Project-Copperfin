@@ -1,0 +1,5 @@
+Working directory: /home/rich/.codex/worktrees/addlistitem-new-column-numeric-5611/Project-Copperfin
+Both commands ran before acceptance/configuration/caller changes; actual driver statuses0, logs empty.
+nice -n10 ionice -c2 -n7 /usr/bin/c++ -std=c++20 -O1 -g0 -Iinclude -Isrc/runtime -fsyntax-only src/runtime/prg_engine.cpp
+nice -n10 ionice -c2 -n7 /usr/bin/clang++ -std=c++20 -O1 -g0 -Iinclude -Isrc/runtime -fsyntax-only src/runtime/prg_engine.cpp
+Syntax feedback ONLY; not runtime build/test/sanitizer/full original or fixed qualification.

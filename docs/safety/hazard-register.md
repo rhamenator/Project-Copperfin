@@ -466,6 +466,26 @@ Run `scripts/validate-safety-traceability.ps1` before release tagging (or run th
 
 Do not pass every issue carrying the broad `safety` label. That label also covers implementation and test lanes; the validator selects documentation issues through the `documentation` label, a `[docs-safety]` title, or `DQ-*` identifiers in the issue body.
 
+## Bounded AddListItem missing-ID numeric-column linkage
+
+RQ-CF-PRG-ADDLISTITEM-NEW-COLUMN-NUMERIC-001 / VR001+002 /
+DQ-DV-5611-ADDLISTITEM-NEW-COLUMN-NUMERIC-001 links unchanged active runtime/
+data/doc hazards to the [independent pre-code requirement and assurance plan](../../tests/fixtures/vfp9-addlistitem-new-column-numeric/recovered-requirements.md).
+Default32745 numeric/preparation domain is derived, not native/configured/global
+capacity or total memory qualification. Explicit VFP9 candidate normalization
+never authorizes zero-minus-one or unbounded preparation. Missing-slot no-row
+fallback and #7186 shared creation are preserved, not native parity or a repair.
+Both full original100/source270/failure/counter gates and fresh328 baselines
+preceded the24-line bounded guard; all other269 frozen inputs/old caller bytes
+are preserved. Both full fixed100/sanitizers, each four112 fixed-only hostile
+and SAME-compiler entire328 NON-NATIVE comparisons/audits passed. See the
+[bounded development results and residual gap](../../tests/fixtures/vfp9-addlistitem-new-column-numeric/local-completion.md).
+MEDIUM misuse/delta/rollback/delegated development walkthrough is complete with
+five actual development contracts5/5 PASS342.28s. This is NOT independent human
+or personal-owner assurance; actual exact-head integration remains open.
+#7186/RST1 and native shared-state/full-capacity are not repaired.
+No hazard severity/status, independent-human/system/release or parent closure.
+
 ## Bounded Windows native CI scheduling linkage
 
 RQ-CF-CI-WINDOWS-NATIVE-BUDGET-001 / DQ-DV-CI-7181-001 links active

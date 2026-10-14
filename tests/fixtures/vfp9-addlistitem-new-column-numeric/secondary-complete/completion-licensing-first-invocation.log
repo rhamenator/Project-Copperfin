@@ -1,0 +1,4 @@
+CMake Error at tests/run_product_licensing_policy_contract_check.cmake:8 (message):
+  COPPERFIN_SOURCE_ROOT is required
+
+

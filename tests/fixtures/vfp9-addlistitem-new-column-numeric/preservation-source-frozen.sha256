@@ -1,0 +1,3 @@
+3c8a70690bf0fe8e03bea5b7905a7f855e557f86589ceb6f40a4916c481eaf17  tests/fixtures/vfp9-addlistitem-new-column-numeric/excluded-scope-preservation.cpp
+25fc258accde7df1afc75d14d2c8f9bf3a51d21e9ceb814a2f8fc2fdf1889a38  tests/fixtures/vfp9-addlistitem-new-column-numeric/audit-preservation.cjs
+6e1b030e9d494f646cd8d53ed06b0ad01de91f5c5be13ce04cee9d641cc432ae  tests/fixtures/vfp9-addlistitem-new-column-numeric/run-preservation.sh

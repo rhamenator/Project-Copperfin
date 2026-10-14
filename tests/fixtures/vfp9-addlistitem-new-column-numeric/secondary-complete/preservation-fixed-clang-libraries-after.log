@@ -1,0 +1,9 @@
+build/addlistitem-new-column-clang/libcf_design_model.a: OK
+build/addlistitem-new-column-clang/libcf_localization.a: OK
+build/addlistitem-new-column-clang/libcf_platform_profile.a: OK
+build/addlistitem-new-column-clang/libcf_platform_support.a: OK
+build/addlistitem-new-column-clang/libcf_prg_analysis.a: OK
+build/addlistitem-new-column-clang/libcf_runtime_text.a: OK
+build/addlistitem-new-column-clang/libcf_security.a: OK
+build/addlistitem-new-column-clang/libcf_vfp_assets.a: OK
+build/addlistitem-new-column-clang/libcf_xbase_runtime.a: OK

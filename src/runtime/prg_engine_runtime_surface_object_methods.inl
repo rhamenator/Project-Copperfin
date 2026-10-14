@@ -342,6 +342,30 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
                 }
                 requested_column = static_cast<long long>(*column); // Helper domain0..32745.
                 admitted_no_write = *column == 0U;
+            } else if (arguments.size() == 3U && materialized_unbound &&
+                !arguments[0].is_null && arguments[0].kind == PrgValueKind::string &&
+                !supplied_column.is_null &&
+                (supplied_column.kind == PrgValueKind::number ||
+                 supplied_column.kind == PrgValueKind::int64 ||
+                 supplied_column.kind == PrgValueKind::uint64) &&
+                !supplied_id.is_null && supplied_id.kind == PrgValueKind::number &&
+                std::isfinite(supplied_id.number_value) &&
+                supplied_id.number_value >= 1.0 && supplied_id.number_value <= 32767.0 &&
+                std::trunc(supplied_id.number_value) == supplied_id.number_value &&
+                !find_native_list_control_row_by_item_id(runtime_object,
+                    static_cast<long long>(supplied_id.number_value)).has_value()) {
+                // RQ-CF-PRG-ADDLISTITEM-NEW-COLUMN-NUMERIC-001 / VR-5611-ADDLISTITEM-NEW-COLUMN-NUMERIC-001/002.
+                // BOTH original100/full failures/counters/source270 audited;
+                // BOTH fresh328 excluded-route baselines precede this wiring.
+                // Ordinary missing ID is bounded BEFORE cast/lookup. Candidate1
+                // keeps original creation; other positives/engaged0 keep the
+                // original missing-slot return0/no-row (#7186), not a repair.
+                const auto column = checked_addlistitem_new_column_argument(supplied_column, behavior);
+                if (!column.has_value()) {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+                }
+                requested_column = static_cast<long long>(*column); // Helper domain0..32745.
+                admitted_no_write = *column == 0U;
             } else {
                 requested_column = std::llround(value_as_number(arguments[2]));
             }

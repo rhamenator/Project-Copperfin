@@ -3240,6 +3240,52 @@ std::optional<std::size_t> checked_addlistitem_column_argument(
     return static_cast<std::size_t>(truncated); // Bounded BEFORE conversion.
 }
 
+// RQ-CF-PRG-ADDLISTITEM-NEW-COLUMN-NUMERIC-001 / VR-5611-ADDLISTITEM-NEW-COLUMN-NUMERIC-001/002.
+// Independently observed missing-ID780/100/384/144 native effects: signedlow32
+// admission, then low16 candidate placement, with >32745/zero admitted no-write.
+// Default32745 preparation-domain bound/exact64/NaN derive from numeric parent
+// #5611/#6776/hazards, NOT a native/global limit or shared creation repair (#7186).
+// UNUSED by production through BOTH complete original compiler gate audits.
+std::optional<std::size_t> checked_addlistitem_new_column_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    if (value.is_null || (value.kind != PrgValueKind::number &&
+        value.kind != PrgValueKind::int64 && value.kind != PrgValueKind::uint64)) {
+        return std::nullopt;
+    }
+    if (value.kind == PrgValueKind::number && !std::isfinite(value.number_value)) {
+        return std::nullopt;
+    }
+    constexpr std::uint64_t maximum_candidate_column = 32745U;
+    if (behavior == NumericBehavior::vfp9) {
+        const auto projected = vfp9_numeric_to_int32(value);
+        if (projected <= 0 && projected != std::numeric_limits<std::int32_t>::min()) {
+            return std::nullopt;
+        }
+        // Unsigned modulo is defined, including INT32_MIN. Engaged zero is
+        // ADMITTED no candidate; NEVER zero-1 or permission to create a blank
+        // row instead of preserving the existing missing-slot fallback.
+        const auto candidate = static_cast<std::uint32_t>(projected) & 65535U;
+        return candidate <= maximum_candidate_column
+            ? static_cast<std::size_t>(candidate) : std::size_t{0U};
+    }
+    if (value.kind == PrgValueKind::int64) {
+        if (value.int64_value < 1 ||
+            static_cast<std::uint64_t>(value.int64_value) > maximum_candidate_column) {
+            return std::nullopt;
+        }
+        return static_cast<std::size_t>(value.int64_value);
+    }
+    if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value < 1U || value.uint64_value > maximum_candidate_column) {
+            return std::nullopt;
+        }
+        return static_cast<std::size_t>(value.uint64_value);
+    }
+    const double truncated = std::trunc(value.number_value);
+    if (truncated < 1.0 || truncated > 32745.0) return std::nullopt;
+    return static_cast<std::size_t>(truncated); // Bounded BEFORE conversion.
+}
+
 std::size_t saturating_size_argument(const double value, const std::size_t minimum) {
     const std::int64_t truncated = saturating_numeric_to_int64(value);
     if (truncated <= 0 || static_cast<std::uint64_t>(truncated) < minimum) {

@@ -6065,6 +6065,20 @@ foreach(addlistitem_column_mode IN ITEMS COPPERFIN VFP9)
             COMMAND $<TARGET_FILE:test_prg_engine_addlistitem_column_numeric> ${addlistitem_column_mode} ${addlistitem_column_session})
     endforeach()
 endforeach()
+# RQ-CF-PRG-ADDLISTITEM-NEW-COLUMN-NUMERIC-001 / VR-5611-ADDLISTITEM-NEW-COLUMN-NUMERIC-001/002.
+# Missing-ID THIRD column only. Safe-original public shards; PRE-WIRE-authored
+# hostile vectors are fixed-only, NEVER old-caller execution qualification.
+copperfin_add_test(test_prg_engine_addlistitem_new_column_numeric cf_xbase_runtime
+    test_prg_engine_addlistitem_new_column_numeric.cpp
+    prg_engine_test_support.cpp
+)
+foreach(addlistitem_new_column_mode IN ITEMS COPPERFIN VFP9)
+    string(TOLOWER "${addlistitem_new_column_mode}" addlistitem_new_column_mode_lower)
+    foreach(addlistitem_new_column_session IN ITEMS 1 2)
+        add_test(NAME test_prg_engine_addlistitem_new_column_numeric_${addlistitem_new_column_mode_lower}_session${addlistitem_new_column_session}
+            COMMAND $<TARGET_FILE:test_prg_engine_addlistitem_new_column_numeric> ${addlistitem_new_column_mode} ${addlistitem_new_column_session})
+    endforeach()
+endforeach()
 # RQ-CF-PRG-ADDLISTITEM-ID-NUMERIC-001 / VR-5611-ADDLISTITEM-ID-NUMERIC-001/002.
 copperfin_add_test(test_prg_engine_addlistitem_numeric cf_xbase_runtime
     test_prg_engine_addlistitem_numeric.cpp

@@ -1,0 +1,12 @@
+{"mutation":"truncated","rejected":true,"errors":["complete unique execution100","unique starts match every result ID/name","complete ordered ordinals","all prior95 must pass","only four new public failures"]}
+{"mutation":"missingCounter","rejected":true,"errors":["all five actual192/four432 counters"]}
+{"mutation":"wrongCounter","rejected":true,"errors":["all five actual192/four432 counters"]}
+{"mutation":"stalePublicCounter","rejected":true,"errors":["all five actual192/four432 counters"]}
+{"mutation":"omittedPrior","rejected":true,"errors":["complete unique execution100","complete ordered ordinals","all prior95 must pass"]}
+{"mutation":"duplicateStart","rejected":true,"errors":["unique starts match every result ID/name"]}
+{"mutation":"falseSummary","rejected":true,"errors":["only four new public failures"]}
+{"mutation":"unrelatedAssertion","rejected":true,"errors":["full selected failure blocks, no unrelated assertions"]}
+{"mutation":"sanitizerDiagnostic","rejected":true,"errors":["unexpected sanitizer diagnostics"]}
+{"mutation":"malformedOrdinal","rejected":true,"errors":["complete ordered ordinals"]}
+{"mutation":"wrongSubject","rejected":true,"errors":["complete unique execution100","unique starts match every result ID/name","all prior95 must pass"]}
+{"parserPositiveShape":true,"fullMultilineRetention":true,"rejectedMutations":11,"note":"AUDIT tooling selftest ONLY. No product runtime execution, original/fixed qualification, synthetic11 acceptance or wiring gate."}
