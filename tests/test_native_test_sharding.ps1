@@ -1,5 +1,6 @@
 # Copyright © 2026 Richard M. Hamilton.
 # SPDX-License-Identifier: GPL-3.0-only
+# Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 # VR-CI-7181-001: synthetic policy checks AND actual tiny CTest execution.
 param([string]$EvidenceDirectory = '')
 Set-StrictMode -Version Latest

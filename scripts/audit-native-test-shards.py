@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright © 2026 Richard M. Hamilton.
+# SPDX-License-Identifier: GPL-3.0-only
+# Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 """RQ-CF-CI-WINDOWS-NATIVE-BUDGET-001: fail-closed aggregate execution proof."""
 import argparse
 import json
