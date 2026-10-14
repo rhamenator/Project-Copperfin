@@ -1,0 +1,3 @@
+gcc fixed90 completed with actual ctest status 0
+clang fixed90 completed with actual ctest status 0
+Both complete fixed90, four542 hostile shards per compiler, and samecompiler296 raw comparisons finished; audit full statuses/counters/sources.

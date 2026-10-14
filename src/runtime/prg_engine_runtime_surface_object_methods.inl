@@ -627,14 +627,6 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
         return make_number_value(0.0);
     }
 
-    long long requested_column = 1LL;
-    if (arguments.size() >= 3U) {
-        requested_column = std::llround(value_as_number(arguments[2]));
-        if (requested_column < 1LL) {
-            return make_number_value(0.0);
-        }
-    }
-
     // RQ-CF-PRG-ADDITEM-POSITION-NUMERIC-001 / VR-5611-ADDITEM-POSITION-NUMERIC-001/002.
     // BOTH complete original85 suites/full failures/hashes audited before wiring.
     // Check only supplied numeric position with Character item/omitted column.
@@ -656,6 +648,37 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
           trim_copy(control_source->second.string_value).empty())) &&
         runtime_object.collection_item_keys.size() == runtime_object.collection_items.size() &&
         runtime_object.list_rows.size() == runtime_object.collection_items.size();
+
+    // RQ-CF-PRG-ADDITEM-COLUMN-NUMERIC-001 / VR-5611-ADDITEM-COLUMN-NUMERIC-001/002.
+    // BOTH complete original90/full multiline failures/input hashes audited
+    // before wiring. Only THIRD numeric column with ordinary integral Numeric
+    // insertion position; this scope check does not transform that position.
+    // Host-int64 check also protects the unchanged shared resolver's llround.
+    const bool ordinary_position = arguments.size() == 3U &&
+        !arguments[1].is_null && arguments[1].kind == PrgValueKind::number &&
+        std::isfinite(arguments[1].number_value) &&
+        arguments[1].number_value == std::trunc(arguments[1].number_value) &&
+        checked_truncated_numeric_to_int64(arguments[1].number_value).has_value() &&
+        checked_additem_position_argument(arguments[1], NumericBehavior::copperfin,
+            runtime_object.collection_items.size()).has_value();
+    long long requested_column = 1LL;
+    if (arguments.size() == 3U && ordinary_position && materialized_unbound &&
+        !arguments[0].is_null && arguments[0].kind == PrgValueKind::string &&
+        !arguments[2].is_null &&
+        (arguments[2].kind == PrgValueKind::number ||
+         arguments[2].kind == PrgValueKind::int64 ||
+         arguments[2].kind == PrgValueKind::uint64)) {
+        const auto column = checked_additem_column_argument(arguments[2], behavior);
+        if (!column.has_value()) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
+        }
+        requested_column = static_cast<long long>(*column); // Defined0..65535.
+    } else if (arguments.size() >= 3U) {
+        requested_column = std::llround(value_as_number(arguments[2]));
+        if (requested_column < 1LL) {
+            return make_number_value(0.0);
+        }
+    }
     std::optional<std::size_t> insert_slot;
     if (arguments.size() == 2U && materialized_unbound &&
         !arguments[0].is_null && arguments[0].kind == PrgValueKind::string &&
@@ -679,8 +702,12 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
     const PrgValue inserted_item = make_string_value(value_as_string(arguments[0]));
     const std::int64_t item_id = next_native_list_control_item_id(runtime_object);
     std::vector<PrgValue> inserted_row;
-    inserted_row.resize(static_cast<std::size_t>(requested_column), make_string_value(""));
-    inserted_row[static_cast<std::size_t>(requested_column - 1LL)] = inserted_item;
+    // Only the newly admitted VFP9 zero sentinel reaches the blank arm;
+    // every fallback still has requested_column>=1 and keeps its old behavior.
+    inserted_row.resize(static_cast<std::size_t>(requested_column == 0LL ? 1LL : requested_column), make_string_value(""));
+    if (requested_column > 0LL) {
+        inserted_row[static_cast<std::size_t>(requested_column - 1LL)] = inserted_item;
+    }
     runtime_object.list_rows.insert(
         runtime_object.list_rows.begin() + static_cast<std::ptrdiff_t>(*insert_slot),
         std::move(inserted_row));

@@ -6037,6 +6037,20 @@ foreach(additem_mode IN ITEMS COPPERFIN VFP9)
             COMMAND $<TARGET_FILE:test_prg_engine_additem_numeric> ${additem_mode} ${additem_session})
     endforeach()
 endforeach()
+# RQ-CF-PRG-ADDITEM-COLUMN-NUMERIC-001 / VR-5611-ADDITEM-COLUMN-NUMERIC-001/002.
+# Only safe-original public shards are registered. PRE-WIRE-authored hostile
+# vectors are explicitly fixed-only; never execute them on the old resize.
+copperfin_add_test(test_prg_engine_additem_column_numeric cf_xbase_runtime
+    test_prg_engine_additem_column_numeric.cpp
+    prg_engine_test_support.cpp
+)
+foreach(additem_column_mode IN ITEMS COPPERFIN VFP9)
+    string(TOLOWER "${additem_column_mode}" additem_column_mode_lower)
+    foreach(additem_column_session IN ITEMS 1 2)
+        add_test(NAME test_prg_engine_additem_column_numeric_${additem_column_mode_lower}_session${additem_column_session}
+            COMMAND $<TARGET_FILE:test_prg_engine_additem_column_numeric> ${additem_column_mode} ${additem_column_session})
+    endforeach()
+endforeach()
 # RQ-CF-PRG-ADDLISTITEM-ID-NUMERIC-001 / VR-5611-ADDLISTITEM-ID-NUMERIC-001/002.
 copperfin_add_test(test_prg_engine_addlistitem_numeric cf_xbase_runtime
     test_prg_engine_addlistitem_numeric.cpp

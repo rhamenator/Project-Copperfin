@@ -431,6 +431,10 @@ std::optional<std::int32_t> checked_addlistitem_id_argument(const PrgValue& valu
 // Independent count-dependent insertion position, NOT a supplied stable-ID domain.
 std::optional<std::size_t> checked_additem_position_argument(
     const PrgValue& value, NumericBehavior behavior, std::size_t item_count);
+// RQ-CF-PRG-ADDITEM-COLUMN-NUMERIC-001 / VR-5611-ADDITEM-COLUMN-NUMERIC-001.
+// Supplied THIRD column, not row/ID; engaged zero is the VFP9 blank-row sentinel.
+// UNUSED by production through BOTH complete original compiler suites.
+std::optional<std::size_t> checked_additem_column_argument(const PrgValue& value, NumericBehavior behavior);
 // #6776: defined conversions for the sites that previously cast a double straight to an integer (undefined when the
 // value is out of range). A size or count: truncated toward zero, never below `minimum`, saturating at the largest
 // value this build supports: INT64_MAX, or SIZE_MAX where size_t is narrower (NaN gives `minimum`). A rounded int64 (llround semantics for in-range values; NaN is 0 and

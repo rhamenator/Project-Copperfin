@@ -1,0 +1,3 @@
+gcc original90 completed with actual ctest status 8
+clang original90 completed with actual ctest status 8
+Both complete original90 executions finished; audit BOTH full raws/statuses/counters/hashes BEFORE caller wiring.

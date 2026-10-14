@@ -3157,6 +3157,46 @@ std::optional<std::size_t> checked_additem_position_argument(
     return position <= upper ? std::optional<std::size_t>(position) : std::nullopt;
 }
 
+// RQ-CF-PRG-ADDITEM-COLUMN-NUMERIC-001 / VR-5611-ADDITEM-COLUMN-NUMERIC-001/002.
+// Independent AddItem THIRD-column observations: signed-low32 admission has
+// an INT32_MIN exception, followed by low16 placement, including blank zero.
+// Default 65535-cell argument bound/exact64/NaN derive from #5611/#6776 and
+// the numeric parent/hazards; NOT ColumnCount or native global capacity.
+// UNUSED by production through BOTH complete original compiler suites.
+std::optional<std::size_t> checked_additem_column_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    if (value.is_null || (value.kind != PrgValueKind::number &&
+        value.kind != PrgValueKind::int64 && value.kind != PrgValueKind::uint64)) {
+        return std::nullopt;
+    }
+    if (value.kind == PrgValueKind::number && !std::isfinite(value.number_value)) {
+        return std::nullopt;
+    }
+    constexpr std::uint64_t maximum_column = 65535U;
+    if (behavior == NumericBehavior::vfp9) {
+        const auto projected = vfp9_numeric_to_int32(value);
+        if (projected <= 0 && projected != std::numeric_limits<std::int32_t>::min()) {
+            return std::nullopt;
+        }
+        // Modulo conversion is defined for negative INT32_MIN. Zero remains
+        // an engaged sentinel; the caller must never compute zero - 1.
+        return static_cast<std::size_t>(static_cast<std::uint32_t>(projected) & maximum_column);
+    }
+    if (value.kind == PrgValueKind::int64) {
+        if (value.int64_value < 1 || static_cast<std::uint64_t>(value.int64_value) > maximum_column) {
+            return std::nullopt;
+        }
+        return static_cast<std::size_t>(value.int64_value);
+    }
+    if (value.kind == PrgValueKind::uint64) {
+        if (value.uint64_value < 1U || value.uint64_value > maximum_column) return std::nullopt;
+        return static_cast<std::size_t>(value.uint64_value);
+    }
+    const double truncated = std::trunc(value.number_value);
+    if (truncated < 1.0 || truncated > 65535.0) return std::nullopt;
+    return static_cast<std::size_t>(truncated); // Bounded BEFORE conversion.
+}
+
 std::size_t saturating_size_argument(const double value, const std::size_t minimum) {
     const std::int64_t truncated = saturating_numeric_to_int64(value);
     if (truncated <= 0 || static_cast<std::uint64_t>(truncated) < minimum) {

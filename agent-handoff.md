@@ -55,6 +55,59 @@ after October rather than assuming quota restoration.
 
 ## Last shipped slice
 
+AddItem supplied second Numeric/exact insertion-position PR7179 merged
+2026-10-13T20:46:54Z ascd4489475cfb424a5c7fa48888b978d9a27eab2a;
+exact signedDCO/localGoodG headce0b68d56eed74d325cee840c2582223fee7dab6.
+https://github.com/rhamenator/Project-Copperfin/pull/7179
+Strictmain20356131 all11unique COMPLETED/SUCCESS; actual clean verifiedBot
+Codex6154037965 explicitlyce0b68d56e after ClaudeFIRST6153973674/fallback
+6153995026. Reviews/reviewcomments/threads/closingrefs0/fullpagination;
+gate6154870680/exactheadmerge/noadminbypass. Optional fullWindowsnative still
+IN_PROGRESS atmerge, notpassing claim; othercheckshealthy/noactionablefailure.
+Parents5611/6776 OPEN/nochildorhazardclosure. Appattach100identitycap retained.
+
+Seven independent VFP9/help pairs and pre-code RQ/VR/DQ/DV/HZ precede UNUSED
+helper/frozen original85 BOTH completeaudits: GNU81/85/637.05s/Clang81/85/
+3756.59s/allprior80+1246direct PASS/fourNEW1102-onlyfail/17612 IDENTICAL
+FULLmultiline failures/f66b04f5/all253initialfive-isolation unchanged. Failed
+retired-driver path/partial62of399compile/SIGINT130/pre-freeze scaffold and
+metadata-onlyrefreeze retained, no frozen assertions weakened. Onlyafterward
+bounded exacttwoargs/nonNULLCharacter/omittedcolumn/coherentunbound/exacttyped
+RST0/trimempty secondPOSITION admission1..count+1/truncate/localized11/current
+session; default exactlossless/explicitVFP9 BOTHsign definedlow32/samecount
+domain. NOT stable-ID ceiling/unrestrictedappend/nativeglobalcapacity.
+Shared insertion/allocator/success-state-sort-return/other types-arity-columns-
+binding-RST-lifecycle-parser unchanged; early materialization precedes check,
+no whole-call atomicity/shared-success/new-ID parity. Separate UNADMITTED7176/
+7177 and7163/7164/7169/7171/7173/7174 excluded/unrepaired.
+
+Both fixed85 PASS GNU641.20s/Clang ASan-UBSan-float-cast-overflow3810.34s/
+all1246-four1102/fullTWO audit0/254-initialfive-isolation-OTHER252 unchanged;
+fullGNU0952867f/Clang0a8b9a2f. Both NON-NATIVE supplemental288 fullrawcmp0/
+DONE288/scaffold0/source-eachnine-libraryhashes0/8a56e54d; failed312 FIRST
+RST1 runtime139 preserved/24PLANNEDvectorsdeferred, NOT24observedcrashes or
+full312 qualification. Completion capture1256/literal1248-462 audits0/no new
+nativeorVM invocation. Finalfive contracts5/5 PASS334.91s/raw0d000f70/currentdoc
+4/4 PASS1.33s/raw76938b7b; boundedmedium delegateddevelopment DQ-DV complete
+local-completion.md, not independenthuman/high-hazard/leak-warningfree/system/
+release/certification qualification. Hazardseverity/status unchanged.
+
+Exactheadpostpush11121 HARVESTED0/85of85 PASS641.97s/actual0/20:08:08Z/
+fullraw3c2d1b8f749d95bd05ae70124c6d2ee0debeaeb0dc5073eac8b5e14e891342bf,
+fullcounter-audit0/all254-initialfive-isolation/headbefore-after unchanged.
+Requiredwatch77120 HARVESTED0. Full committedfixture and ignored1.1GBbuild
+retain native/original/failed/refrozen/fixed/contracts/review/merge evidence.
+Canonicalmain fetched/FF exactmerge/signedheadancestor verified. Scopedstash
+c4c71a254e254b907d2f83809aa65c07cd94809d retained/notpopped; publishedf718
+restored byte-identical/mirror2101. Older stashes/foreign376-AGENTS-corpus-
+vmGUI-pycache/4436-49aeWTs preserved. Completed ownedcleanup: normal worktree/
+localbranch removal/exactce0 leasedremote deletion. Entire1.1GB build moved
+recoverably to /home/rich/.local/share/Trash/files/additem-numeric-5611-build;
+Trashmetadata/cleanup-record.md/fullraw-source-status-review evidence retained,
+postmovepostpushSHA unchanged. Scopedlsof onlyownreportfds/notglobalidleproof.
+
+## Prior shipped slice
+
 AddListItem supplied Numeric/exact stable-ID PR7175 merged14:47:47Z as
 87b0fd854431381db977740e6d6af3a5b3b967ed; exact signed/DCO localGoodG
 2fb9b804552690212c9d97ce550012a27b8e22e7.
@@ -808,83 +861,62 @@ No VM started/recreated; backup-reset completion still unconfirmed.
 
 ## Selected active bounded slice
 
-Admitted numeric slice: AddItem supplied SECOND Numeric/int64/uint64 POSITION,
-not stableID; exacttwoargs/nonNULLCharacter item/omittedcolumn/coherent
-materialized-unbound ListBox/ComboBox/default-exacttypedRST0/trimempty binding.
-OPEN owner5611/6776/exactagent-approved revalidated. Dedicated WT
-/home/rich/.codex/worktrees/additem-numeric-5611/Project-Copperfin,
-branch fix/additem-numeric-5611/base origin/main
-87b0fd854431381db977740e6d6af3a5b3b967ed. No PR/push/commit yet.
+AddItem supplied THIRD Numeric/int64/uint64 column conversion under OPEN owner-
+admitted5611/6776; not second insertion position or AddListItem stableID.
+WT /home/rich/.codex/worktrees/additem-column-numeric-5611/Project-Copperfin,
+branch fix/additem-column-numeric-5611 from exactorigin/main
+cd4489475cfb424a5c7fa48888b978d9a27eab2a. No commit/push/PR yet.
+RQ-CF-PRG-ADDITEM-COLUMN-NUMERIC-001/VR001+002; current local verification and
+boundedMEDIUM delegated DQ-DV complete in
+tests/fixtures/vfp9-additem-column-numeric/local-completion.md.
+Earlier phase records/source/raw/status/hash/failures retained, not overwritten.
 
-Seven independent paired installedVFP9 7423 captures440/96/224/224postbits/
-48/220/228, completely read shipped AddItem771/BINTOC564 help and untouched
-privateWine runner1e64d290/25s. Count-dependent truncate1..ListCount+1/11,
-explicitVFP9 BOTH-sign definedlow32; count10/33 aliases11/34 corroborated.
-Actual below1/4/5 payloads distinguished fromdecimalnearone evaluation1;
-strippedpostbits EXACToriginal. Capture audit1256/762 preserved11/494inserts/
-failures0/2f52637c; independent82literal/1248rawrow/462position/8excluded
-decimalparserrow audit0/61894ca7. Completion replays unchanged.
-Pre-code RQ/VR/DQ/DV/HZ map15:38:45Z preceded distinct UNUSED helper;
-exact64/NaN/hostsize/count+1 overflow derive from named owner parent, not
-native syntax/globalcapacity. Current local-completion.md supersedes earlier
-pending checkpoints WITHOUT overwriting original raw/source/status/hashes.
+Default finite truncation/losslessexact1..65535/localized11; DERIVED per-new-row
+argument-driven bound, NOT native maximum/ColumnCount/Grid255/stableID/global
+capacity. ExplicitVFP9 signedlow32-positive-or-INT32MIN then unsignedlow16/
+engagedzero blank row/nozero-1. Exact3args/nonNULLCharacter/coherentmaterialized-
+unbound/default-exacttypedRST0/trimempty/ordinary finite integral Numeric
+secondposition1..count+1/hostint64 only. Earlymaterialization/no whole-call
+atomicity. Shippedsecondposition/resolver/allocator/shared insertion-state-sort-
+return/fallback/selector/root/prior85 preserved; 7176/7177/earlier unadmitted
+gaps and allother positions/types/RST-binding/lifecycle/parser excluded.
 
-Initialfive/isolation/source-audited conservative serial registration frozen
-BEFORE BOTH originals. Initial retired-driver PATH manifest failed/252not253,
-partialGNUcompile62of399/noCTest/SIGINT130 harvested; full failure retained.
-Metadata-only explicitrefreeze16:04:01Z corrected active run-originals.sh path/
-253inputs/common252-initialfive-isolation0. Pre-freeze wrong-consumer scaffold
-caught/corrected BEFOREfreeze; source retained, no frozen weakening.
-BOTH originals GNU81/85/637.05s/16:30:13Z/rawffcd6e7b andClang81/85/
-3756.59s/17:56:33Z/raw6733bba7; allprior80+1246direct PASS/fourNEW1102
-public-onlyfail. TWO audit0/each85unique/17612 IDENTICAL COMPLETE multiline
-failures/f66b04f5/no unrelated-sanitizer diagnostic/all253beforeafter0.
-Helper UNUSED/caller-selector-rootmain87b until fullaudit18:17:12Z.
+Independent installedVFP9/help/four matching1000-432-864-432 pairs/pre-code map
+precede UNUSEDhelper/frozen255/BOTH originals90. GNU86/90/722.96s and Clang86/90/
+4565.26s/actual8/allprior85+276direct PASS/onlyfourNEW1224 fail/each6968 FULL
+multiline identical1deb79eb/all255-initialfive hashes0 BEFOREwiring. Initial
+runnercleanup1/emptycomparison1/preliminaryself-audit/pre-freeze namespace
+syntax1 correctedbeforefreeze/archivepath mistakes retained honestly.
+Native65538 integer explicitlymodelderived; source-negative2^64 actualPOSITIVE,
+notparserfix. Safeoriginal positive<=65538/widenegatives only; no old hostile
+huge-row invocation or allocator shim/artificial11/assertionphase skip.
 
-Only afterwards wired bounded AddItem checkedposition-1 directly/currentmode/
-localized11 BEFORE modeled insertion. Objectmodulec92b6137/+37lines/-1;
-shared resolver/insertion/allocator/success-state-return-sort/other types/
-arity/columns/RST/binding/lifecycle/parser unchanged. Fixed254/source snapshot
-18:18:52Z; initialfive/isolation/OTHER252 unchanged, no frozen assertions changed.
-Driver33142 HARVESTED0/BOTH actualCTest0/85of85 PASS:
-GNU641.20s/18:29:52Z/fullraw0952867f; Clang ASan-UBSan-float-cast-overflow
-3810.34s/19:34:20Z/fullraw0a8b9a2f. BOTH fullaudit0/85unique/all1246direct-
-four1102public/noassertions-or-sanitizer diagnostics/all254before-after0.
-BOTH samecompiler NON-NATIVE supplemental288 compile-run-driver-cmp0/
-DONE288/scaffold0/stderr empty/fullraw8a56e54d identical ownbaseline/
-allfive-source-eachnine-library beforeafterhashes unchanged.
-Both-fixed-complete-evidence.sha256/fullraw/status/hash retained; fullcompile
-warnings ignored build, NOT leak-warningfree/globalcapacity/shared-success.
+Fixeddriver84919 HARVESTED0/BOTH90 uniquePASS/all276-four1224/bothaudits0:
+GNU718.68s/01:01:32Z/raw0c3a1a14; Clang ASan-UBSan-float-cast-overflow4320.20s/
+02:14:46Z/raw0537ce6e. All256-initialfive unchanged/no frozenweakening. EACH
+compiler four PRE-WIRE-authored fixed-only542/status0/rawcf672f99, NOToriginal
+hostilequalification. BOTH NON-NATIVE296 fullsamecompilercmp0/DONE296/scaffold0/
+eight37groups/all3source-nine-library hashes/rawc4544b0e; sampledmodeledfields,
+notnativeoracle/allproperties/globalcapacity/allocator-success parity.
+Completion capture1000-432-864-432/literal2528-97of98/group72-216/structural
+audits0/no new oracle/VM. Both-fixed-complete.md/manifests retain full evidence.
 
-Separate OPEN UNADMITTED7176 allocator nativeID1 vs main32768 afterhighIDseed,
-and7177 failed312 FIRST RST1/ListBox/COPPERFIN/1.9 runtime139/GDBSIGSEGV.
-Both focused main87b diagnostics corroborated retainedsigned2fb libraries/
-relevanttreematch/allninehashes0; fullsource/raw/status/exactPRG preserved.
-Failed312's24 plannedRST1 vectors explicitly DEFERRED, NOT24observedcrashes.
-Separate supplemental288 retains remaining sampled exclusions; not full312/
-native successfulstate correctness. No fixes/admission/parentclosure.
-7163/7164/7169/7171/7173/7174 remain excluded.
+Five developmentcontracts53769 HARVESTED0/5of5 PASS329.53s/02:24:01Z/actual0/
+raw3c3c6bec/all256beforeafter; safety325.03s/existing1200s unchanged. Current
+local-completion.md/durablematrix/hazard links supersede stalependingrecords.
+Boundedmedium delegateddevelopment DQ-DV delta/misuse/self-review/automated
+walkthrough/rollback complete, NOT independenthuman/personalhuman/high-hazard/
+leak-warningfree/persistence/totalmemory/system/release/certification or
+parent/hazard/KBX closure. No VM/resetcompletion assumption or ownerinput needed.
 
-Initial contracts31637 actual8/4of5 PASS334.74s/only ownfragment formatfail
-source/fullraw/status/hash retained. Singlebullet/two-space-only correction/
-focused1of1 andcorrectedfull5of5 PASS336.80s/status0/17:29:41Z/raw6de492da.
-Existing safety TIMEOUT1200 unchanged. Final currentfive contracts COMPLETE
-exec17892 harvested0/actual0/5of5 PASS334.91s/19:54:02Z/fullraw0d000f70;
-full raw/status/completion/hash retained, including safety333.22s.
-DQ/DV-5611-ADDITEM-POSITION-NUMERIC-001 medium delegateddevelopment self-review/
-automatedwalkthrough/delta-misuse-rollback documented local-completion.md;
-bounded development review complete with finalcurrentcontracts. Hazardsactive/existingseverity,
-not independenthuman/high-hazard/persistence/globalatomicity/system/release/
-certification/parent qualification.
-
-Final result-record fast recheck4of4 PASS1.33s/status0/19:54:49Z/raw76938b7b;
-raw/status/hash retained. NEXT signedDCOcommit/push/PRmain/
-ClaudeFIRST-authorized fallback actualexactheadreview/
-postpushfocused/all11green/resolvedconversations gates; merge then scoped
-recoverable cleanup/sync/channelre-read/nextadmittedslice. Do not modify frozen
-tests or broaden allocator/RST1 scope. NO VMstart/clone while backupreset/
-cleanupcompletion unconfirmed; no ownerinput needed.
-
+Currentdocfast4 recheck PASS4/4/4.48s/raw320ccd8f; fullsource/manifests0.
+NEXT signedDCO commit/push/PR;
+request ClaudeFIRST thenauthorizedCodex ifunavailable; exactheadpostpush90/
+all11required uniquelygreen/actualcleanexactheadreview/resolvedthreads before
+merge. Keep build/evidence/ownworktree until merge thenrecoverablecleanup.
+Canonicalhandoff/mirror2109 synced; immutableaa76a5be carries bothfixedcheckpoint.
+Foreignfiles/stashes/4436-49aeWTs preserved; do not startorcloneVMs until owner
+cleanup/backupreset completion confirmed.
 ## Retained owner steering / deferred work
 
 Audit candidates7100 lifecycle output-drain timeout and7102 designer-smoke

@@ -1,0 +1,16 @@
+{
+  "rows": 296,
+  "contexts": {
+    "ListBox|COPPERFIN|1": 37,
+    "ListBox|COPPERFIN|2": 37,
+    "ListBox|VFP9|1": 37,
+    "ListBox|VFP9|2": 37,
+    "ComboBox|COPPERFIN|1": 37,
+    "ComboBox|COPPERFIN|2": 37,
+    "ComboBox|VFP9|1": 37,
+    "ComboBox|VFP9|2": 37
+  },
+  "failures": 0,
+  "rawSHA256": "c4544b0e5c04b6e95c5053ca7a82f0c1b463ec49139167f4688519b0fa9ff1c2",
+  "note": "NON-NATIVE baseline captures only sampled modeled fields. Not implementation acceptance, native parity, global atomicity or full property/heap qualification."
+}
