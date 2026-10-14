@@ -1,0 +1,7 @@
+85392b4f315272f464b1235795962855ef673ee90531ad137ce90c3f61b518b7  tests/fixtures/vfp9-addlistitem-new-column-numeric/audit-originals-complete.cjs
+09db088828cdeee0ed036dffb727bd4a7300a580a8e5d236d46153176970fdfa  tests/fixtures/vfp9-addlistitem-new-column-numeric/audit-originals-selftest.cjs
+8dff2a1348e5a5c1623f956fddaa0940ac8d6c67468ab0c07545c02cf3ed2f50  tests/fixtures/vfp9-addlistitem-new-column-numeric/original-launch-phase.md
+5bdd53eefc14e18fca14b14a186e300214043ba49780008a26af55415108725a  tests/fixtures/vfp9-addlistitem-new-column-numeric/original-audit-selftest.log
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-addlistitem-new-column-numeric/original-audit-selftest.stderr
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-addlistitem-new-column-numeric/original-audit-selftest.status
+cb49301fe437e77eac379f8c1346fa42ee3c83799369e38d7e0cb2c45b446d3f  tests/fixtures/vfp9-addlistitem-new-column-numeric/frozen-original-inputs.sha256
