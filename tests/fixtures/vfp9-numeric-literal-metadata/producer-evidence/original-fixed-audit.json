@@ -1,0 +1,10 @@
+{
+  "originalExit": 1,
+  "metadataFailures": 56,
+  "otherControlFailures": 0,
+  "fixedGNUCTest": "3/3",
+  "focusedGNUCTest": "4/4",
+  "sourceContractCTest": "3/3",
+  "standaloneClangSanitizedHelperExit": 0,
+  "fullRuntimeSanitizer": "pending hosted exact-head run"
+}

@@ -1,0 +1,25 @@
+Test project /home/rich/.codex/worktrees/numeric-literal-metadata-5611/Project-Copperfin/build/numeric-literal-gnu
+    Start 1: test_prg_numeric_metadata
+1/3 Test #1: test_prg_numeric_metadata ..................   Passed    0.00 sec
+    Start 2: test_prg_numeric_literal_metadata_helper
+2/3 Test #2: test_prg_numeric_literal_metadata_helper ...   Passed    0.01 sec
+    Start 3: test_prg_engine_numeric_literal_metadata
+3/3 Test #3: test_prg_engine_numeric_literal_metadata ...   Passed    0.10 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =   0.11 sec*proc (3 tests)
+copperfin-isolation:child-processes=none            =   0.11 sec*proc (3 tests)
+copperfin-isolation:environment=none                =   0.01 sec*proc (2 tests)
+copperfin-isolation:environment=scoped-process      =   0.10 sec*proc (1 test)
+copperfin-isolation:filesystem=none                 =   0.01 sec*proc (2 tests)
+copperfin-isolation:filesystem=test-owned-unique    =   0.10 sec*proc (1 test)
+copperfin-isolation:network=none                    =   0.11 sec*proc (3 tests)
+copperfin-isolation:platform=portable               =   0.11 sec*proc (3 tests)
+copperfin-isolation:resources=none                  =   0.11 sec*proc (3 tests)
+copperfin-isolation:samples=none                    =   0.11 sec*proc (3 tests)
+copperfin-isolation:schedule=parallel-safe          =   0.01 sec*proc (2 tests)
+copperfin-isolation:schedule=serial                 =   0.10 sec*proc (1 test)
+
+Total Test time (real) =   0.13 sec

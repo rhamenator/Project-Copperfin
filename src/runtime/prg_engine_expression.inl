@@ -1305,7 +1305,7 @@
                 }
                 if (std::isdigit(static_cast<unsigned char>(peek())) != 0)
                 {
-                    return make_number_value(parse_number());
+                    return parse_number();
                 }
 
                 skip_whitespace();
@@ -4148,7 +4148,7 @@
                 return result;
             }
 
-            double parse_number()
+            PrgValue parse_number()
             {
                 const std::size_t start = position_;
                 while (position_ < text_.size())
@@ -4177,7 +4177,12 @@
                 const std::string literal = text_.substr(start, position_ - start);
                 if (const auto parsed = try_parse_invariant_double(literal); parsed.has_value())
                 {
-                    return *parsed;
+                    // RQ-CF-PRG-NUMERIC-LITERAL-METADATA-001: attach only
+                    // recovered plain-decimal attributes; never round payload.
+                    // Other producers/propagation/consumers remain separate.
+                    PrgValue value = make_number_value(*parsed);
+                    value.numeric_metadata = plain_decimal_literal_metadata(literal);
+                    return value;
                 }
                 throw std::invalid_argument("invalid invariant numeric literal");
             }

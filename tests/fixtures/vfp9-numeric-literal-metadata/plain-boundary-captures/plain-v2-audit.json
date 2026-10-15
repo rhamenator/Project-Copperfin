@@ -1,0 +1,9 @@
+{
+  "casesPerRun": 31,
+  "successfulValues": 30,
+  "recordedNativeErrors": 1,
+  "documentedFieldsRepeatEqual": true,
+  "rawByteEqual": true,
+  "firstSha256": "de7a4c57f30c7efb2d01351b36de552a9ffc24dbf97f4d32eec3bc5dbef57c9d",
+  "repeatSha256": "de7a4c57f30c7efb2d01351b36de552a9ffc24dbf97f4d32eec3bc5dbef57c9d"
+}

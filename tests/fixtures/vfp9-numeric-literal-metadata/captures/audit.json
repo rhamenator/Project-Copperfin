@@ -1,0 +1,127 @@
+{
+  "observationsPerRun": 144,
+  "documentedFieldsRepeatEqual": true,
+  "rawByteEqual": true,
+  "firstSha256": "add4cfe708506969e60b309089dfa61edd311eca94db90199b67774cc72518f2",
+  "repeatSha256": "add4cfe708506969e60b309089dfa61edd311eca94db90199b67774cc72518f2",
+  "samples": [
+    {
+      "expression": "1.00",
+      "direct": {
+        "type": "4E",
+        "width": "0004",
+        "decimals": "00000002",
+        "real": "3FF0000000000000",
+        "cw": "027F"
+      },
+      "assigned": {
+        "type": "4E",
+        "width": "000D",
+        "decimals": "00000002",
+        "real": "3FF0000000000000",
+        "cw": "027F"
+      },
+      "bits": "3FF0000000000000",
+      "directDisplay": "1",
+      "assignedDisplay": "1"
+    },
+    {
+      "expression": "001.2300",
+      "direct": {
+        "type": "4E",
+        "width": "0008",
+        "decimals": "00000004",
+        "real": "3FF3AE147AE147AE",
+        "cw": "027F"
+      },
+      "assigned": {
+        "type": "4E",
+        "width": "000F",
+        "decimals": "00000004",
+        "real": "3FF3AE147AE147AE",
+        "cw": "027F"
+      },
+      "bits": "3FF3AE147AE147AE",
+      "directDisplay": "1.2300",
+      "assignedDisplay": "1.2300"
+    },
+    {
+      "expression": "0.0000000000000000001",
+      "direct": {
+        "type": "4E",
+        "width": "0015",
+        "decimals": "00000012",
+        "real": "3BFD83C94FB6D2AC",
+        "cw": "027F"
+      },
+      "assigned": {
+        "type": "4E",
+        "width": "001D",
+        "decimals": "00000012",
+        "real": "3BFD83C94FB6D2AC",
+        "cw": "027F"
+      },
+      "bits": "3BFD83C94FB6D2AC",
+      "directDisplay": "0",
+      "assignedDisplay": "0"
+    },
+    {
+      "expression": "1E-14",
+      "direct": {
+        "type": "4E",
+        "width": "000F",
+        "decimals": "0000000E",
+        "real": "3D06849B86A12B9B",
+        "cw": "027F"
+      },
+      "assigned": {
+        "type": "4E",
+        "width": "0019",
+        "decimals": "0000000E",
+        "real": "3D06849B86A12B9B",
+        "cw": "027F"
+      },
+      "bits": "3D06849B86A12B9B",
+      "directDisplay": ".00000000000001",
+      "assignedDisplay": "0.00000000000001"
+    },
+    {
+      "expression": "1.00E2",
+      "direct": {
+        "type": "49",
+        "width": "0004",
+        "integer": "00000064",
+        "cw": "027F"
+      },
+      "assigned": {
+        "type": "49",
+        "width": "000A",
+        "integer": "00000064",
+        "cw": "027F"
+      },
+      "bits": "4059000000000000",
+      "directDisplay": "100",
+      "assignedDisplay": "100"
+    },
+    {
+      "expression": "1E-300",
+      "direct": {
+        "type": "4E",
+        "width": "0028",
+        "decimals": "00000012",
+        "real": "01A56E1FC2F8F358",
+        "cw": "027F"
+      },
+      "assigned": {
+        "type": "4E",
+        "width": "001D",
+        "decimals": "00000012",
+        "real": "01A56E1FC2F8F358",
+        "cw": "027F"
+      },
+      "bits": "01A56E1FC2F8F358",
+      "directDisplay": "1E-300",
+      "assignedDisplay": "1E-300"
+    }
+  ]
+}

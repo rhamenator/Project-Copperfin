@@ -16,6 +16,12 @@ endfunction()
 copperfin_add_test(test_prg_numeric_metadata "" test_prg_numeric_metadata.cpp)
 target_include_directories(test_prg_numeric_metadata PRIVATE "${PROJECT_SOURCE_DIR}/include")
 
+# RQ-CF-PRG-NUMERIC-LITERAL-METADATA-001: pure classifier and independent
+# public paused-watch regression; neither expected table calls the classifier.
+copperfin_add_test(test_prg_numeric_literal_metadata_helper "" test_prg_numeric_literal_metadata_helper.cpp)
+target_include_directories(test_prg_numeric_literal_metadata_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
+copperfin_add_test(test_prg_engine_numeric_literal_metadata cf_xbase_runtime test_prg_engine_numeric_literal_metadata.cpp)
+
 copperfin_add_test(test_mcp_host "cf_mcp_host;cf_platform_support"
     test_mcp_host.cpp)
 copperfin_add_test(test_project_inventory "cf_migration"

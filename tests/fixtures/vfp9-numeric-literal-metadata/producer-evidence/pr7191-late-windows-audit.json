@@ -1,0 +1,70 @@
+{
+  "run": 38772071102,
+  "url": "https://github.com/rhamenator/Project-Copperfin/actions/runs/38772071102",
+  "head": "c572e55126a7a38cfe5e74bf616921720136f613",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 116550175909,
+      "name": "Windows MSVC (shard 3/3)",
+      "conclusion": "success"
+    },
+    {
+      "id": 116550176322,
+      "name": "Windows MSVC (shard 1/3)",
+      "conclusion": "success"
+    },
+    {
+      "id": 116550176416,
+      "name": "Windows MSVC (shard 2/3)",
+      "conclusion": "success"
+    },
+    {
+      "id": 116590805801,
+      "name": "Windows MSVC inventory coverage",
+      "conclusion": "success"
+    }
+  ],
+  "summary": {
+    "complete": true,
+    "full_inventory": 611,
+    "note": "Full native execution coverage only; no independent-human/release certification claim.",
+    "shards": [
+      {
+        "executed": 204,
+        "selected": 204,
+        "shard": 1
+      },
+      {
+        "executed": 204,
+        "selected": 204,
+        "shard": 2
+      },
+      {
+        "executed": 203,
+        "selected": 203,
+        "shard": 3
+      }
+    ],
+    "unique_executions": 611
+  },
+  "hostLogs": {
+    "shard1": {
+      "sha256": "67402f32af63f26add2474bf5fe049dd92a1fb4e7a87be1bd9dc90e0f4ad5b63",
+      "bytes": 378175
+    },
+    "shard2": {
+      "sha256": "91bb73792e9d0af07822b6c69ebee98069b59434318495369f4dedb8fbb4a606",
+      "bytes": 378701
+    },
+    "shard3": {
+      "sha256": "3bc7f9161efb3ecfa8da5358ae089c4a3d19a9f1181c6ed93b455d14fd781785",
+      "bytes": 377643
+    },
+    "aggregate": {
+      "sha256": "c0bb97fd872619e114ea2c0956db78aebd935f6c52805f235647b4351d78bfc4",
+      "bytes": 20336
+    }
+  }
+}

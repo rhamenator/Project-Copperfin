@@ -1,5 +1,80 @@
 # Agent Handoff
 
+## Active plain-decimal metadata producer (2026-10-15)
+
+Continue fix/numeric-literal-metadata-5611 in dedicated WT
+/home/rich/.codex/worktrees/numeric-literal-metadata-5611/Project-Copperfin,
+baseline origin/main7d07d7203; signed recovery checkpoint57c3bc396.
+RQ-CF-PRG-NUMERIC-LITERAL-METADATA-001 now has a bounded producer: unsigned
+plain decimals <=256bytes, width capped40/decimal places capped18, payload
+unchanged. UNUSED helper/native boundary recovery and frozen original public
+regression precede the single parser connection. Original56 metadata failures
+with payload/format/arithmetic/state controls passing -> fixed GNU3/3 PASS.
+Clang helper ASan/UBSan/float-cast-overflow0; focused existing Numeric/equality/
+string-math/isolation4/4 PASS64.43sec. Both new tests added to hosted PR
+sanitizer selection; full instrumented runtime evidence/review/strict gates
+remain pending, not preclaimed. See fixture recovered-requirements.md,
+producer-completion.md and producer-evidence/. Two31-case boundary captures
+actual0/byte-repeat SHA de7a4c57...57c9d/audit0; failed302byte native attempt
+retained/unqualified, 257byte native36 not a new Copperfin syntax rule.
+Other literals/unary-minus/assignment-width normalization/arithmetic/functions/
+fields/default display/ListItem are mandatory unfinished follow-ons; ordinary
+copies carrying attributes do not establish native propagation parity.
+Next: finish source/traceability checks, signed commit/push/PR, Claude FIRST,
+exact-head clean review/strict green/conversations resolved before merge.
+Do not restart completed EPOCH/CENTURY or claim #7189/list family complete.
+
+Prior carrier PR7191 Windows38772071102 subsequently completed SUCCESS at
+exact c572e55126: shards204/204,204/204,203/203; aggregate611 unique/full611.
+Structured job/full-log-hash audit retained in producer-evidence/; full logs
+host-side build/numeric-literal-native/pr7191-windows-*. No late failure on
+that head; old separate #7188 failures remain unexplained/open. Heartbeat
+ACTIVE, no owner-input blocker and no VM/start/clone/reset-completion claim.
+
+## Latest carrier merge and selected literal prerequisite (2026-10-15)
+
+PR7191 merged2026-10-15T17:47:02Z as
+7d07d72034c9b0c63fda18a3af5ca97105d3d94c, exact signed/DCO
+c572e55126a7a38cfe5e74bf616921720136f613. Actual verified Codex bot199175422
+clean review6197993417 after Claude FIRST6197419702/fallback6197953121;
+all11 strictmain20356131 SUCCESS/requiredwatch75937 completed0, full pagination
+reviews/threads0, fresh gate audit0, postpush focused6/6 PASS. Full hosted
+Linux/macOS610/610/new carrier PASS. Optional full Windows38772071102 remains
+pending under EXISTING watch99643 at canonical build/pr7191-late-native/
+windows-watch.log and .status when complete; do not duplicate. No full Windows,
+Numeric/list family, #7189/parent/hazard/system/release closure claim.
+Only optional value-owned Numeric metadata is integrated; parser/arithmetic/
+assignment-width/field/display/ListItem interpretation is NOT yet wired.
+
+Canonical main/origin FF to exact merge, signed-head ancestor proved0.
+Completed clean listitem-column-numeric-5611 WT/local branch removed; exactc572
+leased remote deletion0. Entire111MB task build/evidence moved recoverably to
+/home/rich/.local/share/Trash/files/listitem-column-numeric-5611-build with
+.trashinfo and unchanged host-only FLL SHA ebb34d4e...5264a3. SDK-containing
+binary/object/import libs remain host-only, not product/repo dependencies.
+Canonical build/pr7191-late-native/merged-cleanup-record.md retains exact record.
+Scoped stash1571c7c11edad73e01d9e9a4956f9b33daca6ad1/older stashes retained.
+Foreign376/AGENTS/corpus/vmGUI/pycache, detached4436/49ae unchanged; scoped lsof
+tracefs warning retained, not global-idle proof. Channel reread after cleanup.
+
+Selected RQ-CF-PRG-NUMERIC-LITERAL-METADATA-001 / VR-DQ-DV001 derives from
+owner Numeric compatibility and admitted #5611/#6776, not a new defect hunt.
+New dedicated WT /home/rich/.codex/worktrees/numeric-literal-metadata-5611/Project-Copperfin,
+branch fix/numeric-literal-metadata-5611, baseline origin/main7d07d7203.
+Fixture tests/fixtures/vfp9-numeric-literal-metadata/ retains source/own FXP/
+raw/status/provenance. Two native144 observations (48 literals x DECIMALS2/6/14,
+FIXED OFF) actual0/empty stderr/full byte-repeat, raw SHA
+add4cfe708506969e60b309089dfa61edd311eca94db90199b67774cc72518f2/audit0.
+Direct/assigned width/scale/type/payload/display remain separate; unused I slots
+not interpreted. No general lexical/exponent/assignment formula or producer code.
+Next concrete action: finish bounded creation contract/architecture/verification
+map (extend width/scale boundary recovery as needed), independent expected
+regressions/original-fail evidence BEFORE literal producer wiring; then focused/
+broader sanitizer and hosted verification, signed review/strict gate workflow.
+Do not infer all rules from these literals, discard the owner parity objective
+or declare the pending ListItem supplied-column read complete. #7189 stays open.
+Heartbeat ACTIVE with owner steering; no VM/start/clone/reset-completion claim.
+
 ## Resumed Numeric prerequisite: first carrier slice (2026-10-15)
 
 Owner explicitly resumed work. Existing heartbeat
