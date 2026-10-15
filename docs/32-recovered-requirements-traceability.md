@@ -21,6 +21,12 @@ parent product requirement or hazard. When allowed evidence and implementation
 disagree, use `gap` or `exception`; never rewrite the requirement to describe
 whatever the code happens to do.
 
+## Numeric division context recovery
+
+| Requirement | Allowed parent/source | Contract and implementation | Verification/results | Hazard and status |
+| --- | --- | --- | --- | --- |
+| `RQ-CF-PRG-NUMERIC-DIVISION-CONTEXT-001` | Owner Numeric compatibility, parent expression-context requirement and admitted #5611/#6776; [installed-VFP9 recovery](../tests/fixtures/vfp9-numeric-division-context/README.md). | Recover typed Integer/Numeric operands separately from result precision, bits and display. No arithmetic formula or production wiring at this checkpoint. Missing native descriptor type must not be inferred from a double or replaced with exact64 extension kinds. | `VR-DQ-DV-5611-NUMERIC-DIVISION-CONTEXT-001`: repeated648 division +384 Integer prerequisite observations per run, actual0/empty stderr/all values/no errors; typed fields/bits/display repeat, compiler/EVALUATE differences0, both audits0. Raw hashes DIFFER only in independently audited unused slots, retained exactly. [Counterexamples, normalized architecture consequence and next child](../tests/fixtures/vfp9-numeric-division-context/observations.md). | LOW recovery delta/misuse/walkthrough/rollback retained; development self-review/automation, not independent-human/system/release evidence. HZ-data-corruption-01/HZ-runtime-crash-01/HZ-doc-command-01, modes and checked conversions/limits unchanged. Native Integer descriptor/literal prerequisite is selected; division/assignment/default display/ListItem remain mandatory. `gap; typed native recovery checkpoint` |
+
 ## Windows native CI budget requirement
 
 | Requirement | Allowed parent/source | Contract and implementation | Verification/results | Hazard and status |

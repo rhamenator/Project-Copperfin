@@ -1,5 +1,19 @@
 # Bounded unary zero-context development result
 
+Post-commit integration receipt: PR7198 merged2026-10-15T22:59:38Z as
+a5c656f6efc96c5df79cddc0f824b68520db3438, exact signed/DCO5c809c704c85fd05846cc4d6ba1e9632f7a5f808.
+Actual clean Codex6203807084 verified bot199175422 after Claude FIRST6203687020/
+authorized fallback6203743027; all11 strict20356131 SUCCESS, full threads/
+inline/reviews0, premerge9/9 PASS. Sanitizer38818147690 attempt1/job116707871463/
+artifact12011144769 independently audited20 unique executed/no failures/skips,
+both new tests/prior unary/literal/selector. Tested mergec166fd7715a3 parents
+54a96438/5c809c70; XML SHAe3168aa41471fbaef59bf35f10402dd785cf462bb56b75ebd3730c1d9481052c.
+ASan/UBSan provenance exact driverbbfa104c+executed lane, not printed configure/
+cache or explicit float-cast flags. Initial wrong expanded --lane receipt
+assumption/CLEAN-only gate rejection from pending optional jobs retained and
+corrected without changing production/test expectations. Optional full native
+jobs still pending at merge; not full-platform/system/release qualification.
+
 RQ-CF-PRG-NUMERIC-UNARY-ZERO-CONTEXT-001 /
 VR-DQ-DV-5611-NUMERIC-UNARY-ZERO-CONTEXT-001. Parent evidence and provenance
 are in README/observations.md; the frozen pre-code contract is zero-contract.md.
