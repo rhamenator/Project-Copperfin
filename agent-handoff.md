@@ -1,5 +1,39 @@
 # Agent Handoff
 
+## Active literal sanitizer execution repair (#7195, 2026-10-15)
+
+Baseline mainff41cfa99 after PR7192 merge. Exact9384204d27 had clean actual
+Codex6200325592 after Claude-FIRST/fallback, strict11 green/threads0/postpush6/6.
+CORRECTION: its hosted sanitizer built but omitted both new literal tests from
+the actual CTest filter; prior instrumented-execution claim is withdrawn.
+Issue7195/PR7192 correction6200492012 record this. No Numeric algorithm change.
+Dedicated WT /home/rich/.codex/worktrees/numeric-literal-sanitizer-selection-5611/Project-Copperfin,
+branch fix/numeric-literal-sanitizer-selection-5611 from origin/mainff41cfa99.
+RQ-CF-PRG-NUMERIC-LITERAL-METADATA-VERIFY-001 / VR-DQ-DV001: independent AST
+regression original1/four failures across3 methods BEFORE repair, SAME test
+fixed0, CMake/isolation/changelog4/4. Add missing actual filter names and
+portable contract; retain named sanitizer metadata/CTest log/JUnit even on
+success. Evidence/requirement map under numeric-literal-sanitizer-selection-5611.
+Next: signed push/PR/Claude FIRST and actual named instrumented hosted receipt
+for both literal tests/selector, exact-head clean review/strict11/resolved
+threads before closure. Local selector PASS or old sanitizer PASS is not proof.
+
+Uncancelled unary slice is preserved at
+/home/rich/.codex/worktrees/numeric-unary-metadata-5611/Project-Copperfin,
+branch fix/numeric-unary-metadata-5611 atff41cfa99, no production edits/commit/PR.
+Untracked fixture README/40-expression source retained; first native1/missing
+result and repeat124/no result are UNQUALIFIED under build/numeric-unary-native/.
+Diagnose source/probe and recover repeat/type-aware native grid AFTER repair.
+No inference or native parity claim from failed attempts; no VM touched.
+
+Completed literal WT/local/exact-leased remote branch removed,763MB build/
+evidence recoverably in Trash/files/numeric-literal-metadata-5611-build with
+.trashinfo; canonical mainff41, owned stash3543c1db6 retained. Foreign files/
+detached4436/49ae unchanged. Canonical build/pr7192-late-native/ cleanup record
+and existing composite watch21975 own late Linux/Windows/macOS results; do not
+duplicate. VSIX retry PASS does not explain/close7193; Mac Access-export7194
+one unchanged retry pending. Heartbeat ACTIVE; no owner decision needed.
+
 ## Active plain-decimal metadata producer (2026-10-15)
 
 Continue fix/numeric-literal-metadata-5611 in dedicated WT

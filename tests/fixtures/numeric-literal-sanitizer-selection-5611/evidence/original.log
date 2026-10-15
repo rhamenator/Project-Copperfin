@@ -1,0 +1,41 @@
+FFFF.
+======================================================================
+FAIL: test_every_built_sanitizer_test_is_executed (__main__.SanitizerSelection.test_every_built_sanitizer_test_is_executed) (name='test_prg_numeric_literal_metadata_helper')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/rich/.codex/worktrees/numeric-literal-sanitizer-selection-5611/Project-Copperfin/tests/test_cloud_validation_sanitizer_selection.py", line 37, in test_every_built_sanitizer_test_is_executed
+    self.assertIsNotNone(selector.search(name), "built target omitted from actual CTest filter")
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : built target omitted from actual CTest filter
+
+======================================================================
+FAIL: test_every_built_sanitizer_test_is_executed (__main__.SanitizerSelection.test_every_built_sanitizer_test_is_executed) (name='test_prg_engine_numeric_literal_metadata')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/rich/.codex/worktrees/numeric-literal-sanitizer-selection-5611/Project-Copperfin/tests/test_cloud_validation_sanitizer_selection.py", line 37, in test_every_built_sanitizer_test_is_executed
+    self.assertIsNotNone(selector.search(name), "built target omitted from actual CTest filter")
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : built target omitted from actual CTest filter
+
+======================================================================
+FAIL: test_literal_tests_are_built_and_run_with_exact_names (__main__.SanitizerSelection.test_literal_tests_are_built_and_run_with_exact_names) (name='test_prg_numeric_literal_metadata_helper')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/rich/.codex/worktrees/numeric-literal-sanitizer-selection-5611/Project-Copperfin/tests/test_cloud_validation_sanitizer_selection.py", line 45, in test_literal_tests_are_built_and_run_with_exact_names
+    self.assertIsNotNone(selector.search(name))
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None
+
+======================================================================
+FAIL: test_literal_tests_are_built_and_run_with_exact_names (__main__.SanitizerSelection.test_literal_tests_are_built_and_run_with_exact_names) (name='test_prg_engine_numeric_literal_metadata')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/rich/.codex/worktrees/numeric-literal-sanitizer-selection-5611/Project-Copperfin/tests/test_cloud_validation_sanitizer_selection.py", line 45, in test_literal_tests_are_built_and_run_with_exact_names
+    self.assertIsNotNone(selector.search(name))
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.002s
+
+FAILED (failures=4)

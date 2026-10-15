@@ -397,6 +397,12 @@ copperfin_select_rscript_executable(
     COPPERFIN_RSCRIPT_EXECUTABLE
 )
 if(COPPERFIN_PYTHON3_EXECUTABLE)
+    # RQ-CF-PRG-NUMERIC-LITERAL-METADATA-VERIFY-001: build != execution.
+    add_test(
+        NAME test_cloud_validation_sanitizer_selection
+        COMMAND ${COPPERFIN_PYTHON3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/test_cloud_validation_sanitizer_selection.py
+    )
     add_test(
         NAME test_rc_candidate_assembly
         COMMAND ${COPPERFIN_PYTHON3_EXECUTABLE}

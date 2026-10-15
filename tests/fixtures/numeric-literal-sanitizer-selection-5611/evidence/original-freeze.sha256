@@ -1,0 +1,3 @@
+c35f6edc504f5bad9d8cc03f6fb44a0f612a49aaa7d868a46cc90378a91562dd  scripts/run-cloud-validation.py
+d60663cd5328758b9b13fa2293ebf9ab6a754c75b2853cdbbdae207c75373cbd  tests/test_cloud_validation_sanitizer_selection.py
+67e15b094894e7e3bca2bd2f0ad7b366d8746281192d7e2a440d7da90af70df2  tests/fixtures/numeric-literal-sanitizer-selection-5611/requirements.md

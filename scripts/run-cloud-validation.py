@@ -109,18 +109,22 @@ def main():
     else:
         command = ["ctest", "--test-dir", str(build), "--no-tests=error", "--output-on-failure",
                    "--timeout", "180", "--parallel", "2"]
+        if args.lane == "sanitizer":
+            command.extend(["--output-junit", str(evidence / "ctest-results.xml")])
         if args.lane == "stress":
             command.extend(["--repeat", f"until-fail:{iterations}", "-R",
                             "^(test_prg_engine_control_flow|test_prg_engine_database_lifecycle|"
                             "test_prg_engine_runtime_surface_functions_buffering|test_prg_engine_data_io)$"])
         elif args.profile == "pr":
             command.extend(["-R", "^(test_prg_engine_control_flow|test_prg_engine_relations|"
+                            "test_prg_numeric_literal_metadata_helper|test_prg_engine_numeric_literal_metadata|"
                             "test_prg_engine_work_areas|test_xasset_methods|"
                             "test_prg_engine_database_lifecycle|"
                             "test_prg_engine_runtime_surface_functions_buffering|test_prg_engine_data_io|"
                             "test_cloud_migration_stress|test_dbf_table|test_dbf_migration_fidelity|"
                             "test_runtime_pipeline|"
-                            "test_package_launcher_inventory_trust|test_native_test_isolation_contract)$"])
+                            "test_package_launcher_inventory_trust|test_native_test_isolation_contract|"
+                            "test_cloud_validation_sanitizer_selection)$"])
         run(command, evidence / "ctest.log", environment)
     metadata["max_rss_kib"] = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
     (evidence / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")

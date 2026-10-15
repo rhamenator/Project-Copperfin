@@ -85,6 +85,18 @@ jobs:
           --rows "$COPPERFIN_ROWS"
           --seed "$COPPERFIN_SEED"
 
+      - name: Retain named sanitizer execution evidence
+        if: ${{ always() && matrix.lane == 'sanitizer' && (github.event_name != 'workflow_dispatch' || inputs.lane == 'all' || inputs.lane == matrix.lane) }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cloud-sanitizer-execution-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/cloud-validation/sanitizer/metadata.json
+            artifacts/cloud-validation/sanitizer/ctest.log
+            artifacts/cloud-validation/sanitizer/ctest-results.xml
+          retention-days: 14
+          if-no-files-found: error
+
       - name: Retain failure diagnostics and reproducer
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
