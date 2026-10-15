@@ -1,0 +1,21 @@
+LIBRARY KERNEL32.dll
+EXPORTS
+HeapFree@12
+GetProcessHeap@0
+LeaveCriticalSection@4
+TlsSetValue@8
+HeapAlloc@12
+TlsGetValue@4
+TlsAlloc@0
+DisableThreadLibraryCalls@4
+EnterCriticalSection@4
+GlobalUnlock@4
+GlobalLock@4
+GlobalAlloc@8
+GlobalFree@4
+GlobalSize@4
+GlobalReAlloc@12
+GlobalCompact@4
+InitializeCriticalSection@4
+DeleteCriticalSection@4
+TlsFree@4

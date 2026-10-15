@@ -95,6 +95,7 @@ function(copperfin_configure_native_test_isolation)
     endforeach()
 
     foreach(test_name IN ITEMS
+            test_prg_numeric_metadata
             test_report_layout
             test_report_layout_sort_settings
             test_report_layout_side_margin_settings

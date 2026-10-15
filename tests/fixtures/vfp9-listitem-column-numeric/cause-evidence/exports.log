@@ -1,0 +1,15 @@
+
+File: build/listitem-column-native/cause/cause-probe.fll
+Format: COFF-i386
+Arch: i386
+AddressSize: 32bit
+Export {
+  Ordinal: 1
+  Name: @DispatchAPI@4
+  RVA: 0x17A6
+}
+Export {
+  Ordinal: 2
+  Name: _FoxTable
+  RVA: 0x3046
+}

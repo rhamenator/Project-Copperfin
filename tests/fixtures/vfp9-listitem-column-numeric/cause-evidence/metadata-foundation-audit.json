@@ -1,0 +1,22 @@
+{
+  "readsPerRun": 96,
+  "documentedFieldsRepeatEqual": true,
+  "rawByteEqual": false,
+  "firstSha256": "1c28d5d4c013d20649960f1900e99758b1a7c061f2f6b5ccf3336d28a2ac15e7",
+  "repeatSha256": "77ee17253ff057e3e575fdfb00bc4664d42ae341e91d392a93cf993a72e5aa7f",
+  "fractionDisplay": {
+    "literal": "2.5",
+    "division": "2.50",
+    "sameBits": true,
+    "literalDecimals": 1,
+    "divisionDecimals": 2
+  },
+  "nearOneDisplay": {
+    "scientific": "0.99999999999999",
+    "power": "1"
+  },
+  "literalWidth": {
+    "direct": 4,
+    "assigned": 13
+  }
+}

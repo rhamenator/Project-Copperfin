@@ -466,6 +466,42 @@ Run `scripts/validate-safety-traceability.ps1` before release tagging (or run th
 
 Do not pass every issue carrying the broad `safety` label. That label also covers implementation and test lanes; the validator selects documentation issues through the `documentation` label, a `[docs-safety]` title, or `DQ-*` identifiers in the issue body.
 
+## Selected ListItem explicit numeric-column READ linkage
+
+Candidate RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001 / VR001+002 /
+DQ-DV-5611-LISTITEM-COLUMN-NUMERIC-001 links unchanged active runtime/data/doc
+hazards to the [selection and independent recovery gates](../../tests/fixtures/vfp9-listitem-column-numeric/README.md).
+Exactly-two-argument COLUMN READ for ordinary existing stable IDs only; shipped
+implicit-column1/first-ID behavior and all other routes remain untouched.
+Error-vs-empty/default/explicit conversion and bounds are still recovery gaps,
+not current-code/another-consumer requirements. Three matching native capture
+pairs224/188/360 now retain actual type/BRS/setup/sample-state/context and
+near-integer promotion requiring further allowed recovery; capture audits0
+are not a conversion table or completed assurance. See
+[recovery checkpoint](../../tests/fixtures/vfp9-listitem-column-numeric/recovery-observations.md).
+MEDIUM misuse analysis and
+delegated walkthrough remain planned before behavior completion. No helper,
+assertion, configuration, caller migration or acceptance claim is introduced;
+no hazard severity/status, independent-human/system/release or parent closure.
+Further native recovery demonstrates identical observed Numeric/BRS/context/
+sample-state inputs with distinct results and32of120 outcome changes after a
+documented bit-preserving double roundtrip. This cannot be turned into an
+invented tolerance or silent native exception. Owner choice #7189 between a
+bounded canonical-binary64 contract/residual gap and a wider provenance
+prerequisite blocks pre-code requirements/helper/assertion/wiring. See
+[specific options and complete retained evidence](../../tests/fixtures/vfp9-listitem-column-numeric/numeric-origin-policy-gap.md).
+That owner-choice pause is historical: direct owner steering on 2026-10-15
+selects the wider Numeric compatibility prerequisite under #5611/#6776.
+Published-interface interventions establish decimal-place metadata as causal;
+the complete conversion formula remains unrecovered. See the
+[prerequisite recovery](../../tests/fixtures/vfp9-listitem-column-numeric/metadata-foundation.md)
+and [bounded value-carrier map](../../tests/fixtures/vfp9-listitem-column-numeric/metadata-carrier-requirements.md).
+The first carrier slice only adds optional value-owned attributes, not producers,
+display or index interpretation, allocation or casts. Consumers must rebuild
+against the changed C++ value layout; future conversions still require
+operation-specific bounds/safety evidence. No new hazard severity/status,
+Numeric/list family, independent-human or release closure is claimed.
+
 ## Bounded AddListItem missing-ID numeric-column linkage
 
 RQ-CF-PRG-ADDLISTITEM-NEW-COLUMN-NUMERIC-001 / VR001+002 /

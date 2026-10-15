@@ -1,0 +1,30 @@
+node:assert:150
+  throw new AssertionError(obj);
+  ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ 'DONE|96.00000000000000'
+- 'DONE|96'
+          ^
+
+    at read (/home/rich/.codex/worktrees/listitem-column-numeric-5611/Project-Copperfin/tests/fixtures/vfp9-listitem-column-numeric/audit-metadata-foundation.cjs:31:10)
+    at Object.<anonymous> (/home/rich/.codex/worktrees/listitem-column-numeric-5611/Project-Copperfin/tests/fixtures/vfp9-listitem-column-numeric/audit-metadata-foundation.cjs:55:13)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 'DONE|96.00000000000000',
+  expected: 'DONE|96',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.20.0

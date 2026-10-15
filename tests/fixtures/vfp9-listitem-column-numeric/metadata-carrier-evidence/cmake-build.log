@@ -1,0 +1,3 @@
+Building CXX object tests/CMakeFiles/test_prg_numeric_metadata.dir/test_prg_numeric_metadata.cpp.o
+Linking CXX executable test_prg_numeric_metadata
+Built target test_prg_numeric_metadata

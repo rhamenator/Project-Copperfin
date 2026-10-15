@@ -1,0 +1,8 @@
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: duplicate symbol: _DllMain@12
+>>> defined at build/listitem-column-native/cause/cause-probe.obj
+>>> defined at winapims.lib(apimain.obj)
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2

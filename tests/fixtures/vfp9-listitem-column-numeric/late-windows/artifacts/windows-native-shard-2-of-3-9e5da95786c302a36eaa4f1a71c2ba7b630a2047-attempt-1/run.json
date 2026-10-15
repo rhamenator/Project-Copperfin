@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "kind": "windows-validation-run",
+  "started_at_utc": "2026-10-14T20:57:31.8149313Z",
+  "runner": {
+    "operating_system": "Microsoft Windows 10.0.26100",
+    "logical_processors": 4,
+    "total_physical_memory_bytes": 17174360064
+  }
+}

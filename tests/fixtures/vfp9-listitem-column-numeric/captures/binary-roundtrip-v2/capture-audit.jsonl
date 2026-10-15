@@ -1,0 +1,1 @@
+{"audit":"capture-only","rows":120,"contexts":{"ListBox/11":30,"ListBox/22":30,"ComboBox/11":30,"ComboBox/22":30},"outcomes":{"31:Invalid subscript reference.:<not-called>":60,"0::C:targetc1":48,"0::C:targetc8":12},"fullRawSha256":"b78198cd391d57cad64525be2e7cd0c7da59640678585cbf771f6a2c221b521f","conversionRequirement":"not asserted; supplemental recovery required"}

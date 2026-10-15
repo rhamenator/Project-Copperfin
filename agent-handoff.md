@@ -1,5 +1,95 @@
 # Agent Handoff
 
+## Resumed Numeric prerequisite: first carrier slice (2026-10-15)
+
+Owner explicitly resumed work. Existing heartbeat
+copperfin-implementation-loop-daybreak-blue is ACTIVE again at unchanged
+15/45-minute cadence; prompt now includes the direct Numeric/list/combo
+compatibility decision, existing switch/safety rules and no canonical-double
+shortcut. No new automation/chat/model or VM was created.
+On the existing slice branch, add RQ-CF-PRG-NUMERIC-METADATA-CARRIER-001:
+PrgNumericMetadata and appended optional value-owned PrgValue metadata, absent
+unless explicitly supplied. No parser/arithmetic/assignment-width/field/display/
+index interpretation or ListItem caller wiring. Formatter executable lines
+unchanged; only its obsolete no-metadata comment is corrected. This is the first
+representation increment, not completed Numeric or list/combo parity.
+Pre-code requirement/test freeze retained; original header compile1 for absent
+type/member, NOT runtime behavior fail. GNU compile/run0 and Clang ASan/UBSan/
+float-cast-overflow compile/run0, CMake target/CTest1/1 and focusedcontracts6/6
+PASS. Full native rebuild/strict checks/exact-head review remain gates.
+See metadata-carrier-requirements.md, metadata-carrier-completion.md and the
+retained metadata-carrier-evidence/ under the active ListItem fixture. Next
+immediate action: signed commit/push/PR for this bounded carrier, Claude FIRST,
+authorized Codex fallback if unavailable, review response/CI before merge.
+After carrier integration continue recovered producer/propagation/display
+slices and the retained ListItem column migration; do not declare a residual
+gap or erase the owner objective. Global test registration/isolation/header
+intentionally change; old selected10/prior270 statements describe recovery
+checkpoints, NOT current all-source equality.
+Separate PR7187 Windows run38636352844 attempt2 is completed FAILURE on old
+8968c625a8: shard1 204/204, shard3 203/203, shard2 202/203 with test_dbf_table
+timeout196.62s; numeric_behavior passed136.18s. Exact job metadata/full logs
+downloaded into active build/numeric-metadata-carrier/pr7187-attempt2-*.
+Root cause remains unproven, #7188 stays open; no retry/budget/assertion/
+unrelated production change. Foreign files/worktrees/stashes preserved.
+
+## Owner decision: Numeric and list/combo compatibility (2026-10-15)
+
+Direct owner steering now resolves #7189's product/scope choice in favor of
+VFP Numeric compatibility, including metadata and a representation rewrite
+where necessary, plus VFP ListBox/ComboBox behavior. Do not implement the
+previously offered canonical-double/residual-gap shortcut. Existing #6776
+per-area switch policy, checked conversions and allocation limits remain;
+this is not authorization to reproduce unsafe crashes or C++ undefined behavior.
+The selected ListItem supplied-column READ remains uncancelled, with Numeric
+representation/propagation/display as its admitted prerequisite under #5611/
+#6776 and this direct owner instruction. No claim that all metadata propagation
+or the full native conversion formula is recovered.
+Active branch fix/listitem-column-numeric-5611 at signed checkpoint53acb58f4,
+WT /home/rich/.codex/worktrees/listitem-column-numeric-5611/Project-Copperfin;
+main/origin b6d1a7634 unchanged after fresh fetch; no active PR/checks/review
+conversations for this branch. Existing uncommitted diagnostic evidence is
+owned and retained. No production migration or completed compatibility claim.
+First bounded prerequisite recovery completed: two native96-case grids for
+literal/copy/by-value parameter/return/property/TRANSFORM/explicit STR under
+DECIMALS2/6/14 and FIXED OFF/ON, actual0/empty stderr, audit0. All documented
+fields/display repeat; full raw cmp1 because ONE unused N ev_long slot differs,
+not byte-identical evidence. Literal2.5 vs5/2: same bits, decimal1 vs2, assigned
+TRANSFORM outputs2.5 vs2.50 at defaults. Direct1.00 width4 becomes13 assigned,
+decimals2 retained. Full report metadata-foundation.md; first footer-audit1
+and correction retained, no false passing claim. Next: finish bounded
+literal/copy/arithmetic-function propagation and display-rule recovery, specify
+a normalized Numeric descriptor (including host-created/exact-integer values),
+then implement/verify one foundation slice before returning to ListItem
+coercion. No production change or completed propagation specification.
+Previous owner-input-required/A-B text below is historical, superseded by this
+decision; no further policy choice is required to proceed. Automation has not
+been resumed by this steering-record update; current local work proceeds.
+Foreign files/worktrees/stashes and VM/backup-reset restrictions are unchanged.
+
+## Current owner-directed diagnosis (2026-10-15)
+
+Owner requested cause investigation and ordinary fractional-column explanation,
+NOT a production fix, policy-option selection or automation resumption.
+Native-only published-FLL-interface diagnosis now establishes decimal-place
+metadata as causal for the selected near-integer ListItem coercion discrepancy:
+actual same N/double3FEFFFFFFFFFFFA6, decimal14 gives31 versus decimal2 column1.
+Direct same-width25/30 interventions flip48 pairs; width-only88/clone44 controls
+retain outcomes. x87CW027F and all double/state/context samples unchanged.
+SET DECIMALS before evaluation changes power-expression metadata; changing it
+only after evaluation does not change the attached precision/outcome. Literal2.5
+and computed5/2 readcolumn2 in both classes/IDs/all tested settings; column0 is
+invalid, with near-integer precision-dependent admission as the observed quirk.
+Repeated full748-factorial/160-settings captures eachactual0/empty native stderr/
+fullbyte-identical; independent audit0. Full conversion formula NOT recovered.
+See active slice WT tests/fixtures/vfp9-listitem-column-numeric/cause-established.md
+and cause-evidence/; SDK-containing FLL/object/import libraries remain host-only
+under WT build/listitem-column-native/cause/, never product/repo binaries.
+Diagnostic linkage/scaffold failures retained; no decompilation/SDK sourcecopy.
+Selected10/prior270 inputs unchanged. Earlier "cause unproven" text below is
+historical and superseded for this observed case. Numeric-precision propagation
+requirements/production implementation remain undecided; heartbeat stays paused.
+
 ## Branching (changed 2026-10-01)
 
 Develop on `main`: branch from `origin/main` and open pull requests with
@@ -54,6 +144,41 @@ production work. Reconfirm review availability/routing
 after October rather than assuming quota restoration.
 
 ## Last shipped slice
+
+PR7187 AddListItem missing-ID THIRD numeric/exact COLUMN merged2026-10-14T21:46:40Z
+asb6d1a7634e56435ad3326d92f13efa3f4fe241d3.
+https://github.com/rhamenator/Project-Copperfin/pull/7187
+Exact signedG/DCO head8968c625a84512394ca3604a9b77d7b7baca62b4. All11unique
+active strictmain20356131 SUCCESS/requiredwatch89635HARVESTED0/actualclean
+verifiedCodex6178385422 afterClaudeFIRST6178317378/fallback6178337415.
+Fullpaginatedreviews-reviewcomments-threads-closingrefs0/mergegate6179203625/
+noadminbypass. Postpush10079273HARVESTED0/all100PASS784.01s/21:10:25Z/
+raw823ba7d1196a7b7ac81fddc1cd3e543c624a9701f213853a2cf078c012df81e3;
+independent source270/headbefore-after/counters-builtcommands audit0.
+Optional3Windowsnativeportions38636352844 pendingatmerge, NOTpassingclaim.
+
+Independent matching780/100/384/144 installedVFP9 pairs/pre-code map preceded
+UNUSEDhelper/freeze/BOTHoriginal100 gate/328baselines andONLY24callerlines.
+Bothoriginals allprior95/new192directPASS/ONLYfour432fail/identical3824fullblocks.
+BOTHfixed100 PASS GNU789.70s/Clangsanitizers4899.77s; eachcompiler fourPRE-WIRE112
+fixed-onlyhostile0/BOTHNONNATIVE328 SAMEcompilerfullcmp0. Source270/other269frozen/
+commands andsecondaryaudits0. Fivecontracts5/5PASS342.28s/currentdoc4/4PASS3.91s;
+boundedMEDIUM delegatedDQDVwalkthrough complete/notindependenthuman/high-human/
+system/release qualification. Allfailed/supersededv1/tool metadata evidence retained.
+Full requirements/native-original-fixed-hostile-preservation provenance remains
+tests/fixtures/vfp9-addlistitem-new-column-numeric/local-completion.md.
+
+CanonicalmainFF/exactsignedheadancestor proved; cleanownedWT/localbranch removed/
+exact8968 leasedremote deletion0. Whole1.1GBbuild/evidence recoverable
+/home/rich/.local/share/Trash/files/addlistitem-new-column-numeric-5611-build;
+Trashinfo/merged-cleanup-record.md/postmove823ba7dSHAunchanged. Scopedcanonical
+stash350dee5e23843f6fd44bb2ca974515a5c3c26869/oldstashes retained/notpopped.
+Foreign376-AGENTS-corpus-vmGUI-pycache/4436-49ae untouched. Scopedlsof onlyownFDs/
+tracefswarnings, notglobalidleproof. Livechannel rereadaftercleanup; optional
+nativewatch64557 livesincanonicalbuildoutsidecleanedWT. Appattach100identitycap.
+No parent/hazard/7186sharedcreationgap/VM-backupreset closure.
+
+## Earlier shipped slice
 
 AddItem supplied THIRD Numeric/exact column PR7180 merged2026-10-14T03:17:49Z
 as5e1b259a65f909fb4c5ce3ae30cb48e869098778, exact signedDCO/localGoodG head
@@ -914,7 +1039,7 @@ Reports7141comment6105561075/PR7140comment6105561197 retained.
 EPOCH/CENTURY complete/#3698 closed; do not restart obsolete slices.
 No VM started/recreated; backup-reset completion still unconfirmed.
 
-## Last shipped numeric slice
+## Prior shipped numeric slice
 
 AddListItem EXISTING ordinary Numeric stable-ID supplied THIRD Numeric/int64/
 uint64 column PR7184 MERGED2026-10-14T14:18:45Z as
@@ -977,77 +1102,71 @@ tracking7181closed, full16MB recoverable Trash/windows-native-test-shards-7181-b
 AppPRattach hit100identitycap; URLs retained/no unrelatedartifactpruning.
 EPOCH/CENTURY/#3698 complete; doNOTrestart. No VM/start/clone/resetcompletion claim.
 
-## Selected active bounded slice
+## Selected ListItem slice — retained pre-decision checkpoint
 
-OPEN owner5611/6776/exactagent-approved revalidated2026-10-14T20:45 beforecontent.
-Main/origin337156b342ff5e59db88859ededf6580066f3355; no activePR/push yet.
-WT /home/rich/.codex/worktrees/addlistitem-new-column-numeric-5611/Project-Copperfin,
-branch fix/addlistitem-new-column-numeric-5611; signedG/DCO wiring4022b654.
-RQ-CF-PRG-ADDLISTITEM-NEW-COLUMN-NUMERIC-001/VR001+002/DQ-DV001:
-tests/fixtures/vfp9-addlistitem-new-column-numeric/local-completion.md is the
-current development result; earlier phase notes/manifests remain historical.
+Admitted OPEN owner5611/6776/exactagent-approved revalidated2026-10-14T22:45;
+both current bodies read after metadata admission. Main/origin remains
+b6d1a7634e56435ad3326d92f13efa3f4fe241d3. Active WT
+/home/rich/.codex/worktrees/listitem-column-numeric-5611/Project-Copperfin,
+branch fix/listitem-column-numeric-5611; signedG/DCO checkpoints7bb0112897
+(selection) and538e7c526 (three native pairs/lateCI). No push/activePR.
 
-Bounded THIRD nonNULLNumeric/int64/uint64 column, exact3/Charactercaption/
-coherent materialized-unbound/default-or-exacttypedRST0/trim-empty binding;
-SECOND ordinary finite integral Numeric stable-ID1..32767 MISSING beforecall.
-Default truncate/lossless1..32745 otherwise localized11. BoundDERIVED numeric/
-allocation-HZparents, NOTnative/configured/global capacity/new32745-cell row.
-ExplicitVFP9 signedlow32 positive-or-INTMIN then unsignedlow16 candidate1..32745
-otherwiseengaged0 ADMITTED-NO-WRITE. Candidate1 ORIGINALcreation; otherpositive/
-zero ORIGINALmissing-slot0/no-row. #7186 OPEN/unadmitted sharedcreationgap
-preserved, notnativeparity/repair. Existing-ID helper-predicate/body, second-ID/
-allocator/insertion/state-sort-return/fallback/other types-arity-NULL-RST-binding-
-lifecycle-parser/7173-7176-7177 unchanged/excluded.
+Uncancelled RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001/VR001+002/DQ-DV001:
+exact2 nativeListBox/ComboBox SECOND Numeric/int64/uint64 COLUMN READ;
+FIRST ordinary finiteintegral Numeric EXISTING stableID1..32767/coherentunbound/
+default-or-exactRST0/trimemptybinding. Not first-ID/implicit-column1/write/
+parser/absentID/sharedcreation/other types-RST-binding-lifecycle expansion.
+One-argListItem/7151/7186 remain excluded. No production/helper/expectedtable/
+assertion/CMake-isolation/configure/build/caller migration introduced.
 
-Independent installedVFP9/help matching780/100/384/144 pairs BEFOREpre-code map/
-UNUSEDhelper/assertions; complete native/literal completion replay0/1188rows/
-58of65 source-matchedNumeric;220unmatchedrows/seven spellings reported/parents.
-No new oracle/VM. Original38/96/264/270 manifests and allfailed-v1 arithmetic/
-metadata/tooling/runner records retained without refreeze or acceptance claims.
-V1driver46224 actual143/partial45of100 UNQUALIFIED. CounterONLY624to432 proved;
-actualconfig192(not384),224core+192config+16locale. Direct192/hostile112unchanged.
+BLOCKER #7189 (focused OPEN owner-authored but unadmitted tracking, notauthority):
+tests/fixtures/vfp9-listitem-column-numeric/numeric-origin-policy-gap.md.
+Fresh repeated native1-1E-14 vs1-90*2^(-53) BOTH N/BRS3FEFFFFFFFFFFFA6 and
+identicalcomplete sampledstate/context, but sameListItem(11,value) raises31
+versusreturnsid11c1; allfour class-ID contexts corroborate. Equivalent near2/
+near9 differences. New matching native pairs720/612/120 pluscorrectedbinary120/
+all8actualinvocations0/captureaudits0. Source/raw/status/ownFXPs retained.
+Documented BINTOC-BRS/CTOBIN-BS double reconstruction preservesall120 observed
+types/eightbytes/state/context butchanges32outcomes; independentorigin audit0.
+Wrong-endianBRS/BRS120pair retainedUNQUALIFIED asroundtrip; no overwrittenraw.
+Previous224/188/360 pairsunchanged. Nativeinternalcause NOTestablished.
+Shipped Numeric/INT/FLOOR/CEILING/CTOBIN/external-parameters help read/hashretained;
+nativeNumeric documentedwidth/decimalfields onlycontext, notcausalproof.
 
-BOTH full original100 precede wire: GNU790.00s/ClangASan-UBSan-floatcast4906.23s/
-actualCTest8 each/allprior95+new192directPASS/ONLYfour432publicFAIL/identical3824
-FULLblocks c24c1e1a/no unrelateddiagnostics/raw52765543-d2623047.
-Driver42918HARVESTED0/fullsource270before-after-current-callers3-builtcommands
-and fresharchivedBOTHaudit0/original-counter-v2-complete/. Safe originalpublic
-positive/exact<=65538/moderatenegatives; neverhugepositive/nonfinite hostile.
+Ownerchoice BEFORE pre-code map/helper/acceptanceauthors:
+A authorize documented canonical-binary64 VFP9-mode selector boundary and retain
+origin-dependent nativeNumeric behavior asnamed residualgap: boundedstateless
+implementation, NOTfulllegacyexpression parity.
+B require prerequisite investigation/representation to preserve the native
+Numeric distinctions first: broaderparity objective, wider-than-active-slice
+scope; decimalmetadataalone notclaimedfix.
+#6776 requires VFP9quirks selectable but doesnotchoose between these new
+non-equivalent contracts; earlierextension-only delegation is not permission
+to invent a native compatibility exception. No chosencontract/KBX/approvallabel.
+Heartbeatpause requiredbyowner steering; pauseoperation followsstatecheckpoint.
+Do NOT resume implementation without explicit owner direction on A/B/scope.
 
-AFTERBOTHgate BEFOREwire fresh GNU/Clang328 NONNATIVEbaselines68440harvest0.
-THENONLY24caller lines inserted beforeoldllround. Structural audit0 reconstructs
-whole oldcaller byte-for-byte onremoval/allother269frozenunchanged; fixedmanifest
-SAME270paths ONLYcallerhashchanged. Helper/header/assertions/counters/isolation/
-timeouts unchanged. Both-originals-and-wiring-phase.md retainsfullchronology.
-Firstwiring AUDITtool extra2parens ->driver4 BEFOREbuild/runtime retained;
-punctuationONLYtoolcorrection0, not productfailure or expectationweakening.
+Re-entry: recordchosen allowedparent/contract/residualgap, finishpre-codeRQ-
+architecture-VR-DQDV-HZ/default-extension-safeoriginal map BEFOREUNUSEDhelper/
+independentliterals/fixed-onlyhostile/freeze. BOTHcomplete originalcompilers/
+allprior100/fullfailures-counters-source-builtcommands BEFOREwire, thenfixed/
+sanitizers/hostile/SAMEcompilerpreservation/contracts/delegatedDQDV/signedhead
+ClaudeFIRST-actualreview/postpush/strict11-resolvedthreads/merge/ownedcleanup.
+Ten selected and270priorfixed inputsunchanged; no partialacceptance/parent-
+hazard-releaseclosure. Original136manifest isimmutable538checkpoint; only
+READMEcurrentblockerpointer differs/allother1350, oldREADMEretainedfromsignedgit.
 
-BOTH fixed100 driver83262 HARVESTED0/fullcompleteandarchivedaudits0:
-GNU789.70s/19:01:40Z/raw21c68a5a; Clangsanitizers4899.77s/20:24:06Z/raw4cc3ec89.
-All100/allprior95/new192-four432 PASS/source270before-after-current/commands0.
-THENeachcompiler four PRE-WIREfixed-only112hostile shards0/emptydiag/source270/
-binaryhashes0, driver13709HARVESTED0. BOTH freshfixed328 NONNATIVEpreservation
-84534HARVESTED0/compile-run-audit-cmp0/full SAMEcompiler baselinebytes80dc91c9/
-eight41casecontexts/scaffold0/source3-library9beforeafter0. Secondaryaudit0.
-Notnative shared-success/allproperties/globalallocator/leak/systemqualification.
+Separate lateCI #7188: PR7187 optionalWindows38636352844 attempt1 failed/
+all610attempted-once/609PASS/numeric_behavior180.07s TIMEOUT/aggregatefailclosed.
+Sourcehead8968c625a8; failedartifacts/APIlog/captureaudit0 retained unchanged.
+One unchanged ALL-three retryattempt2 requested0/samehead; EXISTINGblockingwatch
+31376 at canonicalbuild/pr7187-late-native/retry-watch.log and actual
+retry-watch.status whenfinished. Retrystillpending atthischeckpoint; preserve
+and harvest onresume, doNOTduplicate/modelpoll/mixattempts/raisetimeouts/omit
+tests/retroactivelyqualifyattempt1. PendingCI is NOTnative-origin gapcause.
 
-Five developmentcontracts34767HARVESTED0/all5PASS342.28s/20:53:35Z/raweae26e5b.
-BoundedMEDIUM delegated DQDV review/walkthrough/delta-misuse-rollback complete,
-NOTindependenthuman/personalowner/high-human/system/release assurance. Licensing0;
-initialwrongSOURCE_DIR invocationfailedpreflight1 retained/correctregistered
-COPPERFIN_SOURCE_ROOT0/no sourcechange. Matrix/hazards updatedpartial; parents/
-hazardseverities-statuses remainopen. Existing phase95 evidence remainsunchanged.
-
-Currentdocumentcontracts43209HARVESTED0/all4PASS3.91s/raw49a8339e;
-livecheckpoint56ab9ad7/mirror2137. NEXT signedcheckpoint/push/PR ClaudeFIRST,
-authorizedCodexfallback onlyifunavailable/actualcleanexactheadreview, exacthead
-postpush100, all11strictmainchecks/resolvedconversations/merge/ownedcleanup.
-run-postpush.sh authored/syntax0, NOTexecuted; neverpromoteold-head evidence.
-No active local runtime driver; doNOTrepeat originals/fixed/hostile/preservation
-for unchanged progress. Allfullevidence in fixture plus ignored build/
-addlistitem-new-column-native. DoNOTmodifytrackedfiles during postpush driver.
-No ownerinputblocker or VM-start/clone/backupreset-completion claim.
-EPOCH/CENTURY/#3698 completed, doNOTrestart. Preserve foreignfiles/stashes/WTs.
+Foreign376/AGENTS/corpus/vmGUI/pycache, detached4436-49ae/oldstashes retained.
+No VM/start/clone/resetcompletion claim. EPOCH/CENTURY/#3698 DONE, doNOTrestart.
 
 ## Retained owner steering / deferred work
 

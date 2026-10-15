@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "kind": "windows-validation-phase",
+  "name": "Configure native build",
+  "category": "configure",
+  "command": "cmake",
+  "arguments": [
+    "-S",
+    ".",
+    "-B",
+    "build",
+    "-A",
+    "x64",
+    "-DCOPPERFIN_BUILD_TESTS=ON"
+  ],
+  "build_jobs": null,
+  "started_at_utc": "2026-10-14T20:58:06.8079695Z",
+  "finished_at_utc": "2026-10-14T20:58:57.4653535Z",
+  "elapsed_seconds": 50.651,
+  "exit_code": 0,
+  "sample_interval_seconds": null,
+  "resource_sample_count": 0,
+  "minimum_free_physical_memory_bytes": null,
+  "peak_tracked_working_set_bytes": null,
+  "average_tracked_cpu_percent": null,
+  "peak_tracked_cpu_percent": null,
+  "runner": {
+    "operating_system": "Microsoft Windows 10.0.26100",
+    "logical_processors": 4,
+    "total_physical_memory_bytes": 17174360064
+  }
+}

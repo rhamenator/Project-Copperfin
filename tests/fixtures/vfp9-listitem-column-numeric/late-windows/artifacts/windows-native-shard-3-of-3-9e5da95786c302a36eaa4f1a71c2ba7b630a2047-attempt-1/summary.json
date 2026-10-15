@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "windows-validation-summary",
+  "started_at_utc": "2026-10-14T20:57:28.7707582Z",
+  "finished_at_utc": "2026-10-14T22:20:30.7152704Z",
+  "elapsed_seconds": 4981.945,
+  "phase_count": 4,
+  "successful_phase_count": 4,
+  "categories": [
+    {
+      "category": "configure",
+      "elapsed_seconds": 20.757,
+      "phase_count": 1
+    },
+    {
+      "category": "native-compile",
+      "elapsed_seconds": 3809.714,
+      "phase_count": 2
+    },
+    {
+      "category": "native-test",
+      "elapsed_seconds": 1112.591,
+      "phase_count": 1
+    }
+  ]
+}

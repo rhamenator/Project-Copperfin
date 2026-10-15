@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "kind": "windows-validation-phase",
+  "name": "Build native targets",
+  "category": "native-compile",
+  "command": "cmake",
+  "arguments": [
+    "--build",
+    "build",
+    "--config",
+    "Release",
+    "--parallel",
+    "2"
+  ],
+  "build_jobs": 2,
+  "started_at_utc": "2026-10-14T20:58:24.9935935Z",
+  "finished_at_utc": "2026-10-14T21:54:15.6473595Z",
+  "elapsed_seconds": 3350.474,
+  "exit_code": 0,
+  "sample_interval_seconds": 2,
+  "resource_sample_count": 1605,
+  "minimum_free_physical_memory_bytes": 11854409728,
+  "peak_tracked_working_set_bytes": 2119573504,
+  "average_tracked_cpu_percent": 66.97,
+  "peak_tracked_cpu_percent": 97.6,
+  "runner": {
+    "operating_system": "Microsoft Windows 10.0.26100",
+    "logical_processors": 4,
+    "total_physical_memory_bytes": 17174360064
+  }
+}
