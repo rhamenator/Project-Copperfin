@@ -1,5 +1,36 @@
 # Agent Handoff
 
+## Active plain-decimal metadata producer (2026-10-15)
+
+Continue fix/numeric-literal-metadata-5611 in dedicated WT
+/home/rich/.codex/worktrees/numeric-literal-metadata-5611/Project-Copperfin,
+baseline origin/main7d07d7203; signed recovery checkpoint57c3bc396.
+RQ-CF-PRG-NUMERIC-LITERAL-METADATA-001 now has a bounded producer: unsigned
+plain decimals <=256bytes, width capped40/decimal places capped18, payload
+unchanged. UNUSED helper/native boundary recovery and frozen original public
+regression precede the single parser connection. Original56 metadata failures
+with payload/format/arithmetic/state controls passing -> fixed GNU3/3 PASS.
+Clang helper ASan/UBSan/float-cast-overflow0; focused existing Numeric/equality/
+string-math/isolation4/4 PASS64.43sec. Both new tests added to hosted PR
+sanitizer selection; full instrumented runtime evidence/review/strict gates
+remain pending, not preclaimed. See fixture recovered-requirements.md,
+producer-completion.md and producer-evidence/. Two31-case boundary captures
+actual0/byte-repeat SHA de7a4c57...57c9d/audit0; failed302byte native attempt
+retained/unqualified, 257byte native36 not a new Copperfin syntax rule.
+Other literals/unary-minus/assignment-width normalization/arithmetic/functions/
+fields/default display/ListItem are mandatory unfinished follow-ons; ordinary
+copies carrying attributes do not establish native propagation parity.
+Next: finish source/traceability checks, signed commit/push/PR, Claude FIRST,
+exact-head clean review/strict green/conversations resolved before merge.
+Do not restart completed EPOCH/CENTURY or claim #7189/list family complete.
+
+Prior carrier PR7191 Windows38772071102 subsequently completed SUCCESS at
+exact c572e55126: shards204/204,204/204,203/203; aggregate611 unique/full611.
+Structured job/full-log-hash audit retained in producer-evidence/; full logs
+host-side build/numeric-literal-native/pr7191-windows-*. No late failure on
+that head; old separate #7188 failures remain unexplained/open. Heartbeat
+ACTIVE, no owner-input blocker and no VM/start/clone/reset-completion claim.
+
 ## Latest carrier merge and selected literal prerequisite (2026-10-15)
 
 PR7191 merged2026-10-15T17:47:02Z as

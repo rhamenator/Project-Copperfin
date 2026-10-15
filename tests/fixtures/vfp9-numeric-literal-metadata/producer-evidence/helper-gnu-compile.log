@@ -1,0 +1,9 @@
+tests/test_prg_numeric_literal_metadata_helper.cpp: In function ‘int main()’:
+tests/test_prg_numeric_literal_metadata_helper.cpp:34:21: error: loop variable ‘source’ creates a copy from type ‘const std::__cxx11::basic_string<char>’ [-Werror=range-loop-construct]
+   34 |     for (const auto source : {std::string("1.\0",3), "1." + std::string(255,'0'),
+      |                     ^~~~~~
+tests/test_prg_numeric_literal_metadata_helper.cpp:34:21: note: use reference type to prevent copying
+   34 |     for (const auto source : {std::string("1.\0",3), "1." + std::string(255,'0'),
+      |                     ^~~~~~
+      |                     &
+cc1plus: all warnings being treated as errors

@@ -1,0 +1,28 @@
+Test project /home/rich/.codex/worktrees/numeric-literal-metadata-5611/Project-Copperfin/build/numeric-literal-gnu
+    Start  39: test_native_test_isolation_contract
+1/4 Test  #39: test_native_test_isolation_contract .....   Passed    0.54 sec
+    Start 387: test_prg_engine_numeric_equality
+2/4 Test #387: test_prg_engine_numeric_equality ........   Passed    0.14 sec
+    Start 396: test_prg_engine_numeric_behavior
+3/4 Test #396: test_prg_engine_numeric_behavior ........   Passed   63.16 sec
+    Start 601: test_prg_engine_string_math_functions
+4/4 Test #601: test_prg_engine_string_math_functions ...   Passed    0.56 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =  64.41 sec*proc (4 tests)
+copperfin-isolation:child-processes=none            =  64.41 sec*proc (4 tests)
+copperfin-isolation:environment=none                =   1.25 sec*proc (3 tests)
+copperfin-isolation:environment=scoped-process      =  63.16 sec*proc (1 test)
+copperfin-isolation:filesystem=process-owned        =  63.30 sec*proc (2 tests)
+copperfin-isolation:filesystem=read-only            =   0.54 sec*proc (1 test)
+copperfin-isolation:filesystem=test-owned-unique    =   0.56 sec*proc (1 test)
+copperfin-isolation:network=none                    =  64.41 sec*proc (4 tests)
+copperfin-isolation:platform=portable               =  64.41 sec*proc (4 tests)
+copperfin-isolation:resources=none                  =  64.41 sec*proc (4 tests)
+copperfin-isolation:samples=none                    =  64.41 sec*proc (4 tests)
+copperfin-isolation:schedule=parallel-safe          =   1.11 sec*proc (2 tests)
+copperfin-isolation:schedule=serial                 =  63.30 sec*proc (2 tests)
+
+Total Test time (real) =  64.43 sec

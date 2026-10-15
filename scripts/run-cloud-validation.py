@@ -19,6 +19,7 @@ TARGETS = {
     "migration": ["test_cloud_migration_stress", "test_dbf_table", "test_dbf_migration_fidelity",
                   "test_staged_import_publish"],
     "sanitizer-pr": ["test_prg_engine_control_flow", "test_prg_engine_relations",
+                     "test_prg_numeric_literal_metadata_helper", "test_prg_engine_numeric_literal_metadata",
                      "test_prg_engine_work_areas", "test_xasset_methods",
                      "test_prg_engine_database_lifecycle",
                      "test_prg_engine_runtime_surface_functions_buffering", "test_prg_engine_data_io",
