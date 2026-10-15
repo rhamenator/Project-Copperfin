@@ -1,0 +1,18 @@
+Test project /home/rich/.codex/worktrees/numeric-unary-zero-context-5611/Project-Copperfin/build/numeric-zero-focused
+    Start 378: test_prg_engine_macro_expressions
+1/1 Test #378: test_prg_engine_macro_expressions ...   Passed    0.08 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+copperfin-isolation:audit=complete              =   0.08 sec*proc (1 test)
+copperfin-isolation:child-processes=none        =   0.08 sec*proc (1 test)
+copperfin-isolation:environment=none            =   0.08 sec*proc (1 test)
+copperfin-isolation:filesystem=process-owned    =   0.08 sec*proc (1 test)
+copperfin-isolation:network=none                =   0.08 sec*proc (1 test)
+copperfin-isolation:platform=portable           =   0.08 sec*proc (1 test)
+copperfin-isolation:resources=none              =   0.08 sec*proc (1 test)
+copperfin-isolation:samples=none                =   0.08 sec*proc (1 test)
+copperfin-isolation:schedule=serial             =   0.08 sec*proc (1 test)
+
+Total Test time (real) =   0.10 sec

@@ -2,7 +2,9 @@
 
 RQ-CF-PRG-NUMERIC-UNARY-EXPRESSION-CONTEXT-001 /
 VR-DQ-DV-5611-UNARY-EXPRESSION-CONTEXT-001; parent and scope in README.
-No production code, parser context tag or Numeric representation change here.
+The original384-observation checkpoint below preceded production changes.
+The bounded zero child now has its own contract and completion record; it
+does not claim to recover or implement the division precision shown here.
 
 Two native384-observation runs: actual0, empty stderr,384 values/no errors,
 complete framing and keys; documented fields and raw bytes repeat exactly.
@@ -67,16 +69,18 @@ from equal payload bits or width/decimals alone. Before using a parser-side
 classification, establish which literal/operator/runtime-primary combinations
 qualify; continuation/checkpoint cache replay and suppressed evaluation must
 preserve classifications without re-evaluating callbacks or changing effects.
-The existing ExpressionParser primary checkpoints preserve values/end positions
-but no such classification; that is an architecture constraint, not a newly
-established defect in the currently implemented subset.
+Before the child connection, ExpressionParser primary checkpoints preserved
+values/end positions but no classification. The child now retains ephemeral
+runtime-primary classification alongside those cached values, not in PrgValue.
 
-Next bounded recovery: complete native type-aware precision rules needed at
+Retained next recovery: complete native type-aware precision rules needed at
 this boundary (Integer versus Numeric division operands, nested arithmetic and
 SET DECIMALS changes), and freeze independent expected cases for a narrowly
 defined context increment. Then select a normalized architecture and establish
 original-fail evidence before production wiring. No formula or parser rewrite
-is accepted merely because it fits this grid. Assignment normalization, other
+is accepted merely because it fits this grid. See zero-contract.md for the
+intervening bounded payload increment and its original-fail evidence.
+Assignment normalization, other
 producers/display/conversion and retained ListItem read remain mandatory work.
 
 ## Provenance and DQ/DV walkthrough
@@ -93,6 +97,6 @@ No VM was started or recreated; backup-reset completion remains unconfirmed.
 Walkthrough/self-review: paired audits0,384 expected values each, no errors,
 raw repeat and no compiled/EVALUATE differences; the explicit nonzero table
 and separate zero bits demonstrate why no universal formula is asserted.
-This is implementing-agent LOW recovery-documentation verification, not
+This checkpoint is implementing-agent LOW recovery-documentation verification, not
 independent-human/system/release assurance or acceptance of a production fix.
 Delta/misuse/rollback/hazard and owner-continuity limits are in README.

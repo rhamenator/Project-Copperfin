@@ -40,7 +40,8 @@ class SanitizerSelection(unittest.TestCase):
         self.assertEqual(len(SELECTORS), 1)
         selector = re.compile(SELECTORS[0])
         for name in ("test_prg_numeric_literal_metadata_helper", "test_prg_engine_numeric_literal_metadata",
-                     "test_prg_numeric_unary_metadata_helper", "test_prg_engine_numeric_unary_metadata"):
+                     "test_prg_numeric_unary_metadata_helper", "test_prg_engine_numeric_unary_metadata",
+                     "test_prg_numeric_expression_context_helper", "test_prg_engine_numeric_zero_context"):
             with self.subTest(name=name):
                 self.assertIn(name, TARGETS["sanitizer-pr"])
                 self.assertIsNotNone(selector.search(name))

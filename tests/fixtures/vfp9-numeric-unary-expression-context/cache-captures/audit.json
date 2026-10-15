@@ -1,0 +1,14 @@
+{
+  "settingsPerRun": 4,
+  "actualExit": 0,
+  "stderrEmpty": true,
+  "byteRepeat": true,
+  "firstSha256": "b701b5f0da92eea612b406c3cee9f914e01e8c4306b8bbd293e541c4b14fea20",
+  "repeatSha256": "b701b5f0da92eea612b406c3cee9f914e01e8c4306b8bbd293e541c4b14fea20",
+  "nativeBits": [
+    "0000000000000000",
+    "8000000000000000",
+    "8000000000000000"
+  ],
+  "callbackCountPerSetting": 3
+}

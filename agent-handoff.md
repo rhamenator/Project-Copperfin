@@ -1,5 +1,44 @@
 # Agent Handoff
 
+## Active bounded unary zero-context implementation (2026-10-15)
+
+WT /home/rich/.codex/worktrees/numeric-unary-zero-context-5611/Project-Copperfin,
+branch fix/numeric-unary-zero-context-5611 from origin/main54a96438facc6e390e8649a6aefd9bf67fa5f62d.
+Signed recovery checkpoint3c751b2934bde7b674521114f10ee2e65d9ae882 followed by
+RQ-CF-PRG-NUMERIC-UNARY-ZERO-CONTEXT-001; current uncommitted connection is
+ready for signed commit/push/PR, not yet pushed/reviewed or shipped.
+Pure UNUSED helper GNU/Clang ASan/UBSan/float-cast-overflow compile/run0 before
+wiring. Frozen public ORIGINAL52 payload-only failures -> SAME test fixed0,
+kind/nonzero/NULL/type/suppression/state/resume/callback controls unchanged.
+Preliminary second cache-source DECIMALS setup omission retained/unqualified;
+corrected/frozen and original rebuilt/fail BEFORE wiring; hashes still match.
+Ephemeral operand/primary runtime classification, cached with existing value/
+end and restored on continuation; never persistent PrgValue provenance.
+Known constant Numeric zero -> negative zero, runtime zero preserves sign;
+nonzero/unknown-constant and prior metadata39/Currency/exact-integer paths stay.
+Native repeated192 primary observations:172 values/20 syntax errors per run,
+actual0/empty stderr/audit0/byte repeat5f8bf37a...df03df,12 expected macro-mode
+differences retained without new grammar. Native four-setting cache pair exact
+bits/count3, actual0/empty stderr/audit0/repeatb701b5f0...ea20. Original384
+precision grid/recovery remains, not cancelled or treated as universal formula.
+GNU Debug -O0 -g0 focused14/14 PASS164.44sec; dedicated macro1/1 PASS0.10sec.
+Both new tests in hosted sanitizer build AND actual CTest filter, selection3
+methods PASS. Full named hosted sanitizer receipt, all11 strict checks, actual
+clean exact-head Claude FIRST/authorized Codex fallback review and resolved
+conversations are mandatory before merge; not preclaimed. Fixture contracts/
+completion/evidence/matrix/changelog map RQ/VR/DQ/DV and MEDIUM risks/rollback.
+Next: commit/push/open PR, request @claude review first, postpush focused gates,
+blocking hosted watch; inspect exact review findings and actual executed named
+sanitizer receipt. Then re-enter type-aware Integer/Numeric division precision
+recovery, nested arithmetic/SET DECIMALS. Assignment normalization/remaining
+producers/display/exact conversion and retained ListItem supplied-column READ
+remain mandatory; no full Numeric/#7189 closure or canonical-double shortcut.
+Canonical main/origin54a96438; prior PR7197 late-native all-check watch65659
+still owns canonical build/pr7197-late-native/all-checks-watch.log/.status;
+known optional VSIX7193 red retained, no new actionable review feedback. Foreign
+files/detached worktrees untouched, no VM start/clone/reset-completion claim.
+Heartbeat ACTIVE, owner explicitly resumed; no owner-input blocker.
+
 ## Latest merge and selected expression-context boundary (2026-10-15)
 
 PR7197 merged2026-10-15T21:46:40Z as

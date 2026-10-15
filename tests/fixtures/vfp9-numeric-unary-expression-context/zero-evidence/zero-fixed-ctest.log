@@ -1,0 +1,50 @@
+Test project /home/rich/.codex/worktrees/numeric-unary-zero-context-5611/Project-Copperfin/build/numeric-zero-focused
+      Start   3: test_prg_engine_numeric_literal_metadata
+ 1/14 Test   #3: test_prg_engine_numeric_literal_metadata .....   Passed    0.09 sec
+      Start   4: test_prg_numeric_unary_metadata_helper
+ 2/14 Test   #4: test_prg_numeric_unary_metadata_helper .......   Passed    0.01 sec
+      Start   5: test_prg_engine_numeric_unary_metadata
+ 3/14 Test   #5: test_prg_engine_numeric_unary_metadata .......   Passed    0.09 sec
+      Start   6: test_prg_engine_numeric_zero_context
+ 4/14 Test   #6: test_prg_engine_numeric_zero_context .........   Passed    0.10 sec
+      Start   7: test_prg_numeric_expression_context_helper
+ 5/14 Test   #7: test_prg_numeric_expression_context_helper ...   Passed    0.00 sec
+      Start  25: test_cloud_validation_sanitizer_selection
+ 6/14 Test  #25: test_cloud_validation_sanitizer_selection ....   Passed    0.23 sec
+      Start  29: test_changelog_fragments_valid
+ 7/14 Test  #29: test_changelog_fragments_valid ...............   Passed    0.22 sec
+      Start  44: test_native_test_isolation_contract
+ 8/14 Test  #44: test_native_test_isolation_contract ..........   Passed    0.63 sec
+      Start 376: test_prg_engine_control_flow
+ 9/14 Test #376: test_prg_engine_control_flow .................   Passed   95.17 sec
+      Start 392: test_prg_engine_numeric_equality
+10/14 Test #392: test_prg_engine_numeric_equality .............   Passed    0.15 sec
+      Start 393: test_prg_engine_currency_literals
+11/14 Test #393: test_prg_engine_currency_literals ............   Passed    0.21 sec
+      Start 396: test_prg_engine_currency_overflow
+12/14 Test #396: test_prg_engine_currency_overflow ............   Passed    0.12 sec
+      Start 398: test_prg_engine_int64_exact_expression
+13/14 Test #398: test_prg_engine_int64_exact_expression .......   Passed    0.10 sec
+      Start 401: test_prg_engine_numeric_behavior
+14/14 Test #401: test_prg_engine_numeric_behavior .............   Passed   67.29 sec
+
+100% tests passed, 0 tests failed out of 14
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  = 164.41 sec*proc (14 tests)
+copperfin-isolation:child-processes=none            = 164.41 sec*proc (14 tests)
+copperfin-isolation:environment=none                =   1.67 sec*proc (9 tests)
+copperfin-isolation:environment=scoped-process      = 162.74 sec*proc (5 tests)
+copperfin-isolation:filesystem=none                 =   0.01 sec*proc (2 tests)
+copperfin-isolation:filesystem=process-owned        =  67.86 sec*proc (5 tests)
+copperfin-isolation:filesystem=read-only            =   1.09 sec*proc (3 tests)
+copperfin-isolation:filesystem=test-owned-unique    =  95.45 sec*proc (4 tests)
+copperfin-isolation:network=none                    = 164.41 sec*proc (14 tests)
+copperfin-isolation:platform=configured             =   0.22 sec*proc (1 test)
+copperfin-isolation:platform=portable               = 164.19 sec*proc (13 tests)
+copperfin-isolation:resources=none                  = 164.41 sec*proc (14 tests)
+copperfin-isolation:samples=none                    = 164.41 sec*proc (14 tests)
+copperfin-isolation:schedule=parallel-safe          =  96.26 sec*proc (6 tests)
+copperfin-isolation:schedule=serial                 =  68.15 sec*proc (8 tests)
+
+Total Test time (real) = 164.44 sec

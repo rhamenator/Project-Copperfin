@@ -1,0 +1,465 @@
+{
+  "casesPerRun": 192,
+  "successfulValues": 172,
+  "recordedErrors": 20,
+  "documentedFieldsRepeatEqual": true,
+  "rawByteEqual": true,
+  "firstSha256": "5f8bf37a46809ea0082c68b02562884731475a66d1a117d3d5de427b4efd03df",
+  "repeatSha256": "5f8bf37a46809ea0082c68b02562884731475a66d1a117d3d5de427b4efd03df",
+  "compiledVersusEvalDifferences": [
+    {
+      "s": 2,
+      "fixed": "OFF",
+      "index": 1,
+      "evalRow": {
+        "expression": "-&cZeroExp",
+        "error": 1231,
+        "message": "4D697373696E67206F706572616E642E"
+      },
+      "compiledRow": {
+        "expression": "-&cZeroExp",
+        "type": "4E",
+        "width": 5,
+        "decimals": 2,
+        "bits": "8000000000000000",
+        "display": "30",
+        "cw": "027F"
+      }
+    },
+    {
+      "s": 2,
+      "fixed": "OFF",
+      "index": 2,
+      "evalRow": {
+        "expression": "-(-&cZeroExp)",
+        "error": 1231,
+        "message": "4D697373696E67206F706572616E642E"
+      },
+      "compiledRow": {
+        "expression": "-(-&cZeroExp)",
+        "type": "4E",
+        "width": 6,
+        "decimals": 2,
+        "bits": "8000000000000000",
+        "display": "30",
+        "cw": "027F"
+      }
+    },
+    {
+      "s": 2,
+      "fixed": "OFF",
+      "index": 4,
+      "evalRow": {
+        "expression": "-(&cZeroExp)",
+        "error": 1231,
+        "message": "4D697373696E67206F706572616E642E"
+      },
+      "compiledRow": {
+        "expression": "-(&cZeroExp)",
+        "type": "4E",
+        "width": 5,
+        "decimals": 2,
+        "bits": "8000000000000000",
+        "display": "30",
+        "cw": "027F"
+      }
+    },
+    {
+      "s": 2,
+      "fixed": "ON",
+      "index": 1,
+      "evalRow": {
+        "expression": "-&cZeroExp",
+        "error": 1231,
+        "message": "4D697373696E67206F706572616E642E"
+      },
+      "compiledRow": {
+        "expression": "-&cZeroExp",
+        "type": "4E",
+        "width": 5,
+        "decimals": 2,
+        "bits": "8000000000000000",
+        "display": "302E3030",
+        "cw": "027F"
+      }
+    },
+    {
+      "s": 2,
+      "fixed": "ON",
+      "index": 2,
+      "evalRow": {
+        "expression": "-(-&cZeroExp)",
+        "error": 1231,
+        "message": "4D697373696E67206F706572616E642E"
+      },
+      "compiledRow": {
+        "expression": "-(-&cZeroExp)",
+        "type": "4E",
+        "width": 6,
+        "decimals": 2,
+        "bits": "8000000000000000",
+        "display": "302E3030",
+        "cw": "027F"
+      }
+    },
+    {
+      "s": 2,
+      "fixed": "ON",
+      "index": 4,
+      "evalRow": {
+        "expression": "-(&cZeroExp)",
+        "error": 1231,
+        "message": "4D697373696E67206F706572616E642E"
+      },
+      "compiledRow": {
+        "expression": "-(&cZeroExp)",
+        "type": "4E",
+        "width": 5,
+        "decimals": 2,
+        "bits": "8000000000000000",
+        "display": "302E3030",
+        "cw": "027F"
+      }
+    },
+    {
+      "s": 14,
+      "fixed": "OFF",
+      "index": 1,
+      "evalRow": {
+        "expression": "-&cZeroExp",
+        "error": 1231,
+        "message": "4D697373696E67206F706572616E642E"
+      },
+      "compiledRow": {
+        "expression": "-&cZeroExp",
+        "type": "4E",
+        "width": 5,
+        "decimals": 2,
+        "bits": "8000000000000000",
+        "display": "30",
+        "cw": "027F"
+      }
+    },
+    {
+      "s": 14,
+      "fixed": "OFF",
+      "index": 2,
+      "evalRow": {
+        "expression": "-(-&cZeroExp)",
+        "error": 1231,
+        "message": "4D697373696E67206F706572616E642E"
+      },
+      "compiledRow": {
+        "expression": "-(-&cZeroExp)",
+        "type": "4E",
+        "width": 6,
+        "decimals": 2,
+        "bits": "8000000000000000",
+        "display": "30",
+        "cw": "027F"
+      }
+    },
+    {
+      "s": 14,
+      "fixed": "OFF",
+      "index": 4,
+      "evalRow": {
+        "expression": "-(&cZeroExp)",
+        "error": 1231,
+        "message": "4D697373696E67206F706572616E642E"
+      },
+      "compiledRow": {
+        "expression": "-(&cZeroExp)",
+        "type": "4E",
+        "width": 5,
+        "decimals": 2,
+        "bits": "8000000000000000",
+        "display": "30",
+        "cw": "027F"
+      }
+    },
+    {
+      "s": 14,
+      "fixed": "ON",
+      "index": 1,
+      "evalRow": {
+        "expression": "-&cZeroExp",
+        "error": 1231,
+        "message": "4D697373696E67206F706572616E642E"
+      },
+      "compiledRow": {
+        "expression": "-&cZeroExp",
+        "type": "4E",
+        "width": 5,
+        "decimals": 2,
+        "bits": "8000000000000000",
+        "display": "302E3030303030303030303030303030",
+        "cw": "027F"
+      }
+    },
+    {
+      "s": 14,
+      "fixed": "ON",
+      "index": 2,
+      "evalRow": {
+        "expression": "-(-&cZeroExp)",
+        "error": 1231,
+        "message": "4D697373696E67206F706572616E642E"
+      },
+      "compiledRow": {
+        "expression": "-(-&cZeroExp)",
+        "type": "4E",
+        "width": 6,
+        "decimals": 2,
+        "bits": "8000000000000000",
+        "display": "302E3030303030303030303030303030",
+        "cw": "027F"
+      }
+    },
+    {
+      "s": 14,
+      "fixed": "ON",
+      "index": 4,
+      "evalRow": {
+        "expression": "-(&cZeroExp)",
+        "error": 1231,
+        "message": "4D697373696E67206F706572616E642E"
+      },
+      "compiledRow": {
+        "expression": "-(&cZeroExp)",
+        "type": "4E",
+        "width": 5,
+        "decimals": 2,
+        "bits": "8000000000000000",
+        "display": "302E3030303030303030303030303030",
+        "cw": "027F"
+      }
+    }
+  ],
+  "samples": [
+    {
+      "index": 1,
+      "expression": "-&cZeroExp",
+      "error": 1231,
+      "message": "4D697373696E67206F706572616E642E"
+    },
+    {
+      "index": 2,
+      "expression": "-(-&cZeroExp)",
+      "error": 1231,
+      "message": "4D697373696E67206F706572616E642E"
+    },
+    {
+      "index": 3,
+      "expression": "-&cMinusZeroExp",
+      "error": 1231,
+      "message": "4D697373696E67206F706572616E642E"
+    },
+    {
+      "index": 4,
+      "expression": "-(&cZeroExp)",
+      "error": 1231,
+      "message": "4D697373696E67206F706572616E642E"
+    },
+    {
+      "index": 5,
+      "expression": "-oZero.z",
+      "type": "4E",
+      "width": 14,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 6,
+      "expression": "-(-oZero.z)",
+      "type": "4E",
+      "width": 15,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 7,
+      "expression": "-aZero[1]",
+      "type": "4E",
+      "width": 14,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 8,
+      "expression": "-(-aZero[1])",
+      "type": "4E",
+      "width": 15,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 9,
+      "expression": "-cfUnaryZero.z",
+      "type": "4E",
+      "width": 9,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 10,
+      "expression": "-(-cfUnaryZero.z)",
+      "type": "4E",
+      "width": 10,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 11,
+      "expression": "-IIF(.T.,0.00,ZeroValue())",
+      "type": "4E",
+      "width": 5,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 12,
+      "expression": "-IIF(.F.,ZeroValue(),0.00)",
+      "type": "4E",
+      "width": 5,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 13,
+      "expression": "-ICASE(.T.,0.00,1.00)",
+      "type": "4E",
+      "width": 5,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 14,
+      "expression": "-MAX(0.00,0.00)",
+      "type": "4E",
+      "width": 5,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 15,
+      "expression": "-MIN(0.00,0.00)",
+      "type": "4E",
+      "width": 5,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 16,
+      "expression": "-ReturnArgument(0.00)",
+      "type": "4E",
+      "width": 14,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 17,
+      "expression": "-ReturnArgument(-0.00)",
+      "type": "4E",
+      "width": 14,
+      "decimals": 2,
+      "bits": "8000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 18,
+      "expression": "-(-ReturnArgument(0.00))",
+      "type": "4E",
+      "width": 15,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 19,
+      "expression": "-EVALUATE(cZeroExp)",
+      "type": "4E",
+      "width": 5,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 20,
+      "expression": "-EVALUATE(cMinusZeroExp)",
+      "type": "4E",
+      "width": 6,
+      "decimals": 2,
+      "bits": "8000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 21,
+      "expression": "-(0.00)",
+      "type": "4E",
+      "width": 5,
+      "decimals": 2,
+      "bits": "8000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 22,
+      "expression": "-(-0.00)",
+      "type": "4E",
+      "width": 6,
+      "decimals": 2,
+      "bits": "8000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 23,
+      "expression": "-nZero",
+      "type": "4E",
+      "width": 14,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 24,
+      "expression": "-nMinusZero",
+      "type": "4E",
+      "width": 14,
+      "decimals": 2,
+      "bits": "8000000000000000",
+      "display": "30",
+      "cw": "027F"
+    }
+  ]
+}
