@@ -35,6 +35,13 @@ enum class PrgStringFlavor {
     datetime
 };
 
+// RQ-CF-PRG-NUMERIC-INTEGER-DESCRIPTOR-001: semantic native numeric storage,
+// not an SDK-layout tag, expression provenance or Copperfin exact64 kind.
+enum class PrgNumericStorage {
+    real,
+    integer
+};
+
 // RQ-CF-PRG-NUMERIC-METADATA-CARRIER-001: normalized semantic attributes,
 // not the native FLL layout. Metadata never rounds or replaces number_value.
 // Producers/consumers are migrated separately with native-backed rules;
@@ -42,6 +49,10 @@ enum class PrgStringFlavor {
 struct PrgNumericMetadata {
     std::uint32_t display_width = 0;
     std::uint32_t decimal_places = 0;
+    // Appended/default-real for existing two-field aggregate source users.
+    // For integer storage decimal_places MUST be ignored: zero is a normalized
+    // placeholder, not the unused decimal slot of a native Integer descriptor.
+    PrgNumericStorage storage = PrgNumericStorage::real;
 
     friend bool operator==(const PrgNumericMetadata&, const PrgNumericMetadata&) = default;
 };

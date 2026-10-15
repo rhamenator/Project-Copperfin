@@ -1,0 +1,46 @@
+In file included from tests/test_prg_numeric_integer_metadata_helper.cpp:5:
+tests/../src/runtime/prg_numeric_integer_metadata.h: In function ‘std::optional<copperfin::runtime::PrgNumericMetadata> copperfin::runtime::plain_integer_literal_metadata(std::string_view)’:
+tests/../src/runtime/prg_numeric_integer_metadata.h:29:31: error: ‘PrgNumericStorage’ has not been declared; did you mean ‘PrgNumericMetadata’?
+   29 |                               PrgNumericStorage::integer};
+      |                               ^~~~~~~~~~~~~~~~~
+      |                               PrgNumericMetadata
+tests/../src/runtime/prg_numeric_integer_metadata.h:29:57: error: too many initializers for ‘copperfin::runtime::PrgNumericMetadata’
+   29 |                               PrgNumericStorage::integer};
+      |                                                         ^
+tests/test_prg_numeric_integer_metadata_helper.cpp: In function ‘int main()’:
+tests/test_prg_numeric_integer_metadata_helper.cpp:17:36: error: ‘struct copperfin::runtime::PrgNumericMetadata’ has no member named ‘storage’
+   17 |     expect(PrgNumericMetadata{4,2}.storage==PrgNumericStorage::real,"old aggregate defaults real");
+      |                                    ^~~~~~~
+tests/test_prg_numeric_integer_metadata_helper.cpp:17:45: error: ‘PrgNumericStorage’ has not been declared
+   17 |     expect(PrgNumericMetadata{4,2}.storage==PrgNumericStorage::real,"old aggregate defaults real");
+      |                                             ^~~~~~~~~~~~~~~~~
+tests/test_prg_numeric_integer_metadata_helper.cpp:21:46: error: ‘PrgNumericStorage’ has not been declared
+   21 |         expect(m==PrgNumericMetadata{width,0,PrgNumericStorage::integer},"native staged Integer descriptor");
+      |                                              ^~~~~~~~~~~~~~~~~
+tests/test_prg_numeric_integer_metadata_helper.cpp:21:72: error: too many initializers for ‘copperfin::runtime::PrgNumericMetadata’
+   21 |         expect(m==PrgNumericMetadata{width,0,PrgNumericStorage::integer},"native staged Integer descriptor");
+      |                                                                        ^
+tests/test_prg_numeric_integer_metadata_helper.cpp:23:79: error: ‘PrgNumericStorage’ has not been declared
+   23 |         expect(!minus.overflow&&minus.metadata==PrgNumericMetadata{width+1U,0,PrgNumericStorage::integer},"Integer width/storage propagation");
+      |                                                                               ^~~~~~~~~~~~~~~~~
+tests/test_prg_numeric_integer_metadata_helper.cpp:23:105: error: too many initializers for ‘copperfin::runtime::PrgNumericMetadata’
+   23 |         expect(!minus.overflow&&minus.metadata==PrgNumericMetadata{width+1U,0,PrgNumericStorage::integer},"Integer width/storage propagation");
+      |                                                                                                         ^
+tests/test_prg_numeric_integer_metadata_helper.cpp:27:113: error: ‘PrgNumericStorage’ has not been declared
+   27 |     const auto overflow=negated_numeric_metadata(PrgNumericMetadata{std::numeric_limits<std::uint32_t>::max(),0,PrgNumericStorage::integer});
+      |                                                                                                                 ^~~~~~~~~~~~~~~~~
+tests/test_prg_numeric_integer_metadata_helper.cpp:27:139: error: too many initializers for ‘copperfin::runtime::PrgNumericMetadata’
+   27 |     const auto overflow=negated_numeric_metadata(PrgNumericMetadata{std::numeric_limits<std::uint32_t>::max(),0,PrgNumericStorage::integer});
+      |                                                                                                                                           ^
+tests/test_prg_numeric_integer_metadata_helper.cpp:32:54: error: ‘PrgNumericStorage’ has not been declared
+   32 |     original.numeric_metadata=PrgNumericMetadata{4,0,PrgNumericStorage::integer};
+      |                                                      ^~~~~~~~~~~~~~~~~
+tests/test_prg_numeric_integer_metadata_helper.cpp:32:80: error: too many initializers for ‘copperfin::runtime::PrgNumericMetadata’
+   32 |     original.numeric_metadata=PrgNumericMetadata{4,0,PrgNumericStorage::integer};
+      |                                                                                ^
+tests/test_prg_numeric_integer_metadata_helper.cpp:34:58: error: ‘PrgNumericStorage’ has not been declared
+   34 |     expect(copy.numeric_metadata==PrgNumericMetadata{4,0,PrgNumericStorage::integer},"typed value copy independent");
+      |                                                          ^~~~~~~~~~~~~~~~~
+tests/test_prg_numeric_integer_metadata_helper.cpp:34:84: error: too many initializers for ‘copperfin::runtime::PrgNumericMetadata’
+   34 |     expect(copy.numeric_metadata==PrgNumericMetadata{4,0,PrgNumericStorage::integer},"typed value copy independent");
+      |                                                                                    ^

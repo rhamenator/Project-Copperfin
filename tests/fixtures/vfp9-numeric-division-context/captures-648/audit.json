@@ -1,0 +1,1720 @@
+{
+  "casesPerRun": 648,
+  "successfulValues": 648,
+  "recordedErrors": 0,
+  "typeCounts": {
+    "I": 64,
+    "N": 584
+  },
+  "documentedFieldsRepeatEqual": true,
+  "rawByteEqual": false,
+  "rawDifferencesConfinedToUnusedSlots": {
+    "49:real": 1
+  },
+  "firstSha256": "494eaf60381821c05d114347ef8d1143923f1c5a50284e8b83b979caa47ebc54",
+  "repeatSha256": "535652ea64f565b6326232a1f994810011d30d4c0fa10594be6aabed5125b422",
+  "compiledVersusEvalDifferences": [],
+  "observations": [
+    {
+      "index": 1,
+      "decimals2": {
+        "expression": "5",
+        "type": "I",
+        "width": 1,
+        "integer": 5,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      },
+      "decimals14": {
+        "expression": "5",
+        "type": "I",
+        "width": 1,
+        "integer": 5,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      }
+    },
+    {
+      "index": 2,
+      "decimals2": {
+        "expression": "2",
+        "type": "I",
+        "width": 1,
+        "integer": 2,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      },
+      "decimals14": {
+        "expression": "2",
+        "type": "I",
+        "width": 1,
+        "integer": 2,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      }
+    },
+    {
+      "index": 3,
+      "decimals2": {
+        "expression": "5.0",
+        "type": "N",
+        "width": 3,
+        "decimals": 1,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      },
+      "decimals14": {
+        "expression": "5.0",
+        "type": "N",
+        "width": 3,
+        "decimals": 1,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      }
+    },
+    {
+      "index": 4,
+      "decimals2": {
+        "expression": "2.0",
+        "type": "N",
+        "width": 3,
+        "decimals": 1,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      },
+      "decimals14": {
+        "expression": "2.0",
+        "type": "N",
+        "width": 3,
+        "decimals": 1,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      }
+    },
+    {
+      "index": 5,
+      "decimals2": {
+        "expression": "5.00",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      },
+      "decimals14": {
+        "expression": "5.00",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      }
+    },
+    {
+      "index": 6,
+      "decimals2": {
+        "expression": "2.00",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      },
+      "decimals14": {
+        "expression": "2.00",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      }
+    },
+    {
+      "index": 7,
+      "decimals2": {
+        "expression": "iFive",
+        "type": "I",
+        "width": 10,
+        "integer": 5,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      },
+      "decimals14": {
+        "expression": "iFive",
+        "type": "I",
+        "width": 10,
+        "integer": 5,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      }
+    },
+    {
+      "index": 8,
+      "decimals2": {
+        "expression": "iTwo",
+        "type": "I",
+        "width": 10,
+        "integer": 2,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      },
+      "decimals14": {
+        "expression": "iTwo",
+        "type": "I",
+        "width": 10,
+        "integer": 2,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      }
+    },
+    {
+      "index": 9,
+      "decimals2": {
+        "expression": "nFive",
+        "type": "N",
+        "width": 13,
+        "decimals": 2,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      },
+      "decimals14": {
+        "expression": "nFive",
+        "type": "N",
+        "width": 13,
+        "decimals": 2,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      }
+    },
+    {
+      "index": 10,
+      "decimals2": {
+        "expression": "nTwo",
+        "type": "N",
+        "width": 13,
+        "decimals": 2,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      },
+      "decimals14": {
+        "expression": "nTwo",
+        "type": "N",
+        "width": 13,
+        "decimals": 2,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      }
+    },
+    {
+      "index": 11,
+      "decimals2": {
+        "expression": "INT(5.00)",
+        "type": "I",
+        "width": 4,
+        "integer": 5,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      },
+      "decimals14": {
+        "expression": "INT(5.00)",
+        "type": "I",
+        "width": 4,
+        "integer": 5,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      }
+    },
+    {
+      "index": 12,
+      "decimals2": {
+        "expression": "INT(2.00)",
+        "type": "I",
+        "width": 4,
+        "integer": 2,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      },
+      "decimals14": {
+        "expression": "INT(2.00)",
+        "type": "I",
+        "width": 4,
+        "integer": 2,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      }
+    },
+    {
+      "index": 13,
+      "decimals2": {
+        "expression": "VAL(\"5.00\")",
+        "type": "N",
+        "width": 7,
+        "decimals": 2,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      },
+      "decimals14": {
+        "expression": "VAL(\"5.00\")",
+        "type": "N",
+        "width": 19,
+        "decimals": 14,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      }
+    },
+    {
+      "index": 14,
+      "decimals2": {
+        "expression": "VAL(\"2.00\")",
+        "type": "N",
+        "width": 7,
+        "decimals": 2,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      },
+      "decimals14": {
+        "expression": "VAL(\"2.00\")",
+        "type": "N",
+        "width": 19,
+        "decimals": 14,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      }
+    },
+    {
+      "index": 15,
+      "decimals2": {
+        "expression": "EVALUATE(\"5\")",
+        "type": "I",
+        "width": 1,
+        "integer": 5,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      },
+      "decimals14": {
+        "expression": "EVALUATE(\"5\")",
+        "type": "I",
+        "width": 1,
+        "integer": 5,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      }
+    },
+    {
+      "index": 16,
+      "decimals2": {
+        "expression": "EVALUATE(\"2\")",
+        "type": "I",
+        "width": 1,
+        "integer": 2,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      },
+      "decimals14": {
+        "expression": "EVALUATE(\"2\")",
+        "type": "I",
+        "width": 1,
+        "integer": 2,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      }
+    },
+    {
+      "index": 17,
+      "decimals2": {
+        "expression": "EVALUATE(\"5.00\")",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      },
+      "decimals14": {
+        "expression": "EVALUATE(\"5.00\")",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4014000000000000",
+        "cw": "027F",
+        "display": "5"
+      }
+    },
+    {
+      "index": 18,
+      "decimals2": {
+        "expression": "EVALUATE(\"2.00\")",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      },
+      "decimals14": {
+        "expression": "EVALUATE(\"2.00\")",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4000000000000000",
+        "cw": "027F",
+        "display": "2"
+      }
+    },
+    {
+      "index": 19,
+      "decimals2": {
+        "expression": "5/2",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50"
+      },
+      "decimals14": {
+        "expression": "5/2",
+        "type": "N",
+        "width": 16,
+        "decimals": 14,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50000000000000"
+      }
+    },
+    {
+      "index": 20,
+      "decimals2": {
+        "expression": "5/2.0",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50"
+      },
+      "decimals14": {
+        "expression": "5/2.0",
+        "type": "N",
+        "width": 16,
+        "decimals": 14,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50000000000000"
+      }
+    },
+    {
+      "index": 21,
+      "decimals2": {
+        "expression": "5/2.00",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50"
+      },
+      "decimals14": {
+        "expression": "5/2.00",
+        "type": "N",
+        "width": 16,
+        "decimals": 14,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50000000000000"
+      }
+    },
+    {
+      "index": 22,
+      "decimals2": {
+        "expression": "5.0/2",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50"
+      },
+      "decimals14": {
+        "expression": "5.0/2",
+        "type": "N",
+        "width": 16,
+        "decimals": 14,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50000000000000"
+      }
+    },
+    {
+      "index": 23,
+      "decimals2": {
+        "expression": "5.0/2.0",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50"
+      },
+      "decimals14": {
+        "expression": "5.0/2.0",
+        "type": "N",
+        "width": 16,
+        "decimals": 14,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50000000000000"
+      }
+    },
+    {
+      "index": 24,
+      "decimals2": {
+        "expression": "5.0/2.00",
+        "type": "N",
+        "width": 5,
+        "decimals": 3,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.500"
+      },
+      "decimals14": {
+        "expression": "5.0/2.00",
+        "type": "N",
+        "width": 16,
+        "decimals": 14,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50000000000000"
+      }
+    },
+    {
+      "index": 25,
+      "decimals2": {
+        "expression": "5.00/2",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50"
+      },
+      "decimals14": {
+        "expression": "5.00/2",
+        "type": "N",
+        "width": 16,
+        "decimals": 14,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50000000000000"
+      }
+    },
+    {
+      "index": 26,
+      "decimals2": {
+        "expression": "5.00/2.0",
+        "type": "N",
+        "width": 5,
+        "decimals": 3,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.500"
+      },
+      "decimals14": {
+        "expression": "5.00/2.0",
+        "type": "N",
+        "width": 16,
+        "decimals": 14,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50000000000000"
+      }
+    },
+    {
+      "index": 27,
+      "decimals2": {
+        "expression": "5.00/2.00",
+        "type": "N",
+        "width": 6,
+        "decimals": 4,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000"
+      },
+      "decimals14": {
+        "expression": "5.00/2.00",
+        "type": "N",
+        "width": 16,
+        "decimals": 14,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50000000000000"
+      }
+    },
+    {
+      "index": 28,
+      "decimals2": {
+        "expression": "iFive/iTwo",
+        "type": "N",
+        "width": 24,
+        "decimals": 4,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000"
+      },
+      "decimals14": {
+        "expression": "iFive/iTwo",
+        "type": "N",
+        "width": 36,
+        "decimals": 16,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000000000000000"
+      }
+    },
+    {
+      "index": 29,
+      "decimals2": {
+        "expression": "iFive/nTwo",
+        "type": "N",
+        "width": 24,
+        "decimals": 4,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000"
+      },
+      "decimals14": {
+        "expression": "iFive/nTwo",
+        "type": "N",
+        "width": 36,
+        "decimals": 16,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000000000000000"
+      }
+    },
+    {
+      "index": 30,
+      "decimals2": {
+        "expression": "nFive/iTwo",
+        "type": "N",
+        "width": 24,
+        "decimals": 4,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000"
+      },
+      "decimals14": {
+        "expression": "nFive/iTwo",
+        "type": "N",
+        "width": 36,
+        "decimals": 16,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000000000000000"
+      }
+    },
+    {
+      "index": 31,
+      "decimals2": {
+        "expression": "nFive/nTwo",
+        "type": "N",
+        "width": 25,
+        "decimals": 4,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000"
+      },
+      "decimals14": {
+        "expression": "nFive/nTwo",
+        "type": "N",
+        "width": 37,
+        "decimals": 16,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000000000000000"
+      }
+    },
+    {
+      "index": 32,
+      "decimals2": {
+        "expression": "nFive/2",
+        "type": "N",
+        "width": 15,
+        "decimals": 4,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000"
+      },
+      "decimals14": {
+        "expression": "nFive/2",
+        "type": "N",
+        "width": 27,
+        "decimals": 16,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000000000000000"
+      }
+    },
+    {
+      "index": 33,
+      "decimals2": {
+        "expression": "5/nTwo",
+        "type": "N",
+        "width": 15,
+        "decimals": 4,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000"
+      },
+      "decimals14": {
+        "expression": "5/nTwo",
+        "type": "N",
+        "width": 27,
+        "decimals": 16,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000000000000000"
+      }
+    },
+    {
+      "index": 34,
+      "decimals2": {
+        "expression": "-(5/2)",
+        "type": "N",
+        "width": 2,
+        "decimals": 0,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-3"
+      },
+      "decimals14": {
+        "expression": "-(5/2)",
+        "type": "N",
+        "width": 2,
+        "decimals": 0,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-3"
+      }
+    },
+    {
+      "index": 35,
+      "decimals2": {
+        "expression": "-(5/2.0)",
+        "type": "N",
+        "width": 4,
+        "decimals": 1,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5"
+      },
+      "decimals14": {
+        "expression": "-(5/2.0)",
+        "type": "N",
+        "width": 4,
+        "decimals": 1,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5"
+      }
+    },
+    {
+      "index": 36,
+      "decimals2": {
+        "expression": "-(5/2.00)",
+        "type": "N",
+        "width": 5,
+        "decimals": 2,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50"
+      },
+      "decimals14": {
+        "expression": "-(5/2.00)",
+        "type": "N",
+        "width": 5,
+        "decimals": 2,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50"
+      }
+    },
+    {
+      "index": 37,
+      "decimals2": {
+        "expression": "-(5.0/2)",
+        "type": "N",
+        "width": 4,
+        "decimals": 1,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5"
+      },
+      "decimals14": {
+        "expression": "-(5.0/2)",
+        "type": "N",
+        "width": 4,
+        "decimals": 1,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5"
+      }
+    },
+    {
+      "index": 38,
+      "decimals2": {
+        "expression": "-(5.0/2.0)",
+        "type": "N",
+        "width": 5,
+        "decimals": 2,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50"
+      },
+      "decimals14": {
+        "expression": "-(5.0/2.0)",
+        "type": "N",
+        "width": 5,
+        "decimals": 2,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50"
+      }
+    },
+    {
+      "index": 39,
+      "decimals2": {
+        "expression": "-(5.0/2.00)",
+        "type": "N",
+        "width": 6,
+        "decimals": 3,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.500"
+      },
+      "decimals14": {
+        "expression": "-(5.0/2.00)",
+        "type": "N",
+        "width": 6,
+        "decimals": 3,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.500"
+      }
+    },
+    {
+      "index": 40,
+      "decimals2": {
+        "expression": "-(5.00/2)",
+        "type": "N",
+        "width": 5,
+        "decimals": 2,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50"
+      },
+      "decimals14": {
+        "expression": "-(5.00/2)",
+        "type": "N",
+        "width": 5,
+        "decimals": 2,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50"
+      }
+    },
+    {
+      "index": 41,
+      "decimals2": {
+        "expression": "-(5.00/2.0)",
+        "type": "N",
+        "width": 6,
+        "decimals": 3,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.500"
+      },
+      "decimals14": {
+        "expression": "-(5.00/2.0)",
+        "type": "N",
+        "width": 6,
+        "decimals": 3,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.500"
+      }
+    },
+    {
+      "index": 42,
+      "decimals2": {
+        "expression": "-(5.00/2.00)",
+        "type": "N",
+        "width": 7,
+        "decimals": 4,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000"
+      },
+      "decimals14": {
+        "expression": "-(5.00/2.00)",
+        "type": "N",
+        "width": 7,
+        "decimals": 4,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000"
+      }
+    },
+    {
+      "index": 43,
+      "decimals2": {
+        "expression": "-(iFive/iTwo)",
+        "type": "N",
+        "width": 25,
+        "decimals": 4,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000"
+      },
+      "decimals14": {
+        "expression": "-(iFive/iTwo)",
+        "type": "N",
+        "width": 37,
+        "decimals": 16,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000000000000000"
+      }
+    },
+    {
+      "index": 44,
+      "decimals2": {
+        "expression": "-(iFive/nTwo)",
+        "type": "N",
+        "width": 25,
+        "decimals": 4,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000"
+      },
+      "decimals14": {
+        "expression": "-(iFive/nTwo)",
+        "type": "N",
+        "width": 37,
+        "decimals": 16,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000000000000000"
+      }
+    },
+    {
+      "index": 45,
+      "decimals2": {
+        "expression": "-(nFive/iTwo)",
+        "type": "N",
+        "width": 25,
+        "decimals": 4,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000"
+      },
+      "decimals14": {
+        "expression": "-(nFive/iTwo)",
+        "type": "N",
+        "width": 37,
+        "decimals": 16,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000000000000000"
+      }
+    },
+    {
+      "index": 46,
+      "decimals2": {
+        "expression": "-(nFive/nTwo)",
+        "type": "N",
+        "width": 26,
+        "decimals": 4,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000"
+      },
+      "decimals14": {
+        "expression": "-(nFive/nTwo)",
+        "type": "N",
+        "width": 38,
+        "decimals": 16,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000000000000000"
+      }
+    },
+    {
+      "index": 47,
+      "decimals2": {
+        "expression": "-(nFive/2)",
+        "type": "N",
+        "width": 16,
+        "decimals": 4,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000"
+      },
+      "decimals14": {
+        "expression": "-(nFive/2)",
+        "type": "N",
+        "width": 28,
+        "decimals": 16,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000000000000000"
+      }
+    },
+    {
+      "index": 48,
+      "decimals2": {
+        "expression": "-(5/nTwo)",
+        "type": "N",
+        "width": 16,
+        "decimals": 4,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000"
+      },
+      "decimals14": {
+        "expression": "-(5/nTwo)",
+        "type": "N",
+        "width": 28,
+        "decimals": 16,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000000000000000"
+      }
+    },
+    {
+      "index": 49,
+      "decimals2": {
+        "expression": "-5/2",
+        "type": "N",
+        "width": 5,
+        "decimals": 2,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50"
+      },
+      "decimals14": {
+        "expression": "-5/2",
+        "type": "N",
+        "width": 17,
+        "decimals": 14,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50000000000000"
+      }
+    },
+    {
+      "index": 50,
+      "decimals2": {
+        "expression": "-5/2.0",
+        "type": "N",
+        "width": 5,
+        "decimals": 2,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50"
+      },
+      "decimals14": {
+        "expression": "-5/2.0",
+        "type": "N",
+        "width": 17,
+        "decimals": 14,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50000000000000"
+      }
+    },
+    {
+      "index": 51,
+      "decimals2": {
+        "expression": "-5/2.00",
+        "type": "N",
+        "width": 5,
+        "decimals": 2,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50"
+      },
+      "decimals14": {
+        "expression": "-5/2.00",
+        "type": "N",
+        "width": 17,
+        "decimals": 14,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50000000000000"
+      }
+    },
+    {
+      "index": 52,
+      "decimals2": {
+        "expression": "-5.0/2",
+        "type": "N",
+        "width": 5,
+        "decimals": 2,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50"
+      },
+      "decimals14": {
+        "expression": "-5.0/2",
+        "type": "N",
+        "width": 17,
+        "decimals": 14,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50000000000000"
+      }
+    },
+    {
+      "index": 53,
+      "decimals2": {
+        "expression": "-5.0/2.0",
+        "type": "N",
+        "width": 5,
+        "decimals": 2,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50"
+      },
+      "decimals14": {
+        "expression": "-5.0/2.0",
+        "type": "N",
+        "width": 17,
+        "decimals": 14,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50000000000000"
+      }
+    },
+    {
+      "index": 54,
+      "decimals2": {
+        "expression": "-5.0/2.00",
+        "type": "N",
+        "width": 6,
+        "decimals": 3,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.500"
+      },
+      "decimals14": {
+        "expression": "-5.0/2.00",
+        "type": "N",
+        "width": 17,
+        "decimals": 14,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50000000000000"
+      }
+    },
+    {
+      "index": 55,
+      "decimals2": {
+        "expression": "-5.00/2",
+        "type": "N",
+        "width": 5,
+        "decimals": 2,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50"
+      },
+      "decimals14": {
+        "expression": "-5.00/2",
+        "type": "N",
+        "width": 17,
+        "decimals": 14,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50000000000000"
+      }
+    },
+    {
+      "index": 56,
+      "decimals2": {
+        "expression": "-5.00/2.0",
+        "type": "N",
+        "width": 6,
+        "decimals": 3,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.500"
+      },
+      "decimals14": {
+        "expression": "-5.00/2.0",
+        "type": "N",
+        "width": 17,
+        "decimals": 14,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50000000000000"
+      }
+    },
+    {
+      "index": 57,
+      "decimals2": {
+        "expression": "-5.00/2.00",
+        "type": "N",
+        "width": 7,
+        "decimals": 4,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000"
+      },
+      "decimals14": {
+        "expression": "-5.00/2.00",
+        "type": "N",
+        "width": 17,
+        "decimals": 14,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50000000000000"
+      }
+    },
+    {
+      "index": 58,
+      "decimals2": {
+        "expression": "EVALUATE(\"5/2\")",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50"
+      },
+      "decimals14": {
+        "expression": "EVALUATE(\"5/2\")",
+        "type": "N",
+        "width": 16,
+        "decimals": 14,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50000000000000"
+      }
+    },
+    {
+      "index": 59,
+      "decimals2": {
+        "expression": "-EVALUATE(\"5/2\")",
+        "type": "N",
+        "width": 5,
+        "decimals": 2,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50"
+      },
+      "decimals14": {
+        "expression": "-EVALUATE(\"5/2\")",
+        "type": "N",
+        "width": 17,
+        "decimals": 14,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50000000000000"
+      }
+    },
+    {
+      "index": 60,
+      "decimals2": {
+        "expression": "ABS(5/2)",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50"
+      },
+      "decimals14": {
+        "expression": "ABS(5/2)",
+        "type": "N",
+        "width": 16,
+        "decimals": 14,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50000000000000"
+      }
+    },
+    {
+      "index": 61,
+      "decimals2": {
+        "expression": "-ABS(5/2)",
+        "type": "N",
+        "width": 5,
+        "decimals": 2,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50"
+      },
+      "decimals14": {
+        "expression": "-ABS(5/2)",
+        "type": "N",
+        "width": 17,
+        "decimals": 14,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50000000000000"
+      }
+    },
+    {
+      "index": 62,
+      "decimals2": {
+        "expression": "IIF(.T.,5/2,1.00)",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50"
+      },
+      "decimals14": {
+        "expression": "IIF(.T.,5/2,1.00)",
+        "type": "N",
+        "width": 16,
+        "decimals": 14,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50000000000000"
+      }
+    },
+    {
+      "index": 63,
+      "decimals2": {
+        "expression": "-IIF(.T.,5/2,1.00)",
+        "type": "N",
+        "width": 5,
+        "decimals": 2,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50"
+      },
+      "decimals14": {
+        "expression": "-IIF(.T.,5/2,1.00)",
+        "type": "N",
+        "width": 17,
+        "decimals": 14,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50000000000000"
+      }
+    },
+    {
+      "index": 64,
+      "decimals2": {
+        "expression": "INT(5.00)/INT(2.00)",
+        "type": "N",
+        "width": 12,
+        "decimals": 4,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000"
+      },
+      "decimals14": {
+        "expression": "INT(5.00)/INT(2.00)",
+        "type": "N",
+        "width": 24,
+        "decimals": 16,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000000000000000"
+      }
+    },
+    {
+      "index": 65,
+      "decimals2": {
+        "expression": "-(INT(5.00)/INT(2.00))",
+        "type": "N",
+        "width": 13,
+        "decimals": 4,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000"
+      },
+      "decimals14": {
+        "expression": "-(INT(5.00)/INT(2.00))",
+        "type": "N",
+        "width": 25,
+        "decimals": 16,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000000000000000"
+      }
+    },
+    {
+      "index": 66,
+      "decimals2": {
+        "expression": "VAL(\"5.00\")/VAL(\"2.00\")",
+        "type": "N",
+        "width": 13,
+        "decimals": 4,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000"
+      },
+      "decimals14": {
+        "expression": "VAL(\"5.00\")/VAL(\"2.00\")",
+        "type": "N",
+        "width": 25,
+        "decimals": 16,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000000000000000"
+      }
+    },
+    {
+      "index": 67,
+      "decimals2": {
+        "expression": "-(VAL(\"5.00\")/VAL(\"2.00\"))",
+        "type": "N",
+        "width": 14,
+        "decimals": 4,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000"
+      },
+      "decimals14": {
+        "expression": "-(VAL(\"5.00\")/VAL(\"2.00\"))",
+        "type": "N",
+        "width": 26,
+        "decimals": 16,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000000000000000"
+      }
+    },
+    {
+      "index": 68,
+      "decimals2": {
+        "expression": "EVALUATE(\"5\")/EVALUATE(\"2\")",
+        "type": "N",
+        "width": 6,
+        "decimals": 4,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000"
+      },
+      "decimals14": {
+        "expression": "EVALUATE(\"5\")/EVALUATE(\"2\")",
+        "type": "N",
+        "width": 18,
+        "decimals": 16,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000000000000000"
+      }
+    },
+    {
+      "index": 69,
+      "decimals2": {
+        "expression": "-(EVALUATE(\"5\")/EVALUATE(\"2\"))",
+        "type": "N",
+        "width": 7,
+        "decimals": 4,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000"
+      },
+      "decimals14": {
+        "expression": "-(EVALUATE(\"5\")/EVALUATE(\"2\"))",
+        "type": "N",
+        "width": 19,
+        "decimals": 16,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000000000000000"
+      }
+    },
+    {
+      "index": 70,
+      "decimals2": {
+        "expression": "+(5/2)",
+        "type": "N",
+        "width": 4,
+        "decimals": 2,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50"
+      },
+      "decimals14": {
+        "expression": "+(5/2)",
+        "type": "N",
+        "width": 16,
+        "decimals": 14,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50000000000000"
+      }
+    },
+    {
+      "index": 71,
+      "decimals2": {
+        "expression": "-((5/2))",
+        "type": "N",
+        "width": 2,
+        "decimals": 0,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-3"
+      },
+      "decimals14": {
+        "expression": "-((5/2))",
+        "type": "N",
+        "width": 2,
+        "decimals": 0,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-3"
+      }
+    },
+    {
+      "index": 72,
+      "decimals2": {
+        "expression": "-(+(5/2))",
+        "type": "N",
+        "width": 2,
+        "decimals": 0,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-3"
+      },
+      "decimals14": {
+        "expression": "-(+(5/2))",
+        "type": "N",
+        "width": 2,
+        "decimals": 0,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-3"
+      }
+    },
+    {
+      "index": 73,
+      "decimals2": {
+        "expression": "-(-5/2)",
+        "type": "N",
+        "width": 3,
+        "decimals": 0,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "3"
+      },
+      "decimals14": {
+        "expression": "-(-5/2)",
+        "type": "N",
+        "width": 3,
+        "decimals": 0,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "3"
+      }
+    },
+    {
+      "index": 74,
+      "decimals2": {
+        "expression": "(5/2)+0.00",
+        "type": "N",
+        "width": 5,
+        "decimals": 2,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50"
+      },
+      "decimals14": {
+        "expression": "(5/2)+0.00",
+        "type": "N",
+        "width": 17,
+        "decimals": 14,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50000000000000"
+      }
+    },
+    {
+      "index": 75,
+      "decimals2": {
+        "expression": "-((5/2)+0.00)",
+        "type": "N",
+        "width": 6,
+        "decimals": 2,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50"
+      },
+      "decimals14": {
+        "expression": "-((5/2)+0.00)",
+        "type": "N",
+        "width": 6,
+        "decimals": 2,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.50"
+      }
+    },
+    {
+      "index": 76,
+      "decimals2": {
+        "expression": "(5.00/2.00)*1.00",
+        "type": "N",
+        "width": 10,
+        "decimals": 6,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.500000"
+      },
+      "decimals14": {
+        "expression": "(5.00/2.00)*1.00",
+        "type": "N",
+        "width": 18,
+        "decimals": 14,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.50000000000000"
+      }
+    },
+    {
+      "index": 77,
+      "decimals2": {
+        "expression": "-((5.00/2.00)*1.00)",
+        "type": "N",
+        "width": 11,
+        "decimals": 6,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.500000"
+      },
+      "decimals14": {
+        "expression": "-((5.00/2.00)*1.00)",
+        "type": "N",
+        "width": 11,
+        "decimals": 6,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.500000"
+      }
+    },
+    {
+      "index": 78,
+      "decimals2": {
+        "expression": "(iFive/iTwo)+nOne",
+        "type": "N",
+        "width": 25,
+        "decimals": 4,
+        "bits": "400C000000000000",
+        "cw": "027F",
+        "display": "3.5000"
+      },
+      "decimals14": {
+        "expression": "(iFive/iTwo)+nOne",
+        "type": "N",
+        "width": 37,
+        "decimals": 16,
+        "bits": "400C000000000000",
+        "cw": "027F",
+        "display": "3.5000000000000000"
+      }
+    },
+    {
+      "index": 79,
+      "decimals2": {
+        "expression": "-((iFive/iTwo)+nOne)",
+        "type": "N",
+        "width": 26,
+        "decimals": 4,
+        "bits": "C00C000000000000",
+        "cw": "027F",
+        "display": "-3.5000"
+      },
+      "decimals14": {
+        "expression": "-((iFive/iTwo)+nOne)",
+        "type": "N",
+        "width": 38,
+        "decimals": 16,
+        "bits": "C00C000000000000",
+        "cw": "027F",
+        "display": "-3.5000000000000000"
+      }
+    },
+    {
+      "index": 80,
+      "decimals2": {
+        "expression": "(nFive/nTwo)/iOne",
+        "type": "N",
+        "width": 34,
+        "decimals": 4,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000"
+      },
+      "decimals14": {
+        "expression": "(nFive/nTwo)/iOne",
+        "type": "N",
+        "width": 40,
+        "decimals": 16,
+        "bits": "4004000000000000",
+        "cw": "027F",
+        "display": "2.5000000000000000"
+      }
+    },
+    {
+      "index": 81,
+      "decimals2": {
+        "expression": "-((nFive/nTwo)/iOne)",
+        "type": "N",
+        "width": 35,
+        "decimals": 4,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000"
+      },
+      "decimals14": {
+        "expression": "-((nFive/nTwo)/iOne)",
+        "type": "N",
+        "width": 41,
+        "decimals": 16,
+        "bits": "C004000000000000",
+        "cw": "027F",
+        "display": "-2.5000000000000000"
+      }
+    }
+  ]
+}

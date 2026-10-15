@@ -51,7 +51,7 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures
 c35978aaa6a1ff556ca31983b2a9cabbe38527155d3d5e1e62ab3d948c00ab92  tests/fixtures/vfp9-numeric-unary-expression-context/primary-captures/primary-probe.prg
 4e39be6912046e742f18623bf039fbd29e29ef745b9a462fcfb1ad217b9e58a3  tests/fixtures/vfp9-numeric-unary-expression-context/primary-probe.FXP
 c35978aaa6a1ff556ca31983b2a9cabbe38527155d3d5e1e62ab3d948c00ab92  tests/fixtures/vfp9-numeric-unary-expression-context/primary-probe.prg
-d11327d422296449c6e54399feaf6036e3eb8dda1c5a1dc5ae91dd37645e3d93  tests/fixtures/vfp9-numeric-unary-expression-context/zero-completion.md
+0ff6ad7c4523fa2ab103904b0dd4ee39c92b94d881bae41c248b971b84f96967  tests/fixtures/vfp9-numeric-unary-expression-context/zero-completion.md
 d142bc083dfe35e0f16610d3de4f23bcd29f6e4ed362544564b0306e81ee0cbe  tests/fixtures/vfp9-numeric-unary-expression-context/zero-contract.md
 c7f184523291bf53577c462c0aee5ada87982773dcc486b862b92d50c66a1df2  tests/fixtures/vfp9-numeric-unary-expression-context/zero-evidence/cache-audit.json
 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-numeric-unary-expression-context/zero-evidence/cache-audit.status
