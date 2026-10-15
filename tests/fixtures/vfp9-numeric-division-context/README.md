@@ -31,6 +31,12 @@ do not describe raw hashes as equal. See [observations and selected prerequisite
 Run `node audit-division.cjs captures-648 captures-648/division-probe.prg` or
 the same auditor with `integer-captures integer-captures/integer-input-probe.prg`.
 
+The necessary bounded [Integer descriptor/literal child](integer-contract.md)
+now has a normalized storage carrier, short whole-literal producer and Integer
+unary-zero/width connection. ORIGINAL runtime76 failures -> SAME frozen public0;
+[development verification and mandatory remaining work](integer-completion.md).
+This is not arithmetic propagation or full Numeric/ListItem compatibility.
+
 LOW DQ-DV-5611-NUMERIC-DIVISION-CONTEXT-001 delta: retained384 counterexamples
 -> recover operand types and context-sensitive descriptors -> narrow normalized
 requirement/architecture -> independent frozen original-fail tests BEFORE

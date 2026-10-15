@@ -1,0 +1,8 @@
+{
+  "publicRows": 18,
+  "nativeSettingsPerRow": 2,
+  "documentedTypedRepeat": true,
+  "expectedRowsMatchNative": true,
+  "publicSourceSha256": "6dede9323fdf7598f5ffb5441460c26f56a335740aea50d998653f064ea81dd0",
+  "limitation": "Independent table correspondence, not runtime execution or assignment/default-display acceptance."
+}

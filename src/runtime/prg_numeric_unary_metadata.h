@@ -26,7 +26,11 @@ inline NumericUnaryMetadataResult negated_numeric_metadata(
     if (source->display_width == std::numeric_limits<std::uint32_t>::max()) {
         return {std::nullopt, true};
     }
-    return {PrgNumericMetadata{source->display_width + 1U, source->decimal_places}, false};
+    // RQ-CF-PRG-NUMERIC-INTEGER-DESCRIPTOR-001: retain the semantic storage
+    // discriminator; copying does not establish assignment-width parity.
+    auto result = *source;
+    ++result.display_width;
+    return {result, false};
 }
 
 } // namespace copperfin::runtime

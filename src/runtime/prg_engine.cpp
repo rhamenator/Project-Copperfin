@@ -16,6 +16,7 @@
 #include "prg_engine_command_helpers.h"
 #include "prg_engine_helpers.h"
 #include "prg_numeric_literal_metadata.h"
+#include "prg_numeric_integer_metadata.h"
 #include "prg_numeric_unary_metadata.h"
 #include "prg_numeric_expression_context.h"
 #include "prg_engine_internal.h"

@@ -1,7 +1,9 @@
 # Typed division observations and required prerequisite
 
 RQ-CF-PRG-NUMERIC-DIVISION-CONTEXT-001 / VR-DQ-DV-5611-NUMERIC-DIVISION-CONTEXT-001.
-Recovery only at origin/main a5c656f6e, no precision algorithm or production wiring.
+Initial recovery at origin/main a5c656f6e preceded production wiring. The
+bounded Integer descriptor/literal child now has its own contract/completion;
+there is still no division precision algorithm or arithmetic wiring.
 
 Two648-observation division runs: actual0/empty stderr,648 values/no errors,
 64 native Integer and584 Numeric records per run. Every documented typed field,
@@ -72,14 +74,15 @@ native Integer. A normalized typed descriptor can preserve that distinction
 without copying SDK layout or changing the double payload. Integer's unused
 native decimal slot must not become a reported precision value.
 
-Selected bounded next child: typed descriptor plus unsigned plain whole
+Selected bounded child: typed descriptor plus unsigned plain whole
 Integer literal metadata for at most10 ASCII digits/value<=2147483647, with
 known Integer unary-sign descriptor propagation/positive zero. Longer forms,
 larger whole Numeric literals, assignment normalization, INT/function/field
 producers and arithmetic propagation remain mandatory follow-ons. This is an
-evidence-based prerequisite, not cancellation of division work. Freeze the
-normalized schema/contract and independent expected tests; verify unused
-helpers and original public failure BEFORE producer/unary wiring. Merely
+evidence-based prerequisite, not cancellation of division work. The
+normalized schema/contract and independent expected tests were frozen;
+unproduced typed support/helper tests and original76 runtime failures preceded
+the hooks. SAME public test now passes; see integer-completion.md. Merely
 adding a storage tag is not arithmetic or full Numeric acceptance.
 
 ## DQ/DV and provenance

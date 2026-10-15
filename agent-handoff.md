@@ -62,9 +62,28 @@ integer-contract.md precedes schema/helper/original-public-fail and hooks.
 Do not treat a new tag as full parity. Division precision remains uncancelled;
 re-enter648 counterexamples after typed child. No guessed formula/epsilon,
 assignment normalization, INT/field/arithmetic producer or display change.
-Next concrete action: carrier/helper pure tests (new functionality unproduced),
-frozen native public regression/original runtime failures BEFORE parser/unary
-hooks, then focused/sanitizer/exact-head-review/strict-gate workflow.
+Signed recovery checkpointf79f5be5d04757e5742bd4f0269663ce00f143a4, signatureG.
+Original-header helper compile1 for absent schema (NOT runtime failure), then
+UNPRODUCED typed support/helper GNU/Clang explicit ASan/UBSan/float-cast-overflow
+Werror compile/run0; four previous pure controls GNU0. Independently audited18
+frozen native expected rows/settings0. Rebuilt ORIGINAL runtime with only
+unproduced typed support: build0/test1,72 descriptor+4 Integer -0 bit failures,
+all other controls PASS. ORIGINAL CPP/inl/prewire hashes0 BEFORE two bounded
+parse_number/unary hooks. SAME frozen public fixed0/empty stderr; input hashes
+still match. GNU focused21/21 PASS158.81sec; no timeout/assertion changes.
+Final subsequent edit clarifies two source comments only; exact-head postpush
+rebuild/focused checks still required. Scalar storage enum appended/defaultReal,
+never exact64/provenance; Integer decimal placeholder0 MUST be ignored. Safe
+classifier1..10digits/value<=2147483647 only, copy/check width+1, Integer zero
+positive; existing real Numeric zero rule and kind/NULL/Currency/int64 unchanged.
+Full artifacts under build/numeric-division-native/ and fixture integer-evidence,
+integer-contract/completion/audits/matrix. Both new tests in sanitizer BUILD AND
+actual CTest filter, selector3 methods PASS. No actual hosted named execution,
+clean exact-head review or strict checks preclaimed. Baseline55523/fixed39200
+harvested0; no active local build driver. Ready signed commit/push/PR; Claude
+FIRST, authorized verified Codex fallback if unavailable; actual clean receipt,
+all11 strict green/full resolved conversations and named sanitizer execution
+mandatory before merge. No PR/push yet; no owner-input blocker.
 
 Retained precision re-entry after the typed child: use the native grid recording
 Integer versus Numeric operand descriptors and normalized result fields,

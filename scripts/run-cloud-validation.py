@@ -22,6 +22,7 @@ TARGETS = {
                      "test_prg_numeric_literal_metadata_helper", "test_prg_engine_numeric_literal_metadata",
                      "test_prg_numeric_unary_metadata_helper", "test_prg_engine_numeric_unary_metadata",
                      "test_prg_numeric_expression_context_helper", "test_prg_engine_numeric_zero_context",
+                     "test_prg_numeric_integer_metadata_helper", "test_prg_engine_numeric_integer_metadata",
                      "test_prg_engine_work_areas", "test_xasset_methods",
                      "test_prg_engine_database_lifecycle",
                      "test_prg_engine_runtime_surface_functions_buffering", "test_prg_engine_data_io",
@@ -122,6 +123,7 @@ def main():
                             "test_prg_numeric_literal_metadata_helper|test_prg_engine_numeric_literal_metadata|"
                             "test_prg_numeric_unary_metadata_helper|test_prg_engine_numeric_unary_metadata|"
                             "test_prg_numeric_expression_context_helper|test_prg_engine_numeric_zero_context|"
+                            "test_prg_numeric_integer_metadata_helper|test_prg_engine_numeric_integer_metadata|"
                             "test_prg_engine_work_areas|test_xasset_methods|"
                             "test_prg_engine_database_lifecycle|"
                             "test_prg_engine_runtime_surface_functions_buffering|test_prg_engine_data_io|"

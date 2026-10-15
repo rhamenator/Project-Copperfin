@@ -1145,10 +1145,18 @@
                     {
                         throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.NumericOverflow"), 39);
                     }
-                    // RQ-CF-PRG-NUMERIC-UNARY-ZERO-CONTEXT-001: zero sign
-                    // depends on ephemeral expression context, not equal bits.
-                    PrgValue result = make_number_value(negated_numeric_expression_payload(
-                        value_as_number(operand), numeric_runtime_primary_, operand.numeric_metadata.has_value()));
+                    // RQ-CF-PRG-NUMERIC-UNARY-ZERO-CONTEXT-001: real Numeric
+                    // zero depends on expression context, not equal bits.
+                    const double payload = value_as_number(operand);
+                    // RQ-CF-PRG-NUMERIC-INTEGER-DESCRIPTOR-001: known native
+                    // Integer has no signed zero, unlike real Numeric's
+                    // context-sensitive zero. Never infer storage from bits.
+                    const bool native_integer = operand.numeric_metadata &&
+                        operand.numeric_metadata->storage == PrgNumericStorage::integer;
+                    PrgValue result = make_number_value(native_integer
+                        ? negated_integer_numeric_payload(payload)
+                        : negated_numeric_expression_payload(
+                            payload, numeric_runtime_primary_, operand.numeric_metadata.has_value()));
                     result.numeric_metadata = attributes.metadata;
                     return result;
                 }
@@ -4204,11 +4212,18 @@
                 const std::string literal = text_.substr(start, position_ - start);
                 if (const auto parsed = try_parse_invariant_double(literal); parsed.has_value())
                 {
-                    // RQ-CF-PRG-NUMERIC-LITERAL-METADATA-001: attach only
-                    // recovered plain-decimal attributes; never round payload.
+                    // RQ-CF-PRG-NUMERIC-LITERAL-METADATA-001: attach recovered
+                    // literal attributes; never round the parsed payload.
                     // Other producers/propagation/consumers remain separate.
                     PrgValue value = make_number_value(*parsed);
                     value.numeric_metadata = plain_decimal_literal_metadata(literal);
+                    // RQ-CF-PRG-NUMERIC-INTEGER-DESCRIPTOR-001: bounded whole
+                    // producer after successful parsing; unsupported metadata
+                    // classification leaves existing source grammar untouched.
+                    if (!value.numeric_metadata)
+                    {
+                        value.numeric_metadata = plain_integer_literal_metadata(literal);
+                    }
                     return value;
                 }
                 throw std::invalid_argument("invalid invariant numeric literal");
