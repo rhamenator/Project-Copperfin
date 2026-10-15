@@ -1,0 +1,4 @@
+tests/fixtures/vfp9-numeric-unary-expression-context/zero-contract.md: OK
+src/runtime/prg_numeric_expression_context.h: OK
+tests/test_prg_numeric_expression_context_helper.cpp: OK
+tests/test_prg_engine_numeric_zero_context.cpp: OK

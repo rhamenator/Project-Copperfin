@@ -1108,6 +1108,7 @@
                 }
                 if (match("-"))
                 {
+                    ScopedNumericExpressionContext operand_context(numeric_runtime_primary_);
                     PrgValue operand = parse_unary();
                     if (suppress_evaluation_)
                     {
@@ -1137,15 +1138,17 @@
                         return make_currency_value(-operand.currency_value);
                     }
                     // RQ-CF-PRG-NUMERIC-UNARY-ATTRIBUTES-001: propagate known
-                    // width/scale, without changing payload negation here.
-                    // Native signed-zero context/assignment parity remains
-                    // mandatory follow-on work; see the unary fixture contract.
+                    // width/scale. The bounded zero-context increment below
+                    // does not establish arithmetic/assignment/display parity.
                     const auto attributes = negated_numeric_metadata(operand.numeric_metadata);
                     if (attributes.overflow)
                     {
                         throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.NumericOverflow"), 39);
                     }
-                    PrgValue result = make_number_value(-value_as_number(operand));
+                    // RQ-CF-PRG-NUMERIC-UNARY-ZERO-CONTEXT-001: zero sign
+                    // depends on ephemeral expression context, not equal bits.
+                    PrgValue result = make_number_value(negated_numeric_expression_payload(
+                        value_as_number(operand), numeric_runtime_primary_, operand.numeric_metadata.has_value()));
                     result.numeric_metadata = attributes.metadata;
                     return result;
                 }
@@ -1175,6 +1178,7 @@
 
             PrgValue parse_primary()
             {
+                ScopedNumericExpressionContext primary_context(numeric_runtime_primary_);
                 skip_whitespace();
                 const std::size_t primary_start = position_;
                 if (!suppress_evaluation_ && expression_continuation_ != nullptr)
@@ -1184,15 +1188,27 @@
                     if (checkpoint != expression_continuation_->primary_checkpoints.end())
                     {
                         position_ = checkpoint->second.end;
+                        numeric_runtime_primary_ = checkpoint->second.contains_runtime_primary;
                         return checkpoint->second.value;
                     }
                 }
 
+                // Literal/group primaries aggregate their contained operands.
+                // Ordinary macros replace text then delegate to this parser;
+                // opaque preserved-macro evaluation is a runtime value source.
+                const char leading = peek();
+                const bool literal = std::isdigit(static_cast<unsigned char>(leading)) != 0 ||
+                    leading == '\'' || leading == '"' || leading == '[' || leading == '{' ||
+                    leading == '$' || leading == '.';
+                if (!literal && leading != '(' && (leading != '&' || preserve_macro_text_))
+                {
+                    numeric_runtime_primary_ = true;
+                }
                 PrgValue value = parse_primary_uncached();
                 if (!suppress_evaluation_ && expression_continuation_ != nullptr)
                 {
                     expression_continuation_->primary_checkpoints[primary_start] =
-                        {.end = position_, .value = value};
+                        {.end = position_, .value = value, .contains_runtime_primary = numeric_runtime_primary_};
                 }
                 return value;
             }
@@ -4577,6 +4593,7 @@
             std::function<std::string(const std::string &)> key_assignment_lookup_callback_;
             bool exact_string_compare_ = false;
             bool suppress_evaluation_ = false;
+            bool numeric_runtime_primary_ = false;
             std::size_t position_ = 0;
         };
 

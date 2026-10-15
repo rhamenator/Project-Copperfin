@@ -26,6 +26,8 @@ copperfin_add_test(test_prg_engine_numeric_literal_metadata cf_xbase_runtime tes
 copperfin_add_test(test_prg_numeric_unary_metadata_helper "" test_prg_numeric_unary_metadata_helper.cpp)
 target_include_directories(test_prg_numeric_unary_metadata_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
 copperfin_add_test(test_prg_engine_numeric_unary_metadata cf_xbase_runtime test_prg_engine_numeric_unary_metadata.cpp)
+copperfin_add_test(test_prg_engine_numeric_zero_context cf_xbase_runtime test_prg_engine_numeric_zero_context.cpp)
+copperfin_add_test(test_prg_numeric_expression_context_helper "" test_prg_numeric_expression_context_helper.cpp)
 
 copperfin_add_test(test_mcp_host "cf_mcp_host;cf_platform_support"
     test_mcp_host.cpp)

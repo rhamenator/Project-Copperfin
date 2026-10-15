@@ -1,67 +1,97 @@
 # Agent Handoff
 
-## Latest merge and active unary recovery (2026-10-15)
+## Active bounded unary zero-context implementation (2026-10-15)
 
-PR7196 merged2026-10-15T20:16:32Z as
-995b1a88f37665fdc4e93d5ff7a96f8d76a36ed7; issue7195 closed. Exact signed/DCO
-b9ee1cee5c6e9208d7777031932d79811d76fd2a: actual Codex bot199175422 clean
-6200929266 after Claude-FIRST6200546526/fallback6200889564, all11 strict
-main20356131 SUCCESS, full paginated threads0/postpush4/4. Verified actual
-instrumented execution: sanitizer38794309707/job116626588218/artifact12001908457,
-tested mergecaf87ffd124a4c0de53977e7c3f6fd27724ef899 with parentsff41/b9ee;
-16 unique status=run, failures/errors/skips/disabled0, including both literal
-tests and selection contract. XML SHA b2afc2c2cb39d9b72ca91de831fcae97fc2d4f142d8d60a4b469bfd6602252c4.
-Old PR7192 instrumented-execution claim stays withdrawn; repair closes omission,
-not a Numeric algorithm change. Known NONrequired VSIX failure7193 remains
-open, not waived; all CI was NOT claimed green. App PR attachment failed100 cap.
+WT /home/rich/.codex/worktrees/numeric-unary-zero-context-5611/Project-Copperfin,
+branch fix/numeric-unary-zero-context-5611 from origin/main54a96438facc6e390e8649a6aefd9bf67fa5f62d.
+Signed recovery checkpoint3c751b2934bde7b674521114f10ee2e65d9ae882 followed by
+RQ-CF-PRG-NUMERIC-UNARY-ZERO-CONTEXT-001; current uncommitted connection is
+ready for signed commit/push/PR, not yet pushed/reviewed or shipped.
+Pure UNUSED helper GNU/Clang ASan/UBSan/float-cast-overflow compile/run0 before
+wiring. Frozen public ORIGINAL52 payload-only failures -> SAME test fixed0,
+kind/nonzero/NULL/type/suppression/state/resume/callback controls unchanged.
+Preliminary second cache-source DECIMALS setup omission retained/unqualified;
+corrected/frozen and original rebuilt/fail BEFORE wiring; hashes still match.
+Ephemeral operand/primary runtime classification, cached with existing value/
+end and restored on continuation; never persistent PrgValue provenance.
+Known constant Numeric zero -> negative zero, runtime zero preserves sign;
+nonzero/unknown-constant and prior metadata39/Currency/exact-integer paths stay.
+Native repeated192 primary observations:172 values/20 syntax errors per run,
+actual0/empty stderr/audit0/byte repeat5f8bf37a...df03df,12 expected macro-mode
+differences retained without new grammar. Native four-setting cache pair exact
+bits/count3, actual0/empty stderr/audit0/repeatb701b5f0...ea20. Original384
+precision grid/recovery remains, not cancelled or treated as universal formula.
+GNU Debug -O0 -g0 focused14/14 PASS164.44sec; dedicated macro1/1 PASS0.10sec.
+Both new tests in hosted sanitizer build AND actual CTest filter, selection3
+methods PASS. Full named hosted sanitizer receipt, all11 strict checks, actual
+clean exact-head Claude FIRST/authorized Codex fallback review and resolved
+conversations are mandatory before merge; not preclaimed. Fixture contracts/
+completion/evidence/matrix/changelog map RQ/VR/DQ/DV and MEDIUM risks/rollback.
+Next: commit/push/open PR, request @claude review first, postpush focused gates,
+blocking hosted watch; inspect exact review findings and actual executed named
+sanitizer receipt. Then re-enter type-aware Integer/Numeric division precision
+recovery, nested arithmetic/SET DECIMALS. Assignment normalization/remaining
+producers/display/exact conversion and retained ListItem supplied-column READ
+remain mandatory; no full Numeric/#7189 closure or canonical-double shortcut.
+Canonical main/origin54a96438; prior PR7197 late-native all-check watch65659
+still owns canonical build/pr7197-late-native/all-checks-watch.log/.status;
+known optional VSIX7193 red retained, no new actionable review feedback. Foreign
+files/detached worktrees untouched, no VM start/clone/reset-completion claim.
+Heartbeat ACTIVE, owner explicitly resumed; no owner-input blocker.
 
-Canonical main/origin995b synchronized. Completed selector WT/local/exact-leased
-remote branch removed;37MB build/evidence recoverably in
-/home/rich/.local/share/Trash/files/numeric-literal-sanitizer-selection-5611-build
-with matching.trashinfo. Scoped stash34b084f5bcf909aa7c23a2216d0ee4036a705994/
-older stashes retained. Gate/receipt/cleanup records in canonical
-build/pr7196-late-native/. EXISTING all-check watch77264 owns late jobs at
-all-checks-watch.log/.status; do not duplicate. Known VSIX red can yield1.
-PR7192 existing watch21975 completed0: late Linux/macOS PASS with2 preexisting
-platform skips, Windows aggregate613 unique/full613. Mac unchanged retry
-Access missing-db PASS6.44s does not establish cause;7194 remains OPEN.
-Foreign376/AGENTS/corpus/vmGUI/pycache, detached4436/49ae unchanged.
+## Latest merge and selected expression-context boundary (2026-10-15)
 
-Active admitted #5611/#6776 Numeric prerequisite: dedicated
-/home/rich/.codex/worktrees/numeric-unary-metadata-5611/Project-Copperfin,
-branch fix/numeric-unary-metadata-5611 from995b, prior signed recovery68d9a2072.
-RQ-CF-PRG-NUMERIC-UNARY-ATTRIBUTES-001 / VR-DQ-DV001: bounded optional
-width+1/unchanged-scale propagation, explicit checked host-width overflow39,
-single ordinary Numeric-minus hookup; original double negation unchanged.
-Frozen public nonzero table SHA eb23251574b7ae3d59b51c24f7f8e78e52e5755365415f4499e12f017e127d89:
-original68 metadata-only failures, payload/state/type/NULL/suppression controls
-pass -> SAME test fixed0. GNU focused14/14 PASS69.18sec; helper GNU/Clang
-ASan/UBSan/float-cast-overflow compile/run0; both new tests in build AND actual
-sanitizer CTest filter, selection3 methods PASS. Earlier target-not-regenerated2
-and stale isolation2/3 retained; explicit regeneration fixed inventory, not tests.
-See fixture attributes-requirements.md / attributes-completion.md / evidence.
+PR7197 merged2026-10-15T21:46:40Z as
+54a96438facc6e390e8649a6aefd9bf67fa5f62d, exact signed/DCO9198031d074db64526d682f32498c50f6e1f9f9e.
+Bounded unary ATTRIBUTES only: known width+1/unchanged decimals, checked host
+uint32 overflow39; original payload negation unchanged. Frozen public68
+metadata-only failures -> SAME test0, GNU14/14 PASS69.18s/premerge7/7.
+Actual verified Codex bot199175422 clean6202481074 after Claude FIRST6202161129/
+authorized fallback6202450011; strict20356131 all11 SUCCESS, full threads/
+inline/reviews0, no admin bypass. Sanitizer38806376816 attempt1/job116668204459/
+artifact12006514951:18 unique executed, no failures/skips/disabled, both unary/
+literal tests and selector. Tested mergee26fafadb48ee218027fad652434b6c4b9e9e996
+parents995b/9198; XML SHA0eab7399d40ed71a773ab8b33dec4aa9239af4b593ffd10ef1b4a97910ffd144.
+ASan/UBSan flags provenance exact tested driver/source+logged lane, not cache/
+console; initial mistaken explicit-float-cast console audit failure retained.
+No full unary/Numeric/ListItem/#7189 or system/release completion claim.
 
-Native recovery160/192/240 pairs remain qualified0; final240 SHA
-8dccd0b4ffb9266898baf24885d84df2963b27b3c63b6820fd680493522bdb76.
-New192-observation context pair (24expressions x2DECIMALS x2FIXED x compiled/
-EVALUATE) actual0/empty stderr/all192 values/no errors, audit0/byte repeat,
-SHA5b0cd6d52c370f5bb304a80cea399d6cc04bc54e50a13a23e946d89b046051ab,
-no documented-field compiled-versus-EVALUATE differences. Constant-only versus
-variable/function/conditional zero sign differs; no generic constant-folder or
-persistent provenance flag is inferred. Initial1/wrong-result-name and124/
-timeout stay UNQUALIFIED; timeout cause unestablished. No SDK binary copied.
+Canonical main/origin54a96438 synced, signed-head ancestor0; owned handoff
+stash092e1f051edc10f03387f7449c599dfbfce1a40f/older stashes preserved.
+Completed unary WT/local branch/exact9198-leased remote deleted. Entire~396MiB
+build/evidence recoverably in /home/rich/.local/share/Trash/files/numeric-unary-metadata-5611-build
+with.trashinfo. Scoped lsof0 rows/stderr warning retained, not global-idle proof.
+Canonical build/pr7197-late-native/ retains gates/receipt/cleanup record.
+Old all-watch98761 stopped safely before move; replacement EXISTING canonical
+watch65659 owns all-checks-watch.log/.status; do not duplicate. Optional Linux/
+Windows native pending at merge, not preclaimed. Known NONrequired VSIX7193
+red/uninstall2004+residue retained6202455965, not waived or fixed. App attachment
+failed100 cap; unrelated attachments/foreign376/AGENTS/corpus/vmGUI/pycaches and
+detached4436/49ae untouched. PR7196 sanitizer correction stays valid; no older
+historical CI dependency is closed merely because later checks pass.
 
-Next: signed push/PR, Claude FIRST/authorized Codex fallback if unavailable;
-actual clean exact-head review, strict11 green, all conversations resolved and
-named hosted sanitizer execution of BOTH new tests before merge. No public
-runtime sanitizer/full Windows/system/release evidence is preclaimed.
-After this representation increment, mandatory unary signed-zero/context and
-assignment normalization/arithmetic/function/field/display/full conversion
-work remains, followed by retained ListItem supplied-column READ. The nonzero
-test table is NOT acceptance for those gaps; #7189 and full unary/Numeric/list
-work stay open, not a canonical-double residual exception. Preserve #6776
-switches/checked conversions/allocation limits. EPOCH/CENTURY complete.
-Heartbeat ACTIVE, no owner-input blocker; no VM/start/clone/reset claim.
+Selected next admitted #5611/#6776 prerequisite:
+WT /home/rich/.codex/worktrees/numeric-unary-zero-context-5611/Project-Copperfin,
+branch fix/numeric-unary-zero-context-5611 from origin/main54a96438. No production
+edits/push/PR yet. RQ-CF-PRG-NUMERIC-UNARY-EXPRESSION-CONTEXT-001 / VR-DQ-DV001:
+two native384-observation grids (48expressions x DECIMALS2/14 x FIXED OFF/ON x
+compiled PRG/EVALUATE), actual0/empty stderr/384 values/no errors, audit0,
+documented and byte repeat SHA cd58aacfa769ff959fb02855aaff1278abb5fffb848930a07725e176fafc64c4.
+No documented-field compiled/EVALUATE differences. Constant-only -(5/2)
+D0 versus -EVALUATE("5/2") D14 versus -(nSource/2) D16 at DECIMALS14/
+nSource=5.00; same magnitude payload. Prior zero-context distinction persists.
+No universal division/constant-folding formula or persistent provenance flag
+inferred. Source/own FXP/raw/status/audit/provenance under fixture
+vfp9-numeric-unary-expression-context/; observations.md/matrix retain facts.
+Next concrete action: finish type-aware Integer/Numeric operand, nested
+arithmetic/SET DECIMALS recovery needed at this boundary, then freeze a narrow
+independent expected contract/architecture/original-fail BEFORE wiring.
+Parser continuation/checkpoint and suppressed evaluation context must preserve
+effects; no speculative tag or unsafe conversion. Assignment normalization,
+remaining producers/display/exact conversion and retained ListItem supplied-
+column READ remain mandatory; no canonical-double residual exception.
+EPOCH/CENTURY complete, do not restart. Heartbeat ACTIVE, no owner-input
+blocker; no VM touched/start/clone or backup-reset completion claim.
 
 ## Active plain-decimal metadata producer (2026-10-15)
 

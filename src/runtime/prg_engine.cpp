@@ -17,6 +17,7 @@
 #include "prg_engine_helpers.h"
 #include "prg_numeric_literal_metadata.h"
 #include "prg_numeric_unary_metadata.h"
+#include "prg_numeric_expression_context.h"
 #include "prg_engine_internal.h"
 #include "prg_engine_file_io_functions.h"
 #include "prg_engine_runtime_config.h"
@@ -340,6 +341,9 @@ namespace copperfin::runtime
         {
             std::size_t end = 0U;
             PrgValue value;
+            // RQ-CF-PRG-NUMERIC-UNARY-ZERO-CONTEXT-001: replay evaluation
+            // context, not persistent provenance attached to the value.
+            bool contains_runtime_primary = false;
         };
 
         struct ScopedDataSessionSelection
