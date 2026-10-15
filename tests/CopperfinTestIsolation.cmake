@@ -97,6 +97,7 @@ function(copperfin_configure_native_test_isolation)
     foreach(test_name IN ITEMS
             test_prg_numeric_metadata
             test_prg_numeric_literal_metadata_helper
+            test_prg_numeric_unary_metadata_helper
             test_report_layout
             test_report_layout_sort_settings
             test_report_layout_side_margin_settings
@@ -118,6 +119,18 @@ function(copperfin_configure_native_test_isolation)
     # I/O or host callbacks. Runtime initialization reads process environment;
     # conservatively serial, with no shared transaction-recovery directory.
     copperfin_set_test_isolation(test_prg_engine_numeric_literal_metadata
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT scoped-process
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+
+    # RQ-CF-PRG-NUMERIC-UNARY-ATTRIBUTES-001: same reviewed exclusive
+    # source-override/watch arrangement; no PRG I/O or host callbacks.
+    copperfin_set_test_isolation(test_prg_engine_numeric_unary_metadata
         FILESYSTEM test-owned-unique
         ENVIRONMENT scoped-process
         CHILD_PROCESSES none

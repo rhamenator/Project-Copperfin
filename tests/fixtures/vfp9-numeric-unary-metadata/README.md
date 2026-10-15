@@ -34,6 +34,13 @@ results/stdout, exit statuses, stderr and generated structural/type-aware audit.
 Run `node audit-unary.cjs captures-240 captures-240/unary-probe.prg` from this
 directory; use the matching source argument for captures-160 and captures-192.
 The audit is not an implementation oracle or proof of a general unary formula.
+Additional `context-captures` contains a repeated192-observation compiled PRG
+versus EVALUATE pair with no documented-field differences; run
+`node audit-context.cjs context-captures context-captures/context-probe.prg`.
+The selected next increment is [attribute propagation only](attributes-requirements.md),
+with unchanged payload behavior and explicitly unfinished signed-zero handling.
+The helper is now connected after original68 metadata-only failures -> SAME
+public test0; [development results and limits](attributes-completion.md).
 Native CRLF raw bytes are retained. A default Git whitespace check reports
 those carriage returns; `git -c core.whitespace=cr-at-eol diff --cached --check`
 checks the preserved capture lines without normalizing their evidence bytes.

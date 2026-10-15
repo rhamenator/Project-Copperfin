@@ -1,5 +1,6 @@
-- 2026-10-15: Retain repeated installed-VFP9 unary Numeric metadata recovery
-  under #5611/#6776, including width-boundary and literal-versus-variable
-  signed-zero counterexamples, failed probe attempts and type-aware audits;
-  record PR7196's verified literal sanitizer execution repair. No production
-  wiring or full Numeric/ListItem compatibility closure.
+- 2026-10-15: Propagate known width/decimal attributes through Numeric unary
+  minus under #5611/#6776 with checked width overflow, native nonzero
+  original-fail/fixed coverage and explicit named sanitizer selection. Retain
+  repeated native context/signed-zero recovery and PR7196 verification evidence;
+  payload, assignment/display, signed-zero and full Numeric/ListItem parity
+  remain unfinished rather than being declared compatible.

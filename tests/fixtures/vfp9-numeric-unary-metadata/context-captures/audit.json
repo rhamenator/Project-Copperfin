@@ -1,0 +1,252 @@
+{
+  "casesPerRun": 192,
+  "successfulValues": 192,
+  "recordedErrors": 0,
+  "documentedFieldsRepeatEqual": true,
+  "rawByteEqual": true,
+  "firstSha256": "5b0cd6d52c370f5bb304a80cea399d6cc04bc54e50a13a23e946d89b046051ab",
+  "repeatSha256": "5b0cd6d52c370f5bb304a80cea399d6cc04bc54e50a13a23e946d89b046051ab",
+  "compiledVersusEvalDifferences": [],
+  "samples": [
+    {
+      "index": 1,
+      "expression": "-(0.00)",
+      "type": "4E",
+      "width": 5,
+      "decimals": 2,
+      "bits": "8000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 2,
+      "expression": "-(-0.00)",
+      "type": "4E",
+      "width": 6,
+      "decimals": 2,
+      "bits": "8000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 3,
+      "expression": "-nZero",
+      "type": "4E",
+      "width": 14,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 4,
+      "expression": "-(-nZero)",
+      "type": "4E",
+      "width": 15,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 5,
+      "expression": "-(nZero-nZero)",
+      "type": "4E",
+      "width": 15,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 6,
+      "expression": "-(0.00-0.00)",
+      "type": "4E",
+      "width": 7,
+      "decimals": 2,
+      "bits": "8000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 7,
+      "expression": "-ABS(0.00)",
+      "type": "4E",
+      "width": 5,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 8,
+      "expression": "-ABS(nZero)",
+      "type": "4E",
+      "width": 14,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 9,
+      "expression": "-IIF(.T.,0.00,1.00)",
+      "type": "4E",
+      "width": 5,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 10,
+      "expression": "-IIF(.T.,nZero,1.00)",
+      "type": "4E",
+      "width": 14,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 11,
+      "expression": "-ZeroValue()",
+      "type": "4E",
+      "width": 5,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 12,
+      "expression": "-VAL(\"0.00\")",
+      "type": "4E",
+      "width": 8,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 13,
+      "expression": "-(-VAL(\"0.00\"))",
+      "type": "4E",
+      "width": 9,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 14,
+      "expression": "-(0.00+0.00)",
+      "type": "4E",
+      "width": 6,
+      "decimals": 2,
+      "bits": "8000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 15,
+      "expression": "-(0.00*1.00)",
+      "type": "4E",
+      "width": 9,
+      "decimals": 4,
+      "bits": "8000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 16,
+      "expression": "-(0.00/1.00)",
+      "type": "4E",
+      "width": 7,
+      "decimals": 4,
+      "bits": "8000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 17,
+      "expression": "-(1.00-1.00)",
+      "type": "4E",
+      "width": 7,
+      "decimals": 2,
+      "bits": "8000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 18,
+      "expression": "-(nSource-nSource)",
+      "type": "4E",
+      "width": 15,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 19,
+      "expression": "-(-nMinusZero)",
+      "type": "4E",
+      "width": 15,
+      "decimals": 2,
+      "bits": "8000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 20,
+      "expression": "-(0.00+nZero)",
+      "type": "4E",
+      "width": 15,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 21,
+      "expression": "-(nZero+0.00)",
+      "type": "4E",
+      "width": 15,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 22,
+      "expression": "-EVALUATE(\"0.00\")",
+      "type": "4E",
+      "width": 5,
+      "decimals": 2,
+      "bits": "0000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 23,
+      "expression": "-EVALUATE(\"-0.00\")",
+      "type": "4E",
+      "width": 6,
+      "decimals": 2,
+      "bits": "8000000000000000",
+      "display": "30",
+      "cw": "027F"
+    },
+    {
+      "index": 24,
+      "expression": "-(-(-0.00))",
+      "type": "4E",
+      "width": 7,
+      "decimals": 2,
+      "bits": "8000000000000000",
+      "display": "30",
+      "cw": "027F"
+    }
+  ]
+}

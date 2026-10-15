@@ -29,24 +29,39 @@ Foreign376/AGENTS/corpus/vmGUI/pycache, detached4436/49ae unchanged.
 
 Active admitted #5611/#6776 Numeric prerequisite: dedicated
 /home/rich/.codex/worktrees/numeric-unary-metadata-5611/Project-Copperfin,
-branch fix/numeric-unary-metadata-5611 fast-forwarded to995b. Recovery-only
-checkpoint, no production edits/push/PR or unary acceptance claim.
-RQ-CF-PRG-NUMERIC-UNARY-METADATA-001 / VR-DQ-DV001: repeated160/192/240 native
-grids actual0/empty stderr/type-aware and byte repeat/audit0. Final240 raw SHA
+branch fix/numeric-unary-metadata-5611 from995b, prior signed recovery68d9a2072.
+RQ-CF-PRG-NUMERIC-UNARY-ATTRIBUTES-001 / VR-DQ-DV001: bounded optional
+width+1/unchanged-scale propagation, explicit checked host-width overflow39,
+single ordinary Numeric-minus hookup; original double negation unchanged.
+Frozen public nonzero table SHA eb23251574b7ae3d59b51c24f7f8e78e52e5755365415f4499e12f017e127d89:
+original68 metadata-only failures, payload/state/type/NULL/suppression controls
+pass -> SAME test fixed0. GNU focused14/14 PASS69.18sec; helper GNU/Clang
+ASan/UBSan/float-cast-overflow compile/run0; both new tests in build AND actual
+sanitizer CTest filter, selection3 methods PASS. Earlier target-not-regenerated2
+and stale isolation2/3 retained; explicit regeneration fixed inventory, not tests.
+See fixture attributes-requirements.md / attributes-completion.md / evidence.
+
+Native recovery160/192/240 pairs remain qualified0; final240 SHA
 8dccd0b4ffb9266898baf24885d84df2963b27b3c63b6820fd680493522bdb76.
-Direct widths41/42 refute universal cap40; literal/variable same-W14D2 zero
-operands yield different sign bits, so descriptor-only or universal IEEE
-negation is not recovered behavior. Initial1/wrong result filename and124/
-timeout remain UNQUALIFIED with raw/status/stderr; timeout cause unestablished.
-See fixture vfp9-numeric-unary-metadata/observed-requirements.md and matrix.
-Next concrete action: native controls for function-returned/conditional zero,
-constant versus variable arithmetic and direct compiled versus EVALUATE forms;
-recover boundary, then architecture/independent expected original-fail tests
-BEFORE wiring. Assignment normalization/arithmetic/display/full conversion and
-retained ListItem supplied-column READ remain mandatory unfinished work behind
-this admitted prerequisite; #7189 stays open, no canonical-double shortcut.
-EPOCH/CENTURY complete, do not restart. Heartbeat ACTIVE, no owner-input
-blocker; no VM touched/start/clone or backup-reset completion claim.
+New192-observation context pair (24expressions x2DECIMALS x2FIXED x compiled/
+EVALUATE) actual0/empty stderr/all192 values/no errors, audit0/byte repeat,
+SHA5b0cd6d52c370f5bb304a80cea399d6cc04bc54e50a13a23e946d89b046051ab,
+no documented-field compiled-versus-EVALUATE differences. Constant-only versus
+variable/function/conditional zero sign differs; no generic constant-folder or
+persistent provenance flag is inferred. Initial1/wrong-result-name and124/
+timeout stay UNQUALIFIED; timeout cause unestablished. No SDK binary copied.
+
+Next: signed push/PR, Claude FIRST/authorized Codex fallback if unavailable;
+actual clean exact-head review, strict11 green, all conversations resolved and
+named hosted sanitizer execution of BOTH new tests before merge. No public
+runtime sanitizer/full Windows/system/release evidence is preclaimed.
+After this representation increment, mandatory unary signed-zero/context and
+assignment normalization/arithmetic/function/field/display/full conversion
+work remains, followed by retained ListItem supplied-column READ. The nonzero
+test table is NOT acceptance for those gaps; #7189 and full unary/Numeric/list
+work stay open, not a canonical-double residual exception. Preserve #6776
+switches/checked conversions/allocation limits. EPOCH/CENTURY complete.
+Heartbeat ACTIVE, no owner-input blocker; no VM/start/clone/reset claim.
 
 ## Active plain-decimal metadata producer (2026-10-15)
 

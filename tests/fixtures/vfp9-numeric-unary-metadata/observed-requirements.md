@@ -84,13 +84,16 @@ copying it, globally clamping width40, or guessing an epsilon establishes no
 parity. Exact integers/Currency/NULL/type checks, suppressed evaluation, switch
 policy and checked conversion/allocation limits remain untouched.
 
-Next: separate lexical signed-literal creation from evaluated unary behavior
-with bounded native controls for returned/conditional/function-created zero,
-constant versus variable arithmetic, and direct compiled versus EVALUATE
-execution. Recover a testable contract for that boundary before choosing a
-normalized architecture. Then freeze independent expected tests and establish
-original-fail evidence before connecting production code; full unary and
-consumer acceptance remain open. No request for another owner policy decision.
+The additional repeated192-observation `context-captures` now compares those
+function-returned/conditional/variable/constant controls through both compiled
+PRG and EVALUATE. Actual0/empty stderr, all192 values, audit0, byte repeat and
+no documented-field differences; see [bounded attribute contract](attributes-requirements.md).
+This supports an expression-context distinction without recovering a general
+constant-folder. Next increment propagates attributes only, after independent
+nonzero expected original-fail tests, keeping preexisting payload behavior
+unchanged. Normalized signed-zero context architecture and its own acceptance
+remain mandatory, not a residual exception. Full unary and consumer acceptance
+stay open. No request for another owner policy decision.
 
 ## Provenance and documentation verification
 

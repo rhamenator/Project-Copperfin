@@ -22,6 +22,11 @@ copperfin_add_test(test_prg_numeric_literal_metadata_helper "" test_prg_numeric_
 target_include_directories(test_prg_numeric_literal_metadata_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
 copperfin_add_test(test_prg_engine_numeric_literal_metadata cf_xbase_runtime test_prg_engine_numeric_literal_metadata.cpp)
 
+# RQ-CF-PRG-NUMERIC-UNARY-ATTRIBUTES-001: public nonzero unary propagation.
+copperfin_add_test(test_prg_numeric_unary_metadata_helper "" test_prg_numeric_unary_metadata_helper.cpp)
+target_include_directories(test_prg_numeric_unary_metadata_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
+copperfin_add_test(test_prg_engine_numeric_unary_metadata cf_xbase_runtime test_prg_engine_numeric_unary_metadata.cpp)
+
 copperfin_add_test(test_mcp_host "cf_mcp_host;cf_platform_support"
     test_mcp_host.cpp)
 copperfin_add_test(test_project_inventory "cf_migration"
