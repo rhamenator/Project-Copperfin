@@ -490,7 +490,17 @@ invented tolerance or silent native exception. Owner choice #7189 between a
 bounded canonical-binary64 contract/residual gap and a wider provenance
 prerequisite blocks pre-code requirements/helper/assertion/wiring. See
 [specific options and complete retained evidence](../../tests/fixtures/vfp9-listitem-column-numeric/numeric-origin-policy-gap.md).
-The native internal cause remains unproven; no new hazard status or closure.
+That owner-choice pause is historical: direct owner steering on 2026-10-15
+selects the wider Numeric compatibility prerequisite under #5611/#6776.
+Published-interface interventions establish decimal-place metadata as causal;
+the complete conversion formula remains unrecovered. See the
+[prerequisite recovery](../../tests/fixtures/vfp9-listitem-column-numeric/metadata-foundation.md)
+and [bounded value-carrier map](../../tests/fixtures/vfp9-listitem-column-numeric/metadata-carrier-requirements.md).
+The first carrier slice only adds optional value-owned attributes, not producers,
+display or index interpretation, allocation or casts. Consumers must rebuild
+against the changed C++ value layout; future conversions still require
+operation-specific bounds/safety evidence. No new hazard severity/status,
+Numeric/list family, independent-human or release closure is claimed.
 
 ## Bounded AddListItem missing-ID numeric-column linkage
 

@@ -11,6 +11,11 @@ function(copperfin_add_test TARGET_NAME LINK_LIBS)
     add_test(NAME ${TARGET_NAME} COMMAND $<TARGET_FILE:${TARGET_NAME}>)
 endfunction()
 
+# RQ-CF-PRG-NUMERIC-METADATA-CARRIER-001: header-only value semantics; no
+# runtime callbacks, files, processes, samples or mutable environment.
+copperfin_add_test(test_prg_numeric_metadata "" test_prg_numeric_metadata.cpp)
+target_include_directories(test_prg_numeric_metadata PRIVATE "${PROJECT_SOURCE_DIR}/include")
+
 copperfin_add_test(test_mcp_host "cf_mcp_host;cf_platform_support"
     test_mcp_host.cpp)
 copperfin_add_test(test_project_inventory "cf_migration"

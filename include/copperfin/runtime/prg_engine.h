@@ -35,6 +35,17 @@ enum class PrgStringFlavor {
     datetime
 };
 
+// RQ-CF-PRG-NUMERIC-METADATA-CARRIER-001: normalized semantic attributes,
+// not the native FLL layout. Metadata never rounds or replaces number_value.
+// Producers/consumers are migrated separately with native-backed rules;
+// a width is not an allocation size and must be checked before such use.
+struct PrgNumericMetadata {
+    std::uint32_t display_width = 0;
+    std::uint32_t decimal_places = 0;
+
+    friend bool operator==(const PrgNumericMetadata&, const PrgNumericMetadata&) = default;
+};
+
 struct PrgValue {
     PrgValueKind kind = PrgValueKind::empty;
     bool is_null = false;
@@ -57,6 +68,11 @@ struct PrgValue {
     // asterisks of a value that overflowed the field width. Aggregates skip it as they always have; a Character
     // value that merely looks like one ("***") does not carry the flag and is still a Character.
     bool unparsed_numeric_field = false;
+    // Value-owned Numeric attributes. Absence means unspecified, not zero
+    // decimal places or the current SET DECIMALS. Only meaningful for a
+    // non-NULL number; existing constructors do not synthesize metadata.
+    // Appended to preserve aggregate member ordering, not a binary ABI promise.
+    std::optional<PrgNumericMetadata> numeric_metadata;
 };
 
 struct SourceLocation {

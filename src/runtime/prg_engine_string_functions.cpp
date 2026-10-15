@@ -199,12 +199,12 @@ std::string format_value_for_display(
         // ~/temp/vfp9-probes/nonfinite-results-11.{prg,out}), which
         // reflects VFP9's own numeric-expression width-propagation rules
         // (tracked per computed value, not derived solely from SET
-        // DECIMALS). Copperfin's PrgValue carries no width/decimals
-        // metadata at all, so reproducing that propagation would require
-        // threading new width/decimals tracking through the arithmetic
-        // engine -- a materially larger, deliberately deferred
-        // architectural change, disclosed explicitly rather than
-        // guessed at. This fix only targets the always-reachable,
+        // DECIMALS). PrgValue now has an optional metadata carrier, but
+        // expression producers and this formatter have not yet been
+        // migrated to native-backed propagation/display rules under
+        // RQ-CF-PRG-NUMERIC-METADATA-001. The carrier alone does not fix
+        // this retained gap or authorize guessing a width. This fix
+        // only targets the always-reachable,
         // evidenced default-variable-width case above and
         // unconditionally eliminates the "inf"/"-inf"/"nan" leak; it
         // does not claim expression-width parity for every arithmetic

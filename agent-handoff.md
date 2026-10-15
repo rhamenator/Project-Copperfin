@@ -1,5 +1,38 @@
 # Agent Handoff
 
+## Resumed Numeric prerequisite: first carrier slice (2026-10-15)
+
+Owner explicitly resumed work. Existing heartbeat
+copperfin-implementation-loop-daybreak-blue is ACTIVE again at unchanged
+15/45-minute cadence; prompt now includes the direct Numeric/list/combo
+compatibility decision, existing switch/safety rules and no canonical-double
+shortcut. No new automation/chat/model or VM was created.
+On the existing slice branch, add RQ-CF-PRG-NUMERIC-METADATA-CARRIER-001:
+PrgNumericMetadata and appended optional value-owned PrgValue metadata, absent
+unless explicitly supplied. No parser/arithmetic/assignment-width/field/display/
+index interpretation or ListItem caller wiring. Formatter executable lines
+unchanged; only its obsolete no-metadata comment is corrected. This is the first
+representation increment, not completed Numeric or list/combo parity.
+Pre-code requirement/test freeze retained; original header compile1 for absent
+type/member, NOT runtime behavior fail. GNU compile/run0 and Clang ASan/UBSan/
+float-cast-overflow compile/run0, CMake target/CTest1/1 and focusedcontracts6/6
+PASS. Full native rebuild/strict checks/exact-head review remain gates.
+See metadata-carrier-requirements.md, metadata-carrier-completion.md and the
+retained metadata-carrier-evidence/ under the active ListItem fixture. Next
+immediate action: signed commit/push/PR for this bounded carrier, Claude FIRST,
+authorized Codex fallback if unavailable, review response/CI before merge.
+After carrier integration continue recovered producer/propagation/display
+slices and the retained ListItem column migration; do not declare a residual
+gap or erase the owner objective. Global test registration/isolation/header
+intentionally change; old selected10/prior270 statements describe recovery
+checkpoints, NOT current all-source equality.
+Separate PR7187 Windows run38636352844 attempt2 is completed FAILURE on old
+8968c625a8: shard1 204/204, shard3 203/203, shard2 202/203 with test_dbf_table
+timeout196.62s; numeric_behavior passed136.18s. Exact job metadata/full logs
+downloaded into active build/numeric-metadata-carrier/pr7187-attempt2-*.
+Root cause remains unproven, #7188 stays open; no retry/budget/assertion/
+unrelated production change. Foreign files/worktrees/stashes preserved.
+
 ## Owner decision: Numeric and list/combo compatibility (2026-10-15)
 
 Direct owner steering now resolves #7189's product/scope choice in favor of

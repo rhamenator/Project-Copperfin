@@ -1,0 +1,30 @@
+Test project /home/rich/.codex/worktrees/listitem-column-numeric-5611/Project-Copperfin/build/numeric-metadata-carrier/cmake
+    Start  1: test_prg_numeric_metadata
+1/6 Test  #1: test_prg_numeric_metadata ................   Passed    0.01 sec
+    Start 16: test_release_licensing_contract
+2/6 Test #16: test_release_licensing_contract ..........   Passed    0.02 sec
+    Start 28: test_native_platform_workflow_contract
+3/6 Test #28: test_native_platform_workflow_contract ...   Passed    0.05 sec
+    Start 29: test_github_actions_contract
+4/6 Test #29: test_github_actions_contract .............   Passed    0.03 sec
+    Start 31: test_agent_channel_contract
+5/6 Test #31: test_agent_channel_contract ..............   Passed    0.02 sec
+    Start 37: test_native_test_isolation_contract
+6/6 Test #37: test_native_test_isolation_contract ......   Passed    0.55 sec
+
+100% tests passed, 0 tests failed out of 6
+
+Label Time Summary:
+copperfin-isolation:audit=complete            =   0.67 sec*proc (6 tests)
+copperfin-isolation:child-processes=none      =   0.67 sec*proc (6 tests)
+copperfin-isolation:environment=none          =   0.67 sec*proc (6 tests)
+copperfin-isolation:filesystem=none           =   0.01 sec*proc (1 test)
+copperfin-isolation:filesystem=read-only      =   0.67 sec*proc (5 tests)
+copperfin-isolation:network=none              =   0.67 sec*proc (6 tests)
+copperfin-isolation:platform=portable         =   0.67 sec*proc (6 tests)
+copperfin-isolation:resources=none            =   0.67 sec*proc (6 tests)
+copperfin-isolation:samples=none              =   0.67 sec*proc (6 tests)
+copperfin-isolation:schedule=parallel-safe    =   0.64 sec*proc (5 tests)
+copperfin-isolation:schedule=serial           =   0.03 sec*proc (1 test)
+
+Total Test time (real) =   0.69 sec

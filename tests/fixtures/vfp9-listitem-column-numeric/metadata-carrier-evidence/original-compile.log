@@ -1,0 +1,270 @@
+tests/test_prg_numeric_metadata.cpp:20:27: error: ‘PrgNumericMetadata’ has not been declared in ‘copperfin::runtime’
+   20 | using copperfin::runtime::PrgNumericMetadata;
+      |                           ^~~~~~~~~~~~~~~~~~
+tests/test_prg_numeric_metadata.cpp:27:37: error: ‘PrgNumericMetadata’ has not been declared
+   27 | PrgValue numeric(std::uint64_t bits,PrgNumericMetadata metadata) {
+      |                                     ^~~~~~~~~~~~~~~~~~
+tests/test_prg_numeric_metadata.cpp: In function ‘copperfin::runtime::PrgValue {anonymous}::numeric(uint64_t, int)’:
+tests/test_prg_numeric_metadata.cpp:31:11: error: ‘struct copperfin::runtime::PrgValue’ has no member named ‘numeric_metadata’
+   31 |     value.numeric_metadata=metadata;
+      |           ^~~~~~~~~~~~~~~~
+tests/test_prg_numeric_metadata.cpp: At global scope:
+tests/test_prg_numeric_metadata.cpp:34:53: error: ‘PrgNumericMetadata’ has not been declared
+   34 | void check(const PrgValue& value,std::uint64_t bits,PrgNumericMetadata metadata) {
+      |                                                     ^~~~~~~~~~~~~~~~~~
+tests/test_prg_numeric_metadata.cpp: In function ‘void {anonymous}::check(const copperfin::runtime::PrgValue&, uint64_t, int)’:
+tests/test_prg_numeric_metadata.cpp:37:18: error: ‘const struct copperfin::runtime::PrgValue’ has no member named ‘numeric_metadata’
+   37 |     expect(value.numeric_metadata==metadata,"value-associated metadata preserved");
+      |                  ^~~~~~~~~~~~~~~~
+tests/test_prg_numeric_metadata.cpp: In function ‘void {anonymous}::test_presence_and_native_distinctions()’:
+tests/test_prg_numeric_metadata.cpp:42:39: error: ‘PrgNumericMetadata’ was not declared in this scope
+   42 |     static_assert(std::is_aggregate_v<PrgNumericMetadata>);
+      |                                       ^~~~~~~~~~~~~~~~~~
+tests/test_prg_numeric_metadata.cpp:42:57: error: template argument 1 is invalid
+   42 |     static_assert(std::is_aggregate_v<PrgNumericMetadata>);
+      |                                                         ^
+tests/test_prg_numeric_metadata.cpp:49:23: error: ‘struct copperfin::runtime::PrgValue’ has no member named ‘numeric_metadata’
+   49 |         expect(!value.numeric_metadata,"existing kinds start without invented metadata");
+      |                       ^~~~~~~~~~~~~~~~
+tests/test_prg_numeric_metadata.cpp:51:23: error: ‘struct copperfin::runtime::PrgValue’ has no member named ‘numeric_metadata’
+   51 |         expect(!value.numeric_metadata,"NULL does not invent Numeric metadata");
+      |                       ^~~~~~~~~~~~~~~~
+tests/test_prg_numeric_metadata.cpp:56:34: error: cannot convert ‘<brace-enclosed initializer list>’ to ‘int’
+   56 |     const auto scientific=numeric(near_one,{25,14});
+      |                           ~~~~~~~^~~~~~~~~~~~~~~~~~
+      |                                  |
+      |                                  <brace-enclosed initializer list>
+tests/test_prg_numeric_metadata.cpp:27:56: note: initializing argument 2 of ‘copperfin::runtime::PrgValue {anonymous}::numeric(uint64_t, int)’
+   27 | PrgValue numeric(std::uint64_t bits,PrgNumericMetadata metadata) {
+      |                                     ~~~~~~~~~~~~~~~~~~~^~~~~~~~
+tests/test_prg_numeric_metadata.cpp:57:29: error: cannot convert ‘<brace-enclosed initializer list>’ to ‘int’
+   57 |     const auto power=numeric(near_one,{13,2});
+      |                      ~~~~~~~^~~~~~~~~~~~~~~~~
+      |                             |
+      |                             <brace-enclosed initializer list>
+tests/test_prg_numeric_metadata.cpp:27:56: note: initializing argument 2 of ‘copperfin::runtime::PrgValue {anonymous}::numeric(uint64_t, int)’
+   27 | PrgValue numeric(std::uint64_t bits,PrgNumericMetadata metadata) {
+      |                                     ~~~~~~~~~~~~~~~~~~~^~~~~~~~
+tests/test_prg_numeric_metadata.cpp:63:18: error: cannot convert ‘<brace-enclosed initializer list>’ to ‘int’
+   63 |     check(numeric(fraction,{12,1}),fraction,{12,1});
+      |           ~~~~~~~^~~~~~~~~~~~~~~~~
+      |                  |
+      |                  <brace-enclosed initializer list>
+tests/test_prg_numeric_metadata.cpp:27:56: note: initializing argument 2 of ‘copperfin::runtime::PrgValue {anonymous}::numeric(uint64_t, int)’
+   27 | PrgValue numeric(std::uint64_t bits,PrgNumericMetadata metadata) {
+      |                                     ~~~~~~~~~~~~~~~~~~~^~~~~~~~
+tests/test_prg_numeric_metadata.cpp:64:18: error: cannot convert ‘<brace-enclosed initializer list>’ to ‘int’
+   64 |     check(numeric(fraction,{13,2}),fraction,{13,2});
+      |           ~~~~~~~^~~~~~~~~~~~~~~~~
+      |                  |
+      |                  <brace-enclosed initializer list>
+tests/test_prg_numeric_metadata.cpp:27:56: note: initializing argument 2 of ‘copperfin::runtime::PrgValue {anonymous}::numeric(uint64_t, int)’
+   27 | PrgValue numeric(std::uint64_t bits,PrgNumericMetadata metadata) {
+      |                                     ~~~~~~~~~~~~~~~~~~~^~~~~~~~
+tests/test_prg_numeric_metadata.cpp:66:18: error: cannot convert ‘<brace-enclosed initializer list>’ to ‘int’
+   66 |     check(numeric(0x3FF0000000000000ULL,{4,2}),0x3FF0000000000000ULL,{4,2});
+      |           ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                  |
+      |                  <brace-enclosed initializer list>
+tests/test_prg_numeric_metadata.cpp:27:56: note: initializing argument 2 of ‘copperfin::runtime::PrgValue {anonymous}::numeric(uint64_t, int)’
+   27 | PrgValue numeric(std::uint64_t bits,PrgNumericMetadata metadata) {
+      |                                     ~~~~~~~~~~~~~~~~~~~^~~~~~~~
+tests/test_prg_numeric_metadata.cpp:67:18: error: cannot convert ‘<brace-enclosed initializer list>’ to ‘int’
+   67 |     check(numeric(0x3FF0000000000000ULL,{13,2}),0x3FF0000000000000ULL,{13,2});
+      |           ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                  |
+      |                  <brace-enclosed initializer list>
+tests/test_prg_numeric_metadata.cpp:27:56: note: initializing argument 2 of ‘copperfin::runtime::PrgValue {anonymous}::numeric(uint64_t, int)’
+   27 | PrgValue numeric(std::uint64_t bits,PrgNumericMetadata metadata) {
+      |                                     ~~~~~~~~~~~~~~~~~~~^~~~~~~~
+tests/test_prg_numeric_metadata.cpp: In function ‘void {anonymous}::test_owned_copy_paths()’:
+tests/test_prg_numeric_metadata.cpp:71:24: error: cannot convert ‘<brace-enclosed initializer list>’ to ‘int’
+   71 |     auto source=numeric(bits,{25,14});
+      |                 ~~~~~~~^~~~~~~~~~~~~~
+      |                        |
+      |                        <brace-enclosed initializer list>
+tests/test_prg_numeric_metadata.cpp:27:56: note: initializing argument 2 of ‘copperfin::runtime::PrgValue {anonymous}::numeric(uint64_t, int)’
+   27 | PrgValue numeric(std::uint64_t bits,PrgNumericMetadata metadata) {
+      |                                     ~~~~~~~~~~~~~~~~~~~^~~~~~~~
+tests/test_prg_numeric_metadata.cpp:76:39: error: no matching function for call to ‘std::vector<copperfin::runtime::PrgValue>::vector(<brace-enclosed initializer list>)’
+   76 |     std::vector<PrgValue> array{source};
+      |                                       ^
+tests/test_prg_numeric_metadata.cpp:76:39: note: there are 12 candidates
+In file included from /usr/include/c++/15/vector:68,
+                 from include/copperfin/localization/localization.h:13,
+                 from include/copperfin/runtime/prg_engine.h:7,
+                 from tests/test_prg_numeric_metadata.cpp:6:
+/usr/include/c++/15/bits/stl_vector.h:736:9: note: candidate 1: ‘template<class _InputIterator, class> constexpr std::vector<_Tp, _Alloc>::vector(_InputIterator, _InputIterator, const allocator_type&) [with <template-parameter-2-2> = _InputIterator; _Tp = copperfin::runtime::PrgValue; _Alloc = std::allocator<copperfin::runtime::PrgValue>]’
+  736 |         vector(_InputIterator __first, _InputIterator __last,
+      |         ^~~~~~
+/usr/include/c++/15/bits/stl_vector.h:736:9: note: candidate expects 2 arguments, 1 provided
+/usr/include/c++/15/bits/stl_vector.h:708:7: note: candidate 2: ‘constexpr std::vector<_Tp, _Alloc>::vector(std::initializer_list<_Tp>, const allocator_type&) [with _Tp = copperfin::runtime::PrgValue; _Alloc = std::allocator<copperfin::runtime::PrgValue>; allocator_type = std::allocator<copperfin::runtime::PrgValue>]’
+  708 |       vector(initializer_list<value_type> __l,
+      |       ^~~~~~
+/usr/include/c++/15/bits/stl_vector.h:708:7: note: conversion of argument 1 would be ill-formed:
+/usr/include/c++/15/bits/stl_vector.h:689:7: note: candidate 3: ‘constexpr std::vector<_Tp, _Alloc>::vector(std::vector<_Tp, _Alloc>&&, std::__type_identity_t<_Alloc>&) [with _Tp = copperfin::runtime::PrgValue; _Alloc = std::allocator<copperfin::runtime::PrgValue>; std::__type_identity_t<_Alloc> = std::allocator<copperfin::runtime::PrgValue>]’
+  689 |       vector(vector&& __rv, const __type_identity_t<allocator_type>& __m)
+      |       ^~~~~~
+/usr/include/c++/15/bits/stl_vector.h:689:7: note: candidate expects 2 arguments, 1 provided
+/usr/include/c++/15/bits/stl_vector.h:670:7: note: candidate 4: ‘constexpr std::vector<_Tp, _Alloc>::vector(std::vector<_Tp, _Alloc>&&, const allocator_type&, std::false_type) [with _Tp = copperfin::runtime::PrgValue; _Alloc = std::allocator<copperfin::runtime::PrgValue>; allocator_type = std::allocator<copperfin::runtime::PrgValue>; std::false_type = std::false_type]’
+  670 |       vector(vector&& __rv, const allocator_type& __m, false_type)
+      |       ^~~~~~
+/usr/include/c++/15/bits/stl_vector.h:670:7: note: candidate expects 3 arguments, 1 provided
+/usr/include/c++/15/bits/stl_vector.h:665:7: note: candidate 5: ‘constexpr std::vector<_Tp, _Alloc>::vector(std::vector<_Tp, _Alloc>&&, const allocator_type&, std::true_type) [with _Tp = copperfin::runtime::PrgValue; _Alloc = std::allocator<copperfin::runtime::PrgValue>; allocator_type = std::allocator<copperfin::runtime::PrgValue>; std::true_type = std::true_type]’
+  665 |       vector(vector&& __rv, const allocator_type& __m, true_type) noexcept
+      |       ^~~~~~
+/usr/include/c++/15/bits/stl_vector.h:665:7: note: candidate expects 3 arguments, 1 provided
+/usr/include/c++/15/bits/stl_vector.h:654:7: note: candidate 6: ‘constexpr std::vector<_Tp, _Alloc>::vector(const std::vector<_Tp, _Alloc>&, std::__type_identity_t<_Alloc>&) [with _Tp = copperfin::runtime::PrgValue; _Alloc = std::allocator<copperfin::runtime::PrgValue>; std::__type_identity_t<_Alloc> = std::allocator<copperfin::runtime::PrgValue>]’
+  654 |       vector(const vector& __x, const __type_identity_t<allocator_type>& __a)
+      |       ^~~~~~
+/usr/include/c++/15/bits/stl_vector.h:654:7: note: candidate expects 2 arguments, 1 provided
+/usr/include/c++/15/bits/stl_vector.h:650:7: note: candidate 7: ‘constexpr std::vector<_Tp, _Alloc>::vector(std::vector<_Tp, _Alloc>&&) [with _Tp = copperfin::runtime::PrgValue; _Alloc = std::allocator<copperfin::runtime::PrgValue>]’
+  650 |       vector(vector&&) noexcept = default;
+      |       ^~~~~~
+/usr/include/c++/15/bits/stl_vector.h:650:7: note: conversion of argument 1 would be ill-formed:
+/usr/include/c++/15/bits/stl_vector.h:631:7: note: candidate 8: ‘constexpr std::vector<_Tp, _Alloc>::vector(const std::vector<_Tp, _Alloc>&) [with _Tp = copperfin::runtime::PrgValue; _Alloc = std::allocator<copperfin::runtime::PrgValue>]’
+  631 |       vector(const vector& __x)
+      |       ^~~~~~
+/usr/include/c++/15/bits/stl_vector.h:631:7: note: conversion of argument 1 would be ill-formed:
+/usr/include/c++/15/bits/stl_vector.h:599:7: note: candidate 9: ‘constexpr std::vector<_Tp, _Alloc>::vector(size_type, const value_type&, const allocator_type&) [with _Tp = copperfin::runtime::PrgValue; _Alloc = std::allocator<copperfin::runtime::PrgValue>; size_type = long unsigned int; value_type = copperfin::runtime::PrgValue; allocator_type = std::allocator<copperfin::runtime::PrgValue>]’
+  599 |       vector(size_type __n, const value_type& __value,
+      |       ^~~~~~
+/usr/include/c++/15/bits/stl_vector.h:599:7: note: candidate expects 3 arguments, 1 provided
+/usr/include/c++/15/bits/stl_vector.h:586:7: note: candidate 10: ‘constexpr std::vector<_Tp, _Alloc>::vector(size_type, const allocator_type&) [with _Tp = copperfin::runtime::PrgValue; _Alloc = std::allocator<copperfin::runtime::PrgValue>; size_type = long unsigned int; allocator_type = std::allocator<copperfin::runtime::PrgValue>]’
+  586 |       vector(size_type __n, const allocator_type& __a = allocator_type())
+      |       ^~~~~~
+/usr/include/c++/15/bits/stl_vector.h:586:7: note: conversion of argument 1 would be ill-formed:
+/usr/include/c++/15/bits/stl_vector.h:572:7: note: candidate 11: ‘constexpr std::vector<_Tp, _Alloc>::vector(const allocator_type&) [with _Tp = copperfin::runtime::PrgValue; _Alloc = std::allocator<copperfin::runtime::PrgValue>; allocator_type = std::allocator<copperfin::runtime::PrgValue>]’
+  572 |       vector(const allocator_type& __a) _GLIBCXX_NOEXCEPT
+      |       ^~~~~~
+/usr/include/c++/15/bits/stl_vector.h:572:7: note: conversion of argument 1 would be ill-formed:
+/usr/include/c++/15/bits/stl_vector.h:561:7: note: candidate 12: ‘constexpr std::vector<_Tp, _Alloc>::vector() [with _Tp = copperfin::runtime::PrgValue; _Alloc = std::allocator<copperfin::runtime::PrgValue>]’
+  561 |       vector() = default;
+      |       ^~~~~~
+/usr/include/c++/15/bits/stl_vector.h:561:7: note: candidate expects 0 arguments, 1 provided
+tests/test_prg_numeric_metadata.cpp:77:59: error: no matching function for call to ‘std::map<std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue>::map(<brace-enclosed initializer list>)’
+   77 |     std::map<std::string,PrgValue> locals{{"value",source}};
+      |                                                           ^
+tests/test_prg_numeric_metadata.cpp:77:59: note: there are 12 candidates
+In file included from /usr/include/c++/15/map:65,
+                 from include/copperfin/localization/localization.h:8:
+/usr/include/c++/15/bits/stl_map.h:305:9: note: candidate 1: ‘template<class _InputIterator> std::map<_Key, _Tp, _Compare, _Alloc>::map(_InputIterator, _InputIterator, const _Compare&, const allocator_type&) [with _Key = std::__cxx11::basic_string<char>; _Tp = copperfin::runtime::PrgValue; _Compare = std::less<std::__cxx11::basic_string<char> >; _Alloc = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >]’
+  305 |         map(_InputIterator __first, _InputIterator __last,
+      |         ^~~
+/usr/include/c++/15/bits/stl_map.h:305:9: note: candidate expects 3 arguments, 1 provided
+/usr/include/c++/15/bits/stl_map.h:288:9: note: candidate 2: ‘template<class _InputIterator> std::map<_Key, _Tp, _Compare, _Alloc>::map(_InputIterator, _InputIterator) [with _Key = std::__cxx11::basic_string<char>; _Tp = copperfin::runtime::PrgValue; _Compare = std::less<std::__cxx11::basic_string<char> >; _Alloc = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >]’
+  288 |         map(_InputIterator __first, _InputIterator __last)
+      |         ^~~
+/usr/include/c++/15/bits/stl_map.h:288:9: note: candidate expects 2 arguments, 1 provided
+/usr/include/c++/15/bits/stl_map.h:271:9: note: candidate 3: ‘template<class _InputIterator> std::map<_Key, _Tp, _Compare, _Alloc>::map(_InputIterator, _InputIterator, const allocator_type&) [with _Key = std::__cxx11::basic_string<char>; _Tp = copperfin::runtime::PrgValue; _Compare = std::less<std::__cxx11::basic_string<char> >; _Alloc = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >]’
+  271 |         map(_InputIterator __first, _InputIterator __last,
+      |         ^~~
+/usr/include/c++/15/bits/stl_map.h:271:9: note: candidate expects 3 arguments, 1 provided
+/usr/include/c++/15/bits/stl_map.h:265:7: note: candidate 4: ‘std::map<_Key, _Tp, _Compare, _Alloc>::map(std::initializer_list<std::pair<const _Key, _Tp> >, const allocator_type&) [with _Key = std::__cxx11::basic_string<char>; _Tp = copperfin::runtime::PrgValue; _Compare = std::less<std::__cxx11::basic_string<char> >; _Alloc = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >; allocator_type = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >]’
+  265 |       map(initializer_list<value_type> __l, const allocator_type& __a)
+      |       ^~~
+/usr/include/c++/15/bits/stl_map.h:265:7: note: candidate expects 2 arguments, 1 provided
+/usr/include/c++/15/bits/stl_map.h:259:7: note: candidate 5: ‘std::map<_Key, _Tp, _Compare, _Alloc>::map(std::map<_Key, _Tp, _Compare, _Alloc>&&, std::__type_identity_t<_Alloc>&) [with _Key = std::__cxx11::basic_string<char>; _Tp = copperfin::runtime::PrgValue; _Compare = std::less<std::__cxx11::basic_string<char> >; _Alloc = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >; std::__type_identity_t<_Alloc> = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >]’
+  259 |       map(map&& __m, const __type_identity_t<allocator_type>& __a)
+      |       ^~~
+/usr/include/c++/15/bits/stl_map.h:259:7: note: candidate expects 2 arguments, 1 provided
+/usr/include/c++/15/bits/stl_map.h:255:7: note: candidate 6: ‘std::map<_Key, _Tp, _Compare, _Alloc>::map(const std::map<_Key, _Tp, _Compare, _Alloc>&, std::__type_identity_t<_Alloc>&) [with _Key = std::__cxx11::basic_string<char>; _Tp = copperfin::runtime::PrgValue; _Compare = std::less<std::__cxx11::basic_string<char> >; _Alloc = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >; std::__type_identity_t<_Alloc> = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >]’
+  255 |       map(const map& __m, const __type_identity_t<allocator_type>& __a)
+      |       ^~~
+/usr/include/c++/15/bits/stl_map.h:255:7: note: candidate expects 2 arguments, 1 provided
+/usr/include/c++/15/bits/stl_map.h:251:7: note: candidate 7: ‘std::map<_Key, _Tp, _Compare, _Alloc>::map(const allocator_type&) [with _Key = std::__cxx11::basic_string<char>; _Tp = copperfin::runtime::PrgValue; _Compare = std::less<std::__cxx11::basic_string<char> >; _Alloc = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >; allocator_type = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >]’
+  251 |       map(const allocator_type& __a)
+      |       ^~~
+/usr/include/c++/15/bits/stl_map.h:251:33: note: no known conversion for argument 1 from ‘<brace-enclosed initializer list>’ to ‘const std::map<std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue>::allocator_type&’ {aka ‘const std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >&’}
+  251 |       map(const allocator_type& __a)
+      |           ~~~~~~~~~~~~~~~~~~~~~~^~~
+/usr/include/c++/15/bits/stl_map.h:243:7: note: candidate 8: ‘std::map<_Key, _Tp, _Compare, _Alloc>::map(std::initializer_list<std::pair<const _Key, _Tp> >, const _Compare&, const allocator_type&) [with _Key = std::__cxx11::basic_string<char>; _Tp = copperfin::runtime::PrgValue; _Compare = std::less<std::__cxx11::basic_string<char> >; _Alloc = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >; allocator_type = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >]’
+  243 |       map(initializer_list<value_type> __l,
+      |       ^~~
+/usr/include/c++/15/bits/stl_map.h:243:40: note: no known conversion for argument 1 from ‘<brace-enclosed initializer list>’ to ‘std::initializer_list<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >’
+  243 |       map(initializer_list<value_type> __l,
+      |           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+/usr/include/c++/15/bits/stl_map.h:230:7: note: candidate 9: ‘std::map<_Key, _Tp, _Compare, _Alloc>::map(std::map<_Key, _Tp, _Compare, _Alloc>&&) [with _Key = std::__cxx11::basic_string<char>; _Tp = copperfin::runtime::PrgValue; _Compare = std::less<std::__cxx11::basic_string<char> >; _Alloc = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >]’
+  230 |       map(map&&) = default;
+      |       ^~~
+/usr/include/c++/15/bits/stl_map.h:230:11: note: no known conversion for argument 1 from ‘<brace-enclosed initializer list>’ to ‘std::map<std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue>&&’
+  230 |       map(map&&) = default;
+      |           ^~~~~
+/usr/include/c++/15/bits/stl_map.h:222:7: note: candidate 10: ‘std::map<_Key, _Tp, _Compare, _Alloc>::map(const std::map<_Key, _Tp, _Compare, _Alloc>&) [with _Key = std::__cxx11::basic_string<char>; _Tp = copperfin::runtime::PrgValue; _Compare = std::less<std::__cxx11::basic_string<char> >; _Alloc = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >]’
+  222 |       map(const map&) = default;
+      |       ^~~
+/usr/include/c++/15/bits/stl_map.h:222:11: note: no known conversion for argument 1 from ‘<brace-enclosed initializer list>’ to ‘const std::map<std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue>&’
+  222 |       map(const map&) = default;
+      |           ^~~~~~~~~~
+/usr/include/c++/15/bits/stl_map.h:209:7: note: candidate 11: ‘std::map<_Key, _Tp, _Compare, _Alloc>::map(const _Compare&, const allocator_type&) [with _Key = std::__cxx11::basic_string<char>; _Tp = copperfin::runtime::PrgValue; _Compare = std::less<std::__cxx11::basic_string<char> >; _Alloc = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >; allocator_type = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >]’
+  209 |       map(const _Compare& __comp,
+      |       ^~~
+/usr/include/c++/15/bits/stl_map.h:209:27: note: no known conversion for argument 1 from ‘<brace-enclosed initializer list>’ to ‘const std::less<std::__cxx11::basic_string<char> >&’
+  209 |       map(const _Compare& __comp,
+      |           ~~~~~~~~~~~~~~~~^~~~~~
+/usr/include/c++/15/bits/stl_map.h:200:7: note: candidate 12: ‘std::map<_Key, _Tp, _Compare, _Alloc>::map() [with _Key = std::__cxx11::basic_string<char>; _Tp = copperfin::runtime::PrgValue; _Compare = std::less<std::__cxx11::basic_string<char> >; _Alloc = std::allocator<std::pair<const std::__cxx11::basic_string<char>, copperfin::runtime::PrgValue> >]’
+  200 |       map() = default;
+      |       ^~~
+/usr/include/c++/15/bits/stl_map.h:200:7: note: candidate expects 0 arguments, 1 provided
+tests/test_prg_numeric_metadata.cpp:78:29: error: ‘PrgNumericMetadata’ was not declared in this scope
+   78 |     source.numeric_metadata=PrgNumericMetadata{13,2};
+      |                             ^~~~~~~~~~~~~~~~~~
+tests/test_prg_numeric_metadata.cpp:81:10: error: cannot convert ‘<brace-enclosed initializer list>’ to ‘int’
+   81 |     check(assigned,bits,{25,14});
+      |     ~~~~~^~~~~~~~~~~~~~~~~~~~~~~
+      |          |
+      |          <brace-enclosed initializer list>
+tests/test_prg_numeric_metadata.cpp:34:72: note: initializing argument 3 of ‘void {anonymous}::check(const copperfin::runtime::PrgValue&, uint64_t, int)’
+   34 | void check(const PrgValue& value,std::uint64_t bits,PrgNumericMetadata metadata) {
+      |                                                     ~~~~~~~~~~~~~~~~~~~^~~~~~~~
+tests/test_prg_numeric_metadata.cpp:83:10: error: cannot convert ‘<brace-enclosed initializer list>’ to ‘int’
+   83 |     check(array.at(0),bits,{25,14});
+      |     ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |          |
+      |          <brace-enclosed initializer list>
+tests/test_prg_numeric_metadata.cpp:34:72: note: initializing argument 3 of ‘void {anonymous}::check(const copperfin::runtime::PrgValue&, uint64_t, int)’
+   34 | void check(const PrgValue& value,std::uint64_t bits,PrgNumericMetadata metadata) {
+      |                                                     ~~~~~~~~~~~~~~~~~~~^~~~~~~~
+tests/test_prg_numeric_metadata.cpp:84:10: error: cannot convert ‘<brace-enclosed initializer list>’ to ‘int’
+   84 |     check(locals.at("value"),bits,{25,14});
+      |     ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |          |
+      |          <brace-enclosed initializer list>
+tests/test_prg_numeric_metadata.cpp:34:72: note: initializing argument 3 of ‘void {anonymous}::check(const copperfin::runtime::PrgValue&, uint64_t, int)’
+   34 | void check(const PrgValue& value,std::uint64_t bits,PrgNumericMetadata metadata) {
+      |                                                     ~~~~~~~~~~~~~~~~~~~^~~~~~~~
+tests/test_prg_numeric_metadata.cpp:86:10: error: cannot convert ‘<brace-enclosed initializer list>’ to ‘int’
+   86 |     check(moved,bits,{25,14});
+      |     ~~~~~^~~~~~~~~~~~~~~~~~~~
+      |          |
+      |          <brace-enclosed initializer list>
+tests/test_prg_numeric_metadata.cpp:34:72: note: initializing argument 3 of ‘void {anonymous}::check(const copperfin::runtime::PrgValue&, uint64_t, int)’
+   34 | void check(const PrgValue& value,std::uint64_t bits,PrgNumericMetadata metadata) {
+      |                                                     ~~~~~~~~~~~~~~~~~~~^~~~~~~~
+tests/test_prg_numeric_metadata.cpp:89:10: error: cannot convert ‘<brace-enclosed initializer list>’ to ‘int’
+   89 |     check(move_assigned,bits,{25,14});
+      |     ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |          |
+      |          <brace-enclosed initializer list>
+tests/test_prg_numeric_metadata.cpp:34:72: note: initializing argument 3 of ‘void {anonymous}::check(const copperfin::runtime::PrgValue&, uint64_t, int)’
+   34 | void check(const PrgValue& value,std::uint64_t bits,PrgNumericMetadata metadata) {
+      |                                                     ~~~~~~~~~~~~~~~~~~~^~~~~~~~
+tests/test_prg_numeric_metadata.cpp:91:27: error: ‘struct copperfin::runtime::PrgValue’ has no member named ‘numeric_metadata’
+   91 |     expect(!move_assigned.numeric_metadata,"replacing a value clears prior metadata");
+      |                           ^~~~~~~~~~~~~~~~
+tests/test_prg_numeric_metadata.cpp: In function ‘void {anonymous}::test_no_implicit_payload_interpretation()’:
+tests/test_prg_numeric_metadata.cpp:99:27: error: cannot convert ‘<brace-enclosed initializer list>’ to ‘int’
+   99 |         auto value=numeric(bits,{25,14});
+      |                    ~~~~~~~^~~~~~~~~~~~~~
+      |                           |
+      |                           <brace-enclosed initializer list>
+tests/test_prg_numeric_metadata.cpp:27:56: note: initializing argument 2 of ‘copperfin::runtime::PrgValue {anonymous}::numeric(uint64_t, int)’
+   27 | PrgValue numeric(std::uint64_t bits,PrgNumericMetadata metadata) {
+      |                                     ~~~~~~~~~~~~~~~~~~~^~~~~~~~
+tests/test_prg_numeric_metadata.cpp:101:32: error: ‘PrgNumericMetadata’ was not declared in this scope
+  101 |         value.numeric_metadata=PrgNumericMetadata{0,0};
+      |                                ^~~~~~~~~~~~~~~~~~
+tests/test_prg_numeric_metadata.cpp: At global scope:
+tests/test_prg_numeric_metadata.cpp:39:10: warning: ‘copperfin::runtime::PrgValue {anonymous}::through_parameter_and_return(copperfin::runtime::PrgValue)’ defined but not used [-Wunused-function]
+   39 | PrgValue through_parameter_and_return(PrgValue value) { return value; }
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
