@@ -1136,7 +1136,18 @@
                         }
                         return make_currency_value(-operand.currency_value);
                     }
-                    return make_number_value(-value_as_number(operand));
+                    // RQ-CF-PRG-NUMERIC-UNARY-ATTRIBUTES-001: propagate known
+                    // width/scale, without changing payload negation here.
+                    // Native signed-zero context/assignment parity remains
+                    // mandatory follow-on work; see the unary fixture contract.
+                    const auto attributes = negated_numeric_metadata(operand.numeric_metadata);
+                    if (attributes.overflow)
+                    {
+                        throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.NumericOverflow"), 39);
+                    }
+                    PrgValue result = make_number_value(-value_as_number(operand));
+                    result.numeric_metadata = attributes.metadata;
+                    return result;
                 }
                 return parse_power();
             }

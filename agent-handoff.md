@@ -1,38 +1,67 @@
 # Agent Handoff
 
-## Active literal sanitizer execution repair (#7195, 2026-10-15)
+## Latest merge and active unary recovery (2026-10-15)
 
-Baseline mainff41cfa99 after PR7192 merge. Exact9384204d27 had clean actual
-Codex6200325592 after Claude-FIRST/fallback, strict11 green/threads0/postpush6/6.
-CORRECTION: its hosted sanitizer built but omitted both new literal tests from
-the actual CTest filter; prior instrumented-execution claim is withdrawn.
-Issue7195/PR7192 correction6200492012 record this. No Numeric algorithm change.
-Dedicated WT /home/rich/.codex/worktrees/numeric-literal-sanitizer-selection-5611/Project-Copperfin,
-branch fix/numeric-literal-sanitizer-selection-5611 from origin/mainff41cfa99.
-RQ-CF-PRG-NUMERIC-LITERAL-METADATA-VERIFY-001 / VR-DQ-DV001: independent AST
-regression original1/four failures across3 methods BEFORE repair, SAME test
-fixed0, CMake/isolation/changelog4/4. Add missing actual filter names and
-portable contract; retain named sanitizer metadata/CTest log/JUnit even on
-success. Evidence/requirement map under numeric-literal-sanitizer-selection-5611.
-Next: signed push/PR/Claude FIRST and actual named instrumented hosted receipt
-for both literal tests/selector, exact-head clean review/strict11/resolved
-threads before closure. Local selector PASS or old sanitizer PASS is not proof.
+PR7196 merged2026-10-15T20:16:32Z as
+995b1a88f37665fdc4e93d5ff7a96f8d76a36ed7; issue7195 closed. Exact signed/DCO
+b9ee1cee5c6e9208d7777031932d79811d76fd2a: actual Codex bot199175422 clean
+6200929266 after Claude-FIRST6200546526/fallback6200889564, all11 strict
+main20356131 SUCCESS, full paginated threads0/postpush4/4. Verified actual
+instrumented execution: sanitizer38794309707/job116626588218/artifact12001908457,
+tested mergecaf87ffd124a4c0de53977e7c3f6fd27724ef899 with parentsff41/b9ee;
+16 unique status=run, failures/errors/skips/disabled0, including both literal
+tests and selection contract. XML SHA b2afc2c2cb39d9b72ca91de831fcae97fc2d4f142d8d60a4b469bfd6602252c4.
+Old PR7192 instrumented-execution claim stays withdrawn; repair closes omission,
+not a Numeric algorithm change. Known NONrequired VSIX failure7193 remains
+open, not waived; all CI was NOT claimed green. App PR attachment failed100 cap.
 
-Uncancelled unary slice is preserved at
+Canonical main/origin995b synchronized. Completed selector WT/local/exact-leased
+remote branch removed;37MB build/evidence recoverably in
+/home/rich/.local/share/Trash/files/numeric-literal-sanitizer-selection-5611-build
+with matching.trashinfo. Scoped stash34b084f5bcf909aa7c23a2216d0ee4036a705994/
+older stashes retained. Gate/receipt/cleanup records in canonical
+build/pr7196-late-native/. EXISTING all-check watch77264 owns late jobs at
+all-checks-watch.log/.status; do not duplicate. Known VSIX red can yield1.
+PR7192 existing watch21975 completed0: late Linux/macOS PASS with2 preexisting
+platform skips, Windows aggregate613 unique/full613. Mac unchanged retry
+Access missing-db PASS6.44s does not establish cause;7194 remains OPEN.
+Foreign376/AGENTS/corpus/vmGUI/pycache, detached4436/49ae unchanged.
+
+Active admitted #5611/#6776 Numeric prerequisite: dedicated
 /home/rich/.codex/worktrees/numeric-unary-metadata-5611/Project-Copperfin,
-branch fix/numeric-unary-metadata-5611 atff41cfa99, no production edits/commit/PR.
-Untracked fixture README/40-expression source retained; first native1/missing
-result and repeat124/no result are UNQUALIFIED under build/numeric-unary-native/.
-Diagnose source/probe and recover repeat/type-aware native grid AFTER repair.
-No inference or native parity claim from failed attempts; no VM touched.
+branch fix/numeric-unary-metadata-5611 from995b, prior signed recovery68d9a2072.
+RQ-CF-PRG-NUMERIC-UNARY-ATTRIBUTES-001 / VR-DQ-DV001: bounded optional
+width+1/unchanged-scale propagation, explicit checked host-width overflow39,
+single ordinary Numeric-minus hookup; original double negation unchanged.
+Frozen public nonzero table SHA eb23251574b7ae3d59b51c24f7f8e78e52e5755365415f4499e12f017e127d89:
+original68 metadata-only failures, payload/state/type/NULL/suppression controls
+pass -> SAME test fixed0. GNU focused14/14 PASS69.18sec; helper GNU/Clang
+ASan/UBSan/float-cast-overflow compile/run0; both new tests in build AND actual
+sanitizer CTest filter, selection3 methods PASS. Earlier target-not-regenerated2
+and stale isolation2/3 retained; explicit regeneration fixed inventory, not tests.
+See fixture attributes-requirements.md / attributes-completion.md / evidence.
 
-Completed literal WT/local/exact-leased remote branch removed,763MB build/
-evidence recoverably in Trash/files/numeric-literal-metadata-5611-build with
-.trashinfo; canonical mainff41, owned stash3543c1db6 retained. Foreign files/
-detached4436/49ae unchanged. Canonical build/pr7192-late-native/ cleanup record
-and existing composite watch21975 own late Linux/Windows/macOS results; do not
-duplicate. VSIX retry PASS does not explain/close7193; Mac Access-export7194
-one unchanged retry pending. Heartbeat ACTIVE; no owner decision needed.
+Native recovery160/192/240 pairs remain qualified0; final240 SHA
+8dccd0b4ffb9266898baf24885d84df2963b27b3c63b6820fd680493522bdb76.
+New192-observation context pair (24expressions x2DECIMALS x2FIXED x compiled/
+EVALUATE) actual0/empty stderr/all192 values/no errors, audit0/byte repeat,
+SHA5b0cd6d52c370f5bb304a80cea399d6cc04bc54e50a13a23e946d89b046051ab,
+no documented-field compiled-versus-EVALUATE differences. Constant-only versus
+variable/function/conditional zero sign differs; no generic constant-folder or
+persistent provenance flag is inferred. Initial1/wrong-result-name and124/
+timeout stay UNQUALIFIED; timeout cause unestablished. No SDK binary copied.
+
+Next: signed push/PR, Claude FIRST/authorized Codex fallback if unavailable;
+actual clean exact-head review, strict11 green, all conversations resolved and
+named hosted sanitizer execution of BOTH new tests before merge. No public
+runtime sanitizer/full Windows/system/release evidence is preclaimed.
+After this representation increment, mandatory unary signed-zero/context and
+assignment normalization/arithmetic/function/field/display/full conversion
+work remains, followed by retained ListItem supplied-column READ. The nonzero
+test table is NOT acceptance for those gaps; #7189 and full unary/Numeric/list
+work stay open, not a canonical-double residual exception. Preserve #6776
+switches/checked conversions/allocation limits. EPOCH/CENTURY complete.
+Heartbeat ACTIVE, no owner-input blocker; no VM/start/clone/reset claim.
 
 ## Active plain-decimal metadata producer (2026-10-15)
 

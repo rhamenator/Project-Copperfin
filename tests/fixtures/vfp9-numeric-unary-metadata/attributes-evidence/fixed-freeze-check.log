@@ -1,0 +1,4 @@
+tests/fixtures/vfp9-numeric-unary-metadata/attributes-requirements.md: OK
+tests/test_prg_engine_numeric_unary_metadata.cpp: OK
+src/runtime/prg_numeric_unary_metadata.h: OK
+tests/test_prg_numeric_unary_metadata_helper.cpp: OK

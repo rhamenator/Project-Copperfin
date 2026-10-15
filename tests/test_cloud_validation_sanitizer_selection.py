@@ -36,10 +36,11 @@ class SanitizerSelection(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertIsNotNone(selector.search(name), "built target omitted from actual CTest filter")
 
-    def test_literal_tests_are_built_and_run_with_exact_names(self):
+    def test_numeric_metadata_tests_are_built_and_run_with_exact_names(self):
         self.assertEqual(len(SELECTORS), 1)
         selector = re.compile(SELECTORS[0])
-        for name in ("test_prg_numeric_literal_metadata_helper", "test_prg_engine_numeric_literal_metadata"):
+        for name in ("test_prg_numeric_literal_metadata_helper", "test_prg_engine_numeric_literal_metadata",
+                     "test_prg_numeric_unary_metadata_helper", "test_prg_engine_numeric_unary_metadata"):
             with self.subTest(name=name):
                 self.assertIn(name, TARGETS["sanitizer-pr"])
                 self.assertIsNotNone(selector.search(name))
