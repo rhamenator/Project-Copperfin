@@ -1,5 +1,19 @@
 # Selected ListItem supplied COLUMN numeric READ slice
 
+2026-10-15 owner decision: emulate VFP Numeric metadata, propagation and display
+as closely as possible, rewriting the Numeric representation where necessary;
+likewise preserve native ListBox/ComboBox behavior. This selects the prerequisite
+compatibility path, NOT the proposed canonical-double/residual-gap shortcut.
+See `docs/03-compatibility-and-migration.md` and the current handoff. Existing
+#6776 switch/safety policy remains. The earlier owner-choice blocker below is
+historical. `metadata-foundation.prg` starts bounded literal/copy/display
+recovery; it is not a completed propagation specification or production fix.
+
+2026-10-15 diagnostic update: [the decimal-place descriptor is now established
+as causal for the near-integer discrepancy](cause-established.md). Ordinary2.5
+reads column2. The owner requested diagnosis, not implementation or automation
+resumption; earlier unknown-cause statements below are historical.
+
 Current continuation: owner product/scope choice required under
 [#7189](https://github.com/rhamenator/Project-Copperfin/issues/7189); see
 [repeatable same-bits native counterexamples and viable options](numeric-origin-policy-gap.md).

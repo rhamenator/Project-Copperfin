@@ -1,0 +1,115 @@
+/* Copyright © 2026 Richard M. Hamilton.
+ * SPDX-License-Identifier: GPL-3.0-only
+ * Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
+ * Native-only diagnostic of the documented FLL Value/ParamBlk interface.
+ * No VFP implementation is copied or disassembled. No Copperfin runtime linkage.
+ * Public ABI facts: shipped "Parameters in External Libraries" help and SDK
+ * interface declarations. Installed winapims.lib is used only by this FLL probe.
+ */
+#pragma pack(push, 1)
+typedef struct {
+    char type, padding;
+    short width;
+    unsigned decimals;
+    long integer;
+    double real;
+    unsigned char currency[8];
+    unsigned handle, object;
+} NumericValue;
+typedef struct { short count; NumericValue args[1]; } NumericParameters;
+typedef long (*PublicFunction)(void);
+typedef struct { char *name; PublicFunction function; short count; char *types; } PublicInfo;
+typedef struct PublicTable { struct PublicTable *next; short count; PublicInfo *info; } PublicTable;
+#pragma pack(pop)
+_Static_assert(sizeof(long) == 4 && sizeof(void *) == 4, "32-bit VFP interface");
+_Static_assert(sizeof(NumericValue) == 36 && __builtin_offsetof(NumericValue, real) == 12,
+               "byte-packed published Value layout");
+extern void __fastcall _RetChar(char *value);
+extern void __fastcall _RetInt(long value, int width);
+extern void __fastcall _RetVal(NumericValue *value);
+/* No arithmetic CRT helper is used; the COFF floating-use marker is required. */
+int _fltused = 0;
+
+static char *hex(char *out, unsigned value, unsigned digits) {
+    static const char chars[] = "0123456789ABCDEF";
+    while (digits) { --digits; *out++ = chars[(value >> (4 * digits)) & 15]; }
+    return out;
+}
+static char *text(char *out, const char *value) {
+    while (*value) *out++ = *value++;
+    return out;
+}
+static unsigned control_word(void) {
+    unsigned short value;
+    __asm__ __volatile__("fnstcw %0" : "=m"(value));
+    return value;
+}
+static long parameter_integer(const NumericValue *value) {
+    return value->type == 'I' ? value->integer : (long)value->real;
+}
+static void copy_value(NumericValue *to, const NumericValue *from) {
+    unsigned char *out = (unsigned char *)to;
+    const unsigned char *in = (const unsigned char *)from;
+    for (unsigned i = 0; i < sizeof(*to); ++i) out[i] = in[i];
+}
+static void __fastcall metadata(NumericParameters *p) {
+    char output[180], *out = output;
+    const NumericValue *v = &p->args[0];
+    union { double value; unsigned char bytes[8]; } binary;
+    /* Byte-copy the documented real member without arithmetic or rounding. */
+    for (unsigned i = 0; i < 8; ++i)
+        binary.bytes[i] = ((const unsigned char *)&v->real)[i];
+    out = text(out, "type="); out = hex(out, (unsigned char)v->type, 2);
+    out = text(out, ";width="); out = hex(out, (unsigned short)v->width, 4);
+    out = text(out, ";decimals="); out = hex(out, v->decimals, 8);
+    out = text(out, ";integer="); out = hex(out, (unsigned)v->integer, 8);
+    out = text(out, ";real=");
+    for (int i = 7; i >= 0; --i) out = hex(out, binary.bytes[i], 2);
+    out = text(out, ";cw="); out = hex(out, control_word(), 4);
+    *out = 0;
+    _RetChar(output);
+}
+static void __fastcall clone_value(NumericParameters *p) {
+    NumericValue value;
+    copy_value(&value, &p->args[0]);
+    _RetVal(&value);
+}
+static void __fastcall set_width(NumericParameters *p) {
+    NumericValue value;
+    copy_value(&value, &p->args[0]);
+    value.width = (short)parameter_integer(&p->args[1]);
+    _RetVal(&value);
+}
+static void __fastcall set_decimals(NumericParameters *p) {
+    NumericValue value;
+    copy_value(&value, &p->args[0]);
+    value.decimals = (unsigned)parameter_integer(&p->args[1]);
+    _RetVal(&value);
+}
+static void __fastcall get_control(NumericParameters *p) {
+    (void)p;
+    _RetInt((long)control_word(), 10);
+}
+static PublicInfo functions[] = {
+    {"CFNMETA", (PublicFunction)metadata, 1, "?"},
+    {"CFNCLONE", (PublicFunction)clone_value, 1, "?"},
+    {"CFNWIDTH", (PublicFunction)set_width, 2, "?N"},
+    {"CFNDEC", (PublicFunction)set_decimals, 2, "?N"},
+    {"CFNCW", (PublicFunction)get_control, 0, ""}
+};
+__declspec(dllexport) PublicTable _FoxTable = {0, 5, functions};
+/* Run the installed support library's static initializers before its DllMain.
+ * This is an isolated diagnostic DLL with no C/C++ standard library objects. */
+typedef void (*Initializer)(void);
+#pragma section(".CRT$XCA", read)
+#pragma section(".CRT$XCZ", read)
+__declspec(allocate(".CRT$XCA")) Initializer initialize_begin[] = {0};
+__declspec(allocate(".CRT$XCZ")) Initializer initialize_end[] = {0};
+extern int __stdcall DllMain(void *module, unsigned reason, void *reserved);
+int __stdcall CauseEntry(void *module, unsigned reason, void *reserved) {
+    if (reason == 1) {
+        for (Initializer *p = initialize_begin + 1; p < initialize_end; ++p)
+            if (*p) (*p)();
+    }
+    return DllMain(module, reason, reserved);
+}

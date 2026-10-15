@@ -1,5 +1,62 @@
 # Agent Handoff
 
+## Owner decision: Numeric and list/combo compatibility (2026-10-15)
+
+Direct owner steering now resolves #7189's product/scope choice in favor of
+VFP Numeric compatibility, including metadata and a representation rewrite
+where necessary, plus VFP ListBox/ComboBox behavior. Do not implement the
+previously offered canonical-double/residual-gap shortcut. Existing #6776
+per-area switch policy, checked conversions and allocation limits remain;
+this is not authorization to reproduce unsafe crashes or C++ undefined behavior.
+The selected ListItem supplied-column READ remains uncancelled, with Numeric
+representation/propagation/display as its admitted prerequisite under #5611/
+#6776 and this direct owner instruction. No claim that all metadata propagation
+or the full native conversion formula is recovered.
+Active branch fix/listitem-column-numeric-5611 at signed checkpoint53acb58f4,
+WT /home/rich/.codex/worktrees/listitem-column-numeric-5611/Project-Copperfin;
+main/origin b6d1a7634 unchanged after fresh fetch; no active PR/checks/review
+conversations for this branch. Existing uncommitted diagnostic evidence is
+owned and retained. No production migration or completed compatibility claim.
+First bounded prerequisite recovery completed: two native96-case grids for
+literal/copy/by-value parameter/return/property/TRANSFORM/explicit STR under
+DECIMALS2/6/14 and FIXED OFF/ON, actual0/empty stderr, audit0. All documented
+fields/display repeat; full raw cmp1 because ONE unused N ev_long slot differs,
+not byte-identical evidence. Literal2.5 vs5/2: same bits, decimal1 vs2, assigned
+TRANSFORM outputs2.5 vs2.50 at defaults. Direct1.00 width4 becomes13 assigned,
+decimals2 retained. Full report metadata-foundation.md; first footer-audit1
+and correction retained, no false passing claim. Next: finish bounded
+literal/copy/arithmetic-function propagation and display-rule recovery, specify
+a normalized Numeric descriptor (including host-created/exact-integer values),
+then implement/verify one foundation slice before returning to ListItem
+coercion. No production change or completed propagation specification.
+Previous owner-input-required/A-B text below is historical, superseded by this
+decision; no further policy choice is required to proceed. Automation has not
+been resumed by this steering-record update; current local work proceeds.
+Foreign files/worktrees/stashes and VM/backup-reset restrictions are unchanged.
+
+## Current owner-directed diagnosis (2026-10-15)
+
+Owner requested cause investigation and ordinary fractional-column explanation,
+NOT a production fix, policy-option selection or automation resumption.
+Native-only published-FLL-interface diagnosis now establishes decimal-place
+metadata as causal for the selected near-integer ListItem coercion discrepancy:
+actual same N/double3FEFFFFFFFFFFFA6, decimal14 gives31 versus decimal2 column1.
+Direct same-width25/30 interventions flip48 pairs; width-only88/clone44 controls
+retain outcomes. x87CW027F and all double/state/context samples unchanged.
+SET DECIMALS before evaluation changes power-expression metadata; changing it
+only after evaluation does not change the attached precision/outcome. Literal2.5
+and computed5/2 readcolumn2 in both classes/IDs/all tested settings; column0 is
+invalid, with near-integer precision-dependent admission as the observed quirk.
+Repeated full748-factorial/160-settings captures eachactual0/empty native stderr/
+fullbyte-identical; independent audit0. Full conversion formula NOT recovered.
+See active slice WT tests/fixtures/vfp9-listitem-column-numeric/cause-established.md
+and cause-evidence/; SDK-containing FLL/object/import libraries remain host-only
+under WT build/listitem-column-native/cause/, never product/repo binaries.
+Diagnostic linkage/scaffold failures retained; no decompilation/SDK sourcecopy.
+Selected10/prior270 inputs unchanged. Earlier "cause unproven" text below is
+historical and superseded for this observed case. Numeric-precision propagation
+requirements/production implementation remain undecided; heartbeat stays paused.
+
 ## Branching (changed 2026-10-01)
 
 Develop on `main`: branch from `origin/main` and open pull requests with
@@ -1012,7 +1069,7 @@ tracking7181closed, full16MB recoverable Trash/windows-native-test-shards-7181-b
 AppPRattach hit100identitycap; URLs retained/no unrelatedartifactpruning.
 EPOCH/CENTURY/#3698 complete; doNOTrestart. No VM/start/clone/resetcompletion claim.
 
-## Selected active bounded slice — OWNER INPUT REQUIRED
+## Selected ListItem slice — retained pre-decision checkpoint
 
 Admitted OPEN owner5611/6776/exactagent-approved revalidated2026-10-14T22:45;
 both current bodies read after metadata admission. Main/origin remains

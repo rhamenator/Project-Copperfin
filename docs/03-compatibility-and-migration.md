@@ -61,6 +61,22 @@ Deliverables:
 
 ### Layer 3: Runtime Compatibility
 
+Repository-owner steering, 2026-10-15: emulate VFP Numeric semantics as closely
+as possible, including value-associated width and decimal-place metadata,
+even where this requires redesigning Copperfin's Numeric representation.
+Display and expression/assignment propagation are part of that compatibility
+target, not merely the binary floating-point payload. ListBox and ComboBox
+behavior is likewise a compatibility target; a same-double/different-metadata
+native result must not be dismissed solely because an operand is unusual.
+Implement this through evidence-backed, bounded slices under #5611/#6776,
+preserving checked conversions, allocation limits, and the existing per-area
+compatibility-switch policy. This does not authorize undefined C++ behavior,
+unsafe native crashes, or inventing unrecovered VFP rules. Retain unresolved
+behavior as an explicit gap, not a silently substituted canonical-double
+contract. The selected ListItem column-read slice remains open while its
+Numeric representation prerequisite is recovered and implemented; other
+list/combo consumers follow through separately verified slices.
+
 Support a measured subset of language and command behavior first:
 
 - expressions
