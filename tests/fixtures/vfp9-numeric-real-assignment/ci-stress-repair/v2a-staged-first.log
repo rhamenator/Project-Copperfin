@@ -1,0 +1,12 @@
+tests/fixtures/vfp9-numeric-real-assignment/ci-stress-repair/pr7201-stress-failed.log:39: trailing whitespace.
++stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0618239Z 
+tests/fixtures/vfp9-numeric-real-assignment/ci-stress-repair/pr7201-stress-failed.log:44: trailing whitespace.
++stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0620212Z 
+tests/fixtures/vfp9-numeric-real-assignment/ci-stress-repair/pr7201-stress-failed.log:46: trailing whitespace.
++stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0620480Z 
+tests/fixtures/vfp9-numeric-real-assignment/ci-stress-repair/pr7201-stress-failed.log:60: trailing whitespace.
++stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0625920Z 
+tests/fixtures/vfp9-numeric-real-assignment/ci-stress-repair/pr7201-stress-failed.log:62: trailing whitespace.
++stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0626156Z 
+tests/fixtures/vfp9-numeric-real-assignment/ci-stress-repair/pr7201-stress-failed.log:66: trailing whitespace.
++stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0629254Z 

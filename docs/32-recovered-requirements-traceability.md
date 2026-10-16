@@ -23,7 +23,25 @@ whatever the code happens to do.
 
 ## Numeric division context recovery
 
-### Assignment prerequisite (selected, pre-integration)
+### Assignment prerequisites
+
+CI prerequisite `RQ-CF-CI-V2A-SYNC-001` / `VR-CI-V2A-SYNC-001` derives from the
+owner's actionable-CI repair instruction and HZ-system-failure-01/
+HZ-data-corruption-01: #7202's existing V2a stress test must establish genuine
+lock contention before claiming rollback/retry verification. Test-owned bounded
+readiness/release markers replace fixed50/300ms assumptions; all11 original
+assertions remain exact. Controlled original delayed-holder reproduces all7
+hosted failures; [pre-code contract, architecture, failed drafts, focused
+results and current integration gates](../tests/fixtures/vfp9-numeric-real-assignment/ci-stress-repair/README.md).
+LOW DQ-DV-CI-V2A-SYNC-001 delta/misuse/walkthrough/rollback and implementing-agent
+self-review are retained. No production/expected Numeric change; final five
+targets each run twice PASS182.06s, full control-flow twice, frozen hashes0
+and independent11-assertion audit0. Fresh exact-head hosted/review acceptance
+pending. `derived` requirement.
+
+| Requirement | Allowed parent/source | Contract and implementation | Verification/results | Hazard and status |
+| --- | --- | --- | --- | --- |
+| `RQ-CF-PRG-NUMERIC-REAL-ASSIGNMENT-001` | Owner Numeric policy, admitted #5611/#6776/#7189, assignment-context parent; [paired native1344-observation recovery](../tests/fixtures/vfp9-numeric-real-assignment/README.md) and [pre-code contract](../tests/fixtures/vfp9-numeric-real-assignment/real-assignment-contract.md), signedc820c1a6c. | Known real-storage, ordinary non-NULL Number scalar-memory '=' only, scale1..18/finite magnitude<1e10: W11+D+(payload<0), payload/sign bits/scale preserved. Pure bounded helper composed with existing Integer helper in the two existing scalar dispatcher routes; not broad assign_variable/STORE/transfers. Rounded1e10 native controls excluded, no general magnitude formula. | `VR-5611-NUMERIC-REAL-ASSIGNMENT-001`: native paired1344 actual0/no errors/empty stderr/raw+typed exact repeat/audit0. Independent46 public rows match920 native records, Integer18-row table hash unchanged. Unused GNU Werror/Clang ASan+UBSan+float-cast-overflow/no-recovery helper0; public Clang syntax0. ORIGINAL runtime2816 descriptor failures +16 intentionally updated staged-real-control failures, all other controls pass. [Chronology, retained evidence and remaining gates](../tests/fixtures/vfp9-numeric-real-assignment/completion.md); SAME frozen public tests0/empty stderr and source/input hashes0; premature broader27/28 (control-flow Not Run) retained, complete post-build GNU28/28 PASS161.05s. Actual hosted/review/strict acceptance pending. | MEDIUM DQ-DV001 contract delta/misuse/walkthrough/rollback; existing data-corruption/runtime/doc hazards and #6776 policy/checked conversions/limits unchanged. No division/display/ListItem/parent closure. `recovered`; bounded integration pending |
 
 | Requirement | Allowed parent/source | Contract and architecture | Verification/results | Hazard and status |
 | --- | --- | --- | --- | --- |

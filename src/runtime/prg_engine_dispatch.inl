@@ -1240,8 +1240,9 @@
                                                   std::optional<std::string> assignment_expression_text = std::nullopt) -> ExecutionOutcome
             {
                 std::string assignment_identifier = resolve_runtime_target_identifier(raw_identifier, frame);
-                // RQ-CF-PRG-NUMERIC-INTEGER-ASSIGNMENT-001: only scalar memory
-                // '=' storage normalizes known Integer attributes. Keep this
+                // RQ-CF-PRG-NUMERIC-INTEGER-ASSIGNMENT-001 and
+                // RQ-CF-PRG-NUMERIC-REAL-ASSIGNMENT-001: only scalar memory
+                // '=' normalizes validated bounded numeric attributes. Keep this
                 // out of general assign_variable: STORE, loops and transfers
                 // have not been migrated. Never evaluate the RHS again.
                 auto assign_scalar_memory_variable = [&]()
@@ -1249,8 +1250,10 @@
                     if (assignment_expression_text.has_value() &&
                         !assignment_value.is_null && assignment_value.kind == PrgValueKind::number)
                     {
-                        const auto metadata = assigned_integer_numeric_metadata(
-                            assignment_value.numeric_metadata, assignment_value.number_value);
+                        const auto metadata = assigned_real_numeric_metadata(
+                            assigned_integer_numeric_metadata(assignment_value.numeric_metadata,
+                                                              assignment_value.number_value),
+                            assignment_value.number_value);
                         if (metadata != assignment_value.numeric_metadata)
                         {
                             PrgValue stored_value = assignment_value;

@@ -1,0 +1,40 @@
+Test project /home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused
+    Start  10: test_prg_engine_numeric_integer_assignment
+    Test  #10: test_prg_engine_numeric_integer_assignment ...   Passed    0.40 sec
+    Start  10: test_prg_engine_numeric_integer_assignment
+1/5 Test  #10: test_prg_engine_numeric_integer_assignment ...   Passed    0.39 sec
+    Start  12: test_prg_engine_numeric_real_assignment
+    Test  #12: test_prg_engine_numeric_real_assignment ......   Passed    0.86 sec
+    Start  12: test_prg_engine_numeric_real_assignment
+2/5 Test  #12: test_prg_engine_numeric_real_assignment ......   Passed    0.85 sec
+    Start  13: test_prg_numeric_real_assignment_helper
+    Test  #13: test_prg_numeric_real_assignment_helper ......   Passed    0.01 sec
+    Start  13: test_prg_numeric_real_assignment_helper
+3/5 Test  #13: test_prg_numeric_real_assignment_helper ......   Passed    0.00 sec
+    Start  31: test_cloud_validation_sanitizer_selection
+    Test  #31: test_cloud_validation_sanitizer_selection ....   Passed    0.21 sec
+    Start  31: test_cloud_validation_sanitizer_selection
+4/5 Test  #31: test_cloud_validation_sanitizer_selection ....   Passed    0.24 sec
+    Start 382: test_prg_engine_control_flow
+    Test #382: test_prg_engine_control_flow .................   Passed   89.55 sec
+    Start 382: test_prg_engine_control_flow
+5/5 Test #382: test_prg_engine_control_flow .................   Passed   89.53 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =  91.02 sec*proc (5 tests)
+copperfin-isolation:child-processes=none            =  91.02 sec*proc (5 tests)
+copperfin-isolation:environment=none                =   0.24 sec*proc (2 tests)
+copperfin-isolation:environment=scoped-process      =  90.78 sec*proc (3 tests)
+copperfin-isolation:filesystem=none                 =   0.00 sec*proc (1 test)
+copperfin-isolation:filesystem=read-only            =   0.24 sec*proc (1 test)
+copperfin-isolation:filesystem=test-owned-unique    =  90.78 sec*proc (3 tests)
+copperfin-isolation:network=none                    =  91.02 sec*proc (5 tests)
+copperfin-isolation:platform=portable               =  91.02 sec*proc (5 tests)
+copperfin-isolation:resources=none                  =  91.02 sec*proc (5 tests)
+copperfin-isolation:samples=none                    =  91.02 sec*proc (5 tests)
+copperfin-isolation:schedule=parallel-safe          =  89.78 sec*proc (3 tests)
+copperfin-isolation:schedule=serial                 =   1.24 sec*proc (2 tests)
+
+Total Test time (real) = 182.06 sec

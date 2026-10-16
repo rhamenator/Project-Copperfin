@@ -1,0 +1,67 @@
+stress (pr)	Run bounded campaign	﻿2026-10-16T01:45:13.7161840Z ##[group]Run python3 scripts/run-cloud-validation.py "$COPPERFIN_LANE" --profile "$COPPERFIN_PROFILE" --seconds "$COPPERFIN_SECONDS" --iterations "$COPPERFIN_ITERATIONS" --rows "$COPPERFIN_ROWS" --seed "$COPPERFIN_SEED"
+stress (pr)	Run bounded campaign	2026-10-16T01:45:13.7163319Z [36;1mpython3 scripts/run-cloud-validation.py "$COPPERFIN_LANE" --profile "$COPPERFIN_PROFILE" --seconds "$COPPERFIN_SECONDS" --iterations "$COPPERFIN_ITERATIONS" --rows "$COPPERFIN_ROWS" --seed "$COPPERFIN_SEED"[0m
+stress (pr)	Run bounded campaign	2026-10-16T01:45:13.7345949Z shell: /usr/bin/bash -e {0}
+stress (pr)	Run bounded campaign	2026-10-16T01:45:13.7346282Z env:
+stress (pr)	Run bounded campaign	2026-10-16T01:45:13.7346531Z   COPPERFIN_LANE: stress
+stress (pr)	Run bounded campaign	2026-10-16T01:45:13.7346806Z   COPPERFIN_PROFILE: pr
+stress (pr)	Run bounded campaign	2026-10-16T01:45:13.7347064Z   COPPERFIN_SECONDS: 0
+stress (pr)	Run bounded campaign	2026-10-16T01:45:13.7347365Z   COPPERFIN_ITERATIONS: 0
+stress (pr)	Run bounded campaign	2026-10-16T01:45:13.7347629Z   COPPERFIN_ROWS: 0
+stress (pr)	Run bounded campaign	2026-10-16T01:45:13.7347873Z   COPPERFIN_SEED: 1
+stress (pr)	Run bounded campaign	2026-10-16T01:45:13.7348107Z ##[endgroup]
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0595708Z Failure log: /home/runner/work/Project-Copperfin/Project-Copperfin/artifacts/cloud-validation/stress/ctest.log
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0597895Z Internal ctest changing into directory: /home/runner/work/Project-Copperfin/Project-Copperfin/build-cloud/stress
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0599008Z cmake -S /home/runner/work/Project-Copperfin/Project-Copperfin -B: exit=0 elapsed=4.6s
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0599951Z cmake --build /home/runner/work/Project-Copperfin/Project-Copperfin/build-cloud/stress --parallel: exit=0 elapsed=195.7s
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0601158Z Campaign: {"iterations": 2, "lane": "stress", "profile": "pr", "revision": "fa6914199ef6845cccbb6068737aed4a4ea2bedf", "rows": 1000, "seconds": 30, "seed": 1}
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0602376Z ctest --test-dir /home/runner/work/Project-Copperfin/Project-Copperfin/build-cloud/stress --no-tests=error: exit=8 elapsed=169.9s
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0603326Z Test project /home/runner/work/Project-Copperfin/Project-Copperfin/build-cloud/stress
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0606787Z     Start 378: test_prg_engine_database_lifecycle
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0607188Z     Start 382: test_prg_engine_control_flow
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0607712Z     Test #378: test_prg_engine_database_lifecycle ....................   Passed    0.82 sec
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0608274Z     Start 378: test_prg_engine_database_lifecycle
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0609032Z 1/4 Test #378: test_prg_engine_database_lifecycle ....................   Passed    0.86 sec
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0609585Z     Start 593: test_prg_engine_data_io
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0610059Z     Test #593: test_prg_engine_data_io ...............................   Passed   11.03 sec
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0610568Z     Start 593: test_prg_engine_data_io
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0611076Z 2/4 Test #593: test_prg_engine_data_io ...............................   Passed    9.44 sec
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0611721Z     Test #382: test_prg_engine_control_flow ..........................   Passed   83.46 sec
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0612254Z     Start 382: test_prg_engine_control_flow
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0612742Z 3/4 Test #382: test_prg_engine_control_flow ..........................***Failed   84.02 sec
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0613459Z FAIL: #6495 V2a: the first transaction's REPLACE should contend with the sibling holder's RLOCK() and raise a catchable error, not silently succeed against a record the holder has claimed
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0614410Z FAIL: #6495 V2a: the first attempt's REPLACE should genuinely contend with the holder's RLOCK() and time out via the reprocess retry budget, proving real record-level contention
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0615131Z FAIL: #6495 V2a: the ON ERROR handler should observe the still-open transaction level before ROLLBACK
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0615572Z FAIL: #6495 V2a: record 1 should remain untouched by either attempt
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0616074Z FAIL: #6495 V2a: record 2 should reflect only the retried transaction's committed write, not the failed first attempt's, got ''
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0616696Z FAIL: #6495 V2a: on-disk record 2 should reflect the retried commit, got 'FIRSTATTEMPT'
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0617340Z FAIL: #6495 V2a: no pending transaction journal should remain after the failed attempt's ROLLBACK and the retried attempt's successful END TRANSACTION
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0618131Z 7 test(s) failed.
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0618239Z 
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0618382Z     Start 601: test_prg_engine_runtime_surface_functions_buffering
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0619055Z     Test #601: test_prg_engine_runtime_surface_functions_buffering ...   Passed    0.74 sec
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0619503Z     Start 601: test_prg_engine_runtime_surface_functions_buffering
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0619930Z 4/4 Test #601: test_prg_engine_runtime_surface_functions_buffering ...   Passed    0.92 sec
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0620212Z 
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0620309Z 75% tests passed, 1 tests failed out of 4
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0620480Z 
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0620552Z Label Time Summary:
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0620835Z copperfin-isolation:audit=complete                  =  95.23 sec*proc (4 tests)
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0621273Z copperfin-isolation:child-processes=none            =  95.23 sec*proc (4 tests)
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0621704Z copperfin-isolation:environment=none                =   0.92 sec*proc (1 test)
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0622131Z copperfin-isolation:environment=scoped-process      =  94.31 sec*proc (3 tests)
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0622558Z copperfin-isolation:filesystem=process-owned        =   0.92 sec*proc (1 test)
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0622987Z copperfin-isolation:filesystem=test-owned-unique    =  94.31 sec*proc (3 tests)
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0623406Z copperfin-isolation:network=none                    =  95.23 sec*proc (4 tests)
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0623819Z copperfin-isolation:platform=portable               =  95.23 sec*proc (4 tests)
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0624241Z copperfin-isolation:resources=none                  =  95.23 sec*proc (4 tests)
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0624652Z copperfin-isolation:samples=none                    =  95.23 sec*proc (4 tests)
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0625060Z copperfin-isolation:schedule=parallel-safe          =  94.31 sec*proc (3 tests)
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0625654Z copperfin-isolation:schedule=serial                 =   0.92 sec*proc (1 test)
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0625920Z 
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0626004Z Total Test time (real) = 169.20 sec
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0626156Z 
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0626237Z The following tests FAILED:
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0627480Z 	382 - test_prg_engine_control_flow (Failed)             copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=parallel-safe
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0629122Z Errors while running CTest
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0629254Z 
+stress (pr)	Run bounded campaign	2026-10-16T01:51:24.0659920Z ##[error]Process completed with exit code 8.

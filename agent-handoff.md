@@ -1,5 +1,77 @@
 # Agent Handoff
 
+## Owner stop and PR7201 CI repair (2026-10-16)
+
+Owner explicitly requests stop after7201 is merged/closed: necessary sync/safe
+cleanup/pending-work handoff, PAUSE automation copperfin-implementation-loop-daybreak-blue,
+then STOP. No next division/Numeric/ListItem slice or automatic October22 resume.
+This supersedes every older next-slice instruction; follow-ons remain unfinished.
+Current PR7201 originalc9784d0050 has clean actual Codex6206558679, verified bot
+199175422 after Claude FIRST6206140745/fallback6206535206. That receipt does
+NOT cover the forthcoming repair commit. No actual Claude quota/setup cause
+reported or assumed. Stress38836793953/job116767618283 failed V2a second
+repetition; focused issue7202 records its older missing contention precondition,
+not a Numeric/locking production failure claim. Original function0 -> ONLY
+holder150ms injected delay1, same7 failures. Test-only bounded readiness/release
+handshake, normal/holder150ms/parent500ms schedules, original11 assertions exact
+audit0; Numeric core/expected/source manifests0. Initial local handshake draft
+double-AWAIT failure retained/corrected; final five targets each run twice
+PASS182.06s, full control-flow twice; Clang Werror syntax0. Fixture ci-stress-repair/.
+No production/expected Numeric/CMake/driver changes in repair. Next push must
+obtain new actual clean exact-head review, named hosted sanitizer execution,
+strict11/all resolved conversations and no failed checks. Then merge7201/close
+7202, cleanup/sync/preserve follow-ons, PAUSE and stop. Do not start another slice.
+
+## Real Numeric scalar assignment prerequisite (2026-10-16)
+
+This section supersedes older active-PR/head statements below. Last shipped
+PR7200 merged2026-10-16T01:18:23Z as ffbce9d20db6ee11cc375517049eb6527eb76a15,
+exact signed/DCO b8b472b16136f4a5029e0472e7102cc3b2258900. Clean actual
+Codex6205506348 verified bot199175422 after Claude FIRST6205472034/fallback
+6205489307; all11 strict20356131 checks SUCCESS, full conversations0. Actual
+sanitizer38831631051 attempt1/job116751496921/artifact12017832013 executed24
+unique tests/no fail/skip, tested merge d1c93c8c parentsc5583c4ce/b8b472b1;
+receipt6205816432. Optional full native jobs pending at merge remain monitored
+by EXISTING canonical54755; do not duplicate. Canonical build/pr7200-late-native/
+retains gates/cleanup. Main/originffbce9d20 synced; completed WT/local/leased
+remote removed, whole~514MiB build/evidence recoverably in Trash
+numeric-assignment-context-5611-build, pre/post hashes0, no permanent deletion
+or disk-space reclamation claim. Owned stash0acce36a retained, not popped.
+
+Active #5611/#6776/#7189 child RQ-CF-PRG-NUMERIC-REAL-ASSIGNMENT-001 in
+WT /home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin,
+branch fix/numeric-real-assignment-5611 from origin/mainffbce9d20. Native paired
+1344 real observations, actual0/empty stderr/no errors/raw+typed exact repeat,
+SHA7d2100a1b4a168946882acd6750a0588cd32e9b2f56b1e74c32b93331c0dc6eb;
+scope/copy/compiler differences0. Signed pre-code contract/recoveryc820c1a6c.
+Known real scale1..18/finite magnitude<1e10 scalar '=' width11+D+(payload<0),
+payload/sign bits/scale preserved. Rounded magnitude1e10 controls excluded,
+no general magnitude formula. Independent46 rows match920 native records,
+Integer18-row table SHA c44cd2626e19817521c7559c4049075f24b4b025a143a25b63b2ff194322c15e
+unchanged; old staged real -0.0 control intentionally W12D1 before baseline.
+Unused helper GNU Werror/Clang ASan/UBSan/float-cast-overflow/no-recovery0,
+public Clang syntax0. ORIGINAL2816 descriptor-only failures plus16 staged-real
+control failures -> SAME frozen public tests0/empty stderr/input hashes0.
+Only existing plain/m. scalar '=' routes composed with helper, no broad
+assign_variable/STORE/transfer or payload/evaluation changes. First broad run
+prematurely started before control-flow build:27/28,1 Not Run, exit8 retained;
+all targets then built, identical28-test rerun28/28 PASS161.05s, exit0; final
+source/frozen input hashes0. Both new test names in
+CMake/isolation/sanitizer build+actual filter/selector contract. No PR yet;
+actual named hosted execution/review/strict gates still required.
+
+PR7199 late Windows38824179488 attempt1 SUCCESS, exact87e3b2cf/tested mergebc809c754
+parentsa5c656f6/87e3b2cf. Independent audit0 of all3 artifacts:620 unique tests,
+207/207/206, none failed/skipped/missing/duplicate; coverage116753626163 SUCCESS.
+Receipt6205998685, canonical build/pr7199-late-native/. No release/system claim.
+Next after integrating real assignment: re-enter retained typed division
+precision recovery. Remaining Decimal0/larger assignment/producers/transfers/
+display/exact conversion/ListItem supplied-column READ mandatory, no parent
+closure/canonical-double shortcut. EPOCH/CENTURY complete; do not restart.
+ZIP alert fix awaits separate owner scope approval, not a Numeric blocker.
+No VM start/recreate/reset-completion or foreign file/process change. ACTIVE
+heartbeat; exact admitted owner/open/agent-approved5611/6776/7189 revalidated.
+
 ## Active Integer assignment prerequisite (2026-10-16)
 
 PR7200 https://github.com/rhamenator/Project-Copperfin/pull/7200 is OPEN.

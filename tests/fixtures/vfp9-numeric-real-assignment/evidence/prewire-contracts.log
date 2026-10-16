@@ -1,0 +1,30 @@
+Test project /home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused
+    Start 26: test_product_licensing_policy_contract
+1/6 Test #26: test_product_licensing_policy_contract ......   Passed    0.45 sec
+    Start 28: test_release_licensing_contract
+2/6 Test #28: test_release_licensing_contract .............   Passed    0.02 sec
+    Start 31: test_cloud_validation_sanitizer_selection
+3/6 Test #31: test_cloud_validation_sanitizer_selection ...   Passed    0.23 sec
+    Start 34: test_changelog_fragment_assembler
+4/6 Test #34: test_changelog_fragment_assembler ...........   Passed    0.23 sec
+    Start 35: test_changelog_fragments_valid
+5/6 Test #35: test_changelog_fragments_valid ..............   Passed    0.23 sec
+    Start 50: test_native_test_isolation_contract
+6/6 Test #50: test_native_test_isolation_contract .........   Passed    0.69 sec
+
+100% tests passed, 0 tests failed out of 6
+
+Label Time Summary:
+copperfin-isolation:audit=complete              =   1.85 sec*proc (6 tests)
+copperfin-isolation:child-processes=none        =   1.85 sec*proc (6 tests)
+copperfin-isolation:environment=none            =   1.85 sec*proc (6 tests)
+copperfin-isolation:filesystem=process-owned    =   0.23 sec*proc (1 test)
+copperfin-isolation:filesystem=read-only        =   1.62 sec*proc (5 tests)
+copperfin-isolation:network=none                =   1.85 sec*proc (6 tests)
+copperfin-isolation:platform=configured         =   0.46 sec*proc (2 tests)
+copperfin-isolation:platform=portable           =   1.39 sec*proc (4 tests)
+copperfin-isolation:resources=none              =   1.85 sec*proc (6 tests)
+copperfin-isolation:samples=none                =   1.85 sec*proc (6 tests)
+copperfin-isolation:schedule=parallel-safe      =   1.85 sec*proc (6 tests)
+
+Total Test time (real) =   1.87 sec

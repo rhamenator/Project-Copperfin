@@ -1,0 +1,1 @@
+{"realDescriptorFailures":2816,"stagedRealControlFailures":16,"otherControlFailures":0,"integerExpectedRowsUnchanged":true,"note":"44 of 46 real rows differ; the two ten-digit literal widths already match native assignment."}

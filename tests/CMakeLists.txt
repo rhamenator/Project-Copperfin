@@ -37,6 +37,11 @@ copperfin_add_test(test_prg_engine_numeric_integer_assignment cf_xbase_runtime t
 copperfin_add_test(test_prg_numeric_integer_assignment_helper "" test_prg_numeric_integer_assignment_helper.cpp)
 target_include_directories(test_prg_numeric_integer_assignment_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
 
+# RQ-CF-PRG-NUMERIC-REAL-ASSIGNMENT-001: bounded real scalar '='.
+copperfin_add_test(test_prg_engine_numeric_real_assignment cf_xbase_runtime test_prg_engine_numeric_real_assignment.cpp)
+copperfin_add_test(test_prg_numeric_real_assignment_helper "" test_prg_numeric_real_assignment_helper.cpp)
+target_include_directories(test_prg_numeric_real_assignment_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
+
 copperfin_add_test(test_mcp_host "cf_mcp_host;cf_platform_support"
     test_mcp_host.cpp)
 copperfin_add_test(test_project_inventory "cf_migration"

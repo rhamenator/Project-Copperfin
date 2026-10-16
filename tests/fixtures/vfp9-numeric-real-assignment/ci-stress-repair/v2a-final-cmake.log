@@ -1,0 +1,13 @@
+[  8%] Built target cf_platform_support
+[  8%] Built target cf_localization
+[  8%] Built target cf_runtime_text
+[ 25%] Built target cf_security
+[ 25%] Built target cf_prg_analysis
+[ 33%] Built target cf_platform_profile
+[ 41%] Built target cf_vfp_assets
+[ 58%] Built target cf_design_model
+[ 75%] Built target cf_xbase_runtime
+[ 75%] Built target cf_prg_engine_test_support
+[ 75%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_task_supervision_state_sequences.cpp.o
+[ 83%] Linking CXX executable test_prg_engine_control_flow
+[100%] Built target test_prg_engine_control_flow
