@@ -48,6 +48,13 @@ the original storage path without a new string/array value copy.
 
 Evidence folder integer-evidence/ retains original/fixed/final statuses/logs,
 prewire and source manifests, expected audit and compiler/version/flag records.
+Native CRLF outputs and actually run probe sources have fixture-local Git
+attributes preserving their exact bytes (including final empty source lines),
+not product/test whitespace exemptions. The two repo compiler-flag copies
+trim only trailing/EOF whitespace; exact CMake originals remain on the host.
+The initial staged whole-PR whitespace check found these raw/auto-generated
+forms; its failure was not a runtime or native-semantic result. No raw capture
+bytes were changed to satisfy Git whitespace diagnostics.
 Public test covers both NUMERICBEHAVIOR modes, DECIMALS2/14, FIXED OFF/ON,
 LOCAL/PRIVATE/PUBLIC/copies/plain and m. names, direct-expression/real/unknown/
 NULL controls and paused-watch state/continuation. Existing broader macro/

@@ -22,9 +22,13 @@ dispatch hashes0 BEFORE hooks. SAME frozen public fixed0/empty stderr. Initial
 broad25/26 PASS158.78s failed only missing isolation entries; retained/corrected.
 Final source skips extra copies for unrelated/already-normalized assignments;
 reconfigure/build0, GNU26/26 PASS161.71s, final source/frozen input hashes0.
-Only '=' scalar memory routes planned, not broad assign_variable/STORE/transfers.
+Only '=' scalar memory routes connected, not broad assign_variable/STORE/transfers.
 Sanitizer build/filter/exact-name contract both new names selected; actual
-named hosted execution/review/strict gates NOT preclaimed. No push/PR yet.
+named hosted execution/review/strict gates NOT preclaimed. Branch pushed; no PR yet.
+Final evidence-only follow-up preserves raw native CRLF/source bytes through
+fixture-local Git attributes and trims only repo copies of generated compiler
+flags. Initial staged whitespace diagnostics retained on host, no capture or
+test assertions altered. Pre-PR policy/selection/isolation/changelog6/6 PASS.
 Canonical preexisting handoff edits/unrelated untracked/detached4436/49ae preserved.
 
 PR7198 late checks now allgreen; prior22564 ended1 due GraphQL connection reset,
