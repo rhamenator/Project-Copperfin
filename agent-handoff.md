@@ -2,6 +2,26 @@
 
 ## Active Integer assignment prerequisite (2026-10-16)
 
+PR7200 https://github.com/rhamenator/Project-Copperfin/pull/7200 is OPEN.
+Initial head371616120cbe31fb069dd0b6b9c28a29dbed7bc0 has clean actual
+Codex6205246012 (verified199175422) after Claude FIRST6205197820 and authorized
+fallback6205220081; that receipt does NOT cover subsequent heads.
+CI sanitizer38829614770/job116745112790 and macOS38829614888/job116745113069
+failed to compile the public test: int pauseLine narrowed into size_t API.
+Local Clang Werror syntax reproduces1 -> fixed0 by retaining vector.size()'s
+native size_t. Only that declaration changes, independent delta audit0;
+expected table SHA c44cd2626e19817521c7559c4049075f24b4b025a143a25b63b2ff194322c15e
+and18 rows/540 native matches unchanged. GNU rebuild0/focused17/17 PASS2.45s.
+Failed hosted compilation is NOT runtime sanitizer execution. Full logs and
+failure artifact12016867250 retained in fixture ci-repair/ and host build.
+Historical prewire/final manifests retained, not relabeled as current:
+ci-repair/repaired-source.sha256 plus exact one-line delta link the new harness.
+No production/expected/assertion/timeout changes. Next signed repair commit/
+push must get new actual exact-head review and hosted execution/strict gates.
+Old required68998/all78587 watchers stopped143 after exact PID/cwd/argv checks,
+not remote cancellation; start new-head watchers after push, no duplicates.
+This paragraph supersedes the older pre-PR/in-progress statements below.
+
 Continue WT /home/rich/.codex/worktrees/numeric-assignment-context-5611/Project-Copperfin,
 branch fix/numeric-assignment-context-5611 from origin/mainc5583c4ce.
 Native assignment recovery signed/DCO checkpoint27de03137a800598319943a120679e518b912a70,

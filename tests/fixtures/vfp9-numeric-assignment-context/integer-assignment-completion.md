@@ -63,6 +63,30 @@ are required development controls, not native acceptance for their other areas.
 
 ## Limits and DQ/DV
 
+### CI portability repair after initial push
+
+Exact initial head371616120cbe31fb069dd0b6b9c28a29dbed7bc0 received clean
+Codex6205246012 (verified bot199175422) after Claude FIRST6205197820 and
+authorized fallback6205220081. This receipt does not cover later heads.
+Hosted sanitizer38829614770/job116745112790 and macOS38829614888/job116745113069
+both failed compilation, NOT runtime sanitizer execution: the new public
+test converted vector.size() to int, then list-initialized a size_t breakpoint
+line. Clang correctly rejects the nonconstant narrowing conversion; GNU had
+only warned. Failure artifact12016867250 and full logs retained in ci-repair/.
+
+Local Clang -std=c++20 -Wall -Wextra -Wpedantic -Werror -fsyntax-only
+reproduces1 -> fixed0 by retaining lines.size()'s original size_t type.
+Only that test-harness declaration changes. Independent source-delta audit
+proves all other test bytes unchanged; expected-table SHA256
+c44cd2626e19817521c7559c4049075f24b4b025a143a25b63b2ff194322c15e and
+all18 rows/540 native matches unchanged. No runtime/production/helper edit,
+assertion or timeout weakening. GNU rebuild0 and focused17/17 PASS2.45s.
+Historical prewire/final full-source manifests are retained as historical,
+not relabeled as matching this changed test source; ci-repair manifests and
+the exact delta link the corrected harness to the unchanged expected table.
+New-head actual review/CI/hosted execution remain mandatory; failed compile
+and a previous-head clean receipt cannot satisfy those gates.
+
 MEDIUM misuse/delta/rollback and existing data-corruption/runtime/doc hazards
 are in the contract. Implementing-agent development self-review plus automated
 verification is NOT independent-human/system/release qualification.

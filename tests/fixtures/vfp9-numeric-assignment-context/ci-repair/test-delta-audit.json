@@ -1,0 +1,1 @@
+{"onlyChange":"retain lines.size() std::size_t; remove intermediate int narrowing","expectedTableBytesUnchanged":true,"expectedTableSha256":"c44cd2626e19817521c7559c4049075f24b4b025a143a25b63b2ff194322c15e","beforeSha256":"05320e55c28c08d905d71781b5e960c36dd123a4b74e5b99e1566cda121f8d8e","afterSha256":"8a3661799e2c08230c65925656bb89d3347c5921b65a81fe0bc9822092c37e33"}

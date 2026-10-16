@@ -1,0 +1,13 @@
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_integer_assignment.dir/test_prg_engine_numeric_integer_assignment.cpp.o
+[100%] Linking CXX executable test_prg_engine_numeric_integer_assignment
+[100%] Built target test_prg_engine_numeric_integer_assignment
+Built target test_prg_numeric_integer_assignment_helper

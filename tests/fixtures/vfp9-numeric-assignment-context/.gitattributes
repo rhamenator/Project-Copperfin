@@ -7,3 +7,5 @@ captures/**/*-results.txt -text whitespace=blank-at-eol,blank-at-eof,space-befor
 captures/**/*.prg -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
 *.FXP -text
 captures/**/*.FXP -text
+# Exact timestamped GitHub transport logs are evidence blobs, not source diffs.
+ci-repair/*failure.log -text -diff

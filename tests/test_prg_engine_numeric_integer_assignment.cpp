@@ -58,7 +58,7 @@ int main() {
             lines.push_back("LOCAL nReal,nUnknown,nNull,nPause");
             lines.push_back("nReal=-0.0");lines.push_back("nUnknown=1E300");lines.push_back("nNull=.NULL.");
             lines.push_back("nPause=0");
-            const auto pauseLine=static_cast<int>(lines.size());
+            const auto pauseLine=lines.size();
             lines.push_back("nPause=1");lines.push_back("RETURN");
             std::string source;for(const auto& line:lines)source+=line+"\n";
             RuntimeSessionOptions options;
