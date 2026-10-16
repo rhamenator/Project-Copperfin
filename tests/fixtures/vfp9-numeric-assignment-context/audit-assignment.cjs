@@ -4,15 +4,16 @@
 // Independent structural/type-aware audit. No production helper or inferred normalization formula.
 const fs=require('node:fs'),path=require('node:path'),a=require('node:assert/strict'),crypto=require('node:crypto');
 const root=process.argv[2],source=fs.readFileSync(process.argv[3]||path.join(__dirname,'assignment-probe.prg'),'utf8');
+const memoryPrefix=source.includes('m.assignedLocal=')?'m.':'';
 const expressions=new Map();
 for(const line of source.split('\n').filter(l=>l.startsWith('expressions['))){
  const m=line.match(/^expressions\[(\d+)\]='([^']*)'\r?$/);a(m,line);const index=Number(m[1]),e=m[2];a(!expressions.has(index));expressions.set(index,e);
  const block=source.split('  CASE index='+index+'\n')[1].split('  CASE index=')[0];
  a(block.includes('answer=CFNMETA('+e+")+'|'+HexBytes(BINTOC("+e+",'BRS'))+'|'+HexBytes(TRANSFORM("+e+'))'));
- for(const name of ['assignedLocal','assignedPrivate','assignedPublic'])a(block.includes(name+'='+e+'\n'));
- a(block.includes('copiedLocal=assignedLocal\n'));
+ for(const name of ['assignedLocal','assignedPrivate','assignedPublic'])a(block.includes(memoryPrefix+name+'='+e+'\n'));
+ a(block.includes(memoryPrefix+'copiedLocal='+memoryPrefix+'assignedLocal\n'));
 }
-a.equal(expressions.size,24);a(source.includes('evaluatedLocal=EVALUATE(expression)'));
+a.equal(expressions.size,24);a(source.includes(memoryPrefix+'evaluatedLocal=EVALUATE(expression)'));
 function decode(meta,bits){
  a.match(meta,/^type=[0-9A-F]{2};width=[0-9A-F]{4};decimals=[0-9A-F]{8};integer=[0-9A-F]{8};real=[0-9A-F]{16};cw=[0-9A-F]{4}$/);
  const m=Object.fromEntries(meta.split(';').map(s=>s.split('=')));a.equal(m.cw,'027F');a(['49','4E'].includes(m.type));

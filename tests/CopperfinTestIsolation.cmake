@@ -100,6 +100,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_numeric_unary_metadata_helper
             test_prg_numeric_expression_context_helper
             test_prg_numeric_integer_metadata_helper
+            test_prg_numeric_integer_assignment_helper
             test_report_layout
             test_report_layout_sort_settings
             test_report_layout_side_margin_settings
@@ -158,6 +159,20 @@ function(copperfin_configure_native_test_isolation)
     # RQ-CF-PRG-NUMERIC-INTEGER-DESCRIPTOR-001: exclusive source-override
     # session/temp paths; serial runtime process-environment initialization.
     copperfin_set_test_isolation(test_prg_engine_numeric_integer_metadata
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT scoped-process
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+
+    # RQ-CF-PRG-NUMERIC-INTEGER-ASSIGNMENT-001: helper above is pure;
+    # public test exclusively creates/removes its own working/temp directory,
+    # trusted in-memory source, no PRG I/O/host callbacks/processes/network.
+    # Runtime initialization observes process environment: keep serial.
+    copperfin_set_test_isolation(test_prg_engine_numeric_integer_assignment
         FILESYSTEM test-owned-unique
         ENVIRONMENT scoped-process
         CHILD_PROCESSES none

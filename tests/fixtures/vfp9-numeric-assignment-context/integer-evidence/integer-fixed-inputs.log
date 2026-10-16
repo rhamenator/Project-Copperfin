@@ -1,0 +1,3 @@
+tests/test_prg_engine_numeric_integer_assignment.cpp: OK
+tests/test_prg_numeric_integer_assignment_helper.cpp: OK
+tests/fixtures/vfp9-numeric-assignment-context/integer-assignment-contract.md: OK

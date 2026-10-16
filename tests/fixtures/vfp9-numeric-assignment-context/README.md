@@ -17,6 +17,16 @@ pair. No direct compiled/EVALUATE, assignment compiled/EVALUATE, copy or scope
 differences in either grid. Unused tagged-interface union slots are retained
 raw but never interpreted as semantics.
 
+A third672-observation paired grid repeats the first expressions using explicit
+m. namespace assignment/reads, including the copied source. Actual0/empty
+stderr/no errors/audit0, raw/typed repeat SHA equals the first pair, and no
+scope/compiler/copy differences. Preliminary namespace-attempt1 is retained:
+both native runs0, but structural audit1 caught a generator omission of m.
+on23 copy RHS references. Source corrected before recapture; the failed audit
+is NOT represented as passing. Corrected source and own FXP are retained.
+Independent public expected-table audit matches18 rows to540 native assigned
+records across settings/scopes/copies, without importing the production helper.
+
 First pair SHA256 f3d1d51c26ba35b22c084d42b79701e4dfaa2e0463fbd624ebd067549f5b80f5.
 Boundary pair12cd5d70fa2f0fbc92cafd666c98a3e44f97dc6f3feb1b7d53ca3256fe532545.
 Private installed VFP9 09.00.0000.7423 runner unchanged, no local VM started.
@@ -42,6 +52,10 @@ at DECIMALS2,1-1E-14 W25D14 versus1-90*2^(-53) W13D2; at DECIMALS14 both W25D14.
 No general real Numeric assignment/arithmetic/conversion rule is accepted here.
 
 Selected necessary child is the [pre-code Integer assignment contract](integer-assignment-contract.md).
+Its [development verification](integer-assignment-completion.md) records the
+unchanged ORIGINAL768 descriptor failures -> SAME fixed public test0 and final
+GNU26/26 PASS161.71s, with the initial isolation-registration failure retained.
+Actual hosted named execution/review/strict checks remain integration gates.
 LOW DQ-DV-5611-NUMERIC-ASSIGNMENT-CONTEXT-001 delta: missing assignment operand
 descriptors -> independent paired native grids -> narrow contract/test BEFORE
 wiring. Misuse: interpreting unused slots, assuming all assigned widths10,
