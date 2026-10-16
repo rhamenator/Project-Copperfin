@@ -1,0 +1,17 @@
+FAIL: COPPERFIN/D2/FIXEDOFF/ native real assignment follow-on
+FAIL: COPPERFIN/D2/FIXEDOFF/m. native real assignment follow-on
+FAIL: COPPERFIN/D2/FIXEDON/ native real assignment follow-on
+FAIL: COPPERFIN/D2/FIXEDON/m. native real assignment follow-on
+FAIL: COPPERFIN/D14/FIXEDOFF/ native real assignment follow-on
+FAIL: COPPERFIN/D14/FIXEDOFF/m. native real assignment follow-on
+FAIL: COPPERFIN/D14/FIXEDON/ native real assignment follow-on
+FAIL: COPPERFIN/D14/FIXEDON/m. native real assignment follow-on
+FAIL: VFP9/D2/FIXEDOFF/ native real assignment follow-on
+FAIL: VFP9/D2/FIXEDOFF/m. native real assignment follow-on
+FAIL: VFP9/D2/FIXEDON/ native real assignment follow-on
+FAIL: VFP9/D2/FIXEDON/m. native real assignment follow-on
+FAIL: VFP9/D14/FIXEDOFF/ native real assignment follow-on
+FAIL: VFP9/D14/FIXEDOFF/m. native real assignment follow-on
+FAIL: VFP9/D14/FIXEDON/ native real assignment follow-on
+FAIL: VFP9/D14/FIXEDON/m. native real assignment follow-on
+16 Integer assignment failures

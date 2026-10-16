@@ -1,0 +1,113 @@
+Test project /home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused
+      Start  50: test_native_test_isolation_contract
+      Start  26: test_product_licensing_policy_contract
+ 1/28 Test  #26: test_product_licensing_policy_contract .......   Passed    0.38 sec
+      Start  31: test_cloud_validation_sanitizer_selection
+ 2/28 Test  #50: test_native_test_isolation_contract ..........   Passed    0.61 sec
+      Start  35: test_changelog_fragments_valid
+ 3/28 Test  #31: test_cloud_validation_sanitizer_selection ....   Passed    0.23 sec
+      Start  34: test_changelog_fragment_assembler
+ 4/28 Test  #34: test_changelog_fragment_assembler ............   Passed    0.22 sec
+      Start  28: test_release_licensing_contract
+ 5/28 Test  #35: test_changelog_fragments_valid ...............   Passed    0.23 sec
+      Start   1: test_prg_numeric_metadata
+ 6/28 Test   #1: test_prg_numeric_metadata ....................   Passed    0.00 sec
+      Start   2: test_prg_numeric_literal_metadata_helper
+ 7/28 Test  #28: test_release_licensing_contract ..............   Passed    0.01 sec
+      Start   4: test_prg_numeric_unary_metadata_helper
+ 8/28 Test   #2: test_prg_numeric_literal_metadata_helper .....   Passed    0.00 sec
+      Start   7: test_prg_numeric_expression_context_helper
+ 9/28 Test   #4: test_prg_numeric_unary_metadata_helper .......   Passed    0.00 sec
+      Start   9: test_prg_numeric_integer_metadata_helper
+10/28 Test   #7: test_prg_numeric_expression_context_helper ...   Passed    0.00 sec
+      Start  11: test_prg_numeric_integer_assignment_helper
+11/28 Test   #9: test_prg_numeric_integer_metadata_helper .....   Passed    0.00 sec
+      Start  13: test_prg_numeric_real_assignment_helper
+12/28 Test  #11: test_prg_numeric_integer_assignment_helper ...   Passed    0.00 sec
+      Start 382: test_prg_engine_control_flow
+Could not find executable /home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/test_prg_engine_control_flow
+Looked in the following places:
+/home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/test_prg_engine_control_flow
+/home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/test_prg_engine_control_flow
+/home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/Release/test_prg_engine_control_flow
+/home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/Release/test_prg_engine_control_flow
+/home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/Debug/test_prg_engine_control_flow
+/home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/Debug/test_prg_engine_control_flow
+/home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/MinSizeRel/test_prg_engine_control_flow
+/home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/MinSizeRel/test_prg_engine_control_flow
+/home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/RelWithDebInfo/test_prg_engine_control_flow
+/home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/RelWithDebInfo/test_prg_engine_control_flow
+/home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/Deployment/test_prg_engine_control_flow
+/home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/Deployment/test_prg_engine_control_flow
+/home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/Development/test_prg_engine_control_flow
+/home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/Development/test_prg_engine_control_flow
+home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/test_prg_engine_control_flow
+home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/test_prg_engine_control_flow
+home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/Release/test_prg_engine_control_flow
+home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/Release/test_prg_engine_control_flow
+home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/Debug/test_prg_engine_control_flow
+home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/Debug/test_prg_engine_control_flow
+home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/MinSizeRel/test_prg_engine_control_flow
+home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/MinSizeRel/test_prg_engine_control_flow
+home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/RelWithDebInfo/test_prg_engine_control_flow
+home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/RelWithDebInfo/test_prg_engine_control_flow
+home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/Deployment/test_prg_engine_control_flow
+home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/Deployment/test_prg_engine_control_flow
+home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/Development/test_prg_engine_control_flow
+home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/Development/test_prg_engine_control_flow
+Unable to find executable: /home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused/tests/test_prg_engine_control_flow
+13/28 Test #382: test_prg_engine_control_flow .................***Not Run   0.00 sec
+14/28 Test  #13: test_prg_numeric_real_assignment_helper ......   Passed    0.01 sec
+      Start   3: test_prg_engine_numeric_literal_metadata
+15/28 Test   #3: test_prg_engine_numeric_literal_metadata .....   Passed    0.09 sec
+      Start   5: test_prg_engine_numeric_unary_metadata
+16/28 Test   #5: test_prg_engine_numeric_unary_metadata .......   Passed    0.09 sec
+      Start   6: test_prg_engine_numeric_zero_context
+17/28 Test   #6: test_prg_engine_numeric_zero_context .........   Passed    0.10 sec
+      Start   8: test_prg_engine_numeric_integer_metadata
+18/28 Test   #8: test_prg_engine_numeric_integer_metadata .....   Passed    0.08 sec
+      Start  10: test_prg_engine_numeric_integer_assignment
+19/28 Test  #10: test_prg_engine_numeric_integer_assignment ...   Passed    0.41 sec
+      Start  12: test_prg_engine_numeric_real_assignment
+20/28 Test  #12: test_prg_engine_numeric_real_assignment ......   Passed    0.92 sec
+      Start 384: test_prg_engine_macro_expressions
+21/28 Test #384: test_prg_engine_macro_expressions ............   Passed    0.08 sec
+      Start 398: test_prg_engine_numeric_equality
+22/28 Test #398: test_prg_engine_numeric_equality .............   Passed    0.14 sec
+      Start 399: test_prg_engine_currency_literals
+23/28 Test #399: test_prg_engine_currency_literals ............   Passed    0.21 sec
+      Start 401: test_prg_engine_currency_functions
+24/28 Test #401: test_prg_engine_currency_functions ...........   Passed    0.22 sec
+      Start 402: test_prg_engine_currency_overflow
+25/28 Test #402: test_prg_engine_currency_overflow ............   Passed    0.12 sec
+      Start 403: test_prg_engine_currency_exact_muldiv
+26/28 Test #403: test_prg_engine_currency_exact_muldiv ........   Passed    0.39 sec
+      Start 404: test_prg_engine_int64_exact_expression
+27/28 Test #404: test_prg_engine_int64_exact_expression .......   Passed    0.10 sec
+      Start 407: test_prg_engine_numeric_behavior
+28/28 Test #407: test_prg_engine_numeric_behavior .............   Passed   66.89 sec
+
+96% tests passed, 1 tests failed out of 28
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =  71.56 sec*proc (28 tests)
+copperfin-isolation:child-processes=none            =  71.56 sec*proc (28 tests)
+copperfin-isolation:environment=none                =   2.98 sec*proc (20 tests)
+copperfin-isolation:environment=scoped-process      =  68.58 sec*proc (8 tests)
+copperfin-isolation:filesystem=none                 =   0.03 sec*proc (7 tests)
+copperfin-isolation:filesystem=process-owned        =  68.38 sec*proc (9 tests)
+copperfin-isolation:filesystem=read-only            =   1.46 sec*proc (5 tests)
+copperfin-isolation:filesystem=test-owned-unique    =   1.69 sec*proc (7 tests)
+copperfin-isolation:network=none                    =  71.56 sec*proc (28 tests)
+copperfin-isolation:platform=configured             =   0.44 sec*proc (2 tests)
+copperfin-isolation:platform=portable               =  71.11 sec*proc (26 tests)
+copperfin-isolation:resources=none                  =  71.56 sec*proc (28 tests)
+copperfin-isolation:samples=none                    =  71.56 sec*proc (28 tests)
+copperfin-isolation:schedule=parallel-safe          =   1.71 sec*proc (14 tests)
+copperfin-isolation:schedule=serial                 =  69.85 sec*proc (14 tests)
+
+Total Test time (real) =  70.74 sec
+
+The following tests FAILED:
+	382 - test_prg_engine_control_flow (Not Run)            copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=parallel-safe
+Errors while running CTest

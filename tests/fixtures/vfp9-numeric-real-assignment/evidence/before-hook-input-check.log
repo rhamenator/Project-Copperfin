@@ -1,0 +1,5 @@
+tests/test_prg_engine_numeric_real_assignment.cpp: OK
+tests/test_prg_numeric_real_assignment_helper.cpp: OK
+tests/test_prg_engine_numeric_integer_assignment.cpp: OK
+src/runtime/prg_numeric_real_assignment.h: OK
+tests/fixtures/vfp9-numeric-real-assignment/real-assignment-contract.md: OK

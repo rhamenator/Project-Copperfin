@@ -81,7 +81,9 @@ int main() {
             const auto direct=session.evaluate_watch_expression("5");
             expect(direct.ok&&direct.value.numeric_metadata==PrgNumericMetadata{1,0,PrgNumericStorage::integer},context+" direct literal untouched");
             const auto real=session.evaluate_watch_expression("nReal");
-            expect(real.ok&&real.value.numeric_metadata==PrgNumericMetadata{4,1}&&std::bit_cast<std::uint64_t>(real.value.number_value)==0x8000000000000000ULL,context+" real assignment not migrated");
+            // RQ-CF-PRG-NUMERIC-REAL-ASSIGNMENT-001: admitted follow-on now
+            // migrates this staged control; native real-assignment row38.
+            expect(real.ok&&real.value.numeric_metadata==PrgNumericMetadata{12,1}&&std::bit_cast<std::uint64_t>(real.value.number_value)==0x8000000000000000ULL,context+" native real assignment follow-on");
             const auto unknown=session.evaluate_watch_expression("nUnknown");
             expect(unknown.ok&&!unknown.value.numeric_metadata,context+" unknown producer not inferred");
             expect(session.evaluate_watch_expression("nNull").value.is_null,context+" NULL unchanged");

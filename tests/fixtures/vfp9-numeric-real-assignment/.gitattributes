@@ -3,3 +3,5 @@ captures/*.out -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at
 captures/*-results.txt -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 *.FXP -text
 *-probe.prg -text
+# Exact compiler --version stdout includes a final blank line; preserve it.
+evidence/*-version.log -text whitespace=-blank-at-eof
