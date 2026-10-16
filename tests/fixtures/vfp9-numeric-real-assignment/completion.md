@@ -1,5 +1,10 @@
 # Bounded real assignment development verification
 
+Later hosted stress exposed an older V2a test timing-precondition defect;
+[separate CI repair #7202](ci-stress-repair/README.md) retains original failure,
+controlled reproduction and unchanged Numeric inputs. Previous-head acceptance
+does not qualify the repaired head; fresh exact-head integration gates apply.
+
 RQ-CF-PRG-NUMERIC-REAL-ASSIGNMENT-001 / VR-5611-NUMERIC-REAL-ASSIGNMENT-001,
 DQ-DV-5611-NUMERIC-REAL-ASSIGNMENT-001. Admitted #5611/#6776/#7189.
 [Native recovery](README.md) and [frozen pre-code contract](real-assignment-contract.md)

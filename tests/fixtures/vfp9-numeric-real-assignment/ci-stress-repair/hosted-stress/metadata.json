@@ -1,0 +1,9 @@
+{
+  "lane": "stress",
+  "profile": "pr",
+  "seed": 1,
+  "seconds": 30,
+  "iterations": 2,
+  "rows": 1000,
+  "revision": "fa6914199ef6845cccbb6068737aed4a4ea2bedf"
+}

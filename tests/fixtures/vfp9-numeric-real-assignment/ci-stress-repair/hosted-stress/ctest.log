@@ -1,0 +1,49 @@
+Internal ctest changing into directory: /home/runner/work/Project-Copperfin/Project-Copperfin/build-cloud/stress
+Test project /home/runner/work/Project-Copperfin/Project-Copperfin/build-cloud/stress
+    Start 378: test_prg_engine_database_lifecycle
+    Start 382: test_prg_engine_control_flow
+    Test #378: test_prg_engine_database_lifecycle ....................   Passed    0.82 sec
+    Start 378: test_prg_engine_database_lifecycle
+1/4 Test #378: test_prg_engine_database_lifecycle ....................   Passed    0.86 sec
+    Start 593: test_prg_engine_data_io
+    Test #593: test_prg_engine_data_io ...............................   Passed   11.03 sec
+    Start 593: test_prg_engine_data_io
+2/4 Test #593: test_prg_engine_data_io ...............................   Passed    9.44 sec
+    Test #382: test_prg_engine_control_flow ..........................   Passed   83.46 sec
+    Start 382: test_prg_engine_control_flow
+3/4 Test #382: test_prg_engine_control_flow ..........................***Failed   84.02 sec
+FAIL: #6495 V2a: the first transaction's REPLACE should contend with the sibling holder's RLOCK() and raise a catchable error, not silently succeed against a record the holder has claimed
+FAIL: #6495 V2a: the first attempt's REPLACE should genuinely contend with the holder's RLOCK() and time out via the reprocess retry budget, proving real record-level contention
+FAIL: #6495 V2a: the ON ERROR handler should observe the still-open transaction level before ROLLBACK
+FAIL: #6495 V2a: record 1 should remain untouched by either attempt
+FAIL: #6495 V2a: record 2 should reflect only the retried transaction's committed write, not the failed first attempt's, got ''
+FAIL: #6495 V2a: on-disk record 2 should reflect the retried commit, got 'FIRSTATTEMPT'
+FAIL: #6495 V2a: no pending transaction journal should remain after the failed attempt's ROLLBACK and the retried attempt's successful END TRANSACTION
+7 test(s) failed.
+
+    Start 601: test_prg_engine_runtime_surface_functions_buffering
+    Test #601: test_prg_engine_runtime_surface_functions_buffering ...   Passed    0.74 sec
+    Start 601: test_prg_engine_runtime_surface_functions_buffering
+4/4 Test #601: test_prg_engine_runtime_surface_functions_buffering ...   Passed    0.92 sec
+
+75% tests passed, 1 tests failed out of 4
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =  95.23 sec*proc (4 tests)
+copperfin-isolation:child-processes=none            =  95.23 sec*proc (4 tests)
+copperfin-isolation:environment=none                =   0.92 sec*proc (1 test)
+copperfin-isolation:environment=scoped-process      =  94.31 sec*proc (3 tests)
+copperfin-isolation:filesystem=process-owned        =   0.92 sec*proc (1 test)
+copperfin-isolation:filesystem=test-owned-unique    =  94.31 sec*proc (3 tests)
+copperfin-isolation:network=none                    =  95.23 sec*proc (4 tests)
+copperfin-isolation:platform=portable               =  95.23 sec*proc (4 tests)
+copperfin-isolation:resources=none                  =  95.23 sec*proc (4 tests)
+copperfin-isolation:samples=none                    =  95.23 sec*proc (4 tests)
+copperfin-isolation:schedule=parallel-safe          =  94.31 sec*proc (3 tests)
+copperfin-isolation:schedule=serial                 =   0.92 sec*proc (1 test)
+
+Total Test time (real) = 169.20 sec
+
+The following tests FAILED:
+	382 - test_prg_engine_control_flow (Failed)             copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=parallel-safe
+Errors while running CTest

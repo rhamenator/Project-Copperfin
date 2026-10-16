@@ -14,8 +14,10 @@
 // yield-point/barrier scheduler -- there is no such seam anywhere in the PRG
 // engine's SPAWN/lock/transaction subsystem yet (adding one was judged out
 // of scope for this coverage-only slice; see the issue for the tradeoff).
-// What each sequence does NOT do is trust that wait blindly: every sequence
-// asserts on runtime-emitted evidence (a `runtime.lock_retry`/
+// V2a now uses a bounded test-owned readiness/release handshake instead of
+// fixed startup/hold sleeps, after hosted stress exposed that precondition
+// gap. The other sequences retain their documented timing assumptions.
+// Each sequence asserts on runtime-emitted evidence (a `runtime.lock_retry`/
 // `runtime.lock_timeout`/`runtime.task.cancelled` event, or an equivalent
 // state check) that the intended contention or cancellation genuinely
 // occurred, not merely that the script ran to completion. If scheduling
@@ -329,23 +331,20 @@ void test_cancellation_during_explicit_rlock_retry_halts_the_task() {
 // explicit ROLLBACK must leave no journal/transaction-level residue that
 // would corrupt or block an immediately following retry of the same logical
 // operation.
-// Timing: the parent's `SLEEP 50` after SPAWNing the holder is a fixed,
-// generous window for the holder's own background thread to start and
-// acquire its RLOCK() before the parent's REPLACE ever attempts the same
-// record (PRG scripts cannot observe a sibling's variables to synchronize
-// more precisely -- SPAWN deep-copies an independent Impl). If the holder is
-// somehow not ready in time, `caught` never runs and `error_seen`/
-// `timeout_event` below fail loudly rather than silently accepting an
-// untested sequence. The holder's own `SLEEP 300` then keeps it held well
-// past the parent's default `SET REPROCESS` budget (8 attempts, ~36ms
-// cumulative backoff) plus the startup margin above, guaranteeing the
-// parent's REPLACE genuinely exhausts its retry budget while the holder
-// still owns the record, rather than racing a hold that might release first.
+// RQ-CF-CI-V2A-SYNC-001: test-owned empty-file readiness/release handshake.
+// Publish readiness AFTER successful RLOCK, hold until the caught ROLLBACK
+// explicitly releases the sibling. The old SLEEP50/SLEEP300 assumptions
+// missed contention under scheduling jitter (hosted stress job116767618283,
+// tracked by #7202).
+// Finite 5000 one-ms iteration budgets contain setup failures, not a claim
+// of timing-independence: expiry still fails the real contention assertions.
+// Normal, delayed-holder and delayed-parent schedules keep those assertions.
+// Pre-code contract/evidence: fixtures/vfp9-numeric-real-assignment/ci-stress-repair/.
 // Expected result: the first transaction attempt fails with a catchable
 // error and TXNLEVEL() returns to 0 after ROLLBACK; the retried transaction,
 // attempted only after the sibling releases the record, then completes and
 // commits cleanly, and no pending transaction journal directory remains.
-void test_state_sequence_retry_after_caught_rollback_succeeds_cleanly() {
+static void run_retry_after_caught_rollback_sequence(unsigned holder_delay_ms, unsigned parent_delay_ms) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_state_seq_retry_after_rollback";
     std::error_code ignored;
@@ -357,7 +356,7 @@ void test_state_sequence_retry_after_caught_rollback_succeeds_cleanly() {
     write_text(
         main_path,
         "PUBLIC error_seen, nTxnLevelAtCatch, nTxnLevelAfterRollback, lHolderDone, "
-        "nTxnLevelAfterRetryCommit, cRecord1Final, cRecord2Final\n"
+        "nTxnLevelAfterRetryCommit, cRecord1Final, cRecord2Final, lHolderReady\n"
         "error_seen = .F.\n"
         "ON ERROR DO caught\n"
         "CREATE TABLE race (name C(12))\n"
@@ -367,16 +366,32 @@ void test_state_sequence_retry_after_caught_rollback_succeeds_cleanly() {
         "APPEND BLANK\n"
         "REPLACE name WITH 'ORIGINAL2'\n"
         "SPAWN holder TO nHolder\n"
-        "SLEEP 50\n"
+        "nReadyWait = 0\n"
+        "DO WHILE !FILE('holder-ready.flag') AND !FILE('holder-failed.flag') AND nReadyWait < 5000\n"
+        "SLEEP 1\n"
+        "nReadyWait = nReadyWait + 1\n"
+        "ENDDO\n"
+        "lHolderReady = FILE('holder-ready.flag')\n"
+        "IF !lHolderReady\n"
+        "=STRTOFILE('', 'holder-release.flag')\n"
+        "AWAIT nHolder TO lHolderDone\n"
+        "RETURN\n"
+        "ENDIF\n"
+        "SLEEP " + std::to_string(parent_delay_ms) + "\n"
         "BEGIN TRANSACTION\n"
         "GO 2\n"
         "REPLACE name WITH 'FIRSTATTEMPT'\n"
+        "IF !error_seen\n"
+        "=STRTOFILE('', 'holder-release.flag')\n"
+        "AWAIT nHolder TO lHolderDone\n"
+        "ENDIF\n"
         "RETURN\n"
         "PROCEDURE caught\n"
         "error_seen = .T.\n"
         "nTxnLevelAtCatch = TXNLEVEL()\n"
         "ROLLBACK\n"
         "nTxnLevelAfterRollback = TXNLEVEL()\n"
+        "=STRTOFILE('', 'holder-release.flag')\n"
         "AWAIT nHolder TO lHolderDone\n"
         "BEGIN TRANSACTION\n"
         "GO 2\n"
@@ -390,10 +405,20 @@ void test_state_sequence_retry_after_caught_rollback_succeeds_cleanly() {
         "RETURN\n"
         "ENDPROC\n"
         "PROCEDURE holder\n"
+        "SLEEP " + std::to_string(holder_delay_ms) + "\n"
         "SELECT race\n"
         "GO 2\n"
         "lHolderLocked = RLOCK()\n"
-        "SLEEP 300\n"
+        "IF !lHolderLocked\n"
+        "=STRTOFILE('', 'holder-failed.flag')\n"
+        "RETURN .F.\n"
+        "ENDIF\n"
+        "=STRTOFILE('', 'holder-ready.flag')\n"
+        "nReleaseWait = 0\n"
+        "DO WHILE !FILE('holder-release.flag') AND nReleaseWait < 5000\n"
+        "SLEEP 1\n"
+        "nReleaseWait = nReleaseWait + 1\n"
+        "ENDDO\n"
         "RETURN lHolderLocked\n"
         "ENDPROC\n");
 
@@ -401,6 +426,18 @@ void test_state_sequence_retry_after_caught_rollback_succeeds_cleanly() {
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "#6495 V2a: state-sequence test should complete: " + state.message);
+    if (!state.completed) {
+        std::cerr << "V2a holder_delay=" << holder_delay_ms << " parent_delay=" << parent_delay_ms
+                  << " statement=" << state.statement_text << '\n';
+        for (const auto& event : state.events) {
+            if (event.category.find("error") != std::string::npos || event.category.find("fault") != std::string::npos)
+                std::cerr << event.category << ": " << event.detail << '\n';
+        }
+    }
+
+    const auto ready_it = state.globals.find("lholderready");
+    expect(ready_it != state.globals.end() && ready_it->second.boolean_value,
+           "RQ-CF-CI-V2A-SYNC-001: holder must publish successful RLOCK readiness before the transaction");
 
     const auto error_seen_it = state.globals.find("error_seen");
     expect(error_seen_it != state.globals.end() && error_seen_it->second.boolean_value,
@@ -463,6 +500,12 @@ void test_state_sequence_retry_after_caught_rollback_succeeds_cleanly() {
     }
 
     fs::remove_all(temp_root, ignored);
+}
+
+void test_state_sequence_retry_after_caught_rollback_succeeds_cleanly() {
+    run_retry_after_caught_rollback_sequence(0U, 0U);
+    run_retry_after_caught_rollback_sequence(150U, 0U);
+    run_retry_after_caught_rollback_sequence(0U, 500U);
 }
 
 // Crossing #2, sequence V2b.

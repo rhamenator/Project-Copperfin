@@ -1,0 +1,30 @@
+Test project /home/rich/.codex/worktrees/numeric-real-assignment-5611/Project-Copperfin/build/numeric-real-assignment-focused
+    Start 382: test_prg_engine_control_flow
+    Test #382: test_prg_engine_control_flow .....***Failed   91.03 sec
+FAIL: #6495 V2a: state-sequence test should complete: No active transaction.
+FAIL: #6495 V2a: the ON ERROR handler should observe the still-open transaction level before ROLLBACK
+FAIL: #6495 V2a: state-sequence test should complete: No active transaction.
+FAIL: #6495 V2a: the ON ERROR handler should observe the still-open transaction level before ROLLBACK
+FAIL: #6495 V2a: state-sequence test should complete: No active transaction.
+FAIL: #6495 V2a: the ON ERROR handler should observe the still-open transaction level before ROLLBACK
+6 test(s) failed.
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =  91.03 sec*proc (1 test)
+copperfin-isolation:child-processes=none            =  91.03 sec*proc (1 test)
+copperfin-isolation:environment=scoped-process      =  91.03 sec*proc (1 test)
+copperfin-isolation:filesystem=test-owned-unique    =  91.03 sec*proc (1 test)
+copperfin-isolation:network=none                    =  91.03 sec*proc (1 test)
+copperfin-isolation:platform=portable               =  91.03 sec*proc (1 test)
+copperfin-isolation:resources=none                  =  91.03 sec*proc (1 test)
+copperfin-isolation:samples=none                    =  91.03 sec*proc (1 test)
+copperfin-isolation:schedule=parallel-safe          =  91.03 sec*proc (1 test)
+
+Total Test time (real) =  91.05 sec
+
+The following tests FAILED:
+	382 - test_prg_engine_control_flow (Failed)             copperfin-isolation:audit=complete copperfin-isolation:child-processes=none copperfin-isolation:environment=scoped-process copperfin-isolation:filesystem=test-owned-unique copperfin-isolation:network=none copperfin-isolation:platform=portable copperfin-isolation:resources=none copperfin-isolation:samples=none copperfin-isolation:schedule=parallel-safe
+Errors while running CTest

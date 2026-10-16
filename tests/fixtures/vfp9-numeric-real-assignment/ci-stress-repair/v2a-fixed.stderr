@@ -1,0 +1,6 @@
+FAIL: #6495 V2a: state-sequence test should complete: No active transaction.
+FAIL: #6495 V2a: the ON ERROR handler should observe the still-open transaction level before ROLLBACK
+FAIL: #6495 V2a: state-sequence test should complete: No active transaction.
+FAIL: #6495 V2a: the ON ERROR handler should observe the still-open transaction level before ROLLBACK
+FAIL: #6495 V2a: state-sequence test should complete: No active transaction.
+FAIL: #6495 V2a: the ON ERROR handler should observe the still-open transaction level before ROLLBACK

@@ -5,3 +5,6 @@ captures/*-results.txt -text whitespace=blank-at-eol,blank-at-eof,space-before-t
 *-probe.prg -text
 # Exact compiler --version stdout includes a final blank line; preserve it.
 evidence/*-version.log -text whitespace=-blank-at-eof
+# Exact GitHub transport log includes timestamped empty lines with a space.
+ci-stress-repair/pr7201-stress-failed.log -text -diff
+ci-stress-repair/v2a-staged-first.log -text -diff

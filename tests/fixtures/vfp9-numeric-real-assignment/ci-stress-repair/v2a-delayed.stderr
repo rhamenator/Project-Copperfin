@@ -1,0 +1,7 @@
+FAIL: #6495 V2a: the first transaction's REPLACE should contend with the sibling holder's RLOCK() and raise a catchable error, not silently succeed against a record the holder has claimed
+FAIL: #6495 V2a: the first attempt's REPLACE should genuinely contend with the holder's RLOCK() and time out via the reprocess retry budget, proving real record-level contention
+FAIL: #6495 V2a: the ON ERROR handler should observe the still-open transaction level before ROLLBACK
+FAIL: #6495 V2a: record 1 should remain untouched by either attempt
+FAIL: #6495 V2a: record 2 should reflect only the retried transaction's committed write, not the failed first attempt's, got ''
+FAIL: #6495 V2a: on-disk record 2 should reflect the retried commit, got 'FIRSTATTEMPT'
+FAIL: #6495 V2a: no pending transaction journal should remain after the failed attempt's ROLLBACK and the retried attempt's successful END TRANSACTION
