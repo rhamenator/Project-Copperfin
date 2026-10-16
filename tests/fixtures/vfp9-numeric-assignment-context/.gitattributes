@@ -1,0 +1,11 @@
+# Preserve exact native CRLF bytes on every checkout; do not normalize evidence.
+captures/**/*.out -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+captures/**/*-results.txt -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# The actually run, first-party probe sources are byte-frozen too, including
+# their final empty source line. This allowance does not cover product/tests.
+*-probe.prg -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
+captures/**/*.prg -text whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
+*.FXP -text
+captures/**/*.FXP -text
+# Exact timestamped GitHub transport logs are evidence blobs, not source diffs.
+ci-repair/*failure.log -text -diff

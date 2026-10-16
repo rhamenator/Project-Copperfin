@@ -1,0 +1,414 @@
+[  0%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/bounded_process.cpp.o
+[  0%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/code_page.cpp.o
+[  0%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/disk_space.cpp.o
+[  0%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/environment.cpp.o
+[  0%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/exclusive_file.cpp.o
+[  0%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/executable_path.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/file_stream.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/file_version.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/font_directories.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/invariant_numeric.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/json.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/path.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/private_directory.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/private_executable_image.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/process_arguments.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/process_environment.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/safe_regex.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_platform_support.dir/src/platform/windows_pe_image.cpp.o
+[  8%] Linking CXX static library libcf_platform_support.a
+[  8%] Built target cf_platform_support
+[  8%] Building CXX object CMakeFiles/cf_localization.dir/src/localization/localization.cpp.o
+[  8%] Linking CXX static library libcf_localization.a
+[  8%] Built target cf_localization
+[  8%] Building CXX object CMakeFiles/cf_runtime_text.dir/src/runtime/localized_text.cpp.o
+[  8%] Building CXX object CMakeFiles/cf_security.dir/src/security/audit_stream.cpp.o
+[ 16%] Linking CXX static library libcf_runtime_text.a
+[ 16%] Built target cf_runtime_text
+[ 16%] Building CXX object CMakeFiles/cf_security.dir/src/security/authorization.cpp.o
+[ 16%] Building CXX object CMakeFiles/cf_security.dir/src/security/external_process_policy.cpp.o
+[ 16%] Building CXX object CMakeFiles/cf_security.dir/src/security/localized_text.cpp.o
+[ 16%] Building CXX object CMakeFiles/cf_security.dir/src/security/payload_crypto.cpp.o
+[ 16%] Building CXX object CMakeFiles/cf_security.dir/src/security/physical_path_containment.cpp.o
+[ 16%] Building CXX object CMakeFiles/cf_security.dir/src/security/process_hardening.cpp.o
+[ 16%] Building CXX object CMakeFiles/cf_security.dir/src/security/secret_provider.cpp.o
+[ 16%] Building CXX object CMakeFiles/cf_security.dir/src/security/sha256.cpp.o
+[ 16%] Building CXX object CMakeFiles/cf_security.dir/src/security/security_model.cpp.o
+[ 16%] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_policy.cpp.o
+[ 16%] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_audit_sink.cpp.o
+[ 16%] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_environment.cpp.o
+[ 16%] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_process_containment.cpp.o
+[ 16%] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_process_parser.cpp.o
+[ 16%] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_session.cpp.o
+[ 25%] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_target_containment.cpp.o
+[ 25%] Building CXX object CMakeFiles/cf_security.dir/src/security/workspace_agent_tool_registry.cpp.o
+[ 25%] Building CXX object CMakeFiles/cf_prg_analysis.dir/src/runtime/prg_engine_static_analysis.cpp.o
+[ 25%] Linking CXX static library libcf_prg_analysis.a
+[ 25%] Built target cf_prg_analysis
+[ 25%] Linking CXX static library libcf_security.a
+[ 25%] Built target cf_security
+[ 25%] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/printer.cpp.o
+[ 25%] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_benchmark.cpp.o
+[ 25%] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/database_model.cpp.o
+[ 25%] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/extensibility_model.cpp.o
+[ 25%] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/federation_execution.cpp.o
+[ 25%] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/localized_text.cpp.o
+[ 25%] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_artifact_admission.cpp.o
+[ 33%] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_artifact_adapter.cpp.o
+[ 33%] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_supporting_artifact_admission.cpp.o
+[ 33%] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_bridge_invocation.cpp.o
+[ 33%] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_interop_envelope.cpp.o
+[ 33%] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_migration_telemetry.cpp.o
+[ 33%] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_parity_comparator.cpp.o
+[ 33%] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_route_impact.cpp.o
+[ 33%] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_route_execution.cpp.o
+[ 33%] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/polyglot_route_registry.cpp.o
+[ 33%] Building CXX object CMakeFiles/cf_platform_profile.dir/src/platform/query_translator.cpp.o
+[ 33%] Linking CXX static library libcf_platform_profile.a
+[ 33%] Built target cf_platform_profile
+[ 33%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_container.cpp.o
+[ 33%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_long_value.cpp.o
+[ 33%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_msysobjects.cpp.o
+[ 33%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_saveastext_design.cpp.o
+[ 33%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_saveastext_export.cpp.o
+[ 33%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_saved_queries.cpp.o
+[ 33%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/access_table_definition.cpp.o
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/access_table_definition.cpp:324:120: warning: missing field 'name' initializer [-Wmissing-field-initializers]
+  324 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.UnknownGeneration")};
+      |                                                                                                                        ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/access_table_definition.cpp:334:19: warning: missing field 'name' initializer [-Wmissing-field-initializers]
+  334 |                 })};
+      |                   ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/access_table_definition.cpp:344:59: warning: missing field 'name' initializer [-Wmissing-field-initializers]
+  344 |                 {{"pageType", std::to_string(page_type)}})};
+      |                                                           ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/access_table_definition.cpp:350:127: warning: missing field 'name' initializer [-Wmissing-field-initializers]
+  350 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.MultiPageTdefUnsupported")};
+      |                                                                                                                               ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/access_table_definition.cpp:394:123: warning: missing field 'name' initializer [-Wmissing-field-initializers]
+  394 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.StructureOutOfBounds")};
+      |                                                                                                                           ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/access_table_definition.cpp:408:61: warning: missing field 'name' initializer [-Wmissing-field-initializers]
+  408 |                 {{"tableType", std::to_string(table_type)}})};
+      |                                                             ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/access_table_definition.cpp:417:123: warning: missing field 'name' initializer [-Wmissing-field-initializers]
+  417 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.StructureOutOfBounds")};
+      |                                                                                                                           ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/access_table_definition.cpp:426:123: warning: missing field 'name' initializer [-Wmissing-field-initializers]
+  426 |         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.StructureOutOfBounds")};
+      |                                                                                                                           ^
+[ 33%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/asset_inspector.cpp.o
+8 warnings generated.
+[ 33%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/cdx_header.cpp.o
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/asset_inspector.cpp:5994:42: warning: missing field 'rows' initializer [-Wmissing-field-initializers]
+ 5994 |             {{"table", table_plan.name}})};
+      |                                          ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/asset_inspector.cpp:6007:46: warning: missing field 'rows' initializer [-Wmissing-field-initializers]
+ 6007 |                 {{"table", table_plan.name}})};
+      |                                              ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/asset_inspector.cpp:6029:54: warning: missing field 'rows' initializer [-Wmissing-field-initializers]
+ 6029 |                         {{"table", table_plan.name}})};
+      |                                                      ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/asset_inspector.cpp:6036:54: warning: missing field 'rows' initializer [-Wmissing-field-initializers]
+ 6036 |                         {{"table", table_plan.name}})};
+      |                                                      ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/asset_inspector.cpp:6043:54: warning: missing field 'rows' initializer [-Wmissing-field-initializers]
+ 6043 |                         {{"table", table_plan.name}})};
+      |                                                      ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/asset_inspector.cpp:6080:100: warning: missing field 'cleanup_warning' initializer [-Wmissing-field-initializers]
+ 6080 |         return DatabaseJsonImportResult{.ok = false, .error = std::move(message), .table_count = 0U};
+      |                                                                                                    ^
+[ 33%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/cdx_writer.cpp.o
+[ 33%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_header.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_import.cpp.o
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/dbf_import.cpp:293:51: warning: missing field 'field_mappings' initializer [-Wmissing-field-initializers]
+  293 |         return {.ok = false, .error = source.error};
+      |                                                   ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/dbf_import.cpp:297:49: warning: missing field 'field_mappings' initializer [-Wmissing-field-initializers]
+  297 |         return {.ok = false, .error = plan.error};
+      |                                                 ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/dbf_import.cpp:305:95: warning: missing field 'field_mappings' initializer [-Wmissing-field-initializers]
+  305 |         return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.DestinationExists")};
+      |                                                                                               ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/dbf_import.cpp:321:99: warning: missing field 'field_mappings' initializer [-Wmissing-field-initializers]
+  321 |             return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.DestinationExists")};
+      |                                                                                                   ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/dbf_import.cpp:339:17: warning: missing field 'field_mappings' initializer [-Wmissing-field-initializers]
+  339 |                 };
+      |                 ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/dbf_import.cpp:381:58: warning: missing field 'field_mappings' initializer [-Wmissing-field-initializers]
+  381 |         return {.ok = false, .error = create_result.error};
+      |                                                          ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/dbf_import.cpp:406:64: warning: missing field 'field_mappings' initializer [-Wmissing-field-initializers]
+  406 |                 return {.ok = false, .error = memo_result.error};
+      |                                                                ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/dbf_import.cpp:427:51: warning: missing field 'field_mappings' initializer [-Wmissing-field-initializers]
+  427 |         return {.ok = false, .error = source.error};
+      |                                                   ^
+8 warnings generated.
+[ 41%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_text_encoding.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/dbf_table.cpp.o
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/dbf_table.cpp:2426:91: warning: missing field 'fields' initializer [-Wmissing-field-initializers]
+ 2426 |         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
+      |                                                                                           ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/dbf_table.cpp:2437:91: warning: missing field 'fields' initializer [-Wmissing-field-initializers]
+ 2437 |         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
+      |                                                                                           ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/vfp/dbf_table.cpp:2441:58: warning: missing field 'fields' initializer [-Wmissing-field-initializers]
+ 2441 |         return {.ok = false, .error = header_result.error};
+      |                                                          ^
+6 warnings generated.
+[ 41%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/index_probe.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/sidecar_path.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/staged_import_publish.cpp.o
+3 warnings generated.
+[ 41%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/xbase_relation_inference.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_shared_helpers.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_method_blobs.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_blobs.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_record_and_snapshot.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_undo.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_object_lifecycle.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_setters_behavior.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_setters_appearance.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_vfp_assets.dir/src/vfp/visual_asset_editor_property_setters_data.cpp.o
+[ 41%] Linking CXX static library libcf_vfp_assets.a
+[ 41%] Built target cf_vfp_assets
+[ 41%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/builder_dispatch.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/builder_invocation_admission.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/builder_registry.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/context_editor_actions.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_context.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_dispatch.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_invocation_admission.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/designer_launch_surfaces.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/document_model.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/editor_action_dispatch.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/editor_action_invocation_admission.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/project_workspace.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/product_subsystems.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/report_layout.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_creation.cpp.o
+[ 41%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_dispatch.cpp.o
+[ 50%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_invocation_admission.cpp.o
+[ 50%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/toolbox_palette.cpp.o
+[ 50%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract.cpp.o
+[ 50%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_value_parsing.cpp.o
+[ 50%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_error_messages.cpp.o
+[ 50%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_argument_parsers.cpp.o
+[ 50%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_helpers_request_validators.cpp.o
+[ 50%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_diagnostics_and_session.cpp.o
+[ 50%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_diagnostics_and_session_validate.cpp.o
+[ 50%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_selection_context.cpp.o
+[ 50%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_property_commands.cpp.o
+[ 50%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_property_commands_validate.cpp.o
+[ 50%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_object_lifecycle.cpp.o
+[ 50%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_object_lifecycle_validate.cpp.o
+[ 50%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_layout_actions.cpp.o
+[ 50%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_layout_actions_validate.cpp.o
+[ 50%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_behavior.cpp.o
+[ 58%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_behavior_validate.cpp.o
+[ 58%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_appearance.cpp.o
+[ 58%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_appearance_validate.cpp.o
+[ 58%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_data.cpp.o
+[ 58%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_setters_data_validate.cpp.o
+[ 58%] Building CXX object CMakeFiles/cf_design_model.dir/src/studio/vs_launch_contract_positional_and_fallback.cpp.o
+[ 58%] Linking CXX static library libcf_design_model.a
+[ 58%] Built target cf_design_model
+[ 66%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/runtime_external_event_queue.cpp.o
+[ 66%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_command_helpers.cpp.o
+[ 66%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_date_time_functions.cpp.o
+[ 66%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_file_io_functions.cpp.o
+[ 66%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine.cpp.o
+[ 66%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_native_object_helpers.cpp.o
+[ 66%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/polyglot_runtime_host.cpp.o
+In file included from /home/runner/work/Project-Copperfin/Project-Copperfin/src/runtime/prg_engine.cpp:1270:
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/runtime/prg_engine_flow.inl:285:51: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+  285 |             const auto object_handle_for_value = [this](const PrgValue &value) -> std::optional<int>
+      |                                                   ^~~~
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/runtime/prg_engine.cpp:1847:14: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+ 1847 |             [this]()
+      |              ^~~~
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/runtime/prg_engine.cpp:1851:14: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+ 1851 |             [this]()
+      |              ^~~~
+[ 66%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/index_seek_optimizer.cpp.o
+In file included from /home/runner/work/Project-Copperfin/Project-Copperfin/src/runtime/prg_engine.cpp:8887:
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:11340:62: warning: missing field 'reference' initializer [-Wmissing-field-initializers]
+ 11340 |                     TemporaryAppendSource append_source{*this};
+       |                                                              ^
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:12472:58: warning: missing field 'reference' initializer [-Wmissing-field-initializers]
+ 12472 |                 TemporaryAppendSource append_source{*this};
+       |                                                          ^
+[ 66%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_helpers.cpp.o
+[ 66%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_locale_code_page.cpp.o
+[ 66%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_numeric_functions.cpp.o
+[ 66%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_path_functions.cpp.o
+[ 66%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_parser.cpp.o
+[ 66%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_surface_functions.cpp.o
+In file included from /home/runner/work/Project-Copperfin/Project-Copperfin/src/runtime/prg_engine_runtime_surface_functions.cpp:193:
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:5:15: warning: unused function 'bitwise_value' [-Wunused-function]
+    5 | std::uint32_t bitwise_value(const PrgValue& value) {
+      |               ^~~~~~~~~~~~~
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/runtime/prg_engine_runtime_surface_platform_helpers.inl:13:5: warning: unused function 'bit_position' [-Wunused-function]
+   13 | int bit_position(const PrgValue& value) {
+      |     ^~~~~~~~~~~~
+2 warnings generated.
+[ 66%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_runtime_config.cpp.o
+[ 66%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_string_functions.cpp.o
+In file included from /home/runner/work/Project-Copperfin/Project-Copperfin/src/runtime/prg_engine_string_functions.cpp:28:
+/home/runner/work/Project-Copperfin/Project-Copperfin/src/runtime/prg_engine_string_function_helpers.inl:251:29: warning: unused function 'parse_currency_scaled_value' [-Wunused-function]
+  251 | std::optional<std::int64_t> parse_currency_scaled_value(const std::string& text) {
+      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+1 warning generated.
+[ 75%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_table_structure_helpers.cpp.o
+[ 75%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine_type_functions.cpp.o
+[ 75%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/xasset_methods.cpp.o
+5 warnings generated.
+[ 75%] Linking CXX static library libcf_xbase_runtime.a
+[ 75%] Built target cf_xbase_runtime
+[ 75%] Building CXX object tests/CMakeFiles/cf_prg_engine_test_support.dir/prg_engine_test_support.cpp.o
+[ 75%] Built target cf_prg_engine_test_support
+[ 75%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow.cpp.o
+[ 75%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_shared_test_helpers.cpp.o
+[ 75%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_control_flow_basics.cpp.o
+[ 75%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_basic_constructs.cpp.o
+[ 75%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_for_each.cpp.o
+[ 75%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_array_copy.cpp.o
+[ 75%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_implicit_scope.cpp.o
+[ 75%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_variables_and_scope.cpp.o
+[ 83%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_aggregate_and_total_commands.cpp.o
+[ 83%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_select_query_commands.cpp.o
+[ 83%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_concurrency_and_critical_sections.cpp.o
+[ 83%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_critical_sections.cpp.o
+[ 83%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_task_supervision.cpp.o
+[ 83%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_task_supervision_state_sequences.cpp.o
+[ 83%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_yield_event.cpp.o
+[ 83%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_yield_critical_policy.cpp.o
+[ 83%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_yield_critical_sections.cpp.o
+[ 83%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_event_loop.cpp.o
+[ 83%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_error_handler_commands.cpp.o
+[ 83%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_bare_null.cpp.o
+[ 83%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_on_error_dispatch.cpp.o
+[ 83%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_aerror_runtime_metadata.cpp.o
+[ 83%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_aerror_sql_ole_metadata.cpp.o
+[ 83%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_aerror_innermost_line.cpp.o
+[ 83%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_error_handling_and_faults.cpp.o
+[ 91%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_catch_predicate_fallthrough.cpp.o
+[ 91%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_throw_exception_chain.cpp.o
+[ 91%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_bare_throw_rethrow.cpp.o
+[ 91%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_localized_faults.cpp.o
+[ 91%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_recovery_state.cpp.o
+[ 91%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_normalized_diagnostics.cpp.o
+[ 91%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_retry_resume.cpp.o
+[ 91%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_bare_throw_default.cpp.o
+[ 91%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_localized_errors.cpp.o
+[ 91%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_fault_recovery.cpp.o
+[ 91%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_runtime_guardrails_and_lifecycle.cpp.o
+[ 91%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_routine_calls_parameters.cpp.o
+[ 91%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_routine_calls_continuations_01.cpp.o
+[ 91%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_routine_calls_continuations_02.cpp.o
+[ 91%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_routine_calls_array_parameters.cpp.o
+[ 91%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_routine_calls_predicates_01.cpp.o
+[ 91%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_routine_calls_predicates_02.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_routine_calls_set_procedure.cpp.o
+[100%] Linking CXX executable test_prg_engine_control_flow
+[100%] Built target test_prg_engine_control_flow
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 22%] Built target cf_prg_analysis
+[ 33%] Built target cf_security
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_relations.dir/test_prg_engine_relations.cpp.o
+[100%] Linking CXX executable test_prg_engine_relations
+[100%] Built target test_prg_engine_relations
+[100%] Building CXX object tests/CMakeFiles/test_prg_numeric_literal_metadata_helper.dir/test_prg_numeric_literal_metadata_helper.cpp.o
+[100%] Linking CXX executable test_prg_numeric_literal_metadata_helper
+[100%] Built target test_prg_numeric_literal_metadata_helper
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_literal_metadata.dir/test_prg_engine_numeric_literal_metadata.cpp.o
+[100%] Linking CXX executable test_prg_engine_numeric_literal_metadata
+[100%] Built target test_prg_engine_numeric_literal_metadata
+Building CXX object tests/CMakeFiles/test_prg_numeric_unary_metadata_helper.dir/test_prg_numeric_unary_metadata_helper.cpp.o
+Linking CXX executable test_prg_numeric_unary_metadata_helper
+Built target test_prg_numeric_unary_metadata_helper
+[ 10%] Built target cf_platform_support
+[ 10%] Built target cf_localization
+[ 20%] Built target cf_runtime_text
+[ 30%] Built target cf_security
+[ 30%] Built target cf_prg_analysis
+[ 40%] Built target cf_platform_profile
+[ 50%] Built target cf_vfp_assets
+[ 70%] Built target cf_design_model
+[ 90%] Built target cf_xbase_runtime
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_unary_metadata.dir/test_prg_engine_numeric_unary_metadata.cpp.o
+[100%] Linking CXX executable test_prg_engine_numeric_unary_metadata
+[100%] Built target test_prg_engine_numeric_unary_metadata
+Building CXX object tests/CMakeFiles/test_prg_numeric_expression_context_helper.dir/test_prg_numeric_expression_context_helper.cpp.o
+Linking CXX executable test_prg_numeric_expression_context_helper
+Built target test_prg_numeric_expression_context_helper
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_zero_context.dir/test_prg_engine_numeric_zero_context.cpp.o
+[100%] Linking CXX executable test_prg_engine_numeric_zero_context
+[100%] Built target test_prg_engine_numeric_zero_context
+Building CXX object tests/CMakeFiles/test_prg_numeric_integer_metadata_helper.dir/test_prg_numeric_integer_metadata_helper.cpp.o
+Linking CXX executable test_prg_numeric_integer_metadata_helper
+Built target test_prg_numeric_integer_metadata_helper
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_integer_metadata.dir/test_prg_engine_numeric_integer_metadata.cpp.o
+[100%] Linking CXX executable test_prg_engine_numeric_integer_metadata
+[100%] Built target test_prg_engine_numeric_integer_metadata
+Building CXX object tests/CMakeFiles/test_prg_numeric_integer_assignment_helper.dir/test_prg_numeric_integer_assignment_helper.cpp.o
+Linking CXX executable test_prg_numeric_integer_assignment_helper
+Built target test_prg_numeric_integer_assignment_helper
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_integer_assignment.dir/test_prg_engine_numeric_integer_assignment.cpp.o
+/home/runner/work/Project-Copperfin/Project-Copperfin/tests/test_prg_engine_numeric_integer_assignment.cpp:68:106: error: non-constant-expression cannot be narrowed from type 'int' to 'std::size_t' (aka 'unsigned long') in initializer list [-Wc++11-narrowing]
+   68 |             auto session=PrgRuntimeSession::create(options);session.add_breakpoint({options.startup_path,pauseLine});
+      |                                                                                                          ^~~~~~~~~
+/home/runner/work/Project-Copperfin/Project-Copperfin/tests/test_prg_engine_numeric_integer_assignment.cpp:68:106: note: insert an explicit cast to silence this issue
+   68 |             auto session=PrgRuntimeSession::create(options);session.add_breakpoint({options.startup_path,pauseLine});
+      |                                                                                                          ^~~~~~~~~
+      |                                                                                                          static_cast<size_t>( )
+1 error generated.
+gmake[3]: *** [tests/CMakeFiles/test_prg_engine_numeric_integer_assignment.dir/build.make:79: tests/CMakeFiles/test_prg_engine_numeric_integer_assignment.dir/test_prg_engine_numeric_integer_assignment.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:2717: tests/CMakeFiles/test_prg_engine_numeric_integer_assignment.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:2724: tests/CMakeFiles/test_prg_engine_numeric_integer_assignment.dir/rule] Error 2
+gmake: *** [Makefile:603: test_prg_engine_numeric_integer_assignment] Error 2

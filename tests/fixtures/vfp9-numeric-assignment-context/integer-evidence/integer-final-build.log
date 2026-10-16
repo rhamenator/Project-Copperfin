@@ -1,0 +1,179 @@
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[ 77%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine.cpp.o
+In file included from /home/rich/.codex/worktrees/numeric-assignment-context-5611/Project-Copperfin/src/runtime/prg_engine.cpp:8887:
+/home/rich/.codex/worktrees/numeric-assignment-context-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl: In member function ‘copperfin::runtime::{anonymous}::ExecutionOutcome copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()’:
+/home/rich/.codex/worktrees/numeric-assignment-context-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:11340:62: warning: missing initializer for member ‘copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()::TemporaryAppendSource::reference’ [-Wmissing-field-initializers]
+11340 |                     TemporaryAppendSource append_source{*this};
+      |                                                              ^
+/home/rich/.codex/worktrees/numeric-assignment-context-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:12472:58: warning: missing initializer for member ‘copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()::TemporaryAppendSource::reference’ [-Wmissing-field-initializers]
+12472 |                 TemporaryAppendSource append_source{*this};
+      |                                                          ^
+[ 77%] Linking CXX static library libcf_xbase_runtime.a
+[100%] Built target cf_xbase_runtime
+[100%] Linking CXX executable test_prg_engine_numeric_integer_assignment
+[100%] Built target test_prg_engine_numeric_integer_assignment
+Built target test_prg_numeric_integer_assignment_helper
+Built target test_prg_numeric_metadata
+[100%] Built target test_prg_numeric_literal_metadata_helper
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Linking CXX executable test_prg_engine_numeric_literal_metadata
+[100%] Built target test_prg_engine_numeric_literal_metadata
+Built target test_prg_numeric_unary_metadata_helper
+[ 10%] Built target cf_platform_support
+[ 10%] Built target cf_localization
+[ 20%] Built target cf_runtime_text
+[ 30%] Built target cf_security
+[ 30%] Built target cf_prg_analysis
+[ 40%] Built target cf_platform_profile
+[ 50%] Built target cf_vfp_assets
+[ 70%] Built target cf_design_model
+[ 90%] Built target cf_xbase_runtime
+[ 90%] Linking CXX executable test_prg_engine_numeric_unary_metadata
+[100%] Built target test_prg_engine_numeric_unary_metadata
+Built target test_prg_numeric_expression_context_helper
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Linking CXX executable test_prg_engine_numeric_zero_context
+[100%] Built target test_prg_engine_numeric_zero_context
+Built target test_prg_numeric_integer_metadata_helper
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Linking CXX executable test_prg_engine_numeric_integer_metadata
+[100%] Built target test_prg_engine_numeric_integer_metadata
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Linking CXX executable test_prg_engine_macro_expressions
+[100%] Built target test_prg_engine_macro_expressions
+[  8%] Built target cf_platform_support
+[  8%] Built target cf_localization
+[ 16%] Built target cf_runtime_text
+[ 25%] Built target cf_security
+[ 25%] Built target cf_prg_analysis
+[ 33%] Built target cf_platform_profile
+[ 41%] Built target cf_vfp_assets
+[ 58%] Built target cf_design_model
+[ 75%] Built target cf_xbase_runtime
+[ 75%] Built target cf_prg_engine_test_support
+[ 75%] Linking CXX executable test_prg_engine_control_flow
+[100%] Built target test_prg_engine_control_flow
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Linking CXX executable test_prg_engine_numeric_behavior
+[100%] Built target test_prg_engine_numeric_behavior
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Linking CXX executable test_prg_engine_numeric_equality
+[100%] Built target test_prg_engine_numeric_equality
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Linking CXX executable test_prg_engine_int64_exact_expression
+[100%] Built target test_prg_engine_int64_exact_expression
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Linking CXX executable test_prg_engine_currency_literals
+[100%] Built target test_prg_engine_currency_literals
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Linking CXX executable test_prg_engine_currency_functions
+[100%] Built target test_prg_engine_currency_functions
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Linking CXX executable test_prg_engine_currency_overflow
+[100%] Built target test_prg_engine_currency_overflow
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 22%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Linking CXX executable test_prg_engine_currency_exact_muldiv
+[100%] Built target test_prg_engine_currency_exact_muldiv

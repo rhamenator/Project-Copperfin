@@ -1,0 +1,56 @@
+Test project /home/rich/.codex/worktrees/numeric-assignment-context-5611/Project-Copperfin/build/numeric-assignment-focused
+      Start  1: test_prg_numeric_metadata
+ 1/17 Test  #1: test_prg_numeric_metadata ....................   Passed    0.00 sec
+      Start  2: test_prg_numeric_literal_metadata_helper
+ 2/17 Test  #2: test_prg_numeric_literal_metadata_helper .....   Passed    0.00 sec
+      Start  3: test_prg_engine_numeric_literal_metadata
+ 3/17 Test  #3: test_prg_engine_numeric_literal_metadata .....   Passed    0.09 sec
+      Start  4: test_prg_numeric_unary_metadata_helper
+ 4/17 Test  #4: test_prg_numeric_unary_metadata_helper .......   Passed    0.00 sec
+      Start  5: test_prg_engine_numeric_unary_metadata
+ 5/17 Test  #5: test_prg_engine_numeric_unary_metadata .......   Passed    0.09 sec
+      Start  6: test_prg_engine_numeric_zero_context
+ 6/17 Test  #6: test_prg_engine_numeric_zero_context .........   Passed    0.10 sec
+      Start  7: test_prg_numeric_expression_context_helper
+ 7/17 Test  #7: test_prg_numeric_expression_context_helper ...   Passed    0.00 sec
+      Start  8: test_prg_engine_numeric_integer_metadata
+ 8/17 Test  #8: test_prg_engine_numeric_integer_metadata .....   Passed    0.09 sec
+      Start  9: test_prg_numeric_integer_metadata_helper
+ 9/17 Test  #9: test_prg_numeric_integer_metadata_helper .....   Passed    0.00 sec
+      Start 10: test_prg_engine_numeric_integer_assignment
+10/17 Test #10: test_prg_engine_numeric_integer_assignment ...   Passed    0.42 sec
+      Start 11: test_prg_numeric_integer_assignment_helper
+11/17 Test #11: test_prg_numeric_integer_assignment_helper ...   Passed    0.01 sec
+      Start 24: test_product_licensing_policy_contract
+12/17 Test #24: test_product_licensing_policy_contract .......   Passed    0.39 sec
+      Start 26: test_release_licensing_contract
+13/17 Test #26: test_release_licensing_contract ..............   Passed    0.01 sec
+      Start 29: test_cloud_validation_sanitizer_selection
+14/17 Test #29: test_cloud_validation_sanitizer_selection ....   Passed    0.19 sec
+      Start 32: test_changelog_fragment_assembler
+15/17 Test #32: test_changelog_fragment_assembler ............   Passed    0.20 sec
+      Start 33: test_changelog_fragments_valid
+16/17 Test #33: test_changelog_fragments_valid ...............   Passed    0.23 sec
+      Start 48: test_native_test_isolation_contract
+17/17 Test #48: test_native_test_isolation_contract ..........   Passed    0.57 sec
+
+100% tests passed, 0 tests failed out of 17
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  =   2.42 sec*proc (17 tests)
+copperfin-isolation:child-processes=none            =   2.42 sec*proc (17 tests)
+copperfin-isolation:environment=none                =   1.63 sec*proc (12 tests)
+copperfin-isolation:environment=scoped-process      =   0.80 sec*proc (5 tests)
+copperfin-isolation:filesystem=none                 =   0.02 sec*proc (6 tests)
+copperfin-isolation:filesystem=process-owned        =   0.20 sec*proc (1 test)
+copperfin-isolation:filesystem=read-only            =   1.40 sec*proc (5 tests)
+copperfin-isolation:filesystem=test-owned-unique    =   0.80 sec*proc (5 tests)
+copperfin-isolation:network=none                    =   2.42 sec*proc (17 tests)
+copperfin-isolation:platform=configured             =   0.44 sec*proc (2 tests)
+copperfin-isolation:platform=portable               =   1.99 sec*proc (15 tests)
+copperfin-isolation:resources=none                  =   2.42 sec*proc (17 tests)
+copperfin-isolation:samples=none                    =   2.42 sec*proc (17 tests)
+copperfin-isolation:schedule=parallel-safe          =   1.63 sec*proc (12 tests)
+copperfin-isolation:schedule=serial                 =   0.80 sec*proc (5 tests)
+
+Total Test time (real) =   2.45 sec

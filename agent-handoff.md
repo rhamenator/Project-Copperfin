@@ -1,5 +1,74 @@
 # Agent Handoff
 
+## Active Integer assignment prerequisite (2026-10-16)
+
+PR7200 https://github.com/rhamenator/Project-Copperfin/pull/7200 is OPEN.
+Initial head371616120cbe31fb069dd0b6b9c28a29dbed7bc0 has clean actual
+Codex6205246012 (verified199175422) after Claude FIRST6205197820 and authorized
+fallback6205220081; that receipt does NOT cover subsequent heads.
+CI sanitizer38829614770/job116745112790 and macOS38829614888/job116745113069
+failed to compile the public test: int pauseLine narrowed into size_t API.
+Local Clang Werror syntax reproduces1 -> fixed0 by retaining vector.size()'s
+native size_t. Only that declaration changes, independent delta audit0;
+expected table SHA c44cd2626e19817521c7559c4049075f24b4b025a143a25b63b2ff194322c15e
+and18 rows/540 native matches unchanged. GNU rebuild0/focused17/17 PASS2.45s.
+Failed hosted compilation is NOT runtime sanitizer execution. Full logs and
+failure artifact12016867250 retained in fixture ci-repair/ and host build.
+Historical prewire/final manifests retained, not relabeled as current:
+ci-repair/repaired-source.sha256 plus exact one-line delta link the new harness.
+No production/expected/assertion/timeout changes. Next signed repair commit/
+push must get new actual exact-head review and hosted execution/strict gates.
+Old required68998/all78587 watchers stopped143 after exact PID/cwd/argv checks,
+not remote cancellation; start new-head watchers after push, no duplicates.
+This paragraph supersedes the older pre-PR/in-progress statements below.
+
+Continue WT /home/rich/.codex/worktrees/numeric-assignment-context-5611/Project-Copperfin,
+branch fix/numeric-assignment-context-5611 from origin/mainc5583c4ce.
+Native assignment recovery signed/DCO checkpoint27de03137a800598319943a120679e518b912a70,
+signatureG. Both original24-expression672-observation grids repeat exactly,
+actual0/empty stderr/no errors/audits0. Corrected explicitm. namespace pair672
+also exactrepeat/audit0; preliminary namespace-attempt1 native0 but structural
+audit1 (generator omitted m.on23 copy RHSs) retained, corrected before recapture.
+Independent18 public expected rows match540 native assigned records, no helper.
+Native Integer assigned widths10 except negative ten-digit magnitude11;
+real Numeric different, NOT implemented by this child. Fixture
+tests/fixtures/vfp9-numeric-assignment-context/ and build/numeric-assignment-native/.
+Pre-code integer-assignment-contract.md precedes pure helper/public test.
+GNU Werror and Clang ASan/UBSan/float-cast-overflow/no-recovery helper compile/run0;
+unproduced helper/schema-independent public test frozen in integer-prewire-inputs.sha256.
+ORIGINAL configure/build0/test1: exactly768 descriptor-only failures, all
+payload/kind/real/unknown/NULL/watch/continuation controls pass; original CPP/
+dispatch hashes0 BEFORE hooks. SAME frozen public fixed0/empty stderr. Initial
+broad25/26 PASS158.78s failed only missing isolation entries; retained/corrected.
+Final source skips extra copies for unrelated/already-normalized assignments;
+reconfigure/build0, GNU26/26 PASS161.71s, final source/frozen input hashes0.
+Only '=' scalar memory routes connected, not broad assign_variable/STORE/transfers.
+Sanitizer build/filter/exact-name contract both new names selected; actual
+named hosted execution/review/strict gates NOT preclaimed. Branch pushed; no PR yet.
+Final evidence-only follow-up preserves raw native CRLF/source bytes through
+fixture-local Git attributes and trims only repo copies of generated compiler
+flags. Initial staged whitespace diagnostics retained on host, no capture or
+test assertions altered. Pre-PR policy/selection/isolation/changelog6/6 PASS.
+Canonical preexisting handoff edits/unrelated untracked/detached4436/49ae preserved.
+
+PR7198 late checks now allgreen; prior22564 ended1 due GraphQL connection reset,
+not a remote test failure. Fresh snapshot/final checks and actual Windows
+38818147852 attempt1 SUCCESS (head5c809c70/tested mergec166fd77) archived under
+canonical build/pr7198-late-native/. Independently replayed native shard audit0:
+618 full/unique executions,206/206/206, no skipped/failed/missing/duplicate.
+Inventory coverage job116737601107 SUCCESS. Not release/system qualification.
+Last shipped PR7199 mergedc5583c4ce4fbf98f3b13bb69fd988b7dc4e3d954,
+signed head87e3b2cf93873a230118e3bf91b65f117e03582f; clean6204573311,
+all11 strict SUCCESS/threads0, actual hosted22-test sanitizer receipt6204679937.
+Canonical existing all-watch69943 remains active; do not duplicate. Gates,
+receipt and cleanup records canonical build/pr7199-late-native/.
+Real Numeric assignment, retained division precision,
+remaining producers/display/exact conversion and ListItem supplied-column READ
+remain mandatory. Owner ZIP alert diagnosed only; fix still awaits scope
+authorization, not a reason to abandon Numeric. No owner-input blocker here.
+No VM touched/start/recreate or backup-reset completion claim; heartbeat ACTIVE.
+
+
 ## Latest zero-context merge and selected precision recovery (2026-10-15)
 
 PR7198 merged2026-10-15T22:59:38Z as

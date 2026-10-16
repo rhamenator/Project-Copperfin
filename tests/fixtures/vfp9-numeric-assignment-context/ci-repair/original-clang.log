@@ -1,0 +1,8 @@
+tests/test_prg_engine_numeric_integer_assignment.cpp:68:106: error: non-constant-expression cannot be narrowed from type 'int' to 'std::size_t' (aka 'unsigned long') in initializer list [-Wc++11-narrowing]
+   68 |             auto session=PrgRuntimeSession::create(options);session.add_breakpoint({options.startup_path,pauseLine});
+      |                                                                                                          ^~~~~~~~~
+tests/test_prg_engine_numeric_integer_assignment.cpp:68:106: note: insert an explicit cast to silence this issue
+   68 |             auto session=PrgRuntimeSession::create(options);session.add_breakpoint({options.startup_path,pauseLine});
+      |                                                                                                          ^~~~~~~~~
+      |                                                                                                          static_cast<size_t>( )
+1 error generated.

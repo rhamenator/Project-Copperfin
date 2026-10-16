@@ -32,6 +32,11 @@ copperfin_add_test(test_prg_engine_numeric_integer_metadata cf_xbase_runtime tes
 copperfin_add_test(test_prg_numeric_integer_metadata_helper "" test_prg_numeric_integer_metadata_helper.cpp)
 target_include_directories(test_prg_numeric_integer_metadata_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
 
+# RQ-CF-PRG-NUMERIC-INTEGER-ASSIGNMENT-001: narrow scalar '=' storage boundary.
+copperfin_add_test(test_prg_engine_numeric_integer_assignment cf_xbase_runtime test_prg_engine_numeric_integer_assignment.cpp)
+copperfin_add_test(test_prg_numeric_integer_assignment_helper "" test_prg_numeric_integer_assignment_helper.cpp)
+target_include_directories(test_prg_numeric_integer_assignment_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
+
 copperfin_add_test(test_mcp_host "cf_mcp_host;cf_platform_support"
     test_mcp_host.cpp)
 copperfin_add_test(test_project_inventory "cf_migration"

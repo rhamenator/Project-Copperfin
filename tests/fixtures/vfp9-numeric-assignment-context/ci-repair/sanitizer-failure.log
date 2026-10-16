@@ -1,0 +1,352 @@
+sanitizer (pr)	Set up job	﻿2026-10-16T00:27:55.1591661Z Current runner version: '2.337.0'
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1614180Z ##[group]Runner Image Provisioner
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1614915Z Hosted Compute Agent
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1615544Z Version: 20261012.601
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1616077Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1616779Z Build Date: 2026-10-12T17:48:21Z
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1617345Z Worker ID: {808bbbf7-4f73-43b7-a775-933ca62856bc}
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1617920Z Region: centralus
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1618476Z Cloud: Azure
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1619130Z ##[endgroup]
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1620365Z ##[group]Operating System
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1620890Z Ubuntu
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1621318Z 24.04.5
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1621824Z LTS
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1622249Z ##[endgroup]
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1622695Z ##[group]Runner Image
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1623289Z Image: ubuntu-24.04
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1623757Z Version: 20261012.334.1
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1624749Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1626254Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1627090Z ##[endgroup]
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1628051Z ##[group]GITHUB_TOKEN Permissions
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1629955Z Contents: read
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1630434Z Metadata: read
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1630977Z ##[endgroup]
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1632649Z Secret source: Actions
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1633518Z Cache mode: write
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1634076Z Prepare workflow directory
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1864859Z Prepare all required actions
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.1894766Z Getting action download info
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.4343067Z Download action repository 'actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd' (SHA:de0fac2e4500dabe0009e67214ff5f5447ce83dd)
+sanitizer (pr)	Set up job	2026-10-16T00:27:55.5331640Z Download action repository 'actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1' (SHA:26b0ec14cb23fa6904739307f278c14f94c95bf1)
+sanitizer (pr)	Set up job	2026-10-16T00:27:56.0100578Z Download action repository 'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a' (SHA:043fb46d1a93c77aae656e7c1c64a875d1fc6a0a)
+sanitizer (pr)	Set up job	2026-10-16T00:27:56.1602886Z Complete job name: sanitizer (pr)
+sanitizer (pr)	Check out source	﻿2026-10-16T00:27:56.2076946Z ##[group]Run actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2077511Z with:
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2077783Z   repository: rhamenator/Project-Copperfin
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2080076Z   token: ***
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2080325Z   ssh-strict: true
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2080575Z   ssh-user: git
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2080834Z   persist-credentials: true
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2081114Z   clean: true
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2081376Z   sparse-checkout-cone-mode: true
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2081678Z   fetch-depth: 1
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2081927Z   fetch-tags: false
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2082185Z   show-progress: true
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2082449Z   lfs: false
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2082696Z   submodules: false
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2083012Z   set-safe-directory: true
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2083398Z ##[endgroup]
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2689099Z Syncing repository: rhamenator/Project-Copperfin
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2690240Z ##[group]Getting Git version info
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2690702Z Working directory is '/home/runner/work/Project-Copperfin/Project-Copperfin'
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2691438Z [command]/usr/bin/git version
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2742076Z git version 2.55.0
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2754463Z ##[endgroup]
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2762888Z Temporarily overriding HOME='/home/runner/work/_temp/0f654da4-369f-4a5b-88fb-274393b2b3d9' before making global git config changes
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2763751Z Adding repository directory to the temporary git global config as a safe directory
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2766147Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Project-Copperfin/Project-Copperfin
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2806789Z Deleting the contents of '/home/runner/work/Project-Copperfin/Project-Copperfin'
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2809070Z ##[group]Initializing the repository
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2812291Z [command]/usr/bin/git init /home/runner/work/Project-Copperfin/Project-Copperfin
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2916489Z hint: Using 'master' as the name for the initial branch. This default branch name
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2917097Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2917666Z hint: to use in all of your new repositories, which will suppress this warning,
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2918370Z hint: call:
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2918996Z hint:
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2919475Z hint: 	git config --global init.defaultBranch <name>
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2920038Z hint:
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2920561Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2921440Z hint: 'development'. The just-created branch can be renamed via this command:
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2922138Z hint:
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2922534Z hint: 	git branch -m <name>
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2922941Z hint:
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2923303Z hint: Disable this message with "git config set advice.defaultBranchName false"
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2923958Z Initialized empty Git repository in /home/runner/work/Project-Copperfin/Project-Copperfin/.git/
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2926245Z [command]/usr/bin/git remote add origin https://github.com/rhamenator/Project-Copperfin
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2963602Z ##[endgroup]
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2964079Z ##[group]Disabling automatic garbage collection
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2965484Z [command]/usr/bin/git config --local gc.auto 0
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2987501Z ##[endgroup]
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2987940Z ##[group]Setting up auth
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2988446Z Removing SSH command configuration
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.2991650Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.3013361Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.3296003Z Removing HTTP extra header
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.3299087Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.3320122Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.3509613Z Removing includeIf entries pointing to credentials config files
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.3513630Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.3535623Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.3697716Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-858003b9-8bb4-477d-a63f-130521fc4d7f.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.3722717Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/Project-Copperfin/Project-Copperfin/.git.path /home/runner/work/_temp/git-credentials-858003b9-8bb4-477d-a63f-130521fc4d7f.config
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.3745759Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/Project-Copperfin/Project-Copperfin/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-858003b9-8bb4-477d-a63f-130521fc4d7f.config
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.3770294Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-858003b9-8bb4-477d-a63f-130521fc4d7f.config
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.3793128Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-858003b9-8bb4-477d-a63f-130521fc4d7f.config
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.3812907Z ##[endgroup]
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.3813590Z ##[group]Fetching the repository
+sanitizer (pr)	Check out source	2026-10-16T00:27:56.3817968Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +f59a16994dae0d582cc76857c909c086d120cc64:refs/remotes/pull/7200/merge
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.3116042Z From https://github.com/rhamenator/Project-Copperfin
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.3116615Z  * [new ref]         f59a16994dae0d582cc76857c909c086d120cc64 -> pull/7200/merge
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.3120558Z ##[endgroup]
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.3120893Z ##[group]Determining the checkout info
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.3121415Z ##[endgroup]
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.3125227Z [command]/usr/bin/git sparse-checkout disable
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.3163732Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.3244407Z ##[group]Checking out the ref
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.3250349Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/7200/merge
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8894799Z Note: switching to 'refs/remotes/pull/7200/merge'.
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8895267Z 
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8895402Z You are in 'detached HEAD' state. You can look around, make experimental
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8895721Z changes and commit them, and you can discard any commits you make in this
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8896078Z state without impacting any branches by switching back to a branch.
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8896243Z 
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8896391Z If you want to create a new branch to retain commits you create, you may
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8896681Z do so (now or later) by using -c with the switch command. Example:
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8896832Z 
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8896903Z   git switch -c <new-branch-name>
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8897004Z 
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8897087Z Or undo this operation with:
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8897185Z 
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8897240Z   git switch -
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8897343Z 
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8897513Z Turn off this advice by setting config variable advice.detachedHead to false
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8897692Z 
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8897881Z HEAD is now at f59a169 Merge 371616120cbe31fb069dd0b6b9c28a29dbed7bc0 into c5583c4ce4fbf98f3b13bb69fd988b7dc4e3d954
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8957480Z ##[endgroup]
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.8997255Z [command]/usr/bin/git log -1 --format=%H
+sanitizer (pr)	Check out source	2026-10-16T00:27:59.9016407Z f59a16994dae0d582cc76857c909c086d120cc64
+sanitizer (pr)	Set up .NET for native test inventory	﻿2026-10-16T00:27:59.9212768Z ##[group]Run actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:27:59.9212998Z with:
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:27:59.9213118Z   dotnet-version: 10.0.x
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:27:59.9213247Z   cache: false
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:27:59.9213663Z ##[endgroup]
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:00.0070583Z [command]/home/runner/work/_actions/actions/setup-dotnet/26b0ec14cb23fa6904739307f278c14f94c95bf1/externals/install-dotnet.sh --skip-non-versioned-files --runtime dotnet --channel LTS
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:00.4512472Z dotnet-install: Attempting to download using aka.ms link https://builds.dotnet.microsoft.com/dotnet/Runtime/10.0.13/dotnet-runtime-10.0.13-linux-x64.tar.gz
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:01.3510027Z dotnet-install: Remote file https://builds.dotnet.microsoft.com/dotnet/Runtime/10.0.13/dotnet-runtime-10.0.13-linux-x64.tar.gz size is 36648012 bytes.
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:01.3511169Z dotnet-install: Extracting archive from https://builds.dotnet.microsoft.com/dotnet/Runtime/10.0.13/dotnet-runtime-10.0.13-linux-x64.tar.gz
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:01.8242729Z dotnet-install: Downloaded file size is 36648012 bytes.
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:01.8243185Z dotnet-install: The remote and local file sizes are equal.
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:01.8482084Z dotnet-install: Installed version is 10.0.13
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:01.8529616Z dotnet-install: Adding to current process PATH: `/usr/share/dotnet`. Note: This change will be visible only when sourcing script.
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:01.8530523Z dotnet-install: Note that the script does not resolve dependencies during installation.
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:01.8531311Z dotnet-install: To check the list of dependencies, go to https://learn.microsoft.com/dotnet/core/install, select your operating system and check the "Dependencies" section.
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:01.8532013Z dotnet-install: Installation finished successfully.
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:01.8549859Z [command]/home/runner/work/_actions/actions/setup-dotnet/26b0ec14cb23fa6904739307f278c14f94c95bf1/externals/install-dotnet.sh --skip-non-versioned-files --channel 10.0
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:02.2087341Z dotnet-install: Attempting to download using aka.ms link https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.402/dotnet-sdk-10.0.402-linux-x64.tar.gz
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:07.2951442Z dotnet-install: Remote file https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.402/dotnet-sdk-10.0.402-linux-x64.tar.gz size is 240279509 bytes.
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:07.2953221Z dotnet-install: Extracting archive from https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.402/dotnet-sdk-10.0.402-linux-x64.tar.gz
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:10.7331337Z dotnet-install: Downloaded file size is 240279509 bytes.
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:10.7331892Z dotnet-install: The remote and local file sizes are equal.
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:11.8099794Z dotnet-install: Installed version is 10.0.402
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:11.8144133Z dotnet-install: Adding to current process PATH: `/usr/share/dotnet`. Note: This change will be visible only when sourcing script.
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:11.8144941Z dotnet-install: Note that the script does not resolve dependencies during installation.
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:11.8145911Z dotnet-install: To check the list of dependencies, go to https://learn.microsoft.com/dotnet/core/install, select your operating system and check the "Dependencies" section.
+sanitizer (pr)	Set up .NET for native test inventory	2026-10-16T00:28:11.8146609Z dotnet-install: Installation finished successfully.
+sanitizer (pr)	Run bounded campaign	﻿2026-10-16T00:28:11.8337267Z ##[group]Run python3 scripts/run-cloud-validation.py "$COPPERFIN_LANE" --profile "$COPPERFIN_PROFILE" --seconds "$COPPERFIN_SECONDS" --iterations "$COPPERFIN_ITERATIONS" --rows "$COPPERFIN_ROWS" --seed "$COPPERFIN_SEED"
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:28:11.8338059Z [36;1mpython3 scripts/run-cloud-validation.py "$COPPERFIN_LANE" --profile "$COPPERFIN_PROFILE" --seconds "$COPPERFIN_SECONDS" --iterations "$COPPERFIN_ITERATIONS" --rows "$COPPERFIN_ROWS" --seed "$COPPERFIN_SEED"[0m
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:28:11.8561815Z shell: /usr/bin/bash -e {0}
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:28:11.8561972Z env:
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:28:11.8562088Z   DOTNET_ROOT: /usr/share/dotnet
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:28:11.8562249Z   COPPERFIN_LANE: sanitizer
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:28:11.8562379Z   COPPERFIN_PROFILE: pr
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:28:11.8562497Z   COPPERFIN_SECONDS: 0
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:28:11.8562614Z   COPPERFIN_ITERATIONS: 0
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:28:11.8562734Z   COPPERFIN_ROWS: 0
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:28:11.8562840Z   COPPERFIN_SEED: 1
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:28:11.8562948Z ##[endgroup]
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4955282Z Failure log: /home/runner/work/Project-Copperfin/Project-Copperfin/artifacts/cloud-validation/sanitizer/build.log
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4956116Z [100%] Linking CXX executable test_prg_engine_control_flow
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4956443Z [100%] Built target test_prg_engine_control_flow
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4956710Z [ 11%] Built target cf_platform_support
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4956993Z [ 11%] Built target cf_localization
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4957237Z [ 22%] Built target cf_runtime_text
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4957458Z [ 22%] Built target cf_prg_analysis
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4957707Z [ 33%] Built target cf_security
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4957937Z [ 44%] Built target cf_platform_profile
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4958191Z [ 55%] Built target cf_vfp_assets
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4958433Z [ 77%] Built target cf_design_model
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4958665Z [100%] Built target cf_xbase_runtime
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4959059Z [100%] Built target cf_prg_engine_test_support
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4959529Z [100%] Building CXX object tests/CMakeFiles/test_prg_engine_relations.dir/test_prg_engine_relations.cpp.o
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4959996Z [100%] Linking CXX executable test_prg_engine_relations
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4960290Z [100%] Built target test_prg_engine_relations
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4960832Z [100%] Building CXX object tests/CMakeFiles/test_prg_numeric_literal_metadata_helper.dir/test_prg_numeric_literal_metadata_helper.cpp.o
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4961405Z [100%] Linking CXX executable test_prg_numeric_literal_metadata_helper
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4961763Z [100%] Built target test_prg_numeric_literal_metadata_helper
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4962048Z [ 11%] Built target cf_platform_support
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4962569Z [ 11%] Built target cf_localization
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4962792Z [ 22%] Built target cf_runtime_text
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4963013Z [ 33%] Built target cf_security
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4963224Z [ 33%] Built target cf_prg_analysis
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4963451Z [ 44%] Built target cf_platform_profile
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4963680Z [ 55%] Built target cf_vfp_assets
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4963901Z [ 77%] Built target cf_design_model
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4964120Z [100%] Built target cf_xbase_runtime
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4964626Z [100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_literal_metadata.dir/test_prg_engine_numeric_literal_metadata.cpp.o
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4965199Z [100%] Linking CXX executable test_prg_engine_numeric_literal_metadata
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4965560Z [100%] Built target test_prg_engine_numeric_literal_metadata
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4966099Z Building CXX object tests/CMakeFiles/test_prg_numeric_unary_metadata_helper.dir/test_prg_numeric_unary_metadata_helper.cpp.o
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4966639Z Linking CXX executable test_prg_numeric_unary_metadata_helper
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4966964Z Built target test_prg_numeric_unary_metadata_helper
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4967232Z [ 10%] Built target cf_platform_support
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4967464Z [ 10%] Built target cf_localization
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4967684Z [ 20%] Built target cf_runtime_text
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4968138Z [ 30%] Built target cf_security
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4968370Z [ 30%] Built target cf_prg_analysis
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4968616Z [ 40%] Built target cf_platform_profile
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4968973Z [ 50%] Built target cf_vfp_assets
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4969212Z [ 70%] Built target cf_design_model
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4969455Z [ 90%] Built target cf_xbase_runtime
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4970006Z [100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_unary_metadata.dir/test_prg_engine_numeric_unary_metadata.cpp.o
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4970621Z [100%] Linking CXX executable test_prg_engine_numeric_unary_metadata
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4971004Z [100%] Built target test_prg_engine_numeric_unary_metadata
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4971608Z Building CXX object tests/CMakeFiles/test_prg_numeric_expression_context_helper.dir/test_prg_numeric_expression_context_helper.cpp.o
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4972204Z Linking CXX executable test_prg_numeric_expression_context_helper
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4972554Z Built target test_prg_numeric_expression_context_helper
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4972866Z [ 11%] Built target cf_platform_support
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4973111Z [ 11%] Built target cf_localization
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4973356Z [ 22%] Built target cf_runtime_text
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4973584Z [ 33%] Built target cf_security
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4973814Z [ 33%] Built target cf_prg_analysis
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4974063Z [ 44%] Built target cf_platform_profile
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4974313Z [ 55%] Built target cf_vfp_assets
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4974549Z [ 77%] Built target cf_design_model
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4974791Z [100%] Built target cf_xbase_runtime
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4975330Z [100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_zero_context.dir/test_prg_engine_numeric_zero_context.cpp.o
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4975923Z [100%] Linking CXX executable test_prg_engine_numeric_zero_context
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4976307Z [100%] Built target test_prg_engine_numeric_zero_context
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4976917Z Building CXX object tests/CMakeFiles/test_prg_numeric_integer_metadata_helper.dir/test_prg_numeric_integer_metadata_helper.cpp.o
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4977537Z Linking CXX executable test_prg_numeric_integer_metadata_helper
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4977911Z Built target test_prg_numeric_integer_metadata_helper
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4978207Z [ 11%] Built target cf_platform_support
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4978476Z [ 11%] Built target cf_localization
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4979161Z [ 22%] Built target cf_runtime_text
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4979403Z [ 33%] Built target cf_security
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4979645Z [ 33%] Built target cf_prg_analysis
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4979887Z [ 44%] Built target cf_platform_profile
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4980262Z [ 55%] Built target cf_vfp_assets
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4980502Z [ 77%] Built target cf_design_model
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4980744Z [100%] Built target cf_xbase_runtime
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4981309Z [100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_integer_metadata.dir/test_prg_engine_numeric_integer_metadata.cpp.o
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4981918Z [100%] Linking CXX executable test_prg_engine_numeric_integer_metadata
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4982301Z [100%] Built target test_prg_engine_numeric_integer_metadata
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4982930Z Building CXX object tests/CMakeFiles/test_prg_numeric_integer_assignment_helper.dir/test_prg_numeric_integer_assignment_helper.cpp.o
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4983540Z Linking CXX executable test_prg_numeric_integer_assignment_helper
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4983916Z Built target test_prg_numeric_integer_assignment_helper
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4984213Z [ 11%] Built target cf_platform_support
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4984478Z [ 11%] Built target cf_localization
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4984711Z [ 22%] Built target cf_runtime_text
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4984942Z [ 33%] Built target cf_security
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4985174Z [ 33%] Built target cf_prg_analysis
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4985419Z [ 44%] Built target cf_platform_profile
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4985663Z [ 55%] Built target cf_vfp_assets
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4985897Z [ 77%] Built target cf_design_model
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4986267Z [100%] Built target cf_xbase_runtime
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4986827Z [100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_integer_assignment.dir/test_prg_engine_numeric_integer_assignment.cpp.o
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4988195Z /home/runner/work/Project-Copperfin/Project-Copperfin/tests/test_prg_engine_numeric_integer_assignment.cpp:68:106: error: non-constant-expression cannot be narrowed from type 'int' to 'std::size_t' (aka 'unsigned long') in initializer list [-Wc++11-narrowing]
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4989548Z    68 |             auto session=PrgRuntimeSession::create(options);session.add_breakpoint({options.startup_path,pauseLine});
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4990170Z       |                                                                                                          ^~~~~~~~~
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4990968Z /home/runner/work/Project-Copperfin/Project-Copperfin/tests/test_prg_engine_numeric_integer_assignment.cpp:68:106: note: insert an explicit cast to silence this issue
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4991896Z    68 |             auto session=PrgRuntimeSession::create(options);session.add_breakpoint({options.startup_path,pauseLine});
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4992498Z       |                                                                                                          ^~~~~~~~~
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4992973Z       |                                                                                                          static_cast<size_t>( )
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4993321Z 1 error generated.
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4994122Z gmake[3]: *** [tests/CMakeFiles/test_prg_engine_numeric_integer_assignment.dir/build.make:79: tests/CMakeFiles/test_prg_engine_numeric_integer_assignment.dir/test_prg_engine_numeric_integer_assignment.cpp.o] Error 1
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4995162Z gmake[2]: *** [CMakeFiles/Makefile2:2717: tests/CMakeFiles/test_prg_engine_numeric_integer_assignment.dir/all] Error 2
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4995887Z gmake[1]: *** [CMakeFiles/Makefile2:2724: tests/CMakeFiles/test_prg_engine_numeric_integer_assignment.dir/rule] Error 2
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4996477Z gmake: *** [Makefile:603: test_prg_engine_numeric_integer_assignment] Error 2
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4996728Z 
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4997027Z cmake -S /home/runner/work/Project-Copperfin/Project-Copperfin -B: exit=0 elapsed=7.2s
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.4997696Z cmake --build /home/runner/work/Project-Copperfin/Project-Copperfin/build-cloud/sanitizer --parallel: exit=2 elapsed=347.4s
+sanitizer (pr)	Run bounded campaign	2026-10-16T00:34:06.5020930Z ##[error]Process completed with exit code 2.
+sanitizer (pr)	Retain named sanitizer execution evidence	﻿2026-10-16T00:34:06.5087297Z ##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+sanitizer (pr)	Retain named sanitizer execution evidence	2026-10-16T00:34:06.5087614Z with:
+sanitizer (pr)	Retain named sanitizer execution evidence	2026-10-16T00:34:06.5087748Z   name: cloud-sanitizer-execution-38829614770-1
+sanitizer (pr)	Retain named sanitizer execution evidence	2026-10-16T00:34:06.5088132Z   path: artifacts/cloud-validation/sanitizer/metadata.json
+sanitizer (pr)	Retain named sanitizer execution evidence	artifacts/cloud-validation/sanitizer/ctest.log
+sanitizer (pr)	Retain named sanitizer execution evidence	artifacts/cloud-validation/sanitizer/ctest-results.xml
+sanitizer (pr)	Retain named sanitizer execution evidence	
+sanitizer (pr)	Retain named sanitizer execution evidence	2026-10-16T00:34:06.5088492Z   retention-days: 14
+sanitizer (pr)	Retain named sanitizer execution evidence	2026-10-16T00:34:06.5088617Z   if-no-files-found: error
+sanitizer (pr)	Retain named sanitizer execution evidence	2026-10-16T00:34:06.5088945Z   compression-level: 6
+sanitizer (pr)	Retain named sanitizer execution evidence	2026-10-16T00:34:06.5089137Z   overwrite: false
+sanitizer (pr)	Retain named sanitizer execution evidence	2026-10-16T00:34:06.5089253Z   include-hidden-files: false
+sanitizer (pr)	Retain named sanitizer execution evidence	2026-10-16T00:34:06.5089379Z   archive: true
+sanitizer (pr)	Retain named sanitizer execution evidence	2026-10-16T00:34:06.5089482Z env:
+sanitizer (pr)	Retain named sanitizer execution evidence	2026-10-16T00:34:06.5089591Z   DOTNET_ROOT: /usr/share/dotnet
+sanitizer (pr)	Retain named sanitizer execution evidence	2026-10-16T00:34:06.5089720Z ##[endgroup]
+sanitizer (pr)	Retain named sanitizer execution evidence	2026-10-16T00:34:06.6004079Z Multiple search paths detected. Calculating the least common ancestor of all paths
+sanitizer (pr)	Retain named sanitizer execution evidence	2026-10-16T00:34:06.6005554Z The least common ancestor is /home/runner/work/Project-Copperfin/Project-Copperfin/artifacts/cloud-validation/sanitizer. This will be the root directory of the artifact
+sanitizer (pr)	Retain named sanitizer execution evidence	2026-10-16T00:34:06.6019253Z ##[error]No files were found with the provided path: artifacts/cloud-validation/sanitizer/metadata.json
+sanitizer (pr)	Retain named sanitizer execution evidence	artifacts/cloud-validation/sanitizer/ctest.log
+sanitizer (pr)	Retain named sanitizer execution evidence	artifacts/cloud-validation/sanitizer/ctest-results.xml. No artifacts will be uploaded.
+sanitizer (pr)	Retain failure diagnostics and reproducer	﻿2026-10-16T00:34:06.6106669Z ##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:06.6106897Z with:
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:06.6107036Z   name: cloud-defect-hunt-sanitizer-38829614770
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:06.6107227Z   path: artifacts/cloud-validation/sanitizer/
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:06.6107385Z   retention-days: 14
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:06.6107512Z   if-no-files-found: warn
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:06.6107643Z   compression-level: 6
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:06.6107767Z   overwrite: false
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:06.6107891Z   include-hidden-files: false
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:06.6108023Z   archive: true
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:06.6108130Z env:
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:06.6108242Z   DOTNET_ROOT: /usr/share/dotnet
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:06.6108383Z ##[endgroup]
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:06.7019656Z With the provided path, there will be 2 files uploaded
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:06.7022321Z Artifact name is valid!
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:06.7022649Z Root directory input is valid!
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:06.9689686Z Uploading artifact: cloud-defect-hunt-sanitizer-38829614770.zip
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:06.9745958Z Beginning upload of artifact content to blob storage
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:07.1325422Z Uploaded bytes 4698
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:07.1692087Z Finished uploading artifact content to blob storage!
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:07.1692674Z SHA256 digest of uploaded artifact is 82181d100ccdfe2dd745258752b479fc7489a131a83b294f9ea974ce7ec6186b
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:07.1693109Z Finalizing artifact upload
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:07.4474563Z Artifact cloud-defect-hunt-sanitizer-38829614770 successfully finalized. Artifact ID 12016867250
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:07.4475373Z Artifact cloud-defect-hunt-sanitizer-38829614770 has been successfully uploaded! Final size is 4698 bytes. Artifact ID is 12016867250
+sanitizer (pr)	Retain failure diagnostics and reproducer	2026-10-16T00:34:07.4477763Z Artifact download URL: https://github.com/rhamenator/Project-Copperfin/actions/runs/38829614770/artifacts/12016867250
+sanitizer (pr)	Post Check out source	﻿2026-10-16T00:34:07.4614328Z Post job cleanup.
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5114294Z [command]/usr/bin/git version
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5140799Z git version 2.55.0
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5162862Z Temporarily overriding HOME='/home/runner/work/_temp/34769638-ae01-457b-a12f-3001584c616e' before making global git config changes
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5163595Z Adding repository directory to the temporary git global config as a safe directory
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5167388Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Project-Copperfin/Project-Copperfin
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5190929Z Removing SSH command configuration
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5194868Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5217613Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5385748Z Removing HTTP extra header
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5388180Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5410831Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5576202Z Removing includeIf entries pointing to credentials config files
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5580447Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5600909Z includeif.gitdir:/home/runner/work/Project-Copperfin/Project-Copperfin/.git.path
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5601507Z includeif.gitdir:/home/runner/work/Project-Copperfin/Project-Copperfin/.git/worktrees/*.path
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5601830Z includeif.gitdir:/github/workspace/.git.path
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5602064Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5606988Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/Project-Copperfin/Project-Copperfin/.git.path
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5622892Z /home/runner/work/_temp/git-credentials-858003b9-8bb4-477d-a63f-130521fc4d7f.config
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5630017Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/Project-Copperfin/Project-Copperfin/.git.path /home/runner/work/_temp/git-credentials-858003b9-8bb4-477d-a63f-130521fc4d7f.config
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5655202Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/Project-Copperfin/Project-Copperfin/.git/worktrees/*.path
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5670184Z /home/runner/work/_temp/git-credentials-858003b9-8bb4-477d-a63f-130521fc4d7f.config
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5675723Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/Project-Copperfin/Project-Copperfin/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-858003b9-8bb4-477d-a63f-130521fc4d7f.config
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5730404Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5745562Z /github/runner_temp/git-credentials-858003b9-8bb4-477d-a63f-130521fc4d7f.config
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5750211Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-858003b9-8bb4-477d-a63f-130521fc4d7f.config
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5772636Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5787429Z /github/runner_temp/git-credentials-858003b9-8bb4-477d-a63f-130521fc4d7f.config
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5792115Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-858003b9-8bb4-477d-a63f-130521fc4d7f.config
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5816313Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+sanitizer (pr)	Post Check out source	2026-10-16T00:34:07.5983288Z Removing credentials config '/home/runner/work/_temp/git-credentials-858003b9-8bb4-477d-a63f-130521fc4d7f.config'
+sanitizer (pr)	Complete job	﻿2026-10-16T00:34:07.6097115Z Cleaning up orphan processes

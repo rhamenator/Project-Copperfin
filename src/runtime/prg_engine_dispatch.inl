@@ -1240,6 +1240,29 @@
                                                   std::optional<std::string> assignment_expression_text = std::nullopt) -> ExecutionOutcome
             {
                 std::string assignment_identifier = resolve_runtime_target_identifier(raw_identifier, frame);
+                // RQ-CF-PRG-NUMERIC-INTEGER-ASSIGNMENT-001: only scalar memory
+                // '=' storage normalizes known Integer attributes. Keep this
+                // out of general assign_variable: STORE, loops and transfers
+                // have not been migrated. Never evaluate the RHS again.
+                auto assign_scalar_memory_variable = [&]()
+                {
+                    if (assignment_expression_text.has_value() &&
+                        !assignment_value.is_null && assignment_value.kind == PrgValueKind::number)
+                    {
+                        const auto metadata = assigned_integer_numeric_metadata(
+                            assignment_value.numeric_metadata, assignment_value.number_value);
+                        if (metadata != assignment_value.numeric_metadata)
+                        {
+                            PrgValue stored_value = assignment_value;
+                            stored_value.numeric_metadata = metadata;
+                            assign_variable(frame, assignment_identifier, stored_value);
+                            return;
+                        }
+                    }
+                    // Do not add a PrgValue/string/array copy for unrelated
+                    // assignments or values already normalized.
+                    assign_variable(frame, assignment_identifier, assignment_value);
+                };
                 if (assignment_identifier.find('.') != std::string::npos &&
                     (assignment_identifier.find('(') != std::string::npos ||
                      assignment_identifier.find('[') != std::string::npos))
@@ -1311,7 +1334,7 @@
                     // VFP uses m. as a memory-variable namespace prefix (not an OLE object).
                     if (normalize_identifier(object_part) == "m")
                     {
-                        assign_variable(frame, assignment_identifier, assignment_value);
+                        assign_scalar_memory_variable();
                         return {};
                     }
                     const std::string member_path = assignment_identifier.substr(separator + 1U);
@@ -1436,7 +1459,7 @@
                 }
                 else
                 {
-                    assign_variable(frame, assignment_identifier, assignment_value);
+                    assign_scalar_memory_variable();
                 }
                 return {};
             };
