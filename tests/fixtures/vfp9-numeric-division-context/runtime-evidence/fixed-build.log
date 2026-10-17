@@ -1,0 +1,24 @@
+[ 10%] Built target cf_platform_support
+[ 10%] Built target cf_localization
+[ 10%] Built target cf_runtime_text
+[ 10%] Built target cf_prg_analysis
+[ 30%] Built target cf_security
+[ 40%] Built target cf_platform_profile
+[ 50%] Built target cf_vfp_assets
+[ 70%] Built target cf_design_model
+[ 70%] Building CXX object CMakeFiles/cf_xbase_runtime.dir/src/runtime/prg_engine.cpp.o
+In file included from /home/rich/.codex/worktrees/numeric-division-recovery-5611/Project-Copperfin/src/runtime/prg_engine.cpp:8889:
+/home/rich/.codex/worktrees/numeric-division-recovery-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl: In member function ‘copperfin::runtime::{anonymous}::ExecutionOutcome copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()’:
+/home/rich/.codex/worktrees/numeric-division-recovery-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:11343:62: warning: missing initializer for member ‘copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()::TemporaryAppendSource::reference’ [-Wmissing-field-initializers]
+11343 |                     TemporaryAppendSource append_source{*this};
+      |                                                              ^
+/home/rich/.codex/worktrees/numeric-division-recovery-5611/Project-Copperfin/src/runtime/prg_engine_dispatch.inl:12475:58: warning: missing initializer for member ‘copperfin::runtime::PrgRuntimeSession::Impl::execute_current_statement()::TemporaryAppendSource::reference’ [-Wmissing-field-initializers]
+12475 |                 TemporaryAppendSource append_source{*this};
+      |                                                          ^
+[ 70%] Linking CXX static library libcf_xbase_runtime.a
+[ 90%] Built target cf_xbase_runtime
+[100%] Linking CXX executable test_prg_engine_numeric_runtime_division
+[100%] Built target test_prg_engine_numeric_runtime_division
+Building CXX object tests/CMakeFiles/test_prg_numeric_runtime_division_helper.dir/test_prg_numeric_runtime_division_helper.cpp.o
+Linking CXX executable test_prg_numeric_runtime_division_helper
+Built target test_prg_numeric_runtime_division_helper

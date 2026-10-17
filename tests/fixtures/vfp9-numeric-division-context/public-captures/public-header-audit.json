@@ -1,0 +1,20 @@
+{
+  "mode": "public",
+  "expressions": 60,
+  "casesPerRun": 1200,
+  "successfulValues": 1200,
+  "errors": 0,
+  "actualStatuses": [
+    0,
+    0
+  ],
+  "compiledVersusEvaluateDifferences": 0,
+  "documentedFieldsRepeatEqual": true,
+  "rawByteEqual": true,
+  "differentRawRows": 0,
+  "rawDifferencesConfinedToUnusedSlots": {},
+  "firstSha256": "0c5310c56d6834f793bbd2baf09313520df4b49af450dc3cfd1401350c8ed451",
+  "repeatSha256": "0c5310c56d6834f793bbd2baf09313520df4b49af450dc3cfd1401350c8ed451",
+  "nativePublicHeaderRowsMatched": 1200,
+  "productionHelperImported": false
+}

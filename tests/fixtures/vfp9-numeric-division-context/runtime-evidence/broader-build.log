@@ -1,0 +1,253 @@
+Building CXX object tests/CMakeFiles/test_prg_numeric_metadata.dir/test_prg_numeric_metadata.cpp.o
+Linking CXX executable test_prg_numeric_metadata
+Built target test_prg_numeric_metadata
+[100%] Building CXX object tests/CMakeFiles/test_prg_numeric_literal_metadata_helper.dir/test_prg_numeric_literal_metadata_helper.cpp.o
+[100%] Linking CXX executable test_prg_numeric_literal_metadata_helper
+[100%] Built target test_prg_numeric_literal_metadata_helper
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 11%] Built target cf_runtime_text
+[ 11%] Built target cf_prg_analysis
+[ 33%] Built target cf_security
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_literal_metadata.dir/test_prg_engine_numeric_literal_metadata.cpp.o
+[100%] Linking CXX executable test_prg_engine_numeric_literal_metadata
+[100%] Built target test_prg_engine_numeric_literal_metadata
+Building CXX object tests/CMakeFiles/test_prg_numeric_unary_metadata_helper.dir/test_prg_numeric_unary_metadata_helper.cpp.o
+Linking CXX executable test_prg_numeric_unary_metadata_helper
+Built target test_prg_numeric_unary_metadata_helper
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 11%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_unary_metadata.dir/test_prg_engine_numeric_unary_metadata.cpp.o
+[100%] Linking CXX executable test_prg_engine_numeric_unary_metadata
+[100%] Built target test_prg_engine_numeric_unary_metadata
+Building CXX object tests/CMakeFiles/test_prg_numeric_expression_context_helper.dir/test_prg_numeric_expression_context_helper.cpp.o
+Linking CXX executable test_prg_numeric_expression_context_helper
+Built target test_prg_numeric_expression_context_helper
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 11%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_zero_context.dir/test_prg_engine_numeric_zero_context.cpp.o
+[100%] Linking CXX executable test_prg_engine_numeric_zero_context
+[100%] Built target test_prg_engine_numeric_zero_context
+Building CXX object tests/CMakeFiles/test_prg_numeric_integer_metadata_helper.dir/test_prg_numeric_integer_metadata_helper.cpp.o
+Linking CXX executable test_prg_numeric_integer_metadata_helper
+Built target test_prg_numeric_integer_metadata_helper
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 33%] Built target cf_security
+[ 33%] Built target cf_runtime_text
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_integer_metadata.dir/test_prg_engine_numeric_integer_metadata.cpp.o
+[100%] Linking CXX executable test_prg_engine_numeric_integer_metadata
+[100%] Built target test_prg_engine_numeric_integer_metadata
+Building CXX object tests/CMakeFiles/test_prg_numeric_integer_assignment_helper.dir/test_prg_numeric_integer_assignment_helper.cpp.o
+Linking CXX executable test_prg_numeric_integer_assignment_helper
+Built target test_prg_numeric_integer_assignment_helper
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 11%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_integer_assignment.dir/test_prg_engine_numeric_integer_assignment.cpp.o
+[100%] Linking CXX executable test_prg_engine_numeric_integer_assignment
+[100%] Built target test_prg_engine_numeric_integer_assignment
+Building CXX object tests/CMakeFiles/test_prg_numeric_real_assignment_helper.dir/test_prg_numeric_real_assignment_helper.cpp.o
+Linking CXX executable test_prg_numeric_real_assignment_helper
+Built target test_prg_numeric_real_assignment_helper
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 11%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_real_assignment.dir/test_prg_engine_numeric_real_assignment.cpp.o
+[100%] Linking CXX executable test_prg_engine_numeric_real_assignment
+[100%] Built target test_prg_engine_numeric_real_assignment
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 11%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Building CXX object tests/CMakeFiles/cf_prg_engine_test_support.dir/prg_engine_test_support.cpp.o
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_int64_exact_expression.dir/test_prg_engine_int64_exact_expression.cpp.o
+[100%] Linking CXX executable test_prg_engine_int64_exact_expression
+[100%] Built target test_prg_engine_int64_exact_expression
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 11%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_currency_literals.dir/test_prg_engine_currency_literals.cpp.o
+[100%] Linking CXX executable test_prg_engine_currency_literals
+[100%] Built target test_prg_engine_currency_literals
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 11%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_operator_types.dir/test_prg_engine_operator_types.cpp.o
+[100%] Linking CXX executable test_prg_engine_operator_types
+[100%] Built target test_prg_engine_operator_types
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 11%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_currency_functions.dir/test_prg_engine_currency_functions.cpp.o
+[100%] Linking CXX executable test_prg_engine_currency_functions
+[100%] Built target test_prg_engine_currency_functions
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 11%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_currency_overflow.dir/test_prg_engine_currency_overflow.cpp.o
+[100%] Linking CXX executable test_prg_engine_currency_overflow
+[100%] Built target test_prg_engine_currency_overflow
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 11%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_currency_exact_muldiv.dir/test_prg_engine_currency_exact_muldiv.cpp.o
+[100%] Linking CXX executable test_prg_engine_currency_exact_muldiv
+[100%] Built target test_prg_engine_currency_exact_muldiv
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 11%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_macro_expressions.dir/test_prg_engine_macro_expressions.cpp.o
+[100%] Linking CXX executable test_prg_engine_macro_expressions
+[100%] Built target test_prg_engine_macro_expressions
+[  9%] Built target cf_platform_support
+[  9%] Built target cf_localization
+[  9%] Built target cf_runtime_text
+[ 27%] Built target cf_security
+[ 27%] Built target cf_prg_analysis
+[ 36%] Built target cf_platform_profile
+[ 45%] Built target cf_vfp_assets
+[ 63%] Built target cf_design_model
+[ 81%] Built target cf_xbase_runtime
+[ 81%] Built target cf_prg_engine_test_support
+[ 81%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow.cpp.o
+[ 81%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_shared_test_helpers.cpp.o
+[ 81%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_control_flow_basics.cpp.o
+[ 81%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_basic_constructs.cpp.o
+[ 81%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_for_each.cpp.o
+[ 81%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_array_copy.cpp.o
+[ 81%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_implicit_scope.cpp.o
+[ 81%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_variables_and_scope.cpp.o
+[ 81%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_aggregate_and_total_commands.cpp.o
+[ 81%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_select_query_commands.cpp.o
+[ 81%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_concurrency_and_critical_sections.cpp.o
+[ 90%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_critical_sections.cpp.o
+[ 90%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_task_supervision.cpp.o
+[ 90%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_task_supervision_state_sequences.cpp.o
+[ 90%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_yield_event.cpp.o
+[ 90%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_yield_critical_policy.cpp.o
+[ 90%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_yield_critical_sections.cpp.o
+[ 90%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_event_loop.cpp.o
+[ 90%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_error_handler_commands.cpp.o
+[ 90%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_bare_null.cpp.o
+[ 90%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_on_error_dispatch.cpp.o
+[ 90%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_aerror_runtime_metadata.cpp.o
+[ 90%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_aerror_sql_ole_metadata.cpp.o
+[ 90%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_aerror_innermost_line.cpp.o
+[ 90%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_error_handling_and_faults.cpp.o
+[ 90%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_catch_predicate_fallthrough.cpp.o
+[ 90%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_throw_exception_chain.cpp.o
+[ 90%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_bare_throw_rethrow.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_localized_faults.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_recovery_state.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_normalized_diagnostics.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_retry_resume.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_bare_throw_default.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_localized_errors.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_fault_recovery.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_runtime_guardrails_and_lifecycle.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_routine_calls_parameters.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_routine_calls_continuations_01.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_routine_calls_continuations_02.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_routine_calls_array_parameters.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_routine_calls_predicates_01.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_routine_calls_predicates_02.cpp.o
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_control_flow.dir/test_prg_engine_control_flow_routine_calls_set_procedure.cpp.o
+[100%] Linking CXX executable test_prg_engine_control_flow
+[100%] Built target test_prg_engine_control_flow
+[ 11%] Built target cf_platform_support
+[ 11%] Built target cf_localization
+[ 11%] Built target cf_runtime_text
+[ 33%] Built target cf_security
+[ 33%] Built target cf_prg_analysis
+[ 44%] Built target cf_platform_profile
+[ 55%] Built target cf_vfp_assets
+[ 77%] Built target cf_design_model
+[100%] Built target cf_xbase_runtime
+[100%] Built target cf_prg_engine_test_support
+[100%] Building CXX object tests/CMakeFiles/test_prg_engine_numeric_behavior.dir/test_prg_engine_numeric_behavior.cpp.o
+[100%] Linking CXX executable test_prg_engine_numeric_behavior
+[100%] Built target test_prg_engine_numeric_behavior

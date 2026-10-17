@@ -1,0 +1,1 @@
+- 2026-10-17: Preserve native-backed width/scale metadata for bounded ordinary runtime Numeric division without changing quotient bits, isolate multiplicative expression context, and retain paired VFP9 recovery plus original-fail regressions under #5611/#6776/#7189; constant arithmetic, display, conversion and ListItem follow-ons remain unfinished.

@@ -980,6 +980,10 @@
 
             PrgValue parse_multiplicative()
             {
+                // RQ-CF-PRG-NUMERIC-RUNTIME-DIVISION-001: an additive sibling
+                // or enclosing function must not make this constant subtree
+                // runtime. Aggregate actual primaries back on every exit.
+                ScopedNumericExpressionContext multiplicative_context(numeric_runtime_primary_);
                 PrgValue left = parse_unary();
                 while (true)
                 {
@@ -1040,7 +1044,14 @@
                             const double divisor = value_as_number(right);
                             if (divisor == 0.0)
                                 throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.DivisionByZero"));
-                            left = make_number_value(value_as_number(left) / divisor);
+                            PrgValue result = make_number_value(value_as_number(left) / divisor);
+                            if (numeric_runtime_primary_ && left.numeric_metadata && right.numeric_metadata)
+                            {
+                                result.numeric_metadata = runtime_numeric_division_metadata(
+                                    left, right, result.number_value, set_callback_("DECIMALS"),
+                                    numeric_runtime_primary_);
+                            }
+                            left = std::move(result);
                         }
                     }
                     else if (match("%"))

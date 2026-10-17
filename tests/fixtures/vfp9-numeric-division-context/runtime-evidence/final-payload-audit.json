@@ -1,0 +1,23 @@
+{
+  "mode": "payload",
+  "expressions": 648,
+  "casesPerRun": 12960,
+  "successfulValues": 12960,
+  "errors": 0,
+  "actualStatuses": [
+    0,
+    0
+  ],
+  "compiledVersusEvaluateDifferences": 0,
+  "documentedFieldsRepeatEqual": true,
+  "rawByteEqual": false,
+  "differentRawRows": 6636,
+  "rawDifferencesConfinedToUnusedSlots": {
+    "9:49:real": 3889,
+    "9:4E:integer": 2747
+  },
+  "firstSha256": "5c857da60c5a7bab8234a0e1a0f1e26cf852c63ec9b9e23c78fc6cf3f80e0b8a",
+  "repeatSha256": "8edbaffc8eb66c02c750a9ab8a945febc7738a094b41547f40333ec4084b2fc4",
+  "nativePublicHeaderRowsMatched": 0,
+  "productionHelperImported": false
+}

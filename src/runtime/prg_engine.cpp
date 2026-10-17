@@ -19,6 +19,7 @@
 #include "prg_numeric_integer_metadata.h"
 #include "prg_numeric_integer_assignment.h"
 #include "prg_numeric_real_assignment.h"
+#include "prg_numeric_runtime_division.h"
 #include "prg_numeric_unary_metadata.h"
 #include "prg_numeric_expression_context.h"
 #include "prg_engine_internal.h"

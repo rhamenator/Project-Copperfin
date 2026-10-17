@@ -1,5 +1,82 @@
 # Agent Handoff
 
+## Bounded runtime division implementation in verification (2026-10-17)
+
+Continue WT /home/rich/.codex/worktrees/numeric-division-recovery-5611/Project-Copperfin,
+branch fix/numeric-division-recovery-5611 from origin/mainb37ddf7241.
+Signed pre-code checkpoints149bf4085fbd22e88cc7036d08b9a02065651b7d/
+edf1a685b retain contract/native constants/unproduced helper; initialdcd240f61
+retains controlled positive matrix. All parent5611/6776/7189 still admitted.
+
+New paired12960 payload/sign/zero/Integer-boundary native observations/run and
+paired1200 public-route observations/run, actual0/empty stderr/no errors.
+Payload raw differences ONLY audited unused slots; public raw exactrepeat
+SHA0c5310c56d6834f793bbd2baf09313520df4b49af450dc3cfd1401350c8ed451.
+Standalone audit matches60-row C++ constant header against1200 native records.
+All scales1..18, tiny/big real controls, signs/negative zero, nested runtime,
+IIF/EVALUATE included. Source/raw/ownFXP/audits in division fixture runtime-*,
+payload-captures/public-captures. Payload gzip preserves exact decompressed bytes.
+
+Unused helper GNU Werror and Clang explicit ASan/UBSan/float-cast-overflow/
+no-recovery0. GNU first indentation-only compile1 retained/fixed. Header EOF
+and pause-sentinel static-review changes retained BEFORE baseline test execution;
+no native constants/assertions changed. Final prewire manifest in runtime-evidence.
+ORIGINAL runtime build0/public1 exactly1220 descriptor failures, every other
+control PASS; independent audit0 and original source hashes0 before hooks.
+SAME frozen public after bounded hook build0/test0/empty stderr, input SHA0.
+
+Current uncommitted hook: one include + scoped parse_multiplicative context +
+ordinary Number division metadata assignment; payload arithmetic, NULL/type/
+Currency/exact64/zero handling unchanged. Both new names registered in CMake/
+isolation/actual sanitizer build+filter/selector tests0. Bounds/modes unchanged.
+Broader target build0; CTest98887 completed0,28/28 PASS163.47s, including full
+control-flow93.76s and Numeric behavior65.16s. All final frozen/source/native
+audits0 and staged whitespace0; logs/status in runtime-evidence and host build.
+Ready final signed commit/push/PR, Claude FIRST then authorized verified Codex
+fallback if unavailable. No assertions/timeouts/expected constants changed.
+Actual named hosted sanitizer execution, clean exact-head review, strict green
+checks and resolved conversations required before merge. No new PR yet.
+
+Native runtime contract remains bounded: constant-only/folded arithmetic,
+outside-domain metadata/magnitudes, producers/display/exact conversion/ListItem
+remain mandatory follow-ons. No canonical-double shortcut or parent closure.
+Late7201 unchanged macOS retry uses canonical existing39603 watcher; inspect
+saved status when completed, no duplicate poll/retry. No VM/reboot/upload work.
+
+## Owner resumed; typed division runtime recovery active (2026-10-17)
+
+Direct owner instruction "Belay that order. Start working again" resumes this
+implementation-only loop and cancels the proposed Claude takeover. The earlier
+stop-after7201 condition is superseded. Existing heartbeat ACTIVE; automatic
+reboot remains cancelled, no upload monitoring or October22 action. PR7201 and
+EPOCH/CENTURY stay complete; do not restart. Parent5611/6776/7189 revalidated
+OPEN/owner-authored/exact agent-approved; no open PR or unread channel messages.
+
+Current WT /home/rich/.codex/worktrees/numeric-division-recovery-5611/Project-Copperfin,
+branch fix/numeric-division-recovery-5611 from origin/mainb37ddf7241. Native-only
+runtime intervention recovery under retained division parent: paired1,620/run,
+actual0/empty stderr/all values/no caught errors/raw exact repeat/audit0; actual
+left/right type/width/scale/payload controls checked, compiled/EVAL differences0.
+Raw SHAb6e15c11840fa090aaeee3c5f3390aebbf6740da0e8c750534156491e50864b0.
+Positive5/2 candidate D=min(18,max(S+2,DL,DR)), W=min(40,WL+WR-DL-DR+D-point),
+point only when either relevant scale>0; rejected storage-type-based point
+candidate has64 mismatches/run. Not general payload/context or product acceptance.
+Sources/raw/own FXP/status/audit/attempt history in division fixture runtime-*.
+Old host FLL Trash path missing; first-party native diagnostic rebuilt host-only
+against existing SDK, final link0 with retained earlier failures/warnings; no
+proprietary binary/source copied into repo, VM or backup/foreign process touched.
+Next: recover payload/sign and runtime/constant/nested context controls, then
+freeze normalized contract and independent ORIGINAL-fail tests before arithmetic
+wiring. No epsilon, canonical-double shortcut or parent/ListItem closure.
+
+Late PR7201 macOS38840932843/job116780592184 failed after merge with actual
+"hosted runner lost communication" annotation; no test failure log/artifact.
+Unchanged --failed retry dispatched, EXISTING canonical watch session39603 owns
+build/pr7201-late-native/macos-retry-watch.log/.status; do not duplicate or claim
+passed until actual completed evidence. Linux/full Windows jobs completed SUCCESS
+at resumed snapshot, not an independent shard-artifact completeness claim.
+No new production changes or PR yet. Prior merge/cleanup evidence remains below.
+
 ## Owner stop and PR7201 CI repair (2026-10-16)
 
 Owner explicitly requests stop after7201 is merged/closed: necessary sync/safe
