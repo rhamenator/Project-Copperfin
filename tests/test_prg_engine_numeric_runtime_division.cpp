@@ -29,6 +29,7 @@ int main(){
                 "LOCAL iFive,iTwo,nFive,nTwo,iZero,nZero,nNegZero,iBoundary,nBoundary,nTiny,nBig,nNegFive,nNegTwo,nPause",
                 "iFive=5","iTwo=2","nFive=5.00","nTwo=2.00","iZero=0","nZero=0.0","nNegZero=-0.0","iBoundary=2147483647","nBoundary=2147483647.00","nTiny=0.000000000000000001","nBig=9999999999.0","nNegFive=-5.00","nNegTwo=-2.00"};
             for(unsigned i=1;i<=18;++i){lines.push_back("LOCAL nScale"+std::to_string(i));lines.push_back("nScale"+std::to_string(i)+"=5."+std::string(i,'0'));}
+            lines.push_back("nPause=0");
             const auto pauseLine=lines.size();lines.push_back("nPause=1");lines.push_back("RETURN");std::string source;for(const auto& line:lines)source+=line+"\n";
             RuntimeSessionOptions options;options.startup_path=(directory.path/"division.prg").string();options.working_directory=directory.path.string();options.temp_directory=(directory.path/"runtime-temp").string();options.require_source_text_overrides=true;options.startup_source_text=source;
             auto session=PrgRuntimeSession::create(options);session.add_breakpoint({options.startup_path,pauseLine});const auto paused=session.run(DebugResumeAction::continue_run);

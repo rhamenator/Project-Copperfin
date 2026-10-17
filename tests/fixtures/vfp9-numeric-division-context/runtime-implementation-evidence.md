@@ -32,3 +32,11 @@ apply only the bounded ordinary-division hook and transient context scope,
 re-run SAME frozen tests and broader controls, preserve exact chronology and
 obtain actual named hosted execution/clean exact-head review/strict gates.
 No production include or arithmetic/context hook exists at this checkpoint.
+
+Before any baseline test execution, static review added the same explicit
+pause sentinel used by prior assignment tests: the breakpoint must not stop
+before the last nScale18 initialization. The first source and pre-sentinel
+manifest are retained on the host; expected constants/assertions unchanged.
+The pre-code public/header/contract/helper manifest was refreshed before the
+ORIGINAL run. A generated header's final blank EOF was likewise removed before
+that run; its first bytes/manifest and staged diagnostic remain retained.
