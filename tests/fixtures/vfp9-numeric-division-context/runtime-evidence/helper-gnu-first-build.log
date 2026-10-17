@@ -1,0 +1,8 @@
+tests/test_prg_numeric_runtime_division_helper.cpp: In function ‘int main()’:
+tests/test_prg_numeric_runtime_division_helper.cpp:37:5: error: this ‘if’ clause does not guard... [-Werror=misleading-indentation]
+   37 |     if(failures)return 1;std::cout<<"Runtime division helper native metadata and bounds passed\n";
+      |     ^~
+tests/test_prg_numeric_runtime_division_helper.cpp:37:26: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+   37 |     if(failures)return 1;std::cout<<"Runtime division helper native metadata and bounds passed\n";
+      |                          ^~~
+cc1plus: all warnings being treated as errors
