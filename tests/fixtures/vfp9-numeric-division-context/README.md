@@ -1,5 +1,10 @@
 # Type-aware Numeric division-context recovery
 
+Latest: [input-verified runtime intervention checkpoint](runtime-recovery.md),
+paired1,620 values/run and standalone audit0; positive5/2 candidate only, not a
+general division algorithm or production acceptance. Earlier observations and
+their unchanged counterexamples remain retained below.
+
 RQ-CF-PRG-NUMERIC-DIVISION-CONTEXT-001 derives from the owner Numeric policy,
 RQ-CF-PRG-NUMERIC-UNARY-EXPRESSION-CONTEXT-001 and admitted #5611/#6776.
 Baseline origin/main a5c656f6efc96c5df79cddc0f824b68520db3438 includes the

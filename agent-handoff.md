@@ -1,5 +1,39 @@
 # Agent Handoff
 
+## Owner resumed; typed division runtime recovery active (2026-10-17)
+
+Direct owner instruction "Belay that order. Start working again" resumes this
+implementation-only loop and cancels the proposed Claude takeover. The earlier
+stop-after7201 condition is superseded. Existing heartbeat ACTIVE; automatic
+reboot remains cancelled, no upload monitoring or October22 action. PR7201 and
+EPOCH/CENTURY stay complete; do not restart. Parent5611/6776/7189 revalidated
+OPEN/owner-authored/exact agent-approved; no open PR or unread channel messages.
+
+Current WT /home/rich/.codex/worktrees/numeric-division-recovery-5611/Project-Copperfin,
+branch fix/numeric-division-recovery-5611 from origin/mainb37ddf7241. Native-only
+runtime intervention recovery under retained division parent: paired1,620/run,
+actual0/empty stderr/all values/no caught errors/raw exact repeat/audit0; actual
+left/right type/width/scale/payload controls checked, compiled/EVAL differences0.
+Raw SHAb6e15c11840fa090aaeee3c5f3390aebbf6740da0e8c750534156491e50864b0.
+Positive5/2 candidate D=min(18,max(S+2,DL,DR)), W=min(40,WL+WR-DL-DR+D-point),
+point only when either relevant scale>0; rejected storage-type-based point
+candidate has64 mismatches/run. Not general payload/context or product acceptance.
+Sources/raw/own FXP/status/audit/attempt history in division fixture runtime-*.
+Old host FLL Trash path missing; first-party native diagnostic rebuilt host-only
+against existing SDK, final link0 with retained earlier failures/warnings; no
+proprietary binary/source copied into repo, VM or backup/foreign process touched.
+Next: recover payload/sign and runtime/constant/nested context controls, then
+freeze normalized contract and independent ORIGINAL-fail tests before arithmetic
+wiring. No epsilon, canonical-double shortcut or parent/ListItem closure.
+
+Late PR7201 macOS38840932843/job116780592184 failed after merge with actual
+"hosted runner lost communication" annotation; no test failure log/artifact.
+Unchanged --failed retry dispatched, EXISTING canonical watch session39603 owns
+build/pr7201-late-native/macos-retry-watch.log/.status; do not duplicate or claim
+passed until actual completed evidence. Linux/full Windows jobs completed SUCCESS
+at resumed snapshot, not an independent shard-artifact completeness claim.
+No new production changes or PR yet. Prior merge/cleanup evidence remains below.
+
 ## Owner stop and PR7201 CI repair (2026-10-16)
 
 Owner explicitly requests stop after7201 is merged/closed: necessary sync/safe

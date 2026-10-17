@@ -1,0 +1,28 @@
+{
+  "casesPerRun": 1620,
+  "actualSuccessfulValues": 1620,
+  "recordedErrors": 0,
+  "operandVariants": 9,
+  "pairs": 81,
+  "settings": [
+    0,
+    2,
+    6,
+    14,
+    18
+  ],
+  "fixedModes": [
+    "OFF",
+    "ON"
+  ],
+  "compiledVersusEvaluateDifferences": 0,
+  "documentedFieldsRepeatEqual": true,
+  "rawByteEqual": true,
+  "rawDifferentRows": 0,
+  "rawDifferencesConfinedToUnusedSlots": {},
+  "firstSha256": "b6e15c11840fa090aaeee3c5f3390aebbf6740da0e8c750534156491e50864b0",
+  "repeatSha256": "b6e15c11840fa090aaeee3c5f3390aebbf6740da0e8c750534156491e50864b0",
+  "rejectedTypeBasedCandidateMismatches": 64,
+  "recoveredPositiveFiveOverTwoCandidateMismatches": 0,
+  "limitation": "Native-only intervention recovery at fixed payloads 5/2. No general payload/context algorithm or Copperfin production acceptance."
+}

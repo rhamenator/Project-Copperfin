@@ -54,6 +54,19 @@ pending. `derived` requirement.
 
 ## Native Integer descriptor/literal foundation
 
+Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
+[actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)
+at mainb37ddf7241; paired1,620 values/run, actual0/empty stderr/no errors,
+raw exact repeat and compiled/EVALUATE differences0. Standalone source/framing/
+actual operand/type/payload/repeat audit0 reproduces64 rejected type-based
+decimal-point candidate mismatches and zero corrected-candidate mismatches.
+Candidate is explicitly bounded to positive5/2 interventions; arbitrary payload,
+sign, constant/nested context and independent ORIGINAL-fail behavior remain gaps.
+LOW DQ-DV-5611-NUMERIC-DIVISION-RUNTIME-GRID-001 delta/misuse/rollback/walkthrough
+and development self-review are retained; existing data-corruption/runtime/doc
+hazards, #6776 modes, checked conversions and allocation limits unchanged.
+No Copperfin implementation change, universal division or ListItem acceptance.
+
 | Requirement | Allowed parent/source | Contract and implementation | Verification/results | Hazard and status |
 | --- | --- | --- | --- | --- |
 | `RQ-CF-PRG-NUMERIC-INTEGER-DESCRIPTOR-001` | Owner Numeric policy, typed division recovery and admitted #5611/#6776; [frozen pre-code contract](../tests/fixtures/vfp9-numeric-division-context/integer-contract.md), repeated native384 Integer controls and648 division grid. | Normalized storage discriminator appended/default-real in existing optional metadata, not exact64 or provenance; Integer decimal slot is ignored, zero placeholder only. Pure bounded1..10-digit/value<=2147483647 unsigned whole classifier and Integer-zero helper, typed unary width copy/check, two parser/unary hooks AFTER behavioral original failure. Real descriptors/defaults, grammar, checked conversion/allocation and modes unchanged. | `VR-5611-NUMERIC-INTEGER-DESCRIPTOR-001`: original-header helper compile1 for absent schema, NOT runtime behavior evidence. Unproduced typed support GNU Werror and Clang ASan/UBSan/float-cast-overflow/no recovery compile/run0; previous four pure helper/carrier controls GNU0. Independent18 public expected rows match native widths/storage/bits in both settings, audit0. Rebuilt ORIGINAL behavior with unproduced schema/helper support:72 descriptor+4 Integer-zero bit failures -> SAME frozen public0, all other controls pass; original parser and prewire input hashes0. GNU focused21/21 PASS158.81sec. Both names in hosted sanitizer build AND actual filter, selector3 methods PASS; actual hosted named execution/clean exact-head review/strict checks remain integration gates. [Development results and retained limits](../tests/fixtures/vfp9-numeric-division-context/integer-completion.md). | MEDIUM DQ-DV001 delta/misuse/rollback/walkthrough in contract; development self-review/automation, not independent-human/system/release assurance. HZ-data-corruption-01/HZ-runtime-crash-01/HZ-doc-command-01. Longer/larger literal, assignment normalization, INT/field/function/arithmetic/display/conversion and retained ListItem remain unfinished. `recovered; bounded short Integer literal/unary only` |

@@ -1,0 +1,10 @@
+# Exact native captures: preserve CRLF, control bytes and first-party FXPs.
+runtime-captures/*.out -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+runtime-captures/*-results.txt -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+runtime-pilot/*.out -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+runtime-pilot/*-results.txt -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+*.FXP -text
+runtime-pilot/*.FXP -text
+# Exact generated native sources include a final blank line; keep FXP provenance.
+runtime-grid.prg -text whitespace=-blank-at-eof
+runtime-pilot/pilot.prg -text whitespace=-blank-at-eof

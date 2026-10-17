@@ -1,0 +1,110 @@
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _HeapFree@12
+>>> referenced by winapims.lib(apimain.obj):(@ApiTlsShutdown@0)
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _GetProcessHeap@0
+>>> referenced by winapims.lib(apimain.obj):(@ApiTlsShutdown@0)
+>>> referenced by winapims.lib(apimain.obj):(_DllMain@12)
+>>> referenced by winapims.lib(apimain.obj):(@DispatchAPI@4)
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _LeaveCriticalSection@4
+>>> referenced by winapims.lib(apimain.obj):(_DllMain@12)
+>>> referenced by winapims.lib(apimain.obj):(@DispatchAPI@4)
+>>> referenced by winapims.lib(apicsect.obj):(public: __thiscall CApiStatic::~CApiStatic(void))
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _TlsSetValue@8
+>>> referenced by winapims.lib(apimain.obj):(_DllMain@12)
+>>> referenced by winapims.lib(apimain.obj):(@DispatchAPI@4)
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _HeapAlloc@12
+>>> referenced by winapims.lib(apimain.obj):(_DllMain@12)
+>>> referenced by winapims.lib(apimain.obj):(@DispatchAPI@4)
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _TlsGetValue@4
+>>> referenced by winapims.lib(apimain.obj):(_DllMain@12)
+>>> referenced by winapims.lib(apimain.obj):(@APICallback@4)
+>>> referenced by winapims.lib(apimain.obj):(@_AllocObj@4)
+>>> referenced 11 more times
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _TlsAlloc@0
+>>> referenced by winapims.lib(apimain.obj):(_DllMain@12)
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _DisableThreadLibraryCalls@4
+>>> referenced by winapims.lib(apimain.obj):(_DllMain@12)
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _EnterCriticalSection@4
+>>> referenced by winapims.lib(apimain.obj):(_DllMain@12)
+>>> referenced by winapims.lib(apimain.obj):(@DispatchAPI@4)
+>>> referenced by winapims.lib(apicsect.obj):(public: __thiscall CApiStatic::~CApiStatic(void))
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _GlobalUnlock@4
+>>> referenced by winapims.lib(apimain.obj):(@_AllocHandAttr@8)
+>>> referenced by winapims.lib(apimain.obj):(@_HandToPtr@4)
+>>> referenced by winapims.lib(apimain.obj):(@_HUnLock@4)
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _GlobalLock@4
+>>> referenced by winapims.lib(apimain.obj):(@_AllocHandAttr@8)
+>>> referenced by winapims.lib(apimain.obj):(@_HandToPtr@4)
+>>> referenced by winapims.lib(apimain.obj):(@_HLock@4)
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _GlobalAlloc@8
+>>> referenced by winapims.lib(apimain.obj):(@_AllocHandAttr@8)
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _GlobalFree@4
+>>> referenced by winapims.lib(apimain.obj):(@_FreeHand@4)
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _GlobalSize@4
+>>> referenced by winapims.lib(apimain.obj):(@_GetHandSize@4)
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _GlobalReAlloc@12
+>>> referenced by winapims.lib(apimain.obj):(@_SetHandSize@8)
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _GlobalCompact@4
+>>> referenced by winapims.lib(apimain.obj):(@_MemAvail@4)
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _InitializeCriticalSection@4
+>>> referenced by winapims.lib(apicsect.obj):(public: __thiscall CApiStatic::CApiStatic(void))
+>>> referenced by winapims.lib(apicsect.obj):(_$E1)
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _DeleteCriticalSection@4
+>>> referenced by winapims.lib(apicsect.obj):(public: __thiscall CApiStatic::~CApiStatic(void))
+
+rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2
+rust-lld: error: undefined symbol: __declspec(dllimport) _TlsFree@4
+>>> referenced by winapims.lib(apicsect.obj):(public: __thiscall CApiStatic::~CApiStatic(void))

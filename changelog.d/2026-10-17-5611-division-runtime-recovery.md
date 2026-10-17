@@ -1,0 +1,1 @@
+- 2026-10-17: Retain paired, input-verified VFP9 runtime division metadata interventions under #5611/#6776/#7189, including a rejected candidate and explicit payload/context recovery gaps; no production arithmetic change or full Numeric parity claim.
