@@ -74,6 +74,8 @@ function capture(name) {
                 const decimal = literal.includes('.'), unsigned = literal.replace(/^-/, '');
                 a.equal(observed.type, decimal ? 'N' : 'I');
                 a.equal(observed.width, literal.length);
+                const payload = Buffer.alloc(8); payload.writeDoubleBE(Number(literal));
+                a.equal(observed.bits, payload.toString('hex').toUpperCase());
                 if (decimal) a.equal(observed.decimals, unsigned.length - unsigned.indexOf('.') - 1);
                 else a.equal(observed.integer, Number(literal));
             }
