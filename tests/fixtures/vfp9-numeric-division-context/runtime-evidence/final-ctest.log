@@ -1,0 +1,78 @@
+Test project /home/rich/.codex/worktrees/numeric-division-recovery-5611/Project-Copperfin/build/division-focused
+      Start   1: test_prg_numeric_metadata
+      Start   2: test_prg_numeric_literal_metadata_helper
+ 1/28 Test   #1: test_prg_numeric_metadata ....................   Passed    0.00 sec
+      Start   4: test_prg_numeric_unary_metadata_helper
+ 2/28 Test   #4: test_prg_numeric_unary_metadata_helper .......   Passed    0.00 sec
+      Start   7: test_prg_numeric_expression_context_helper
+ 3/28 Test   #2: test_prg_numeric_literal_metadata_helper .....   Passed    0.01 sec
+      Start   9: test_prg_numeric_integer_metadata_helper
+ 4/28 Test   #7: test_prg_numeric_expression_context_helper ...   Passed    0.00 sec
+      Start  11: test_prg_numeric_integer_assignment_helper
+ 5/28 Test   #9: test_prg_numeric_integer_metadata_helper .....   Passed    0.00 sec
+      Start  13: test_prg_numeric_real_assignment_helper
+ 6/28 Test  #11: test_prg_numeric_integer_assignment_helper ...   Passed    0.00 sec
+      Start  15: test_prg_numeric_runtime_division_helper
+ 7/28 Test  #13: test_prg_numeric_real_assignment_helper ......   Passed    0.00 sec
+      Start  28: test_product_licensing_policy_contract
+ 8/28 Test  #15: test_prg_numeric_runtime_division_helper .....   Passed    0.01 sec
+      Start  33: test_cloud_validation_sanitizer_selection
+ 9/28 Test  #33: test_cloud_validation_sanitizer_selection ....   Passed    0.21 sec
+      Start  37: test_changelog_fragments_valid
+10/28 Test  #37: test_changelog_fragments_valid ...............   Passed    0.22 sec
+      Start  52: test_native_test_isolation_contract
+11/28 Test  #28: test_product_licensing_policy_contract .......   Passed    0.78 sec
+      Start 384: test_prg_engine_control_flow
+12/28 Test  #52: test_native_test_isolation_contract ..........   Passed    0.59 sec
+13/28 Test #384: test_prg_engine_control_flow .................   Passed   93.76 sec
+      Start   3: test_prg_engine_numeric_literal_metadata
+14/28 Test   #3: test_prg_engine_numeric_literal_metadata .....   Passed    0.09 sec
+      Start   5: test_prg_engine_numeric_unary_metadata
+15/28 Test   #5: test_prg_engine_numeric_unary_metadata .......   Passed    0.09 sec
+      Start   6: test_prg_engine_numeric_zero_context
+16/28 Test   #6: test_prg_engine_numeric_zero_context .........   Passed    0.10 sec
+      Start   8: test_prg_engine_numeric_integer_metadata
+17/28 Test   #8: test_prg_engine_numeric_integer_metadata .....   Passed    0.09 sec
+      Start  10: test_prg_engine_numeric_integer_assignment
+18/28 Test  #10: test_prg_engine_numeric_integer_assignment ...   Passed    0.41 sec
+      Start  12: test_prg_engine_numeric_real_assignment
+19/28 Test  #12: test_prg_engine_numeric_real_assignment ......   Passed    0.88 sec
+      Start  14: test_prg_engine_numeric_runtime_division
+20/28 Test  #14: test_prg_engine_numeric_runtime_division .....   Passed    0.34 sec
+      Start 386: test_prg_engine_macro_expressions
+21/28 Test #386: test_prg_engine_macro_expressions ............   Passed    0.08 sec
+      Start 396: test_prg_engine_operator_types
+22/28 Test #396: test_prg_engine_operator_types ...............   Passed    0.64 sec
+      Start 401: test_prg_engine_currency_literals
+23/28 Test #401: test_prg_engine_currency_literals ............   Passed    0.20 sec
+      Start 403: test_prg_engine_currency_functions
+24/28 Test #403: test_prg_engine_currency_functions ...........   Passed    0.22 sec
+      Start 404: test_prg_engine_currency_overflow
+25/28 Test #404: test_prg_engine_currency_overflow ............   Passed    0.12 sec
+      Start 405: test_prg_engine_currency_exact_muldiv
+26/28 Test #405: test_prg_engine_currency_exact_muldiv ........   Passed    0.37 sec
+      Start 406: test_prg_engine_int64_exact_expression
+27/28 Test #406: test_prg_engine_int64_exact_expression .......   Passed    0.10 sec
+      Start 409: test_prg_engine_numeric_behavior
+28/28 Test #409: test_prg_engine_numeric_behavior .............   Passed   65.16 sec
+
+100% tests passed, 0 tests failed out of 28
+
+Label Time Summary:
+copperfin-isolation:audit=complete                  = 164.48 sec*proc (28 tests)
+copperfin-isolation:child-processes=none            = 164.48 sec*proc (28 tests)
+copperfin-isolation:environment=none                =   3.55 sec*proc (19 tests)
+copperfin-isolation:environment=scoped-process      = 160.92 sec*proc (9 tests)
+copperfin-isolation:filesystem=none                 =   0.04 sec*proc (8 tests)
+copperfin-isolation:filesystem=process-owned        =  66.89 sec*proc (8 tests)
+copperfin-isolation:filesystem=read-only            =   1.79 sec*proc (4 tests)
+copperfin-isolation:filesystem=test-owned-unique    =  95.76 sec*proc (8 tests)
+copperfin-isolation:network=none                    = 164.48 sec*proc (28 tests)
+copperfin-isolation:platform=configured             =   0.22 sec*proc (1 test)
+copperfin-isolation:platform=portable               = 164.25 sec*proc (27 tests)
+copperfin-isolation:resources=none                  = 164.48 sec*proc (28 tests)
+copperfin-isolation:samples=none                    = 164.48 sec*proc (28 tests)
+copperfin-isolation:schedule=parallel-safe          =  95.59 sec*proc (13 tests)
+copperfin-isolation:schedule=serial                 =  68.88 sec*proc (15 tests)
+
+Total Test time (real) = 163.47 sec

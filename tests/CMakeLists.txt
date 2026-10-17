@@ -44,6 +44,8 @@ target_include_directories(test_prg_numeric_real_assignment_helper PRIVATE "${PR
 
 # RQ-CF-PRG-NUMERIC-RUNTIME-DIVISION-001: native constants before hooks.
 copperfin_add_test(test_prg_engine_numeric_runtime_division cf_xbase_runtime test_prg_engine_numeric_runtime_division.cpp)
+copperfin_add_test(test_prg_numeric_runtime_division_helper "" test_prg_numeric_runtime_division_helper.cpp)
+target_include_directories(test_prg_numeric_runtime_division_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
 
 copperfin_add_test(test_mcp_host "cf_mcp_host;cf_platform_support"
     test_mcp_host.cpp)

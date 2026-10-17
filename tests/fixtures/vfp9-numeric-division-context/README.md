@@ -5,6 +5,16 @@ paired1,620 values/run and standalone audit0; positive5/2 candidate only, not a
 general division algorithm or production acceptance. Earlier observations and
 their unchanged counterexamples remain retained below.
 
+The [bounded runtime contract](runtime-contract.md) now additionally retains
+paired12,960 payload/sign/intervention and1,200 ordinary public-route values.
+Run `audit-runtime-increment.cjs payload-captures payload` or
+`audit-runtime-increment.cjs public-captures public` from this directory.
+The former losslessly decompresses gzip before checking original raw bytes;
+only documented typed fields are compared across unused-slot differences.
+The latter matches the independent frozen public C++ constant header.
+[Actual implementation chronology](runtime-implementation-evidence.md) records
+unused support, frozen inputs and outstanding ORIGINAL/fixed/hosted gates.
+
 RQ-CF-PRG-NUMERIC-DIVISION-CONTEXT-001 derives from the owner Numeric policy,
 RQ-CF-PRG-NUMERIC-UNARY-EXPRESSION-CONTEXT-001 and admitted #5611/#6776.
 Baseline origin/main a5c656f6efc96c5df79cddc0f824b68520db3438 includes the
