@@ -1,0 +1,987 @@
+* Copyright © 2026 Richard M. Hamilton.
+* SPDX-License-Identifier: GPL-3.0-only
+* Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
+* RQ-CF-PRG-NUMERIC-DIVISION-CONTEXT-001: constant-folding behavioral recovery only.
+LOCAL ARRAY expressions[183], lefts[183], rights[183], settings[5]
+expressions[1]='5/2'
+lefts[1]='5'
+rights[1]='2'
+expressions[2]='-5/2'
+lefts[2]='-5'
+rights[2]='2'
+expressions[3]='-(5/2)'
+lefts[3]='5'
+rights[3]='2'
+expressions[4]='5/02'
+lefts[4]='5'
+rights[4]='02'
+expressions[5]='-5/02'
+lefts[5]='-5'
+rights[5]='02'
+expressions[6]='-(5/02)'
+lefts[6]='5'
+rights[6]='02'
+expressions[7]='5/2.0'
+lefts[7]='5'
+rights[7]='2.0'
+expressions[8]='-5/2.0'
+lefts[8]='-5'
+rights[8]='2.0'
+expressions[9]='-(5/2.0)'
+lefts[9]='5'
+rights[9]='2.0'
+expressions[10]='5/2.00'
+lefts[10]='5'
+rights[10]='2.00'
+expressions[11]='-5/2.00'
+lefts[11]='-5'
+rights[11]='2.00'
+expressions[12]='-(5/2.00)'
+lefts[12]='5'
+rights[12]='2.00'
+expressions[13]='5/2.000000'
+lefts[13]='5'
+rights[13]='2.000000'
+expressions[14]='-5/2.000000'
+lefts[14]='-5'
+rights[14]='2.000000'
+expressions[15]='-(5/2.000000)'
+lefts[15]='5'
+rights[15]='2.000000'
+expressions[16]='5/2.00000000000000'
+lefts[16]='5'
+rights[16]='2.00000000000000'
+expressions[17]='-5/2.00000000000000'
+lefts[17]='-5'
+rights[17]='2.00000000000000'
+expressions[18]='-(5/2.00000000000000)'
+lefts[18]='5'
+rights[18]='2.00000000000000'
+expressions[19]='5/2.000000000000000000'
+lefts[19]='5'
+rights[19]='2.000000000000000000'
+expressions[20]='-5/2.000000000000000000'
+lefts[20]='-5'
+rights[20]='2.000000000000000000'
+expressions[21]='-(5/2.000000000000000000)'
+lefts[21]='5'
+rights[21]='2.000000000000000000'
+expressions[22]='05/2'
+lefts[22]='05'
+rights[22]='2'
+expressions[23]='-05/2'
+lefts[23]='-05'
+rights[23]='2'
+expressions[24]='-(05/2)'
+lefts[24]='05'
+rights[24]='2'
+expressions[25]='05/02'
+lefts[25]='05'
+rights[25]='02'
+expressions[26]='-05/02'
+lefts[26]='-05'
+rights[26]='02'
+expressions[27]='-(05/02)'
+lefts[27]='05'
+rights[27]='02'
+expressions[28]='05/2.0'
+lefts[28]='05'
+rights[28]='2.0'
+expressions[29]='-05/2.0'
+lefts[29]='-05'
+rights[29]='2.0'
+expressions[30]='-(05/2.0)'
+lefts[30]='05'
+rights[30]='2.0'
+expressions[31]='05/2.00'
+lefts[31]='05'
+rights[31]='2.00'
+expressions[32]='-05/2.00'
+lefts[32]='-05'
+rights[32]='2.00'
+expressions[33]='-(05/2.00)'
+lefts[33]='05'
+rights[33]='2.00'
+expressions[34]='05/2.000000'
+lefts[34]='05'
+rights[34]='2.000000'
+expressions[35]='-05/2.000000'
+lefts[35]='-05'
+rights[35]='2.000000'
+expressions[36]='-(05/2.000000)'
+lefts[36]='05'
+rights[36]='2.000000'
+expressions[37]='05/2.00000000000000'
+lefts[37]='05'
+rights[37]='2.00000000000000'
+expressions[38]='-05/2.00000000000000'
+lefts[38]='-05'
+rights[38]='2.00000000000000'
+expressions[39]='-(05/2.00000000000000)'
+lefts[39]='05'
+rights[39]='2.00000000000000'
+expressions[40]='05/2.000000000000000000'
+lefts[40]='05'
+rights[40]='2.000000000000000000'
+expressions[41]='-05/2.000000000000000000'
+lefts[41]='-05'
+rights[41]='2.000000000000000000'
+expressions[42]='-(05/2.000000000000000000)'
+lefts[42]='05'
+rights[42]='2.000000000000000000'
+expressions[43]='5.0/2'
+lefts[43]='5.0'
+rights[43]='2'
+expressions[44]='-5.0/2'
+lefts[44]='-5.0'
+rights[44]='2'
+expressions[45]='-(5.0/2)'
+lefts[45]='5.0'
+rights[45]='2'
+expressions[46]='5.0/02'
+lefts[46]='5.0'
+rights[46]='02'
+expressions[47]='-5.0/02'
+lefts[47]='-5.0'
+rights[47]='02'
+expressions[48]='-(5.0/02)'
+lefts[48]='5.0'
+rights[48]='02'
+expressions[49]='5.0/2.0'
+lefts[49]='5.0'
+rights[49]='2.0'
+expressions[50]='-5.0/2.0'
+lefts[50]='-5.0'
+rights[50]='2.0'
+expressions[51]='-(5.0/2.0)'
+lefts[51]='5.0'
+rights[51]='2.0'
+expressions[52]='5.0/2.00'
+lefts[52]='5.0'
+rights[52]='2.00'
+expressions[53]='-5.0/2.00'
+lefts[53]='-5.0'
+rights[53]='2.00'
+expressions[54]='-(5.0/2.00)'
+lefts[54]='5.0'
+rights[54]='2.00'
+expressions[55]='5.0/2.000000'
+lefts[55]='5.0'
+rights[55]='2.000000'
+expressions[56]='-5.0/2.000000'
+lefts[56]='-5.0'
+rights[56]='2.000000'
+expressions[57]='-(5.0/2.000000)'
+lefts[57]='5.0'
+rights[57]='2.000000'
+expressions[58]='5.0/2.00000000000000'
+lefts[58]='5.0'
+rights[58]='2.00000000000000'
+expressions[59]='-5.0/2.00000000000000'
+lefts[59]='-5.0'
+rights[59]='2.00000000000000'
+expressions[60]='-(5.0/2.00000000000000)'
+lefts[60]='5.0'
+rights[60]='2.00000000000000'
+expressions[61]='5.0/2.000000000000000000'
+lefts[61]='5.0'
+rights[61]='2.000000000000000000'
+expressions[62]='-5.0/2.000000000000000000'
+lefts[62]='-5.0'
+rights[62]='2.000000000000000000'
+expressions[63]='-(5.0/2.000000000000000000)'
+lefts[63]='5.0'
+rights[63]='2.000000000000000000'
+expressions[64]='5.00/2'
+lefts[64]='5.00'
+rights[64]='2'
+expressions[65]='-5.00/2'
+lefts[65]='-5.00'
+rights[65]='2'
+expressions[66]='-(5.00/2)'
+lefts[66]='5.00'
+rights[66]='2'
+expressions[67]='5.00/02'
+lefts[67]='5.00'
+rights[67]='02'
+expressions[68]='-5.00/02'
+lefts[68]='-5.00'
+rights[68]='02'
+expressions[69]='-(5.00/02)'
+lefts[69]='5.00'
+rights[69]='02'
+expressions[70]='5.00/2.0'
+lefts[70]='5.00'
+rights[70]='2.0'
+expressions[71]='-5.00/2.0'
+lefts[71]='-5.00'
+rights[71]='2.0'
+expressions[72]='-(5.00/2.0)'
+lefts[72]='5.00'
+rights[72]='2.0'
+expressions[73]='5.00/2.00'
+lefts[73]='5.00'
+rights[73]='2.00'
+expressions[74]='-5.00/2.00'
+lefts[74]='-5.00'
+rights[74]='2.00'
+expressions[75]='-(5.00/2.00)'
+lefts[75]='5.00'
+rights[75]='2.00'
+expressions[76]='5.00/2.000000'
+lefts[76]='5.00'
+rights[76]='2.000000'
+expressions[77]='-5.00/2.000000'
+lefts[77]='-5.00'
+rights[77]='2.000000'
+expressions[78]='-(5.00/2.000000)'
+lefts[78]='5.00'
+rights[78]='2.000000'
+expressions[79]='5.00/2.00000000000000'
+lefts[79]='5.00'
+rights[79]='2.00000000000000'
+expressions[80]='-5.00/2.00000000000000'
+lefts[80]='-5.00'
+rights[80]='2.00000000000000'
+expressions[81]='-(5.00/2.00000000000000)'
+lefts[81]='5.00'
+rights[81]='2.00000000000000'
+expressions[82]='5.00/2.000000000000000000'
+lefts[82]='5.00'
+rights[82]='2.000000000000000000'
+expressions[83]='-5.00/2.000000000000000000'
+lefts[83]='-5.00'
+rights[83]='2.000000000000000000'
+expressions[84]='-(5.00/2.000000000000000000)'
+lefts[84]='5.00'
+rights[84]='2.000000000000000000'
+expressions[85]='5.000000/2'
+lefts[85]='5.000000'
+rights[85]='2'
+expressions[86]='-5.000000/2'
+lefts[86]='-5.000000'
+rights[86]='2'
+expressions[87]='-(5.000000/2)'
+lefts[87]='5.000000'
+rights[87]='2'
+expressions[88]='5.000000/02'
+lefts[88]='5.000000'
+rights[88]='02'
+expressions[89]='-5.000000/02'
+lefts[89]='-5.000000'
+rights[89]='02'
+expressions[90]='-(5.000000/02)'
+lefts[90]='5.000000'
+rights[90]='02'
+expressions[91]='5.000000/2.0'
+lefts[91]='5.000000'
+rights[91]='2.0'
+expressions[92]='-5.000000/2.0'
+lefts[92]='-5.000000'
+rights[92]='2.0'
+expressions[93]='-(5.000000/2.0)'
+lefts[93]='5.000000'
+rights[93]='2.0'
+expressions[94]='5.000000/2.00'
+lefts[94]='5.000000'
+rights[94]='2.00'
+expressions[95]='-5.000000/2.00'
+lefts[95]='-5.000000'
+rights[95]='2.00'
+expressions[96]='-(5.000000/2.00)'
+lefts[96]='5.000000'
+rights[96]='2.00'
+expressions[97]='5.000000/2.000000'
+lefts[97]='5.000000'
+rights[97]='2.000000'
+expressions[98]='-5.000000/2.000000'
+lefts[98]='-5.000000'
+rights[98]='2.000000'
+expressions[99]='-(5.000000/2.000000)'
+lefts[99]='5.000000'
+rights[99]='2.000000'
+expressions[100]='5.000000/2.00000000000000'
+lefts[100]='5.000000'
+rights[100]='2.00000000000000'
+expressions[101]='-5.000000/2.00000000000000'
+lefts[101]='-5.000000'
+rights[101]='2.00000000000000'
+expressions[102]='-(5.000000/2.00000000000000)'
+lefts[102]='5.000000'
+rights[102]='2.00000000000000'
+expressions[103]='5.000000/2.000000000000000000'
+lefts[103]='5.000000'
+rights[103]='2.000000000000000000'
+expressions[104]='-5.000000/2.000000000000000000'
+lefts[104]='-5.000000'
+rights[104]='2.000000000000000000'
+expressions[105]='-(5.000000/2.000000000000000000)'
+lefts[105]='5.000000'
+rights[105]='2.000000000000000000'
+expressions[106]='5.00000000000000/2'
+lefts[106]='5.00000000000000'
+rights[106]='2'
+expressions[107]='-5.00000000000000/2'
+lefts[107]='-5.00000000000000'
+rights[107]='2'
+expressions[108]='-(5.00000000000000/2)'
+lefts[108]='5.00000000000000'
+rights[108]='2'
+expressions[109]='5.00000000000000/02'
+lefts[109]='5.00000000000000'
+rights[109]='02'
+expressions[110]='-5.00000000000000/02'
+lefts[110]='-5.00000000000000'
+rights[110]='02'
+expressions[111]='-(5.00000000000000/02)'
+lefts[111]='5.00000000000000'
+rights[111]='02'
+expressions[112]='5.00000000000000/2.0'
+lefts[112]='5.00000000000000'
+rights[112]='2.0'
+expressions[113]='-5.00000000000000/2.0'
+lefts[113]='-5.00000000000000'
+rights[113]='2.0'
+expressions[114]='-(5.00000000000000/2.0)'
+lefts[114]='5.00000000000000'
+rights[114]='2.0'
+expressions[115]='5.00000000000000/2.00'
+lefts[115]='5.00000000000000'
+rights[115]='2.00'
+expressions[116]='-5.00000000000000/2.00'
+lefts[116]='-5.00000000000000'
+rights[116]='2.00'
+expressions[117]='-(5.00000000000000/2.00)'
+lefts[117]='5.00000000000000'
+rights[117]='2.00'
+expressions[118]='5.00000000000000/2.000000'
+lefts[118]='5.00000000000000'
+rights[118]='2.000000'
+expressions[119]='-5.00000000000000/2.000000'
+lefts[119]='-5.00000000000000'
+rights[119]='2.000000'
+expressions[120]='-(5.00000000000000/2.000000)'
+lefts[120]='5.00000000000000'
+rights[120]='2.000000'
+expressions[121]='5.00000000000000/2.00000000000000'
+lefts[121]='5.00000000000000'
+rights[121]='2.00000000000000'
+expressions[122]='-5.00000000000000/2.00000000000000'
+lefts[122]='-5.00000000000000'
+rights[122]='2.00000000000000'
+expressions[123]='-(5.00000000000000/2.00000000000000)'
+lefts[123]='5.00000000000000'
+rights[123]='2.00000000000000'
+expressions[124]='5.00000000000000/2.000000000000000000'
+lefts[124]='5.00000000000000'
+rights[124]='2.000000000000000000'
+expressions[125]='-5.00000000000000/2.000000000000000000'
+lefts[125]='-5.00000000000000'
+rights[125]='2.000000000000000000'
+expressions[126]='-(5.00000000000000/2.000000000000000000)'
+lefts[126]='5.00000000000000'
+rights[126]='2.000000000000000000'
+expressions[127]='5.000000000000000000/2'
+lefts[127]='5.000000000000000000'
+rights[127]='2'
+expressions[128]='-5.000000000000000000/2'
+lefts[128]='-5.000000000000000000'
+rights[128]='2'
+expressions[129]='-(5.000000000000000000/2)'
+lefts[129]='5.000000000000000000'
+rights[129]='2'
+expressions[130]='5.000000000000000000/02'
+lefts[130]='5.000000000000000000'
+rights[130]='02'
+expressions[131]='-5.000000000000000000/02'
+lefts[131]='-5.000000000000000000'
+rights[131]='02'
+expressions[132]='-(5.000000000000000000/02)'
+lefts[132]='5.000000000000000000'
+rights[132]='02'
+expressions[133]='5.000000000000000000/2.0'
+lefts[133]='5.000000000000000000'
+rights[133]='2.0'
+expressions[134]='-5.000000000000000000/2.0'
+lefts[134]='-5.000000000000000000'
+rights[134]='2.0'
+expressions[135]='-(5.000000000000000000/2.0)'
+lefts[135]='5.000000000000000000'
+rights[135]='2.0'
+expressions[136]='5.000000000000000000/2.00'
+lefts[136]='5.000000000000000000'
+rights[136]='2.00'
+expressions[137]='-5.000000000000000000/2.00'
+lefts[137]='-5.000000000000000000'
+rights[137]='2.00'
+expressions[138]='-(5.000000000000000000/2.00)'
+lefts[138]='5.000000000000000000'
+rights[138]='2.00'
+expressions[139]='5.000000000000000000/2.000000'
+lefts[139]='5.000000000000000000'
+rights[139]='2.000000'
+expressions[140]='-5.000000000000000000/2.000000'
+lefts[140]='-5.000000000000000000'
+rights[140]='2.000000'
+expressions[141]='-(5.000000000000000000/2.000000)'
+lefts[141]='5.000000000000000000'
+rights[141]='2.000000'
+expressions[142]='5.000000000000000000/2.00000000000000'
+lefts[142]='5.000000000000000000'
+rights[142]='2.00000000000000'
+expressions[143]='-5.000000000000000000/2.00000000000000'
+lefts[143]='-5.000000000000000000'
+rights[143]='2.00000000000000'
+expressions[144]='-(5.000000000000000000/2.00000000000000)'
+lefts[144]='5.000000000000000000'
+rights[144]='2.00000000000000'
+expressions[145]='5.000000000000000000/2.000000000000000000'
+lefts[145]='5.000000000000000000'
+rights[145]='2.000000000000000000'
+expressions[146]='-5.000000000000000000/2.000000000000000000'
+lefts[146]='-5.000000000000000000'
+rights[146]='2.000000000000000000'
+expressions[147]='-(5.000000000000000000/2.000000000000000000)'
+lefts[147]='5.000000000000000000'
+rights[147]='2.000000000000000000'
+expressions[148]='0/2'
+lefts[148]='0'
+rights[148]='2'
+expressions[149]='-0/2'
+lefts[149]='-0'
+rights[149]='2'
+expressions[150]='0.0/2'
+lefts[150]='0.0'
+rights[150]='2'
+expressions[151]='-0.0/2'
+lefts[151]='-0.0'
+rights[151]='2'
+expressions[152]='-(0/2)'
+lefts[152]='0'
+rights[152]='2'
+expressions[153]='-(0.0/2)'
+lefts[153]='0.0'
+rights[153]='2'
+expressions[154]='1/2'
+lefts[154]='1'
+rights[154]='2'
+expressions[155]='1.00/2.00'
+lefts[155]='1.00'
+rights[155]='2.00'
+expressions[156]='7/3'
+lefts[156]='7'
+rights[156]='3'
+expressions[157]='-(7/3)'
+lefts[157]='7'
+rights[157]='3'
+expressions[158]='7.00/3.00'
+lefts[158]='7.00'
+rights[158]='3.00'
+expressions[159]='10/2'
+lefts[159]='10'
+rights[159]='2'
+expressions[160]='100/2'
+lefts[160]='100'
+rights[160]='2'
+expressions[161]='9999999999/2'
+lefts[161]='9999999999'
+rights[161]='2'
+expressions[162]='0.000000000000000001/2'
+lefts[162]='0.000000000000000001'
+rights[162]='2'
+expressions[163]='5/-2'
+lefts[163]='5'
+rights[163]='-2'
+expressions[164]='5.00/-2.00'
+lefts[164]='5.00'
+rights[164]='-2.00'
+expressions[165]='-5.00/-2.00'
+lefts[165]='-5.00'
+rights[165]='-2.00'
+expressions[166]='+(5/2)'
+lefts[166]='5'
+rights[166]='2'
+expressions[167]='-((5/2))'
+lefts[167]='5'
+rights[167]='2'
+expressions[168]='-(+(5/2))'
+lefts[168]='5'
+rights[168]='2'
+expressions[169]='-(-5/2)'
+lefts[169]='-5'
+rights[169]='2'
+expressions[170]='(5/2)+0.00'
+lefts[170]='5/2'
+rights[170]='0.00'
+expressions[171]='-((5/2)+0.00)'
+lefts[171]='5/2'
+rights[171]='0.00'
+expressions[172]='(5.00/2.00)*1.00'
+lefts[172]='5.00/2.00'
+rights[172]='1.00'
+expressions[173]='-((5.00/2.00)*1.00)'
+lefts[173]='5.00/2.00'
+rights[173]='1.00'
+expressions[174]='(5/2)/2'
+lefts[174]='5/2'
+rights[174]='2'
+expressions[175]='5/(2/2)'
+lefts[175]='5'
+rights[175]='2/2'
+expressions[176]='CFNCLONE(5)/2'
+lefts[176]='CFNCLONE(5)'
+rights[176]='2'
+expressions[177]='5/CFNCLONE(2)'
+lefts[177]='5'
+rights[177]='CFNCLONE(2)'
+expressions[178]='iFive/iTwo'
+lefts[178]='iFive'
+rights[178]='iTwo'
+expressions[179]='nFive/nTwo'
+lefts[179]='nFive'
+rights[179]='nTwo'
+expressions[180]='ABS(5/2)'
+lefts[180]='5'
+rights[180]='2'
+expressions[181]='IIF(.T.,5/2,0)'
+lefts[181]='5'
+rights[181]='2'
+expressions[182]='EVALUATE("5/2")'
+lefts[182]='5'
+rights[182]='2'
+expressions[183]='(CFNCLONE(5)/2)+(5/2)'
+lefts[183]='CFNCLONE(5)/2'
+rights[183]='5/2'
+settings[1]=0
+settings[2]=2
+settings[3]=6
+settings[4]=14
+settings[5]=18
+LOCAL outputPath,libraryPath,settingNo,fixedNo,decimalCount,fixedMode,index,expression
+LOCAL observation,line,total,caught
+PRIVATE iFive,iTwo,nFive,nTwo
+outputPath='Z:\home\rich\.codex\worktrees\numeric-constant-division-5611\Project-Copperfin\build\constant-division-native\results.txt'
+libraryPath='Z:\home\rich\dev\Project-Copperfin\build\pr7203-completed\native-evidence\diagnostic\cause-probe.fll'
+=STRTOFILE('VERSION|'+VERSION()+CHR(13)+CHR(10),outputPath,0)
+SET LIBRARY TO (libraryPath) ADDITIVE
+total=0
+FOR settingNo=1 TO ALEN(settings)
+ decimalCount=settings[settingNo]
+ SET DECIMALS TO decimalCount
+ FOR fixedNo=1 TO 2
+  IF fixedNo=1
+   SET FIXED OFF
+   fixedMode='OFF'
+  ELSE
+   SET FIXED ON
+   fixedMode='ON'
+  ENDIF
+  iFive=5
+  iTwo=2
+  nFive=5.00
+  nTwo=2.00
+  FOR index=1 TO ALEN(expressions)
+   expression=expressions[index]
+   TRY
+    observation=CFNMETA(EVALUATE(expression))+'|'+HexBytes(BINTOC(EVALUATE(expression),'BRS'))+'|'+HexBytes(TRANSFORM(EVALUATE(expression)))+'|'+CFNMETA(EVALUATE(lefts[index]))+'|'+CFNMETA(EVALUATE(rights[index]))
+    line='EVAL|'+ALLTRIM(STR(decimalCount,4,0))+'|'+fixedMode+'|'+ALLTRIM(STR(index,4,0))+'|'+HexBytes(expression)+'|'+observation
+   CATCH TO caught
+    line='ERROR-EVAL|'+ALLTRIM(STR(decimalCount,4,0))+'|'+fixedMode+'|'+ALLTRIM(STR(index,4,0))+'|'+HexBytes(expression)+'|'+ALLTRIM(STR(caught.ErrorNo,6,0))+'|'+HexBytes(caught.Message)
+   ENDTRY
+   =STRTOFILE(line+CHR(13)+CHR(10),outputPath,1)
+   total=total+1
+   TRY
+    observation=CompiledObservation(index)
+    line='COMPILED|'+ALLTRIM(STR(decimalCount,4,0))+'|'+fixedMode+'|'+ALLTRIM(STR(index,4,0))+'|'+HexBytes(expression)+'|'+observation
+   CATCH TO caught
+    line='ERROR-COMPILED|'+ALLTRIM(STR(decimalCount,4,0))+'|'+fixedMode+'|'+ALLTRIM(STR(index,4,0))+'|'+HexBytes(expression)+'|'+ALLTRIM(STR(caught.ErrorNo,6,0))+'|'+HexBytes(caught.Message)
+   ENDTRY
+   =STRTOFILE(line+CHR(13)+CHR(10),outputPath,1)
+   total=total+1
+  ENDFOR
+ ENDFOR
+ENDFOR
+=STRTOFILE('DONE|'+ALLTRIM(STR(total,6,0))+CHR(13)+CHR(10),outputPath,1)
+SET LIBRARY TO
+
+FUNCTION CompiledObservation
+ LPARAMETERS index
+ DO CASE
+ CASE index=1
+  RETURN CFNMETA(5/2)+'|'+HexBytes(BINTOC(5/2,'BRS'))+'|'+HexBytes(TRANSFORM(5/2))+'|'+CFNMETA(5)+'|'+CFNMETA(2)
+ CASE index=2
+  RETURN CFNMETA(-5/2)+'|'+HexBytes(BINTOC(-5/2,'BRS'))+'|'+HexBytes(TRANSFORM(-5/2))+'|'+CFNMETA(-5)+'|'+CFNMETA(2)
+ CASE index=3
+  RETURN CFNMETA(-(5/2))+'|'+HexBytes(BINTOC(-(5/2),'BRS'))+'|'+HexBytes(TRANSFORM(-(5/2)))+'|'+CFNMETA(5)+'|'+CFNMETA(2)
+ CASE index=4
+  RETURN CFNMETA(5/02)+'|'+HexBytes(BINTOC(5/02,'BRS'))+'|'+HexBytes(TRANSFORM(5/02))+'|'+CFNMETA(5)+'|'+CFNMETA(02)
+ CASE index=5
+  RETURN CFNMETA(-5/02)+'|'+HexBytes(BINTOC(-5/02,'BRS'))+'|'+HexBytes(TRANSFORM(-5/02))+'|'+CFNMETA(-5)+'|'+CFNMETA(02)
+ CASE index=6
+  RETURN CFNMETA(-(5/02))+'|'+HexBytes(BINTOC(-(5/02),'BRS'))+'|'+HexBytes(TRANSFORM(-(5/02)))+'|'+CFNMETA(5)+'|'+CFNMETA(02)
+ CASE index=7
+  RETURN CFNMETA(5/2.0)+'|'+HexBytes(BINTOC(5/2.0,'BRS'))+'|'+HexBytes(TRANSFORM(5/2.0))+'|'+CFNMETA(5)+'|'+CFNMETA(2.0)
+ CASE index=8
+  RETURN CFNMETA(-5/2.0)+'|'+HexBytes(BINTOC(-5/2.0,'BRS'))+'|'+HexBytes(TRANSFORM(-5/2.0))+'|'+CFNMETA(-5)+'|'+CFNMETA(2.0)
+ CASE index=9
+  RETURN CFNMETA(-(5/2.0))+'|'+HexBytes(BINTOC(-(5/2.0),'BRS'))+'|'+HexBytes(TRANSFORM(-(5/2.0)))+'|'+CFNMETA(5)+'|'+CFNMETA(2.0)
+ CASE index=10
+  RETURN CFNMETA(5/2.00)+'|'+HexBytes(BINTOC(5/2.00,'BRS'))+'|'+HexBytes(TRANSFORM(5/2.00))+'|'+CFNMETA(5)+'|'+CFNMETA(2.00)
+ CASE index=11
+  RETURN CFNMETA(-5/2.00)+'|'+HexBytes(BINTOC(-5/2.00,'BRS'))+'|'+HexBytes(TRANSFORM(-5/2.00))+'|'+CFNMETA(-5)+'|'+CFNMETA(2.00)
+ CASE index=12
+  RETURN CFNMETA(-(5/2.00))+'|'+HexBytes(BINTOC(-(5/2.00),'BRS'))+'|'+HexBytes(TRANSFORM(-(5/2.00)))+'|'+CFNMETA(5)+'|'+CFNMETA(2.00)
+ CASE index=13
+  RETURN CFNMETA(5/2.000000)+'|'+HexBytes(BINTOC(5/2.000000,'BRS'))+'|'+HexBytes(TRANSFORM(5/2.000000))+'|'+CFNMETA(5)+'|'+CFNMETA(2.000000)
+ CASE index=14
+  RETURN CFNMETA(-5/2.000000)+'|'+HexBytes(BINTOC(-5/2.000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5/2.000000))+'|'+CFNMETA(-5)+'|'+CFNMETA(2.000000)
+ CASE index=15
+  RETURN CFNMETA(-(5/2.000000))+'|'+HexBytes(BINTOC(-(5/2.000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5/2.000000)))+'|'+CFNMETA(5)+'|'+CFNMETA(2.000000)
+ CASE index=16
+  RETURN CFNMETA(5/2.00000000000000)+'|'+HexBytes(BINTOC(5/2.00000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(5/2.00000000000000))+'|'+CFNMETA(5)+'|'+CFNMETA(2.00000000000000)
+ CASE index=17
+  RETURN CFNMETA(-5/2.00000000000000)+'|'+HexBytes(BINTOC(-5/2.00000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5/2.00000000000000))+'|'+CFNMETA(-5)+'|'+CFNMETA(2.00000000000000)
+ CASE index=18
+  RETURN CFNMETA(-(5/2.00000000000000))+'|'+HexBytes(BINTOC(-(5/2.00000000000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5/2.00000000000000)))+'|'+CFNMETA(5)+'|'+CFNMETA(2.00000000000000)
+ CASE index=19
+  RETURN CFNMETA(5/2.000000000000000000)+'|'+HexBytes(BINTOC(5/2.000000000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(5/2.000000000000000000))+'|'+CFNMETA(5)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=20
+  RETURN CFNMETA(-5/2.000000000000000000)+'|'+HexBytes(BINTOC(-5/2.000000000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5/2.000000000000000000))+'|'+CFNMETA(-5)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=21
+  RETURN CFNMETA(-(5/2.000000000000000000))+'|'+HexBytes(BINTOC(-(5/2.000000000000000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5/2.000000000000000000)))+'|'+CFNMETA(5)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=22
+  RETURN CFNMETA(05/2)+'|'+HexBytes(BINTOC(05/2,'BRS'))+'|'+HexBytes(TRANSFORM(05/2))+'|'+CFNMETA(05)+'|'+CFNMETA(2)
+ CASE index=23
+  RETURN CFNMETA(-05/2)+'|'+HexBytes(BINTOC(-05/2,'BRS'))+'|'+HexBytes(TRANSFORM(-05/2))+'|'+CFNMETA(-05)+'|'+CFNMETA(2)
+ CASE index=24
+  RETURN CFNMETA(-(05/2))+'|'+HexBytes(BINTOC(-(05/2),'BRS'))+'|'+HexBytes(TRANSFORM(-(05/2)))+'|'+CFNMETA(05)+'|'+CFNMETA(2)
+ CASE index=25
+  RETURN CFNMETA(05/02)+'|'+HexBytes(BINTOC(05/02,'BRS'))+'|'+HexBytes(TRANSFORM(05/02))+'|'+CFNMETA(05)+'|'+CFNMETA(02)
+ CASE index=26
+  RETURN CFNMETA(-05/02)+'|'+HexBytes(BINTOC(-05/02,'BRS'))+'|'+HexBytes(TRANSFORM(-05/02))+'|'+CFNMETA(-05)+'|'+CFNMETA(02)
+ CASE index=27
+  RETURN CFNMETA(-(05/02))+'|'+HexBytes(BINTOC(-(05/02),'BRS'))+'|'+HexBytes(TRANSFORM(-(05/02)))+'|'+CFNMETA(05)+'|'+CFNMETA(02)
+ CASE index=28
+  RETURN CFNMETA(05/2.0)+'|'+HexBytes(BINTOC(05/2.0,'BRS'))+'|'+HexBytes(TRANSFORM(05/2.0))+'|'+CFNMETA(05)+'|'+CFNMETA(2.0)
+ CASE index=29
+  RETURN CFNMETA(-05/2.0)+'|'+HexBytes(BINTOC(-05/2.0,'BRS'))+'|'+HexBytes(TRANSFORM(-05/2.0))+'|'+CFNMETA(-05)+'|'+CFNMETA(2.0)
+ CASE index=30
+  RETURN CFNMETA(-(05/2.0))+'|'+HexBytes(BINTOC(-(05/2.0),'BRS'))+'|'+HexBytes(TRANSFORM(-(05/2.0)))+'|'+CFNMETA(05)+'|'+CFNMETA(2.0)
+ CASE index=31
+  RETURN CFNMETA(05/2.00)+'|'+HexBytes(BINTOC(05/2.00,'BRS'))+'|'+HexBytes(TRANSFORM(05/2.00))+'|'+CFNMETA(05)+'|'+CFNMETA(2.00)
+ CASE index=32
+  RETURN CFNMETA(-05/2.00)+'|'+HexBytes(BINTOC(-05/2.00,'BRS'))+'|'+HexBytes(TRANSFORM(-05/2.00))+'|'+CFNMETA(-05)+'|'+CFNMETA(2.00)
+ CASE index=33
+  RETURN CFNMETA(-(05/2.00))+'|'+HexBytes(BINTOC(-(05/2.00),'BRS'))+'|'+HexBytes(TRANSFORM(-(05/2.00)))+'|'+CFNMETA(05)+'|'+CFNMETA(2.00)
+ CASE index=34
+  RETURN CFNMETA(05/2.000000)+'|'+HexBytes(BINTOC(05/2.000000,'BRS'))+'|'+HexBytes(TRANSFORM(05/2.000000))+'|'+CFNMETA(05)+'|'+CFNMETA(2.000000)
+ CASE index=35
+  RETURN CFNMETA(-05/2.000000)+'|'+HexBytes(BINTOC(-05/2.000000,'BRS'))+'|'+HexBytes(TRANSFORM(-05/2.000000))+'|'+CFNMETA(-05)+'|'+CFNMETA(2.000000)
+ CASE index=36
+  RETURN CFNMETA(-(05/2.000000))+'|'+HexBytes(BINTOC(-(05/2.000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(05/2.000000)))+'|'+CFNMETA(05)+'|'+CFNMETA(2.000000)
+ CASE index=37
+  RETURN CFNMETA(05/2.00000000000000)+'|'+HexBytes(BINTOC(05/2.00000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(05/2.00000000000000))+'|'+CFNMETA(05)+'|'+CFNMETA(2.00000000000000)
+ CASE index=38
+  RETURN CFNMETA(-05/2.00000000000000)+'|'+HexBytes(BINTOC(-05/2.00000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(-05/2.00000000000000))+'|'+CFNMETA(-05)+'|'+CFNMETA(2.00000000000000)
+ CASE index=39
+  RETURN CFNMETA(-(05/2.00000000000000))+'|'+HexBytes(BINTOC(-(05/2.00000000000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(05/2.00000000000000)))+'|'+CFNMETA(05)+'|'+CFNMETA(2.00000000000000)
+ CASE index=40
+  RETURN CFNMETA(05/2.000000000000000000)+'|'+HexBytes(BINTOC(05/2.000000000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(05/2.000000000000000000))+'|'+CFNMETA(05)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=41
+  RETURN CFNMETA(-05/2.000000000000000000)+'|'+HexBytes(BINTOC(-05/2.000000000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(-05/2.000000000000000000))+'|'+CFNMETA(-05)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=42
+  RETURN CFNMETA(-(05/2.000000000000000000))+'|'+HexBytes(BINTOC(-(05/2.000000000000000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(05/2.000000000000000000)))+'|'+CFNMETA(05)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=43
+  RETURN CFNMETA(5.0/2)+'|'+HexBytes(BINTOC(5.0/2,'BRS'))+'|'+HexBytes(TRANSFORM(5.0/2))+'|'+CFNMETA(5.0)+'|'+CFNMETA(2)
+ CASE index=44
+  RETURN CFNMETA(-5.0/2)+'|'+HexBytes(BINTOC(-5.0/2,'BRS'))+'|'+HexBytes(TRANSFORM(-5.0/2))+'|'+CFNMETA(-5.0)+'|'+CFNMETA(2)
+ CASE index=45
+  RETURN CFNMETA(-(5.0/2))+'|'+HexBytes(BINTOC(-(5.0/2),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.0/2)))+'|'+CFNMETA(5.0)+'|'+CFNMETA(2)
+ CASE index=46
+  RETURN CFNMETA(5.0/02)+'|'+HexBytes(BINTOC(5.0/02,'BRS'))+'|'+HexBytes(TRANSFORM(5.0/02))+'|'+CFNMETA(5.0)+'|'+CFNMETA(02)
+ CASE index=47
+  RETURN CFNMETA(-5.0/02)+'|'+HexBytes(BINTOC(-5.0/02,'BRS'))+'|'+HexBytes(TRANSFORM(-5.0/02))+'|'+CFNMETA(-5.0)+'|'+CFNMETA(02)
+ CASE index=48
+  RETURN CFNMETA(-(5.0/02))+'|'+HexBytes(BINTOC(-(5.0/02),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.0/02)))+'|'+CFNMETA(5.0)+'|'+CFNMETA(02)
+ CASE index=49
+  RETURN CFNMETA(5.0/2.0)+'|'+HexBytes(BINTOC(5.0/2.0,'BRS'))+'|'+HexBytes(TRANSFORM(5.0/2.0))+'|'+CFNMETA(5.0)+'|'+CFNMETA(2.0)
+ CASE index=50
+  RETURN CFNMETA(-5.0/2.0)+'|'+HexBytes(BINTOC(-5.0/2.0,'BRS'))+'|'+HexBytes(TRANSFORM(-5.0/2.0))+'|'+CFNMETA(-5.0)+'|'+CFNMETA(2.0)
+ CASE index=51
+  RETURN CFNMETA(-(5.0/2.0))+'|'+HexBytes(BINTOC(-(5.0/2.0),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.0/2.0)))+'|'+CFNMETA(5.0)+'|'+CFNMETA(2.0)
+ CASE index=52
+  RETURN CFNMETA(5.0/2.00)+'|'+HexBytes(BINTOC(5.0/2.00,'BRS'))+'|'+HexBytes(TRANSFORM(5.0/2.00))+'|'+CFNMETA(5.0)+'|'+CFNMETA(2.00)
+ CASE index=53
+  RETURN CFNMETA(-5.0/2.00)+'|'+HexBytes(BINTOC(-5.0/2.00,'BRS'))+'|'+HexBytes(TRANSFORM(-5.0/2.00))+'|'+CFNMETA(-5.0)+'|'+CFNMETA(2.00)
+ CASE index=54
+  RETURN CFNMETA(-(5.0/2.00))+'|'+HexBytes(BINTOC(-(5.0/2.00),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.0/2.00)))+'|'+CFNMETA(5.0)+'|'+CFNMETA(2.00)
+ CASE index=55
+  RETURN CFNMETA(5.0/2.000000)+'|'+HexBytes(BINTOC(5.0/2.000000,'BRS'))+'|'+HexBytes(TRANSFORM(5.0/2.000000))+'|'+CFNMETA(5.0)+'|'+CFNMETA(2.000000)
+ CASE index=56
+  RETURN CFNMETA(-5.0/2.000000)+'|'+HexBytes(BINTOC(-5.0/2.000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5.0/2.000000))+'|'+CFNMETA(-5.0)+'|'+CFNMETA(2.000000)
+ CASE index=57
+  RETURN CFNMETA(-(5.0/2.000000))+'|'+HexBytes(BINTOC(-(5.0/2.000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.0/2.000000)))+'|'+CFNMETA(5.0)+'|'+CFNMETA(2.000000)
+ CASE index=58
+  RETURN CFNMETA(5.0/2.00000000000000)+'|'+HexBytes(BINTOC(5.0/2.00000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(5.0/2.00000000000000))+'|'+CFNMETA(5.0)+'|'+CFNMETA(2.00000000000000)
+ CASE index=59
+  RETURN CFNMETA(-5.0/2.00000000000000)+'|'+HexBytes(BINTOC(-5.0/2.00000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5.0/2.00000000000000))+'|'+CFNMETA(-5.0)+'|'+CFNMETA(2.00000000000000)
+ CASE index=60
+  RETURN CFNMETA(-(5.0/2.00000000000000))+'|'+HexBytes(BINTOC(-(5.0/2.00000000000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.0/2.00000000000000)))+'|'+CFNMETA(5.0)+'|'+CFNMETA(2.00000000000000)
+ CASE index=61
+  RETURN CFNMETA(5.0/2.000000000000000000)+'|'+HexBytes(BINTOC(5.0/2.000000000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(5.0/2.000000000000000000))+'|'+CFNMETA(5.0)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=62
+  RETURN CFNMETA(-5.0/2.000000000000000000)+'|'+HexBytes(BINTOC(-5.0/2.000000000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5.0/2.000000000000000000))+'|'+CFNMETA(-5.0)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=63
+  RETURN CFNMETA(-(5.0/2.000000000000000000))+'|'+HexBytes(BINTOC(-(5.0/2.000000000000000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.0/2.000000000000000000)))+'|'+CFNMETA(5.0)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=64
+  RETURN CFNMETA(5.00/2)+'|'+HexBytes(BINTOC(5.00/2,'BRS'))+'|'+HexBytes(TRANSFORM(5.00/2))+'|'+CFNMETA(5.00)+'|'+CFNMETA(2)
+ CASE index=65
+  RETURN CFNMETA(-5.00/2)+'|'+HexBytes(BINTOC(-5.00/2,'BRS'))+'|'+HexBytes(TRANSFORM(-5.00/2))+'|'+CFNMETA(-5.00)+'|'+CFNMETA(2)
+ CASE index=66
+  RETURN CFNMETA(-(5.00/2))+'|'+HexBytes(BINTOC(-(5.00/2),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.00/2)))+'|'+CFNMETA(5.00)+'|'+CFNMETA(2)
+ CASE index=67
+  RETURN CFNMETA(5.00/02)+'|'+HexBytes(BINTOC(5.00/02,'BRS'))+'|'+HexBytes(TRANSFORM(5.00/02))+'|'+CFNMETA(5.00)+'|'+CFNMETA(02)
+ CASE index=68
+  RETURN CFNMETA(-5.00/02)+'|'+HexBytes(BINTOC(-5.00/02,'BRS'))+'|'+HexBytes(TRANSFORM(-5.00/02))+'|'+CFNMETA(-5.00)+'|'+CFNMETA(02)
+ CASE index=69
+  RETURN CFNMETA(-(5.00/02))+'|'+HexBytes(BINTOC(-(5.00/02),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.00/02)))+'|'+CFNMETA(5.00)+'|'+CFNMETA(02)
+ CASE index=70
+  RETURN CFNMETA(5.00/2.0)+'|'+HexBytes(BINTOC(5.00/2.0,'BRS'))+'|'+HexBytes(TRANSFORM(5.00/2.0))+'|'+CFNMETA(5.00)+'|'+CFNMETA(2.0)
+ CASE index=71
+  RETURN CFNMETA(-5.00/2.0)+'|'+HexBytes(BINTOC(-5.00/2.0,'BRS'))+'|'+HexBytes(TRANSFORM(-5.00/2.0))+'|'+CFNMETA(-5.00)+'|'+CFNMETA(2.0)
+ CASE index=72
+  RETURN CFNMETA(-(5.00/2.0))+'|'+HexBytes(BINTOC(-(5.00/2.0),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.00/2.0)))+'|'+CFNMETA(5.00)+'|'+CFNMETA(2.0)
+ CASE index=73
+  RETURN CFNMETA(5.00/2.00)+'|'+HexBytes(BINTOC(5.00/2.00,'BRS'))+'|'+HexBytes(TRANSFORM(5.00/2.00))+'|'+CFNMETA(5.00)+'|'+CFNMETA(2.00)
+ CASE index=74
+  RETURN CFNMETA(-5.00/2.00)+'|'+HexBytes(BINTOC(-5.00/2.00,'BRS'))+'|'+HexBytes(TRANSFORM(-5.00/2.00))+'|'+CFNMETA(-5.00)+'|'+CFNMETA(2.00)
+ CASE index=75
+  RETURN CFNMETA(-(5.00/2.00))+'|'+HexBytes(BINTOC(-(5.00/2.00),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.00/2.00)))+'|'+CFNMETA(5.00)+'|'+CFNMETA(2.00)
+ CASE index=76
+  RETURN CFNMETA(5.00/2.000000)+'|'+HexBytes(BINTOC(5.00/2.000000,'BRS'))+'|'+HexBytes(TRANSFORM(5.00/2.000000))+'|'+CFNMETA(5.00)+'|'+CFNMETA(2.000000)
+ CASE index=77
+  RETURN CFNMETA(-5.00/2.000000)+'|'+HexBytes(BINTOC(-5.00/2.000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5.00/2.000000))+'|'+CFNMETA(-5.00)+'|'+CFNMETA(2.000000)
+ CASE index=78
+  RETURN CFNMETA(-(5.00/2.000000))+'|'+HexBytes(BINTOC(-(5.00/2.000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.00/2.000000)))+'|'+CFNMETA(5.00)+'|'+CFNMETA(2.000000)
+ CASE index=79
+  RETURN CFNMETA(5.00/2.00000000000000)+'|'+HexBytes(BINTOC(5.00/2.00000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(5.00/2.00000000000000))+'|'+CFNMETA(5.00)+'|'+CFNMETA(2.00000000000000)
+ CASE index=80
+  RETURN CFNMETA(-5.00/2.00000000000000)+'|'+HexBytes(BINTOC(-5.00/2.00000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5.00/2.00000000000000))+'|'+CFNMETA(-5.00)+'|'+CFNMETA(2.00000000000000)
+ CASE index=81
+  RETURN CFNMETA(-(5.00/2.00000000000000))+'|'+HexBytes(BINTOC(-(5.00/2.00000000000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.00/2.00000000000000)))+'|'+CFNMETA(5.00)+'|'+CFNMETA(2.00000000000000)
+ CASE index=82
+  RETURN CFNMETA(5.00/2.000000000000000000)+'|'+HexBytes(BINTOC(5.00/2.000000000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(5.00/2.000000000000000000))+'|'+CFNMETA(5.00)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=83
+  RETURN CFNMETA(-5.00/2.000000000000000000)+'|'+HexBytes(BINTOC(-5.00/2.000000000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5.00/2.000000000000000000))+'|'+CFNMETA(-5.00)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=84
+  RETURN CFNMETA(-(5.00/2.000000000000000000))+'|'+HexBytes(BINTOC(-(5.00/2.000000000000000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.00/2.000000000000000000)))+'|'+CFNMETA(5.00)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=85
+  RETURN CFNMETA(5.000000/2)+'|'+HexBytes(BINTOC(5.000000/2,'BRS'))+'|'+HexBytes(TRANSFORM(5.000000/2))+'|'+CFNMETA(5.000000)+'|'+CFNMETA(2)
+ CASE index=86
+  RETURN CFNMETA(-5.000000/2)+'|'+HexBytes(BINTOC(-5.000000/2,'BRS'))+'|'+HexBytes(TRANSFORM(-5.000000/2))+'|'+CFNMETA(-5.000000)+'|'+CFNMETA(2)
+ CASE index=87
+  RETURN CFNMETA(-(5.000000/2))+'|'+HexBytes(BINTOC(-(5.000000/2),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.000000/2)))+'|'+CFNMETA(5.000000)+'|'+CFNMETA(2)
+ CASE index=88
+  RETURN CFNMETA(5.000000/02)+'|'+HexBytes(BINTOC(5.000000/02,'BRS'))+'|'+HexBytes(TRANSFORM(5.000000/02))+'|'+CFNMETA(5.000000)+'|'+CFNMETA(02)
+ CASE index=89
+  RETURN CFNMETA(-5.000000/02)+'|'+HexBytes(BINTOC(-5.000000/02,'BRS'))+'|'+HexBytes(TRANSFORM(-5.000000/02))+'|'+CFNMETA(-5.000000)+'|'+CFNMETA(02)
+ CASE index=90
+  RETURN CFNMETA(-(5.000000/02))+'|'+HexBytes(BINTOC(-(5.000000/02),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.000000/02)))+'|'+CFNMETA(5.000000)+'|'+CFNMETA(02)
+ CASE index=91
+  RETURN CFNMETA(5.000000/2.0)+'|'+HexBytes(BINTOC(5.000000/2.0,'BRS'))+'|'+HexBytes(TRANSFORM(5.000000/2.0))+'|'+CFNMETA(5.000000)+'|'+CFNMETA(2.0)
+ CASE index=92
+  RETURN CFNMETA(-5.000000/2.0)+'|'+HexBytes(BINTOC(-5.000000/2.0,'BRS'))+'|'+HexBytes(TRANSFORM(-5.000000/2.0))+'|'+CFNMETA(-5.000000)+'|'+CFNMETA(2.0)
+ CASE index=93
+  RETURN CFNMETA(-(5.000000/2.0))+'|'+HexBytes(BINTOC(-(5.000000/2.0),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.000000/2.0)))+'|'+CFNMETA(5.000000)+'|'+CFNMETA(2.0)
+ CASE index=94
+  RETURN CFNMETA(5.000000/2.00)+'|'+HexBytes(BINTOC(5.000000/2.00,'BRS'))+'|'+HexBytes(TRANSFORM(5.000000/2.00))+'|'+CFNMETA(5.000000)+'|'+CFNMETA(2.00)
+ CASE index=95
+  RETURN CFNMETA(-5.000000/2.00)+'|'+HexBytes(BINTOC(-5.000000/2.00,'BRS'))+'|'+HexBytes(TRANSFORM(-5.000000/2.00))+'|'+CFNMETA(-5.000000)+'|'+CFNMETA(2.00)
+ CASE index=96
+  RETURN CFNMETA(-(5.000000/2.00))+'|'+HexBytes(BINTOC(-(5.000000/2.00),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.000000/2.00)))+'|'+CFNMETA(5.000000)+'|'+CFNMETA(2.00)
+ CASE index=97
+  RETURN CFNMETA(5.000000/2.000000)+'|'+HexBytes(BINTOC(5.000000/2.000000,'BRS'))+'|'+HexBytes(TRANSFORM(5.000000/2.000000))+'|'+CFNMETA(5.000000)+'|'+CFNMETA(2.000000)
+ CASE index=98
+  RETURN CFNMETA(-5.000000/2.000000)+'|'+HexBytes(BINTOC(-5.000000/2.000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5.000000/2.000000))+'|'+CFNMETA(-5.000000)+'|'+CFNMETA(2.000000)
+ CASE index=99
+  RETURN CFNMETA(-(5.000000/2.000000))+'|'+HexBytes(BINTOC(-(5.000000/2.000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.000000/2.000000)))+'|'+CFNMETA(5.000000)+'|'+CFNMETA(2.000000)
+ CASE index=100
+  RETURN CFNMETA(5.000000/2.00000000000000)+'|'+HexBytes(BINTOC(5.000000/2.00000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(5.000000/2.00000000000000))+'|'+CFNMETA(5.000000)+'|'+CFNMETA(2.00000000000000)
+ CASE index=101
+  RETURN CFNMETA(-5.000000/2.00000000000000)+'|'+HexBytes(BINTOC(-5.000000/2.00000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5.000000/2.00000000000000))+'|'+CFNMETA(-5.000000)+'|'+CFNMETA(2.00000000000000)
+ CASE index=102
+  RETURN CFNMETA(-(5.000000/2.00000000000000))+'|'+HexBytes(BINTOC(-(5.000000/2.00000000000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.000000/2.00000000000000)))+'|'+CFNMETA(5.000000)+'|'+CFNMETA(2.00000000000000)
+ CASE index=103
+  RETURN CFNMETA(5.000000/2.000000000000000000)+'|'+HexBytes(BINTOC(5.000000/2.000000000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(5.000000/2.000000000000000000))+'|'+CFNMETA(5.000000)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=104
+  RETURN CFNMETA(-5.000000/2.000000000000000000)+'|'+HexBytes(BINTOC(-5.000000/2.000000000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5.000000/2.000000000000000000))+'|'+CFNMETA(-5.000000)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=105
+  RETURN CFNMETA(-(5.000000/2.000000000000000000))+'|'+HexBytes(BINTOC(-(5.000000/2.000000000000000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.000000/2.000000000000000000)))+'|'+CFNMETA(5.000000)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=106
+  RETURN CFNMETA(5.00000000000000/2)+'|'+HexBytes(BINTOC(5.00000000000000/2,'BRS'))+'|'+HexBytes(TRANSFORM(5.00000000000000/2))+'|'+CFNMETA(5.00000000000000)+'|'+CFNMETA(2)
+ CASE index=107
+  RETURN CFNMETA(-5.00000000000000/2)+'|'+HexBytes(BINTOC(-5.00000000000000/2,'BRS'))+'|'+HexBytes(TRANSFORM(-5.00000000000000/2))+'|'+CFNMETA(-5.00000000000000)+'|'+CFNMETA(2)
+ CASE index=108
+  RETURN CFNMETA(-(5.00000000000000/2))+'|'+HexBytes(BINTOC(-(5.00000000000000/2),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.00000000000000/2)))+'|'+CFNMETA(5.00000000000000)+'|'+CFNMETA(2)
+ CASE index=109
+  RETURN CFNMETA(5.00000000000000/02)+'|'+HexBytes(BINTOC(5.00000000000000/02,'BRS'))+'|'+HexBytes(TRANSFORM(5.00000000000000/02))+'|'+CFNMETA(5.00000000000000)+'|'+CFNMETA(02)
+ CASE index=110
+  RETURN CFNMETA(-5.00000000000000/02)+'|'+HexBytes(BINTOC(-5.00000000000000/02,'BRS'))+'|'+HexBytes(TRANSFORM(-5.00000000000000/02))+'|'+CFNMETA(-5.00000000000000)+'|'+CFNMETA(02)
+ CASE index=111
+  RETURN CFNMETA(-(5.00000000000000/02))+'|'+HexBytes(BINTOC(-(5.00000000000000/02),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.00000000000000/02)))+'|'+CFNMETA(5.00000000000000)+'|'+CFNMETA(02)
+ CASE index=112
+  RETURN CFNMETA(5.00000000000000/2.0)+'|'+HexBytes(BINTOC(5.00000000000000/2.0,'BRS'))+'|'+HexBytes(TRANSFORM(5.00000000000000/2.0))+'|'+CFNMETA(5.00000000000000)+'|'+CFNMETA(2.0)
+ CASE index=113
+  RETURN CFNMETA(-5.00000000000000/2.0)+'|'+HexBytes(BINTOC(-5.00000000000000/2.0,'BRS'))+'|'+HexBytes(TRANSFORM(-5.00000000000000/2.0))+'|'+CFNMETA(-5.00000000000000)+'|'+CFNMETA(2.0)
+ CASE index=114
+  RETURN CFNMETA(-(5.00000000000000/2.0))+'|'+HexBytes(BINTOC(-(5.00000000000000/2.0),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.00000000000000/2.0)))+'|'+CFNMETA(5.00000000000000)+'|'+CFNMETA(2.0)
+ CASE index=115
+  RETURN CFNMETA(5.00000000000000/2.00)+'|'+HexBytes(BINTOC(5.00000000000000/2.00,'BRS'))+'|'+HexBytes(TRANSFORM(5.00000000000000/2.00))+'|'+CFNMETA(5.00000000000000)+'|'+CFNMETA(2.00)
+ CASE index=116
+  RETURN CFNMETA(-5.00000000000000/2.00)+'|'+HexBytes(BINTOC(-5.00000000000000/2.00,'BRS'))+'|'+HexBytes(TRANSFORM(-5.00000000000000/2.00))+'|'+CFNMETA(-5.00000000000000)+'|'+CFNMETA(2.00)
+ CASE index=117
+  RETURN CFNMETA(-(5.00000000000000/2.00))+'|'+HexBytes(BINTOC(-(5.00000000000000/2.00),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.00000000000000/2.00)))+'|'+CFNMETA(5.00000000000000)+'|'+CFNMETA(2.00)
+ CASE index=118
+  RETURN CFNMETA(5.00000000000000/2.000000)+'|'+HexBytes(BINTOC(5.00000000000000/2.000000,'BRS'))+'|'+HexBytes(TRANSFORM(5.00000000000000/2.000000))+'|'+CFNMETA(5.00000000000000)+'|'+CFNMETA(2.000000)
+ CASE index=119
+  RETURN CFNMETA(-5.00000000000000/2.000000)+'|'+HexBytes(BINTOC(-5.00000000000000/2.000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5.00000000000000/2.000000))+'|'+CFNMETA(-5.00000000000000)+'|'+CFNMETA(2.000000)
+ CASE index=120
+  RETURN CFNMETA(-(5.00000000000000/2.000000))+'|'+HexBytes(BINTOC(-(5.00000000000000/2.000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.00000000000000/2.000000)))+'|'+CFNMETA(5.00000000000000)+'|'+CFNMETA(2.000000)
+ CASE index=121
+  RETURN CFNMETA(5.00000000000000/2.00000000000000)+'|'+HexBytes(BINTOC(5.00000000000000/2.00000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(5.00000000000000/2.00000000000000))+'|'+CFNMETA(5.00000000000000)+'|'+CFNMETA(2.00000000000000)
+ CASE index=122
+  RETURN CFNMETA(-5.00000000000000/2.00000000000000)+'|'+HexBytes(BINTOC(-5.00000000000000/2.00000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5.00000000000000/2.00000000000000))+'|'+CFNMETA(-5.00000000000000)+'|'+CFNMETA(2.00000000000000)
+ CASE index=123
+  RETURN CFNMETA(-(5.00000000000000/2.00000000000000))+'|'+HexBytes(BINTOC(-(5.00000000000000/2.00000000000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.00000000000000/2.00000000000000)))+'|'+CFNMETA(5.00000000000000)+'|'+CFNMETA(2.00000000000000)
+ CASE index=124
+  RETURN CFNMETA(5.00000000000000/2.000000000000000000)+'|'+HexBytes(BINTOC(5.00000000000000/2.000000000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(5.00000000000000/2.000000000000000000))+'|'+CFNMETA(5.00000000000000)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=125
+  RETURN CFNMETA(-5.00000000000000/2.000000000000000000)+'|'+HexBytes(BINTOC(-5.00000000000000/2.000000000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5.00000000000000/2.000000000000000000))+'|'+CFNMETA(-5.00000000000000)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=126
+  RETURN CFNMETA(-(5.00000000000000/2.000000000000000000))+'|'+HexBytes(BINTOC(-(5.00000000000000/2.000000000000000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.00000000000000/2.000000000000000000)))+'|'+CFNMETA(5.00000000000000)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=127
+  RETURN CFNMETA(5.000000000000000000/2)+'|'+HexBytes(BINTOC(5.000000000000000000/2,'BRS'))+'|'+HexBytes(TRANSFORM(5.000000000000000000/2))+'|'+CFNMETA(5.000000000000000000)+'|'+CFNMETA(2)
+ CASE index=128
+  RETURN CFNMETA(-5.000000000000000000/2)+'|'+HexBytes(BINTOC(-5.000000000000000000/2,'BRS'))+'|'+HexBytes(TRANSFORM(-5.000000000000000000/2))+'|'+CFNMETA(-5.000000000000000000)+'|'+CFNMETA(2)
+ CASE index=129
+  RETURN CFNMETA(-(5.000000000000000000/2))+'|'+HexBytes(BINTOC(-(5.000000000000000000/2),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.000000000000000000/2)))+'|'+CFNMETA(5.000000000000000000)+'|'+CFNMETA(2)
+ CASE index=130
+  RETURN CFNMETA(5.000000000000000000/02)+'|'+HexBytes(BINTOC(5.000000000000000000/02,'BRS'))+'|'+HexBytes(TRANSFORM(5.000000000000000000/02))+'|'+CFNMETA(5.000000000000000000)+'|'+CFNMETA(02)
+ CASE index=131
+  RETURN CFNMETA(-5.000000000000000000/02)+'|'+HexBytes(BINTOC(-5.000000000000000000/02,'BRS'))+'|'+HexBytes(TRANSFORM(-5.000000000000000000/02))+'|'+CFNMETA(-5.000000000000000000)+'|'+CFNMETA(02)
+ CASE index=132
+  RETURN CFNMETA(-(5.000000000000000000/02))+'|'+HexBytes(BINTOC(-(5.000000000000000000/02),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.000000000000000000/02)))+'|'+CFNMETA(5.000000000000000000)+'|'+CFNMETA(02)
+ CASE index=133
+  RETURN CFNMETA(5.000000000000000000/2.0)+'|'+HexBytes(BINTOC(5.000000000000000000/2.0,'BRS'))+'|'+HexBytes(TRANSFORM(5.000000000000000000/2.0))+'|'+CFNMETA(5.000000000000000000)+'|'+CFNMETA(2.0)
+ CASE index=134
+  RETURN CFNMETA(-5.000000000000000000/2.0)+'|'+HexBytes(BINTOC(-5.000000000000000000/2.0,'BRS'))+'|'+HexBytes(TRANSFORM(-5.000000000000000000/2.0))+'|'+CFNMETA(-5.000000000000000000)+'|'+CFNMETA(2.0)
+ CASE index=135
+  RETURN CFNMETA(-(5.000000000000000000/2.0))+'|'+HexBytes(BINTOC(-(5.000000000000000000/2.0),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.000000000000000000/2.0)))+'|'+CFNMETA(5.000000000000000000)+'|'+CFNMETA(2.0)
+ CASE index=136
+  RETURN CFNMETA(5.000000000000000000/2.00)+'|'+HexBytes(BINTOC(5.000000000000000000/2.00,'BRS'))+'|'+HexBytes(TRANSFORM(5.000000000000000000/2.00))+'|'+CFNMETA(5.000000000000000000)+'|'+CFNMETA(2.00)
+ CASE index=137
+  RETURN CFNMETA(-5.000000000000000000/2.00)+'|'+HexBytes(BINTOC(-5.000000000000000000/2.00,'BRS'))+'|'+HexBytes(TRANSFORM(-5.000000000000000000/2.00))+'|'+CFNMETA(-5.000000000000000000)+'|'+CFNMETA(2.00)
+ CASE index=138
+  RETURN CFNMETA(-(5.000000000000000000/2.00))+'|'+HexBytes(BINTOC(-(5.000000000000000000/2.00),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.000000000000000000/2.00)))+'|'+CFNMETA(5.000000000000000000)+'|'+CFNMETA(2.00)
+ CASE index=139
+  RETURN CFNMETA(5.000000000000000000/2.000000)+'|'+HexBytes(BINTOC(5.000000000000000000/2.000000,'BRS'))+'|'+HexBytes(TRANSFORM(5.000000000000000000/2.000000))+'|'+CFNMETA(5.000000000000000000)+'|'+CFNMETA(2.000000)
+ CASE index=140
+  RETURN CFNMETA(-5.000000000000000000/2.000000)+'|'+HexBytes(BINTOC(-5.000000000000000000/2.000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5.000000000000000000/2.000000))+'|'+CFNMETA(-5.000000000000000000)+'|'+CFNMETA(2.000000)
+ CASE index=141
+  RETURN CFNMETA(-(5.000000000000000000/2.000000))+'|'+HexBytes(BINTOC(-(5.000000000000000000/2.000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.000000000000000000/2.000000)))+'|'+CFNMETA(5.000000000000000000)+'|'+CFNMETA(2.000000)
+ CASE index=142
+  RETURN CFNMETA(5.000000000000000000/2.00000000000000)+'|'+HexBytes(BINTOC(5.000000000000000000/2.00000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(5.000000000000000000/2.00000000000000))+'|'+CFNMETA(5.000000000000000000)+'|'+CFNMETA(2.00000000000000)
+ CASE index=143
+  RETURN CFNMETA(-5.000000000000000000/2.00000000000000)+'|'+HexBytes(BINTOC(-5.000000000000000000/2.00000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5.000000000000000000/2.00000000000000))+'|'+CFNMETA(-5.000000000000000000)+'|'+CFNMETA(2.00000000000000)
+ CASE index=144
+  RETURN CFNMETA(-(5.000000000000000000/2.00000000000000))+'|'+HexBytes(BINTOC(-(5.000000000000000000/2.00000000000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.000000000000000000/2.00000000000000)))+'|'+CFNMETA(5.000000000000000000)+'|'+CFNMETA(2.00000000000000)
+ CASE index=145
+  RETURN CFNMETA(5.000000000000000000/2.000000000000000000)+'|'+HexBytes(BINTOC(5.000000000000000000/2.000000000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(5.000000000000000000/2.000000000000000000))+'|'+CFNMETA(5.000000000000000000)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=146
+  RETURN CFNMETA(-5.000000000000000000/2.000000000000000000)+'|'+HexBytes(BINTOC(-5.000000000000000000/2.000000000000000000,'BRS'))+'|'+HexBytes(TRANSFORM(-5.000000000000000000/2.000000000000000000))+'|'+CFNMETA(-5.000000000000000000)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=147
+  RETURN CFNMETA(-(5.000000000000000000/2.000000000000000000))+'|'+HexBytes(BINTOC(-(5.000000000000000000/2.000000000000000000),'BRS'))+'|'+HexBytes(TRANSFORM(-(5.000000000000000000/2.000000000000000000)))+'|'+CFNMETA(5.000000000000000000)+'|'+CFNMETA(2.000000000000000000)
+ CASE index=148
+  RETURN CFNMETA(0/2)+'|'+HexBytes(BINTOC(0/2,'BRS'))+'|'+HexBytes(TRANSFORM(0/2))+'|'+CFNMETA(0)+'|'+CFNMETA(2)
+ CASE index=149
+  RETURN CFNMETA(-0/2)+'|'+HexBytes(BINTOC(-0/2,'BRS'))+'|'+HexBytes(TRANSFORM(-0/2))+'|'+CFNMETA(-0)+'|'+CFNMETA(2)
+ CASE index=150
+  RETURN CFNMETA(0.0/2)+'|'+HexBytes(BINTOC(0.0/2,'BRS'))+'|'+HexBytes(TRANSFORM(0.0/2))+'|'+CFNMETA(0.0)+'|'+CFNMETA(2)
+ CASE index=151
+  RETURN CFNMETA(-0.0/2)+'|'+HexBytes(BINTOC(-0.0/2,'BRS'))+'|'+HexBytes(TRANSFORM(-0.0/2))+'|'+CFNMETA(-0.0)+'|'+CFNMETA(2)
+ CASE index=152
+  RETURN CFNMETA(-(0/2))+'|'+HexBytes(BINTOC(-(0/2),'BRS'))+'|'+HexBytes(TRANSFORM(-(0/2)))+'|'+CFNMETA(0)+'|'+CFNMETA(2)
+ CASE index=153
+  RETURN CFNMETA(-(0.0/2))+'|'+HexBytes(BINTOC(-(0.0/2),'BRS'))+'|'+HexBytes(TRANSFORM(-(0.0/2)))+'|'+CFNMETA(0.0)+'|'+CFNMETA(2)
+ CASE index=154
+  RETURN CFNMETA(1/2)+'|'+HexBytes(BINTOC(1/2,'BRS'))+'|'+HexBytes(TRANSFORM(1/2))+'|'+CFNMETA(1)+'|'+CFNMETA(2)
+ CASE index=155
+  RETURN CFNMETA(1.00/2.00)+'|'+HexBytes(BINTOC(1.00/2.00,'BRS'))+'|'+HexBytes(TRANSFORM(1.00/2.00))+'|'+CFNMETA(1.00)+'|'+CFNMETA(2.00)
+ CASE index=156
+  RETURN CFNMETA(7/3)+'|'+HexBytes(BINTOC(7/3,'BRS'))+'|'+HexBytes(TRANSFORM(7/3))+'|'+CFNMETA(7)+'|'+CFNMETA(3)
+ CASE index=157
+  RETURN CFNMETA(-(7/3))+'|'+HexBytes(BINTOC(-(7/3),'BRS'))+'|'+HexBytes(TRANSFORM(-(7/3)))+'|'+CFNMETA(7)+'|'+CFNMETA(3)
+ CASE index=158
+  RETURN CFNMETA(7.00/3.00)+'|'+HexBytes(BINTOC(7.00/3.00,'BRS'))+'|'+HexBytes(TRANSFORM(7.00/3.00))+'|'+CFNMETA(7.00)+'|'+CFNMETA(3.00)
+ CASE index=159
+  RETURN CFNMETA(10/2)+'|'+HexBytes(BINTOC(10/2,'BRS'))+'|'+HexBytes(TRANSFORM(10/2))+'|'+CFNMETA(10)+'|'+CFNMETA(2)
+ CASE index=160
+  RETURN CFNMETA(100/2)+'|'+HexBytes(BINTOC(100/2,'BRS'))+'|'+HexBytes(TRANSFORM(100/2))+'|'+CFNMETA(100)+'|'+CFNMETA(2)
+ CASE index=161
+  RETURN CFNMETA(9999999999/2)+'|'+HexBytes(BINTOC(9999999999/2,'BRS'))+'|'+HexBytes(TRANSFORM(9999999999/2))+'|'+CFNMETA(9999999999)+'|'+CFNMETA(2)
+ CASE index=162
+  RETURN CFNMETA(0.000000000000000001/2)+'|'+HexBytes(BINTOC(0.000000000000000001/2,'BRS'))+'|'+HexBytes(TRANSFORM(0.000000000000000001/2))+'|'+CFNMETA(0.000000000000000001)+'|'+CFNMETA(2)
+ CASE index=163
+  RETURN CFNMETA(5/-2)+'|'+HexBytes(BINTOC(5/-2,'BRS'))+'|'+HexBytes(TRANSFORM(5/-2))+'|'+CFNMETA(5)+'|'+CFNMETA(-2)
+ CASE index=164
+  RETURN CFNMETA(5.00/-2.00)+'|'+HexBytes(BINTOC(5.00/-2.00,'BRS'))+'|'+HexBytes(TRANSFORM(5.00/-2.00))+'|'+CFNMETA(5.00)+'|'+CFNMETA(-2.00)
+ CASE index=165
+  RETURN CFNMETA(-5.00/-2.00)+'|'+HexBytes(BINTOC(-5.00/-2.00,'BRS'))+'|'+HexBytes(TRANSFORM(-5.00/-2.00))+'|'+CFNMETA(-5.00)+'|'+CFNMETA(-2.00)
+ CASE index=166
+  RETURN CFNMETA(+(5/2))+'|'+HexBytes(BINTOC(+(5/2),'BRS'))+'|'+HexBytes(TRANSFORM(+(5/2)))+'|'+CFNMETA(5)+'|'+CFNMETA(2)
+ CASE index=167
+  RETURN CFNMETA(-((5/2)))+'|'+HexBytes(BINTOC(-((5/2)),'BRS'))+'|'+HexBytes(TRANSFORM(-((5/2))))+'|'+CFNMETA(5)+'|'+CFNMETA(2)
+ CASE index=168
+  RETURN CFNMETA(-(+(5/2)))+'|'+HexBytes(BINTOC(-(+(5/2)),'BRS'))+'|'+HexBytes(TRANSFORM(-(+(5/2))))+'|'+CFNMETA(5)+'|'+CFNMETA(2)
+ CASE index=169
+  RETURN CFNMETA(-(-5/2))+'|'+HexBytes(BINTOC(-(-5/2),'BRS'))+'|'+HexBytes(TRANSFORM(-(-5/2)))+'|'+CFNMETA(-5)+'|'+CFNMETA(2)
+ CASE index=170
+  RETURN CFNMETA((5/2)+0.00)+'|'+HexBytes(BINTOC((5/2)+0.00,'BRS'))+'|'+HexBytes(TRANSFORM((5/2)+0.00))+'|'+CFNMETA(5/2)+'|'+CFNMETA(0.00)
+ CASE index=171
+  RETURN CFNMETA(-((5/2)+0.00))+'|'+HexBytes(BINTOC(-((5/2)+0.00),'BRS'))+'|'+HexBytes(TRANSFORM(-((5/2)+0.00)))+'|'+CFNMETA(5/2)+'|'+CFNMETA(0.00)
+ CASE index=172
+  RETURN CFNMETA((5.00/2.00)*1.00)+'|'+HexBytes(BINTOC((5.00/2.00)*1.00,'BRS'))+'|'+HexBytes(TRANSFORM((5.00/2.00)*1.00))+'|'+CFNMETA(5.00/2.00)+'|'+CFNMETA(1.00)
+ CASE index=173
+  RETURN CFNMETA(-((5.00/2.00)*1.00))+'|'+HexBytes(BINTOC(-((5.00/2.00)*1.00),'BRS'))+'|'+HexBytes(TRANSFORM(-((5.00/2.00)*1.00)))+'|'+CFNMETA(5.00/2.00)+'|'+CFNMETA(1.00)
+ CASE index=174
+  RETURN CFNMETA((5/2)/2)+'|'+HexBytes(BINTOC((5/2)/2,'BRS'))+'|'+HexBytes(TRANSFORM((5/2)/2))+'|'+CFNMETA(5/2)+'|'+CFNMETA(2)
+ CASE index=175
+  RETURN CFNMETA(5/(2/2))+'|'+HexBytes(BINTOC(5/(2/2),'BRS'))+'|'+HexBytes(TRANSFORM(5/(2/2)))+'|'+CFNMETA(5)+'|'+CFNMETA(2/2)
+ CASE index=176
+  RETURN CFNMETA(CFNCLONE(5)/2)+'|'+HexBytes(BINTOC(CFNCLONE(5)/2,'BRS'))+'|'+HexBytes(TRANSFORM(CFNCLONE(5)/2))+'|'+CFNMETA(CFNCLONE(5))+'|'+CFNMETA(2)
+ CASE index=177
+  RETURN CFNMETA(5/CFNCLONE(2))+'|'+HexBytes(BINTOC(5/CFNCLONE(2),'BRS'))+'|'+HexBytes(TRANSFORM(5/CFNCLONE(2)))+'|'+CFNMETA(5)+'|'+CFNMETA(CFNCLONE(2))
+ CASE index=178
+  RETURN CFNMETA(iFive/iTwo)+'|'+HexBytes(BINTOC(iFive/iTwo,'BRS'))+'|'+HexBytes(TRANSFORM(iFive/iTwo))+'|'+CFNMETA(iFive)+'|'+CFNMETA(iTwo)
+ CASE index=179
+  RETURN CFNMETA(nFive/nTwo)+'|'+HexBytes(BINTOC(nFive/nTwo,'BRS'))+'|'+HexBytes(TRANSFORM(nFive/nTwo))+'|'+CFNMETA(nFive)+'|'+CFNMETA(nTwo)
+ CASE index=180
+  RETURN CFNMETA(ABS(5/2))+'|'+HexBytes(BINTOC(ABS(5/2),'BRS'))+'|'+HexBytes(TRANSFORM(ABS(5/2)))+'|'+CFNMETA(5)+'|'+CFNMETA(2)
+ CASE index=181
+  RETURN CFNMETA(IIF(.T.,5/2,0))+'|'+HexBytes(BINTOC(IIF(.T.,5/2,0),'BRS'))+'|'+HexBytes(TRANSFORM(IIF(.T.,5/2,0)))+'|'+CFNMETA(5)+'|'+CFNMETA(2)
+ CASE index=182
+  RETURN CFNMETA(EVALUATE("5/2"))+'|'+HexBytes(BINTOC(EVALUATE("5/2"),'BRS'))+'|'+HexBytes(TRANSFORM(EVALUATE("5/2")))+'|'+CFNMETA(5)+'|'+CFNMETA(2)
+ CASE index=183
+  RETURN CFNMETA((CFNCLONE(5)/2)+(5/2))+'|'+HexBytes(BINTOC((CFNCLONE(5)/2)+(5/2),'BRS'))+'|'+HexBytes(TRANSFORM((CFNCLONE(5)/2)+(5/2)))+'|'+CFNMETA(CFNCLONE(5)/2)+'|'+CFNMETA(5/2)
+ ENDCASE
+ RETURN ''
+
+FUNCTION HexBytes
+ LPARAMETERS value
+ LOCAL result,index,byteValue
+ result=''
+ FOR index=1 TO LEN(value)
+  byteValue=ASC(SUBSTR(value,index,1))
+  result=result+SUBSTR('0123456789ABCDEF',INT(byteValue/16)+1,1)+SUBSTR('0123456789ABCDEF',MOD(byteValue,16)+1,1)
+ ENDFOR
+ RETURN result

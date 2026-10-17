@@ -1,5 +1,12 @@
 # Type-aware Numeric division-context recovery
 
+Latest: [constant-only division recovery](constant-recovery.md) after merged
+PR7203's bounded runtime increment. Paired3,660 observations/run, actual0,
+typed repeat/compiler-EVAL differences0 and retained audit0; raw differences
+only independently audited unused slots. Source-width, grouped-minus, scale
+saturation and native Integer-result constraints remain unresolved by a general
+constant-folding contract. No new product code or constant parity claim.
+
 Latest: [input-verified runtime intervention checkpoint](runtime-recovery.md),
 paired1,620 values/run and standalone audit0; positive5/2 candidate only, not a
 general division algorithm or production acceptance. Earlier observations and

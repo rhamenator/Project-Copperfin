@@ -1,0 +1,1 @@
+- 2026-10-17: Retain paired native VFP9 constant-division precision/context observations and an independent type-aware audit under #5611/#6776/#7189; preserve source-width, grouped-sign, saturation and Integer-result counterexamples before any constant-folding implementation.
