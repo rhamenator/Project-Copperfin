@@ -283,9 +283,17 @@ Separate exact zero rules fit all4480 without rounding/tolerance/nonzero payload
 correction, but are not a native expected emitter or implementation pass.
 Frozen single-evaluation small-divisor-timing source/inventory/paired auditor
 adds219 expressions/4380 rows per future run to recover callback count/final
-setting/materialization timing BEFORE implementation. Actual timing remains
-unexecuted; native-only expectations/ORIGINAL/support/hook/SAME/hosted/review
-gates remain pending. See the same recovery contract for LOW DQ/DV walkthrough.
+setting/materialization timing BEFORE implementation. Signed65da37991 precedes
+actual paired runs0/empty stderr:4380 rows each, complete raw repeat/compiled-
+EVALUATE equality, exact callback counts/final state, host+archived audits0.
+REA ev_fd4b732a00f0417c8dff284784201267982a63ece6f5e3d19b008c6098513f39
+and small-divisor-timing-captures/ retain full lifecycle/source/pressure evidence,
+including one EACCES ownership-check limitation and kernel-worker readback.
+Both-chat window released; no VM/runtime change. Rejected176- then16-difference
+timing hypotheses remain; operator-aware refinement fits all4300 finite rows,
+with80 zero-divisor nonfinite controls retained, NOT policy migration.
+Native-only expectations/ORIGINAL/support/hook/SAME/hosted/review gates remain
+pending. See the same recovery contract for LOW DQ/DV walkthrough/limitations.
 
 Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
 [actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)

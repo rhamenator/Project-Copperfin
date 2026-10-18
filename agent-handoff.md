@@ -12,7 +12,8 @@ NEW WT /home/rich/.codex/worktrees/numeric-small-divisor-5611/Project-Copperfin
 branch fix/numeric-small-divisor-5611 created from origin/main240ac51cb.
 Pre-observation signed/DCO freezec68aaadf2 and first-observation checkpoint273a51b60
 are retained; read exact git head before use. Paired native recovery is now audited;
-paired checkpoint44306c92e pushed; no PR or runtime change.
+paired checkpoint44306c92e and timing source freeze65da37991 pushed;
+actual paired timing is now audited; read latest signed head. No PR/runtime change.
 src/include remain byte-identical to main. Do NOT restart completed PR7209.
 
 ## Last shipped slice and cleanup
@@ -46,7 +47,7 @@ relaxation of the completed helper's guard. Native-only source/inventory/auditor
 tests/fixtures/vfp9-numeric-division-context/emit-small-divisor-grid.cjs,
 small-divisor-grid.prg, small-divisor-grid-cases.json, audit-small-divisor-grid.cjs.
 56 cores/253 expressions/15 literal controls; five settings0/2/6/14/18, both FIXED
-and compiled/EVALUATE =5060 observations/future run. Eight boundary rows retained;
+and compiled/EVALUATE =5060 observations/actual run. Eight boundary rows retained;
 no zero/nonfinite/magnitude/scientific policy migration. No candidate/expectation
 or product imports, no separately evaluated child oracle. Source/inventory exact
 reconstruction and JS syntax/whitespace/changelog checks0. Subsequent first
@@ -81,14 +82,24 @@ decompilation, installation/configuration changes, VM or new compiler needed.
 REA skill fully read plus native/runtime/evidence guides; preserve root-vs-
 descendant settlement/cleanup, sampling/environment/image-binding limitations.
 
-NEXT: actual paired single-evaluation small-divisor timing recovery, AFTER signed
-source freeze/fresh BOTH-chat clearance/idle Wine/full PSI avg10 AND avg60<1%.
+DONE: actual paired single-evaluation small-divisor timing recovery, AFTER signed
+source freeze65da37991/fresh BOTH-chat clearance/idle Wine/full PSI0.00/0.00%.
 emit-small-divisor-timing.cjs, small-divisor-timing.prg/cases and independent
 audit-small-divisor-timing.cjs:219 expressions/4380 rows/run, twelve cores/nine
 callback wrappers/targets0,14 and three pure controls. Capture once through
-CFNMETA only; no BRS/display side-effect replay. Output build/small-divisor-native/
-timing-results.txt. No timing native run yet. Then native contract -> independent
-direct/public freeze and actual ORIGINAL-fail -> unused support -> bounded hook/
+CFNMETA only; no BRS/display side-effect replay. Both actual0/empty stderr,
+4380 records/compiled-EVAL/raw exact repeat, count/state0 differences, host+
+archived audits0. Raw SHA1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6.
+REA ev_fd4b732a00f0417c8dff284784201267982a63ece6f5e3d19b008c6098513f39:
+root0/quiesced/owned cleanup verified/untruncated, ONE EACCES ownership sample;
+read-only PID746418 readback is root/PPID2 kworker, retained with limitations.
+No unrelated process stopped; postcheck no Wine/VFP. Source/runner/VFP/FLL hashes0.
+Tracked small-divisor-timing-captures/ preserves raw/compiledFXP/status/hash/audits/
+REA and all rejected176-then16-difference hypotheses. Operator-aware refinement
+fits all4300 finite rows;80 nonfinite zero-divisor controls retained/unmodeled.
+NEXT: native-only direct/public/timing expected vectors, test sources and exact
+registrations freeze (no candidate/product import) -> actual unchanged-production
+ORIGINAL-fail before any unused support or hook -> unused support -> bounded hook/
 unchanged SAME/broader/actual hosted named execution -> Claude FIRST/exact-head
 clean review/strict green required checks/all conversations resolved -> merge.
 Do not infer parity from candidate fit/metadata fields or change native inputs.
@@ -98,7 +109,8 @@ Do not infer parity from candidate fit/metadata fields or change native inputs.
 No local build/probe/Wine/VM active/reserved. Both chats cleared each attempted
 window and received immediate RELEASED/DEFERRED after the per-run gates. Own
 post-first PSI rose54.46%/18.62%, later63.69%/48.92%; no repeat was launched.
-Actual repeat later completed after renewed gates; no reservation remains.
+Actual repeat AND paired timing later completed after renewed gates; no reservation
+remains. Timing full avg10/60=0 before EACH and after; both chats received RELEASED.
 Audit01a0a1e1-7469-7ae3-9668-470a4e5b91b5; DAW01a1050d-72c7-7213-bd2b-899e3cf342f7.
 Backup reset completion unconfirmed: no VM starts/recreation/DAW cleanup race.
 Read owner VM CLAUDE.md before actual VM work; originals/recovery/shared seed safe.

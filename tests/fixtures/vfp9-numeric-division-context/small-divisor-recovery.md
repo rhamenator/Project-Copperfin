@@ -52,9 +52,10 @@ allocation policy, integral Integer eligibility and #6776 per-area modes remain.
 Walkthrough: freeze source/inventory -> conditional resource gate -> paired actual
 observations/audits -> native-only oracles/ORIGINAL -> support/hook verification.
 Development source self-review and generator checks are not independent-human,
-native execution or release qualification. Rollback removes only the unproduced
-recovery additions; a later incorrect hook must be removed without discarding
-evidence. Parent HZ-data-corruption-01/HZ-runtime-crash-01/HZ-doc-command-01 apply.
+native execution or release qualification. Rollback reverts an incorrect helper/
+hook or unproduced experiment without discarding actual observations, failed
+hypotheses or original-test evidence. Parent HZ-data-corruption-01/
+HZ-runtime-crash-01/HZ-doc-command-01 apply.
 Wider producers/operators, propagation/display/exact conversion, #7208 and the
 pending ListItem supplied-column READ remain unfinished; no parent closure.
 
@@ -157,3 +158,62 @@ the callback non-replay and +0/-0 distinctions; automated generator byte checks,
 JS syntax, raw paired archive audit and whitespace/changelog/channel checks0
 are source/development evidence only. Existing rollback, hazards, limitations
 and mandatory unfinished Numeric/ListItem boundaries remain unchanged.
+
+## Actual paired timing recovery (before tests/support/hook)
+
+Signed/DCO source/inventory/auditor freeze65da37991 precedes invocation. Both
+chats clear a fresh narrow window; shared Wine prefix is idle. Each immediate
+full I/O PSI avg10/avg60 guard reads0.00%/0.00%. Two serialized nice10 installed
+VFP9 invocations return0/empty stderr, each4380 framed observations/no errors.
+The unchanged host and archived paired audits0 are byte-identical. All documented
+result/parameter fields and ALL raw records repeat exactly; compiled/EVALUATE
+differences0, callback counts exactly1 for each effect and0 for pure controls,
+final DECIMALS always the declared target (or original setting for controls).
+Both raw SHA256 values:
+1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6.
+
+REA ev_fd4b732a00f0417c8dff284784201267982a63ece6f5e3d19b008c6098513f39
+retains root0/quiesced, owned-group cleanup verified, selected capture untruncated.
+It also reports ONE sampled process whose ownership check receives EACCES.
+Immediate read-only command/parent readback identifies PID746418 as root
+PPID2 kworker/u256:2+gfx, consistent with a kernel worker; this does not
+retroactively prove REA ownership/atomic identity. Exact readback and full REA
+record remain in small-divisor-timing-captures/. Pre/post source/runner/VFP/FLL
+hash checks0, actual compiled FXP retained. The previous image-binding/process-
+sampling/inherited-environment/snapshot limitations still apply. Visible postcheck
+has no Wine/VFP process. Both chats receive immediate RELEASED; no native/build/
+VM reservation remains, no unrelated process is stopped and no VM is used.
+
+The finite-root timing hypothesis initially differs on176 of4300 finite rows.
+All80 nonfinite timing records are retained zero-divisor controls, not new
+checked-policy authorization. The176 differences expose negative-zero
+materialization and an ungrouped unary-prefix boundary: prepared materialization
+normalizes zero to +0, while unary on an intrinsic constant retains -0 and
+intrinsic scale before runtime continuation. A first overly broad textual
+starts-with-minus refinement misclassifies `-5/0.5` (a division root, not unary)
+and leaves16 differences. Parsing the top-level operator correctly produces
+zero differences across ALL4300 finite rows, without rounding/tolerance/nonzero
+payload adjustment. Rejected sources/status/results and the refined analysis
+are preserved; none emits expected test values or imports production behavior.
+CFObserve descriptors are after LPARAMETERS normalization, not child or raw
+call-argument oracles. No root payload is derived from a separately evaluated
+intermediate descriptor.
+
+Within the observed finite literal-derived small-divisor frontier, intrinsic
+scale/width/storage follow the prior native division rule; Integer storage still
+requires both Integer inputs and an in-range integral quotient. Preserve the
+prepared DECIMALS floor across later callbacks, use the intrinsic descriptor
+for grouped constant unary, and preserve the root-operator/continuation
+distinction above. Unknown producers, zero divisors, nonfinite/magnitude/wider
+descriptors and general conversion/allocation behavior remain outside the
+proposed helper frontier; no global switch or checked-boundary relaxation.
+
+NEXT: freeze native-only direct complete-root/public/timing expected vectors
+(including raw retained boundaries), independent test sources and registrations;
+establish actual unchanged-production ORIGINAL failures BEFORE unused support
+and any bounded parser hookup. Freeze no expectations from these candidates.
+Direct support, SAME, broad/actual hosted named execution, exact-head clean
+review/strict checks/resolved conversations and integration are ALL still pending.
+DQ/DV LOW development walkthrough now includes exact paired timing/raw archive
+audit, retained failed hypotheses and syntax boundary review; this is neither
+independent-human/release evidence nor completed small-divisor compatibility.
