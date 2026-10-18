@@ -15,7 +15,7 @@ struct ConstantDivisionIntrinsicResult {
     double payload;
 };
 
-// RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-INTRINSIC-001. UNUSED SUPPORT:
+// RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-INTRINSIC-001:
 // fixtures/vfp9-numeric-division-context/constant-intrinsic-contract.md.
 // Caller must prove a constant literal-derived node, never infer origin from
 // a double/descriptor. No SET DECIMALS, materialization, runtime hook or replay.

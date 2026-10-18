@@ -1,0 +1,21 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-MATERIALIZATION-001",
+  "source": "tests/test_prg_numeric_constant_division_intrinsic_helper.cpp",
+  "gnu": {
+    "compiler": "c++",
+    "flags": ["-std=c++20", "-O0", "-g0", "-Wall", "-Wextra", "-Wpedantic", "-Werror", "-Iinclude"],
+    "compile_status": 0,
+    "run_status": 0,
+    "evidence_prefix": "materialization-helper-gnu"
+  },
+  "clang": {
+    "compiler": "clang++",
+    "flags": ["-std=c++20", "-O0", "-g0", "-Wall", "-Wextra", "-Wpedantic", "-Werror", "-fsanitize=address,undefined,float-cast-overflow", "-fno-sanitize-recover=all", "-Iinclude"],
+    "compile_status": 0,
+    "premature_launch_status": 127,
+    "premature_launch_reason": "Executable not yet produced by asynchronous compile; retained original run stderr/status.",
+    "qualifying_after_build_run_status": 0,
+    "evidence_prefix": "materialization-helper-clang"
+  },
+  "scope": "Pure helper execution only; no full runtime or hosted sanitizer claim."
+}

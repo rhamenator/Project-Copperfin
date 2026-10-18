@@ -1,8 +1,9 @@
 // Copyright © 2026 Richard M. Hamilton.
 // SPDX-License-Identifier: GPL-3.0-only
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
-// VR-5611-NUMERIC-CONSTANT-DIVISION-INTRINSIC-001: unused support verification.
+// VR-5611-NUMERIC-CONSTANT-DIVISION-INTRINSIC-001 and MATERIALIZATION-001.
 #include "../src/runtime/prg_numeric_constant_division_intrinsic.h"
+#include "../src/runtime/prg_numeric_constant_division_materialization.h"
 #include "../src/runtime/prg_numeric_expression_context.h"
 #include "../src/runtime/prg_numeric_unary_metadata.h"
 #include "fixtures/vfp9-numeric-division-context/constant-intrinsic-expected.h"
@@ -75,6 +76,24 @@ int main() {
     }
     const auto unused = constant_division_intrinsic(value(5, {1, std::numeric_limits<std::uint32_t>::max(), I}), r, 2.5, true);
     expect(unused && unused->metadata == PrgNumericMetadata{1, 0, R}, "native Integer scale slot ignored");
+    // Explicit native 5/2 root descriptors from the pre-hook header/captures.
+    expect(materialized_constant_division_metadata({1, 0, R}, "0") ==
+        PrgNumericMetadata{1, 0, R}, "native direct D0");
+    expect(materialized_constant_division_metadata({1, 0, R}, "14") ==
+        PrgNumericMetadata{16, 14, R}, "native direct D14");
+    expect(materialized_constant_division_metadata({6, 4, R}, "2") ==
+        PrgNumericMetadata{6, 4, R}, "native explicit scale exceeds setting");
+    expect(materialized_constant_division_metadata({2, 0, I}, "18") ==
+        PrgNumericMetadata{2, 0, I}, "native integral constant has no floor");
+    for (const auto setting : {"", "-1", "+2", " 2", "2 ", "02", "19", "2x", "4294967296"})
+        expect(!materialized_constant_division_metadata({1, 0, R}, setting),
+               "invalid DECIMALS text fails closed");
+    for (const auto metadata : {PrgNumericMetadata{0, 0, R}, PrgNumericMetadata{32, 0, R},
+                               PrgNumericMetadata{3, 2, R}, PrgNumericMetadata{4, 19, R},
+                               PrgNumericMetadata{13, 0, R}, PrgNumericMetadata{13, 0, I},
+                               PrgNumericMetadata{1, 0, static_cast<PrgNumericStorage>(255)}})
+        expect(!materialized_constant_division_metadata(metadata, "14"),
+               "unsupported materialization metadata fails closed");
     if (failures) return 1;
-    std::cout << "640 frozen native intrinsic rows and unsupported-domain controls passed; no parser integration\n";
+    std::cout << "640 frozen native intrinsic rows, materialization and unsupported-domain controls passed\n";
 }

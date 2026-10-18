@@ -20,6 +20,8 @@
 #include "prg_numeric_integer_assignment.h"
 #include "prg_numeric_real_assignment.h"
 #include "prg_numeric_runtime_division.h"
+#include "prg_numeric_constant_division_intrinsic.h"
+#include "prg_numeric_constant_division_materialization.h"
 #include "prg_numeric_unary_metadata.h"
 #include "prg_numeric_expression_context.h"
 #include "prg_engine_internal.h"
@@ -348,6 +350,9 @@ namespace copperfin::runtime
             // RQ-CF-PRG-NUMERIC-UNARY-ZERO-CONTEXT-001: replay evaluation
             // context, not persistent provenance attached to the value.
             bool contains_runtime_primary = false;
+            // RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-MATERIALIZATION-001:
+            // transient prepared descriptor, not value-associated origin.
+            std::optional<PrgNumericMetadata> constant_materialized_metadata;
         };
 
         struct ScopedDataSessionSelection
@@ -374,6 +379,9 @@ namespace copperfin::runtime
         {
             Statement statement;
             std::map<std::size_t, ExpressionPrimaryCheckpoint> primary_checkpoints;
+            // A completed ungrouped prefix has no primary checkpoint. Keep
+            // its first prepared precision across a later routine suspension.
+            std::map<std::size_t, std::optional<PrgNumericMetadata>> constant_division_precision;
             std::map<std::pair<std::size_t, std::size_t>, PrgValue> routine_results;
             std::optional<std::pair<std::size_t, std::size_t>> awaiting_routine;
             // RQ-CF-PRG-035: command expressions can suspend into a PRG
@@ -3947,6 +3955,7 @@ namespace copperfin::runtime
                 ExpressionContinuation{
                     .statement = statement,
                     .primary_checkpoints = {},
+                    .constant_division_precision = {},
                     .routine_results = {},
                     .awaiting_routine = std::nullopt,
                     .command_cursor_reference = std::nullopt};
