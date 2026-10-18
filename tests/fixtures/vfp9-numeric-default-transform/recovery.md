@@ -980,6 +980,31 @@ Current full41.16/12.65 fails; no window requested/reservation/owner-input block
 NEXT sign/push source, then only if pressure recovers request fresh BOTH-chat
 compiler-only CLEAR; after build0/release, separate NEW native-only CLEAR.
 
+### ONE-CALL pre-import guard1 — no import/compiler/link/native invocation
+
+Unchanged clean signed/DCO be3ebe9693abd29615c08553827fe1b3c038fc14 after
+NEW explicit BOTH-chat compiler-only CLEAR. Pressure had recovered0.00/0.79
+before request; immediate pre-import full8.41/2.04 failed the mandatory guard75.
+Prefix idle exit1/empty. NO import command, compilation, link, FLL or native
+invocation occurred. BOTH chats RELEASED promptly; no standing reservation.
+The diagnostic source remains UNBUILT/UNRUN, not a failed compiler/native test.
+
+crt-binding-diagnostic-guard1/ retains17 byte-compared plain guard/OWN source
+receipts and complete REA
+ev_d97dfeca257dd96dfca09d8adb47cd1e8042e7d051535e930d034751bca32b35:
+root75/quiesced/owned verified/untruncated/no sampled ownership unknowns. All
+original process-sampling/atomic-image-binding/snapshot/inherited-environment/
+network limitations remain; root75 is not compiler or native evidence.
+Archive readback0/manifest0. Original host directory moved intact to
+build/default-transform-crt-binding-diagnostic-guarded1; original build path
+absent. No SDK binary/object/import library was generated; installed inputs
+unchanged. Do NOT invoke archived/guarded worker or overwrite attempted mode.
+LOW DQ-DV001 developer walkthrough/readback verifies guard prevents the FIRST
+import and preserves all attempted state, with no identity or resource-policy
+relaxation. NEXT same frozen source only after NEW BOTH-chat compiler-only
+CLEAR/immediate guards at a fresh root; build0/release precedes a separate new
+native-only window. No VM or owner-input blocker; recurring work stays active.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only

@@ -177,7 +177,15 @@ crt-binding-diagnostic.sh --build/--capture isolated new directory, attempted-
 mode overwrite rejected, clean source/tool/input/binary hashes/actual statuses,
 full avg10 AND avg60<1%/idle prefix each import/compiler/link/native. EACH mode
 needs NEW explicit BOTH-chat CLEAR. Node syntax/bash-n/diff-check0; no execution
-yet. Freeze/sign/push source BEFORE compiler-only request; after build0/release,
+yet. At unchanged signedbe3ebe969, NEW BOTH-clear compiler-only window hit
+immediate pre-import full8.41/2.04 guard75 (prefix idle1), NO import/compiler/
+link/native invocation. Both RELEASED;17 receipts/own sources/full REA archived
+in crt-binding-diagnostic-guard1/, byte readback/manifest0. Host intact at
+build/default-transform-crt-binding-diagnostic-guarded1, original path absent.
+REA ev_d97dfeca257dd96dfca09d8adb47cd1e8042e7d051535e930d034751bca32b35
+root75/quiesced/owned verified/untruncated; all standard limitations remain.
+Do NOT run guarded worker. NEXT same frozen source at a fresh root only after
+NEW BOTH-chat compiler-only CLEAR/immediate guards; after build0/release,
 separate native-only request. Current full41.16/12.65 fails, no window requested.
 Do NOT run unchanged failed full4176 workers or relax identity; old4176/latest
 1626 remain unqualified. No VM/reservation/owner-input blocker. See recovery.md
