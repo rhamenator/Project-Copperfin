@@ -5,13 +5,16 @@
 const fs = require('node:fs'), path = require('node:path'), zlib = require('node:zlib');
 const a = require('node:assert/strict'), crypto = require('node:crypto');
 const root = process.argv[2];
-const source = fs.readFileSync(path.join(__dirname, 'constant-effects.prg'), 'utf8');
-const inventory = JSON.parse(fs.readFileSync(path.join(__dirname, 'constant-effects-cases.json')));
-a.equal(inventory.rows.length, 16); a.deepEqual(inventory.settings, [0, 2, 6, 14, 18]);
-a.equal([...source.matchAll(/^expressions\[\d+\]='/gm)].length, 16);
-a.equal([...source.matchAll(/^ CASE index=\d+$/gm)].length, 16);
+const stem = process.argv[3] || 'constant-effects';
+a(['constant-effects', 'constant-continuation'].includes(stem));
+const count = stem === 'constant-effects' ? 16 : 4, total = count * 20;
+const source = fs.readFileSync(path.join(__dirname, stem + '.prg'), 'utf8');
+const inventory = JSON.parse(fs.readFileSync(path.join(__dirname, stem + '-cases.json')));
+a.equal(inventory.rows.length, count); a.deepEqual(inventory.settings, [0, 2, 6, 14, 18]);
+a.equal([...source.matchAll(/^expressions\[\d+\]='/gm)].length, count);
+a.equal([...source.matchAll(/^ CASE index=\d+$/gm)].length, count);
 const declared = new Map(inventory.rows.map(row => [row.index, row]));
-a.deepEqual([...declared.keys()], Array.from({length: 16}, (_, i) => i + 1));
+a.deepEqual([...declared.keys()], Array.from({length: count}, (_, i) => i + 1));
 for (const row of inventory.rows) {
     a(source.includes(`expressions[${row.index}]='${row.expression}'`));
     a(source.includes(` CASE index=${row.index}\n  RETURN CFNMETA(${row.expression})`));
@@ -39,7 +42,7 @@ function capture(name) {
     const raw = bytes(name + '-results.txt'); a.deepEqual(raw, bytes(name + '.out'));
     const lines = raw.toString('ascii').split('\r\n'); a.equal(lines.pop(), '');
     a.equal(lines.shift(), 'VERSION|Visual FoxPro 09.00.0000.7423 for Windows');
-    a.equal(lines.pop(), 'DONE|320'); a.equal(lines.length, 320);
+    a.equal(lines.pop(), 'DONE|' + total); a.equal(lines.length, total);
     const rows = new Map();
     for (const line of lines) {
         const fields = line.split('|'); a.equal(fields.length, 9, line);
@@ -82,8 +85,8 @@ for (const [key, x] of first.rows) {
     }
 }
 const sha = value => crypto.createHash('sha256').update(value).digest('hex');
-console.log(JSON.stringify({casesPerRun: 320, successfulValues: 320, errors: 0,
-    expressions: 16, singleEvaluationCallbackCount: 1, documentedFieldsRepeatEqual: true, compiledVersusEvaluateDifferences: 0,
+console.log(JSON.stringify({casesPerRun: total, successfulValues: total, errors: 0,
+    expressions: count, singleEvaluationCallbackCount: 1, documentedFieldsRepeatEqual: true, compiledVersusEvaluateDifferences: 0,
     rawByteEqual: first.raw.equals(repeat.raw), rawDifferentRows, rawDifferencesConfinedToUnusedSlots: unused,
     firstSha256: sha(first.raw), repeatSha256: sha(repeat.raw),
     limitation: 'No separate BINTOC/default display replay. Seen parameter descriptors are after native LPARAMETERS normalization, not raw argument descriptors.',

@@ -1,0 +1,12 @@
+{
+  "parent": "RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-MATERIALIZATION-001",
+  "baseline": "ca77da12bb74cfd3aa31d7b081ce2a9f29424883",
+  "settings": [0, 2, 6, 14, 18],
+  "rows": [
+    {"index": 1, "expression": "5/2/CFMark(0)", "changesTo": 0, "observesArgument": false},
+    {"index": 2, "expression": "5/2/CFMark(14)", "changesTo": 14, "observesArgument": false},
+    {"index": 3, "expression": "(10/2)/2/CFMark(0)", "changesTo": 0, "observesArgument": false},
+    {"index": 4, "expression": "(10/2)/2/CFMark(14)", "changesTo": 14, "observesArgument": false}
+  ],
+  "limitation": "Native timing evidence, not evidence of Copperfin continuation implementation. Single evaluation per row; no display replay."
+}

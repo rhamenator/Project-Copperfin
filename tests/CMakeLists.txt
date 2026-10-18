@@ -47,6 +47,12 @@ copperfin_add_test(test_prg_engine_numeric_runtime_division cf_xbase_runtime tes
 copperfin_add_test(test_prg_numeric_runtime_division_helper "" test_prg_numeric_runtime_division_helper.cpp)
 target_include_directories(test_prg_numeric_runtime_division_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
 
+# RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-MATERIALIZATION-001: frozen native
+# public expectations and RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-INTRINSIC-001 support.
+copperfin_add_test(test_prg_engine_numeric_constant_division cf_xbase_runtime test_prg_engine_numeric_constant_division.cpp)
+copperfin_add_test(test_prg_numeric_constant_division_intrinsic_helper "" test_prg_numeric_constant_division_intrinsic_helper.cpp)
+target_include_directories(test_prg_numeric_constant_division_intrinsic_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
+
 copperfin_add_test(test_mcp_host "cf_mcp_host;cf_platform_support"
     test_mcp_host.cpp)
 copperfin_add_test(test_project_inventory "cf_migration"

@@ -44,6 +44,17 @@ already established precision. At initial0 and mutation14, the corresponding
 results differW18 versusW19 (bothD16). Observer UDFs separately confirm that the
 argument scale is established before the callee changes the setting.
 
+Additional `constant-continuation.prg` controls test ungrouped constant prefixes
+`5/2/CFMark(0/14)` and `(10/2)/2/CFMark(0/14)`: paired80 values/run, actual0,
+empty stderr/no errors, exactly1 callback and source/typed/compiler-route audit0.
+Raw bytes repeat exactly, SHA256
+5779e236c74ee68cd8cfa926bebaf356959365c387a75b8cfc6ff57e9d15975b.
+At initial14 and mutation0 the first result remainsW17/D14 and chained result
+W18/D14. A primary-only precision checkpoint is therefore insufficient when
+the constant division has no enclosing group primary: preserve the prepared
+descriptor of a completed division node across continuation too. This is a
+required parser architecture constraint, not evidence that it is implemented.
+
 The first effects probe was NOT qualified: wrapper status0 caught320 error11
 records in each run. Its output formatter incorrectly passed Numeric
 SET('DECIMALS') to ALLTRIM. A separate native VARTYPE query returnsN; changing
@@ -81,7 +92,8 @@ Required semantic boundaries:
    and when a constant operand joins a runtime division. Use the descriptor
    prepared BEFORE a later callback, never a fresh setting read after it.
 3. Cache/restore that prepared descriptor alongside the existing primary value
-   and runtime-primary flag on continuation. Never reevaluate an operand or
+   and runtime-primary flag AND at completed constant-division nodes which have
+   no enclosing primary checkpoint. Never reevaluate an operand or
    duplicate callbacks to reconstruct precision. Pending state is parser/IR
    evaluation state, NOT a persistent PrgValue origin field.
 4. Unsupported operators/results must not inherit a right operand's pending
@@ -92,7 +104,8 @@ Required semantic boundaries:
    quotient arithmetic, checked conversions and allocation limits unchanged.
 
 Proposed architecture: pure metadata materializer; an optional prepared descriptor
-in ExpressionParser/ExpressionPrimaryCheckpoint; explicit outer/argument versus
+in ExpressionParser/ExpressionPrimaryCheckpoint plus completed-node precision
+checkpoints owned by the existing expression continuation; explicit outer/argument versus
 group expression boundaries; scoped consumption at unary and division operators.
 No persistent provenance, source-text pattern matching, new constructor-wide
 inference, display rewrite or unrelated arithmetic migration. Both NUMERICBEHAVIOR

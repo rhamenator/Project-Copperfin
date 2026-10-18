@@ -19,3 +19,4 @@ constant-boundary-captures/*.gz -text -diff
 constant-effects-captures/*.gz -text -diff
 constant-effects-captures/format-first/*.gz -text -diff
 constant-effects-captures/format-first/*.FXP -text
+constant-continuation-captures/*.gz -text -diff

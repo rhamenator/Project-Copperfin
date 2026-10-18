@@ -11,7 +11,10 @@ retains paired12,800 payload/sign/width observations and a640-row expected heade
 independently checked against native records; materialization/parser hooks remain
 unimplemented. `audit-constant-intrinsic.cjs --check-header` reproduces that check.
 The [pre-hook materialization contract](constant-materialization-contract.md)
-adds paired3,000 boundary and320 single-evaluation side-effect observations.
+and [public verification chronology](constant-public-verification.md) retain
+complete-expression/callback timing and explicit pre-hook verification gates.
+They add paired3,000 boundary,320 single-evaluation side-effect and80 ungrouped
+continuation-timing observations.
 `emit-constant-public-header.cjs --check` independently checks846 captured rows/
 five settings (798 current-producer frontier;48 explicitly retained producer gaps).
 Public ORIGINAL-fail tests and parser integration remain pending, not accepted.
