@@ -1,0 +1,298 @@
+{
+  "totalPayloadRows": 640,
+  "selectedPayloadRows": 592,
+  "excluded": [
+    {
+      "batch": "b",
+      "index": 73,
+      "left": "02147483646",
+      "right": "2"
+    },
+    {
+      "batch": "b",
+      "index": 74,
+      "left": "02147483646",
+      "right": "2"
+    },
+    {
+      "batch": "b",
+      "index": 75,
+      "left": "-02147483646",
+      "right": "2"
+    },
+    {
+      "batch": "b",
+      "index": 76,
+      "left": "-02147483646",
+      "right": "2"
+    },
+    {
+      "batch": "b",
+      "index": 77,
+      "left": "02147483646",
+      "right": "-2"
+    },
+    {
+      "batch": "b",
+      "index": 78,
+      "left": "02147483646",
+      "right": "-2"
+    },
+    {
+      "batch": "b",
+      "index": 79,
+      "left": "-02147483646",
+      "right": "-2"
+    },
+    {
+      "batch": "b",
+      "index": 80,
+      "left": "-02147483646",
+      "right": "-2"
+    },
+    {
+      "batch": "b",
+      "index": 137,
+      "left": "02147483647",
+      "right": "3"
+    },
+    {
+      "batch": "b",
+      "index": 138,
+      "left": "02147483647",
+      "right": "3"
+    },
+    {
+      "batch": "b",
+      "index": 139,
+      "left": "-02147483647",
+      "right": "3"
+    },
+    {
+      "batch": "b",
+      "index": 140,
+      "left": "-02147483647",
+      "right": "3"
+    },
+    {
+      "batch": "b",
+      "index": 141,
+      "left": "02147483647",
+      "right": "-3"
+    },
+    {
+      "batch": "b",
+      "index": 142,
+      "left": "02147483647",
+      "right": "-3"
+    },
+    {
+      "batch": "b",
+      "index": 143,
+      "left": "-02147483647",
+      "right": "-3"
+    },
+    {
+      "batch": "b",
+      "index": 144,
+      "left": "-02147483647",
+      "right": "-3"
+    },
+    {
+      "batch": "b",
+      "index": 193,
+      "left": "9999999999",
+      "right": "1"
+    },
+    {
+      "batch": "b",
+      "index": 194,
+      "left": "9999999999",
+      "right": "1"
+    },
+    {
+      "batch": "b",
+      "index": 195,
+      "left": "-9999999999",
+      "right": "1"
+    },
+    {
+      "batch": "b",
+      "index": 196,
+      "left": "-9999999999",
+      "right": "1"
+    },
+    {
+      "batch": "b",
+      "index": 197,
+      "left": "9999999999",
+      "right": "-1"
+    },
+    {
+      "batch": "b",
+      "index": 198,
+      "left": "9999999999",
+      "right": "-1"
+    },
+    {
+      "batch": "b",
+      "index": 199,
+      "left": "-9999999999",
+      "right": "-1"
+    },
+    {
+      "batch": "b",
+      "index": 200,
+      "left": "-9999999999",
+      "right": "-1"
+    },
+    {
+      "batch": "b",
+      "index": 201,
+      "left": "09999999999",
+      "right": "1"
+    },
+    {
+      "batch": "b",
+      "index": 202,
+      "left": "09999999999",
+      "right": "1"
+    },
+    {
+      "batch": "b",
+      "index": 203,
+      "left": "-09999999999",
+      "right": "1"
+    },
+    {
+      "batch": "b",
+      "index": 204,
+      "left": "-09999999999",
+      "right": "1"
+    },
+    {
+      "batch": "b",
+      "index": 205,
+      "left": "09999999999",
+      "right": "-1"
+    },
+    {
+      "batch": "b",
+      "index": 206,
+      "left": "09999999999",
+      "right": "-1"
+    },
+    {
+      "batch": "b",
+      "index": 207,
+      "left": "-09999999999",
+      "right": "-1"
+    },
+    {
+      "batch": "b",
+      "index": 208,
+      "left": "-09999999999",
+      "right": "-1"
+    },
+    {
+      "batch": "b",
+      "index": 209,
+      "left": "9999999999",
+      "right": "01"
+    },
+    {
+      "batch": "b",
+      "index": 210,
+      "left": "9999999999",
+      "right": "01"
+    },
+    {
+      "batch": "b",
+      "index": 211,
+      "left": "-9999999999",
+      "right": "01"
+    },
+    {
+      "batch": "b",
+      "index": 212,
+      "left": "-9999999999",
+      "right": "01"
+    },
+    {
+      "batch": "b",
+      "index": 213,
+      "left": "9999999999",
+      "right": "-01"
+    },
+    {
+      "batch": "b",
+      "index": 214,
+      "left": "9999999999",
+      "right": "-01"
+    },
+    {
+      "batch": "b",
+      "index": 215,
+      "left": "-9999999999",
+      "right": "-01"
+    },
+    {
+      "batch": "b",
+      "index": 216,
+      "left": "-9999999999",
+      "right": "-01"
+    },
+    {
+      "batch": "b",
+      "index": 225,
+      "left": "9999999999",
+      "right": "1.00"
+    },
+    {
+      "batch": "b",
+      "index": 226,
+      "left": "9999999999",
+      "right": "1.00"
+    },
+    {
+      "batch": "b",
+      "index": 227,
+      "left": "-9999999999",
+      "right": "1.00"
+    },
+    {
+      "batch": "b",
+      "index": 228,
+      "left": "-9999999999",
+      "right": "1.00"
+    },
+    {
+      "batch": "b",
+      "index": 229,
+      "left": "9999999999",
+      "right": "-1.00"
+    },
+    {
+      "batch": "b",
+      "index": 230,
+      "left": "9999999999",
+      "right": "-1.00"
+    },
+    {
+      "batch": "b",
+      "index": 231,
+      "left": "-9999999999",
+      "right": "-1.00"
+    },
+    {
+      "batch": "b",
+      "index": 232,
+      "left": "-9999999999",
+      "right": "-1.00"
+    }
+  ],
+  "excludedCount": 48,
+  "boundaryRows": 59,
+  "firstGridRows": 147,
+  "publicRows": 798
+}

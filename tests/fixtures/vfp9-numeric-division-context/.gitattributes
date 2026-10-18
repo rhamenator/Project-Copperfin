@@ -15,3 +15,7 @@ public-captures/*.out -text whitespace=blank-at-eol,blank-at-eof,space-before-ta
 public-captures/*-results.txt -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 constant-captures/*.gz -text -diff
 constant-payload-*-captures/*.gz -text -diff
+constant-boundary-captures/*.gz -text -diff
+constant-effects-captures/*.gz -text -diff
+constant-effects-captures/format-first/*.gz -text -diff
+constant-effects-captures/format-first/*.FXP -text

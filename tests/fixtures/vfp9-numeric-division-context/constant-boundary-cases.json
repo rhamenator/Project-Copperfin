@@ -1,0 +1,914 @@
+{
+  "parent": "RQ-CF-PRG-NUMERIC-DIVISION-CONTEXT-001",
+  "baseline": "ca77da12bb74cfd3aa31d7b081ce2a9f29424883",
+  "settings": [
+    0,
+    2,
+    6,
+    14,
+    18
+  ],
+  "rows": [
+    {
+      "index": 1,
+      "wrapper": "plain",
+      "inner": "5/2",
+      "expression": "5/2"
+    },
+    {
+      "index": 2,
+      "wrapper": "plus",
+      "inner": "5/2",
+      "expression": "+(5/2)"
+    },
+    {
+      "index": 3,
+      "wrapper": "minus",
+      "inner": "5/2",
+      "expression": "-(5/2)"
+    },
+    {
+      "index": 4,
+      "wrapper": "double-minus",
+      "inner": "5/2",
+      "expression": "-(-(5/2))"
+    },
+    {
+      "index": 5,
+      "wrapper": "clone",
+      "inner": "5/2",
+      "expression": "CFNCLONE(5/2)"
+    },
+    {
+      "index": 6,
+      "wrapper": "minus-clone",
+      "inner": "5/2",
+      "expression": "-(CFNCLONE(5/2))"
+    },
+    {
+      "index": 7,
+      "wrapper": "clone-minus",
+      "inner": "5/2",
+      "expression": "CFNCLONE(-(5/2))"
+    },
+    {
+      "index": 8,
+      "wrapper": "abs",
+      "inner": "5/2",
+      "expression": "ABS(5/2)"
+    },
+    {
+      "index": 9,
+      "wrapper": "minus-abs",
+      "inner": "5/2",
+      "expression": "-(ABS(5/2))"
+    },
+    {
+      "index": 10,
+      "wrapper": "iif",
+      "inner": "5/2",
+      "expression": "IIF(.T.,5/2,0)"
+    },
+    {
+      "index": 11,
+      "wrapper": "minus-iif",
+      "inner": "5/2",
+      "expression": "-(IIF(.T.,5/2,0))"
+    },
+    {
+      "index": 12,
+      "wrapper": "evaluate",
+      "inner": "5/2",
+      "expression": "EVALUATE(\"5/2\")"
+    },
+    {
+      "index": 13,
+      "wrapper": "minus-evaluate",
+      "inner": "5/2",
+      "expression": "-(EVALUATE(\"5/2\"))"
+    },
+    {
+      "index": 14,
+      "wrapper": "plain",
+      "inner": "5.00/2.00",
+      "expression": "5.00/2.00"
+    },
+    {
+      "index": 15,
+      "wrapper": "plus",
+      "inner": "5.00/2.00",
+      "expression": "+(5.00/2.00)"
+    },
+    {
+      "index": 16,
+      "wrapper": "minus",
+      "inner": "5.00/2.00",
+      "expression": "-(5.00/2.00)"
+    },
+    {
+      "index": 17,
+      "wrapper": "double-minus",
+      "inner": "5.00/2.00",
+      "expression": "-(-(5.00/2.00))"
+    },
+    {
+      "index": 18,
+      "wrapper": "clone",
+      "inner": "5.00/2.00",
+      "expression": "CFNCLONE(5.00/2.00)"
+    },
+    {
+      "index": 19,
+      "wrapper": "minus-clone",
+      "inner": "5.00/2.00",
+      "expression": "-(CFNCLONE(5.00/2.00))"
+    },
+    {
+      "index": 20,
+      "wrapper": "clone-minus",
+      "inner": "5.00/2.00",
+      "expression": "CFNCLONE(-(5.00/2.00))"
+    },
+    {
+      "index": 21,
+      "wrapper": "abs",
+      "inner": "5.00/2.00",
+      "expression": "ABS(5.00/2.00)"
+    },
+    {
+      "index": 22,
+      "wrapper": "minus-abs",
+      "inner": "5.00/2.00",
+      "expression": "-(ABS(5.00/2.00))"
+    },
+    {
+      "index": 23,
+      "wrapper": "iif",
+      "inner": "5.00/2.00",
+      "expression": "IIF(.T.,5.00/2.00,0)"
+    },
+    {
+      "index": 24,
+      "wrapper": "minus-iif",
+      "inner": "5.00/2.00",
+      "expression": "-(IIF(.T.,5.00/2.00,0))"
+    },
+    {
+      "index": 25,
+      "wrapper": "evaluate",
+      "inner": "5.00/2.00",
+      "expression": "EVALUATE(\"5.00/2.00\")"
+    },
+    {
+      "index": 26,
+      "wrapper": "minus-evaluate",
+      "inner": "5.00/2.00",
+      "expression": "-(EVALUATE(\"5.00/2.00\"))"
+    },
+    {
+      "index": 27,
+      "wrapper": "plain",
+      "inner": "10/2",
+      "expression": "10/2"
+    },
+    {
+      "index": 28,
+      "wrapper": "plus",
+      "inner": "10/2",
+      "expression": "+(10/2)"
+    },
+    {
+      "index": 29,
+      "wrapper": "minus",
+      "inner": "10/2",
+      "expression": "-(10/2)"
+    },
+    {
+      "index": 30,
+      "wrapper": "double-minus",
+      "inner": "10/2",
+      "expression": "-(-(10/2))"
+    },
+    {
+      "index": 31,
+      "wrapper": "clone",
+      "inner": "10/2",
+      "expression": "CFNCLONE(10/2)"
+    },
+    {
+      "index": 32,
+      "wrapper": "minus-clone",
+      "inner": "10/2",
+      "expression": "-(CFNCLONE(10/2))"
+    },
+    {
+      "index": 33,
+      "wrapper": "clone-minus",
+      "inner": "10/2",
+      "expression": "CFNCLONE(-(10/2))"
+    },
+    {
+      "index": 34,
+      "wrapper": "abs",
+      "inner": "10/2",
+      "expression": "ABS(10/2)"
+    },
+    {
+      "index": 35,
+      "wrapper": "minus-abs",
+      "inner": "10/2",
+      "expression": "-(ABS(10/2))"
+    },
+    {
+      "index": 36,
+      "wrapper": "iif",
+      "inner": "10/2",
+      "expression": "IIF(.T.,10/2,0)"
+    },
+    {
+      "index": 37,
+      "wrapper": "minus-iif",
+      "inner": "10/2",
+      "expression": "-(IIF(.T.,10/2,0))"
+    },
+    {
+      "index": 38,
+      "wrapper": "evaluate",
+      "inner": "10/2",
+      "expression": "EVALUATE(\"10/2\")"
+    },
+    {
+      "index": 39,
+      "wrapper": "minus-evaluate",
+      "inner": "10/2",
+      "expression": "-(EVALUATE(\"10/2\"))"
+    },
+    {
+      "index": 40,
+      "wrapper": "plain",
+      "inner": "0.00/2",
+      "expression": "0.00/2"
+    },
+    {
+      "index": 41,
+      "wrapper": "plus",
+      "inner": "0.00/2",
+      "expression": "+(0.00/2)"
+    },
+    {
+      "index": 42,
+      "wrapper": "minus",
+      "inner": "0.00/2",
+      "expression": "-(0.00/2)"
+    },
+    {
+      "index": 43,
+      "wrapper": "double-minus",
+      "inner": "0.00/2",
+      "expression": "-(-(0.00/2))"
+    },
+    {
+      "index": 44,
+      "wrapper": "clone",
+      "inner": "0.00/2",
+      "expression": "CFNCLONE(0.00/2)"
+    },
+    {
+      "index": 45,
+      "wrapper": "minus-clone",
+      "inner": "0.00/2",
+      "expression": "-(CFNCLONE(0.00/2))"
+    },
+    {
+      "index": 46,
+      "wrapper": "clone-minus",
+      "inner": "0.00/2",
+      "expression": "CFNCLONE(-(0.00/2))"
+    },
+    {
+      "index": 47,
+      "wrapper": "abs",
+      "inner": "0.00/2",
+      "expression": "ABS(0.00/2)"
+    },
+    {
+      "index": 48,
+      "wrapper": "minus-abs",
+      "inner": "0.00/2",
+      "expression": "-(ABS(0.00/2))"
+    },
+    {
+      "index": 49,
+      "wrapper": "iif",
+      "inner": "0.00/2",
+      "expression": "IIF(.T.,0.00/2,0)"
+    },
+    {
+      "index": 50,
+      "wrapper": "minus-iif",
+      "inner": "0.00/2",
+      "expression": "-(IIF(.T.,0.00/2,0))"
+    },
+    {
+      "index": 51,
+      "wrapper": "evaluate",
+      "inner": "0.00/2",
+      "expression": "EVALUATE(\"0.00/2\")"
+    },
+    {
+      "index": 52,
+      "wrapper": "minus-evaluate",
+      "inner": "0.00/2",
+      "expression": "-(EVALUATE(\"0.00/2\"))"
+    },
+    {
+      "index": 53,
+      "wrapper": "plain",
+      "inner": "(5/2)/(5/2)",
+      "expression": "(5/2)/(5/2)"
+    },
+    {
+      "index": 54,
+      "wrapper": "plus",
+      "inner": "(5/2)/(5/2)",
+      "expression": "+((5/2)/(5/2))"
+    },
+    {
+      "index": 55,
+      "wrapper": "minus",
+      "inner": "(5/2)/(5/2)",
+      "expression": "-((5/2)/(5/2))"
+    },
+    {
+      "index": 56,
+      "wrapper": "double-minus",
+      "inner": "(5/2)/(5/2)",
+      "expression": "-(-((5/2)/(5/2)))"
+    },
+    {
+      "index": 57,
+      "wrapper": "clone",
+      "inner": "(5/2)/(5/2)",
+      "expression": "CFNCLONE((5/2)/(5/2))"
+    },
+    {
+      "index": 58,
+      "wrapper": "minus-clone",
+      "inner": "(5/2)/(5/2)",
+      "expression": "-(CFNCLONE((5/2)/(5/2)))"
+    },
+    {
+      "index": 59,
+      "wrapper": "clone-minus",
+      "inner": "(5/2)/(5/2)",
+      "expression": "CFNCLONE(-((5/2)/(5/2)))"
+    },
+    {
+      "index": 60,
+      "wrapper": "abs",
+      "inner": "(5/2)/(5/2)",
+      "expression": "ABS((5/2)/(5/2))"
+    },
+    {
+      "index": 61,
+      "wrapper": "minus-abs",
+      "inner": "(5/2)/(5/2)",
+      "expression": "-(ABS((5/2)/(5/2)))"
+    },
+    {
+      "index": 62,
+      "wrapper": "iif",
+      "inner": "(5/2)/(5/2)",
+      "expression": "IIF(.T.,(5/2)/(5/2),0)"
+    },
+    {
+      "index": 63,
+      "wrapper": "minus-iif",
+      "inner": "(5/2)/(5/2)",
+      "expression": "-(IIF(.T.,(5/2)/(5/2),0))"
+    },
+    {
+      "index": 64,
+      "wrapper": "evaluate",
+      "inner": "(5/2)/(5/2)",
+      "expression": "EVALUATE(\"(5/2)/(5/2)\")"
+    },
+    {
+      "index": 65,
+      "wrapper": "minus-evaluate",
+      "inner": "(5/2)/(5/2)",
+      "expression": "-(EVALUATE(\"(5/2)/(5/2)\"))"
+    },
+    {
+      "index": 66,
+      "wrapper": "plain",
+      "inner": "(5.00/2)/(5/2.00)",
+      "expression": "(5.00/2)/(5/2.00)"
+    },
+    {
+      "index": 67,
+      "wrapper": "plus",
+      "inner": "(5.00/2)/(5/2.00)",
+      "expression": "+((5.00/2)/(5/2.00))"
+    },
+    {
+      "index": 68,
+      "wrapper": "minus",
+      "inner": "(5.00/2)/(5/2.00)",
+      "expression": "-((5.00/2)/(5/2.00))"
+    },
+    {
+      "index": 69,
+      "wrapper": "double-minus",
+      "inner": "(5.00/2)/(5/2.00)",
+      "expression": "-(-((5.00/2)/(5/2.00)))"
+    },
+    {
+      "index": 70,
+      "wrapper": "clone",
+      "inner": "(5.00/2)/(5/2.00)",
+      "expression": "CFNCLONE((5.00/2)/(5/2.00))"
+    },
+    {
+      "index": 71,
+      "wrapper": "minus-clone",
+      "inner": "(5.00/2)/(5/2.00)",
+      "expression": "-(CFNCLONE((5.00/2)/(5/2.00)))"
+    },
+    {
+      "index": 72,
+      "wrapper": "clone-minus",
+      "inner": "(5.00/2)/(5/2.00)",
+      "expression": "CFNCLONE(-((5.00/2)/(5/2.00)))"
+    },
+    {
+      "index": 73,
+      "wrapper": "abs",
+      "inner": "(5.00/2)/(5/2.00)",
+      "expression": "ABS((5.00/2)/(5/2.00))"
+    },
+    {
+      "index": 74,
+      "wrapper": "minus-abs",
+      "inner": "(5.00/2)/(5/2.00)",
+      "expression": "-(ABS((5.00/2)/(5/2.00)))"
+    },
+    {
+      "index": 75,
+      "wrapper": "iif",
+      "inner": "(5.00/2)/(5/2.00)",
+      "expression": "IIF(.T.,(5.00/2)/(5/2.00),0)"
+    },
+    {
+      "index": 76,
+      "wrapper": "minus-iif",
+      "inner": "(5.00/2)/(5/2.00)",
+      "expression": "-(IIF(.T.,(5.00/2)/(5/2.00),0))"
+    },
+    {
+      "index": 77,
+      "wrapper": "evaluate",
+      "inner": "(5.00/2)/(5/2.00)",
+      "expression": "EVALUATE(\"(5.00/2)/(5/2.00)\")"
+    },
+    {
+      "index": 78,
+      "wrapper": "minus-evaluate",
+      "inner": "(5.00/2)/(5/2.00)",
+      "expression": "-(EVALUATE(\"(5.00/2)/(5/2.00)\"))"
+    },
+    {
+      "index": 79,
+      "wrapper": "plain",
+      "inner": "(10/2)/2",
+      "expression": "(10/2)/2"
+    },
+    {
+      "index": 80,
+      "wrapper": "plus",
+      "inner": "(10/2)/2",
+      "expression": "+((10/2)/2)"
+    },
+    {
+      "index": 81,
+      "wrapper": "minus",
+      "inner": "(10/2)/2",
+      "expression": "-((10/2)/2)"
+    },
+    {
+      "index": 82,
+      "wrapper": "double-minus",
+      "inner": "(10/2)/2",
+      "expression": "-(-((10/2)/2))"
+    },
+    {
+      "index": 83,
+      "wrapper": "clone",
+      "inner": "(10/2)/2",
+      "expression": "CFNCLONE((10/2)/2)"
+    },
+    {
+      "index": 84,
+      "wrapper": "minus-clone",
+      "inner": "(10/2)/2",
+      "expression": "-(CFNCLONE((10/2)/2))"
+    },
+    {
+      "index": 85,
+      "wrapper": "clone-minus",
+      "inner": "(10/2)/2",
+      "expression": "CFNCLONE(-((10/2)/2))"
+    },
+    {
+      "index": 86,
+      "wrapper": "abs",
+      "inner": "(10/2)/2",
+      "expression": "ABS((10/2)/2)"
+    },
+    {
+      "index": 87,
+      "wrapper": "minus-abs",
+      "inner": "(10/2)/2",
+      "expression": "-(ABS((10/2)/2))"
+    },
+    {
+      "index": 88,
+      "wrapper": "iif",
+      "inner": "(10/2)/2",
+      "expression": "IIF(.T.,(10/2)/2,0)"
+    },
+    {
+      "index": 89,
+      "wrapper": "minus-iif",
+      "inner": "(10/2)/2",
+      "expression": "-(IIF(.T.,(10/2)/2,0))"
+    },
+    {
+      "index": 90,
+      "wrapper": "evaluate",
+      "inner": "(10/2)/2",
+      "expression": "EVALUATE(\"(10/2)/2\")"
+    },
+    {
+      "index": 91,
+      "wrapper": "minus-evaluate",
+      "inner": "(10/2)/2",
+      "expression": "-(EVALUATE(\"(10/2)/2\"))"
+    },
+    {
+      "index": 92,
+      "wrapper": "plain",
+      "inner": "5/(2/2)",
+      "expression": "5/(2/2)"
+    },
+    {
+      "index": 93,
+      "wrapper": "plus",
+      "inner": "5/(2/2)",
+      "expression": "+(5/(2/2))"
+    },
+    {
+      "index": 94,
+      "wrapper": "minus",
+      "inner": "5/(2/2)",
+      "expression": "-(5/(2/2))"
+    },
+    {
+      "index": 95,
+      "wrapper": "double-minus",
+      "inner": "5/(2/2)",
+      "expression": "-(-(5/(2/2)))"
+    },
+    {
+      "index": 96,
+      "wrapper": "clone",
+      "inner": "5/(2/2)",
+      "expression": "CFNCLONE(5/(2/2))"
+    },
+    {
+      "index": 97,
+      "wrapper": "minus-clone",
+      "inner": "5/(2/2)",
+      "expression": "-(CFNCLONE(5/(2/2)))"
+    },
+    {
+      "index": 98,
+      "wrapper": "clone-minus",
+      "inner": "5/(2/2)",
+      "expression": "CFNCLONE(-(5/(2/2)))"
+    },
+    {
+      "index": 99,
+      "wrapper": "abs",
+      "inner": "5/(2/2)",
+      "expression": "ABS(5/(2/2))"
+    },
+    {
+      "index": 100,
+      "wrapper": "minus-abs",
+      "inner": "5/(2/2)",
+      "expression": "-(ABS(5/(2/2)))"
+    },
+    {
+      "index": 101,
+      "wrapper": "iif",
+      "inner": "5/(2/2)",
+      "expression": "IIF(.T.,5/(2/2),0)"
+    },
+    {
+      "index": 102,
+      "wrapper": "minus-iif",
+      "inner": "5/(2/2)",
+      "expression": "-(IIF(.T.,5/(2/2),0))"
+    },
+    {
+      "index": 103,
+      "wrapper": "evaluate",
+      "inner": "5/(2/2)",
+      "expression": "EVALUATE(\"5/(2/2)\")"
+    },
+    {
+      "index": 104,
+      "wrapper": "minus-evaluate",
+      "inner": "5/(2/2)",
+      "expression": "-(EVALUATE(\"5/(2/2)\"))"
+    },
+    {
+      "index": 105,
+      "wrapper": "plain",
+      "inner": "(1/7)/3",
+      "expression": "(1/7)/3"
+    },
+    {
+      "index": 106,
+      "wrapper": "plus",
+      "inner": "(1/7)/3",
+      "expression": "+((1/7)/3)"
+    },
+    {
+      "index": 107,
+      "wrapper": "minus",
+      "inner": "(1/7)/3",
+      "expression": "-((1/7)/3)"
+    },
+    {
+      "index": 108,
+      "wrapper": "double-minus",
+      "inner": "(1/7)/3",
+      "expression": "-(-((1/7)/3))"
+    },
+    {
+      "index": 109,
+      "wrapper": "clone",
+      "inner": "(1/7)/3",
+      "expression": "CFNCLONE((1/7)/3)"
+    },
+    {
+      "index": 110,
+      "wrapper": "minus-clone",
+      "inner": "(1/7)/3",
+      "expression": "-(CFNCLONE((1/7)/3))"
+    },
+    {
+      "index": 111,
+      "wrapper": "clone-minus",
+      "inner": "(1/7)/3",
+      "expression": "CFNCLONE(-((1/7)/3))"
+    },
+    {
+      "index": 112,
+      "wrapper": "abs",
+      "inner": "(1/7)/3",
+      "expression": "ABS((1/7)/3)"
+    },
+    {
+      "index": 113,
+      "wrapper": "minus-abs",
+      "inner": "(1/7)/3",
+      "expression": "-(ABS((1/7)/3))"
+    },
+    {
+      "index": 114,
+      "wrapper": "iif",
+      "inner": "(1/7)/3",
+      "expression": "IIF(.T.,(1/7)/3,0)"
+    },
+    {
+      "index": 115,
+      "wrapper": "minus-iif",
+      "inner": "(1/7)/3",
+      "expression": "-(IIF(.T.,(1/7)/3,0))"
+    },
+    {
+      "index": 116,
+      "wrapper": "evaluate",
+      "inner": "(1/7)/3",
+      "expression": "EVALUATE(\"(1/7)/3\")"
+    },
+    {
+      "index": 117,
+      "wrapper": "minus-evaluate",
+      "inner": "(1/7)/3",
+      "expression": "-(EVALUATE(\"(1/7)/3\"))"
+    },
+    {
+      "index": 118,
+      "wrapper": "plain",
+      "inner": "5/(5/2)",
+      "expression": "5/(5/2)"
+    },
+    {
+      "index": 119,
+      "wrapper": "plus",
+      "inner": "5/(5/2)",
+      "expression": "+(5/(5/2))"
+    },
+    {
+      "index": 120,
+      "wrapper": "minus",
+      "inner": "5/(5/2)",
+      "expression": "-(5/(5/2))"
+    },
+    {
+      "index": 121,
+      "wrapper": "double-minus",
+      "inner": "5/(5/2)",
+      "expression": "-(-(5/(5/2)))"
+    },
+    {
+      "index": 122,
+      "wrapper": "clone",
+      "inner": "5/(5/2)",
+      "expression": "CFNCLONE(5/(5/2))"
+    },
+    {
+      "index": 123,
+      "wrapper": "minus-clone",
+      "inner": "5/(5/2)",
+      "expression": "-(CFNCLONE(5/(5/2)))"
+    },
+    {
+      "index": 124,
+      "wrapper": "clone-minus",
+      "inner": "5/(5/2)",
+      "expression": "CFNCLONE(-(5/(5/2)))"
+    },
+    {
+      "index": 125,
+      "wrapper": "abs",
+      "inner": "5/(5/2)",
+      "expression": "ABS(5/(5/2))"
+    },
+    {
+      "index": 126,
+      "wrapper": "minus-abs",
+      "inner": "5/(5/2)",
+      "expression": "-(ABS(5/(5/2)))"
+    },
+    {
+      "index": 127,
+      "wrapper": "iif",
+      "inner": "5/(5/2)",
+      "expression": "IIF(.T.,5/(5/2),0)"
+    },
+    {
+      "index": 128,
+      "wrapper": "minus-iif",
+      "inner": "5/(5/2)",
+      "expression": "-(IIF(.T.,5/(5/2),0))"
+    },
+    {
+      "index": 129,
+      "wrapper": "evaluate",
+      "inner": "5/(5/2)",
+      "expression": "EVALUATE(\"5/(5/2)\")"
+    },
+    {
+      "index": 130,
+      "wrapper": "minus-evaluate",
+      "inner": "5/(5/2)",
+      "expression": "-(EVALUATE(\"5/(5/2)\"))"
+    },
+    {
+      "index": 131,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "iFive/(5/2)"
+    },
+    {
+      "index": 132,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "(5/2)/iTwo"
+    },
+    {
+      "index": 133,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "iFive/-(5/2)"
+    },
+    {
+      "index": 134,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "-(iFive/(5/2))"
+    },
+    {
+      "index": 135,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "-((5/2)/iTwo)"
+    },
+    {
+      "index": 136,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "(5/2)/(iFive/iTwo)"
+    },
+    {
+      "index": 137,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "(iFive/iTwo)/(5/2)"
+    },
+    {
+      "index": 138,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "5/(CFNCLONE(5)/2)"
+    },
+    {
+      "index": 139,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "CFNCLONE(5)/(5/2)"
+    },
+    {
+      "index": 140,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "-(CFNCLONE(5)/(5/2))"
+    },
+    {
+      "index": 141,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "CFNCLONE(5)/-(5/2)"
+    },
+    {
+      "index": 142,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "(5/2)/CFNCLONE(2)"
+    },
+    {
+      "index": 143,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "-(5/2)/CFNCLONE(2)"
+    },
+    {
+      "index": 144,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "-((5/2)/CFNCLONE(2))"
+    },
+    {
+      "index": 145,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "(5/2)/(CFNCLONE(5)/2)"
+    },
+    {
+      "index": 146,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "(CFNCLONE(5)/2)/(5/2)"
+    },
+    {
+      "index": 147,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "(5/2)/(IIF(.T.,5,0)/2)"
+    },
+    {
+      "index": 148,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "IIF(.T.,5,0)/(5/2)"
+    },
+    {
+      "index": 149,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "(5/2)/IIF(.T.,2,0)"
+    },
+    {
+      "index": 150,
+      "wrapper": "runtime-boundary",
+      "inner": null,
+      "expression": "-(IIF(.T.,5,0)/(5/2))"
+    }
+  ],
+  "limitation": "Complete expression observations, not child-operand precision inferred from separate evaluation."
+}

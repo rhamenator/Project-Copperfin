@@ -10,6 +10,11 @@ The [intrinsic support contract](constant-intrinsic-contract.md) additionally
 retains paired12,800 payload/sign/width observations and a640-row expected header
 independently checked against native records; materialization/parser hooks remain
 unimplemented. `audit-constant-intrinsic.cjs --check-header` reproduces that check.
+The [pre-hook materialization contract](constant-materialization-contract.md)
+adds paired3,000 boundary and320 single-evaluation side-effect observations.
+`emit-constant-public-header.cjs --check` independently checks846 captured rows/
+five settings (798 current-producer frontier;48 explicitly retained producer gaps).
+Public ORIGINAL-fail tests and parser integration remain pending, not accepted.
 
 Latest: [input-verified runtime intervention checkpoint](runtime-recovery.md),
 paired1,620 values/run and standalone audit0; positive5/2 candidate only, not a

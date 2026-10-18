@@ -1,0 +1,27 @@
+node:assert:150
+  throw new AssertionError(obj);
+  ^
+
+AssertionError [ERR_ASSERTION]: ERROR-EVAL|0|OFF|1|43464F62736572766528352F322C313429|11|46756E6374696F6E20617267756D656E742076616C75652C20747970652C206F7220636F756E7420697320696E76616C69642E
+
+7 !== 9
+
+    at capture (/home/rich/.codex/worktrees/numeric-constant-division-5611/Project-Copperfin/tests/fixtures/vfp9-numeric-division-context/audit-constant-effects.cjs:45:43)
+    at Object.<anonymous> (/home/rich/.codex/worktrees/numeric-constant-division-5611/Project-Copperfin/tests/fixtures/vfp9-numeric-division-context/audit-constant-effects.cjs:68:15)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 7,
+  expected: 9,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.20.0

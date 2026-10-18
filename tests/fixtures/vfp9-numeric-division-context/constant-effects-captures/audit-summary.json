@@ -1,0 +1,17 @@
+{
+  "casesPerRun": 320,
+  "successfulValues": 320,
+  "errors": 0,
+  "expressions": 16,
+  "singleEvaluationCallbackCount": 1,
+  "documentedFieldsRepeatEqual": true,
+  "compiledVersusEvaluateDifferences": 0,
+  "rawByteEqual": false,
+  "rawDifferentRows": 10,
+  "rawDifferencesConfinedToUnusedSlots": {
+    "6:49:real": 10
+  },
+  "firstSha256": "dc123d468fd64d1e95c995b2351c3529dbd4533a766a7e7658416f9ea9521e42",
+  "repeatSha256": "d263d7a740ecc00886182d18a82643e0eb01d3b6377e2372351cb56f78ebb8b7",
+  "limitation": "No separate BINTOC/default display replay. Seen parameter descriptors are after native LPARAMETERS normalization, not raw argument descriptors."
+}

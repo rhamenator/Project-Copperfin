@@ -1,0 +1,110 @@
+{
+  "parent": "RQ-CF-PRG-NUMERIC-DIVISION-CONTEXT-001",
+  "baseline": "ca77da12bb74cfd3aa31d7b081ce2a9f29424883",
+  "settings": [
+    0,
+    2,
+    6,
+    14,
+    18
+  ],
+  "rows": [
+    {
+      "index": 1,
+      "expression": "CFObserve(5/2,14)",
+      "changesTo": 14,
+      "observesArgument": true
+    },
+    {
+      "index": 2,
+      "expression": "-(CFObserve(5/2,14))",
+      "changesTo": 14,
+      "observesArgument": true
+    },
+    {
+      "index": 3,
+      "expression": "CFObserve(-(5/2),14)",
+      "changesTo": 14,
+      "observesArgument": true
+    },
+    {
+      "index": 4,
+      "expression": "CFObserve(5.00/2.00,14)",
+      "changesTo": 14,
+      "observesArgument": true
+    },
+    {
+      "index": 5,
+      "expression": "CFObserve(5/2,0)",
+      "changesTo": 0,
+      "observesArgument": true
+    },
+    {
+      "index": 6,
+      "expression": "-(CFObserve(5/2,0))",
+      "changesTo": 0,
+      "observesArgument": true
+    },
+    {
+      "index": 7,
+      "expression": "(5/2)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false
+    },
+    {
+      "index": 8,
+      "expression": "-(5/2)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false
+    },
+    {
+      "index": 9,
+      "expression": "-((5/2)/CFMark(14))",
+      "changesTo": 14,
+      "observesArgument": false
+    },
+    {
+      "index": 10,
+      "expression": "CFMark(14)/(5/2)",
+      "changesTo": 14,
+      "observesArgument": false
+    },
+    {
+      "index": 11,
+      "expression": "(5/2)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false
+    },
+    {
+      "index": 12,
+      "expression": "-(5/2)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false
+    },
+    {
+      "index": 13,
+      "expression": "-((5/2)/CFMark(0))",
+      "changesTo": 0,
+      "observesArgument": false
+    },
+    {
+      "index": 14,
+      "expression": "CFMark(0)/(5/2)",
+      "changesTo": 0,
+      "observesArgument": false
+    },
+    {
+      "index": 15,
+      "expression": "CFObserve(10/2,14)",
+      "changesTo": 14,
+      "observesArgument": true
+    },
+    {
+      "index": 16,
+      "expression": "CFObserve(0.00/2,14)",
+      "changesTo": 14,
+      "observesArgument": true
+    }
+  ],
+  "limitation": "One CFNMETA evaluation per expression. No separate BINTOC/TRANSFORM replay; observedValue descriptor is after native LPARAMETERS normalization, not raw call argument."
+}
