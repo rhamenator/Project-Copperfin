@@ -1201,6 +1201,44 @@ checks above actually0; rollback exact source revert while retaining all raw
 receipts/provenance correction, notify owner if evidence is invalidated. No
 independent-human/system/release assurance, known-bug exception or closure.
 
+### Full CRT build capture lifecycle failure — no worker evidence
+
+At signed/DCO source8ce84ed596e1b65c51084188515a31fafe7a2fa0, fresh explicit
+BOTH compiler-only CLEAR was obtained. The declared crt-build.sh REA call
+returned ONLY cleanup_incomplete (retryable:false), no Evidence ID, root exit,
+partial capture or worker receipts. No build.started.utc/build.finished.utc or
+compiler/test/import/link status existed. Therefore no completed build or test
+is established; absence of receipts is NOT complete process observation.
+
+Full unmodified tool response is retained. Ownership-token reads failed with
+EACCES for candidates1303366/1305485/1305502. Read-only ps showed msedge,
+parent938012/UID1000; left untouched, NO signals sent. This is not verified
+REA cleanup or evidence that the target completed. Both windows RELEASED
+immediately. Follow-up full I/O PSI41.72/17.74 exceeded the gate, prefix idle1;
+no native reservation or VM operation. No repeated producer or diagnostic run.
+
+crt-full-rea-lifecycle-attempt1/ archives13 byte-compared plain receipts/OWN
+source copies; SHA256SUMS verified0. Host attempt retained intact at
+build/default-transform-crt-rea-lifecycle-attempt1; original worker path absent.
+No SDK-containing artifacts archived and no new FLL evidenced.
+
+NEXT use the existing frozen worker through an ordinary shell capture after
+fresh BOTH compiler-only CLEAR and all unchanged immediate per-invocation
+pressure/prefix gates. Do not retry identical failed REA lifecycle while its
+blocker persists, modify REA configuration, or signal unrelated processes.
+Ordinary shell receipts must be labelled as such, NOT REA Evidence/verified
+descendant cleanup. Only actual build0 allows a separate fresh BOTH native-only
+window. Preserve every guard/failure, strict first-before-repeat and exact
+module binding. Full CRT experiment remains UNBUILT/UNRUN; no accepted rule.
+
+LOW DQ-DV001 developer walkthrough: compared all13 archived bytes to original
+receipts/source and verified manifest0; inspected error-only/absent execution
+evidence versus prior one-call partial capture distinction. This procedural
+delta changes capture fallback only, not probe/guards/identity/acceptance.
+Rollback retains all raw errors and restores previous capture route only after
+its blocker resolves; notify owner if evidence invalidated. No independent or
+release assurance, production change, owner-input blocker or automation pause.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
