@@ -165,15 +165,23 @@ quiesced/owned verified/untruncated/no sampled ownership unknowns; ALL standard
 sampling/atomic-binding/snapshot/environment/network limits remain. Native
 snapshot160files/40MB budget recorded; test scope unchanged. Earlier link1
 source176224a01/105-receipt crt-binding-build-attempt1 stays intact.
-NEXT prepare ONE-CALL staged runtime binding diagnostic, not implemented yet:
-bounded public VirtualQuery/PE/path facts and distinct operation/error statuses,
-no proprietary bytes/relaxed identity. Fail PRG immediately on first observer
-error; do NOT replay unchanged full4176 failed worker (failure currently retries
-per call). Freeze/sign source/reader BEFORE NEW BOTH compiler/native CLEAR,
-immediate full avg10 AND avg60<1%/idle prefix per invocation. Only after exact
-one-call binding/control proof, separately freeze full4176 caller with stop-on-
-error and strict first gate BEFORE repeat. No VM/owner-input blocker, no model/
-production formatter, old4176 and latest1626 remain unqualified. See recovery.md.
+NEXT ONE-CALL staged diagnostic now SOURCE-PREPARED, UNBUILT/UNRUN:
+CFNBIND zero-arg/once per FLL, public query/PE/path/file read/hash/close facts,
+FIRST failed stage + immediate API error; no CRT conversions/proprietary bytes/
+pointers/CW changes. All identity predicates unchanged, hash valid before later
+header mismatch never means BOUND. Independent Numeric0.5 metadata/BRS/display
+controls. New crt-binding-diagnostic.prg calls once/DONE1 only means completion;
+audit-crt-binding-diagnostic.cjs --require-bound requires exact composite32-bit
+identity and returns2 on failed binding. No full4176/repeat reachable.
+crt-binding-diagnostic.sh --build/--capture isolated new directory, attempted-
+mode overwrite rejected, clean source/tool/input/binary hashes/actual statuses,
+full avg10 AND avg60<1%/idle prefix each import/compiler/link/native. EACH mode
+needs NEW explicit BOTH-chat CLEAR. Node syntax/bash-n/diff-check0; no execution
+yet. Freeze/sign/push source BEFORE compiler-only request; after build0/release,
+separate native-only request. Current full41.16/12.65 fails, no window requested.
+Do NOT run unchanged failed full4176 workers or relax identity; old4176/latest
+1626 remain unqualified. No VM/reservation/owner-input blocker. See recovery.md
+for exact stages, bounds, source provenance and LOW DQ-DV walkthrough.
 Do not replay seven qualified pairs.
 expectations/actual ORIGINAL -> unused support/direct GNU+Clang -> separate
 wiring/SAME/broader/actual named hosted -> exact-head clean review/strict green/

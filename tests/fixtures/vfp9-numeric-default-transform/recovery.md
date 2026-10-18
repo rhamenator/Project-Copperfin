@@ -917,6 +917,69 @@ host-only binary exclusion, next single-call-before-full recovery ordering.
 Forensic verification above actually passed; no independent-human/system or
 release acceptance, hazard/compatibility/parent closure.
 
+### ONE-CALL staged binding diagnostic — source freeze, UNBUILT/UNRUN
+
+CFNBIND is an OWN zero-argument diagnostic entry in the same published packed
+FLL table (new third entry; original conversion entries unchanged). It permits
+only one diagnostic per FLL lifetime, refuses reuse/parameters/already-cached
+binding, calls no CRT conversion and changes no control word. It records the
+FIRST failed binding operation/predicate plus immediate
+[GetLastError](https://learn.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-getlasterror)
+only where the API documents failure error state. Zero error on a predicate
+failure is explicit, not an API success claim. Close outcome/error is separate;
+an earlier read failure is preserved even if cleanup also fails.
+
+Stages: MODULE_API/PATH_API/PATH_BOUND, QUERY_API/QUERY_SIZE/QUERY_PREDICATE,
+IMAGE_HEADER, CACHE_IMAGE/CACHE_PATH, SHA_SELFTEST, OPEN_API/SIZE_API/SIZE_BOUND,
+READ_LIMIT/READ_API/READ_BOUND, EOF_API/EOF_BOUND, CLOSE_API/READ_SIZE,
+FILE_HEADER/HEADER_EQUAL, or BOUND. Public facts: bounded path, returned query
+byte count/base+allocation match booleans/region size/state/protection/type,
+validity-tagged loaded/file PE fields, self-test outcome,64-bit file size words,
+bytes/read count/close result, validity-tagged file SHA256 and CW before/after.
+No process pointers, proprietary bytes, instructions or disassembly are emitted.
+Output bound2048 (max518 path hex + fixed protocol less1600), header/read/hash
+bounds unchanged. No aggregate struct copies/new provider or DLL loading.
+
+Every ORIGINAL binding predicate remains mandatory. Digest now finalizes after
+complete bounded read/EOF/close but BEFORE header equality, allowing a failed
+HEADER_EQUAL diagnostic to retain the sampled file hash; hash alone never sets
+bound. BOUND still requires loaded/header/file checks and cache field copies.
+Shared crt-binding.h/hash/header algorithm remains unchanged from the actual
+GNU+Clang72-check receipts. New FLL/table/diagnostic execution is unverified.
+
+crt-binding-diagnostic.prg invokes CFNBIND exactly ONCE, no conversion/full4176
+loop, and writes VERSION/one BIND record/DONE1 then returns regardless of bound
+status. DONE1 means diagnostic completion, NOT identity success. Independent
+pre/post Numeric0.5 width40/scale18 metadata/BRS/display/CW controls accompany
+the one call. audit-crt-binding-diagnostic.cjs separates complete framing/
+unchanged-control diagnosis from --require-bound acceptance. Failure details
+are retained with bindingEstablished:false; --require-bound returns2. A claimed
+BOUND must also pass exact frozen32-bit path/digest/size/header facts and every
+memory/read/control predicate. No CRT/display/formatter/pair qualification
+follows even if this one-call check succeeds. No path-only bypass or old-capture
+retroqualification; prior strict reader and failed sources remain immutable.
+
+crt-binding-diagnostic.sh --build and --capture use a NEW isolated directory,
+reject attempted modes BEFORE overwriting receipts, require clean signed source,
+retain all tool/source/native/binary hashes/actual statuses/stderr and immediate
+full avg10 AND avg60<1%/idle prefix before each import/compiler/link/native
+invocation. Each mode needs separate fresh explicit BOTH-chat CLEAR; script
+arguments do not grant clearance. No repeat/full caller is reachable. Native
+failure exits before reader; reader statuses are always recorded. Do not invoke
+crt-build.sh/crt-capture.sh or attempted workers as a fallback. SDK-linked
+object/libs/FLL remain HOST-ONLY. No VM/session/setup/install/config change.
+
+Node syntax/bash-n/diff-check0; no compiler/test executable/native invocation
+yet. LOW DQ-DV001 procedural delta/walkthrough: traced each failure through
+close/record/return, one-call guard, separate structural-vs-binding gates and
+fresh-directory guards. Developer self-review only, not independent-human or
+acceptance evidence. Misuse mitigated: DONE/diagnostic0 cannot be reported as
+successful binding or a formatter oracle. Rollback: exact diagnostic-source
+revert, keep all failure receipts and notify owner if evidence is invalidated.
+Current full41.16/12.65 fails; no window requested/reservation/owner-input blocker.
+NEXT sign/push source, then only if pressure recovers request fresh BOTH-chat
+compiler-only CLEAR; after build0/release, separate NEW native-only CLEAR.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only

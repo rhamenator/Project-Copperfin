@@ -8,3 +8,4 @@ GetFileSizeEx@8
 ReadFile@20
 CloseHandle@4
 VirtualQuery@12
+GetLastError@0
