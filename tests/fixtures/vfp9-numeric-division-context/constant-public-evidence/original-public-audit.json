@@ -1,0 +1,16 @@
+{
+  "summary": "constant division: descriptor=15966 bits=660 evaluation=0 controls=0 total=16626",
+  "failureLines": 16626,
+  "nativeBitFailureExpectedBits": {
+    "0000000000000000": 440,
+    "8000000000000000": 220
+  },
+  "callbackFailures": [
+    "FAIL: COPPERFIN (5/2)/LaterReal() prepared precision survives callback",
+    "FAIL: COPPERFIN 5/2/LaterReal() prepared precision survives callback",
+    "FAIL: COPPERFIN (10/2)/2/LaterReal() prepared precision survives callback",
+    "FAIL: VFP9 (5/2)/LaterReal() prepared precision survives callback",
+    "FAIL: VFP9 5/2/LaterReal() prepared precision survives callback",
+    "FAIL: VFP9 (10/2)/2/LaterReal() prepared precision survives callback"
+  ]
+}

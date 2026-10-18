@@ -43,9 +43,20 @@ Pre-hook source/hash freeze is retained at host
 adding the ungrouped/chained callback controls and its hash list also remain on
 the host; no ORIGINAL result preceded that strengthening. Configure is actual0
 using GNU Debug -O0 -g0, dedicated `build/constant-division-original`, parallel2.
-Build/public ORIGINAL result still pending at this documentation checkpoint.
-Require a classified actual failure on the unchanged runtime, then SAME frozen
-tests passing after bounded integration; do not revise constants to fit code.
+Public test/registrations were signed c7e287ba1f0abcbbbdcd0b78226b5bc59418eb84
+BEFORE runtime hooks. Actual configure/build/final no-work build all0. ORIGINAL
+CTest exits8: public constant test fails; prior runtime division, intrinsic
+helper, exact-name sanitizer-selection and native isolation contracts pass4/4.
+Public summary:15,966 descriptor failures (15,960 table pairs plus6 callback
+precision assertions),660 native-bit failures, evaluation0/control0, total16,626.
+All660 expected bit mismatches are signed zeros:440 native positive zero and220
+native negative zero. No nonzero expected bits fail. Actual callback pauses,
+once-only counts, quotient, final setting,48 retained gaps, unsupported routes
+and watch/resume controls pass. Raw log and JUnit are retained losslessly in
+`constant-public-evidence/`; audit classifies, never changes native constants.
+The full pre-hook source/header/contract/registration SHA list still verifies0
+after baseline. Next require SAME frozen tests passing after bounded integration;
+do not revise constants to fit code.
 All broad/local/hosted/exact-head-review/strict/resolved-conversation gates and
 remaining producer/non-whole/display/conversion/ListItem obligations remain.
 
