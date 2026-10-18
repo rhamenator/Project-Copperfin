@@ -198,3 +198,11 @@ be recorded separately before hookup; adding a helper is not compatibility
 completion. The pre-launch full I/O spike65.53%/50.52% (10s/60s) caused both
 chats to defer the cleared narrow compile window; no compiler/native/VM was
 launched at that sample. Both chats report no competing reservation.
+
+After the spike decays, actual serialized nice10 GNU15 Werror and Clang21
+ASan/UBSan/float-cast-overflow/no-recovery compile0/run0, empty stderr, each
+pass all68 native complete roots/314 syntax nodes,640 older native rows and
+domain/provenance controls. Full avg10=0 before/after both; both chats receive
+RELEASED immediately. `nonwhole-support-evidence/verification.md` retains exact
+commands/status/log/time/pressure/source hashes. No runtime caller change or
+public SAME/hosted acceptance at this point; old whole frontier remains intact.

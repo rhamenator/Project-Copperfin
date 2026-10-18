@@ -218,6 +218,15 @@ isolation and actual sanitizer build/filter registration are frozen before its
 unused helper exists. No build/pass/hook claim at this checkpoint. Governing
 NONWHOLE-001/timing contract, LOW DQ/DV/parent hazards and remaining gates apply.
 
+Unused supportdda3f633c follows frozen direct tests2165024f7. Shared bounded
+intrinsic arithmetic retains old whole-domain entry point and640 native rows;
+new fractional eligibility applies only to real storage, never forged Integer
+payloads/provenance. Actual nice10 GNU15 Werror and Clang21 ASan/UBSan/
+float-cast-overflow/no-recovery compile0/run0/empty stderr each:68 complete
+native roots/314 syntax nodes,640 older native rows and boundary controls pass.
+[Retained helper receipts](../tests/fixtures/vfp9-numeric-division-context/nonwhole-support-evidence/verification.md)
+bind raw logs/statuses/hashes. No runtime hookup or public/hosted pass yet.
+
 Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
 [actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)
 at mainb37ddf7241; paired1,620 values/run, actual0/empty stderr/no errors,
