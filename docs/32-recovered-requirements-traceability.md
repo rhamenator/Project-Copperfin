@@ -227,6 +227,17 @@ native roots/314 syntax nodes,640 older native rows and boundary controls pass.
 [Retained helper receipts](../tests/fixtures/vfp9-numeric-division-context/nonwhole-support-evidence/verification.md)
 bind raw logs/statuses/hashes. No runtime hookup or public/hosted pass yet.
 
+Subsequent bounded hook146d4c6dd changes only the helper selection on the proven
+constant path; prepared timing/continuation/checked-error code is unchanged.
+Actual coordinated GNU Debug O0/g0 parallel1 normal build0, SAME CTest0/six
+unique executions6.55s/no failures/errors/skips. Frozen expanded constant
+descriptor60 ->0 and non-whole12,480 ->0; all bits/literal/evaluation/controls0.
+Old/new direct native helpers plus isolation631 and exact sanitizer selection
+pass. Seven frozen source/header hashes unchanged; independent host+archived
+JUnit/log/counter audits0. `nonwhole-same-evidence/` retains exact receipts;
+hosted broad/selected tests, clean exact-head review/strict/resolved gates remain
+pending. This establishes focused bounded SAME only, not general Numeric parity.
+
 Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
 [actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)
 at mainb37ddf7241; paired1,620 values/run, actual0/empty stderr/no errors,

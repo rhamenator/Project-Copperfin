@@ -213,3 +213,28 @@ runtime-operand branch, checked divisor/error paths, prepared materialization,
 operation-position continuation checkpoints, callback replay avoidance and both
 NUMERICBEHAVIOR mode policy are unchanged. Exact frozen expanded public SAME
 must now establish those semantics; no pass is inferred from this small delta.
+
+## Actual unchanged SAME after bounded hookup
+
+Signed hook146d4c6dd follows the independent native/public freezes, qualified
+expanded ORIGINAL and unused GNU/Clang support checks. Fresh BOTH-chat clearance
+and full avg10=0 precede the separate nice10 GNU Debug O0/g0 Ninja parallel1
+incremental runtime-TU rebuild, two public links and two pure helper builds.
+Actual normal build0; existing missing-member-initializer warnings are retained.
+Six unique actual CTest executions6.55s/CTest0/no failures/errors/skips: constant
+and non-whole public tests, old/new direct helpers, isolation inventory631 and
+the actual sanitizer-selection contract. Constant descriptor60 ->0; non-whole
+descriptor12,480 ->0. All payload/literal/evaluation/setting/callback/recovery/
+safety controls remain0. The exact same public source and native headers pass
+pre/post seven-file hash checks; all72 callback forms x20 contexts are unchanged.
+
+Independent host and losslessly archived JUnit/log/result auditor0 verifies
+six exact names, executed/run statuses/no skip, both public zero-counter
+summaries and direct native inventory summaries. Full raw build/test logs,
+JUnit/status/time/pressure and frozen hashes remain in `nonwhole-same-evidence/`.
+Post-window full avg10=4.69%/avg60=1.90%; window promptly RELEASED to both chats.
+No native/Wine/VM or additional heavy build remains reserved. This is focused
+GNU SAME, not yet hosted/full-suite/independent review or release qualification.
+PR/exact-head review, actual selected hosted execution, strict required checks
+and resolved-conversation merge gates still apply. #7208 and mandatory broader
+Numeric/ListItem work remain open; no parent completion or zero-policy change.

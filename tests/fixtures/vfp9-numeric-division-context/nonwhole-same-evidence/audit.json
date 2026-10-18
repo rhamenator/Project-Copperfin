@@ -1,0 +1,14 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-NONWHOLE-001",
+  "hook": "146d4c6ddcc834feb5b259d46a7950bf461bf435",
+  "actualExecuted": 6,
+  "actualFailedOrSkipped": 0,
+  "constantDescriptor": 0,
+  "nonwholeDescriptor": 0,
+  "bits": 0,
+  "literalBits": 0,
+  "evaluation": 0,
+  "controls": 0,
+  "frozenSourceAndHeaderHashes": 7,
+  "conclusion": "Unchanged expanded public SAME and native direct/whole helpers executed and passed. Hosted/full-suite/review/strict merge gates remain separate."
+}
