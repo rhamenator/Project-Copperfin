@@ -1,0 +1,1 @@
+- 2026-10-18: Freeze bounded native default Numeric TRANSFORM display recovery under #5611/#6776/#7189, tracking #7210; preserve the uncancelled small-divisor division tests and actual ORIGINAL evidence without suppressing display assertions. No formatter behavior change or parity claim yet.

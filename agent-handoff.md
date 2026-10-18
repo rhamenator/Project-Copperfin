@@ -1,113 +1,83 @@
 # Agent Handoff
 
-## Active non-whole Numeric division foundation — 2026-10-18
+## Active default Numeric TRANSFORM display prerequisite — 2026-10-18
 
-Continue only the admitted Numeric workstream under owner-authored OPEN,
-agent-approved #5611/#6776/#7189. Main is the sole integration branch;
-v1-development is retired. PR7201 and completed EPOCH/CENTURY work stay complete.
-Owner resumed the loop; no stop-after7201, October22 action, reboot or upload
-monitoring. No owner-input blocker or automation pause.
+Owner resumed implementation: admitted OPEN/owner/agent-approved #5611/#6776/
+#7189. main sole integration, v1-development retired. No stop-after7201,
+October22 action, reboot/upload monitoring or owner-input blocker.
 
-Canonical main/origin/main: 4b6cc734fb1b70cf7cbcdd1f083fafa1317fa4f9 (PR7207).
-Active WT: /home/rich/.codex/worktrees/numeric-nonwhole-division-5611/Project-Copperfin
-Branch: fix/numeric-nonwhole-division-5611
-Latest implementation/evidence checkpoint: signed/DCO6cb231cc1, qualified SAME,
-after hook146d4c6dd and support6b11b2aa7. Continuity-only commit follows;
-read the exact live branch/PR head before review. PR opening/hosted review is
-next, not new scope. Runtime delta is bounded eligibility plus its constant caller.
+main=origin/main240ac51cbbaa3114a08a687142e67fe4969ea212 (completed PR7209).
+Active WT /home/rich/.codex/worktrees/numeric-literal-display-5611/Project-Copperfin,
+branch fix/numeric-literal-display-5611 from that main. No PR, helper or hook;
+src/include unchanged. #7210 is owner-authored OPEN bug/runtime (no
+agent-approved label); bounded display authority derives from admitted parents
+and direct owner policy, NOT the child body. Native-only source/inventory/
+paired audit freeze is next; see tests/fixtures/vfp9-numeric-default-transform/
+recovery.md. No native invocation yet. No build/Wine/native/VM reservation.
 
-## Exact state and evidence
+## Why division is explicitly deferred, not cancelled
 
-Native/public chronology: 274a38635 pre-code578-row freeze -> afc488bb0 actual
-ORIGINAL -> 11bd096a6 literal prerequisite deferral -> b0115ccb0 signed main
-merge -> 79b305a5b refreshed ORIGINAL -> 569b36e84 native timing/expanded public
-freeze -> 0967ad091 query-readback adapter refreeze -> e9494dad3 exact-CRLF
-attributes -> 811bdcb4f qualified expanded ORIGINAL. Do not rewrite signed
-history, native fields, operands or expectations.
+Retain /home/rich/.codex/worktrees/numeric-small-divisor-5611/Project-Copperfin,
+branch fix/numeric-small-divisor-5611. Signed/DCO native/test freeze
+3b7a5163618ea92420f63b70c5cac265cdd08807, completed actual ORIGINAL checkpoint
+031d790abcde424ab8622833ad81bc43248f2f3e and exact current-output diagnostic
+03c3a4520446765125101be7052a05bf7e6f0546 all pushed. That branch has no PR,
+division helper or hook. Its src/include are main-identical. Preserve frozen
+tests, first interrupted build, complete second original, raw native pairs,
+rejected hypotheses and all REA coverage/limitations.
 
-The unchanged578-row header/574 exact assertions now have zero payload failures
-after PR7207's literal fix; original11,040 division metadata failures remain.
-Paired new native timing captures each contain2,940 observations, actual0/empty
-stderr/no caught errors, byte-identical SHA256
-fcbb0f3b3a2b40880dfe62c4a585b046151023153bb6efecf784e51f886dc9ff.
-Source/typed/framing/repeat/compiled-EVALUATE/callback/final-state audit0.
-Native-only147-row/five-setting header retains every result. Nonzero timing
-hypothesis matches2,220 records; initial168 LPARAMETERS D0-width mismatches
-and source are retained. All720 zero-boundary observations, including80 native
-infinity values, remain outside acceptance; never remove checked-zero policy.
-REA ev_0a9d125b0912206705f63a9873c684415ea0e90f80a5f324910be1d4f34da54f
-records controlled replay; lifecycle/sampling/environment limits are explicit.
+Actual ORIGINAL configure/build0, seven unique focused CTests: old six pass,
+new regression fails with6920 descriptors/320 signed-zero payloads/964 displays
+(882 core,12 runtime-mixture,70 literal-only). Literal metadata/payloads match.
+Literal diagnostic compile0/run0/empty stderr reads300 contexts,70 exact string
+differences, all300 metadata/payloads match; nine original library hashes match
+before/after. At D0/FIXED OFF current0.5 prints0/native0.5 and current2.50
+prints2/native2.50, BOTH modes. Evidence in that branch's
+small-divisor-display-diagnostic/ and issue7210 comment6249598072.
+Diagnostic0 is reproduction, not product acceptance.
 
-Expanded public source adds72 finite nonzero callback pause/resume forms in20
-mode/settings contexts, and strengthens exactly3 older unknown controls using
-native metadata/bits. First actual expanded ORIGINAL had720 final-setting
-control failures; retain it. Separate diagnosis #7208 confirms native
-SET('DECIMALS') is Integer versus Copperfin Character text in both modes.
-Underlying setting is correct; inactive number_value was the wrong observer.
-Actual native/host diagnostics verify VAL(TRANSFORM(...)) gives Number0/14.
-Test-only adapter now explicitly requires Number and exact setting values;
-no native expectation/count was dropped and no production query fix was made.
-#7208 is OPEN/owner/bug/runtime, without agent-approved; do not expand this slice.
-REA diagnosis ev_cceee29f338ac9ddffe80be9ad40708568efa44596966e8a593a2bdef59afca2.
+Re-entry only AFTER the separate display prerequisite is accepted: refreshed
+UNCHANGED division ORIGINAL -> unused bounded helper/direct GNU/Clang checks
+-> separate parser hook -> SAME/broader/actual named hosted tests -> clean
+exact-head Claude/Codex review, ALL strict checks green/conversations resolved
+-> normal merge/cleanup. Do not suppress native display assertions, fit
+expectations from Copperfin, claim fields-only parity or use canonical-double/
+residual-gap shortcuts. Complete Numeric/ListItem obligations remain.
 
-Corrected expanded ORIGINAL: both-chat-cleared nice10 GNU Debug O0/g0,
-parallel1 normal incremental two-test-TU build0; four actual CTest executions,
-6.26s/CTest8, ONLY expected metadata failures: constant60, non-whole12,480
-(prior11,040 + callback1,440). Bits/literal/evaluation/ALL controls0.
-Independent host+archived JUnit/log/inventory audits0; source/header/runtime
-archive hashes unchanged. Full IO avg10/60=0 before/after. This is ORIGINAL-fail
-qualification, not a passing implementation.
+## Resource gates and evidence discipline
 
-Read tests/fixtures/vfp9-numeric-division-context/nonwhole-timing-contract.md,
-nonwhole-reentry.md and docs/32-recovered-requirements-traceability.md.
-Exact raw/status/FXP/candidate/diagnostic/audit records are in nonwhole-timing-
-captures/, nonwhole-expanded-original-evidence/, nonwhole-refrozen-original-
-evidence/ and earlier fixture directories. Host build/nonwhole-native/timing/,
-build/nonwhole-expanded-original/, build/nonwhole-expanded-refrozen-original/
-and build/nonwhole-original remain needed for the unfinished slice.
+User requires audit/DAW coordination before heavy builds or native/VM use.
+Audit chat01a0a1e1-7469-7ae3-9668-470a4e5b91b5; DAW
+01a1050d-72c7-7213-bd2b-899e3cf342f7. Both released the completed diagnostic.
+Fresh BOTH-chat clearance and full I/O PSI avg10 AND avg60 below1% immediately
+before EACH native/compiler/test invocation. Stop task-owned heavy build on
+renewed pressure, retain attempts, re-coordinate. No current reservation.
+Backup reset completion unconfirmed: NO VM starts/recreation; read owner VM
+CLAUDE.md first if VM work later becomes necessary. Preserve originals,
+recovery copies/shared seeds; don't race DAW-owned cleanup.
 
-## Next bounded action
+Reverse-engineering skill is used only for black-box authored PRG/native
+observation. Freeze native source before capture, use installed vfp9-probe/
+documented public ABI observer, retain full REA records/hashes/statuses/
+pressure/actual cleanup and limitations; no decompilation or VM.
+Native qualified observations -> native-only expected tests -> actual
+original-fail BEFORE support -> direct helper verification BEFORE wiring.
+All normal hosted/review/strict/conversation gates remain.
 
-Native-only direct freeze2165024f7 precedes unused supportdda3f633c. GNU15
-Werror/Clang21 ASan/UBSan/float-cast-overflow/no-recovery compile0/run0 each,
-empty stderr:68 native roots/314 syntax nodes,640 older native rows and boundary/
-provenance controls pass. Support signed6b11b2aa7; sole constant caller hook
-146d4c6dd preserves prepared timing/continuation, integral Integer, checked bounds.
-Actual normal GNU O0/g0 single-job build0; unchanged SAME CTest0/six executions
-6.55s/no failure/error/skip. Former constant60/nonwhole12,480 metadata failures
-now0; all bits/literal/evaluation/callback/setting/controls0. Old/new helpers,
-isolation631 and exact sanitizer selector pass. Seven frozen hashes unchanged;
-independent host+archived audit0. nonwhole-support-evidence/ and nonwhole-same-
-evidence/ retain full receipts; host builds remain needed.
+## Last shipped and unfinished work
 
-Open PR against main; request Claude FIRST for exact final head, documented
-Codex fallback only on explicit unavailability/quota. Then actual broad/selected
-hosted execution -> clean exact-head review -> strict green required checks/all
-conversations resolved -> normal merge and safe completed cleanup.
-No tolerance, quotient correction, spelling exclusions, callback replay or
-metadata-only parity claim. Small divisors, wider producers/operators, propagation,
-display/exact conversion and pending ListItem supplied-column READ remain
-mandatory. #7206/parents remain OPEN.
+PR7209 merged2026-10-18T09:19:27Z as240ac51cb, reviewed signed/DCO headde1c094c53.
+Claude-FIRST6247124783; actual configured Codex clean full-head6247125017;
+all39 checks/11 strict green/conversations0, acceptance6248161998.
+Windows632/no skip, sanitizer44/no skip; Linux/macOS629 unique passes/631
+reported with two unrelated launcher skips NOT execution evidence. All16
+selected pass. Cleanup complete; canonical build/pr7209-completed/evidence
+retains byte-compared receipts/cleanup record,323MB build recoverable Trash.
+No need to repeat completed EPOCH/CENTURY, PR7201 or older division slices.
 
-## Coordination and preservation
-
-All build/native windows are RELEASED; no active build/test/Wine/VM reservation.
-Both chats cleared narrow helper and separate runtime windows. Initial full IO
-65.53%/50.52% deferred launch; actual helper pre/post and runtime prelaunch
-avg10=0. Runtime post-window4.69%/1.90%; no more heavy local work planned now.
-Fresh audit AND DAW clearance plus pressure sampling precede further heavy work:
-audit 01a0a1e1-7469-7ae3-9668-470a4e5b91b5;
-DAW 01a1050d-72c7-7213-bd2b-899e3cf342f7.
-No VM was used. Backup reset completion is unconfirmed: do not start/recreate
-VMs, race DAW clone cleanup, or delete originals/recovery copies/shared media.
-Read the owner VM CLAUDE.md before any actual VM work.
-
-PR7207 merged after exact-head clean review, all39 checks including11 strict
-required, full conversations0; actual Windows630/no skip, sanitizer42/no skip,
-macOS12 selected passes (two unrelated launcher skips disclosed). Completed
-WT/local/leased remote cleaned, full build recoverable in Trash
-completed-pr7207-build; canonical build/pr7207-completed/ has raw gates/cleanup.
-Owned handoff stash64cd2ab6 retained. Foreign WTs/stashes and canonical untracked
-files remain untouched. Prior long canonical continuity is preserved at
-build/pr7207-completed/canonical-handoff-before-20261018-compact.md and in signed
-history/stashes; this brief supersedes its active/next-state statements.
+#7206 remains OPEN; #7208 is separate unapproved SET-query-type gap. Wider
+Numeric producers/propagation/display/exact conversion and pending ListItem
+supplied-column READ remain mandatory. Keep #6776 per-area switch, checked
+conversions/zero/allocation limits and Integer eligibility. Preserve foreign
+canonical tracked/untracked files, WTs4436/49ae and stashes057655d/64cd2ab6.
+App PR attachment limit100 identities: don't unlink unrelated artifacts.
