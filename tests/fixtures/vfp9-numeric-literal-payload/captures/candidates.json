@@ -1,0 +1,4248 @@
+{
+  "scope": "Finite245 bare-literal payloads from audited native records; no model is accepted as an implementation requirement.",
+  "results": {
+    "directDecimal": {
+      "compared": 245,
+      "mismatches": 60,
+      "counterexamples": [
+        {
+          "literal": "1.234567890123456789",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "0.9999999999999999",
+          "native": "3FF0000000000000",
+          "predicted": "3FEFFFFFFFFFFFFF"
+        },
+        {
+          "literal": "0.123456789012345678",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "0.9007199254740993",
+          "native": "3FECD2B297D889BC",
+          "predicted": "3FECD2B297D889BD"
+        },
+        {
+          "literal": "0.9007199254740995",
+          "native": "3FECD2B297D889C0",
+          "predicted": "3FECD2B297D889BF"
+        },
+        {
+          "literal": "0.009007199254740995",
+          "native": "3F82725DD1D243AE",
+          "predicted": "3F82725DD1D243AD"
+        },
+        {
+          "literal": "0.9999999999999995",
+          "native": "3FEFFFFFFFFFFFFC",
+          "predicted": "3FEFFFFFFFFFFFFB"
+        },
+        {
+          "literal": "0.009999999999999995",
+          "native": "3F847AE147AE1479",
+          "predicted": "3F847AE147AE1478"
+        },
+        {
+          "literal": "0.9999999999999997",
+          "native": "3FEFFFFFFFFFFFFC",
+          "predicted": "3FEFFFFFFFFFFFFD"
+        },
+        {
+          "literal": "0.009999999999999999",
+          "native": "3F847AE147AE147B",
+          "predicted": "3F847AE147AE147A"
+        },
+        {
+          "literal": "123456789012345678.5",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "1.234567890123456785",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "123456789012345678.6",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "1.234567890123456786",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "123456789012345678.7",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "1.234567890123456787",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "123456789012345678.8",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "1.234567890123456788",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "123456789012345678.9",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.0",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "1.234567890123456790",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "123456789012345679.1",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "1.234567890123456791",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "123456789012345679.2",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "1.234567890123456792",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "123456789012345679.3",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "1.234567890123456793",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "99999999999999999.5",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999995",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.6",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999996",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.7",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999997",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.8",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999998",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.9",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999999",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "00.9999999999999999",
+          "native": "3FF0000000000000",
+          "predicted": "3FEFFFFFFFFFFFFF"
+        },
+        {
+          "literal": "000.9999999999999999",
+          "native": "3FF0000000000000",
+          "predicted": "3FEFFFFFFFFFFFFF"
+        },
+        {
+          "literal": "0.99999999999999990",
+          "native": "3FF0000000000000",
+          "predicted": "3FEFFFFFFFFFFFFF"
+        },
+        {
+          "literal": "0.999999999999999900",
+          "native": "3FF0000000000000",
+          "predicted": "3FEFFFFFFFFFFFFF"
+        },
+        {
+          "literal": "01.234567890123456789",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "001.234567890123456789",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "1.2345678901234567890",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "1.23456789012345678900",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "3.999999999999999600",
+          "native": "4010000000000000",
+          "predicted": "400FFFFFFFFFFFFF"
+        },
+        {
+          "literal": "0.12345678901234567",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F65E"
+        },
+        {
+          "literal": "0.1234567890123456789",
+          "native": "3FBF9ADD3746F661",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "1234567890123456789.0",
+          "native": "43B12210F47DE982",
+          "predicted": "43B12210F47DE981"
+        },
+        {
+          "literal": "0.12345678901234567890",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "12345678901234567890.1",
+          "native": "43E56A95319D63E2",
+          "predicted": "43E56A95319D63E1"
+        },
+        {
+          "literal": "0.12345678901234567890123",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "123456789012345678901234.5",
+          "native": "44BA249B1F10A06C",
+          "predicted": "44BA249B1F10A06D"
+        },
+        {
+          "literal": "0.1234567890123456789012345",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "0.12345678901234567890123456",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "0.123456789012345678901234567",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "1234567890123456789012345678.9",
+          "native": "458FE9AF5B6BCBD4",
+          "predicted": "458FE9AF5B6BCBD5"
+        },
+        {
+          "literal": "12345678901234567890123456789.0",
+          "native": "45C3F20D99235F64",
+          "predicted": "45C3F20D99235F65"
+        },
+        {
+          "literal": "123456789012345678901234567890.1",
+          "native": "45F8EE90FF6C373D",
+          "predicted": "45F8EE90FF6C373E"
+        },
+        {
+          "literal": "1234567890123456789012345678901.2",
+          "native": "462F2A353F47450C",
+          "predicted": "462F2A353F47450E"
+        }
+      ]
+    },
+    "roundedCoefficientDivide": {
+      "compared": 245,
+      "mismatches": 67,
+      "counterexamples": [
+        {
+          "literal": "1.234567890123456789",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "3.9999999999999996",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "0.123456789012345678",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "90071992.54740993",
+          "native": "4195798EE2308C3B",
+          "predicted": "4195798EE2308C3A"
+        },
+        {
+          "literal": "900719925474099.5",
+          "native": "430999999999999C",
+          "predicted": "430999999999999D"
+        },
+        {
+          "literal": "90071992.54740995",
+          "native": "4195798EE2308C3C",
+          "predicted": "4195798EE2308C3D"
+        },
+        {
+          "literal": "999999999999999.5",
+          "native": "430C6BF52633FFFC",
+          "predicted": "430C6BF52633FFFD"
+        },
+        {
+          "literal": "999999999999999.7",
+          "native": "430C6BF52633FFFE",
+          "predicted": "430C6BF52633FFFD"
+        },
+        {
+          "literal": "99999999.99999997",
+          "native": "4197D783FFFFFFFE",
+          "predicted": "4197D783FFFFFFFD"
+        },
+        {
+          "literal": "999999999999999.9",
+          "native": "430C6BF52633FFFF",
+          "predicted": "430C6BF526340000"
+        },
+        {
+          "literal": "99999999.99999999",
+          "native": "4197D783FFFFFFFF",
+          "predicted": "4197D78400000000"
+        },
+        {
+          "literal": "1000000000000000.1",
+          "native": "430C6BF526340001",
+          "predicted": "430C6BF526340000"
+        },
+        {
+          "literal": "100000000.00000001",
+          "native": "4197D78400000001",
+          "predicted": "4197D78400000000"
+        },
+        {
+          "literal": "1000000000000000.3",
+          "native": "430C6BF526340002",
+          "predicted": "430C6BF526340003"
+        },
+        {
+          "literal": "100000000.00000003",
+          "native": "4197D78400000002",
+          "predicted": "4197D78400000003"
+        },
+        {
+          "literal": "1.0000000000000003",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000002"
+        },
+        {
+          "literal": "123456789012345678.5",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "1.234567890123456785",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "123456789012345678.6",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "1.234567890123456786",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "123456789012345678.7",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "1.234567890123456787",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "123456789012345678.8",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "1.234567890123456788",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "123456789012345678.9",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.0",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "1.234567890123456790",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "123456789012345679.1",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "1.234567890123456791",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "123456789012345679.2",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "1.234567890123456792",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "123456789012345679.3",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "1.234567890123456793",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "99999999999999999.5",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999995",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.6",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999996",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.7",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999997",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.8",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999998",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.9",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999999",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "0.99999999999999990",
+          "native": "3FF0000000000000",
+          "predicted": "3FEFFFFFFFFFFFFF"
+        },
+        {
+          "literal": "0.999999999999999900",
+          "native": "3FF0000000000000",
+          "predicted": "3FEFFFFFFFFFFFFF"
+        },
+        {
+          "literal": "01.234567890123456789",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "001.234567890123456789",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "1.2345678901234567890",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "03.9999999999999996",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "003.9999999999999996",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "3.999999999999999600",
+          "native": "4010000000000000",
+          "predicted": "400FFFFFFFFFFFFF"
+        },
+        {
+          "literal": "0.1234567890123456789",
+          "native": "3FBF9ADD3746F661",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "1234567890123456789.0",
+          "native": "43B12210F47DE982",
+          "predicted": "43B12210F47DE981"
+        },
+        {
+          "literal": "0.12345678901234567890",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "0.123456789012345678901234",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F660"
+        },
+        {
+          "literal": "123456789012345678901234.5",
+          "native": "44BA249B1F10A06C",
+          "predicted": "44BA249B1F10A06D"
+        },
+        {
+          "literal": "0.1234567890123456789012345",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "0.12345678901234567890123456",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "0.123456789012345678901234567",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "0.1234567890123456789012345678",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F660"
+        },
+        {
+          "literal": "1234567890123456789012345678.9",
+          "native": "458FE9AF5B6BCBD4",
+          "predicted": "458FE9AF5B6BCBD5"
+        },
+        {
+          "literal": "0.12345678901234567890123456789",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F660"
+        },
+        {
+          "literal": "12345678901234567890123456789.0",
+          "native": "45C3F20D99235F64",
+          "predicted": "45C3F20D99235F65"
+        },
+        {
+          "literal": "123456789012345678901234567890.1",
+          "native": "45F8EE90FF6C373D",
+          "predicted": "45F8EE90FF6C373E"
+        },
+        {
+          "literal": "0.1234567890123456789012345678901",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F660"
+        },
+        {
+          "literal": "1234567890123456789012345678901.2",
+          "native": "462F2A353F47450C",
+          "predicted": "462F2A353F47450D"
+        },
+        {
+          "literal": "0.12345678901234567890123456789012",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F65E"
+        }
+      ]
+    },
+    "roundedCoefficientReciprocal": {
+      "compared": 245,
+      "mismatches": 75,
+      "counterexamples": [
+        {
+          "literal": "0.3",
+          "native": "3FD3333333333333",
+          "predicted": "3FD3333333333334"
+        },
+        {
+          "literal": "3.9999999999999996",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "900719925474098.8",
+          "native": "4309999999999996",
+          "predicted": "4309999999999997"
+        },
+        {
+          "literal": "0.9007199254740988",
+          "native": "3FECD2B297D889B9",
+          "predicted": "3FECD2B297D889B8"
+        },
+        {
+          "literal": "0.009007199254740988",
+          "native": "3F82725DD1D243A9",
+          "predicted": "3F82725DD1D243AA"
+        },
+        {
+          "literal": "900719925474098.9",
+          "native": "4309999999999997",
+          "predicted": "4309999999999998"
+        },
+        {
+          "literal": "0.009007199254740990",
+          "native": "3F82725DD1D243AA",
+          "predicted": "3F82725DD1D243AB"
+        },
+        {
+          "literal": "90071992.54740993",
+          "native": "4195798EE2308C3B",
+          "predicted": "4195798EE2308C3A"
+        },
+        {
+          "literal": "900719925474099.4",
+          "native": "430999999999999B",
+          "predicted": "430999999999999C"
+        },
+        {
+          "literal": "900719925474099.5",
+          "native": "430999999999999C",
+          "predicted": "430999999999999D"
+        },
+        {
+          "literal": "90071992.54740995",
+          "native": "4195798EE2308C3C",
+          "predicted": "4195798EE2308C3D"
+        },
+        {
+          "literal": "999999999999999.5",
+          "native": "430C6BF52633FFFC",
+          "predicted": "430C6BF52633FFFD"
+        },
+        {
+          "literal": "999999999999999.7",
+          "native": "430C6BF52633FFFE",
+          "predicted": "430C6BF52633FFFD"
+        },
+        {
+          "literal": "99999999.99999997",
+          "native": "4197D783FFFFFFFE",
+          "predicted": "4197D783FFFFFFFD"
+        },
+        {
+          "literal": "999999999999999.8",
+          "native": "430C6BF52633FFFE",
+          "predicted": "430C6BF52633FFFF"
+        },
+        {
+          "literal": "999999999999999.9",
+          "native": "430C6BF52633FFFF",
+          "predicted": "430C6BF526340000"
+        },
+        {
+          "literal": "99999999.99999999",
+          "native": "4197D783FFFFFFFF",
+          "predicted": "4197D78400000000"
+        },
+        {
+          "literal": "1000000000000000.1",
+          "native": "430C6BF526340001",
+          "predicted": "430C6BF526340000"
+        },
+        {
+          "literal": "100000000.00000001",
+          "native": "4197D78400000001",
+          "predicted": "4197D78400000000"
+        },
+        {
+          "literal": "1000000000000000.3",
+          "native": "430C6BF526340002",
+          "predicted": "430C6BF526340004"
+        },
+        {
+          "literal": "100000000.00000003",
+          "native": "4197D78400000002",
+          "predicted": "4197D78400000003"
+        },
+        {
+          "literal": "1.0000000000000003",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000002"
+        },
+        {
+          "literal": "0.010000000000000003",
+          "native": "3F847AE147AE147D",
+          "predicted": "3F847AE147AE147E"
+        },
+        {
+          "literal": "123456789012345678.5",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345678.6",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345678.7",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345678.8",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345678.9",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.0",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.1",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.2",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.3",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "99999999999999999.5",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999995",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.6",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999996",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.7",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999997",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.8",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999998",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.9",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999999",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "0.99999999999999990",
+          "native": "3FF0000000000000",
+          "predicted": "3FEFFFFFFFFFFFFF"
+        },
+        {
+          "literal": "0.999999999999999900",
+          "native": "3FF0000000000000",
+          "predicted": "3FEFFFFFFFFFFFFF"
+        },
+        {
+          "literal": "1.2345678901234567890",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "1.23456789012345678900",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "03.9999999999999996",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "003.9999999999999996",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "3.999999999999999600",
+          "native": "4010000000000000",
+          "predicted": "400FFFFFFFFFFFFF"
+        },
+        {
+          "literal": "0.2900",
+          "native": "3FD28F5C28F5C28F",
+          "predicted": "3FD28F5C28F5C290"
+        },
+        {
+          "literal": "1.2",
+          "native": "3FF3333333333333",
+          "predicted": "3FF3333333333334"
+        },
+        {
+          "literal": "0.1234",
+          "native": "3FBF972474538EF3",
+          "predicted": "3FBF972474538EF4"
+        },
+        {
+          "literal": "123456.7",
+          "native": "40FE240B33333333",
+          "predicted": "40FE240B33333334"
+        },
+        {
+          "literal": "0.1234567",
+          "native": "3FBF9ADBB8F8DA72",
+          "predicted": "3FBF9ADBB8F8DA71"
+        },
+        {
+          "literal": "0.123456789",
+          "native": "3FBF9ADD3739635F",
+          "predicted": "3FBF9ADD37396360"
+        },
+        {
+          "literal": "0.1234567890",
+          "native": "3FBF9ADD3739635F",
+          "predicted": "3FBF9ADD37396360"
+        },
+        {
+          "literal": "1234567890.1",
+          "native": "41D26580B4866666",
+          "predicted": "41D26580B4866667"
+        },
+        {
+          "literal": "1234567890123.4",
+          "native": "4271F71FB04CB666",
+          "predicted": "4271F71FB04CB667"
+        },
+        {
+          "literal": "0.123456789012345",
+          "native": "3FBF9ADD3746F62E",
+          "predicted": "3FBF9ADD3746F62F"
+        },
+        {
+          "literal": "123456789012345.6",
+          "native": "42DC12218377DE66",
+          "predicted": "42DC12218377DE67"
+        },
+        {
+          "literal": "0.12345678901234567",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F660"
+        },
+        {
+          "literal": "0.1234567890123456789",
+          "native": "3FBF9ADD3746F661",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "1234567890123456789.0",
+          "native": "43B12210F47DE982",
+          "predicted": "43B12210F47DE981"
+        },
+        {
+          "literal": "0.12345678901234567890",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65E"
+        },
+        {
+          "literal": "0.12345678901234567890123",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "12345678901234567890123.4",
+          "native": "4484EA15B273B38A",
+          "predicted": "4484EA15B273B38B"
+        },
+        {
+          "literal": "123456789012345678901234.5",
+          "native": "44BA249B1F10A06C",
+          "predicted": "44BA249B1F10A06D"
+        },
+        {
+          "literal": "0.123456789012345678901234567",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "123456789012345678901234567.8",
+          "native": "455987BF7C563CAA",
+          "predicted": "455987BF7C563CAB"
+        },
+        {
+          "literal": "1234567890123456789012345678.9",
+          "native": "458FE9AF5B6BCBD4",
+          "predicted": "458FE9AF5B6BCBD5"
+        },
+        {
+          "literal": "12345678901234567890123456789.0",
+          "native": "45C3F20D99235F64",
+          "predicted": "45C3F20D99235F65"
+        },
+        {
+          "literal": "0.123456789012345678901234567890",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F660"
+        },
+        {
+          "literal": "123456789012345678901234567890.1",
+          "native": "45F8EE90FF6C373D",
+          "predicted": "45F8EE90FF6C373F"
+        },
+        {
+          "literal": "0.1234567890123456789012345678901",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F660"
+        },
+        {
+          "literal": "1234567890123456789012345678901.2",
+          "native": "462F2A353F47450C",
+          "predicted": "462F2A353F47450D"
+        }
+      ]
+    },
+    "hornerCoefficientDivide": {
+      "compared": 245,
+      "mismatches": 66,
+      "counterexamples": [
+        {
+          "literal": "1.234567890123456789",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "3.9999999999999996",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "90071992.54740993",
+          "native": "4195798EE2308C3B",
+          "predicted": "4195798EE2308C3A"
+        },
+        {
+          "literal": "900719925474099.5",
+          "native": "430999999999999C",
+          "predicted": "430999999999999D"
+        },
+        {
+          "literal": "90071992.54740995",
+          "native": "4195798EE2308C3C",
+          "predicted": "4195798EE2308C3D"
+        },
+        {
+          "literal": "999999999999999.5",
+          "native": "430C6BF52633FFFC",
+          "predicted": "430C6BF52633FFFD"
+        },
+        {
+          "literal": "999999999999999.7",
+          "native": "430C6BF52633FFFE",
+          "predicted": "430C6BF52633FFFD"
+        },
+        {
+          "literal": "99999999.99999997",
+          "native": "4197D783FFFFFFFE",
+          "predicted": "4197D783FFFFFFFD"
+        },
+        {
+          "literal": "999999999999999.9",
+          "native": "430C6BF52633FFFF",
+          "predicted": "430C6BF526340000"
+        },
+        {
+          "literal": "99999999.99999999",
+          "native": "4197D783FFFFFFFF",
+          "predicted": "4197D78400000000"
+        },
+        {
+          "literal": "1000000000000000.1",
+          "native": "430C6BF526340001",
+          "predicted": "430C6BF526340000"
+        },
+        {
+          "literal": "100000000.00000001",
+          "native": "4197D78400000001",
+          "predicted": "4197D78400000000"
+        },
+        {
+          "literal": "1000000000000000.3",
+          "native": "430C6BF526340002",
+          "predicted": "430C6BF526340003"
+        },
+        {
+          "literal": "100000000.00000003",
+          "native": "4197D78400000002",
+          "predicted": "4197D78400000003"
+        },
+        {
+          "literal": "1.0000000000000003",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000002"
+        },
+        {
+          "literal": "12345678901.23456785",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456785",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9B"
+        },
+        {
+          "literal": "1.234567890123456785",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "12345678901.23456786",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456786",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9B"
+        },
+        {
+          "literal": "1.234567890123456786",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "12345678901.23456787",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456787",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9B"
+        },
+        {
+          "literal": "1.234567890123456787",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "12345678901.23456788",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456788",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9B"
+        },
+        {
+          "literal": "1.234567890123456788",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "12345678901.23456789",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456789",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9B"
+        },
+        {
+          "literal": "12345678901.23456790",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456790",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9B"
+        },
+        {
+          "literal": "1.234567890123456790",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "12345678901.23456791",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456791",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9B"
+        },
+        {
+          "literal": "1.234567890123456791",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "12345678901.23456792",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456792",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9B"
+        },
+        {
+          "literal": "1.234567890123456792",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "12345678901.23456793",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456793",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9B"
+        },
+        {
+          "literal": "1.234567890123456793",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "9999999999.99999995",
+          "native": "4202A05F20000000",
+          "predicted": "4202A05F20000001"
+        },
+        {
+          "literal": "99.9999999999999995",
+          "native": "4059000000000000",
+          "predicted": "4059000000000001"
+        },
+        {
+          "literal": "9999999999.99999996",
+          "native": "4202A05F20000000",
+          "predicted": "4202A05F20000001"
+        },
+        {
+          "literal": "99.9999999999999996",
+          "native": "4059000000000000",
+          "predicted": "4059000000000001"
+        },
+        {
+          "literal": "9999999999.99999997",
+          "native": "4202A05F20000000",
+          "predicted": "4202A05F20000001"
+        },
+        {
+          "literal": "99.9999999999999997",
+          "native": "4059000000000000",
+          "predicted": "4059000000000001"
+        },
+        {
+          "literal": "9999999999.99999998",
+          "native": "4202A05F20000000",
+          "predicted": "4202A05F20000001"
+        },
+        {
+          "literal": "99.9999999999999998",
+          "native": "4059000000000000",
+          "predicted": "4059000000000001"
+        },
+        {
+          "literal": "9999999999.99999999",
+          "native": "4202A05F20000000",
+          "predicted": "4202A05F20000001"
+        },
+        {
+          "literal": "99.9999999999999999",
+          "native": "4059000000000000",
+          "predicted": "4059000000000001"
+        },
+        {
+          "literal": "01.234567890123456789",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "001.234567890123456789",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "03.9999999999999996",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "003.9999999999999996",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "3.99999999999999960",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "12345678901234567.8",
+          "native": "4345EE2A2EB5A5C4",
+          "predicted": "4345EE2A2EB5A5C5"
+        },
+        {
+          "literal": "123456789012345678901234.5",
+          "native": "44BA249B1F10A06C",
+          "predicted": "44BA249B1F10A06D"
+        },
+        {
+          "literal": "0.1234567890123456789012345",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "0.12345678901234567890123456",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "0.123456789012345678901234567",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "1234567890123456789012345678.9",
+          "native": "458FE9AF5B6BCBD4",
+          "predicted": "458FE9AF5B6BCBD3"
+        },
+        {
+          "literal": "0.123456789012345678901234567890",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F65E"
+        },
+        {
+          "literal": "0.1234567890123456789012345678901",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F65E"
+        },
+        {
+          "literal": "1234567890123456789012345678901.2",
+          "native": "462F2A353F47450C",
+          "predicted": "462F2A353F47450D"
+        },
+        {
+          "literal": "0.12345678901234567890123456789012",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F65E"
+        }
+      ]
+    },
+    "hornerCoefficientReciprocal": {
+      "compared": 245,
+      "mismatches": 97,
+      "counterexamples": [
+        {
+          "literal": "0.3",
+          "native": "3FD3333333333333",
+          "predicted": "3FD3333333333334"
+        },
+        {
+          "literal": "1.234567890123456789",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "3.9999999999999996",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "0.123456789012345678",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F661"
+        },
+        {
+          "literal": "900719925474098.8",
+          "native": "4309999999999996",
+          "predicted": "4309999999999997"
+        },
+        {
+          "literal": "0.9007199254740988",
+          "native": "3FECD2B297D889B9",
+          "predicted": "3FECD2B297D889B8"
+        },
+        {
+          "literal": "0.009007199254740988",
+          "native": "3F82725DD1D243A9",
+          "predicted": "3F82725DD1D243AA"
+        },
+        {
+          "literal": "900719925474098.9",
+          "native": "4309999999999997",
+          "predicted": "4309999999999998"
+        },
+        {
+          "literal": "0.009007199254740990",
+          "native": "3F82725DD1D243AA",
+          "predicted": "3F82725DD1D243AB"
+        },
+        {
+          "literal": "90071992.54740993",
+          "native": "4195798EE2308C3B",
+          "predicted": "4195798EE2308C3A"
+        },
+        {
+          "literal": "900719925474099.4",
+          "native": "430999999999999B",
+          "predicted": "430999999999999C"
+        },
+        {
+          "literal": "900719925474099.5",
+          "native": "430999999999999C",
+          "predicted": "430999999999999D"
+        },
+        {
+          "literal": "90071992.54740995",
+          "native": "4195798EE2308C3C",
+          "predicted": "4195798EE2308C3D"
+        },
+        {
+          "literal": "999999999999999.5",
+          "native": "430C6BF52633FFFC",
+          "predicted": "430C6BF52633FFFD"
+        },
+        {
+          "literal": "999999999999999.7",
+          "native": "430C6BF52633FFFE",
+          "predicted": "430C6BF52633FFFD"
+        },
+        {
+          "literal": "99999999.99999997",
+          "native": "4197D783FFFFFFFE",
+          "predicted": "4197D783FFFFFFFD"
+        },
+        {
+          "literal": "999999999999999.8",
+          "native": "430C6BF52633FFFE",
+          "predicted": "430C6BF52633FFFF"
+        },
+        {
+          "literal": "999999999999999.9",
+          "native": "430C6BF52633FFFF",
+          "predicted": "430C6BF526340000"
+        },
+        {
+          "literal": "99999999.99999999",
+          "native": "4197D783FFFFFFFF",
+          "predicted": "4197D78400000000"
+        },
+        {
+          "literal": "1000000000000000.1",
+          "native": "430C6BF526340001",
+          "predicted": "430C6BF526340000"
+        },
+        {
+          "literal": "100000000.00000001",
+          "native": "4197D78400000001",
+          "predicted": "4197D78400000000"
+        },
+        {
+          "literal": "1000000000000000.3",
+          "native": "430C6BF526340002",
+          "predicted": "430C6BF526340004"
+        },
+        {
+          "literal": "100000000.00000003",
+          "native": "4197D78400000002",
+          "predicted": "4197D78400000003"
+        },
+        {
+          "literal": "1.0000000000000003",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000002"
+        },
+        {
+          "literal": "0.010000000000000003",
+          "native": "3F847AE147AE147D",
+          "predicted": "3F847AE147AE147E"
+        },
+        {
+          "literal": "123456789012345678.5",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F37"
+        },
+        {
+          "literal": "12345678901.23456785",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456785",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9A"
+        },
+        {
+          "literal": "1.234567890123456785",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "123456789012345678.6",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F37"
+        },
+        {
+          "literal": "12345678901.23456786",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456786",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9A"
+        },
+        {
+          "literal": "1.234567890123456786",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "123456789012345678.7",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F37"
+        },
+        {
+          "literal": "12345678901.23456787",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456787",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9A"
+        },
+        {
+          "literal": "1.234567890123456787",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "123456789012345678.8",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F37"
+        },
+        {
+          "literal": "12345678901.23456788",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456788",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9A"
+        },
+        {
+          "literal": "1.234567890123456788",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "123456789012345678.9",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F37"
+        },
+        {
+          "literal": "12345678901.23456789",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456789",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9A"
+        },
+        {
+          "literal": "123456789012345679.0",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F37"
+        },
+        {
+          "literal": "12345678901.23456790",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456790",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9A"
+        },
+        {
+          "literal": "1.234567890123456790",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "123456789012345679.1",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F37"
+        },
+        {
+          "literal": "12345678901.23456791",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456791",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9A"
+        },
+        {
+          "literal": "1.234567890123456791",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "123456789012345679.2",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F37"
+        },
+        {
+          "literal": "12345678901.23456792",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456792",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9A"
+        },
+        {
+          "literal": "1.234567890123456792",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "123456789012345679.3",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F37"
+        },
+        {
+          "literal": "12345678901.23456793",
+          "native": "4206FEE0E1A9E065",
+          "predicted": "4206FEE0E1A9E066"
+        },
+        {
+          "literal": "123.4567890123456793",
+          "native": "405EDD3C07FB4C99",
+          "predicted": "405EDD3C07FB4C9A"
+        },
+        {
+          "literal": "1.234567890123456793",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "9999999999.99999995",
+          "native": "4202A05F20000000",
+          "predicted": "4202A05F20000001"
+        },
+        {
+          "literal": "99.9999999999999995",
+          "native": "4059000000000000",
+          "predicted": "4059000000000001"
+        },
+        {
+          "literal": "9999999999.99999996",
+          "native": "4202A05F20000000",
+          "predicted": "4202A05F20000001"
+        },
+        {
+          "literal": "99.9999999999999996",
+          "native": "4059000000000000",
+          "predicted": "4059000000000001"
+        },
+        {
+          "literal": "9999999999.99999997",
+          "native": "4202A05F20000000",
+          "predicted": "4202A05F20000001"
+        },
+        {
+          "literal": "99.9999999999999997",
+          "native": "4059000000000000",
+          "predicted": "4059000000000001"
+        },
+        {
+          "literal": "9999999999.99999998",
+          "native": "4202A05F20000000",
+          "predicted": "4202A05F20000001"
+        },
+        {
+          "literal": "99.9999999999999998",
+          "native": "4059000000000000",
+          "predicted": "4059000000000001"
+        },
+        {
+          "literal": "9999999999.99999999",
+          "native": "4202A05F20000000",
+          "predicted": "4202A05F20000001"
+        },
+        {
+          "literal": "99.9999999999999999",
+          "native": "4059000000000000",
+          "predicted": "4059000000000001"
+        },
+        {
+          "literal": "01.234567890123456789",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "001.234567890123456789",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FD"
+        },
+        {
+          "literal": "1.23456789012345678900",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "03.9999999999999996",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "003.9999999999999996",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "3.99999999999999960",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "0.2900",
+          "native": "3FD28F5C28F5C28F",
+          "predicted": "3FD28F5C28F5C290"
+        },
+        {
+          "literal": "1.2",
+          "native": "3FF3333333333333",
+          "predicted": "3FF3333333333334"
+        },
+        {
+          "literal": "0.1234",
+          "native": "3FBF972474538EF3",
+          "predicted": "3FBF972474538EF4"
+        },
+        {
+          "literal": "123456.7",
+          "native": "40FE240B33333333",
+          "predicted": "40FE240B33333334"
+        },
+        {
+          "literal": "0.1234567",
+          "native": "3FBF9ADBB8F8DA72",
+          "predicted": "3FBF9ADBB8F8DA71"
+        },
+        {
+          "literal": "0.123456789",
+          "native": "3FBF9ADD3739635F",
+          "predicted": "3FBF9ADD37396360"
+        },
+        {
+          "literal": "0.1234567890",
+          "native": "3FBF9ADD3739635F",
+          "predicted": "3FBF9ADD37396360"
+        },
+        {
+          "literal": "1234567890.1",
+          "native": "41D26580B4866666",
+          "predicted": "41D26580B4866667"
+        },
+        {
+          "literal": "1234567890123.4",
+          "native": "4271F71FB04CB666",
+          "predicted": "4271F71FB04CB667"
+        },
+        {
+          "literal": "0.123456789012345",
+          "native": "3FBF9ADD3746F62E",
+          "predicted": "3FBF9ADD3746F62F"
+        },
+        {
+          "literal": "123456789012345.6",
+          "native": "42DC12218377DE66",
+          "predicted": "42DC12218377DE67"
+        },
+        {
+          "literal": "0.12345678901234567",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F660"
+        },
+        {
+          "literal": "12345678901234567.8",
+          "native": "4345EE2A2EB5A5C4",
+          "predicted": "4345EE2A2EB5A5C5"
+        },
+        {
+          "literal": "0.12345678901234567890123",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "0.123456789012345678901234",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F65E"
+        },
+        {
+          "literal": "123456789012345678901234.5",
+          "native": "44BA249B1F10A06C",
+          "predicted": "44BA249B1F10A06D"
+        },
+        {
+          "literal": "0.123456789012345678901234567",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "0.1234567890123456789012345678",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F65E"
+        },
+        {
+          "literal": "0.12345678901234567890123456789",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F65D"
+        },
+        {
+          "literal": "0.1234567890123456789012345678901",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F65E"
+        },
+        {
+          "literal": "1234567890123456789012345678901.2",
+          "native": "462F2A353F47450C",
+          "predicted": "462F2A353F47450D"
+        }
+      ]
+    },
+    "splitIntegerFractionDivide": {
+      "compared": 245,
+      "mismatches": 41,
+      "counterexamples": [
+        {
+          "literal": "0.123456789012345678",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "123456789012345678.5",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345678.6",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345678.7",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345678.8",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345678.9",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.0",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.1",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.2",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.3",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "99999999999999999.5",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999995",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.6",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999996",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.7",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999997",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.8",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999998",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.9",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999999",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "0.99999999999999990",
+          "native": "3FF0000000000000",
+          "predicted": "3FEFFFFFFFFFFFFF"
+        },
+        {
+          "literal": "0.999999999999999900",
+          "native": "3FF0000000000000",
+          "predicted": "3FEFFFFFFFFFFFFF"
+        },
+        {
+          "literal": "1.2345678901234567890",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "3.999999999999999600",
+          "native": "4010000000000000",
+          "predicted": "400FFFFFFFFFFFFF"
+        },
+        {
+          "literal": "0.1234567890123456789",
+          "native": "3FBF9ADD3746F661",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "1234567890123456789.0",
+          "native": "43B12210F47DE982",
+          "predicted": "43B12210F47DE981"
+        },
+        {
+          "literal": "0.12345678901234567890",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "12345678901234567890.1",
+          "native": "43E56A95319D63E2",
+          "predicted": "43E56A95319D63E1"
+        },
+        {
+          "literal": "0.123456789012345678901234",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F660"
+        },
+        {
+          "literal": "123456789012345678901234.5",
+          "native": "44BA249B1F10A06C",
+          "predicted": "44BA249B1F10A06D"
+        },
+        {
+          "literal": "0.1234567890123456789012345",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "0.12345678901234567890123456",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "0.123456789012345678901234567",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "0.1234567890123456789012345678",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F660"
+        },
+        {
+          "literal": "1234567890123456789012345678.9",
+          "native": "458FE9AF5B6BCBD4",
+          "predicted": "458FE9AF5B6BCBD5"
+        },
+        {
+          "literal": "0.12345678901234567890123456789",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F660"
+        },
+        {
+          "literal": "12345678901234567890123456789.0",
+          "native": "45C3F20D99235F64",
+          "predicted": "45C3F20D99235F65"
+        },
+        {
+          "literal": "123456789012345678901234567890.1",
+          "native": "45F8EE90FF6C373D",
+          "predicted": "45F8EE90FF6C373E"
+        },
+        {
+          "literal": "0.1234567890123456789012345678901",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F660"
+        },
+        {
+          "literal": "1234567890123456789012345678901.2",
+          "native": "462F2A353F47450C",
+          "predicted": "462F2A353F47450E"
+        },
+        {
+          "literal": "0.12345678901234567890123456789012",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F65E"
+        }
+      ]
+    },
+    "splitIntegerFractionReciprocal": {
+      "compared": 245,
+      "mismatches": 50,
+      "counterexamples": [
+        {
+          "literal": "0.3",
+          "native": "3FD3333333333333",
+          "predicted": "3FD3333333333334"
+        },
+        {
+          "literal": "0.9007199254740988",
+          "native": "3FECD2B297D889B9",
+          "predicted": "3FECD2B297D889B8"
+        },
+        {
+          "literal": "0.009007199254740988",
+          "native": "3F82725DD1D243A9",
+          "predicted": "3F82725DD1D243AA"
+        },
+        {
+          "literal": "0.009007199254740990",
+          "native": "3F82725DD1D243AA",
+          "predicted": "3F82725DD1D243AB"
+        },
+        {
+          "literal": "0.010000000000000003",
+          "native": "3F847AE147AE147D",
+          "predicted": "3F847AE147AE147E"
+        },
+        {
+          "literal": "123456789012345678.5",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345678.6",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345678.7",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345678.8",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345678.9",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.0",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.1",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.2",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.3",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "99999999999999999.5",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999995",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.6",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999996",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.7",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999997",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.8",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999998",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.9",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999999",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "0.99999999999999990",
+          "native": "3FF0000000000000",
+          "predicted": "3FEFFFFFFFFFFFFF"
+        },
+        {
+          "literal": "0.999999999999999900",
+          "native": "3FF0000000000000",
+          "predicted": "3FEFFFFFFFFFFFFF"
+        },
+        {
+          "literal": "1.2345678901234567890",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "1.23456789012345678900",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "3.99999999999999960",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "3.999999999999999600",
+          "native": "4010000000000000",
+          "predicted": "400FFFFFFFFFFFFF"
+        },
+        {
+          "literal": "0.2900",
+          "native": "3FD28F5C28F5C28F",
+          "predicted": "3FD28F5C28F5C290"
+        },
+        {
+          "literal": "0.1234",
+          "native": "3FBF972474538EF3",
+          "predicted": "3FBF972474538EF4"
+        },
+        {
+          "literal": "0.1234567",
+          "native": "3FBF9ADBB8F8DA72",
+          "predicted": "3FBF9ADBB8F8DA71"
+        },
+        {
+          "literal": "0.123456789",
+          "native": "3FBF9ADD3739635F",
+          "predicted": "3FBF9ADD37396360"
+        },
+        {
+          "literal": "0.1234567890",
+          "native": "3FBF9ADD3739635F",
+          "predicted": "3FBF9ADD37396360"
+        },
+        {
+          "literal": "0.123456789012345",
+          "native": "3FBF9ADD3746F62E",
+          "predicted": "3FBF9ADD3746F62F"
+        },
+        {
+          "literal": "0.12345678901234567",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F660"
+        },
+        {
+          "literal": "0.1234567890123456789",
+          "native": "3FBF9ADD3746F661",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "1234567890123456789.0",
+          "native": "43B12210F47DE982",
+          "predicted": "43B12210F47DE981"
+        },
+        {
+          "literal": "0.12345678901234567890",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65E"
+        },
+        {
+          "literal": "12345678901234567890.1",
+          "native": "43E56A95319D63E2",
+          "predicted": "43E56A95319D63E1"
+        },
+        {
+          "literal": "0.12345678901234567890123",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "123456789012345678901234.5",
+          "native": "44BA249B1F10A06C",
+          "predicted": "44BA249B1F10A06D"
+        },
+        {
+          "literal": "0.123456789012345678901234567",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "1234567890123456789012345678.9",
+          "native": "458FE9AF5B6BCBD4",
+          "predicted": "458FE9AF5B6BCBD5"
+        },
+        {
+          "literal": "12345678901234567890123456789.0",
+          "native": "45C3F20D99235F64",
+          "predicted": "45C3F20D99235F65"
+        },
+        {
+          "literal": "0.123456789012345678901234567890",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F660"
+        },
+        {
+          "literal": "123456789012345678901234567890.1",
+          "native": "45F8EE90FF6C373D",
+          "predicted": "45F8EE90FF6C373E"
+        },
+        {
+          "literal": "0.1234567890123456789012345678901",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F660"
+        },
+        {
+          "literal": "1234567890123456789012345678901.2",
+          "native": "462F2A353F47450C",
+          "predicted": "462F2A353F47450E"
+        }
+      ]
+    },
+    "chunkNineCoefficientReciprocal": {
+      "compared": 245,
+      "mismatches": 77,
+      "counterexamples": [
+        {
+          "literal": "0.3",
+          "native": "3FD3333333333333",
+          "predicted": "3FD3333333333334"
+        },
+        {
+          "literal": "3.9999999999999996",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "900719925474098.8",
+          "native": "4309999999999996",
+          "predicted": "4309999999999997"
+        },
+        {
+          "literal": "0.9007199254740988",
+          "native": "3FECD2B297D889B9",
+          "predicted": "3FECD2B297D889B8"
+        },
+        {
+          "literal": "0.009007199254740988",
+          "native": "3F82725DD1D243A9",
+          "predicted": "3F82725DD1D243AA"
+        },
+        {
+          "literal": "900719925474098.9",
+          "native": "4309999999999997",
+          "predicted": "4309999999999998"
+        },
+        {
+          "literal": "0.009007199254740990",
+          "native": "3F82725DD1D243AA",
+          "predicted": "3F82725DD1D243AB"
+        },
+        {
+          "literal": "90071992.54740993",
+          "native": "4195798EE2308C3B",
+          "predicted": "4195798EE2308C3A"
+        },
+        {
+          "literal": "900719925474099.4",
+          "native": "430999999999999B",
+          "predicted": "430999999999999C"
+        },
+        {
+          "literal": "900719925474099.5",
+          "native": "430999999999999C",
+          "predicted": "430999999999999D"
+        },
+        {
+          "literal": "90071992.54740995",
+          "native": "4195798EE2308C3C",
+          "predicted": "4195798EE2308C3D"
+        },
+        {
+          "literal": "999999999999999.5",
+          "native": "430C6BF52633FFFC",
+          "predicted": "430C6BF52633FFFD"
+        },
+        {
+          "literal": "999999999999999.7",
+          "native": "430C6BF52633FFFE",
+          "predicted": "430C6BF52633FFFD"
+        },
+        {
+          "literal": "99999999.99999997",
+          "native": "4197D783FFFFFFFE",
+          "predicted": "4197D783FFFFFFFD"
+        },
+        {
+          "literal": "999999999999999.8",
+          "native": "430C6BF52633FFFE",
+          "predicted": "430C6BF52633FFFF"
+        },
+        {
+          "literal": "999999999999999.9",
+          "native": "430C6BF52633FFFF",
+          "predicted": "430C6BF526340000"
+        },
+        {
+          "literal": "99999999.99999999",
+          "native": "4197D783FFFFFFFF",
+          "predicted": "4197D78400000000"
+        },
+        {
+          "literal": "1000000000000000.1",
+          "native": "430C6BF526340001",
+          "predicted": "430C6BF526340000"
+        },
+        {
+          "literal": "100000000.00000001",
+          "native": "4197D78400000001",
+          "predicted": "4197D78400000000"
+        },
+        {
+          "literal": "1000000000000000.3",
+          "native": "430C6BF526340002",
+          "predicted": "430C6BF526340004"
+        },
+        {
+          "literal": "100000000.00000003",
+          "native": "4197D78400000002",
+          "predicted": "4197D78400000003"
+        },
+        {
+          "literal": "1.0000000000000003",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000002"
+        },
+        {
+          "literal": "0.010000000000000003",
+          "native": "3F847AE147AE147D",
+          "predicted": "3F847AE147AE147E"
+        },
+        {
+          "literal": "123456789012345678.5",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345678.6",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345678.7",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345678.8",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345678.9",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.0",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.1",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.2",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "123456789012345679.3",
+          "native": "437B69B4BA630F36",
+          "predicted": "437B69B4BA630F35"
+        },
+        {
+          "literal": "99999999999999999.5",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999995",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.6",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999996",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.7",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999997",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.8",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999998",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "99999999999999999.9",
+          "native": "4376345785D8A001",
+          "predicted": "4376345785D8A000"
+        },
+        {
+          "literal": "0.999999999999999999",
+          "native": "3FF0000000000001",
+          "predicted": "3FF0000000000000"
+        },
+        {
+          "literal": "0.99999999999999990",
+          "native": "3FF0000000000000",
+          "predicted": "3FEFFFFFFFFFFFFF"
+        },
+        {
+          "literal": "0.999999999999999900",
+          "native": "3FF0000000000000",
+          "predicted": "3FEFFFFFFFFFFFFF"
+        },
+        {
+          "literal": "1.2345678901234567890",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "1.23456789012345678900",
+          "native": "3FF3C0CA428C59FC",
+          "predicted": "3FF3C0CA428C59FB"
+        },
+        {
+          "literal": "03.9999999999999996",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "003.9999999999999996",
+          "native": "400FFFFFFFFFFFFF",
+          "predicted": "4010000000000000"
+        },
+        {
+          "literal": "3.999999999999999600",
+          "native": "4010000000000000",
+          "predicted": "400FFFFFFFFFFFFF"
+        },
+        {
+          "literal": "0.2900",
+          "native": "3FD28F5C28F5C28F",
+          "predicted": "3FD28F5C28F5C290"
+        },
+        {
+          "literal": "1.2",
+          "native": "3FF3333333333333",
+          "predicted": "3FF3333333333334"
+        },
+        {
+          "literal": "0.1234",
+          "native": "3FBF972474538EF3",
+          "predicted": "3FBF972474538EF4"
+        },
+        {
+          "literal": "123456.7",
+          "native": "40FE240B33333333",
+          "predicted": "40FE240B33333334"
+        },
+        {
+          "literal": "0.1234567",
+          "native": "3FBF9ADBB8F8DA72",
+          "predicted": "3FBF9ADBB8F8DA71"
+        },
+        {
+          "literal": "0.123456789",
+          "native": "3FBF9ADD3739635F",
+          "predicted": "3FBF9ADD37396360"
+        },
+        {
+          "literal": "0.1234567890",
+          "native": "3FBF9ADD3739635F",
+          "predicted": "3FBF9ADD37396360"
+        },
+        {
+          "literal": "1234567890.1",
+          "native": "41D26580B4866666",
+          "predicted": "41D26580B4866667"
+        },
+        {
+          "literal": "1234567890123.4",
+          "native": "4271F71FB04CB666",
+          "predicted": "4271F71FB04CB667"
+        },
+        {
+          "literal": "0.123456789012345",
+          "native": "3FBF9ADD3746F62E",
+          "predicted": "3FBF9ADD3746F62F"
+        },
+        {
+          "literal": "123456789012345.6",
+          "native": "42DC12218377DE66",
+          "predicted": "42DC12218377DE67"
+        },
+        {
+          "literal": "0.12345678901234567",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F660"
+        },
+        {
+          "literal": "0.1234567890123456789",
+          "native": "3FBF9ADD3746F661",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "1234567890123456789.0",
+          "native": "43B12210F47DE982",
+          "predicted": "43B12210F47DE981"
+        },
+        {
+          "literal": "0.12345678901234567890",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65E"
+        },
+        {
+          "literal": "123456789012345678901.2",
+          "native": "441AC53A7E04BCDA",
+          "predicted": "441AC53A7E04BCDC"
+        },
+        {
+          "literal": "0.1234567890123456789012",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F661"
+        },
+        {
+          "literal": "0.12345678901234567890123",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "0.123456789012345678901234",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F65E"
+        },
+        {
+          "literal": "123456789012345678901234.5",
+          "native": "44BA249B1F10A06C",
+          "predicted": "44BA249B1F10A06D"
+        },
+        {
+          "literal": "0.123456789012345678901234567",
+          "native": "3FBF9ADD3746F660",
+          "predicted": "3FBF9ADD3746F65F"
+        },
+        {
+          "literal": "0.1234567890123456789012345678",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F65E"
+        },
+        {
+          "literal": "1234567890123456789012345678.9",
+          "native": "458FE9AF5B6BCBD4",
+          "predicted": "458FE9AF5B6BCBD5"
+        },
+        {
+          "literal": "12345678901234567890123456789.0",
+          "native": "45C3F20D99235F64",
+          "predicted": "45C3F20D99235F65"
+        },
+        {
+          "literal": "0.123456789012345678901234567890",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F660"
+        },
+        {
+          "literal": "123456789012345678901234567890.1",
+          "native": "45F8EE90FF6C373D",
+          "predicted": "45F8EE90FF6C3740"
+        },
+        {
+          "literal": "0.1234567890123456789012345678901",
+          "native": "3FBF9ADD3746F65F",
+          "predicted": "3FBF9ADD3746F661"
+        },
+        {
+          "literal": "1234567890123456789012345678901.2",
+          "native": "462F2A353F47450C",
+          "predicted": "462F2A353F47450D"
+        }
+      ]
+    }
+  },
+  "nativeDirectDifferences": [
+    {
+      "literal": "1.234567890123456789",
+      "native": "3FF3C0CA428C59FC",
+      "direct": "3FF3C0CA428C59FB"
+    },
+    {
+      "literal": "0.9999999999999999",
+      "native": "3FF0000000000000",
+      "direct": "3FEFFFFFFFFFFFFF"
+    },
+    {
+      "literal": "0.123456789012345678",
+      "native": "3FBF9ADD3746F660",
+      "direct": "3FBF9ADD3746F65F"
+    },
+    {
+      "literal": "0.9007199254740993",
+      "native": "3FECD2B297D889BC",
+      "direct": "3FECD2B297D889BD"
+    },
+    {
+      "literal": "0.9007199254740995",
+      "native": "3FECD2B297D889C0",
+      "direct": "3FECD2B297D889BF"
+    },
+    {
+      "literal": "0.009007199254740995",
+      "native": "3F82725DD1D243AE",
+      "direct": "3F82725DD1D243AD"
+    },
+    {
+      "literal": "0.9999999999999995",
+      "native": "3FEFFFFFFFFFFFFC",
+      "direct": "3FEFFFFFFFFFFFFB"
+    },
+    {
+      "literal": "0.009999999999999995",
+      "native": "3F847AE147AE1479",
+      "direct": "3F847AE147AE1478"
+    },
+    {
+      "literal": "0.9999999999999997",
+      "native": "3FEFFFFFFFFFFFFC",
+      "direct": "3FEFFFFFFFFFFFFD"
+    },
+    {
+      "literal": "0.009999999999999999",
+      "native": "3F847AE147AE147B",
+      "direct": "3F847AE147AE147A"
+    },
+    {
+      "literal": "123456789012345678.5",
+      "native": "437B69B4BA630F36",
+      "direct": "437B69B4BA630F35"
+    },
+    {
+      "literal": "1.234567890123456785",
+      "native": "3FF3C0CA428C59FC",
+      "direct": "3FF3C0CA428C59FB"
+    },
+    {
+      "literal": "123456789012345678.6",
+      "native": "437B69B4BA630F36",
+      "direct": "437B69B4BA630F35"
+    },
+    {
+      "literal": "1.234567890123456786",
+      "native": "3FF3C0CA428C59FC",
+      "direct": "3FF3C0CA428C59FB"
+    },
+    {
+      "literal": "123456789012345678.7",
+      "native": "437B69B4BA630F36",
+      "direct": "437B69B4BA630F35"
+    },
+    {
+      "literal": "1.234567890123456787",
+      "native": "3FF3C0CA428C59FC",
+      "direct": "3FF3C0CA428C59FB"
+    },
+    {
+      "literal": "123456789012345678.8",
+      "native": "437B69B4BA630F36",
+      "direct": "437B69B4BA630F35"
+    },
+    {
+      "literal": "1.234567890123456788",
+      "native": "3FF3C0CA428C59FC",
+      "direct": "3FF3C0CA428C59FB"
+    },
+    {
+      "literal": "123456789012345678.9",
+      "native": "437B69B4BA630F36",
+      "direct": "437B69B4BA630F35"
+    },
+    {
+      "literal": "123456789012345679.0",
+      "native": "437B69B4BA630F36",
+      "direct": "437B69B4BA630F35"
+    },
+    {
+      "literal": "1.234567890123456790",
+      "native": "3FF3C0CA428C59FC",
+      "direct": "3FF3C0CA428C59FB"
+    },
+    {
+      "literal": "123456789012345679.1",
+      "native": "437B69B4BA630F36",
+      "direct": "437B69B4BA630F35"
+    },
+    {
+      "literal": "1.234567890123456791",
+      "native": "3FF3C0CA428C59FC",
+      "direct": "3FF3C0CA428C59FB"
+    },
+    {
+      "literal": "123456789012345679.2",
+      "native": "437B69B4BA630F36",
+      "direct": "437B69B4BA630F35"
+    },
+    {
+      "literal": "1.234567890123456792",
+      "native": "3FF3C0CA428C59FC",
+      "direct": "3FF3C0CA428C59FB"
+    },
+    {
+      "literal": "123456789012345679.3",
+      "native": "437B69B4BA630F36",
+      "direct": "437B69B4BA630F35"
+    },
+    {
+      "literal": "1.234567890123456793",
+      "native": "3FF3C0CA428C59FC",
+      "direct": "3FF3C0CA428C59FB"
+    },
+    {
+      "literal": "99999999999999999.5",
+      "native": "4376345785D8A001",
+      "direct": "4376345785D8A000"
+    },
+    {
+      "literal": "0.999999999999999995",
+      "native": "3FF0000000000001",
+      "direct": "3FF0000000000000"
+    },
+    {
+      "literal": "99999999999999999.6",
+      "native": "4376345785D8A001",
+      "direct": "4376345785D8A000"
+    },
+    {
+      "literal": "0.999999999999999996",
+      "native": "3FF0000000000001",
+      "direct": "3FF0000000000000"
+    },
+    {
+      "literal": "99999999999999999.7",
+      "native": "4376345785D8A001",
+      "direct": "4376345785D8A000"
+    },
+    {
+      "literal": "0.999999999999999997",
+      "native": "3FF0000000000001",
+      "direct": "3FF0000000000000"
+    },
+    {
+      "literal": "99999999999999999.8",
+      "native": "4376345785D8A001",
+      "direct": "4376345785D8A000"
+    },
+    {
+      "literal": "0.999999999999999998",
+      "native": "3FF0000000000001",
+      "direct": "3FF0000000000000"
+    },
+    {
+      "literal": "99999999999999999.9",
+      "native": "4376345785D8A001",
+      "direct": "4376345785D8A000"
+    },
+    {
+      "literal": "0.999999999999999999",
+      "native": "3FF0000000000001",
+      "direct": "3FF0000000000000"
+    },
+    {
+      "literal": "00.9999999999999999",
+      "native": "3FF0000000000000",
+      "direct": "3FEFFFFFFFFFFFFF"
+    },
+    {
+      "literal": "000.9999999999999999",
+      "native": "3FF0000000000000",
+      "direct": "3FEFFFFFFFFFFFFF"
+    },
+    {
+      "literal": "0.99999999999999990",
+      "native": "3FF0000000000000",
+      "direct": "3FEFFFFFFFFFFFFF"
+    },
+    {
+      "literal": "0.999999999999999900",
+      "native": "3FF0000000000000",
+      "direct": "3FEFFFFFFFFFFFFF"
+    },
+    {
+      "literal": "01.234567890123456789",
+      "native": "3FF3C0CA428C59FC",
+      "direct": "3FF3C0CA428C59FB"
+    },
+    {
+      "literal": "001.234567890123456789",
+      "native": "3FF3C0CA428C59FC",
+      "direct": "3FF3C0CA428C59FB"
+    },
+    {
+      "literal": "1.2345678901234567890",
+      "native": "3FF3C0CA428C59FC",
+      "direct": "3FF3C0CA428C59FB"
+    },
+    {
+      "literal": "1.23456789012345678900",
+      "native": "3FF3C0CA428C59FC",
+      "direct": "3FF3C0CA428C59FB"
+    },
+    {
+      "literal": "3.999999999999999600",
+      "native": "4010000000000000",
+      "direct": "400FFFFFFFFFFFFF"
+    },
+    {
+      "literal": "0.12345678901234567",
+      "native": "3FBF9ADD3746F65F",
+      "direct": "3FBF9ADD3746F65E"
+    },
+    {
+      "literal": "0.1234567890123456789",
+      "native": "3FBF9ADD3746F661",
+      "direct": "3FBF9ADD3746F65F"
+    },
+    {
+      "literal": "1234567890123456789.0",
+      "native": "43B12210F47DE982",
+      "direct": "43B12210F47DE981"
+    },
+    {
+      "literal": "0.12345678901234567890",
+      "native": "3FBF9ADD3746F660",
+      "direct": "3FBF9ADD3746F65F"
+    },
+    {
+      "literal": "12345678901234567890.1",
+      "native": "43E56A95319D63E2",
+      "direct": "43E56A95319D63E1"
+    },
+    {
+      "literal": "0.12345678901234567890123",
+      "native": "3FBF9ADD3746F660",
+      "direct": "3FBF9ADD3746F65F"
+    },
+    {
+      "literal": "123456789012345678901234.5",
+      "native": "44BA249B1F10A06C",
+      "direct": "44BA249B1F10A06D"
+    },
+    {
+      "literal": "0.1234567890123456789012345",
+      "native": "3FBF9ADD3746F660",
+      "direct": "3FBF9ADD3746F65F"
+    },
+    {
+      "literal": "0.12345678901234567890123456",
+      "native": "3FBF9ADD3746F660",
+      "direct": "3FBF9ADD3746F65F"
+    },
+    {
+      "literal": "0.123456789012345678901234567",
+      "native": "3FBF9ADD3746F660",
+      "direct": "3FBF9ADD3746F65F"
+    },
+    {
+      "literal": "1234567890123456789012345678.9",
+      "native": "458FE9AF5B6BCBD4",
+      "direct": "458FE9AF5B6BCBD5"
+    },
+    {
+      "literal": "12345678901234567890123456789.0",
+      "native": "45C3F20D99235F64",
+      "direct": "45C3F20D99235F65"
+    },
+    {
+      "literal": "123456789012345678901234567890.1",
+      "native": "45F8EE90FF6C373D",
+      "direct": "45F8EE90FF6C373E"
+    },
+    {
+      "literal": "1234567890123456789012345678901.2",
+      "native": "462F2A353F47450C",
+      "direct": "462F2A353F47450E"
+    }
+  ],
+  "inputRecords": [
+    {
+      "literal": "0.0",
+      "native": "0000000000000000",
+      "index": 1
+    },
+    {
+      "literal": "0.00",
+      "native": "0000000000000000",
+      "index": 5
+    },
+    {
+      "literal": "0.1",
+      "native": "3FB999999999999A",
+      "index": 9
+    },
+    {
+      "literal": "0.2",
+      "native": "3FC999999999999A",
+      "index": 13
+    },
+    {
+      "literal": "0.29",
+      "native": "3FD28F5C28F5C28F",
+      "index": 17
+    },
+    {
+      "literal": "0.3",
+      "native": "3FD3333333333333",
+      "index": 21
+    },
+    {
+      "literal": "0.5",
+      "native": "3FE0000000000000",
+      "index": 25
+    },
+    {
+      "literal": "2.50",
+      "native": "4004000000000000",
+      "index": 29
+    },
+    {
+      "literal": "02.50",
+      "native": "4004000000000000",
+      "index": 33
+    },
+    {
+      "literal": "1.00",
+      "native": "3FF0000000000000",
+      "index": 37
+    },
+    {
+      "literal": "0.000000000000000001",
+      "native": "3C32725DD1D243AC",
+      "index": 41
+    },
+    {
+      "literal": "1.234567890123456789",
+      "native": "3FF3C0CA428C59FC",
+      "index": 45
+    },
+    {
+      "literal": "0.9999999999999999",
+      "native": "3FF0000000000000",
+      "index": 49
+    },
+    {
+      "literal": "1.0000000000000002",
+      "native": "3FF0000000000001",
+      "index": 53
+    },
+    {
+      "literal": "3.9999999999999996",
+      "native": "400FFFFFFFFFFFFF",
+      "index": 57
+    },
+    {
+      "literal": "0.123456789012345678",
+      "native": "3FBF9ADD3746F660",
+      "index": 61
+    },
+    {
+      "literal": "900719925474098.8",
+      "native": "4309999999999996",
+      "index": 65
+    },
+    {
+      "literal": "90071992.54740988",
+      "native": "4195798EE2308C37",
+      "index": 69
+    },
+    {
+      "literal": "0.9007199254740988",
+      "native": "3FECD2B297D889B9",
+      "index": 73
+    },
+    {
+      "literal": "0.009007199254740988",
+      "native": "3F82725DD1D243A9",
+      "index": 77
+    },
+    {
+      "literal": "900719925474098.9",
+      "native": "4309999999999997",
+      "index": 81
+    },
+    {
+      "literal": "90071992.54740989",
+      "native": "4195798EE2308C38",
+      "index": 85
+    },
+    {
+      "literal": "0.9007199254740989",
+      "native": "3FECD2B297D889B9",
+      "index": 89
+    },
+    {
+      "literal": "0.009007199254740989",
+      "native": "3F82725DD1D243AA",
+      "index": 93
+    },
+    {
+      "literal": "900719925474099.0",
+      "native": "4309999999999998",
+      "index": 97
+    },
+    {
+      "literal": "90071992.54740990",
+      "native": "4195798EE2308C39",
+      "index": 101
+    },
+    {
+      "literal": "0.9007199254740990",
+      "native": "3FECD2B297D889BA",
+      "index": 105
+    },
+    {
+      "literal": "0.009007199254740990",
+      "native": "3F82725DD1D243AA",
+      "index": 109
+    },
+    {
+      "literal": "900719925474099.1",
+      "native": "4309999999999999",
+      "index": 113
+    },
+    {
+      "literal": "90071992.54740991",
+      "native": "4195798EE2308C39",
+      "index": 117
+    },
+    {
+      "literal": "0.9007199254740991",
+      "native": "3FECD2B297D889BB",
+      "index": 121
+    },
+    {
+      "literal": "0.009007199254740991",
+      "native": "3F82725DD1D243AB",
+      "index": 125
+    },
+    {
+      "literal": "900719925474099.2",
+      "native": "430999999999999A",
+      "index": 129
+    },
+    {
+      "literal": "90071992.54740992",
+      "native": "4195798EE2308C3A",
+      "index": 133
+    },
+    {
+      "literal": "0.9007199254740992",
+      "native": "3FECD2B297D889BC",
+      "index": 137
+    },
+    {
+      "literal": "0.009007199254740992",
+      "native": "3F82725DD1D243AC",
+      "index": 141
+    },
+    {
+      "literal": "900719925474099.3",
+      "native": "430999999999999A",
+      "index": 145
+    },
+    {
+      "literal": "90071992.54740993",
+      "native": "4195798EE2308C3B",
+      "index": 149
+    },
+    {
+      "literal": "0.9007199254740993",
+      "native": "3FECD2B297D889BC",
+      "index": 153
+    },
+    {
+      "literal": "0.009007199254740993",
+      "native": "3F82725DD1D243AC",
+      "index": 157
+    },
+    {
+      "literal": "900719925474099.4",
+      "native": "430999999999999B",
+      "index": 161
+    },
+    {
+      "literal": "90071992.54740994",
+      "native": "4195798EE2308C3B",
+      "index": 165
+    },
+    {
+      "literal": "0.9007199254740994",
+      "native": "3FECD2B297D889BE",
+      "index": 169
+    },
+    {
+      "literal": "0.009007199254740994",
+      "native": "3F82725DD1D243AD",
+      "index": 173
+    },
+    {
+      "literal": "900719925474099.5",
+      "native": "430999999999999C",
+      "index": 177
+    },
+    {
+      "literal": "90071992.54740995",
+      "native": "4195798EE2308C3C",
+      "index": 181
+    },
+    {
+      "literal": "0.9007199254740995",
+      "native": "3FECD2B297D889C0",
+      "index": 185
+    },
+    {
+      "literal": "0.009007199254740995",
+      "native": "3F82725DD1D243AE",
+      "index": 189
+    },
+    {
+      "literal": "900719925474099.6",
+      "native": "430999999999999D",
+      "index": 193
+    },
+    {
+      "literal": "90071992.54740996",
+      "native": "4195798EE2308C3D",
+      "index": 197
+    },
+    {
+      "literal": "0.9007199254740996",
+      "native": "3FECD2B297D889C0",
+      "index": 201
+    },
+    {
+      "literal": "0.009007199254740996",
+      "native": "3F82725DD1D243AE",
+      "index": 205
+    },
+    {
+      "literal": "999999999999999.5",
+      "native": "430C6BF52633FFFC",
+      "index": 209
+    },
+    {
+      "literal": "99999999.99999995",
+      "native": "4197D783FFFFFFFD",
+      "index": 213
+    },
+    {
+      "literal": "0.9999999999999995",
+      "native": "3FEFFFFFFFFFFFFC",
+      "index": 217
+    },
+    {
+      "literal": "0.009999999999999995",
+      "native": "3F847AE147AE1479",
+      "index": 221
+    },
+    {
+      "literal": "999999999999999.6",
+      "native": "430C6BF52633FFFD",
+      "index": 225
+    },
+    {
+      "literal": "99999999.99999996",
+      "native": "4197D783FFFFFFFD",
+      "index": 229
+    },
+    {
+      "literal": "0.9999999999999996",
+      "native": "3FEFFFFFFFFFFFFC",
+      "index": 233
+    },
+    {
+      "literal": "0.009999999999999996",
+      "native": "3F847AE147AE1479",
+      "index": 237
+    },
+    {
+      "literal": "999999999999999.7",
+      "native": "430C6BF52633FFFE",
+      "index": 241
+    },
+    {
+      "literal": "99999999.99999997",
+      "native": "4197D783FFFFFFFE",
+      "index": 245
+    },
+    {
+      "literal": "0.9999999999999997",
+      "native": "3FEFFFFFFFFFFFFC",
+      "index": 249
+    },
+    {
+      "literal": "0.009999999999999997",
+      "native": "3F847AE147AE1479",
+      "index": 253
+    },
+    {
+      "literal": "999999999999999.8",
+      "native": "430C6BF52633FFFE",
+      "index": 257
+    },
+    {
+      "literal": "99999999.99999998",
+      "native": "4197D783FFFFFFFF",
+      "index": 261
+    },
+    {
+      "literal": "0.9999999999999998",
+      "native": "3FEFFFFFFFFFFFFE",
+      "index": 265
+    },
+    {
+      "literal": "0.009999999999999998",
+      "native": "3F847AE147AE147A",
+      "index": 269
+    },
+    {
+      "literal": "999999999999999.9",
+      "native": "430C6BF52633FFFF",
+      "index": 273
+    },
+    {
+      "literal": "99999999.99999999",
+      "native": "4197D783FFFFFFFF",
+      "index": 277
+    },
+    {
+      "literal": "0.009999999999999999",
+      "native": "3F847AE147AE147B",
+      "index": 281
+    },
+    {
+      "literal": "1000000000000000.0",
+      "native": "430C6BF526340000",
+      "index": 285
+    },
+    {
+      "literal": "100000000.00000000",
+      "native": "4197D78400000000",
+      "index": 289
+    },
+    {
+      "literal": "1.0000000000000000",
+      "native": "3FF0000000000000",
+      "index": 293
+    },
+    {
+      "literal": "0.010000000000000000",
+      "native": "3F847AE147AE147B",
+      "index": 297
+    },
+    {
+      "literal": "1000000000000000.1",
+      "native": "430C6BF526340001",
+      "index": 301
+    },
+    {
+      "literal": "100000000.00000001",
+      "native": "4197D78400000001",
+      "index": 305
+    },
+    {
+      "literal": "1.0000000000000001",
+      "native": "3FF0000000000000",
+      "index": 309
+    },
+    {
+      "literal": "0.010000000000000001",
+      "native": "3F847AE147AE147B",
+      "index": 313
+    },
+    {
+      "literal": "1000000000000000.2",
+      "native": "430C6BF526340002",
+      "index": 317
+    },
+    {
+      "literal": "100000000.00000002",
+      "native": "4197D78400000001",
+      "index": 321
+    },
+    {
+      "literal": "0.010000000000000002",
+      "native": "3F847AE147AE147C",
+      "index": 325
+    },
+    {
+      "literal": "1000000000000000.3",
+      "native": "430C6BF526340002",
+      "index": 329
+    },
+    {
+      "literal": "100000000.00000003",
+      "native": "4197D78400000002",
+      "index": 333
+    },
+    {
+      "literal": "1.0000000000000003",
+      "native": "3FF0000000000001",
+      "index": 337
+    },
+    {
+      "literal": "0.010000000000000003",
+      "native": "3F847AE147AE147D",
+      "index": 341
+    },
+    {
+      "literal": "123456789012345678.5",
+      "native": "437B69B4BA630F36",
+      "index": 345
+    },
+    {
+      "literal": "12345678901.23456785",
+      "native": "4206FEE0E1A9E065",
+      "index": 349
+    },
+    {
+      "literal": "123.4567890123456785",
+      "native": "405EDD3C07FB4C99",
+      "index": 353
+    },
+    {
+      "literal": "1.234567890123456785",
+      "native": "3FF3C0CA428C59FC",
+      "index": 357
+    },
+    {
+      "literal": "123456789012345678.6",
+      "native": "437B69B4BA630F36",
+      "index": 361
+    },
+    {
+      "literal": "12345678901.23456786",
+      "native": "4206FEE0E1A9E065",
+      "index": 365
+    },
+    {
+      "literal": "123.4567890123456786",
+      "native": "405EDD3C07FB4C99",
+      "index": 369
+    },
+    {
+      "literal": "1.234567890123456786",
+      "native": "3FF3C0CA428C59FC",
+      "index": 373
+    },
+    {
+      "literal": "123456789012345678.7",
+      "native": "437B69B4BA630F36",
+      "index": 377
+    },
+    {
+      "literal": "12345678901.23456787",
+      "native": "4206FEE0E1A9E065",
+      "index": 381
+    },
+    {
+      "literal": "123.4567890123456787",
+      "native": "405EDD3C07FB4C99",
+      "index": 385
+    },
+    {
+      "literal": "1.234567890123456787",
+      "native": "3FF3C0CA428C59FC",
+      "index": 389
+    },
+    {
+      "literal": "123456789012345678.8",
+      "native": "437B69B4BA630F36",
+      "index": 393
+    },
+    {
+      "literal": "12345678901.23456788",
+      "native": "4206FEE0E1A9E065",
+      "index": 397
+    },
+    {
+      "literal": "123.4567890123456788",
+      "native": "405EDD3C07FB4C99",
+      "index": 401
+    },
+    {
+      "literal": "1.234567890123456788",
+      "native": "3FF3C0CA428C59FC",
+      "index": 405
+    },
+    {
+      "literal": "123456789012345678.9",
+      "native": "437B69B4BA630F36",
+      "index": 409
+    },
+    {
+      "literal": "12345678901.23456789",
+      "native": "4206FEE0E1A9E065",
+      "index": 413
+    },
+    {
+      "literal": "123.4567890123456789",
+      "native": "405EDD3C07FB4C99",
+      "index": 417
+    },
+    {
+      "literal": "123456789012345679.0",
+      "native": "437B69B4BA630F36",
+      "index": 421
+    },
+    {
+      "literal": "12345678901.23456790",
+      "native": "4206FEE0E1A9E065",
+      "index": 425
+    },
+    {
+      "literal": "123.4567890123456790",
+      "native": "405EDD3C07FB4C99",
+      "index": 429
+    },
+    {
+      "literal": "1.234567890123456790",
+      "native": "3FF3C0CA428C59FC",
+      "index": 433
+    },
+    {
+      "literal": "123456789012345679.1",
+      "native": "437B69B4BA630F36",
+      "index": 437
+    },
+    {
+      "literal": "12345678901.23456791",
+      "native": "4206FEE0E1A9E065",
+      "index": 441
+    },
+    {
+      "literal": "123.4567890123456791",
+      "native": "405EDD3C07FB4C99",
+      "index": 445
+    },
+    {
+      "literal": "1.234567890123456791",
+      "native": "3FF3C0CA428C59FC",
+      "index": 449
+    },
+    {
+      "literal": "123456789012345679.2",
+      "native": "437B69B4BA630F36",
+      "index": 453
+    },
+    {
+      "literal": "12345678901.23456792",
+      "native": "4206FEE0E1A9E065",
+      "index": 457
+    },
+    {
+      "literal": "123.4567890123456792",
+      "native": "405EDD3C07FB4C99",
+      "index": 461
+    },
+    {
+      "literal": "1.234567890123456792",
+      "native": "3FF3C0CA428C59FC",
+      "index": 465
+    },
+    {
+      "literal": "123456789012345679.3",
+      "native": "437B69B4BA630F36",
+      "index": 469
+    },
+    {
+      "literal": "12345678901.23456793",
+      "native": "4206FEE0E1A9E065",
+      "index": 473
+    },
+    {
+      "literal": "123.4567890123456793",
+      "native": "405EDD3C07FB4C99",
+      "index": 477
+    },
+    {
+      "literal": "1.234567890123456793",
+      "native": "3FF3C0CA428C59FC",
+      "index": 481
+    },
+    {
+      "literal": "99999999999999999.5",
+      "native": "4376345785D8A001",
+      "index": 485
+    },
+    {
+      "literal": "9999999999.99999995",
+      "native": "4202A05F20000000",
+      "index": 489
+    },
+    {
+      "literal": "99.9999999999999995",
+      "native": "4059000000000000",
+      "index": 493
+    },
+    {
+      "literal": "0.999999999999999995",
+      "native": "3FF0000000000001",
+      "index": 497
+    },
+    {
+      "literal": "99999999999999999.6",
+      "native": "4376345785D8A001",
+      "index": 501
+    },
+    {
+      "literal": "9999999999.99999996",
+      "native": "4202A05F20000000",
+      "index": 505
+    },
+    {
+      "literal": "99.9999999999999996",
+      "native": "4059000000000000",
+      "index": 509
+    },
+    {
+      "literal": "0.999999999999999996",
+      "native": "3FF0000000000001",
+      "index": 513
+    },
+    {
+      "literal": "99999999999999999.7",
+      "native": "4376345785D8A001",
+      "index": 517
+    },
+    {
+      "literal": "9999999999.99999997",
+      "native": "4202A05F20000000",
+      "index": 521
+    },
+    {
+      "literal": "99.9999999999999997",
+      "native": "4059000000000000",
+      "index": 525
+    },
+    {
+      "literal": "0.999999999999999997",
+      "native": "3FF0000000000001",
+      "index": 529
+    },
+    {
+      "literal": "99999999999999999.8",
+      "native": "4376345785D8A001",
+      "index": 533
+    },
+    {
+      "literal": "9999999999.99999998",
+      "native": "4202A05F20000000",
+      "index": 537
+    },
+    {
+      "literal": "99.9999999999999998",
+      "native": "4059000000000000",
+      "index": 541
+    },
+    {
+      "literal": "0.999999999999999998",
+      "native": "3FF0000000000001",
+      "index": 545
+    },
+    {
+      "literal": "99999999999999999.9",
+      "native": "4376345785D8A001",
+      "index": 549
+    },
+    {
+      "literal": "9999999999.99999999",
+      "native": "4202A05F20000000",
+      "index": 553
+    },
+    {
+      "literal": "99.9999999999999999",
+      "native": "4059000000000000",
+      "index": 557
+    },
+    {
+      "literal": "0.999999999999999999",
+      "native": "3FF0000000000001",
+      "index": 561
+    },
+    {
+      "literal": "100000000000000000.0",
+      "native": "4376345785D8A000",
+      "index": 565
+    },
+    {
+      "literal": "10000000000.00000000",
+      "native": "4202A05F20000000",
+      "index": 569
+    },
+    {
+      "literal": "100.0000000000000000",
+      "native": "4059000000000000",
+      "index": 573
+    },
+    {
+      "literal": "1.000000000000000000",
+      "native": "3FF0000000000000",
+      "index": 577
+    },
+    {
+      "literal": "100000000000000000.1",
+      "native": "4376345785D8A000",
+      "index": 581
+    },
+    {
+      "literal": "10000000000.00000001",
+      "native": "4202A05F20000000",
+      "index": 585
+    },
+    {
+      "literal": "100.0000000000000001",
+      "native": "4059000000000000",
+      "index": 589
+    },
+    {
+      "literal": "1.000000000000000001",
+      "native": "3FF0000000000000",
+      "index": 593
+    },
+    {
+      "literal": "100000000000000000.2",
+      "native": "4376345785D8A000",
+      "index": 597
+    },
+    {
+      "literal": "10000000000.00000002",
+      "native": "4202A05F20000000",
+      "index": 601
+    },
+    {
+      "literal": "100.0000000000000002",
+      "native": "4059000000000000",
+      "index": 605
+    },
+    {
+      "literal": "1.000000000000000002",
+      "native": "3FF0000000000000",
+      "index": 609
+    },
+    {
+      "literal": "100000000000000000.3",
+      "native": "4376345785D8A000",
+      "index": 613
+    },
+    {
+      "literal": "10000000000.00000003",
+      "native": "4202A05F20000000",
+      "index": 617
+    },
+    {
+      "literal": "100.0000000000000003",
+      "native": "4059000000000000",
+      "index": 621
+    },
+    {
+      "literal": "1.000000000000000003",
+      "native": "3FF0000000000000",
+      "index": 625
+    },
+    {
+      "literal": "100000000000000000.4",
+      "native": "4376345785D8A000",
+      "index": 629
+    },
+    {
+      "literal": "10000000000.00000004",
+      "native": "4202A05F20000000",
+      "index": 633
+    },
+    {
+      "literal": "100.0000000000000004",
+      "native": "4059000000000000",
+      "index": 637
+    },
+    {
+      "literal": "1.000000000000000004",
+      "native": "3FF0000000000000",
+      "index": 641
+    },
+    {
+      "literal": "00.9999999999999999",
+      "native": "3FF0000000000000",
+      "index": 645
+    },
+    {
+      "literal": "000.9999999999999999",
+      "native": "3FF0000000000000",
+      "index": 649
+    },
+    {
+      "literal": "0.99999999999999990",
+      "native": "3FF0000000000000",
+      "index": 653
+    },
+    {
+      "literal": "0.999999999999999900",
+      "native": "3FF0000000000000",
+      "index": 657
+    },
+    {
+      "literal": "01.234567890123456789",
+      "native": "3FF3C0CA428C59FC",
+      "index": 661
+    },
+    {
+      "literal": "001.234567890123456789",
+      "native": "3FF3C0CA428C59FC",
+      "index": 665
+    },
+    {
+      "literal": "1.2345678901234567890",
+      "native": "3FF3C0CA428C59FC",
+      "index": 669
+    },
+    {
+      "literal": "1.23456789012345678900",
+      "native": "3FF3C0CA428C59FC",
+      "index": 673
+    },
+    {
+      "literal": "01.0000000000000002",
+      "native": "3FF0000000000001",
+      "index": 677
+    },
+    {
+      "literal": "001.0000000000000002",
+      "native": "3FF0000000000001",
+      "index": 681
+    },
+    {
+      "literal": "1.00000000000000020",
+      "native": "3FF0000000000001",
+      "index": 685
+    },
+    {
+      "literal": "1.000000000000000200",
+      "native": "3FF0000000000001",
+      "index": 689
+    },
+    {
+      "literal": "03.9999999999999996",
+      "native": "400FFFFFFFFFFFFF",
+      "index": 693
+    },
+    {
+      "literal": "003.9999999999999996",
+      "native": "400FFFFFFFFFFFFF",
+      "index": 697
+    },
+    {
+      "literal": "3.99999999999999960",
+      "native": "400FFFFFFFFFFFFF",
+      "index": 701
+    },
+    {
+      "literal": "3.999999999999999600",
+      "native": "4010000000000000",
+      "index": 705
+    },
+    {
+      "literal": "00.1",
+      "native": "3FB999999999999A",
+      "index": 709
+    },
+    {
+      "literal": "000.1",
+      "native": "3FB999999999999A",
+      "index": 713
+    },
+    {
+      "literal": "0.10",
+      "native": "3FB999999999999A",
+      "index": 717
+    },
+    {
+      "literal": "0.100",
+      "native": "3FB999999999999A",
+      "index": 721
+    },
+    {
+      "literal": "00.29",
+      "native": "3FD28F5C28F5C28F",
+      "index": 725
+    },
+    {
+      "literal": "000.29",
+      "native": "3FD28F5C28F5C28F",
+      "index": 729
+    },
+    {
+      "literal": "0.290",
+      "native": "3FD28F5C28F5C28F",
+      "index": 733
+    },
+    {
+      "literal": "0.2900",
+      "native": "3FD28F5C28F5C28F",
+      "index": 737
+    },
+    {
+      "literal": "1.2",
+      "native": "3FF3333333333333",
+      "index": 741
+    },
+    {
+      "literal": "0.12",
+      "native": "3FBEB851EB851EB8",
+      "index": 745
+    },
+    {
+      "literal": "12.3",
+      "native": "402899999999999A",
+      "index": 749
+    },
+    {
+      "literal": "0.123",
+      "native": "3FBF7CED916872B0",
+      "index": 753
+    },
+    {
+      "literal": "123.4",
+      "native": "405ED9999999999A",
+      "index": 757
+    },
+    {
+      "literal": "0.1234",
+      "native": "3FBF972474538EF3",
+      "index": 761
+    },
+    {
+      "literal": "1234.5",
+      "native": "40934A0000000000",
+      "index": 765
+    },
+    {
+      "literal": "0.12345",
+      "native": "3FBF9A6B50B0F27C",
+      "index": 769
+    },
+    {
+      "literal": "12345.6",
+      "native": "40C81CCCCCCCCCCD",
+      "index": 773
+    },
+    {
+      "literal": "0.123456",
+      "native": "3FBF9ACFFA7EB6BF",
+      "index": 777
+    },
+    {
+      "literal": "123456.7",
+      "native": "40FE240B33333333",
+      "index": 781
+    },
+    {
+      "literal": "0.1234567",
+      "native": "3FBF9ADBB8F8DA72",
+      "index": 785
+    },
+    {
+      "literal": "1234567.8",
+      "native": "4132D687CCCCCCCD",
+      "index": 789
+    },
+    {
+      "literal": "0.12345678",
+      "native": "3FBF9ADD1091C895",
+      "index": 793
+    },
+    {
+      "literal": "12345678.9",
+      "native": "41678C29DCCCCCCD",
+      "index": 797
+    },
+    {
+      "literal": "0.123456789",
+      "native": "3FBF9ADD3739635F",
+      "index": 801
+    },
+    {
+      "literal": "123456789.0",
+      "native": "419D6F3454000000",
+      "index": 805
+    },
+    {
+      "literal": "0.1234567890",
+      "native": "3FBF9ADD3739635F",
+      "index": 809
+    },
+    {
+      "literal": "1234567890.1",
+      "native": "41D26580B4866666",
+      "index": 813
+    },
+    {
+      "literal": "0.12345678901",
+      "native": "3FBF9ADD3744621F",
+      "index": 817
+    },
+    {
+      "literal": "12345678901.2",
+      "native": "4206FEE0E1A9999A",
+      "index": 821
+    },
+    {
+      "literal": "0.123456789012",
+      "native": "3FBF9ADD37469512",
+      "index": 825
+    },
+    {
+      "literal": "123456789012.3",
+      "native": "423CBE991A144CCD",
+      "index": 829
+    },
+    {
+      "literal": "0.1234567890123",
+      "native": "3FBF9ADD3746E984",
+      "index": 833
+    },
+    {
+      "literal": "1234567890123.4",
+      "native": "4271F71FB04CB666",
+      "index": 837
+    },
+    {
+      "literal": "0.12345678901234",
+      "native": "3FBF9ADD3746F4C6",
+      "index": 841
+    },
+    {
+      "literal": "12345678901234.5",
+      "native": "42A674E79C5FE500",
+      "index": 845
+    },
+    {
+      "literal": "0.123456789012345",
+      "native": "3FBF9ADD3746F62E",
+      "index": 849
+    },
+    {
+      "literal": "123456789012345.6",
+      "native": "42DC12218377DE66",
+      "index": 853
+    },
+    {
+      "literal": "0.1234567890123456",
+      "native": "3FBF9ADD3746F659",
+      "index": 857
+    },
+    {
+      "literal": "1234567890123456.7",
+      "native": "43118B54F22AEB03",
+      "index": 861
+    },
+    {
+      "literal": "0.12345678901234567",
+      "native": "3FBF9ADD3746F65F",
+      "index": 865
+    },
+    {
+      "literal": "12345678901234567.8",
+      "native": "4345EE2A2EB5A5C4",
+      "index": 869
+    },
+    {
+      "literal": "0.1234567890123456789",
+      "native": "3FBF9ADD3746F661",
+      "index": 873
+    },
+    {
+      "literal": "1234567890123456789.0",
+      "native": "43B12210F47DE982",
+      "index": 877
+    },
+    {
+      "literal": "0.12345678901234567890",
+      "native": "3FBF9ADD3746F660",
+      "index": 881
+    },
+    {
+      "literal": "12345678901234567890.1",
+      "native": "43E56A95319D63E2",
+      "index": 885
+    },
+    {
+      "literal": "0.123456789012345678901",
+      "native": "3FBF9ADD3746F65F",
+      "index": 889
+    },
+    {
+      "literal": "123456789012345678901.2",
+      "native": "441AC53A7E04BCDA",
+      "index": 893
+    },
+    {
+      "literal": "0.1234567890123456789012",
+      "native": "3FBF9ADD3746F65F",
+      "index": 897
+    },
+    {
+      "literal": "1234567890123456789012.3",
+      "native": "4450BB448EC2F608",
+      "index": 901
+    },
+    {
+      "literal": "0.12345678901234567890123",
+      "native": "3FBF9ADD3746F660",
+      "index": 905
+    },
+    {
+      "literal": "12345678901234567890123.4",
+      "native": "4484EA15B273B38A",
+      "index": 909
+    },
+    {
+      "literal": "0.123456789012345678901234",
+      "native": "3FBF9ADD3746F65F",
+      "index": 913
+    },
+    {
+      "literal": "123456789012345678901234.5",
+      "native": "44BA249B1F10A06C",
+      "index": 917
+    },
+    {
+      "literal": "0.1234567890123456789012345",
+      "native": "3FBF9ADD3746F660",
+      "index": 921
+    },
+    {
+      "literal": "1234567890123456789012345.6",
+      "native": "44F056E0F36A6444",
+      "index": 925
+    },
+    {
+      "literal": "0.12345678901234567890123456",
+      "native": "3FBF9ADD3746F660",
+      "index": 929
+    },
+    {
+      "literal": "12345678901234567890123456.7",
+      "native": "45246C993044FD55",
+      "index": 933
+    },
+    {
+      "literal": "0.123456789012345678901234567",
+      "native": "3FBF9ADD3746F660",
+      "index": 937
+    },
+    {
+      "literal": "123456789012345678901234567.8",
+      "native": "455987BF7C563CAA",
+      "index": 941
+    },
+    {
+      "literal": "0.1234567890123456789012345678",
+      "native": "3FBF9ADD3746F65F",
+      "index": 945
+    },
+    {
+      "literal": "1234567890123456789012345678.9",
+      "native": "458FE9AF5B6BCBD4",
+      "index": 949
+    },
+    {
+      "literal": "0.12345678901234567890123456789",
+      "native": "3FBF9ADD3746F65F",
+      "index": 953
+    },
+    {
+      "literal": "12345678901234567890123456789.0",
+      "native": "45C3F20D99235F64",
+      "index": 957
+    },
+    {
+      "literal": "0.123456789012345678901234567890",
+      "native": "3FBF9ADD3746F65F",
+      "index": 961
+    },
+    {
+      "literal": "123456789012345678901234567890.1",
+      "native": "45F8EE90FF6C373D",
+      "index": 965
+    },
+    {
+      "literal": "0.1234567890123456789012345678901",
+      "native": "3FBF9ADD3746F65F",
+      "index": 969
+    },
+    {
+      "literal": "1234567890123456789012345678901.2",
+      "native": "462F2A353F47450C",
+      "index": 973
+    },
+    {
+      "literal": "0.12345678901234567890123456789012",
+      "native": "3FBF9ADD3746F65F",
+      "index": 977
+    }
+  ],
+  "limitations": "No product code, expected test data or conversion API behavior is imported/generated. Unary/materialization metadata and wider producer boundaries require separate recovery. A zero counterexample count on this profile is not universal equivalence."
+}

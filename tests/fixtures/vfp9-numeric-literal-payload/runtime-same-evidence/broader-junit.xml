@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="20"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="155"
+	timestamp="2026-10-17T23:28:10"
+	>
+	<testcase name="test_prg_numeric_literal_metadata_helper" classname="test_prg_numeric_literal_metadata_helper" time="0.0049697" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=none;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>Plain decimal metadata helper: native and unsupported-domain checks passed
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_numeric_literal_metadata" classname="test_prg_engine_numeric_literal_metadata" time="0.0959681" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>Direct plain-decimal metadata: both modes/DECIMALS2,14 passed; payload/state controls passed
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_numeric_unary_metadata" classname="test_prg_engine_numeric_unary_metadata" time="0.090616" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>Nonzero plain-decimal unary attributes: both modes/DECIMALS2,14 passed; payload/state controls passed
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_numeric_integer_metadata" classname="test_prg_engine_numeric_integer_metadata" time="0.0988551" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>Native staged Integer descriptors/bits: both modes/settings passed; controls unchanged
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_numeric_integer_assignment" classname="test_prg_engine_numeric_integer_assignment" time="0.396024" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>Native Integer scalar assignments: modes/settings/scopes/copies/namespaces passed
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_numeric_real_assignment" classname="test_prg_engine_numeric_real_assignment" time="0.882588" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>Native bounded real assignments: modes/settings/scopes/copies/namespaces passed
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_numeric_runtime_division" classname="test_prg_engine_numeric_runtime_division" time="0.346313" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>Native runtime division metadata and unchanged-route controls passed
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_numeric_constant_division" classname="test_prg_engine_numeric_constant_division" time="0.925677" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>constant division: descriptor=0 bits=0 evaluation=0 controls=0 total=0
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_numeric_literal_payload" classname="test_prg_engine_numeric_literal_payload" time="0.492519" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>literal payload: descriptor=0 bits=0 evaluation=0 controls=0 total=0
+</system-out>
+	</testcase>
+	<testcase name="test_prg_numeric_literal_payload_helper" classname="test_prg_numeric_literal_payload_helper" time="0.00422173" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=none;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>literal payload helper: selected=458 failures=0
+</system-out>
+	</testcase>
+	<testcase name="test_cloud_validation_sanitizer_selection" classname="test_cloud_validation_sanitizer_selection" time="0.215875" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>...
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+
+OK
+</system-out>
+	</testcase>
+	<testcase name="test_native_test_isolation_contract" classname="test_native_test_isolation_contract" time="0.548485" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>-- Native test isolation inventory contract passed for 629 tests
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_control_flow" classname="test_prg_engine_control_flow" time="87.6174" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>All tests passed.
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_macro_expressions" classname="test_prg_engine_macro_expressions" time="0.083057" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_currency_literals" classname="test_prg_engine_currency_literals" time="0.189777" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_currency_functions" classname="test_prg_engine_currency_functions" time="0.206936" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_currency_overflow" classname="test_prg_engine_currency_overflow" time="0.108573" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_currency_exact_muldiv" classname="test_prg_engine_currency_exact_muldiv" time="0.361289" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_int64_exact_expression" classname="test_prg_engine_int64_exact_expression" time="0.0952175" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="test_prg_engine_numeric_behavior" classname="test_prg_engine_numeric_behavior" time="62.2386" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=process-owned;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+</testsuite>

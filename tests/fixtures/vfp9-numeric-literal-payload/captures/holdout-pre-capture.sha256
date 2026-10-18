@@ -1,0 +1,9 @@
+32eb46db6ee28ff69f5e1531e40257e78849074dea29ce8d366ecbdbe64c0f9d  tests/fixtures/vfp9-numeric-literal-payload/holdout.prg
+cf9798c2a2758730a5f80f0dcb9b00e0065110b0120eb985cadb79280a68b7d1  tests/fixtures/vfp9-numeric-literal-payload/holdout-cases.json
+fb3b80e88bebf84b4d3e8a04e43cb6d8f5989ba28aae24503be04340b0e390d3  tests/fixtures/vfp9-numeric-literal-payload/holdout-predictions.json
+9c52cf233d544b244a8b4d1adcfa2a39a70f3283b963b94a00af27b6bfdb5b86  tests/fixtures/vfp9-numeric-literal-payload/emit-holdout.cjs
+b1280be48868d746133888e5e03ca654a44421fc5a5f60373058e45c57d4a1c5  tests/fixtures/vfp9-numeric-literal-payload/audit-holdout.cjs
+11b4322b4c4faad4505e5e7862739350b32749bcd8882edaf159bed9d10a719e  tests/fixtures/vfp9-numeric-literal-payload/analyze-chunks.cjs
+1e64d290b8994acf0ad10eb3448b42dc72a6a109ab436b955a59587e9c1abb06  /home/rich/bin/vfp9-probe
+cdc159a1e07e5208a0def267a94b8b3b007160641b442cb453aba8ecc4138560  /home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe
+1afd8eca71d2ef716efc22bb90f7f092322d9639ebec671fb5bd1bf4df806c19  /home/rich/dev/Project-Copperfin/build/pr7203-completed/native-evidence/diagnostic/cause-probe.fll

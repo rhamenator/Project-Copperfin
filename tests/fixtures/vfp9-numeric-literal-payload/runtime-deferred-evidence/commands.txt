@@ -1,0 +1,16 @@
+Actual commands, run from the literal slice worktree; status receipts distinguish attempts.
+
+cmake -S . -B build/literal-payload-fixed -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG='-O0 -g0' -DCOPPERFIN_BUILD_TESTS=ON -DCOPPERFIN_BUILD_ROBUSTNESS_TESTS=OFF
+
+After the retained initial unknown-target selection error, the corrected command was:
+nice -n 10 cmake --build build/literal-payload-fixed --parallel 2 --target test_prg_engine_numeric_literal_payload test_prg_numeric_literal_payload_helper test_prg_numeric_literal_metadata_helper test_prg_engine_numeric_literal_metadata test_prg_engine_numeric_integer_metadata test_prg_engine_numeric_unary_metadata test_prg_engine_numeric_runtime_division test_prg_engine_numeric_constant_division test_prg_engine_numeric_real_assignment test_prg_engine_numeric_integer_assignment test_prg_engine_int64_exact_expression test_prg_engine_currency_literals test_prg_engine_currency_functions test_prg_engine_currency_overflow test_prg_engine_currency_exact_muldiv test_prg_engine_macro_expressions test_prg_engine_control_flow test_prg_engine_numeric_behavior
+
+ctest --test-dir build/literal-payload-fixed --output-on-failure -R '^(test_cloud_validation_sanitizer_selection|test_native_test_isolation_contract)$' --output-junit ../literal-payload-native/fixed-public/tooling-junit.xml
+
+Process observation summary (not a raw captured process log): Ninja443577 had
+parent CMake443576 and cwd ending Project-Copperfin/build/literal-payload-fixed.
+Only after checking both, kill -INT 443577 was sent. Build status130 and actual
+Ninja interruption output are retained; targeted process query afterward empty.
+
+Future restart MUST re-coordinate; preserve interrupted logs before resuming the
+same corrected build. No SAME/broader runtime CTest was executed in this attempt.

@@ -1,0 +1,45 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-DECIMAL-LITERAL-PAYLOAD-001",
+  "sourceCheckpoint": "a6cfc9954580e45c6c8cd2b760c6a3945369f6e5",
+  "actualLocalExecution": {
+    "same": {
+      "executed": 2,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "names": [
+        "test_prg_engine_numeric_literal_payload",
+        "test_prg_numeric_literal_payload_helper"
+      ]
+    },
+    "broader": {
+      "executed": 20,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "names": [
+        "test_cloud_validation_sanitizer_selection",
+        "test_native_test_isolation_contract",
+        "test_prg_engine_control_flow",
+        "test_prg_engine_currency_exact_muldiv",
+        "test_prg_engine_currency_functions",
+        "test_prg_engine_currency_literals",
+        "test_prg_engine_currency_overflow",
+        "test_prg_engine_int64_exact_expression",
+        "test_prg_engine_macro_expressions",
+        "test_prg_engine_numeric_behavior",
+        "test_prg_engine_numeric_constant_division",
+        "test_prg_engine_numeric_integer_assignment",
+        "test_prg_engine_numeric_integer_metadata",
+        "test_prg_engine_numeric_literal_metadata",
+        "test_prg_engine_numeric_literal_payload",
+        "test_prg_engine_numeric_real_assignment",
+        "test_prg_engine_numeric_runtime_division",
+        "test_prg_engine_numeric_unary_metadata",
+        "test_prg_numeric_literal_metadata_helper",
+        "test_prg_numeric_literal_payload_helper"
+      ]
+    }
+  },
+  "scope": "GNU local execution only, not hosted/review/merge acceptance"
+}

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="2"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="0"
+	timestamp="2026-10-17T23:16:06"
+	>
+	<testcase name="test_cloud_validation_sanitizer_selection" classname="test_cloud_validation_sanitizer_selection" time="0.245831" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>...
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+
+OK
+</system-out>
+	</testcase>
+	<testcase name="test_native_test_isolation_contract" classname="test_native_test_isolation_contract" time="0.605096" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>-- Native test isolation inventory contract passed for 629 tests
+</system-out>
+	</testcase>
+</testsuite>

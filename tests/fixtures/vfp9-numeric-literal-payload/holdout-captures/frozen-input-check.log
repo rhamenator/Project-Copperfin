@@ -1,0 +1,9 @@
+tests/fixtures/vfp9-numeric-literal-payload/holdout.prg: OK
+tests/fixtures/vfp9-numeric-literal-payload/holdout-cases.json: OK
+tests/fixtures/vfp9-numeric-literal-payload/holdout-predictions.json: OK
+tests/fixtures/vfp9-numeric-literal-payload/emit-holdout.cjs: OK
+tests/fixtures/vfp9-numeric-literal-payload/audit-holdout.cjs: OK
+tests/fixtures/vfp9-numeric-literal-payload/analyze-chunks.cjs: OK
+/home/rich/bin/vfp9-probe: OK
+/home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe: OK
+/home/rich/dev/Project-Copperfin/build/pr7203-completed/native-evidence/diagnostic/cause-probe.fll: OK
