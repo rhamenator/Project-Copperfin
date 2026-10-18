@@ -26,6 +26,11 @@ whole-domain/bounds controls pass. Inputs' descriptors and bits remain unchanged
 Initial compiles/runs passed; no failed assertion or hidden retry. Logs, actual
 statuses, compiler versions and source hashes are retained in this evidence
 directory. Node source syntax, structural/model/header audits0; changelog valid.
+The staged/full-diff whitespace check separately found the compiler version
+stdout's final blank line (status2). Only that presentation blank line was
+trimmed; exact original version stdout remains in the host build and signed
+6336ac9f9 checkpoint. Its diagnostic/status are retained. No source, expected
+row, assertion or whitespace rule was changed; final full-diff check0.
 
 From repository root, reproduce the focused unused-helper verification:
 
