@@ -212,7 +212,7 @@ exact-binary half-away rule is contradicted. Do not guess a tolerance from this.
 NEXT independently frozen adjacent-binary64 boundary recovery using observed
 native centers and documented CTOBIN/BRS identity, BEFORE formatter/test model.
 
-### Adjacent-binary64 source freeze (not yet observed)
+### Adjacent-binary64 source freeze and qualified pair
 
 `emit-rounding-boundary.cjs` reads only the qualified archived native report
 (bound to SHA45d1e318...) and stimulus inventory to select eight native payload
@@ -238,7 +238,52 @@ window; audit initially returned no text, which is NOT clearance, then explicitl
 said HOLD at full0.00%/3.46%. Do not inherit a released window, treat HOLD as
 clearance or start merely because one pressure window is zero. No reservation
 retained. NEXT fresh pressure readback and BOTH-chat clearance, not a retry of
-the already-qualified1872-record grid.
+the already-qualified1872-record grid. That earlier resource HOLD is historical;
+it did not authorize the following separately coordinated run.
+
+Fresh BOTH-chat explicit CLEAR and low-pressure gates subsequently allowed
+the UNCHANGED signed8f3831354 source. Both native statuses0/empty stderr,
+first structure0 BEFORE repeat, independent paired reader0, complete2000/run,
+RAW-BYTE-IDENTICAL SHA256
+3c6601c1d769cd9bf662adf3068da1486a4f48e9993fb2b13524dfabcf627980.
+Every CTOBIN/BRS payload and width40/scale18 readback exact. Full PSI0.00/0.00
+before both invocations; all source/runner/VFP9/FLL hash checks0.
+rounding-captures/ retains lossless records/statuses/pressure/script, archived
+reader0/host-byte-compare0 and full REA
+ev_25f3b664d91b97d1c3b9be6055c6a65987f22542c87f4039a110992173d81106:
+root0/quiesced/owned cleanup verified/untruncated/no sampled ownership unknowns.
+The inherited-environment/sampling/snapshot/image-binding limits remain.
+Both chats RELEASED; prefix postcheck empty/1; no resource reservation.
+
+`analyze-rounding-boundary.cjs` emits observed equal-text intervals ONLY;
+it is not a formatter/model. Its complete result/status/stderr is retained.
+For FIXED ON, all sampled offsets-512..32 around native0.5 still display1;
+all offsets-32..32 around1.005,2.675,9.995 and5E-16 likewise remain in ONE
+observed text interval at the declared critical setting. These windows do NOT
+bracket those transitions. FIXED OFF still distinguishes payloads through
+18-scale text. The other three centers have16/65/13 observed FIXED ON
+intervals. A positive finite neighborhood and its endpoint strings do not
+establish a general tolerance, negative behavior or a complete conversion rule.
+
+### Wider signed magnitude-offset ladder (unrun)
+
+The next source/inventory/reader is emit-rounding-ladder.cjs,
+rounding-ladder.prg, rounding-ladder-cases.json and audit-rounding-ladder.cjs.
+It derives eight centers from the qualified native declarations, bound to
+the paired2000-record receipt. Each center has both sign bits and121 exact
+magnitude offsets:0/1/-1 plus neighbors of negative powers of two through2^40.
+There are1936 finite inputs/3872 observations per run, same width40/scale18,
+critical DECIMALS and both FIXED modes. New source reuses only our authored
+PRG template; no Copperfin/candidate/expected-string input.
+
+The purpose is to bracket unobserved transitions, not declare an epsilon or
+fit a rounding tolerance. Strict complete/typed/BRS/paired audits and first-
+structure gate remain required. Separate build/default-transform-rounding-ladder
+preserves all prior evidence. No invocation yet. Audit subsequently reported
+renewed full PSI20.05/3.97 and stopped its own probes, so no additional native
+job is reserved. NEXT fresh BOTH-chat CLEAR and immediate low-full-PSI gates
+for this signed frozen ladder; then exact boundary recovery before any model,
+native-only expected regression/actual ORIGINAL/support/wiring.
 
 ## Traceability and development-document walkthrough
 

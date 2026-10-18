@@ -46,24 +46,34 @@ REA ev_d750f514647fb048ce40c9fe290bdf782421ca5a52662b3c19ed0d84bce08915
 root0/quiesced/owned cleanup verified/untruncated/no sampled EACCES here;
 earlier attempt still UNQUALIFIED. Both chats RELEASED; prefix postcheck empty.
 See intervention-captures/ and recovery.md for independent width/scale causal
-witnesses and rounding outputs. NEXT adjacent-binary64 rounding boundary
-recovery from native centers; do not guess epsilon/tolerance or implement from
-16-significant-digit inference alone. No model/expected emitter/helper yet.
-Adjacent-payload native source/inventory/reader freeze is now ready in
-emit-rounding-boundary.cjs/rounding.prg/rounding-cases.json/audit-rounding-boundary.cjs:
-1000 exact inputs around eight QUALIFIED native centers,2000 observations/run,
-width40/scale18 readback+CTOBIN BRS identity mandatory. First --single before
-repeat; separate build/default-transform-rounding, fresh BOTH-chat/full PSI
-gates. Signed/DCO source freeze
-8f38313540a702af0e0b3bad858a56ff3017fb7c pushed. No native invocation for this
-new grid. Separate build/default-transform-rounding/capture-pair.sh prepared;
-DAW fresh clearance obtained, audit's initial reply empty (NOT clearance);
-subsequent explicit HOLD at full0.00/3.46. Own last full0.00/3.70 likewise
-prevents execution. Recheck BOTH windows later and obtain fresh clearance;
-do not start from that HOLD acknowledgement.
-No standing resource reservation; re-coordinate and check BOTH full windows
-before each invocation. Successful1872 pair evidence stays qualified; no need
-to repeat it. All failed-attempt and division receipts remain unchanged.
+witnesses and rounding outputs. No model/expected emitter/helper yet.
+
+Adjacent-payload pair from signed source8f3831354 is now QUALIFIED after new
+BOTH-chat explicit CLEAR/full PSI0.00/0.00 before each: both actual0/empty
+stderr/DONE2000, first structure0 then paired reader0, RAW-BYTE-IDENTICAL SHA
+3c6601c1d769cd9bf662adf3068da1486a4f48e9993fb2b13524dfabcf627980.
+All CTOBIN/BRS identities and width40/scale18 exact. Archived reader0/host byte
+compare0, input/native hashes unchanged. REA
+ev_25f3b664d91b97d1c3b9be6055c6a65987f22542c87f4039a110992173d81106
+root0/quiesced/owned cleanup verified/untruncated/no sampled ownership unknowns;
+standard sampling/environment/image-binding limitations remain. Both chats
+RELEASED/prefix postcheck empty. See rounding-captures/; model-free observed-
+interval analyzer0 retains every interval. Five near-half windows do NOT
+bracket a transition:0.5 offsets-512..32 all display1 at D0 FIXED ON;
+1.005/2.675/9.995/5E-16 offsets-32..32 likewise one interval. Do not guess
+epsilon/tolerance or treat16-significant-digit inference as a complete rule.
+
+NEXT source/inventory/strict reader freeze: emit-rounding-ladder.cjs,
+rounding-ladder.prg, rounding-ladder-cases.json, audit-rounding-ladder.cjs.
+Eight native centers/both signs/121 exact magnitude offsets through2^40:
+1936 inputs/3872 observations per run, width40/scale18/critical DECIMALS/
+both FIXED, exact CTOBIN/BRS readback and first --single BEFORE repeat.
+Separate build/default-transform-rounding-ladder. No native invocation yet.
+Audit reports renewed full20.05/3.97 and stopped its probes; no resource
+reservation or owner-input blocker. Sign/push this freeze BEFORE fresh
+BOTH-chat explicit CLEAR and immediate avg10 AND avg60<1% at EACH invocation.
+No additional run now. Qualified3936/1872/2000 phases need no duplicate replay.
+All failed-attempt/division receipts remain unchanged; no production changes.
 
 ## Why division is explicitly deferred, not cancelled
 
