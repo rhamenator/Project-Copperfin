@@ -10,9 +10,9 @@ Canonical /home/rich/dev/Project-Copperfin main=origin/main
 240ac51cbbaa3114a08a687142e67fe4969ea212 (completed PR7209).
 Active WT /home/rich/.codex/worktrees/numeric-literal-display-5611/Project-Copperfin,
 branch fix/numeric-literal-display-5611, from that main. Last native capture
-at signed/DCO headacd08561f8af5636e552a7646eb13f3d7c568ab0 from source395f3829f;
-Signed/pushed source checkpoint1cf23445495e375e1e124c47ca7a436e2b48b985 retains
-qualified4104 pair and freezes public-arithmetic probe; next checkpoint retains guard only.
+at signed/DCO clean head962594cf0297b91ef3121d1ba42c55517fc17008 from unchanged
+arithmetic source1cf23445495e375e1e124c47ca7a436e2b48b985;
+next signed checkpoint retains qualified528 pair/native graph rejection.
 No PR/expected regression/helper/hook; src/include remain main-identical.
 Tracking #7210 is owner-authored OPEN bug/runtime, no agent-approved label.
 Authority derives from admitted parents/direct owner policy, NOT child content.
@@ -25,10 +25,10 @@ Use these retained sources; do not rerun completed phases or infer an epsilon.
 
 ## Qualified native phases — do not replay
 
-Six paired phases:3936 literal/routes,1872 width/scale/stored-value,2000 adjacent
-payload,3872 signed ladder,1080 exact-edge,4104 type-aware DECIMALS rows/run. All native0/
+Seven paired phases:3936 literal/routes,1872 width/scale/stored-value,2000 adjacent
+payload,3872 signed ladder,1080 exact-edge,4104 type-aware DECIMALS,528 arithmetic rows/run. All native0/
 empty stderr/complete; independent strict readers/archived readbacks0.3936 has
-one inactive type-I real-slot difference, NOT raw equality; other five RAW equal.
+one inactive type-I real-slot difference, NOT raw equality; other six RAW equal.
 Failed earlier2736-planned intervention emitted387/no footer; remains UNQUALIFIED.
 
 Prior qualified1080 pair from signed4f8040d1c: all10 signed groups reach
@@ -87,39 +87,47 @@ Earlier pressure guard75 started NO VFP, retained in rounding-decimals3-guard1/
 and host build/default-transform-rounding-decimals3-guarded1; don't run archived
 worker. No old receipts overwritten or retroactively qualified.
 
-## NEXT — public-arithmetic discrimination, natively UNRUN
+## Latest qualified arithmetic pair and NEXT conversion-boundary recovery
 
-emit-rounding-arithmetic.cjs, rounding-arithmetic.prg,
-rounding-arithmetic-cases.json, audit-rounding-arithmetic.cjs.
-Six explicit input payloads around44 QUALIFIED signed local edges:264 inputs/
-528 observations/run, width40/scale18/BOTH FIXED/applied settings.
-Record native BRS/type of eight provisional public-language arithmetic steps
-(powDown,bias,shifted,effectiveCount,powUp,scaled,raised,quantized), alongside
-independent actual TRANSFORM/STR. Scalar assignments are part of experiment.
-A DISCRIMINATOR for rejected hypothesis, NOT accepted formatter/cap/tolerance/
-operation-order requirement or expected-output producer. Reader observes bits,
-does NOT approve candidate answers. Complete unique coverage, actual input/
-metadata/BRS/settings, finite intermediate values/typed repeat required;
-first structural gate BEFORE repeat. No production/model/regression/helper/hook.
+Unchanged signed source1cf234454 captured at clean head962594cf0 after NEW
+explicit BOTH-chat CLEAR/full PSI0.00/0.00 and idle prefix BEFORE EACH run.
+Both actual0/empty stderr/DONE528, first structural0 BEFORE repeat/paired0,
+all528 RAW identical SHA2917ff9167e4a2752520614776580d08dda8fa4ba1520615154912bd937bd1c9.
+264 explicit inputs around44 previously qualified signed edges; width40/scale18,
+original metadata/BRS/applied settings exact, eight finite numeric intermediates
+repeat and agree across FIXED modes. Archived reader/byte-compare/manifest0.
+All host receipts retained in rounding-arithmetic-captures/, full REA
+ev_91adec73e74ffd0b13dc8004895fe694d2878feb3ccb7c170a5f5c8bcb33f510:
+root0/quiesced/owned verified/untruncated/no sampled ownership unknowns;
+standard image-binding/sampling/snapshot/environment/network limits.
+Both chats RELEASED promptly/prefix empty1/no standing reservation.
+Prior guard75 remains in rounding-arithmetic-guard1/ and separate guarded host
+directory; no failed/guarded/qualified capture is replayed or overwritten.
 
-Separate build/default-transform-rounding-arithmetic contains prepared worker.
-Source regeneration/Node syntax/bash-n checked; freeze1cf234454 signed/pushed.
-NEW explicit BOTH-chat CLEAR obtained, but immediate full PSI55.32/24.52
-guard75 prevented FIRST native invocation. No native outputs/status/results.
-ALL receipts archived/byte-compared in rounding-arithmetic-guard1/, manifest0,
-exact source/native hashes unchanged/prefix empty1 before+after. Full REA
-ev_230e66f1ba7243ed95db75a3e3863d3b9c4b59c6b4c1595da5f963f9ea7aaa8a
-root75/quiesced/owned verified/untruncated; standard limits retained.
-Both chats RELEASED. Host original moved intact to
-build/default-transform-rounding-arithmetic-guarded1; fresh original contains
-ONLY identical prepared worker. Do not run archived worker/overwrite receipts.
-NO arithmetic native invocation/reservation/owner-input blocker.
-NEXT fresh explicit BOTH-chat CLEAR and immediate full avg10 AND avg60<1%/
-idle-prefix gates EACH native/compiler/test invocation. Do not replay six
-qualified pairs or any failed source.
-Exact-rule recovery -> native-only regression/actual ORIGINAL -> unused helper/
-direct GNU+Clang checks -> separate wiring/SAME/broader/actual hosted execution
--> exact-head clean review/all strict checks/resolved conversations/normal merge.
+analyze-rounding-arithmetic.cjs REJECTS the actual native scalar graph18/264
+ON magnitudes (exact decimal integer-unit comparison). Native vs host power/
+bias bits differ36 each, but every later recorded step coincides for these
+inputs; power differences ALONE do not explain the display discrepancy.
+All counterexamples retained; NO tolerance/cap/operation-order/internal
+precision/call-attribution/exact sign-padding-text or formatter parity claim.
+
+NEXT bounded experiment: prepare OWN native-only FLL _fcvt/_ecvt wrapper using
+documented C ABI/published FLL interface. Same264 finite original and observed
+shifted payloads; _fcvt applied counts1..18 (omit0), _ecvt15/16/17 significant
+counts. Observe input/count/sign/decimal-point/digit buffer and CW before/after
+alongside independent TRANSFORM/STR; immediate bounded buffer copy, fail closed
+on NULL/error/overflow. No guessed VFP DECLARE ABI, decompilation or CW changes.
+Neither wrapper/caller/reader nor binary exists yet. Freeze/sign sources and
+readers BEFORE new compile/native work, NEW BOTH-chat CLEAR and immediate full
+avg10 AND avg60<1%/idle-prefix guards. NO VM. Latest full48.97/21.69 fails;
+no further build/native invocation. No owner-input blocker.
+Read recovery.md for Microsoft API sources and read-only32-bit MSVCR71 export/
+hash inventory; exports do NOT prove VFP calls them. Future capture must bind
+runtime module identity; do not substitute64-bit Wine's system32 DLL.
+Do not replay seven qualified pairs. Exact-rule recovery -> native-only
+expectations/actual ORIGINAL -> unused support/direct GNU+Clang -> separate
+wiring/SAME/broader/actual named hosted -> exact-head clean review/strict green/
+resolved conversations/normal merge. No production/model/regression/helper/hook.
 
 ## Retained division — deferred, NOT cancelled
 

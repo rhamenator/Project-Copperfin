@@ -537,7 +537,7 @@ ON observations disagree. All raw counterexamples retained; no tolerated
 mismatch, guessed epsilon or accepted formatter follows from the close fit.
 Numeric magnitude comparison is not exact sign/padding/text verification.
 
-### Native public-arithmetic discrimination — unrun
+### Native public-arithmetic discrimination — qualified528
 
 emit-rounding-arithmetic.cjs, rounding-arithmetic.prg,
 rounding-arithmetic-cases.json and audit-rounding-arithmetic.cjs freeze the
@@ -577,12 +577,69 @@ NEXT reuse unchanged signed source1cf234454, NEW explicit BOTH-chat CLEAR and im
 windows<1%/idle prefix before EACH invocation. Exact-rule recovery still precedes
 native-only expectations/actual ORIGINAL/unused support/direct checks/wiring.
 
+The preceding paragraph records the guard-only checkpoint, NOT current run
+status. On a NEW explicitly cleared audit/DAW window at signed/DCO clean head
+962594cf0297b91ef3121d1ba42c55517fc17008, unchanged source1cf234454 completed
+BOTH actual runs0/empty stderr/DONE528. Immediate full PSI0.00/0.00 and prefix
+empty1 before EACH run. First structural reader0 BEFORE repeat; paired0,
+all528 raw records byte-identical SHA
+2917ff9167e4a2752520614776580d08dda8fa4ba1520615154912bd937bd1c9.
+Original input/descriptor/BRS/applied settings exact; all eight finite
+intermediates numeric and equal across FIXED modes/typed repeats. Archived
+independent reader0/host-audit compare0/all receipt byte-compares0/manifest0.
+Both chats RELEASED promptly, post-prefix empty1; no build/compiler/VM/new FLL.
+rounding-arithmetic-captures/ retains ALL host receipts and complete REA
+ev_91adec73e74ffd0b13dc8004895fe694d2878feb3ccb7c170a5f5c8bcb33f510:
+root0/quiesced/owned verified/untruncated/no sampled ownership unknowns;
+image-binding/sampling/snapshot/inherited-environment and unobserved-network limitations remain.
+An initial inline archive byte-check had a host JavaScript syntax error;
+its corrected independent check actually passed. No native capture was replayed
+or qualification reader weakened.
+
+analyze-rounding-arithmetic.cjs rejects the OBSERVED native scalar graph:
+18/264 ON magnitudes disagree with actual TRANSFORM. Comparison uses exact
+decimal integer units, not a Number(string) approximation. Raw strings and
+all counterexamples remain retained; sign/padding/negative-zero/text equality
+are NOT claimed. Host/native powDown and bias bits differ36 times each, but
+all later recorded steps coincide in this finite set; power differences ALONE
+do not explain the formatter discrepancy. No cap, epsilon, operation order,
+internal precision, call attribution or production formatter is established.
+
+### Next bounded conversion-boundary experiment — not implemented or run
+
+Do not replay the seven qualified pairs. Prepare an OWN native-only FLL wrapper
+for installed32-bit MSVCR71 _fcvt/_ecvt, using documented C ABI and the existing
+published FLL interface, NOT guessed VFP DECLARE calling convention. Observe
+original and already-observed shifted payloads, actual input bits/count/sign/
+decimal-point/digit buffer and control word before/after, alongside independent
+TRANSFORM/STR. Bounds: the same264 finite inputs, applied count1..18 for _fcvt (omit0),
+positive15/16/17 significant counts for _ecvt; copy static return buffer
+immediately, bound reads, reject NULL/error/overflow and preserve failures.
+No ABI-boundary caller/source or wrapper binary has been created yet.
+
+Public signatures/count meanings/static-buffer lifetime are documented by
+[Microsoft _fcvt](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/fcvt?view=msvc-170)
+and [Microsoft _ecvt](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/ecvt?view=msvc-170).
+These current interface documents are NOT version-specific VFP rounding
+evidence. The bounded read-only PE export inventory, retained as
+crt-inventory.txt.gz, finds _fcvt/_ecvt/_gcvt in installed32-bit
+syswow64/msvcr71.dll SHA8094af5ee310714caebccaeee7769ffb08048503ba478b879edfef5f1a24fefe.
+This proves neither that VFP calls them nor that 64-bit Wine's separate
+system32 DLL is equivalent; do not use that other DLL. Bind runtime module
+identity in the future wrapper capture. No decompilation/internal attribution.
+Freeze/sign native-only sources/readers and request NEW BOTH-chat compiler/
+native clearance with immediate BOTH full PSI<1%/idle-prefix gates; no VM.
+Latest full48.97/21.69 fails, so no additional build/native invocation now.
+If these functions disagree, preserve rejection and recover the next actual
+conversion boundary rather than accepting a close fit. Exact-rule recovery
+still precedes expectation freeze/actual ORIGINAL/support/direct/wiring/SAME.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
 expectation emitter, original-fail/SAME, focused/broader/actual named hosted
 execution, exact-head review, strict checks and resolved conversations are
-pending except the six bounded native pairs qualified above. No compatibility,
+pending except the seven bounded native pairs qualified above. No compatibility,
 parent, hazard or release closure.
 
 `DQ-DV-5611-NUMERIC-DEFAULT-TRANSFORM-001`, LOW procedure delta: preserve the
@@ -596,3 +653,11 @@ review. HZ-data-corruption-01/HZ-runtime-crash-01/HZ-doc-command-01 unchanged.
 Rollback is the exact display slice revert, retaining raw receipts; notify the
 owner if evidence or shipped formatting is invalidated. Developer-maintainer
 self-review only, not independent-human, system or release assurance.
+
+2026-10-18 arithmetic checkpoint walkthrough: inspected signed stimulus and
+strict reader against all528 retained rows, verified archived readback/byte
+checks and18 explicit rejected-model counterexamples. The next procedure keeps
+count0/unchecked buffers/guessed DECLARE ABI out of execution, requires a new
+source freeze and resource clearance, and leaves proprietary binaries host-only.
+This is LOW developer self-review of the evidence/continuation procedure,
+not verification of an as-yet-unwritten wrapper or independent acceptance.
