@@ -119,3 +119,41 @@ whether additional timing observations are needed. Candidate recovery,
 native-only expected vectors, actual ORIGINAL and every implementation/hosted/
 review gate remain pending. No runtime change, model fit or small-divisor
 compatibility completion is claimed from repeat qualification alone.
+
+## Post-capture hypotheses; timing source freeze before implementation
+
+Paired observation checkpoint44306c92e precedes the independent host candidate.
+It imports captured literal descriptors/payloads and parses complete source
+trees; no separately evaluated intermediate division descriptor or product
+helper is an input. The initial literal-invariance assertion incorrectly
+included setting-sensitive TRANSFORM bytes and fails before comparison. Exact
+source/status/stderr are retained. A descriptor/payload-only refinement compares
+all4480 core observations: zero metadata differences,160 payload differences,
+ALL confined to eight zero-result minus-IIF forms. Grouped constant unary zero
+has negative-zero bits; runtime unary after IIF has positive-zero bits. Keeping
+these as distinct operators yields zero differences across4480 core rows.
+Rejected and refined sources/results are retained; no tolerance, epsilon,
+rounding or nonzero quotient correction is introduced. The long decimal literal
+differs from JS Number by one binary64 step, so the candidate uses the captured
+native literal, not JS parsing. Display/runtime-mixture/boundary rows stay in the
+native evidence and outside this candidate's modeled claims.
+
+Candidate fit is NOT a test oracle or a production pass. The new native-only
+emit-small-divisor-timing.cjs freezes219 complete expressions: twelve cores under
+nine callback wrappers/two target settings0/14 plus three pure controls. Five
+initial settings0/2/6/14/18, both FIXED and compiled/EVALUATE give4380 rows/run.
+Each expression is evaluated ONCE through CFNMETA; no BINTOC or display replay
+duplicates side effects. Capture callback count, final DECIMALS and CFObserve's
+AFTER-LPARAMETERS descriptor. Include signed and zero-result controls without
+changing checked division-by-zero policy. The source, inventory and independent
+paired auditor must be signed BEFORE invocation, with fresh BOTH-chat/idle-prefix/
+unchanged pressure gates and actual status/raw/source/REA scope preserved.
+This is an unexecuted timing source freeze, not a native timing result.
+
+LOW DQ/DV walkthrough: repeated roots -> retain rejected hypotheses -> freeze
+single-evaluation callbacks -> actual paired timing -> native-only expected
+vectors/ORIGINAL -> unused support/hook/SAME. Development self-review covers
+the callback non-replay and +0/-0 distinctions; automated generator byte checks,
+JS syntax, raw paired archive audit and whitespace/changelog/channel checks0
+are source/development evidence only. Existing rollback, hazards, limitations
+and mandatory unfinished Numeric/ListItem boundaries remain unchanged.

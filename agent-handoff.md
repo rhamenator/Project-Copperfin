@@ -12,7 +12,7 @@ NEW WT /home/rich/.codex/worktrees/numeric-small-divisor-5611/Project-Copperfin
 branch fix/numeric-small-divisor-5611 created from origin/main240ac51cb.
 Pre-observation signed/DCO freezec68aaadf2 and first-observation checkpoint273a51b60
 are retained; read exact git head before use. Paired native recovery is now audited;
-no PR or runtime change.
+paired checkpoint44306c92e pushed; no PR or runtime change.
 src/include remain byte-identical to main. Do NOT restart completed PR7209.
 
 ## Last shipped slice and cleanup
@@ -56,7 +56,10 @@ host+archived first-only typed/source/framing/BRS/compiled-EVAL audit0. CW027F;
 573771b12980ec0cafb39632a217e99c8df5533c440ffb3a61617987e4c0e8c0.
 Subsequent independent repeat0/empty stderr; all5060 raw records byte-identical.
 Unchanged paired host+archived audits0; compiled/EVAL differences0. Both raw SHA
-values above match. No candidate/helper/public pass or runtime change.
+values above match. Post-capture candidate compares4480 complete core rows:
+zero metadata differences, initial160 zero-sign mismatches only minus-IIF;
+distinct constant/runtime unary zero rules fit all4480 exactly. Rejected sources/
+outputs retained; not an expected emitter/helper/public pass or runtime change.
 Read small-divisor-recovery.md and docs/32-recovered-requirements-traceability.md.
 
 Completed independent REPEAT ONLY after low-pressure + fresh BOTH-chat clearance;
@@ -78,8 +81,13 @@ decompilation, installation/configuration changes, VM or new compiler needed.
 REA skill fully read plus native/runtime/evidence guides; preserve root-vs-
 descendant settlement/cleanup, sampling/environment/image-binding limitations.
 
-NEXT: post-capture finite-frontier hypothesis recovery (no runtime/expected edits),
-then native recovered contract -> any necessary timing recovery -> independent
+NEXT: actual paired single-evaluation small-divisor timing recovery, AFTER signed
+source freeze/fresh BOTH-chat clearance/idle Wine/full PSI avg10 AND avg60<1%.
+emit-small-divisor-timing.cjs, small-divisor-timing.prg/cases and independent
+audit-small-divisor-timing.cjs:219 expressions/4380 rows/run, twelve cores/nine
+callback wrappers/targets0,14 and three pure controls. Capture once through
+CFNMETA only; no BRS/display side-effect replay. Output build/small-divisor-native/
+timing-results.txt. No timing native run yet. Then native contract -> independent
 direct/public freeze and actual ORIGINAL-fail -> unused support -> bounded hook/
 unchanged SAME/broader/actual hosted named execution -> Claude FIRST/exact-head
 clean review/strict green required checks/all conversations resolved -> merge.

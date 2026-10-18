@@ -276,6 +276,17 @@ released to both chats. Hypothesis recovery, native-only expected vectors and
 ALL implementation gates remain pending. No native expectation, model, caller
 or runtime policy changed; paired observation is not compatibility completion.
 
+Post-capture candidate/source and rejected attempts are retained with this grid:
+zero metadata differences across4480 core rows; initial160 zero-sign payload
+differences distinguish grouped-constant unary from runtime unary after IIF.
+Separate exact zero rules fit all4480 without rounding/tolerance/nonzero payload
+correction, but are not a native expected emitter or implementation pass.
+Frozen single-evaluation small-divisor-timing source/inventory/paired auditor
+adds219 expressions/4380 rows per future run to recover callback count/final
+setting/materialization timing BEFORE implementation. Actual timing remains
+unexecuted; native-only expectations/ORIGINAL/support/hook/SAME/hosted/review
+gates remain pending. See the same recovery contract for LOW DQ/DV walkthrough.
+
 Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
 [actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)
 at mainb37ddf7241; paired1,620 values/run, actual0/empty stderr/no errors,
