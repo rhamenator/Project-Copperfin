@@ -8,7 +8,9 @@ the recovery chronology. Subsequently the unchanged held-out native profile
 supports the [bounded contract](contract.md), [actual public ORIGINAL](original-verification.md)
 fails2,432 payload assertions, and [unused support](unused-support.md) passes458
 native inputs before the [single producer hookup](runtime-verification.md).
-Runtime build was resource-deferred; no SAME, native parity or new grammar claim.
+After the retained resource deferral, a newly coordinated single-job build and
+unchanged public/helper SAME2/2 plus selected regressions20/20 pass. Actual named
+hosted/platform/review gates remain; no full Numeric parity or new grammar claim.
 
 ## Preserved dependency and exact original
 

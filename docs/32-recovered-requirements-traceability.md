@@ -98,10 +98,13 @@ b7fb2b23f expanded support freeze precedes a single successful plain-decimal
 producer hookup; native/public/helper source/header/contract/registrations remain
 unchanged. Both named tests have normal isolation/build/filter registration,
 selector3/3. [Runtime verification checkpoint](../tests/fixtures/vfp9-numeric-literal-payload/runtime-verification.md):
-configured tooling2/2 passes; coordinated two-job GNU runtime build interrupted130
-on sustained I/O pressure, no SAME/broader runtime execution or PR yet. Partial
-build/evidence retained; fresh audit/DAW coordination required before restart.
-No VM/external-process intervention, runtime acceptance or parity claim.
+initial coordinated two-job build interrupted130 on sustained I/O pressure,
+retained unchanged; fresh audit/DAW single-job window completes GNU build0,
+frozen public/helper SAME2/2 and selected regressions20/20,155.03s, no failure/
+error/skip. Public descriptor/bits/evaluation/controls all0; independent actual
+JUnit/status/native-header/source-hash audit0. No assertions or oracle changed.
+Actual named hosted/platform execution, exact-head clean review and strict green
+resolved-conversation gates remain; no VM/external intervention or full parity claim.
 DQ-DV-7206-DECIMAL-PAYLOAD-RECOVERY-001 LOW delta/misuse/walkthrough/
 rollback in recovery note; parent hazards, #6776 modes and checked limits unchanged.
 `gap; literal conversion recovery before retained non-whole division re-entry`.

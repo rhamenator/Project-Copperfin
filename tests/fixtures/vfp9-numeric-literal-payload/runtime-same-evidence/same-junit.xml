@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="2"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="0"
+	timestamp="2026-10-17T23:27:56"
+	>
+	<testcase name="test_prg_engine_numeric_literal_payload" classname="test_prg_engine_numeric_literal_payload" time="0.525757" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>literal payload: descriptor=0 bits=0 evaluation=0 controls=0 total=0
+</system-out>
+	</testcase>
+	<testcase name="test_prg_numeric_literal_payload_helper" classname="test_prg_numeric_literal_payload_helper" time="0.00464251" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=none;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>literal payload helper: selected=458 failures=0
+</system-out>
+	</testcase>
+</testsuite>

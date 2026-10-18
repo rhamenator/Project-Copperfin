@@ -1,8 +1,9 @@
-# Producer hookup staged; runtime verification deferred
+# Literal payload local SAME verification
 
 `RQ-CF-PRG-NUMERIC-DECIMAL-LITERAL-PAYLOAD-001`, #7206, relates to admitted
-#5611/#6776/#7189. This is an **unfinished development checkpoint**, not runtime
-acceptance, a green PR, or whole-Numeric/division/ListItem completion.
+#5611/#6776/#7189. Actual local SAME and selected regression evidence now follows
+the interrupted checkpoint below. Hosted/platform/review/strict merge gates
+remain; this is not whole-Numeric/division/ListItem or release acceptance.
 
 Chronology: native-only public freeze e2e59d020 -> actual qualified ORIGINAL
 f530857ff -> unused helper/expanded registration freeze b7fb2b23f -> one include
@@ -32,7 +33,7 @@ focused eighteen-target build began. This is not a product compile failure.
 
 While it ran, the configured sanitizer-selector and native-isolation contract
 tests actually executed: CTest0, two unique passed/no failures/errors/skips.
-The new public SAME and the broader runtime tests have **NOT** run.
+At that interrupted checkpoint, public SAME/broader runtime tests had NOT run.
 
 Full I/O PSI avg10 rose from0.00% to16.72%, then22.72%/23.64%; audit independently
 confirmed sustained contention and the agreed stop condition. Verified exact
@@ -48,17 +49,41 @@ samples, source hashes and frozen-input checks are retained losslessly under
 `runtime-deferred-evidence/`; host originals are under
 `build/literal-payload-native/fixed-public/`. No runtime build-success claim.
 
-## Exact next action
+## Fresh coordinated resume and actual unchanged SAME
 
-Coordinate a fresh low-contention window with BOTH audit and DAW before resuming
-the same `build/literal-payload-fixed` eighteen-target build (two low-priority
-jobs). Preserve this interrupted attempt's receipts before any new logs. Then
-execute the unchanged public SAME/helper tests and prior Numeric/metadata/
-assignment/division/Currency/exact64/macro/control-flow coverage. Keep all1,193
-native rows and every control/assertion unchanged; diagnose real failures.
-Only after actual SAME/broader success, open the bounded PR, request Claude
-first, require clean exact-head review, actual named hosted execution, strict
-green checks and resolved conversations. No approval bypass or PR yet.
+Both audit and DAW cleared a new low-contention window. Resume used the SAME
+eighteen targets/build tree/source checkpoint a6cfc9954 with ONE nice10 GNU job
+instead of two; no source/assertion/timeout/native expectation changed. Build0.
+Existing unrelated compiler warnings are retained, not called warning-clean
+runtime qualification. I/O samples remained low; full avg10/avg60 finished0.00%.
+Both chats received window release after completion; no VM/external intervention.
+
+Configured CTest SAME actually executed the frozen public regression and helper:
+2/2 pass, exit0. Public summary descriptor0/bits0/evaluation0/controls0/total0;
+ALL1,193 expression rows across eight contexts remain asserted. Helper reports
+458 selected/failures0. Earlier actual ORIGINAL's2,432 payload assertions now
+pass without changing the native oracle, test source, metadata or controls.
+
+Selected broader CTest actually executes20 unique names, all PASS, exit0,
+155.03s, failures/errors/skips0. Includes old literal/integer/unary metadata,
+integer/real scalar assignment, runtime/constant division, Currency literal/
+functions/overflow/exact muldiv, exact64 expressions, macros, full control-flow,
+Numeric behavior, both new names and selector/isolation contracts. This is a
+selected suite, not the full native inventory or hosted qualification.
+
+`audit-runtime.py` independently verifies process receipts, exact actual JUnit
+inventories/run status/no failure/error/skip nodes and both precise summaries;
+actual audit0/empty stderr. It generates no Numeric expectation and imports no
+conversion helper. Native-only header byte check0; all eleven source hashes
+still match the staged a6cfc9954 inputs. New final source SHA manifest and full
+raw/log/JUnit/status/audit/I/O evidence in `runtime-same-evidence/`, host originals
+at `build/literal-payload-native/resume-one-job/`. Old interrupted receipts remain
+unchanged in `runtime-deferred-evidence/`; no attempt is relabelled as success.
+
+Next: bounded PR, Claude-FIRST exact-head review; actual named hosted sanitizer
+and Windows/macOS verification, strict green checks and all resolved conversations
+before merge. Registration/local pass is not actual hosted execution. No owner
+approval or quality-gate bypass; parent/non-whole/ListItem obligations remain.
 
 `DQ-DV-7206-DECIMAL-PAYLOAD-CONTRACT-001` remains MEDIUM. Development self-review
 walkthrough confirms pre-code evidence/freeze, one scoped hook, no altered oracle,

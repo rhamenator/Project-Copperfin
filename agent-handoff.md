@@ -1,74 +1,66 @@
 # Agent Handoff
 
-## #7206 hookup staged; build gracefully resource-deferred, SAME NOT run
+## #7206 literal payload local SAME/regressions pass; prepare PR/hosted review
 
 Active WT /home/rich/.codex/worktrees/numeric-literal-payload-7206/Project-Copperfin,
 branch fix/numeric-literal-payload-7206 from origin/main
 ef3ea326f78d640546363abe97bbe27b6208bf45. Parents5611/6776/7189 OPEN/owner/
 exact agent-approved; derived7206 OPEN/owner/bug/runtime, no label change.
-No PR yet. Signed/pushed sequence4ff7d0d8b pre-observation holdout freeze ->
-e2e59d020 native contract/public regression freeze ->f530857ff actual public
-ORIGINAL ->b7fb2b23f unused helper + expanded registration freeze. The checkpoint
-containing this entry stages the single producer connection, NOT a verified fix.
+No PR yet at this evidence checkpoint. Signed/pushed chronology4ff7d0d8b
+pre-observation holdout ->e2e59d020 native-only public freeze ->f530857ff actual
+ORIGINAL ->b7fb2b23f unused support/expanded freeze ->a6cfc9954 bounded hook/
+initial build deferral. Test/producer source still EXACT a6cfc9954; new evidence/
+docs only afterward. Never relabel the interrupted130 attempt as successful.
 
-Native first profile245 spellings/four contexts/eight routes=7,840/run;
-paired0/empty stderr/raw identical SHA589f03edf5a2d5a36c7a46bc84f6b5431c5aaa209dff6e73478eee01c1dcce94.
-Held-out213 (198 new/15 calibration),1,704/run; paired0/empty stderr/raw identical
-SHAafc73f60f03eb9bacd182bcf4c3710945f92adc9bee664422be479477f52ace0.
-Independent source/typed/BINTOC/repeat/compiler-EVAL audits0; all1,704 pre-frozen
-predictions match. Rejected8/initial108 alternatives preserved. Separate binary64
-whole/fraction Horner + repeated divisor/ratio/sum fits finite native profile.
-Source zeros/digits significant; no epsilon/digit cap/proprietary-code inference.
+Native profile7,840/run + independently held-out1,704/run, paired0/empty stderr/
+raw byte repeat/typed-BINTOC/compiler-EVAL audits0. All1,704 frozen predictions
+match; rejected8/initial108 alternatives retained. Native-only header1,193 rows,
+all public assertions retained. Actual ORIGINAL compile0/test1 exactly2,432
+payload failures; descriptor/evaluation/controls0. Contract/original/raw hashes
+and finite domain are in fixture vfp9-numeric-literal-payload; not universal parity.
 
-Native-only1,193-row public assertions frozen. Actual manual GNU ORIGINAL against
-qualified unchanged-main nine archives: compile0/test1, descriptor0/bits2,432/
-evaluation0/control0; independent native re-audit0. Not CTest or fresh runtime
-build. See literal fixture original-verification.md/public-original-evidence/.
-Unused helper458 native inputs GNU -O2/Werror/contract-fast and Clang -O3/
-ASan/UBSan/float-cast-overflow/no-recovery compile/run0; shape/length/NUL/scoped
-rounding controls0. Expanded freeze signed b7fb2b23f BEFORE hook, receipts in
-unused-evidence/. No changes to public/helper/header/contract/registrations.
+Hook ONLY include + successful ordinary parse_number payload optional helper.
+All display metadata/source grammar/shared invariant parser/Currency/exact64
+unchanged. Bounded ASCII plain decimal3..256, every digit/source zero retained,
+explicit binary64 operation boundaries, nearest-environment guard. Beyond256/
+nondefault FP/other producers/display/exact conversion remain mandatory recovery.
 
-Hook: prg_engine.cpp include and successful parse_number ordinary payload from
-plain_decimal_literal_payload(literal).value_or(*parsed). Metadata/grammar/error/
-shared invariant parser/Currency/exact64 untouched. Ten unchanged frozen inputs
-hash0, public/helper/contract/registration diff empty; the full old manifest
-reports exactly TWO intended producer-file differences, not an all-input pass.
-See runtime-verification.md/runtime-deferred-evidence/, exact hook diff/source SHA.
+Fresh audit AND DAW window resumed existing GNU -O0 -g0 build with ONE nice10
+Ninja job; actual build0. Configured unchanged SAME public/helper2/2 pass:
+descriptor0/bits0/evaluation0/controls0; helper458/failures0. Broader selected20
+unique CTests ALL PASS155.03s, no failure/error/skip; includes metadata/assignment/
+runtime+constant division/Currency/exact64/macros/full control-flow/Numeric behavior
+and selector/isolation. Independent audit-runtime.py checks actual JUnit/status/
+summaries0; native-only header and all11 staged source hashes0. No expectation,
+assertion or timeout changed; after the intended hook, source stayed EXACT
+a6cfc9954 through SAME.
+Old GNU/Clang optimized/Werror/explicit ASan/UBSan/float-cast-overflow helper458
+checks remain qualifying source-identical evidence, not a full sanitized runtime.
 
-Audit AND DAW cleared one nice10 GNU -O0 -g0 Ninja --parallel2 focused runtime
-build. Configure0; first invalid target-name selection1 retained before compile,
-corrected18-target build reached125/230 then resource-stopped130. Tooling CTest
-actually2/2 PASS (selector + isolation); public SAME/broader runtime NOT RUN.
-Full PSI avg10 rose0 ->16.72 ->22.72/23.64%; audit independently confirmed sustained
-pressure and asked stop. Verified owned Ninja443577/parent443576/build cwd then
-SIGINT only that Ninja. Jobs exited; partial100MiB build/literal-payload-fixed
-retained. Window RELEASED to BOTH. Latest post-stop full avg10/avg60=23.91/13.19%.
-No VM/browser/backup/upload/reboot intervention or attributed root cause.
+Evidence: runtime-verification.md and runtime-same-evidence/ in literal fixture,
+host build/literal-payload-native/resume-one-job/. Interrupted receipt/build state
+retained separately. Both chats got window RELEASED, no local heavy task/VM
+reserved. Full I/O PSI finished avg10/avg60=0.00%/0.00%; no browser/backup/upload/
+reboot intervention or causal attribution. Any future heavy/VM job re-coordinate.
 
-NEXT: request fresh low-contention window from BOTH audit
-01a0a1e1-7469-7ae3-9668-470a4e5b91b5 and DAW
-01a1050d-72c7-7213-bd2b-899e3cf342f7. Preserve interrupted receipts; resume SAME
-corrected18-target command in runtime-deferred-evidence/commands.txt, nice10/
-parallel2, monitor pressure. Then exact frozen public SAME + helper and prior
-Numeric/metadata/assignment/division/Currency/exact64/macro/control-flow coverage.
-Do not claim CTest/runtime success before actual execution. Only after success
-PR/Claude-FIRST exact-head clean review/actual named hosted/strict green checks/
-resolved conversations; no merge/issue closure now. Beyond256/nondefault FP/
-other producers/display/exact conversion remain mandatory native recovery.
+NEXT: final evidence commit/sign/push; open bounded PR targeting main, Claude
+FIRST exact head, actual named hosted sanitizer AND Windows/macOS evidence,
+strict required green checks/all conversations resolved before merge. Local
+selection/registration is NOT hosted or whole inventory qualification. No PR/
+issue/parent closure yet. Keep source/native oracle fixed; investigate real CI/
+review failures, never infer clean review from silence/skipped/quota notice.
 
-Retained non-whole division branch fix/numeric-nonwhole-division-5611 pushed
-11bd096a6232a86aee10074e8e35f7daca19cbb6/WT preserved. Do NOT drop/rewrite
-578-row native header/574 exact assertions. Original11,040 descriptor/2,280 bit
-failures included40 bare-literal failures. After literal prerequisite integrates,
-refresh ORIGINAL, finish fractional native callback/continuation timing and
-strengthen3 former-unknown controls BEFORE next freeze, then bounded hook/SAME/
-broad/hosted/review gates. Division/ListItem READ uncancelled;7204/EPOCH/CENTURY
-completed, not restarted. No VM/Windows use by this chat.
+Retained non-whole division WT/branch fix/numeric-nonwhole-division-5611 pushed
+11bd096a6232a86aee10074e8e35f7daca19cbb6. Preserve578-row native header/574
+exact assertions. AFTER literal prerequisite integrates: refresh ORIGINAL,
+complete fractional native callback/continuation timing, strengthen3 former-
+unknown controls BEFORE next freeze, then bounded division/SAME/broad/hosted/
+review gates. Division/ListItem supplied-column READ uncancelled; completed
+7204/EPOCH/CENTURY/7201 not restarted. No automatic reboot/date action.
 
-Canonical own handoff/unrelated files/stashes/foreign WTs preserved; channel0,
-fetch unchanged. No owner-input blocker or automation pause. Resource deferral
-is not a request to stop the resumed implementation loop. History below superseded.
+Canonical own handoff/unrelated files/stashes/foreign WTs preserved; channel0/
+fetch unchanged this wake. No owner-input blocker/automation pause. Historical
+entries below superseded by this current prerequisite and retained re-entry.
 
 ## Bounded runtime division implementation in verification (2026-10-17)
 

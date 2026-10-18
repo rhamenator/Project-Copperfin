@@ -6,3 +6,4 @@ public-original-evidence/*.gz -text -diff
 public-original-evidence/toolchain.txt -text whitespace=-blank-at-eof
 unused-evidence/*.gz -text -diff
 runtime-deferred-evidence/*.gz -text -diff
+runtime-same-evidence/*.gz -text -diff
