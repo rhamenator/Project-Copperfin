@@ -81,24 +81,40 @@ BOTH signs bracket D2 transitions at native1.005/2.675/9.995;0.5 D0 and
 These are observations, NOT a tolerance, monotonicity or general rounding rule.
 No model/expected regression/helper/hook; division assertions remain unchanged.
 
-NEXT native-feedback source/inventory/strict reader: emit-rounding-edge.cjs,
-rounding-edge.prg, rounding-edge-cases.json, audit-rounding-edge.cjs.
-Five near-half centers/both signs, endpoints offset0/-2^52, up to54 queries/
-group and1080 observations/run. Exact native hex payloads; BOTH FIXED modes
-each query; actual ON text alone chooses midpoint branches. Host reader
-independently replays every midpoint, requires differing initial endpoints,
-adjacent terminal EDGE/different ON text in all10 groups, metadata/BRS,
-complete framing and paired repeat. Failed first structure prevents repeat.
-Local edge only, NOT global monotonicity or a recovered algorithm.
+Native-feedback exact-edge pair is now QUALIFIED from signed freeze4f8040d1c:
+both actual0/empty stderr/DONE1080, first structural0 BEFORE repeat, paired0,
+RAW-BYTE-IDENTICAL SHA
+b6e43abea8d3290d46e231a72e0ec6807c25551b266cfa156d91f393f4baacc2.
+All10 signed groups reached adjacent different-ON-output payloads with54 exact
+queries/group; every constructor/path/metadata/BRS identity exact. Archived
+reader0/host byte compare0, all source/native hashes unchanged, full PSI0.00/
+0.00 before each. Both chats explicitly CLEARED then RELEASED/prefix empty1.
+Full REA ev_a3f65d05d1c73c2be15c40f366ecd85dd9b9465e0e36c56bc277d9431a4e6515
+root0/quiesced/owned-group verified/untruncated/no sampled ownership unknowns
+in THIS capture; inherited environment/image-binding/sampling/snapshot/network
+limits remain. See rounding-edge-captures/ and recovery.md for all exact edges.
 
-Separate build/default-transform-rounding-edge contains prepared capture-pair.sh
-ONLY; no invocation/VFP syntax acceptance yet. Freeze/sign/push BEFORE run.
-Renewed full PSI55.61/26.01 after ladder release blocks further native work.
-No reservation or owner-input blocker. Obtain NEW explicit BOTH-chat CLEAR
-and immediate full avg10 AND avg60<1%/idle-prefix guards before EACH invocation.
-Qualified3936/1872/2000/3872 phases need no duplicate replay. Preserve earlier
-failed attempt/division/native/test receipts. Exact-rule recovery still precedes
-independent expectations/actual ORIGINAL/unused support/direct checks/wiring.
+Three explicitly HOST-BINARY64 magnitude hypotheses are REJECTED: ordinary
+half rounding198/540 mismatches, add0.5005 and pre-round3-extra-places each4.
+These close fits are NOT a tolerance or accepted algorithm; raw counterexamples
+at0.5 and5E-16/BOTH signs retained by reject-rounding-hypotheses.cjs.
+Local adjacent edges do not establish monotonicity/uniqueness/general conversion.
+No model/expected regression/helper/hook; division assertions remain unchanged.
+
+NEXT native-only source/inventory/reader: emit-rounding-decimals.cjs,
+rounding-decimals.prg, rounding-decimals-cases.json, audit-rounding-decimals.cjs.
+Nineteen explicit finite half-step inputs, DECIMALS0..18/both signs=38 groups,
+width40/scale18, BOTH FIXED observations/query, max54 queries/group/4104 rows.
+Host Number selects explicit input BITS, never an expected output. Every actual
+query path/readback and adjacent differing-output endpoint must independently
+qualify; first structural gate before repeat. No all-magnitude/descriptor rule.
+Separate build/default-transform-rounding-decimals contains prepared worker;
+no invocation yet. Sign/push freeze BEFORE renewed explicit BOTH-chat CLEAR
+and immediate full avg10 AND avg60<1%/idle-prefix guards EACH native invocation.
+No resource reservation or owner-input blocker. Existing qualified five pairs
+need no replay; all failed/division/native/test evidence remains unchanged.
+Exact-rule recovery still precedes independent expectations/actual ORIGINAL/
+unused support/direct checks/wiring. No production changes.
 
 ## Why division is explicitly deferred, not cancelled
 

@@ -316,7 +316,7 @@ prints1 in BOTH default TRANSFORM and explicit STR(...,40,0). These facts
 rule out treating the earlier adjacent-only window as an exact boundary.
 They do not establish monotonicity, uniqueness or any numeric tolerance.
 
-### Native-feedback exact-edge stimulus — unrun
+### Native-feedback exact-edge stimulus — qualified
 
 emit-rounding-edge.cjs, rounding-edge.prg, rounding-edge-cases.json and
 audit-rounding-edge.cjs freeze the next bounded native-only recovery. Five
@@ -333,8 +333,9 @@ outputs for all10 groups, exact metadata/BRS, framing/totals and paired typed
 repeat. An unbracketed endpoint, bad constructor, incomplete run or path
 mismatch fails BEFORE repeat. Even a qualified result establishes only the
 local witnessed edge, NOT monotonicity or a general conversion algorithm.
-No native invocation or VFP-syntax acceptance yet. Source regeneration and
-Node syntax checks pass; no expected regression/helper/model/hook yet.
+At source freeze no native invocation or VFP-syntax acceptance was claimed.
+Source regeneration and Node syntax checks passed; no expected regression/
+helper/model/hook was introduced.
 
 Separate build/default-transform-rounding-edge will preserve earlier evidence.
 Renewed full PSI55.61/26.01 after ladder release blocks further native work.
@@ -343,12 +344,66 @@ and immediate full avg10 AND avg60<1%/idle-prefix guards for each invocation.
 Do not duplicate the qualified3936/1872/2000/3872 pairs. Exact-rule recovery
 still precedes independent expectations/actual ORIGINAL/support/wiring.
 
+Fresh explicit audit/DAW CLEAR subsequently allowed the unchanged signed
+4f8040d1c9eac65516a9b11e84b88355a82e1a1a source. Both actual native statuses0/
+empty stderr/DONE1080; first structural gate0 BEFORE repeat, paired reader0,
+RAW-BYTE-IDENTICAL SHA256
+b6e43abea8d3290d46e231a72e0ec6807c25551b266cfa156d91f393f4baacc2.
+All10 signed groups completed54 exact queries and reached adjacent payloads
+with different ON strings. Every input/path/metadata/BRS check exact; archived
+independent reader0/host byte compare0. Full PSI0.00/0.00 before both runs,
+all input/runner/VFP9/FLL hash checks0. Both chats RELEASED/prefix empty1.
+
+rounding-edge-captures/ retains all host receipts and full REA
+ev_a3f65d05d1c73c2be15c40f366ecd85dd9b9465e0e36c56bc277d9431a4e6515:
+root0/quiesced/owned-group verified/untruncated/no sampled ownership unknowns
+in THIS capture. Image-binding/sampling/snapshot/inherited-environment/network
+limits remain; no global cleanup claim. No build, VM or reservation retained.
+
+Positive local ON edges (negative groups have the SAME magnitude bits and
+opposite strings, including negative zero):
+
+| Center / D | Lower payload | Upper adjacent payload | Lower / upper text |
+| --- | --- | --- | --- |
+| 0.5 / 0 | 3FDFF7CED9168729 | 3FDFF7CED916872A | 0 / 1 |
+| 1.005 / 2 | 3FF01475A31A4BDB | 3FF01475A31A4BDC | 1.00 / 1.01 |
+| 2.675 / 2 | 40056663C74FB549 | 40056663C74FB54A | 2.67 / 2.68 |
+| 9.995 / 2 | 4023FD6FFC115DF6 | 4023FD6FFC115DF7 | 9.99 / 10.00 |
+| 5E-16 / 15 | 3CC1FF130772E183 | 3CC1FF130772E184 | 0.000000000000000 / 0.000000000000001 |
+
+These are witnessed local edges, NOT general monotonicity or uniqueness.
+reject-rounding-hypotheses.cjs compares only the540 ON magnitudes against
+three explicit HOST-BINARY64 hypotheses, all REJECTED: straightforward
+floor(abs(x)*10^D+0.5)/10^D has198 mismatches; replacing0.5 with0.5005 has4;
+rounding three extra decimal places first has4. Exact raw witnesses retained.
+The two apparently close hypotheses fail at the0.5 and5E-16 edge payloads,
+BOTH signs. Numeric comparison excludes padding/negative-zero/sign semantics
+and says nothing about an x87 implementation. No tolerated mismatch, inferred
+epsilon or fitted formatter is accepted as the requirement.
+
+### DECIMALS0..18 exact-edge stimulus — unrun
+
+emit-rounding-decimals.cjs, rounding-decimals.prg,
+rounding-decimals-cases.json and audit-rounding-decimals.cjs freeze the next
+native-only experiment. Nineteen explicit finite binary64 stimuli near half
+steps, DECIMALS0..18/both signs (38 groups), width40/scale18, BOTH FIXED
+observations per query;54 queries/group maximum4104 observations/run.
+Host Number selects explicit input BITS only, never an expected output.
+The proven query/reader protocol is reused; every constructor/readback/path,
+adjacent differing-output edge and paired repeat must qualify independently.
+This probes setting-dependent behavior, not all magnitudes/descriptors or a
+general algorithm. Separate build/default-transform-rounding-decimals.
+No invocation yet; sign/push BEFORE renewed BOTH-chat CLEAR and immediate
+full avg10 AND avg60<1%/idle-prefix gates. Existing qualified pairs need no
+replay. Exact-rule recovery still precedes native-only regression/actual
+ORIGINAL/unused support/direct verification/wiring and acceptance.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
 expectation emitter, original-fail/SAME, focused/broader/actual named hosted
 execution, exact-head review, strict checks and resolved conversations are
-pending except the four bounded native pairs qualified above. No compatibility,
+pending except the five bounded native pairs qualified above. No compatibility,
 parent, hazard or release closure.
 
 `DQ-DV-5611-NUMERIC-DEFAULT-TRANSFORM-001`, LOW procedure delta: preserve the
