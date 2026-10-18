@@ -5,9 +5,11 @@
 // Actual native complete-expression expectations, frozen before production changes.
 #include "copperfin/runtime/prg_engine.h"
 #include "fixtures/vfp9-numeric-division-context/nonwhole-public-expected.h"
+#include "fixtures/vfp9-numeric-division-context/nonwhole-timing-expected.h"
 
 #include <bit>
 #include <chrono>
+#include <cmath>
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
@@ -124,6 +126,59 @@ int main() {
                            context + " watch state unchanged", controlFailures);
                     expect(session.run(DebugResumeAction::continue_run).completed,
                            context + " resumed", controlFailures);
+
+                    unsigned callbackCases = 0;
+                    for (const auto& row : copperfin::test::native_nonwhole_timing_rows) {
+                        if (!row.callback_admitted) continue;
+                        ++callbackCases;
+                        RuntimeSessionOptions callbackOptions;
+                        callbackOptions.startup_path = (directory.path / "nonwhole-callback.prg").string();
+                        callbackOptions.working_directory = directory.path.string();
+                        callbackOptions.temp_directory = (directory.path / "callback-temp").string();
+                        callbackOptions.require_source_text_overrides = true;
+                        callbackOptions.startup_source_text = std::string("SET NUMERICBEHAVIOR TO ") + mode +
+                            "\nSET DECIMALS TO " + std::to_string(settings[d]) + "\nSET FIXED " + fixed +
+                            "\nPUBLIC gCalls\ngCalls=0\nanswer=" + row.expression +
+                            "\nfinalDecimals=SET('DECIMALS')\nRETURN\nFUNCTION CFMark\nLPARAMETERS nextSetting"
+                            "\ngCalls=gCalls+1\nSET DECIMALS TO nextSetting\nRETURN 2.00\nENDFUNC\n";
+                        const auto label = context + " callback " + row.expression;
+                        auto callback = PrgRuntimeSession::create(callbackOptions);
+                        // Pause after the increment but before settings change; resuming
+                        // must restore completed constant-prefix precision, not replay it.
+                        callback.add_breakpoint({callbackOptions.startup_path, 12});
+                        const auto pause = callback.run(DebugResumeAction::continue_run);
+                        expect(pause.reason == DebugPauseReason::breakpoint,
+                               label + " paused " + pause.message, controlFailures);
+                        const auto pausedCalls = pause.globals.find("gcalls");
+                        expect(pausedCalls != pause.globals.end() && pausedCalls->second.number_value == 1,
+                               label + " callback increment occurs once before pause", controlFailures);
+                        const auto done = callback.run(DebugResumeAction::continue_run);
+                        expect(done.completed, label + " resumed " + done.message, controlFailures);
+                        const auto calls = done.globals.find("gcalls");
+                        const auto answer = done.globals.find("answer");
+                        const auto finalSetting = done.globals.find("finaldecimals");
+                        expect(calls != done.globals.end() && calls->second.number_value == 1,
+                               label + " exactly one callback after continuation", controlFailures);
+                        expect(finalSetting != done.globals.end() && finalSetting->second.number_value == row.changes_to,
+                               label + " native final setting", controlFailures);
+                        expect(answer != done.globals.end() && answer->second.kind == PrgValueKind::number &&
+                                   !answer->second.is_null, label + " ordinary assigned Number", evaluationFailures);
+                        if (answer == done.globals.end() || answer->second.kind != PrgValueKind::number ||
+                            answer->second.is_null) continue;
+                        expect(std::bit_cast<std::uint64_t>(answer->second.number_value) == row.bits,
+                               label + " native quotient bits", bitFailures);
+                        const auto scale = row.metadata[d].decimal_places;
+                        // Separate native-backed RQ-CF-PRG-NUMERIC-REAL-ASSIGNMENT-001:
+                        // these finite nonzero real results all have scale2..18.
+                        const auto nativePayload = std::bit_cast<double>(row.bits);
+                        expect(scale >= 2U && scale <= 18U && std::isfinite(nativePayload) && nativePayload != 0.0,
+                               label + " frozen assignment frontier", controlFailures);
+                        const PrgNumericMetadata assigned{11U + scale + (nativePayload < 0.0 ? 1U : 0U),
+                                                         scale, PrgNumericStorage::real};
+                        expect(answer->second.numeric_metadata == assigned,
+                               label + " native precision survives pause and scalar assignment", descriptorFailures);
+                    }
+                    expect(callbackCases == 72, context + " complete frozen callback inventory", controlFailures);
                 }
             }
         }

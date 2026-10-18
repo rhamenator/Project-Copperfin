@@ -5,6 +5,7 @@
 // independently captured native descriptors/bits, frozen BEFORE parser hooks.
 #include "copperfin/runtime/prg_engine.h"
 #include "fixtures/vfp9-numeric-division-context/constant-public-expected.h"
+#include "fixtures/vfp9-numeric-division-context/nonwhole-timing-expected.h"
 
 #include <bit>
 #include <chrono>
@@ -93,8 +94,23 @@ int main() {
                     }
                     expect(selected == 798 && retainedGaps == 48,
                            context + " exact frozen frontier inventory", controlFailures);
+                    unsigned newlyAdmitted = 0;
+                    for (const auto& row : copperfin::test::native_nonwhole_timing_rows) {
+                        if (!row.old_unknown_control) continue;
+                        ++newlyAdmitted;
+                        const auto result = session.evaluate_watch_expression(row.expression);
+                        const auto label = context + " newly admitted " + row.expression;
+                        expect(result.ok && result.value.kind == PrgValueKind::number && !result.value.is_null,
+                               label + " evaluates ordinary Number", evaluationFailures);
+                        if (!result.ok || result.value.kind != PrgValueKind::number || result.value.is_null) continue;
+                        expect(result.value.numeric_metadata == row.metadata[d],
+                               label + " native descriptor", descriptorFailures);
+                        expect(std::bit_cast<std::uint64_t>(result.value.number_value) == row.bits,
+                               label + " native bits", bitFailures);
+                    }
+                    expect(newlyAdmitted == 3, context + " all three old controls strengthened", controlFailures);
                     for (const auto expression : {
-                             "(5/2)/(5/2)", "(1/7)/3", "5/(5/2)", "5/0.5",
+                             "5/0.5",
                              "1E300/iTwo", "iFive/(1E300)", "(iFive*2)/iTwo",
                              "((5/2)*1)/iTwo", "((5/2)+0)/iTwo", "2^(5/2)/iTwo"}) {
                         const auto result = session.evaluate_watch_expression(expression);

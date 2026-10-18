@@ -1,0 +1,7 @@
+{
+  "compared": 2220,
+  "retainedZeroBoundaryObservations": 720,
+  "differences": 0,
+  "limitation": "Post-capture nonzero hypothesis only. Zero boundaries stay retained; not a test oracle or product acceptance.",
+  "examples": []
+}

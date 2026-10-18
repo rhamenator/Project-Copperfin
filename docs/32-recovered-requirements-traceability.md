@@ -174,6 +174,22 @@ source hashes0 and independent result/inventory/JUnit audit0. Earlier2,280 input
 payload failures disappear; remaining metadata/timing is NOT implemented or
 accepted. Failed initial JUnit-status reader and exact original results retained.
 
+[Non-whole timing pre-support contract](../tests/fixtures/vfp9-numeric-division-context/nonwhole-timing-contract.md):
+paired2,940 native observations/run, process0/empty stderr/no caught errors,
+raw exact repeat/compiled-EVAL/count/state audit0. REA controlled-replay
+ev_0a9d125b0912206705f63a9873c684415ea0e90f80a5f324910be1d4f34da54f
+retains declared lifecycle/selected snapshots and sampling/environment limits.
+Nonzero post-capture timing hypothesis matches2,220 records; original168-mismatch
+LPARAMETERS D0-width candidate retained. All720 zero-boundary records (including
+80 native infinity payloads) remain outside acceptance, not new checked-zero policy.
+Native-only147-row/five-setting header retains every result; expanded public
+source freezes72 finite callback continuations plus stronger exact expectations
+for the three old unknown forms, preserving the prior578-row/574 assertions.
+Existing #7200 scalar-assignment requirement supplies the separately derived
+assignment normalization. No new division helper/hook or expanded ORIGINAL/SAME
+execution yet; those and hosted/exact-head review/strict gates remain mandatory.
+LOW DQ/DV, parent hazards/#6776 switches/checked limits remain unchanged.
+
 Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
 [actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)
 at mainb37ddf7241; paired1,620 values/run, actual0/empty stderr/no errors,

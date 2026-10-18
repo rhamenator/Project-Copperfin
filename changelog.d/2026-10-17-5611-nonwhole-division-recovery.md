@@ -14,3 +14,7 @@
   frozen operands/assertions retained; 11,040 metadata failures remain, with
   evaluation/safety controls passing. Retain actual results and independent audit
   before callback/continuation recovery or implementation.
+  Recover paired native fractional callback timing with single-evaluation
+  controls, retain zero/nonfinite boundaries and a rejected parameter-width
+  hypothesis, then freeze72 callback continuations and strengthen three older
+  unknown assertions using independent native fields before support or hooks.

@@ -1,5 +1,39 @@
 # Agent Handoff
 
+## Non-whole timing/native and expanded public freeze; no support/hook (2026-10-18)
+
+Active WT /home/rich/.codex/worktrees/numeric-nonwhole-division-5611/Project-Copperfin,
+branch fix/numeric-nonwhole-division-5611, from main4b6cc734f via signedb0115ccb0;
+refreshed ORIGINAL79b305a5b already retained11,040 metadata/zero bits-controls.
+Parents5611/6776/7189 revalidated OPEN/owner/exact agent-approved, no open PR.
+
+Fresh BOTH-chat native clearance at IO full avg10/60=0, exact existing runner/
+VFP/FLL hashes, no active Wine before. Two installed-VFP9 Wine invocations each
+0/empty stderr/2940 observations/no caught errors; raw byte repeat SHA
+fcbb0f3b3a2b40880dfe62c4a585b046151023153bb6efecf784e51f886dc9ff.
+Source/framing/typed/compiled-EVAL/count/finalsetting audit0. REA evidence
+ev_0a9d125b0912206705f63a9873c684415ea0e90f80a5f324910be1d4f34da54f
+root0/quiesced/owned cleanup verified; process sampling/ambient-env/identity limits
+explicit in nonwhole-timing-contract.md. Window RELEASED both chats, no VM.
+
+Nonzero timing candidate2220 comparisons0 differences; first168 LPARAMETERS
+D0-width mismatches/source retained, NOT product code/expected values. All720
+zero boundaries retained, including80 native infinity values; no relaxation of
+checked-zero policy or acceptance. Native-only147-row/five-setting header0.
+Expanded public source adds72 finite nonzero callback pause/resume forms per
+mode/settings, using separately native-backed assignment normalization, and
+strengthens exactly3 older unknown forms to native metadata/bits. Prior578-row
+header and574 exact assertions unchanged. New source/native header/contract
+freeze precedes any support/hook. Fixtures nonwhole-timing-*; host
+build/nonwhole-native/timing/ retains full raw/REA/candidate/provenance.
+
+NEXT qualify this expanded ORIGINAL against unchanged main runtime, then unused
+bounded non-whole support/direct native verification, bounded hook/SAME/broader/
+hosted exact-head review/strict/resolved gates. No production change, new PR,
+completion or parent/#7206 closure. Fresh both-chat clearance/pressure before
+any build/native/VM. No backup/upload/reboot/date action; unrelated files and
+all old evidence preserved. Historical next-state text below superseded.
+
 ## Non-whole division re-entry after merged PR7207 (2026-10-18)
 
 UPDATE: signed merge b0115ccb0fc00ea97064c35d48f94ed48ec9b919 pushed; fresh
