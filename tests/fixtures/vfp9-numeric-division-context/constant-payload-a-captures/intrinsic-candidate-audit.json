@@ -1,0 +1,20 @@
+{
+  "checked": 15740,
+  "rejectedSignWidthMismatches": 560,
+  "revisedCandidateMismatches": 0,
+  "inputAudits": [
+    {
+      "batch": "a",
+      "casesPerRun": 6400,
+      "firstSha256": "35f3f6857d8405b8e34a819f1268a66a557cebc774eac16db190a08f3ca20243",
+      "repeatSha256": "da5ba6f42992b4c2ec09d427adbb414f3e9dfd56776c879f58af7c3894c3e70c"
+    },
+    {
+      "batch": "b",
+      "casesPerRun": 6400,
+      "firstSha256": "aca7f2293894913b60009b5126e8b39fab956ff8a9f4185c5a5dc46ee2db972e",
+      "repeatSha256": "e57d7f98978b4ca7a64b8a80089b3860e19f3d02d2dcc97307dac43f1535a2b1"
+    }
+  ],
+  "limitation": "Direct literal division and grouped minus in the retained domain only. Nested-folding/materialization integration and runtime acceptance remain unproved."
+}

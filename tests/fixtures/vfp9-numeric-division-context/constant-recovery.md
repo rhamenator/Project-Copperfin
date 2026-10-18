@@ -115,3 +115,42 @@ Remaining constant/folded arithmetic, unsupported domains, producer propagation,
 display, exact conversion and ListItem supplied-column READ remain mandatory.
 No full Numeric parity, canonical-double shortcut, parent closure or ListItem
 acceptance follows merely from adding metadata or retaining this fixture.
+
+## Whole-payload/sign/width follow-up (2026-10-18 UTC)
+
+Two further batches each retain paired6,400 native observations/run, actual0,
+empty stderr/no errors/compiled-EVAL differences0. Ten payload pairs include
+zero, nonterminating fractions, integral results, native Integer boundaries,
+and real whole9999999999; eight scale/padding forms include0/2/6/18 scales,
+numerator/denominator leading zeros, four input signs, direct/grouped minus.
+Actual source literal types/widths/relevant scales/payload bits are verified.
+The original runner's scoped25-second limit is unchanged; no native source,
+expected result, assertion, timeout or production behavior changed after capture.
+
+Batch a raw differs one row, only an unused Integer result real slot. Raw first
+35f3f6857d8405b8e34a819f1268a66a557cebc774eac16db190a08f3ca20243;
+repeat da5ba6f42992b4c2ec09d427adbb414f3e9dfd56776c879f58af7c3894c3e70c.
+Batch b raw differs3,200 rows, only unused Integer right real slots3,200 and
+result real slots240. First aca7f2293894913b60009b5126e8b39fab956ff8a9f4185c5a5dc46ee2db972e;
+repeat e57d7f98978b4ca7a64b8a80089b3860e19f3d02d2dcc97307dac43f1535a2b1.
+All documented typed fields, result bits and display repeat exactly. Lossless
+gzip, source/ownFXP/inventory/status/audits are retained in constant-payload-*.
+
+A post-capture sign-width candidate incorrectly required a leading-zero
+position for negative fractions:560 mismatches, retained with actual examples.
+Revising only that hypothesis gives0 mismatches over12,800 payload records plus
+the first grid's2,940 literal/sign records. The independent auditor reconstructs
+640 DECIMALS0 literal expected rows directly from native observations, never
+from that candidate or production code. See the [pre-code intrinsic contract](constant-intrinsic-contract.md).
+This is a bounded whole-payload intrinsic-division model, not a nested-folding,
+materialization or parser acceptance claim. These boundaries still need recovery.
+
+    node tests/fixtures/vfp9-numeric-division-context/audit-constant-intrinsic.cjs
+    node tests/fixtures/vfp9-numeric-division-context/audit-constant-intrinsic.cjs --check-header
+
+The second command checks the frozen C++ expected header against all640 captured
+DECIMALS0 rows; the existing structural auditors independently check the complete
+two-setting/fixed/compiler route inventory (five DECIMALS settings, two FIXED
+modes, two compiler routes), actual input controls and unused-slot differences.
+The first rejected1,140-case hypothesis remains unchanged. No helper/public/
+hosted acceptance is implied by these native-only checks.

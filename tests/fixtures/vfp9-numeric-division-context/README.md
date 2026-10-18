@@ -6,6 +6,10 @@ typed repeat/compiler-EVAL differences0 and retained audit0; raw differences
 only independently audited unused slots. Source-width, grouped-minus, scale
 saturation and native Integer-result constraints remain unresolved by a general
 constant-folding contract. No new product code or constant parity claim.
+The [intrinsic support contract](constant-intrinsic-contract.md) additionally
+retains paired12,800 payload/sign/width observations and a640-row expected header
+independently checked against native records; materialization/parser hooks remain
+unimplemented. `audit-constant-intrinsic.cjs --check-header` reproduces that check.
 
 Latest: [input-verified runtime intervention checkpoint](runtime-recovery.md),
 paired1,620 values/run and standalone audit0; positive5/2 candidate only, not a

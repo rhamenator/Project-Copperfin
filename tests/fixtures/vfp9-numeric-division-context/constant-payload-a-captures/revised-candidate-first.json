@@ -1,0 +1,6 @@
+{
+  "tested": 12800,
+  "mismatches": 0,
+  "examples": [],
+  "domain": "This captured direct literal/grouped-minus grid only; no nested-folding or runtime acceptance."
+}

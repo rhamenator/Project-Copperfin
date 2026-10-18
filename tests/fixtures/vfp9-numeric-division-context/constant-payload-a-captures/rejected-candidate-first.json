@@ -1,0 +1,357 @@
+{
+  "tested": 12800,
+  "mismatches": 560,
+  "examples": [
+    {
+      "batch": "a",
+      "index": 69,
+      "expr": "1/-7",
+      "setting": 0,
+      "mode": "EVAL",
+      "fixed": "OFF",
+      "predicted": {
+        "type": "N",
+        "w": 2,
+        "d": 0
+      },
+      "actual": {
+        "type": "N",
+        "width": 1,
+        "cw": "027F",
+        "decimals": 0,
+        "bits": "BFC2492492492492"
+      }
+    },
+    {
+      "batch": "a",
+      "index": 69,
+      "expr": "1/-7",
+      "setting": 0,
+      "mode": "COMPILED",
+      "fixed": "OFF",
+      "predicted": {
+        "type": "N",
+        "w": 2,
+        "d": 0
+      },
+      "actual": {
+        "type": "N",
+        "width": 1,
+        "cw": "027F",
+        "decimals": 0,
+        "bits": "BFC2492492492492"
+      }
+    },
+    {
+      "batch": "a",
+      "index": 70,
+      "expr": "-(1/-7)",
+      "setting": 0,
+      "mode": "EVAL",
+      "fixed": "OFF",
+      "predicted": {
+        "type": "N",
+        "w": 3,
+        "d": 0
+      },
+      "actual": {
+        "type": "N",
+        "width": 2,
+        "cw": "027F",
+        "decimals": 0,
+        "bits": "3FC2492492492492"
+      }
+    },
+    {
+      "batch": "a",
+      "index": 70,
+      "expr": "-(1/-7)",
+      "setting": 0,
+      "mode": "COMPILED",
+      "fixed": "OFF",
+      "predicted": {
+        "type": "N",
+        "w": 3,
+        "d": 0
+      },
+      "actual": {
+        "type": "N",
+        "width": 2,
+        "cw": "027F",
+        "decimals": 0,
+        "bits": "3FC2492492492492"
+      }
+    },
+    {
+      "batch": "a",
+      "index": 85,
+      "expr": "1/-07",
+      "setting": 0,
+      "mode": "EVAL",
+      "fixed": "OFF",
+      "predicted": {
+        "type": "N",
+        "w": 2,
+        "d": 0
+      },
+      "actual": {
+        "type": "N",
+        "width": 1,
+        "cw": "027F",
+        "decimals": 0,
+        "bits": "BFC2492492492492"
+      }
+    },
+    {
+      "batch": "a",
+      "index": 85,
+      "expr": "1/-07",
+      "setting": 0,
+      "mode": "COMPILED",
+      "fixed": "OFF",
+      "predicted": {
+        "type": "N",
+        "w": 2,
+        "d": 0
+      },
+      "actual": {
+        "type": "N",
+        "width": 1,
+        "cw": "027F",
+        "decimals": 0,
+        "bits": "BFC2492492492492"
+      }
+    },
+    {
+      "batch": "a",
+      "index": 86,
+      "expr": "-(1/-07)",
+      "setting": 0,
+      "mode": "EVAL",
+      "fixed": "OFF",
+      "predicted": {
+        "type": "N",
+        "w": 3,
+        "d": 0
+      },
+      "actual": {
+        "type": "N",
+        "width": 2,
+        "cw": "027F",
+        "decimals": 0,
+        "bits": "3FC2492492492492"
+      }
+    },
+    {
+      "batch": "a",
+      "index": 86,
+      "expr": "-(1/-07)",
+      "setting": 0,
+      "mode": "COMPILED",
+      "fixed": "OFF",
+      "predicted": {
+        "type": "N",
+        "w": 3,
+        "d": 0
+      },
+      "actual": {
+        "type": "N",
+        "width": 2,
+        "cw": "027F",
+        "decimals": 0,
+        "bits": "3FC2492492492492"
+      }
+    },
+    {
+      "batch": "a",
+      "index": 93,
+      "expr": "1.00/-7",
+      "setting": 0,
+      "mode": "EVAL",
+      "fixed": "OFF",
+      "predicted": {
+        "type": "N",
+        "w": 5,
+        "d": 2
+      },
+      "actual": {
+        "type": "N",
+        "width": 4,
+        "cw": "027F",
+        "decimals": 2,
+        "bits": "BFC2492492492492"
+      }
+    },
+    {
+      "batch": "a",
+      "index": 93,
+      "expr": "1.00/-7",
+      "setting": 0,
+      "mode": "COMPILED",
+      "fixed": "OFF",
+      "predicted": {
+        "type": "N",
+        "w": 5,
+        "d": 2
+      },
+      "actual": {
+        "type": "N",
+        "width": 4,
+        "cw": "027F",
+        "decimals": 2,
+        "bits": "BFC2492492492492"
+      }
+    },
+    {
+      "batch": "a",
+      "index": 94,
+      "expr": "-(1.00/-7)",
+      "setting": 0,
+      "mode": "EVAL",
+      "fixed": "OFF",
+      "predicted": {
+        "type": "N",
+        "w": 6,
+        "d": 2
+      },
+      "actual": {
+        "type": "N",
+        "width": 5,
+        "cw": "027F",
+        "decimals": 2,
+        "bits": "3FC2492492492492"
+      }
+    },
+    {
+      "batch": "a",
+      "index": 94,
+      "expr": "-(1.00/-7)",
+      "setting": 0,
+      "mode": "COMPILED",
+      "fixed": "OFF",
+      "predicted": {
+        "type": "N",
+        "w": 6,
+        "d": 2
+      },
+      "actual": {
+        "type": "N",
+        "width": 5,
+        "cw": "027F",
+        "decimals": 2,
+        "bits": "3FC2492492492492"
+      }
+    },
+    {
+      "batch": "a",
+      "index": 101,
+      "expr": "1/-7.00",
+      "setting": 0,
+      "mode": "EVAL",
+      "fixed": "OFF",
+      "predicted": {
+        "type": "N",
+        "w": 5,
+        "d": 2
+      },
+      "actual": {
+        "type": "N",
+        "width": 4,
+        "cw": "027F",
+        "decimals": 2,
+        "bits": "BFC2492492492492"
+      }
+    },
+    {
+      "batch": "a",
+      "index": 101,
+      "expr": "1/-7.00",
+      "setting": 0,
+      "mode": "COMPILED",
+      "fixed": "OFF",
+      "predicted": {
+        "type": "N",
+        "w": 5,
+        "d": 2
+      },
+      "actual": {
+        "type": "N",
+        "width": 4,
+        "cw": "027F",
+        "decimals": 2,
+        "bits": "BFC2492492492492"
+      }
+    },
+    {
+      "batch": "a",
+      "index": 102,
+      "expr": "-(1/-7.00)",
+      "setting": 0,
+      "mode": "EVAL",
+      "fixed": "OFF",
+      "predicted": {
+        "type": "N",
+        "w": 6,
+        "d": 2
+      },
+      "actual": {
+        "type": "N",
+        "width": 5,
+        "cw": "027F",
+        "decimals": 2,
+        "bits": "3FC2492492492492"
+      }
+    }
+  ],
+  "byBatch": {
+    "a": {
+      "casesPerRun": 6400,
+      "actualSuccessfulValues": 6400,
+      "errors": 0,
+      "batch": "a",
+      "expressions": 320,
+      "settings": [
+        0,
+        2,
+        6,
+        14,
+        18
+      ],
+      "compiledVersusEvalDifferences": 0,
+      "documentedFieldsRepeatEqual": true,
+      "rawByteEqual": false,
+      "rawDifferentRows": 1,
+      "rawDifferencesConfinedToUnusedSlots": {
+        "5:49:real": 1
+      },
+      "firstSha256": "35f3f6857d8405b8e34a819f1268a66a557cebc774eac16db190a08f3ca20243",
+      "repeatSha256": "da5ba6f42992b4c2ec09d427adbb414f3e9dfd56776c879f58af7c3894c3e70c",
+      "limitation": "Native observation recovery only. No constant-folding algorithm or Copperfin acceptance inferred."
+    },
+    "b": {
+      "casesPerRun": 6400,
+      "actualSuccessfulValues": 6400,
+      "errors": 0,
+      "batch": "b",
+      "expressions": 320,
+      "settings": [
+        0,
+        2,
+        6,
+        14,
+        18
+      ],
+      "compiledVersusEvalDifferences": 0,
+      "documentedFieldsRepeatEqual": true,
+      "rawByteEqual": false,
+      "rawDifferentRows": 3200,
+      "rawDifferencesConfinedToUnusedSlots": {
+        "9:49:real": 3200,
+        "5:49:real": 240
+      },
+      "firstSha256": "aca7f2293894913b60009b5126e8b39fab956ff8a9f4185c5a5dc46ee2db972e",
+      "repeatSha256": "e57d7f98978b4ca7a64b8a80089b3860e19f3d02d2dcc97307dac43f1535a2b1",
+      "limitation": "Native observation recovery only. No constant-folding algorithm or Copperfin acceptance inferred."
+    }
+  }
+}
