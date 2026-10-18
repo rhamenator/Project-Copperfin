@@ -206,3 +206,10 @@ domain/provenance controls. Full avg10=0 before/after both; both chats receive
 RELEASED immediately. `nonwhole-support-evidence/verification.md` retains exact
 commands/status/log/time/pressure/source hashes. No runtime caller change or
 public SAME/hosted acceptance at this point; old whole frontier remains intact.
+
+After signed passing unused-support checkpoint6b11b2aa7, the sole parser hook
+selects the new helper at the existing proven-constant division site. The
+runtime-operand branch, checked divisor/error paths, prepared materialization,
+operation-position continuation checkpoints, callback replay avoidance and both
+NUMERICBEHAVIOR mode policy are unchanged. Exact frozen expanded public SAME
+must now establish those semantics; no pass is inferred from this small delta.
