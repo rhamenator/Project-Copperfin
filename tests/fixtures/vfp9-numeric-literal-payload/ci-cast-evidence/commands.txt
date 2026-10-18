@@ -1,0 +1,15 @@
+Actual old-source replay, from the literal worktree, for each cast_family=byte,uint64:
+git show b8c1325c7:tests/test_prg_engine_cast_${cast_family}_numeric.cpp | nice -n 10 /usr/bin/c++ -O0 -g0 -std=c++20 -Wall -Wextra -Wpedantic -I include -I tests -x c++ - -x none build/literal-payload-fixed/tests/CMakeFiles/cf_prg_engine_test_support.dir/prg_engine_test_support.cpp.o build/literal-payload-fixed/libcf_xbase_runtime.a build/literal-payload-fixed/libcf_design_model.a build/literal-payload-fixed/libcf_prg_analysis.a build/literal-payload-fixed/libcf_runtime_text.a build/literal-payload-fixed/libcf_vfp_assets.a build/literal-payload-fixed/libcf_platform_profile.a build/literal-payload-fixed/libcf_security.a build/literal-payload-fixed/libcf_localization.a build/literal-payload-fixed/libcf_platform_support.a -o build/literal-payload-native/cast-repair/original-${cast_family}
+Each resulting executable ran once with no args (direct) and once for EACH
+COPPERFIN|VFP9 1|2 combination; all twelve separate status receipts retained.
+
+nice -n 10 cmake --build build/literal-payload-fixed --parallel 1 --target test_prg_engine_cast_byte_numeric test_prg_engine_cast_uint64_numeric
+ctest --test-dir build/literal-payload-fixed --output-on-failure -R '^(test_prg_engine_cast_(byte|uint64)_numeric(_(copperfin|vfp9)_session[12])?|test_prg_engine_numeric_literal_payload|test_prg_numeric_literal_payload_helper|test_cloud_validation_sanitizer_selection|test_native_test_isolation_contract)$' --output-junit ../literal-payload-native/cast-repair/fixed-junit.xml
+
+python3 tests/fixtures/vfp9-numeric-literal-payload/audit-cast-repair.py build/literal-payload-native/cast-repair
+python3 tests/fixtures/vfp9-numeric-literal-payload/audit-cast-repair.py tests/fixtures/vfp9-numeric-literal-payload/ci-cast-evidence
+
+Production archive SHA before and after replay/fixed build:
+c65ac027a74f755520fcc76eb9a395dff91fe13416b0d76b592e14dddaa03904 build/literal-payload-fixed/libcf_xbase_runtime.a
+Retained shared test-support object SHA:
+7af68350f3f5d435eeda61b6ee012fe1af1099b3365c2263dd2936256831ab55 build/literal-payload-fixed/tests/CMakeFiles/cf_prg_engine_test_support.dir/prg_engine_test_support.cpp.o

@@ -1,5 +1,70 @@
 # Agent Handoff
 
+## PR7207 test-only CAST input repair verified locally; push and fresh review/CI
+
+Active WT /home/rich/.codex/worktrees/numeric-literal-payload-7206/Project-Copperfin,
+branch fix/numeric-literal-payload-7206 from origin/main
+ef3ea326f78d640546363abe97bbe27b6208bf45. Parents5611/6776/7189 OPEN/owner/
+exact agent-approved; derived7206 OPEN/owner/bug/runtime, no label change.
+PR https://github.com/rhamenator/Project-Copperfin/pull/7207 OPEN on old signed
+headb8c1325c7b466237ed58eeac5ac0c8d2daaa7f37. The checkpoint containing this
+entry is a TEST-ONLY repair; no production/original1,193-row literal oracle change.
+
+Old head had actual clean exact-head configured Codex199175422 review6245229835
+after Claude-FIRST6245230588; threads0/full paginationfalse. That review does NOT
+cover this fix. Watcher9793 ENDED1 after actionable macOS failure; no active watcher.
+Native macOS39094031076/job117576589900 attempt1 runs629:8 unsigned CAST public
+variants fail, exactly68 assertions ONLY -0.9999999999999999. Not infrastructure.
+Frozen native profile:50 proves source=BFF0000000000000 (-1), while C++ direct
+input=BFEFFFFFFFFFFFFF (neighbor toward0). Existing owner extension range policy
+requires rejection of -1 and zero for actual neighbor. No new production defect/
+VFP unsupported CAST semantics inferred; existing test conflated producers.
+
+Repair: preserve Byte140/UInt6462 direct raw/expected cases; one public input
+uses explicit CTOBIN BS BFEFFFFFFFFFFFFF bytes with BINTOC BRS IIF bit guard.
+Keep old neighbor-to-zero assertion AND add original decimal spelling error11/
+sentinel/kind/context controls per alias. Public Byte126->128 and UInt64159->162
+per mode/session. Native oracle/helper/contract/production remain unchanged.
+Widen hosted sanitizer BOTH build/filter by two executables/all10 direct+public
+names; selector4/4 exact prefix/suffix checks. Existing selections not removed.
+
+After resource deferral (~37% full PSI), audit AND DAW cleared ONE nice10 narrow
+window. Old b8 test source from Git + unchanged retained runtime archives:
+both GNU compile/direct0; all8 public1, exactly68 same-spelling assertions,
+old counters complete. Fixed normal incremental two-TU build0, CTest14/14PASS
+14.71s/no failure/error/skip; direct140/62 and public128/162 counts checked.
+Own unchanged literal1193x8=9544 observations/helper458 still pass. Independent
+host+archived JUnit/status/math audit0;12-file precompile hash0, production/oracle
+diff empty, runtime archive SHA c65ac027a74f755520fcc76eb9a395dff91fe13416b0d76b592e14dddaa03904.
+Both chats got window RELEASED, no VM/probe/foreign intervention/heavy task held.
+Evidence ci-cast-input-recovery.md/ci-cast-evidence/, host
+build/literal-payload-native/cast-repair/. Prior resource interruption130 and
+local20/20SAME evidence remain unmodified, not relabelled. New review/CI required.
+
+NEXT: sign/push repair then Claude exact NEW head, configured clean actual Codex
+or Claude review required; old clean review cannot count. New-head actual named
+sanitizer (now all affected variants) AND Windows/macOS execution, strict required
+11 green/all conversations resolved/no failed checks before merge. No timeout,
+range, oracle or assertion weakening; keep7206/parents open for retained producers.
+Inspect existing watcher status before any replacement. App attach cap100 failed
+already, no unrelated removal/retry. Stay quiet if only CI/review pending.
+
+Native literal chronology4ff7d0d8b pre-heldout ->e2e59d020 native-only public
+freeze ->f530857ff actual ORIGINAL2,432 payload failures ->b7fb2b23f unused
+support ->a6cfc9954 bounded hookup ->b8c1325c7 actual literal SAME/broader20 pass.
+Paired native7840+1704 observations/run, all heldout predictions matched; reject
+models retained. Explicit binary64 rounded loops, no epsilon/source specialcase.
+Beyond256/nondefault FP/other producers/display/exact conversion mandatory recovery.
+
+Retained non-whole division WT/branch fix/numeric-nonwhole-division-5611 pushed
+11bd096a6232a86aee10074e8e35f7daca19cbb6. Preserve578-row native header/574
+exact assertions. AFTER prerequisite integrates refresh ORIGINAL, complete native
+fractional callback/continuation timing, strengthen3 former-unknown controls BEFORE
+next freeze, then bounded hook/SAME/broad/hosted/review gates. Division/ListItem
+READ uncancelled; completed7204/EPOCH/CENTURY/7201 not restarted. No reboot/date action.
+Canonical own handoff/unrelated files/stashes/foreign WTs preserved; channel0/
+fetch unchanged. No owner-input blocker/automation pause. History below superseded.
+
 ## Bounded runtime division implementation in verification (2026-10-17)
 
 Continue WT /home/rich/.codex/worktrees/numeric-division-recovery-5611/Project-Copperfin,

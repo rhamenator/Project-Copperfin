@@ -4286,10 +4286,15 @@
                 const std::string literal = text_.substr(start, position_ - start);
                 if (const auto parsed = try_parse_invariant_double(literal); parsed.has_value())
                 {
-                    // RQ-CF-PRG-NUMERIC-LITERAL-METADATA-001: attach recovered
-                    // literal attributes; never round the parsed payload.
+                    // RQ-CF-PRG-NUMERIC-DECIMAL-LITERAL-PAYLOAD-001: only
+                    // after successful grammar parsing, apply the native-backed
+                    // bounded plain-decimal source conversion. Other shapes and
+                    // unsupported environments retain the existing parsed value.
+                    PrgValue value = make_number_value(
+                        plain_decimal_literal_payload(literal).value_or(*parsed));
+                    // RQ-CF-PRG-NUMERIC-LITERAL-METADATA-001: these display
+                    // attributes do not round or truncate the source payload.
                     // Other producers/propagation/consumers remain separate.
-                    PrgValue value = make_number_value(*parsed);
                     value.numeric_metadata = plain_decimal_literal_metadata(literal);
                     // RQ-CF-PRG-NUMERIC-INTEGER-DESCRIPTOR-001: bounded whole
                     // producer after successful parsing; unsupported metadata

@@ -1,0 +1,21 @@
+{
+  "baseline": "ef3ea326f78d640546363abe97bbe27b6208bf45",
+  "publicFreeze": "e2e59d020e404202a736ee96e907b57a01ecff5a",
+  "descriptor": 0,
+  "bits": 2432,
+  "evaluation": 0,
+  "controls": 0,
+  "total": 2432,
+  "counts": {
+    "profile": {
+      "rows": 240,
+      "assertions": 1920
+    },
+    "heldout": {
+      "rows": 64,
+      "assertions": 512
+    }
+  },
+  "result": "Actual public ORIGINAL fails only native payload assertions; all recorded actual bits agree with the old direct decimal parser counterfactual.",
+  "limitation": "Manual public object/link/run against verified unchanged-main libraries; not a new runtime rebuild, CTest run or SAME/native parity pass."
+}

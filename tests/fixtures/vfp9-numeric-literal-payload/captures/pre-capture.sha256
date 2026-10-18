@@ -1,0 +1,7 @@
+ba0fe78bd05f9f442eed2f182df8908d8bb8c9313ef6302541115ddb9e73e57c  tests/fixtures/vfp9-numeric-literal-payload/grid.prg
+1dce85d18040a31c6df1a2b62e76175eca42b765bdf7bfb8e3a754be8237d80b  tests/fixtures/vfp9-numeric-literal-payload/cases.json
+7ea394a4c0794b9928880d18836058a51449f7e7dc412c78a12b72df79b53638  tests/fixtures/vfp9-numeric-literal-payload/emit-grid.cjs
+909ce001767506973e517f38b99dc24b216000d13a8ecd82c7e88f86a715405c  tests/fixtures/vfp9-numeric-literal-payload/audit-grid.cjs
+1e64d290b8994acf0ad10eb3448b42dc72a6a109ab436b955a59587e9c1abb06  /home/rich/bin/vfp9-probe
+cdc159a1e07e5208a0def267a94b8b3b007160641b442cb453aba8ecc4138560  /home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe
+1afd8eca71d2ef716efc22bb90f7f092322d9639ebec671fb5bd1bf4df806c19  /home/rich/dev/Project-Copperfin/build/pr7203-completed/native-evidence/diagnostic/cause-probe.fll

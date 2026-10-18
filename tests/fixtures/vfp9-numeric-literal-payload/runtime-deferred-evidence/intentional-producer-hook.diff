@@ -1,0 +1,35 @@
+diff --git a/src/runtime/prg_engine.cpp b/src/runtime/prg_engine.cpp
+index a3b28cf9d..602f9f2b6 100644
+--- a/src/runtime/prg_engine.cpp
++++ b/src/runtime/prg_engine.cpp
+@@ -16,6 +16,7 @@
+ #include "prg_engine_command_helpers.h"
+ #include "prg_engine_helpers.h"
+ #include "prg_numeric_literal_metadata.h"
++#include "prg_numeric_literal_payload.h"
+ #include "prg_numeric_integer_metadata.h"
+ #include "prg_numeric_integer_assignment.h"
+ #include "prg_numeric_real_assignment.h"
+diff --git a/src/runtime/prg_engine_expression.inl b/src/runtime/prg_engine_expression.inl
+index 60b782195..0c46a2f9d 100644
+--- a/src/runtime/prg_engine_expression.inl
++++ b/src/runtime/prg_engine_expression.inl
+@@ -4286,10 +4286,15 @@
+                 const std::string literal = text_.substr(start, position_ - start);
+                 if (const auto parsed = try_parse_invariant_double(literal); parsed.has_value())
+                 {
+-                    // RQ-CF-PRG-NUMERIC-LITERAL-METADATA-001: attach recovered
+-                    // literal attributes; never round the parsed payload.
++                    // RQ-CF-PRG-NUMERIC-DECIMAL-LITERAL-PAYLOAD-001: only
++                    // after successful grammar parsing, apply the native-backed
++                    // bounded plain-decimal source conversion. Other shapes and
++                    // unsupported environments retain the existing parsed value.
++                    PrgValue value = make_number_value(
++                        plain_decimal_literal_payload(literal).value_or(*parsed));
++                    // RQ-CF-PRG-NUMERIC-LITERAL-METADATA-001: these display
++                    // attributes do not round or truncate the source payload.
+                     // Other producers/propagation/consumers remain separate.
+-                    PrgValue value = make_number_value(*parsed);
+                     value.numeric_metadata = plain_decimal_literal_metadata(literal);
+                     // RQ-CF-PRG-NUMERIC-INTEGER-DESCRIPTOR-001: bounded whole
+                     // producer after successful parsing; unsupported metadata

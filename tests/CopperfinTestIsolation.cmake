@@ -146,6 +146,18 @@ function(copperfin_configure_native_test_isolation)
         AUDIT complete
     )
 
+    # RQ-CF-PRG-NUMERIC-DECIMAL-LITERAL-PAYLOAD-001: no filesystem/children/
+    # network; a scoped floating-rounding test restores caller state. Serial.
+    copperfin_set_test_isolation(test_prg_numeric_literal_payload_helper
+        FILESYSTEM none
+        ENVIRONMENT scoped-process
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+
     # RQ-CF-PRG-NUMERIC-UNARY-ZERO-CONTEXT-001: exclusive source-override
     # sessions/temp paths, no PRG I/O or external host callback. Serial because
     # runtime initialization observes the process environment.
@@ -179,7 +191,8 @@ function(copperfin_configure_native_test_isolation)
     foreach(test_name IN ITEMS test_prg_engine_numeric_integer_assignment
                                test_prg_engine_numeric_real_assignment
                                test_prg_engine_numeric_runtime_division
-                               test_prg_engine_numeric_constant_division)
+                               test_prg_engine_numeric_constant_division
+                               test_prg_engine_numeric_literal_payload)
         copperfin_set_test_isolation(${test_name}
             FILESYSTEM test-owned-unique
             ENVIRONMENT scoped-process

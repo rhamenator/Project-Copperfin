@@ -1,0 +1,7 @@
+{
+  "originalSourceHead": "b8c1325c7b466237ed58eeac5ac0c8d2daaa7f37",
+  "originalAssertions": 68,
+  "fixedExecuted": 14,
+  "fixedFailuresErrorsSkips": 0,
+  "scope": "GNU replay/fixed tests only; new-head hosted/review gates remain"
+}

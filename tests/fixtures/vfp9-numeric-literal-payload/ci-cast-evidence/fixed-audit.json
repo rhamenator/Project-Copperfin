@@ -1,0 +1,22 @@
+{
+  "executed": 14,
+  "failures": 0,
+  "errors": 0,
+  "skips": 0,
+  "actualOutput": {
+    "test_prg_engine_numeric_literal_payload": "literal payload: descriptor=0 bits=0 evaluation=0 controls=0 total=0\n",
+    "test_prg_numeric_literal_payload_helper": "literal payload helper: selected=458 failures=0\n",
+    "test_cloud_validation_sanitizer_selection": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.002s\n\nOK\n",
+    "test_native_test_isolation_contract": "-- Native test isolation inventory contract passed for 629 tests\n",
+    "test_prg_engine_cast_byte_numeric": "BYTE frozen cases: direct=140 public=0\n",
+    "test_prg_engine_cast_byte_numeric_copperfin_session1": "BYTE frozen cases: direct=0 public=128\n",
+    "test_prg_engine_cast_byte_numeric_copperfin_session2": "BYTE frozen cases: direct=0 public=128\n",
+    "test_prg_engine_cast_byte_numeric_vfp9_session1": "BYTE frozen cases: direct=0 public=128\n",
+    "test_prg_engine_cast_byte_numeric_vfp9_session2": "BYTE frozen cases: direct=0 public=128\n",
+    "test_prg_engine_cast_uint64_numeric": "CAST frozen cases: direct=62 public=0\n",
+    "test_prg_engine_cast_uint64_numeric_copperfin_session1": "CAST frozen cases: direct=0 public=162\n",
+    "test_prg_engine_cast_uint64_numeric_copperfin_session2": "CAST frozen cases: direct=0 public=162\n",
+    "test_prg_engine_cast_uint64_numeric_vfp9_session1": "CAST frozen cases: direct=0 public=162\n",
+    "test_prg_engine_cast_uint64_numeric_vfp9_session2": "CAST frozen cases: direct=0 public=162\n"
+  }
+}

@@ -46,12 +46,27 @@ class SanitizerSelection(unittest.TestCase):
                      "test_prg_numeric_integer_assignment_helper", "test_prg_engine_numeric_integer_assignment",
                      "test_prg_numeric_real_assignment_helper", "test_prg_engine_numeric_real_assignment",
                      "test_prg_numeric_runtime_division_helper", "test_prg_engine_numeric_runtime_division",
-                     "test_prg_numeric_constant_division_intrinsic_helper", "test_prg_engine_numeric_constant_division"):
+                     "test_prg_numeric_constant_division_intrinsic_helper", "test_prg_engine_numeric_constant_division",
+                     "test_prg_engine_numeric_literal_payload", "test_prg_numeric_literal_payload_helper"):
             with self.subTest(name=name):
                 self.assertIn(name, TARGETS["sanitizer-pr"])
                 self.assertIsNotNone(selector.search(name))
                 self.assertIsNone(selector.search("prefix_" + name))
                 self.assertIsNone(selector.search(name + "_suffix"))
+
+
+    def test_literal_payload_cast_consumers_include_all_public_shards(self):
+        self.assertEqual(len(SELECTORS), 1)
+        selector = re.compile(SELECTORS[0])
+        for family in ("test_prg_engine_cast_byte_numeric", "test_prg_engine_cast_uint64_numeric"):
+            self.assertIn(family, TARGETS["sanitizer-pr"])
+            for suffix in ("", "_copperfin_session1", "_copperfin_session2",
+                           "_vfp9_session1", "_vfp9_session2"):
+                name = family + suffix
+                with self.subTest(name=name):
+                    self.assertIsNotNone(selector.search(name))
+                    self.assertIsNone(selector.search("prefix_" + name))
+                    self.assertIsNone(selector.search(name + "_suffix"))
 
 
 if __name__ == "__main__":

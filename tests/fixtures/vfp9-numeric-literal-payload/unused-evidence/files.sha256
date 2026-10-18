@@ -1,0 +1,16 @@
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-numeric-literal-payload/unused-evidence/clang-build.out
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-numeric-literal-payload/unused-evidence/clang-build.status
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-numeric-literal-payload/unused-evidence/clang-build.stderr
+d8d70c29640063cedd0fd27892a7b1a62cdd2e6797eaaa3dd99158b3107a8341  tests/fixtures/vfp9-numeric-literal-payload/unused-evidence/clang-io-before.txt
+8efb830eac3dfb7e7d1000f9f4e0208b7916fead9bf6369752e8283370082781  tests/fixtures/vfp9-numeric-literal-payload/unused-evidence/clang-run.out
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-numeric-literal-payload/unused-evidence/clang-run.status
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-numeric-literal-payload/unused-evidence/clang-run.stderr
+f4ba2b01b89448cab163c426d6874cd1918aeb9aa29fd86e570f04275781abac  tests/fixtures/vfp9-numeric-literal-payload/unused-evidence/commands.txt
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-numeric-literal-payload/unused-evidence/gnu-build.out
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-numeric-literal-payload/unused-evidence/gnu-build.status
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-numeric-literal-payload/unused-evidence/gnu-build.stderr
+8efb830eac3dfb7e7d1000f9f4e0208b7916fead9bf6369752e8283370082781  tests/fixtures/vfp9-numeric-literal-payload/unused-evidence/gnu-run.out
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  tests/fixtures/vfp9-numeric-literal-payload/unused-evidence/gnu-run.status
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tests/fixtures/vfp9-numeric-literal-payload/unused-evidence/gnu-run.stderr
+7c8373345ecfca9d1c8a78107b464f57f7aefe117e09acedc35e6729e4308655  tests/fixtures/vfp9-numeric-literal-payload/unused-evidence/io-before.txt
+e23901689e7a78c7833264fb44c9496b0a20a5f63e60ad4ab01b8afd1238a4f7  tests/fixtures/vfp9-numeric-literal-payload/unused-evidence/pre-hook-expanded.sha256

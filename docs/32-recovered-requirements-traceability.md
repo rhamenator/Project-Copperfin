@@ -66,6 +66,58 @@ Additional intrinsic support phase:
 | `RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-INTRINSIC-001` | Constant-context parent, direct owner Numeric policy, admitted #5611/#6776/#7189; [signed pre-code contract](../tests/fixtures/vfp9-numeric-division-context/constant-intrinsic-contract.md) and640 native rows in checkpoint37a3acec5 before support. | Pure `prg_numeric_constant_division_intrinsic.h`: known typed whole-payload constant-literal division, intrinsic metadata/native storage/folded positive zero; no SET floor, source matching, persistent provenance, allocation, narrowing or replay. Now called only by the bounded constant path in `ExpressionParser::parse_multiplicative`; unknown/unsupported inputs stay unknown. | Paired12800 payload/sign/width native values/run and combined15740 bounded observations; audits0, raw differences only audited unused Integer slots; rejected560-mismatch candidate retained. Native-only header check640 unchanged rows. [Unused support chronology](../tests/fixtures/vfp9-numeric-division-context/constant-intrinsic-support.md) precedes [signed public ORIGINAL-fail and SAME-pass integration](../tests/fixtures/vfp9-numeric-division-context/constant-public-verification.md). GNU Werror and Clang ASan/UBSan/float-cast-overflow/no-recovery helper compile/run0, including expanded materialization bounds. | MEDIUM DQ/DV and existing hazards in contracts; modes/conversions/limits unchanged. Development self-review/automation only. `bounded development integration verified; hosted/review/merge gates and wider domains remain required` |
 | `RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-MATERIALIZATION-001` | Intrinsic/typed division parent, direct owner policy, admitted #5611/#6776/#7189; [pre-hook timing contract](../tests/fixtures/vfp9-numeric-division-context/constant-materialization-contract.md). | Pure `prg_numeric_constant_division_materialization.h`; `ExpressionParser` intrinsic/prepared state and expression/argument/runtime boundaries, `ExpressionPrimaryCheckpoint` plus completed-node precision in statement `ExpressionContinuation`, macro invalidation and unsupported-result guards. No persistent origin, replay or delayed setting re-query; bounded producers/whole operands only. | Paired3000 boundary,320 setting-mutating and80 ungrouped native values/run, actual0/all values/callbacks1/audits0. Initial formatter/count diagnostics retained. Native-only846-row header (798 selected,48 retained gaps). [Signed ORIGINAL/SAME chronology](../tests/fixtures/vfp9-numeric-division-context/constant-public-verification.md): ORIGINAL CTest8,15,966 descriptor +660 signed-zero failures, evaluation/control0; first wired SAME CTest0,5/5 passed, descriptor/bits/evaluation/control0. Frozen public tests/header/contract/registration hashes0, GNU Werror and explicit Clang sanitizer helper0. | MEDIUM DQ/DV delta/misuse/walkthrough/rollback in contract; existing hazards and checked limits unchanged. Development self-review/automation only. `bounded local integration verified; broad/hosted/exact-head review/strict/resolved-conversation gates and retained compatibility work remain required` |
 
+Decimal-literal payload prerequisite `RQ-CF-PRG-NUMERIC-DECIMAL-LITERAL-PAYLOAD-001`
+([#7206](https://github.com/rhamenator/Project-Copperfin/issues/7206), derived from
+admitted #5611/#6776/#7189/direct owner policy):
+[native conversion recovery](../tests/fixtures/vfp9-numeric-literal-payload/recovery.md).
+At main`ef3ea326f`, actual non-whole ORIGINAL isolated two bare-literal payload
+differences before division; its signed frozen tests and exact re-entry remain
+on branch`fix/numeric-nonwhole-division-5611`, head`11bd096a6`. New paired7,840
+native observations/run (245 spellings/four pure contexts/two settings/two FIXED/
+compiled-EVAL), actual0/empty stderr/all values, raw byte equality, independent
+typed/BINTOC/repeat audit0/compiled-EVAL differences0.60 bare spellings differ
+from standard direct decimal parsing. Initial8 and108 structural hypotheses
+fail; one refined two-accumulator/repeated-divisor candidate fits245 captured
+bare values only. Pre-observation213-row held-out source/hypothesis predictions
+(198 new,15 calibration, through256 bytes) are frozen for independent validation;
+they are NOT native expected tests. Subsequent unchanged held-out runs each0/
+empty stderr/all1,704 values, raw byte equality and independent actual audit0;
+all pre-frozen predictions match, including256-byte boundaries. [Bounded pre-code
+contract](../tests/fixtures/vfp9-numeric-literal-payload/contract.md) and native-only
+1,193-row public source/header/registrations precede any support/producer hook.
+Signed e2e59d020 public freeze precedes actual [qualified-reuse ORIGINAL](../tests/fixtures/vfp9-numeric-literal-payload/original-verification.md):
+GNU object/link0/empty compiler stderr against verified unchanged-main nine
+archives and matching ABI/source flags; public actual1 with2,432 payload failures,
+descriptor/evaluation/control0, independent native re-audit/classification0,
+frozen input hashes0. Manual run, NOT CTest or a new runtime build.
+After that actual failure, [unused bounded support](../tests/fixtures/vfp9-numeric-literal-payload/unused-support.md)
+and458 native direct-input checks pass GNU -O2/Werror/contract-fast and Clang
+-O3/contract-fast/ASan/UBSan/float-cast-overflow/no-recovery, compiler/run stderr0;
+unsupported shapes, length/NUL and scoped rounding controls pass. Signed
+b7fb2b23f expanded support freeze precedes a single successful plain-decimal
+producer hookup; native/public/helper source/header/contract/registrations remain
+unchanged. Both named tests have normal isolation/build/filter registration,
+selector3/3. [Runtime verification checkpoint](../tests/fixtures/vfp9-numeric-literal-payload/runtime-verification.md):
+initial coordinated two-job build interrupted130 on sustained I/O pressure,
+retained unchanged; fresh audit/DAW single-job window completes GNU build0,
+frozen public/helper SAME2/2 and selected regressions20/20,155.03s, no failure/
+error/skip. Public descriptor/bits/evaluation/controls all0; independent actual
+JUnit/status/native-header/source-hash audit0. No assertions or oracle changed.
+Actual named hosted/platform execution, exact-head clean review and strict green
+resolved-conversation gates remain; no VM/external intervention or full parity claim.
+[Hosted CAST input recovery](../tests/fixtures/vfp9-numeric-literal-payload/ci-cast-input-recovery.md):
+macOS629 executes with eight public Byte/UInt64 variants failing only the old
+shared raw/source expectation; signed native profile:50 proves the source is
+exact -1, while independent binary64 neighbor remains above -1. Test-only repair
+retains all direct/raw range assertions, adds source-error controls and widens
+sanitizer selection; no production/oracle change. Fresh coordinated GNU replay
+repeats all68 old source assertions; fixed incremental build0/14unique tests PASS
+14.71s, preserved140/62 direct/increased128/162 public counts, unchanged literal
+oracle/helper pass and source hashes0. New-head hosted/review gates remain.
+DQ-DV-7206-DECIMAL-PAYLOAD-RECOVERY-001 LOW delta/misuse/walkthrough/
+rollback in recovery note; parent hazards, #6776 modes and checked limits unchanged.
+`gap; literal conversion recovery before retained non-whole division re-entry`.
+
 Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
 [actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)
 at mainb37ddf7241; paired1,620 values/run, actual0/empty stderr/no errors,

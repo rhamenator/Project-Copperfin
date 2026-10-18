@@ -1,0 +1,2 @@
+d41be67a4cc4e3bc12c4d59160a0a27fdbced6014e59ea6a5365fe4857544416  tests/fixtures/vfp9-numeric-literal-payload/analyze-chunks.cjs
+cfe373b8813fb4b5c49059b07e0b9fea37c8c2ace1290f38133cde639422f42e  build/literal-payload-native/chunk-candidates-initial108.json
