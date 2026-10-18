@@ -1,0 +1,8 @@
+9beb67b588857d59b3e0c401f047ab654470d6bef74628135c284fca3523b7c4  tests/fixtures/vfp9-numeric-division-context/constant-grid.prg
+3cab96bf4fb2dcbeeaa1d1fac438d441753ae8c37750c408d10fd2bfaba27027  tests/fixtures/vfp9-numeric-division-context/constant-grid.FXP
+3c4d0ab7aa0f5ee7b44ee0138ba8130df367332ac54603cdd2390dd43782a132  tests/fixtures/vfp9-numeric-division-context/constant-grid-cases.json
+639fd6da2caf673ac834120310414862c663dc65f143cecc2ab04926f267e30c  tests/fixtures/vfp9-numeric-division-context/audit-constant-grid.cjs
+cf67bdccc8b5d08fe19240fa157883e9c990001324707c053dd4dfa09949a0e3  tests/fixtures/vfp9-numeric-division-context/constant-captures/first-results.txt.gz
+cf67bdccc8b5d08fe19240fa157883e9c990001324707c053dd4dfa09949a0e3  tests/fixtures/vfp9-numeric-division-context/constant-captures/first.out.gz
+5fd766c51d7a5b226079d2d1937247afa804eb08a145ff7478c0618fe43c1e7d  tests/fixtures/vfp9-numeric-division-context/constant-captures/repeat-results.txt.gz
+5fd766c51d7a5b226079d2d1937247afa804eb08a145ff7478c0618fe43c1e7d  tests/fixtures/vfp9-numeric-division-context/constant-captures/repeat.out.gz

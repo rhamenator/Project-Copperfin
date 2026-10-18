@@ -1,0 +1,1478 @@
+{
+  "parent": "RQ-CF-PRG-NUMERIC-DIVISION-CONTEXT-001",
+  "baseline": "ca77da12bb74cfd3aa31d7b081ce2a9f29424883",
+  "settings": [
+    0,
+    2,
+    6,
+    14,
+    18
+  ],
+  "rows": [
+    {
+      "index": 1,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5",
+      "right": "2",
+      "expression": "5/2"
+    },
+    {
+      "index": 2,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5",
+      "right": "2",
+      "expression": "-5/2"
+    },
+    {
+      "index": 3,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5",
+      "right": "2",
+      "expression": "-(5/2)"
+    },
+    {
+      "index": 4,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5",
+      "right": "02",
+      "expression": "5/02"
+    },
+    {
+      "index": 5,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5",
+      "right": "02",
+      "expression": "-5/02"
+    },
+    {
+      "index": 6,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5",
+      "right": "02",
+      "expression": "-(5/02)"
+    },
+    {
+      "index": 7,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5",
+      "right": "2.0",
+      "expression": "5/2.0"
+    },
+    {
+      "index": 8,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5",
+      "right": "2.0",
+      "expression": "-5/2.0"
+    },
+    {
+      "index": 9,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5",
+      "right": "2.0",
+      "expression": "-(5/2.0)"
+    },
+    {
+      "index": 10,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5",
+      "right": "2.00",
+      "expression": "5/2.00"
+    },
+    {
+      "index": 11,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5",
+      "right": "2.00",
+      "expression": "-5/2.00"
+    },
+    {
+      "index": 12,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5",
+      "right": "2.00",
+      "expression": "-(5/2.00)"
+    },
+    {
+      "index": 13,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5",
+      "right": "2.000000",
+      "expression": "5/2.000000"
+    },
+    {
+      "index": 14,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5",
+      "right": "2.000000",
+      "expression": "-5/2.000000"
+    },
+    {
+      "index": 15,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5",
+      "right": "2.000000",
+      "expression": "-(5/2.000000)"
+    },
+    {
+      "index": 16,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5",
+      "right": "2.00000000000000",
+      "expression": "5/2.00000000000000"
+    },
+    {
+      "index": 17,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5",
+      "right": "2.00000000000000",
+      "expression": "-5/2.00000000000000"
+    },
+    {
+      "index": 18,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5",
+      "right": "2.00000000000000",
+      "expression": "-(5/2.00000000000000)"
+    },
+    {
+      "index": 19,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5",
+      "right": "2.000000000000000000",
+      "expression": "5/2.000000000000000000"
+    },
+    {
+      "index": 20,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5",
+      "right": "2.000000000000000000",
+      "expression": "-5/2.000000000000000000"
+    },
+    {
+      "index": 21,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5",
+      "right": "2.000000000000000000",
+      "expression": "-(5/2.000000000000000000)"
+    },
+    {
+      "index": 22,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "05",
+      "right": "2",
+      "expression": "05/2"
+    },
+    {
+      "index": 23,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-05",
+      "right": "2",
+      "expression": "-05/2"
+    },
+    {
+      "index": 24,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "05",
+      "right": "2",
+      "expression": "-(05/2)"
+    },
+    {
+      "index": 25,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "05",
+      "right": "02",
+      "expression": "05/02"
+    },
+    {
+      "index": 26,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-05",
+      "right": "02",
+      "expression": "-05/02"
+    },
+    {
+      "index": 27,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "05",
+      "right": "02",
+      "expression": "-(05/02)"
+    },
+    {
+      "index": 28,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "05",
+      "right": "2.0",
+      "expression": "05/2.0"
+    },
+    {
+      "index": 29,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-05",
+      "right": "2.0",
+      "expression": "-05/2.0"
+    },
+    {
+      "index": 30,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "05",
+      "right": "2.0",
+      "expression": "-(05/2.0)"
+    },
+    {
+      "index": 31,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "05",
+      "right": "2.00",
+      "expression": "05/2.00"
+    },
+    {
+      "index": 32,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-05",
+      "right": "2.00",
+      "expression": "-05/2.00"
+    },
+    {
+      "index": 33,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "05",
+      "right": "2.00",
+      "expression": "-(05/2.00)"
+    },
+    {
+      "index": 34,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "05",
+      "right": "2.000000",
+      "expression": "05/2.000000"
+    },
+    {
+      "index": 35,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-05",
+      "right": "2.000000",
+      "expression": "-05/2.000000"
+    },
+    {
+      "index": 36,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "05",
+      "right": "2.000000",
+      "expression": "-(05/2.000000)"
+    },
+    {
+      "index": 37,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "05",
+      "right": "2.00000000000000",
+      "expression": "05/2.00000000000000"
+    },
+    {
+      "index": 38,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-05",
+      "right": "2.00000000000000",
+      "expression": "-05/2.00000000000000"
+    },
+    {
+      "index": 39,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "05",
+      "right": "2.00000000000000",
+      "expression": "-(05/2.00000000000000)"
+    },
+    {
+      "index": 40,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "05",
+      "right": "2.000000000000000000",
+      "expression": "05/2.000000000000000000"
+    },
+    {
+      "index": 41,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-05",
+      "right": "2.000000000000000000",
+      "expression": "-05/2.000000000000000000"
+    },
+    {
+      "index": 42,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "05",
+      "right": "2.000000000000000000",
+      "expression": "-(05/2.000000000000000000)"
+    },
+    {
+      "index": 43,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.0",
+      "right": "2",
+      "expression": "5.0/2"
+    },
+    {
+      "index": 44,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.0",
+      "right": "2",
+      "expression": "-5.0/2"
+    },
+    {
+      "index": 45,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.0",
+      "right": "2",
+      "expression": "-(5.0/2)"
+    },
+    {
+      "index": 46,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.0",
+      "right": "02",
+      "expression": "5.0/02"
+    },
+    {
+      "index": 47,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.0",
+      "right": "02",
+      "expression": "-5.0/02"
+    },
+    {
+      "index": 48,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.0",
+      "right": "02",
+      "expression": "-(5.0/02)"
+    },
+    {
+      "index": 49,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.0",
+      "right": "2.0",
+      "expression": "5.0/2.0"
+    },
+    {
+      "index": 50,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.0",
+      "right": "2.0",
+      "expression": "-5.0/2.0"
+    },
+    {
+      "index": 51,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.0",
+      "right": "2.0",
+      "expression": "-(5.0/2.0)"
+    },
+    {
+      "index": 52,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.0",
+      "right": "2.00",
+      "expression": "5.0/2.00"
+    },
+    {
+      "index": 53,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.0",
+      "right": "2.00",
+      "expression": "-5.0/2.00"
+    },
+    {
+      "index": 54,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.0",
+      "right": "2.00",
+      "expression": "-(5.0/2.00)"
+    },
+    {
+      "index": 55,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.0",
+      "right": "2.000000",
+      "expression": "5.0/2.000000"
+    },
+    {
+      "index": 56,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.0",
+      "right": "2.000000",
+      "expression": "-5.0/2.000000"
+    },
+    {
+      "index": 57,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.0",
+      "right": "2.000000",
+      "expression": "-(5.0/2.000000)"
+    },
+    {
+      "index": 58,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.0",
+      "right": "2.00000000000000",
+      "expression": "5.0/2.00000000000000"
+    },
+    {
+      "index": 59,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.0",
+      "right": "2.00000000000000",
+      "expression": "-5.0/2.00000000000000"
+    },
+    {
+      "index": 60,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.0",
+      "right": "2.00000000000000",
+      "expression": "-(5.0/2.00000000000000)"
+    },
+    {
+      "index": 61,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.0",
+      "right": "2.000000000000000000",
+      "expression": "5.0/2.000000000000000000"
+    },
+    {
+      "index": 62,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.0",
+      "right": "2.000000000000000000",
+      "expression": "-5.0/2.000000000000000000"
+    },
+    {
+      "index": 63,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.0",
+      "right": "2.000000000000000000",
+      "expression": "-(5.0/2.000000000000000000)"
+    },
+    {
+      "index": 64,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.00",
+      "right": "2",
+      "expression": "5.00/2"
+    },
+    {
+      "index": 65,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.00",
+      "right": "2",
+      "expression": "-5.00/2"
+    },
+    {
+      "index": 66,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.00",
+      "right": "2",
+      "expression": "-(5.00/2)"
+    },
+    {
+      "index": 67,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.00",
+      "right": "02",
+      "expression": "5.00/02"
+    },
+    {
+      "index": 68,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.00",
+      "right": "02",
+      "expression": "-5.00/02"
+    },
+    {
+      "index": 69,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.00",
+      "right": "02",
+      "expression": "-(5.00/02)"
+    },
+    {
+      "index": 70,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.00",
+      "right": "2.0",
+      "expression": "5.00/2.0"
+    },
+    {
+      "index": 71,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.00",
+      "right": "2.0",
+      "expression": "-5.00/2.0"
+    },
+    {
+      "index": 72,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.00",
+      "right": "2.0",
+      "expression": "-(5.00/2.0)"
+    },
+    {
+      "index": 73,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.00",
+      "right": "2.00",
+      "expression": "5.00/2.00"
+    },
+    {
+      "index": 74,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.00",
+      "right": "2.00",
+      "expression": "-5.00/2.00"
+    },
+    {
+      "index": 75,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.00",
+      "right": "2.00",
+      "expression": "-(5.00/2.00)"
+    },
+    {
+      "index": 76,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.00",
+      "right": "2.000000",
+      "expression": "5.00/2.000000"
+    },
+    {
+      "index": 77,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.00",
+      "right": "2.000000",
+      "expression": "-5.00/2.000000"
+    },
+    {
+      "index": 78,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.00",
+      "right": "2.000000",
+      "expression": "-(5.00/2.000000)"
+    },
+    {
+      "index": 79,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.00",
+      "right": "2.00000000000000",
+      "expression": "5.00/2.00000000000000"
+    },
+    {
+      "index": 80,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.00",
+      "right": "2.00000000000000",
+      "expression": "-5.00/2.00000000000000"
+    },
+    {
+      "index": 81,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.00",
+      "right": "2.00000000000000",
+      "expression": "-(5.00/2.00000000000000)"
+    },
+    {
+      "index": 82,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.00",
+      "right": "2.000000000000000000",
+      "expression": "5.00/2.000000000000000000"
+    },
+    {
+      "index": 83,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.00",
+      "right": "2.000000000000000000",
+      "expression": "-5.00/2.000000000000000000"
+    },
+    {
+      "index": 84,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.00",
+      "right": "2.000000000000000000",
+      "expression": "-(5.00/2.000000000000000000)"
+    },
+    {
+      "index": 85,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.000000",
+      "right": "2",
+      "expression": "5.000000/2"
+    },
+    {
+      "index": 86,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.000000",
+      "right": "2",
+      "expression": "-5.000000/2"
+    },
+    {
+      "index": 87,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.000000",
+      "right": "2",
+      "expression": "-(5.000000/2)"
+    },
+    {
+      "index": 88,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.000000",
+      "right": "02",
+      "expression": "5.000000/02"
+    },
+    {
+      "index": 89,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.000000",
+      "right": "02",
+      "expression": "-5.000000/02"
+    },
+    {
+      "index": 90,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.000000",
+      "right": "02",
+      "expression": "-(5.000000/02)"
+    },
+    {
+      "index": 91,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.000000",
+      "right": "2.0",
+      "expression": "5.000000/2.0"
+    },
+    {
+      "index": 92,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.000000",
+      "right": "2.0",
+      "expression": "-5.000000/2.0"
+    },
+    {
+      "index": 93,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.000000",
+      "right": "2.0",
+      "expression": "-(5.000000/2.0)"
+    },
+    {
+      "index": 94,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.000000",
+      "right": "2.00",
+      "expression": "5.000000/2.00"
+    },
+    {
+      "index": 95,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.000000",
+      "right": "2.00",
+      "expression": "-5.000000/2.00"
+    },
+    {
+      "index": 96,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.000000",
+      "right": "2.00",
+      "expression": "-(5.000000/2.00)"
+    },
+    {
+      "index": 97,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.000000",
+      "right": "2.000000",
+      "expression": "5.000000/2.000000"
+    },
+    {
+      "index": 98,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.000000",
+      "right": "2.000000",
+      "expression": "-5.000000/2.000000"
+    },
+    {
+      "index": 99,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.000000",
+      "right": "2.000000",
+      "expression": "-(5.000000/2.000000)"
+    },
+    {
+      "index": 100,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.000000",
+      "right": "2.00000000000000",
+      "expression": "5.000000/2.00000000000000"
+    },
+    {
+      "index": 101,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.000000",
+      "right": "2.00000000000000",
+      "expression": "-5.000000/2.00000000000000"
+    },
+    {
+      "index": 102,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.000000",
+      "right": "2.00000000000000",
+      "expression": "-(5.000000/2.00000000000000)"
+    },
+    {
+      "index": 103,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.000000",
+      "right": "2.000000000000000000",
+      "expression": "5.000000/2.000000000000000000"
+    },
+    {
+      "index": 104,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.000000",
+      "right": "2.000000000000000000",
+      "expression": "-5.000000/2.000000000000000000"
+    },
+    {
+      "index": 105,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.000000",
+      "right": "2.000000000000000000",
+      "expression": "-(5.000000/2.000000000000000000)"
+    },
+    {
+      "index": 106,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.00000000000000",
+      "right": "2",
+      "expression": "5.00000000000000/2"
+    },
+    {
+      "index": 107,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.00000000000000",
+      "right": "2",
+      "expression": "-5.00000000000000/2"
+    },
+    {
+      "index": 108,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.00000000000000",
+      "right": "2",
+      "expression": "-(5.00000000000000/2)"
+    },
+    {
+      "index": 109,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.00000000000000",
+      "right": "02",
+      "expression": "5.00000000000000/02"
+    },
+    {
+      "index": 110,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.00000000000000",
+      "right": "02",
+      "expression": "-5.00000000000000/02"
+    },
+    {
+      "index": 111,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.00000000000000",
+      "right": "02",
+      "expression": "-(5.00000000000000/02)"
+    },
+    {
+      "index": 112,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.00000000000000",
+      "right": "2.0",
+      "expression": "5.00000000000000/2.0"
+    },
+    {
+      "index": 113,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.00000000000000",
+      "right": "2.0",
+      "expression": "-5.00000000000000/2.0"
+    },
+    {
+      "index": 114,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.00000000000000",
+      "right": "2.0",
+      "expression": "-(5.00000000000000/2.0)"
+    },
+    {
+      "index": 115,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.00000000000000",
+      "right": "2.00",
+      "expression": "5.00000000000000/2.00"
+    },
+    {
+      "index": 116,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.00000000000000",
+      "right": "2.00",
+      "expression": "-5.00000000000000/2.00"
+    },
+    {
+      "index": 117,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.00000000000000",
+      "right": "2.00",
+      "expression": "-(5.00000000000000/2.00)"
+    },
+    {
+      "index": 118,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.00000000000000",
+      "right": "2.000000",
+      "expression": "5.00000000000000/2.000000"
+    },
+    {
+      "index": 119,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.00000000000000",
+      "right": "2.000000",
+      "expression": "-5.00000000000000/2.000000"
+    },
+    {
+      "index": 120,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.00000000000000",
+      "right": "2.000000",
+      "expression": "-(5.00000000000000/2.000000)"
+    },
+    {
+      "index": 121,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.00000000000000",
+      "right": "2.00000000000000",
+      "expression": "5.00000000000000/2.00000000000000"
+    },
+    {
+      "index": 122,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.00000000000000",
+      "right": "2.00000000000000",
+      "expression": "-5.00000000000000/2.00000000000000"
+    },
+    {
+      "index": 123,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.00000000000000",
+      "right": "2.00000000000000",
+      "expression": "-(5.00000000000000/2.00000000000000)"
+    },
+    {
+      "index": 124,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.00000000000000",
+      "right": "2.000000000000000000",
+      "expression": "5.00000000000000/2.000000000000000000"
+    },
+    {
+      "index": 125,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.00000000000000",
+      "right": "2.000000000000000000",
+      "expression": "-5.00000000000000/2.000000000000000000"
+    },
+    {
+      "index": 126,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.00000000000000",
+      "right": "2.000000000000000000",
+      "expression": "-(5.00000000000000/2.000000000000000000)"
+    },
+    {
+      "index": 127,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.000000000000000000",
+      "right": "2",
+      "expression": "5.000000000000000000/2"
+    },
+    {
+      "index": 128,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.000000000000000000",
+      "right": "2",
+      "expression": "-5.000000000000000000/2"
+    },
+    {
+      "index": 129,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.000000000000000000",
+      "right": "2",
+      "expression": "-(5.000000000000000000/2)"
+    },
+    {
+      "index": 130,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.000000000000000000",
+      "right": "02",
+      "expression": "5.000000000000000000/02"
+    },
+    {
+      "index": 131,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.000000000000000000",
+      "right": "02",
+      "expression": "-5.000000000000000000/02"
+    },
+    {
+      "index": 132,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.000000000000000000",
+      "right": "02",
+      "expression": "-(5.000000000000000000/02)"
+    },
+    {
+      "index": 133,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.000000000000000000",
+      "right": "2.0",
+      "expression": "5.000000000000000000/2.0"
+    },
+    {
+      "index": 134,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.000000000000000000",
+      "right": "2.0",
+      "expression": "-5.000000000000000000/2.0"
+    },
+    {
+      "index": 135,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.000000000000000000",
+      "right": "2.0",
+      "expression": "-(5.000000000000000000/2.0)"
+    },
+    {
+      "index": 136,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.000000000000000000",
+      "right": "2.00",
+      "expression": "5.000000000000000000/2.00"
+    },
+    {
+      "index": 137,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.000000000000000000",
+      "right": "2.00",
+      "expression": "-5.000000000000000000/2.00"
+    },
+    {
+      "index": 138,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.000000000000000000",
+      "right": "2.00",
+      "expression": "-(5.000000000000000000/2.00)"
+    },
+    {
+      "index": 139,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.000000000000000000",
+      "right": "2.000000",
+      "expression": "5.000000000000000000/2.000000"
+    },
+    {
+      "index": 140,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.000000000000000000",
+      "right": "2.000000",
+      "expression": "-5.000000000000000000/2.000000"
+    },
+    {
+      "index": 141,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.000000000000000000",
+      "right": "2.000000",
+      "expression": "-(5.000000000000000000/2.000000)"
+    },
+    {
+      "index": 142,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.000000000000000000",
+      "right": "2.00000000000000",
+      "expression": "5.000000000000000000/2.00000000000000"
+    },
+    {
+      "index": 143,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.000000000000000000",
+      "right": "2.00000000000000",
+      "expression": "-5.000000000000000000/2.00000000000000"
+    },
+    {
+      "index": 144,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.000000000000000000",
+      "right": "2.00000000000000",
+      "expression": "-(5.000000000000000000/2.00000000000000)"
+    },
+    {
+      "index": 145,
+      "group": "five-over-two",
+      "mode": "direct",
+      "left": "5.000000000000000000",
+      "right": "2.000000000000000000",
+      "expression": "5.000000000000000000/2.000000000000000000"
+    },
+    {
+      "index": 146,
+      "group": "five-over-two",
+      "mode": "leading-minus",
+      "left": "-5.000000000000000000",
+      "right": "2.000000000000000000",
+      "expression": "-5.000000000000000000/2.000000000000000000"
+    },
+    {
+      "index": 147,
+      "group": "five-over-two",
+      "mode": "group-minus",
+      "left": "5.000000000000000000",
+      "right": "2.000000000000000000",
+      "expression": "-(5.000000000000000000/2.000000000000000000)"
+    },
+    {
+      "index": 148,
+      "group": "controls",
+      "mode": "control",
+      "expression": "0/2",
+      "left": "0",
+      "right": "2"
+    },
+    {
+      "index": 149,
+      "group": "controls",
+      "mode": "control",
+      "expression": "-0/2",
+      "left": "-0",
+      "right": "2"
+    },
+    {
+      "index": 150,
+      "group": "controls",
+      "mode": "control",
+      "expression": "0.0/2",
+      "left": "0.0",
+      "right": "2"
+    },
+    {
+      "index": 151,
+      "group": "controls",
+      "mode": "control",
+      "expression": "-0.0/2",
+      "left": "-0.0",
+      "right": "2"
+    },
+    {
+      "index": 152,
+      "group": "controls",
+      "mode": "control",
+      "expression": "-(0/2)",
+      "left": "0",
+      "right": "2"
+    },
+    {
+      "index": 153,
+      "group": "controls",
+      "mode": "control",
+      "expression": "-(0.0/2)",
+      "left": "0.0",
+      "right": "2"
+    },
+    {
+      "index": 154,
+      "group": "controls",
+      "mode": "control",
+      "expression": "1/2",
+      "left": "1",
+      "right": "2"
+    },
+    {
+      "index": 155,
+      "group": "controls",
+      "mode": "control",
+      "expression": "1.00/2.00",
+      "left": "1.00",
+      "right": "2.00"
+    },
+    {
+      "index": 156,
+      "group": "controls",
+      "mode": "control",
+      "expression": "7/3",
+      "left": "7",
+      "right": "3"
+    },
+    {
+      "index": 157,
+      "group": "controls",
+      "mode": "control",
+      "expression": "-(7/3)",
+      "left": "7",
+      "right": "3"
+    },
+    {
+      "index": 158,
+      "group": "controls",
+      "mode": "control",
+      "expression": "7.00/3.00",
+      "left": "7.00",
+      "right": "3.00"
+    },
+    {
+      "index": 159,
+      "group": "controls",
+      "mode": "control",
+      "expression": "10/2",
+      "left": "10",
+      "right": "2"
+    },
+    {
+      "index": 160,
+      "group": "controls",
+      "mode": "control",
+      "expression": "100/2",
+      "left": "100",
+      "right": "2"
+    },
+    {
+      "index": 161,
+      "group": "controls",
+      "mode": "control",
+      "expression": "9999999999/2",
+      "left": "9999999999",
+      "right": "2"
+    },
+    {
+      "index": 162,
+      "group": "controls",
+      "mode": "control",
+      "expression": "0.000000000000000001/2",
+      "left": "0.000000000000000001",
+      "right": "2"
+    },
+    {
+      "index": 163,
+      "group": "controls",
+      "mode": "control",
+      "expression": "5/-2",
+      "left": "5",
+      "right": "-2"
+    },
+    {
+      "index": 164,
+      "group": "controls",
+      "mode": "control",
+      "expression": "5.00/-2.00",
+      "left": "5.00",
+      "right": "-2.00"
+    },
+    {
+      "index": 165,
+      "group": "controls",
+      "mode": "control",
+      "expression": "-5.00/-2.00",
+      "left": "-5.00",
+      "right": "-2.00"
+    },
+    {
+      "index": 166,
+      "group": "controls",
+      "mode": "control",
+      "expression": "+(5/2)",
+      "left": "5",
+      "right": "2"
+    },
+    {
+      "index": 167,
+      "group": "controls",
+      "mode": "control",
+      "expression": "-((5/2))",
+      "left": "5",
+      "right": "2"
+    },
+    {
+      "index": 168,
+      "group": "controls",
+      "mode": "control",
+      "expression": "-(+(5/2))",
+      "left": "5",
+      "right": "2"
+    },
+    {
+      "index": 169,
+      "group": "controls",
+      "mode": "control",
+      "expression": "-(-5/2)",
+      "left": "-5",
+      "right": "2"
+    },
+    {
+      "index": 170,
+      "group": "controls",
+      "mode": "control",
+      "expression": "(5/2)+0.00",
+      "left": "5/2",
+      "right": "0.00"
+    },
+    {
+      "index": 171,
+      "group": "controls",
+      "mode": "control",
+      "expression": "-((5/2)+0.00)",
+      "left": "5/2",
+      "right": "0.00"
+    },
+    {
+      "index": 172,
+      "group": "controls",
+      "mode": "control",
+      "expression": "(5.00/2.00)*1.00",
+      "left": "5.00/2.00",
+      "right": "1.00"
+    },
+    {
+      "index": 173,
+      "group": "controls",
+      "mode": "control",
+      "expression": "-((5.00/2.00)*1.00)",
+      "left": "5.00/2.00",
+      "right": "1.00"
+    },
+    {
+      "index": 174,
+      "group": "controls",
+      "mode": "control",
+      "expression": "(5/2)/2",
+      "left": "5/2",
+      "right": "2"
+    },
+    {
+      "index": 175,
+      "group": "controls",
+      "mode": "control",
+      "expression": "5/(2/2)",
+      "left": "5",
+      "right": "2/2"
+    },
+    {
+      "index": 176,
+      "group": "controls",
+      "mode": "control",
+      "expression": "CFNCLONE(5)/2",
+      "left": "CFNCLONE(5)",
+      "right": "2"
+    },
+    {
+      "index": 177,
+      "group": "controls",
+      "mode": "control",
+      "expression": "5/CFNCLONE(2)",
+      "left": "5",
+      "right": "CFNCLONE(2)"
+    },
+    {
+      "index": 178,
+      "group": "controls",
+      "mode": "control",
+      "expression": "iFive/iTwo",
+      "left": "iFive",
+      "right": "iTwo"
+    },
+    {
+      "index": 179,
+      "group": "controls",
+      "mode": "control",
+      "expression": "nFive/nTwo",
+      "left": "nFive",
+      "right": "nTwo"
+    },
+    {
+      "index": 180,
+      "group": "controls",
+      "mode": "control",
+      "expression": "ABS(5/2)",
+      "left": "5",
+      "right": "2"
+    },
+    {
+      "index": 181,
+      "group": "controls",
+      "mode": "control",
+      "expression": "IIF(.T.,5/2,0)",
+      "left": "5",
+      "right": "2"
+    },
+    {
+      "index": 182,
+      "group": "controls",
+      "mode": "control",
+      "expression": "EVALUATE(\"5/2\")",
+      "left": "5",
+      "right": "2"
+    },
+    {
+      "index": 183,
+      "group": "controls",
+      "mode": "control",
+      "expression": "(CFNCLONE(5)/2)+(5/2)",
+      "left": "CFNCLONE(5)/2",
+      "right": "5/2"
+    }
+  ],
+  "limitation": "Native observation inventory, not a production precision oracle; controls include expressions outside plain constant division."
+}

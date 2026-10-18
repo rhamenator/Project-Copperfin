@@ -1,5 +1,24 @@
 # Type-aware Numeric division-context recovery
 
+Latest: [constant-only division recovery](constant-recovery.md) after merged
+PR7203's bounded runtime increment. Paired3,660 observations/run, actual0,
+typed repeat/compiler-EVAL differences0 and retained audit0; raw differences
+only independently audited unused slots. Source-width, grouped-minus, scale
+saturation and native Integer-result constraints remain unresolved by a general
+constant-folding contract. No new product code or constant parity claim.
+The [intrinsic support contract](constant-intrinsic-contract.md) additionally
+retains paired12,800 payload/sign/width observations and a640-row expected header
+independently checked against native records; materialization/parser hooks remain
+unimplemented. `audit-constant-intrinsic.cjs --check-header` reproduces that check.
+The [pre-hook materialization contract](constant-materialization-contract.md)
+and [public verification chronology](constant-public-verification.md) retain
+complete-expression/callback timing and explicit pre-hook verification gates.
+They add paired3,000 boundary,320 single-evaluation side-effect and80 ungrouped
+continuation-timing observations.
+`emit-constant-public-header.cjs --check` independently checks846 captured rows/
+five settings (798 current-producer frontier;48 explicitly retained producer gaps).
+Public ORIGINAL-fail tests and parser integration remain pending, not accepted.
+
 Latest: [input-verified runtime intervention checkpoint](runtime-recovery.md),
 paired1,620 values/run and standalone audit0; positive5/2 candidate only, not a
 general division algorithm or production acceptance. Earlier observations and

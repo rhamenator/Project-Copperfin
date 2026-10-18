@@ -612,9 +612,27 @@
                 throw_currency_out_of_range();
             }
 
-            PrgValue parse_expression()
+            static void materialize_constant_numeric(
+                PrgValue& value, const std::optional<PrgNumericMetadata>& prepared)
             {
-                return parse_or();
+                // Never attach a child's pending descriptor to an unknown,
+                // NULL, non-Number or unsupported operator result.
+                if (value.kind == PrgValueKind::number && !value.is_null &&
+                    value.numeric_metadata && prepared)
+                    value.numeric_metadata = prepared;
+            }
+
+            PrgValue parse_expression(bool materialize = true)
+            {
+                PrgValue value = parse_or();
+                if (materialize)
+                {
+                    materialize_constant_numeric(value, constant_materialized_metadata_);
+                    constant_materialized_metadata_.reset();
+                }
+                else if (value.kind != PrgValueKind::number || value.is_null || !value.numeric_metadata)
+                    constant_materialized_metadata_.reset();
+                return value;
             }
 
             PrgValue parse_or()
@@ -988,6 +1006,7 @@
                 while (true)
                 {
                     skip_whitespace();
+                    const std::size_t operation_position = position_;
                     if (match("*"))
                     {
                         PrgValue right = parse_unary();
@@ -1012,10 +1031,19 @@
                         {
                             left = make_number_value(value_as_number(left) * value_as_number(right));
                         }
+                        constant_materialized_metadata_.reset();
                     }
                     else if (match("/"))
                     {
+                        const auto left_prepared = constant_materialized_metadata_;
                         PrgValue right = parse_unary();
+                        const auto right_prepared = constant_materialized_metadata_;
+                        constant_materialized_metadata_.reset();
+                        if (numeric_runtime_primary_)
+                        {
+                            materialize_constant_numeric(left, left_prepared);
+                            materialize_constant_numeric(right, right_prepared);
+                        }
                         if (suppress_evaluation_)
                         {
                             left = make_empty_value();
@@ -1051,6 +1079,32 @@
                                     left, right, result.number_value, set_callback_("DECIMALS"),
                                     numeric_runtime_primary_);
                             }
+                            else if (!numeric_runtime_primary_)
+                            {
+                                // Intrinsic attributes flow through pure folding;
+                                // only semantic runtime boundaries consume the floor.
+                                const auto intrinsic = constant_division_intrinsic(
+                                    left, right, result.number_value, true);
+                                if (intrinsic)
+                                {
+                                    result.number_value = intrinsic->payload;
+                                    result.numeric_metadata = intrinsic->metadata;
+                                    if (expression_continuation_ != nullptr)
+                                    {
+                                        auto& checkpoints = expression_continuation_->constant_division_precision;
+                                        auto found = checkpoints.find(operation_position);
+                                        if (found == checkpoints.end())
+                                            found = checkpoints.emplace(operation_position,
+                                                materialized_constant_division_metadata(
+                                                    intrinsic->metadata, set_callback_("DECIMALS"))).first;
+                                        constant_materialized_metadata_ = found->second;
+                                    }
+                                    else
+                                        constant_materialized_metadata_ = materialized_constant_division_metadata(
+                                            intrinsic->metadata, set_callback_("DECIMALS"));
+                                    if (!constant_materialized_metadata_) result.numeric_metadata.reset();
+                                }
+                            }
                             left = std::move(result);
                         }
                     }
@@ -1083,6 +1137,7 @@
                             }
                             left = make_number_value(remainder);
                         }
+                        constant_materialized_metadata_.reset();
                     }
                     else
                     {
@@ -1121,6 +1176,9 @@
                 {
                     ScopedNumericExpressionContext operand_context(numeric_runtime_primary_);
                     PrgValue operand = parse_unary();
+                    // Constant grouped minus uses intrinsic precision. Runtime
+                    // function returns have already materialized at their boundary.
+                    constant_materialized_metadata_.reset();
                     if (suppress_evaluation_)
                     {
                         return make_empty_value();
@@ -1181,6 +1239,7 @@
                 if (match("**") || match("^"))
                 {
                     PrgValue right = parse_unary();
+                    constant_materialized_metadata_.reset();
                     if (suppress_evaluation_)
                     {
                         return make_empty_value();
@@ -1198,6 +1257,7 @@
             PrgValue parse_primary()
             {
                 ScopedNumericExpressionContext primary_context(numeric_runtime_primary_);
+                constant_materialized_metadata_.reset();
                 skip_whitespace();
                 const std::size_t primary_start = position_;
                 if (!suppress_evaluation_ && expression_continuation_ != nullptr)
@@ -1208,6 +1268,7 @@
                     {
                         position_ = checkpoint->second.end;
                         numeric_runtime_primary_ = checkpoint->second.contains_runtime_primary;
+                        constant_materialized_metadata_ = checkpoint->second.constant_materialized_metadata;
                         return checkpoint->second.value;
                     }
                 }
@@ -1227,7 +1288,8 @@
                 if (!suppress_evaluation_ && expression_continuation_ != nullptr)
                 {
                     expression_continuation_->primary_checkpoints[primary_start] =
-                        {.end = position_, .value = value, .contains_runtime_primary = numeric_runtime_primary_};
+                        {.end = position_, .value = value, .contains_runtime_primary = numeric_runtime_primary_,
+                         .constant_materialized_metadata = constant_materialized_metadata_};
                 }
                 return value;
             }
@@ -1237,7 +1299,7 @@
                 skip_whitespace();
                 if (match("("))
                 {
-                    PrgValue value = parse_expression();
+                    PrgValue value = parse_expression(false);
                     match(")");
                     return value;
                 }
@@ -4107,6 +4169,7 @@
                     if (expression_continuation_ != nullptr)
                     {
                         expression_continuation_->primary_checkpoints.clear();
+                        expression_continuation_->constant_division_precision.clear();
                     }
                     const PrgValue expanded_value = parse_unary();
                     if (expanded_value.kind == PrgValueKind::empty &&
@@ -4620,6 +4683,7 @@
             bool exact_string_compare_ = false;
             bool suppress_evaluation_ = false;
             bool numeric_runtime_primary_ = false;
+            std::optional<PrgNumericMetadata> constant_materialized_metadata_;
             std::size_t position_ = 0;
         };
 

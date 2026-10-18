@@ -13,3 +13,11 @@ runtime-public-grid.prg -text whitespace=-blank-at-eof
 payload-captures/*.gz -text -diff
 public-captures/*.out -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 public-captures/*-results.txt -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+constant-captures/*.gz -text -diff
+constant-payload-*-captures/*.gz -text -diff
+constant-boundary-captures/*.gz -text -diff
+constant-effects-captures/*.gz -text -diff
+constant-effects-captures/format-first/*.gz -text -diff
+constant-effects-captures/format-first/*.FXP -text
+constant-continuation-captures/*.gz -text -diff
+constant-public-evidence/*.gz -text -diff

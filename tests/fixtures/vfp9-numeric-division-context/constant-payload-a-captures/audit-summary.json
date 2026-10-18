@@ -1,0 +1,24 @@
+{
+  "casesPerRun": 6400,
+  "actualSuccessfulValues": 6400,
+  "errors": 0,
+  "batch": "a",
+  "expressions": 320,
+  "settings": [
+    0,
+    2,
+    6,
+    14,
+    18
+  ],
+  "compiledVersusEvalDifferences": 0,
+  "documentedFieldsRepeatEqual": true,
+  "rawByteEqual": false,
+  "rawDifferentRows": 1,
+  "rawDifferencesConfinedToUnusedSlots": {
+    "5:49:real": 1
+  },
+  "firstSha256": "35f3f6857d8405b8e34a819f1268a66a557cebc774eac16db190a08f3ca20243",
+  "repeatSha256": "da5ba6f42992b4c2ec09d427adbb414f3e9dfd56776c879f58af7c3894c3e70c",
+  "limitation": "Native observation recovery only. No constant-folding algorithm or Copperfin acceptance inferred."
+}

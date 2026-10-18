@@ -1,0 +1,14 @@
+{
+  "casesPerRun": 3000,
+  "successfulValues": 3000,
+  "errors": 0,
+  "expressions": 150,
+  "documentedFieldsRepeatEqual": true,
+  "compiledVersusEvaluateDifferences": 0,
+  "rawByteEqual": true,
+  "rawDifferentRows": 0,
+  "rawDifferencesConfinedToUnusedSlots": {},
+  "firstSha256": "402c38e12f268ac9392c046437616451610afac4fe94fd93b09153e367b7f75e",
+  "repeatSha256": "402c38e12f268ac9392c046437616451610afac4fe94fd93b09153e367b7f75e",
+  "limitation": "Complete expression observations only. Separately evaluated child metadata is not an operand oracle for an enclosing folded tree."
+}
