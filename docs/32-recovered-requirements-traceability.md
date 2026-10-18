@@ -66,6 +66,27 @@ Additional intrinsic support phase:
 | `RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-INTRINSIC-001` | Constant-context parent, direct owner Numeric policy, admitted #5611/#6776/#7189; [signed pre-code contract](../tests/fixtures/vfp9-numeric-division-context/constant-intrinsic-contract.md) and640 native rows in checkpoint37a3acec5 before support. | Pure `prg_numeric_constant_division_intrinsic.h`: known typed whole-payload constant-literal division, intrinsic metadata/native storage/folded positive zero; no SET floor, source matching, persistent provenance, allocation, narrowing or replay. Now called only by the bounded constant path in `ExpressionParser::parse_multiplicative`; unknown/unsupported inputs stay unknown. | Paired12800 payload/sign/width native values/run and combined15740 bounded observations; audits0, raw differences only audited unused Integer slots; rejected560-mismatch candidate retained. Native-only header check640 unchanged rows. [Unused support chronology](../tests/fixtures/vfp9-numeric-division-context/constant-intrinsic-support.md) precedes [signed public ORIGINAL-fail and SAME-pass integration](../tests/fixtures/vfp9-numeric-division-context/constant-public-verification.md). GNU Werror and Clang ASan/UBSan/float-cast-overflow/no-recovery helper compile/run0, including expanded materialization bounds. | MEDIUM DQ/DV and existing hazards in contracts; modes/conversions/limits unchanged. Development self-review/automation only. `bounded development integration verified; hosted/review/merge gates and wider domains remain required` |
 | `RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-MATERIALIZATION-001` | Intrinsic/typed division parent, direct owner policy, admitted #5611/#6776/#7189; [pre-hook timing contract](../tests/fixtures/vfp9-numeric-division-context/constant-materialization-contract.md). | Pure `prg_numeric_constant_division_materialization.h`; `ExpressionParser` intrinsic/prepared state and expression/argument/runtime boundaries, `ExpressionPrimaryCheckpoint` plus completed-node precision in statement `ExpressionContinuation`, macro invalidation and unsupported-result guards. No persistent origin, replay or delayed setting re-query; bounded producers/whole operands only. | Paired3000 boundary,320 setting-mutating and80 ungrouped native values/run, actual0/all values/callbacks1/audits0. Initial formatter/count diagnostics retained. Native-only846-row header (798 selected,48 retained gaps). [Signed ORIGINAL/SAME chronology](../tests/fixtures/vfp9-numeric-division-context/constant-public-verification.md): ORIGINAL CTest8,15,966 descriptor +660 signed-zero failures, evaluation/control0; first wired SAME CTest0,5/5 passed, descriptor/bits/evaluation/control0. Frozen public tests/header/contract/registration hashes0, GNU Werror and explicit Clang sanitizer helper0. | MEDIUM DQ/DV delta/misuse/walkthrough/rollback in contract; existing hazards and checked limits unchanged. Development self-review/automation only. `bounded local integration verified; broad/hosted/exact-head review/strict/resolved-conversation gates and retained compatibility work remain required` |
 
+Non-whole follow-on `RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-NONWHOLE-001`:
+[native checkpoint and public pre-code contract](../tests/fixtures/vfp9-numeric-division-context/nonwhole-recovery.md),
+baseline main`ef3ea326f`. Paired11,560 actual native observations/run, process0/
+empty stderr/all values/no errors, raw byte equality and independent typed/
+payload/compiled-EVAL audit0. Post-capture hypothesis agrees with10,880 core
+rows ONLY when supplied actual native literal inputs; two literal controls differ
+from independent nearest-binary64 parsing. No producer fix/tolerance inferred.
+Native-only578-row expected header (574 admitted, four retained gaps) and public
+paused-runtime regression/registrations precede production changes. ORIGINAL,
+continuation recovery, implementation/SAME and hosted integration remain pending.
+Existing data-corruption/runtime-crash hazards, checked bounds and #6776 modes
+remain unchanged. `gap; non-whole recovery, not compatibility completion`.
+
+PR7204 materialization acceptance supersedes its earlier local-only gate status:
+exact head`3bcb24d32e50aa3607ce8f6971edeca31d964206` merged as`ef3ea326f`,
+local29/29 and hosted sanitizer39086065459/job117552782565/artifact12120992964
+with30 unique actual executions/no failures/errors/skips including both new names.
+Verified clean exact-head Codex completion after Claude-FIRST, full threads0,
+strict11 required checks green and normal merge; acceptance comment6244388045.
+See the checkpoint's explicit limits. This does not complete Numeric or ListItem.
+
 Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
 [actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)
 at mainb37ddf7241; paired1,620 values/run, actual0/empty stderr/no errors,

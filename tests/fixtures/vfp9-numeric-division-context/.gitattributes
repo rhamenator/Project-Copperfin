@@ -21,3 +21,6 @@ constant-effects-captures/format-first/*.gz -text -diff
 constant-effects-captures/format-first/*.FXP -text
 constant-continuation-captures/*.gz -text -diff
 constant-public-evidence/*.gz -text -diff
+nonwhole-captures/*.gz -text -diff
+nonwhole-captures/*.out -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+nonwhole-captures/*-results.txt -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

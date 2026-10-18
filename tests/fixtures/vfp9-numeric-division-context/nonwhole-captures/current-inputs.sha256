@@ -1,0 +1,8 @@
+7edd9b7fd5fc4e6553974488160dd49474214028419e62c02ecd676454943ba8  tests/fixtures/vfp9-numeric-division-context/nonwhole-grid.prg
+4cd00a1516a0390794c8ffd0ca0070556a10e75e8c4b7e558b108eb84bf99a7e  tests/fixtures/vfp9-numeric-division-context/nonwhole-grid.FXP
+34961c85491513b34eaef1e69bec6ab5f967360107d17e228086f0f8b3a1f8c9  tests/fixtures/vfp9-numeric-division-context/nonwhole-grid-cases.json
+365e23d846fe8fb0c21983e89c07e7af4ddb5a9ecfbf68457b0136e4aa4303f1  tests/fixtures/vfp9-numeric-division-context/emit-nonwhole-grid.cjs
+dc76536271b6bc934bb026c989863fbfebc44f21dd44087d5c35510628f276a2  tests/fixtures/vfp9-numeric-division-context/audit-nonwhole-grid.cjs
+ef98e13bb8653d54c925944277adeec6ab4bc45c3382410dbbb76c4bef50a099  tests/fixtures/vfp9-numeric-division-context/emit-nonwhole-public-header.cjs
+ea8d4e576c245efeef42c530a15ec915f5bfe07fd6033c69d040c37d4e547ba7  tests/fixtures/vfp9-numeric-division-context/nonwhole-public-expected.h
+bed0218fea78f87480f212ecd60d7c7c5457d17daef767d225e8bf3025047a3c  tests/fixtures/vfp9-numeric-division-context/analyze-nonwhole-candidate.cjs

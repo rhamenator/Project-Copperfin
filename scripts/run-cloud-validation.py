@@ -27,6 +27,7 @@ TARGETS = {
                      "test_prg_numeric_real_assignment_helper", "test_prg_engine_numeric_real_assignment",
                      "test_prg_numeric_runtime_division_helper", "test_prg_engine_numeric_runtime_division",
                      "test_prg_numeric_constant_division_intrinsic_helper", "test_prg_engine_numeric_constant_division",
+                     "test_prg_engine_numeric_nonwhole_division",
                      "test_prg_engine_work_areas", "test_xasset_methods",
                      "test_prg_engine_database_lifecycle",
                      "test_prg_engine_runtime_surface_functions_buffering", "test_prg_engine_data_io",
@@ -132,6 +133,7 @@ def main():
                             "test_prg_numeric_real_assignment_helper|test_prg_engine_numeric_real_assignment|"
                             "test_prg_numeric_runtime_division_helper|test_prg_engine_numeric_runtime_division|"
                             "test_prg_numeric_constant_division_intrinsic_helper|test_prg_engine_numeric_constant_division|"
+                            "test_prg_engine_numeric_nonwhole_division|"
                             "test_prg_engine_work_areas|test_xasset_methods|"
                             "test_prg_engine_database_lifecycle|"
                             "test_prg_engine_runtime_surface_functions_buffering|test_prg_engine_data_io|"
