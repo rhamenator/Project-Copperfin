@@ -1,0 +1,8 @@
+Executed from the literal slice worktree after the final helper/test source freeze.
+Each compiler completed before its executable was run; all four statuses are zero.
+
+/usr/bin/c++ -std=c++20 -O2 -g0 -ffp-contract=fast -Wall -Wextra -Wpedantic -Werror -I include tests/test_prg_numeric_literal_payload_helper.cpp -o build/literal-payload-native/unused-helper/gnu
+build/literal-payload-native/unused-helper/gnu
+
+/usr/bin/clang++ -std=c++20 -O3 -g0 -ffp-contract=fast -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined,float-cast-overflow -fno-sanitize-recover=all -fno-omit-frame-pointer -I include tests/test_prg_numeric_literal_payload_helper.cpp -o build/literal-payload-native/unused-helper/clang-sanitized
+build/literal-payload-native/unused-helper/clang-sanitized

@@ -6,5 +6,7 @@
   contract and1,193-row native-only public ORIGINAL regression before support
   or producer hooks. Actual unchanged-runtime ORIGINAL isolates2,432 native
   payload failures with descriptor/evaluation/control0, using verified retained
-  baseline libraries without a runtime rebuild. No Numeric/division/ListItem
+  baseline libraries without a runtime rebuild. Unused bounded support passes
+  native GNU/Clang optimized and explicit sanitizer/rounding guard checks before
+  any producer hookup. No Numeric/division/ListItem
   parity or completed-issue claim.
