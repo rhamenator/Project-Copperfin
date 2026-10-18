@@ -1,0 +1,712 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-SMALL-DIVISOR-001",
+  "separateTrackingIssue": 7210,
+  "actualReadbacks": 300,
+  "displayMismatches": 70,
+  "metadataMismatches": 0,
+  "payloadMismatches": 0,
+  "nativeSource": "Existing independent paired compiled/EVALUATE small-divisor literal controls, not a new native run or a product-derived expected table.",
+  "sha256": "f9f1f6cddc052f67e6798ed999c1f43951346d9d88df5efdf7388c5f11c0b3db",
+  "differences": [
+    {
+      "mode": "COPPERFIN",
+      "decimals": 0,
+      "fixed": "OFF",
+      "expression": "0.5",
+      "nativeHex": "302E35",
+      "actualHex": "30",
+      "nativeText": "0.5",
+      "actualText": "0"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 0,
+      "fixed": "OFF",
+      "expression": "0.25",
+      "nativeHex": "302E3235",
+      "actualHex": "30",
+      "nativeText": "0.25",
+      "actualText": "0"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 0,
+      "fixed": "OFF",
+      "expression": "2.50",
+      "nativeHex": "322E3530",
+      "actualHex": "32",
+      "nativeText": "2.50",
+      "actualText": "2"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 0,
+      "fixed": "OFF",
+      "expression": "0.50",
+      "nativeHex": "302E3530",
+      "actualHex": "30",
+      "nativeText": "0.50",
+      "actualText": "0"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 0,
+      "fixed": "OFF",
+      "expression": "0.3",
+      "nativeHex": "302E33",
+      "actualHex": "30",
+      "nativeText": "0.3",
+      "actualText": "0"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 0,
+      "fixed": "OFF",
+      "expression": "1.234567890123456789",
+      "nativeHex": "312E323334353637383930313233343537303030",
+      "actualHex": "31",
+      "nativeText": "1.234567890123457000",
+      "actualText": "1"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 0,
+      "fixed": "OFF",
+      "expression": "00.50",
+      "nativeHex": "302E3530",
+      "actualHex": "30",
+      "nativeText": "0.50",
+      "actualText": "0"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 0,
+      "fixed": "OFF",
+      "expression": "0.125",
+      "nativeHex": "302E313235",
+      "actualHex": "30",
+      "nativeText": "0.125",
+      "actualText": "0"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 0,
+      "fixed": "ON",
+      "expression": "0.5",
+      "nativeHex": "31",
+      "actualHex": "30",
+      "nativeText": "1",
+      "actualText": "0"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 0,
+      "fixed": "ON",
+      "expression": "2.50",
+      "nativeHex": "33",
+      "actualHex": "32",
+      "nativeText": "3",
+      "actualText": "2"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 0,
+      "fixed": "ON",
+      "expression": "0.50",
+      "nativeHex": "31",
+      "actualHex": "30",
+      "nativeText": "1",
+      "actualText": "0"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 0,
+      "fixed": "ON",
+      "expression": "00.50",
+      "nativeHex": "31",
+      "actualHex": "30",
+      "nativeText": "1",
+      "actualText": "0"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 2,
+      "fixed": "OFF",
+      "expression": "2.50",
+      "nativeHex": "322E3530",
+      "actualHex": "322E35",
+      "nativeText": "2.50",
+      "actualText": "2.5"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 2,
+      "fixed": "OFF",
+      "expression": "0.50",
+      "nativeHex": "302E3530",
+      "actualHex": "302E35",
+      "nativeText": "0.50",
+      "actualText": "0.5"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 2,
+      "fixed": "OFF",
+      "expression": "1.234567890123456789",
+      "nativeHex": "312E323334353637383930313233343537303030",
+      "actualHex": "312E3233",
+      "nativeText": "1.234567890123457000",
+      "actualText": "1.23"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 2,
+      "fixed": "OFF",
+      "expression": "00.50",
+      "nativeHex": "302E3530",
+      "actualHex": "302E35",
+      "nativeText": "0.50",
+      "actualText": "0.5"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 2,
+      "fixed": "OFF",
+      "expression": "0.125",
+      "nativeHex": "302E313235",
+      "actualHex": "302E3132",
+      "nativeText": "0.125",
+      "actualText": "0.12"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 2,
+      "fixed": "ON",
+      "expression": "0.125",
+      "nativeHex": "302E3133",
+      "actualHex": "302E3132",
+      "nativeText": "0.13",
+      "actualText": "0.12"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 6,
+      "fixed": "OFF",
+      "expression": "2.50",
+      "nativeHex": "322E3530",
+      "actualHex": "322E35",
+      "nativeText": "2.50",
+      "actualText": "2.5"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 6,
+      "fixed": "OFF",
+      "expression": "0.50",
+      "nativeHex": "302E3530",
+      "actualHex": "302E35",
+      "nativeText": "0.50",
+      "actualText": "0.5"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 6,
+      "fixed": "OFF",
+      "expression": "1.234567890123456789",
+      "nativeHex": "312E323334353637383930313233343537303030",
+      "actualHex": "312E323334353638",
+      "nativeText": "1.234567890123457000",
+      "actualText": "1.234568"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 6,
+      "fixed": "OFF",
+      "expression": "00.50",
+      "nativeHex": "302E3530",
+      "actualHex": "302E35",
+      "nativeText": "0.50",
+      "actualText": "0.5"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 14,
+      "fixed": "OFF",
+      "expression": "2.50",
+      "nativeHex": "322E3530",
+      "actualHex": "322E35",
+      "nativeText": "2.50",
+      "actualText": "2.5"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 14,
+      "fixed": "OFF",
+      "expression": "0.50",
+      "nativeHex": "302E3530",
+      "actualHex": "302E35",
+      "nativeText": "0.50",
+      "actualText": "0.5"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 14,
+      "fixed": "OFF",
+      "expression": "1.234567890123456789",
+      "nativeHex": "312E323334353637383930313233343537303030",
+      "actualHex": "312E3233343536373839303132333436",
+      "nativeText": "1.234567890123457000",
+      "actualText": "1.23456789012346"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 14,
+      "fixed": "OFF",
+      "expression": "00.50",
+      "nativeHex": "302E3530",
+      "actualHex": "302E35",
+      "nativeText": "0.50",
+      "actualText": "0.5"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 18,
+      "fixed": "OFF",
+      "expression": "2.50",
+      "nativeHex": "322E3530",
+      "actualHex": "322E35",
+      "nativeText": "2.50",
+      "actualText": "2.5"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 18,
+      "fixed": "OFF",
+      "expression": "0.50",
+      "nativeHex": "302E3530",
+      "actualHex": "302E35",
+      "nativeText": "0.50",
+      "actualText": "0.5"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 18,
+      "fixed": "OFF",
+      "expression": "0.3",
+      "nativeHex": "302E33",
+      "actualHex": "302E323939393939393939393939393939393839",
+      "nativeText": "0.3",
+      "actualText": "0.299999999999999989"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 18,
+      "fixed": "OFF",
+      "expression": "0.000000000000000001",
+      "nativeHex": "30",
+      "actualHex": "302E303030303030303030303030303030303031",
+      "nativeText": "0",
+      "actualText": "0.000000000000000001"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 18,
+      "fixed": "OFF",
+      "expression": "1.234567890123456789",
+      "nativeHex": "312E323334353637383930313233343537303030",
+      "actualHex": "312E323334353637383930313233343536393132",
+      "nativeText": "1.234567890123457000",
+      "actualText": "1.234567890123456912"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 18,
+      "fixed": "OFF",
+      "expression": "00.50",
+      "nativeHex": "302E3530",
+      "actualHex": "302E35",
+      "nativeText": "0.50",
+      "actualText": "0.5"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 18,
+      "fixed": "ON",
+      "expression": "0.3",
+      "nativeHex": "302E333030303030303030303030303030303030",
+      "actualHex": "302E323939393939393939393939393939393839",
+      "nativeText": "0.300000000000000000",
+      "actualText": "0.299999999999999989"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 18,
+      "fixed": "ON",
+      "expression": "0.000000000000000001",
+      "nativeHex": "302E303030303030303030303030303030303030",
+      "actualHex": "302E303030303030303030303030303030303031",
+      "nativeText": "0.000000000000000000",
+      "actualText": "0.000000000000000001"
+    },
+    {
+      "mode": "COPPERFIN",
+      "decimals": 18,
+      "fixed": "ON",
+      "expression": "1.234567890123456789",
+      "nativeHex": "312E323334353637383930313233343537303030",
+      "actualHex": "312E323334353637383930313233343536393132",
+      "nativeText": "1.234567890123457000",
+      "actualText": "1.234567890123456912"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 0,
+      "fixed": "OFF",
+      "expression": "0.5",
+      "nativeHex": "302E35",
+      "actualHex": "30",
+      "nativeText": "0.5",
+      "actualText": "0"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 0,
+      "fixed": "OFF",
+      "expression": "0.25",
+      "nativeHex": "302E3235",
+      "actualHex": "30",
+      "nativeText": "0.25",
+      "actualText": "0"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 0,
+      "fixed": "OFF",
+      "expression": "2.50",
+      "nativeHex": "322E3530",
+      "actualHex": "32",
+      "nativeText": "2.50",
+      "actualText": "2"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 0,
+      "fixed": "OFF",
+      "expression": "0.50",
+      "nativeHex": "302E3530",
+      "actualHex": "30",
+      "nativeText": "0.50",
+      "actualText": "0"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 0,
+      "fixed": "OFF",
+      "expression": "0.3",
+      "nativeHex": "302E33",
+      "actualHex": "30",
+      "nativeText": "0.3",
+      "actualText": "0"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 0,
+      "fixed": "OFF",
+      "expression": "1.234567890123456789",
+      "nativeHex": "312E323334353637383930313233343537303030",
+      "actualHex": "31",
+      "nativeText": "1.234567890123457000",
+      "actualText": "1"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 0,
+      "fixed": "OFF",
+      "expression": "00.50",
+      "nativeHex": "302E3530",
+      "actualHex": "30",
+      "nativeText": "0.50",
+      "actualText": "0"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 0,
+      "fixed": "OFF",
+      "expression": "0.125",
+      "nativeHex": "302E313235",
+      "actualHex": "30",
+      "nativeText": "0.125",
+      "actualText": "0"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 0,
+      "fixed": "ON",
+      "expression": "0.5",
+      "nativeHex": "31",
+      "actualHex": "30",
+      "nativeText": "1",
+      "actualText": "0"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 0,
+      "fixed": "ON",
+      "expression": "2.50",
+      "nativeHex": "33",
+      "actualHex": "32",
+      "nativeText": "3",
+      "actualText": "2"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 0,
+      "fixed": "ON",
+      "expression": "0.50",
+      "nativeHex": "31",
+      "actualHex": "30",
+      "nativeText": "1",
+      "actualText": "0"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 0,
+      "fixed": "ON",
+      "expression": "00.50",
+      "nativeHex": "31",
+      "actualHex": "30",
+      "nativeText": "1",
+      "actualText": "0"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 2,
+      "fixed": "OFF",
+      "expression": "2.50",
+      "nativeHex": "322E3530",
+      "actualHex": "322E35",
+      "nativeText": "2.50",
+      "actualText": "2.5"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 2,
+      "fixed": "OFF",
+      "expression": "0.50",
+      "nativeHex": "302E3530",
+      "actualHex": "302E35",
+      "nativeText": "0.50",
+      "actualText": "0.5"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 2,
+      "fixed": "OFF",
+      "expression": "1.234567890123456789",
+      "nativeHex": "312E323334353637383930313233343537303030",
+      "actualHex": "312E3233",
+      "nativeText": "1.234567890123457000",
+      "actualText": "1.23"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 2,
+      "fixed": "OFF",
+      "expression": "00.50",
+      "nativeHex": "302E3530",
+      "actualHex": "302E35",
+      "nativeText": "0.50",
+      "actualText": "0.5"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 2,
+      "fixed": "OFF",
+      "expression": "0.125",
+      "nativeHex": "302E313235",
+      "actualHex": "302E3132",
+      "nativeText": "0.125",
+      "actualText": "0.12"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 2,
+      "fixed": "ON",
+      "expression": "0.125",
+      "nativeHex": "302E3133",
+      "actualHex": "302E3132",
+      "nativeText": "0.13",
+      "actualText": "0.12"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 6,
+      "fixed": "OFF",
+      "expression": "2.50",
+      "nativeHex": "322E3530",
+      "actualHex": "322E35",
+      "nativeText": "2.50",
+      "actualText": "2.5"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 6,
+      "fixed": "OFF",
+      "expression": "0.50",
+      "nativeHex": "302E3530",
+      "actualHex": "302E35",
+      "nativeText": "0.50",
+      "actualText": "0.5"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 6,
+      "fixed": "OFF",
+      "expression": "1.234567890123456789",
+      "nativeHex": "312E323334353637383930313233343537303030",
+      "actualHex": "312E323334353638",
+      "nativeText": "1.234567890123457000",
+      "actualText": "1.234568"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 6,
+      "fixed": "OFF",
+      "expression": "00.50",
+      "nativeHex": "302E3530",
+      "actualHex": "302E35",
+      "nativeText": "0.50",
+      "actualText": "0.5"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 14,
+      "fixed": "OFF",
+      "expression": "2.50",
+      "nativeHex": "322E3530",
+      "actualHex": "322E35",
+      "nativeText": "2.50",
+      "actualText": "2.5"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 14,
+      "fixed": "OFF",
+      "expression": "0.50",
+      "nativeHex": "302E3530",
+      "actualHex": "302E35",
+      "nativeText": "0.50",
+      "actualText": "0.5"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 14,
+      "fixed": "OFF",
+      "expression": "1.234567890123456789",
+      "nativeHex": "312E323334353637383930313233343537303030",
+      "actualHex": "312E3233343536373839303132333436",
+      "nativeText": "1.234567890123457000",
+      "actualText": "1.23456789012346"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 14,
+      "fixed": "OFF",
+      "expression": "00.50",
+      "nativeHex": "302E3530",
+      "actualHex": "302E35",
+      "nativeText": "0.50",
+      "actualText": "0.5"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 18,
+      "fixed": "OFF",
+      "expression": "2.50",
+      "nativeHex": "322E3530",
+      "actualHex": "322E35",
+      "nativeText": "2.50",
+      "actualText": "2.5"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 18,
+      "fixed": "OFF",
+      "expression": "0.50",
+      "nativeHex": "302E3530",
+      "actualHex": "302E35",
+      "nativeText": "0.50",
+      "actualText": "0.5"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 18,
+      "fixed": "OFF",
+      "expression": "0.3",
+      "nativeHex": "302E33",
+      "actualHex": "302E323939393939393939393939393939393839",
+      "nativeText": "0.3",
+      "actualText": "0.299999999999999989"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 18,
+      "fixed": "OFF",
+      "expression": "0.000000000000000001",
+      "nativeHex": "30",
+      "actualHex": "302E303030303030303030303030303030303031",
+      "nativeText": "0",
+      "actualText": "0.000000000000000001"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 18,
+      "fixed": "OFF",
+      "expression": "1.234567890123456789",
+      "nativeHex": "312E323334353637383930313233343537303030",
+      "actualHex": "312E323334353637383930313233343536393132",
+      "nativeText": "1.234567890123457000",
+      "actualText": "1.234567890123456912"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 18,
+      "fixed": "OFF",
+      "expression": "00.50",
+      "nativeHex": "302E3530",
+      "actualHex": "302E35",
+      "nativeText": "0.50",
+      "actualText": "0.5"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 18,
+      "fixed": "ON",
+      "expression": "0.3",
+      "nativeHex": "302E333030303030303030303030303030303030",
+      "actualHex": "302E323939393939393939393939393939393839",
+      "nativeText": "0.300000000000000000",
+      "actualText": "0.299999999999999989"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 18,
+      "fixed": "ON",
+      "expression": "0.000000000000000001",
+      "nativeHex": "302E303030303030303030303030303030303030",
+      "actualHex": "302E303030303030303030303030303030303031",
+      "nativeText": "0.000000000000000000",
+      "actualText": "0.000000000000000001"
+    },
+    {
+      "mode": "VFP9",
+      "decimals": 18,
+      "fixed": "ON",
+      "expression": "1.234567890123456789",
+      "nativeHex": "312E323334353637383930313233343537303030",
+      "actualHex": "312E323334353637383930313233343536393132",
+      "nativeText": "1.234567890123457000",
+      "actualText": "1.234567890123456912"
+    }
+  ]
+}

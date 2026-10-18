@@ -332,6 +332,15 @@ current main240ac51cb, not a division scope expansion or suppressed assertion.
 No helper/hook/SAME or compatibility completion. Full provenance/reader limits/
 pressure-deferral and re-entry are in the same recovery contract/archive.
 
+Subsequent exact current readback for #7210: single GNU O0/g0 TU compile0/run0,
+300 literal contexts/70 display mismatches with metadata/bits all matching,
+verified original archives unchanged. Native-only cross-check audit0. At D0/
+FIXED OFF current TRANSFORM(0.5)=`0`, native=`0.5`; current TRANSFORM(2.50)=`2`,
+native=`2.50`. Full raw/status/source/resource/artifact evidence retained in
+small-divisor-display-diagnostic/. This replaces unknown current bytes, not a
+cause/policy/helper/compatibility claim. Both-chat window released; separate
+Numeric-display prerequisite remains mandatory before unchanged division SAME.
+
 Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
 [actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)
 at mainb37ddf7241; paired1,620 values/run, actual0/empty stderr/no errors,

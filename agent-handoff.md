@@ -84,10 +84,14 @@ NEW focused owner-authored OPEN #7210 (bug/runtime, no agent-approved label)
 against current main240ac51cb tracks literal-only default TRANSFORM mismatch,
 derived prerequisite within admitted #5611/#6776/#7189 Numeric/display scope.
 Native D0/FIXEDOFF TRANSFORM(0.5)=Character302E35, realW3/D1/3FE0000000000000;
-current Number fields match but string equality fails. Exact Copperfin returned
-bytes/causality not yet logged; don't guess them. Proposed readback source
-build/small-divisor-native/literal-display-diagnostic.cpp is UNCOMPILED/UNRUN:
-new full25.10%/5.78% fails gate, both chats receive DEFERRED/no reservation.
+current Number fields match but string equality fails. After new BOTH-chat/
+full0.00%/0.00% clearance, exact readback now compile0/run0/empty stderr,300
+contexts/70 displays mismatch/all300 Number metadata/bits match; archives hash-
+unchanged before/after. D0/FIXEDOFF current0.5 prints`0`, native`0.5`; current
+2.50 prints`2`, native`2.50` in BOTH modes. Independent native cross-check audit0.
+See tracked small-divisor-display-diagnostic/ for source/raw/status/pressure/
+hashes/verification and all70 differences. This is reproduction, not a product
+pass or proven cause. Both chats received RELEASED; no native/Wine/VM/rebuild.
 
 EXPLICIT division deferral/re-entry: keep this branch/frozen tests/complete
 ORIGINAL intact; no display assertion suppression or widened division helper.

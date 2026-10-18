@@ -1,0 +1,10 @@
+build/small-divisor-original/libcf_xbase_runtime.a: OK
+build/small-divisor-original/libcf_design_model.a: OK
+build/small-divisor-original/libcf_prg_analysis.a: OK
+build/small-divisor-original/libcf_runtime_text.a: OK
+build/small-divisor-original/libcf_vfp_assets.a: OK
+build/small-divisor-original/libcf_platform_profile.a: OK
+build/small-divisor-original/libcf_security.a: OK
+build/small-divisor-original/libcf_localization.a: OK
+build/small-divisor-original/libcf_platform_support.a: OK
+build/small-divisor-original/tests/test_prg_engine_numeric_small_divisor: OK

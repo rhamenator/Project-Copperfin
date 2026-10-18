@@ -330,3 +330,21 @@ a new immediate full25.10%/5.78% sample fails the resource gate; both chats rece
 DEFERRED/no reservation. Scope/re-entry: independently recover and implement
 that admitted Numeric display prerequisite in a separate bounded slice, then
 resume the retained division freeze/original evidence and all unchanged gates.
+
+## Actual exact current display readback for #7210
+
+After fresh BOTH-chat clearance and full0.00%/0.00% before compile/run, the
+separate single-TU diagnostic compiles0/runs0 against the exact checked original
+archives, both stderr empty, with ALL library/binary hashes unchanged before/
+after. It records300 actual literal readbacks, reproduces70 display differences,
+and independently confirms all300 Number metadata/payload comparisons match.
+Actual D0/FIXED OFF (both modes): TRANSFORM(0.5) is current30 (`0`), native302E35
+(`0.5`); TRANSFORM(0.25) is current30, native302E3235; TRANSFORM(2.50) current32
+(`2`), native322E3530 (`2.50`). The previously unknown current bytes are now
+observed, not a cause inferred from implementation. Independent native-only
+cross-check audit0; all raw/source/status/pressure/artifact provenance and
+70 differences are in small-divisor-display-diagnostic/verification.md.
+Diagnostic0 means reproduction succeeded, not product parity. Both chats receive
+RELEASED; no native/VFP/Wine/VM run or runtime/library rebuild occurred. Keep this
+division branch unchanged while selecting a separate admitted Numeric-display
+prerequisite worktree from origin/main; do not remove its frozen assertions.
