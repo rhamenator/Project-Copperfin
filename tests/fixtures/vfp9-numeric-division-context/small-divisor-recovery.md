@@ -271,3 +271,16 @@ support, product pass, independent-human review or release claim at this freeze.
 High host I/O defers compilation; fresh BOTH-chat clearance and immediate full
 PSI avg10 AND avg60<1% are required before the actual ORIGINAL build. Keep
 all prior failed hypotheses and checked boundaries; rollback retains this evidence.
+
+## First ORIGINAL build attempt interrupted for host pressure
+
+Fresh BOTH-chat clearance/full0.00%/0.00% permits actual nice10 single-job fresh
+GNU O0/g0 configure0. During compilation full34.93%/11.36% triggers controlled
+SIGINT of the exact rechecked task Ninja, actual build/worker130 at step122/161.
+No test/native/VM runs, no numerical ORIGINAL failure/pass is established and
+no product or frozen test source changes. Both chats receive RELEASED after
+owned worker/group quiescence. small-divisor-original-attempt1/ retains the full
+logs/statuses/commands/pressure/time/source checks0 and empty production diff;
+source/header hash checks remain18 OK. Preserve the partial fresh slice cache,
+but qualify a separate complete resumed attempt before support/hook work.
+The new original-evidence reader is source-only at this point, not an audit pass.

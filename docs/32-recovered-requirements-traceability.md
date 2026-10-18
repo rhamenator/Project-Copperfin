@@ -308,6 +308,16 @@ checks0 are not actual ORIGINAL or product execution. Original-build pressure/
 both-chat coordination gate still applies; see recovery contract for exact
 scope, independent scalar-assignment requirement, LOW DQ/DV and remaining gates.
 
+Actual ORIGINAL attempt1 is NOT qualifying numerical evidence: fresh BOTH-chat/
+full0.00%/0.00% clearance allows GNU O0/g0 configure0, but mid-build host full
+PSI34.93%/11.36% causes controlled interruption of the exact owned Ninja.
+Build/worker130 at122/161, no CTest/native/VM invocation;18 frozen source hashes
+still match and src/include diff from main empty. Raw commands/logs/statuses/
+pressure/source checks retained in small-divisor-original-attempt1/; both chats
+receive RELEASED after owned-process quiescence. Separate resumed complete
+ORIGINAL/actual reader audit is required before support; partial cache is not
+an artifact qualification or a product failure. No runtime change.
+
 Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
 [actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)
 at mainb37ddf7241; paired1,620 values/run, actual0/empty stderr/no errors,

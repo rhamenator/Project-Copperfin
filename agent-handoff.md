@@ -1,132 +1,112 @@
 # Agent Handoff
 
-## Active small-divisor Numeric recovery — 2026-10-18
+## Active small-divisor Numeric division — 2026-10-18
 
-Continue only owner OPEN/agent-approved #5611/#6776/#7189. Main only integration;
-v1-development retired. EPOCH/CENTURY and PR7201 complete. Owner resumed loop:
-no stop-after7201, October22 action, reboot or upload monitoring. No owner-input
-blocker/automation pause. Preserve unrelated files, foreign WTs4436/49ae and stashes.
+Continue owner OPEN/agent-approved #5611/#6776/#7189 only; metadata rechecked
+this wake. main sole integration; v1-development retired. Owner resumed loop:
+no stop-after7201, October22 action, reboot/upload monitoring or owner-input
+blocker. EPOCH/CENTURY, PR7201 and prior division slices complete; don't restart.
 
-Canonical main/origin/main240ac51cbbaa3114a08a687142e67fe4969ea212 (PR7209).
-NEW WT /home/rich/.codex/worktrees/numeric-small-divisor-5611/Project-Copperfin
-branch fix/numeric-small-divisor-5611 created from origin/main240ac51cb.
-Pre-observation signed/DCO freezec68aaadf2 and first-observation checkpoint273a51b60
-are retained; read exact git head before use. Paired native recovery is now audited;
-paired checkpoint44306c92e and timing source freeze65da37991 pushed;
-actual paired timing is now audited; read latest signed head. No PR/runtime change.
-src/include remain byte-identical to main. Do NOT restart completed PR7209.
+Canonical main=origin/main240ac51cbbaa3114a08a687142e67fe4969ea212 (PR7209).
+Active WT /home/rich/.codex/worktrees/numeric-small-divisor-5611/Project-Copperfin,
+branch fix/numeric-small-divisor-5611 from that main. Signed/DCO native-only
+test/oracle/registration freeze3b7a5163618ea92420f63b70c5cac265cdd08807 pushed.
+No PR, helper or hook; src/include byte-identical to main. Latest checkpoint
+preserves the interrupted ORIGINAL attempt below; read exact git head.
 
-## Last shipped slice and cleanup
+## Current recovery and frozen tests
 
-PR7209 merged normally2026-10-18T09:19:27Z as240ac51cb; reviewed signed head
-de1c094c53c964b7454ea41d649469f315b681a8. Claude FIRST6247124783; no response/
-unavailability inferred from silence. Configured Codex bot199175422 actual clean
-full-head completed review6247125017. All39 checks SUCCESS/11 effective strict,
-complete conversations0. Acceptance6248161998. Tested mergeee881af6b exact parents.
-Windows632 actual PASS/no skip, sanitizer44/no skip, native Linux/macOS each629
-unique passes/631 reported with two unrelated launcher skips explicitly NOT
-execution/release evidence; all16 selected names PASS. Raw independent gates0.
-Local original-fail -> native-only freeze -> unused GNU/Clang support -> bounded
-hook -> unchanged SAME all pass, with earlier failures/rejected candidates retained.
-Only the finite literal-derived non-whole division foundation is complete.
+RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-SMALL-DIVISOR-001, bounded finite literal
+divisors0<abs<1, including5/0.5 and(1/3)/(1/3). Read
+tests/fixtures/vfp9-numeric-division-context/small-divisor-recovery.md and
+docs/32-recovered-requirements-traceability.md. Native source/inventory/paired
+auditors and full REA records remain in that fixture; no more native runs needed
+for this phase. Preserve source freezes/captured failures/rejected hypotheses.
 
-PR7209 cleanup DONE under fresh both-chat clearance/conditional full PSI<1%
-gate, actual0/0 pre/post. Main fast-forwarded; completed WT/local branch/exact
-leased remote removed. Full323MB build recoverable Trash completed-pr7209-build.
-Canonical build/pr7209-completed/evidence/ copied/byte-compared0; cleanup-record.md,
-pressure samples, raw hosted receipts/auditors/acceptance/merge and native/support
-evidence retained. Own handoff stash057655d072bb6ce2a9eca94d5d3d33065b65c24f
-and prior stash64cd2ab6 preserved; canonical untracked files/foreign WTs untouched.
-Window RELEASED to both chats. No VM/reboot/backup/upload or broad prune/reset.
+Paired root5060/run and timing4380/run actual0/empty stderr/raw exact repeat,
+compiled-EVAL differences0; host+archived independent raw audits0. Timing is
+single evaluation/callback counts and final settings exact. Root SHA
+573771b12980ec0cafb39632a217e99c8df5533c440ffb3a61617987e4c0e8c0;
+timing SHA1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6.
+Pure root candidate fits4480; operator-aware timing fits4300 finite,80 zero-
+divisor nonfinite controls retained/unmodeled. Candidate fit is not an oracle.
+REA sampling/environment/image-binding limits and one EACCES process-ownership
+sample/kernel-worker readback remain explicit; no decompilation or VM used.
 
-## Next bounded action
+New native-only emit-small-divisor-{public,direct,timing}-header.cjs reconstruct
+253 root rows/245 admitted/eight retained, five descriptors/ten display entries;
+219 timing records/120 finite nonzero CFMark callback forms. Public test
+test_prg_engine_numeric_small_divisor asserts exact kind/metadata/bits/display,
+pause/resume/count/final-state in both modes/five DECIMALS/both FIXED. Zero ROOTS
+included; CFObserve/zero callback assignment and eight checked-boundary records
+retained/unselected, not parity. #7208 SET query type is separate: use verified
+VAL(TRANSFORM(SET('DECIMALS'))) Number readback only.
 
-RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-SMALL-DIVISOR-001: recover finite literal-derived
-divisor magnitude between0 and1 (retained 5/0.5 and (1/3)/(1/3)), not a guessed
-relaxation of the completed helper's guard. Native-only source/inventory/auditor:
-tests/fixtures/vfp9-numeric-division-context/emit-small-divisor-grid.cjs,
-small-divisor-grid.prg, small-divisor-grid-cases.json, audit-small-divisor-grid.cjs.
-56 cores/253 expressions/15 literal controls; five settings0/2/6/14/18, both FIXED
-and compiled/EVALUATE =5060 observations/actual run. Eight boundary rows retained;
-no zero/nonfinite/magnitude/scientific policy migration. No candidate/expectation
-or product imports, no separately evaluated child oracle. Source/inventory exact
-reconstruction and JS syntax/whitespace/changelog checks0. Subsequent first
-actual native run0/empty stderr:5060 complete observations/no caught errors,
-host+archived first-only typed/source/framing/BRS/compiled-EVAL audit0. CW027F;
-60 nonfinite values only retained zero-boundaries, two empty displays. Raw SHA
-573771b12980ec0cafb39632a217e99c8df5533c440ffb3a61617987e4c0e8c0.
-Subsequent independent repeat0/empty stderr; all5060 raw records byte-identical.
-Unchanged paired host+archived audits0; compiled/EVAL differences0. Both raw SHA
-values above match. Post-capture candidate compares4480 complete core rows:
-zero metadata differences, initial160 zero-sign mismatches only minus-IIF;
-distinct constant/runtime unary zero rules fit all4480 exactly. Rejected sources/
-outputs retained; not an expected emitter/helper/public pass or runtime change.
-Read small-divisor-recovery.md and docs/32-recovered-requirements-traceability.md.
+Pure test test_prg_numeric_small_divisor_helper composes56 roots/252 syntax
+nodes plus68 prior nonwhole roots/314 nodes and640 older native rows, invalid
+metadata/storage/provenance/zero/nonfinite bounds. Future entry point
+constant_small_divisor_intrinsic deliberately undefined. Don't compile that
+target until support AFTER actual ORIGINAL qualification. CMake/isolation/
+actual sanitizer targets+strict-selector tests are signed in3b7a51636.
+Three native header byte checks/JS syntax/four selector tests/changelog235/
+channel/whitespace0 are source checks, NOT product or ORIGINAL execution.
 
-Completed independent REPEAT ONLY after low-pressure + fresh BOTH-chat clearance;
-existing first remains in NEW WT build/small-divisor-native/paired-captures/ and
-tracked small-divisor-captures/. Do not simulate or overwrite the first result.
-Initial REA wrapper ev_2b96881d gates75 before any native run at2.06%/0.62%;
-next ev_f6880b11 completes first then gates75 BEFORE repeat at22.61%/5.64%.
-Both complete records/raw attempts retained. Root75 is a pressure gate, NOT VFP
-failure. Source/runner/VFP/FLL hashes unchanged after first. Actual FXP retained.
-Separate repeat-attempt ev_e7b41a6b1a308d58dcd566c66f7123c8c1103b2c57ef237aa28c817cfb80bbe1
-is root0/quiesced/owned cleanup verified/untruncated, retained separately with
-unchanged source/runner/VFP/FLL checks0 and exact paired outputs. No further
-repeat is needed. Both chats received immediate RELEASED. Reused installed
-VFP /home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe and existing observer
-/home/rich/dev/Project-Copperfin/build/pr7203-completed/native-evidence/diagnostic/cause-probe.fll.
-Expected output NEW WT build/small-divisor-native/grid-results.txt. Preserve exact
-raw first/repeat/stdout/stderr/status/FXP/hashes; run independent auditor. No binary
-decompilation, installation/configuration changes, VM or new compiler needed.
-REA skill fully read plus native/runtime/evidence guides; preserve root-vs-
-descendant settlement/cleanup, sampling/environment/image-binding limitations.
+## ORIGINAL attempt1 interrupted; exact next action
 
-DONE: actual paired single-evaluation small-divisor timing recovery, AFTER signed
-source freeze65da37991/fresh BOTH-chat clearance/idle Wine/full PSI0.00/0.00%.
-emit-small-divisor-timing.cjs, small-divisor-timing.prg/cases and independent
-audit-small-divisor-timing.cjs:219 expressions/4380 rows/run, twelve cores/nine
-callback wrappers/targets0,14 and three pure controls. Capture once through
-CFNMETA only; no BRS/display side-effect replay. Both actual0/empty stderr,
-4380 records/compiled-EVAL/raw exact repeat, count/state0 differences, host+
-archived audits0. Raw SHA1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6.
-REA ev_fd4b732a00f0417c8dff284784201267982a63ece6f5e3d19b008c6098513f39:
-root0/quiesced/owned cleanup verified/untruncated, ONE EACCES ownership sample;
-read-only PID746418 readback is root/PPID2 kworker, retained with limitations.
-No unrelated process stopped; postcheck no Wine/VFP. Source/runner/VFP/FLL hashes0.
-Tracked small-divisor-timing-captures/ preserves raw/compiledFXP/status/hash/audits/
-REA and all rejected176-then16-difference hypotheses. Operator-aware refinement
-fits all4300 finite rows;80 nonfinite zero-divisor controls retained/unmodeled.
-DONE source-only native direct/public/timing expected-vector emitters/headers,
-two test sources/CMake/isolation/actual sanitizer targets+strict-selector tests.
-Native-only regeneration0:253 root rows/245 admitted/eight retained, five metadata/
-ten display entries;219 timing rows/120 finite nonzero CFMark callbacks. Public
-test asserts metadata/bits/display and pause/resume/count/target setting in both
-modes/five settings/both FIXED. Zero roots included; CFObserve/zero assignment
-callback and eight checked-boundary records retained/unselected, not parity.
-Pure direct test composes56 roots/252 syntax nodes plus68 prior nonwhole roots/
-314 nodes and640 older rows; future constant_small_divisor_intrinsic undefined.
-No helper/hook authored. See recovery contract native-only test freeze.
-NEXT: signed test/native-header freeze -> actual unchanged-production public
-ORIGINAL-fail before any unused support or hook -> unused support -> bounded hook/
-unchanged SAME/broader/actual hosted named execution -> Claude FIRST/exact-head
-clean review/strict green required checks/all conversations resolved -> merge.
-Do not infer parity from candidate fit/metadata fields or change native inputs.
+Fresh BOTH-chat clearance/full0.00%/0.00% allowed nice10 GNU Debug O0/g0 Ninja
+parallel1 fresh build. Configure0. Mid-build full PSI34.93%/11.36% caused SIGINT
+ONLY to rechecked owned Ninja769669 (parent cmake769668, worker769470/PGID769470).
+Actual build+worker130; log stops after122/161, interrupted by user. NO CTest,
+native/Wine/VM or numerical ORIGINAL pass/failure. Source/hash checks18 OK and
+production diff remain empty. Owned group/worker/cmake/Ninja absent on postcheck;
+both chats received RELEASED. Cause of I/O unknown; don't monitor backup/upload.
 
-## Resource and retained scope
+Host evidence build/small-divisor-original-evidence/ and ignored worker
+build/small-divisor-native/original-worker.sh; tracked lossless copy
+tests/fixtures/vfp9-numeric-division-context/small-divisor-original-attempt1/.
+Partial fresh cache build/small-divisor-original/ is incomplete, not a qualifying
+artifact. Preserve it for resumed remaining compilation, not an older Trash cache.
+New audit-small-divisor-original.py is only syntax-checked, not an audit pass.
 
-No local build/probe/Wine/VM active/reserved. Both chats cleared each attempted
-window and received immediate RELEASED/DEFERRED after the per-run gates. Own
-post-first PSI rose54.46%/18.62%, later63.69%/48.92%; no repeat was launched.
-Actual repeat AND paired timing later completed after renewed gates; no reservation
-remains. Timing full avg10/60=0 before EACH and after; both chats received RELEASED.
-Audit01a0a1e1-7469-7ae3-9668-470a4e5b91b5; DAW01a1050d-72c7-7213-bd2b-899e3cf342f7.
-Backup reset completion unconfirmed: no VM starts/recreation/DAW cleanup race.
-Read owner VM CLAUDE.md before actual VM work; originals/recovery/shared seed safe.
+NEXT: wait for full avg10 AND avg60<1%, obtain fresh audit AND DAW clearance,
+then record a SEPARATE resumed attempt (new evidence directory/worker, same
+verified cache; don't overwrite attempt1). Keep18 frozen hashes and src/include
+diff0. Build ONLY new public and prior constant/nonwhole public+pure helpers;
+then seven focused CTests including isolation and sanitizer-selection contracts.
+Capture full logs/JUnit/status/pressure/source binding; classify ALL metadata/
+bits/display/evaluation/control failures, don't assume metadata-only or change
+native expectations. Audit exact executions/no skips/only new failure and
+investigate any unexpected result before qualifying ORIGINAL.
 
-Wider producers/operators, propagation/display/exact conversion and pending
-ListItem supplied-column READ remain mandatory. #5611/#6776/#7189/#7206 OPEN.
-#7208 query-type gap is unapproved/separate; do not expand this slice. Keep #6776
-per-area modes, integral Integer eligibility, checked zero/conversions/allocation
-limits; no tolerance/nonzero quotient correction or residual-gap shortcut.
-App PR attachment hit100 identities; do not unlink unrelated attachments.
+Then unused bounded support -> GNU/Clang sanitizer direct checks -> separate
+parser hook -> UNCHANGED SAME/broader/actual hosted named execution -> Claude
+FIRST, actual clean exact-head Claude/Codex review, ALL strict checks green and
+ALL conversations resolved -> normal merge/cleanup. No parity from fields alone.
+
+## Resources, last shipped slice and retained obligations
+
+No build/native/Wine/VM active or reserved. Pressure remained high after the
+interruption (full12.22%/31.20% at a later sample). No automatic resume without
+fresh both-chat/low-pressure gates. Audit01a0a1e1-7469-7ae3-9668-470a4e5b91b5;
+DAW01a1050d-72c7-7213-bd2b-899e3cf342f7. Backup reset completion unconfirmed:
+no VM starts/recreation; read owner VM CLAUDE.md before any VM work. Preserve
+originals/recovery/shared seeds; don't race DAW-owned cleanup.
+
+PR7209 merged2026-10-18T09:19:27Z as240ac51cb; signed reviewed headde1c094c53.
+Claude FIRST6247124783; no silence inference. Actual configured Codex clean
+full-head review6247125017; all39 checks/11 strict SUCCESS/conversations0;
+acceptance6248161998. Windows632/no skips, sanitizer44/no skips, native Linux/
+macOS629 unique passes/631 reported with two unrelated launcher skips NOT
+execution evidence; all16 selected passed. Only finite nonwhole foundation done.
+Cleanup complete: main synchronized, WT/local/exact-leased remote removed;
+323MB build recoverable Trash completed-pr7209-build. Canonical
+build/pr7209-completed/evidence/ byte-compared0/cleanup-record.md retain evidence.
+Own stash057655d072bb6ce2a9eca94d5d3d33065b65c24f and old64cd2ab6 preserved.
+
+Preserve canonical foreign tracked/untracked files, WTs4436/49ae and stashes.
+#5611/#6776/#7189/#7206 OPEN; #7208 unapproved/separate. Wider producers,
+propagation/display/exact conversion and pending ListItem supplied-column READ
+remain mandatory. Keep #6776 per-area modes, checked conversions/zero/allocation
+limits and Integer eligibility; no tolerance/nonzero quotient correction or
+canonical-double residual-gap shortcut. App PR attachment limit100 identities:
+don't unlink unrelated artifacts. No owner-input blocker/automation pause.
