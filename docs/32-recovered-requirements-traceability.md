@@ -318,6 +318,19 @@ receive RELEASED after owned-process quiescence. Separate resumed complete
 ORIGINAL/actual reader audit is required before support; partial cache is not
 an artifact qualification or a product failure. No runtime change.
 
+Separate complete resumed ORIGINAL now qualifies the pre-support failure gate:
+configure/build0, seven unique actual CTests13.78s/only new public fails/no skip;
+6920 metadata/320 signed-zero bits/964 display failures, zero literal-bits/
+evaluation/control failures. Host+archived complete-console/structured-JUnit
+audits0/byte-identical,18 frozen hashes unchanged and production diff empty.
+JUnit's clipped failure text and first reader failure remain; full727146-byte
+console supplies all8204 exact failures/counters without rerun or test changes.
+Of964 display mismatches,70 are independent literal-only controls whose Numeric
+metadata/payloads match; retain a focused separate default-TRANSFORM prerequisite
+against main240ac51cb, not a division scope expansion or suppressed assertion.
+No helper/hook/SAME or compatibility completion. Full provenance/reader limits/
+pressure-deferral and re-entry are in the same recovery contract/archive.
+
 Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
 [actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)
 at mainb37ddf7241; paired1,620 values/run, actual0/empty stderr/no errors,

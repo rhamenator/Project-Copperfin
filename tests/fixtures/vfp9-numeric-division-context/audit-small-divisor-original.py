@@ -43,6 +43,18 @@ for case in cases:
     else:
         assert case.attrib["status"] == "run" and case.find("failure") is None
 assert failed
+# CTest's complete --output-on-failure console log retains this entire failed
+# case; JUnit may clip system-out at its default307200-byte threshold. Keep
+# that clipped artifact/first reader failure, but do not infer missing counters.
+console = raw("ctest.log").decode("utf8")
+block = re.search(r"^\d+/7 Test #\d+: test_prg_engine_numeric_small_divisor[^\n]*\*\*\*Failed[^\n]*\n(.*?^small-divisor division:[^\n]*\n)", console, re.M | re.S)
+assert block, "complete independently retained failure block is required"
+complete = block.group(1)
+assert failed.startswith(complete[:1024]), "bind clipped JUnit to the complete console case"
+junit_clipped = "test output was removed since it exceeds the threshold" in failed
+if not junit_clipped:
+    assert failed.strip() == complete.strip()
+failed = complete
 summary = re.findall(r"^small-divisor division: descriptor=(\d+) bits=(\d+) literalBits=(\d+) evaluation=(\d+) display=(\d+) controls=(\d+) total=(\d+)$", failed, re.M)
 assert len(summary) == 1
 descriptor, bits, literal_bits, evaluation, display, controls, total = map(int, summary[0])
@@ -50,14 +62,27 @@ assert descriptor > 0 and literal_bits == evaluation == controls == 0
 assert total == descriptor + bits + evaluation + display + controls
 failures = re.findall(r"^FAIL: (.*)$", failed, re.M)
 assert len(failures) == total
+assert len(re.findall(r"^FAIL: ", console, re.M)) == total
 assert sum(x.endswith("native descriptor") or x.endswith("native precision survives pause and scalar assignment") for x in failures) == descriptor
 assert sum(" bits actual=" in x or x.endswith("native quotient bits") for x in failures) == bits
 assert sum(x.endswith("native display") for x in failures) == display
+bit_pairs = {}
+for actual, native in re.findall(r" bits actual=([0-9A-F]{16}) native=([0-9A-F]{16})$", failed, re.M):
+    key = actual + ":" + native
+    bit_pairs[key] = bit_pairs.get(key, 0) + 1
+display_kinds = {}
+for line in failures:
+    if line.endswith("native display"):
+        kind = line.split()[1].split(":")[0]
+        display_kinds[kind] = display_kinds.get(kind, 0) + 1
 print(json.dumps({"requirement": "RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-SMALL-DIVISOR-001",
     "sourceFreeze": "3b7a5163618ea92420f63b70c5cac265cdd08807",
     "actualExecuted": 7, "actualFailed": 1, "actualSkipped": 0,
     "descriptor": descriptor, "bits": bits, "literalBits": literal_bits,
     "evaluation": evaluation, "display": display, "controls": controls, "total": total,
+    "payloadBitPairs": bit_pairs, "displayFailureKinds": display_kinds,
+    "junitFailedSystemOutClipped": junit_clipped,
+    "completeFailedOutputSource": "Lossless full CTest console block, exact summary/failure-category counts and JUnit prefix binding; no rerun or changed test expectation.",
     "frozenSourceAndHeaderHashes": 18,
     "rawJUnitSha256": hashlib.sha256(raw("results.xml")).hexdigest(),
     "rawCTestSha256": hashlib.sha256(raw("ctest.log")).hexdigest(),

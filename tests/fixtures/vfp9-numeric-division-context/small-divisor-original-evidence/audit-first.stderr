@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/rich/.codex/worktrees/numeric-small-divisor-5611/Project-Copperfin/tests/fixtures/vfp9-numeric-division-context/audit-small-divisor-original.py", line 47, in <module>
+    assert len(summary) == 1
+           ^^^^^^^^^^^^^^^^^
+AssertionError

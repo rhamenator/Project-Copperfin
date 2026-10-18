@@ -284,3 +284,47 @@ logs/statuses/commands/pressure/time/source checks0 and empty production diff;
 source/header hash checks remain18 OK. Preserve the partial fresh slice cache,
 but qualify a separate complete resumed attempt before support/hook work.
 The new original-evidence reader is source-only at this point, not an audit pass.
+
+## Actual complete resumed ORIGINAL; independent display prerequisite
+
+After renewed BOTH-chat clearance and immediate full pressure below1%, attempt2
+resumes ONLY the verified fresh slice cache. Configure0/build0, actual seven
+unique serial CTest executions13.78s/no skips; only the new small-divisor public
+test fails (CTest8, worker0 means completed collection, NOT a product pass).
+All18 frozen input hashes remain identical before/after build/test; src/include
+diff from main240ac51cb empty. Exact library/binary hashes are retained separately.
+Both chats receive RELEASED promptly; no native/Wine/VM or later build reserved.
+
+Full console/JUnit/category audit0 on host AND lossless archive, byte-identical:
+6920 descriptor,320 payload,964 display failures; literalBits/evaluation/controls0,
+total8204. All320 bit mismatches are SIGNED ZERO only:240 actual-0/native+0 and
+80 actual+0/native-0, not nonzero quotient or literal-parser mismatches. Display
+failures:882 core,12 runtime-mixture,70 literal-only controls. The old constant/
+nonwhole public and direct tests plus isolation and sanitizer-selection contracts
+all execute/pass. This is the actual complete ORIGINAL gate before support.
+
+The initial reader fails because CTest clips JUnit system-out at307200 bytes;
+the independent console log retains the entire failed case (727146 bytes overall)
+including all8204 FAIL lines and exact final counters. Keep clipped original XML,
+failed reader/source/status and complete console. The corrected reader uses
+that complete case, binds the JUnit prefix, checks all seven actual statuses/no
+skip, exact line/category/counter totals and hashes. It does NOT rerun a producer,
+change test expectations, infer absent output or call clipped output complete.
+small-divisor-original-evidence/ retains full raw/status/pressure/source/artifact
+binding and both reader attempts. Raw console SHA256
+c3b8959e1212f740e4cefa2c2b996f63dcdad50f452d579d8213aeaadb73e37a;
+JUnit SHA256161d249b9866af5bbfd160b67b17415e82b38aec93522d0aacabe1690ecafda9.
+
+The70 literal-only display failures are a genuinely separate observed gap:
+their native Numeric descriptor and payload comparisons pass without division.
+For example D0/FIXED OFF TRANSFORM(0.5) disagrees with native Character bytes
+302E35 (0.5), despite realW3/D1/BRS3FE0000000000000 matching. Exact Copperfin
+display bytes have NOT been logged in this run; do not guess them or a cause.
+File a focused issue against exact main240ac51cb and retain it as a separate
+Numeric-display prerequisite, not a widened division-helper change. Keep every
+frozen display assertion; no known-failure suppression or canonical-double gap
+shortcut. A proposed short exact-string diagnostic is NOT compiled/run because
+a new immediate full25.10%/5.78% sample fails the resource gate; both chats receive
+DEFERRED/no reservation. Scope/re-entry: independently recover and implement
+that admitted Numeric display prerequisite in a separate bounded slice, then
+resume the retained division freeze/original evidence and all unchanged gates.
