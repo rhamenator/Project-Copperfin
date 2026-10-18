@@ -150,7 +150,7 @@ materialization or parser acceptance claim. These boundaries still need recovery
 
 The second command checks the frozen C++ expected header against all640 captured
 DECIMALS0 rows; the existing structural auditors independently check the complete
-two-setting/fixed/compiler route inventory (five DECIMALS settings, two FIXED
+setting/fixed/compiler route inventory (five DECIMALS settings, two FIXED
 modes, two compiler routes), actual input controls and unused-slot differences.
 The first rejected1,140-case hypothesis remains unchanged. No helper/public/
 hosted acceptance is implied by these native-only checks.
