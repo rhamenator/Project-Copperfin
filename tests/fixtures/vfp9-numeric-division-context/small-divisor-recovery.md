@@ -320,7 +320,9 @@ their native Numeric descriptor and payload comparisons pass without division.
 For example D0/FIXED OFF TRANSFORM(0.5) disagrees with native Character bytes
 302E35 (0.5), despite realW3/D1/BRS3FE0000000000000 matching. Exact Copperfin
 display bytes have NOT been logged in this run; do not guess them or a cause.
-File a focused issue against exact main240ac51cb and retain it as a separate
+Focused owner-authored OPEN issue [#7210](https://github.com/rhamenator/Project-Copperfin/issues/7210)
+is filed against exact current main240ac51cb after metadata-only deduplication;
+no agent-approved label added. Retain it as a separate
 Numeric-display prerequisite, not a widened division-helper change. Keep every
 frozen display assertion; no known-failure suppression or canonical-double gap
 shortcut. A proposed short exact-string diagnostic is NOT compiled/run because

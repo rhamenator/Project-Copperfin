@@ -327,7 +327,8 @@ JUnit's clipped failure text and first reader failure remain; full727146-byte
 console supplies all8204 exact failures/counters without rerun or test changes.
 Of964 display mismatches,70 are independent literal-only controls whose Numeric
 metadata/payloads match; retain a focused separate default-TRANSFORM prerequisite
-against main240ac51cb, not a division scope expansion or suppressed assertion.
+[#7210](https://github.com/rhamenator/Project-Copperfin/issues/7210) against
+current main240ac51cb, not a division scope expansion or suppressed assertion.
 No helper/hook/SAME or compatibility completion. Full provenance/reader limits/
 pressure-deferral and re-entry are in the same recovery contract/archive.
 

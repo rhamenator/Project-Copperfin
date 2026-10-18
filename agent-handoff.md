@@ -11,8 +11,9 @@ Canonical main=origin/main240ac51cbbaa3114a08a687142e67fe4969ea212 (PR7209).
 Active WT /home/rich/.codex/worktrees/numeric-small-divisor-5611/Project-Copperfin,
 branch fix/numeric-small-divisor-5611 from that main. Signed/DCO native-only
 test/oracle/registration freeze3b7a5163618ea92420f63b70c5cac265cdd08807 pushed.
-No PR, helper or hook; src/include byte-identical to main. Latest checkpoint
-preserves the interrupted ORIGINAL attempt below; read exact git head.
+No PR, helper or hook; src/include byte-identical to main. Complete ORIGINAL
+checkpoint031d790abcde424ab8622833ad81bc43248f2f3e pushed/signed G/DCO;
+read latest git head for subsequent issue/handoff traceability update.
 
 ## Current recovery and frozen tests
 
@@ -51,7 +52,7 @@ actual sanitizer targets+strict-selector tests are signed in3b7a51636.
 Three native header byte checks/JS syntax/four selector tests/changelog235/
 channel/whitespace0 are source checks, NOT product or ORIGINAL execution.
 
-## ORIGINAL attempt1 interrupted; exact next action
+## Complete ORIGINAL and separate display prerequisite
 
 Fresh BOTH-chat clearance/full0.00%/0.00% allowed nice10 GNU Debug O0/g0 Ninja
 parallel1 fresh build. Configure0. Mid-build full PSI34.93%/11.36% caused SIGINT
@@ -64,19 +65,40 @@ both chats received RELEASED. Cause of I/O unknown; don't monitor backup/upload.
 Host evidence build/small-divisor-original-evidence/ and ignored worker
 build/small-divisor-native/original-worker.sh; tracked lossless copy
 tests/fixtures/vfp9-numeric-division-context/small-divisor-original-attempt1/.
-Partial fresh cache build/small-divisor-original/ is incomplete, not a qualifying
-artifact. Preserve it for resumed remaining compilation, not an older Trash cache.
-New audit-small-divisor-original.py is only syntax-checked, not an audit pass.
+Separate attempt2 after renewed BOTH-chat/low-pressure gates completes configure/
+build0, seven unique CTests13.78s/only new regression fails/no skip (CTest8,
+worker0=completed collection, not product pass). Old six pass. All18 frozen hashes
+unchanged/src+include diff0. New reader host+archived audits0/byte-identical:
+6920 descriptor,320 SIGNED-ZERO bits,964 display, literalBits/evaluation/controls0,
+total8204. Payload pairs240 actual-0/native+0 and80 reverse; no nonzero bit gap.
+Display failures882 core/12 runtime-mixture/70 literal-only, with literal Number
+metadata/payloads all matching. JUnit failure text clipped307200 bytes; retain
+first reader failure/source and original XML. Complete727146-byte CTest console
+supplies all8204 failures/counters, prefix-bound to JUnit, no rerun/expectation edit.
+Full host build/small-divisor-original-attempt2/; tracked lossless fixture
+small-divisor-original-evidence/ includes library/binary hashes. Completed fresh
+build/small-divisor-original/ now exists; preserve for diagnostics, no support/hook.
+Both chats received RELEASED, no compiler/worker/native/VM remains reserved.
 
-NEXT: wait for full avg10 AND avg60<1%, obtain fresh audit AND DAW clearance,
-then record a SEPARATE resumed attempt (new evidence directory/worker, same
-verified cache; don't overwrite attempt1). Keep18 frozen hashes and src/include
-diff0. Build ONLY new public and prior constant/nonwhole public+pure helpers;
-then seven focused CTests including isolation and sanitizer-selection contracts.
-Capture full logs/JUnit/status/pressure/source binding; classify ALL metadata/
-bits/display/evaluation/control failures, don't assume metadata-only or change
-native expectations. Audit exact executions/no skips/only new failure and
-investigate any unexpected result before qualifying ORIGINAL.
+NEW focused owner-authored OPEN #7210 (bug/runtime, no agent-approved label)
+against current main240ac51cb tracks literal-only default TRANSFORM mismatch,
+derived prerequisite within admitted #5611/#6776/#7189 Numeric/display scope.
+Native D0/FIXEDOFF TRANSFORM(0.5)=Character302E35, realW3/D1/3FE0000000000000;
+current Number fields match but string equality fails. Exact Copperfin returned
+bytes/causality not yet logged; don't guess them. Proposed readback source
+build/small-divisor-native/literal-display-diagnostic.cpp is UNCOMPILED/UNRUN:
+new full25.10%/5.78% fails gate, both chats receive DEFERRED/no reservation.
+
+EXPLICIT division deferral/re-entry: keep this branch/frozen tests/complete
+ORIGINAL intact; no display assertion suppression or widened division helper.
+NEXT bounded work is separate #7210 native-evidenced default-Numeric display
+prerequisite under admitted parents, in a separate slice WT from origin/main
+before production changes. First obtain exact current readback against the
+verified original archives after fresh BOTH-chat/full avg10 AND avg60<1% gates;
+recover additional native display boundaries as needed, don't fit from product.
+Once that separate prerequisite is accepted, re-enter unchanged division tests/
+refreshed ORIGINAL before support/hook. No parent completion or owner decision
+blocker/automation pause; do not start unrelated work or restart native grids.
 
 Then unused bounded support -> GNU/Clang sanitizer direct checks -> separate
 parser hook -> UNCHANGED SAME/broader/actual hosted named execution -> Claude
