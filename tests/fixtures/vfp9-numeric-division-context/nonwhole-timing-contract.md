@@ -185,3 +185,16 @@ its portable parallel-safe isolation audit is source review, not execution.
 The LOW DQ/DV walkthrough adds native-only root reconstruction -> frozen test
 -> unused support -> direct checks, retaining the previously qualified public
 ORIGINAL. All remaining gates and limitations above still apply.
+
+Signed test/oracle/registration freeze2165024f7 precedes unused support. The
+old entry point retains its whole-valued domain; the new entry point shares
+the same bounded arithmetic and permits fractional **real** operands only.
+Integer tags still require integral payloads. No caller, materialization,
+setting timing, allocation/conversion or nonzero payload policy changes here.
+Source review verifies width<=31, scale<=18, whole-width<=12 before subtraction,
+bounded scale addition<=36/width<=31 and at most nine threshold increments;
+invalid descriptors and provenance fail closed. GNU/Clang actual checks must
+be recorded separately before hookup; adding a helper is not compatibility
+completion. The pre-launch full I/O spike65.53%/50.52% (10s/60s) caused both
+chats to defer the cleared narrow compile window; no compiler/native/VM was
+launched at that sample. Both chats report no competing reservation.
