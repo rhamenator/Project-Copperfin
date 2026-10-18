@@ -2,6 +2,19 @@
 
 ## Non-whole division re-entry after merged PR7207 (2026-10-18)
 
+UPDATE: signed merge b0115ccb0fc00ea97064c35d48f94ed48ec9b919 pushed; fresh
+both-chat one-job clearance obtained at full IO avg10=0.00%. Nice10 GNU Debug
+O0/g0 incremental runtime build0, three actual tests1.96s/CTest8 ONLY non-whole
+public ORIGINAL fails:11,040 descriptor, bits/literal/evaluation/controls0.
+Earlier2,280 payload failures now absent, no input/header/assertion change.
+Independent JUnit/native-inventory audit0, frozen hashes0, native578-row check0;
+nonwhole-reentry.md/nonwhole-refreshed-original-evidence/ retain exact results,
+including initial failed JUnit-status reader1, corrected reader0/no test rerun.
+Window RELEASED BOTH chats, no active heavy job/native/Wine/VM/probe. Next is
+fractional native callback/continuation recovery and stronger3 old unknown
+controls BEFORE support/new freeze/hook; request fresh resources first.
+No new PR, production byte-identical to main4b6cc734f, no implementation pass.
+
 Current integration main4b6cc734fb1b70cf7cbcdd1f083fafa1317fa4f9 is merged
 PR7207, exact signed head2c010c91fa62acc08fb5efc122f79dfe50d6e095. Clean
 actual exact-head Codex6245661668 after Claude-FIRST,39 green checks including

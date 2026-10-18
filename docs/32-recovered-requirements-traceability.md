@@ -165,6 +165,15 @@ unblocked at the producer prerequisite only: refresh ORIGINAL with unchanged
 Beyond-domain producers, propagation/display/conversions and ListItem remain
 mandatory gaps; #7206 and admitted parents stay open.
 
+[Non-whole re-entry](../tests/fixtures/vfp9-numeric-division-context/nonwhole-reentry.md)
+at signed merged prerequisite checkpointb0115ccb0 refreshes actual ORIGINAL:
+coordinated single-job GNU build0, CTest8/three unique executions/only new public
+failure,1.96s; descriptor11,040, payload/literal/evaluation/control0. Unchanged
+578-row native header/574 exact public assertions, native reconstruction0,
+source hashes0 and independent result/inventory/JUnit audit0. Earlier2,280 input
+payload failures disappear; remaining metadata/timing is NOT implemented or
+accepted. Failed initial JUnit-status reader and exact original results retained.
+
 Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
 [actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)
 at mainb37ddf7241; paired1,620 values/run, actual0/empty stderr/no errors,

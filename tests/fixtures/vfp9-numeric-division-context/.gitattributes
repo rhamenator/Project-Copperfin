@@ -25,3 +25,4 @@ nonwhole-captures/*.gz -text -diff
 nonwhole-captures/*.out -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 nonwhole-captures/*-results.txt -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 nonwhole-original-evidence/*.gz -text -diff
+nonwhole-refreshed-original-evidence/*.gz -text -diff

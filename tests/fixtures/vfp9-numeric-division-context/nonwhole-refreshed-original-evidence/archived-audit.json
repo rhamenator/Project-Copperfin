@@ -1,0 +1,39 @@
+{
+  "baseline": "4b6cc734fb1b70cf7cbcdd1f083fafa1317fa4f9",
+  "public_freeze": "274a38635a463db154b4b9e0c78c502d6722c53c",
+  "executed_tests": 3,
+  "expected_original_failed_tests": [
+    "test_prg_engine_numeric_nonwhole_division"
+  ],
+  "native_rows": 578,
+  "admitted_exact_rows": 574,
+  "descriptor": 11040,
+  "bits": 0,
+  "literalBits": 0,
+  "evaluation": 0,
+  "controls": 0,
+  "total": 11040,
+  "descriptor_failures_by_context": {
+    "COPPERFIN/D0/FIXEDOFF": 552,
+    "COPPERFIN/D0/FIXEDON": 552,
+    "COPPERFIN/D2/FIXEDOFF": 552,
+    "COPPERFIN/D2/FIXEDON": 552,
+    "COPPERFIN/D6/FIXEDOFF": 552,
+    "COPPERFIN/D6/FIXEDON": 552,
+    "COPPERFIN/D14/FIXEDOFF": 552,
+    "COPPERFIN/D14/FIXEDON": 552,
+    "COPPERFIN/D18/FIXEDOFF": 552,
+    "COPPERFIN/D18/FIXEDON": 552,
+    "VFP9/D0/FIXEDOFF": 552,
+    "VFP9/D0/FIXEDON": 552,
+    "VFP9/D2/FIXEDOFF": 552,
+    "VFP9/D2/FIXEDON": 552,
+    "VFP9/D6/FIXEDOFF": 552,
+    "VFP9/D6/FIXEDON": 552,
+    "VFP9/D14/FIXEDOFF": 552,
+    "VFP9/D14/FIXEDON": 552,
+    "VFP9/D18/FIXEDOFF": 552,
+    "VFP9/D18/FIXEDON": 552
+  },
+  "conclusion": "Integrated literal producer removes observed payload failures; division metadata remains an actual ORIGINAL failure. No division hook or timing/parity acceptance claim."
+}

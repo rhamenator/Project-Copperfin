@@ -10,3 +10,7 @@
   sanitizer registration sets and the unchanged non-whole native/public freeze.
   Require refreshed ORIGINAL and native timing recovery before a division hook;
   source-only preparation does not establish numerical or execution acceptance.
+  The coordinated refreshed ORIGINAL now has zero payload failures with all
+  frozen operands/assertions retained; 11,040 metadata failures remain, with
+  evaluation/safety controls passing. Retain actual results and independent audit
+  before callback/continuation recovery or implementation.

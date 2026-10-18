@@ -47,3 +47,46 @@ are not independent-human/system/release qualification. Roll back this merge
 checkpoint if incorrect, retaining original observations/results. Parent
 HZ-data-corruption-01/HZ-runtime-crash-01/HZ-doc-command-01, checked conversions,
 allocation limits and #6776 mode policy remain unchanged.
+
+## Actual refreshed ORIGINAL (before any non-whole hook)
+
+Signed merge checkpoint `b0115ccb0fc00ea97064c35d48f94ed48ec9b919` preserves
+both parent histories. Runtime source is byte-identical to main4b6cc734f; the
+578-row header and 574-assertion public source are byte-identical to the signed
+pre-code freeze. Native-only header reconstruction still matches exactly.
+
+Fresh **both-chat** clearance and pre-launch full I/O avg10=0.00% permit one
+nice10 GNU Debug `-O0 -g0` Ninja `--parallel 1` incremental rebuild. Actual
+normal build0 recompiles the changed runtime translation unit and links the
+unchanged public test; existing missing-member-initializer warnings are retained,
+not hidden or promoted into a guessed cause. Build and three focused tests end
+2026-10-18T06:24:22Z; sampled full avg10 remains0.00%. Both chats receive window
+RELEASED immediately; no native/Wine/VM/probe or further build is reserved.
+
+Actual CTest8, three unique executed tests, only the intended non-whole public
+regression fails; isolation and exact sanitizer-selection contracts pass.
+Elapsed1.96s. Public actual1 reports **11,040 descriptor, zero payload bits,
+zero literal bits, zero evaluation and zero safety/debugger/boundary failures**.
+The earlier unchanged-main run's2,280 payload failures/40 bare-literal subset
+are now gone without changing any operand or expectation. All552 descriptor
+failure labels per each of20 mode/settings contexts independently match admitted
+native inventory entries, with no duplicate/foreign labels. The auditor imports
+no product/candidate implementation. This isolates the remaining metadata work;
+it is an expected ORIGINAL failure, NOT a passing non-whole implementation.
+
+`nonwhole-refreshed-original-evidence/` retains complete verbose log compressed
+losslessly, actual JUnit/statuses, original source hashes/unchanged diff receipts,
+native header check, build identities, pressure samples and independent audit0.
+The initial refreshed auditor incorrectly required CTest's successful `run`
+status for the deliberately failing executed test, and failed1. Actual JUnit
+uses `fail` with a failure element; its original auditor/stderr/status are retained.
+Correcting only that reader interpretation yields audit0 without rerunning or
+changing product/tests/expectations. A separate mistaken attempt to invoke a
+nonexistent Python isolation test was a pre-build command-path error; the actual
+existing CMake isolation contract then executes and passes through CTest.
+
+Next remains native fractional callback/continuation timing recovery and stronger
+three older unknown controls, BEFORE any new freeze/support/hook. The existing
+whole-value timing rule cannot be assumed to cover these operands. Preserve all
+old and refreshed ORIGINAL receipts, exact operands, mode/checked-allocation
+policy and pending mandatory downstream Numeric/ListItem work.
