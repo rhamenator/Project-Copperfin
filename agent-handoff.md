@@ -21,8 +21,8 @@ Full REA ev_b5c385b50babd0d46ce575ce70612afc29509d23ec249752ecddbb2eeef6fe67
 root0/quiesced/owned cleanup verified/untruncated; sampling/environment/image
 binding limits retained. Source/native/FLL/runner hashes unchanged. Both chats
 RELEASED, prefix postcheck empty. No build/Wine/native/VM reservation.
-NEXT native-only controlled width/scale interventions, cross-setting stored
-values and rounding boundaries before expected tests/actual ORIGINAL/support.
+Completed intervention phase and next rounding boundary are distinguished below;
+native expectations/actual ORIGINAL/support have NOT started.
 Follow-up source freeze f07ab8b0c9edfbfacf61d71248a3b316f519675a:384 GRID
 +12 STORED/2736 expected observations. Actual attempt1 runner0/empty stderr BUT
 only387 observations/no footer; frozen independent reader1 correctly rejects.
@@ -36,8 +36,6 @@ raw/failed-reader/pressure/status receipts. Both chats corrected/RELEASED.
 Narrower source/inventory/reader now240 GRID +12 STORED/1872 expected per run:
 omit width<=scale solely as probe-safety restriction, NOT production policy or
 established cause. EVALUATE-only GRID, compiled private-value birth assignments.
-No run yet. Full PSI59.23/43.38 prevents retry. NEXT fresh BOTH-chat/low-full-
-PSI gates for narrower pair before native expectations/ORIGINAL/support.
 Narrower pair now QUALIFIED from signed source acaf2f67c: both actual0/empty
 stderr/DONE1872; first structure0 before repeat, paired reader0, RAW exact
 repeat SHA45d1e318ba670f980f191c574a83d7d14206069468f35a53827537469018bea2.
@@ -55,8 +53,8 @@ Adjacent-payload native source/inventory/reader freeze is now ready in
 emit-rounding-boundary.cjs/rounding.prg/rounding-cases.json/audit-rounding-boundary.cjs:
 1000 exact inputs around eight QUALIFIED native centers,2000 observations/run,
 width40/scale18 readback+CTOBIN BRS identity mandatory. First --single before
-repeat; separate build/default-transform-rounding. Sign/push before fresh
-BOTH-chat/full PSI gates. Signed/DCO source freeze
+repeat; separate build/default-transform-rounding, fresh BOTH-chat/full PSI
+gates. Signed/DCO source freeze
 8f38313540a702af0e0b3bad858a56ff3017fb7c pushed. No native invocation for this
 new grid. Separate build/default-transform-rounding/capture-pair.sh prepared;
 DAW fresh clearance obtained, audit's initial reply empty (NOT clearance);
