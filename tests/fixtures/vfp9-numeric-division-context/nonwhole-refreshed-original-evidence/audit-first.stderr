@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/rich/.codex/worktrees/numeric-nonwhole-division-5611/Project-Copperfin/tests/fixtures/vfp9-numeric-division-context/audit-nonwhole-refreshed-original.py", line 26, in <module>
+    assert case.attrib["status"] == "run"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

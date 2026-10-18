@@ -1,0 +1,7 @@
+tests/fixtures/vfp9-numeric-division-context/emit-nonwhole-timing.cjs: OK
+tests/fixtures/vfp9-numeric-division-context/nonwhole-timing.prg: OK
+tests/fixtures/vfp9-numeric-division-context/nonwhole-timing-cases.json: OK
+tests/fixtures/vfp9-numeric-division-context/audit-nonwhole-timing.cjs: OK
+/home/rich/bin/vfp9-probe: OK
+/home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe: OK
+/home/rich/dev/Project-Copperfin/build/pr7203-completed/native-evidence/diagnostic/cause-probe.fll: OK

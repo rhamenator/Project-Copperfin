@@ -1,0 +1,27 @@
+node:assert:883
+    throw err;
+    ^
+
+AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^(?:[0-9A-F]{2})+$/. Input:
+
+''
+
+    at capture (/home/rich/.codex/worktrees/numeric-nonwhole-division-5611/Project-Copperfin/tests/fixtures/vfp9-numeric-division-context/audit-nonwhole-grid.cjs:52:11)
+    at Object.<anonymous> (/home/rich/.codex/worktrees/numeric-nonwhole-division-5611/Project-Copperfin/tests/fixtures/vfp9-numeric-division-context/audit-nonwhole-grid.cjs:63:15)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: '',
+  expected: /^(?:[0-9A-F]{2})+$/,
+  operator: 'match',
+  diff: 'simple'
+}
+
+Node.js v22.20.0

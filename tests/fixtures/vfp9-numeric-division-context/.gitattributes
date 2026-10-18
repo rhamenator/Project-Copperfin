@@ -21,3 +21,17 @@ constant-effects-captures/format-first/*.gz -text -diff
 constant-effects-captures/format-first/*.FXP -text
 constant-continuation-captures/*.gz -text -diff
 constant-public-evidence/*.gz -text -diff
+nonwhole-captures/*.gz -text -diff
+nonwhole-captures/*.out -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+nonwhole-captures/*-results.txt -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+nonwhole-original-evidence/*.gz -text -diff
+nonwhole-refreshed-original-evidence/*.gz -text -diff
+nonwhole-timing-captures/*.gz -text -diff
+nonwhole-timing.prg -text whitespace=-blank-at-eof
+nonwhole-expanded-original-evidence/*.gz -text -diff
+nonwhole-expanded-original-evidence/query-diagnostic/*.gz -text -diff
+nonwhole-expanded-original-evidence/query-diagnostic/*-results.txt -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+nonwhole-expanded-original-evidence/query-diagnostic/first.out -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+nonwhole-expanded-original-evidence/query-diagnostic/repeat.out -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+nonwhole-refrozen-original-evidence/*.gz -text -diff
+nonwhole-refrozen-original-evidence/crlf-attribute-check-first.log -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

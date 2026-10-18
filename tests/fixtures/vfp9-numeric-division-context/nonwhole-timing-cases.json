@@ -1,0 +1,1200 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-NONWHOLE-001",
+  "baseline": "4b6cc734fb1b70cf7cbcdd1f083fafa1317fa4f9",
+  "settings": [
+    0,
+    2,
+    6,
+    14,
+    18
+  ],
+  "cores": [
+    "0.5/2",
+    "(1/7)/3",
+    "(5/2)/(5/2)",
+    "5/(5/2)",
+    "1.234567890123456789/3",
+    "0.9999999999999999/2.5",
+    "-(0.00/2)",
+    "(0.00/2)/2"
+  ],
+  "rows": [
+    {
+      "index": 1,
+      "core": "0.5/2",
+      "expression": "CFObserve((0.5/2),0)",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 2,
+      "core": "0.5/2",
+      "expression": "-(CFObserve((0.5/2),0))",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 3,
+      "core": "0.5/2",
+      "expression": "CFObserve(-((0.5/2)),0)",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 4,
+      "core": "0.5/2",
+      "expression": "(0.5/2)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 5,
+      "core": "0.5/2",
+      "expression": "-((0.5/2))/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 6,
+      "core": "0.5/2",
+      "expression": "-(((0.5/2))/CFMark(0))",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 7,
+      "core": "0.5/2",
+      "expression": "CFMark(0)/(0.5/2)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 8,
+      "core": "0.5/2",
+      "expression": "0.5/2/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 9,
+      "core": "0.5/2",
+      "expression": "IIF(.T.,(0.5/2),0)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 10,
+      "core": "0.5/2",
+      "expression": "CFObserve((0.5/2),14)",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 11,
+      "core": "0.5/2",
+      "expression": "-(CFObserve((0.5/2),14))",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 12,
+      "core": "0.5/2",
+      "expression": "CFObserve(-((0.5/2)),14)",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 13,
+      "core": "0.5/2",
+      "expression": "(0.5/2)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 14,
+      "core": "0.5/2",
+      "expression": "-((0.5/2))/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 15,
+      "core": "0.5/2",
+      "expression": "-(((0.5/2))/CFMark(14))",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 16,
+      "core": "0.5/2",
+      "expression": "CFMark(14)/(0.5/2)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 17,
+      "core": "0.5/2",
+      "expression": "0.5/2/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 18,
+      "core": "0.5/2",
+      "expression": "IIF(.T.,(0.5/2),0)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 19,
+      "core": "(1/7)/3",
+      "expression": "CFObserve(((1/7)/3),0)",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 20,
+      "core": "(1/7)/3",
+      "expression": "-(CFObserve(((1/7)/3),0))",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 21,
+      "core": "(1/7)/3",
+      "expression": "CFObserve(-(((1/7)/3)),0)",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 22,
+      "core": "(1/7)/3",
+      "expression": "((1/7)/3)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 23,
+      "core": "(1/7)/3",
+      "expression": "-(((1/7)/3))/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 24,
+      "core": "(1/7)/3",
+      "expression": "-((((1/7)/3))/CFMark(0))",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 25,
+      "core": "(1/7)/3",
+      "expression": "CFMark(0)/((1/7)/3)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 26,
+      "core": "(1/7)/3",
+      "expression": "(1/7)/3/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 27,
+      "core": "(1/7)/3",
+      "expression": "IIF(.T.,((1/7)/3),0)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 28,
+      "core": "(1/7)/3",
+      "expression": "CFObserve(((1/7)/3),14)",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 29,
+      "core": "(1/7)/3",
+      "expression": "-(CFObserve(((1/7)/3),14))",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 30,
+      "core": "(1/7)/3",
+      "expression": "CFObserve(-(((1/7)/3)),14)",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 31,
+      "core": "(1/7)/3",
+      "expression": "((1/7)/3)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 32,
+      "core": "(1/7)/3",
+      "expression": "-(((1/7)/3))/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 33,
+      "core": "(1/7)/3",
+      "expression": "-((((1/7)/3))/CFMark(14))",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 34,
+      "core": "(1/7)/3",
+      "expression": "CFMark(14)/((1/7)/3)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 35,
+      "core": "(1/7)/3",
+      "expression": "(1/7)/3/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 36,
+      "core": "(1/7)/3",
+      "expression": "IIF(.T.,((1/7)/3),0)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 37,
+      "core": "(5/2)/(5/2)",
+      "expression": "CFObserve(((5/2)/(5/2)),0)",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 38,
+      "core": "(5/2)/(5/2)",
+      "expression": "-(CFObserve(((5/2)/(5/2)),0))",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 39,
+      "core": "(5/2)/(5/2)",
+      "expression": "CFObserve(-(((5/2)/(5/2))),0)",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 40,
+      "core": "(5/2)/(5/2)",
+      "expression": "((5/2)/(5/2))/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 41,
+      "core": "(5/2)/(5/2)",
+      "expression": "-(((5/2)/(5/2)))/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 42,
+      "core": "(5/2)/(5/2)",
+      "expression": "-((((5/2)/(5/2)))/CFMark(0))",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 43,
+      "core": "(5/2)/(5/2)",
+      "expression": "CFMark(0)/((5/2)/(5/2))",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 44,
+      "core": "(5/2)/(5/2)",
+      "expression": "(5/2)/(5/2)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 45,
+      "core": "(5/2)/(5/2)",
+      "expression": "IIF(.T.,((5/2)/(5/2)),0)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 46,
+      "core": "(5/2)/(5/2)",
+      "expression": "CFObserve(((5/2)/(5/2)),14)",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 47,
+      "core": "(5/2)/(5/2)",
+      "expression": "-(CFObserve(((5/2)/(5/2)),14))",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 48,
+      "core": "(5/2)/(5/2)",
+      "expression": "CFObserve(-(((5/2)/(5/2))),14)",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 49,
+      "core": "(5/2)/(5/2)",
+      "expression": "((5/2)/(5/2))/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 50,
+      "core": "(5/2)/(5/2)",
+      "expression": "-(((5/2)/(5/2)))/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 51,
+      "core": "(5/2)/(5/2)",
+      "expression": "-((((5/2)/(5/2)))/CFMark(14))",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 52,
+      "core": "(5/2)/(5/2)",
+      "expression": "CFMark(14)/((5/2)/(5/2))",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 53,
+      "core": "(5/2)/(5/2)",
+      "expression": "(5/2)/(5/2)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 54,
+      "core": "(5/2)/(5/2)",
+      "expression": "IIF(.T.,((5/2)/(5/2)),0)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 55,
+      "core": "5/(5/2)",
+      "expression": "CFObserve((5/(5/2)),0)",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 56,
+      "core": "5/(5/2)",
+      "expression": "-(CFObserve((5/(5/2)),0))",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 57,
+      "core": "5/(5/2)",
+      "expression": "CFObserve(-((5/(5/2))),0)",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 58,
+      "core": "5/(5/2)",
+      "expression": "(5/(5/2))/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 59,
+      "core": "5/(5/2)",
+      "expression": "-((5/(5/2)))/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 60,
+      "core": "5/(5/2)",
+      "expression": "-(((5/(5/2)))/CFMark(0))",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 61,
+      "core": "5/(5/2)",
+      "expression": "CFMark(0)/(5/(5/2))",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 62,
+      "core": "5/(5/2)",
+      "expression": "5/(5/2)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 63,
+      "core": "5/(5/2)",
+      "expression": "IIF(.T.,(5/(5/2)),0)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 64,
+      "core": "5/(5/2)",
+      "expression": "CFObserve((5/(5/2)),14)",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 65,
+      "core": "5/(5/2)",
+      "expression": "-(CFObserve((5/(5/2)),14))",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 66,
+      "core": "5/(5/2)",
+      "expression": "CFObserve(-((5/(5/2))),14)",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 67,
+      "core": "5/(5/2)",
+      "expression": "(5/(5/2))/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 68,
+      "core": "5/(5/2)",
+      "expression": "-((5/(5/2)))/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 69,
+      "core": "5/(5/2)",
+      "expression": "-(((5/(5/2)))/CFMark(14))",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 70,
+      "core": "5/(5/2)",
+      "expression": "CFMark(14)/(5/(5/2))",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 71,
+      "core": "5/(5/2)",
+      "expression": "5/(5/2)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 72,
+      "core": "5/(5/2)",
+      "expression": "IIF(.T.,(5/(5/2)),0)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 73,
+      "core": "1.234567890123456789/3",
+      "expression": "CFObserve((1.234567890123456789/3),0)",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 74,
+      "core": "1.234567890123456789/3",
+      "expression": "-(CFObserve((1.234567890123456789/3),0))",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 75,
+      "core": "1.234567890123456789/3",
+      "expression": "CFObserve(-((1.234567890123456789/3)),0)",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 76,
+      "core": "1.234567890123456789/3",
+      "expression": "(1.234567890123456789/3)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 77,
+      "core": "1.234567890123456789/3",
+      "expression": "-((1.234567890123456789/3))/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 78,
+      "core": "1.234567890123456789/3",
+      "expression": "-(((1.234567890123456789/3))/CFMark(0))",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 79,
+      "core": "1.234567890123456789/3",
+      "expression": "CFMark(0)/(1.234567890123456789/3)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 80,
+      "core": "1.234567890123456789/3",
+      "expression": "1.234567890123456789/3/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 81,
+      "core": "1.234567890123456789/3",
+      "expression": "IIF(.T.,(1.234567890123456789/3),0)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 82,
+      "core": "1.234567890123456789/3",
+      "expression": "CFObserve((1.234567890123456789/3),14)",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 83,
+      "core": "1.234567890123456789/3",
+      "expression": "-(CFObserve((1.234567890123456789/3),14))",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 84,
+      "core": "1.234567890123456789/3",
+      "expression": "CFObserve(-((1.234567890123456789/3)),14)",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 85,
+      "core": "1.234567890123456789/3",
+      "expression": "(1.234567890123456789/3)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 86,
+      "core": "1.234567890123456789/3",
+      "expression": "-((1.234567890123456789/3))/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 87,
+      "core": "1.234567890123456789/3",
+      "expression": "-(((1.234567890123456789/3))/CFMark(14))",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 88,
+      "core": "1.234567890123456789/3",
+      "expression": "CFMark(14)/(1.234567890123456789/3)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 89,
+      "core": "1.234567890123456789/3",
+      "expression": "1.234567890123456789/3/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 90,
+      "core": "1.234567890123456789/3",
+      "expression": "IIF(.T.,(1.234567890123456789/3),0)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 91,
+      "core": "0.9999999999999999/2.5",
+      "expression": "CFObserve((0.9999999999999999/2.5),0)",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 92,
+      "core": "0.9999999999999999/2.5",
+      "expression": "-(CFObserve((0.9999999999999999/2.5),0))",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 93,
+      "core": "0.9999999999999999/2.5",
+      "expression": "CFObserve(-((0.9999999999999999/2.5)),0)",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 94,
+      "core": "0.9999999999999999/2.5",
+      "expression": "(0.9999999999999999/2.5)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 95,
+      "core": "0.9999999999999999/2.5",
+      "expression": "-((0.9999999999999999/2.5))/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 96,
+      "core": "0.9999999999999999/2.5",
+      "expression": "-(((0.9999999999999999/2.5))/CFMark(0))",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 97,
+      "core": "0.9999999999999999/2.5",
+      "expression": "CFMark(0)/(0.9999999999999999/2.5)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 98,
+      "core": "0.9999999999999999/2.5",
+      "expression": "0.9999999999999999/2.5/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 99,
+      "core": "0.9999999999999999/2.5",
+      "expression": "IIF(.T.,(0.9999999999999999/2.5),0)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 100,
+      "core": "0.9999999999999999/2.5",
+      "expression": "CFObserve((0.9999999999999999/2.5),14)",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 101,
+      "core": "0.9999999999999999/2.5",
+      "expression": "-(CFObserve((0.9999999999999999/2.5),14))",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 102,
+      "core": "0.9999999999999999/2.5",
+      "expression": "CFObserve(-((0.9999999999999999/2.5)),14)",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 103,
+      "core": "0.9999999999999999/2.5",
+      "expression": "(0.9999999999999999/2.5)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 104,
+      "core": "0.9999999999999999/2.5",
+      "expression": "-((0.9999999999999999/2.5))/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 105,
+      "core": "0.9999999999999999/2.5",
+      "expression": "-(((0.9999999999999999/2.5))/CFMark(14))",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 106,
+      "core": "0.9999999999999999/2.5",
+      "expression": "CFMark(14)/(0.9999999999999999/2.5)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 107,
+      "core": "0.9999999999999999/2.5",
+      "expression": "0.9999999999999999/2.5/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 108,
+      "core": "0.9999999999999999/2.5",
+      "expression": "IIF(.T.,(0.9999999999999999/2.5),0)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 109,
+      "core": "-(0.00/2)",
+      "expression": "CFObserve((-(0.00/2)),0)",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 110,
+      "core": "-(0.00/2)",
+      "expression": "-(CFObserve((-(0.00/2)),0))",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 111,
+      "core": "-(0.00/2)",
+      "expression": "CFObserve(-((-(0.00/2))),0)",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 112,
+      "core": "-(0.00/2)",
+      "expression": "(-(0.00/2))/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 113,
+      "core": "-(0.00/2)",
+      "expression": "-((-(0.00/2)))/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 114,
+      "core": "-(0.00/2)",
+      "expression": "-(((-(0.00/2)))/CFMark(0))",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 115,
+      "core": "-(0.00/2)",
+      "expression": "CFMark(0)/(-(0.00/2))",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 116,
+      "core": "-(0.00/2)",
+      "expression": "-(0.00/2)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 117,
+      "core": "-(0.00/2)",
+      "expression": "IIF(.T.,(-(0.00/2)),0)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 118,
+      "core": "-(0.00/2)",
+      "expression": "CFObserve((-(0.00/2)),14)",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 119,
+      "core": "-(0.00/2)",
+      "expression": "-(CFObserve((-(0.00/2)),14))",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 120,
+      "core": "-(0.00/2)",
+      "expression": "CFObserve(-((-(0.00/2))),14)",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 121,
+      "core": "-(0.00/2)",
+      "expression": "(-(0.00/2))/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 122,
+      "core": "-(0.00/2)",
+      "expression": "-((-(0.00/2)))/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 123,
+      "core": "-(0.00/2)",
+      "expression": "-(((-(0.00/2)))/CFMark(14))",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 124,
+      "core": "-(0.00/2)",
+      "expression": "CFMark(14)/(-(0.00/2))",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 125,
+      "core": "-(0.00/2)",
+      "expression": "-(0.00/2)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 126,
+      "core": "-(0.00/2)",
+      "expression": "IIF(.T.,(-(0.00/2)),0)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 127,
+      "core": "(0.00/2)/2",
+      "expression": "CFObserve(((0.00/2)/2),0)",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 128,
+      "core": "(0.00/2)/2",
+      "expression": "-(CFObserve(((0.00/2)/2),0))",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 129,
+      "core": "(0.00/2)/2",
+      "expression": "CFObserve(-(((0.00/2)/2)),0)",
+      "changesTo": 0,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 130,
+      "core": "(0.00/2)/2",
+      "expression": "((0.00/2)/2)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 131,
+      "core": "(0.00/2)/2",
+      "expression": "-(((0.00/2)/2))/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 132,
+      "core": "(0.00/2)/2",
+      "expression": "-((((0.00/2)/2))/CFMark(0))",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 133,
+      "core": "(0.00/2)/2",
+      "expression": "CFMark(0)/((0.00/2)/2)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 134,
+      "core": "(0.00/2)/2",
+      "expression": "(0.00/2)/2/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 135,
+      "core": "(0.00/2)/2",
+      "expression": "IIF(.T.,((0.00/2)/2),0)/CFMark(0)",
+      "changesTo": 0,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 136,
+      "core": "(0.00/2)/2",
+      "expression": "CFObserve(((0.00/2)/2),14)",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 137,
+      "core": "(0.00/2)/2",
+      "expression": "-(CFObserve(((0.00/2)/2),14))",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 138,
+      "core": "(0.00/2)/2",
+      "expression": "CFObserve(-(((0.00/2)/2)),14)",
+      "changesTo": 14,
+      "observesArgument": true,
+      "calls": 1
+    },
+    {
+      "index": 139,
+      "core": "(0.00/2)/2",
+      "expression": "((0.00/2)/2)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 140,
+      "core": "(0.00/2)/2",
+      "expression": "-(((0.00/2)/2))/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 141,
+      "core": "(0.00/2)/2",
+      "expression": "-((((0.00/2)/2))/CFMark(14))",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 142,
+      "core": "(0.00/2)/2",
+      "expression": "CFMark(14)/((0.00/2)/2)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 143,
+      "core": "(0.00/2)/2",
+      "expression": "(0.00/2)/2/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 144,
+      "core": "(0.00/2)/2",
+      "expression": "IIF(.T.,((0.00/2)/2),0)/CFMark(14)",
+      "changesTo": 14,
+      "observesArgument": false,
+      "calls": 1
+    },
+    {
+      "index": 145,
+      "expression": "(5/2)/(5/2)",
+      "changesTo": null,
+      "observesArgument": false,
+      "calls": 0,
+      "oldUnknownControl": true
+    },
+    {
+      "index": 146,
+      "expression": "(1/7)/3",
+      "changesTo": null,
+      "observesArgument": false,
+      "calls": 0,
+      "oldUnknownControl": true
+    },
+    {
+      "index": 147,
+      "expression": "5/(5/2)",
+      "changesTo": null,
+      "observesArgument": false,
+      "calls": 0,
+      "oldUnknownControl": true
+    }
+  ],
+  "limitations": "Single evaluation through public-API FLL. CFObserve seen descriptors are after LPARAMETERS normalization, not raw call arguments. Small outer runtime divisors and zero-result cases are timing controls, not an expanded production frontier."
+}

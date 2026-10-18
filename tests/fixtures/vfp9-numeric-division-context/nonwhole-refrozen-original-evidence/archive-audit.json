@@ -1,0 +1,21 @@
+{
+  "baseline": "4b6cc734fb1b70cf7cbcdd1f083fafa1317fa4f9",
+  "expandedFreeze": "569b36e84236a7f1c7f97492a8a92d136bbecce5",
+  "queryAdapterRefreeze": "0967ad091475ffdb4600bba60536df5b6ef77e00",
+  "actualExecuted": 4,
+  "expectedOriginalFailures": [
+    "test_prg_engine_numeric_constant_division",
+    "test_prg_engine_numeric_nonwhole_division"
+  ],
+  "constantDescriptor": 60,
+  "nonwholeDescriptor": 12480,
+  "nonwholePriorDescriptor": 11040,
+  "callbackDescriptor": 1440,
+  "bits": 0,
+  "literalBits": 0,
+  "evaluation": 0,
+  "controls": 0,
+  "callbackForms": 72,
+  "contextsPerForm": 20,
+  "conclusion": "Expanded source unchanged after adapter refreeze; actual metadata-only ORIGINAL failures retained before any non-whole support/hook. SET query type issue7208 remains unfixed."
+}

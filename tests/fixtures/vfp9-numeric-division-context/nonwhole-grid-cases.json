@@ -1,0 +1,5463 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-NONWHOLE-001",
+  "baseline": "ef3ea326f78d640546363abe97bbe27b6208bf45",
+  "settings": [
+    0,
+    2,
+    6,
+    14,
+    18
+  ],
+  "cores": [
+    {
+      "id": 1,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "0.5"
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2"
+        }
+      },
+      "expression": "(0.5/2)"
+    },
+    {
+      "id": 2,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "0.5"
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2"
+        }
+      },
+      "expression": "(-(0.5)/2)"
+    },
+    {
+      "id": 3,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "0.5"
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2"
+          }
+        }
+      },
+      "expression": "(0.5/-(2))"
+    },
+    {
+      "id": 4,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "0.5"
+          }
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2"
+          }
+        }
+      },
+      "expression": "(-(0.5)/-(2))"
+    },
+    {
+      "id": 5,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "0.5"
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2.5"
+        }
+      },
+      "expression": "(0.5/2.5)"
+    },
+    {
+      "id": 6,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "0.5"
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2.5"
+        }
+      },
+      "expression": "(-(0.5)/2.5)"
+    },
+    {
+      "id": 7,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "0.5"
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2.5"
+          }
+        }
+      },
+      "expression": "(0.5/-(2.5))"
+    },
+    {
+      "id": 8,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "0.5"
+          }
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2.5"
+          }
+        }
+      },
+      "expression": "(-(0.5)/-(2.5))"
+    },
+    {
+      "id": 9,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "0.5"
+        },
+        "right": {
+          "kind": "literal",
+          "text": "02.50"
+        }
+      },
+      "expression": "(0.5/02.50)"
+    },
+    {
+      "id": 10,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "0.5"
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "02.50"
+        }
+      },
+      "expression": "(-(0.5)/02.50)"
+    },
+    {
+      "id": 11,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "0.5"
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "02.50"
+          }
+        }
+      },
+      "expression": "(0.5/-(02.50))"
+    },
+    {
+      "id": 12,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "0.5"
+          }
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "02.50"
+          }
+        }
+      },
+      "expression": "(-(0.5)/-(02.50))"
+    },
+    {
+      "id": 13,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "2.50"
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2"
+        }
+      },
+      "expression": "(2.50/2)"
+    },
+    {
+      "id": 14,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2.50"
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2"
+        }
+      },
+      "expression": "(-(2.50)/2)"
+    },
+    {
+      "id": 15,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "2.50"
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2"
+          }
+        }
+      },
+      "expression": "(2.50/-(2))"
+    },
+    {
+      "id": 16,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2.50"
+          }
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2"
+          }
+        }
+      },
+      "expression": "(-(2.50)/-(2))"
+    },
+    {
+      "id": 17,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "2.50"
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2.5"
+        }
+      },
+      "expression": "(2.50/2.5)"
+    },
+    {
+      "id": 18,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2.50"
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2.5"
+        }
+      },
+      "expression": "(-(2.50)/2.5)"
+    },
+    {
+      "id": 19,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "2.50"
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2.5"
+          }
+        }
+      },
+      "expression": "(2.50/-(2.5))"
+    },
+    {
+      "id": 20,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2.50"
+          }
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2.5"
+          }
+        }
+      },
+      "expression": "(-(2.50)/-(2.5))"
+    },
+    {
+      "id": 21,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "2.50"
+        },
+        "right": {
+          "kind": "literal",
+          "text": "02.50"
+        }
+      },
+      "expression": "(2.50/02.50)"
+    },
+    {
+      "id": 22,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2.50"
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "02.50"
+        }
+      },
+      "expression": "(-(2.50)/02.50)"
+    },
+    {
+      "id": 23,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "2.50"
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "02.50"
+          }
+        }
+      },
+      "expression": "(2.50/-(02.50))"
+    },
+    {
+      "id": 24,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2.50"
+          }
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "02.50"
+          }
+        }
+      },
+      "expression": "(-(2.50)/-(02.50))"
+    },
+    {
+      "id": 25,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "0.000000000000000001"
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2"
+        }
+      },
+      "expression": "(0.000000000000000001/2)"
+    },
+    {
+      "id": 26,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "0.000000000000000001"
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2"
+        }
+      },
+      "expression": "(-(0.000000000000000001)/2)"
+    },
+    {
+      "id": 27,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "0.000000000000000001"
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2"
+          }
+        }
+      },
+      "expression": "(0.000000000000000001/-(2))"
+    },
+    {
+      "id": 28,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "0.000000000000000001"
+          }
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2"
+          }
+        }
+      },
+      "expression": "(-(0.000000000000000001)/-(2))"
+    },
+    {
+      "id": 29,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "0.000000000000000001"
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2.5"
+        }
+      },
+      "expression": "(0.000000000000000001/2.5)"
+    },
+    {
+      "id": 30,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "0.000000000000000001"
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2.5"
+        }
+      },
+      "expression": "(-(0.000000000000000001)/2.5)"
+    },
+    {
+      "id": 31,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "0.000000000000000001"
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2.5"
+          }
+        }
+      },
+      "expression": "(0.000000000000000001/-(2.5))"
+    },
+    {
+      "id": 32,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "0.000000000000000001"
+          }
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2.5"
+          }
+        }
+      },
+      "expression": "(-(0.000000000000000001)/-(2.5))"
+    },
+    {
+      "id": 33,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "0.000000000000000001"
+        },
+        "right": {
+          "kind": "literal",
+          "text": "02.50"
+        }
+      },
+      "expression": "(0.000000000000000001/02.50)"
+    },
+    {
+      "id": 34,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "0.000000000000000001"
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "02.50"
+        }
+      },
+      "expression": "(-(0.000000000000000001)/02.50)"
+    },
+    {
+      "id": 35,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "0.000000000000000001"
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "02.50"
+          }
+        }
+      },
+      "expression": "(0.000000000000000001/-(02.50))"
+    },
+    {
+      "id": 36,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "0.000000000000000001"
+          }
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "02.50"
+          }
+        }
+      },
+      "expression": "(-(0.000000000000000001)/-(02.50))"
+    },
+    {
+      "id": 37,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "1.234567890123456789"
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2"
+        }
+      },
+      "expression": "(1.234567890123456789/2)"
+    },
+    {
+      "id": 38,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "1.234567890123456789"
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2"
+        }
+      },
+      "expression": "(-(1.234567890123456789)/2)"
+    },
+    {
+      "id": 39,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "1.234567890123456789"
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2"
+          }
+        }
+      },
+      "expression": "(1.234567890123456789/-(2))"
+    },
+    {
+      "id": 40,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "1.234567890123456789"
+          }
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2"
+          }
+        }
+      },
+      "expression": "(-(1.234567890123456789)/-(2))"
+    },
+    {
+      "id": 41,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "1.234567890123456789"
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2.5"
+        }
+      },
+      "expression": "(1.234567890123456789/2.5)"
+    },
+    {
+      "id": 42,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "1.234567890123456789"
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2.5"
+        }
+      },
+      "expression": "(-(1.234567890123456789)/2.5)"
+    },
+    {
+      "id": 43,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "1.234567890123456789"
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2.5"
+          }
+        }
+      },
+      "expression": "(1.234567890123456789/-(2.5))"
+    },
+    {
+      "id": 44,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "1.234567890123456789"
+          }
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "2.5"
+          }
+        }
+      },
+      "expression": "(-(1.234567890123456789)/-(2.5))"
+    },
+    {
+      "id": 45,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "1.234567890123456789"
+        },
+        "right": {
+          "kind": "literal",
+          "text": "02.50"
+        }
+      },
+      "expression": "(1.234567890123456789/02.50)"
+    },
+    {
+      "id": 46,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "1.234567890123456789"
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "02.50"
+        }
+      },
+      "expression": "(-(1.234567890123456789)/02.50)"
+    },
+    {
+      "id": 47,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "1.234567890123456789"
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "02.50"
+          }
+        }
+      },
+      "expression": "(1.234567890123456789/-(02.50))"
+    },
+    {
+      "id": 48,
+      "label": "literal pair/sign",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "1.234567890123456789"
+          }
+        },
+        "right": {
+          "kind": "negate",
+          "operand": {
+            "kind": "literal",
+            "text": "02.50"
+          }
+        }
+      },
+      "expression": "(-(1.234567890123456789)/-(02.50))"
+    },
+    {
+      "id": 49,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "5"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "2"
+          }
+        },
+        "right": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "5"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "2"
+          }
+        }
+      },
+      "expression": "((5/2)/(5/2))"
+    },
+    {
+      "id": 50,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "1"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "7"
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "3"
+        }
+      },
+      "expression": "((1/7)/3)"
+    },
+    {
+      "id": 51,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "5"
+        },
+        "right": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "5"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "2"
+          }
+        }
+      },
+      "expression": "(5/(5/2))"
+    },
+    {
+      "id": 52,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "2"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "3"
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "7"
+        }
+      },
+      "expression": "((2/3)/7)"
+    },
+    {
+      "id": 53,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "1"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "3"
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "7"
+        }
+      },
+      "expression": "((1/3)/7)"
+    },
+    {
+      "id": 54,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "1"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "3"
+          }
+        },
+        "right": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "7"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "3"
+          }
+        }
+      },
+      "expression": "((1/3)/(7/3))"
+    },
+    {
+      "id": 55,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "divide",
+          "left": {
+            "kind": "divide",
+            "left": {
+              "kind": "literal",
+              "text": "1"
+            },
+            "right": {
+              "kind": "literal",
+              "text": "7"
+            }
+          },
+          "right": {
+            "kind": "literal",
+            "text": "3"
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "3"
+        }
+      },
+      "expression": "(((1/7)/3)/3)"
+    },
+    {
+      "id": 56,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "5.00"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "2.00"
+          }
+        },
+        "right": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "7.0"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "3.0"
+          }
+        }
+      },
+      "expression": "((5.00/2.00)/(7.0/3.0))"
+    },
+    {
+      "id": 57,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "0.5"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "2"
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2"
+        }
+      },
+      "expression": "((0.5/2)/2)"
+    },
+    {
+      "id": 58,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "divide",
+          "left": {
+            "kind": "divide",
+            "left": {
+              "kind": "literal",
+              "text": "5"
+            },
+            "right": {
+              "kind": "literal",
+              "text": "2"
+            }
+          },
+          "right": {
+            "kind": "divide",
+            "left": {
+              "kind": "literal",
+              "text": "5"
+            },
+            "right": {
+              "kind": "literal",
+              "text": "2"
+            }
+          }
+        },
+        "right": {
+          "kind": "literal",
+          "text": "3"
+        }
+      },
+      "expression": "(((5/2)/(5/2))/3)"
+    },
+    {
+      "id": 59,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "divide",
+          "left": {
+            "kind": "divide",
+            "left": {
+              "kind": "literal",
+              "text": "5"
+            },
+            "right": {
+              "kind": "literal",
+              "text": "2"
+            }
+          },
+          "right": {
+            "kind": "literal",
+            "text": "2"
+          }
+        },
+        "right": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "7"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "3"
+          }
+        }
+      },
+      "expression": "(((5/2)/2)/(7/3))"
+    },
+    {
+      "id": 60,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "2.50"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "2.5"
+          }
+        },
+        "right": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "5"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "2"
+          }
+        }
+      },
+      "expression": "((2.50/2.5)/(5/2))"
+    },
+    {
+      "id": 61,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "divide",
+          "left": {
+            "kind": "negate",
+            "operand": {
+              "kind": "literal",
+              "text": "5"
+            }
+          },
+          "right": {
+            "kind": "literal",
+            "text": "2"
+          }
+        },
+        "right": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "7"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "3"
+          }
+        }
+      },
+      "expression": "((-(5)/2)/(7/3))"
+    },
+    {
+      "id": 62,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "5"
+          },
+          "right": {
+            "kind": "negate",
+            "operand": {
+              "kind": "literal",
+              "text": "2"
+            }
+          }
+        },
+        "right": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "7"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "3"
+          }
+        }
+      },
+      "expression": "((5/-(2))/(7/3))"
+    },
+    {
+      "id": 63,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "5"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "2"
+          }
+        },
+        "right": {
+          "kind": "divide",
+          "left": {
+            "kind": "negate",
+            "operand": {
+              "kind": "literal",
+              "text": "7"
+            }
+          },
+          "right": {
+            "kind": "literal",
+            "text": "3"
+          }
+        }
+      },
+      "expression": "((5/2)/(-(7)/3))"
+    },
+    {
+      "id": 64,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "5"
+          },
+          "right": {
+            "kind": "literal",
+            "text": "2"
+          }
+        },
+        "right": {
+          "kind": "divide",
+          "left": {
+            "kind": "literal",
+            "text": "7"
+          },
+          "right": {
+            "kind": "negate",
+            "operand": {
+              "kind": "literal",
+              "text": "3"
+            }
+          }
+        }
+      },
+      "expression": "((5/2)/(7/-(3)))"
+    },
+    {
+      "id": 65,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "1.0000000000000002"
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2.5"
+        }
+      },
+      "expression": "(1.0000000000000002/2.5)"
+    },
+    {
+      "id": 66,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "0.9999999999999999"
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2.5"
+        }
+      },
+      "expression": "(0.9999999999999999/2.5)"
+    },
+    {
+      "id": 67,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "3.9999999999999996"
+        },
+        "right": {
+          "kind": "literal",
+          "text": "2.5"
+        }
+      },
+      "expression": "(3.9999999999999996/2.5)"
+    },
+    {
+      "id": 68,
+      "label": "nested or mantissa control",
+      "tree": {
+        "kind": "divide",
+        "left": {
+          "kind": "literal",
+          "text": "1.234567890123456789"
+        },
+        "right": {
+          "kind": "literal",
+          "text": "3"
+        }
+      },
+      "expression": "(1.234567890123456789/3)"
+    }
+  ],
+  "rows": [
+    {
+      "index": 1,
+      "kind": "core",
+      "core": 1,
+      "wrapper": "direct",
+      "expression": "(0.5/2)"
+    },
+    {
+      "index": 2,
+      "kind": "core",
+      "core": 1,
+      "wrapper": "plus",
+      "expression": "+((0.5/2))"
+    },
+    {
+      "index": 3,
+      "kind": "core",
+      "core": 1,
+      "wrapper": "minus",
+      "expression": "-((0.5/2))"
+    },
+    {
+      "index": 4,
+      "kind": "core",
+      "core": 1,
+      "wrapper": "double-minus",
+      "expression": "-(-((0.5/2)))"
+    },
+    {
+      "index": 5,
+      "kind": "core",
+      "core": 1,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(0.5/2),0)"
+    },
+    {
+      "index": 6,
+      "kind": "core",
+      "core": 1,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(0.5/2),0))"
+    },
+    {
+      "index": 7,
+      "kind": "core",
+      "core": 1,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(0.5/2)\")"
+    },
+    {
+      "index": 8,
+      "kind": "core",
+      "core": 1,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(0.5/2)\"))"
+    },
+    {
+      "index": 9,
+      "kind": "core",
+      "core": 2,
+      "wrapper": "direct",
+      "expression": "(-(0.5)/2)"
+    },
+    {
+      "index": 10,
+      "kind": "core",
+      "core": 2,
+      "wrapper": "plus",
+      "expression": "+((-(0.5)/2))"
+    },
+    {
+      "index": 11,
+      "kind": "core",
+      "core": 2,
+      "wrapper": "minus",
+      "expression": "-((-(0.5)/2))"
+    },
+    {
+      "index": 12,
+      "kind": "core",
+      "core": 2,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(0.5)/2)))"
+    },
+    {
+      "index": 13,
+      "kind": "core",
+      "core": 2,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(0.5)/2),0)"
+    },
+    {
+      "index": 14,
+      "kind": "core",
+      "core": 2,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(0.5)/2),0))"
+    },
+    {
+      "index": 15,
+      "kind": "core",
+      "core": 2,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(0.5)/2)\")"
+    },
+    {
+      "index": 16,
+      "kind": "core",
+      "core": 2,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(0.5)/2)\"))"
+    },
+    {
+      "index": 17,
+      "kind": "core",
+      "core": 3,
+      "wrapper": "direct",
+      "expression": "(0.5/-(2))"
+    },
+    {
+      "index": 18,
+      "kind": "core",
+      "core": 3,
+      "wrapper": "plus",
+      "expression": "+((0.5/-(2)))"
+    },
+    {
+      "index": 19,
+      "kind": "core",
+      "core": 3,
+      "wrapper": "minus",
+      "expression": "-((0.5/-(2)))"
+    },
+    {
+      "index": 20,
+      "kind": "core",
+      "core": 3,
+      "wrapper": "double-minus",
+      "expression": "-(-((0.5/-(2))))"
+    },
+    {
+      "index": 21,
+      "kind": "core",
+      "core": 3,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(0.5/-(2)),0)"
+    },
+    {
+      "index": 22,
+      "kind": "core",
+      "core": 3,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(0.5/-(2)),0))"
+    },
+    {
+      "index": 23,
+      "kind": "core",
+      "core": 3,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(0.5/-(2))\")"
+    },
+    {
+      "index": 24,
+      "kind": "core",
+      "core": 3,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(0.5/-(2))\"))"
+    },
+    {
+      "index": 25,
+      "kind": "core",
+      "core": 4,
+      "wrapper": "direct",
+      "expression": "(-(0.5)/-(2))"
+    },
+    {
+      "index": 26,
+      "kind": "core",
+      "core": 4,
+      "wrapper": "plus",
+      "expression": "+((-(0.5)/-(2)))"
+    },
+    {
+      "index": 27,
+      "kind": "core",
+      "core": 4,
+      "wrapper": "minus",
+      "expression": "-((-(0.5)/-(2)))"
+    },
+    {
+      "index": 28,
+      "kind": "core",
+      "core": 4,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(0.5)/-(2))))"
+    },
+    {
+      "index": 29,
+      "kind": "core",
+      "core": 4,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(0.5)/-(2)),0)"
+    },
+    {
+      "index": 30,
+      "kind": "core",
+      "core": 4,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(0.5)/-(2)),0))"
+    },
+    {
+      "index": 31,
+      "kind": "core",
+      "core": 4,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(0.5)/-(2))\")"
+    },
+    {
+      "index": 32,
+      "kind": "core",
+      "core": 4,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(0.5)/-(2))\"))"
+    },
+    {
+      "index": 33,
+      "kind": "core",
+      "core": 5,
+      "wrapper": "direct",
+      "expression": "(0.5/2.5)"
+    },
+    {
+      "index": 34,
+      "kind": "core",
+      "core": 5,
+      "wrapper": "plus",
+      "expression": "+((0.5/2.5))"
+    },
+    {
+      "index": 35,
+      "kind": "core",
+      "core": 5,
+      "wrapper": "minus",
+      "expression": "-((0.5/2.5))"
+    },
+    {
+      "index": 36,
+      "kind": "core",
+      "core": 5,
+      "wrapper": "double-minus",
+      "expression": "-(-((0.5/2.5)))"
+    },
+    {
+      "index": 37,
+      "kind": "core",
+      "core": 5,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(0.5/2.5),0)"
+    },
+    {
+      "index": 38,
+      "kind": "core",
+      "core": 5,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(0.5/2.5),0))"
+    },
+    {
+      "index": 39,
+      "kind": "core",
+      "core": 5,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(0.5/2.5)\")"
+    },
+    {
+      "index": 40,
+      "kind": "core",
+      "core": 5,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(0.5/2.5)\"))"
+    },
+    {
+      "index": 41,
+      "kind": "core",
+      "core": 6,
+      "wrapper": "direct",
+      "expression": "(-(0.5)/2.5)"
+    },
+    {
+      "index": 42,
+      "kind": "core",
+      "core": 6,
+      "wrapper": "plus",
+      "expression": "+((-(0.5)/2.5))"
+    },
+    {
+      "index": 43,
+      "kind": "core",
+      "core": 6,
+      "wrapper": "minus",
+      "expression": "-((-(0.5)/2.5))"
+    },
+    {
+      "index": 44,
+      "kind": "core",
+      "core": 6,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(0.5)/2.5)))"
+    },
+    {
+      "index": 45,
+      "kind": "core",
+      "core": 6,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(0.5)/2.5),0)"
+    },
+    {
+      "index": 46,
+      "kind": "core",
+      "core": 6,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(0.5)/2.5),0))"
+    },
+    {
+      "index": 47,
+      "kind": "core",
+      "core": 6,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(0.5)/2.5)\")"
+    },
+    {
+      "index": 48,
+      "kind": "core",
+      "core": 6,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(0.5)/2.5)\"))"
+    },
+    {
+      "index": 49,
+      "kind": "core",
+      "core": 7,
+      "wrapper": "direct",
+      "expression": "(0.5/-(2.5))"
+    },
+    {
+      "index": 50,
+      "kind": "core",
+      "core": 7,
+      "wrapper": "plus",
+      "expression": "+((0.5/-(2.5)))"
+    },
+    {
+      "index": 51,
+      "kind": "core",
+      "core": 7,
+      "wrapper": "minus",
+      "expression": "-((0.5/-(2.5)))"
+    },
+    {
+      "index": 52,
+      "kind": "core",
+      "core": 7,
+      "wrapper": "double-minus",
+      "expression": "-(-((0.5/-(2.5))))"
+    },
+    {
+      "index": 53,
+      "kind": "core",
+      "core": 7,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(0.5/-(2.5)),0)"
+    },
+    {
+      "index": 54,
+      "kind": "core",
+      "core": 7,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(0.5/-(2.5)),0))"
+    },
+    {
+      "index": 55,
+      "kind": "core",
+      "core": 7,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(0.5/-(2.5))\")"
+    },
+    {
+      "index": 56,
+      "kind": "core",
+      "core": 7,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(0.5/-(2.5))\"))"
+    },
+    {
+      "index": 57,
+      "kind": "core",
+      "core": 8,
+      "wrapper": "direct",
+      "expression": "(-(0.5)/-(2.5))"
+    },
+    {
+      "index": 58,
+      "kind": "core",
+      "core": 8,
+      "wrapper": "plus",
+      "expression": "+((-(0.5)/-(2.5)))"
+    },
+    {
+      "index": 59,
+      "kind": "core",
+      "core": 8,
+      "wrapper": "minus",
+      "expression": "-((-(0.5)/-(2.5)))"
+    },
+    {
+      "index": 60,
+      "kind": "core",
+      "core": 8,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(0.5)/-(2.5))))"
+    },
+    {
+      "index": 61,
+      "kind": "core",
+      "core": 8,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(0.5)/-(2.5)),0)"
+    },
+    {
+      "index": 62,
+      "kind": "core",
+      "core": 8,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(0.5)/-(2.5)),0))"
+    },
+    {
+      "index": 63,
+      "kind": "core",
+      "core": 8,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(0.5)/-(2.5))\")"
+    },
+    {
+      "index": 64,
+      "kind": "core",
+      "core": 8,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(0.5)/-(2.5))\"))"
+    },
+    {
+      "index": 65,
+      "kind": "core",
+      "core": 9,
+      "wrapper": "direct",
+      "expression": "(0.5/02.50)"
+    },
+    {
+      "index": 66,
+      "kind": "core",
+      "core": 9,
+      "wrapper": "plus",
+      "expression": "+((0.5/02.50))"
+    },
+    {
+      "index": 67,
+      "kind": "core",
+      "core": 9,
+      "wrapper": "minus",
+      "expression": "-((0.5/02.50))"
+    },
+    {
+      "index": 68,
+      "kind": "core",
+      "core": 9,
+      "wrapper": "double-minus",
+      "expression": "-(-((0.5/02.50)))"
+    },
+    {
+      "index": 69,
+      "kind": "core",
+      "core": 9,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(0.5/02.50),0)"
+    },
+    {
+      "index": 70,
+      "kind": "core",
+      "core": 9,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(0.5/02.50),0))"
+    },
+    {
+      "index": 71,
+      "kind": "core",
+      "core": 9,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(0.5/02.50)\")"
+    },
+    {
+      "index": 72,
+      "kind": "core",
+      "core": 9,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(0.5/02.50)\"))"
+    },
+    {
+      "index": 73,
+      "kind": "core",
+      "core": 10,
+      "wrapper": "direct",
+      "expression": "(-(0.5)/02.50)"
+    },
+    {
+      "index": 74,
+      "kind": "core",
+      "core": 10,
+      "wrapper": "plus",
+      "expression": "+((-(0.5)/02.50))"
+    },
+    {
+      "index": 75,
+      "kind": "core",
+      "core": 10,
+      "wrapper": "minus",
+      "expression": "-((-(0.5)/02.50))"
+    },
+    {
+      "index": 76,
+      "kind": "core",
+      "core": 10,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(0.5)/02.50)))"
+    },
+    {
+      "index": 77,
+      "kind": "core",
+      "core": 10,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(0.5)/02.50),0)"
+    },
+    {
+      "index": 78,
+      "kind": "core",
+      "core": 10,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(0.5)/02.50),0))"
+    },
+    {
+      "index": 79,
+      "kind": "core",
+      "core": 10,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(0.5)/02.50)\")"
+    },
+    {
+      "index": 80,
+      "kind": "core",
+      "core": 10,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(0.5)/02.50)\"))"
+    },
+    {
+      "index": 81,
+      "kind": "core",
+      "core": 11,
+      "wrapper": "direct",
+      "expression": "(0.5/-(02.50))"
+    },
+    {
+      "index": 82,
+      "kind": "core",
+      "core": 11,
+      "wrapper": "plus",
+      "expression": "+((0.5/-(02.50)))"
+    },
+    {
+      "index": 83,
+      "kind": "core",
+      "core": 11,
+      "wrapper": "minus",
+      "expression": "-((0.5/-(02.50)))"
+    },
+    {
+      "index": 84,
+      "kind": "core",
+      "core": 11,
+      "wrapper": "double-minus",
+      "expression": "-(-((0.5/-(02.50))))"
+    },
+    {
+      "index": 85,
+      "kind": "core",
+      "core": 11,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(0.5/-(02.50)),0)"
+    },
+    {
+      "index": 86,
+      "kind": "core",
+      "core": 11,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(0.5/-(02.50)),0))"
+    },
+    {
+      "index": 87,
+      "kind": "core",
+      "core": 11,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(0.5/-(02.50))\")"
+    },
+    {
+      "index": 88,
+      "kind": "core",
+      "core": 11,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(0.5/-(02.50))\"))"
+    },
+    {
+      "index": 89,
+      "kind": "core",
+      "core": 12,
+      "wrapper": "direct",
+      "expression": "(-(0.5)/-(02.50))"
+    },
+    {
+      "index": 90,
+      "kind": "core",
+      "core": 12,
+      "wrapper": "plus",
+      "expression": "+((-(0.5)/-(02.50)))"
+    },
+    {
+      "index": 91,
+      "kind": "core",
+      "core": 12,
+      "wrapper": "minus",
+      "expression": "-((-(0.5)/-(02.50)))"
+    },
+    {
+      "index": 92,
+      "kind": "core",
+      "core": 12,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(0.5)/-(02.50))))"
+    },
+    {
+      "index": 93,
+      "kind": "core",
+      "core": 12,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(0.5)/-(02.50)),0)"
+    },
+    {
+      "index": 94,
+      "kind": "core",
+      "core": 12,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(0.5)/-(02.50)),0))"
+    },
+    {
+      "index": 95,
+      "kind": "core",
+      "core": 12,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(0.5)/-(02.50))\")"
+    },
+    {
+      "index": 96,
+      "kind": "core",
+      "core": 12,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(0.5)/-(02.50))\"))"
+    },
+    {
+      "index": 97,
+      "kind": "core",
+      "core": 13,
+      "wrapper": "direct",
+      "expression": "(2.50/2)"
+    },
+    {
+      "index": 98,
+      "kind": "core",
+      "core": 13,
+      "wrapper": "plus",
+      "expression": "+((2.50/2))"
+    },
+    {
+      "index": 99,
+      "kind": "core",
+      "core": 13,
+      "wrapper": "minus",
+      "expression": "-((2.50/2))"
+    },
+    {
+      "index": 100,
+      "kind": "core",
+      "core": 13,
+      "wrapper": "double-minus",
+      "expression": "-(-((2.50/2)))"
+    },
+    {
+      "index": 101,
+      "kind": "core",
+      "core": 13,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(2.50/2),0)"
+    },
+    {
+      "index": 102,
+      "kind": "core",
+      "core": 13,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(2.50/2),0))"
+    },
+    {
+      "index": 103,
+      "kind": "core",
+      "core": 13,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(2.50/2)\")"
+    },
+    {
+      "index": 104,
+      "kind": "core",
+      "core": 13,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(2.50/2)\"))"
+    },
+    {
+      "index": 105,
+      "kind": "core",
+      "core": 14,
+      "wrapper": "direct",
+      "expression": "(-(2.50)/2)"
+    },
+    {
+      "index": 106,
+      "kind": "core",
+      "core": 14,
+      "wrapper": "plus",
+      "expression": "+((-(2.50)/2))"
+    },
+    {
+      "index": 107,
+      "kind": "core",
+      "core": 14,
+      "wrapper": "minus",
+      "expression": "-((-(2.50)/2))"
+    },
+    {
+      "index": 108,
+      "kind": "core",
+      "core": 14,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(2.50)/2)))"
+    },
+    {
+      "index": 109,
+      "kind": "core",
+      "core": 14,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(2.50)/2),0)"
+    },
+    {
+      "index": 110,
+      "kind": "core",
+      "core": 14,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(2.50)/2),0))"
+    },
+    {
+      "index": 111,
+      "kind": "core",
+      "core": 14,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(2.50)/2)\")"
+    },
+    {
+      "index": 112,
+      "kind": "core",
+      "core": 14,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(2.50)/2)\"))"
+    },
+    {
+      "index": 113,
+      "kind": "core",
+      "core": 15,
+      "wrapper": "direct",
+      "expression": "(2.50/-(2))"
+    },
+    {
+      "index": 114,
+      "kind": "core",
+      "core": 15,
+      "wrapper": "plus",
+      "expression": "+((2.50/-(2)))"
+    },
+    {
+      "index": 115,
+      "kind": "core",
+      "core": 15,
+      "wrapper": "minus",
+      "expression": "-((2.50/-(2)))"
+    },
+    {
+      "index": 116,
+      "kind": "core",
+      "core": 15,
+      "wrapper": "double-minus",
+      "expression": "-(-((2.50/-(2))))"
+    },
+    {
+      "index": 117,
+      "kind": "core",
+      "core": 15,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(2.50/-(2)),0)"
+    },
+    {
+      "index": 118,
+      "kind": "core",
+      "core": 15,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(2.50/-(2)),0))"
+    },
+    {
+      "index": 119,
+      "kind": "core",
+      "core": 15,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(2.50/-(2))\")"
+    },
+    {
+      "index": 120,
+      "kind": "core",
+      "core": 15,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(2.50/-(2))\"))"
+    },
+    {
+      "index": 121,
+      "kind": "core",
+      "core": 16,
+      "wrapper": "direct",
+      "expression": "(-(2.50)/-(2))"
+    },
+    {
+      "index": 122,
+      "kind": "core",
+      "core": 16,
+      "wrapper": "plus",
+      "expression": "+((-(2.50)/-(2)))"
+    },
+    {
+      "index": 123,
+      "kind": "core",
+      "core": 16,
+      "wrapper": "minus",
+      "expression": "-((-(2.50)/-(2)))"
+    },
+    {
+      "index": 124,
+      "kind": "core",
+      "core": 16,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(2.50)/-(2))))"
+    },
+    {
+      "index": 125,
+      "kind": "core",
+      "core": 16,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(2.50)/-(2)),0)"
+    },
+    {
+      "index": 126,
+      "kind": "core",
+      "core": 16,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(2.50)/-(2)),0))"
+    },
+    {
+      "index": 127,
+      "kind": "core",
+      "core": 16,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(2.50)/-(2))\")"
+    },
+    {
+      "index": 128,
+      "kind": "core",
+      "core": 16,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(2.50)/-(2))\"))"
+    },
+    {
+      "index": 129,
+      "kind": "core",
+      "core": 17,
+      "wrapper": "direct",
+      "expression": "(2.50/2.5)"
+    },
+    {
+      "index": 130,
+      "kind": "core",
+      "core": 17,
+      "wrapper": "plus",
+      "expression": "+((2.50/2.5))"
+    },
+    {
+      "index": 131,
+      "kind": "core",
+      "core": 17,
+      "wrapper": "minus",
+      "expression": "-((2.50/2.5))"
+    },
+    {
+      "index": 132,
+      "kind": "core",
+      "core": 17,
+      "wrapper": "double-minus",
+      "expression": "-(-((2.50/2.5)))"
+    },
+    {
+      "index": 133,
+      "kind": "core",
+      "core": 17,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(2.50/2.5),0)"
+    },
+    {
+      "index": 134,
+      "kind": "core",
+      "core": 17,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(2.50/2.5),0))"
+    },
+    {
+      "index": 135,
+      "kind": "core",
+      "core": 17,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(2.50/2.5)\")"
+    },
+    {
+      "index": 136,
+      "kind": "core",
+      "core": 17,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(2.50/2.5)\"))"
+    },
+    {
+      "index": 137,
+      "kind": "core",
+      "core": 18,
+      "wrapper": "direct",
+      "expression": "(-(2.50)/2.5)"
+    },
+    {
+      "index": 138,
+      "kind": "core",
+      "core": 18,
+      "wrapper": "plus",
+      "expression": "+((-(2.50)/2.5))"
+    },
+    {
+      "index": 139,
+      "kind": "core",
+      "core": 18,
+      "wrapper": "minus",
+      "expression": "-((-(2.50)/2.5))"
+    },
+    {
+      "index": 140,
+      "kind": "core",
+      "core": 18,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(2.50)/2.5)))"
+    },
+    {
+      "index": 141,
+      "kind": "core",
+      "core": 18,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(2.50)/2.5),0)"
+    },
+    {
+      "index": 142,
+      "kind": "core",
+      "core": 18,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(2.50)/2.5),0))"
+    },
+    {
+      "index": 143,
+      "kind": "core",
+      "core": 18,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(2.50)/2.5)\")"
+    },
+    {
+      "index": 144,
+      "kind": "core",
+      "core": 18,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(2.50)/2.5)\"))"
+    },
+    {
+      "index": 145,
+      "kind": "core",
+      "core": 19,
+      "wrapper": "direct",
+      "expression": "(2.50/-(2.5))"
+    },
+    {
+      "index": 146,
+      "kind": "core",
+      "core": 19,
+      "wrapper": "plus",
+      "expression": "+((2.50/-(2.5)))"
+    },
+    {
+      "index": 147,
+      "kind": "core",
+      "core": 19,
+      "wrapper": "minus",
+      "expression": "-((2.50/-(2.5)))"
+    },
+    {
+      "index": 148,
+      "kind": "core",
+      "core": 19,
+      "wrapper": "double-minus",
+      "expression": "-(-((2.50/-(2.5))))"
+    },
+    {
+      "index": 149,
+      "kind": "core",
+      "core": 19,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(2.50/-(2.5)),0)"
+    },
+    {
+      "index": 150,
+      "kind": "core",
+      "core": 19,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(2.50/-(2.5)),0))"
+    },
+    {
+      "index": 151,
+      "kind": "core",
+      "core": 19,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(2.50/-(2.5))\")"
+    },
+    {
+      "index": 152,
+      "kind": "core",
+      "core": 19,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(2.50/-(2.5))\"))"
+    },
+    {
+      "index": 153,
+      "kind": "core",
+      "core": 20,
+      "wrapper": "direct",
+      "expression": "(-(2.50)/-(2.5))"
+    },
+    {
+      "index": 154,
+      "kind": "core",
+      "core": 20,
+      "wrapper": "plus",
+      "expression": "+((-(2.50)/-(2.5)))"
+    },
+    {
+      "index": 155,
+      "kind": "core",
+      "core": 20,
+      "wrapper": "minus",
+      "expression": "-((-(2.50)/-(2.5)))"
+    },
+    {
+      "index": 156,
+      "kind": "core",
+      "core": 20,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(2.50)/-(2.5))))"
+    },
+    {
+      "index": 157,
+      "kind": "core",
+      "core": 20,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(2.50)/-(2.5)),0)"
+    },
+    {
+      "index": 158,
+      "kind": "core",
+      "core": 20,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(2.50)/-(2.5)),0))"
+    },
+    {
+      "index": 159,
+      "kind": "core",
+      "core": 20,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(2.50)/-(2.5))\")"
+    },
+    {
+      "index": 160,
+      "kind": "core",
+      "core": 20,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(2.50)/-(2.5))\"))"
+    },
+    {
+      "index": 161,
+      "kind": "core",
+      "core": 21,
+      "wrapper": "direct",
+      "expression": "(2.50/02.50)"
+    },
+    {
+      "index": 162,
+      "kind": "core",
+      "core": 21,
+      "wrapper": "plus",
+      "expression": "+((2.50/02.50))"
+    },
+    {
+      "index": 163,
+      "kind": "core",
+      "core": 21,
+      "wrapper": "minus",
+      "expression": "-((2.50/02.50))"
+    },
+    {
+      "index": 164,
+      "kind": "core",
+      "core": 21,
+      "wrapper": "double-minus",
+      "expression": "-(-((2.50/02.50)))"
+    },
+    {
+      "index": 165,
+      "kind": "core",
+      "core": 21,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(2.50/02.50),0)"
+    },
+    {
+      "index": 166,
+      "kind": "core",
+      "core": 21,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(2.50/02.50),0))"
+    },
+    {
+      "index": 167,
+      "kind": "core",
+      "core": 21,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(2.50/02.50)\")"
+    },
+    {
+      "index": 168,
+      "kind": "core",
+      "core": 21,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(2.50/02.50)\"))"
+    },
+    {
+      "index": 169,
+      "kind": "core",
+      "core": 22,
+      "wrapper": "direct",
+      "expression": "(-(2.50)/02.50)"
+    },
+    {
+      "index": 170,
+      "kind": "core",
+      "core": 22,
+      "wrapper": "plus",
+      "expression": "+((-(2.50)/02.50))"
+    },
+    {
+      "index": 171,
+      "kind": "core",
+      "core": 22,
+      "wrapper": "minus",
+      "expression": "-((-(2.50)/02.50))"
+    },
+    {
+      "index": 172,
+      "kind": "core",
+      "core": 22,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(2.50)/02.50)))"
+    },
+    {
+      "index": 173,
+      "kind": "core",
+      "core": 22,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(2.50)/02.50),0)"
+    },
+    {
+      "index": 174,
+      "kind": "core",
+      "core": 22,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(2.50)/02.50),0))"
+    },
+    {
+      "index": 175,
+      "kind": "core",
+      "core": 22,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(2.50)/02.50)\")"
+    },
+    {
+      "index": 176,
+      "kind": "core",
+      "core": 22,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(2.50)/02.50)\"))"
+    },
+    {
+      "index": 177,
+      "kind": "core",
+      "core": 23,
+      "wrapper": "direct",
+      "expression": "(2.50/-(02.50))"
+    },
+    {
+      "index": 178,
+      "kind": "core",
+      "core": 23,
+      "wrapper": "plus",
+      "expression": "+((2.50/-(02.50)))"
+    },
+    {
+      "index": 179,
+      "kind": "core",
+      "core": 23,
+      "wrapper": "minus",
+      "expression": "-((2.50/-(02.50)))"
+    },
+    {
+      "index": 180,
+      "kind": "core",
+      "core": 23,
+      "wrapper": "double-minus",
+      "expression": "-(-((2.50/-(02.50))))"
+    },
+    {
+      "index": 181,
+      "kind": "core",
+      "core": 23,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(2.50/-(02.50)),0)"
+    },
+    {
+      "index": 182,
+      "kind": "core",
+      "core": 23,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(2.50/-(02.50)),0))"
+    },
+    {
+      "index": 183,
+      "kind": "core",
+      "core": 23,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(2.50/-(02.50))\")"
+    },
+    {
+      "index": 184,
+      "kind": "core",
+      "core": 23,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(2.50/-(02.50))\"))"
+    },
+    {
+      "index": 185,
+      "kind": "core",
+      "core": 24,
+      "wrapper": "direct",
+      "expression": "(-(2.50)/-(02.50))"
+    },
+    {
+      "index": 186,
+      "kind": "core",
+      "core": 24,
+      "wrapper": "plus",
+      "expression": "+((-(2.50)/-(02.50)))"
+    },
+    {
+      "index": 187,
+      "kind": "core",
+      "core": 24,
+      "wrapper": "minus",
+      "expression": "-((-(2.50)/-(02.50)))"
+    },
+    {
+      "index": 188,
+      "kind": "core",
+      "core": 24,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(2.50)/-(02.50))))"
+    },
+    {
+      "index": 189,
+      "kind": "core",
+      "core": 24,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(2.50)/-(02.50)),0)"
+    },
+    {
+      "index": 190,
+      "kind": "core",
+      "core": 24,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(2.50)/-(02.50)),0))"
+    },
+    {
+      "index": 191,
+      "kind": "core",
+      "core": 24,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(2.50)/-(02.50))\")"
+    },
+    {
+      "index": 192,
+      "kind": "core",
+      "core": 24,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(2.50)/-(02.50))\"))"
+    },
+    {
+      "index": 193,
+      "kind": "core",
+      "core": 25,
+      "wrapper": "direct",
+      "expression": "(0.000000000000000001/2)"
+    },
+    {
+      "index": 194,
+      "kind": "core",
+      "core": 25,
+      "wrapper": "plus",
+      "expression": "+((0.000000000000000001/2))"
+    },
+    {
+      "index": 195,
+      "kind": "core",
+      "core": 25,
+      "wrapper": "minus",
+      "expression": "-((0.000000000000000001/2))"
+    },
+    {
+      "index": 196,
+      "kind": "core",
+      "core": 25,
+      "wrapper": "double-minus",
+      "expression": "-(-((0.000000000000000001/2)))"
+    },
+    {
+      "index": 197,
+      "kind": "core",
+      "core": 25,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(0.000000000000000001/2),0)"
+    },
+    {
+      "index": 198,
+      "kind": "core",
+      "core": 25,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(0.000000000000000001/2),0))"
+    },
+    {
+      "index": 199,
+      "kind": "core",
+      "core": 25,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(0.000000000000000001/2)\")"
+    },
+    {
+      "index": 200,
+      "kind": "core",
+      "core": 25,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(0.000000000000000001/2)\"))"
+    },
+    {
+      "index": 201,
+      "kind": "core",
+      "core": 26,
+      "wrapper": "direct",
+      "expression": "(-(0.000000000000000001)/2)"
+    },
+    {
+      "index": 202,
+      "kind": "core",
+      "core": 26,
+      "wrapper": "plus",
+      "expression": "+((-(0.000000000000000001)/2))"
+    },
+    {
+      "index": 203,
+      "kind": "core",
+      "core": 26,
+      "wrapper": "minus",
+      "expression": "-((-(0.000000000000000001)/2))"
+    },
+    {
+      "index": 204,
+      "kind": "core",
+      "core": 26,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(0.000000000000000001)/2)))"
+    },
+    {
+      "index": 205,
+      "kind": "core",
+      "core": 26,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(0.000000000000000001)/2),0)"
+    },
+    {
+      "index": 206,
+      "kind": "core",
+      "core": 26,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(0.000000000000000001)/2),0))"
+    },
+    {
+      "index": 207,
+      "kind": "core",
+      "core": 26,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(0.000000000000000001)/2)\")"
+    },
+    {
+      "index": 208,
+      "kind": "core",
+      "core": 26,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(0.000000000000000001)/2)\"))"
+    },
+    {
+      "index": 209,
+      "kind": "core",
+      "core": 27,
+      "wrapper": "direct",
+      "expression": "(0.000000000000000001/-(2))"
+    },
+    {
+      "index": 210,
+      "kind": "core",
+      "core": 27,
+      "wrapper": "plus",
+      "expression": "+((0.000000000000000001/-(2)))"
+    },
+    {
+      "index": 211,
+      "kind": "core",
+      "core": 27,
+      "wrapper": "minus",
+      "expression": "-((0.000000000000000001/-(2)))"
+    },
+    {
+      "index": 212,
+      "kind": "core",
+      "core": 27,
+      "wrapper": "double-minus",
+      "expression": "-(-((0.000000000000000001/-(2))))"
+    },
+    {
+      "index": 213,
+      "kind": "core",
+      "core": 27,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(0.000000000000000001/-(2)),0)"
+    },
+    {
+      "index": 214,
+      "kind": "core",
+      "core": 27,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(0.000000000000000001/-(2)),0))"
+    },
+    {
+      "index": 215,
+      "kind": "core",
+      "core": 27,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(0.000000000000000001/-(2))\")"
+    },
+    {
+      "index": 216,
+      "kind": "core",
+      "core": 27,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(0.000000000000000001/-(2))\"))"
+    },
+    {
+      "index": 217,
+      "kind": "core",
+      "core": 28,
+      "wrapper": "direct",
+      "expression": "(-(0.000000000000000001)/-(2))"
+    },
+    {
+      "index": 218,
+      "kind": "core",
+      "core": 28,
+      "wrapper": "plus",
+      "expression": "+((-(0.000000000000000001)/-(2)))"
+    },
+    {
+      "index": 219,
+      "kind": "core",
+      "core": 28,
+      "wrapper": "minus",
+      "expression": "-((-(0.000000000000000001)/-(2)))"
+    },
+    {
+      "index": 220,
+      "kind": "core",
+      "core": 28,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(0.000000000000000001)/-(2))))"
+    },
+    {
+      "index": 221,
+      "kind": "core",
+      "core": 28,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(0.000000000000000001)/-(2)),0)"
+    },
+    {
+      "index": 222,
+      "kind": "core",
+      "core": 28,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(0.000000000000000001)/-(2)),0))"
+    },
+    {
+      "index": 223,
+      "kind": "core",
+      "core": 28,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(0.000000000000000001)/-(2))\")"
+    },
+    {
+      "index": 224,
+      "kind": "core",
+      "core": 28,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(0.000000000000000001)/-(2))\"))"
+    },
+    {
+      "index": 225,
+      "kind": "core",
+      "core": 29,
+      "wrapper": "direct",
+      "expression": "(0.000000000000000001/2.5)"
+    },
+    {
+      "index": 226,
+      "kind": "core",
+      "core": 29,
+      "wrapper": "plus",
+      "expression": "+((0.000000000000000001/2.5))"
+    },
+    {
+      "index": 227,
+      "kind": "core",
+      "core": 29,
+      "wrapper": "minus",
+      "expression": "-((0.000000000000000001/2.5))"
+    },
+    {
+      "index": 228,
+      "kind": "core",
+      "core": 29,
+      "wrapper": "double-minus",
+      "expression": "-(-((0.000000000000000001/2.5)))"
+    },
+    {
+      "index": 229,
+      "kind": "core",
+      "core": 29,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(0.000000000000000001/2.5),0)"
+    },
+    {
+      "index": 230,
+      "kind": "core",
+      "core": 29,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(0.000000000000000001/2.5),0))"
+    },
+    {
+      "index": 231,
+      "kind": "core",
+      "core": 29,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(0.000000000000000001/2.5)\")"
+    },
+    {
+      "index": 232,
+      "kind": "core",
+      "core": 29,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(0.000000000000000001/2.5)\"))"
+    },
+    {
+      "index": 233,
+      "kind": "core",
+      "core": 30,
+      "wrapper": "direct",
+      "expression": "(-(0.000000000000000001)/2.5)"
+    },
+    {
+      "index": 234,
+      "kind": "core",
+      "core": 30,
+      "wrapper": "plus",
+      "expression": "+((-(0.000000000000000001)/2.5))"
+    },
+    {
+      "index": 235,
+      "kind": "core",
+      "core": 30,
+      "wrapper": "minus",
+      "expression": "-((-(0.000000000000000001)/2.5))"
+    },
+    {
+      "index": 236,
+      "kind": "core",
+      "core": 30,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(0.000000000000000001)/2.5)))"
+    },
+    {
+      "index": 237,
+      "kind": "core",
+      "core": 30,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(0.000000000000000001)/2.5),0)"
+    },
+    {
+      "index": 238,
+      "kind": "core",
+      "core": 30,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(0.000000000000000001)/2.5),0))"
+    },
+    {
+      "index": 239,
+      "kind": "core",
+      "core": 30,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(0.000000000000000001)/2.5)\")"
+    },
+    {
+      "index": 240,
+      "kind": "core",
+      "core": 30,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(0.000000000000000001)/2.5)\"))"
+    },
+    {
+      "index": 241,
+      "kind": "core",
+      "core": 31,
+      "wrapper": "direct",
+      "expression": "(0.000000000000000001/-(2.5))"
+    },
+    {
+      "index": 242,
+      "kind": "core",
+      "core": 31,
+      "wrapper": "plus",
+      "expression": "+((0.000000000000000001/-(2.5)))"
+    },
+    {
+      "index": 243,
+      "kind": "core",
+      "core": 31,
+      "wrapper": "minus",
+      "expression": "-((0.000000000000000001/-(2.5)))"
+    },
+    {
+      "index": 244,
+      "kind": "core",
+      "core": 31,
+      "wrapper": "double-minus",
+      "expression": "-(-((0.000000000000000001/-(2.5))))"
+    },
+    {
+      "index": 245,
+      "kind": "core",
+      "core": 31,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(0.000000000000000001/-(2.5)),0)"
+    },
+    {
+      "index": 246,
+      "kind": "core",
+      "core": 31,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(0.000000000000000001/-(2.5)),0))"
+    },
+    {
+      "index": 247,
+      "kind": "core",
+      "core": 31,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(0.000000000000000001/-(2.5))\")"
+    },
+    {
+      "index": 248,
+      "kind": "core",
+      "core": 31,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(0.000000000000000001/-(2.5))\"))"
+    },
+    {
+      "index": 249,
+      "kind": "core",
+      "core": 32,
+      "wrapper": "direct",
+      "expression": "(-(0.000000000000000001)/-(2.5))"
+    },
+    {
+      "index": 250,
+      "kind": "core",
+      "core": 32,
+      "wrapper": "plus",
+      "expression": "+((-(0.000000000000000001)/-(2.5)))"
+    },
+    {
+      "index": 251,
+      "kind": "core",
+      "core": 32,
+      "wrapper": "minus",
+      "expression": "-((-(0.000000000000000001)/-(2.5)))"
+    },
+    {
+      "index": 252,
+      "kind": "core",
+      "core": 32,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(0.000000000000000001)/-(2.5))))"
+    },
+    {
+      "index": 253,
+      "kind": "core",
+      "core": 32,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(0.000000000000000001)/-(2.5)),0)"
+    },
+    {
+      "index": 254,
+      "kind": "core",
+      "core": 32,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(0.000000000000000001)/-(2.5)),0))"
+    },
+    {
+      "index": 255,
+      "kind": "core",
+      "core": 32,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(0.000000000000000001)/-(2.5))\")"
+    },
+    {
+      "index": 256,
+      "kind": "core",
+      "core": 32,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(0.000000000000000001)/-(2.5))\"))"
+    },
+    {
+      "index": 257,
+      "kind": "core",
+      "core": 33,
+      "wrapper": "direct",
+      "expression": "(0.000000000000000001/02.50)"
+    },
+    {
+      "index": 258,
+      "kind": "core",
+      "core": 33,
+      "wrapper": "plus",
+      "expression": "+((0.000000000000000001/02.50))"
+    },
+    {
+      "index": 259,
+      "kind": "core",
+      "core": 33,
+      "wrapper": "minus",
+      "expression": "-((0.000000000000000001/02.50))"
+    },
+    {
+      "index": 260,
+      "kind": "core",
+      "core": 33,
+      "wrapper": "double-minus",
+      "expression": "-(-((0.000000000000000001/02.50)))"
+    },
+    {
+      "index": 261,
+      "kind": "core",
+      "core": 33,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(0.000000000000000001/02.50),0)"
+    },
+    {
+      "index": 262,
+      "kind": "core",
+      "core": 33,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(0.000000000000000001/02.50),0))"
+    },
+    {
+      "index": 263,
+      "kind": "core",
+      "core": 33,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(0.000000000000000001/02.50)\")"
+    },
+    {
+      "index": 264,
+      "kind": "core",
+      "core": 33,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(0.000000000000000001/02.50)\"))"
+    },
+    {
+      "index": 265,
+      "kind": "core",
+      "core": 34,
+      "wrapper": "direct",
+      "expression": "(-(0.000000000000000001)/02.50)"
+    },
+    {
+      "index": 266,
+      "kind": "core",
+      "core": 34,
+      "wrapper": "plus",
+      "expression": "+((-(0.000000000000000001)/02.50))"
+    },
+    {
+      "index": 267,
+      "kind": "core",
+      "core": 34,
+      "wrapper": "minus",
+      "expression": "-((-(0.000000000000000001)/02.50))"
+    },
+    {
+      "index": 268,
+      "kind": "core",
+      "core": 34,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(0.000000000000000001)/02.50)))"
+    },
+    {
+      "index": 269,
+      "kind": "core",
+      "core": 34,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(0.000000000000000001)/02.50),0)"
+    },
+    {
+      "index": 270,
+      "kind": "core",
+      "core": 34,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(0.000000000000000001)/02.50),0))"
+    },
+    {
+      "index": 271,
+      "kind": "core",
+      "core": 34,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(0.000000000000000001)/02.50)\")"
+    },
+    {
+      "index": 272,
+      "kind": "core",
+      "core": 34,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(0.000000000000000001)/02.50)\"))"
+    },
+    {
+      "index": 273,
+      "kind": "core",
+      "core": 35,
+      "wrapper": "direct",
+      "expression": "(0.000000000000000001/-(02.50))"
+    },
+    {
+      "index": 274,
+      "kind": "core",
+      "core": 35,
+      "wrapper": "plus",
+      "expression": "+((0.000000000000000001/-(02.50)))"
+    },
+    {
+      "index": 275,
+      "kind": "core",
+      "core": 35,
+      "wrapper": "minus",
+      "expression": "-((0.000000000000000001/-(02.50)))"
+    },
+    {
+      "index": 276,
+      "kind": "core",
+      "core": 35,
+      "wrapper": "double-minus",
+      "expression": "-(-((0.000000000000000001/-(02.50))))"
+    },
+    {
+      "index": 277,
+      "kind": "core",
+      "core": 35,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(0.000000000000000001/-(02.50)),0)"
+    },
+    {
+      "index": 278,
+      "kind": "core",
+      "core": 35,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(0.000000000000000001/-(02.50)),0))"
+    },
+    {
+      "index": 279,
+      "kind": "core",
+      "core": 35,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(0.000000000000000001/-(02.50))\")"
+    },
+    {
+      "index": 280,
+      "kind": "core",
+      "core": 35,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(0.000000000000000001/-(02.50))\"))"
+    },
+    {
+      "index": 281,
+      "kind": "core",
+      "core": 36,
+      "wrapper": "direct",
+      "expression": "(-(0.000000000000000001)/-(02.50))"
+    },
+    {
+      "index": 282,
+      "kind": "core",
+      "core": 36,
+      "wrapper": "plus",
+      "expression": "+((-(0.000000000000000001)/-(02.50)))"
+    },
+    {
+      "index": 283,
+      "kind": "core",
+      "core": 36,
+      "wrapper": "minus",
+      "expression": "-((-(0.000000000000000001)/-(02.50)))"
+    },
+    {
+      "index": 284,
+      "kind": "core",
+      "core": 36,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(0.000000000000000001)/-(02.50))))"
+    },
+    {
+      "index": 285,
+      "kind": "core",
+      "core": 36,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(0.000000000000000001)/-(02.50)),0)"
+    },
+    {
+      "index": 286,
+      "kind": "core",
+      "core": 36,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(0.000000000000000001)/-(02.50)),0))"
+    },
+    {
+      "index": 287,
+      "kind": "core",
+      "core": 36,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(0.000000000000000001)/-(02.50))\")"
+    },
+    {
+      "index": 288,
+      "kind": "core",
+      "core": 36,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(0.000000000000000001)/-(02.50))\"))"
+    },
+    {
+      "index": 289,
+      "kind": "core",
+      "core": 37,
+      "wrapper": "direct",
+      "expression": "(1.234567890123456789/2)"
+    },
+    {
+      "index": 290,
+      "kind": "core",
+      "core": 37,
+      "wrapper": "plus",
+      "expression": "+((1.234567890123456789/2))"
+    },
+    {
+      "index": 291,
+      "kind": "core",
+      "core": 37,
+      "wrapper": "minus",
+      "expression": "-((1.234567890123456789/2))"
+    },
+    {
+      "index": 292,
+      "kind": "core",
+      "core": 37,
+      "wrapper": "double-minus",
+      "expression": "-(-((1.234567890123456789/2)))"
+    },
+    {
+      "index": 293,
+      "kind": "core",
+      "core": 37,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(1.234567890123456789/2),0)"
+    },
+    {
+      "index": 294,
+      "kind": "core",
+      "core": 37,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(1.234567890123456789/2),0))"
+    },
+    {
+      "index": 295,
+      "kind": "core",
+      "core": 37,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(1.234567890123456789/2)\")"
+    },
+    {
+      "index": 296,
+      "kind": "core",
+      "core": 37,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(1.234567890123456789/2)\"))"
+    },
+    {
+      "index": 297,
+      "kind": "core",
+      "core": 38,
+      "wrapper": "direct",
+      "expression": "(-(1.234567890123456789)/2)"
+    },
+    {
+      "index": 298,
+      "kind": "core",
+      "core": 38,
+      "wrapper": "plus",
+      "expression": "+((-(1.234567890123456789)/2))"
+    },
+    {
+      "index": 299,
+      "kind": "core",
+      "core": 38,
+      "wrapper": "minus",
+      "expression": "-((-(1.234567890123456789)/2))"
+    },
+    {
+      "index": 300,
+      "kind": "core",
+      "core": 38,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(1.234567890123456789)/2)))"
+    },
+    {
+      "index": 301,
+      "kind": "core",
+      "core": 38,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(1.234567890123456789)/2),0)"
+    },
+    {
+      "index": 302,
+      "kind": "core",
+      "core": 38,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(1.234567890123456789)/2),0))"
+    },
+    {
+      "index": 303,
+      "kind": "core",
+      "core": 38,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(1.234567890123456789)/2)\")"
+    },
+    {
+      "index": 304,
+      "kind": "core",
+      "core": 38,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(1.234567890123456789)/2)\"))"
+    },
+    {
+      "index": 305,
+      "kind": "core",
+      "core": 39,
+      "wrapper": "direct",
+      "expression": "(1.234567890123456789/-(2))"
+    },
+    {
+      "index": 306,
+      "kind": "core",
+      "core": 39,
+      "wrapper": "plus",
+      "expression": "+((1.234567890123456789/-(2)))"
+    },
+    {
+      "index": 307,
+      "kind": "core",
+      "core": 39,
+      "wrapper": "minus",
+      "expression": "-((1.234567890123456789/-(2)))"
+    },
+    {
+      "index": 308,
+      "kind": "core",
+      "core": 39,
+      "wrapper": "double-minus",
+      "expression": "-(-((1.234567890123456789/-(2))))"
+    },
+    {
+      "index": 309,
+      "kind": "core",
+      "core": 39,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(1.234567890123456789/-(2)),0)"
+    },
+    {
+      "index": 310,
+      "kind": "core",
+      "core": 39,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(1.234567890123456789/-(2)),0))"
+    },
+    {
+      "index": 311,
+      "kind": "core",
+      "core": 39,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(1.234567890123456789/-(2))\")"
+    },
+    {
+      "index": 312,
+      "kind": "core",
+      "core": 39,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(1.234567890123456789/-(2))\"))"
+    },
+    {
+      "index": 313,
+      "kind": "core",
+      "core": 40,
+      "wrapper": "direct",
+      "expression": "(-(1.234567890123456789)/-(2))"
+    },
+    {
+      "index": 314,
+      "kind": "core",
+      "core": 40,
+      "wrapper": "plus",
+      "expression": "+((-(1.234567890123456789)/-(2)))"
+    },
+    {
+      "index": 315,
+      "kind": "core",
+      "core": 40,
+      "wrapper": "minus",
+      "expression": "-((-(1.234567890123456789)/-(2)))"
+    },
+    {
+      "index": 316,
+      "kind": "core",
+      "core": 40,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(1.234567890123456789)/-(2))))"
+    },
+    {
+      "index": 317,
+      "kind": "core",
+      "core": 40,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(1.234567890123456789)/-(2)),0)"
+    },
+    {
+      "index": 318,
+      "kind": "core",
+      "core": 40,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(1.234567890123456789)/-(2)),0))"
+    },
+    {
+      "index": 319,
+      "kind": "core",
+      "core": 40,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(1.234567890123456789)/-(2))\")"
+    },
+    {
+      "index": 320,
+      "kind": "core",
+      "core": 40,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(1.234567890123456789)/-(2))\"))"
+    },
+    {
+      "index": 321,
+      "kind": "core",
+      "core": 41,
+      "wrapper": "direct",
+      "expression": "(1.234567890123456789/2.5)"
+    },
+    {
+      "index": 322,
+      "kind": "core",
+      "core": 41,
+      "wrapper": "plus",
+      "expression": "+((1.234567890123456789/2.5))"
+    },
+    {
+      "index": 323,
+      "kind": "core",
+      "core": 41,
+      "wrapper": "minus",
+      "expression": "-((1.234567890123456789/2.5))"
+    },
+    {
+      "index": 324,
+      "kind": "core",
+      "core": 41,
+      "wrapper": "double-minus",
+      "expression": "-(-((1.234567890123456789/2.5)))"
+    },
+    {
+      "index": 325,
+      "kind": "core",
+      "core": 41,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(1.234567890123456789/2.5),0)"
+    },
+    {
+      "index": 326,
+      "kind": "core",
+      "core": 41,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(1.234567890123456789/2.5),0))"
+    },
+    {
+      "index": 327,
+      "kind": "core",
+      "core": 41,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(1.234567890123456789/2.5)\")"
+    },
+    {
+      "index": 328,
+      "kind": "core",
+      "core": 41,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(1.234567890123456789/2.5)\"))"
+    },
+    {
+      "index": 329,
+      "kind": "core",
+      "core": 42,
+      "wrapper": "direct",
+      "expression": "(-(1.234567890123456789)/2.5)"
+    },
+    {
+      "index": 330,
+      "kind": "core",
+      "core": 42,
+      "wrapper": "plus",
+      "expression": "+((-(1.234567890123456789)/2.5))"
+    },
+    {
+      "index": 331,
+      "kind": "core",
+      "core": 42,
+      "wrapper": "minus",
+      "expression": "-((-(1.234567890123456789)/2.5))"
+    },
+    {
+      "index": 332,
+      "kind": "core",
+      "core": 42,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(1.234567890123456789)/2.5)))"
+    },
+    {
+      "index": 333,
+      "kind": "core",
+      "core": 42,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(1.234567890123456789)/2.5),0)"
+    },
+    {
+      "index": 334,
+      "kind": "core",
+      "core": 42,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(1.234567890123456789)/2.5),0))"
+    },
+    {
+      "index": 335,
+      "kind": "core",
+      "core": 42,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(1.234567890123456789)/2.5)\")"
+    },
+    {
+      "index": 336,
+      "kind": "core",
+      "core": 42,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(1.234567890123456789)/2.5)\"))"
+    },
+    {
+      "index": 337,
+      "kind": "core",
+      "core": 43,
+      "wrapper": "direct",
+      "expression": "(1.234567890123456789/-(2.5))"
+    },
+    {
+      "index": 338,
+      "kind": "core",
+      "core": 43,
+      "wrapper": "plus",
+      "expression": "+((1.234567890123456789/-(2.5)))"
+    },
+    {
+      "index": 339,
+      "kind": "core",
+      "core": 43,
+      "wrapper": "minus",
+      "expression": "-((1.234567890123456789/-(2.5)))"
+    },
+    {
+      "index": 340,
+      "kind": "core",
+      "core": 43,
+      "wrapper": "double-minus",
+      "expression": "-(-((1.234567890123456789/-(2.5))))"
+    },
+    {
+      "index": 341,
+      "kind": "core",
+      "core": 43,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(1.234567890123456789/-(2.5)),0)"
+    },
+    {
+      "index": 342,
+      "kind": "core",
+      "core": 43,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(1.234567890123456789/-(2.5)),0))"
+    },
+    {
+      "index": 343,
+      "kind": "core",
+      "core": 43,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(1.234567890123456789/-(2.5))\")"
+    },
+    {
+      "index": 344,
+      "kind": "core",
+      "core": 43,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(1.234567890123456789/-(2.5))\"))"
+    },
+    {
+      "index": 345,
+      "kind": "core",
+      "core": 44,
+      "wrapper": "direct",
+      "expression": "(-(1.234567890123456789)/-(2.5))"
+    },
+    {
+      "index": 346,
+      "kind": "core",
+      "core": 44,
+      "wrapper": "plus",
+      "expression": "+((-(1.234567890123456789)/-(2.5)))"
+    },
+    {
+      "index": 347,
+      "kind": "core",
+      "core": 44,
+      "wrapper": "minus",
+      "expression": "-((-(1.234567890123456789)/-(2.5)))"
+    },
+    {
+      "index": 348,
+      "kind": "core",
+      "core": 44,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(1.234567890123456789)/-(2.5))))"
+    },
+    {
+      "index": 349,
+      "kind": "core",
+      "core": 44,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(1.234567890123456789)/-(2.5)),0)"
+    },
+    {
+      "index": 350,
+      "kind": "core",
+      "core": 44,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(1.234567890123456789)/-(2.5)),0))"
+    },
+    {
+      "index": 351,
+      "kind": "core",
+      "core": 44,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(1.234567890123456789)/-(2.5))\")"
+    },
+    {
+      "index": 352,
+      "kind": "core",
+      "core": 44,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(1.234567890123456789)/-(2.5))\"))"
+    },
+    {
+      "index": 353,
+      "kind": "core",
+      "core": 45,
+      "wrapper": "direct",
+      "expression": "(1.234567890123456789/02.50)"
+    },
+    {
+      "index": 354,
+      "kind": "core",
+      "core": 45,
+      "wrapper": "plus",
+      "expression": "+((1.234567890123456789/02.50))"
+    },
+    {
+      "index": 355,
+      "kind": "core",
+      "core": 45,
+      "wrapper": "minus",
+      "expression": "-((1.234567890123456789/02.50))"
+    },
+    {
+      "index": 356,
+      "kind": "core",
+      "core": 45,
+      "wrapper": "double-minus",
+      "expression": "-(-((1.234567890123456789/02.50)))"
+    },
+    {
+      "index": 357,
+      "kind": "core",
+      "core": 45,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(1.234567890123456789/02.50),0)"
+    },
+    {
+      "index": 358,
+      "kind": "core",
+      "core": 45,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(1.234567890123456789/02.50),0))"
+    },
+    {
+      "index": 359,
+      "kind": "core",
+      "core": 45,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(1.234567890123456789/02.50)\")"
+    },
+    {
+      "index": 360,
+      "kind": "core",
+      "core": 45,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(1.234567890123456789/02.50)\"))"
+    },
+    {
+      "index": 361,
+      "kind": "core",
+      "core": 46,
+      "wrapper": "direct",
+      "expression": "(-(1.234567890123456789)/02.50)"
+    },
+    {
+      "index": 362,
+      "kind": "core",
+      "core": 46,
+      "wrapper": "plus",
+      "expression": "+((-(1.234567890123456789)/02.50))"
+    },
+    {
+      "index": 363,
+      "kind": "core",
+      "core": 46,
+      "wrapper": "minus",
+      "expression": "-((-(1.234567890123456789)/02.50))"
+    },
+    {
+      "index": 364,
+      "kind": "core",
+      "core": 46,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(1.234567890123456789)/02.50)))"
+    },
+    {
+      "index": 365,
+      "kind": "core",
+      "core": 46,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(1.234567890123456789)/02.50),0)"
+    },
+    {
+      "index": 366,
+      "kind": "core",
+      "core": 46,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(1.234567890123456789)/02.50),0))"
+    },
+    {
+      "index": 367,
+      "kind": "core",
+      "core": 46,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(1.234567890123456789)/02.50)\")"
+    },
+    {
+      "index": 368,
+      "kind": "core",
+      "core": 46,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(1.234567890123456789)/02.50)\"))"
+    },
+    {
+      "index": 369,
+      "kind": "core",
+      "core": 47,
+      "wrapper": "direct",
+      "expression": "(1.234567890123456789/-(02.50))"
+    },
+    {
+      "index": 370,
+      "kind": "core",
+      "core": 47,
+      "wrapper": "plus",
+      "expression": "+((1.234567890123456789/-(02.50)))"
+    },
+    {
+      "index": 371,
+      "kind": "core",
+      "core": 47,
+      "wrapper": "minus",
+      "expression": "-((1.234567890123456789/-(02.50)))"
+    },
+    {
+      "index": 372,
+      "kind": "core",
+      "core": 47,
+      "wrapper": "double-minus",
+      "expression": "-(-((1.234567890123456789/-(02.50))))"
+    },
+    {
+      "index": 373,
+      "kind": "core",
+      "core": 47,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(1.234567890123456789/-(02.50)),0)"
+    },
+    {
+      "index": 374,
+      "kind": "core",
+      "core": 47,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(1.234567890123456789/-(02.50)),0))"
+    },
+    {
+      "index": 375,
+      "kind": "core",
+      "core": 47,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(1.234567890123456789/-(02.50))\")"
+    },
+    {
+      "index": 376,
+      "kind": "core",
+      "core": 47,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(1.234567890123456789/-(02.50))\"))"
+    },
+    {
+      "index": 377,
+      "kind": "core",
+      "core": 48,
+      "wrapper": "direct",
+      "expression": "(-(1.234567890123456789)/-(02.50))"
+    },
+    {
+      "index": 378,
+      "kind": "core",
+      "core": 48,
+      "wrapper": "plus",
+      "expression": "+((-(1.234567890123456789)/-(02.50)))"
+    },
+    {
+      "index": 379,
+      "kind": "core",
+      "core": 48,
+      "wrapper": "minus",
+      "expression": "-((-(1.234567890123456789)/-(02.50)))"
+    },
+    {
+      "index": 380,
+      "kind": "core",
+      "core": 48,
+      "wrapper": "double-minus",
+      "expression": "-(-((-(1.234567890123456789)/-(02.50))))"
+    },
+    {
+      "index": 381,
+      "kind": "core",
+      "core": 48,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(-(1.234567890123456789)/-(02.50)),0)"
+    },
+    {
+      "index": 382,
+      "kind": "core",
+      "core": 48,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(-(1.234567890123456789)/-(02.50)),0))"
+    },
+    {
+      "index": 383,
+      "kind": "core",
+      "core": 48,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(-(1.234567890123456789)/-(02.50))\")"
+    },
+    {
+      "index": 384,
+      "kind": "core",
+      "core": 48,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(-(1.234567890123456789)/-(02.50))\"))"
+    },
+    {
+      "index": 385,
+      "kind": "core",
+      "core": 49,
+      "wrapper": "direct",
+      "expression": "((5/2)/(5/2))"
+    },
+    {
+      "index": 386,
+      "kind": "core",
+      "core": 49,
+      "wrapper": "plus",
+      "expression": "+(((5/2)/(5/2)))"
+    },
+    {
+      "index": 387,
+      "kind": "core",
+      "core": 49,
+      "wrapper": "minus",
+      "expression": "-(((5/2)/(5/2)))"
+    },
+    {
+      "index": 388,
+      "kind": "core",
+      "core": 49,
+      "wrapper": "double-minus",
+      "expression": "-(-(((5/2)/(5/2))))"
+    },
+    {
+      "index": 389,
+      "kind": "core",
+      "core": 49,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,((5/2)/(5/2)),0)"
+    },
+    {
+      "index": 390,
+      "kind": "core",
+      "core": 49,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,((5/2)/(5/2)),0))"
+    },
+    {
+      "index": 391,
+      "kind": "core",
+      "core": 49,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"((5/2)/(5/2))\")"
+    },
+    {
+      "index": 392,
+      "kind": "core",
+      "core": 49,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"((5/2)/(5/2))\"))"
+    },
+    {
+      "index": 393,
+      "kind": "core",
+      "core": 50,
+      "wrapper": "direct",
+      "expression": "((1/7)/3)"
+    },
+    {
+      "index": 394,
+      "kind": "core",
+      "core": 50,
+      "wrapper": "plus",
+      "expression": "+(((1/7)/3))"
+    },
+    {
+      "index": 395,
+      "kind": "core",
+      "core": 50,
+      "wrapper": "minus",
+      "expression": "-(((1/7)/3))"
+    },
+    {
+      "index": 396,
+      "kind": "core",
+      "core": 50,
+      "wrapper": "double-minus",
+      "expression": "-(-(((1/7)/3)))"
+    },
+    {
+      "index": 397,
+      "kind": "core",
+      "core": 50,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,((1/7)/3),0)"
+    },
+    {
+      "index": 398,
+      "kind": "core",
+      "core": 50,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,((1/7)/3),0))"
+    },
+    {
+      "index": 399,
+      "kind": "core",
+      "core": 50,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"((1/7)/3)\")"
+    },
+    {
+      "index": 400,
+      "kind": "core",
+      "core": 50,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"((1/7)/3)\"))"
+    },
+    {
+      "index": 401,
+      "kind": "core",
+      "core": 51,
+      "wrapper": "direct",
+      "expression": "(5/(5/2))"
+    },
+    {
+      "index": 402,
+      "kind": "core",
+      "core": 51,
+      "wrapper": "plus",
+      "expression": "+((5/(5/2)))"
+    },
+    {
+      "index": 403,
+      "kind": "core",
+      "core": 51,
+      "wrapper": "minus",
+      "expression": "-((5/(5/2)))"
+    },
+    {
+      "index": 404,
+      "kind": "core",
+      "core": 51,
+      "wrapper": "double-minus",
+      "expression": "-(-((5/(5/2))))"
+    },
+    {
+      "index": 405,
+      "kind": "core",
+      "core": 51,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(5/(5/2)),0)"
+    },
+    {
+      "index": 406,
+      "kind": "core",
+      "core": 51,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(5/(5/2)),0))"
+    },
+    {
+      "index": 407,
+      "kind": "core",
+      "core": 51,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(5/(5/2))\")"
+    },
+    {
+      "index": 408,
+      "kind": "core",
+      "core": 51,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(5/(5/2))\"))"
+    },
+    {
+      "index": 409,
+      "kind": "core",
+      "core": 52,
+      "wrapper": "direct",
+      "expression": "((2/3)/7)"
+    },
+    {
+      "index": 410,
+      "kind": "core",
+      "core": 52,
+      "wrapper": "plus",
+      "expression": "+(((2/3)/7))"
+    },
+    {
+      "index": 411,
+      "kind": "core",
+      "core": 52,
+      "wrapper": "minus",
+      "expression": "-(((2/3)/7))"
+    },
+    {
+      "index": 412,
+      "kind": "core",
+      "core": 52,
+      "wrapper": "double-minus",
+      "expression": "-(-(((2/3)/7)))"
+    },
+    {
+      "index": 413,
+      "kind": "core",
+      "core": 52,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,((2/3)/7),0)"
+    },
+    {
+      "index": 414,
+      "kind": "core",
+      "core": 52,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,((2/3)/7),0))"
+    },
+    {
+      "index": 415,
+      "kind": "core",
+      "core": 52,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"((2/3)/7)\")"
+    },
+    {
+      "index": 416,
+      "kind": "core",
+      "core": 52,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"((2/3)/7)\"))"
+    },
+    {
+      "index": 417,
+      "kind": "core",
+      "core": 53,
+      "wrapper": "direct",
+      "expression": "((1/3)/7)"
+    },
+    {
+      "index": 418,
+      "kind": "core",
+      "core": 53,
+      "wrapper": "plus",
+      "expression": "+(((1/3)/7))"
+    },
+    {
+      "index": 419,
+      "kind": "core",
+      "core": 53,
+      "wrapper": "minus",
+      "expression": "-(((1/3)/7))"
+    },
+    {
+      "index": 420,
+      "kind": "core",
+      "core": 53,
+      "wrapper": "double-minus",
+      "expression": "-(-(((1/3)/7)))"
+    },
+    {
+      "index": 421,
+      "kind": "core",
+      "core": 53,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,((1/3)/7),0)"
+    },
+    {
+      "index": 422,
+      "kind": "core",
+      "core": 53,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,((1/3)/7),0))"
+    },
+    {
+      "index": 423,
+      "kind": "core",
+      "core": 53,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"((1/3)/7)\")"
+    },
+    {
+      "index": 424,
+      "kind": "core",
+      "core": 53,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"((1/3)/7)\"))"
+    },
+    {
+      "index": 425,
+      "kind": "core",
+      "core": 54,
+      "wrapper": "direct",
+      "expression": "((1/3)/(7/3))"
+    },
+    {
+      "index": 426,
+      "kind": "core",
+      "core": 54,
+      "wrapper": "plus",
+      "expression": "+(((1/3)/(7/3)))"
+    },
+    {
+      "index": 427,
+      "kind": "core",
+      "core": 54,
+      "wrapper": "minus",
+      "expression": "-(((1/3)/(7/3)))"
+    },
+    {
+      "index": 428,
+      "kind": "core",
+      "core": 54,
+      "wrapper": "double-minus",
+      "expression": "-(-(((1/3)/(7/3))))"
+    },
+    {
+      "index": 429,
+      "kind": "core",
+      "core": 54,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,((1/3)/(7/3)),0)"
+    },
+    {
+      "index": 430,
+      "kind": "core",
+      "core": 54,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,((1/3)/(7/3)),0))"
+    },
+    {
+      "index": 431,
+      "kind": "core",
+      "core": 54,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"((1/3)/(7/3))\")"
+    },
+    {
+      "index": 432,
+      "kind": "core",
+      "core": 54,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"((1/3)/(7/3))\"))"
+    },
+    {
+      "index": 433,
+      "kind": "core",
+      "core": 55,
+      "wrapper": "direct",
+      "expression": "(((1/7)/3)/3)"
+    },
+    {
+      "index": 434,
+      "kind": "core",
+      "core": 55,
+      "wrapper": "plus",
+      "expression": "+((((1/7)/3)/3))"
+    },
+    {
+      "index": 435,
+      "kind": "core",
+      "core": 55,
+      "wrapper": "minus",
+      "expression": "-((((1/7)/3)/3))"
+    },
+    {
+      "index": 436,
+      "kind": "core",
+      "core": 55,
+      "wrapper": "double-minus",
+      "expression": "-(-((((1/7)/3)/3)))"
+    },
+    {
+      "index": 437,
+      "kind": "core",
+      "core": 55,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(((1/7)/3)/3),0)"
+    },
+    {
+      "index": 438,
+      "kind": "core",
+      "core": 55,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(((1/7)/3)/3),0))"
+    },
+    {
+      "index": 439,
+      "kind": "core",
+      "core": 55,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(((1/7)/3)/3)\")"
+    },
+    {
+      "index": 440,
+      "kind": "core",
+      "core": 55,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(((1/7)/3)/3)\"))"
+    },
+    {
+      "index": 441,
+      "kind": "core",
+      "core": 56,
+      "wrapper": "direct",
+      "expression": "((5.00/2.00)/(7.0/3.0))"
+    },
+    {
+      "index": 442,
+      "kind": "core",
+      "core": 56,
+      "wrapper": "plus",
+      "expression": "+(((5.00/2.00)/(7.0/3.0)))"
+    },
+    {
+      "index": 443,
+      "kind": "core",
+      "core": 56,
+      "wrapper": "minus",
+      "expression": "-(((5.00/2.00)/(7.0/3.0)))"
+    },
+    {
+      "index": 444,
+      "kind": "core",
+      "core": 56,
+      "wrapper": "double-minus",
+      "expression": "-(-(((5.00/2.00)/(7.0/3.0))))"
+    },
+    {
+      "index": 445,
+      "kind": "core",
+      "core": 56,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,((5.00/2.00)/(7.0/3.0)),0)"
+    },
+    {
+      "index": 446,
+      "kind": "core",
+      "core": 56,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,((5.00/2.00)/(7.0/3.0)),0))"
+    },
+    {
+      "index": 447,
+      "kind": "core",
+      "core": 56,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"((5.00/2.00)/(7.0/3.0))\")"
+    },
+    {
+      "index": 448,
+      "kind": "core",
+      "core": 56,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"((5.00/2.00)/(7.0/3.0))\"))"
+    },
+    {
+      "index": 449,
+      "kind": "core",
+      "core": 57,
+      "wrapper": "direct",
+      "expression": "((0.5/2)/2)"
+    },
+    {
+      "index": 450,
+      "kind": "core",
+      "core": 57,
+      "wrapper": "plus",
+      "expression": "+(((0.5/2)/2))"
+    },
+    {
+      "index": 451,
+      "kind": "core",
+      "core": 57,
+      "wrapper": "minus",
+      "expression": "-(((0.5/2)/2))"
+    },
+    {
+      "index": 452,
+      "kind": "core",
+      "core": 57,
+      "wrapper": "double-minus",
+      "expression": "-(-(((0.5/2)/2)))"
+    },
+    {
+      "index": 453,
+      "kind": "core",
+      "core": 57,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,((0.5/2)/2),0)"
+    },
+    {
+      "index": 454,
+      "kind": "core",
+      "core": 57,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,((0.5/2)/2),0))"
+    },
+    {
+      "index": 455,
+      "kind": "core",
+      "core": 57,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"((0.5/2)/2)\")"
+    },
+    {
+      "index": 456,
+      "kind": "core",
+      "core": 57,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"((0.5/2)/2)\"))"
+    },
+    {
+      "index": 457,
+      "kind": "core",
+      "core": 58,
+      "wrapper": "direct",
+      "expression": "(((5/2)/(5/2))/3)"
+    },
+    {
+      "index": 458,
+      "kind": "core",
+      "core": 58,
+      "wrapper": "plus",
+      "expression": "+((((5/2)/(5/2))/3))"
+    },
+    {
+      "index": 459,
+      "kind": "core",
+      "core": 58,
+      "wrapper": "minus",
+      "expression": "-((((5/2)/(5/2))/3))"
+    },
+    {
+      "index": 460,
+      "kind": "core",
+      "core": 58,
+      "wrapper": "double-minus",
+      "expression": "-(-((((5/2)/(5/2))/3)))"
+    },
+    {
+      "index": 461,
+      "kind": "core",
+      "core": 58,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(((5/2)/(5/2))/3),0)"
+    },
+    {
+      "index": 462,
+      "kind": "core",
+      "core": 58,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(((5/2)/(5/2))/3),0))"
+    },
+    {
+      "index": 463,
+      "kind": "core",
+      "core": 58,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(((5/2)/(5/2))/3)\")"
+    },
+    {
+      "index": 464,
+      "kind": "core",
+      "core": 58,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(((5/2)/(5/2))/3)\"))"
+    },
+    {
+      "index": 465,
+      "kind": "core",
+      "core": 59,
+      "wrapper": "direct",
+      "expression": "(((5/2)/2)/(7/3))"
+    },
+    {
+      "index": 466,
+      "kind": "core",
+      "core": 59,
+      "wrapper": "plus",
+      "expression": "+((((5/2)/2)/(7/3)))"
+    },
+    {
+      "index": 467,
+      "kind": "core",
+      "core": 59,
+      "wrapper": "minus",
+      "expression": "-((((5/2)/2)/(7/3)))"
+    },
+    {
+      "index": 468,
+      "kind": "core",
+      "core": 59,
+      "wrapper": "double-minus",
+      "expression": "-(-((((5/2)/2)/(7/3))))"
+    },
+    {
+      "index": 469,
+      "kind": "core",
+      "core": 59,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(((5/2)/2)/(7/3)),0)"
+    },
+    {
+      "index": 470,
+      "kind": "core",
+      "core": 59,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(((5/2)/2)/(7/3)),0))"
+    },
+    {
+      "index": 471,
+      "kind": "core",
+      "core": 59,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(((5/2)/2)/(7/3))\")"
+    },
+    {
+      "index": 472,
+      "kind": "core",
+      "core": 59,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(((5/2)/2)/(7/3))\"))"
+    },
+    {
+      "index": 473,
+      "kind": "core",
+      "core": 60,
+      "wrapper": "direct",
+      "expression": "((2.50/2.5)/(5/2))"
+    },
+    {
+      "index": 474,
+      "kind": "core",
+      "core": 60,
+      "wrapper": "plus",
+      "expression": "+(((2.50/2.5)/(5/2)))"
+    },
+    {
+      "index": 475,
+      "kind": "core",
+      "core": 60,
+      "wrapper": "minus",
+      "expression": "-(((2.50/2.5)/(5/2)))"
+    },
+    {
+      "index": 476,
+      "kind": "core",
+      "core": 60,
+      "wrapper": "double-minus",
+      "expression": "-(-(((2.50/2.5)/(5/2))))"
+    },
+    {
+      "index": 477,
+      "kind": "core",
+      "core": 60,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,((2.50/2.5)/(5/2)),0)"
+    },
+    {
+      "index": 478,
+      "kind": "core",
+      "core": 60,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,((2.50/2.5)/(5/2)),0))"
+    },
+    {
+      "index": 479,
+      "kind": "core",
+      "core": 60,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"((2.50/2.5)/(5/2))\")"
+    },
+    {
+      "index": 480,
+      "kind": "core",
+      "core": 60,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"((2.50/2.5)/(5/2))\"))"
+    },
+    {
+      "index": 481,
+      "kind": "core",
+      "core": 61,
+      "wrapper": "direct",
+      "expression": "((-(5)/2)/(7/3))"
+    },
+    {
+      "index": 482,
+      "kind": "core",
+      "core": 61,
+      "wrapper": "plus",
+      "expression": "+(((-(5)/2)/(7/3)))"
+    },
+    {
+      "index": 483,
+      "kind": "core",
+      "core": 61,
+      "wrapper": "minus",
+      "expression": "-(((-(5)/2)/(7/3)))"
+    },
+    {
+      "index": 484,
+      "kind": "core",
+      "core": 61,
+      "wrapper": "double-minus",
+      "expression": "-(-(((-(5)/2)/(7/3))))"
+    },
+    {
+      "index": 485,
+      "kind": "core",
+      "core": 61,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,((-(5)/2)/(7/3)),0)"
+    },
+    {
+      "index": 486,
+      "kind": "core",
+      "core": 61,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,((-(5)/2)/(7/3)),0))"
+    },
+    {
+      "index": 487,
+      "kind": "core",
+      "core": 61,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"((-(5)/2)/(7/3))\")"
+    },
+    {
+      "index": 488,
+      "kind": "core",
+      "core": 61,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"((-(5)/2)/(7/3))\"))"
+    },
+    {
+      "index": 489,
+      "kind": "core",
+      "core": 62,
+      "wrapper": "direct",
+      "expression": "((5/-(2))/(7/3))"
+    },
+    {
+      "index": 490,
+      "kind": "core",
+      "core": 62,
+      "wrapper": "plus",
+      "expression": "+(((5/-(2))/(7/3)))"
+    },
+    {
+      "index": 491,
+      "kind": "core",
+      "core": 62,
+      "wrapper": "minus",
+      "expression": "-(((5/-(2))/(7/3)))"
+    },
+    {
+      "index": 492,
+      "kind": "core",
+      "core": 62,
+      "wrapper": "double-minus",
+      "expression": "-(-(((5/-(2))/(7/3))))"
+    },
+    {
+      "index": 493,
+      "kind": "core",
+      "core": 62,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,((5/-(2))/(7/3)),0)"
+    },
+    {
+      "index": 494,
+      "kind": "core",
+      "core": 62,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,((5/-(2))/(7/3)),0))"
+    },
+    {
+      "index": 495,
+      "kind": "core",
+      "core": 62,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"((5/-(2))/(7/3))\")"
+    },
+    {
+      "index": 496,
+      "kind": "core",
+      "core": 62,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"((5/-(2))/(7/3))\"))"
+    },
+    {
+      "index": 497,
+      "kind": "core",
+      "core": 63,
+      "wrapper": "direct",
+      "expression": "((5/2)/(-(7)/3))"
+    },
+    {
+      "index": 498,
+      "kind": "core",
+      "core": 63,
+      "wrapper": "plus",
+      "expression": "+(((5/2)/(-(7)/3)))"
+    },
+    {
+      "index": 499,
+      "kind": "core",
+      "core": 63,
+      "wrapper": "minus",
+      "expression": "-(((5/2)/(-(7)/3)))"
+    },
+    {
+      "index": 500,
+      "kind": "core",
+      "core": 63,
+      "wrapper": "double-minus",
+      "expression": "-(-(((5/2)/(-(7)/3))))"
+    },
+    {
+      "index": 501,
+      "kind": "core",
+      "core": 63,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,((5/2)/(-(7)/3)),0)"
+    },
+    {
+      "index": 502,
+      "kind": "core",
+      "core": 63,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,((5/2)/(-(7)/3)),0))"
+    },
+    {
+      "index": 503,
+      "kind": "core",
+      "core": 63,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"((5/2)/(-(7)/3))\")"
+    },
+    {
+      "index": 504,
+      "kind": "core",
+      "core": 63,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"((5/2)/(-(7)/3))\"))"
+    },
+    {
+      "index": 505,
+      "kind": "core",
+      "core": 64,
+      "wrapper": "direct",
+      "expression": "((5/2)/(7/-(3)))"
+    },
+    {
+      "index": 506,
+      "kind": "core",
+      "core": 64,
+      "wrapper": "plus",
+      "expression": "+(((5/2)/(7/-(3))))"
+    },
+    {
+      "index": 507,
+      "kind": "core",
+      "core": 64,
+      "wrapper": "minus",
+      "expression": "-(((5/2)/(7/-(3))))"
+    },
+    {
+      "index": 508,
+      "kind": "core",
+      "core": 64,
+      "wrapper": "double-minus",
+      "expression": "-(-(((5/2)/(7/-(3)))))"
+    },
+    {
+      "index": 509,
+      "kind": "core",
+      "core": 64,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,((5/2)/(7/-(3))),0)"
+    },
+    {
+      "index": 510,
+      "kind": "core",
+      "core": 64,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,((5/2)/(7/-(3))),0))"
+    },
+    {
+      "index": 511,
+      "kind": "core",
+      "core": 64,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"((5/2)/(7/-(3)))\")"
+    },
+    {
+      "index": 512,
+      "kind": "core",
+      "core": 64,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"((5/2)/(7/-(3)))\"))"
+    },
+    {
+      "index": 513,
+      "kind": "core",
+      "core": 65,
+      "wrapper": "direct",
+      "expression": "(1.0000000000000002/2.5)"
+    },
+    {
+      "index": 514,
+      "kind": "core",
+      "core": 65,
+      "wrapper": "plus",
+      "expression": "+((1.0000000000000002/2.5))"
+    },
+    {
+      "index": 515,
+      "kind": "core",
+      "core": 65,
+      "wrapper": "minus",
+      "expression": "-((1.0000000000000002/2.5))"
+    },
+    {
+      "index": 516,
+      "kind": "core",
+      "core": 65,
+      "wrapper": "double-minus",
+      "expression": "-(-((1.0000000000000002/2.5)))"
+    },
+    {
+      "index": 517,
+      "kind": "core",
+      "core": 65,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(1.0000000000000002/2.5),0)"
+    },
+    {
+      "index": 518,
+      "kind": "core",
+      "core": 65,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(1.0000000000000002/2.5),0))"
+    },
+    {
+      "index": 519,
+      "kind": "core",
+      "core": 65,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(1.0000000000000002/2.5)\")"
+    },
+    {
+      "index": 520,
+      "kind": "core",
+      "core": 65,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(1.0000000000000002/2.5)\"))"
+    },
+    {
+      "index": 521,
+      "kind": "core",
+      "core": 66,
+      "wrapper": "direct",
+      "expression": "(0.9999999999999999/2.5)"
+    },
+    {
+      "index": 522,
+      "kind": "core",
+      "core": 66,
+      "wrapper": "plus",
+      "expression": "+((0.9999999999999999/2.5))"
+    },
+    {
+      "index": 523,
+      "kind": "core",
+      "core": 66,
+      "wrapper": "minus",
+      "expression": "-((0.9999999999999999/2.5))"
+    },
+    {
+      "index": 524,
+      "kind": "core",
+      "core": 66,
+      "wrapper": "double-minus",
+      "expression": "-(-((0.9999999999999999/2.5)))"
+    },
+    {
+      "index": 525,
+      "kind": "core",
+      "core": 66,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(0.9999999999999999/2.5),0)"
+    },
+    {
+      "index": 526,
+      "kind": "core",
+      "core": 66,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(0.9999999999999999/2.5),0))"
+    },
+    {
+      "index": 527,
+      "kind": "core",
+      "core": 66,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(0.9999999999999999/2.5)\")"
+    },
+    {
+      "index": 528,
+      "kind": "core",
+      "core": 66,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(0.9999999999999999/2.5)\"))"
+    },
+    {
+      "index": 529,
+      "kind": "core",
+      "core": 67,
+      "wrapper": "direct",
+      "expression": "(3.9999999999999996/2.5)"
+    },
+    {
+      "index": 530,
+      "kind": "core",
+      "core": 67,
+      "wrapper": "plus",
+      "expression": "+((3.9999999999999996/2.5))"
+    },
+    {
+      "index": 531,
+      "kind": "core",
+      "core": 67,
+      "wrapper": "minus",
+      "expression": "-((3.9999999999999996/2.5))"
+    },
+    {
+      "index": 532,
+      "kind": "core",
+      "core": 67,
+      "wrapper": "double-minus",
+      "expression": "-(-((3.9999999999999996/2.5)))"
+    },
+    {
+      "index": 533,
+      "kind": "core",
+      "core": 67,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(3.9999999999999996/2.5),0)"
+    },
+    {
+      "index": 534,
+      "kind": "core",
+      "core": 67,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(3.9999999999999996/2.5),0))"
+    },
+    {
+      "index": 535,
+      "kind": "core",
+      "core": 67,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(3.9999999999999996/2.5)\")"
+    },
+    {
+      "index": 536,
+      "kind": "core",
+      "core": 67,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(3.9999999999999996/2.5)\"))"
+    },
+    {
+      "index": 537,
+      "kind": "core",
+      "core": 68,
+      "wrapper": "direct",
+      "expression": "(1.234567890123456789/3)"
+    },
+    {
+      "index": 538,
+      "kind": "core",
+      "core": 68,
+      "wrapper": "plus",
+      "expression": "+((1.234567890123456789/3))"
+    },
+    {
+      "index": 539,
+      "kind": "core",
+      "core": 68,
+      "wrapper": "minus",
+      "expression": "-((1.234567890123456789/3))"
+    },
+    {
+      "index": 540,
+      "kind": "core",
+      "core": 68,
+      "wrapper": "double-minus",
+      "expression": "-(-((1.234567890123456789/3)))"
+    },
+    {
+      "index": 541,
+      "kind": "core",
+      "core": 68,
+      "wrapper": "iif",
+      "expression": "IIF(.T.,(1.234567890123456789/3),0)"
+    },
+    {
+      "index": 542,
+      "kind": "core",
+      "core": 68,
+      "wrapper": "minus-iif",
+      "expression": "-(IIF(.T.,(1.234567890123456789/3),0))"
+    },
+    {
+      "index": 543,
+      "kind": "core",
+      "core": 68,
+      "wrapper": "evaluate",
+      "expression": "EVALUATE(\"(1.234567890123456789/3)\")"
+    },
+    {
+      "index": 544,
+      "kind": "core",
+      "core": 68,
+      "wrapper": "minus-evaluate",
+      "expression": "-(EVALUATE(\"(1.234567890123456789/3)\"))"
+    },
+    {
+      "index": 545,
+      "kind": "literal-control",
+      "literal": "0.5",
+      "expression": "0.5"
+    },
+    {
+      "index": 546,
+      "kind": "literal-control",
+      "literal": "2",
+      "expression": "2"
+    },
+    {
+      "index": 547,
+      "kind": "literal-control",
+      "literal": "2.5",
+      "expression": "2.5"
+    },
+    {
+      "index": 548,
+      "kind": "literal-control",
+      "literal": "02.50",
+      "expression": "02.50"
+    },
+    {
+      "index": 549,
+      "kind": "literal-control",
+      "literal": "2.50",
+      "expression": "2.50"
+    },
+    {
+      "index": 550,
+      "kind": "literal-control",
+      "literal": "0.000000000000000001",
+      "expression": "0.000000000000000001"
+    },
+    {
+      "index": 551,
+      "kind": "literal-control",
+      "literal": "1.234567890123456789",
+      "expression": "1.234567890123456789"
+    },
+    {
+      "index": 552,
+      "kind": "literal-control",
+      "literal": "5",
+      "expression": "5"
+    },
+    {
+      "index": 553,
+      "kind": "literal-control",
+      "literal": "1",
+      "expression": "1"
+    },
+    {
+      "index": 554,
+      "kind": "literal-control",
+      "literal": "7",
+      "expression": "7"
+    },
+    {
+      "index": 555,
+      "kind": "literal-control",
+      "literal": "3",
+      "expression": "3"
+    },
+    {
+      "index": 556,
+      "kind": "literal-control",
+      "literal": "5.00",
+      "expression": "5.00"
+    },
+    {
+      "index": 557,
+      "kind": "literal-control",
+      "literal": "2.00",
+      "expression": "2.00"
+    },
+    {
+      "index": 558,
+      "kind": "literal-control",
+      "literal": "7.0",
+      "expression": "7.0"
+    },
+    {
+      "index": 559,
+      "kind": "literal-control",
+      "literal": "3.0",
+      "expression": "3.0"
+    },
+    {
+      "index": 560,
+      "kind": "literal-control",
+      "literal": "1.0000000000000002",
+      "expression": "1.0000000000000002"
+    },
+    {
+      "index": 561,
+      "kind": "literal-control",
+      "literal": "0.9999999999999999",
+      "expression": "0.9999999999999999"
+    },
+    {
+      "index": 562,
+      "kind": "literal-control",
+      "literal": "3.9999999999999996",
+      "expression": "3.9999999999999996"
+    },
+    {
+      "index": 563,
+      "kind": "runtime-mixture",
+      "expression": "(1/7)/iTwo"
+    },
+    {
+      "index": 564,
+      "kind": "runtime-mixture",
+      "expression": "iTwo/(5/2)"
+    },
+    {
+      "index": 565,
+      "kind": "runtime-mixture",
+      "expression": "((5/2)/(5/2))/iTwo"
+    },
+    {
+      "index": 566,
+      "kind": "runtime-mixture",
+      "expression": "iTwo/((5/2)/(5/2))"
+    },
+    {
+      "index": 567,
+      "kind": "runtime-mixture",
+      "expression": "(2.50/2)/nTwo"
+    },
+    {
+      "index": 568,
+      "kind": "runtime-mixture",
+      "expression": "nTwo/(2.50/2)"
+    },
+    {
+      "index": 569,
+      "kind": "runtime-mixture",
+      "expression": "-((1/7)/iTwo)"
+    },
+    {
+      "index": 570,
+      "kind": "runtime-mixture",
+      "expression": "-(iTwo/(5/2))"
+    },
+    {
+      "index": 571,
+      "kind": "runtime-mixture",
+      "expression": "((1/7)/3)/iTwo"
+    },
+    {
+      "index": 572,
+      "kind": "runtime-mixture",
+      "expression": "((5/2)/(7/3))/iTwo"
+    },
+    {
+      "index": 573,
+      "kind": "runtime-mixture",
+      "expression": "-(((5/2)/(7/3))/iTwo)"
+    },
+    {
+      "index": 574,
+      "kind": "runtime-mixture",
+      "expression": "iTwo/((7/3)/(5/2))"
+    },
+    {
+      "index": 575,
+      "kind": "retained-outside-scope",
+      "expression": "5/0.5"
+    },
+    {
+      "index": 576,
+      "kind": "retained-outside-scope",
+      "expression": "(1/3)/(1/3)"
+    },
+    {
+      "index": 577,
+      "kind": "retained-outside-scope",
+      "expression": "1E-14/2"
+    },
+    {
+      "index": 578,
+      "kind": "retained-outside-scope",
+      "expression": "9999999999/2.5"
+    }
+  ],
+  "setup": {
+    "iTwo": "2",
+    "nTwo": "2.00"
+  },
+  "limitation": "Complete-expression fields. Separate literal controls are not child-result oracles for enclosing folded trees. Pure expressions replayed for independent BRS and TRANSFORM; no callbacks in this grid."
+}
