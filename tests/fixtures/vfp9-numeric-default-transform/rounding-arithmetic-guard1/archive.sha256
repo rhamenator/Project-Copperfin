@@ -1,0 +1,17 @@
+9ace4d0266993f576e7a5faee51850e45dd1a95456c1c3f0a58d73aa37d4d8f4  tests/fixtures/vfp9-numeric-default-transform/rounding-arithmetic-guard1/capture-pair.sh.gz
+288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78  tests/fixtures/vfp9-numeric-default-transform/rounding-arithmetic-guard1/first.prefix-check.status.gz
+59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2  tests/fixtures/vfp9-numeric-default-transform/rounding-arithmetic-guard1/first.prefix-processes.txt.gz
+0318465504534128bb7495c45f951bdf346851a3a63915d5a170e2922890acad  tests/fixtures/vfp9-numeric-default-transform/rounding-arithmetic-guard1/first.pressure-before.txt.gz
+123740289ad938b533c31c5e66cc0d805eddbcf8d94ea5f3bc707fa3943f7ec4  tests/fixtures/vfp9-numeric-default-transform/rounding-arithmetic-guard1/first.pressure-guard.status.gz
+8aadac3a9f5ff01b8b76d3d95aabe07d8a73ef68b1afea38d6693781fbf5141d  tests/fixtures/vfp9-numeric-default-transform/rounding-arithmetic-guard1/first.started.utc.gz
+54276dfcb6971a29be798edc315412074b7c342bf086369f0963bd2cab82cd3c  tests/fixtures/vfp9-numeric-default-transform/rounding-arithmetic-guard1/guard-summary.json.gz
+153a072cc55d9ecb4132bc857a4ed4730e01adbbca03e04d715fa9beb8ecf834  tests/fixtures/vfp9-numeric-default-transform/rounding-arithmetic-guard1/inputs.sha256.gz
+de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee  tests/fixtures/vfp9-numeric-default-transform/rounding-arithmetic-guard1/postguard-inputs-check.status.gz
+be3d4bfd12c3ed3fe0221fab5d05e15c37ac8e3ca91616131db7ef5e87487eb1  tests/fixtures/vfp9-numeric-default-transform/rounding-arithmetic-guard1/postguard-inputs-check.txt.gz
+288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78  tests/fixtures/vfp9-numeric-default-transform/rounding-arithmetic-guard1/prefix-postcheck.status.gz
+59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2  tests/fixtures/vfp9-numeric-default-transform/rounding-arithmetic-guard1/prefix-postcheck.txt.gz
+bcb536467626291490a5e2f24467d62fbea162ea5e444c92697e9553535dfe9e  tests/fixtures/vfp9-numeric-default-transform/rounding-arithmetic-guard1/probe.prg.gz
+928a9eb648bd0bf2e4780a88ccccfa8f06d78553d91c562775b592666669d6ef  tests/fixtures/vfp9-numeric-default-transform/rounding-arithmetic-guard1/rea-process-evidence.json.gz
+71d42e552739c91780ac6273a20d6a0def12c9f8ce1a90e57370f498213404df  tests/fixtures/vfp9-numeric-default-transform/rounding-arithmetic-guard1/source-commit.txt.gz
+59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2  tests/fixtures/vfp9-numeric-default-transform/rounding-arithmetic-guard1/source-status.txt.gz
+8aadac3a9f5ff01b8b76d3d95aabe07d8a73ef68b1afea38d6693781fbf5141d  tests/fixtures/vfp9-numeric-default-transform/rounding-arithmetic-guard1/started.utc.gz

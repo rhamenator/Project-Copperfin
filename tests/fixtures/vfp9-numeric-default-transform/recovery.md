@@ -557,11 +557,23 @@ original payload/descriptor/applied setting, all finite arithmetic bits,
 complete unique coverage and typed repeat; it does NOT synthesize or approve
 the candidate outputs. First structural gate BEFORE repeat remains mandatory.
 
-Separate build/default-transform-rounding-arithmetic has prepared worker;
-source regeneration/Node syntax/bash-n checks precede source signing. NO native
-invocation yet. Fresh full0.00/10.25 fails avg60 gate and audit reports renewed
-severe pressure/stopped probes. No reservation or owner-input blocker.
-NEXT signed freeze, NEW explicit BOTH-chat CLEAR and immediate BOTH full PSI
+Source freeze1cf234454 is signed/pushed and regeneration/bash-n checks pass.
+After NEW explicit audit and DAW CLEAR, the immediate first invocation guard
+observed full PSI55.32/24.52 and exited75 BEFORE VFP. No first/repeat native
+status, stdout, stderr or results exists; this is resource evidence only,
+not a failed native probe or qualified arithmetic observation.
+rounding-arithmetic-guard1/ retains ALL host receipts/full REA
+ev_230e66f1ba7243ed95db75a3e3863d3b9c4b59c6b4c1595da5f963f9ea7aaa8a:
+root75/quiesced/owned-group verified/untruncated, normal image-binding,
+sampling, filesystem-snapshot and inherited-environment limitations retained.
+Independent archived readback verifies every compressed receipt byte-equal to
+the host, exact guard/source status, unchanged source/native hashes and empty
+prefix checks1 before/after; archive manifest0. Both chats RELEASED promptly.
+Original host receipts moved intact to build/default-transform-rounding-arithmetic-guarded1;
+fresh original directory contains ONLY the identical prepared worker, preserving
+the frozen PRG's hardcoded output path without overwriting receipts. Do not run
+the archived worker. NO native invocation/reservation/owner-input blocker.
+NEXT reuse unchanged signed source1cf234454, NEW explicit BOTH-chat CLEAR and immediate BOTH full PSI
 windows<1%/idle prefix before EACH invocation. Exact-rule recovery still precedes
 native-only expectations/actual ORIGINAL/unused support/direct checks/wiring.
 

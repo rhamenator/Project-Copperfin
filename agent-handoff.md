@@ -11,7 +11,8 @@ Canonical /home/rich/dev/Project-Copperfin main=origin/main
 Active WT /home/rich/.codex/worktrees/numeric-literal-display-5611/Project-Copperfin,
 branch fix/numeric-literal-display-5611, from that main. Last native capture
 at signed/DCO headacd08561f8af5636e552a7646eb13f3d7c568ab0 from source395f3829f;
-next checkpoint retains qualified4104 pair and freezes public-arithmetic probe.
+Signed/pushed source checkpoint1cf23445495e375e1e124c47ca7a436e2b48b985 retains
+qualified4104 pair and freezes public-arithmetic probe; next checkpoint retains guard only.
 No PR/expected regression/helper/hook; src/include remain main-identical.
 Tracking #7210 is owner-authored OPEN bug/runtime, no agent-approved label.
 Authority derives from admitted parents/direct owner policy, NOT child content.
@@ -102,9 +103,17 @@ metadata/BRS/settings, finite intermediate values/typed repeat required;
 first structural gate BEFORE repeat. No production/model/regression/helper/hook.
 
 Separate build/default-transform-rounding-arithmetic contains prepared worker.
-Source regeneration/Node syntax/bash-n checked; sign/push freeze BEFORE run.
-Full PSI0.00/10.25 fails avg60; audit reports renewed severe pressure/stopped
-probes. NO arithmetic native invocation/reservation/owner-input blocker.
+Source regeneration/Node syntax/bash-n checked; freeze1cf234454 signed/pushed.
+NEW explicit BOTH-chat CLEAR obtained, but immediate full PSI55.32/24.52
+guard75 prevented FIRST native invocation. No native outputs/status/results.
+ALL receipts archived/byte-compared in rounding-arithmetic-guard1/, manifest0,
+exact source/native hashes unchanged/prefix empty1 before+after. Full REA
+ev_230e66f1ba7243ed95db75a3e3863d3b9c4b59c6b4c1595da5f963f9ea7aaa8a
+root75/quiesced/owned verified/untruncated; standard limits retained.
+Both chats RELEASED. Host original moved intact to
+build/default-transform-rounding-arithmetic-guarded1; fresh original contains
+ONLY identical prepared worker. Do not run archived worker/overwrite receipts.
+NO arithmetic native invocation/reservation/owner-input blocker.
 NEXT fresh explicit BOTH-chat CLEAR and immediate full avg10 AND avg60<1%/
 idle-prefix gates EACH native/compiler/test invocation. Do not replay six
 qualified pairs or any failed source.
