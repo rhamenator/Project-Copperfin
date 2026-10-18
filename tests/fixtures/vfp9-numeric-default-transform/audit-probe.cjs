@@ -31,7 +31,7 @@ function capture(name){
     const lines=raw.toString('ascii').split('\r\n');a.equal(lines.pop(),'');
     a.equal(lines.shift(),'VERSION|Visual FoxPro 09.00.0000.7423 for Windows');
     a.equal(lines.pop(),`DONE|${inv.recordsPerRun}`);a.equal(lines.length,inv.recordsPerRun);
-    const rows=new Map();
+    const rows=new Map(),fields=new Map();
     for(const line of lines){
         const f=line.split('|');a.equal(f.length,9);a(inv.routes.includes(f[0]));
         const setting=Number(f[1]),fixed=f[2],index=Number(f[3]);
@@ -39,6 +39,7 @@ function capture(name){
         a.equal(Buffer.from(f[4],'hex').toString('ascii'),inv.rows[index-1].expression);
         const value=typed(f[5]);a.equal(value.bits,f[6]);a.match(f[7],/^(?:[0-9A-F]{2})*$/);a.equal(f[8],'C');
         const key=JSON.stringify([setting,fixed,index,f[0]]);a(!rows.has(key));
+        fields.set(key,f);
         rows.set(key,{setting,fixed,index,route:f[0],...value,displayHex:f[7]});
     }
     // Routes are separately retained: equality of direct and stored descriptors
@@ -49,12 +50,27 @@ function capture(name){
             const q=rows.get(JSON.stringify([setting,fixed,r.index,y]));a(p&&q);
             a.deepEqual({...p,route:null},{...q,route:null});
         }
-    return {raw,rows};
+    return {raw,rows,fields};
 }
 const first=capture('first'),repeat=capture('repeat');
-for(const [key,row]of first.rows)a.deepEqual(row,repeat.rows.get(key));
+let rawDifferentRows=0;
+const unusedSlotDifferences={};
+for(const [key,row]of first.rows){
+    a.deepEqual(row,repeat.rows.get(key));
+    const p=first.fields.get(key),q=repeat.fields.get(key);
+    if(p.join('|')===q.join('|'))continue;
+    ++rawDifferentRows;
+    for(let i=0;i<p.length;++i)if(i!==5)a.equal(p[i],q[i]);
+    const x=Object.fromEntries(p[5].split(';').map(s=>s.split('=')));
+    const y=Object.fromEntries(q[5].split(';').map(s=>s.split('=')));
+    for(const slot of Object.keys(x))if(x[slot]!==y[slot]){
+        a(x.type==='49'?['decimals','real'].includes(slot):slot==='integer');
+        const label=x.type+':'+slot;unusedSlotDifferences[label]=(unusedSlotDifferences[label]||0)+1;
+    }
+}
 const sha=x=>crypto.createHash('sha256').update(x).digest('hex');
 console.log(JSON.stringify({requirement:inv.requirement,recordsPerRun:inv.recordsPerRun,
     expressions:inv.rows.length,documentedFieldsRepeatEqual:true,rawByteEqual:first.raw.equals(repeat.raw),
+    rawDifferentRows,unusedSlotDifferences,
     firstSha256:sha(first.raw),repeatSha256:sha(repeat.raw),
     limitation:inv.limitation,observations:[...first.rows.values()]},null,2));

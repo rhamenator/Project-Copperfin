@@ -65,10 +65,61 @@ unknown pending a separately frozen probe if needed.
 
 ## Traceability and development-document walkthrough
 
+## First qualified native pair
+
+Signed/DCO source freeze7a45097eb872d64f2e37357dee1b804fa33a358d precedes
+both actual invocations. Fresh audit/DAW clearance obtained. Both native
+statuses0/empty stderr; all3936 typed records and exact Character bytes repeat,
+equivalent compiled/EVALUATE routes agree. Source/runner/VFP9/FLL before/after
+hash checks0. Full PSI before first0.00%/0.03%, before repeat0.00%/0.02%.
+Both chats received RELEASED; prefix process postcheck empty/exit1.
+
+First raw SHA2569908c60cbc39b1585b463182550e07fae68868ce8de8f21a98c75d00e4fde4d9;
+repeat7e2d5030fdea536a4ee9cdce292adbc8aa2000989e15184c20da0faca327d14a.
+They are NOT raw-byte identical: one unused real slot of type-I differs.
+Initial reader0/report/source are preserved. Strengthened reader explicitly
+checks every raw difference is confined to inactive ABI slots, returns0, and
+the archived readback report compares byte-identical to the host report.
+No native rerun or expected-result change for this strengthening.
+
+REA ev_b5c385b50babd0d46ce575ce70612afc29509d23ec249752ecddbb2eeef6fe67:
+root exit0, descendants quiesced, owned process group cleanup verified,
+temporary root removed, untruncated. Full structured record in captures/;
+prelaunch executable binding is bash, not an atomic VFP9 image binding.
+Native/runner/FLL hashes bind sampled files separately. Short-lived descendants
+can escape sampling, snapshots are not syscall traces, inherited environment
+is not recorded; no network-containment/security-sandbox claim.
+
+Observed, not a general formula:
+
+- FIXED OFF direct2.50 and its assigned copy both display2.50, but1.00
+  displays1; settings0 through18 do not change those literal displays.
+- FIXED ON changes0.5 to1 at D0,0.50 at D2, and18 fractional places at D18.
+  This is half-tie evidence, not authority for all rounding boundaries.
+- Direct1E-14 displays .00000000000001 (no leading zero), assigned copy
+  displays0.00000000000001; payload/scale match but width differs15 versus25.
+  At D0/FIXED ON that direct display is empty while assigned copy displays0.
+- Negative nonzero tiny literal -0.000000000000000001 displays -0 with FIXED
+  OFF, whereas true signed zero -0.00 displays0. At D0/FIXED ON both display0.
+- The18-scale1.234567890123456789 displays1.234567890123457000; simply
+  streaming18 exact binary64 fractional digits is not the native requirement.
+- Grouping may change associated metadata (already a separate completed
+  producer concern). No producer correction is admitted by this display probe.
+- Large/exponent controls retain exponent/asterisk outputs, not a newly
+  authorized conversion or overflow policy.
+
+Unknowns before implementation: exact finite formatting/rounding boundary,
+width/scale causality versus correlated literal syntax, FIXED width handling,
+and display after settings change without re-assignment. NEXT separately
+freeze controlled public-ABI metadata interventions plus cross-setting stored
+values and rounding controls, recover those boundaries, then native-only
+regression/actual ORIGINAL before support/wiring. No production change yet.
+
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
 expectation emitter, original-fail/SAME, focused/broader/actual named hosted
 execution, exact-head review, strict checks and resolved conversations are
-pending. No compatibility, parent, hazard or release closure.
+pending except the bounded first native pair qualified above. No compatibility,
+parent, hazard or release closure.
 
 `DQ-DV-5611-NUMERIC-DEFAULT-TRANSFORM-001`, LOW procedure delta: preserve the
 uncancelled division source/test freeze3b7a51636 and complete ORIGINAL031d790ab;
