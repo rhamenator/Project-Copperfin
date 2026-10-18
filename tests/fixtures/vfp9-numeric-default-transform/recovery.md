@@ -265,7 +265,7 @@ bracket those transitions. FIXED OFF still distinguishes payloads through
 intervals. A positive finite neighborhood and its endpoint strings do not
 establish a general tolerance, negative behavior or a complete conversion rule.
 
-### Wider signed magnitude-offset ladder (unrun)
+### Wider signed magnitude-offset ladder — qualified
 
 The next source/inventory/reader is emit-rounding-ladder.cjs,
 rounding-ladder.prg, rounding-ladder-cases.json and audit-rounding-ladder.cjs.
@@ -279,18 +279,76 @@ PRG template; no Copperfin/candidate/expected-string input.
 The purpose is to bracket unobserved transitions, not declare an epsilon or
 fit a rounding tolerance. Strict complete/typed/BRS/paired audits and first-
 structure gate remain required. Separate build/default-transform-rounding-ladder
-preserves all prior evidence. No invocation yet. Audit subsequently reported
+preserves all prior evidence. At the source-freeze checkpoint no invocation
+had occurred. Audit subsequently reported
 renewed full PSI20.05/3.97 and stopped its own probes, so no additional native
 job is reserved. NEXT fresh BOTH-chat CLEAR and immediate low-full-PSI gates
 for this signed frozen ladder; then exact boundary recovery before any model,
 native-only expected regression/actual ORIGINAL/support/wiring.
+
+Fresh audit and DAW explicit CLEAR subsequently allowed the unchanged signed
+c25498cd955e33a94b1dd9b85908edb687f4e631 ladder. Both native statuses0/empty
+stderr/DONE3872, first structural0 BEFORE repeat, paired0. All3872 records
+RAW-BYTE-IDENTICAL, SHA256
+e7cbfd0a45549b69bbfcebc2d924dc20bb7f895e1405ad95136f4359b4eb134f.
+Every width40/scale18/CTOBIN/BRS readback exact. Archived independent reader0/
+host byte comparison0. Full PSI0.00/0.00 immediately before both invocations;
+all source/runner/VFP9/FLL hash checks0. Both chats RELEASED, prefix postcheck
+empty/1. No build/native/Wine/VM reservation remains.
+
+rounding-ladder-captures/ retains all lossless host receipts and complete REA
+ev_380da287e63482c2aefe25f101d20ad4fbeea20048d5bda34e3b0cc0d28d37a3:
+root0/quiesced/owned-group cleanup verified/untruncated. Ten sampled unrelated
+process-ownership EACCES unknowns remain; they were untouched, with minimal
+PID/user/comm readback retained. No claim of global cleanup or causal attribution.
+Image-binding/process-sampling/filesystem-snapshot/inherited-environment/network
+limits remain. No native implementation or proprietary binary copied.
+
+analyze-rounding-ladder.cjs groups ACTUAL sampled text and differing-neighbor
+brackets, not an output formula or continuous-interval proof. At critical D2/
+FIXED ON, BOTH signs show magnitude-offset brackets:1.005 between-34359738367
+and-17179869185 (1.00 to1.01),2.675 between-17179869183 and-8589934593
+(2.67 to2.68),9.995 between-4294967295 and-2147483649 (9.99 to10.00),
+with corresponding negative strings. At D0, BOTH signs of0.5 still have one
+observed segment across-1099511627777..1; D15/BOTH signs of5E-16 likewise.
+The smallest sampled positive0.5 neighbor is0.49993896484374994 and STILL
+prints1 in BOTH default TRANSFORM and explicit STR(...,40,0). These facts
+rule out treating the earlier adjacent-only window as an exact boundary.
+They do not establish monotonicity, uniqueness or any numeric tolerance.
+
+### Native-feedback exact-edge stimulus — unrun
+
+emit-rounding-edge.cjs, rounding-edge.prg, rounding-edge-cases.json and
+audit-rounding-edge.cjs freeze the next bounded native-only recovery. Five
+near-half centers/both signs, endpoints offset0 and-2^52, width40/scale18,
+critical DECIMALS. Both FIXED observations are emitted for EVERY query;
+only the actual native ON text chooses a midpoint branch. Up to54 exact
+integer-offset queries/group (1080 observations/run maximum), with every
+input reconstructed from hex and checked against independent host BigInt.
+No Copperfin or candidate formatter supplies strings or decisions.
+
+The reader independently replays every queried midpoint, requires distinct
+initial ON outputs and an adjacent-payload terminal EDGE with distinct ON
+outputs for all10 groups, exact metadata/BRS, framing/totals and paired typed
+repeat. An unbracketed endpoint, bad constructor, incomplete run or path
+mismatch fails BEFORE repeat. Even a qualified result establishes only the
+local witnessed edge, NOT monotonicity or a general conversion algorithm.
+No native invocation or VFP-syntax acceptance yet. Source regeneration and
+Node syntax checks pass; no expected regression/helper/model/hook yet.
+
+Separate build/default-transform-rounding-edge will preserve earlier evidence.
+Renewed full PSI55.61/26.01 after ladder release blocks further native work.
+NEXT sign/push this source freeze, then obtain NEW explicit BOTH-chat CLEAR
+and immediate full avg10 AND avg60<1%/idle-prefix guards for each invocation.
+Do not duplicate the qualified3936/1872/2000/3872 pairs. Exact-rule recovery
+still precedes independent expectations/actual ORIGINAL/support/wiring.
 
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
 expectation emitter, original-fail/SAME, focused/broader/actual named hosted
 execution, exact-head review, strict checks and resolved conversations are
-pending except the bounded first native pair qualified above. No compatibility,
+pending except the four bounded native pairs qualified above. No compatibility,
 parent, hazard or release closure.
 
 `DQ-DV-5611-NUMERIC-DEFAULT-TRANSFORM-001`, LOW procedure delta: preserve the

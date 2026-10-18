@@ -1,0 +1,92 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001",
+  "parentNativeSha256": "e7cbfd0a45549b69bbfcebc2d924dc20bb7f895e1405ad95136f4359b4eb134f",
+  "groups": [
+    {
+      "id": 1,
+      "expression": "0.5",
+      "setting": 0,
+      "bits": "3FE0000000000000",
+      "center": 1,
+      "negative": false
+    },
+    {
+      "id": 2,
+      "expression": "0.5",
+      "setting": 0,
+      "bits": "3FE0000000000000",
+      "center": 1,
+      "negative": true
+    },
+    {
+      "id": 3,
+      "expression": "1.005",
+      "setting": 2,
+      "bits": "3FF0147AE147AE14",
+      "center": 2,
+      "negative": false
+    },
+    {
+      "id": 4,
+      "expression": "1.005",
+      "setting": 2,
+      "bits": "3FF0147AE147AE14",
+      "center": 2,
+      "negative": true
+    },
+    {
+      "id": 5,
+      "expression": "2.675",
+      "setting": 2,
+      "bits": "4005666666666666",
+      "center": 3,
+      "negative": false
+    },
+    {
+      "id": 6,
+      "expression": "2.675",
+      "setting": 2,
+      "bits": "4005666666666666",
+      "center": 3,
+      "negative": true
+    },
+    {
+      "id": 7,
+      "expression": "9.995",
+      "setting": 2,
+      "bits": "4023FD70A3D70A3D",
+      "center": 4,
+      "negative": false
+    },
+    {
+      "id": 8,
+      "expression": "9.995",
+      "setting": 2,
+      "bits": "4023FD70A3D70A3D",
+      "center": 4,
+      "negative": true
+    },
+    {
+      "id": 9,
+      "expression": "0.00000000000000050",
+      "setting": 15,
+      "bits": "3CC203AF9EE75616",
+      "center": 5,
+      "negative": false
+    },
+    {
+      "id": 10,
+      "expression": "0.00000000000000050",
+      "setting": 15,
+      "bits": "3CC203AF9EE75616",
+      "center": 5,
+      "negative": true
+    }
+  ],
+  "lowOffset": "-4503599627370496",
+  "highOffset": "0",
+  "width": 40,
+  "scale": 18,
+  "maxQueriesPerGroup": 54,
+  "limitation": "Native feedback bisection of five near-half centers, both signs, exact finite payloads. Initial endpoints need different observed ON text. Each midpoint is retained in both FIXED modes. Reader independently reconstructs every query and requires adjacent final payloads with different ON text. This proves a local witnessed boundary only, not monotonicity, uniqueness, a tolerance or a conversion algorithm. No Copperfin/model/expected-output input, production changes, VM or new FLL."
+}

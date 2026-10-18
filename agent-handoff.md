@@ -63,17 +63,42 @@ bracket a transition:0.5 offsets-512..32 all display1 at D0 FIXED ON;
 1.005/2.675/9.995/5E-16 offsets-32..32 likewise one interval. Do not guess
 epsilon/tolerance or treat16-significant-digit inference as a complete rule.
 
-NEXT source/inventory/strict reader freeze: emit-rounding-ladder.cjs,
-rounding-ladder.prg, rounding-ladder-cases.json, audit-rounding-ladder.cjs.
-Eight native centers/both signs/121 exact magnitude offsets through2^40:
-1936 inputs/3872 observations per run, width40/scale18/critical DECIMALS/
-both FIXED, exact CTOBIN/BRS readback and first --single BEFORE repeat.
-Separate build/default-transform-rounding-ladder. No native invocation yet.
-Audit reports renewed full20.05/3.97 and stopped its probes; no resource
-reservation or owner-input blocker. Sign/push this freeze BEFORE fresh
-BOTH-chat explicit CLEAR and immediate avg10 AND avg60<1% at EACH invocation.
-No additional run now. Qualified3936/1872/2000 phases need no duplicate replay.
-All failed-attempt/division receipts remain unchanged; no production changes.
+The wider signed ladder is now QUALIFIED from signed freeze c25498cd9:
+both actual0/empty stderr/DONE3872, first structure0 BEFORE repeat, paired0,
+RAW-BYTE-IDENTICAL SHA
+e7cbfd0a45549b69bbfcebc2d924dc20bb7f895e1405ad95136f4359b4eb134f.
+Every CTOBIN/BRS/width40/scale18 readback exact; archived independent reader0/
+host byte compare0. Full PSI0.00/0.00 before BOTH invocations; input/native
+hash checks0. Full REA
+ev_380da287e63482c2aefe25f101d20ad4fbeea20048d5bda34e3b0cc0d28d37a3
+root0/quiesced/owned-group verified/untruncated, plus10 unrelated sampled
+EACCES ownership unknowns retained/untouched; minimal readback and all limits
+preserved. Both chats explicitly CLEARED then RELEASED; prefix empty/1.
+See rounding-ladder-captures/ and model-free observed-bracket analyzer0.
+
+BOTH signs bracket D2 transitions at native1.005/2.675/9.995;0.5 D0 and
+5E-16 D15 remain one sampled segment through negative2^40 magnitude offsets.
+These are observations, NOT a tolerance, monotonicity or general rounding rule.
+No model/expected regression/helper/hook; division assertions remain unchanged.
+
+NEXT native-feedback source/inventory/strict reader: emit-rounding-edge.cjs,
+rounding-edge.prg, rounding-edge-cases.json, audit-rounding-edge.cjs.
+Five near-half centers/both signs, endpoints offset0/-2^52, up to54 queries/
+group and1080 observations/run. Exact native hex payloads; BOTH FIXED modes
+each query; actual ON text alone chooses midpoint branches. Host reader
+independently replays every midpoint, requires differing initial endpoints,
+adjacent terminal EDGE/different ON text in all10 groups, metadata/BRS,
+complete framing and paired repeat. Failed first structure prevents repeat.
+Local edge only, NOT global monotonicity or a recovered algorithm.
+
+Separate build/default-transform-rounding-edge contains prepared capture-pair.sh
+ONLY; no invocation/VFP syntax acceptance yet. Freeze/sign/push BEFORE run.
+Renewed full PSI55.61/26.01 after ladder release blocks further native work.
+No reservation or owner-input blocker. Obtain NEW explicit BOTH-chat CLEAR
+and immediate full avg10 AND avg60<1%/idle-prefix guards before EACH invocation.
+Qualified3936/1872/2000/3872 phases need no duplicate replay. Preserve earlier
+failed attempt/division/native/test receipts. Exact-rule recovery still precedes
+independent expectations/actual ORIGINAL/unused support/direct checks/wiring.
 
 ## Why division is explicitly deferred, not cancelled
 
