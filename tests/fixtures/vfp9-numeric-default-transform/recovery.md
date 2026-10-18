@@ -423,7 +423,7 @@ path/constructor/metadata/BRS field. It explicitly reports
 originalQualificationFailed:true/pairedQualified:false. It does NOT retroactively
 qualify the first run or infer applied settings not captured in that source.
 
-### Refined DECIMALS sweep with applied settings — unrun
+### Refined DECIMALS sweep with applied settings — first-only UNQUALIFIED
 
 emit-rounding-decimals2.cjs, rounding-decimals2.prg,
 rounding-decimals2-cases.json, audit-rounding-decimals2.cjs freeze the bounded
@@ -443,6 +443,43 @@ checks precede signing; no native invocation yet. NEW explicit BOTH-chat CLEAR
 and immediate low-full-PSI/idle-prefix gates remain mandatory for EACH invocation.
 No owner-input blocker. Exact-rule recovery remains before native-only
 regression/actual ORIGINAL/unused helper/direct checks/wiring and acceptance.
+
+The unchanged signed0722c6860 source subsequently ran once after NEW explicit
+audit/DAW CLEAR, full PSI0.00/0.03 and idle prefix. Actual native0/empty stderr/
+DONE4104, BUT all4104 observation rows are ERROR11 (Function argument value,
+type, or count is invalid) from the authored combined setting-readback
+expression. The strict first reader1 correctly rejects five-field ERROR rows
+instead of required12 fields; repeat NOT invoked.38 feedback EDGE rows are
+not enough to establish input/path/metadata/BRS/applied settings. No qualified
+pair or Copperfin defect is inferred. The exact failing subexpression/SET
+return type was NOT isolated by this capture. Raw SHA256
+3410b6884d72f4cf17823226dca2479eba01142cbfaddacbc1ac3138190d64b7.
+
+rounding-decimals2-attempt1/ retains every exact host receipt, failed strict
+reader, failure summary and full REA
+ev_2e775fabbc279bea57b4966bebc9c6174ddb50036137475fa6d931367cac0067:
+root1/quiesced/owned-group verified/untruncated/no sampled ownership unknowns
+in THIS capture. Standard image-binding/sampling/snapshot/environment/network
+limitations remain. Input/runner/VFP9/FLL hash checks0, both chats RELEASED,
+prefix empty1/no resource reservation. Earlier failed/qualified receipts intact.
+
+### Type-aware setting-readback refinement — unrun
+
+emit-rounding-decimals3.cjs, rounding-decimals3.prg,
+rounding-decimals3-cases.json and audit-rounding-decimals3.cjs freeze the next
+source/inventory/reader. Same38 groups/bits/query bounds/width40/scale18/BOTH
+FIXED/max4104 records. Setting readback no longer passes an unknown return
+type to ALLTRIM: VARTYPE plus hex TRANSFORM text record BOTH native SET values.
+The reader requires a complete numeric DECIMALS value equal to the requested
+count, actual FIXED text equal to the requested mode, and exact type/text repeat;
+then every constructor/path/metadata/BRS/adjacent edge/completeness gate still
+applies. It is not a SET product change or presumed native type rule.
+
+Separate build/default-transform-rounding-decimals3. Source regeneration,
+Node syntax/worker bash-n and applied-count regex checks precede source signing.
+No native invocation yet. NEW explicit BOTH-chat CLEAR and immediate BOTH
+full PSI windows<1%/idle prefix before EACH invocation. Exact conversion-rule
+recovery remains before expected regressions/actual ORIGINAL/support/wiring.
 
 ## Traceability and development-document walkthrough
 

@@ -59,23 +59,38 @@ records/32 edges/six controls/path/metadata/BRS, explicitly
 originalQualificationFailed:true/pairedQualified:false. NOT retroqualification
 or applied-setting evidence. Do not infer a fractional-precision cap.
 
-## NEXT — refined source freeze, no native invocation yet
+## Latest refined sweep — first-only UNQUALIFIED
 
-emit-rounding-decimals2.cjs, rounding-decimals2.prg,
-rounding-decimals2-cases.json, audit-rounding-decimals2.cjs.
-D0..15 unchanged; D16..18 reuse already QUALIFIED5E-16 payload3CC203AF9EE75616,
-not guessed outputs.38 signed groups/width40/scale18/BOTH FIXED per query/
-max54 queries/group,4104 records/run. NEW explicit SET DECIMALS/FIXED readbacks
-must match requested settings. Exact constructor/path/metadata/BRS/framing/
-adjacent differing-output endpoints and paired repeat mandatory; first
-structural gate BEFORE repeat. No expected/model/production changes.
-Separate build/default-transform-rounding-decimals2 contains prepared worker.
-Source regeneration/Node syntax/bash-n checked; sign/push BEFORE any run.
+Signed0722c6860 source ran after NEW explicit BOTH-chat CLEAR, idle prefix and
+full PSI0.00/0.03. First actual native0/empty stderr/DONE4104, BUT all4104
+observation rows are authored-probe ERROR11 (invalid function argument).
+Strict first reader1 correctly rejects five-field ERROR rows; repeat NOT invoked.
+38 feedback EDGE rows do NOT establish missing input/path/metadata/BRS/settings.
+Combined setting-readback expression failed; exact subexpression/return type
+not isolated. NOT a product defect, qualified pair or reason to weaken reader.
+Raw SHA3410b6884d72f4cf17823226dca2479eba01142cbfaddacbc1ac3138190d64b7.
+rounding-decimals2-attempt1/ retains all receipts/failed reader/summary/full REA
+ev_2e775fabbc279bea57b4966bebc9c6174ddb50036137475fa6d931367cac0067:
+root1/quiesced/owned-group verified/untruncated/no sampled ownership unknowns
+in THIS capture; standard image/sampling/snapshot/environment/network limits.
+Native/input hash checks0, both chats RELEASED/prefix empty1/no reservation.
+Earlier3480 unbracketed attempt and five qualified pairs stay unchanged.
 
-Renewed full PSI58.43/42.10 after release fails the gate; audit independently
-reports severe contention/stopped probes. NO DECIMALS2 invocation or reservation.
-Obtain NEW explicit BOTH-chat CLEAR and immediate full avg10 AND avg60<1%/
-idle-prefix guards before EACH native/compiler/test invocation.
+## NEXT — type-aware setting readback, no native invocation yet
+
+emit-rounding-decimals3.cjs, rounding-decimals3.prg,
+rounding-decimals3-cases.json, audit-rounding-decimals3.cjs.
+Same38 signed groups/bits/bounds/width40/scale18/BOTH FIXED/max4104 records.
+Remove ALLTRIM on unknown SET return; VARTYPE and hex TRANSFORM text record
+actual DECIMALS/FIXED values without assuming DECIMALS character type.
+Reader requires full numeric count equal to request, actual mode equality,
+exact type/text repeat AND all constructor/path/metadata/BRS/adjacent-edge/
+complete/paired gates. Failed first structure prevents repeat. No SET product
+change, type rule, tolerance, expected model or production changes.
+Separate build/default-transform-rounding-decimals3 contains prepared worker.
+Source regeneration/Node syntax/bash-n/applied-count regex checks pass.
+Sign/push source freeze BEFORE fresh explicit BOTH-chat CLEAR and immediate
+full PSI avg10 AND avg60<1%/idle-prefix gates at EACH native/compiler/test call.
 Exact-rule recovery -> native-only regression/actual ORIGINAL -> unused helper/
 direct GNU+Clang checks -> separate wiring/SAME/broader/actual hosted execution
 -> exact-head clean review/all strict checks/resolved conversations/normal merge.
