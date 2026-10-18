@@ -113,6 +113,32 @@ freeze controlled public-ABI metadata interventions plus cross-setting stored
 values and rounding controls, recover those boundaries, then native-only
 regression/actual ORIGINAL before support/wiring. No production change yet.
 
+## Follow-up intervention freeze (no observations yet)
+
+`emit-intervention.cjs` freezes384 GRID expressions and12 STORED expressions,
+2736 observations per run. Eight finite real seeds have baseline and bit/field-
+preserving CFNCLONE controls plus42 width/scale interventions each (widths
+1/2/3/4/12/20/40, scales0/1/2/14/15/18). CFNWIDTH/CFNDEC use the existing
+authored public-ABI observer source in vfp9-listitem-column-numeric/cause-probe.c;
+no new FLL, arithmetic or implementation logic. Read back requested metadata,
+unchanged BRS payload and FPU word before accepting any causal observation.
+The32 additional finite rounding controls discriminate binary precision/ties
+and integer-digit magnitudes. GRID uses EVALUATE only: no compiled-equivalence
+claim for this intervention grid.
+
+Twelve private values are assigned explicit compiled expressions once under
+each birth DECIMALS0/2/18 and FIXED OFF/ON. Subsequent nested display settings
+read the SAME variables without reassignment; observer function references
+private variables rather than passing them through a value parameter. It also
+captures explicit STR(value,40,current DECIMALS) as diagnostic native bytes,
+NOT as a model or requirement for TRANSFORM. Reader reports any metadata/payload
+changes without assuming they are zero. Callback timing is not in this grid.
+
+Sign/freeze source/inventory/reader BEFORE two fresh coordinated/pressure-gated
+invocations. Preserve prior source and all attempts; do not retrofit conclusions
+into the initial82-case stimulus or frozen division tests. Production, expected
+test emitter, model and helper remain absent until qualified recovery.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only

@@ -23,6 +23,11 @@ binding limits retained. Source/native/FLL/runner hashes unchanged. Both chats
 RELEASED, prefix postcheck empty. No build/Wine/native/VM reservation.
 NEXT native-only controlled width/scale interventions, cross-setting stored
 values and rounding boundaries before expected tests/actual ORIGINAL/support.
+Follow-up native source/inventory/independent reader freeze is this checkpoint:
+emit-intervention.cjs/intervention.prg/intervention-cases.json/audit-intervention.cjs,
+384 GRID +12 STORED expressions,2736 observations/run. EVALUATE-only GRID,
+compiled private-value birth assignments, no route-equivalence claim. No new
+native invocation yet; obtain fresh BOTH-chat/full PSI gates before pair.
 
 ## Why division is explicitly deferred, not cancelled
 
