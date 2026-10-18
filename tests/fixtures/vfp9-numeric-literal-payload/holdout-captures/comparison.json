@@ -1,0 +1,10 @@
+{
+  "preCaptureCheckpoint": "4ff7d0d8b2c44027914370075e3adbd67c40f5c8",
+  "compared": 1704,
+  "newCompared": 1584,
+  "calibrationCompared": 120,
+  "mismatches": 0,
+  "finiteProfileHypothesisPassed": true,
+  "differences": [],
+  "limitation": "Held-out finite-profile prediction comparison, not a native expected emitter, universal conversion rule, product/SAME pass or Numeric/division/ListItem completion."
+}

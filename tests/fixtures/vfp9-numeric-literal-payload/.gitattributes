@@ -1,3 +1,4 @@
 # Exact native byte evidence and first-party generated FXP identity.
 *.FXP -text
 captures/*.gz -text -diff
+holdout-captures/*.gz -text -diff

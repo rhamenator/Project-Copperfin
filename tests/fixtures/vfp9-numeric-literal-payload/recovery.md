@@ -124,7 +124,28 @@ emitter. They must stay frozen while awaiting the resource window. Preparing
 them does not establish that the candidate covers the accepted256-byte producer
 domain or that any Copperfin runtime behavior has changed.
 
-Run paired unchanged sources only in the coordinated low-contention window;
+### Held-out actual completion
+
+After fresh audit/DAW clearance and source/prediction hash verification, both
+unchanged held-out runs completed0/empty stderr, all1,704 values/no errors.
+Raw byte-identical SHA
+`afc73f60f03eb9bacd182bcf4c3710945f92adc9bee664422be479477f52ace0`;
+independent actual source/typed/BINTOC/repeat audit0, compiled/EVAL differences0.
+All1,704 pre-frozen predictions match (1,584 new-spelling observations,120
+calibration). No expected data, source or timeout changes. The native window
+was released to both chats; no VM or heavy build was used. Actual records,
+own FXP, statuses and comparison are retained in holdout-captures/.
+
+This supersedes the preparation/pending state above, not its chronology.
+[Bounded pre-code contract](contract.md) now records the recovered compatible
+algorithm and significant rounding boundaries. Native-only1,193-row expected
+header and public source/registrations are frozen BEFORE support/hooks.
+`emit-native-header.cjs --check` reconstructs all actual fields independently;
+predictions and model code are never expected-value emitters. Header byte check
+and exact hosted-selector tests pass. Actual public ORIGINAL and producer
+implementation/SAME remain required, not inferred from native agreement.
+
+Run any further paired sources only in a coordinated low-contention window;
 retain actual process status/stderr, complete native result, source and own FXP.
 Then audit before analyzing conversion hypotheses. Exact agreement with a
 candidate over this finite profile is not a universal rule; keep counterexamples

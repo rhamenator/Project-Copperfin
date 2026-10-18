@@ -80,7 +80,13 @@ from standard direct decimal parsing. Initial8 and108 structural hypotheses
 fail; one refined two-accumulator/repeated-divisor candidate fits245 captured
 bare values only. Pre-observation213-row held-out source/hypothesis predictions
 (198 new,15 calibration, through256 bytes) are frozen for independent validation;
-they are NOT native expected tests. No production or parity claim. Resource-
+they are NOT native expected tests. Subsequent unchanged held-out runs each0/
+empty stderr/all1,704 values, raw byte equality and independent actual audit0;
+all pre-frozen predictions match, including256-byte boundaries. [Bounded pre-code
+contract](../tests/fixtures/vfp9-numeric-literal-payload/contract.md) and native-only
+1,193-row public source/header/registrations precede any support/producer hook.
+Actual public ORIGINAL, implementation/SAME and hosted gates remain required;
+no production or parity claim. Resource-
 coordinated Wine only, no VM/heavy build; defer pending native runs during high
 I/O pressure. DQ-DV-7206-DECIMAL-PAYLOAD-RECOVERY-001 LOW delta/misuse/walkthrough/
 rollback in recovery note; parent hazards, #6776 modes and checked limits unchanged.

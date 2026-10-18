@@ -1,0 +1,6 @@
+32eb46db6ee28ff69f5e1531e40257e78849074dea29ce8d366ecbdbe64c0f9d  tests/fixtures/vfp9-numeric-literal-payload/holdout.prg
+a46061a42eeb2d63d2562067551a44ca02acca289bcc03ea69fa4980944b986a  tests/fixtures/vfp9-numeric-literal-payload/holdout.FXP
+cf9798c2a2758730a5f80f0dcb9b00e0065110b0120eb985cadb79280a68b7d1  tests/fixtures/vfp9-numeric-literal-payload/holdout-cases.json
+fb3b80e88bebf84b4d3e8a04e43cb6d8f5989ba28aae24503be04340b0e390d3  tests/fixtures/vfp9-numeric-literal-payload/holdout-predictions.json
+b1280be48868d746133888e5e03ca654a44421fc5a5f60373058e45c57d4a1c5  tests/fixtures/vfp9-numeric-literal-payload/audit-holdout.cjs
+0360395e015271fa08df49ef71049283890fadcea523b3422c71ff5762d076e7  tests/fixtures/vfp9-numeric-literal-payload/compare-holdout.cjs
