@@ -1239,12 +1239,91 @@ Rollback retains all raw errors and restores previous capture route only after
 its blocker resolves; notify owner if evidence invalidated. No independent or
 release assurance, production change, owner-input blocker or automation pause.
 
+### Native-only full CRT pair — captured and qualified, no accepted rule
+
+At clean signed/DCO f1be513a3a041f35aca8bb4ba8374a5b8fa4c718 (unchanged
+experiment source8ce84ed59), NEW explicit BOTH compiler-only CLEAR and all
+immediate full avg10/avg60<1%/idle-prefix gates: GNU+Clang ASan/UBSan72 direct
+shared SHA/header checks EACH0, import/Clang32 compile/link0. Compiler stderr
+empty; four installed SDK .debug$S linker warnings retained. HOST-ONLY FLL
+0c683d16a8bb7637398ad91d9451d53cdb4bdb13d9e3e276274e3738a3ecb686.
+Ordinary shell worker/session completion0, NOT REA Evidence/descendant-cleanup
+attestation. Previous REA error-only attempt remains intact, not retroqualified.
+
+Compiler window RELEASED, separate NEW BOTH native-only CLEAR. EACH invocation
+guard0/full PSI0.00/0.00/prefix idle1. Inherited override UNSET/supplied
+WINEDLLOVERRIDES=msvcr71=n recorded; no global registry/helper/DLL/VM change.
+First actual0/empty stderr/DONE4176/strict first0 BEFORE repeat. Repeat actual0/
+empty stderr/DONE4176, paired reader0. All20 fields RAW BYTE IDENTICAL:
+SHA60a1b217bbe305ccb61012cb4324d7bb944d9e413bd920803debd17e36e8c54d
+for BOTH raw reports. Same264 explicit original/historical shifted stimuli,
+both FIXED modes, F at applied D1..18 and E15/16/17. Metadata/BRS/argument/
+settings/control-word027F/control displays exact, module path/digest/PE32
+identity predicates exact on each observation; sampled file once per FLL,
+later loaded-image/path rechecks. This is NOT atomic mapped-code proof,
+Windows execution or VFP internal-call attribution. No proprietary decompilation.
+
+crt-nativeonly-captures1/ retains157 byte-compared receipts/OWN sources/FXP/
+generated hash inputs/full plain-shell results/strict audit/offline comparison.
+SHA256SUMS and archived strict+analysis readers0 under set-e/pipefail. Source/
+tool/native/binary hash checks0 before relocation. SDK-containing FLL/obj/libs
+and host test executables stay HOST-ONLY in intact
+build/default-transform-crt-nativeonly-captures1; original worker path absent.
+Both chats immediately RELEASED/prefix idle1; no standing job/reservation/VM.
+
+Offline analyze-crt.cjs checks raw report digests/qualified-reader flags and
+produces comparison.json with complete counterexamples, NOT expected strings
+or production logic. All528 original-route payload/settings display contexts
+match the earlier arithmetic capture exactly. ONLY this finite overlap was
+compared; no retroqualification of earlier phases/Windows formatter provenance.
+
+Public conversion-output tuple sufficiency check groups by fixed/D/width40/
+scale18/original sign/kind/count/returned decimal/sign/digits, deliberately NOT
+input bits. Distinct original display strings share the same tuple:
+
+| Route | F at D: conflicting/keys (rows) | E15 | E16 | E17 |
+| --- | --- | --- | --- | --- |
+| ORIGINAL | 50/84 (504) | 52/88 (528) | 18/444 (528) | 0/528 (528) |
+| historical SHIFTED | 42/156 (504) | 52/88 (528) | 12/436 (528) | 0/524 (528) |
+
+Example ORIGINAL indices13 and16, FIXED ON/D1/positive: same F1 empty digits,
+decimal FFFFFFFF/sign0, but VFP original display0.0 versus0.1. Therefore those
+public tuples alone do NOT determine original display in the captured sample.
+No inference that VFP calls that API at that count. Zero E17 conflicts does NOT
+establish a formatter rule: original keys are unique, so the test provides no
+nontrivial equivalence for them. SHIFTED bits remain explicit old magnitude
+stimuli, not newly observed native arithmetic or an accepted bias/operation.
+
+NEXT bounded native-only recovery: source-freeze an ORIGINAL-only public
+_fcvt count discriminator at applied D+1,D+2,D+3 (D0..18, counts1..21), same
+264 payloads/width40scale18/both FIXED modes,1584 rows/run. Explicitly extend
+only the experimental wrapper count bound before testing; no production or
+implicit18 cap. Keep finite/count validation, immediate bounded copy of CRT
+static output, exact identity/controls, first-error stop, fresh separate BOTH
+windows/all guards and strict-first-before-repeat. These counts are diagnostic
+inputs, NOT a presumed VFP extra-digit algorithm. Source NOT yet written/frozen.
+Primary documented API contract (not legacy-runtime behavior proof):
+https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/fcvt?view=msvc-170
+describes decimal-place count, decimal/sign results, bounded static output
+overwritten by subsequent conversions; keep count0 excluded. Exact behavior
+must come from this installed/bound native CRT, not modern documentation alone.
+
+LOW DQ-DV001 developer walkthrough: inspected actual stage/direct-check logs,
+both strict/raw/hash proofs, archive byte comparisons/manifest/readers and
+complete tuple counterexamples. Delta is qualified plain-shell evidence plus
+an offline insufficiency test; NOT a fitted formatter or expected regression.
+Existing hazards/rollback retained. No independent-human/release assurance,
+parent closure, owner-input blocker or automation pause. Next remains exact
+conversion/display recovery -> expectation freeze/actual ORIGINAL -> unused
+support/direct -> wiring/SAME/broader/hosted/exact-head review/merge.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
 expectation emitter, original-fail/SAME, focused/broader/actual named hosted
 execution, exact-head review, strict checks and resolved conversations are
-pending except the seven bounded native pairs qualified above. No compatibility,
+pending except the seven earlier bounded captured pairs and this native-bound
+CRT pair qualified above, each retaining its provenance limits. No compatibility,
 parent, hazard or release closure.
 
 `DQ-DV-5611-NUMERIC-DEFAULT-TRANSFORM-001`, LOW procedure delta: preserve the
