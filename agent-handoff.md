@@ -15,7 +15,9 @@ arithmetic source1cf23445495e375e1e124c47ca7a436e2b48b985;
 Qualified528 pair/native graph rejection retained at signed/pushed61438bd5a;
 Sourceaccdbe40f import0/compile1 retained; corrected signed7d706418f builds0,
 first native0/DONE4176 but strict1 on runtime module path; repeat prevented.
-Next signed checkpoint retains UNQUALIFIED4176 and read-only binding plan.
+Signed/DCO pushed observer source7c58dcbf8 implements read-only binding after
+direct hash/header checks; latest build0/native124 partial failure retained
+below. Both4176 and1626 binding attempts remain UNQUALIFIED.
 No PR/expected regression/helper/hook; src/include remain main-identical.
 Tracking #7210 is owner-authored OPEN bug/runtime, no agent-approved label.
 Authority derives from admitted parents/direct owner policy, NOT child content.
@@ -141,25 +143,37 @@ build path absent. Prior import0/compile1 attempt intact at
 crt-build-attempt1/ and build/default-transform-crt-build-attempt1.
 No failed/guarded/qualified source replay, weakened reader or accepted CRT model.
 
-At signed176224a01, NEW BOTH-chat clearance/full guards/idle prefix:
-GNU+Clang ASan/UBSan direct tests actually72 each0/empty stderr, known answers/
-Node+CRT digest/header bounds PASS; import/Clang32 compile0, link1 undefined
-_memcpy from own cached CrtPe struct assignment. NO FLL/native; both released.
-crt-binding-build-attempt1/ archives105 byte-compared receipts/own sources/full
-REA ev_3e83f3df48e30e8ac01d60ae3e95aa0e375f9c5281330c60f46b809534ae5863:
-root1/quiesced/owned verified BUT process limit60 => truncated:true/incomplete
-process sampling, three unrelated EACCES ownership checks left untouched.
-Archive reader/manifest0, host intact build/default-transform-crt-binding-build-attempt1,
-original build path absent; SDK-containing object/libs/host exes HOST-ONLY.
-NEXT five explicit scalar copies replace cached struct assignment only; corrected
-observer UNBUILT. Hash/header/direct source unchanged, checks above NOT proof
-of corrected link/runtime binding. Freeze/sign/push BEFORE NEW BOTH-chat CLEAR,
-full avg10 AND avg60<1%/idle-prefix before EACH compiler/import/link/test/native.
-Composite reader requires observed path PLUS exact32-bit file digest/size and
-loaded/file PE32 header facts; old4176 remains unqualified, no path-only bypass.
-Once-per-FLL file sample, no atomic binding/no DLL or CW changes/proprietary
-byte export. Same264/4176/strict first gate, no model/production change. No VM,
-standing reservation or owner-input blocker. No replay archived workers.
+Latest binding checkpoint at signed/DCO clean7c58dcbf8: NEW BOTH compiler-only
+CLEAR/guards, GNU+Clang sanitizer72 checks each0, import/Clang32/link0 (four SDK
+warnings retained), FLL HOST-ONLY d86e224a7fdda75625838296c89eed8691517975cc17f8f83e7ddaec40ce9610.
+Build window RELEASED; separate NEW BOTH native-only CLEAR/guards then first
+actual124/25sec timeout, stdout empty/stderr70, partial1626 rows ALL generic
+ERROR:MODULEBINDING/no DONE. Strict reader+repeat NOT invoked. Raw SHA
+23d814cc7b2caf2b9f1ada4bf9530935e3fcbd88fc9a06c3d5e24ca1aa3af640.
+BOTH RELEASED/prefix idle1; no standing reservation. Generic error does not
+identify failed check; no runtime identity/conversion/display qualification.
+crt-binding-native-attempt1/ retains134 byte-compared receipts/OWN sources/FXP/
+full REA. Host intact build/default-transform-crt-binding-native-attempt1;
+original build path absent; all SDK binaries/libs/objects/host exes HOST-ONLY.
+Forensic audit-crt-binding-attempt.cjs host+archive0/manifest0 is NOT strict
+qualification; explicitly qualified:false. Input/binary/native hash checks0.
+Build REA ev_4f7c967ddb570d6ea8ae683fd492a0dcde37e971fc3aad8f21b51aa153018c6d
+root0/quiesced/owned verified BUT process limit60/incomplete/truncated:true,
+one unrelated EACCES unknown untouched. Native REA
+ev_118f96a67432dd223a2e334bdf2031e916a527238a5f35cb94716fa2e82d327c root124/
+quiesced/owned verified/untruncated/no sampled ownership unknowns; ALL standard
+sampling/atomic-binding/snapshot/environment/network limits remain. Native
+snapshot160files/40MB budget recorded; test scope unchanged. Earlier link1
+source176224a01/105-receipt crt-binding-build-attempt1 stays intact.
+NEXT prepare ONE-CALL staged runtime binding diagnostic, not implemented yet:
+bounded public VirtualQuery/PE/path facts and distinct operation/error statuses,
+no proprietary bytes/relaxed identity. Fail PRG immediately on first observer
+error; do NOT replay unchanged full4176 failed worker (failure currently retries
+per call). Freeze/sign source/reader BEFORE NEW BOTH compiler/native CLEAR,
+immediate full avg10 AND avg60<1%/idle prefix per invocation. Only after exact
+one-call binding/control proof, separately freeze full4176 caller with stop-on-
+error and strict first gate BEFORE repeat. No VM/owner-input blocker, no model/
+production formatter, old4176 and latest1626 remain unqualified. See recovery.md.
 Do not replay seven qualified pairs.
 expectations/actual ORIGINAL -> unused support/direct GNU+Clang -> separate
 wiring/SAME/broader/actual named hosted -> exact-head clean review/strict green/

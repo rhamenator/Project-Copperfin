@@ -855,6 +855,68 @@ source, not proof of the corrected FLL link or runtime binding. LOW developer
 walkthrough confirms exact field coverage and preserved failed receipts; no
 formatter/native qualification, exception or independent-human acceptance.
 
+### Corrected binding build0; first native TIMEOUT/UNQUALIFIED, no repeat
+
+At unchanged signed/DCO clean7c58dcbf8, a NEW BOTH-chat compiler-only CLEAR and
+all immediate guards preceded repeated GNU/Clang ASan/UBSan compilation and
+72 actual checks each0/empty stderr. Import/Clang32/link now all0; four SDK
+debug-section warnings retained. HOST-ONLY FLL SHA
+d86e224a7fdda75625838296c89eed8691517975cc17f8f83e7ddaec40ce9610.
+Source/tool/native/binary hash checks0. Compiler window explicitly RELEASED.
+Build REA ev_4f7c967ddb570d6ea8ae683fd492a0dcde37e971fc3aad8f21b51aa153018c6d:
+root0/quiesced/owned verified; terminal/filesystem untruncated but process limit60
+reached => overall truncated:true/incomplete process sampling. One unrelated
+EACCES ownership unknown left untouched; all original limits/unknowns retained.
+
+Separate NEW explicit BOTH-chat native-only CLEAR followed. Immediate full
+avg10/avg60<1% guard exit0 and idle-prefix exit1/empty passed; first wrapper
+returned actual124 after its25sec timeout. stdout empty, stderr70 bytes records
+timeout. Result file partial703242 bytes/1626 complete20-field rows, ALL
+ERROR:MODULEBINDING, NO DONE. Raw SHA
+23d814cc7b2caf2b9f1ada4bf9530935e3fcbd88fc9a06c3d5e24ca1aa3af640.
+Strict first reader and repeat were NOT invoked because actual native status
+already failed. No ABI/conversion/module-file/display qualification and no
+retroqualification of the earlier4176 attempt. Generic failure does NOT reveal
+which binding check failed; do not guess path redirection, image header or
+hash fault from this receipt. Failed binding is attempted per call because
+only success is cached, so do not replay this full4176 worker.
+
+Native REA ev_118f96a67432dd223a2e334bdf2031e916a527238a5f35cb94716fa2e82d327c:
+root124/quiesced/owned verified/untruncated; no sampled ownership unknowns in
+THIS run. The explicit native capture snapshot budget160 files/40MB covers
+extended identity protocol/build+native receipts, not additional test scope;
+other bounds unchanged. All original process-sampling/atomic-image-binding/
+filesystem-snapshot/inherited-environment/network limits remain. Both chats
+RELEASED promptly; post-prefix empty1. No standing reservation/VM/owner blocker.
+
+crt-binding-native-attempt1/ retains134 byte-compared generated receipts,
+OWN sources/caller/FXP and BOTH complete REA records. SDK-containing object/
+import/export libraries/FLL and host executables stay HOST-ONLY in intact
+build/default-transform-crt-binding-native-attempt1; original build path absent.
+All source/tool/native/binary/post-attempt input checks0. Separate
+audit-crt-binding-attempt.cjs host+archived forensic reader0/manifest0 verifies
+partial framing/errors/status and direct host receipts only, explicitly
+qualified:false/pairedQualified:false. It is NOT the skipped strict reader or
+proof of any successful runtime binding/conversion semantics.
+
+NEXT bounded recovery, NOT implemented yet: prepare a ONE-CALL native-only
+binding diagnostic, exposing bounded public path/VirtualQuery/PE facts and
+distinct operation/status errors for size/read/header/digest, without exporting
+proprietary bytes or weakening any identity requirement. Stop the PRG at the
+first observer error; never spend another4176 calls repeating a failed binding.
+Freeze/sign source/reader first, then fresh BOTH-chat compiler/native windows
+and immediate guards. Do not run the unchanged failed worker or reuse attempted
+directories. Only after one-call exact identity/control proof may a separately
+frozen full4176 caller run; first strict gate still precedes repeat. Preserve
+failures and cache semantics explicitly. No production/hash-provider/CW/DLL
+replacement, guessed path acceptance, epsilon, cap or formatter-model adoption.
+
+LOW DQ-DV001 developer walkthrough: checked actual124 prevents strict/repeat,
+all1626 rows remain unqualified, original source/build/native receipts immutable,
+host-only binary exclusion, next single-call-before-full recovery ordering.
+Forensic verification above actually passed; no independent-human/system or
+release acceptance, hazard/compatibility/parent closure.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
