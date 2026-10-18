@@ -175,6 +175,43 @@ BEFORE allowing a second invocation. Its status0 means first-structure-only,
 not repeat qualification or product parity. Preserve any first-structure failure
 and stop; never treat runner0 alone as successful native completion.
 
+### Narrower pair qualified
+
+Signed/DCO source acaf2f67cd795dc06ce15e5018b3545533900e5a precedes the
+renewed run after fresh audit/DAW clearance. Both actual native statuses0/
+empty stderr/complete DONE|1872. First structural gate0 before repeat;
+final independent paired reader0. All1872 records repeat RAW-BYTE-IDENTICALLY,
+SHA25645d1e318ba670f980f191c574a83d7d14206069468f35a53827537469018bea2.
+Requested metadata readbacks exact, every intervention payload unchanged,
+cloned controls equal; stored metadata/payload changes0 across display settings.
+Archived independent readback0/byte compare0. Both full PSI windows0.00/0.00
+before EACH invocation; all source/runner/VFP9/FLL hash checks0. Both chats
+RELEASED; prefix postcheck empty/1. No build, Wine, native or VM reservation.
+
+Full intervention-captures/ REA
+ev_d750f514647fb048ce40c9fe290bdf782421ca5a52662b3c19ed0d84bce08915:
+root0/quiesced/owned cleanup verified/untruncated, no sampled EACCES unknowns
+in THIS capture. Older failed attempt/unknowns remain retained, not reclassified.
+Image-binding, process-sampling, filesystem-snapshot and inherited-environment
+limitations remain; no sandbox/global cleanup claim.
+
+Observed intervention witnesses (D2/FIXED OFF): same0.50 bits/scale1 display
+`.5` at width2, `0.5` at widths3/4; fixed width20 with scale1 versus2 displays
+`0.5` versus `0.50`. Width and scale independently affect exact output without
+changing payload. Negative0.50 at width3/scale1 displays `-.5`, width4 `-0.5`;
+width2 gives `.*`. The clone control is unchanged. Stored-value output changes
+with FIXED/DECIMALS while all observed value metadata/payloads remain unchanged.
+
+Rounding witnesses: D2/FIXED ON2.675 ->2.68,1.005 ->1.01,9.995 ->*.** at its
+literal width, while explicit STR(...,40,2) is10.00. FIXED OFF18-scale
+1.234567890123456789 ->1.234567890123457000; 999999999.123456789 ->
+999999999.123456800;12345678901234.5625 ->12345678901234.5600. These suggest
+a magnitude-dependent significant-digit boundary, but do NOT establish its
+algorithm. Near-half0.499999999999999 produces1 in STR(...,40,0), so a simple
+exact-binary half-away rule is contradicted. Do not guess a tolerance from this.
+NEXT independently frozen adjacent-binary64 boundary recovery using observed
+native centers and documented CTOBIN/BRS identity, BEFORE formatter/test model.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only

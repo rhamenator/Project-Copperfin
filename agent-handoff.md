@@ -38,8 +38,19 @@ omit width<=scale solely as probe-safety restriction, NOT production policy or
 established cause. EVALUATE-only GRID, compiled private-value birth assignments.
 No run yet. Full PSI59.23/43.38 prevents retry. NEXT fresh BOTH-chat/low-full-
 PSI gates for narrower pair before native expectations/ORIGINAL/support.
-Use separate build/default-transform-intervention2; --single reader must pass
-after first capture BEFORE invoking repeat. Runner0 alone is insufficient.
+Narrower pair now QUALIFIED from signed source acaf2f67c: both actual0/empty
+stderr/DONE1872; first structure0 before repeat, paired reader0, RAW exact
+repeat SHA45d1e318ba670f980f191c574a83d7d14206069468f35a53827537469018bea2.
+All metadata interventions exact/payloads unchanged/clone controls equal;
+stored metadata+payload changes0 across settings. Full PSI0.00/0.00 before
+each, all source/native hashes unchanged; archive reader0/byte compare0.
+REA ev_d750f514647fb048ce40c9fe290bdf782421ca5a52662b3c19ed0d84bce08915
+root0/quiesced/owned cleanup verified/untruncated/no sampled EACCES here;
+earlier attempt still UNQUALIFIED. Both chats RELEASED; prefix postcheck empty.
+See intervention-captures/ and recovery.md for independent width/scale causal
+witnesses and rounding outputs. NEXT adjacent-binary64 rounding boundary
+recovery from native centers; do not guess epsilon/tolerance or implement from
+16-significant-digit inference alone. No model/expected emitter/helper yet.
 
 ## Why division is explicitly deferred, not cancelled
 
