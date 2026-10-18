@@ -14,7 +14,8 @@ const inv={requirement:native.requirement,parentNativeSha256:native.firstSha256,
     modulePath:'C:\\windows\\system32\\MSVCR71.dll',
     moduleSha256:'8094af5ee310714caebccaeee7769ffb08048503ba478b879edfef5f1a24fefe',
     moduleFileSize:348160,modulePe:{machine:332,magic:267,stamp:1045831340,imageSize:352256,checksum:389609},
-    limitation:'Observe installed32-bit CRT conversion of original/qualified shifted bits, not recomputed model inputs. Both FIXED modes, applied fcvt count1..18 (D0 omitted), ecvt counts15/16/17. Runtime-reported path plus once-per-FLL bounded file digest and matching loaded/file PE32 headers, not atomic mapped-image/backing-file proof. No DLL load/replacement/CW modification, inferred VFP call attribution, expected formatter or production linkage.'};
+    runtimeEnvironment:'WINEDLLOVERRIDES=msvcr71=n',inputsAreExplicitPayloadStimuli:true,
+    limitation:'Observe native-only installed32-bit Microsoft CRT on explicit original/historical shifted payload stimuli, NOT accepted thresholds/current-runtime arithmetic/expected formatter text. Both FIXED modes, applied fcvt count1..18 (D0 omitted), ecvt counts15/16/17. Strict runtime path/once-per-FLL bounded file digest/matching loaded-file PE32 headers; no atomic image binding. Stop first observer/runtime error. No observer DLL load/replacement/CW modification, VFP internal call attribution, Windows parity or production linkage.'};
 const prior=fs.readFileSync(path.join(__dirname,'rounding-arithmetic.prg'),'utf8');
 const functions=prior.slice(prior.indexOf('FUNCTION Unhex'));
 a(functions.startsWith('FUNCTION Unhex'));a.equal(prior.split('FUNCTION Unhex').length,2);
@@ -23,7 +24,7 @@ const source=prior.split('\n').slice(0,3).join('\n')+'\n* RQ-CF-PRG-NUMERIC-DEFA
     inputs.map(r=>`inputHex[${r.index}]='${r.bits}'\nshiftedHex[${r.index}]='${r.shiftedBits}'\ntargetDecimals[${r.index}]=${r.setting}`).join('\n')+String.raw`
 LOCAL outputPath,libraryPath,crtPath,index,decimalCount,fixedNo,fixedMode,targetNo,route
 LOCAL payload,argumentHex,kindNo,kind,countNo,conversionCount,crtResult,line,caught,total
-LOCAL beforeMeta,beforeBits,beforeDisplay,beforeStr
+LOCAL beforeMeta,beforeBits,beforeDisplay,beforeStr,failed
 outputPath='Z:\home\rich\.codex\worktrees\numeric-literal-display-5611\Project-Copperfin\build\default-transform-crt\results.txt'
 libraryPath='Z:\home\rich\dev\Project-Copperfin\build\pr7203-completed\native-evidence\diagnostic\cause-probe.fll'
 crtPath='Z:\home\rich\.codex\worktrees\numeric-literal-display-5611\Project-Copperfin\build\default-transform-crt\crt-probe.fll'
@@ -70,17 +71,28 @@ FOR index=1 TO ALEN(inputHex)
      ELSE
       conversionCount=14+countNo
      ENDIF
+     failed=.F.
      TRY
       IF kindNo=1
        crtResult=CFNFCVT(payload,conversionCount)
       ELSE
        crtResult=CFNECVT(payload,conversionCount)
       ENDIF
-      line=fixedMode+'|'+ALLTRIM(STR(index,6,0))+'|'+inputHex[index]+'|'+ALLTRIM(STR(decimalCount,4,0))+'|'+route+'|'+argumentHex+'|'+kind+'|'+ALLTRIM(STR(conversionCount,4,0))+'|'+beforeMeta+'|'+beforeBits+'|'+beforeDisplay+'|'+beforeStr+'|'+VARTYPE(SET('DECIMALS'))+'|'+HexBytes(TRANSFORM(SET('DECIMALS')))+'|'+VARTYPE(SET('FIXED'))+'|'+HexBytes(TRANSFORM(SET('FIXED')))+'|'+crtResult+'|'+CFNMETA(CFNDEC(CFNWIDTH(payload,40),18))+'|'+HexBytes(BINTOC(CFNDEC(CFNWIDTH(payload,40),18),'BRS'))+'|'+HexBytes(TRANSFORM(CFNDEC(CFNWIDTH(payload,40),18)))
+      IF LEFT(crtResult,6)=='ERROR:'
+       failed=.T.
+       line='ERROR-OBSERVER|'+ALLTRIM(STR(index,6,0))+'|'+argumentHex+'|'+HexBytes(crtResult)
+      ELSE
+       line=fixedMode+'|'+ALLTRIM(STR(index,6,0))+'|'+inputHex[index]+'|'+ALLTRIM(STR(decimalCount,4,0))+'|'+route+'|'+argumentHex+'|'+kind+'|'+ALLTRIM(STR(conversionCount,4,0))+'|'+beforeMeta+'|'+beforeBits+'|'+beforeDisplay+'|'+beforeStr+'|'+VARTYPE(SET('DECIMALS'))+'|'+HexBytes(TRANSFORM(SET('DECIMALS')))+'|'+VARTYPE(SET('FIXED'))+'|'+HexBytes(TRANSFORM(SET('FIXED')))+'|'+crtResult+'|'+CFNMETA(CFNDEC(CFNWIDTH(payload,40),18))+'|'+HexBytes(BINTOC(CFNDEC(CFNWIDTH(payload,40),18),'BRS'))+'|'+HexBytes(TRANSFORM(CFNDEC(CFNWIDTH(payload,40),18)))
+      ENDIF
      CATCH TO caught
+      failed=.T.
       line='ERROR-'+fixedMode+'|'+ALLTRIM(STR(index,6,0))+'|'+argumentHex+'|'+ALLTRIM(STR(caught.ErrorNo,6,0))+'|'+HexBytes(caught.Message)
      ENDTRY
      =STRTOFILE(line+CHR(13)+CHR(10),outputPath,1)
+     IF failed
+      SET LIBRARY TO
+      RETURN
+     ENDIF
      total=total+1
     ENDFOR
    ENDFOR

@@ -1601,5 +1601,7 @@
     "imageSize": 352256,
     "checksum": 389609
   },
-  "limitation": "Observe installed32-bit CRT conversion of original/qualified shifted bits, not recomputed model inputs. Both FIXED modes, applied fcvt count1..18 (D0 omitted), ecvt counts15/16/17. Runtime-reported path plus once-per-FLL bounded file digest and matching loaded/file PE32 headers, not atomic mapped-image/backing-file proof. No DLL load/replacement/CW modification, inferred VFP call attribution, expected formatter or production linkage."
+  "runtimeEnvironment": "WINEDLLOVERRIDES=msvcr71=n",
+  "inputsAreExplicitPayloadStimuli": true,
+  "limitation": "Observe native-only installed32-bit Microsoft CRT on explicit original/historical shifted payload stimuli, NOT accepted thresholds/current-runtime arithmetic/expected formatter text. Both FIXED modes, applied fcvt count1..18 (D0 omitted), ecvt counts15/16/17. Strict runtime path/once-per-FLL bounded file digest/matching loaded-file PE32 headers; no atomic image binding. Stop first observer/runtime error. No observer DLL load/replacement/CW modification, VFP internal call attribution, Windows parity or production linkage."
 }

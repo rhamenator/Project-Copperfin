@@ -1155,6 +1155,52 @@ manifest/reader0. The compact handoff redirects historical chronology here,
 preserving uncancelled division ORIGINAL/tests and all failures/unknowns.
 No independent-human/system/release assurance. No owner-input blocker or pause.
 
+### Native-bound full CRT recovery — source freeze, NOT built/run
+
+emit-crt.cjs/crt.prg/crt-cases.json now explicitly classify the264 original/
+historical shifted payloads as stimuli ONLY. Old arithmetic-capture bits remain
+immutable; not interpreted as new-runtime arithmetic, threshold expectations or
+accepted formatter strings. Enumeration remains4176 rows/run: both FIXED modes,
+F at applied D1..18 (D0 omitted), E15/16/17, both payload routes. Same independent
+TRANSFORM/STR/settings/metadata/BRS/pre+post controls and bounded observer C/hash
+source. First observer ERROR: return or caught runtime error is written ONCE,
+then caller unloads libraries/returns with NO completion footer. Never continue
+thousands of failed calls. Normal20-field row layout/coverage stays unchanged.
+
+crt-capture.sh supplies process-local native-only msvcr71=n on EACH invocation,
+records supplied/inherited override, rejects nonempty inherited overrides.
+audit-crt.cjs requires those exact records plus the explicit-stimulus declaration,
+all existing exact32-bit digest/path/loaded-file header/CW/argument controls,
+actual0/empty/full coverage, strict first gate BEFORE repeat/typed repeat.
+No old reader/archive is edited or retroqualified. No expected CRT digits or
+production formatter rule is synthesized.
+
+Source Node syntax/emitter PRG+inventory regeneration/cmp/bash-n/diff-check
+all0 under set-e/pipefail. These are source checks, NOT compiler/native proof.
+crt-build.sh still performs guarded GNU+Clang exact shared hash/header direct
+checks before cross-building the source-frozen wrapper. No changes to observer,
+hash algorithm, compatibility-switch/checked-conversion/allocation policy,
+registry/global helper/DLL/VM configuration or production code.
+
+NEXT clean signed source at fresh build/default-transform-crt; request NEW BOTH
+compiler-only CLEAR, all immediate avg10 AND avg60<1%/idle-prefix gates per
+host test/import/compiler/link. Build0/release -> separate NEW BOTH native-only
+window, each invocation gated. Preserve every guard/failure/full tool error and
+actual status; never overwrite prior paths. For full paired native receipts,
+declare snapshot budget160 files/40MB (not extra test scope) so extended protocol/
+raw/stdout/audit/source/build receipts can be sampled without hiding omissions.
+Keep SDK-linked binaries/objects/libs HOST-ONLY; full REA and any limitations
+remain evidence alongside actual statuses/readers, not replacements for them.
+No full experiment has run this native-only/first-error source yet.
+
+LOW DQ-DV001 procedural delta/developer walkthrough: traced observer and runtime
+failure branches through one retained error/no DONE, unchanged normal row count,
+both environment guards and exact module reader, old observation/stimulus versus
+expectation boundary, fresh separate windows/strict-first-before-repeat. Source
+checks above actually0; rollback exact source revert while retaining all raw
+receipts/provenance correction, notify owner if evidence is invalidated. No
+independent-human/system/release assurance, known-bug exception or closure.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only

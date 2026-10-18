@@ -13,6 +13,9 @@ git status --porcelain > "$capture_root/source-status.txt"
 test ! -s "$capture_root/source-status.txt" || exit 97
 git rev-parse HEAD > "$capture_root/source-commit.txt"
 date -u +%FT%TZ > "$capture_root/started.utc"
+printf '%s\n' "${WINEDLLOVERRIDES-UNSET}" > "$capture_root/inherited-dll-overrides.txt"
+test -z "${WINEDLLOVERRIDES-}" || exit 94
+printf 'WINEDLLOVERRIDES=msvcr71=n\n' > "$capture_root/supplied-runtime-env.txt"
 sha256sum -c "$capture_root/build-inputs.sha256" > "$capture_root/pre-native-build-check.txt"
 sha256sum -c "$capture_root/built.sha256" > "$capture_root/pre-native-binary-check.txt"
 sha256sum "$fixture"/{crt-probe.c,crt-binding.h,crt-binding-check.c,crt-binding-check.cjs,crt-kernel32.def,emit-crt.cjs,crt.prg,crt-cases.json,audit-crt.cjs,crt-build.sh,crt-capture.sh} /home/rich/bin/vfp9-probe /home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe /home/rich/copperfin-wine-vfp9/drive_c/windows/syswow64/msvcr71.dll /home/rich/dev/Project-Copperfin/build/pr7203-completed/native-evidence/diagnostic/cause-probe.fll "$capture_root/crt-probe.fll" > "$capture_root/inputs.sha256"
@@ -34,7 +37,7 @@ for name in first repeat; do
  printf '%s\n' "$guard_status" > "$capture_root/$name.guard.status"
  test "$guard_status" -eq 0 || exit 75
  set +e
- nice -n 10 /home/rich/bin/vfp9-probe "$capture_root/probe.prg" --result "$capture_root/results.txt" > "$capture_root/$name.out" 2> "$capture_root/$name.stderr"
+ nice -n 10 /usr/bin/env WINEDLLOVERRIDES=msvcr71=n /home/rich/bin/vfp9-probe "$capture_root/probe.prg" --result "$capture_root/results.txt" > "$capture_root/$name.out" 2> "$capture_root/$name.stderr"
  status=$?
  set -e
  printf '%s\n' "$status" > "$capture_root/$name.status"

@@ -9,6 +9,9 @@ a.equal(inv.inputCount,264);a.equal(inv.recordsPerRun,4176);a.equal(inv.inputs.l
 for(const r of inv.inputs){a(source.includes(`inputHex[${r.index}]='${r.bits}'`));a(source.includes(`shiftedHex[${r.index}]='${r.shiftedBits}'`));a(source.includes(`targetDecimals[${r.index}]=${r.setting}`));}
 const bytes=name=>{const p=path.join(process.argv[2],name);return fs.existsSync(p)?fs.readFileSync(p):z.gunzipSync(fs.readFileSync(p+'.gz'));};
 const sha=b=>crypto.createHash('sha256').update(b).digest('hex'),ascii=h=>Buffer.from(h,'hex').toString('ascii');
+a.equal(inv.runtimeEnvironment,'WINEDLLOVERRIDES=msvcr71=n');a.equal(inv.inputsAreExplicitPayloadStimuli,true);
+a.equal(bytes('supplied-runtime-env.txt').toString(),inv.runtimeEnvironment+'\n');
+a(['UNSET\n','\n'].includes(bytes('inherited-dll-overrides.txt').toString()));
 function read(name){
  a.equal(bytes(name+'.status').toString(),'0\n');a.equal(bytes(name+'.stderr').length,0);
  const raw=bytes(name+'-results.txt');a.deepEqual(raw,bytes(name+'.out'));

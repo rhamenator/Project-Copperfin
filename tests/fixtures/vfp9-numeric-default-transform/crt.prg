@@ -797,7 +797,7 @@ shiftedHex[264]='4023FD70A3D70A40'
 targetDecimals[264]=2
 LOCAL outputPath,libraryPath,crtPath,index,decimalCount,fixedNo,fixedMode,targetNo,route
 LOCAL payload,argumentHex,kindNo,kind,countNo,conversionCount,crtResult,line,caught,total
-LOCAL beforeMeta,beforeBits,beforeDisplay,beforeStr
+LOCAL beforeMeta,beforeBits,beforeDisplay,beforeStr,failed
 outputPath='Z:\home\rich\.codex\worktrees\numeric-literal-display-5611\Project-Copperfin\build\default-transform-crt\results.txt'
 libraryPath='Z:\home\rich\dev\Project-Copperfin\build\pr7203-completed\native-evidence\diagnostic\cause-probe.fll'
 crtPath='Z:\home\rich\.codex\worktrees\numeric-literal-display-5611\Project-Copperfin\build\default-transform-crt\crt-probe.fll'
@@ -844,17 +844,28 @@ FOR index=1 TO ALEN(inputHex)
      ELSE
       conversionCount=14+countNo
      ENDIF
+     failed=.F.
      TRY
       IF kindNo=1
        crtResult=CFNFCVT(payload,conversionCount)
       ELSE
        crtResult=CFNECVT(payload,conversionCount)
       ENDIF
-      line=fixedMode+'|'+ALLTRIM(STR(index,6,0))+'|'+inputHex[index]+'|'+ALLTRIM(STR(decimalCount,4,0))+'|'+route+'|'+argumentHex+'|'+kind+'|'+ALLTRIM(STR(conversionCount,4,0))+'|'+beforeMeta+'|'+beforeBits+'|'+beforeDisplay+'|'+beforeStr+'|'+VARTYPE(SET('DECIMALS'))+'|'+HexBytes(TRANSFORM(SET('DECIMALS')))+'|'+VARTYPE(SET('FIXED'))+'|'+HexBytes(TRANSFORM(SET('FIXED')))+'|'+crtResult+'|'+CFNMETA(CFNDEC(CFNWIDTH(payload,40),18))+'|'+HexBytes(BINTOC(CFNDEC(CFNWIDTH(payload,40),18),'BRS'))+'|'+HexBytes(TRANSFORM(CFNDEC(CFNWIDTH(payload,40),18)))
+      IF LEFT(crtResult,6)=='ERROR:'
+       failed=.T.
+       line='ERROR-OBSERVER|'+ALLTRIM(STR(index,6,0))+'|'+argumentHex+'|'+HexBytes(crtResult)
+      ELSE
+       line=fixedMode+'|'+ALLTRIM(STR(index,6,0))+'|'+inputHex[index]+'|'+ALLTRIM(STR(decimalCount,4,0))+'|'+route+'|'+argumentHex+'|'+kind+'|'+ALLTRIM(STR(conversionCount,4,0))+'|'+beforeMeta+'|'+beforeBits+'|'+beforeDisplay+'|'+beforeStr+'|'+VARTYPE(SET('DECIMALS'))+'|'+HexBytes(TRANSFORM(SET('DECIMALS')))+'|'+VARTYPE(SET('FIXED'))+'|'+HexBytes(TRANSFORM(SET('FIXED')))+'|'+crtResult+'|'+CFNMETA(CFNDEC(CFNWIDTH(payload,40),18))+'|'+HexBytes(BINTOC(CFNDEC(CFNWIDTH(payload,40),18),'BRS'))+'|'+HexBytes(TRANSFORM(CFNDEC(CFNWIDTH(payload,40),18)))
+      ENDIF
      CATCH TO caught
+      failed=.T.
       line='ERROR-'+fixedMode+'|'+ALLTRIM(STR(index,6,0))+'|'+argumentHex+'|'+ALLTRIM(STR(caught.ErrorNo,6,0))+'|'+HexBytes(caught.Message)
      ENDTRY
      =STRTOFILE(line+CHR(13)+CHR(10),outputPath,1)
+     IF failed
+      SET LIBRARY TO
+      RETURN
+     ENDIF
      total=total+1
     ENDFOR
    ENDFOR

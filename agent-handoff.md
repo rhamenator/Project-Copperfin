@@ -81,22 +81,29 @@ Original process/atomic-binding/snapshot/environment/network limits retained.
 Projection code assumed normal response shape and threw after saving full error;
 corrected extraction reused same result, NO native rerun. All details recovery.md.
 
-## NEXT bounded action — native-bound full CRT source preparation
+## NEXT bounded action — native-bound full CRT source frozen, UNBUILT/UNRUN
 
-NOT implemented/frozen yet: adapt emit-crt.cjs/crt.prg +crt-capture.sh to explicit
-process-local native-only msvcr71=n input, log inherited/supplied override and
-fail if inherited override nonempty. Same264 original/historical shifted payloads
-are STIMULI ONLY, not accepted thresholds/current-runtime arithmetic/expected
-display. Caller MUST stop on first observer OR runtime error and retain it.
-Keep exact module/header/digest/metadata/BRS/settings/control predicates and
-strict first4176 gate BEFORE repeat; no old worker replay or weakened reader.
-Freeze/sign changed source BEFORE fresh separate BOTH compiler/native CLEAR,
-immediate BOTH full avg10/avg60<1%/idle prefix per invocation and fresh roots.
-Do not rerun completed ONE-CALL diagnostic or seven earlier pairs; preserve all
-failed/guarded/qualified receipts and SDK-containing artifacts host-only.
-Recover actual native-bound conversion/display boundary BEFORE expectations/
-ORIGINAL/support/direct/wiring/SAME/hosted/review. No model/production change.
-No standing compiler/native/Wine/VM job or owner-input blocker; automation active.
+emit-crt.cjs/crt.prg/crt-cases.json now label same264 original/historical shifted
+payloads STIMULI ONLY, not expected thresholds/current-runtime arithmetic/display.
+Normal4176 rows/independent controls unchanged. Caller writes FIRST observer
+ERROR: or caught runtime error, unloads/returns WITHOUT DONE; never loops failures.
+crt-capture.sh supplies process-local native-only msvcr71=n EACH run, logs
+inherited/supplied overrides/rejects nonempty inherited override. audit-crt.cjs
+requires exact env records and existing strict32-bit path/digest/header/CW/
+metadata/BRS/settings/arguments/coverage, first strict gate BEFORE repeat.
+Observer C/hash unchanged. Node syntax/regeneration+cmp/bash-n/diff-check0 only;
+NO compiler/full native run of this new source. Freeze/sign before execution.
+
+NEXT fresh build/default-transform-crt using crt-build.sh ONLY after NEW BOTH
+compiler-only CLEAR, avg10 AND avg60<1%/idle prefix before each host test/import/
+compiler/link. Build0/release then separate NEW BOTH native-only CLEAR for
+crt-capture.sh, EACH native invocation gated. Declare full native REA snapshot
+budget160 files/40MB to cover extended raw/stdout/audit/receipts, not extra scope.
+Preserve guards/failures/cleanup errors/partial captures; no attempted directory
+overwrite, SDK artifacts host-only. Do not rerun completed ONE-CALL diagnostic,
+old full4176 workers or seven prior pairs. Recover actual native-bound exact
+conversion/display boundary BEFORE expectations/ORIGINAL/support/direct/wiring/
+SAME/hosted/review. No model/production change, reservation/VM/owner-input blocker.
 
 ## Retained evidence / verification ladder
 
