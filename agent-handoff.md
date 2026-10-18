@@ -2,6 +2,25 @@
 
 ## Non-whole timing/native and expanded public freeze; no support/hook (2026-10-18)
 
+UPDATE: signed freeze569b36e84236a7f1c7f97492a8a92d136bbecce5 pushed before
+expanded actual ORIGINAL. Both-chat narrow2-TU GNU build0/CTest8/four executed
+6.11s: constant metadata60/bits-eval-control0; non-whole metadata12480/bits-
+literal-eval0 PLUS720 final-setting controls only target14. Preserve first run.
+Independent actual native/host diagnostic0 establishes SET('DECIMALS') query
+returns native Integer versus Copperfin Character text0/14 in BOTH modes, not
+failed setting mutation. Focused7208 OPEN/owner/bug/runtime/no approval label,
+filed against main4b6cc734f; production fix outside active slice. Native two
+2-row wrappers0/typed-repeat, host object/link0/public0; both-chat window RELEASED.
+REA ev_cceee29f338ac9ddffe80be9ad40708568efa44596966e8a593a2bdef59afca2.
+Independently verified VAL(TRANSFORM(SET('DECIMALS'))) returns Number0/14 on
+both hosts. Correct ONLY the test observation in older+new controls, explicitly
+require Number; preserve all native expected values/counts/metadata/setting
+assertions. This checkpoint refreezes that adapter before any support/hook.
+First expanded failures/source hashes/typed diagnostics/host+archive audit0 in
+nonwhole-expanded-original-evidence/. NEXT fresh-clearance corrected expanded
+ORIGINAL, then unused bounded helper/direct verification before hookup. No PR/
+implementation acceptance/query parity/parent closure. Other text below historical.
+
 Active WT /home/rich/.codex/worktrees/numeric-nonwhole-division-5611/Project-Copperfin,
 branch fix/numeric-nonwhole-division-5611, from main4b6cc734f via signedb0115ccb0;
 refreshed ORIGINAL79b305a5b already retained11,040 metadata/zero bits-controls.

@@ -28,3 +28,5 @@ nonwhole-original-evidence/*.gz -text -diff
 nonwhole-refreshed-original-evidence/*.gz -text -diff
 nonwhole-timing-captures/*.gz -text -diff
 nonwhole-timing.prg -text whitespace=-blank-at-eof
+nonwhole-expanded-original-evidence/*.gz -text -diff
+nonwhole-expanded-original-evidence/query-diagnostic/*.gz -text -diff

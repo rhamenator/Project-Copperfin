@@ -1,0 +1,36 @@
+{
+  "expandedOriginal": {
+    "executed": 4,
+    "constantDescriptor": 60,
+    "nonwholeDescriptor": 12480,
+    "bits": 0,
+    "literalBits": 0,
+    "evaluation": 0,
+    "finalSettingControl": 720
+  },
+  "queryDiagnosis": {
+    "native": [
+      {
+        "setting": 0,
+        "type": "Integer",
+        "width": 10,
+        "value": 0,
+        "normalizedReadback": 0
+      },
+      {
+        "setting": 14,
+        "type": "Integer",
+        "width": 10,
+        "value": 14,
+        "normalizedReadback": 14
+      }
+    ],
+    "copperfinBothModes": "Character with correct decimal text; inactive number field0",
+    "normalizedReadbackBothHosts": [
+      0,
+      14
+    ],
+    "issue": 7208
+  },
+  "conclusion": "Preserve the failing run; normalize only the observation adapter and refreeze before support. Query type parity remains a separate unfixed issue."
+}

@@ -18,3 +18,7 @@
   controls, retain zero/nonfinite boundaries and a rejected parameter-width
   hypothesis, then freeze72 callback continuations and strengthen three older
   unknown assertions using independent native fields before support or hooks.
+  Preserve expanded ORIGINAL failures and separately report SET DECIMALS query
+  type gap #7208; normalize only the final-setting test observation using a
+  native/host-verified adapter and require Number, without changing production
+  query behavior or division expectations.

@@ -190,6 +190,17 @@ assignment normalization. No new division helper/hook or expanded ORIGINAL/SAME
 execution yet; those and hosted/exact-head review/strict gates remain mandatory.
 LOW DQ/DV, parent hazards/#6776 switches/checked limits remain unchanged.
 
+Expanded freeze569b36e84 actual GNU build0/CTest8, four executed6.11s: constant
+descriptor60; non-whole descriptor12,480; all payload/evaluation0;720 final-setting
+controls fail ONLY under target14. Independent audit and actual native/host
+typed diagnostics establish [separate SET query gap #7208](https://github.com/rhamenator/Project-Copperfin/issues/7208):
+native Integer0/14 versus current Character text in both modes. Underlying setting
+is correct. Normalize the observation using independently verified existing
+VAL(TRANSFORM(...)) and require Number, preserving exact setting values and all
+native expectations. First failure, source hashes and typed diagnosis retained;
+corrected source must be refrozen/re-run before support. No production query fix
+or passing expanded ORIGINAL claimed here.
+
 Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
 [actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)
 at mainb37ddf7241; paired1,620 values/run, actual0/empty stderr/no errors,

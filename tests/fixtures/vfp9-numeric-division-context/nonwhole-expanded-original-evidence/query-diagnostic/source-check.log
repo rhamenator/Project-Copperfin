@@ -1,0 +1,5 @@
+build/nonwhole-expanded-original/setting-query.prg: OK
+build/nonwhole-expanded-original/setting-query.cpp: OK
+/home/rich/bin/vfp9-probe: OK
+/home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe: OK
+/home/rich/dev/Project-Copperfin/build/pr7203-completed/native-evidence/diagnostic/cause-probe.fll: OK

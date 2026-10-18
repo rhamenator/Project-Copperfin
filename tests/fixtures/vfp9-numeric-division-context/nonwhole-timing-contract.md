@@ -109,3 +109,36 @@ and bounded hook while retaining observations and failures. Existing parent
 HZ-data-corruption-01/HZ-runtime-crash-01/HZ-doc-command-01, #6776 per-area policy,
 checked conversions/allocation limits and mandatory Numeric/display/conversion/
 ListItem work stay unchanged; no parent or #7206 closure.
+
+## Expanded ORIGINAL and exact readback-adapter recovery
+
+Signed pre-support source freeze569b36e84 precedes a fresh both-chat-cleared
+single-job nice10 build of only the two public test TUs. Runtime archive and all
+frozen source/native headers remain hash-identical. Actual build0; four unique
+CTest executions6.11s/CTest8, only the two strengthened public tests fail.
+Constant test:60 descriptor/zero bits-evaluation-controls. Non-whole:12,480
+descriptor/zero bits-literal-evaluation, plus720 final-setting control failures.
+All720 are target14 readbacks; callback counts, pauses/resumes, values and other
+controls pass. Preserve this run unchanged, not as a clean metadata-only baseline.
+
+Actual native and host diagnostics establish the separate cause, filed as
+[#7208](https://github.com/rhamenator/Project-Copperfin/issues/7208) against exact
+main4b6cc734f. Native SET('DECIMALS') at0/14 returns Numeric/native Integer W10;
+unchanged-main Copperfin returns Character text0/14 in BOTH modes. Reading its
+inactive `number_value` field yields0; this is NOT a failed setting mutation.
+The older D0-only control could accidentally pass that inactive field. The
+isolated diagnostic compiles/runs0 against verified existing archives; two
+native wrappers0/empty stderr, documented typed values repeat (unused native
+Integer slots are not semantic). REA evidence
+ev_cceee29f338ac9ddffe80be9ad40708568efa44596966e8a593a2bdef59afca2
+retains the declared process lifecycle/limitations; no VM/runtime change.
+
+`VAL(TRANSFORM(SET('DECIMALS')))` is independently observed as ordinary Number
+0/14 on BOTH hosts/modes and is the existing Numeric test readback pattern.
+Use that adapter only for final-state observation, adding an explicit Number
+kind check in BOTH the older and new test. All exact native payload/descriptor,
+callback/count/state/setting expectations remain unchanged; no assertion is
+dropped. This strengthens the observer rather than implementing or accepting
+SET query-type parity. #7208 remains a separate unfixed gap; no label/authority
+expansion or parent closure. Archive first failures/typed diagnostics and refreeze
+this correction BEFORE unused division support or another actual ORIGINAL.

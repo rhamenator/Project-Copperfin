@@ -139,7 +139,7 @@ int main() {
                         callbackOptions.startup_source_text = std::string("SET NUMERICBEHAVIOR TO ") + mode +
                             "\nSET DECIMALS TO " + std::to_string(settings[d]) + "\nSET FIXED " + fixed +
                             "\nPUBLIC gCalls\ngCalls=0\nanswer=" + row.expression +
-                            "\nfinalDecimals=SET('DECIMALS')\nRETURN\nFUNCTION CFMark\nLPARAMETERS nextSetting"
+                            "\nfinalDecimals=VAL(TRANSFORM(SET('DECIMALS')))\nRETURN\nFUNCTION CFMark\nLPARAMETERS nextSetting"
                             "\ngCalls=gCalls+1\nSET DECIMALS TO nextSetting\nRETURN 2.00\nENDFUNC\n";
                         const auto label = context + " callback " + row.expression;
                         auto callback = PrgRuntimeSession::create(callbackOptions);
@@ -159,7 +159,10 @@ int main() {
                         const auto finalSetting = done.globals.find("finaldecimals");
                         expect(calls != done.globals.end() && calls->second.number_value == 1,
                                label + " exactly one callback after continuation", controlFailures);
-                        expect(finalSetting != done.globals.end() && finalSetting->second.number_value == row.changes_to,
+                        // #7208 tracks SET query result-type parity separately. Observe
+                        // exact setting state through the independently verified adapter.
+                        expect(finalSetting != done.globals.end() && finalSetting->second.kind == PrgValueKind::number &&
+                                   finalSetting->second.number_value == row.changes_to,
                                label + " native final setting", controlFailures);
                         expect(answer != done.globals.end() && answer->second.kind == PrgValueKind::number &&
                                    !answer->second.is_null, label + " ordinary assigned Number", evaluationFailures);

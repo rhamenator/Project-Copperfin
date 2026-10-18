@@ -153,7 +153,7 @@ int main() {
                 options.require_source_text_overrides = true;
                 options.startup_source_text = std::string("SET NUMERICBEHAVIOR TO ") + mode +
                     "\nSET DECIMALS TO 14\nPUBLIC callCount\ncallCount=0\nanswer=" + expression +
-                    "\nfinalDecimals=SET('DECIMALS')\nRETURN\nFUNCTION LaterReal\ncallCount=callCount+1"
+                    "\nfinalDecimals=VAL(TRANSFORM(SET('DECIMALS')))\nRETURN\nFUNCTION LaterReal\ncallCount=callCount+1"
                     "\nSET DECIMALS TO 0\nRETURN 2.00\nENDFUNC\n";
                 auto replay = PrgRuntimeSession::create(options);
                 // A real pause inside the callback forces continuation/checkpoint recovery.
@@ -176,7 +176,8 @@ int main() {
                            answer->second.numeric_metadata->decimal_places == 14 &&
                            answer->second.numeric_metadata->storage == PrgNumericStorage::real,
                        callbackContext + " prepared precision survives callback", descriptorFailures);
-                expect(finalSetting != done.globals.end() && finalSetting->second.number_value == 0,
+                expect(finalSetting != done.globals.end() && finalSetting->second.kind == PrgValueKind::number &&
+                           finalSetting->second.number_value == 0,
                        callbackContext + " callback mutation persists", controlFailures);
             }
         }
