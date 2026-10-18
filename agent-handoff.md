@@ -1,5 +1,71 @@
 # Agent Handoff
 
+## #7206 first native profile retained; held-out native runs pending resource window
+
+Active WT /home/rich/.codex/worktrees/numeric-literal-payload-7206/Project-Copperfin,
+branch fix/numeric-literal-payload-7206 from origin/mainef3ea326f78d640546363abe97bbe27b6208bf45.
+Admitted owner5611/6776/7189 remain OPEN/exact agent-approved.7206 is derived
+tracking only, OPEN/owner/bug/runtime; NO approval-label change. No production
+edits, heavy build or VM use; no PR/implementation or compatibility acceptance.
+
+Retained non-whole division branch fix/numeric-nonwhole-division-5611 is pushed
+at11bd096a6232a86aee10074e8e35f7daca19cbb6. Do NOT restart or rewrite its
+578-row native header/574 exact assertions, original evidence or tests. Integration
+explicitly deferred until this literal-payload prerequisite is integrated, then
+refresh ORIGINAL, finish native fractional callback/continuation timing and
+stronger former-unknown controls BEFORE next freeze; bounded integration/SAME/
+broad/actual hosted execution/exact-head clean review/strict/resolved conversations.
+Other Numeric/display/exact-conversion/ListItem supplied-column READ obligations
+remain mandatory. Completed PR7204/EPOCH/CENTURY are not reopened.
+
+First native literal profile:245 spellings/four contexts, compiled/EVAL x
+DECIMALS0/18 x FIXED OFF/ON =7,840 values/run. Paired actual0/empty stderr/all
+values/no errors; raw byte-identical SHA589f03edf5a2d5a36c7a46bc84f6b5431c5aaa209dff6e73478eee01c1dcce94.
+Independent framing/source/typed/BINTOC/repeat audit0, compiler/EVAL differences0.
+60 bare spellings differ from direct nearest-binary64 parsing; eight simple
+and initial108 structural hypotheses ALL rejected (best27). Full counterexamples
+and initial script retained. Refined separate Horner whole/fraction accumulators
+plus repeatedly multiplied divisor matches all245 bare values; directly parsed
+power divisor still fails6. This is a clean-room finite candidate, NOT an accepted
+native algorithm or proprietary-code inference. Same-rational trailing-zero
+spellings can have different native bits, so do not canonicalize spellings first.
+
+Before any further native observation, holdout.prg/holdout-cases.json and explicit
+holdout-predictions.json prepared/frozen:213 bare literals,198 new spellings,
+15 calibration overlaps, seeded coefficients and width/scale/zero boundaries to
+256 bytes. Prediction file says HYPOTHESIS ONLY, NOT NATIVE EXPECTATIONS.
+audit-holdout.cjs independently verifies actual output, does not import prediction.
+Source/cases/predictions reproduce exactly; source/candidate/auditor/predictions
+hashes in build/literal-payload-native/holdout-pre-capture.sha256 and archived
+captures/. Held-out native runs have NOT executed. Keep all inputs frozen.
+
+Resource coordination: audit01a0a1e1-7469-7ae3-9668-470a4e5b91b5 and
+DAW01a1050d-72c7-7213-bd2b-899e3cf342f7 cleared only bounded short Wine
+windows, no heavy build/VM. First pair launched after pressure fell and window
+released to both on completion. New held-out window was conditionally cleared,
+then full PSI avg10 rose31.21% then57.06%,avg60=35.51%; audit also stopped its
+probes. Held-out runs DEFERRED; no browser/backup/upload change or diagnosis.
+Owner reports Chromium background I/O, contextual only/not earlier-timeout proof.
+No VM/heavy build started/reserved and no owner input blocker/automation pause.
+Coordinate fresh timing with both chats/sample PSI before/between held-out runs.
+
+Next concrete action: when low-contention coordinated window returns, verify
+pre-capture hashes, run unchanged holdout source twice with existing25s runner,
+retain raw stdout/result/status/stderr/own FXP before reuse. Audit actual complete
+native records FIRST, then compare against pre-frozen hypothesis (do NOT emit
+native expected tests from predictions). Keep any counterexamples; no tolerance,
+digit cap, two-spelling fix, global invariant-data parser change or source-grammar
+expansion (#5879/#7114 not selected). If independently supported, freeze bounded
+native contract/public ORIGINAL-fail tests before any unused helper/runtime hook.
+Existing actual non-whole original is prior evidence, not a new helper pass.
+
+All first-profile raw gzip/FXP/native/source/model/candidate/hash evidence in
+tests/fixtures/vfp9-numeric-literal-payload/ and host build/literal-payload-native/.
+See recovery.md/docs32/changelog fragment. REA unavailable; ordinary shell
+black-box evidence only, no decompile/config install. Preserve canonical own
+handoff and unrelated files/stashes/foreign WTs. Historical entries below are
+superseded by this exact active prerequisite and retained division re-entry.
+
 ## Bounded runtime division implementation in verification (2026-10-17)
 
 Continue WT /home/rich/.codex/worktrees/numeric-division-recovery-5611/Project-Copperfin,
