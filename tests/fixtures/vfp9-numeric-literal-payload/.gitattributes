@@ -2,3 +2,5 @@
 *.FXP -text
 captures/*.gz -text -diff
 holdout-captures/*.gz -text -diff
+public-original-evidence/*.gz -text -diff
+public-original-evidence/toolchain.txt -text whitespace=-blank-at-eof

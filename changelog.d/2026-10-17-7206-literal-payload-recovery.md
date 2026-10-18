@@ -4,4 +4,7 @@
   before independent held-out verification: all1,704 predictions subsequently
   match repeated native records through256 source bytes. Freeze a bounded
   contract and1,193-row native-only public ORIGINAL regression before support
-  or producer hooks; no Numeric/division/ListItem parity or completed-issue claim.
+  or producer hooks. Actual unchanged-runtime ORIGINAL isolates2,432 native
+  payload failures with descriptor/evaluation/control0, using verified retained
+  baseline libraries without a runtime rebuild. No Numeric/division/ListItem
+  parity or completed-issue claim.

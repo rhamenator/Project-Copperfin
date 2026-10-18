@@ -85,7 +85,12 @@ empty stderr/all1,704 values, raw byte equality and independent actual audit0;
 all pre-frozen predictions match, including256-byte boundaries. [Bounded pre-code
 contract](../tests/fixtures/vfp9-numeric-literal-payload/contract.md) and native-only
 1,193-row public source/header/registrations precede any support/producer hook.
-Actual public ORIGINAL, implementation/SAME and hosted gates remain required;
+Signed e2e59d020 public freeze precedes actual [qualified-reuse ORIGINAL](../tests/fixtures/vfp9-numeric-literal-payload/original-verification.md):
+GNU object/link0/empty compiler stderr against verified unchanged-main nine
+archives and matching ABI/source flags; public actual1 with2,432 payload failures,
+descriptor/evaluation/control0, independent native re-audit/classification0,
+frozen input hashes0. Manual run, NOT CTest or a new runtime build.
+Unused support, implementation/SAME and hosted gates remain required;
 no production or parity claim. Resource-
 coordinated Wine only, no VM/heavy build; defer pending native runs during high
 I/O pressure. DQ-DV-7206-DECIMAL-PAYLOAD-RECOVERY-001 LOW delta/misuse/walkthrough/
