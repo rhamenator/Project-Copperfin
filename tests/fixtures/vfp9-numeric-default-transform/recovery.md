@@ -63,8 +63,6 @@ prerequisite. Stored routes materialize at CURRENT settings; they do not prove
 behavior of a variable assigned under another setting. That boundary remains
 unknown pending a separately frozen probe if needed.
 
-## Traceability and development-document walkthrough
-
 ## First qualified native pair
 
 Signed/DCO source freeze7a45097eb872d64f2e37357dee1b804fa33a358d precedes
@@ -114,6 +112,8 @@ and display after settings change without re-assignment. NEXT separately
 freeze controlled public-ABI metadata interventions plus cross-setting stored
 values and rounding controls, recover those boundaries, then native-only
 regression/actual ORIGINAL before support/wiring. No production change yet.
+
+## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
 expectation emitter, original-fail/SAME, focused/broader/actual named hosted
