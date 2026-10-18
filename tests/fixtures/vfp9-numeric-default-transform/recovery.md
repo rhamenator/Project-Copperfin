@@ -381,7 +381,7 @@ BOTH signs. Numeric comparison excludes padding/negative-zero/sign semantics
 and says nothing about an x87 implementation. No tolerated mismatch, inferred
 epsilon or fitted formatter is accepted as the requirement.
 
-### DECIMALS0..18 exact-edge stimulus — unrun
+### DECIMALS0..18 exact-edge stimulus — first-only UNQUALIFIED
 
 emit-rounding-decimals.cjs, rounding-decimals.prg,
 rounding-decimals-cases.json and audit-rounding-decimals.cjs freeze the next
@@ -397,6 +397,52 @@ No invocation yet; sign/push BEFORE renewed BOTH-chat CLEAR and immediate
 full avg10 AND avg60<1%/idle-prefix gates. Existing qualified pairs need no
 replay. Exact-rule recovery still precedes native-only regression/actual
 ORIGINAL/unused support/direct verification/wiring and acceptance.
+
+The unchanged signed c73d70876 source subsequently ran once after NEW explicit
+audit/DAW CLEAR and immediate full PSI0.00/0.00/idle prefix. Actual native0/
+empty stderr/complete DONE3480, BUT strict first structural reader1: the first
+sixteen settings/both signs emitted32 local EDGE records, while D16..18/both
+signs emitted six UNBRACKETED records with equal endpoint text. The repeat
+was correctly NOT invoked. This is NOT a qualified paired capture, despite
+the successful native process exit. First raw SHA256
+8a2f03fb12b0e25a430163284dac832378f2f42b3ea61c1709d5898735a0a5fa.
+The frozen strict reader and its failure remain unchanged.
+
+rounding-decimals-attempt1/ retains ALL exact host receipts, failed strict
+reader output/status and full REA
+ev_b87e000140c3a68e610bbec850334a09d80de02fa3e03723b38431b6558b8298:
+root1/quiesced/owned-group verified/untruncated/no sampled ownership unknowns
+in THIS capture. Standard image-binding/sampling/snapshot/environment/network
+limits remain. Input/runner/VFP9/FLL hashes unchanged; both chats RELEASED,
+prefix empty1, no native/build/Wine/VM reservation.
+
+audit-decimals-attempt.cjs is a separate FORENSIC diagnostic, not a replacement
+qualification reader. Its archived readback0 verifies3480 complete observations,
+32 local edges and exactly six known unbracketed controls, every actual query
+path/constructor/metadata/BRS field. It explicitly reports
+originalQualificationFailed:true/pairedQualified:false. It does NOT retroactively
+qualify the first run or infer applied settings not captured in that source.
+
+### Refined DECIMALS sweep with applied settings — unrun
+
+emit-rounding-decimals2.cjs, rounding-decimals2.prg,
+rounding-decimals2-cases.json, audit-rounding-decimals2.cjs freeze the bounded
+refinement, preserving the original source/inventory/reader/failure intact.
+D0..15 retain their declared bits; D16..18 instead reuse the already QUALIFIED
+5E-16 input bits3CC203AF9EE75616 from the1080 paired edge witness. This merely
+selects a new stimulus; it is NOT a minimum-fractional-precision rule. Still
+38 groups/both signs/width40/scale18/max54 queries/group and4104 rows/run.
+
+Each record additionally reads SET('DECIMALS') and SET('FIXED'); the new reader
+requires actual applied values equal the requested group setting and mode.
+Every query/metadata/BRS/control/framing/adjacent differing-output edge and
+paired repeat must independently qualify, with first structural gate BEFORE
+repeat. No output synthesis or guessed tolerance. Separate host directory
+build/default-transform-rounding-decimals2. Regeneration/Node syntax/bash-n
+checks precede signing; no native invocation yet. NEW explicit BOTH-chat CLEAR
+and immediate low-full-PSI/idle-prefix gates remain mandatory for EACH invocation.
+No owner-input blocker. Exact-rule recovery remains before native-only
+regression/actual ORIGINAL/unused helper/direct checks/wiring and acceptance.
 
 ## Traceability and development-document walkthrough
 

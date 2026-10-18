@@ -1,184 +1,116 @@
 # Agent Handoff
 
-## Active default Numeric TRANSFORM display prerequisite — 2026-10-18
+## Active Numeric display prerequisite — 2026-10-18
 
-Owner resumed implementation: admitted OPEN/owner/agent-approved #5611/#6776/
-#7189. main sole integration, v1-development retired. No stop-after7201,
-October22 action, reboot/upload monitoring or owner-input blocker.
+Owner resumed implementation under OPEN/owner/agent-approved #5611/#6776/#7189.
+main is sole integration; v1-development retired. No stop-after7201, October22
+action, Claude takeover, reboot/upload monitoring or owner-input blocker.
 
-main=origin/main240ac51cbbaa3114a08a687142e67fe4969ea212 (completed PR7209).
+Canonical /home/rich/dev/Project-Copperfin main=origin/main
+240ac51cbbaa3114a08a687142e67fe4969ea212 (completed PR7209).
 Active WT /home/rich/.codex/worktrees/numeric-literal-display-5611/Project-Copperfin,
-branch fix/numeric-literal-display-5611 from that main. No PR, helper or hook;
-src/include unchanged. #7210 is owner-authored OPEN bug/runtime (no
-agent-approved label); bounded display authority derives from admitted parents
-and direct owner policy, NOT the child body. Native-only source/inventory/
-paired audit freeze7a45097eb872d64f2e37357dee1b804fa33a358d pushed before
-qualified native pair; see tests/fixtures/vfp9-numeric-default-transform/
-recovery.md. Both actual0/empty stderr,3936 complete records each, typed repeat
-and compiled/EVALUATE route agreement0. One unused type-I real slot differs;
-NOT raw-byte equality. Strengthened raw-slot reader0/archived byte check0.
-Full REA ev_b5c385b50babd0d46ce575ce70612afc29509d23ec249752ecddbb2eeef6fe67
-root0/quiesced/owned cleanup verified/untruncated; sampling/environment/image
-binding limits retained. Source/native/FLL/runner hashes unchanged. Both chats
-RELEASED, prefix postcheck empty. No build/Wine/native/VM reservation.
-Completed intervention phase and next rounding boundary are distinguished below;
-native expectations/actual ORIGINAL/support have NOT started.
-Follow-up source freeze f07ab8b0c9edfbfacf61d71248a3b316f519675a:384 GRID
-+12 STORED/2736 expected observations. Actual attempt1 runner0/empty stderr BUT
-only387 observations/no footer; frozen independent reader1 correctly rejects.
-UNQUALIFIED, not a native-grid pass. Last emitted D0/FIXED ON GRID3 width1/
-scale0; next width1/scale1 not emitted. Cause/native crash unproven. First
-native input hashes unchanged. Repeat NOT invoked: guard75 at full19.34/4.49.
-Full REA ev_c690dbad800eaa574d67879bffb95c1bbbc95a987a9491688466ae32eae0a944
-root75/quiesced/owned group verified/untruncated plus14 sampled EACCES ownership
-unknowns retained, not global cleanup. See intervention-attempt1/ for ALL source/
-raw/failed-reader/pressure/status receipts. Both chats corrected/RELEASED.
-Narrower source/inventory/reader now240 GRID +12 STORED/1872 expected per run:
-omit width<=scale solely as probe-safety restriction, NOT production policy or
-established cause. EVALUATE-only GRID, compiled private-value birth assignments.
-Narrower pair now QUALIFIED from signed source acaf2f67c: both actual0/empty
-stderr/DONE1872; first structure0 before repeat, paired reader0, RAW exact
-repeat SHA45d1e318ba670f980f191c574a83d7d14206069468f35a53827537469018bea2.
-All metadata interventions exact/payloads unchanged/clone controls equal;
-stored metadata+payload changes0 across settings. Full PSI0.00/0.00 before
-each, all source/native hashes unchanged; archive reader0/byte compare0.
-REA ev_d750f514647fb048ce40c9fe290bdf782421ca5a52662b3c19ed0d84bce08915
-root0/quiesced/owned cleanup verified/untruncated/no sampled EACCES here;
-earlier attempt still UNQUALIFIED. Both chats RELEASED; prefix postcheck empty.
-See intervention-captures/ and recovery.md for independent width/scale causal
-witnesses and rounding outputs. No model/expected emitter/helper yet.
+branch fix/numeric-literal-display-5611, from that main. Latest prior signed/DCO
+pushed source c73d70876da0e8ea8e22d4d2d9f84e86785f68a5; next checkpoint preserves
+the failed sweep and freezes refined DECIMALS2 source below. No PR/model/
+expected regression/helper/hook; src/include remain main-identical.
+Tracking #7210 is owner-authored OPEN bug/runtime, no agent-approved label.
+Authority derives from admitted parents/direct owner policy, NOT child content.
 
-Adjacent-payload pair from signed source8f3831354 is now QUALIFIED after new
-BOTH-chat explicit CLEAR/full PSI0.00/0.00 before each: both actual0/empty
-stderr/DONE2000, first structure0 then paired reader0, RAW-BYTE-IDENTICAL SHA
-3c6601c1d769cd9bf662adf3068da1486a4f48e9993fb2b13524dfabcf627980.
-All CTOBIN/BRS identities and width40/scale18 exact. Archived reader0/host byte
-compare0, input/native hashes unchanged. REA
-ev_25f3b664d91b97d1c3b9be6055c6a65987f22542c87f4039a110992173d81106
-root0/quiesced/owned cleanup verified/untruncated/no sampled ownership unknowns;
-standard sampling/environment/image-binding limitations remain. Both chats
-RELEASED/prefix postcheck empty. See rounding-captures/; model-free observed-
-interval analyzer0 retains every interval. Five near-half windows do NOT
-bracket a transition:0.5 offsets-512..32 all display1 at D0 FIXED ON;
-1.005/2.675/9.995/5E-16 offsets-32..32 likewise one interval. Do not guess
-epsilon/tolerance or treat16-significant-digit inference as a complete rule.
+Contract/chronology/exact hashes/REA records/observations/unknowns/LOW DQ-DV/
+hazards/rollback/walkthrough are in
+tests/fixtures/vfp9-numeric-default-transform/recovery.md and requirements row
+RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001 in docs/32-recovered-requirements-traceability.md.
+Use these retained sources; do not rerun completed phases or infer an epsilon.
 
-The wider signed ladder is now QUALIFIED from signed freeze c25498cd9:
-both actual0/empty stderr/DONE3872, first structure0 BEFORE repeat, paired0,
-RAW-BYTE-IDENTICAL SHA
-e7cbfd0a45549b69bbfcebc2d924dc20bb7f895e1405ad95136f4359b4eb134f.
-Every CTOBIN/BRS/width40/scale18 readback exact; archived independent reader0/
-host byte compare0. Full PSI0.00/0.00 before BOTH invocations; input/native
-hash checks0. Full REA
-ev_380da287e63482c2aefe25f101d20ad4fbeea20048d5bda34e3b0cc0d28d37a3
-root0/quiesced/owned-group verified/untruncated, plus10 unrelated sampled
-EACCES ownership unknowns retained/untouched; minimal readback and all limits
-preserved. Both chats explicitly CLEARED then RELEASED; prefix empty/1.
-See rounding-ladder-captures/ and model-free observed-bracket analyzer0.
+## Qualified native phases — do not replay
 
-BOTH signs bracket D2 transitions at native1.005/2.675/9.995;0.5 D0 and
-5E-16 D15 remain one sampled segment through negative2^40 magnitude offsets.
-These are observations, NOT a tolerance, monotonicity or general rounding rule.
-No model/expected regression/helper/hook; division assertions remain unchanged.
+Five paired phases:3936 literal/routes,1872 width/scale/stored-value,2000 adjacent
+payload,3872 signed ladder,1080 exact-edge observations/run. All actual native0/
+empty stderr/complete; independent strict readers/archived readbacks0.3936 has
+one inactive type-I real-slot difference, NOT raw equality; other four RAW equal.
+Failed earlier2736-planned intervention emitted387/no footer; remains UNQUALIFIED.
 
-Native-feedback exact-edge pair is now QUALIFIED from signed freeze4f8040d1c:
-both actual0/empty stderr/DONE1080, first structural0 BEFORE repeat, paired0,
-RAW-BYTE-IDENTICAL SHA
-b6e43abea8d3290d46e231a72e0ec6807c25551b266cfa156d91f393f4baacc2.
-All10 signed groups reached adjacent different-ON-output payloads with54 exact
-queries/group; every constructor/path/metadata/BRS identity exact. Archived
-reader0/host byte compare0, all source/native hashes unchanged, full PSI0.00/
-0.00 before each. Both chats explicitly CLEARED then RELEASED/prefix empty1.
-Full REA ev_a3f65d05d1c73c2be15c40f366ecd85dd9b9465e0e36c56bc277d9431a4e6515
-root0/quiesced/owned-group verified/untruncated/no sampled ownership unknowns
-in THIS capture; inherited environment/image-binding/sampling/snapshot/network
-limits remain. See rounding-edge-captures/ and recovery.md for all exact edges.
+Most recent qualified1080 pair from signed4f8040d1c: all10 signed groups reach
+adjacent payloads with different ON text, every query/metadata/BRS exact.
+SHA b6e43abea8d3290d46e231a72e0ec6807c25551b266cfa156d91f393f4baacc2.
+See rounding-edge-captures/. Three HOST-BINARY64 magnitude hypotheses rejected:
+ordinary half198/540 mismatches, add0.5005 and pre-round3-extra-places each4.
+Exact counterexamples retained by reject-rounding-hypotheses.cjs, NOT accepted
+approximations. Local adjacent edges do not prove monotonicity/unique/general
+rounding or conversion; no fields-only or canonical-double shortcut.
 
-Three explicitly HOST-BINARY64 magnitude hypotheses are REJECTED: ordinary
-half rounding198/540 mismatches, add0.5005 and pre-round3-extra-places each4.
-These close fits are NOT a tolerance or accepted algorithm; raw counterexamples
-at0.5 and5E-16/BOTH signs retained by reject-rounding-hypotheses.cjs.
-Local adjacent edges do not establish monotonicity/uniqueness/general conversion.
-No model/expected regression/helper/hook; division assertions remain unchanged.
+## Latest DECIMALS sweep — first-only UNQUALIFIED
 
-NEXT native-only source/inventory/reader: emit-rounding-decimals.cjs,
-rounding-decimals.prg, rounding-decimals-cases.json, audit-rounding-decimals.cjs.
-Nineteen explicit finite half-step inputs, DECIMALS0..18/both signs=38 groups,
-width40/scale18, BOTH FIXED observations/query, max54 queries/group/4104 rows.
-Host Number selects explicit input BITS, never an expected output. Every actual
-query path/readback and adjacent differing-output endpoint must independently
-qualify; first structural gate before repeat. No all-magnitude/descriptor rule.
-Separate build/default-transform-rounding-decimals contains prepared worker;
-no invocation yet. Sign/push freeze BEFORE renewed explicit BOTH-chat CLEAR
-and immediate full avg10 AND avg60<1%/idle-prefix guards EACH native invocation.
-No resource reservation or owner-input blocker. Existing qualified five pairs
-need no replay; all failed/division/native/test evidence remains unchanged.
-Exact-rule recovery still precedes independent expectations/actual ORIGINAL/
-unused support/direct checks/wiring. No production changes.
+Unchanged signed c73d70876 source (rounding-decimals.*) ran after NEW explicit
+audit/DAW CLEAR and full PSI0.00/0.00/idle prefix. First actual native0/empty
+stderr/complete DONE3480, BUT strict structural reader1:32 local edges at D0..15/
+both signs; six equal-endpoint UNBRACKETED controls at D16..18/both signs.
+Repeat correctly NOT invoked. NOT a qualified pair; preserve original failed
+reader/source/raw/status without weakening it.
+Raw SHA8a2f03fb12b0e25a430163284dac832378f2f42b3ea61c1709d5898735a0a5fa.
+rounding-decimals-attempt1/ retains ALL host receipts and full REA
+ev_b87e000140c3a68e610bbec850334a09d80de02fa3e03723b38431b6558b8298:
+root1/quiesced/owned-group verified/untruncated/no sampled ownership unknowns
+in THIS capture; all image-binding/sampling/snapshot/environment/network limits
+remain. Input/native hashes unchanged; both chats RELEASED/prefix empty1.
 
-## Why division is explicitly deferred, not cancelled
+Separate audit-decimals-attempt.cjs diagnostic readback0 verifies all3480
+records/32 edges/six controls/path/metadata/BRS, explicitly
+originalQualificationFailed:true/pairedQualified:false. NOT retroqualification
+or applied-setting evidence. Do not infer a fractional-precision cap.
 
-Retain /home/rich/.codex/worktrees/numeric-small-divisor-5611/Project-Copperfin,
-branch fix/numeric-small-divisor-5611. Signed/DCO native/test freeze
-3b7a5163618ea92420f63b70c5cac265cdd08807, completed actual ORIGINAL checkpoint
-031d790abcde424ab8622833ad81bc43248f2f3e and exact current-output diagnostic
-03c3a4520446765125101be7052a05bf7e6f0546 all pushed. That branch has no PR,
-division helper or hook. Its src/include are main-identical. Preserve frozen
-tests, first interrupted build, complete second original, raw native pairs,
-rejected hypotheses and all REA coverage/limitations.
+## NEXT — refined source freeze, no native invocation yet
 
-Actual ORIGINAL configure/build0, seven unique focused CTests: old six pass,
-new regression fails with6920 descriptors/320 signed-zero payloads/964 displays
-(882 core,12 runtime-mixture,70 literal-only). Literal metadata/payloads match.
-Literal diagnostic compile0/run0/empty stderr reads300 contexts,70 exact string
-differences, all300 metadata/payloads match; nine original library hashes match
-before/after. At D0/FIXED OFF current0.5 prints0/native0.5 and current2.50
-prints2/native2.50, BOTH modes. Evidence in that branch's
-small-divisor-display-diagnostic/ and issue7210 comment6249598072.
-Diagnostic0 is reproduction, not product acceptance.
+emit-rounding-decimals2.cjs, rounding-decimals2.prg,
+rounding-decimals2-cases.json, audit-rounding-decimals2.cjs.
+D0..15 unchanged; D16..18 reuse already QUALIFIED5E-16 payload3CC203AF9EE75616,
+not guessed outputs.38 signed groups/width40/scale18/BOTH FIXED per query/
+max54 queries/group,4104 records/run. NEW explicit SET DECIMALS/FIXED readbacks
+must match requested settings. Exact constructor/path/metadata/BRS/framing/
+adjacent differing-output endpoints and paired repeat mandatory; first
+structural gate BEFORE repeat. No expected/model/production changes.
+Separate build/default-transform-rounding-decimals2 contains prepared worker.
+Source regeneration/Node syntax/bash-n checked; sign/push BEFORE any run.
 
-Re-entry only AFTER the separate display prerequisite is accepted: refreshed
-UNCHANGED division ORIGINAL -> unused bounded helper/direct GNU/Clang checks
--> separate parser hook -> SAME/broader/actual named hosted tests -> clean
-exact-head Claude/Codex review, ALL strict checks green/conversations resolved
--> normal merge/cleanup. Do not suppress native display assertions, fit
-expectations from Copperfin, claim fields-only parity or use canonical-double/
-residual-gap shortcuts. Complete Numeric/ListItem obligations remain.
+Renewed full PSI58.43/42.10 after release fails the gate; audit independently
+reports severe contention/stopped probes. NO DECIMALS2 invocation or reservation.
+Obtain NEW explicit BOTH-chat CLEAR and immediate full avg10 AND avg60<1%/
+idle-prefix guards before EACH native/compiler/test invocation.
+Exact-rule recovery -> native-only regression/actual ORIGINAL -> unused helper/
+direct GNU+Clang checks -> separate wiring/SAME/broader/actual hosted execution
+-> exact-head clean review/all strict checks/resolved conversations/normal merge.
 
-## Resource gates and evidence discipline
+## Retained division — deferred, NOT cancelled
 
-User requires audit/DAW coordination before heavy builds or native/VM use.
+WT /home/rich/.codex/worktrees/numeric-small-divisor-5611/Project-Copperfin,
+branch fix/numeric-small-divisor-5611, signed/DCO pushed head03c3a4520446765125101be7052a05bf7e6f0546.
+Native/test freeze3b7a5163618ea92420f63b70c5cac265cdd08807,
+complete actual ORIGINAL031d790abcde424ab8622833ad81bc43248f2f3e.
+No PR/helper/hook, src/include main-identical. Preserve all native/test freezes,
+first interrupted build, complete original, diagnostic and rejected hypotheses.
+Original7 focused CTests: old6 pass/new fails,6920 descriptors/320 signed-zero
+payloads/964 displays (882 core/12 runtime/70 literal-only). Diagnostic300 literal
+contexts/70 exact string differences, all metadata/payloads match; this is
+reproduction, not acceptance. Re-enter only AFTER separate display prerequisite
+accepted: refreshed UNCHANGED division ORIGINAL -> support/direct -> wiring/
+SAME/hosted/review/merge. Never suppress division display assertions.
+
+## Resources, shipping and preservation
+
 Audit chat01a0a1e1-7469-7ae3-9668-470a4e5b91b5; DAW
-01a1050d-72c7-7213-bd2b-899e3cf342f7. Both released the completed diagnostic.
-Fresh BOTH-chat clearance and full I/O PSI avg10 AND avg60 below1% immediately
-before EACH native/compiler/test invocation. Stop task-owned heavy build on
-renewed pressure, retain attempts, re-coordinate. No current reservation.
-Backup reset completion unconfirmed: NO VM starts/recreation; read owner VM
-CLAUDE.md first if VM work later becomes necessary. Preserve originals,
-recovery copies/shared seeds; don't race DAW-owned cleanup.
+01a1050d-72c7-7213-bd2b-899e3cf342f7. Fresh explicit clearance from BOTH,
+no silence as clearance; release promptly. No standing build/native/Wine/VM job.
+Backup reset completion unconfirmed: NO VM starts/recreation. Read owner VM
+CLAUDE.md first if needed; preserve originals/recovery/shared media/DAW cleanup.
+REA skill only black-box authored PRG/public-ABI observation, no decompilation.
 
-Reverse-engineering skill is used only for black-box authored PRG/native
-observation. Freeze native source before capture, use installed vfp9-probe/
-documented public ABI observer, retain full REA records/hashes/statuses/
-pressure/actual cleanup and limitations; no decompilation or VM.
-Native qualified observations -> native-only expected tests -> actual
-original-fail BEFORE support -> direct helper verification BEFORE wiring.
-All normal hosted/review/strict/conversation gates remain.
-
-## Last shipped and unfinished work
-
-PR7209 merged2026-10-18T09:19:27Z as240ac51cb, reviewed signed/DCO headde1c094c53.
-Claude-FIRST6247124783; actual configured Codex clean full-head6247125017;
-all39 checks/11 strict green/conversations0, acceptance6248161998.
-Windows632/no skip, sanitizer44/no skip; Linux/macOS629 unique passes/631
-reported with two unrelated launcher skips NOT execution evidence. All16
-selected pass. Cleanup complete; canonical build/pr7209-completed/evidence
-retains byte-compared receipts/cleanup record,323MB build recoverable Trash.
-No need to repeat completed EPOCH/CENTURY, PR7201 or older division slices.
-
-#7206 remains OPEN; #7208 is separate unapproved SET-query-type gap. Wider
-Numeric producers/propagation/display/exact conversion and pending ListItem
-supplied-column READ remain mandatory. Keep #6776 per-area switch, checked
-conversions/zero/allocation limits and Integer eligibility. Preserve foreign
-canonical tracked/untracked files, WTs4436/49ae and stashes057655d/64cd2ab6.
-App PR attachment limit100 identities: don't unlink unrelated artifacts.
+PR7209 merged2026-10-18T09:19:27Z as240ac51cb; reviewed signed/DCO de1c094c53,
+Claude-FIRST6247124783/configured clean Codex full-head6247125017/all39 checks
+(11 strict) green/threads0, acceptance6248161998. Cleanup complete; canonical
+build/pr7209-completed/evidence preserves byte-compared receipts/cleanup record,
+323MB build recoverable Trash. Completed EPOCH/CENTURY/7201/older slices stay done.
+#7206 OPEN; #7208 separate unapproved SET-query-type gap. Wider Numeric producers/
+propagation/display/exact conversion and ListItem supplied-column READ mandatory.
+Preserve #6776 per-area switch, checked conversions/zero/allocation limits/
+Integer eligibility, foreign canonical tracked/untracked files, WTs4436/49ae,
+stashes057655d/64cd2ab6. App PR attachment limit100: don't unlink unrelated items.
