@@ -1,5 +1,35 @@
 # Agent Handoff
 
+## Non-whole expanded ORIGINAL gate qualified; unused support NEXT (2026-10-18)
+
+Active fix/numeric-nonwhole-division-5611 WT below, main4b6cc734f source unchanged.
+Native timing/public freeze569b36e84 -> actual first expanded failure -> separate
+query diagnosis7208 -> test-only adapter refreeze0967ad091 -> rawCRLF attrs
+e9494dad3 -> corrected actual ORIGINAL. Both-chat nice10/parallel1 two-TU build0,
+four actual tests6.26s/CTest8 ONLY metadata failures:constant60, non-whole12480
+(prior11040+callback1440). Bits/literal/evaluation/ALL controls0. Independent
+host+archive JUnit/log/native-inventory audit0; all72 callback forms x20contexts,
+frozen source/header and runtime archive hashes0. No support/hook/PR yet.
+
+Original query mismatch720 controls NOT hidden: preserved first run and native/
+host typed diagnosis, #7208 OPEN/owner/bug/runtime/no approval label. Runtime SET
+readback remains Character vs native Integer; test-only VAL(TRANSFORM(...))+
+Number-kind observation verifies exact0/14 on both hosts without query-type claim.
+No production scope expansion or parent/#7206/7208 closure. Native2940 pair/
+147 expected rows and prior578/574 exact assertions retained; zero/nonfinite
+boundaries excluded explicitly and mandatory, no checked-zero-policy change.
+
+NEXT unused bounded non-whole intrinsic support and independent direct native
+verification BEFORE caller hook. Preserve old whole helper640-row behavior and
+strict Integer eligibility, literal provenance, finite/width/scale/divisor bounds,
+checked conversions/allocation/#6776 policy. Then bounded hookup/SAME unchanged
+expanded tests/broader/actual hosted/exact-head clean review/strict/all resolved.
+Fresh both-chat coordination before any further build/native/VM. All windows
+RELEASED, no current build/test/Wine/VM; no backup/upload/reboot/date action.
+Host build/nonwhole-expanded-refrozen-original and fixture evidence retained;
+earlier first failures, rejected candidates and resource receipts preserved.
+No owner input blocker; automation remains active. Older next-state text superseded.
+
 ## Non-whole timing/native and expanded public freeze; no support/hook (2026-10-18)
 
 UPDATE: signed freeze569b36e84236a7f1c7f97492a8a92d136bbecce5 pushed before

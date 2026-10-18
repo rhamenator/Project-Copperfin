@@ -22,3 +22,6 @@
   type gap #7208; normalize only the final-setting test observation using a
   native/host-verified adapter and require Number, without changing production
   query behavior or division expectations.
+  The corrected, refrozen expanded ORIGINAL independently confirms only metadata
+  failures (60 older controls plus12,480 non-whole assertions), with all payload,
+  evaluation and safety/state controls passing before support or runtime changes.

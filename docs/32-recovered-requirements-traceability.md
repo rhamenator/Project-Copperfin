@@ -201,6 +201,14 @@ native expectations. First failure, source hashes and typed diagnosis retained;
 corrected source must be refrozen/re-run before support. No production query fix
 or passing expanded ORIGINAL claimed here.
 
+Subsequent signed adapter refreeze0967ad091 (exact raw CRLF attributes e9494dad3)
+precedes corrected actual GNU build0/CTest8:four tests6.26s, only metadata failures
+constant60/non-whole12,480; payload/literal/evaluation/ALL controls0. Independent
+host+archived audit0 verifies72 callback forms x20 contexts, frozen hashes and
+unchanged runtime archive. Original first failure and #7208 diagnosis remain
+retained separately. This qualifies an expanded ORIGINAL-fail gate, not a passing
+implementation. Unused bounded support/direct native checks must precede hookup.
+
 Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
 [actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)
 at mainb37ddf7241; paired1,620 values/run, actual0/empty stderr/no errors,

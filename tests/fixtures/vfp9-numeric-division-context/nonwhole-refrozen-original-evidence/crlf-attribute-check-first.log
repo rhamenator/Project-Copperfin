@@ -1,0 +1,32 @@
+tests/fixtures/vfp9-numeric-division-context/nonwhole-expanded-original-evidence/query-diagnostic/first-results.txt:1: trailing whitespace.
++VERSION|Visual FoxPro 09.00.0000.7423 for Windows
+tests/fixtures/vfp9-numeric-division-context/nonwhole-expanded-original-evidence/query-diagnostic/first-results.txt:2: trailing whitespace.
++QUERY|0|N|type=49;width=000A;decimals=00000008;integer=00000000;real=0000000000000000;cw=027F|0
+tests/fixtures/vfp9-numeric-division-context/nonwhole-expanded-original-evidence/query-diagnostic/first-results.txt:3: trailing whitespace.
++QUERY|14|N|type=49;width=000A;decimals=00000008;integer=0000000E;real=00005B887BD5818E;cw=027F|14
+tests/fixtures/vfp9-numeric-division-context/nonwhole-expanded-original-evidence/query-diagnostic/first-results.txt:4: trailing whitespace.
++DONE|2
+tests/fixtures/vfp9-numeric-division-context/nonwhole-expanded-original-evidence/query-diagnostic/first.out:1: trailing whitespace.
++VERSION|Visual FoxPro 09.00.0000.7423 for Windows
+tests/fixtures/vfp9-numeric-division-context/nonwhole-expanded-original-evidence/query-diagnostic/first.out:2: trailing whitespace.
++QUERY|0|N|type=49;width=000A;decimals=00000008;integer=00000000;real=0000000000000000;cw=027F|0
+tests/fixtures/vfp9-numeric-division-context/nonwhole-expanded-original-evidence/query-diagnostic/first.out:3: trailing whitespace.
++QUERY|14|N|type=49;width=000A;decimals=00000008;integer=0000000E;real=00005B887BD5818E;cw=027F|14
+tests/fixtures/vfp9-numeric-division-context/nonwhole-expanded-original-evidence/query-diagnostic/first.out:4: trailing whitespace.
++DONE|2
+tests/fixtures/vfp9-numeric-division-context/nonwhole-expanded-original-evidence/query-diagnostic/repeat-results.txt:1: trailing whitespace.
++VERSION|Visual FoxPro 09.00.0000.7423 for Windows
+tests/fixtures/vfp9-numeric-division-context/nonwhole-expanded-original-evidence/query-diagnostic/repeat-results.txt:2: trailing whitespace.
++QUERY|0|N|type=49;width=000A;decimals=00000008;integer=00000000;real=0000000000000000;cw=027F|0
+tests/fixtures/vfp9-numeric-division-context/nonwhole-expanded-original-evidence/query-diagnostic/repeat-results.txt:3: trailing whitespace.
++QUERY|14|N|type=49;width=000A;decimals=00000008;integer=0000000E;real=000006887BD5818E;cw=027F|14
+tests/fixtures/vfp9-numeric-division-context/nonwhole-expanded-original-evidence/query-diagnostic/repeat-results.txt:4: trailing whitespace.
++DONE|2
+tests/fixtures/vfp9-numeric-division-context/nonwhole-expanded-original-evidence/query-diagnostic/repeat.out:1: trailing whitespace.
++VERSION|Visual FoxPro 09.00.0000.7423 for Windows
+tests/fixtures/vfp9-numeric-division-context/nonwhole-expanded-original-evidence/query-diagnostic/repeat.out:2: trailing whitespace.
++QUERY|0|N|type=49;width=000A;decimals=00000008;integer=00000000;real=0000000000000000;cw=027F|0
+tests/fixtures/vfp9-numeric-division-context/nonwhole-expanded-original-evidence/query-diagnostic/repeat.out:3: trailing whitespace.
++QUERY|14|N|type=49;width=000A;decimals=00000008;integer=0000000E;real=000006887BD5818E;cw=027F|14
+tests/fixtures/vfp9-numeric-division-context/nonwhole-expanded-original-evidence/query-diagnostic/repeat.out:4: trailing whitespace.
++DONE|2

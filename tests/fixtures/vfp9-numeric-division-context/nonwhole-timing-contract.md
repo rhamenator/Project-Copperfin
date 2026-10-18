@@ -142,3 +142,21 @@ dropped. This strengthens the observer rather than implementing or accepting
 SET query-type parity. #7208 remains a separate unfixed gap; no label/authority
 expansion or parent closure. Archive first failures/typed diagnostics and refreeze
 this correction BEFORE unused division support or another actual ORIGINAL.
+
+Corrected adapter source is signed in0967ad091; e9494dad3 adds exact-CRLF
+attributes to the retained native query bytes without changing them. The earlier
+attribute-check2/its diagnostics remain host-side; corrected whitespace check0.
+A fresh BOTH-chat-cleared nice10/parallel1 two-TU build0 then executes the four
+focused tests6.26s, actual CTest8 with ONLY expected metadata failures:
+constant60; non-whole12,480=prior11,040+callback1,440. Payload/literal/evaluation
+and ALL controls0. Independent host and archived JUnit/log/inventory audit0
+verifies all72 callback forms in20 contexts; native/public hashes and retained
+runtime archive hash remain unchanged. Full I/O avg10/60 is0 before/after; both
+chats receive RELEASED, no job/native/VM reservation remains. Exact old first
+failure/query diagnosis is not replaced by this separate result.
+
+`nonwhole-refrozen-original-evidence/` retains complete losslessly compressed
+logs/JUnit, statuses, hashes, pressure and audits. This is the actual expanded
+metadata-only ORIGINAL gate before unused non-whole support. Implementation,
+SAME, broad/hosted named tests, exact-head review and strict/resolved merge gates
+are still pending. No runtime behavior or #7208 query type has been changed.
