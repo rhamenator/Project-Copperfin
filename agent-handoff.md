@@ -1,5 +1,65 @@
 # Agent Handoff
 
+## Non-whole ORIGINAL preserved; literal-payload prerequisite #7206 next
+
+Owner-directed #5611/#6776/#7189 remain admitted; PR7204 is already merged and
+cleaned. Canonical main/origin ef3ea326f78d640546363abe97bbe27b6208bf45.
+Active evidence WT /home/rich/.codex/worktrees/numeric-nonwhole-division-5611/Project-Copperfin,
+branch fix/numeric-nonwhole-division-5611, native/public pre-code freeze
+274a38635a463db154b4b9e0c78c502d6722c53c then actual ORIGINAL checkpoint
+afc488bb059965c6ff8d8c7ccb681b3cbb855adf, both signed/DCO and pushed.
+NO production changes, no PR or green-implementation claim. Keep this branch
+and its frozen native/public expectations for explicit division re-entry.
+
+Paired11,560 native observations/run, actual0/all values/empty stderr, byte-
+identical SHA1b523f2923e52e9a4109ffaf2e805708910449edd5a38bfb9036f7f821238e1c.
+Independent source/typed/BINTOC/compiled-EVAL/repeat audit0. Native-only578-row
+header includes574 exact descriptor+bits assertions/four retained boundaries.
+All expected rows remain unchanged, including problematic long literal inputs.
+Post-capture model10,880 core comparisons only matches with actual native
+literal inputs; no general rule, tolerance or completion inferred.
+
+Actual unchanged-main GNU Debug -O0 -g0 --parallel2 configure/build0 after audit
+AND DAW clearance; low I/O pressure, no VM used. Build ended02:28:37Z and both
+chats were told heavy-work window RELEASED. CTest2.09s, three unique executed,
+only new public regression failed;11,040 descriptor/2,280 bit assertions,
+40 of those bare-literal bits, evaluation/control0. Frozen hashes0; public
+ORIGINAL/source/headers/contract/registrations signed BEFORE any product hook.
+Independent audit accounts for all bit failures from two literal producers:
+1.234567890123456789 actual3FF3C0CA428C59FB/native3FF3C0CA428C59FC;
+0.9999999999999999 actual3FEFFFFFFFFFFFFF/native3FF0000000000000.
+Bare-literal failures in both modes/all settings isolate source conversion,
+not division metadata. Exact native decimal conversion remains unrecovered.
+
+Focused issue https://github.com/rhamenator/Project-Copperfin/issues/7206 is
+filed against exact current main; no agent-approved label added/manufactured.
+The bounded prerequisite inherits the existing admitted parents/direct owner
+Numeric policy. Next selection: separate plain-decimal Numeric literal-payload
+recovery from origin/main, using black-box installed native evidence and a
+pre-code original-fail contract; do NOT change shared invariant-data parsing,
+guess a15/16-digit rounding rule, hardcode spellings, alter source grammar or
+exclude inconvenient operands. #5879/#7114 are different scope, not selected.
+
+Non-whole integration is explicitly DEFERRED, not cancelled: re-enter after
+literal prerequisite is integrated; refresh ORIGINAL with unchanged578-row
+header/574 assertions, finish native fractional callback/continuation timing,
+replace three older now-admitted unknown assertions BEFORE next public freeze,
+then bounded implementation/SAME, broad/actual hosted execution/exact-head clean
+review/strict/resolved conversations. Retained small-divisor/wide/other operators,
+display/exact conversion and ListItem supplied-column READ remain mandatory.
+
+Evidence/traceability: fixture nonwhole-recovery.md, nonwhole-original-verification.md,
+nonwhole-captures/, nonwhole-original-evidence/ and docs32; original status8 is
+intentional failure, independent audit0, no acceptance claim. Host build/
+nonwhole-native/ and build/nonwhole-original retained for this unfinished slice.
+Initial auditor/cleanup/hash-receipt diagnostics preserved, no timeout or native
+expectation changes. REA unavailable, shell black-box evidence only/no decompile.
+No owner blocker; automation remains active. No further heavy build/VM scheduled;
+coordinate audit01a0a1e1-7469-7ae3-9668-470a4e5b91b5 and
+DAW01a1050d-72c7-7213-bd2b-899e3cf342f7 before either. No reboot/backup work.
+Canonical unrelated files/stashes/foreign WTs preserved. Historical entries below
+are superseded by this exact checkpoint and explicit re-entry.
+
 ## Bounded runtime division implementation in verification (2026-10-17)
 
 Continue WT /home/rich/.codex/worktrees/numeric-division-recovery-5611/Project-Copperfin,

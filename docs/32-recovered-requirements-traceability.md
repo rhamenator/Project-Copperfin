@@ -82,7 +82,8 @@ only new public test failed;11,040 descriptor/2,280 payload assertions,40 of tho
 bare-literal bits, evaluation/control0. Frozen hashes0. Independent counterfactual
 classifies all payload failures from two literal inputs, but does not recover the
 native conversion algorithm. Non-whole integration explicitly deferred until a
-separate admitted literal-payload prerequisite is integrated, followed by refreshed
+separate literal-payload prerequisite [#7206](https://github.com/rhamenator/Project-Copperfin/issues/7206)
+(derived from the admitted parents) is integrated, followed by refreshed
 ORIGINAL/timing recovery and SAME; no spelling exclusions or quotient correction.
 Existing data-corruption/runtime-crash hazards, checked bounds and #6776 modes
 remain unchanged. `gap; non-whole recovery, not compatibility completion`.

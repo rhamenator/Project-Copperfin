@@ -77,8 +77,10 @@ still-unimplemented division metadata gap. This is not direct ListItem acceptanc
 
 Do not widen the active division hook or mask/exclude the two literals.
 Defer non-whole integration on a **separate bounded decimal-literal payload
-recovery prerequisite**, derived from the admitted Numeric workstream. File its
-focused defect against the exact main revision above. Start its own evidence/
+recovery prerequisite**, [focused issue #7206](https://github.com/rhamenator/Project-Copperfin/issues/7206),
+derived from the admitted Numeric workstream and filed against the exact main
+revision above. No approval label was added; authority remains with the admitted
+parents and direct owner policy. Start its own evidence/
 contract/source freeze from main; do not alter the shared invariant parser used
 by unrelated persisted data. Native source conversion, width/scale/storage and
 propagation must be recovered together where evidence requires them.
