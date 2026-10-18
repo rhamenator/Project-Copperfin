@@ -217,3 +217,57 @@ review/strict checks/resolved conversations and integration are ALL still pendin
 DQ/DV LOW development walkthrough now includes exact paired timing/raw archive
 audit, retained failed hypotheses and syntax boundary review; this is neither
 independent-human/release evidence nor completed small-divisor compatibility.
+
+## Native-only test/oracle freeze (before ORIGINAL or support)
+
+Three new emitters invoke ONLY the unchanged native paired auditors and syntax
+inventories. They import neither candidate analysis nor production computations.
+The public header retains ALL253 actual rows, five native descriptors and ten
+setting/FIXED-dependent display byte strings per row. The245 admitted pure/
+runtime-variable forms assert exact Number kind/metadata/bits and Character
+TRANSFORM bytes in a real paused session; eight zero/magnitude/scientific native
+boundaries remain unselected records, not inferred acceptance. Separate checked
+zero/type/NULL/Currency/suppressed-branch and debugger-state controls preserve
+the existing safer policy. Real native empty displays are not rewritten.
+
+The timing header retains ALL219 observed rows. The public test selects120
+finite NONZERO CFMark forms (ten nonzero cores, six wrappers, two setting targets)
+in BOTH modes/all five initial settings/both FIXED values. Pause after the
+single callback increment and before DECIMALS mutation, then resume: assert
+native bits, exactly-one count and target setting through the independently
+verified VAL(TRANSFORM(SET('DECIMALS'))) adapter (#7208 remains separate).
+The assigned real descriptor uses separately recovered
+RQ-CF-PRG-NUMERIC-REAL-ASSIGNMENT-001's finite nonzero scale2..18 normalization,
+not the division implementation. CFObserve/zero callback rows remain recorded
+and unselected for this assignment/continuation frontier; raw zero/parameter
+recovery is not represented as general producer/assignment implementation.
+All captured zero ROOT forms still assert exact metadata/bits/display in the
+245-row public frontier. No callback is replayed for BRS or display.
+
+The direct header reconstructs252 postorder syntax nodes from the56 core trees;
+only captured literal fields and COMPLETE D0 root results are expected values.
+The new pure unit references a deliberately not-yet-defined
+constant_small_divisor_intrinsic entry point and also replays all68 prior native
+nonwhole roots/314 nodes plus640 older native rows. It preserves the old entry
+points' frontiers and checks provenance, immutable operands, Integer eligibility,
+invalid/overflow metadata, unknown/NULL/non-Number, finite magnitude and zero
+bounds. No new helper or caller is authored at this freeze; direct compilation
+is intentionally not yet a claimed pass.
+
+CMake, portable isolation classification and actual sanitizer target/strict
+selector regression registrations are frozen with both new test sources.
+Public test owns an exclusive working/temp directory and source overrides;
+process-environment runtime initialization stays serial, no child/network/sample
+access. Direct unit uses only bounded local values/arrays and remains parallel
+safe. These isolation statements are source reviews, not hosted execution.
+
+Development LOW DQ/DV walkthrough: independently regenerate all three headers
+from both archived native pairs -> exact byte checks -> signed source freeze ->
+actual public ORIGINAL with src/include unchanged -> unused direct support ->
+bounded hook -> unchanged SAME/broader/actual hosted/exact-head review. JS syntax,
+header reconstruction, four sanitizer-selector tests, whitespace/changelog/
+channel verification are source-development checks only. No actual ORIGINAL,
+support, product pass, independent-human review or release claim at this freeze.
+High host I/O defers compilation; fresh BOTH-chat clearance and immediate full
+PSI avg10 AND avg60<1% are required before the actual ORIGINAL build. Keep
+all prior failed hypotheses and checked boundaries; rollback retains this evidence.

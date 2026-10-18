@@ -295,6 +295,19 @@ with80 zero-divisor nonfinite controls retained, NOT policy migration.
 Native-only expectations/ORIGINAL/support/hook/SAME/hosted/review gates remain
 pending. See the same recovery contract for LOW DQ/DV walkthrough/limitations.
 
+Small-divisor independent test freeze: native-only emitters retain253 root rows
+and219 timing rows; public245 exact kind/metadata/bits/display assertions per
+context and120 finite nonzero callback/pause-resume forms, BOTH modes/five settings/
+both FIXED. Zero root forms are included; CFObserve/zero callback assignment
+frontiers and eight zero/magnitude/scientific boundaries remain retained, not
+silently claimed. Direct56 roots/252 syntax nodes plus68 prior nonwhole roots/
+314 nodes and640 older rows; future pure helper entry point remains undefined.
+CMake/isolation/actual sanitizer target+strict-selector test coverage are frozen
+BEFORE support. Byte-exact native-header generation and source-development
+checks0 are not actual ORIGINAL or product execution. Original-build pressure/
+both-chat coordination gate still applies; see recovery contract for exact
+scope, independent scalar-assignment requirement, LOW DQ/DV and remaining gates.
+
 Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
 [actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)
 at mainb37ddf7241; paired1,620 values/run, actual0/empty stderr/no errors,

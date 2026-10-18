@@ -97,8 +97,17 @@ No unrelated process stopped; postcheck no Wine/VFP. Source/runner/VFP/FLL hashe
 Tracked small-divisor-timing-captures/ preserves raw/compiledFXP/status/hash/audits/
 REA and all rejected176-then16-difference hypotheses. Operator-aware refinement
 fits all4300 finite rows;80 nonfinite zero-divisor controls retained/unmodeled.
-NEXT: native-only direct/public/timing expected vectors, test sources and exact
-registrations freeze (no candidate/product import) -> actual unchanged-production
+DONE source-only native direct/public/timing expected-vector emitters/headers,
+two test sources/CMake/isolation/actual sanitizer targets+strict-selector tests.
+Native-only regeneration0:253 root rows/245 admitted/eight retained, five metadata/
+ten display entries;219 timing rows/120 finite nonzero CFMark callbacks. Public
+test asserts metadata/bits/display and pause/resume/count/target setting in both
+modes/five settings/both FIXED. Zero roots included; CFObserve/zero assignment
+callback and eight checked-boundary records retained/unselected, not parity.
+Pure direct test composes56 roots/252 syntax nodes plus68 prior nonwhole roots/
+314 nodes and640 older rows; future constant_small_divisor_intrinsic undefined.
+No helper/hook authored. See recovery contract native-only test freeze.
+NEXT: signed test/native-header freeze -> actual unchanged-production public
 ORIGINAL-fail before any unused support or hook -> unused support -> bounded hook/
 unchanged SAME/broader/actual hosted named execution -> Claude FIRST/exact-head
 clean review/strict green required checks/all conversations resolved -> merge.

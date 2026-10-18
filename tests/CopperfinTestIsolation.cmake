@@ -105,6 +105,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_numeric_runtime_division_helper
             test_prg_numeric_constant_division_intrinsic_helper
             test_prg_numeric_nonwhole_division_helper
+            test_prg_numeric_small_divisor_helper
             test_report_layout
             test_report_layout_sort_settings
             test_report_layout_side_margin_settings
@@ -194,6 +195,7 @@ function(copperfin_configure_native_test_isolation)
                                test_prg_engine_numeric_runtime_division
                                test_prg_engine_numeric_constant_division
                                test_prg_engine_numeric_nonwhole_division
+                               test_prg_engine_numeric_small_divisor
                                test_prg_engine_numeric_literal_payload)
         copperfin_set_test_isolation(${test_name}
             FILESYSTEM test-owned-unique

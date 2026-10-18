@@ -29,6 +29,7 @@ TARGETS = {
                      "test_prg_numeric_constant_division_intrinsic_helper", "test_prg_engine_numeric_constant_division",
                      "test_prg_engine_numeric_nonwhole_division",
                      "test_prg_numeric_nonwhole_division_helper",
+                     "test_prg_engine_numeric_small_divisor", "test_prg_numeric_small_divisor_helper",
                      "test_prg_engine_numeric_literal_payload", "test_prg_numeric_literal_payload_helper",
                      "test_prg_engine_cast_byte_numeric", "test_prg_engine_cast_uint64_numeric",
                      "test_prg_engine_work_areas", "test_xasset_methods",
@@ -138,6 +139,7 @@ def main():
                             "test_prg_numeric_constant_division_intrinsic_helper|test_prg_engine_numeric_constant_division|"
                             "test_prg_engine_numeric_nonwhole_division|"
                             "test_prg_numeric_nonwhole_division_helper|"
+                            "test_prg_engine_numeric_small_divisor|test_prg_numeric_small_divisor_helper|"
                             "test_prg_engine_numeric_literal_payload|test_prg_numeric_literal_payload_helper|"
                             "test_prg_engine_cast_(byte|uint64)_numeric(_(copperfin|vfp9)_session[12])?|"
                             "test_prg_engine_work_areas|test_xasset_methods|"
