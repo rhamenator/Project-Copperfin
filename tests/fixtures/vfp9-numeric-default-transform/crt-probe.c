@@ -16,13 +16,17 @@ typedef struct {
     unsigned handle, object;
 } NumericValue;
 typedef struct { short count; NumericValue args[2]; } NumericParameters;
-typedef long (*PublicFunction)(void);
+/* The packed table stores a code address; type it as the actual fastcall
+ * handler rather than casting through the SDK's historical generic pointer. */
+typedef void (__fastcall *PublicFunction)(NumericParameters *);
 typedef struct { char *name; PublicFunction function; short count; char *types; } PublicInfo;
 typedef struct PublicTable { struct PublicTable *next; short count; PublicInfo *info; } PublicTable;
 #pragma pack(pop)
 _Static_assert(sizeof(long)==4 && sizeof(void *)==4, "32-bit FLL only");
 _Static_assert(sizeof(NumericValue)==36 && __builtin_offsetof(NumericValue,real)==12,
                "published byte-packed Value layout");
+_Static_assert(sizeof(PublicInfo)==14 && __builtin_offsetof(PublicInfo,function)==4,
+               "published packed dispatch address layout");
 extern void __fastcall _RetChar(char *);
 __declspec(dllimport) void * __stdcall GetModuleHandleA(const char *);
 __declspec(dllimport) unsigned long __stdcall GetModuleFileNameA(void *,char *,unsigned long);
@@ -99,8 +103,8 @@ static void convert(NumericParameters *p,int significant) {
 static void __fastcall fixed_conversion(NumericParameters *p) { convert(p,0); }
 static void __fastcall significant_conversion(NumericParameters *p) { convert(p,1); }
 static PublicInfo functions[]={
-    {"CFNFCVT",(PublicFunction)fixed_conversion,2,"NN"},
-    {"CFNECVT",(PublicFunction)significant_conversion,2,"NN"}
+    {"CFNFCVT",fixed_conversion,2,"NN"},
+    {"CFNECVT",significant_conversion,2,"NN"}
 };
 __declspec(dllexport) PublicTable _FoxTable={0,2,functions};
 /* Same first-party entry pattern as cause-probe.c; installed SDK stays host-only. */

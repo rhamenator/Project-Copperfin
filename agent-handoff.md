@@ -13,7 +13,8 @@ branch fix/numeric-literal-display-5611, from that main. Last native capture
 at signed/DCO clean head962594cf0297b91ef3121d1ba42c55517fc17008 from unchanged
 arithmetic source1cf23445495e375e1e124c47ca7a436e2b48b985;
 Qualified528 pair/native graph rejection retained at signed/pushed61438bd5a;
-next signed checkpoint freezes native-only CRT sources, not built/run.
+Sourceaccdbe40f attempted: import0/compile1, no linker/native/FLL.
+Next signed checkpoint retains failed build and actual fastcall dispatch-pointer correction, UNBUILT.
 No PR/expected regression/helper/hook; src/include remain main-identical.
 Tracking #7210 is owner-authored OPEN bug/runtime, no agent-approved label.
 Authority derives from admitted parents/direct owner policy, NOT child content.
@@ -124,8 +125,16 @@ metadata/BRS/settings and post-call controls accompany each observation.
 Strict module path C:\\windows\\syswow64\\msvcr71.dll, native count/bits/CW/
 controls and unique coverage; first strict --single BEFORE repeat. No digit
 model/expected output or formatter call attribution.
-Node syntax/regeneration+cmp/bash-n/diff checks0. Compiler/linker/native NOT run;
-no binary or build/default-transform-crt directory yet. Sign/push source freeze
+Node syntax/regeneration+cmp/bash-n/diff checks0. First build at signedaccdbe40f:
+NEW BOTH-chat CLEAR/full0.00/0.01 before each import/compile; import0/Clang1
+on two generic-function-pointer casts with -Werror. NO linker/native/FLL.
+All plain receipts/source/full REA ev_f58bc2e20aabe068adc2b9de0ddc073cd5475234a6427fac253d6714c5d6c5cc
+archived/byte-verified in crt-build-attempt1/, owned/quiesced/untruncated.
+Both chats RELEASED/prefix idle1. Host directory moved intact to
+build/default-transform-crt-build-attempt1; original build path absent.
+Corrected OWN dispatch pointer to actual void fastcall handler, no casts,
+packed table size14/address offset4 assertions; -Wall/-Wextra/-Werror unchanged.
+Corrected source UNBUILT; no binary, no native capture. Sign/push source freeze
 BEFORE invoking tracked build/capture scripts. Every new compiler/native
 window requires fresh explicit BOTH-chat CLEAR and immediate full avg10 AND
 avg60<1%/idle-prefix guards per stage. Latest full0.64/21.27 fails; NO window

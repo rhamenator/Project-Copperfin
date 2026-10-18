@@ -674,6 +674,33 @@ No independent-human/system/release assurance, known-bug exception or closure.
 Source-freeze resource check full0.64/21.27 fails avg60; no compiler/native
 window requested or job started, no reservation or owner-input blocker.
 
+### First CRT build attempt — import0, compile1, no native invocation
+
+NEW explicit audit/DAW CLEAR obtained at unchanged signed sourceaccdbe40f.
+Immediate full0.00/0.01 and prefix empty1 before BOTH import and compiler.
+Import-generation0; Clang1 at two historical generic-function-pointer casts
+under -Werror,-Wcast-function-type-mismatch. No linker/native invocation,
+build-finished marker or wrapper FLL exists. No rounding observation follows.
+Both chats RELEASED promptly, post-prefix empty1.
+crt-build-attempt1/ retains ALL plain host receipts, failed first-party C/
+build source and complete REA
+ev_f58bc2e20aabe068adc2b9de0ddc073cd5475234a6427fac253d6714c5d6c5cc:
+root1/quiesced/owned verified/untruncated; standard sampling/image-binding/
+snapshot/inherited-environment/network limitations remain. Independent archived
+byte readback0 verifies import0/compile1 and absence of link/native/FLL.
+The import library remains HOST-ONLY; original host directory moved intact to
+build/default-transform-crt-build-attempt1. Original build path is now absent.
+
+Correct only the OWN dispatch-pointer C type to the actual void fastcall
+handler and remove the incompatible casts; retain -Wall/-Wextra/-Werror and
+add packed PublicInfo size14/function-address offset4 assertions. No public
+table bytes/caller/CRT experiment/reader/production semantics are changed.
+This corrected source is UNBUILT; freeze/sign/push it BEFORE NEW compiler/native
+window and fresh BOTH-chat CLEAR/guards. Do not replay the failed source or
+overwrite its receipts. LOW developer walkthrough confirms the correction
+keeps the packed code-address layout and strengthens rather than skips compile
+validation; execution remains pending, not a verified ABI or parity claim.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
