@@ -51,6 +51,12 @@ See intervention-captures/ and recovery.md for independent width/scale causal
 witnesses and rounding outputs. NEXT adjacent-binary64 rounding boundary
 recovery from native centers; do not guess epsilon/tolerance or implement from
 16-significant-digit inference alone. No model/expected emitter/helper yet.
+Adjacent-payload native source/inventory/reader freeze is now ready in
+emit-rounding-boundary.cjs/rounding.prg/rounding-cases.json/audit-rounding-boundary.cjs:
+1000 exact inputs around eight QUALIFIED native centers,2000 observations/run,
+width40/scale18 readback+CTOBIN BRS identity mandatory. First --single before
+repeat; separate build/default-transform-rounding. Sign/push before fresh
+BOTH-chat/full PSI gates. No native invocation yet for this new grid.
 
 ## Why division is explicitly deferred, not cancelled
 

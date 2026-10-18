@@ -212,6 +212,27 @@ exact-binary half-away rule is contradicted. Do not guess a tolerance from this.
 NEXT independently frozen adjacent-binary64 boundary recovery using observed
 native centers and documented CTOBIN/BRS identity, BEFORE formatter/test model.
 
+### Adjacent-binary64 source freeze (not yet observed)
+
+`emit-rounding-boundary.cjs` reads only the qualified archived native report
+(bound to SHA45d1e318...) and stimulus inventory to select eight native payload
+centers. It enumerates1000 exact neighboring positive finite binary64 payloads:
+0.5 offsets-512..32 and seven other centers offsets-32..32. The centers are
+1.005,2.675,9.995,5E-16,1.2345678901234565,999999999.123456789 and
+12345678901234.5625; critical DECIMALS0/2/15/7 are explicitly inventoried.
+Both FIXED modes give2000 observations/run. Hex payload arithmetic defines
+stimulus ONLY, not a display/rounding expectation.
+
+The authored PRG reconstructs bytes with documented CTOBIN(...,'BS') and
+applies the already-verified public-ABI width40/scale18 clone without assigning
+that returned descriptor to a normalizing variable. Strict reader requires
+every metadata field and BRS payload match the declared stimulus, complete
+framing/unique coverage, exact typed repeat and inactive-slot-only raw changes.
+First --single structure must pass BEFORE repeat. No runtime model, tolerance,
+compiled-equivalence or general-format proof is encoded. Separate host directory
+build/default-transform-rounding preserves all prior attempts. Sign source/
+inventory/reader before fresh BOTH-chat/low-PSI paired capture.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
