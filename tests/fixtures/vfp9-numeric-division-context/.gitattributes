@@ -30,3 +30,6 @@ nonwhole-timing-captures/*.gz -text -diff
 nonwhole-timing.prg -text whitespace=-blank-at-eof
 nonwhole-expanded-original-evidence/*.gz -text -diff
 nonwhole-expanded-original-evidence/query-diagnostic/*.gz -text -diff
+nonwhole-expanded-original-evidence/query-diagnostic/*-results.txt -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+nonwhole-expanded-original-evidence/query-diagnostic/first.out -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+nonwhole-expanded-original-evidence/query-diagnostic/repeat.out -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
