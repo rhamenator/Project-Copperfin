@@ -38,6 +38,8 @@ omit width<=scale solely as probe-safety restriction, NOT production policy or
 established cause. EVALUATE-only GRID, compiled private-value birth assignments.
 No run yet. Full PSI59.23/43.38 prevents retry. NEXT fresh BOTH-chat/low-full-
 PSI gates for narrower pair before native expectations/ORIGINAL/support.
+Use separate build/default-transform-intervention2; --single reader must pass
+after first capture BEFORE invoking repeat. Runner0 alone is insufficient.
 
 ## Why division is explicitly deferred, not cancelled
 

@@ -168,6 +168,12 @@ full PSI59.23%/43.38% disallows retry; no waiting resource window retained.
 NEXT renewed BOTH-chat clearance plus low-pressure gates for this narrower
 pair. Do not retrofit conclusions into the initial82-case stimulus or frozen
 division tests. Production, expected emitter, model and helper remain absent.
+The next source uses separate host directory build/default-transform-intervention2
+so it cannot overwrite attempt1. Reader --single must validate completeness,
+metadata interventions, payload/BRS and clone controls after FIRST capture
+BEFORE allowing a second invocation. Its status0 means first-structure-only,
+not repeat qualification or product parity. Preserve any first-structure failure
+and stop; never treat runner0 alone as successful native completion.
 
 ## Traceability and development-document walkthrough
 

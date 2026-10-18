@@ -44,7 +44,7 @@ ${settings.map((s,i)=>`settings[${i+1}]=${s}`).join('\n')}
 PRIVATE ${stored.map(r=>r.name).join(',')}
 LOCAL outputPath,libraryPath,settingNo,fixedNo,decimalCount,fixedMode,index,expression
 LOCAL observation,line,total,caught,birthNo,birthSetting,birthFixedNo,birthFixed
-outputPath='Z:\\home\\rich\\.codex\\worktrees\\numeric-literal-display-5611\\Project-Copperfin\\build\\default-transform-intervention\\results.txt'
+outputPath='Z:\\home\\rich\\.codex\\worktrees\\numeric-literal-display-5611\\Project-Copperfin\\build\\default-transform-intervention2\\results.txt'
 libraryPath='Z:\\home\\rich\\dev\\Project-Copperfin\\build\\pr7203-completed\\native-evidence\\diagnostic\\cause-probe.fll'
 =STRTOFILE('VERSION|'+VERSION()+CHR(13)+CHR(10),outputPath,0)
 SET LIBRARY TO (libraryPath) ADDITIVE

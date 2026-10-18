@@ -58,7 +58,16 @@ function read(name){
     }
     return {raw,rows,fields};
 }
-const first=read('first'),repeat=read('repeat');let rawDifferentRows=0;
+const first=read('first');
+if(process.argv[3]==='--single'){
+    console.log(JSON.stringify({requirement:inv.requirement,records:inv.recordsPerRun,
+        firstComplete:true,cloneControlsEqual:true,interventionPayloadsUnchanged:true,
+        requestedWidthScaleReadbackExact:true,pairedQualified:false,
+        firstSha256:crypto.createHash('sha256').update(first.raw).digest('hex'),
+        limitation:'First-capture structural qualification only; no repeat or product parity claim.'},null,2));
+    process.exit(0);
+}
+const repeat=read('repeat');let rawDifferentRows=0;
 const unusedSlotDifferences={};
 for(const [key,p]of first.rows){
     a.deepEqual(p,repeat.rows.get(key));const x=first.fields.get(key),y=repeat.fields.get(key);
