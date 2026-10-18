@@ -48,10 +48,22 @@ small-divisor-grid.prg, small-divisor-grid-cases.json, audit-small-divisor-grid.
 and compiled/EVALUATE =5060 observations/future run. Eight boundary rows retained;
 no zero/nonfinite/magnitude/scientific policy migration. No candidate/expectation
 or product imports, no separately evaluated child oracle. Source/inventory exact
-reconstruction and JS syntax/whitespace/changelog checks0; no observed result.
+reconstruction and JS syntax/whitespace/changelog checks0. Subsequent first
+actual native run0/empty stderr:5060 complete observations/no caught errors,
+host+archived first-only typed/source/framing/BRS/compiled-EVAL audit0. CW027F;
+60 nonfinite values only retained zero-boundaries, two empty displays. Raw SHA
+573771b12980ec0cafb39632a217e99c8df5533c440ffb3a61617987e4c0e8c0.
+NO repeat qualification, candidate/helper/public pass or runtime change.
 Read small-divisor-recovery.md and docs/32-recovered-requirements-traceability.md.
 
-Next: conditional low-pressure gate + fresh BOTH-chat clearance, check shared
+Next: independent REPEAT ONLY after low-pressure + fresh BOTH-chat clearance;
+existing first remains in NEW WT build/small-divisor-native/paired-captures/ and
+tracked small-divisor-captures/. Do not simulate or overwrite the first result.
+Initial REA wrapper ev_2b96881d gates75 before any native run at2.06%/0.62%;
+next ev_f6880b11 completes first then gates75 BEFORE repeat at22.61%/5.64%.
+Both complete records/raw attempts retained. Root75 is a pressure gate, NOT VFP
+failure. Source/runner/VFP/FLL hashes unchanged after first. Actual FXP retained.
+Use separate repeat-attempt REA metadata, then unchanged paired auditor. Check shared
 Wine-prefix ownership, hash runner/VFP9/FLL/source, then two serialized nice10
 /home/rich/bin/vfp9-probe invocations under REA process capture. Reuse installed
 VFP /home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe and existing observer
@@ -70,10 +82,10 @@ Do not infer parity from candidate fit/metadata fields or change native inputs.
 
 ## Resource and retained scope
 
-No local build/probe/Wine/VM active/reserved. Native request was sent separately
-to audit and DAW; DAW no conflict, audit reports full PSI46.24%/18.01% rising and
-explicitly defers native invocations. Own latest sample39.55%/20.93%. Source-only
-work continues; do not invoke oracle until fresh BOTH-chat/low-pressure gate.
+No local build/probe/Wine/VM active/reserved. Both chats cleared each attempted
+window and received immediate RELEASED/DEFERRED after the per-run gates. Own
+post-first PSI rose54.46%/18.62%, later63.69%/48.92%; no repeat was launched.
+Source-only work continues; repeat needs fresh BOTH-chat/low-pressure gate.
 Audit01a0a1e1-7469-7ae3-9668-470a4e5b91b5; DAW01a1050d-72c7-7213-bd2b-899e3cf342f7.
 Backup reset completion unconfirmed: no VM starts/recreation/DAW cleanup race.
 Read owner VM CLAUDE.md before actual VM work; originals/recovery/shared seed safe.

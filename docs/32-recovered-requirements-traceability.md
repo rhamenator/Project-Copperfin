@@ -256,6 +256,18 @@ future run. No native run, model, expected result, production guard relaxation o
 pass is claimed. LOW DQ/DV/parent hazards, resource/clean-room gates and mandatory
 Numeric/ListItem follow-ons remain; source/current behavior is not a requirement.
 
+Subsequent actual first small-divisor invocation follows signed freezec68aaadf2:
+VFP0/empty stderr/all5060 observations/no caught errors; independent host+archived
+first-only source/framing/typed/BRS/compiled-EVAL audit0. All60 nonfinite values
+are retained zero-boundaries, not changed checked policy. Initial wrapper's gate75
+ran no native process; next wrapper completes first then gate75 prevents repeat.
+REA records ev_2b96881db1a2d7607cfb89c60e36fd8afd56660d439e66f0f7af2106d07abcaa
+and ev_f6880b11682df59ee814871efc2357a4450424c28bf9f0157cc0433f69d38e29
+retain declared lifecycle/cleanup/snapshot scope and image/sampling/environment
+limitations. Raw first/FXP/status/hash/guarded attempts remain in small-divisor-
+captures/. Actual independent repeat, paired audit and ALL implementation gates
+are pending. No native expectation, model, caller or runtime policy changed.
+
 Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
 [actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)
 at mainb37ddf7241; paired1,620 values/run, actual0/empty stderr/no errors,

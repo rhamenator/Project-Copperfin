@@ -1,1 +1,1 @@
-- 2026-10-18: Record accepted non-whole Numeric division evidence and freeze the next bounded small-divisor native-observation scope before changing runtime behavior (#5611/#6776/#7189); broader Numeric and ListItem compatibility remain unfinished.
+- 2026-10-18: Record accepted non-whole Numeric division evidence and the next bounded small-divisor source freeze/first actual native observations, retaining pressure-gated attempts and deferred independent repeat before any runtime change (#5611/#6776/#7189); broader Numeric and ListItem compatibility remain unfinished.
