@@ -160,3 +160,28 @@ logs/JUnit, statuses, hashes, pressure and audits. This is the actual expanded
 metadata-only ORIGINAL gate before unused non-whole support. Implementation,
 SAME, broad/hosted named tests, exact-head review and strict/resolved merge gates
 are still pending. No runtime behavior or #7208 query type has been changed.
+
+## Direct helper oracle freeze before unused support
+
+`emit-nonwhole-direct-header.cjs` independently imports the original raw native
+audit and source inventory, not the candidate model or product helper. Its
+68 complete native D0 root results agree across both FIXED/routes. The314
+postorder nodes carry only syntax and the18 captured literal controls; no
+separately evaluated child result is an intermediate oracle. The direct test
+composes actual helper results and existing unary behavior, compares complete
+roots bit-for-bit/typed metadata, and repeats all640 older native rows through
+both entry points. Invalid descriptors, forged fractional Integer tags,
+nonfinite/magnitude/small-divisor bounds, unknown/NULL/non-Number and missing
+constant provenance remain fail-closed controls. No rounding or quotient
+correction is permitted. Existing public sources/headers remain unchanged.
+
+The new pure unit's CMake/isolation and actual sanitizer target/CTest selector
+registrations are frozen with its source/header BEFORE support is authored.
+The source intentionally references the not-yet-defined unused entry point;
+this freeze is not a claimed build or execution. GNU/Clang sanitizer direct
+checks must then pass before a separate runtime hookup. No filesystem,
+environment, child process, network or sample access occurs in the pure unit;
+its portable parallel-safe isolation audit is source review, not execution.
+The LOW DQ/DV walkthrough adds native-only root reconstruction -> frozen test
+-> unused support -> direct checks, retaining the previously qualified public
+ORIGINAL. All remaining gates and limitations above still apply.

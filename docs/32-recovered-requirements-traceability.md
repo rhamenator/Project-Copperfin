@@ -209,6 +209,15 @@ unchanged runtime archive. Original first failure and #7208 diagnosis remain
 retained separately. This qualifies an expanded ORIGINAL-fail gate, not a passing
 implementation. Unused bounded support/direct native checks must precede hookup.
 
+Direct helper pre-support freeze: native-only `nonwhole-direct-expected.h`
+reconstructs68 complete D0 roots/314 syntax nodes from original raw observations
+and18 literal controls, without intermediate expected descriptors or candidate
+input. `test_prg_numeric_nonwhole_division_helper` compares these exact roots,
+all640 older native rows and fail-closed domain/provenance controls; pure CMake
+isolation and actual sanitizer build/filter registration are frozen before its
+unused helper exists. No build/pass/hook claim at this checkpoint. Governing
+NONWHOLE-001/timing contract, LOW DQ/DV/parent hazards and remaining gates apply.
+
 Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
 [actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)
 at mainb37ddf7241; paired1,620 values/run, actual0/empty stderr/no errors,

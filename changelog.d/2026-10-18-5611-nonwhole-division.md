@@ -1,0 +1,1 @@
+- 2026-10-18: Retain native-backed non-whole Numeric division requirements and original failures; freeze direct complete-root, continuation and boundary verification before bounded support (#5611/#6776/#7189). General Numeric and ListItem compatibility remain unfinished.

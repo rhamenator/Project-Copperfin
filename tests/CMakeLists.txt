@@ -53,6 +53,8 @@ copperfin_add_test(test_prg_engine_numeric_constant_division cf_xbase_runtime te
 copperfin_add_test(test_prg_engine_numeric_nonwhole_division cf_xbase_runtime test_prg_engine_numeric_nonwhole_division.cpp)
 copperfin_add_test(test_prg_numeric_constant_division_intrinsic_helper "" test_prg_numeric_constant_division_intrinsic_helper.cpp)
 target_include_directories(test_prg_numeric_constant_division_intrinsic_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
+copperfin_add_test(test_prg_numeric_nonwhole_division_helper "" test_prg_numeric_nonwhole_division_helper.cpp)
+target_include_directories(test_prg_numeric_nonwhole_division_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
 
 # RQ-CF-PRG-NUMERIC-DECIMAL-LITERAL-PAYLOAD-001: native fields before producer hooks.
 copperfin_add_test(test_prg_engine_numeric_literal_payload cf_xbase_runtime test_prg_engine_numeric_literal_payload.cpp)

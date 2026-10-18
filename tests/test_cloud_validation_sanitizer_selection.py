@@ -48,6 +48,7 @@ class SanitizerSelection(unittest.TestCase):
                      "test_prg_numeric_runtime_division_helper", "test_prg_engine_numeric_runtime_division",
                      "test_prg_numeric_constant_division_intrinsic_helper", "test_prg_engine_numeric_constant_division",
                      "test_prg_engine_numeric_nonwhole_division",
+                     "test_prg_numeric_nonwhole_division_helper",
                      "test_prg_engine_numeric_literal_payload", "test_prg_numeric_literal_payload_helper"):
             with self.subTest(name=name):
                 self.assertIn(name, TARGETS["sanitizer-pr"])
