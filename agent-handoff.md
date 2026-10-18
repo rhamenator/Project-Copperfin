@@ -12,7 +12,8 @@ Active WT /home/rich/.codex/worktrees/numeric-literal-display-5611/Project-Coppe
 branch fix/numeric-literal-display-5611, from that main. Last native capture
 at signed/DCO clean head962594cf0297b91ef3121d1ba42c55517fc17008 from unchanged
 arithmetic source1cf23445495e375e1e124c47ca7a436e2b48b985;
-next signed checkpoint retains qualified528 pair/native graph rejection.
+Qualified528 pair/native graph rejection retained at signed/pushed61438bd5a;
+next signed checkpoint freezes native-only CRT sources, not built/run.
 No PR/expected regression/helper/hook; src/include remain main-identical.
 Tracking #7210 is owner-authored OPEN bug/runtime, no agent-approved label.
 Authority derives from admitted parents/direct owner policy, NOT child content.
@@ -111,19 +112,30 @@ inputs; power differences ALONE do not explain the display discrepancy.
 All counterexamples retained; NO tolerance/cap/operation-order/internal
 precision/call-attribution/exact sign-padding-text or formatter parity claim.
 
-NEXT bounded experiment: prepare OWN native-only FLL _fcvt/_ecvt wrapper using
-documented C ABI/published FLL interface. Same264 finite original and observed
-shifted payloads; _fcvt applied counts1..18 (omit0), _ecvt15/16/17 significant
-counts. Observe input/count/sign/decimal-point/digit buffer and CW before/after
-alongside independent TRANSFORM/STR; immediate bounded buffer copy, fail closed
-on NULL/error/overflow. No guessed VFP DECLARE ABI, decompilation or CW changes.
-Neither wrapper/caller/reader nor binary exists yet. Freeze/sign sources and
-readers BEFORE new compile/native work, NEW BOTH-chat CLEAR and immediate full
-avg10 AND avg60<1%/idle-prefix guards. NO VM. Latest full48.97/21.69 fails;
-no further build/native invocation. No owner-input blocker.
-Read recovery.md for Microsoft API sources and read-only32-bit MSVCR71 export/
-hash inventory; exports do NOT prove VFP calls them. Future capture must bind
-runtime module identity; do not substitute64-bit Wine's system32 DLL.
+NEXT source freeze now prepared:
+crt-probe.c/crt-kernel32.def, emit-crt.cjs/crt.prg/crt-cases.json,
+audit-crt.cjs, crt-build.sh/crt-capture.sh, all under the display fixture.
+OWN documented-ABI32-bit FLL; already-loaded MSVCR71 lookup only (no DLL load/
+replacement/CW modification). Bounded finite/count handling and immediate
+bounded static-buffer copy; NULL/error/truncation are qualification failures.
+264 qualified original/shifted inputs (NOT recomputed model), BOTH FIXED,
+_fcvt applied D1..18 only, _ecvt15/16/17:4176 rows/run. Independent strings/
+metadata/BRS/settings and post-call controls accompany each observation.
+Strict module path C:\\windows\\syswow64\\msvcr71.dll, native count/bits/CW/
+controls and unique coverage; first strict --single BEFORE repeat. No digit
+model/expected output or formatter call attribution.
+Node syntax/regeneration+cmp/bash-n/diff checks0. Compiler/linker/native NOT run;
+no binary or build/default-transform-crt directory yet. Sign/push source freeze
+BEFORE invoking tracked build/capture scripts. Every new compiler/native
+window requires fresh explicit BOTH-chat CLEAR and immediate full avg10 AND
+avg60<1%/idle-prefix guards per stage. Latest full0.64/21.27 fails; NO window
+requested/reservation/owner-input blocker. NO VM.
+Preserve all attempted directories and failures; do not rerun/overwrite an
+attempt. Future SDK-containing FLL/object/libraries stay HOST-ONLY; archive
+plain receipts/first-party sources/own FXP only. Read recovery.md for the API
+sources, ABI/buffer/count boundaries, source-only walkthrough and module
+identity limitations. Runtime path mismatch must be investigated, never
+silently accepted as64-bit Wine's different DLL.
 Do not replay seven qualified pairs. Exact-rule recovery -> native-only
 expectations/actual ORIGINAL -> unused support/direct GNU+Clang -> separate
 wiring/SAME/broader/actual named hosted -> exact-head clean review/strict green/

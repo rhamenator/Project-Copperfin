@@ -605,7 +605,7 @@ all later recorded steps coincide in this finite set; power differences ALONE
 do not explain the formatter discrepancy. No cap, epsilon, operation order,
 internal precision, call attribution or production formatter is established.
 
-### Next bounded conversion-boundary experiment — not implemented or run
+### Next bounded conversion-boundary experiment — source freeze, not built/run
 
 Do not replay the seven qualified pairs. Prepare an OWN native-only FLL wrapper
 for installed32-bit MSVCR71 _fcvt/_ecvt, using documented C ABI and the existing
@@ -615,7 +615,8 @@ decimal-point/digit buffer and control word before/after, alongside independent
 TRANSFORM/STR. Bounds: the same264 finite inputs, applied count1..18 for _fcvt (omit0),
 positive15/16/17 significant counts for _ecvt; copy static return buffer
 immediately, bound reads, reject NULL/error/overflow and preserve failures.
-No ABI-boundary caller/source or wrapper binary has been created yet.
+The following source-only checkpoint now implements this bounded experiment,
+but no compiler/linker/native invocation or binary exists yet.
 
 Public signatures/count meanings/static-buffer lifetime are documented by
 [Microsoft _fcvt](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/fcvt?view=msvc-170)
@@ -629,10 +630,49 @@ system32 DLL is equivalent; do not use that other DLL. Bind runtime module
 identity in the future wrapper capture. No decompilation/internal attribution.
 Freeze/sign native-only sources/readers and request NEW BOTH-chat compiler/
 native clearance with immediate BOTH full PSI<1%/idle-prefix gates; no VM.
-Latest full48.97/21.69 fails, so no additional build/native invocation now.
+At the qualified528 checkpoint, full48.97/21.69 failed, so no additional build/native invocation followed.
 If these functions disagree, preserve rejection and recover the next actual
 conversion boundary rather than accepting a close fit. Exact-rule recovery
 still precedes expectation freeze/actual ORIGINAL/support/direct/wiring/SAME.
+
+crt-probe.c/crt-kernel32.def implement the OWN32-bit FLL wrapper using the same
+published interface/SDK entry pattern as cause-probe.c. GetModuleHandleA,
+GetModuleFileNameA and GetProcAddress query the already-loaded MSVCR71; no DLL
+load/replacement/CW changes. Correct C calling convention is explicit. Reject
+nonfinite/wrong type/count before conversion, require bounded integral counts,
+copy at most127 digits immediately from the CRT static buffer, reject NULL/
+invalid characters/truncation, and retain exact count/input bits/sign/decimal/
+CW before+after/module path/digit bytes. No proprietary binary enters the repo.
+
+emit-crt.cjs/crt.prg/crt-cases.json freeze264 original and already-observed
+shifted inputs from the qualified528 pair, NOT recomputed candidate arithmetic.
+Both FIXED modes; _fcvt applied D1..18 only, _ecvt15/16/17;4176 rows/run.
+Independent TRANSFORM/STR, original/requested metadata/BRS/settings, and
+post-call metadata/BRS/display controls accompany every CRT observation.
+audit-crt.cjs requires actual0/empty stderr/full unique coverage, exact
+arguments/CW/module path/unchanged controls/typed repeat; NO digits are
+generated or compared against a model. First strict --single BEFORE repeat.
+Unexpected runtime module path remains a qualification failure to investigate,
+not permission to accept64-bit Wine's different file or silently relax identity.
+
+crt-build.sh/crt-capture.sh isolate build/default-transform-crt, reject
+attempt-directory overwrite and dirty sources, retain source/tool/SDK/input/
+binary hashes, native results/statuses/stderrs and per-stage pressure/prefix
+guards. NEW explicit BOTH-chat clearance remains external prerequisite for
+EACH window, with immediate full avg10 AND avg60<1%/idle prefix before EACH
+import-generation/compiler/link/native invocation. No compiler syntax check
+has run yet. Node syntax/source+inventory regeneration/cmp and bash-n returned0.
+Do NOT archive/distribute generated SDK-containing FLL/object/import libraries;
+retain them host-only, archive first-party source/FXP and plain receipts only.
+SDK debug-section linker warnings, if any, must remain recorded.
+
+LOW DQ-DV001 developer self-review walkthrough: inspected the count/type/finite
+and buffer bounds, no-load/no-CW-write module lookup, strict argument/control
+and module checks,4176 enumeration and fail-before-repeat flow. Source-only
+automated checks above passed; ABI/build/native execution remain unverified.
+No independent-human/system/release assurance, known-bug exception or closure.
+Source-freeze resource check full0.64/21.27 fails avg60; no compiler/native
+window requested or job started, no reservation or owner-input blocker.
 
 ## Traceability and development-document walkthrough
 
