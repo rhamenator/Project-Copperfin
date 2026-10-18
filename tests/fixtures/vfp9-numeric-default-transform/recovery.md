@@ -1089,6 +1089,72 @@ process-only env scope/unset guard/recorded override/no fallback, and rollback
 by exact worker revert while retaining receipts. Readers/readbacks above
 actually0; no independent-human/system/release acceptance or hazard closure.
 
+### Native-only ONE-CALL exact binding0 — observed; capture cleanup caveat
+
+Unchanged signed/DCO cleanc1d63a83c after NEW explicit BOTH-chat compiler-only
+CLEAR/guards: import/Clang32/link all0, compile stderr empty/four SDK debug
+warnings retained. HOST-ONLY FLL SHA
+396374787866ab66dcb86b9054c70697a07772e813b8449029bc71d35affe9cd.
+Observer/header/caller/inventory/strict reader SOURCE BYTES match prior failed
+diagnostic. Rebuild artifacts have different hashes; binary equality is not
+claimed. Compiler window RELEASED, separate NEW BOTH native-only CLEAR/guard.
+Inherited override recorded UNSET; supplied process-only msvcr71=n recorded.
+No registry/global helper/DLL/VM change or builtin fallback was made.
+
+Actual VFP0/empty stderr/DONE1, structural/control0 AND exact --require-bound0:
+BOUND/error0. Loaded/file machine014C/magic010B/timestamp3E561EAC/imageSize00056000/
+checksum0005F1E9 match frozen Microsoft32 artifact;348160 bytes/85 reads/EOF/
+close0/file SHA8094af5e..., self-test/memory predicates/CW027F/Numeric metadata/
+BRS/display controls pass. Raw1053 bytes SHA
+fe7146266291fe113dedafae02946464e8dc63d7ffab78ace921e98a5967a108.
+This is ONE sampled module-binding/control result under Wine, no CRT conversion,
+formatter rule, Windows execution or paired qualification. Native-only loading
+corrects this observed identity boundary; old failures remain failed and prior
+captured environment/provenance limitations are NOT erased.
+
+Build REA ev_fa42d0af7c3e00e07020d6c04ef3006a88f44d61d28c2366729fd33f52132bc3
+root0/quiesced/owned verified/untruncated/no sampled ownership unknowns.
+Native REA returned top-level cleanup_incomplete, NO Evidence ID. Full raw tool
+response, parsed error and partial capture retained, NOT discarded/replayed.
+Partial capture root0/quiesced/untruncated BUT cleanup_outcome:failed due EACCES
+ownership token on live candidate PID1245895. Read-only ps identified unrelated
+Edge renderer/parent938012/UID1000; left untouched/no signals. Later ps found
+PID absent and Wine-prefix scan exit1. That follow-up is not retroactive proof
+of REA ownership/cleanup; do NOT claim owned-group verified for THIS native run.
+Original sampling/atomic-binding/snapshot/inherited-environment/network limits
+remain. Initial orchestration projection assumed normal result shape and threw
+after the full error was saved; corrected extraction preserved the same partial
+record, no native rerun. Actual worker/readers were already0 independently.
+
+crt-binding-nativeonly-capture1/ retains81 byte-compared plain receipts/OWN
+source/FXP/full error+partial capture/cleanup-followup and build REA. Host+archive
+strict --require-bound reader0/manifest0, all source/tool/native/binary hash
+checks0. SDK-containing FLL/obj/import/export libs HOST-ONLY in intact
+build/default-transform-crt-binding-nativeonly-capture1; original diagnostic
+build path absent. Both chats RELEASED/prefix idle1/no reservation or VM.
+
+NEXT bounded recovery (NOT source-frozen/implemented yet): adapt the full CRT
+experiment to this explicit native-only load-order input and retain the exact
+binding predicate on EVERY process. Same264 original/historical shifted payloads
+are EXPLICIT STIMULI, not accepted thresholds, current-runtime arithmetic
+results or expected formatter strings. Change emitter/caller to stop and retain
+the FIRST observer/runtime error, no thousands of repeated failures. Worker
+must record supplied/inherited environment and reject nonempty overrides, hash
+all changed sources, and first strict gate BEFORE repeat. Freeze/sign source
+before fresh separate BOTH-chat compiler/native windows and immediate guards.
+Do not simply invoke the old full4176 worker (no native-only env/first-error
+stop), replay seven prior pairs, reuse attempted paths or relax identity.
+Recover the exact conversion/display boundary under the corrected input before
+native-only expectations/actual ORIGINAL/support/direct/wiring/SAME/hosted.
+No production/model/tolerance/cap/call-attribution or compatibility closure.
+
+LOW DQ-DV001 developer walkthrough: inspected independent actual0/strict0/raw
+and hash receipts, unchanged source bytes, validity-tagged native identity,
+one-call scope and full unmodified cleanup failure; verified archive readback/
+manifest/reader0. The compact handoff redirects historical chronology here,
+preserving uncancelled division ORIGINAL/tests and all failures/unknowns.
+No independent-human/system/release assurance. No owner-input blocker or pause.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only

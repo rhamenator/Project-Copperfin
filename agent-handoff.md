@@ -10,7 +10,7 @@ Canonical /home/rich/dev/Project-Copperfin main=origin/main
 240ac51cbbaa3114a08a687142e67fe4969ea212 (completed PR7209).
 Active WT /home/rich/.codex/worktrees/numeric-literal-display-5611/Project-Copperfin,
 branch fix/numeric-literal-display-5611. Last executed clean signed/DCO source
-27a1c66e9fb57a2db433ec13cf6f9b989aeffe36; observer C/hash sourcebe3ebe969.
+c1d63a83c8a483037e6a356e2f42584db6a7c5f9; observer C/hash sourcebe3ebe969.
 Next signed checkpoint preserves the result and native-only discriminator source.
 No PR/expected regression/helper/hook; src/include remain main-identical.
 Tracking #7210 owner-authored OPEN bug/runtime, no agent-approved label.
@@ -52,28 +52,51 @@ root0; native ev_8969fe0cd5a361e1245602b4e82a816bb63b97ccac5441edc7e1bb6155342b1
 root2. BOTH quiesced/owned verified/untruncated/no sampled ownership unknowns;
 ALL sampling/atomic-binding/snapshot/inherited-environment/network limits remain.
 
-## NEXT bounded action — process-local native-only ONE-CALL discriminator
+## Latest native-only discriminator — exact module binding0, no formatter claim
 
-Worker source now requests env WINEDLLOVERRIDES=msvcr71=n for ONE process only;
-installed Wine10 manpage documents n as native-only (no builtin fallback).
-Record supplied/inherited overrides and fail if inherited override is nonempty.
-NO registry/global helper/config/DLL/search-path/VM changes. Python runner copies
-environment then sets prefix/debug, so no helper edit. C/hash/PRG/strict reader/
-path+digest+header predicates UNCHANGED; not accepting builtin as Microsoft.
-New worker is UNBUILT/UNRUN. Bash-n/Node syntax/diff-check0. Preserve failures;
-even BOUND success means sampled module proof under Wine, not formatter parity.
+At unchanged signed/DCO cleanc1d63a83c, NEW BOTH compiler-only CLEAR/guards:
+import/Clang32/link0, compile stderr empty/four SDK warnings retained.
+HOST-ONLY FLL396374787866ab66dcb86b9054c70697a07772e813b8449029bc71d35affe9cd.
+Released; separate NEW BOTH native-only CLEAR/guard. Inherited override UNSET/
+supplied process-local WINEDLLOVERRIDES=msvcr71=n recorded; no registry/global/
+DLL/VM change. Actual VFP0/empty stderr/DONE1, structural0/exact binding0 BOUND.
+Loaded+opened-file headers now match frozen Microsoft32 facts/digest above.
+CW/Numeric metadata/BRS/display/read/EOF/close/self-test controls pass.
+Raw1053bytes SHAfe7146266291fe113dedafae02946464e8dc63d7ffab78ace921e98a5967a108.
+Observer/hash/caller/inventory/reader source bytes identical to failed baseline;
+rebuild binary hashes DIFFER, not claimed identical. ONE sampled module proof
+under Wine only, no CRT conversions/paired qualification/Windows formatter parity.
 
-Freeze/sign/push BEFORE NEW explicit BOTH-chat compiler-only CLEAR, immediate
-full avg10 AND avg60<1%/idle prefix before EACH import/compiler/link. Use fresh
-build/default-transform-crt-binding-diagnostic via
-bash tests/fixtures/vfp9-numeric-default-transform/crt-binding-diagnostic.sh --build.
-After build0/release, request separate NEW native-only CLEAR and --capture with
-same immediate guards. No full4176/repeat reachable. Only after exact one-call
-identity/control proof may a separately frozen full caller/decisive comparison
-run; stop on first observer error, strict first gate BEFORE repeat.
-Do NOT run archived/guarded workers, original full4176 failed caller, or overwrite
-attempt directories. Current full45.86/44.60 failed after source prep; no further
-window requested/reservation/VM or owner-input blocker. Automation stays active.
+crt-binding-nativeonly-capture1/ retains81 byte-compared receipts/OWN sources/
+FXP/full native tool error+partial capture/cleanup follow-up/build REA.
+Archive strict reader/manifest0, input/native/binary hashes0; SDK binaries/obj/libs
+HOST-ONLY in intact build/default-transform-crt-binding-nativeonly-capture1;
+original diagnostic path absent. Both chats RELEASED/prefix idle1/no reservation.
+Build REA ev_fa42d0af7c3e00e07020d6c04ef3006a88f44d61d28c2366729fd33f52132bc3
+root0/quiesced/owned verified/untruncated. Native top-level cleanup_incomplete,
+NO Evidence ID; partial capture root0/quiesced/untruncated/cleanup_outcome failed.
+Unverified EACCES PID1245895 was unrelated Edge renderer/parent938012, left
+untouched/no signals; later PID absent. Do NOT retroclaim verified native cleanup.
+Original process/atomic-binding/snapshot/environment/network limits retained.
+Projection code assumed normal response shape and threw after saving full error;
+corrected extraction reused same result, NO native rerun. All details recovery.md.
+
+## NEXT bounded action — native-bound full CRT source preparation
+
+NOT implemented/frozen yet: adapt emit-crt.cjs/crt.prg +crt-capture.sh to explicit
+process-local native-only msvcr71=n input, log inherited/supplied override and
+fail if inherited override nonempty. Same264 original/historical shifted payloads
+are STIMULI ONLY, not accepted thresholds/current-runtime arithmetic/expected
+display. Caller MUST stop on first observer OR runtime error and retain it.
+Keep exact module/header/digest/metadata/BRS/settings/control predicates and
+strict first4176 gate BEFORE repeat; no old worker replay or weakened reader.
+Freeze/sign changed source BEFORE fresh separate BOTH compiler/native CLEAR,
+immediate BOTH full avg10/avg60<1%/idle prefix per invocation and fresh roots.
+Do not rerun completed ONE-CALL diagnostic or seven earlier pairs; preserve all
+failed/guarded/qualified receipts and SDK-containing artifacts host-only.
+Recover actual native-bound conversion/display boundary BEFORE expectations/
+ORIGINAL/support/direct/wiring/SAME/hosted/review. No model/production change.
+No standing compiler/native/Wine/VM job or owner-input blocker; automation active.
 
 ## Retained evidence / verification ladder
 
