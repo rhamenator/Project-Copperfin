@@ -10,8 +10,9 @@ blocker/automation pause. Preserve unrelated files, foreign WTs4436/49ae and sta
 Canonical main/origin/main240ac51cbbaa3114a08a687142e67fe4969ea212 (PR7209).
 NEW WT /home/rich/.codex/worktrees/numeric-small-divisor-5611/Project-Copperfin
 branch fix/numeric-small-divisor-5611 created from origin/main240ac51cb.
-Current source-only pre-observation freeze is the branch's latest signed/DCO
-checkpoint; read exact git head before use. No PR, native run or runtime change.
+Pre-observation signed/DCO freezec68aaadf2 and first-observation checkpoint273a51b60
+are retained; read exact git head before use. Paired native recovery is now audited;
+no PR or runtime change.
 src/include remain byte-identical to main. Do NOT restart completed PR7209.
 
 ## Last shipped slice and cleanup
@@ -53,19 +54,22 @@ actual native run0/empty stderr:5060 complete observations/no caught errors,
 host+archived first-only typed/source/framing/BRS/compiled-EVAL audit0. CW027F;
 60 nonfinite values only retained zero-boundaries, two empty displays. Raw SHA
 573771b12980ec0cafb39632a217e99c8df5533c440ffb3a61617987e4c0e8c0.
-NO repeat qualification, candidate/helper/public pass or runtime change.
+Subsequent independent repeat0/empty stderr; all5060 raw records byte-identical.
+Unchanged paired host+archived audits0; compiled/EVAL differences0. Both raw SHA
+values above match. No candidate/helper/public pass or runtime change.
 Read small-divisor-recovery.md and docs/32-recovered-requirements-traceability.md.
 
-Next: independent REPEAT ONLY after low-pressure + fresh BOTH-chat clearance;
+Completed independent REPEAT ONLY after low-pressure + fresh BOTH-chat clearance;
 existing first remains in NEW WT build/small-divisor-native/paired-captures/ and
 tracked small-divisor-captures/. Do not simulate or overwrite the first result.
 Initial REA wrapper ev_2b96881d gates75 before any native run at2.06%/0.62%;
 next ev_f6880b11 completes first then gates75 BEFORE repeat at22.61%/5.64%.
 Both complete records/raw attempts retained. Root75 is a pressure gate, NOT VFP
 failure. Source/runner/VFP/FLL hashes unchanged after first. Actual FXP retained.
-Use separate repeat-attempt REA metadata, then unchanged paired auditor. Check shared
-Wine-prefix ownership, hash runner/VFP9/FLL/source, then two serialized nice10
-/home/rich/bin/vfp9-probe invocations under REA process capture. Reuse installed
+Separate repeat-attempt ev_e7b41a6b1a308d58dcd566c66f7123c8c1103b2c57ef237aa28c817cfb80bbe1
+is root0/quiesced/owned cleanup verified/untruncated, retained separately with
+unchanged source/runner/VFP/FLL checks0 and exact paired outputs. No further
+repeat is needed. Both chats received immediate RELEASED. Reused installed
 VFP /home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe and existing observer
 /home/rich/dev/Project-Copperfin/build/pr7203-completed/native-evidence/diagnostic/cause-probe.fll.
 Expected output NEW WT build/small-divisor-native/grid-results.txt. Preserve exact
@@ -74,7 +78,8 @@ decompilation, installation/configuration changes, VM or new compiler needed.
 REA skill fully read plus native/runtime/evidence guides; preserve root-vs-
 descendant settlement/cleanup, sampling/environment/image-binding limitations.
 
-Then native recovered contract -> any necessary timing recovery -> independent
+NEXT: post-capture finite-frontier hypothesis recovery (no runtime/expected edits),
+then native recovered contract -> any necessary timing recovery -> independent
 direct/public freeze and actual ORIGINAL-fail -> unused support -> bounded hook/
 unchanged SAME/broader/actual hosted named execution -> Claude FIRST/exact-head
 clean review/strict green required checks/all conversations resolved -> merge.
@@ -85,7 +90,7 @@ Do not infer parity from candidate fit/metadata fields or change native inputs.
 No local build/probe/Wine/VM active/reserved. Both chats cleared each attempted
 window and received immediate RELEASED/DEFERRED after the per-run gates. Own
 post-first PSI rose54.46%/18.62%, later63.69%/48.92%; no repeat was launched.
-Source-only work continues; repeat needs fresh BOTH-chat/low-pressure gate.
+Actual repeat later completed after renewed gates; no reservation remains.
 Audit01a0a1e1-7469-7ae3-9668-470a4e5b91b5; DAW01a1050d-72c7-7213-bd2b-899e3cf342f7.
 Backup reset completion unconfirmed: no VM starts/recreation/DAW cleanup race.
 Read owner VM CLAUDE.md before actual VM work; originals/recovery/shared seed safe.

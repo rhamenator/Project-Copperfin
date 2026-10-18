@@ -34,7 +34,8 @@ backup reset completion is unconfirmed. REA process capture will record the
 declared wrapper/root/descendant settlement and cleanup scope; its sampling,
 environment and executable-binding limitations must remain explicit. No binary
 decompilation, proprietary implementation reuse or new integration installation.
-There is no current native/build/VM reservation or observed result for this grid.
+There is no current native/build/VM reservation. Actual observations below
+supersede the pre-observation status without changing the frozen inputs.
 
 After actual native recovery: define the finite supported frontier, determine
 whether further setting/callback timing evidence is required, freeze independent
@@ -57,7 +58,7 @@ evidence. Parent HZ-data-corruption-01/HZ-runtime-crash-01/HZ-doc-command-01 app
 Wider producers/operators, propagation/display/exact conversion, #7208 and the
 pending ListItem supplied-column READ remain unfinished; no parent closure.
 
-## First actual run; repeat remains deferred
+## First actual run and pressure-deferred repeat attempt
 
 Signed/DCO pre-observation freezec68aaadf2 precedes all execution. A first
 REA wrapper, ev_2b96881db1a2d7607cfb89c60e36fd8afd56660d439e66f0f7af2106d07abcaa,
@@ -92,9 +93,29 @@ framing/typed fields; the previously frozen paired reader is unchanged. No
 native operand/expectation was changed and no absent repeat was simulated.
 Both chats received immediate RELEASED/DEFERRED; no native/build/VM reservation.
 
-Next is the genuinely independent repeat of the SAME frozen source after fresh
-both-chat/low-pressure/ownership gates. Preserve existing first and interrupted
-wrapper metadata; use a separate repeat-attempt record. The paired auditor,
-any candidate recovery, native-only expected vectors, actual ORIGINAL and every
-implementation/hosted/review gate remain pending. No runtime change, model fit,
-paired repeat or small-divisor compatibility completion is claimed here.
+## Actual independent repeat and paired qualification
+
+After another fresh BOTH-chat clearance and empty shared-prefix process check,
+REA ev_e7b41a6b1a308d58dcd566c66f7123c8c1103b2c57ef237aa28c817cfb80bbe1
+executes ONLY the repeat of the same signed source. Actual native0/empty stderr,
+root0/quiesced, owned cleanup verified, selected capture untruncated. Separate
+rea-repeat-process-evidence.json preserves the full wrapper record and the same
+image-binding, process-sampling, inherited-environment and snapshot limitations.
+Source/runner/VFP/FLL hashes remain unchanged before and after this invocation.
+No earlier attempt, first result or metadata is overwritten. Both chats received
+immediate RELEASED; no native/build/VM reservation remains.
+
+The unchanged pre-capture paired auditor returns0 against both host and archived
+captures; complete audit output is byte-identical. Each actual run has5060 values,
+errors0,60 nonfinite retained-boundary values and two empty displays. Documented
+fields, BRS payloads, display bytes and ALL raw records repeat exactly; compiled
+versus EVALUATE differences0. Both raw SHA256 values are
+573771b12980ec0cafb39632a217e99c8df5533c440ffb3a61617987e4c0e8c0.
+Archive includes both raw/stdout gzip streams, paired audit/status/stderr and
+pre/post source checks, pressure/time records and separate complete REA records.
+
+Next: post-capture hypothesis testing to recover the finite frontier and decide
+whether additional timing observations are needed. Candidate recovery,
+native-only expected vectors, actual ORIGINAL and every implementation/hosted/
+review gate remain pending. No runtime change, model fit or small-divisor
+compatibility completion is claimed from repeat qualification alone.
