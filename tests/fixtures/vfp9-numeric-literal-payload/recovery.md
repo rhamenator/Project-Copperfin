@@ -3,8 +3,12 @@
 Tracking #7206, derived from admitted #5611/#6776/#7189 and the direct owner
 Numeric compatibility policy. Requirement
 `RQ-CF-PRG-NUMERIC-DECIMAL-LITERAL-PAYLOAD-001` is a **recovery gap**.
-Baseline `ef3ea326f78d640546363abe97bbe27b6208bf45`. No runtime implementation,
-accepted conversion equation, native parity or new source grammar is claimed.
+Baseline `ef3ea326f78d640546363abe97bbe27b6208bf45`. The sections below retain
+the recovery chronology. Subsequently the unchanged held-out native profile
+supports the [bounded contract](contract.md), [actual public ORIGINAL](original-verification.md)
+fails2,432 payload assertions, and [unused support](unused-support.md) passes458
+native inputs before the [single producer hookup](runtime-verification.md).
+Runtime build was resource-deferred; no SAME, native parity or new grammar claim.
 
 ## Preserved dependency and exact original
 

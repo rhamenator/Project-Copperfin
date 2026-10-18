@@ -93,14 +93,16 @@ frozen input hashes0. Manual run, NOT CTest or a new runtime build.
 After that actual failure, [unused bounded support](../tests/fixtures/vfp9-numeric-literal-payload/unused-support.md)
 and458 native direct-input checks pass GNU -O2/Werror/contract-fast and Clang
 -O3/contract-fast/ASan/UBSan/float-cast-overflow/no-recovery, compiler/run stderr0;
-unsupported shapes, length/NUL and scoped rounding controls pass. No production
-include/call yet; native/public source/header/contract unchanged. Both named
-tests have normal isolation/build/filter registration, selector3/3. Expanded
-support freeze precedes any hook; normal configured SAME/broader/hosted gates
-remain required;
-no production or parity claim. Resource-
-coordinated Wine only, no VM/heavy build; defer pending native runs during high
-I/O pressure. DQ-DV-7206-DECIMAL-PAYLOAD-RECOVERY-001 LOW delta/misuse/walkthrough/
+unsupported shapes, length/NUL and scoped rounding controls pass. Signed
+b7fb2b23f expanded support freeze precedes a single successful plain-decimal
+producer hookup; native/public/helper source/header/contract/registrations remain
+unchanged. Both named tests have normal isolation/build/filter registration,
+selector3/3. [Runtime verification checkpoint](../tests/fixtures/vfp9-numeric-literal-payload/runtime-verification.md):
+configured tooling2/2 passes; coordinated two-job GNU runtime build interrupted130
+on sustained I/O pressure, no SAME/broader runtime execution or PR yet. Partial
+build/evidence retained; fresh audit/DAW coordination required before restart.
+No VM/external-process intervention, runtime acceptance or parity claim.
+DQ-DV-7206-DECIMAL-PAYLOAD-RECOVERY-001 LOW delta/misuse/walkthrough/
 rollback in recovery note; parent hazards, #6776 modes and checked limits unchanged.
 `gap; literal conversion recovery before retained non-whole division re-entry`.
 

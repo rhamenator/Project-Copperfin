@@ -1,73 +1,74 @@
 # Agent Handoff
 
-## #7206 native recovery / actual ORIGINAL retained; unused support awaiting hookup
+## #7206 hookup staged; build gracefully resource-deferred, SAME NOT run
 
 Active WT /home/rich/.codex/worktrees/numeric-literal-payload-7206/Project-Copperfin,
 branch fix/numeric-literal-payload-7206 from origin/main
 ef3ea326f78d640546363abe97bbe27b6208bf45. Parents5611/6776/7189 OPEN/owner/
 exact agent-approved; derived7206 OPEN/owner/bug/runtime, no label change.
-No PR yet. Pushed signed/DCO f530857ff0e39dd5718012eb1f223792073a3e85
-retains actual public ORIGINAL before unused support; e2e59d020 freezes native
-contract/public regression; 4ff7d0d8b froze holdout predictions BEFORE observation.
+No PR yet. Signed/pushed sequence4ff7d0d8b pre-observation holdout freeze ->
+e2e59d020 native contract/public regression freeze ->f530857ff actual public
+ORIGINAL ->b7fb2b23f unused helper + expanded registration freeze. The checkpoint
+containing this entry stages the single producer connection, NOT a verified fix.
 
-Actual native first profile245 spellings x4 contexts x8 routes=7,840/run,
+Native first profile245 spellings/four contexts/eight routes=7,840/run;
 paired0/empty stderr/raw identical SHA589f03edf5a2d5a36c7a46bc84f6b5431c5aaa209dff6e73478eee01c1dcce94.
-Held-out213 bare spellings (198 new/15 calibration),1,704/run, paired0/empty
-stderr/raw identical SHAafc73f60f03eb9bacd182bcf4c3710945f92adc9bee664422be479477f52ace0.
-Independent source/framing/typed/BINTOC/repeat/compiler-EVAL audits0. Pre-frozen
-predictions match all1,704, no exclusions. Eight initial/108 chunk hypotheses
-rejected and retained. Separate whole/fraction binary64 Horner accumulators,
-repeated-multiply divisor, ratio then sum matches finite profile, not proprietary
-internals or universal parity. Source zeros/digits matter; no epsilon/digit cap.
+Held-out213 (198 new/15 calibration),1,704/run; paired0/empty stderr/raw identical
+SHAafc73f60f03eb9bacd182bcf4c3710945f92adc9bee664422be479477f52ace0.
+Independent source/typed/BINTOC/repeat/compiler-EVAL audits0; all1,704 pre-frozen
+predictions match. Rejected8/initial108 alternatives preserved. Separate binary64
+whole/fraction Horner + repeated divisor/ratio/sum fits finite native profile.
+Source zeros/digits significant; no epsilon/digit cap/proprietary-code inference.
 
-Native-only header1,193 rows (980+213), public test asserts ALL exact metadata
-and payload across8 contexts. Actual ORIGINAL manual GNU single-object/link
-against retained unchanged-main original libraries: compile0/test1; descriptor0,
-bits2,432, evaluation0/control0. Independent audit0 validates all actual failures.
-Not CTest or fresh runtime build. Exact toolchain/libraries/source qualification,
-logs/statuses/hashes preserved at literal fixture public-original-evidence/ and
-original-verification.md, host build/literal-payload-native/original-public/.
+Native-only1,193-row public assertions frozen. Actual manual GNU ORIGINAL against
+qualified unchanged-main nine archives: compile0/test1, descriptor0/bits2,432/
+evaluation0/control0; independent native re-audit0. Not CTest or fresh runtime
+build. See literal fixture original-verification.md/public-original-evidence/.
+Unused helper458 native inputs GNU -O2/Werror/contract-fast and Clang -O3/
+ASan/UBSan/float-cast-overflow/no-recovery compile/run0; shape/length/NUL/scoped
+rounding controls0. Expanded freeze signed b7fb2b23f BEFORE hook, receipts in
+unused-evidence/. No changes to public/helper/header/contract/registrations.
 
-UNUSED src/runtime/prg_numeric_literal_payload.h plus pure test/registrations
-currently being frozen BEFORE producer hook. GNU -O2/Werror/contract-fast and
-Clang -O3/Werror/contract-fast/ASan/UBSan/float-cast-overflow/no-recovery each
-compile/run0 on458 native unsigned inputs. Complete bounded shape validation,
-explicit binary64 volatile storage boundaries, non-nearest unspecified guard,
-caller rounding preserved. No allocation/unchecked narrowing/global parser or
-grammar change. Public source/header/native contract byte-identical to e2e59d020;
-expanded registration freeze intentionally adds pure test. No runtime acceptance.
-See fixture unused-support.md/unused-evidence/, contract.md and docs32.
+Hook: prg_engine.cpp include and successful parse_number ordinary payload from
+plain_decimal_literal_payload(literal).value_or(*parsed). Metadata/grammar/error/
+shared invariant parser/Currency/exact64 untouched. Ten unchanged frozen inputs
+hash0, public/helper/contract/registration diff empty; the full old manifest
+reports exactly TWO intended producer-file differences, not an all-input pass.
+See runtime-verification.md/runtime-deferred-evidence/, exact hook diff/source SHA.
 
-Next: sign/push unused support + expanded pre-hook freeze; connect ONLY successful
-ordinary plain-decimal parse_number payload via optional helper, preserve existing
-metadata/grammar/error handling. Obtain fresh audit/DAW runtime-build window first,
-then configured CMake SAME/broader selected tests, actual named hosted execution,
-Claude-FIRST exact-head clean review, strict green checks/resolved conversations.
-No implementation/parent closure claim before gates. Beyond256/nondefault floating
-environment/other producers/display/exact conversion remain mandatory recovery.
+Audit AND DAW cleared one nice10 GNU -O0 -g0 Ninja --parallel2 focused runtime
+build. Configure0; first invalid target-name selection1 retained before compile,
+corrected18-target build reached125/230 then resource-stopped130. Tooling CTest
+actually2/2 PASS (selector + isolation); public SAME/broader runtime NOT RUN.
+Full PSI avg10 rose0 ->16.72 ->22.72/23.64%; audit independently confirmed sustained
+pressure and asked stop. Verified owned Ninja443577/parent443576/build cwd then
+SIGINT only that Ninja. Jobs exited; partial100MiB build/literal-payload-fixed
+retained. Window RELEASED to BOTH. Latest post-stop full avg10/avg60=23.91/13.19%.
+No VM/browser/backup/upload/reboot intervention or attributed root cause.
 
-Resource coordination: audit01a0a1e1-7469-7ae3-9668-470a4e5b91b5 and
-DAW01a1050d-72c7-7213-bd2b-899e3cf342f7 cleared bounded native and single
-public ORIGINAL compile windows, both RELEASED on completion. No VM started/
-reserved. Fresh low-priority GNU -O0 -g0 Ninja --parallel2 runtime window requested
-from BOTH; wait for coordination, sample PSI before/during and defer on contention.
-Latest full PSI avg10/avg60=0.00%. Owner Chromium background-I/O report is context,
-not proof of prior timeout cause. No browser/backup/upload/reboot intervention.
-Only light source/evidence/helper checks before new runtime clearance.
+NEXT: request fresh low-contention window from BOTH audit
+01a0a1e1-7469-7ae3-9668-470a4e5b91b5 and DAW
+01a1050d-72c7-7213-bd2b-899e3cf342f7. Preserve interrupted receipts; resume SAME
+corrected18-target command in runtime-deferred-evidence/commands.txt, nice10/
+parallel2, monitor pressure. Then exact frozen public SAME + helper and prior
+Numeric/metadata/assignment/division/Currency/exact64/macro/control-flow coverage.
+Do not claim CTest/runtime success before actual execution. Only after success
+PR/Claude-FIRST exact-head clean review/actual named hosted/strict green checks/
+resolved conversations; no merge/issue closure now. Beyond256/nondefault FP/
+other producers/display/exact conversion remain mandatory native recovery.
 
 Retained non-whole division branch fix/numeric-nonwhole-division-5611 pushed
-11bd096a6232a86aee10074e8e35f7daca19cbb6, WT preserved. Do NOT rewrite/drop
-578-row header/574 exact assertions or original evidence. Its original11,040
-descriptor/2,280 bits failures included40 bare-literal failures; this upstream
-prerequisite explains bits but does not solve division metadata. AFTER literal
-integration refresh ORIGINAL, finish native fractional callback/continuation
-timing and strengthen3 former-unknown controls BEFORE next freeze; then bounded
-integration/SAME/broad/hosted/review/strict/resolved gates. Division/ListItem
-supplied-column READ uncancelled; completed7204/EPOCH/CENTURY not restarted.
+11bd096a6232a86aee10074e8e35f7daca19cbb6/WT preserved. Do NOT drop/rewrite
+578-row native header/574 exact assertions. Original11,040 descriptor/2,280 bit
+failures included40 bare-literal failures. After literal prerequisite integrates,
+refresh ORIGINAL, finish fractional native callback/continuation timing and
+strengthen3 former-unknown controls BEFORE next freeze, then bounded hook/SAME/
+broad/hosted/review gates. Division/ListItem READ uncancelled;7204/EPOCH/CENTURY
+completed, not restarted. No VM/Windows use by this chat.
 
-Canonical own handoff modification and unrelated tracked/untracked files/stashes/
-foreign WTs preserved. Canonical live channel unread0; fetch unchanged. No owner
-input blocker/automation pause. Historical entries below superseded by this state.
+Canonical own handoff/unrelated files/stashes/foreign WTs preserved; channel0,
+fetch unchanged. No owner-input blocker or automation pause. Resource deferral
+is not a request to stop the resumed implementation loop. History below superseded.
 
 ## Bounded runtime division implementation in verification (2026-10-17)
 
