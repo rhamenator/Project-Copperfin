@@ -75,7 +75,15 @@ rows ONLY when supplied actual native literal inputs; two literal controls diffe
 from independent nearest-binary64 parsing. No producer fix/tolerance inferred.
 Native-only578-row expected header (574 admitted, four retained gaps) and public
 paused-runtime regression/registrations precede production changes. ORIGINAL,
-continuation recovery, implementation/SAME and hosted integration remain pending.
+continuation recovery, implementation/SAME and hosted integration were pending
+at that pre-code checkpoint. [Actual ORIGINAL and producer diagnosis](../tests/fixtures/vfp9-numeric-division-context/nonwhole-original-verification.md):
+signed274a public freeze -> unchanged-main build0 -> CTest8, three unique executed,
+only new public test failed;11,040 descriptor/2,280 payload assertions,40 of those
+bare-literal bits, evaluation/control0. Frozen hashes0. Independent counterfactual
+classifies all payload failures from two literal inputs, but does not recover the
+native conversion algorithm. Non-whole integration explicitly deferred until a
+separate admitted literal-payload prerequisite is integrated, followed by refreshed
+ORIGINAL/timing recovery and SAME; no spelling exclusions or quotient correction.
 Existing data-corruption/runtime-crash hazards, checked bounds and #6776 modes
 remain unchanged. `gap; non-whole recovery, not compatibility completion`.
 

@@ -1,0 +1,25 @@
+{
+  "baseline": "ef3ea326f78d640546363abe97bbe27b6208bf45",
+  "checkpoint": "274a38635a463db154b4b9e0c78c502d6722c53c",
+  "descriptor": 11040,
+  "bits": 2280,
+  "literalBits": 40,
+  "evaluation": 0,
+  "controls": 0,
+  "total": 13320,
+  "literalFailures": [
+    {
+      "expression": "1.234567890123456789",
+      "actual": "3FF3C0CA428C59FB",
+      "native": "3FF3C0CA428C59FC",
+      "contexts": 20
+    },
+    {
+      "expression": "0.9999999999999999",
+      "actual": "3FEFFFFFFFFFFFFF",
+      "native": "3FF0000000000000",
+      "contexts": 20
+    }
+  ],
+  "conclusion": "Standalone literal payload failures occur without division in both modes/all settings. A literal-producer prerequisite is required; no quotient correction or universal conversion algorithm is established."
+}
