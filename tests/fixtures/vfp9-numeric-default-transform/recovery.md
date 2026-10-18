@@ -1317,6 +1317,53 @@ parent closure, owner-input blocker or automation pause. Next remains exact
 conversion/display recovery -> expectation freeze/actual ORIGINAL -> unused
 support/direct -> wiring/SAME/broader/hosted/exact-head review/merge.
 
+### ORIGINAL-only higher-count discriminator — source freeze, UNBUILT/UNRUN
+
+emit-crt-precision.cjs validates both parent native raw hashes60a1b217bbe305cc...
+and selects exactly264 ORIGINAL/ON/E17 records, checking identical index/D/bits
+against prior immutable input inventory. Emits crt-precision.prg/inventory with
+no SHIFTED route, both FIXED modes, F at D+1/+2/+3 for D0..18/counts1..21:
+1584 rows/run. Same20-field controls/independent metadata40/18/BRS/TRANSFORM/
+STR/applied settings/pre+post controls and first-error/no-footer stop. No
+expected text, decimal rounding, threshold/bias or format rule is generated.
+
+crt-probe.c now has explicit compile-time experimental CRT_FIXED_COUNT_MAX,
+static-asserted18 or21, default18 (prior experiment domain unchanged). ONLY
+new crt-precision-build.sh opts into21. Finite/positive/integral count checks,
+E15/16/17 restriction, argument/header/digest/path binding, immediate127-digit
+static-buffer copy/NULL/character/bounds/CW checks remain. No internal calls,
+global override/configuration/VM or production/model changes. Old exact sources
+and captures remain archived unchanged; do not rerun them to requalify this delta.
+
+New dedicated build/default-transform-crt-precision worker path; compiler worker
+retains guarded GNU+Clang72 direct hash/header tests each, import/compile/link
+and source/tool/SDK/CRT hashes. Capture worker records inherited/supplied native
+override, rejects inherited nonempty overrides, all source/native/binary hashes,
+fresh guard EACH invocation, actual first0 then strict --single0 BEFORE repeat,
+paired strict0. audit-crt-precision.cjs requires full1584 unique keys/exact
+counts1..21/ORIGINAL-only inputs, all prior identity/typed/raw/control predicates.
+No old reader or archive acceptance is weakened. Ordinary shell capture is NOT
+REA Evidence/verified descendant cleanup; retain earlier tool errors separately.
+
+Node syntax/emitter source+inventory regeneration/cmp/bash-n/diff-check0 under
+set-e/pipefail. These are source checks ONLY, NOT compiler or native execution.
+NEXT clean signed source -> NEW BOTH compiler-only CLEAR/all per-invocation
+full avg10 AND avg60<1%/idle-prefix gates -> actual build0/release -> separate
+NEW BOTH native-only CLEAR, same strict-first-before-repeat. Preserve every
+guard/failure/actual status/full ordinary-shell result. No attempted path reuse,
+SDK binary distribution, old completed capture replay or guess of production
+precision. Exact conversion/display recovery and entire implementation ladder
+remain pending; no owner-input blocker/pause.
+
+LOW DQ-DV001 source walkthrough: traced264*2*3 count coverage/max21/default18,
+unchanged C binding/buffer/parameter gates, new reader source/actual-env/first
+gate and separate worker paths. Source checks0 above; no independent-human,
+compiler/native or release assurance. Misuse risk is treating diagnostic counts
+as accepted VFP extra digits; mitigated by explicit no-model inventory/controls
+and required native observation. Existing HZ-data-corruption-01/HZ-runtime-crash-01/
+HZ-doc-command-01 retained. Rollback exact new source delta while preserving all
+raw receipts/provenance correction; notify owner if evidence invalidated.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only

@@ -6,6 +6,13 @@
  * No conversion hypothesis or control-word modification is implemented here.
  */
 #include "crt-binding.h"
+/* Default experiment unchanged. The separate precision discriminator opts in
+ * to counts19..21; this is NOT a VFP precision cap or production policy. */
+#ifndef CRT_FIXED_COUNT_MAX
+#define CRT_FIXED_COUNT_MAX 18
+#endif
+_Static_assert(CRT_FIXED_COUNT_MAX==18 || CRT_FIXED_COUNT_MAX==21,
+               "only the two source-frozen experimental count bounds");
 #pragma pack(push, 1)
 typedef struct {
     char type, padding;
@@ -197,7 +204,7 @@ static void convert(NumericParameters *p,int significant) {
     if((input.bytes[7]&0x7f)==0x7f && (input.bytes[6]&0xf0)==0xf0) {
         _RetChar("ERROR:NONFINITE"); return;
     }
-    if(!(count_value>=1 && count_value<=18)) { _RetChar("ERROR:COUNT"); return; }
+    if(!(count_value>=1 && count_value<=CRT_FIXED_COUNT_MAX)) { _RetChar("ERROR:COUNT"); return; }
     int count=(int)count_value;
     if((double)count!=count_value || (significant && count!=15 && count!=16 && count!=17)) {
         _RetChar("ERROR:COUNT"); return;
