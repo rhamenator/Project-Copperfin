@@ -481,6 +481,25 @@ No native invocation yet. NEW explicit BOTH-chat CLEAR and immediate BOTH
 full PSI windows<1%/idle prefix before EACH invocation. Exact conversion-rule
 recovery remains before expected regressions/actual ORIGINAL/support/wiring.
 
+Type-aware source freeze395f3829ffee866ff9e2483fc9e5e0aa6bec8392 is signed/
+DCO/pushed. NEW explicit audit/DAW CLEAR at full0.00/0.00 preceded the worker,
+but its immediate pre-FIRST snapshot was full38.92/9.91. Guard75 prevented
+BOTH native invocations. No first native status/output exists; no VFP syntax
+or type-aware setting-readback acceptance is claimed. Prefix empty1/both chats
+RELEASED; no standing reservation or owner-input blocker.
+
+rounding-decimals3-guard1/ retains the full guard receipts and REA
+ev_4f4b4529244ebb5144f453177aabe83554f38d91e7400344993cc77da33b9403:
+root75/quiesced/owned-group verified/untruncated/no sampled ownership unknowns;
+standard observation/image/environment/network limits remain. The host guard
+directory was moved, not overwritten, to
+build/default-transform-rounding-decimals3-guarded1; its archived worker must
+NOT be run. Original build/default-transform-rounding-decimals3 was recreated
+with ONLY the identical prepared worker so the unchanged signed PRG output
+path can be used in a NEW capture window without overwriting guard evidence.
+NEXT fresh explicit BOTH-chat CLEAR and immediate low-full-PSI/idle-prefix
+guards; no retry in this pressure episode. All earlier attempts stay intact.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only

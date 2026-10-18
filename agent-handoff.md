@@ -89,8 +89,19 @@ complete/paired gates. Failed first structure prevents repeat. No SET product
 change, type rule, tolerance, expected model or production changes.
 Separate build/default-transform-rounding-decimals3 contains prepared worker.
 Source regeneration/Node syntax/bash-n/applied-count regex checks pass.
-Sign/push source freeze BEFORE fresh explicit BOTH-chat CLEAR and immediate
-full PSI avg10 AND avg60<1%/idle-prefix gates at EACH native/compiler/test call.
+Source freeze395f3829ffee866ff9e2483fc9e5e0aa6bec8392 signed/DCO/pushed.
+New explicit BOTH-chat CLEAR preceded worker, but immediate full PSI38.92/9.91
+caused guard75 BEFORE FIRST native invocation: BOTH runs prevented, no native
+status/output. NOT VFP syntax/readback acceptance. Both chats RELEASED/prefix1.
+rounding-decimals3-guard1/ retains full receipts/REA
+ev_4f4b4529244ebb5144f453177aabe83554f38d91e7400344993cc77da33b9403
+root75/quiesced/owned-group verified/untruncated/standard limits. Host guard
+directory moved intact to build/default-transform-rounding-decimals3-guarded1;
+do NOT run its archived worker. Original build/default-transform-rounding-decimals3
+recreated with ONLY identical worker for a NEW unchanged-PRG capture. No old
+receipts overwritten. No standing reservation/owner-input blocker.
+NEXT fresh explicit BOTH-chat CLEAR and immediate full PSI avg10 AND avg60<1%/
+idle-prefix gates at EACH native/compiler/test call; no retry this episode.
 Exact-rule recovery -> native-only regression/actual ORIGINAL -> unused helper/
 direct GNU+Clang checks -> separate wiring/SAME/broader/actual hosted execution
 -> exact-head clean review/all strict checks/resolved conversations/normal merge.
