@@ -1364,6 +1364,59 @@ and required native observation. Existing HZ-data-corruption-01/HZ-runtime-crash
 HZ-doc-command-01 retained. Rollback exact new source delta while preserving all
 raw receipts/provenance correction; notify owner if evidence invalidated.
 
+### ORIGINAL-only precision build0 / pre-native guard75 — UNRUN
+
+At clean signed/DCO f4fdf81a9571bc86071b9e621b98029fbbf050a6, NEW BOTH
+compiler-only CLEAR and all immediate guards: GNU+Clang ASan/UBSan72 direct
+shared SHA/header checks EACH0, import/Clang32 opt-in21/link0. Compiler stderr
+empty/four installed SDK .debug$S warnings retained. Ordinary-shell worker and
+completion0, NOT REA Evidence/verified descendant cleanup. HOST-ONLY FLL SHA
+a4d38aaecf67837c06b0d640746bc44b56b126d697cd0519c1b25c1b7934b090.
+
+Released compiler window, separate NEW BOTH native-only CLEAR. First immediate
+guard failed75 at full PSI19.91/4.54 (avg10/avg60), prefix idle1, BEFORE invoking
+VFP. Plain-shell root75, no first native status/out/stderr/results/strict/repeat.
+Both windows immediately RELEASED; later prefix idle1/full PSI42.07/14.59.
+This is resource guard evidence ONLY, not native observation or accepted pair.
+No VM/global config/production change, old capture replay or same-window retry.
+
+crt-precision-guard1/ retains130 byte-compared files:129 successful-build/
+guard/OWN-source/generated-input/full-shell receipts plus build-reuse receipt.
+Manifest0 and host+archived audit-crt-precision-guard.cjs forensic reader0.
+Reader verifies actual build0/seven stages/all144 direct checks/guards and
+absence of native receipts, explicitly pairedQualified:false. Input/tool/native/
+binary hash checks0 before relocation. SDK-containing FLL/obj/libs and host
+test executables stay HOST-ONLY in intact
+build/default-transform-crt-precision-guard1; no proprietary binaries archived.
+
+Successful build is NOT repeated just to retry a pre-invocation resource gate.
+An explicit106-file allowlist (seven successful stage receipts, both direct-check
+logs/generated hash inputs, build/source/tool/hash/identity receipts, local
+compiled outputs) was byte-copied into new EMPTY build/default-transform-crt-precision.
+Source guard attempt untouched; NO native/guard attempt receipts copied.
+restored-build.json records exact source/destination/source commit/all106 sizes+
+SHA256 and purpose, byte comparison0/3,064,649bytes; input+binary manifests check0
+at restored paths. This mechanical host-only copy executes NO compiler, test or
+native program, and is not new build qualification. Restored host executables
+need not be executable: only the proven FLL is needed for next native capture.
+
+NEXT after unchanged source/hashes/clean signed state, request NEW BOTH
+native-only CLEAR and invoke crt-precision-capture.sh against the restored
+successful build. Every invocation still full avg10 AND avg60<1%/idle prefix;
+first actual0/strict0 BEFORE repeat. Preserve new guards/failures separately,
+never overwrite original guard attempt or rerun completed full4176/one-call
+captures. If source changes invalidate a build input, explicitly rebuild after
+fresh compiler clearance instead of reusing stale artifacts. No source/module
+acceptance or successful native run exists for counts19..21 yet.
+
+LOW DQ-DV001 developer walkthrough: examined all144 actual direct-test statuses,
+compiler/link logs, exact first guard before native call, host/archive forensic
+reader0/manifest/byte comparisons, preserved attempt and106 allowlisted build
+copy hashes/no-native-receipt condition. Delta reuses completed unchanged build
+only; no weakened pressure/identity/strict gates or production precision policy.
+Existing hazards/rollback retained; no independent-human/release assurance,
+owner-input blocker or pause. Full expected/ORIGINAL/implementation ladder open.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
