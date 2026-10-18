@@ -141,20 +141,25 @@ build path absent. Prior import0/compile1 attempt intact at
 crt-build-attempt1/ and build/default-transform-crt-build-attempt1.
 No failed/guarded/qualified source replay, weakened reader or accepted CRT model.
 
-NEXT OWN binding enhancement/source now prepared: crt-binding.h and guarded
-crt-binding-check.c/cjs, loaded readable/committed MEM_IMAGE PE32 headers plus
-bounded SHA256 opened via REPORTED path INSIDE32-bit process. Reader requires
-observed system32 path PLUS exact32-bit digest/size/header facts, not path-only
-allow-list. Old4176 capture remains unqualified and immutable. Direct GNU/Clang
-ASan/UBSan known-answer/Node-differential/header checks must PASS BEFORE native.
-72 guarded test invocations/compiler; no compiler/test/native run yet. Sources
-pass Node syntax/regeneration+cmp/bash-n/diff-check only. Freeze/sign/push before
-fresh explicit BOTH-chat CLEAR with BOTH full avg10/avg60<1%/idle-prefix gates
-before EACH import/compiler/link/test/native invocation. No DLL/CW changes or
-proprietary bytes export; once-per-FLL file sample, no atomic image-binding
-claim. See recovery.md for public provenance, bounds and LOW walkthrough.
-No standing reservation/owner-input blocker; no VM. Do not rerun old failed
-source/archive workers. Same264/4176 inputs/controls and first-before-repeat.
+At signed176224a01, NEW BOTH-chat clearance/full guards/idle prefix:
+GNU+Clang ASan/UBSan direct tests actually72 each0/empty stderr, known answers/
+Node+CRT digest/header bounds PASS; import/Clang32 compile0, link1 undefined
+_memcpy from own cached CrtPe struct assignment. NO FLL/native; both released.
+crt-binding-build-attempt1/ archives105 byte-compared receipts/own sources/full
+REA ev_3e83f3df48e30e8ac01d60ae3e95aa0e375f9c5281330c60f46b809534ae5863:
+root1/quiesced/owned verified BUT process limit60 => truncated:true/incomplete
+process sampling, three unrelated EACCES ownership checks left untouched.
+Archive reader/manifest0, host intact build/default-transform-crt-binding-build-attempt1,
+original build path absent; SDK-containing object/libs/host exes HOST-ONLY.
+NEXT five explicit scalar copies replace cached struct assignment only; corrected
+observer UNBUILT. Hash/header/direct source unchanged, checks above NOT proof
+of corrected link/runtime binding. Freeze/sign/push BEFORE NEW BOTH-chat CLEAR,
+full avg10 AND avg60<1%/idle-prefix before EACH compiler/import/link/test/native.
+Composite reader requires observed path PLUS exact32-bit file digest/size and
+loaded/file PE32 header facts; old4176 remains unqualified, no path-only bypass.
+Once-per-FLL file sample, no atomic binding/no DLL or CW changes/proprietary
+byte export. Same264/4176/strict first gate, no model/production change. No VM,
+standing reservation or owner-input blocker. No replay archived workers.
 Do not replay seven qualified pairs.
 expectations/actual ORIGINAL -> unused support/direct GNU+Clang -> separate
 wiring/SAME/broader/actual named hosted -> exact-head clean review/strict green/

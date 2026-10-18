@@ -87,7 +87,11 @@ static int bind_module(void *module,const char *path,unsigned length) {
     if(!valid || total!=(unsigned)size || !crt_pe(header,header_used,&file_pe) || !crt_pe_equal(&image,&file_pe)) return 0;
     crt_sha_final(&sha,bound_digest);
     for(unsigned i=0;i<=length;++i) bound_path[i]=path[i];
-    bound_pe=image;bound_size=total;bound_module=module;return 1;
+    /* Explicit scalar copies keep this freestanding wrapper free of a compiler-
+     * synthesized memcpy dependency (the first binding build retained link1). */
+    bound_pe.machine=image.machine;bound_pe.magic=image.magic;bound_pe.stamp=image.stamp;
+    bound_pe.image_size=image.image_size;bound_pe.checksum=image.checksum;
+    bound_size=total;bound_module=module;return 1;
 }
 
 static char *text(char *out,const char *in) { while(*in) *out++=*in++; return out; }

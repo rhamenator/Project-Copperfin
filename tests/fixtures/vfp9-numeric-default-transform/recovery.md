@@ -817,6 +817,44 @@ reservation or owner-input blocker. NEXT sign/push this native-only checkpoint,
 then fresh BOTH-chat clearance/direct checks/build/native FIRST gate/repeat.
 Do not resume production/expectation/ORIGINAL work before exact-rule recovery.
 
+### Binding build attempt1 — direct checks0, cross-compile0, link1; no native
+
+At signed/DCO clean176224a01 after NEW explicit BOTH-chat CLEAR, GNU/Clang
+ASan/UBSan each compiled0 and each actually executed all72 hash/header checks0/
+empty stderr. Every independent digest (including installed CRT) and known
+answer matched; PE bounds tests passed.144 individual test prefix/pressure/
+status/stdout/stderr receipts retained. Import-generation0 and32-bit Clang0/
+empty stderr; link1: undefined _memcpy referenced by bind_module's structure
+assignment. Four installed SDK .debug$S warnings remain. No FLL/build-finished/
+native invocation. All stage and individual test immediate full avg10/avg60
+guards<1%/prefix empty1. Source/tool/native hashes unchanged0; BOTH chats
+RELEASED promptly, no standing reservation.
+
+crt-binding-build-attempt1/ archives105 byte-compared generated receipts/OWN
+sources/test inputs and complete REA
+ev_3e83f3df48e30e8ac01d60ae3e95aa0e375f9c5281330c60f46b809534ae5863.
+Archive independent readback0/manifest0. The first manifest CLI call used the
+wrong working directory and returned1 (no file); corrected exact archive cwd
+returned0, no content changed. Host directory moved intact to
+build/default-transform-crt-binding-build-attempt1; original path absent.
+SDK-containing object/import libraries and host executables stay HOST-ONLY.
+
+REA root1/quiesced/owned group verified, terminal/filesystem untruncated BUT
+process sample_limit60 reached: overall truncated:true, process sampling
+INCOMPLETE. Three unrelated /proc environment ownership checks EACCES; those
+processes left untouched. Original process/image-binding/snapshot/environment/
+network limitations and unknowns retained. Do not claim full descendant
+coverage or recapture this completed failure to erase the limitation.
+
+Correct only OWN cached CrtPe assignment to five explicit unsigned scalar
+copies, removing the compiler-generated freestanding memcpy dependency without
+new imports/providers, ABI/output/reader/hash algorithm or production changes.
+This correction is UNBUILT; sign/push BEFORE NEW BOTH-chat compiler/native
+clearance/guards. The direct checks above apply to unchanged shared hash/header
+source, not proof of the corrected FLL link or runtime binding. LOW developer
+walkthrough confirms exact field coverage and preserved failed receipts; no
+formatter/native qualification, exception or independent-human acceptance.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
