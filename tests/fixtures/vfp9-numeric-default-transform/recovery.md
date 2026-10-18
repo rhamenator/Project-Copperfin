@@ -463,7 +463,7 @@ in THIS capture. Standard image-binding/sampling/snapshot/environment/network
 limitations remain. Input/runner/VFP9/FLL hash checks0, both chats RELEASED,
 prefix empty1/no resource reservation. Earlier failed/qualified receipts intact.
 
-### Type-aware setting-readback refinement — unrun
+### Type-aware setting-readback refinement — qualified
 
 emit-rounding-decimals3.cjs, rounding-decimals3.prg,
 rounding-decimals3-cases.json and audit-rounding-decimals3.cjs freeze the next
@@ -500,12 +500,77 @@ path can be used in a NEW capture window without overwriting guard evidence.
 NEXT fresh explicit BOTH-chat CLEAR and immediate low-full-PSI/idle-prefix
 guards; no retry in this pressure episode. All earlier attempts stay intact.
 
+The unchanged signed395f3829f native source subsequently ran at clean signed
+headacd08561f after NEW explicit audit/DAW CLEAR. Both actual native0/empty
+stderr/DONE4104; first structural0 BEFORE repeat, paired reader0. All4104
+records RAW-BYTE-IDENTICAL SHA256
+6972cb22232ddd776ec25491bb461b051e88c297d5e98d1bf9eea5bd519e1a3f.
+All38 signed groups reach adjacent different-ON-output payloads; every
+constructor/query path/width40/scale18/BRS/applied setting exact. Native SET
+DECIMALS returns typeN, SET FIXED typeC in every captured row. Archived
+independent reader0/host-byte-compare0; all source/runner/VFP9/FLL hash checks0.
+Full PSI0.00/0.00 immediately before EACH native run. Both chats RELEASED,
+prefix empty1/no resource reservation. Older failures and guard remain unchanged.
+
+rounding-decimals3-captures/ retains ALL host receipts and full REA
+ev_c2b005708e8f209f2bd8529cead52a6ad3c7ea5393045ad225ad038e9773b453:
+root0/quiesced/owned-group verified/untruncated/no sampled ownership unknowns
+in THIS capture; standard image-binding/sampling/snapshot/environment/network
+limits remain. No global cleanup or implementation parity claim.
+
+Observed positive local edges (negative groups have the same magnitude bits
+with opposite strings, including negative zero):
+
+| Applied D | Lower payload | Upper adjacent payload | Upper ON text |
+| --- | --- | --- | --- |
+| 0 | 3FDFF7CED9168729 | 3FDFF7CED916872A | 1 |
+| 15 | 3CC1FF130772E183 | 3CC1FF130772E184 | 0.000000000000001 |
+| 16 | 3CC203398FC21739 | 3CC203398FC2173A | 0.0000000000000010 |
+| 17 | 3CC203A3D096CFCB | 3CC203A3D096CFCC | 0.00000000000000100 |
+| 18 | 3CC203AE70AC1573 | 3CC203AE70AC1574 | 0.000000000000001000 |
+
+These D15..18 edges are DIFFERENT despite their similar padded upper values;
+the settings were not simply ignored. This is NOT a general precision cap.
+reject-preadd-hypothesis.cjs rejects a further post-hoc HOST-BINARY64 magnitude
+hypothesis: pre-add5*10^(-D-4), then scale/half-round at MIN(D,15).16 of2052
+ON observations disagree. All raw counterexamples retained; no tolerated
+mismatch, guessed epsilon or accepted formatter follows from the close fit.
+Numeric magnitude comparison is not exact sign/padding/text verification.
+
+### Native public-arithmetic discrimination — unrun
+
+emit-rounding-arithmetic.cjs, rounding-arithmetic.prg,
+rounding-arithmetic-cases.json and audit-rounding-arithmetic.cjs freeze the
+next bounded experiment. Six explicit payloads around each of44 QUALIFIED
+signed local edges (38 from this pair, six D2 edges near1.005/2.675/9.995
+from the1080 pair):264 inputs/528 observations per run, width40/scale18,
+both FIXED modes and type-aware applied-setting readback.
+
+The public-language provisional arithmetic graph records BRS payloads of
+10^(-D), its product with0.0005, ABS(input)+that product, MIN(D,15),10^q,
+shifted*10^q, that value+0.5 and INT(result), plus their VARTYPE values.
+Scalar assignments are explicitly part of this experiment. It is a
+DISCRIMINATOR for a rejected hypothesis, not an accepted formatter, cap,
+tolerance, arithmetic-order requirement or expected-string producer. Actual
+TRANSFORM/STR observations remain independent. The reader requires every
+original payload/descriptor/applied setting, all finite arithmetic bits,
+complete unique coverage and typed repeat; it does NOT synthesize or approve
+the candidate outputs. First structural gate BEFORE repeat remains mandatory.
+
+Separate build/default-transform-rounding-arithmetic has prepared worker;
+source regeneration/Node syntax/bash-n checks precede source signing. NO native
+invocation yet. Fresh full0.00/10.25 fails avg60 gate and audit reports renewed
+severe pressure/stopped probes. No reservation or owner-input blocker.
+NEXT signed freeze, NEW explicit BOTH-chat CLEAR and immediate BOTH full PSI
+windows<1%/idle prefix before EACH invocation. Exact-rule recovery still precedes
+native-only expectations/actual ORIGINAL/unused support/direct checks/wiring.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
 expectation emitter, original-fail/SAME, focused/broader/actual named hosted
 execution, exact-head review, strict checks and resolved conversations are
-pending except the five bounded native pairs qualified above. No compatibility,
+pending except the six bounded native pairs qualified above. No compatibility,
 parent, hazard or release closure.
 
 `DQ-DV-5611-NUMERIC-DEFAULT-TRANSFORM-001`, LOW procedure delta: preserve the

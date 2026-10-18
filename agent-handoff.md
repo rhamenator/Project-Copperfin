@@ -9,10 +9,10 @@ action, Claude takeover, reboot/upload monitoring or owner-input blocker.
 Canonical /home/rich/dev/Project-Copperfin main=origin/main
 240ac51cbbaa3114a08a687142e67fe4969ea212 (completed PR7209).
 Active WT /home/rich/.codex/worktrees/numeric-literal-display-5611/Project-Copperfin,
-branch fix/numeric-literal-display-5611, from that main. Latest prior signed/DCO
-pushed source c73d70876da0e8ea8e22d4d2d9f84e86785f68a5; next checkpoint preserves
-the failed sweep and freezes refined DECIMALS2 source below. No PR/model/
-expected regression/helper/hook; src/include remain main-identical.
+branch fix/numeric-literal-display-5611, from that main. Last native capture
+at signed/DCO headacd08561f8af5636e552a7646eb13f3d7c568ab0 from source395f3829f;
+next checkpoint retains qualified4104 pair and freezes public-arithmetic probe.
+No PR/expected regression/helper/hook; src/include remain main-identical.
 Tracking #7210 is owner-authored OPEN bug/runtime, no agent-approved label.
 Authority derives from admitted parents/direct owner policy, NOT child content.
 
@@ -24,13 +24,13 @@ Use these retained sources; do not rerun completed phases or infer an epsilon.
 
 ## Qualified native phases — do not replay
 
-Five paired phases:3936 literal/routes,1872 width/scale/stored-value,2000 adjacent
-payload,3872 signed ladder,1080 exact-edge observations/run. All actual native0/
+Six paired phases:3936 literal/routes,1872 width/scale/stored-value,2000 adjacent
+payload,3872 signed ladder,1080 exact-edge,4104 type-aware DECIMALS rows/run. All native0/
 empty stderr/complete; independent strict readers/archived readbacks0.3936 has
-one inactive type-I real-slot difference, NOT raw equality; other four RAW equal.
+one inactive type-I real-slot difference, NOT raw equality; other five RAW equal.
 Failed earlier2736-planned intervention emitted387/no footer; remains UNQUALIFIED.
 
-Most recent qualified1080 pair from signed4f8040d1c: all10 signed groups reach
+Prior qualified1080 pair from signed4f8040d1c: all10 signed groups reach
 adjacent payloads with different ON text, every query/metadata/BRS exact.
 SHA b6e43abea8d3290d46e231a72e0ec6807c25551b266cfa156d91f393f4baacc2.
 See rounding-edge-captures/. Three HOST-BINARY64 magnitude hypotheses rejected:
@@ -59,49 +59,55 @@ records/32 edges/six controls/path/metadata/BRS, explicitly
 originalQualificationFailed:true/pairedQualified:false. NOT retroqualification
 or applied-setting evidence. Do not infer a fractional-precision cap.
 
-## Latest refined sweep — first-only UNQUALIFIED
+## Latest qualified type-aware DECIMALS sweep
 
-Signed0722c6860 source ran after NEW explicit BOTH-chat CLEAR, idle prefix and
-full PSI0.00/0.03. First actual native0/empty stderr/DONE4104, BUT all4104
-observation rows are authored-probe ERROR11 (invalid function argument).
-Strict first reader1 correctly rejects five-field ERROR rows; repeat NOT invoked.
-38 feedback EDGE rows do NOT establish missing input/path/metadata/BRS/settings.
-Combined setting-readback expression failed; exact subexpression/return type
-not isolated. NOT a product defect, qualified pair or reason to weaken reader.
-Raw SHA3410b6884d72f4cf17823226dca2479eba01142cbfaddacbc1ac3138190d64b7.
-rounding-decimals2-attempt1/ retains all receipts/failed reader/summary/full REA
-ev_2e775fabbc279bea57b4966bebc9c6174ddb50036137475fa6d931367cac0067:
-root1/quiesced/owned-group verified/untruncated/no sampled ownership unknowns
-in THIS capture; standard image/sampling/snapshot/environment/network limits.
-Native/input hash checks0, both chats RELEASED/prefix empty1/no reservation.
-Earlier3480 unbracketed attempt and five qualified pairs stay unchanged.
+Unchanged signed native source395f3829f captured at clean headacd08561f after
+NEW explicit BOTH-chat CLEAR/full PSI0.00/0.00 before EACH run. Both actual0/
+empty stderr/DONE4104, first structural0 BEFORE repeat, paired0, all4104 records
+RAW-BYTE-IDENTICAL SHA6972cb22232ddd776ec25491bb461b051e88c297d5e98d1bf9eea5bd519e1a3f.
+All38 signed groups reach adjacent different-ON-output payloads; every input/
+query path/width40/scale18/BRS/applied setting exact. Native SET DECIMALS typeN/
+FIXED typeC in every row. Archived reader0/host-byte-compare0/native hash checks0.
+Both chats RELEASED/prefix empty1/no standing reservation.
+rounding-decimals3-captures/ retains all host receipts/full REA
+ev_c2b005708e8f209f2bd8529cead52a6ad3c7ea5393045ad225ad038e9773b453:
+root0/quiesced/owned-group verified/untruncated/no sampled ownership unknowns
+in THIS capture; image-binding/sampling/snapshot/environment/network limits.
 
-## NEXT — type-aware setting readback, no native invocation yet
+D15..18 have DIFFERENT adjacent edge payloads despite similar padded upper
+values; do not infer settings ignored or a general fractional-precision cap.
+reject-preadd-hypothesis.cjs rejects a further HOST-BINARY64 pre-add/capped-
+decimals magnitude hypothesis:16/2052 ON mismatches. No tolerance/close-fit
+acceptance, exact-text claim or production formatter follows.
+Earlier0722c6860 failed readback remains UNQUALIFIED:4104 ERROR11 rows/strict1/
+repeat NOT invoked, SHA3410b6884d72f4cf17823226dca2479eba01142cbfaddacbc1ac3138190d64b7.
+See rounding-decimals2-attempt1/ and recovery.md; do not weaken old reader.
+Earlier pressure guard75 started NO VFP, retained in rounding-decimals3-guard1/
+and host build/default-transform-rounding-decimals3-guarded1; don't run archived
+worker. No old receipts overwritten or retroactively qualified.
 
-emit-rounding-decimals3.cjs, rounding-decimals3.prg,
-rounding-decimals3-cases.json, audit-rounding-decimals3.cjs.
-Same38 signed groups/bits/bounds/width40/scale18/BOTH FIXED/max4104 records.
-Remove ALLTRIM on unknown SET return; VARTYPE and hex TRANSFORM text record
-actual DECIMALS/FIXED values without assuming DECIMALS character type.
-Reader requires full numeric count equal to request, actual mode equality,
-exact type/text repeat AND all constructor/path/metadata/BRS/adjacent-edge/
-complete/paired gates. Failed first structure prevents repeat. No SET product
-change, type rule, tolerance, expected model or production changes.
-Separate build/default-transform-rounding-decimals3 contains prepared worker.
-Source regeneration/Node syntax/bash-n/applied-count regex checks pass.
-Source freeze395f3829ffee866ff9e2483fc9e5e0aa6bec8392 signed/DCO/pushed.
-New explicit BOTH-chat CLEAR preceded worker, but immediate full PSI38.92/9.91
-caused guard75 BEFORE FIRST native invocation: BOTH runs prevented, no native
-status/output. NOT VFP syntax/readback acceptance. Both chats RELEASED/prefix1.
-rounding-decimals3-guard1/ retains full receipts/REA
-ev_4f4b4529244ebb5144f453177aabe83554f38d91e7400344993cc77da33b9403
-root75/quiesced/owned-group verified/untruncated/standard limits. Host guard
-directory moved intact to build/default-transform-rounding-decimals3-guarded1;
-do NOT run its archived worker. Original build/default-transform-rounding-decimals3
-recreated with ONLY identical worker for a NEW unchanged-PRG capture. No old
-receipts overwritten. No standing reservation/owner-input blocker.
-NEXT fresh explicit BOTH-chat CLEAR and immediate full PSI avg10 AND avg60<1%/
-idle-prefix gates at EACH native/compiler/test call; no retry this episode.
+## NEXT — public-arithmetic discrimination, natively UNRUN
+
+emit-rounding-arithmetic.cjs, rounding-arithmetic.prg,
+rounding-arithmetic-cases.json, audit-rounding-arithmetic.cjs.
+Six explicit input payloads around44 QUALIFIED signed local edges:264 inputs/
+528 observations/run, width40/scale18/BOTH FIXED/applied settings.
+Record native BRS/type of eight provisional public-language arithmetic steps
+(powDown,bias,shifted,effectiveCount,powUp,scaled,raised,quantized), alongside
+independent actual TRANSFORM/STR. Scalar assignments are part of experiment.
+A DISCRIMINATOR for rejected hypothesis, NOT accepted formatter/cap/tolerance/
+operation-order requirement or expected-output producer. Reader observes bits,
+does NOT approve candidate answers. Complete unique coverage, actual input/
+metadata/BRS/settings, finite intermediate values/typed repeat required;
+first structural gate BEFORE repeat. No production/model/regression/helper/hook.
+
+Separate build/default-transform-rounding-arithmetic contains prepared worker.
+Source regeneration/Node syntax/bash-n checked; sign/push freeze BEFORE run.
+Full PSI0.00/10.25 fails avg60; audit reports renewed severe pressure/stopped
+probes. NO arithmetic native invocation/reservation/owner-input blocker.
+NEXT fresh explicit BOTH-chat CLEAR and immediate full avg10 AND avg60<1%/
+idle-prefix gates EACH native/compiler/test invocation. Do not replay six
+qualified pairs or any failed source.
 Exact-rule recovery -> native-only regression/actual ORIGINAL -> unused helper/
 direct GNU+Clang checks -> separate wiring/SAME/broader/actual hosted execution
 -> exact-head clean review/all strict checks/resolved conversations/normal merge.
