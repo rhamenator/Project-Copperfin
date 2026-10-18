@@ -23,11 +23,21 @@ binding limits retained. Source/native/FLL/runner hashes unchanged. Both chats
 RELEASED, prefix postcheck empty. No build/Wine/native/VM reservation.
 NEXT native-only controlled width/scale interventions, cross-setting stored
 values and rounding boundaries before expected tests/actual ORIGINAL/support.
-Follow-up native source/inventory/independent reader freeze is this checkpoint:
-emit-intervention.cjs/intervention.prg/intervention-cases.json/audit-intervention.cjs,
-384 GRID +12 STORED expressions,2736 observations/run. EVALUATE-only GRID,
-compiled private-value birth assignments, no route-equivalence claim. No new
-native invocation yet; obtain fresh BOTH-chat/full PSI gates before pair.
+Follow-up source freeze f07ab8b0c9edfbfacf61d71248a3b316f519675a:384 GRID
++12 STORED/2736 expected observations. Actual attempt1 runner0/empty stderr BUT
+only387 observations/no footer; frozen independent reader1 correctly rejects.
+UNQUALIFIED, not a native-grid pass. Last emitted D0/FIXED ON GRID3 width1/
+scale0; next width1/scale1 not emitted. Cause/native crash unproven. First
+native input hashes unchanged. Repeat NOT invoked: guard75 at full19.34/4.49.
+Full REA ev_c690dbad800eaa574d67879bffb95c1bbbc95a987a9491688466ae32eae0a944
+root75/quiesced/owned group verified/untruncated plus14 sampled EACCES ownership
+unknowns retained, not global cleanup. See intervention-attempt1/ for ALL source/
+raw/failed-reader/pressure/status receipts. Both chats corrected/RELEASED.
+Narrower source/inventory/reader now240 GRID +12 STORED/1872 expected per run:
+omit width<=scale solely as probe-safety restriction, NOT production policy or
+established cause. EVALUATE-only GRID, compiled private-value birth assignments.
+No run yet. Full PSI59.23/43.38 prevents retry. NEXT fresh BOTH-chat/low-full-
+PSI gates for narrower pair before native expectations/ORIGINAL/support.
 
 ## Why division is explicitly deferred, not cancelled
 

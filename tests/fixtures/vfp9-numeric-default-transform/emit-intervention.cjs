@@ -9,7 +9,10 @@ const rows=[];
 for(const seed of seeds){
     rows.push({kind:'baseline',seed,expression:seed});
     rows.push({kind:'clone',seed,expression:`CFNCLONE(${seed})`});
-    for(const width of widths)for(const scale of scales)
+    // Do not replay synthetic descriptors with no integer/point room: the
+    // f07ab8b0c attempt ended without a footer before width1/scale1 under
+    // FIXED ON. This is a probe-safety restriction, not product policy.
+    for(const width of widths)for(const scale of scales)if(width>scale)
         rows.push({kind:'intervention',seed,width,scale,
             expression:`CFNDEC(CFNWIDTH(${seed},${width}),${scale})`});
 }
@@ -29,7 +32,7 @@ const stored=['0.5','2.50','1.00','-0.00','1E-14','-1E-18',
 const inv={requirement:'RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001',
     baseline:'240ac51cbbaa3114a08a687142e67fe4969ea212',settings,seeds,widths,scales,rows,stored,
     recordsPerRun:rows.length*settings.length*2+stored.length*settings.length*2*settings.length*2,
-    limitation:'EVALUATE-only pure controlled width/scale interventions with independent typed/BRS readback and unchanged clone controls; not a compiled-route equivalence claim. Stored private values are explicitly assigned compiled expressions once at each birth setting/FIXED state, then read under all display settings without reassignment. STR(value,40,current DECIMALS) is an observed diagnostic, not the expected TRANSFORM model. No callbacks, pictures, Currency, locale, division change, decompilation or VM.'};
+    limitation:'EVALUATE-only pure controlled width/scale interventions, restricted to width>scale for probe safety after the retained incomplete f07ab8b0c attempt; not a production validity or crash-cause claim. Independent typed/BRS readback and unchanged clone controls; not a compiled-route equivalence claim. Stored private values are explicitly assigned compiled expressions once at each birth setting/FIXED state, then read under all display settings without reassignment. STR(value,40,current DECIMALS) is an observed diagnostic, not the expected TRANSFORM model. No callbacks, pictures, Currency, locale, division change, decompilation or VM.'};
 const observation=x=>`CFNMETA(${x})+'|'+HexBytes(BINTOC(${x},'BRS'))+'|'+HexBytes(TRANSFORM(${x}))+'|'+HexBytes(STR(${x},40,decimalCount))+'|'+VARTYPE(TRANSFORM(${x}))`;
 const source=`* Copyright © 2026 Richard M. Hamilton.
 * SPDX-License-Identifier: GPL-3.0-only

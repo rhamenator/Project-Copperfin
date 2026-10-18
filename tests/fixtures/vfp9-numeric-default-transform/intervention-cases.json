@@ -57,50 +57,10 @@
     {
       "kind": "intervention",
       "seed": "0.50",
-      "width": 1,
-      "scale": 1,
-      "expression": "CFNDEC(CFNWIDTH(0.50,1),1)",
-      "index": 4
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
-      "width": 1,
-      "scale": 2,
-      "expression": "CFNDEC(CFNWIDTH(0.50,1),2)",
-      "index": 5
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
-      "width": 1,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(0.50,1),14)",
-      "index": 6
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
-      "width": 1,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(0.50,1),15)",
-      "index": 7
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
-      "width": 1,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(0.50,1),18)",
-      "index": 8
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
       "width": 2,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(0.50,2),0)",
-      "index": 9
+      "index": 4
     },
     {
       "kind": "intervention",
@@ -108,39 +68,7 @@
       "width": 2,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(0.50,2),1)",
-      "index": 10
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
-      "width": 2,
-      "scale": 2,
-      "expression": "CFNDEC(CFNWIDTH(0.50,2),2)",
-      "index": 11
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
-      "width": 2,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(0.50,2),14)",
-      "index": 12
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
-      "width": 2,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(0.50,2),15)",
-      "index": 13
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
-      "width": 2,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(0.50,2),18)",
-      "index": 14
+      "index": 5
     },
     {
       "kind": "intervention",
@@ -148,7 +76,7 @@
       "width": 3,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(0.50,3),0)",
-      "index": 15
+      "index": 6
     },
     {
       "kind": "intervention",
@@ -156,7 +84,7 @@
       "width": 3,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(0.50,3),1)",
-      "index": 16
+      "index": 7
     },
     {
       "kind": "intervention",
@@ -164,31 +92,7 @@
       "width": 3,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(0.50,3),2)",
-      "index": 17
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
-      "width": 3,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(0.50,3),14)",
-      "index": 18
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
-      "width": 3,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(0.50,3),15)",
-      "index": 19
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
-      "width": 3,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(0.50,3),18)",
-      "index": 20
+      "index": 8
     },
     {
       "kind": "intervention",
@@ -196,7 +100,7 @@
       "width": 4,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(0.50,4),0)",
-      "index": 21
+      "index": 9
     },
     {
       "kind": "intervention",
@@ -204,7 +108,7 @@
       "width": 4,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(0.50,4),1)",
-      "index": 22
+      "index": 10
     },
     {
       "kind": "intervention",
@@ -212,31 +116,7 @@
       "width": 4,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(0.50,4),2)",
-      "index": 23
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
-      "width": 4,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(0.50,4),14)",
-      "index": 24
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
-      "width": 4,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(0.50,4),15)",
-      "index": 25
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
-      "width": 4,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(0.50,4),18)",
-      "index": 26
+      "index": 11
     },
     {
       "kind": "intervention",
@@ -244,7 +124,7 @@
       "width": 12,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(0.50,12),0)",
-      "index": 27
+      "index": 12
     },
     {
       "kind": "intervention",
@@ -252,7 +132,7 @@
       "width": 12,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(0.50,12),1)",
-      "index": 28
+      "index": 13
     },
     {
       "kind": "intervention",
@@ -260,31 +140,7 @@
       "width": 12,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(0.50,12),2)",
-      "index": 29
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
-      "width": 12,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(0.50,12),14)",
-      "index": 30
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
-      "width": 12,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(0.50,12),15)",
-      "index": 31
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.50",
-      "width": 12,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(0.50,12),18)",
-      "index": 32
+      "index": 14
     },
     {
       "kind": "intervention",
@@ -292,7 +148,7 @@
       "width": 20,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(0.50,20),0)",
-      "index": 33
+      "index": 15
     },
     {
       "kind": "intervention",
@@ -300,7 +156,7 @@
       "width": 20,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(0.50,20),1)",
-      "index": 34
+      "index": 16
     },
     {
       "kind": "intervention",
@@ -308,7 +164,7 @@
       "width": 20,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(0.50,20),2)",
-      "index": 35
+      "index": 17
     },
     {
       "kind": "intervention",
@@ -316,7 +172,7 @@
       "width": 20,
       "scale": 14,
       "expression": "CFNDEC(CFNWIDTH(0.50,20),14)",
-      "index": 36
+      "index": 18
     },
     {
       "kind": "intervention",
@@ -324,7 +180,7 @@
       "width": 20,
       "scale": 15,
       "expression": "CFNDEC(CFNWIDTH(0.50,20),15)",
-      "index": 37
+      "index": 19
     },
     {
       "kind": "intervention",
@@ -332,7 +188,7 @@
       "width": 20,
       "scale": 18,
       "expression": "CFNDEC(CFNWIDTH(0.50,20),18)",
-      "index": 38
+      "index": 20
     },
     {
       "kind": "intervention",
@@ -340,7 +196,7 @@
       "width": 40,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(0.50,40),0)",
-      "index": 39
+      "index": 21
     },
     {
       "kind": "intervention",
@@ -348,7 +204,7 @@
       "width": 40,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(0.50,40),1)",
-      "index": 40
+      "index": 22
     },
     {
       "kind": "intervention",
@@ -356,7 +212,7 @@
       "width": 40,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(0.50,40),2)",
-      "index": 41
+      "index": 23
     },
     {
       "kind": "intervention",
@@ -364,7 +220,7 @@
       "width": 40,
       "scale": 14,
       "expression": "CFNDEC(CFNWIDTH(0.50,40),14)",
-      "index": 42
+      "index": 24
     },
     {
       "kind": "intervention",
@@ -372,7 +228,7 @@
       "width": 40,
       "scale": 15,
       "expression": "CFNDEC(CFNWIDTH(0.50,40),15)",
-      "index": 43
+      "index": 25
     },
     {
       "kind": "intervention",
@@ -380,19 +236,19 @@
       "width": 40,
       "scale": 18,
       "expression": "CFNDEC(CFNWIDTH(0.50,40),18)",
-      "index": 44
+      "index": 26
     },
     {
       "kind": "baseline",
       "seed": "-0.50",
       "expression": "-0.50",
-      "index": 45
+      "index": 27
     },
     {
       "kind": "clone",
       "seed": "-0.50",
       "expression": "CFNCLONE(-0.50)",
-      "index": 46
+      "index": 28
     },
     {
       "kind": "intervention",
@@ -400,47 +256,7 @@
       "width": 1,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-0.50,1),0)",
-      "index": 47
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 1,
-      "scale": 1,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,1),1)",
-      "index": 48
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 1,
-      "scale": 2,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,1),2)",
-      "index": 49
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 1,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,1),14)",
-      "index": 50
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 1,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,1),15)",
-      "index": 51
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 1,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,1),18)",
-      "index": 52
+      "index": 29
     },
     {
       "kind": "intervention",
@@ -448,7 +264,7 @@
       "width": 2,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-0.50,2),0)",
-      "index": 53
+      "index": 30
     },
     {
       "kind": "intervention",
@@ -456,39 +272,7 @@
       "width": 2,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-0.50,2),1)",
-      "index": 54
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 2,
-      "scale": 2,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,2),2)",
-      "index": 55
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 2,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,2),14)",
-      "index": 56
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 2,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,2),15)",
-      "index": 57
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 2,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,2),18)",
-      "index": 58
+      "index": 31
     },
     {
       "kind": "intervention",
@@ -496,7 +280,7 @@
       "width": 3,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-0.50,3),0)",
-      "index": 59
+      "index": 32
     },
     {
       "kind": "intervention",
@@ -504,7 +288,7 @@
       "width": 3,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-0.50,3),1)",
-      "index": 60
+      "index": 33
     },
     {
       "kind": "intervention",
@@ -512,31 +296,7 @@
       "width": 3,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(-0.50,3),2)",
-      "index": 61
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 3,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,3),14)",
-      "index": 62
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 3,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,3),15)",
-      "index": 63
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 3,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,3),18)",
-      "index": 64
+      "index": 34
     },
     {
       "kind": "intervention",
@@ -544,7 +304,7 @@
       "width": 4,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-0.50,4),0)",
-      "index": 65
+      "index": 35
     },
     {
       "kind": "intervention",
@@ -552,7 +312,7 @@
       "width": 4,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-0.50,4),1)",
-      "index": 66
+      "index": 36
     },
     {
       "kind": "intervention",
@@ -560,31 +320,7 @@
       "width": 4,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(-0.50,4),2)",
-      "index": 67
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 4,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,4),14)",
-      "index": 68
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 4,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,4),15)",
-      "index": 69
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 4,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,4),18)",
-      "index": 70
+      "index": 37
     },
     {
       "kind": "intervention",
@@ -592,7 +328,7 @@
       "width": 12,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-0.50,12),0)",
-      "index": 71
+      "index": 38
     },
     {
       "kind": "intervention",
@@ -600,7 +336,7 @@
       "width": 12,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-0.50,12),1)",
-      "index": 72
+      "index": 39
     },
     {
       "kind": "intervention",
@@ -608,31 +344,7 @@
       "width": 12,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(-0.50,12),2)",
-      "index": 73
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 12,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,12),14)",
-      "index": 74
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 12,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,12),15)",
-      "index": 75
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.50",
-      "width": 12,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(-0.50,12),18)",
-      "index": 76
+      "index": 40
     },
     {
       "kind": "intervention",
@@ -640,7 +352,7 @@
       "width": 20,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-0.50,20),0)",
-      "index": 77
+      "index": 41
     },
     {
       "kind": "intervention",
@@ -648,7 +360,7 @@
       "width": 20,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-0.50,20),1)",
-      "index": 78
+      "index": 42
     },
     {
       "kind": "intervention",
@@ -656,7 +368,7 @@
       "width": 20,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(-0.50,20),2)",
-      "index": 79
+      "index": 43
     },
     {
       "kind": "intervention",
@@ -664,7 +376,7 @@
       "width": 20,
       "scale": 14,
       "expression": "CFNDEC(CFNWIDTH(-0.50,20),14)",
-      "index": 80
+      "index": 44
     },
     {
       "kind": "intervention",
@@ -672,7 +384,7 @@
       "width": 20,
       "scale": 15,
       "expression": "CFNDEC(CFNWIDTH(-0.50,20),15)",
-      "index": 81
+      "index": 45
     },
     {
       "kind": "intervention",
@@ -680,7 +392,7 @@
       "width": 20,
       "scale": 18,
       "expression": "CFNDEC(CFNWIDTH(-0.50,20),18)",
-      "index": 82
+      "index": 46
     },
     {
       "kind": "intervention",
@@ -688,7 +400,7 @@
       "width": 40,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-0.50,40),0)",
-      "index": 83
+      "index": 47
     },
     {
       "kind": "intervention",
@@ -696,7 +408,7 @@
       "width": 40,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-0.50,40),1)",
-      "index": 84
+      "index": 48
     },
     {
       "kind": "intervention",
@@ -704,7 +416,7 @@
       "width": 40,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(-0.50,40),2)",
-      "index": 85
+      "index": 49
     },
     {
       "kind": "intervention",
@@ -712,7 +424,7 @@
       "width": 40,
       "scale": 14,
       "expression": "CFNDEC(CFNWIDTH(-0.50,40),14)",
-      "index": 86
+      "index": 50
     },
     {
       "kind": "intervention",
@@ -720,7 +432,7 @@
       "width": 40,
       "scale": 15,
       "expression": "CFNDEC(CFNWIDTH(-0.50,40),15)",
-      "index": 87
+      "index": 51
     },
     {
       "kind": "intervention",
@@ -728,19 +440,19 @@
       "width": 40,
       "scale": 18,
       "expression": "CFNDEC(CFNWIDTH(-0.50,40),18)",
-      "index": 88
+      "index": 52
     },
     {
       "kind": "baseline",
       "seed": "0.00",
       "expression": "0.00",
-      "index": 89
+      "index": 53
     },
     {
       "kind": "clone",
       "seed": "0.00",
       "expression": "CFNCLONE(0.00)",
-      "index": 90
+      "index": 54
     },
     {
       "kind": "intervention",
@@ -748,47 +460,7 @@
       "width": 1,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(0.00,1),0)",
-      "index": 91
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 1,
-      "scale": 1,
-      "expression": "CFNDEC(CFNWIDTH(0.00,1),1)",
-      "index": 92
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 1,
-      "scale": 2,
-      "expression": "CFNDEC(CFNWIDTH(0.00,1),2)",
-      "index": 93
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 1,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(0.00,1),14)",
-      "index": 94
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 1,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(0.00,1),15)",
-      "index": 95
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 1,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(0.00,1),18)",
-      "index": 96
+      "index": 55
     },
     {
       "kind": "intervention",
@@ -796,7 +468,7 @@
       "width": 2,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(0.00,2),0)",
-      "index": 97
+      "index": 56
     },
     {
       "kind": "intervention",
@@ -804,39 +476,7 @@
       "width": 2,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(0.00,2),1)",
-      "index": 98
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 2,
-      "scale": 2,
-      "expression": "CFNDEC(CFNWIDTH(0.00,2),2)",
-      "index": 99
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 2,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(0.00,2),14)",
-      "index": 100
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 2,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(0.00,2),15)",
-      "index": 101
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 2,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(0.00,2),18)",
-      "index": 102
+      "index": 57
     },
     {
       "kind": "intervention",
@@ -844,7 +484,7 @@
       "width": 3,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(0.00,3),0)",
-      "index": 103
+      "index": 58
     },
     {
       "kind": "intervention",
@@ -852,7 +492,7 @@
       "width": 3,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(0.00,3),1)",
-      "index": 104
+      "index": 59
     },
     {
       "kind": "intervention",
@@ -860,31 +500,7 @@
       "width": 3,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(0.00,3),2)",
-      "index": 105
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 3,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(0.00,3),14)",
-      "index": 106
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 3,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(0.00,3),15)",
-      "index": 107
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 3,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(0.00,3),18)",
-      "index": 108
+      "index": 60
     },
     {
       "kind": "intervention",
@@ -892,7 +508,7 @@
       "width": 4,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(0.00,4),0)",
-      "index": 109
+      "index": 61
     },
     {
       "kind": "intervention",
@@ -900,7 +516,7 @@
       "width": 4,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(0.00,4),1)",
-      "index": 110
+      "index": 62
     },
     {
       "kind": "intervention",
@@ -908,31 +524,7 @@
       "width": 4,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(0.00,4),2)",
-      "index": 111
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 4,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(0.00,4),14)",
-      "index": 112
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 4,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(0.00,4),15)",
-      "index": 113
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 4,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(0.00,4),18)",
-      "index": 114
+      "index": 63
     },
     {
       "kind": "intervention",
@@ -940,7 +532,7 @@
       "width": 12,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(0.00,12),0)",
-      "index": 115
+      "index": 64
     },
     {
       "kind": "intervention",
@@ -948,7 +540,7 @@
       "width": 12,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(0.00,12),1)",
-      "index": 116
+      "index": 65
     },
     {
       "kind": "intervention",
@@ -956,31 +548,7 @@
       "width": 12,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(0.00,12),2)",
-      "index": 117
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 12,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(0.00,12),14)",
-      "index": 118
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 12,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(0.00,12),15)",
-      "index": 119
-    },
-    {
-      "kind": "intervention",
-      "seed": "0.00",
-      "width": 12,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(0.00,12),18)",
-      "index": 120
+      "index": 66
     },
     {
       "kind": "intervention",
@@ -988,7 +556,7 @@
       "width": 20,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(0.00,20),0)",
-      "index": 121
+      "index": 67
     },
     {
       "kind": "intervention",
@@ -996,7 +564,7 @@
       "width": 20,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(0.00,20),1)",
-      "index": 122
+      "index": 68
     },
     {
       "kind": "intervention",
@@ -1004,7 +572,7 @@
       "width": 20,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(0.00,20),2)",
-      "index": 123
+      "index": 69
     },
     {
       "kind": "intervention",
@@ -1012,7 +580,7 @@
       "width": 20,
       "scale": 14,
       "expression": "CFNDEC(CFNWIDTH(0.00,20),14)",
-      "index": 124
+      "index": 70
     },
     {
       "kind": "intervention",
@@ -1020,7 +588,7 @@
       "width": 20,
       "scale": 15,
       "expression": "CFNDEC(CFNWIDTH(0.00,20),15)",
-      "index": 125
+      "index": 71
     },
     {
       "kind": "intervention",
@@ -1028,7 +596,7 @@
       "width": 20,
       "scale": 18,
       "expression": "CFNDEC(CFNWIDTH(0.00,20),18)",
-      "index": 126
+      "index": 72
     },
     {
       "kind": "intervention",
@@ -1036,7 +604,7 @@
       "width": 40,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(0.00,40),0)",
-      "index": 127
+      "index": 73
     },
     {
       "kind": "intervention",
@@ -1044,7 +612,7 @@
       "width": 40,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(0.00,40),1)",
-      "index": 128
+      "index": 74
     },
     {
       "kind": "intervention",
@@ -1052,7 +620,7 @@
       "width": 40,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(0.00,40),2)",
-      "index": 129
+      "index": 75
     },
     {
       "kind": "intervention",
@@ -1060,7 +628,7 @@
       "width": 40,
       "scale": 14,
       "expression": "CFNDEC(CFNWIDTH(0.00,40),14)",
-      "index": 130
+      "index": 76
     },
     {
       "kind": "intervention",
@@ -1068,7 +636,7 @@
       "width": 40,
       "scale": 15,
       "expression": "CFNDEC(CFNWIDTH(0.00,40),15)",
-      "index": 131
+      "index": 77
     },
     {
       "kind": "intervention",
@@ -1076,19 +644,19 @@
       "width": 40,
       "scale": 18,
       "expression": "CFNDEC(CFNWIDTH(0.00,40),18)",
-      "index": 132
+      "index": 78
     },
     {
       "kind": "baseline",
       "seed": "-0.00",
       "expression": "-0.00",
-      "index": 133
+      "index": 79
     },
     {
       "kind": "clone",
       "seed": "-0.00",
       "expression": "CFNCLONE(-0.00)",
-      "index": 134
+      "index": 80
     },
     {
       "kind": "intervention",
@@ -1096,47 +664,7 @@
       "width": 1,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-0.00,1),0)",
-      "index": 135
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 1,
-      "scale": 1,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,1),1)",
-      "index": 136
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 1,
-      "scale": 2,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,1),2)",
-      "index": 137
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 1,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,1),14)",
-      "index": 138
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 1,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,1),15)",
-      "index": 139
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 1,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,1),18)",
-      "index": 140
+      "index": 81
     },
     {
       "kind": "intervention",
@@ -1144,7 +672,7 @@
       "width": 2,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-0.00,2),0)",
-      "index": 141
+      "index": 82
     },
     {
       "kind": "intervention",
@@ -1152,39 +680,7 @@
       "width": 2,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-0.00,2),1)",
-      "index": 142
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 2,
-      "scale": 2,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,2),2)",
-      "index": 143
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 2,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,2),14)",
-      "index": 144
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 2,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,2),15)",
-      "index": 145
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 2,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,2),18)",
-      "index": 146
+      "index": 83
     },
     {
       "kind": "intervention",
@@ -1192,7 +688,7 @@
       "width": 3,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-0.00,3),0)",
-      "index": 147
+      "index": 84
     },
     {
       "kind": "intervention",
@@ -1200,7 +696,7 @@
       "width": 3,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-0.00,3),1)",
-      "index": 148
+      "index": 85
     },
     {
       "kind": "intervention",
@@ -1208,31 +704,7 @@
       "width": 3,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(-0.00,3),2)",
-      "index": 149
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 3,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,3),14)",
-      "index": 150
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 3,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,3),15)",
-      "index": 151
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 3,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,3),18)",
-      "index": 152
+      "index": 86
     },
     {
       "kind": "intervention",
@@ -1240,7 +712,7 @@
       "width": 4,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-0.00,4),0)",
-      "index": 153
+      "index": 87
     },
     {
       "kind": "intervention",
@@ -1248,7 +720,7 @@
       "width": 4,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-0.00,4),1)",
-      "index": 154
+      "index": 88
     },
     {
       "kind": "intervention",
@@ -1256,31 +728,7 @@
       "width": 4,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(-0.00,4),2)",
-      "index": 155
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 4,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,4),14)",
-      "index": 156
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 4,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,4),15)",
-      "index": 157
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 4,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,4),18)",
-      "index": 158
+      "index": 89
     },
     {
       "kind": "intervention",
@@ -1288,7 +736,7 @@
       "width": 12,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-0.00,12),0)",
-      "index": 159
+      "index": 90
     },
     {
       "kind": "intervention",
@@ -1296,7 +744,7 @@
       "width": 12,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-0.00,12),1)",
-      "index": 160
+      "index": 91
     },
     {
       "kind": "intervention",
@@ -1304,31 +752,7 @@
       "width": 12,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(-0.00,12),2)",
-      "index": 161
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 12,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,12),14)",
-      "index": 162
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 12,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,12),15)",
-      "index": 163
-    },
-    {
-      "kind": "intervention",
-      "seed": "-0.00",
-      "width": 12,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(-0.00,12),18)",
-      "index": 164
+      "index": 92
     },
     {
       "kind": "intervention",
@@ -1336,7 +760,7 @@
       "width": 20,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-0.00,20),0)",
-      "index": 165
+      "index": 93
     },
     {
       "kind": "intervention",
@@ -1344,7 +768,7 @@
       "width": 20,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-0.00,20),1)",
-      "index": 166
+      "index": 94
     },
     {
       "kind": "intervention",
@@ -1352,7 +776,7 @@
       "width": 20,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(-0.00,20),2)",
-      "index": 167
+      "index": 95
     },
     {
       "kind": "intervention",
@@ -1360,7 +784,7 @@
       "width": 20,
       "scale": 14,
       "expression": "CFNDEC(CFNWIDTH(-0.00,20),14)",
-      "index": 168
+      "index": 96
     },
     {
       "kind": "intervention",
@@ -1368,7 +792,7 @@
       "width": 20,
       "scale": 15,
       "expression": "CFNDEC(CFNWIDTH(-0.00,20),15)",
-      "index": 169
+      "index": 97
     },
     {
       "kind": "intervention",
@@ -1376,7 +800,7 @@
       "width": 20,
       "scale": 18,
       "expression": "CFNDEC(CFNWIDTH(-0.00,20),18)",
-      "index": 170
+      "index": 98
     },
     {
       "kind": "intervention",
@@ -1384,7 +808,7 @@
       "width": 40,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-0.00,40),0)",
-      "index": 171
+      "index": 99
     },
     {
       "kind": "intervention",
@@ -1392,7 +816,7 @@
       "width": 40,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-0.00,40),1)",
-      "index": 172
+      "index": 100
     },
     {
       "kind": "intervention",
@@ -1400,7 +824,7 @@
       "width": 40,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(-0.00,40),2)",
-      "index": 173
+      "index": 101
     },
     {
       "kind": "intervention",
@@ -1408,7 +832,7 @@
       "width": 40,
       "scale": 14,
       "expression": "CFNDEC(CFNWIDTH(-0.00,40),14)",
-      "index": 174
+      "index": 102
     },
     {
       "kind": "intervention",
@@ -1416,7 +840,7 @@
       "width": 40,
       "scale": 15,
       "expression": "CFNDEC(CFNWIDTH(-0.00,40),15)",
-      "index": 175
+      "index": 103
     },
     {
       "kind": "intervention",
@@ -1424,19 +848,19 @@
       "width": 40,
       "scale": 18,
       "expression": "CFNDEC(CFNWIDTH(-0.00,40),18)",
-      "index": 176
+      "index": 104
     },
     {
       "kind": "baseline",
       "seed": "1E-14",
       "expression": "1E-14",
-      "index": 177
+      "index": 105
     },
     {
       "kind": "clone",
       "seed": "1E-14",
       "expression": "CFNCLONE(1E-14)",
-      "index": 178
+      "index": 106
     },
     {
       "kind": "intervention",
@@ -1444,47 +868,7 @@
       "width": 1,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1E-14,1),0)",
-      "index": 179
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 1,
-      "scale": 1,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,1),1)",
-      "index": 180
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 1,
-      "scale": 2,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,1),2)",
-      "index": 181
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 1,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,1),14)",
-      "index": 182
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 1,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,1),15)",
-      "index": 183
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 1,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,1),18)",
-      "index": 184
+      "index": 107
     },
     {
       "kind": "intervention",
@@ -1492,7 +876,7 @@
       "width": 2,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1E-14,2),0)",
-      "index": 185
+      "index": 108
     },
     {
       "kind": "intervention",
@@ -1500,39 +884,7 @@
       "width": 2,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1E-14,2),1)",
-      "index": 186
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 2,
-      "scale": 2,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,2),2)",
-      "index": 187
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 2,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,2),14)",
-      "index": 188
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 2,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,2),15)",
-      "index": 189
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 2,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,2),18)",
-      "index": 190
+      "index": 109
     },
     {
       "kind": "intervention",
@@ -1540,7 +892,7 @@
       "width": 3,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1E-14,3),0)",
-      "index": 191
+      "index": 110
     },
     {
       "kind": "intervention",
@@ -1548,7 +900,7 @@
       "width": 3,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1E-14,3),1)",
-      "index": 192
+      "index": 111
     },
     {
       "kind": "intervention",
@@ -1556,31 +908,7 @@
       "width": 3,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(1E-14,3),2)",
-      "index": 193
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 3,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,3),14)",
-      "index": 194
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 3,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,3),15)",
-      "index": 195
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 3,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,3),18)",
-      "index": 196
+      "index": 112
     },
     {
       "kind": "intervention",
@@ -1588,7 +916,7 @@
       "width": 4,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1E-14,4),0)",
-      "index": 197
+      "index": 113
     },
     {
       "kind": "intervention",
@@ -1596,7 +924,7 @@
       "width": 4,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1E-14,4),1)",
-      "index": 198
+      "index": 114
     },
     {
       "kind": "intervention",
@@ -1604,31 +932,7 @@
       "width": 4,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(1E-14,4),2)",
-      "index": 199
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 4,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,4),14)",
-      "index": 200
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 4,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,4),15)",
-      "index": 201
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 4,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,4),18)",
-      "index": 202
+      "index": 115
     },
     {
       "kind": "intervention",
@@ -1636,7 +940,7 @@
       "width": 12,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1E-14,12),0)",
-      "index": 203
+      "index": 116
     },
     {
       "kind": "intervention",
@@ -1644,7 +948,7 @@
       "width": 12,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1E-14,12),1)",
-      "index": 204
+      "index": 117
     },
     {
       "kind": "intervention",
@@ -1652,31 +956,7 @@
       "width": 12,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(1E-14,12),2)",
-      "index": 205
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 12,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,12),14)",
-      "index": 206
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 12,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,12),15)",
-      "index": 207
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-14",
-      "width": 12,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(1E-14,12),18)",
-      "index": 208
+      "index": 118
     },
     {
       "kind": "intervention",
@@ -1684,7 +964,7 @@
       "width": 20,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1E-14,20),0)",
-      "index": 209
+      "index": 119
     },
     {
       "kind": "intervention",
@@ -1692,7 +972,7 @@
       "width": 20,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1E-14,20),1)",
-      "index": 210
+      "index": 120
     },
     {
       "kind": "intervention",
@@ -1700,7 +980,7 @@
       "width": 20,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(1E-14,20),2)",
-      "index": 211
+      "index": 121
     },
     {
       "kind": "intervention",
@@ -1708,7 +988,7 @@
       "width": 20,
       "scale": 14,
       "expression": "CFNDEC(CFNWIDTH(1E-14,20),14)",
-      "index": 212
+      "index": 122
     },
     {
       "kind": "intervention",
@@ -1716,7 +996,7 @@
       "width": 20,
       "scale": 15,
       "expression": "CFNDEC(CFNWIDTH(1E-14,20),15)",
-      "index": 213
+      "index": 123
     },
     {
       "kind": "intervention",
@@ -1724,7 +1004,7 @@
       "width": 20,
       "scale": 18,
       "expression": "CFNDEC(CFNWIDTH(1E-14,20),18)",
-      "index": 214
+      "index": 124
     },
     {
       "kind": "intervention",
@@ -1732,7 +1012,7 @@
       "width": 40,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1E-14,40),0)",
-      "index": 215
+      "index": 125
     },
     {
       "kind": "intervention",
@@ -1740,7 +1020,7 @@
       "width": 40,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1E-14,40),1)",
-      "index": 216
+      "index": 126
     },
     {
       "kind": "intervention",
@@ -1748,7 +1028,7 @@
       "width": 40,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(1E-14,40),2)",
-      "index": 217
+      "index": 127
     },
     {
       "kind": "intervention",
@@ -1756,7 +1036,7 @@
       "width": 40,
       "scale": 14,
       "expression": "CFNDEC(CFNWIDTH(1E-14,40),14)",
-      "index": 218
+      "index": 128
     },
     {
       "kind": "intervention",
@@ -1764,7 +1044,7 @@
       "width": 40,
       "scale": 15,
       "expression": "CFNDEC(CFNWIDTH(1E-14,40),15)",
-      "index": 219
+      "index": 129
     },
     {
       "kind": "intervention",
@@ -1772,19 +1052,19 @@
       "width": 40,
       "scale": 18,
       "expression": "CFNDEC(CFNWIDTH(1E-14,40),18)",
-      "index": 220
+      "index": 130
     },
     {
       "kind": "baseline",
       "seed": "1E-18",
       "expression": "1E-18",
-      "index": 221
+      "index": 131
     },
     {
       "kind": "clone",
       "seed": "1E-18",
       "expression": "CFNCLONE(1E-18)",
-      "index": 222
+      "index": 132
     },
     {
       "kind": "intervention",
@@ -1792,47 +1072,7 @@
       "width": 1,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1E-18,1),0)",
-      "index": 223
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 1,
-      "scale": 1,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,1),1)",
-      "index": 224
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 1,
-      "scale": 2,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,1),2)",
-      "index": 225
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 1,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,1),14)",
-      "index": 226
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 1,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,1),15)",
-      "index": 227
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 1,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,1),18)",
-      "index": 228
+      "index": 133
     },
     {
       "kind": "intervention",
@@ -1840,7 +1080,7 @@
       "width": 2,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1E-18,2),0)",
-      "index": 229
+      "index": 134
     },
     {
       "kind": "intervention",
@@ -1848,39 +1088,7 @@
       "width": 2,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1E-18,2),1)",
-      "index": 230
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 2,
-      "scale": 2,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,2),2)",
-      "index": 231
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 2,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,2),14)",
-      "index": 232
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 2,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,2),15)",
-      "index": 233
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 2,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,2),18)",
-      "index": 234
+      "index": 135
     },
     {
       "kind": "intervention",
@@ -1888,7 +1096,7 @@
       "width": 3,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1E-18,3),0)",
-      "index": 235
+      "index": 136
     },
     {
       "kind": "intervention",
@@ -1896,7 +1104,7 @@
       "width": 3,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1E-18,3),1)",
-      "index": 236
+      "index": 137
     },
     {
       "kind": "intervention",
@@ -1904,31 +1112,7 @@
       "width": 3,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(1E-18,3),2)",
-      "index": 237
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 3,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,3),14)",
-      "index": 238
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 3,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,3),15)",
-      "index": 239
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 3,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,3),18)",
-      "index": 240
+      "index": 138
     },
     {
       "kind": "intervention",
@@ -1936,7 +1120,7 @@
       "width": 4,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1E-18,4),0)",
-      "index": 241
+      "index": 139
     },
     {
       "kind": "intervention",
@@ -1944,7 +1128,7 @@
       "width": 4,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1E-18,4),1)",
-      "index": 242
+      "index": 140
     },
     {
       "kind": "intervention",
@@ -1952,31 +1136,7 @@
       "width": 4,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(1E-18,4),2)",
-      "index": 243
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 4,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,4),14)",
-      "index": 244
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 4,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,4),15)",
-      "index": 245
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 4,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,4),18)",
-      "index": 246
+      "index": 141
     },
     {
       "kind": "intervention",
@@ -1984,7 +1144,7 @@
       "width": 12,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1E-18,12),0)",
-      "index": 247
+      "index": 142
     },
     {
       "kind": "intervention",
@@ -1992,7 +1152,7 @@
       "width": 12,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1E-18,12),1)",
-      "index": 248
+      "index": 143
     },
     {
       "kind": "intervention",
@@ -2000,31 +1160,7 @@
       "width": 12,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(1E-18,12),2)",
-      "index": 249
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 12,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,12),14)",
-      "index": 250
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 12,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,12),15)",
-      "index": 251
-    },
-    {
-      "kind": "intervention",
-      "seed": "1E-18",
-      "width": 12,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(1E-18,12),18)",
-      "index": 252
+      "index": 144
     },
     {
       "kind": "intervention",
@@ -2032,7 +1168,7 @@
       "width": 20,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1E-18,20),0)",
-      "index": 253
+      "index": 145
     },
     {
       "kind": "intervention",
@@ -2040,7 +1176,7 @@
       "width": 20,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1E-18,20),1)",
-      "index": 254
+      "index": 146
     },
     {
       "kind": "intervention",
@@ -2048,7 +1184,7 @@
       "width": 20,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(1E-18,20),2)",
-      "index": 255
+      "index": 147
     },
     {
       "kind": "intervention",
@@ -2056,7 +1192,7 @@
       "width": 20,
       "scale": 14,
       "expression": "CFNDEC(CFNWIDTH(1E-18,20),14)",
-      "index": 256
+      "index": 148
     },
     {
       "kind": "intervention",
@@ -2064,7 +1200,7 @@
       "width": 20,
       "scale": 15,
       "expression": "CFNDEC(CFNWIDTH(1E-18,20),15)",
-      "index": 257
+      "index": 149
     },
     {
       "kind": "intervention",
@@ -2072,7 +1208,7 @@
       "width": 20,
       "scale": 18,
       "expression": "CFNDEC(CFNWIDTH(1E-18,20),18)",
-      "index": 258
+      "index": 150
     },
     {
       "kind": "intervention",
@@ -2080,7 +1216,7 @@
       "width": 40,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1E-18,40),0)",
-      "index": 259
+      "index": 151
     },
     {
       "kind": "intervention",
@@ -2088,7 +1224,7 @@
       "width": 40,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1E-18,40),1)",
-      "index": 260
+      "index": 152
     },
     {
       "kind": "intervention",
@@ -2096,7 +1232,7 @@
       "width": 40,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(1E-18,40),2)",
-      "index": 261
+      "index": 153
     },
     {
       "kind": "intervention",
@@ -2104,7 +1240,7 @@
       "width": 40,
       "scale": 14,
       "expression": "CFNDEC(CFNWIDTH(1E-18,40),14)",
-      "index": 262
+      "index": 154
     },
     {
       "kind": "intervention",
@@ -2112,7 +1248,7 @@
       "width": 40,
       "scale": 15,
       "expression": "CFNDEC(CFNWIDTH(1E-18,40),15)",
-      "index": 263
+      "index": 155
     },
     {
       "kind": "intervention",
@@ -2120,19 +1256,19 @@
       "width": 40,
       "scale": 18,
       "expression": "CFNDEC(CFNWIDTH(1E-18,40),18)",
-      "index": 264
+      "index": 156
     },
     {
       "kind": "baseline",
       "seed": "-1E-18",
       "expression": "-1E-18",
-      "index": 265
+      "index": 157
     },
     {
       "kind": "clone",
       "seed": "-1E-18",
       "expression": "CFNCLONE(-1E-18)",
-      "index": 266
+      "index": 158
     },
     {
       "kind": "intervention",
@@ -2140,47 +1276,7 @@
       "width": 1,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,1),0)",
-      "index": 267
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 1,
-      "scale": 1,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,1),1)",
-      "index": 268
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 1,
-      "scale": 2,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,1),2)",
-      "index": 269
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 1,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,1),14)",
-      "index": 270
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 1,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,1),15)",
-      "index": 271
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 1,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,1),18)",
-      "index": 272
+      "index": 159
     },
     {
       "kind": "intervention",
@@ -2188,7 +1284,7 @@
       "width": 2,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,2),0)",
-      "index": 273
+      "index": 160
     },
     {
       "kind": "intervention",
@@ -2196,39 +1292,7 @@
       "width": 2,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,2),1)",
-      "index": 274
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 2,
-      "scale": 2,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,2),2)",
-      "index": 275
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 2,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,2),14)",
-      "index": 276
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 2,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,2),15)",
-      "index": 277
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 2,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,2),18)",
-      "index": 278
+      "index": 161
     },
     {
       "kind": "intervention",
@@ -2236,7 +1300,7 @@
       "width": 3,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,3),0)",
-      "index": 279
+      "index": 162
     },
     {
       "kind": "intervention",
@@ -2244,7 +1308,7 @@
       "width": 3,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,3),1)",
-      "index": 280
+      "index": 163
     },
     {
       "kind": "intervention",
@@ -2252,31 +1316,7 @@
       "width": 3,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,3),2)",
-      "index": 281
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 3,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,3),14)",
-      "index": 282
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 3,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,3),15)",
-      "index": 283
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 3,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,3),18)",
-      "index": 284
+      "index": 164
     },
     {
       "kind": "intervention",
@@ -2284,7 +1324,7 @@
       "width": 4,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,4),0)",
-      "index": 285
+      "index": 165
     },
     {
       "kind": "intervention",
@@ -2292,7 +1332,7 @@
       "width": 4,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,4),1)",
-      "index": 286
+      "index": 166
     },
     {
       "kind": "intervention",
@@ -2300,31 +1340,7 @@
       "width": 4,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,4),2)",
-      "index": 287
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 4,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,4),14)",
-      "index": 288
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 4,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,4),15)",
-      "index": 289
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 4,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,4),18)",
-      "index": 290
+      "index": 167
     },
     {
       "kind": "intervention",
@@ -2332,7 +1348,7 @@
       "width": 12,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,12),0)",
-      "index": 291
+      "index": 168
     },
     {
       "kind": "intervention",
@@ -2340,7 +1356,7 @@
       "width": 12,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,12),1)",
-      "index": 292
+      "index": 169
     },
     {
       "kind": "intervention",
@@ -2348,31 +1364,7 @@
       "width": 12,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,12),2)",
-      "index": 293
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 12,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,12),14)",
-      "index": 294
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 12,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,12),15)",
-      "index": 295
-    },
-    {
-      "kind": "intervention",
-      "seed": "-1E-18",
-      "width": 12,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(-1E-18,12),18)",
-      "index": 296
+      "index": 170
     },
     {
       "kind": "intervention",
@@ -2380,7 +1372,7 @@
       "width": 20,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,20),0)",
-      "index": 297
+      "index": 171
     },
     {
       "kind": "intervention",
@@ -2388,7 +1380,7 @@
       "width": 20,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,20),1)",
-      "index": 298
+      "index": 172
     },
     {
       "kind": "intervention",
@@ -2396,7 +1388,7 @@
       "width": 20,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,20),2)",
-      "index": 299
+      "index": 173
     },
     {
       "kind": "intervention",
@@ -2404,7 +1396,7 @@
       "width": 20,
       "scale": 14,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,20),14)",
-      "index": 300
+      "index": 174
     },
     {
       "kind": "intervention",
@@ -2412,7 +1404,7 @@
       "width": 20,
       "scale": 15,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,20),15)",
-      "index": 301
+      "index": 175
     },
     {
       "kind": "intervention",
@@ -2420,7 +1412,7 @@
       "width": 20,
       "scale": 18,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,20),18)",
-      "index": 302
+      "index": 176
     },
     {
       "kind": "intervention",
@@ -2428,7 +1420,7 @@
       "width": 40,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,40),0)",
-      "index": 303
+      "index": 177
     },
     {
       "kind": "intervention",
@@ -2436,7 +1428,7 @@
       "width": 40,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,40),1)",
-      "index": 304
+      "index": 178
     },
     {
       "kind": "intervention",
@@ -2444,7 +1436,7 @@
       "width": 40,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,40),2)",
-      "index": 305
+      "index": 179
     },
     {
       "kind": "intervention",
@@ -2452,7 +1444,7 @@
       "width": 40,
       "scale": 14,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,40),14)",
-      "index": 306
+      "index": 180
     },
     {
       "kind": "intervention",
@@ -2460,7 +1452,7 @@
       "width": 40,
       "scale": 15,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,40),15)",
-      "index": 307
+      "index": 181
     },
     {
       "kind": "intervention",
@@ -2468,19 +1460,19 @@
       "width": 40,
       "scale": 18,
       "expression": "CFNDEC(CFNWIDTH(-1E-18,40),18)",
-      "index": 308
+      "index": 182
     },
     {
       "kind": "baseline",
       "seed": "1.234567890123456789",
       "expression": "1.234567890123456789",
-      "index": 309
+      "index": 183
     },
     {
       "kind": "clone",
       "seed": "1.234567890123456789",
       "expression": "CFNCLONE(1.234567890123456789)",
-      "index": 310
+      "index": 184
     },
     {
       "kind": "intervention",
@@ -2488,47 +1480,7 @@
       "width": 1,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,1),0)",
-      "index": 311
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 1,
-      "scale": 1,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,1),1)",
-      "index": 312
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 1,
-      "scale": 2,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,1),2)",
-      "index": 313
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 1,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,1),14)",
-      "index": 314
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 1,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,1),15)",
-      "index": 315
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 1,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,1),18)",
-      "index": 316
+      "index": 185
     },
     {
       "kind": "intervention",
@@ -2536,7 +1488,7 @@
       "width": 2,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,2),0)",
-      "index": 317
+      "index": 186
     },
     {
       "kind": "intervention",
@@ -2544,39 +1496,7 @@
       "width": 2,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,2),1)",
-      "index": 318
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 2,
-      "scale": 2,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,2),2)",
-      "index": 319
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 2,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,2),14)",
-      "index": 320
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 2,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,2),15)",
-      "index": 321
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 2,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,2),18)",
-      "index": 322
+      "index": 187
     },
     {
       "kind": "intervention",
@@ -2584,7 +1504,7 @@
       "width": 3,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,3),0)",
-      "index": 323
+      "index": 188
     },
     {
       "kind": "intervention",
@@ -2592,7 +1512,7 @@
       "width": 3,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,3),1)",
-      "index": 324
+      "index": 189
     },
     {
       "kind": "intervention",
@@ -2600,31 +1520,7 @@
       "width": 3,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,3),2)",
-      "index": 325
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 3,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,3),14)",
-      "index": 326
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 3,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,3),15)",
-      "index": 327
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 3,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,3),18)",
-      "index": 328
+      "index": 190
     },
     {
       "kind": "intervention",
@@ -2632,7 +1528,7 @@
       "width": 4,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,4),0)",
-      "index": 329
+      "index": 191
     },
     {
       "kind": "intervention",
@@ -2640,7 +1536,7 @@
       "width": 4,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,4),1)",
-      "index": 330
+      "index": 192
     },
     {
       "kind": "intervention",
@@ -2648,31 +1544,7 @@
       "width": 4,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,4),2)",
-      "index": 331
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 4,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,4),14)",
-      "index": 332
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 4,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,4),15)",
-      "index": 333
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 4,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,4),18)",
-      "index": 334
+      "index": 193
     },
     {
       "kind": "intervention",
@@ -2680,7 +1552,7 @@
       "width": 12,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,12),0)",
-      "index": 335
+      "index": 194
     },
     {
       "kind": "intervention",
@@ -2688,7 +1560,7 @@
       "width": 12,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,12),1)",
-      "index": 336
+      "index": 195
     },
     {
       "kind": "intervention",
@@ -2696,31 +1568,7 @@
       "width": 12,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,12),2)",
-      "index": 337
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 12,
-      "scale": 14,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,12),14)",
-      "index": 338
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 12,
-      "scale": 15,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,12),15)",
-      "index": 339
-    },
-    {
-      "kind": "intervention",
-      "seed": "1.234567890123456789",
-      "width": 12,
-      "scale": 18,
-      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,12),18)",
-      "index": 340
+      "index": 196
     },
     {
       "kind": "intervention",
@@ -2728,7 +1576,7 @@
       "width": 20,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,20),0)",
-      "index": 341
+      "index": 197
     },
     {
       "kind": "intervention",
@@ -2736,7 +1584,7 @@
       "width": 20,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,20),1)",
-      "index": 342
+      "index": 198
     },
     {
       "kind": "intervention",
@@ -2744,7 +1592,7 @@
       "width": 20,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,20),2)",
-      "index": 343
+      "index": 199
     },
     {
       "kind": "intervention",
@@ -2752,7 +1600,7 @@
       "width": 20,
       "scale": 14,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,20),14)",
-      "index": 344
+      "index": 200
     },
     {
       "kind": "intervention",
@@ -2760,7 +1608,7 @@
       "width": 20,
       "scale": 15,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,20),15)",
-      "index": 345
+      "index": 201
     },
     {
       "kind": "intervention",
@@ -2768,7 +1616,7 @@
       "width": 20,
       "scale": 18,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,20),18)",
-      "index": 346
+      "index": 202
     },
     {
       "kind": "intervention",
@@ -2776,7 +1624,7 @@
       "width": 40,
       "scale": 0,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,40),0)",
-      "index": 347
+      "index": 203
     },
     {
       "kind": "intervention",
@@ -2784,7 +1632,7 @@
       "width": 40,
       "scale": 1,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,40),1)",
-      "index": 348
+      "index": 204
     },
     {
       "kind": "intervention",
@@ -2792,7 +1640,7 @@
       "width": 40,
       "scale": 2,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,40),2)",
-      "index": 349
+      "index": 205
     },
     {
       "kind": "intervention",
@@ -2800,7 +1648,7 @@
       "width": 40,
       "scale": 14,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,40),14)",
-      "index": 350
+      "index": 206
     },
     {
       "kind": "intervention",
@@ -2808,7 +1656,7 @@
       "width": 40,
       "scale": 15,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,40),15)",
-      "index": 351
+      "index": 207
     },
     {
       "kind": "intervention",
@@ -2816,167 +1664,167 @@
       "width": 40,
       "scale": 18,
       "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,40),18)",
-      "index": 352
+      "index": 208
     },
     {
       "kind": "rounding",
       "expression": "0.5",
-      "index": 353
+      "index": 209
     },
     {
       "kind": "rounding",
       "expression": "-0.5",
-      "index": 354
+      "index": 210
     },
     {
       "kind": "rounding",
       "expression": "1.5",
-      "index": 355
+      "index": 211
     },
     {
       "kind": "rounding",
       "expression": "-1.5",
-      "index": 356
+      "index": 212
     },
     {
       "kind": "rounding",
       "expression": "2.5",
-      "index": 357
+      "index": 213
     },
     {
       "kind": "rounding",
       "expression": "-2.5",
-      "index": 358
+      "index": 214
     },
     {
       "kind": "rounding",
       "expression": "2.675",
-      "index": 359
+      "index": 215
     },
     {
       "kind": "rounding",
       "expression": "-2.675",
-      "index": 360
+      "index": 216
     },
     {
       "kind": "rounding",
       "expression": "1.005",
-      "index": 361
+      "index": 217
     },
     {
       "kind": "rounding",
       "expression": "-1.005",
-      "index": 362
+      "index": 218
     },
     {
       "kind": "rounding",
       "expression": "9.995",
-      "index": 363
+      "index": 219
     },
     {
       "kind": "rounding",
       "expression": "-9.995",
-      "index": 364
+      "index": 220
     },
     {
       "kind": "rounding",
       "expression": "0.499999999999999",
-      "index": 365
+      "index": 221
     },
     {
       "kind": "rounding",
       "expression": "0.500000000000001",
-      "index": 366
+      "index": 222
     },
     {
       "kind": "rounding",
       "expression": "1.2345678901234545",
-      "index": 367
+      "index": 223
     },
     {
       "kind": "rounding",
       "expression": "1.2345678901234555",
-      "index": 368
+      "index": 224
     },
     {
       "kind": "rounding",
       "expression": "1.2345678901234565",
-      "index": 369
+      "index": 225
     },
     {
       "kind": "rounding",
       "expression": "1.2345678901234575",
-      "index": 370
+      "index": 226
     },
     {
       "kind": "rounding",
       "expression": "1.2345678901234585",
-      "index": 371
+      "index": 227
     },
     {
       "kind": "rounding",
       "expression": "9.999999999999999",
-      "index": 372
+      "index": 228
     },
     {
       "kind": "rounding",
       "expression": "99.999999999999999",
-      "index": 373
+      "index": 229
     },
     {
       "kind": "rounding",
       "expression": "999999999.123456789",
-      "index": 374
+      "index": 230
     },
     {
       "kind": "rounding",
       "expression": "-999999999.123456789",
-      "index": 375
+      "index": 231
     },
     {
       "kind": "rounding",
       "expression": "12345678901234.5625",
-      "index": 376
+      "index": 232
     },
     {
       "kind": "rounding",
       "expression": "-12345678901234.5625",
-      "index": 377
+      "index": 233
     },
     {
       "kind": "rounding",
       "expression": "999999999999999.5",
-      "index": 378
+      "index": 234
     },
     {
       "kind": "rounding",
       "expression": "999999999999999.9",
-      "index": 379
+      "index": 235
     },
     {
       "kind": "rounding",
       "expression": "1000000000000000.5",
-      "index": 380
+      "index": 236
     },
     {
       "kind": "rounding",
       "expression": "0.00000000000000049",
-      "index": 381
+      "index": 237
     },
     {
       "kind": "rounding",
       "expression": "0.00000000000000050",
-      "index": 382
+      "index": 238
     },
     {
       "kind": "rounding",
       "expression": "0.00000000000000051",
-      "index": 383
+      "index": 239
     },
     {
       "kind": "rounding",
       "expression": "-0.00000000000000049",
-      "index": 384
+      "index": 240
     }
   ],
   "stored": [
@@ -3041,6 +1889,6 @@
       "name": "frozen12"
     }
   ],
-  "recordsPerRun": 2736,
-  "limitation": "EVALUATE-only pure controlled width/scale interventions with independent typed/BRS readback and unchanged clone controls; not a compiled-route equivalence claim. Stored private values are explicitly assigned compiled expressions once at each birth setting/FIXED state, then read under all display settings without reassignment. STR(value,40,current DECIMALS) is an observed diagnostic, not the expected TRANSFORM model. No callbacks, pictures, Currency, locale, division change, decompilation or VM."
+  "recordsPerRun": 1872,
+  "limitation": "EVALUATE-only pure controlled width/scale interventions, restricted to width>scale for probe safety after the retained incomplete f07ab8b0c attempt; not a production validity or crash-cause claim. Independent typed/BRS readback and unchanged clone controls; not a compiled-route equivalence claim. Stored private values are explicitly assigned compiled expressions once at each birth setting/FIXED state, then read under all display settings without reassignment. STR(value,40,current DECIMALS) is an observed diagnostic, not the expected TRANSFORM model. No callbacks, pictures, Currency, locale, division change, decompilation or VM."
 }

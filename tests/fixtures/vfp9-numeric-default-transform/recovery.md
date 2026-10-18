@@ -113,12 +113,13 @@ freeze controlled public-ABI metadata interventions plus cross-setting stored
 values and rounding controls, recover those boundaries, then native-only
 regression/actual ORIGINAL before support/wiring. No production change yet.
 
-## Follow-up intervention freeze (no observations yet)
+## Follow-up intervention attempt and narrower source freeze
 
-`emit-intervention.cjs` freezes384 GRID expressions and12 STORED expressions,
-2736 observations per run. Eight finite real seeds have baseline and bit/field-
-preserving CFNCLONE controls plus42 width/scale interventions each (widths
-1/2/3/4/12/20/40, scales0/1/2/14/15/18). CFNWIDTH/CFNDEC use the existing
+Signed/DCO source f07ab8b0c9edfbfacf61d71248a3b316f519675a froze384 GRID
+expressions and12 STORED expressions,2736 observations per run. Eight finite
+real seeds have baseline and bit/field-preserving CFNCLONE controls plus42
+width/scale interventions each (widths1/2/3/4/12/20/40,
+scales0/1/2/14/15/18). CFNWIDTH/CFNDEC use the existing
 authored public-ABI observer source in vfp9-listitem-column-numeric/cause-probe.c;
 no new FLL, arithmetic or implementation logic. Read back requested metadata,
 unchanged BRS payload and FPU word before accepting any causal observation.
@@ -134,10 +135,39 @@ captures explicit STR(value,40,current DECIMALS) as diagnostic native bytes,
 NOT as a model or requirement for TRANSFORM. Reader reports any metadata/payload
 changes without assuming they are zero. Callback timing is not in this grid.
 
-Sign/freeze source/inventory/reader BEFORE two fresh coordinated/pressure-gated
-invocations. Preserve prior source and all attempts; do not retrofit conclusions
-into the initial82-case stimulus or frozen division tests. Production, expected
-test emitter, model and helper remain absent until qualified recovery.
+Actual attempt1, after fresh BOTH-chat clearance: first runner0/empty stderr
+but ONLY387 observations/no DONE footer, so INCOMPLETE/UNQUALIFIED. Independent
+frozen reader1 rejects the missing DONE|2736 footer. Last emitted observation:
+D0/FIXED ON GRID3 CFNDEC(CFNWIDTH(0.50,1),0); next requested GRID4
+CFNDEC(CFNWIDTH(0.50,1),1) was not emitted. No proven native crash, cause or
+Copperfin defect is inferred from this abrupt ending. Initial release messages
+reported runner0, then both chats received the explicit missing-footer
+correction. No complete native-grid or test pass is claimed.
+
+Full I/O PSI0.00%/0.00% before first invocation;19.34%/4.49% before repeat.
+Pressure guard75 prevented second native invocation; no repeat status exists.
+First source/VFP9/runner/FLL hashes unchanged. Raw first SHA256
+b8b7abdaa151097a36af0559355757caca0e89db9a39843cf43513587690e0a0.
+Lossless intervention-attempt1/ retains original source/inventory/reader, all
+raw data, statuses, hash checks, guard, pressure, script and full REA record.
+REA ev_c690dbad800eaa574d67879bffb95c1bbbc95a987a9491688466ae32eae0a944:
+root75/quiesced/owned group verified/untruncated, BUT14 sampled processes have
+EACCES environ ownership unknowns. Minimal readback retains root/system process
+names/parents; it neither proves causation nor authorizes touching them. No
+global cleanup claim. Same image-binding/sampling/environment limits as above.
+Both chats RELEASED, prefix postcheck empty; no build/native/Wine/VM reserved.
+
+Narrower current stimulus deliberately omits synthetic width<=scale pairs:
+240 GRID +12 STORED expressions,1872 observations/run,24 interventions/seed.
+This is an experimental safety restriction after the incomplete attempt, NOT
+a recovered production validity rule or an explanation of the missing footer.
+The natural width=scale+1 boundary (e.g.1E-14) remains covered. Original
+f07ab8b0c source and partial capture remain immutable in Git and the archive.
+Source/inventory/reader must be signed BEFORE renewed paired execution. Current
+full PSI59.23%/43.38% disallows retry; no waiting resource window retained.
+NEXT renewed BOTH-chat clearance plus low-pressure gates for this narrower
+pair. Do not retrofit conclusions into the initial82-case stimulus or frozen
+division tests. Production, expected emitter, model and helper remain absent.
 
 ## Traceability and development-document walkthrough
 

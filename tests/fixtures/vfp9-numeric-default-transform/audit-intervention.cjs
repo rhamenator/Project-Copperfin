@@ -6,10 +6,13 @@ const fs=require('node:fs'),path=require('node:path'),zlib=require('node:zlib');
 const a=require('node:assert/strict'),crypto=require('node:crypto');
 const inv=JSON.parse(fs.readFileSync(path.join(__dirname,'intervention-cases.json')));
 const source=fs.readFileSync(path.join(__dirname,'intervention.prg'),'utf8');
-a.equal(inv.rows.length,384);a.equal(inv.stored.length,12);a.equal(inv.recordsPerRun,2736);
+a.equal(inv.rows.length,240);a.equal(inv.stored.length,12);a.equal(inv.recordsPerRun,1872);
 a.deepEqual(inv.settings,[0,2,18]);a.deepEqual(inv.widths,[1,2,3,4,12,20,40]);
 a.deepEqual(inv.scales,[0,1,2,14,15,18]);
-for(const row of inv.rows)a(source.includes(`expressions[${row.index}]='${row.expression}'`));
+for(const row of inv.rows){
+    a(source.includes(`expressions[${row.index}]='${row.expression}'`));
+    if(row.kind==='intervention')a(row.width>row.scale);
+}
 for(const row of inv.stored){a(source.includes(`  ${row.name}=${row.expression}\n`));a(source.includes(`CFNMETA(${row.name})`));}
 const bytes=name=>{const p=path.join(process.argv[2],name);return fs.existsSync(p)?fs.readFileSync(p):zlib.gunzipSync(fs.readFileSync(p+'.gz'));};
 const hex=s=>a.match(s,/^(?:[0-9A-F]{2})*$/);
