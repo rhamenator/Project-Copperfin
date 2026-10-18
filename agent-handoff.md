@@ -11,9 +11,10 @@ monitoring. No owner-input blocker or automation pause.
 Canonical main/origin/main: 4b6cc734fb1b70cf7cbcdd1f083fafa1317fa4f9 (PR7207).
 Active WT: /home/rich/.codex/worktrees/numeric-nonwhole-division-5611/Project-Copperfin
 Branch: fix/numeric-nonwhole-division-5611
-Latest evidence checkpoint: signed/DCO 811bdcb4f8cf319f48cca14877f1548a622b90fc,
-pushed, tracked clean before this brief consolidation. No open PR or runtime
-change; src/include are byte-identical to current main.
+Latest implementation/evidence checkpoint: signed/DCO6cb231cc1, qualified SAME,
+after hook146d4c6dd and support6b11b2aa7. Continuity-only commit follows;
+read the exact live branch/PR head before review. PR opening/hosted review is
+next, not new scope. Runtime delta is bounded eligibility plus its constant caller.
 
 ## Exact state and evidence
 
@@ -67,14 +68,22 @@ and build/nonwhole-original remain needed for the unfinished slice.
 
 ## Next bounded action
 
-Add UNUSED bounded non-whole intrinsic support and independent direct native
-verification before changing the caller. Preserve the existing whole helper's
-640-row behavior, strict integral Integer eligibility and proven constant-literal
-provenance; never infer origin/type from equal bits. Keep finite/width/scale/
-divisor bounds, checked conversions/allocation limits and #6776 per-area policy.
-Then bounded hook -> SAME unchanged expanded tests -> broader/actual hosted
-named execution -> clean exact-head Claude/Codex review -> strict green required
-checks/all conversations resolved -> normal merge and safe completed cleanup.
+Native-only direct freeze2165024f7 precedes unused supportdda3f633c. GNU15
+Werror/Clang21 ASan/UBSan/float-cast-overflow/no-recovery compile0/run0 each,
+empty stderr:68 native roots/314 syntax nodes,640 older native rows and boundary/
+provenance controls pass. Support signed6b11b2aa7; sole constant caller hook
+146d4c6dd preserves prepared timing/continuation, integral Integer, checked bounds.
+Actual normal GNU O0/g0 single-job build0; unchanged SAME CTest0/six executions
+6.55s/no failure/error/skip. Former constant60/nonwhole12,480 metadata failures
+now0; all bits/literal/evaluation/callback/setting/controls0. Old/new helpers,
+isolation631 and exact sanitizer selector pass. Seven frozen hashes unchanged;
+independent host+archived audit0. nonwhole-support-evidence/ and nonwhole-same-
+evidence/ retain full receipts; host builds remain needed.
+
+Open PR against main; request Claude FIRST for exact final head, documented
+Codex fallback only on explicit unavailability/quota. Then actual broad/selected
+hosted execution -> clean exact-head review -> strict green required checks/all
+conversations resolved -> normal merge and safe completed cleanup.
 No tolerance, quotient correction, spelling exclusions, callback replay or
 metadata-only parity claim. Small divisors, wider producers/operators, propagation,
 display/exact conversion and pending ListItem supplied-column READ remain
@@ -83,6 +92,9 @@ mandatory. #7206/parents remain OPEN.
 ## Coordination and preservation
 
 All build/native windows are RELEASED; no active build/test/Wine/VM reservation.
+Both chats cleared narrow helper and separate runtime windows. Initial full IO
+65.53%/50.52% deferred launch; actual helper pre/post and runtime prelaunch
+avg10=0. Runtime post-window4.69%/1.90%; no more heavy local work planned now.
 Fresh audit AND DAW clearance plus pressure sampling precede further heavy work:
 audit 01a0a1e1-7469-7ae3-9668-470a4e5b91b5;
 DAW 01a1050d-72c7-7213-bd2b-899e3cf342f7.
