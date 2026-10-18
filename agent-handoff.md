@@ -9,12 +9,13 @@ action, Claude takeover, reboot/upload monitoring or owner-input blocker.
 Canonical /home/rich/dev/Project-Copperfin main=origin/main
 240ac51cbbaa3114a08a687142e67fe4969ea212 (completed PR7209).
 Active WT /home/rich/.codex/worktrees/numeric-literal-display-5611/Project-Copperfin,
-branch fix/numeric-literal-display-5611, from that main. Last native capture
+branch fix/numeric-literal-display-5611, from that main. Last QUALIFIED native capture
 at signed/DCO clean head962594cf0297b91ef3121d1ba42c55517fc17008 from unchanged
 arithmetic source1cf23445495e375e1e124c47ca7a436e2b48b985;
 Qualified528 pair/native graph rejection retained at signed/pushed61438bd5a;
-Sourceaccdbe40f attempted: import0/compile1, no linker/native/FLL.
-Next signed checkpoint retains failed build and actual fastcall dispatch-pointer correction, UNBUILT.
+Sourceaccdbe40f import0/compile1 retained; corrected signed7d706418f builds0,
+first native0/DONE4176 but strict1 on runtime module path; repeat prevented.
+Next signed checkpoint retains UNQUALIFIED4176 and read-only binding plan.
 No PR/expected regression/helper/hook; src/include remain main-identical.
 Tracking #7210 is owner-authored OPEN bug/runtime, no agent-approved label.
 Authority derives from admitted parents/direct owner policy, NOT child content.
@@ -113,38 +114,46 @@ inputs; power differences ALONE do not explain the display discrepancy.
 All counterexamples retained; NO tolerance/cap/operation-order/internal
 precision/call-attribution/exact sign-padding-text or formatter parity claim.
 
-NEXT source freeze now prepared:
-crt-probe.c/crt-kernel32.def, emit-crt.cjs/crt.prg/crt-cases.json,
-audit-crt.cjs, crt-build.sh/crt-capture.sh, all under the display fixture.
-OWN documented-ABI32-bit FLL; already-loaded MSVCR71 lookup only (no DLL load/
-replacement/CW modification). Bounded finite/count handling and immediate
-bounded static-buffer copy; NULL/error/truncation are qualification failures.
-264 qualified original/shifted inputs (NOT recomputed model), BOTH FIXED,
-_fcvt applied D1..18 only, _ecvt15/16/17:4176 rows/run. Independent strings/
-metadata/BRS/settings and post-call controls accompany each observation.
-Strict module path C:\\windows\\syswow64\\msvcr71.dll, native count/bits/CW/
-controls and unique coverage; first strict --single BEFORE repeat. No digit
-model/expected output or formatter call attribution.
-Node syntax/regeneration+cmp/bash-n/diff checks0. First build at signedaccdbe40f:
-NEW BOTH-chat CLEAR/full0.00/0.01 before each import/compile; import0/Clang1
-on two generic-function-pointer casts with -Werror. NO linker/native/FLL.
-All plain receipts/source/full REA ev_f58bc2e20aabe068adc2b9de0ddc073cd5475234a6427fac253d6714c5d6c5cc
-archived/byte-verified in crt-build-attempt1/, owned/quiesced/untruncated.
-Both chats RELEASED/prefix idle1. Host directory moved intact to
-build/default-transform-crt-build-attempt1; original build path absent.
-Corrected OWN dispatch pointer to actual void fastcall handler, no casts,
-packed table size14/address offset4 assertions; -Wall/-Wextra/-Werror unchanged.
-Corrected source UNBUILT; no binary, no native capture. Sign/push source freeze
-BEFORE invoking tracked build/capture scripts. Every new compiler/native
-window requires fresh explicit BOTH-chat CLEAR and immediate full avg10 AND
-avg60<1%/idle-prefix guards per stage. Latest full0.64/21.27 fails; NO window
-requested/reservation/owner-input blocker. NO VM.
-Preserve all attempted directories and failures; do not rerun/overwrite an
-attempt. Future SDK-containing FLL/object/libraries stay HOST-ONLY; archive
-plain receipts/first-party sources/own FXP only. Read recovery.md for the API
-sources, ABI/buffer/count boundaries, source-only walkthrough and module
-identity limitations. Runtime path mismatch must be investigated, never
-silently accepted as64-bit Wine's different DLL.
+## Latest CRT attempt — UNQUALIFIED; NEXT strengthen module binding
+
+Unchanged signed7d706418f after NEW explicit BOTH-chat CLEAR:
+import/Clang/link all0, -Wall/-Wextra/-Werror retained; four SDK debug-section
+linker warnings retained. HOST-ONLY32-bit FLL SHA
+318adabbf8f235d2596ae28c6ddcc5c8eb44198c5d7ec2871b2264a0e0d92af6.
+Immediate full0.00/0.00/idle prefix before all3 stages and first native run.
+Build REA ev_c41f80a8d204ee0da213e47d487ce9012cf09f920891e0bada52faa070b7ba73.
+
+First VFP actual0/empty stderr/DONE4176, BUT strict --single1 because observed
+GetModuleFileName path C:\\windows\\system32\\MSVCR71.dll != frozen syswow64.
+Repeat correctly NOT invoked. Raw SHA
+98cf75e53306f441f2359b63fb84e19134c8aee8fe97889794b851d395134c96.
+Framing/module diagnostic only confirms4176 non-error20-field rows/one path,
+explicit qualified:false; NOT semantic or loaded-image/backing-file identity.
+All original input/source/binary hashes checked0. Both chats RELEASED/prefix
+idle1/no standing reservation. Native REA
+ev_619d964368741cc71b9868ea74871296d035a6a3a3bb54340be07c2fdbaa07cb;
+both roots quiesced/owned verified/untruncated, all limitations/unknowns retained.
+
+crt-native-attempt1/ archives ALL plain receipts/first-party wrapper/caller/
+FXP/reader/inventory, byte readback/manifest0; SDK-containing binary/object/libs
+HOST-ONLY in intact build/default-transform-crt-native-attempt1. Original
+build path absent. Prior import0/compile1 attempt intact at
+crt-build-attempt1/ and build/default-transform-crt-build-attempt1.
+No failed/guarded/qualified source replay, weakened reader or accepted CRT model.
+
+NEXT prepare OWN observer enhancement: read-only loaded-image PE32 header facts
+plus bounded SHA256 of file opened through REPORTED path INSIDE32-bit process.
+First consult authoritative Win32 file/module/SHA256 docs; verify own digest
+with standard known-answer/direct host checks before trusting it. Bind digest/
+image header to frozen32-bit artifact; preserve atomic image-binding limits.
+Do NOT just accept alternate path/rewrite it to syswow64 or substitute host
+system32's separately inventoried64-bit Wine DLL. No DLL/CW changes or
+proprietary file export. Binding enhancement/caller/reader protocol NOT yet
+implemented/frozen. Sign sources BEFORE NEW BOTH-chat compiler/native clearance
+and immediate BOTH full PSI<1%/idle-prefix guards per invocation. NO VM.
+Latest full50.06/31.19 fails; no further job/window request/owner-input blocker.
+Existing crt-build.sh/crt-capture.sh and4176 probe remain unchanged; don't rerun
+the now-failed identity probe or archived workers.
 Do not replay seven qualified pairs. Exact-rule recovery -> native-only
 expectations/actual ORIGINAL -> unused support/direct GNU+Clang -> separate
 wiring/SAME/broader/actual named hosted -> exact-head clean review/strict green/

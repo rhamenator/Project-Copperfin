@@ -701,6 +701,57 @@ overwrite its receipts. LOW developer walkthrough confirms the correction
 keeps the packed code-address layout and strengthens rather than skips compile
 validation; execution remains pending, not a verified ABI or parity claim.
 
+### Corrected CRT build0; first native4176 UNQUALIFIED on module identity
+
+NEW explicit audit/DAW CLEAR at unchanged signed/DCO clean7d706418f.
+Import/Clang/link all actually0; -Wall/-Wextra/-Werror retained, compile stderr
+empty. Four installed SDK .debug$S linker warnings remain recorded; not a
+warning-free build. Result HOST-ONLY32-bit FLL SHA
+318adabbf8f235d2596ae28c6ddcc5c8eb44198c5d7ec2871b2264a0e0d92af6.
+Build input hash-check0. Full PSI0.00/0.00 and idle prefix before all three
+stages. Full REA build record
+ev_c41f80a8d204ee0da213e47d487ce9012cf09f920891e0bada52faa070b7ba73.
+
+First native actual0/empty stderr/full DONE4176, likewise immediate full
+PSI0.00/0.00 and idle prefix. BUT strict --single returned1: runtime
+GetModuleFileNameA reports C:\windows\system32\MSVCR71.dll, not frozen
+syswow64 path. Repeat correctly NOT invoked. No pair/ABI/formatter/conversion
+qualification; do NOT simply admit the different path. Host system32 contains
+the separately inventoried64-bit Wine DLL while syswow64 is the32-bit file;
+the actual runtime loaded image/backing-file mapping still needs direct
+read-only evidence rather than inference from the path string.
+Raw SHA98cf75e53306f441f2359b63fb84e19134c8aee8fe97889794b851d395134c96.
+Separate framing/module diagnostic verifies4176 non-error20-field rows and
+that one observed module path, explicitly qualified:false; it does NOT replace
+the failed original reader or qualify metadata/controls/conversion semantics.
+First native source/binary/hash checks0. Both chats RELEASED/prefix idle1.
+
+crt-native-attempt1/ retains ALL plain receipts, first-party caller/FXP/
+wrapper/reader/inventory and complete native REA
+ev_619d964368741cc71b9868ea74871296d035a6a3a3bb54340be07c2fdbaa07cb.
+Both REA roots report owned-group verified/quiesced/untruncated; all original
+sampling/image-binding/filesystem-snapshot/environment/network limitations
+and residual unknowns retained. Archive bytes compared against host0/manifest0.
+SDK-containing FLL/object/import libraries remain HOST-ONLY in intact
+build/default-transform-crt-native-attempt1; original build path absent.
+Earlier compile1 attempt remains untouched. No replay of qualified/failed
+probes, no weakened reader, no tolerance or internal VFP call attribution.
+
+NEXT bounded recovery: strengthen the OWN observer with read-only loaded-image
+PE32 header identity plus a bounded SHA256 of the file opened through the
+reported path INSIDE the32-bit process. Cross-check the hash implementation
+with standard known-answer/direct host checks before trusting it; bind the
+digest and loaded PE header facts against the frozen32-bit artifact, retaining
+atomic image-binding limitations. Consult authoritative Win32 file/module
+and SHA256 documentation while preparing this change. No guessed path rewrite,
+silent module allow-list expansion, proprietary file export or DLL/CW changes.
+This binding enhancement/caller/reader protocol is NOT implemented/frozen yet;
+sign before NEW BOTH-chat-cleared compilation/native capture. No owner input
+blocker. Exact-rule/expectation/ORIGINAL/support/wiring gates remain unchanged.
+LOW developer walkthrough verified strict module failure prevents repeat and
+receipts remain unqualified; next binding requires its own direct checks,
+not retroactive acceptance of this capture.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
