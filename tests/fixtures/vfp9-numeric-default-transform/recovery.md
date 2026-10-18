@@ -1005,6 +1005,90 @@ relaxation. NEXT same frozen source only after NEW BOTH-chat compiler-only
 CLEAR/immediate guards at a fresh root; build0/release precedes a separate new
 native-only window. No VM or owner-input blocker; recurring work stays active.
 
+### ONE-CALL build0/diagnosis0; HEADER_EQUAL binding2 — provenance gap exposed
+
+Unchanged signed/DCO clean27a1c66e9 (observer sourcebe3ebe969), NEW BOTH-chat
+compiler-only CLEAR/full guards/idle prefix: import/Clang32/link all0, compile
+stderr empty, four installed SDK .debug$S warnings retained. HOST-ONLY FLL SHA
+789ab0c0860692fe87e3087a31cbc3a10b700d0ce500a10f895cb9444c68766c.
+Compiler window RELEASED; separate NEW BOTH-chat native-only CLEAR/guard then
+ONE CFNBIND call: actual VFP0/empty stderr/DONE1, structural/control reader0,
+but exact --require-bound2 at HEADER_EQUAL, error0/bound0. No CRT conversion,
+full4176 caller or repeat. Raw SHA
+26d2694c98da1a87bd787d1ff3ae59841d11f6beab046206dbdd847753c8b214.
+
+Observed loaded PE32 machine014C/magic010B/header timestamp69C2DC77,
+SizeOfImage00273000/checksum002B0A4C; committed/readable/unguarded MEM_IMAGE
+region4096 at matching base/allocation, query28 bytes. In-process opening of
+reported C:\windows\system32\MSVCR71.dll read348160 bytes in85 reads/EOF/close0
+and self-tests passed; file SHA8094af5e... is the frozen Microsoft32 artifact,
+but its timestamp3E561EAC/imageSize00056000/checksum0005F1E9 differ. CW027F and
+Numeric control metadata/BRS/display unchanged. Gate failure is NOT waived.
+
+Read-only crt-provenance.cjs compares these public facts with installed files:
+/usr/lib/x86_64-linux-gnu/wine/i386-windows/msvcr71.dll SHA
+ba16ba7ccf14544b6cbce9f143153c81f00c4ed92802bd761c2463ffc4880b28,
+size2780966, matches ALL loaded header facts. Wine64 artifact remains distinct
+SHA271f2b72.../machine8664/magic020B. Installed libwine:amd64
+10.0~repack-12ubuntu1 supplies both architectures (libwine:i386 is not installed).
+This is a Wine-builtin provenance candidate supported by exact header match,
+NOT atomic mapped instruction/file identity. No proprietary bytes/disassembly
+copied. Local DLL override environment was unset and selected registry override
+section empty; do not claim complete historical environment reconstruction.
+
+PROVENANCE CORRECTION: seven prior paired phases retain their raw/repeat/typed/
+control observations and failed hypotheses IN THEIR CAPTURED ENVIRONMENT.
+They did not record loaded Microsoft-CRT identity; it cannot be assumed or
+retroactively established from backing-file hashes. They are NOT by themselves
+proof of Microsoft-CRT/Windows formatter parity. Do not turn their thresholds/
+rejected arithmetic fits into production expectations until an explicitly
+native-bound discriminator recovers the relevant boundary. This does not prove
+a shipped regression or authorize unrelated product changes/replaying every
+completed slice; select a bounded decisive comparison after identity proof.
+
+crt-binding-diagnostic-attempt1/ retains78 byte-compared generated receipts/
+OWN source/caller/FXP/full build+native REA and offline provenance.json.
+Host+archived diagnostic/provenance readers0/manifest0; exact binding remains2.
+All source/tool/native/binary hashes checked0. SDK-containing FLL/object/
+import/export libs stay HOST-ONLY in intact
+build/default-transform-crt-binding-diagnostic-attempt1; original path absent.
+Both chats RELEASED promptly/prefix idle1, no reservation/VM/owner blocker.
+Build REA ev_f791b2be140ca80a1d1cc1e84350ebe983973a66b74b26dafe86954b3d1b1b30
+root0; native REA ev_8969fe0cd5a361e1245602b4e82a816bb63b97ccac5441edc7e1bb6155342b17
+root2. BOTH quiesced/owned verified/untruncated/no sampled ownership unknowns;
+all original process-sampling/atomic-binding/snapshot/environment/network limits
+remain. No old failed capture is retroqualified.
+
+### Native-only load-order discriminator — source freeze, NOT run
+
+The installed wine-stable.1 manpage and
+[Wine10 primary manpage](https://github.com/wine-mirror/wine/blob/wine-10.0/loader/wine.man.in)
+document WINEDLLOVERRIDES and native-only n (no builtin fallback). The runner
+source copies its inherited environment, then sets WINEPREFIX/WINEDEBUG, so
+the selected override reaches Wine. No global helper edit is needed.
+
+Change ONLY the diagnostic worker's native invocation to process-local
+env WINEDLLOVERRIDES=msvcr71=n; record the supplied value and inherited override,
+fail if a nonempty override already exists rather than silently replacing it.
+No registry/installed DLL/loader/search-path/system/VM maintenance, DLL copying,
+global configuration or load from inside the observer. This is a declared
+test-input change, not accepting a Wine module as Microsoft. Same ONE CFNBIND
+caller/control/observer/strict digest+header+path predicates, unchanged C/hash/
+reader and no full4176/repeat. Native-only loading may fail; preserve actual
+failure. Even BOUND success covers one sampled module diagnostic under Wine,
+not internal VFP conversion attribution, formatter parity or Windows validation.
+
+Build/capture requires clean signed NEW source at a fresh root after prior
+attempt preservation. Fresh separate BOTH-chat compiler/native CLEAR and all
+immediate guards unchanged. Bash-n/Node syntax/diff-check0. Override not run,
+new worker unbuilt; old FLL is evidence only, not a bypass of source manifests.
+Current full45.86/44.60 fails; no further window requested/reservation.
+LOW DQ-DV001 developer walkthrough checked first failure/close/digest fields,
+offline header equality, preserved exact failed gate, uncertainty correction,
+process-only env scope/unset guard/recorded override/no fallback, and rollback
+by exact worker revert while retaining receipts. Readers/readbacks above
+actually0; no independent-human/system/release acceptance or hazard closure.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only

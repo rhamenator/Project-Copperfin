@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 # Each mode requires its OWN fresh explicit audit+DAW CLEAR. No full4176/repeat.
+# Native-only load-order DISCRIMINATOR, process-local; no registry/host changes.
 set -eu
 cd /home/rich/.codex/worktrees/numeric-literal-display-5611/Project-Copperfin
 fixture=tests/fixtures/vfp9-numeric-default-transform
@@ -68,11 +69,14 @@ else
  git rev-parse HEAD > "$capture_root/native-source-commit.txt"
  sha256sum -c "$capture_root/build-inputs.sha256" > "$capture_root/pre-native-build-check.txt"
  sha256sum -c "$capture_root/built.sha256" > "$capture_root/pre-native-binary-check.txt"
+ printf '%s\n' "${WINEDLLOVERRIDES-UNSET}" > "$capture_root/inherited-dll-overrides.txt"
+ test -z "${WINEDLLOVERRIDES-}" || exit 94
+ printf 'WINEDLLOVERRIDES=msvcr71=n\n' > "$capture_root/supplied-runtime-env.txt"
  sha256sum /home/rich/bin/vfp9-probe /home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe /home/rich/copperfin-wine-vfp9/drive_c/windows/syswow64/msvcr71.dll /home/rich/dev/Project-Copperfin/build/pr7203-completed/native-evidence/diagnostic/cause-probe.fll > "$capture_root/native-inputs.sha256"
  cp "$fixture/crt-binding-diagnostic.prg" "$capture_root/probe.prg"
  cmp "$fixture/crt-binding-diagnostic.prg" "$capture_root/probe.prg"
  native_status=0
- stage first /home/rich/bin/vfp9-probe "$capture_root/probe.prg" --result "$capture_root/results.txt" || native_status=$?
+ stage first /usr/bin/env WINEDLLOVERRIDES=msvcr71=n /home/rich/bin/vfp9-probe "$capture_root/probe.prg" --result "$capture_root/results.txt" || native_status=$?
  cp "$capture_root/first.stdout" "$capture_root/first.out"
  if [ -f "$capture_root/results.txt" ]; then cp "$capture_root/results.txt" "$capture_root/first-results.txt"; fi
  sha256sum -c "$capture_root/native-inputs.sha256" > "$capture_root/native-inputs-check.txt"
