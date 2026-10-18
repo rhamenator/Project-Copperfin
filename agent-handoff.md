@@ -56,7 +56,16 @@ emit-rounding-boundary.cjs/rounding.prg/rounding-cases.json/audit-rounding-bound
 1000 exact inputs around eight QUALIFIED native centers,2000 observations/run,
 width40/scale18 readback+CTOBIN BRS identity mandatory. First --single before
 repeat; separate build/default-transform-rounding. Sign/push before fresh
-BOTH-chat/full PSI gates. No native invocation yet for this new grid.
+BOTH-chat/full PSI gates. Signed/DCO source freeze
+8f38313540a702af0e0b3bad858a56ff3017fb7c pushed. No native invocation for this
+new grid. Separate build/default-transform-rounding/capture-pair.sh prepared;
+DAW fresh clearance obtained, audit's initial reply empty (NOT clearance);
+subsequent explicit HOLD at full0.00/3.46. Own last full0.00/3.70 likewise
+prevents execution. Recheck BOTH windows later and obtain fresh clearance;
+do not start from that HOLD acknowledgement.
+No standing resource reservation; re-coordinate and check BOTH full windows
+before each invocation. Successful1872 pair evidence stays qualified; no need
+to repeat it. All failed-attempt and division receipts remain unchanged.
 
 ## Why division is explicitly deferred, not cancelled
 

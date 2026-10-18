@@ -232,6 +232,13 @@ First --single structure must pass BEFORE repeat. No runtime model, tolerance,
 compiled-equivalence or general-format proof is encoded. Separate host directory
 build/default-transform-rounding preserves all prior attempts. Sign source/
 inventory/reader before fresh BOTH-chat/low-PSI paired capture.
+Signed source freeze8f38313540a702af0e0b3bad858a56ff3017fb7c pushed. No run
+yet: latest full PSI0.00%/3.70% fails the avg60 gate. DAW cleared this separate
+window; audit initially returned no text, which is NOT clearance, then explicitly
+said HOLD at full0.00%/3.46%. Do not inherit a released window, treat HOLD as
+clearance or start merely because one pressure window is zero. No reservation
+retained. NEXT fresh pressure readback and BOTH-chat clearance, not a retry of
+the already-qualified1872-record grid.
 
 ## Traceability and development-document walkthrough
 
