@@ -15,7 +15,7 @@ git rev-parse HEAD > "$capture_root/source-commit.txt"
 date -u +%FT%TZ > "$capture_root/started.utc"
 sha256sum -c "$capture_root/build-inputs.sha256" > "$capture_root/pre-native-build-check.txt"
 sha256sum -c "$capture_root/built.sha256" > "$capture_root/pre-native-binary-check.txt"
-sha256sum "$fixture"/{crt-probe.c,crt-kernel32.def,emit-crt.cjs,crt.prg,crt-cases.json,audit-crt.cjs,crt-build.sh,crt-capture.sh} /home/rich/bin/vfp9-probe /home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe /home/rich/copperfin-wine-vfp9/drive_c/windows/syswow64/msvcr71.dll /home/rich/dev/Project-Copperfin/build/pr7203-completed/native-evidence/diagnostic/cause-probe.fll "$capture_root/crt-probe.fll" > "$capture_root/inputs.sha256"
+sha256sum "$fixture"/{crt-probe.c,crt-binding.h,crt-binding-check.c,crt-binding-check.cjs,crt-kernel32.def,emit-crt.cjs,crt.prg,crt-cases.json,audit-crt.cjs,crt-build.sh,crt-capture.sh} /home/rich/bin/vfp9-probe /home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe /home/rich/copperfin-wine-vfp9/drive_c/windows/syswow64/msvcr71.dll /home/rich/dev/Project-Copperfin/build/pr7203-completed/native-evidence/diagnostic/cause-probe.fll "$capture_root/crt-probe.fll" > "$capture_root/inputs.sha256"
 cp "$fixture/crt.prg" "$capture_root/probe.prg"
 cmp "$fixture/crt.prg" "$capture_root/probe.prg"
 for name in first repeat; do

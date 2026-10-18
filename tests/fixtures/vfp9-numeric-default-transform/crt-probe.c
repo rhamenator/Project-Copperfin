@@ -5,6 +5,7 @@
  * Published FLL ABI and documented CRT calls; no VFP implementation linkage.
  * No conversion hypothesis or control-word modification is implemented here.
  */
+#include "crt-binding.h"
 #pragma pack(push, 1)
 typedef struct {
     char type, padding;
@@ -31,8 +32,63 @@ extern void __fastcall _RetChar(char *);
 __declspec(dllimport) void * __stdcall GetModuleHandleA(const char *);
 __declspec(dllimport) unsigned long __stdcall GetModuleFileNameA(void *,char *,unsigned long);
 __declspec(dllimport) void * __stdcall GetProcAddress(void *,const char *);
+__declspec(dllimport) void * __stdcall CreateFileA(const char *,unsigned long,unsigned long,void *,unsigned long,unsigned long,void *);
+__declspec(dllimport) int __stdcall GetFileSizeEx(void *,long long *);
+__declspec(dllimport) int __stdcall ReadFile(void *,void *,unsigned long,unsigned long *,void *);
+__declspec(dllimport) int __stdcall CloseHandle(void *);
+typedef struct { void *base,*allocation; unsigned long allocation_protect,region_size,state,protect,type; } MemoryInfo;
+_Static_assert(sizeof(MemoryInfo)==28,"32-bit MEMORY_BASIC_INFORMATION");
+__declspec(dllimport) unsigned long __stdcall VirtualQuery(const void *,MemoryInfo *,unsigned long);
 typedef char * (__cdecl *ConvertFunction)(double,int,int *,int *);
 int _fltused=0;
+
+static void *bound_module;
+static char bound_path[260];
+static CrtPe bound_pe;
+static unsigned bound_size;
+static unsigned char bound_digest[32];
+static int loaded_pe(void *module,CrtPe *pe) {
+    MemoryInfo info;
+    if(VirtualQuery(module,&info,sizeof(info))!=sizeof(info) || info.base!=module || info.allocation!=module || info.type!=0x1000000 ||
+       info.state!=0x1000 || info.region_size<4096 || (info.protect&0x100) ||
+       !(info.protect&(0x02|0x04|0x08|0x20|0x40|0x80))) return 0;
+    return crt_pe((const unsigned char *)module,4096,pe);
+}
+/* Hash once per FLL lifetime through the exact runtime-reported path, in THIS
+ * 32-bit process. Later calls recheck loaded headers/module/path. This is not
+ * an atomic proof of mapped image content or a rehash on every conversion. */
+static int bind_module(void *module,const char *path,unsigned length) {
+    CrtPe image,file_pe;
+    if(!loaded_pe(module,&image)) return 0;
+    if(bound_module) {
+        if(module!=bound_module || !crt_pe_equal(&image,&bound_pe)) return 0;
+        for(unsigned i=0;i<=length;++i) if(path[i]!=bound_path[i]) return 0;
+        return 1;
+    }
+    if(!crt_sha_selftest()) return 0;
+    void *file=CreateFileA(path,0x80000000u,1,0,3,0x80,0);
+    if(file==(void *)-1) return 0;
+    long long size=0;
+    int valid=GetFileSizeEx(file,&size) && size>=4096 && size<=8388608;
+    CrtSha sha;unsigned total=0,header_used=0,iterations=0;
+    /* VFP invokes these synchronous handlers on its evaluation thread. Static
+     * scratch avoids a large freestanding32-bit stack-probe dependency. */
+    static unsigned char block[4096],header[4096];crt_sha_init(&sha);
+    while(valid && total<(unsigned)size) {
+        unsigned request=(unsigned)size-total;if(request>sizeof(block)) request=sizeof(block);
+        unsigned long got=0;
+        if(++iterations>4096 || !ReadFile(file,block,request,&got,0) || !got || got>request) { valid=0;break; }
+        for(unsigned i=0;i<got && header_used<sizeof(header);++i) header[header_used++]=block[i];
+        crt_sha_update(&sha,block,got);total+=got;
+    }
+    unsigned long extra=0;
+    if(valid && (!ReadFile(file,block,1,&extra,0) || extra)) valid=0;
+    if(!CloseHandle(file)) valid=0;
+    if(!valid || total!=(unsigned)size || !crt_pe(header,header_used,&file_pe) || !crt_pe_equal(&image,&file_pe)) return 0;
+    crt_sha_final(&sha,bound_digest);
+    for(unsigned i=0;i<=length;++i) bound_path[i]=path[i];
+    bound_pe=image;bound_size=total;bound_module=module;return 1;
+}
 
 static char *text(char *out,const char *in) { while(*in) *out++=*in++; return out; }
 static char *hex(char *out,unsigned value,unsigned count) {
@@ -71,6 +127,7 @@ static void convert(NumericParameters *p,int significant) {
     unsigned long length=GetModuleFileNameA(module,module_path,sizeof(module_path));
     if(!length || length>=sizeof(module_path)) { _RetChar("ERROR:MODULEPATH"); return; }
     module_path[length]=0;
+    if(!bind_module(module,module_path,length)) { _RetChar("ERROR:MODULEBINDING"); return; }
     ConvertFunction function=(ConvertFunction)GetProcAddress(module,significant?"_ecvt":"_fcvt");
     if(!function) { _RetChar("ERROR:EXPORT"); return; }
     int decimal=0,sign=0;
@@ -87,8 +144,8 @@ static void convert(NumericParameters *p,int significant) {
         digits[used]=c;
     }
     if(used==sizeof(digits)) { _RetChar("ERROR:BUFFERBOUND"); return; }
-    /* Maximum: 518 module hex +254 digit hex + fixed fields <1200 bytes. */
-    char output[1200],*out=output;
+    /* Maximum: 518 module hex +254 digit hex + identity/fixed fields <1536. */
+    char output[1536],*out=output;
     out=text(out,significant?"kind=E;count=":"kind=F;count=");
     out=hex(out,(unsigned)count,8);
     out=text(out,";real="); for(int i=7;i>=0;--i) out=hex(out,input.bytes[i],2);
@@ -97,6 +154,13 @@ static void convert(NumericParameters *p,int significant) {
     out=text(out,";cw0="); out=hex(out,before,4);
     out=text(out,";cw1="); out=hex(out,after,4);
     out=text(out,";module="); for(unsigned i=0;i<length;++i) out=hex(out,(unsigned char)module_path[i],2);
+    out=text(out,";fileSample=ONCE;fileSize=");out=hex(out,bound_size,8);
+    out=text(out,";fileSha256=");for(unsigned i=0;i<32;++i) out=hex(out,bound_digest[i],2);
+    out=text(out,";machine=");out=hex(out,bound_pe.machine,4);
+    out=text(out,";magic=");out=hex(out,bound_pe.magic,4);
+    out=text(out,";stamp=");out=hex(out,bound_pe.stamp,8);
+    out=text(out,";imageSize=");out=hex(out,bound_pe.image_size,8);
+    out=text(out,";checksum=");out=hex(out,bound_pe.checksum,8);
     out=text(out,";digits="); for(unsigned i=0;i<used;++i) out=hex(out,(unsigned char)digits[i],2);
     *out=0; _RetChar(output);
 }

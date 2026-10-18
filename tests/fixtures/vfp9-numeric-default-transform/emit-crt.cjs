@@ -11,9 +11,10 @@ const inputs=native.observations.filter(r=>r.fixed==='ON').map(r=>({
 a.equal(inputs.length,264);a.equal(inputs.filter(r=>r.setting===0).length,12);
 const inv={requirement:native.requirement,parentNativeSha256:native.firstSha256,
     inputCount:264,recordsPerRun:4176,width:40,scale:18,inputs,
-    modulePath:'C:\\windows\\syswow64\\msvcr71.dll',
+    modulePath:'C:\\windows\\system32\\MSVCR71.dll',
     moduleSha256:'8094af5ee310714caebccaeee7769ffb08048503ba478b879edfef5f1a24fefe',
-    limitation:'Observe installed32-bit CRT conversion of original/qualified shifted bits, not recomputed model inputs. Both FIXED modes, applied fcvt count1..18 (D0 omitted), ecvt counts15/16/17. No DLL load/replacement/CW modification, inferred VFP call attribution, expected formatter or production linkage.'};
+    moduleFileSize:348160,modulePe:{machine:332,magic:267,stamp:1045831340,imageSize:352256,checksum:389609},
+    limitation:'Observe installed32-bit CRT conversion of original/qualified shifted bits, not recomputed model inputs. Both FIXED modes, applied fcvt count1..18 (D0 omitted), ecvt counts15/16/17. Runtime-reported path plus once-per-FLL bounded file digest and matching loaded/file PE32 headers, not atomic mapped-image/backing-file proof. No DLL load/replacement/CW modification, inferred VFP call attribution, expected formatter or production linkage.'};
 const prior=fs.readFileSync(path.join(__dirname,'rounding-arithmetic.prg'),'utf8');
 const functions=prior.slice(prior.indexOf('FUNCTION Unhex'));
 a(functions.startsWith('FUNCTION Unhex'));a.equal(prior.split('FUNCTION Unhex').length,2);

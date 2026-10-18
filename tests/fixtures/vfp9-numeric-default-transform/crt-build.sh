@@ -17,7 +17,7 @@ git rev-parse HEAD > "$capture_root/build-source-commit.txt"
 sdk='/home/rich/copperfin-wine-vfp9/drive_c/Program Files (x86)/Microsoft Visual FoxPro 9/Samples/API/winapims.lib'
 legacy=/home/rich/dev/Project-Copperfin/build/pr7203-completed/native-evidence/diagnostic
 linker=/home/rich/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/rust-lld
-sha256sum "$fixture"/{crt-probe.c,crt-kernel32.def,emit-crt.cjs,crt.prg,crt-cases.json,audit-crt.cjs,crt-build.sh,crt-capture.sh} "$sdk" "$legacy/kernel32-stdcall.lib" "$legacy/msvcrt.lib" /usr/bin/clang /usr/bin/llvm-dlltool-21 "$linker" /home/rich/copperfin-wine-vfp9/drive_c/windows/syswow64/msvcr71.dll > "$capture_root/build-inputs.sha256"
+sha256sum "$fixture"/{crt-probe.c,crt-binding.h,crt-binding-check.c,crt-binding-check.cjs,crt-kernel32.def,emit-crt.cjs,crt.prg,crt-cases.json,audit-crt.cjs,crt-build.sh,crt-capture.sh} "$sdk" "$legacy/kernel32-stdcall.lib" "$legacy/msvcrt.lib" /usr/bin/gcc /usr/bin/clang /usr/bin/llvm-dlltool-21 "$linker" /home/rich/copperfin-wine-vfp9/drive_c/windows/syswow64/msvcr71.dll > "$capture_root/build-inputs.sha256"
 stage() {
  local label=$1
  shift
@@ -45,11 +45,15 @@ stage() {
  printf '%s status=%s\n' "$label" "$status"
  test "$status" -eq 0 || exit "$status"
 }
+stage host-gnu /usr/bin/gcc -std=c11 -O0 -Wall -Wextra -Werror -fsanitize=address,undefined "$fixture/crt-binding-check.c" -o "$capture_root/binding-gnu"
+stage check-gnu node "$fixture/crt-binding-check.cjs" "$capture_root/binding-gnu" "$capture_root"
+stage host-clang /usr/bin/clang -std=c11 -O0 -Wall -Wextra -Werror -fsanitize=address,undefined "$fixture/crt-binding-check.c" -o "$capture_root/binding-clang"
+stage check-clang node "$fixture/crt-binding-check.cjs" "$capture_root/binding-clang" "$capture_root"
 stage import /usr/bin/llvm-dlltool-21 -m i386 -k -d "$fixture/crt-kernel32.def" -l "$capture_root/crt-kernel32.lib"
 stage compile /usr/bin/clang --target=i686-pc-windows-msvc -std=c11 -O0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror -c "$fixture/crt-probe.c" -o "$capture_root/crt-probe.obj"
 stage link "$linker" -flavor link /dll /nodefaultlib /machine:x86 /entry:CrtEntry@12 "/out:$capture_root/crt-probe.fll" "$capture_root/crt-probe.obj" "$capture_root/crt-kernel32.lib" "$sdk" "$legacy/kernel32-stdcall.lib" "$legacy/msvcrt.lib"
 sha256sum -c "$capture_root/build-inputs.sha256" > "$capture_root/build-inputs-check.txt"
-sha256sum "$capture_root/crt-probe.fll" "$capture_root/crt-probe.obj" "$capture_root/crt-kernel32.lib" > "$capture_root/built.sha256"
+sha256sum "$capture_root/crt-probe.fll" "$capture_root/crt-probe.obj" "$capture_root/crt-kernel32.lib" "$capture_root/binding-gnu" "$capture_root/binding-clang" > "$capture_root/built.sha256"
 file "$capture_root/crt-probe.fll" > "$capture_root/built-file.txt"
 objdump -p "$capture_root/crt-probe.fll" > "$capture_root/built-pe.txt"
 date -u +%FT%TZ > "$capture_root/build.finished.utc"

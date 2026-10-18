@@ -141,20 +141,21 @@ build path absent. Prior import0/compile1 attempt intact at
 crt-build-attempt1/ and build/default-transform-crt-build-attempt1.
 No failed/guarded/qualified source replay, weakened reader or accepted CRT model.
 
-NEXT prepare OWN observer enhancement: read-only loaded-image PE32 header facts
-plus bounded SHA256 of file opened through REPORTED path INSIDE32-bit process.
-First consult authoritative Win32 file/module/SHA256 docs; verify own digest
-with standard known-answer/direct host checks before trusting it. Bind digest/
-image header to frozen32-bit artifact; preserve atomic image-binding limits.
-Do NOT just accept alternate path/rewrite it to syswow64 or substitute host
-system32's separately inventoried64-bit Wine DLL. No DLL/CW changes or
-proprietary file export. Binding enhancement/caller/reader protocol NOT yet
-implemented/frozen. Sign sources BEFORE NEW BOTH-chat compiler/native clearance
-and immediate BOTH full PSI<1%/idle-prefix guards per invocation. NO VM.
-Latest full50.06/31.19 fails; no further job/window request/owner-input blocker.
-Existing crt-build.sh/crt-capture.sh and4176 probe remain unchanged; don't rerun
-the now-failed identity probe or archived workers.
-Do not replay seven qualified pairs. Exact-rule recovery -> native-only
+NEXT OWN binding enhancement/source now prepared: crt-binding.h and guarded
+crt-binding-check.c/cjs, loaded readable/committed MEM_IMAGE PE32 headers plus
+bounded SHA256 opened via REPORTED path INSIDE32-bit process. Reader requires
+observed system32 path PLUS exact32-bit digest/size/header facts, not path-only
+allow-list. Old4176 capture remains unqualified and immutable. Direct GNU/Clang
+ASan/UBSan known-answer/Node-differential/header checks must PASS BEFORE native.
+72 guarded test invocations/compiler; no compiler/test/native run yet. Sources
+pass Node syntax/regeneration+cmp/bash-n/diff-check only. Freeze/sign/push before
+fresh explicit BOTH-chat CLEAR with BOTH full avg10/avg60<1%/idle-prefix gates
+before EACH import/compiler/link/test/native invocation. No DLL/CW changes or
+proprietary bytes export; once-per-FLL file sample, no atomic image-binding
+claim. See recovery.md for public provenance, bounds and LOW walkthrough.
+No standing reservation/owner-input blocker; no VM. Do not rerun old failed
+source/archive workers. Same264/4176 inputs/controls and first-before-repeat.
+Do not replay seven qualified pairs.
 expectations/actual ORIGINAL -> unused support/direct GNU+Clang -> separate
 wiring/SAME/broader/actual named hosted -> exact-head clean review/strict green/
 resolved conversations/normal merge. No production/model/regression/helper/hook.

@@ -29,10 +29,12 @@ function read(name){
   for(const k of [10,11,13,15,19])a.match(f[k],/^(?:[0-9A-F]{2})*$/);
   a.equal(f[12],'N');const applied=ascii(f[13]);a.match(applied,/^\s*[0-9]+(?:\.0+)?\s*$/);a.equal(Number(applied),r.setting);
   a.equal(f[14],'C');a.equal(ascii(f[15]),f[0]);
-  a.match(f[16],/^kind=[FE];count=[0-9A-F]{8};real=[0-9A-F]{16};decimal=[0-9A-F]{8};sign=[0-9A-F]{8};cw0=027F;cw1=027F;module=(?:[0-9A-F]{2})+;digits=(?:3[0-9])*$/);
+  a.match(f[16],/^kind=[FE];count=[0-9A-F]{8};real=[0-9A-F]{16};decimal=[0-9A-F]{8};sign=[0-9A-F]{8};cw0=027F;cw1=027F;module=(?:[0-9A-F]{2})+;fileSample=ONCE;fileSize=[0-9A-F]{8};fileSha256=[0-9A-F]{64};machine=[0-9A-F]{4};magic=[0-9A-F]{4};stamp=[0-9A-F]{8};imageSize=[0-9A-F]{8};checksum=[0-9A-F]{8};digits=(?:3[0-9])*$/);
   const c=Object.fromEntries(f[16].split(';').map(s=>s.split('=')));
   a.equal(c.kind,f[6]);a.equal(parseInt(c.count,16),count);a.equal(c.real,f[5]);
   a.equal(ascii(c.module).toLowerCase(),inv.modulePath.toLowerCase());a(c.digits.length<=254);
+  a.equal(c.fileSha256.toLowerCase(),inv.moduleSha256);a.equal(parseInt(c.fileSize,16),inv.moduleFileSize);
+  for(const [key,value] of Object.entries(inv.modulePe))a.equal(parseInt(c[key],16),value);
   const key=JSON.stringify([r.index,f[0],f[4],f[6],count]);a(!seen.has(key));seen.add(key);
   observations.push({...r,fixed:f[0],route:f[4],argumentBits:f[5],kind:f[6],count,displayHex:f[10],strHex:f[11],appliedDecimalHex:f[13],appliedFixedHex:f[15],crt:c});
   fields.push(f);

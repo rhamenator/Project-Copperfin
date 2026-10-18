@@ -1591,7 +1591,15 @@
       "shiftedBits": "4023FD70A3D70A40"
     }
   ],
-  "modulePath": "C:\\windows\\syswow64\\msvcr71.dll",
+  "modulePath": "C:\\windows\\system32\\MSVCR71.dll",
   "moduleSha256": "8094af5ee310714caebccaeee7769ffb08048503ba478b879edfef5f1a24fefe",
-  "limitation": "Observe installed32-bit CRT conversion of original/qualified shifted bits, not recomputed model inputs. Both FIXED modes, applied fcvt count1..18 (D0 omitted), ecvt counts15/16/17. No DLL load/replacement/CW modification, inferred VFP call attribution, expected formatter or production linkage."
+  "moduleFileSize": 348160,
+  "modulePe": {
+    "machine": 332,
+    "magic": 267,
+    "stamp": 1045831340,
+    "imageSize": 352256,
+    "checksum": 389609
+  },
+  "limitation": "Observe installed32-bit CRT conversion of original/qualified shifted bits, not recomputed model inputs. Both FIXED modes, applied fcvt count1..18 (D0 omitted), ecvt counts15/16/17. Runtime-reported path plus once-per-FLL bounded file digest and matching loaded/file PE32 headers, not atomic mapped-image/backing-file proof. No DLL load/replacement/CW modification, inferred VFP call attribution, expected formatter or production linkage."
 }

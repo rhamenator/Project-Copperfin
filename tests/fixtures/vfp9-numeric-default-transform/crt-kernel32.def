@@ -3,3 +3,8 @@ EXPORTS
 GetModuleHandleA@4
 GetModuleFileNameA@12
 GetProcAddress@8
+CreateFileA@28
+GetFileSizeEx@8
+ReadFile@20
+CloseHandle@4
+VirtualQuery@12
