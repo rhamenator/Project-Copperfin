@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="14"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="14"
+	timestamp="2026-10-18T00:24:41"
+	>
+	<testcase name="test_prg_engine_numeric_literal_payload" classname="test_prg_engine_numeric_literal_payload" time="0.489772" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>literal payload: descriptor=0 bits=0 evaluation=0 controls=0 total=0
+</system-out>
+	</testcase>
+	<testcase name="test_prg_numeric_literal_payload_helper" classname="test_prg_numeric_literal_payload_helper" time="0.00459606" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=none;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>literal payload helper: selected=458 failures=0
+</system-out>
+	</testcase>
+	<testcase name="test_cloud_validation_sanitizer_selection" classname="test_cloud_validation_sanitizer_selection" time="0.235034" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>....
+----------------------------------------------------------------------
+Ran 4 tests in 0.002s
+
+OK
+</system-out>
+	</testcase>
+	<testcase name="test_native_test_isolation_contract" classname="test_native_test_isolation_contract" time="0.609843" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=none;copperfin-isolation:filesystem=read-only;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=parallel-safe"/>
+		</properties>
+		<system-out>-- Native test isolation inventory contract passed for 629 tests
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_byte_numeric" classname="test_prg_engine_cast_byte_numeric" time="0.00425852" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>BYTE frozen cases: direct=140 public=0
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_byte_numeric_copperfin_session1" classname="test_prg_engine_cast_byte_numeric_copperfin_session1" time="1.46615" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>BYTE frozen cases: direct=0 public=128
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_byte_numeric_copperfin_session2" classname="test_prg_engine_cast_byte_numeric_copperfin_session2" time="1.47995" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>BYTE frozen cases: direct=0 public=128
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_byte_numeric_vfp9_session1" classname="test_prg_engine_cast_byte_numeric_vfp9_session1" time="1.34724" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>BYTE frozen cases: direct=0 public=128
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_byte_numeric_vfp9_session2" classname="test_prg_engine_cast_byte_numeric_vfp9_session2" time="1.40003" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>BYTE frozen cases: direct=0 public=128
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_uint64_numeric" classname="test_prg_engine_cast_uint64_numeric" time="0.00630006" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>CAST frozen cases: direct=62 public=0
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_uint64_numeric_copperfin_session1" classname="test_prg_engine_cast_uint64_numeric_copperfin_session1" time="1.89285" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>CAST frozen cases: direct=0 public=162
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_uint64_numeric_copperfin_session2" classname="test_prg_engine_cast_uint64_numeric_copperfin_session2" time="1.92641" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>CAST frozen cases: direct=0 public=162
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_uint64_numeric_vfp9_session1" classname="test_prg_engine_cast_uint64_numeric_vfp9_session1" time="1.89527" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>CAST frozen cases: direct=0 public=162
+</system-out>
+	</testcase>
+	<testcase name="test_prg_engine_cast_uint64_numeric_vfp9_session2" classname="test_prg_engine_cast_uint64_numeric_vfp9_session2" time="1.93075" status="run">
+		<properties>
+			<property name="cmake_labels" value="copperfin-isolation:audit=complete;copperfin-isolation:child-processes=none;copperfin-isolation:environment=scoped-process;copperfin-isolation:filesystem=test-owned-unique;copperfin-isolation:network=none;copperfin-isolation:platform=portable;copperfin-isolation:resources=none;copperfin-isolation:samples=none;copperfin-isolation:schedule=serial"/>
+		</properties>
+		<system-out>CAST frozen cases: direct=0 public=162
+</system-out>
+	</testcase>
+</testsuite>

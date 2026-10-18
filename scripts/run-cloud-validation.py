@@ -28,6 +28,7 @@ TARGETS = {
                      "test_prg_numeric_runtime_division_helper", "test_prg_engine_numeric_runtime_division",
                      "test_prg_numeric_constant_division_intrinsic_helper", "test_prg_engine_numeric_constant_division",
                      "test_prg_engine_numeric_literal_payload", "test_prg_numeric_literal_payload_helper",
+                     "test_prg_engine_cast_byte_numeric", "test_prg_engine_cast_uint64_numeric",
                      "test_prg_engine_work_areas", "test_xasset_methods",
                      "test_prg_engine_database_lifecycle",
                      "test_prg_engine_runtime_surface_functions_buffering", "test_prg_engine_data_io",
@@ -134,6 +135,7 @@ def main():
                             "test_prg_numeric_runtime_division_helper|test_prg_engine_numeric_runtime_division|"
                             "test_prg_numeric_constant_division_intrinsic_helper|test_prg_engine_numeric_constant_division|"
                             "test_prg_engine_numeric_literal_payload|test_prg_numeric_literal_payload_helper|"
+                            "test_prg_engine_cast_(byte|uint64)_numeric(_(copperfin|vfp9)_session[12])?|"
                             "test_prg_engine_work_areas|test_xasset_methods|"
                             "test_prg_engine_database_lifecycle|"
                             "test_prg_engine_runtime_surface_functions_buffering|test_prg_engine_data_io|"

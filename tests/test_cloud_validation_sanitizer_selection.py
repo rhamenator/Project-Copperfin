@@ -55,5 +55,19 @@ class SanitizerSelection(unittest.TestCase):
                 self.assertIsNone(selector.search(name + "_suffix"))
 
 
+    def test_literal_payload_cast_consumers_include_all_public_shards(self):
+        self.assertEqual(len(SELECTORS), 1)
+        selector = re.compile(SELECTORS[0])
+        for family in ("test_prg_engine_cast_byte_numeric", "test_prg_engine_cast_uint64_numeric"):
+            self.assertIn(family, TARGETS["sanitizer-pr"])
+            for suffix in ("", "_copperfin_session1", "_copperfin_session2",
+                           "_vfp9_session1", "_vfp9_session2"):
+                name = family + suffix
+                with self.subTest(name=name):
+                    self.assertIsNotNone(selector.search(name))
+                    self.assertIsNone(selector.search("prefix_" + name))
+                    self.assertIsNone(selector.search(name + "_suffix"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -5,6 +5,7 @@
 #include "../src/runtime/prg_engine_helpers.h"
 #include "prg_engine_test_support.h"
 #include "test_environment_support.h"
+#include "fixtures/vfp9-numeric-literal-payload/cast-neighbor-input.h"
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -25,13 +26,18 @@ namespace fs = std::filesystem;
 // RQ-CF-PRG-CAST-UINT64-NUMERIC-001 / VR-5611-CAST-UINT64-NUMERIC-001/002.
 // Literal extension expectations come from owner policy and integer mathematics,
 // not Copperfin output. Native probe controls document absence, not native64 parity.
-struct NumericRow { const char* text; double raw; std::optional<std::uint64_t> expected; };
+struct NumericRow {
+    const char* text;
+    double raw;
+    std::optional<std::uint64_t> expected;
+    const char* public_expression=nullptr;
+};
 const std::vector<NumericRow> numeric_rows{
     {"0",0,0}, {"-0",-0.,0},
     {"0.49",0.49,0}, {"0.5",0.5,0}, {"0.9",0.9,0},
     {"1.49",1.49,1}, {"1.5",1.5,1}, {"1.9",1.9,1},
     {"-0.49",-0.49,0}, {"-0.5",-0.5,0}, {"-0.9",-0.9,0},
-    {"-0.9999999999999999",-0.9999999999999999,0},
+    {"-0.9999999999999999",-0.9999999999999999,0,copperfin::test::cast_inner_negative_neighbor},
     {"-1",-1.,{}}, {"-1.0000000000000002",-1.0000000000000002,{}},
     {"-1.49",-1.49,{}}, {"-1.5",-1.5,{}}, {"-1.9",-1.9,{}},
     {"2147483648",2147483648.,2147483648ULL},
@@ -145,7 +151,10 @@ void public_cases(const std::string& mode,int selected) {
     const auto path=dir/"query.prg";
     for(const char* alias:{"UINT64","ULONGLONG","UBIGINT"}) {
         const auto cast=[&](const std::string& input){return "CAST("+input+" AS "+alias+")";};
-        for(const auto& row:numeric_rows)public_case(path,mode,selected,cast(row.text),row.expected);
+        for(const auto& row:numeric_rows)
+            public_case(path,mode,selected,cast(row.public_expression?row.public_expression:row.text),row.expected);
+        // Native profile:50 source is -1; exact binary64 neighbor above stays0.
+        public_case(path,mode,selected,cast("-0.9999999999999999"),{});
         for(const auto& row:exact_rows)public_case(path,mode,selected,cast(row.expression),row.expected);
         for(const auto& row:std::vector<PublicRow>{{".T.",1},{"'1.9'",1},{"$1.5",1}})
             public_case(path,mode,selected,cast(row.expression),row.expected);
@@ -175,7 +184,7 @@ int main(int argc,char** argv) {
     } else if(argc==3&&(std::string(argv[1])=="COPPERFIN"||std::string(argv[1])=="VFP9")&&
               (std::string(argv[2])=="1"||std::string(argv[2])=="2")) {
         public_cases(argv[1],std::string(argv[2])=="1"?1:2);
-        expect(direct_count==0&&public_count==159,"CAST complete public shard count");
+        expect(direct_count==0&&public_count==162,"CAST complete public shard count");
     } else {
         std::cerr<<"Expected no arguments (direct), or COPPERFIN|VFP9 1|2 (public shard)\n";
         return 2;

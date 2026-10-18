@@ -12,5 +12,10 @@
   that signed freeze; retain configured tooling2/2 and graceful runtime-build
   resource deferral. A fresh coordinated single-job build completes, unchanged
   public/helper SAME2/2 and selected regressions20/20 pass; hosted/review gates
-  remain. No whole-Numeric/division/ListItem
+  remain. Hosted macOS exposes old unsigned-CAST tests conflating C++ neighbor
+  bits with native source -1; preserve raw-neighbor assertions with explicit
+  bit-carrier inputs, add source-error controls and widen sanitizer selection.
+  Coordinated GNU replay reproduces all68 old source assertions; fixed14/14
+  checks pass with unchanged direct counts and increased public coverage.
+  New-head hosted/review gates remain. No whole-Numeric/division/ListItem
   parity or completed-issue claim.

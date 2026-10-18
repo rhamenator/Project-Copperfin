@@ -1,66 +1,69 @@
 # Agent Handoff
 
-## #7206 literal payload local SAME/regressions pass; prepare PR/hosted review
+## PR7207 test-only CAST input repair verified locally; push and fresh review/CI
 
 Active WT /home/rich/.codex/worktrees/numeric-literal-payload-7206/Project-Copperfin,
 branch fix/numeric-literal-payload-7206 from origin/main
 ef3ea326f78d640546363abe97bbe27b6208bf45. Parents5611/6776/7189 OPEN/owner/
 exact agent-approved; derived7206 OPEN/owner/bug/runtime, no label change.
-No PR yet at this evidence checkpoint. Signed/pushed chronology4ff7d0d8b
-pre-observation holdout ->e2e59d020 native-only public freeze ->f530857ff actual
-ORIGINAL ->b7fb2b23f unused support/expanded freeze ->a6cfc9954 bounded hook/
-initial build deferral. Test/producer source still EXACT a6cfc9954; new evidence/
-docs only afterward. Never relabel the interrupted130 attempt as successful.
+PR https://github.com/rhamenator/Project-Copperfin/pull/7207 OPEN on old signed
+headb8c1325c7b466237ed58eeac5ac0c8d2daaa7f37. The checkpoint containing this
+entry is a TEST-ONLY repair; no production/original1,193-row literal oracle change.
 
-Native profile7,840/run + independently held-out1,704/run, paired0/empty stderr/
-raw byte repeat/typed-BINTOC/compiler-EVAL audits0. All1,704 frozen predictions
-match; rejected8/initial108 alternatives retained. Native-only header1,193 rows,
-all public assertions retained. Actual ORIGINAL compile0/test1 exactly2,432
-payload failures; descriptor/evaluation/controls0. Contract/original/raw hashes
-and finite domain are in fixture vfp9-numeric-literal-payload; not universal parity.
+Old head had actual clean exact-head configured Codex199175422 review6245229835
+after Claude-FIRST6245230588; threads0/full paginationfalse. That review does NOT
+cover this fix. Watcher9793 ENDED1 after actionable macOS failure; no active watcher.
+Native macOS39094031076/job117576589900 attempt1 runs629:8 unsigned CAST public
+variants fail, exactly68 assertions ONLY -0.9999999999999999. Not infrastructure.
+Frozen native profile:50 proves source=BFF0000000000000 (-1), while C++ direct
+input=BFEFFFFFFFFFFFFF (neighbor toward0). Existing owner extension range policy
+requires rejection of -1 and zero for actual neighbor. No new production defect/
+VFP unsupported CAST semantics inferred; existing test conflated producers.
 
-Hook ONLY include + successful ordinary parse_number payload optional helper.
-All display metadata/source grammar/shared invariant parser/Currency/exact64
-unchanged. Bounded ASCII plain decimal3..256, every digit/source zero retained,
-explicit binary64 operation boundaries, nearest-environment guard. Beyond256/
-nondefault FP/other producers/display/exact conversion remain mandatory recovery.
+Repair: preserve Byte140/UInt6462 direct raw/expected cases; one public input
+uses explicit CTOBIN BS BFEFFFFFFFFFFFFF bytes with BINTOC BRS IIF bit guard.
+Keep old neighbor-to-zero assertion AND add original decimal spelling error11/
+sentinel/kind/context controls per alias. Public Byte126->128 and UInt64159->162
+per mode/session. Native oracle/helper/contract/production remain unchanged.
+Widen hosted sanitizer BOTH build/filter by two executables/all10 direct+public
+names; selector4/4 exact prefix/suffix checks. Existing selections not removed.
 
-Fresh audit AND DAW window resumed existing GNU -O0 -g0 build with ONE nice10
-Ninja job; actual build0. Configured unchanged SAME public/helper2/2 pass:
-descriptor0/bits0/evaluation0/controls0; helper458/failures0. Broader selected20
-unique CTests ALL PASS155.03s, no failure/error/skip; includes metadata/assignment/
-runtime+constant division/Currency/exact64/macros/full control-flow/Numeric behavior
-and selector/isolation. Independent audit-runtime.py checks actual JUnit/status/
-summaries0; native-only header and all11 staged source hashes0. No expectation,
-assertion or timeout changed; after the intended hook, source stayed EXACT
-a6cfc9954 through SAME.
-Old GNU/Clang optimized/Werror/explicit ASan/UBSan/float-cast-overflow helper458
-checks remain qualifying source-identical evidence, not a full sanitized runtime.
+After resource deferral (~37% full PSI), audit AND DAW cleared ONE nice10 narrow
+window. Old b8 test source from Git + unchanged retained runtime archives:
+both GNU compile/direct0; all8 public1, exactly68 same-spelling assertions,
+old counters complete. Fixed normal incremental two-TU build0, CTest14/14PASS
+14.71s/no failure/error/skip; direct140/62 and public128/162 counts checked.
+Own unchanged literal1193x8=9544 observations/helper458 still pass. Independent
+host+archived JUnit/status/math audit0;12-file precompile hash0, production/oracle
+diff empty, runtime archive SHA c65ac027a74f755520fcc76eb9a395dff91fe13416b0d76b592e14dddaa03904.
+Both chats got window RELEASED, no VM/probe/foreign intervention/heavy task held.
+Evidence ci-cast-input-recovery.md/ci-cast-evidence/, host
+build/literal-payload-native/cast-repair/. Prior resource interruption130 and
+local20/20SAME evidence remain unmodified, not relabelled. New review/CI required.
 
-Evidence: runtime-verification.md and runtime-same-evidence/ in literal fixture,
-host build/literal-payload-native/resume-one-job/. Interrupted receipt/build state
-retained separately. Both chats got window RELEASED, no local heavy task/VM
-reserved. Full I/O PSI finished avg10/avg60=0.00%/0.00%; no browser/backup/upload/
-reboot intervention or causal attribution. Any future heavy/VM job re-coordinate.
+NEXT: sign/push repair then Claude exact NEW head, configured clean actual Codex
+or Claude review required; old clean review cannot count. New-head actual named
+sanitizer (now all affected variants) AND Windows/macOS execution, strict required
+11 green/all conversations resolved/no failed checks before merge. No timeout,
+range, oracle or assertion weakening; keep7206/parents open for retained producers.
+Inspect existing watcher status before any replacement. App attach cap100 failed
+already, no unrelated removal/retry. Stay quiet if only CI/review pending.
 
-NEXT: final evidence commit/sign/push; open bounded PR targeting main, Claude
-FIRST exact head, actual named hosted sanitizer AND Windows/macOS evidence,
-strict required green checks/all conversations resolved before merge. Local
-selection/registration is NOT hosted or whole inventory qualification. No PR/
-issue/parent closure yet. Keep source/native oracle fixed; investigate real CI/
-review failures, never infer clean review from silence/skipped/quota notice.
+Native literal chronology4ff7d0d8b pre-heldout ->e2e59d020 native-only public
+freeze ->f530857ff actual ORIGINAL2,432 payload failures ->b7fb2b23f unused
+support ->a6cfc9954 bounded hookup ->b8c1325c7 actual literal SAME/broader20 pass.
+Paired native7840+1704 observations/run, all heldout predictions matched; reject
+models retained. Explicit binary64 rounded loops, no epsilon/source specialcase.
+Beyond256/nondefault FP/other producers/display/exact conversion mandatory recovery.
 
 Retained non-whole division WT/branch fix/numeric-nonwhole-division-5611 pushed
 11bd096a6232a86aee10074e8e35f7daca19cbb6. Preserve578-row native header/574
-exact assertions. AFTER literal prerequisite integrates: refresh ORIGINAL,
-complete fractional native callback/continuation timing, strengthen3 former-
-unknown controls BEFORE next freeze, then bounded division/SAME/broad/hosted/
-review gates. Division/ListItem supplied-column READ uncancelled; completed
-7204/EPOCH/CENTURY/7201 not restarted. No automatic reboot/date action.
-
+exact assertions. AFTER prerequisite integrates refresh ORIGINAL, complete native
+fractional callback/continuation timing, strengthen3 former-unknown controls BEFORE
+next freeze, then bounded hook/SAME/broad/hosted/review gates. Division/ListItem
+READ uncancelled; completed7204/EPOCH/CENTURY/7201 not restarted. No reboot/date action.
 Canonical own handoff/unrelated files/stashes/foreign WTs preserved; channel0/
-fetch unchanged this wake. No owner-input blocker/automation pause. Historical
-entries below superseded by this current prerequisite and retained re-entry.
+fetch unchanged. No owner-input blocker/automation pause. History below superseded.
 
 ## Bounded runtime division implementation in verification (2026-10-17)
 

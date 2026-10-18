@@ -1,0 +1,18 @@
+{
+  "sourceHead": "b8c1325c7b466237ed58eeac5ac0c8d2daaa7f37",
+  "runtimeUnchanged": true,
+  "gnuActualOriginal": {
+    "byte": {
+      "directPassed": 140,
+      "publicPerContext": 126,
+      "failedContexts": 4
+    },
+    "uint64": {
+      "directPassed": 62,
+      "publicPerContext": 159,
+      "failedContexts": 4
+    }
+  },
+  "assertions": 68,
+  "allOnlySourceSpelling": true
+}

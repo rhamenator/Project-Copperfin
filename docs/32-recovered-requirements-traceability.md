@@ -105,6 +105,15 @@ error/skip. Public descriptor/bits/evaluation/controls all0; independent actual
 JUnit/status/native-header/source-hash audit0. No assertions or oracle changed.
 Actual named hosted/platform execution, exact-head clean review and strict green
 resolved-conversation gates remain; no VM/external intervention or full parity claim.
+[Hosted CAST input recovery](../tests/fixtures/vfp9-numeric-literal-payload/ci-cast-input-recovery.md):
+macOS629 executes with eight public Byte/UInt64 variants failing only the old
+shared raw/source expectation; signed native profile:50 proves the source is
+exact -1, while independent binary64 neighbor remains above -1. Test-only repair
+retains all direct/raw range assertions, adds source-error controls and widens
+sanitizer selection; no production/oracle change. Fresh coordinated GNU replay
+repeats all68 old source assertions; fixed incremental build0/14unique tests PASS
+14.71s, preserved140/62 direct/increased128/162 public counts, unchanged literal
+oracle/helper pass and source hashes0. New-head hosted/review gates remain.
 DQ-DV-7206-DECIMAL-PAYLOAD-RECOVERY-001 LOW delta/misuse/walkthrough/
 rollback in recovery note; parent hazards, #6776 modes and checked limits unchanged.
 `gap; literal conversion recovery before retained non-whole division re-entry`.

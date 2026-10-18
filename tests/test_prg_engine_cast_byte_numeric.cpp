@@ -5,6 +5,7 @@
 #include "../src/runtime/prg_engine_helpers.h"
 #include "prg_engine_test_support.h"
 #include "test_environment_support.h"
+#include "fixtures/vfp9-numeric-literal-payload/cast-neighbor-input.h"
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -24,13 +25,18 @@ namespace fs = std::filesystem;
 // RQ-CF-PRG-CAST-BYTE-NUMERIC-001 / VR-5611-CAST-BYTE-NUMERIC-001/002.
 // Owner-derived extension policy/native truncation/independent integer math;
 // literal expectations precede Copperfin execution, not sibling CAST outputs.
-struct NumericRow { const char* text; double raw; std::optional<std::uint64_t> expected; };
+struct NumericRow {
+    const char* text;
+    double raw;
+    std::optional<std::uint64_t> expected;
+    const char* public_expression=nullptr;
+};
 const std::vector<NumericRow> numeric_rows{
     {"0",0,0}, {"-0",-0.,0},
     {"0.49",0.49,0}, {"0.5",0.5,0}, {"0.9",0.9,0},
     {"1.49",1.49,1}, {"1.5",1.5,1}, {"1.9",1.9,1},
     {"-0.49",-0.49,0}, {"-0.5",-0.5,0}, {"-0.9",-0.9,0},
-    {"-0.9999999999999999",-0.9999999999999999,0},
+    {"-0.9999999999999999",-0.9999999999999999,0,copperfin::test::cast_inner_negative_neighbor},
     {"-1.0000000000000002",-1.0000000000000002,{}},
     {"-1",-1.,{}}, {"-1.49",-1.49,{}}, {"-1.5",-1.5,{}}, {"-1.9",-1.9,{}},
     {"127",127.,127}, {"128",128.,128}, {"254",254.,254}, {"255",255.,255},
@@ -126,7 +132,11 @@ void public_cases(const std::string& mode,int selected) {
     const auto path=dir/"query.prg";
     for(const char* alias:{"BYTE","UINT8"}) {
         const auto cast=[&](const std::string& input){return "CAST("+input+" AS "+alias+")";};
-        for(const auto& row:numeric_rows)public_case(path,mode,selected,cast(row.text),row.expected);
+        for(const auto& row:numeric_rows)
+            public_case(path,mode,selected,cast(row.public_expression?row.public_expression:row.text),row.expected);
+        // Native profile:50 is -1, unlike the exact binary64 neighbor above.
+        // Preserve that old neighbor-to-zero assertion AND check this source route.
+        public_case(path,mode,selected,cast("-0.9999999999999999"),{});
         for(const auto& row:exact_rows)public_case(path,mode,selected,cast(row.expression),row.expected);
         // Untouched non-Numeric path: Character256 retains its existing low8 result.
         for(const auto& row:std::vector<std::pair<const char*,std::uint64_t>>{
@@ -156,7 +166,7 @@ int main(int argc,char** argv) {
     } else if(argc==3&&(std::string(argv[1])=="COPPERFIN"||std::string(argv[1])=="VFP9")&&
               (std::string(argv[2])=="1"||std::string(argv[2])=="2")) {
         public_cases(argv[1],std::string(argv[2])=="1"?1:2);
-        expect(direct_count==0&&public_count==126,"BYTE complete public shard count");
+        expect(direct_count==0&&public_count==128,"BYTE complete public shard count");
     } else {
         std::cerr<<"Expected no arguments (direct), or COPPERFIN|VFP9 1|2 (public shard)\n";
         return 2;
