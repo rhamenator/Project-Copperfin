@@ -1685,6 +1685,53 @@ silently lose distinctions; recorded counterexamples and next inline-result
 boundary preserve the recovery gap. Developer self-review only, not independent
 human/system/release acceptance; existing hazards/rollback/notification retained.
 
+### INLINE ROUND result-assignment boundary — source freeze, UNRUN
+
+emit-round-inline.cjs validates BOTH stored-parent raw digests0be810176af4c28e...
+and exact264 input/D/index inventory, derives a NEW round-inline.prg and
+round-inline-cases.json from the retained source (completed pair NOT replayed).
+Same264 ORIGINAL/bothFIXED/D0..18/528rows,35fields (original26 + inline9).
+All inputs remain INLINE width40/18. Public ROUND is evaluated inline for
+VARTYPE/CFNMETA/BINTOC/TRANSFORM/STR separately, only resulting characters
+assigned. Snapshot fields26..30 precede stored ROUND assignment; fresh inline
+meta/BRS/display/STR fields31..34 follow the after-CRT control. These are separate
+evaluations, NOT a claim of one retained numeric object. Stored result and all
+original/settings/CRT identity controls remain independent.
+
+audit-round-inline.cjs requires full528 unique keys/footer/actual0/empty stderr/
+stdout==raw, unchanged original width40/18/BRS/settings/display+STR, exact CRT17
+module/CW/argument before+after, and stored result descriptor/payload/display/
+STR/CRT tuple identical to qualified parent. INLINE result type/active descriptor/
+finite BRS/display/STR must be stable across control call and repeat, but are
+NOT assumed equal to stored result or expected arithmetic. Only published
+inactive Numeric.integer/Integer.real+decimals slots normalized; public
+VARTYPE=N for both carriers. Per-field raw repeat differences retained/countable.
+
+round-inline-capture.sh uses NEW build/default-transform-round-inline, refuses
+dirty/attempted source/root, exact reused observer hash+archived C/header,
+generation-input/parent/source/native/tool hashes and process-local native-only
+msvcr71=n. Each native invocation still requires NEW BOTH CLEAR and immediate
+full PSI avg10 AND avg60<1%/idle prefix; first strict --single BEFORE repeat.
+First binding/runtime error stops without footer. Ordinary-shell fallback,
+NOT REA Evidence/descendant-cleanup attestation; no compiler/VM/global config.
+
+Node syntax, emitter PRG+inventory regeneration/cmp, emitted35-field separator
+count, bash-n and diff-check0. Source checks ONLY; new worker/root/native not
+started. Observer C/header/binary unchanged, HOST-ONLY reused FLL SHA
+a4d38aaecf67837c06b0d640746bc44b56b126d697cd0519c1b25c1b7934b090.
+NEXT sign/push clean freeze, NEW BOTH native-only CLEAR/all immediate guards.
+No inferred internal TRANSFORM call, accepted formatter, tolerance/cap or
+production ROUND change. Exact recovery/expectations/ORIGINAL ladder remains.
+
+LOW DQ-DV001 walkthrough: traced26 retained+9 new fields, inline versus stored
+numeric assignment routes, each input40/18 consumer, first-error/no-footer and
+strict-first-before-repeat flow, unchanged identity/parent controls and active
+slot normalization. Completed source checks above, developer self-review only,
+not native/independent-human/release acceptance. Mistaking repeated expressions
+for a retained object or a formatter algorithm could silently corrupt display;
+explicit route contracts/independent parent/raw controls mitigate that misuse.
+Existing hazards/rollback/notification apply; no owner-input blocker/pause.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
