@@ -2348,6 +2348,63 @@ and kept separate zero/text metrics. Developer self-review only, NOT independent
 human/system/release assurance. Existing hazards/rollback/notification retained;
 no owner-input blocker or automation pause.
 
+### Exact fixed-count STR / native CRT overlap — offline only
+
+analyze-str-crt-overlap.cjs joins the qualified str-middle-captures1 and
+crt-nativeonly-captures1 archives AFTER capture, without executing native code.
+Both first/repeat raw hashes and published SHA256SUMS bind the inputs; selected
+raw fields must agree with the audit projections. All528 original-route
+payload/settings/N40/18/display/current-D STR contexts and runtime identity/CW
+controls match. ONLY F-at-current-D exists in the older capture: counts15..18
+therefore overlap96 contexts (12 inputs per count/FIXED), NOT every count at
+every payload. F17 control is also byte-exact to the newer F17 control where
+the requested counts match. No retroactive broad/Windows/runtime qualification.
+
+The comparison uses the public digit/decimal-point/sign interpretation from
+[Microsoft _fcvt documentation](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/fcvt?view=msvc-170),
+rechecked2026-10-19. Current documentation interprets the interface; it does
+not prove installed MSVCR71 implementation or VFP internal calls. Signed32-bit
+decimal positions and coefficient/exponent normalization are exact integers;
+9 metric sanity checks pass. No binary Number(text), tolerance or formatter.
+Empty native digit returns stay separate, without manufactured zero digits or
+a numeric equality claim. Literal padding/sign observations remain retained.
+
+Observed overlap, per12 contexts/FIXED:
+
+| Requested count = applied D | Empty CRT digits | Nonempty CRT digits | STR versus nonempty CRT value differences | TRANSFORM versus nonempty CRT value differences |
+| --- | --- | --- | --- | --- |
+| 15, OFF or ON separately | 12 | 0 | not compared | not compared |
+| 16, OFF or ON separately | 0 | 12 | 12 | 12 |
+| 17, OFF or ON separately | 0 | 12 | 12 | 12 |
+| 18, OFF or ON separately | 0 | 12 | 12 | 12 |
+
+Thus all72 nonempty conversions differ from both displays in THIS overlap.
+This rejects direct same-request-count digit-copy/value equivalence here,
+not every possible CRT use, an internal call sequence or all Numeric inputs.
+For count15,24 empty returns are reported, not counted as matching zeros.
+STR versus TRANSFORM value differences: OFF6/12 at15/16/17 and0/12 at18;
+ON0/12 each. Padding and zero spelling remain separate from these value metrics.
+
+str-crt-overlap-analysis1 retains18 gzip source/output/status/pressure/readback
+files byte-compared to the intact hostbuild/default-transform-str-crt-overlap1,
+overlap2 and overlap3 directories, manifest and checksum inventory. Initial
+offline attempt1/status1 assumed a JSON manifest absent from the older CRT
+archive; its source/error/empty output are preserved. Correction uses BOTH
+archives' published SHA256SUMS and retains exact raw/control predicates;
+attempt2/status0 precedes the metric sanity checks, final attempt3/status0/
+empty stderr/9 checks/readback0/report byte-exact. No native invocation or
+qualification in any of these offline attempts. Ordinary shell NOT REA Evidence.
+
+NEXT bounded offline classification: correlate the retained18 rejected
+arithmetic-graph magnitudes with the qualified fixed STR15..18 and typed-stage
+observations to isolate which conversion question remains. Preserve exact
+inputs/counterexamples; do not fit constants/caps/tolerance or implement a
+rejected graph. Native-only expected freeze and retained division ladder stay
+OPEN. LOW DQ-DV001 walkthrough checked join cardinality/raw-to-projection fields,
+signed decimal positions, empty-return exclusion,9 sanity checks and18 archive
+readbacks. Developer self-review only, not independent/release assurance;
+existing hazards, rollback and notification unchanged.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
