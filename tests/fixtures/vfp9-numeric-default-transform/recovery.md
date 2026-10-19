@@ -1622,6 +1622,69 @@ Misuse could mistake assignment-normalized input for width40 evidence; unchanged
 strict metadata gate and preserved rejection mitigate silent display/data risk.
 Existing hazards/rollback/notification and exact-recovery ladder remain open.
 
+### Corrected inline-input/stored-ROUND-result pair — qualified528
+
+At clean signed/DCO9e9bf0c15cf07374a987d49d5a18115f18ee4502, NEW explicit
+BOTH native-only CLEAR. No compiler/new observer. Each immediate guard0/prefix
+idle1; full PSI first0.15/0.55, repeat0.10/0.51 (avg10/avg60, each<1%). Inherited
+override UNSET/process-local native-onlymsvcr71=n, exact reused observer/source/
+native input hashes0. First actual0/empty stderr/DONE528, strict --single0
+BEFORE repeat; repeat actual0/empty/DONE528/paired0. All26 raw fields identical,
+inactive differences0, both raw SHA
+0be810176af4c28eca3864eae70dc8adbfe409986ca227cdde8ccaa7c8013607.
+
+Same264 ORIGINAL inputs/D0..18/both FIXED; original INLINE width40/scale18,
+BRS/settings/original TRANSFORM+STR/CRT17 before-after identity/argument/CW027F
+controls exact. Stored ROUND result type/active descriptor/BRS/display/STR
+stable across control call and repeat. File sampled once perFLL/later loaded
+image/path checks, NOT atomic mapped-code proof/Windows execution/internal-call
+attribution. Ordinary shell NOT REA Evidence/descendant-cleanup attestation.
+Both chats RELEASED/prefix idle1/no reservation. Previous first-only rejection
+and pre-launch guard remain intact and unqualified.
+
+round-result-captures1/55 byte-compared compressed plain/source/OWN FXP/full
+shell receipts/raw/strict/offline comparison; manifest+archived strict0,
+host/archive audit byte-exact0, offline comparison recomputed byte-exact0,
+input/tool/native/observer hashes0 before relocation. Intact host at
+build/default-transform-round-result-captures1; original working path ABSENT.
+Existing SDK-linked observer and metadata FLL remain HOST-ONLY, not copied.
+
+analyze-round-result.cjs added AFTER capture, offline only: verifies both raw
+digests/strict flags, bound-parent raw digests and all528 original display+STR
+contexts unchanged. This overlap ONLY, no broader retroqualification.
+
+| Stored-result comparison | FIXED OFF (264) | FIXED ON (264) |
+| --- | --- | --- |
+| Result payload differs from original | 264 | 264 |
+| Result TRANSFORM differs from original | 252 | 180 |
+| Result STR(...,40,D) differs from original | 132 | 132 |
+| Conflicting stored-result tuples / distinct tuples | 8/44 | 44/44 |
+
+Tuple includes FIXED/D/original40/18/result carrier/width/decimals/payload,
+deliberately NOT original bits. Full tuples and all comparisons/counterexamples
+retained. D0/ON indices3 and4 both stored Numeric width10/scale0/result+0, yet
+original displays0 and1. Thus the stored public ROUND tuple alone cannot
+determine original default display in this finite set. Assignment is part of
+this route: this does NOT establish inline ROUND descriptor behavior, disprove
+all internal rounding roles, identify calls, or accept a formatter rule.
+
+NEXT bounded recovery: observe INLINE ROUND(CFNDEC(CFNWIDTH(payload,40),18),D)
+descriptor/BRS/TRANSFORM/STR at each consumer, alongside SAME stored-result and
+original controls. This isolates the still-unobserved result-assignment boundary
+without weakening any original width40/parent/identity checks. Existing observer
+can be reused, no compiler needed. Freeze a NEW bounded caller/inventory/reader/
+worker before fresh BOTH native-only CLEAR/all immediate gates; do not replay
+this completed pair or accept an inferred tolerance/cap/internal-call shortcut.
+New inline-result sources NOT written/frozen yet.
+
+LOW DQ-DV001 delta walkthrough: checked strict-first-before-repeat statuses,
+all528 key/descriptor/BRS/settings/identity controls, raw equality,55 byte checks/
+manifest/archived strict/offline reproducibility0, finite tuple collision keys
+and explicit stored-result boundary. Misuse as a universal formatting rule would
+silently lose distinctions; recorded counterexamples and next inline-result
+boundary preserve the recovery gap. Developer self-review only, not independent
+human/system/release acceptance; existing hazards/rollback/notification retained.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
