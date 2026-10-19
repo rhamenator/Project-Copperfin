@@ -1797,6 +1797,58 @@ constants as a formatter rule risks silent data corruption; observation-only
 contracts/independent original controls/exact recovery ladder remain mitigation.
 Existing hazards/rollback/notification retained, no owner-input blocker/pause.
 
+### Inline rejected-graph arithmetic route — source freeze, UNRUN
+
+emit-arithmetic-inline.cjs verifies BOTH bound inline-ROUND-parent raw SHA
+254b46dadbb71fa51b10e8439d51785b2c2aa3eb871c8c948fd3b8bdd3da4873,
+same264 input/index/D tuples against original scalar inventory, same8 stage
+names. NEW arithmetic-inline.prg/inventory evaluate prior REJECTED graph's
+powDown/bias/shifted/effectiveCount/powUp/scaled/raised/quantized as INLINE
+expressions, not numeric locals. Only VARTYPE/CFNMETA/BINTOC character results
+are stored. Numeric input/control loop indices remain ordinary variables;
+stage arithmetic uses ABS(payload), matching prior graph, while independent
+original formatting controls use inline width40/18. No guessed new constants.
+Prior0.0005/0.5/MIN(D,15) remain rejected diagnostic stimulus, NEVER requirement,
+proposed tolerance/cap/internal TRANSFORM algorithm or authorized production fix.
+
+Same264/bothFIXED/D0..18/528rows/66fields:26 original+storedROUND+CRT controls
+and8*5 stage fields (VARTYPE/meta/BRS BEFORE; meta/BRS AFTER). Each expression
+evaluation independent; no retained-object claim. Appended records split across
+source lines (maximum715 characters), delimiter count65, all8 expression
+parentheses balanced/source has no named numeric stage assignment.
+
+audit-arithmetic-inline.cjs requires full528 keys/footer/actual0/empty stderr/
+stdout==raw, exact original40/18/BRS/settings/display+STR, stored-ROUND descriptor/
+payload/text and CRT17 tuple against bound parent, exact before-after runtime
+identity/argument/CW027F. Every stage finite typed result/meta/BRS stable before/
+after/repeat, no predicted stage bits/accepted arithmetic. Public VARTYPE=N for
+N/I carriers, raw Value tag selects active slots; only published inactive slots
+normalized and counted. First strict --single BEFORE repeat remains mandatory.
+
+arithmetic-inline-capture.sh uses new build/default-transform-arithmetic-inline,
+refuses dirty/attempted source/root, verifies unchanged proven observer binary/
+archived C/header, hashes source/generation-parent/old-inventory/native/tool inputs,
+process-local native-onlymsvcr71=n. NEW BOTH native-only CLEAR and immediate
+full avg10 AND avg60<1%/idle prefix EACH launch, first-error/no-footer. No new
+observer/compiler/VM/global configuration. Ordinary shell NOT REA Evidence/
+descendant-cleanup attestation; earlier lifecycle blocker unchanged.
+
+Node syntax/emitter PRG+inventory regeneration/cmp/expression balance/field-count/
+no-named-stage-assignment/bash-n/diff-check0; observer hash unchanged
+a4d38aaecf67837c06b0d640746bc44b56b126d697cd0519c1b25c1b7934b090.
+These are source checks ONLY; no worker/root/native run yet. NEXT signed clean
+freeze/push/NEW BOTH native-only clearance/all immediate gates. Do not replay
+completed scalar/CRT/ROUND pairs or retroqualify prior environment observations.
+
+LOW DQ-DV001 walkthrough: mapped prior scalar graph's exact operation tree to
+all8 inline expressions,66 field indices/typed before-after samples, no numeric
+stage locals, independent parent/original/settings/identity controls, first-error
+and strict-first-before-repeat flow. Source checks above actually passed;
+developer self-review only, not native/independent-human/system/release evidence.
+Misuse of a rejected hypothesis as implementation could silently corrupt data;
+explicit diagnostic-only constants/no expected bits/unchanged recovery ladder
+mitigate it. Existing hazards/rollback/notification retained; no owner blocker.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
