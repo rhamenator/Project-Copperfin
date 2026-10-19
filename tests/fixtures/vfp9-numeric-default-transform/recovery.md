@@ -2986,6 +2986,82 @@ resource clearance before any native/compiler work. Exact display conversion,
 native-only expectations, unchanged division ORIGINAL/SAME and full acceptance
 ladder remain OPEN; no production formatter/helper/hook or compatibility closure.
 
+## 2026-10-19 observable-stage / adjacent endpoint join
+
+Completed the preceding bounded NEXT discriminator with
+join-observable-stage-adjacency.cjs. This replays/binds archived inventory
+source/results (including the raw ROUND validator) and classification pass2
+source/results (including EVERY arithmetic-stage raw field in BOTH captures).
+Source digests and all264 endpoint index/D/bits/public-ROUND/TF/STR joins checked.
+The eight diagnostic expressions are independent inline evaluations of a
+REJECTED graph, not observed formatter internals or a recovered operation order.
+All220 actually adjacent pairs and264 endpoints retained, six uncaptured gaps
+excluded. D/sign held equal; original metadata N40/18 validated by the inventory.
+
+Payload equality and full ACTIVE tuple equality are distinct metrics, including
+type/width/active scale/value/CW. Inactive union slots are excluded ONLY by the
+already raw-validated type rules; signed-zero payloads are not normalized away.
+Nine new metric checks cover key order, transition/plateau classification,
+same-payload/different-width distinction, signed zero, N/I distinction and
+nonfinite rejection. Replayed inventory8/classification9/shared raw validator8
+checks pass; 528 raw/control contexts joined,264 ON endpoints/220 pairs.
+
+| Observable expression/consumer | Equal active tuple across44 observed changes | Different tuple across44 changes | Equal tuple on176 observed plateaus | Different tuple on176 plateaus |
+| --- | ---: | ---: | ---: | ---: |
+| shifted | 0 | 44 | 2 | 174 |
+| scaled | 2 | 42 | 12 | 164 |
+| raised | 12 | 32 | 92 | 84 |
+| quantized | 12 | 32 | 166 | 10 |
+| public inline ROUND | 44 | 0 | 176 | 0 |
+| public stored ROUND | 44 | 0 | 176 | 0 |
+
+The payload-equal counts across changes equal the tuple-equal counts in this
+sample. Inline and stored ROUND are EACH constant across all220 pairs; that is
+not a claim that their widths equal each other. D-only powDown/bias/effectiveCount/
+powUp controls are constant across all220 pairs by construction, not a discovery
+about the formatter. Equal ROUND tuples on44 display transitions are explicit
+counterexamples to ROUND tuple sufficiency for original display in this sample.
+
+The two scaled-collapse witnesses are D13 pairs159->160 and165->166 (signs),
+bits3D2C1E8DBBA38061->3D2C1E8DBBA38062 and corresponding BD payloads. The
+shifted tuples differ but scaled tuples coincide; twelve raised/quantized
+collapse pairs are111->112,117->118,123->124,129->130,135->136,141->142,
+147->148,153->154,159->160,165->166,171->172,177->178. These observations
+do not prove which operations VFP uses internally, or that changing precision
+would establish parity. No candidate accepted, interpolation/fitted threshold,
+expected emitter or production formatter.
+
+Actual analysis0/readback0/empty/byte-identical and input hashes before+after
+EACH0. BEFORE source snapshot; basea42cbbf31+dirty snapshots explicitly POST-check,
+not a native clean freeze. Each immediate prefixidle1/fullPSI avg10/avg60
+0.00/0.00%/guard0/nice-n10. Hostbuild/default-transform-stage-adjacency1 intact.
+stage-adjacency-analysis1 retains23 baseline gzip receipts/source/reports/gates/
+inputs/full actual shell result; baseline manifest/compressed hashes/gunzip
+sizes/hashes/host bytes checked. Separate byte-equivalent archived-source replay0/
+empty/byte-exact to BOTH reports/input hashes before+after0, NEW immediate
+prefixidle1/fullPSI0.00/0.00%/guard0/nice-n10. Ten supplemental receipts and
+verification-manifest/VERIFICATION-SHA256SUMS ->33 verified gzip receipts.
+Ordinary shell NOT REA Evidence/native/Windows/internal-call/atomic-image or
+cleanup proof. No compiler/native/Wine/VM invocation/reservation.
+
+LOW DQ-DV-5611-NUMERIC-DEFAULT-TRANSFORM-001 delta/walkthrough: examined the two
+D13 witness endpoints, separate payload/metadata metrics, all220 pair accounting,
+independent-expression warning, D-only controls and nine synthetic truth checks.
+Misuse risk: treating a diagnostic-stage collision as the actual formatter
+sequence or an accepted extra-precision repair. Retained raw tuples/counterexamples
+and explicit sufficiency-only interpretation mitigate this. Actual developer-
+maintainer self-review/automated checks, not independent/system/release assurance.
+HZ-data-corruption-01/HZ-runtime-crash-01/HZ-doc-command-01/rollback unchanged.
+
+NEXT bounded discriminator: exact-rational comparison of already observed
+shifted/powUp and scaled/+half operands for these collapsed endpoint pairs,
+retaining their distinguishability relative to the observed quantization
+boundary. This is offline analysis of measured operands only, not a fitted
+conversion rule or proposed internal precision. Fresh idle prefix/fullPSI avg10
+AND avg60<1%/nice-n10 EACH offline launch; NEW BOTH explicit resource CLEAR before
+any compiler/native work. Full recovery/expectation/ORIGINAL/SAME/hosted/review
+ladder remains OPEN, including uncancelled division/ListItem prerequisites.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
