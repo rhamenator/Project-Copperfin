@@ -2045,6 +2045,97 @@ new FLL rather than old-export reuse, and strict-first gating before repeat.
 Developer self-review/source checking only, not independent/native acceptance.
 Existing hazards, rollback and notification remain open as above.
 
+## Qualified guarded _gcvt pair — 2026-10-19
+
+Unchanged clean signed/DCO source0d836050f63a342c8cc2f741f81acade31100172
+completed the compiler worker after fresh BOTH compiler-only clearance: all11
+stages0; GNU+Clang ASan/UBSan115 exact shared-helper STUB assertions EACH0 and
+72 SHA/PE direct invocations EACH0 (374 direct checks total). Every compiler/
+test/import/link and72-percompiler child invocation had immediate idleprefix1
+and full PSI avg10 AND avg60 each<1%. Own32-bit compile/link0, FLL HOST-ONLY
+SHA0b1fcd2ba81b95631cb52e6ecd0d4afa721b450a967402f504d1852a49e9e9ac.
+Four ignored legacy SDK .debug$S linker warnings are byte-identical to prior
+successful link stderr; no C/sanitizer error. An extra offline aggregate checker
+initially required empty stderr even for this known linker warning; corrected
+aggregate explicitly retains/byte-checks these292 bytes, no worker or native
+predicate changed. Compiler window released; no later recompile.
+
+Separate native request first held4.34/1.21 before worker. Renewed BOTH CLEAR
+then immediate actual worker guard75 at full5.24/1.86/prefixidle1 BEFORE VFP;
+no first.status/raw/repeat. Window released. gcvt-guard1 retains186 byte-compared
+gzip plain/source/first-party hash-input/full shell/coordination receipts plus
+manifest/SHA256SUMS. Host+archived forensic0 byte-exact, explicitly
+nativeInvoked:false/pairedQualified:false. Intact hostbuild/default-transform-gcvt-guard1.
+172 successful build files were then byte-copied, digest-checked, NOT rebuilt,
+into a fresh working root. SDK binaries/host executables remain HOST-ONLY.
+The original guard manifest names seven known excluded binary artifacts; the
+actual archive also excludes auto-generated gcvt-probe.lib by the all-.lib
+filter. No library/object/FLL/executable appears among archived plain files.
+
+Later NEW explicit audit+DAW native-only CLEAR and immediate full0.00/0.01
+at BOTH launches/prefixidle1/guard0 allowed the same source+verified build.
+nice -n10, inherited DLL override UNSET, process-onlymsvcr71=n, exact source/
+tool/helper/runtime/observer/native digests0. First actual0/empty stderr/
+DONE1584/frozen strict --single0 BEFORE repeat; repeat actual0/empty/DONE1584/
+paired reader0. All20 fields byte-identical/inactive-slot differences0; raw
+SHA BOTH0b7950e0725e76d15742428b0b03614563ddcc15a1ac088a28f207b7788e7712.
+Original N40/18/BRS/settings/display+STR/public_fcvt17 before+after all exact
+to bound parent; G input/count/CW027F/module digest+PE32/own2048buffer/PASS
+canaries/OWN pointer/bounded ASCII decimal-scientific text all pass. No errors
+were relaxed. Same264 ORIGINAL/bothFIXED/count15/16/17,1584 observations/run.
+Once-perFLL file sampling/later image-path checks remain NOT atomic mapped-code
+proof, Windows execution or VFP internal API attribution. Ordinary-shell
+fallback only, NOT REA Evidence/descendant-cleanup attestation. Both chats
+released/prefixidle1/no reservation. No compiler/VM/completed native replay.
+
+gcvt-captures1 contains217 baseline+9 supplemental=226 byte-compared gzip
+plain/raw/source/OWN FXP/full shell/analysis/readback/hash receipts, native and
+verification manifests plus checksum inventories. Archived strict reader0,
+offline recomputation0 and guard forensic0 each byte-exact to host output;
+all final source/tool/runtime/observer/build manifests rechecked0 before move.
+Intact hostbuild/default-transform-gcvt-captures1; original working rootABSENT.
+All SDK FLL/obj/import libs (including generated gcvt-probe.lib)/host executables
+EXCLUDED, retainedHOSTONLY. Archive helper initially stopped safely on that
+additional auto-generated .lib; resumed only missing plain gz files after
+byte-comparing every existing partial archive, no overwrite/native rerun.
+Prior Node /dev/stdin pipe runner failure was corrected to node - for offline
+guard readback only; failed native/guard receipts were not retroqualified.
+
+analyze-gcvt.cjs was written AFTER capture and runs offline only. It verifies
+both native raw digests, strict flags, bound-parent hashes and all528 original
+display/STR/CRT controls unchanged (ONLY this overlap, not broader provenance).
+GCVT counts15/16/17 literal output differs from original TRANSFORM in ALL264
+OFF and ALL264 ON contexts per count. Exact decimal coefficient/exponent
+normalization (no Number(text), rounding, powers or tolerance) shows value
+differences106/208/258 OFF for15/16/17 respectively,264 ON for EVERY count.
+Value equality separately ignores padding/signed-zero spelling; it is NOT
+literal formatting parity. Full observations/counterexamples retained.
+Tuple(fixed,D,N40/18,count/text) conflicts:
+15 =>8/44OFF and44/44ON;16 =>2/222OFF and16/222ON;17 and combined15+16+17 =>
+0/264 each. Uniqueness including17-digit text is NOT an accepted algorithm,
+precision/cap/order/tolerance or internal-call proof; do not implement a lookup
+or text shortcut. Public _gcvt alone does not establish original formatting.
+
+NEXT bounded discriminator: public fixed-count STR on the unchanged original
+inline40/18 inputs at explicit15 and18 decimal places, alongside original
+TRANSFORM/current-D STR and native binding controls before+after, bothFIXED.
+This isolates public conversion-family behavior from default display policy;
+counts are stimuli, NOT guessed VFP caps. Existing probes recorded STR at the
+current D, not this cross-setting fixed-count route. Preserve parent byte
+controls, independent reader and strict-first repeat. Reuse proven observer
+with exact own-source/binary identity; freeze a new caller/reader/worker before
+NEW BOTH native-only clearance. No compiler needed unless observer changes.
+Do not restart completed pairs or implement rejected graphs; exact formatter
+recovery and retained division ORIGINAL/support/wiring/SAME/hosted/review remain.
+
+LOW DQ-DV001 walkthrough: traced all374 direct assertions/checks and both native
+launch receipts through frozen reader, archive decompression/SHA/byte checks,
+strict-first ordering and offline exact-decimal normalization. Rechecked that
+resource gates used actual I/O, CPU work used nice, no VM or backup state was
+changed, and no G17 uniqueness was promoted to a requirement. Developer
+self-review only, not independent-human/system/release assurance. Existing
+hazards/rollback/notification remain open; no issue/compatibility closure.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only

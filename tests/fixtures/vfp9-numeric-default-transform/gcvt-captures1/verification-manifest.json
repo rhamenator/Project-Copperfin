@@ -1,0 +1,58 @@
+{
+  "baselineFiles": 217,
+  "supplementalFiles": 9,
+  "baselineAndSupplementalByteCompared": 226,
+  "archivedStrictReadback": 0,
+  "archivedAnalysisRecomputation": 0,
+  "archivedGuardReadback": 0,
+  "hostArchiveOutputsByteExact": true,
+  "hostRoot": "build/default-transform-gcvt-captures1",
+  "workingRootAbsent": true,
+  "files": [
+    {
+      "name": "archive-audit.json",
+      "bytes": 2938323,
+      "sha256": "89f733f62003f07018da77140644016fcf52d970ff589049c700ed8899788006"
+    },
+    {
+      "name": "archive-audit.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "archive-analysis.json",
+      "bytes": 693519,
+      "sha256": "bb00099347db8a43aa422a1d2fc67d44d28782836241bed7ecbf35681d63b0eb"
+    },
+    {
+      "name": "archive-analysis.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "archive-guard-forensic.json",
+      "bytes": 379,
+      "sha256": "2563acfaaaa5031ac92bd72c87a6dccd663ad1c175c7a9474c010d0188aed7cb"
+    },
+    {
+      "name": "final-build-inputs-check.txt",
+      "bytes": 1981,
+      "sha256": "d1605577edd48973fa4946c8b149f49ad0b89fa308b2f719fdbabc983b2fcf27"
+    },
+    {
+      "name": "final-built-check.txt",
+      "bytes": 324,
+      "sha256": "004130ffba041db28a92ffd8a87e76b167d5a807b151c062298e8fe7c7fcc61a"
+    },
+    {
+      "name": "final-inputs-check.txt",
+      "bytes": 1251,
+      "sha256": "7832d8d7d8b3f92339929d68b6892ed09ba35d340356b24dc8af6b8630532cc1"
+    },
+    {
+      "name": "host-finalization-shell.json",
+      "bytes": 228,
+      "sha256": "68957142719f850a266540ef29af79abeacaa093dd86464b394eb3223684b6c8"
+    }
+  ]
+}
