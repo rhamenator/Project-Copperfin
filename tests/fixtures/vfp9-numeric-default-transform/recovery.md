@@ -1577,6 +1577,51 @@ resource stop into false compatibility evidence; explicit no-invocation fields
 and unchanged native/strict-first gates mitigate that risk. Existing hazards,
 rollback/notification and development self-review limits apply.
 
+### ROUND first-only argument-width rejection and inline correction
+
+NEW BOTH native-only CLEAR at clean signed/DCO35bd9b24bbecfb4f9503170c5909375463393425.
+Immediate full PSI0.00/0.02/idle prefix1, reused observer/source/native input
+hashes0. First native actual0/empty stderr/DONE528, then FROZEN strict reader1
+at required width40 (0028), correctly preventing repeat. Raw SHA
+e86d9b43a656896a2dd9ed3965b5d4fe77273aeca765dfe89d3977511e492468.
+All argument pre/post widths already29 or30 (264 each); descriptor width does
+not change across ROUND, so this is not evidence of ROUND mutating input.
+Caller stored CFNDEC(CFNWIDTH(payload,40),18) into local argument before
+observation, unlike the prior inline width40 captures. This route did not
+preserve the required input descriptor. No semantic ROUND result accepted.
+
+round-result-attempt1/39 byte-compared plain/source/OWN FXP receipts retain
+actual first/strict diagnostic/full ordinary-shell results. Manifest0 and
+host+archived audit-round-attempt.cjs forensic0 explicitly argumentControlQualified:
+false/pairedQualified:false. Original reader/source archived unchanged; this
+forensic check added AFTER failure is NOT strict acceptance. Intact host at
+build/default-transform-round-result-attempt1, original working path absent.
+Both chats RELEASED/prefix idle1. No compiler/SDK binary copies/VM/REA Evidence/
+descendant-cleanup attestation; previous guard1 remains unchanged.
+
+Correction: emit the already-used inline CFNDEC(CFNWIDTH(payload,40),18) at
+EVERY original metadata/BRS/display/STR/CRT17 consumer and public ROUND input,
+without local argument assignment. Same264 input/D keys,26fields/528rows,
+original parent controls, before/after CRT identity and width40 strict check
+are unchanged. Reader additionally verifies the explicit input-route source
+contract. The result remains deliberately assigned to local rounded, so result
+metadata/display evidence covers that STORED result only, not inline result
+metadata. Inventory distinguishes both routes. No predicted bits/strings or
+relaxed predicates, changed observer/compiler, production ROUND/formatter fix.
+
+Node syntax/regeneration+cmp/bash-n/diff-check0; next signed clean source freeze,
+NEW BOTH native-only CLEAR/all immediate gates and fresh root. Earlier failure
+stays unqualified, no retroactive repeat. Strict first BEFORE repeat unchanged.
+
+LOW DQ-DV001 delta walkthrough: traced the failing field4 assertion and both
+argument descriptor samples against528 rows, compared prior inline caller and
+own public-ABI clone setter source, checked each corrected consumer route,
+stored-result boundary, raw archive39 byte checks/manifest/forensic0 and source
+checks above. Developer self-review, not independent-human/release assurance.
+Misuse could mistake assignment-normalized input for width40 evidence; unchanged
+strict metadata gate and preserved rejection mitigate silent display/data risk.
+Existing hazards/rollback/notification and exact-recovery ladder remain open.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only

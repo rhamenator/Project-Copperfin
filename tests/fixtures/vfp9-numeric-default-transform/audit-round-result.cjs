@@ -5,6 +5,9 @@
 const fs=require('node:fs'),path=require('node:path'),z=require('node:zlib'),a=require('node:assert/strict'),crypto=require('node:crypto');
 const inv=JSON.parse(fs.readFileSync(path.join(__dirname,'round-result-cases.json'))),source=fs.readFileSync(path.join(__dirname,'round-result.prg'),'utf8');
 a.equal(inv.inputCount,264);a.equal(inv.recordsPerRun,528);a.equal(inv.inputs.length,264);
+a.equal(inv.inputRoute,'Inline CFNDEC(CFNWIDTH(payload,40),18) expression at every consumer, never stored in an argument variable.');
+a.equal(inv.resultRoute,'Public ROUND expression assigned to local rounded; metadata/payload/display/STR of that stored result are observed, not assumed equal to inline result metadata.');
+a(source.includes('rounded=ROUND(CFNDEC(CFNWIDTH(payload,40),18),decimalCount)'));a(!/\bargument\s*=/i.test(source));
 for(const r of inv.inputs){a(source.includes(`inputHex[${r.index}]='${r.bits}'`));a(source.includes(`targetDecimals[${r.index}]=${r.setting}`));}
 const bytes=(root,n)=>{const p=path.join(root,n);return fs.existsSync(p)?fs.readFileSync(p):z.gunzipSync(fs.readFileSync(p+'.gz'));},root=process.argv[2];a(root);
 const sha=b=>crypto.createHash('sha256').update(b).digest('hex'),ascii=h=>Buffer.from(h,'hex').toString('ascii');

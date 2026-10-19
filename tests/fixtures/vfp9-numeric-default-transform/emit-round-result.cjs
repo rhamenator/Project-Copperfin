@@ -9,13 +9,15 @@ for(const n of ['first','repeat']){a.equal(parent[n+'Sha256'],parentHash);a.equa
 const inputs=parent.observations.filter(r=>r.fixed==='ON'&&r.count===r.setting+1).map(r=>({index:r.index,setting:r.setting,bits:r.bits}));
 a.equal(inputs.length,264);a.deepEqual(inputs,base.inputs);
 const inv={requirement:base.requirement,parentNativeSha256:parentHash,inputCount:264,recordsPerRun:528,width:40,scale:18,inputs,
+ inputRoute:'Inline CFNDEC(CFNWIDTH(payload,40),18) expression at every consumer, never stored in an argument variable.',
+ resultRoute:'Public ROUND expression assigned to local rounded; metadata/payload/display/STR of that stored result are observed, not assumed equal to inline result metadata.',
  modulePath:base.modulePath,moduleSha256:base.moduleSha256,moduleFileSize:base.moduleFileSize,modulePe:base.modulePe,runtimeEnvironment:base.runtimeEnvironment,
  observerSha256:'a4d38aaecf67837c06b0d640746bc44b56b126d697cd0519c1b25c1b7934b090',
  limitation:'Independent public ROUND(payload,D) at D0..18 on explicit ORIGINAL payloads/metadata40scale18; typed result metadata/BRS/display/STR observed, NOT TRANSFORM internal-call attribution or accepted rounding algorithm. Existing bound CRT17 controls bracket each public call; no CRT count0, new compiler/observer, atomic image proof or Windows parity.'};
 const prior=fs.readFileSync(path.join(__dirname,'crt-precision.prg'),'utf8'),functions=prior.slice(prior.indexOf('FUNCTION Unhex'));a.equal(prior.split('FUNCTION Unhex').length,2);
 const source=prior.split('\n').slice(0,3).join('\n')+'\n* RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001: independent public ROUND discriminator.\nLOCAL ARRAY inputHex[264],targetDecimals[264]\n'+inputs.map(r=>`inputHex[${r.index}]='${r.bits}'\ntargetDecimals[${r.index}]=${r.setting}`).join('\n')+String.raw`
 LOCAL outputPath,libraryPath,crtPath,index,decimalCount,fixedNo,fixedMode
-LOCAL payload,argument,rounded,bindingBefore,bindingAfter,failed,line,caught,total
+LOCAL payload,rounded,bindingBefore,bindingAfter,failed,line,caught,total
 LOCAL beforeMeta,beforeBits,beforeDisplay,beforeStr,roundedMeta,roundedBits
 LOCAL roundedDisplay,roundedStr
 outputPath='Z:\home\rich\.codex\worktrees\numeric-literal-display-5611\Project-Copperfin\build\default-transform-round-result\results.txt'
@@ -39,27 +41,26 @@ FOR index=1 TO ALEN(inputHex)
   ENDIF
   failed=.F.
   TRY
-   argument=CFNDEC(CFNWIDTH(payload,40),18)
-   beforeMeta=CFNMETA(argument)
-   beforeBits=HexBytes(BINTOC(argument,'BRS'))
-   beforeDisplay=HexBytes(TRANSFORM(argument))
-   beforeStr=HexBytes(STR(argument,40,decimalCount))
-   bindingBefore=CFNFCVT(argument,17)
+   beforeMeta=CFNMETA(CFNDEC(CFNWIDTH(payload,40),18))
+   beforeBits=HexBytes(BINTOC(CFNDEC(CFNWIDTH(payload,40),18),'BRS'))
+   beforeDisplay=HexBytes(TRANSFORM(CFNDEC(CFNWIDTH(payload,40),18)))
+   beforeStr=HexBytes(STR(CFNDEC(CFNWIDTH(payload,40),18),40,decimalCount))
+   bindingBefore=CFNFCVT(CFNDEC(CFNWIDTH(payload,40),18),17)
    IF LEFT(bindingBefore,6)=='ERROR:'
     failed=.T.
     line='ERROR-BINDING-BEFORE|'+ALLTRIM(STR(index,6,0))+'|'+HexBytes(bindingBefore)
    ELSE
-    rounded=ROUND(argument,decimalCount)
+    rounded=ROUND(CFNDEC(CFNWIDTH(payload,40),18),decimalCount)
     roundedMeta=CFNMETA(rounded)
     roundedBits=HexBytes(BINTOC(rounded,'BRS'))
     roundedDisplay=HexBytes(TRANSFORM(rounded))
     roundedStr=HexBytes(STR(rounded,40,decimalCount))
-    bindingAfter=CFNFCVT(argument,17)
+    bindingAfter=CFNFCVT(CFNDEC(CFNWIDTH(payload,40),18),17)
     IF LEFT(bindingAfter,6)=='ERROR:'
      failed=.T.
      line='ERROR-BINDING-AFTER|'+ALLTRIM(STR(index,6,0))+'|'+HexBytes(bindingAfter)
     ELSE
-     line=fixedMode+'|'+ALLTRIM(STR(index,6,0))+'|'+inputHex[index]+'|'+ALLTRIM(STR(decimalCount,4,0))+'|'+beforeMeta+'|'+beforeBits+'|'+beforeDisplay+'|'+beforeStr+'|'+VARTYPE(SET('DECIMALS'))+'|'+HexBytes(TRANSFORM(SET('DECIMALS')))+'|'+VARTYPE(SET('FIXED'))+'|'+HexBytes(TRANSFORM(SET('FIXED')))+'|'+bindingBefore+'|'+VARTYPE(rounded)+'|'+roundedMeta+'|'+roundedBits+'|'+roundedDisplay+'|'+roundedStr+'|'+CFNMETA(argument)+'|'+HexBytes(BINTOC(argument,'BRS'))+'|'+HexBytes(TRANSFORM(argument))+'|'+bindingAfter+'|'+CFNMETA(rounded)+'|'+HexBytes(BINTOC(rounded,'BRS'))+'|'+HexBytes(TRANSFORM(rounded))+'|'+HexBytes(STR(rounded,40,decimalCount))
+     line=fixedMode+'|'+ALLTRIM(STR(index,6,0))+'|'+inputHex[index]+'|'+ALLTRIM(STR(decimalCount,4,0))+'|'+beforeMeta+'|'+beforeBits+'|'+beforeDisplay+'|'+beforeStr+'|'+VARTYPE(SET('DECIMALS'))+'|'+HexBytes(TRANSFORM(SET('DECIMALS')))+'|'+VARTYPE(SET('FIXED'))+'|'+HexBytes(TRANSFORM(SET('FIXED')))+'|'+bindingBefore+'|'+VARTYPE(rounded)+'|'+roundedMeta+'|'+roundedBits+'|'+roundedDisplay+'|'+roundedStr+'|'+CFNMETA(CFNDEC(CFNWIDTH(payload,40),18))+'|'+HexBytes(BINTOC(CFNDEC(CFNWIDTH(payload,40),18),'BRS'))+'|'+HexBytes(TRANSFORM(CFNDEC(CFNWIDTH(payload,40),18)))+'|'+bindingAfter+'|'+CFNMETA(rounded)+'|'+HexBytes(BINTOC(rounded,'BRS'))+'|'+HexBytes(TRANSFORM(rounded))+'|'+HexBytes(STR(rounded,40,decimalCount))
     ENDIF
    ENDIF
   CATCH TO caught

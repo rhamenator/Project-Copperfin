@@ -532,7 +532,7 @@ targetDecimals[263]=2
 inputHex[264]='C023FD6FFC115DF9'
 targetDecimals[264]=2
 LOCAL outputPath,libraryPath,crtPath,index,decimalCount,fixedNo,fixedMode
-LOCAL payload,argument,rounded,bindingBefore,bindingAfter,failed,line,caught,total
+LOCAL payload,rounded,bindingBefore,bindingAfter,failed,line,caught,total
 LOCAL beforeMeta,beforeBits,beforeDisplay,beforeStr,roundedMeta,roundedBits
 LOCAL roundedDisplay,roundedStr
 outputPath='Z:\home\rich\.codex\worktrees\numeric-literal-display-5611\Project-Copperfin\build\default-transform-round-result\results.txt'
@@ -556,27 +556,26 @@ FOR index=1 TO ALEN(inputHex)
   ENDIF
   failed=.F.
   TRY
-   argument=CFNDEC(CFNWIDTH(payload,40),18)
-   beforeMeta=CFNMETA(argument)
-   beforeBits=HexBytes(BINTOC(argument,'BRS'))
-   beforeDisplay=HexBytes(TRANSFORM(argument))
-   beforeStr=HexBytes(STR(argument,40,decimalCount))
-   bindingBefore=CFNFCVT(argument,17)
+   beforeMeta=CFNMETA(CFNDEC(CFNWIDTH(payload,40),18))
+   beforeBits=HexBytes(BINTOC(CFNDEC(CFNWIDTH(payload,40),18),'BRS'))
+   beforeDisplay=HexBytes(TRANSFORM(CFNDEC(CFNWIDTH(payload,40),18)))
+   beforeStr=HexBytes(STR(CFNDEC(CFNWIDTH(payload,40),18),40,decimalCount))
+   bindingBefore=CFNFCVT(CFNDEC(CFNWIDTH(payload,40),18),17)
    IF LEFT(bindingBefore,6)=='ERROR:'
     failed=.T.
     line='ERROR-BINDING-BEFORE|'+ALLTRIM(STR(index,6,0))+'|'+HexBytes(bindingBefore)
    ELSE
-    rounded=ROUND(argument,decimalCount)
+    rounded=ROUND(CFNDEC(CFNWIDTH(payload,40),18),decimalCount)
     roundedMeta=CFNMETA(rounded)
     roundedBits=HexBytes(BINTOC(rounded,'BRS'))
     roundedDisplay=HexBytes(TRANSFORM(rounded))
     roundedStr=HexBytes(STR(rounded,40,decimalCount))
-    bindingAfter=CFNFCVT(argument,17)
+    bindingAfter=CFNFCVT(CFNDEC(CFNWIDTH(payload,40),18),17)
     IF LEFT(bindingAfter,6)=='ERROR:'
      failed=.T.
      line='ERROR-BINDING-AFTER|'+ALLTRIM(STR(index,6,0))+'|'+HexBytes(bindingAfter)
     ELSE
-     line=fixedMode+'|'+ALLTRIM(STR(index,6,0))+'|'+inputHex[index]+'|'+ALLTRIM(STR(decimalCount,4,0))+'|'+beforeMeta+'|'+beforeBits+'|'+beforeDisplay+'|'+beforeStr+'|'+VARTYPE(SET('DECIMALS'))+'|'+HexBytes(TRANSFORM(SET('DECIMALS')))+'|'+VARTYPE(SET('FIXED'))+'|'+HexBytes(TRANSFORM(SET('FIXED')))+'|'+bindingBefore+'|'+VARTYPE(rounded)+'|'+roundedMeta+'|'+roundedBits+'|'+roundedDisplay+'|'+roundedStr+'|'+CFNMETA(argument)+'|'+HexBytes(BINTOC(argument,'BRS'))+'|'+HexBytes(TRANSFORM(argument))+'|'+bindingAfter+'|'+CFNMETA(rounded)+'|'+HexBytes(BINTOC(rounded,'BRS'))+'|'+HexBytes(TRANSFORM(rounded))+'|'+HexBytes(STR(rounded,40,decimalCount))
+     line=fixedMode+'|'+ALLTRIM(STR(index,6,0))+'|'+inputHex[index]+'|'+ALLTRIM(STR(decimalCount,4,0))+'|'+beforeMeta+'|'+beforeBits+'|'+beforeDisplay+'|'+beforeStr+'|'+VARTYPE(SET('DECIMALS'))+'|'+HexBytes(TRANSFORM(SET('DECIMALS')))+'|'+VARTYPE(SET('FIXED'))+'|'+HexBytes(TRANSFORM(SET('FIXED')))+'|'+bindingBefore+'|'+VARTYPE(rounded)+'|'+roundedMeta+'|'+roundedBits+'|'+roundedDisplay+'|'+roundedStr+'|'+CFNMETA(CFNDEC(CFNWIDTH(payload,40),18))+'|'+HexBytes(BINTOC(CFNDEC(CFNWIDTH(payload,40),18),'BRS'))+'|'+HexBytes(TRANSFORM(CFNDEC(CFNWIDTH(payload,40),18)))+'|'+bindingAfter+'|'+CFNMETA(rounded)+'|'+HexBytes(BINTOC(rounded,'BRS'))+'|'+HexBytes(TRANSFORM(rounded))+'|'+HexBytes(STR(rounded,40,decimalCount))
     ENDIF
    ENDIF
   CATCH TO caught

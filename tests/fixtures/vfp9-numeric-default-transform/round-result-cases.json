@@ -1327,6 +1327,8 @@
       "bits": "C023FD6FFC115DF9"
     }
   ],
+  "inputRoute": "Inline CFNDEC(CFNWIDTH(payload,40),18) expression at every consumer, never stored in an argument variable.",
+  "resultRoute": "Public ROUND expression assigned to local rounded; metadata/payload/display/STR of that stored result are observed, not assumed equal to inline result metadata.",
   "modulePath": "C:\\windows\\system32\\MSVCR71.dll",
   "moduleSha256": "8094af5ee310714caebccaeee7769ffb08048503ba478b879edfef5f1a24fefe",
   "moduleFileSize": 348160,
