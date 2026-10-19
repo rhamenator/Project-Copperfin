@@ -2798,6 +2798,71 @@ integer ratios rather than fitted tolerance, preserve counterexamples, and do
 not repeat completed native captures. Exact conversion/display and retained
 division/ListItem implementation ladder remain open; no owner-input blocker.
 
+## True decimal half-grid hypotheses — all four REJECTED
+
+test-decimal-half-grid.cjs is an AFTER-capture mathematical discriminator, NOT
+a formatter/expected emitter. Inspection of classify-graph-rejections.cjs and
+analyze-arithmetic-inline.cjs confirmed those comparisons use observed binary
+bias/powers/stages, not true decimal half-grid quantization of the input.
+Four explicit candidates are now compared with264 retained N40/18 FIXED ON
+original inputs: q=D or q=min(D,15), each with no bias or exact decimal prebias
+1/(2000*10^D). Candidate magnitude is floor((abs(input)+bias)*10^q+1/2)/10^q,
+all operations using exact BigInt ratios. The cap15 and prebias originate in
+REJECTED diagnostic stimuli, not recovered requirements, fitted parameters or
+permission to implement them. No binary Number(displayText) or tolerance.
+
+The source reuses the unchanged, archived-source-bound decomposition validator:
+its actual fresh output equals the retained output byte-exactly, validating all
+528 raw ROUND/arithmetic/STR controls (eight validator checks). Independent new
+binary-ratio/decimal/half-grid metric checks14 pass, including adjacent half
+payloads, subnormal/negative-zero, exact prebias ties, count18/cap15 distinction,
+scientific decimal equality and nonfinite rejection. Prior graph classification
+is manifest/hash bound and all264 indices/bits/settings/display joins match.
+Public ROUND payloads are retained for traceability but NOT compared to decimal
+text as a supposed conversion-defect metric. This is a magnitude-only model
+comparison, not a literal/padding/signed-zero implementation.
+
+| Candidate | Original TRANSFORM differences | Original STR differences | ROUND TRANSFORM differences | ROUND STR differences |
+| --- | ---: | ---: | ---: | ---: |
+| Unbiased, q=D | 150 | 150 | 36 | 36 |
+| Unbiased, q=min(D,15) | 132 | 132 | 36 | 36 |
+| Exact decimal prebias, q=D | 64 | 64 | 134 | 134 |
+| Exact decimal prebias, q=min(D,15) | 34 | 34 | 122 | 122 |
+
+Each column has264 comparisons; raw literals/zero spelling remain attached to
+every row without predicting text. All four candidates are rejected. The exact
+decimal-prebias/cap15 candidate fails six of the prior graph's18 failures and
+introduces28 others (34 total), so merely substituting exact arithmetic does
+not repair the graph. No global cap, internal call/order/precision or formatter
+rule is accepted, even where one candidate happens to match a finite subset.
+
+Actual analysis0/readback0/empty stderr/byte-identical, all14 new and8 reused
+checks pass behind immediate prefix-idle1/full I/O PSI avg10 AND avg60<1%/guard0,
+nice-n10. No compiler/Wine/VFP/VM/native invocation/window. Host root
+build/default-transform-decimal-half-grid1 intact; decimal-half-grid-analysis1
+retains20 gzip receipts/source/results/gates/full shell/input inventory/checks,
+manifest/SHA256SUMS, all gunzip sizes/hashes/host bytes verified. Source-base and
+dirty-status snapshots are explicitly POST-check, not a clean native freeze.
+
+Separate executable archived-source recomputation is NOT yet performed:
+audit then reported HOLD17.16/3.29 and31.91/8.51, with local fullPSI52.89/32.41.
+No replay was attempted and this is NOT worker guard75/native failure. NEXT
+SAME slice: after fresh immediate prefix-idle/full avg10 AND avg60<1% gates,
+verify archived source/input hashes, recompute to a new receipt file, compare
+byte-exact and append supplemental verification receipts without overwriting
+the20-file baseline. Then inspect qualified raw264 inputs for any actually
+bracketed adjacent display transitions before selecting another discriminator;
+do not infer new thresholds from fitted tolerance or use old-runtime captures
+as retroqualified native evidence. No owner-input blocker/automation pause.
+
+LOW DQ-DV001 delta/walkthrough: replace the proposed exact-half-grid question
+with executed, explicitly rejected candidates; checked magnitude/sign handling,
+exact prebias formula,264 joins/counts,14 metric checks and fresh pressure stop
+before further execution. Misuse risk is treating a near-fit as an accepted
+formatter; retain all counterexamples and no production hook. Developer self-
+review only, not independent/system/release assurance. Hazards/rollback unchanged;
+exact conversion/display and retained division/ListItem ladder remain open.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
