@@ -2727,7 +2727,7 @@ route, or treating source/synthetic checks as native evidence. Mitigations are
 separate target observations, exact parent controls, retained failures and
 explicit UNRUN state. Hazards/rollback/field-notification policy unchanged.
 
-NEXT: native worker remains UNRUN. Audit released its separate job then reported
+At the source checkpoint, native worker remained UNRUN. Audit released its separate job then reported
 resource HOLD fullPSI19.78/3.90%; no native/compiler window is reserved here.
 After NEW explicit audit AND DAW native-only CLEAR, require immediate prefix-idle
 and BOTH fullPSI avg10/avg60<1% EACH launch. Reuse verified observer/no rebuild,
@@ -2735,6 +2735,68 @@ strict first40-row read before repeat, retain any failure without weakening
 controls, then archive independent readback before interpreting outcomes.
 No owner-input blocker or automation pause; conversion/display recovery and
 the retained division/ListItem implementation ladder remain open.
+
+## Same-payload scale pair — qualified40, bounded metadata effect
+
+Actual clean signed/DCO source1a933a5beb097dcd0ad38b4d2adac57f24742b43.
+NEW explicit audit AND DAW native-only CLEAR, both immediate prefix-idle1/
+guard0/full I/O PSI avg10/avg60 0.00/0.00%, nice-n10, verified observer reuse/
+unchanged own C sources/no compiler/new FLL/VM. Inherited override UNSET,
+process-local WINEDLLOVERRIDES=msvcr71=n. First actual0/empty stderr/DONE40/
+frozen strict-single0 BEFORE repeat; repeat0/empty/DONE40/paired0. All42 raw
+fields repeat-identical, inactive-slot repeat differences0, raw SHA BOTH:
+d6fef944a8f3fd2732703b7f8a81190a5743be78dcad758341cdd97702cb0fc2.
+Original and actual ROUND parent controls, target N40/scale/BRS, before-after
+settings/F17/CW027F/exact Microsoft32 path+digest+PE32 controls pass.
+Once-per-FLL backing-file sample/later image-path checks NOT atomic mapped-code,
+Windows execution/internal-call or descendant-cleanup proof. Ordinary shell
+NOT REA Evidence. Native window RELEASED to both chats; post-prefix idle1.
+
+scale-intervention-captures1 retains99 gzip receipts (63baseline+36supplemental),
+manifest/SHA256SUMS and verification-manifest/VERIFICATION-SHA256SUMS, all
+gunzip sizes/hashes/host bytes verified. Archived source equals frozen source;
+archived strict reader0/empty stderr/report byte-exact, final input hashes0.
+Intact hostbuild/default-transform-scale-intervention-captures1; workingroot
+ABSENT. SDK-linked observer/metadata binaries remain HOST-ONLY, no redistribution.
+
+analyze-scale-intervention.cjs was added AFTER capture. An initial offline
+analysis1 incorrectly demanded raw before/after equality of the inactive Numeric
+integer slot; it failed1 and was retained with its source/stderr/full shell
+receipt. Correction normalizes ONLY that inactive slot while retaining type,
+width, decimals, real payload and CW. Frozen native reader/qualification was
+unchanged; no native replay or product issue. Separate analysis2/readback both0/
+empty/byte-identical, eight exact-decimal metric checks pass/all40 raw projection
+and control joins verified. Both immediate prefix/PSI gates pass, nice-n10.
+Hostbuild/default-transform-scale-analysis1/2 retained; both archived above.
+
+| Bounded comparison | Count | TRANSFORM literal gaps | STR literal gaps | Decimal-value gaps (either consumer) |
+| --- | ---: | ---: | ---: | ---: |
+| Same payload, scale18 versus scaleD at D16/17 | 16 | 4 | 0 | 0 |
+| Original reconstruction scale18 versus parent original | 12 | 0 | 0 | 0 |
+| ROUND-payload reconstruction scaleD versus actual parent ROUND | 12 | 0 | 0 | 0 |
+
+The four scale-dependent TRANSFORM strings are ROUND-kind/FIXED OFF at
+D16/17, both signs: only trailing zeros differ, exact value +/-1E-15 unchanged.
+No zero-sign changes occur in those16 intervention pairs. D18 remains
+unchanged-scale controls, not an independent metadata intervention.
+Across all40 target TRANSFORM/STR pairs:40 raw literal gaps,19 after leading-space
+removal,0 decimal-value gaps,10 zero-sign spelling gaps. Decimal coefficient/
+exponent comparisons preserve these spelling/padding distinctions separately;
+binary-payload-versus-decimal representation gaps are not called defects.
+
+In THESE contexts, changing scale18 to16/17 does not explain the earlier
+original-versus-ROUND decimal-value gap. Baseline route coincidence is not a
+universal reconstruction/metadata-sufficiency/hidden-state-absence rule.
+No formatter, precision cap/order/tolerance or expected-output model is accepted.
+LOW DQ-DV001 actual walkthrough checked strict-first ordering, all42 offsets,
+exact archived replay, inactive-slot correction and bounded comparison counts.
+Developer self-review only; existing hazards/rollback/field-notification unchanged.
+NEXT bounded offline question: inspect prior exact graph analyses before testing
+true decimal half-grid quantization of retained payloads versus observed displays.
+Keep any candidate cap/rounding arithmetic explicitly hypothesis-only, use exact
+integer ratios rather than fitted tolerance, preserve counterexamples, and do
+not repeat completed native captures. Exact conversion/display and retained
+division/ListItem implementation ladder remain open; no owner-input blocker.
 
 ## Traceability and development-document walkthrough
 

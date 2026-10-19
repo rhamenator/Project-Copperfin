@@ -1,0 +1,233 @@
+{
+  "ordinaryShellNotReaEvidence": true,
+  "nativeReplay": false,
+  "baselineFiles": 63,
+  "supplementalFiles": 36,
+  "archivedReaderStatus": 0,
+  "archivedReaderByteExact": true,
+  "offlineAttempt1Status": 1,
+  "offlineAttempt1Cause": "AFTER-capture analyzer required inactive Numeric integer slot equality before/after; native reader unchanged/qualified",
+  "offlineAttempt2Status": 0,
+  "offlineReadbackStatus": 0,
+  "offlineByteExact": true,
+  "metricSelfChecks": 8,
+  "inputHashesStatus": 0,
+  "files": [
+    {
+      "name": "archive-reader-shell-completion.json",
+      "hostPath": "build/default-transform-scale-intervention/archive-reader-shell-completion.json",
+      "bytes": 325,
+      "sha256": "1ab66dcfe8c37abce006b36fc7b6e62add1f0fc7702826c441c7076ec968a2e2"
+    },
+    {
+      "name": "archive-reader.guard.status",
+      "hostPath": "build/default-transform-scale-intervention/archive-reader.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "archive-reader.inputs-check.txt",
+      "hostPath": "build/default-transform-scale-intervention/archive-reader.inputs-check.txt",
+      "bytes": 2458,
+      "sha256": "2eec76141d500784912b31b92c002a907ed8197ccf7bdd072b1e5bfd2ff9e9fe"
+    },
+    {
+      "name": "archive-reader.json",
+      "hostPath": "build/default-transform-scale-intervention/archive-reader.json",
+      "bytes": 62234,
+      "sha256": "cc6c3d68da01d792bc849c0f5c2fd7453d6ad7202dcdbba220a343f7e05deca3"
+    },
+    {
+      "name": "archive-reader.prefix.status",
+      "hostPath": "build/default-transform-scale-intervention/archive-reader.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "archive-reader.prefix.txt",
+      "hostPath": "build/default-transform-scale-intervention/archive-reader.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "archive-reader.pressure-before.txt",
+      "hostPath": "build/default-transform-scale-intervention/archive-reader.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "886913838c9e7d5584d3a0f5a93865be966b4b1e610c453598bd590936981385"
+    },
+    {
+      "name": "archive-reader.status",
+      "hostPath": "build/default-transform-scale-intervention/archive-reader.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "archive-reader.stderr",
+      "hostPath": "build/default-transform-scale-intervention/archive-reader.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "offline-attempt1-analysis.guard.status",
+      "hostPath": "build/default-transform-scale-analysis1/analysis.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "offline-attempt1-analysis.json",
+      "hostPath": "build/default-transform-scale-analysis1/analysis.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "offline-attempt1-analysis.prefix.status",
+      "hostPath": "build/default-transform-scale-analysis1/analysis.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "offline-attempt1-analysis.prefix.txt",
+      "hostPath": "build/default-transform-scale-analysis1/analysis.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "offline-attempt1-analysis.pressure-before.txt",
+      "hostPath": "build/default-transform-scale-analysis1/analysis.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "5ff70cfc8338148387dcc874f7653263ee22ad0dd606d00a884e1a8321e63c00"
+    },
+    {
+      "name": "offline-attempt1-analysis.status",
+      "hostPath": "build/default-transform-scale-analysis1/analysis.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "offline-attempt1-analysis.stderr",
+      "hostPath": "build/default-transform-scale-analysis1/analysis.stderr",
+      "bytes": 1344,
+      "sha256": "4170c667426d06441227c62a17d4ab83d9b676d8cf503a629dea1909c538b55f"
+    },
+    {
+      "name": "offline-attempt1-shell-completion.json",
+      "hostPath": "build/default-transform-scale-analysis1/shell-completion.json",
+      "bytes": 343,
+      "sha256": "5579fa76a150caaf8d4d3ff6e2624e2ec14d58a7d59e40afc90f3580d555a0f7"
+    },
+    {
+      "name": "offline-attempt1-shell-full.json",
+      "hostPath": "build/default-transform-scale-analysis1/shell-full.json",
+      "bytes": 1500,
+      "sha256": "9864b95379805b6704de10dfbccdeb660c8e6fe7d46fb1b88c86b8056714b29d"
+    },
+    {
+      "name": "offline-attempt1-source-analyze-scale-intervention.cjs",
+      "hostPath": "build/default-transform-scale-analysis1/source-analyze-scale-intervention.cjs",
+      "bytes": 6839,
+      "sha256": "f7b04d6c5293b2ee02c8ae431a3086625caba025d901756b6e94842ed1e30f5a"
+    },
+    {
+      "name": "offline-attempt2-analysis.guard.status",
+      "hostPath": "build/default-transform-scale-analysis2/analysis.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "offline-attempt2-analysis.json",
+      "hostPath": "build/default-transform-scale-analysis2/analysis.json",
+      "bytes": 86215,
+      "sha256": "177972030f82c5e2dba13dce6f4a7138eceb7d219bd88a61b1f0b20813322614"
+    },
+    {
+      "name": "offline-attempt2-analysis.prefix.status",
+      "hostPath": "build/default-transform-scale-analysis2/analysis.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "offline-attempt2-analysis.prefix.txt",
+      "hostPath": "build/default-transform-scale-analysis2/analysis.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "offline-attempt2-analysis.pressure-before.txt",
+      "hostPath": "build/default-transform-scale-analysis2/analysis.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "22cfcf1996f94e13da03b2a9962f37b7bbb050cbb45a463667f803e61525c9b4"
+    },
+    {
+      "name": "offline-attempt2-analysis.status",
+      "hostPath": "build/default-transform-scale-analysis2/analysis.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "offline-attempt2-analysis.stderr",
+      "hostPath": "build/default-transform-scale-analysis2/analysis.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "offline-attempt2-readback.guard.status",
+      "hostPath": "build/default-transform-scale-analysis2/readback.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "offline-attempt2-readback.json",
+      "hostPath": "build/default-transform-scale-analysis2/readback.json",
+      "bytes": 86215,
+      "sha256": "177972030f82c5e2dba13dce6f4a7138eceb7d219bd88a61b1f0b20813322614"
+    },
+    {
+      "name": "offline-attempt2-readback.prefix.status",
+      "hostPath": "build/default-transform-scale-analysis2/readback.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "offline-attempt2-readback.prefix.txt",
+      "hostPath": "build/default-transform-scale-analysis2/readback.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "offline-attempt2-readback.pressure-before.txt",
+      "hostPath": "build/default-transform-scale-analysis2/readback.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "22cfcf1996f94e13da03b2a9962f37b7bbb050cbb45a463667f803e61525c9b4"
+    },
+    {
+      "name": "offline-attempt2-readback.status",
+      "hostPath": "build/default-transform-scale-analysis2/readback.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "offline-attempt2-readback.stderr",
+      "hostPath": "build/default-transform-scale-analysis2/readback.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "offline-attempt2-shell-completion.json",
+      "hostPath": "build/default-transform-scale-analysis2/shell-completion.json",
+      "bytes": 1277,
+      "sha256": "b43461e441e0d2e4fe2e825e4dc5051464a2bd1d4d24d8979430be90f7f6062a"
+    },
+    {
+      "name": "offline-attempt2-source-analyze-scale-intervention.cjs",
+      "hostPath": "build/default-transform-scale-analysis2/source-analyze-scale-intervention.cjs",
+      "bytes": 7129,
+      "sha256": "c116cf481a547199ca51bfe7a2e93c03f2335b8dd868297ce645148450a78e84"
+    },
+    {
+      "name": "final-verified-inputs-check.txt",
+      "hostPath": "build/default-transform-scale-intervention/final-verified-inputs-check.txt",
+      "bytes": 2458,
+      "sha256": "2eec76141d500784912b31b92c002a907ed8197ccf7bdd072b1e5bfd2ff9e9fe"
+    }
+  ]
+}

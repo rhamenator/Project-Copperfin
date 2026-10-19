@@ -1,0 +1,330 @@
+{
+  "sourceCommit": "1a933a5beb097dcd0ad38b4d2adac57f24742b43",
+  "sourceStatusClean": true,
+  "ordinaryShellNotReaEvidence": true,
+  "nativeInvoked": true,
+  "pairedQualified": true,
+  "recordsPerRun": 40,
+  "fieldsPerRecord": 42,
+  "rawByteEqual": true,
+  "rawSha256": "d6fef944a8f3fd2732703b7f8a81190a5743be78dcad758341cdd97702cb0fc2",
+  "sdkLinkedBinariesHostOnly": true,
+  "limitation": "Process-local native-only Microsoft32 binding under Wine; once-per-FLL file sample/later image-path controls, not Windows execution, atomic mapped-code/internal-call or descendant-cleanup proof.",
+  "files": [
+    {
+      "name": "audit-clear.txt",
+      "bytes": 479,
+      "sha256": "8cb4103c1f751595835b4560c5a810c07fb47e62756c773a395440f6c5f44b7a"
+    },
+    {
+      "name": "audit.json",
+      "bytes": 62234,
+      "sha256": "cc6c3d68da01d792bc849c0f5c2fd7453d6ad7202dcdbba220a343f7e05deca3"
+    },
+    {
+      "name": "audit.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "audit.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "daw-clear.json",
+      "bytes": 429,
+      "sha256": "5b2ab7ac132c143eb91b63c63d8bf3b801aa6ff1837fcf079c17dd38e723fcda"
+    },
+    {
+      "name": "final-inputs-check.txt",
+      "bytes": 2458,
+      "sha256": "2eec76141d500784912b31b92c002a907ed8197ccf7bdd072b1e5bfd2ff9e9fe"
+    },
+    {
+      "name": "finished.utc",
+      "bytes": 21,
+      "sha256": "56b6a0c9f0c6352f903ca8b6fae8deb2536326f453c312d20835bf4405ddc650"
+    },
+    {
+      "name": "first-results.txt",
+      "bytes": 112706,
+      "sha256": "d6fef944a8f3fd2732703b7f8a81190a5743be78dcad758341cdd97702cb0fc2"
+    },
+    {
+      "name": "first-structure.json",
+      "bytes": 229,
+      "sha256": "c11be1035b9e101323e0cb2ef17cdd38aecd94581d3df44475091ee983eab8cc"
+    },
+    {
+      "name": "first-structure.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "first-structure.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "first.finished.utc",
+      "bytes": 21,
+      "sha256": "e55a60a211eeb43b1796a328ef172691dc2667b7e943591ad8bd9e17f5075d70"
+    },
+    {
+      "name": "first.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "first.inputs-check.txt",
+      "bytes": 2458,
+      "sha256": "2eec76141d500784912b31b92c002a907ed8197ccf7bdd072b1e5bfd2ff9e9fe"
+    },
+    {
+      "name": "first.out",
+      "bytes": 112706,
+      "sha256": "d6fef944a8f3fd2732703b7f8a81190a5743be78dcad758341cdd97702cb0fc2"
+    },
+    {
+      "name": "first.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "first.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "first.pressure-after.txt",
+      "bytes": 114,
+      "sha256": "8b54d5f53b558476def6b928a6d926e3e7003d6d284bd29b5f9c91396fb33051"
+    },
+    {
+      "name": "first.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "bbea6eaf1a3909dacfe061af9c4835c6cf5851466ea9a4afdc2b4454e9235a0c"
+    },
+    {
+      "name": "first.started.utc",
+      "bytes": 21,
+      "sha256": "8a3620ebda5701830c59852900b9128439796668065733dbcbb65703d5913a36"
+    },
+    {
+      "name": "first.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "first.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "inherited-dll-overrides.txt",
+      "bytes": 6,
+      "sha256": "032c782c1cb5bad40ce45531ab8150371aa30d9b8ff91df907702a1138575854"
+    },
+    {
+      "name": "inputs.sha256",
+      "bytes": 4380,
+      "sha256": "114b7e26c19a1f993b62522dedc423a8e2eee79458eaa8e82b41ea7e48f8ff97"
+    },
+    {
+      "name": "native-shell-completion.json",
+      "bytes": 153,
+      "sha256": "1af0433a554f124d24489a6dea38be51da89a4beb28ccb0501a8b7969f4be822"
+    },
+    {
+      "name": "native-shell-start.json",
+      "bytes": 110,
+      "sha256": "41299bf518bcb362a39e6a8b55ee2b9ffbeec6c4c6aaaf9c1e84a3d606e3d00d"
+    },
+    {
+      "name": "parent-source-check.json",
+      "bytes": 132,
+      "sha256": "ed678ecb013d90e0e57eeb7395897619a7b75622f1c1a46c365059ab02149ea7"
+    },
+    {
+      "name": "post-capture-check-shell.json",
+      "bytes": 770,
+      "sha256": "e9b351b412e7465b8b967b7c79fdc41231d234b42c279dabaa048bccbcd1bef4"
+    },
+    {
+      "name": "probe.FXP",
+      "bytes": 8867,
+      "sha256": "0e60b4f82c5ab4504be8d4b3cfe13da6a6789c1001c27e604e3c632a7ab1b6bb"
+    },
+    {
+      "name": "probe.prg",
+      "bytes": 10299,
+      "sha256": "89668bd165180496f7dcdd5b1b727beddb2ab050c8ec0450e057a683e039fa11"
+    },
+    {
+      "name": "regenerated-cases.json",
+      "bytes": 5188,
+      "sha256": "65578e96e2675ae2444697e09006561d99c91adb2bfc7880558d52c20d562a07"
+    },
+    {
+      "name": "regenerated.prg",
+      "bytes": 10299,
+      "sha256": "89668bd165180496f7dcdd5b1b727beddb2ab050c8ec0450e057a683e039fa11"
+    },
+    {
+      "name": "repeat-results.txt",
+      "bytes": 112706,
+      "sha256": "d6fef944a8f3fd2732703b7f8a81190a5743be78dcad758341cdd97702cb0fc2"
+    },
+    {
+      "name": "repeat.finished.utc",
+      "bytes": 21,
+      "sha256": "56b6a0c9f0c6352f903ca8b6fae8deb2536326f453c312d20835bf4405ddc650"
+    },
+    {
+      "name": "repeat.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "repeat.inputs-check.txt",
+      "bytes": 2458,
+      "sha256": "2eec76141d500784912b31b92c002a907ed8197ccf7bdd072b1e5bfd2ff9e9fe"
+    },
+    {
+      "name": "repeat.out",
+      "bytes": 112706,
+      "sha256": "d6fef944a8f3fd2732703b7f8a81190a5743be78dcad758341cdd97702cb0fc2"
+    },
+    {
+      "name": "repeat.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "repeat.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "repeat.pressure-after.txt",
+      "bytes": 114,
+      "sha256": "d559677b3667181903471fc16d30d426e59e70bf5569075ce41ca84c06712832"
+    },
+    {
+      "name": "repeat.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "8b54d5f53b558476def6b928a6d926e3e7003d6d284bd29b5f9c91396fb33051"
+    },
+    {
+      "name": "repeat.started.utc",
+      "bytes": 21,
+      "sha256": "e55a60a211eeb43b1796a328ef172691dc2667b7e943591ad8bd9e17f5075d70"
+    },
+    {
+      "name": "repeat.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "repeat.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "results.txt",
+      "bytes": 112706,
+      "sha256": "d6fef944a8f3fd2732703b7f8a81190a5743be78dcad758341cdd97702cb0fc2"
+    },
+    {
+      "name": "reused-binary-check.txt",
+      "bytes": 58,
+      "sha256": "f50c63ce6f7cae42d42ed0b2664386cb4e9da06a9b9464b2b33d77befc182003"
+    },
+    {
+      "name": "reused-crt-binding.h",
+      "bytes": 5404,
+      "sha256": "a89fda816bef572e1b191f61d7e7164f6bf00704729dc7a420cff5d6fcc3943f"
+    },
+    {
+      "name": "reused-crt-probe.c",
+      "bytes": 15886,
+      "sha256": "796c3ccb9b73357da195d5d70e55cac5ddc0937ae1ae243d923bbc894a99f469"
+    },
+    {
+      "name": "reused-gcvt-boundary.h",
+      "bytes": 3999,
+      "sha256": "d6ca0472309b25d90fb16557990341e6566aa990ce88a2a2933a95b6e162f7d2"
+    },
+    {
+      "name": "reused-gcvt-probe.c",
+      "bytes": 18890,
+      "sha256": "48b5bb8af56b88f2829d829029ebe4386dfcae8ce3566a7edb487e51c09c6b4b"
+    },
+    {
+      "name": "reused-round-inline.prg",
+      "bytes": 19325,
+      "sha256": "aebc1bfe55711683aa62946cbe1afb03ab6df93295a8cbb8b4d18cb61446562e"
+    },
+    {
+      "name": "source-audit-scale-intervention.cjs",
+      "bytes": 10869,
+      "sha256": "1d2b1f66e05e377147b75537a7730849c2d377c703926bf595ef4f7d1498cf12"
+    },
+    {
+      "name": "source-check-scale-reader.cjs",
+      "bytes": 5559,
+      "sha256": "4c93f4e9853dcf834d7642063e09df6bef01bc6b4ee318f92c29b9b39071f32b"
+    },
+    {
+      "name": "source-commit.txt",
+      "bytes": 41,
+      "sha256": "838a11aab761b574c6a52471f54fefd29f96de0f0c8f8323991b6db9b2a478f7"
+    },
+    {
+      "name": "source-emit-scale-intervention.cjs",
+      "bytes": 7110,
+      "sha256": "fafe9f152f38fcdb7ccdf108cd6308d77dc419935a7c4527533be29f9dd228c3"
+    },
+    {
+      "name": "source-round-inline.prg",
+      "bytes": 19325,
+      "sha256": "aebc1bfe55711683aa62946cbe1afb03ab6df93295a8cbb8b4d18cb61446562e"
+    },
+    {
+      "name": "source-scale-intervention-capture.sh",
+      "bytes": 5627,
+      "sha256": "8f8ac6ec6afd7a8e1c38742b9cc510691c083c21e8bfd6a0d1e5739a1cb65f37"
+    },
+    {
+      "name": "source-scale-intervention-cases.json",
+      "bytes": 5188,
+      "sha256": "65578e96e2675ae2444697e09006561d99c91adb2bfc7880558d52c20d562a07"
+    },
+    {
+      "name": "source-scale-intervention.prg",
+      "bytes": 10299,
+      "sha256": "89668bd165180496f7dcdd5b1b727beddb2ab050c8ec0450e057a683e039fa11"
+    },
+    {
+      "name": "source-status.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "source-str-middle-cases.json",
+      "bytes": 23995,
+      "sha256": "c163d38b343adac6a612c421072d8ebe8f31c5f3c59f0b10a24c9683df9b01ef"
+    },
+    {
+      "name": "started.utc",
+      "bytes": 21,
+      "sha256": "8ce13dfe0aea67b64788f159be629f334405eaa90636f2474d52c992b5705a57"
+    },
+    {
+      "name": "supplied-runtime-env.txt",
+      "bytes": 27,
+      "sha256": "81e52acf397bb460cc99c685c406c2524eaa4c8c5f7b5864a25d1814ce130f70"
+    }
+  ]
+}
