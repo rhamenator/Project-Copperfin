@@ -1,0 +1,69 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001",
+  "inputCount": 4,
+  "recordsPerRun": 8,
+  "fieldsPerRecord": 42,
+  "parentNativeSha256": "254b46dadbb71fa51b10e8439d51785b2c2aa3eb871c8c948fd3b8bdd3da4873",
+  "arithmeticNativeSha256": "1979626f4fec992924791da5cbc89ed3abef1583810690300fff1fd3cf95ea32",
+  "inputs": [
+    {
+      "index": 1,
+      "parentIndex": 159,
+      "originalBits": "3D2C1E8DBBA38061",
+      "bits": "3D2C25C268497683",
+      "setting": 13,
+      "scale": 18,
+      "width": 32,
+      "kind": "expression"
+    },
+    {
+      "index": 2,
+      "parentIndex": 159,
+      "originalBits": "3D2C1E8DBBA38061",
+      "bits": "3D2C25C268497683",
+      "setting": 13,
+      "scale": 18,
+      "width": 32,
+      "kind": "reconstructed"
+    },
+    {
+      "index": 3,
+      "parentIndex": 160,
+      "originalBits": "3D2C1E8DBBA38062",
+      "bits": "3D2C25C268497684",
+      "setting": 13,
+      "scale": 18,
+      "width": 32,
+      "kind": "expression"
+    },
+    {
+      "index": 4,
+      "parentIndex": 160,
+      "originalBits": "3D2C1E8DBBA38062",
+      "bits": "3D2C25C268497684",
+      "setting": 13,
+      "scale": 18,
+      "width": 32,
+      "kind": "reconstructed"
+    }
+  ],
+  "inputRoute": "Branch-specific inline ABS(originalPayload)+(0.0005*(10^(-decimalCount))) versus CFNDEC(CFNWIDTH(targetPayload,inputWidth[index]),inputScale[index]); no stored Numeric argument/result or IIF normalization.",
+  "parentRoute": "Original N40/18 and INLINE ROUND(original,appliedD), before/after target observations.",
+  "widths": [
+    32
+  ],
+  "controlCount": 17,
+  "runtimeEnvironment": "WINEDLLOVERRIDES=msvcr71=n",
+  "observerSha256": "0b1fcd2ba81b95631cb52e6ecd0d4afa721b450a967402f504d1852a49e9e9ac",
+  "limitation": "Two positive D13 originals159/160, actual inline diagnostic ABS-shift expression versus reconstructed same measured N32/18 payload, both FIXED. Expression and reconstruction are independent NEW consumer routes; no target text or route equality presumed. Constants belong to the retained REJECTED diagnostic graph, NOT formatter rules/tolerance/internal sequence.",
+  "modulePath": "C:\\windows\\system32\\MSVCR71.dll",
+  "moduleSha256": "8094af5ee310714caebccaeee7769ffb08048503ba478b879edfef5f1a24fefe",
+  "moduleFileSize": 348160,
+  "modulePe": {
+    "machine": 332,
+    "magic": 267,
+    "stamp": 1045831340,
+    "imageSize": 352256,
+    "checksum": 389609
+  }
+}

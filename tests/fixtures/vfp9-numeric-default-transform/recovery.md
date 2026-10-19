@@ -3549,6 +3549,63 @@ source qualification and clean freeze BEFORE new BOTH clearance/each immediate
 native gate. Do not replay either completed16-row pair. Exact conversion and
 unchanged division ORIGINAL/SAME/hosted/review ladder remain OPEN.
 
+## Positive D13 actual-expression/reconstruction source qualified; native UNRUN
+
+NEXT bounded prerequisite prepared, without replaying either completed native
+pair: emit-shifted-expression-consumer.cjs, shifted-expression-consumer.prg/cases,
+audit-shifted-expression-consumer.cjs, check-shifted-expression-reader.cjs,
+shifted-expression-consumer-capture.sh and shifted-expression-source-check.sh.
+Parent159/160 positive originals;4 input routes/8 records/42 fields, both FIXED.
+Compare actual inline ABS(originalPayload)+(0.0005*(10^(-decimalCount))) against
+CFNDEC(CFNWIDTH(targetPayload,32),18), reconstructing measured shifted bits
+3D2C25C268497683/84 at N32/18. No sign-copy. This expression is retained diagnostic
+stimulus from the REJECTED graph, NOT a proposed formatter rule, bias, tolerance,
+operation sequence or general compatibility requirement. No display expectation
+or route equality is assumed. Independent parent4+measured shifted4 raw controls
+bind the stimuli; output metadata/payload requirements are measured, not fitted.
+
+Use explicit IF/ELSE source branches around all Character observations, not IIF
+or an assigned Numeric expression/result that could normalize the route. Original
+N40/18 and actual inline public ROUND remain before/after controls. Independent
+reader isolates uniquely marked complete branches and verifies each literal
+consumer path, runtime identity/FPU controls, metadata/BRS and before/after output
+stability. Synthetic48 checks include wrong-width40 rejection independently for
+both routes/before+after, framing/status/settings/control mutations and permitted
+inactive Numeric integer-slot variation. Arbitrary valid target test strings are
+structural checks only, NOT native compatibility expectations.
+
+Host build/default-transform-shifted-expression-generate1 two generation stages0;
+source-checks1 all11 stages0/empty stderr/input hashes BEFORE+AFTER EACH0/48 tests.
+New archive-replay1 all4 archived-source stages0/empty/four reports byte-exact/
+hashes BEFORE+AFTER EACH0/48 tests again. All17 immediate prefixidle1/fullPSI
+avg10/avg60=0.00/0.00%/guard0/nice-n10; no native/compiler/new FLL/VM/window.
+BEFORE snapshots/base d8ea75d34+dirty new-source additions are NOT native clean
+freeze. Source files are unchanged between source tests and archive recomputation.
+
+Archive shifted-expression-source-checks1 has139 primary+41 verification=180
+gzip source/contract/status/gate/hash/report/full actual-shell receipts, both
+manifests/checksum inventories; all compressed hashes/gunzip sizes/hashes/exact
+hostbytes verified. All three host roots retained. Ordinary shell NOT REA
+Evidence/native/Windows/internal-call/atomic-image/cleanup proof. No earlier
+guard, failure, source freeze or finite native result erased or upgraded.
+
+LOW DQ-DV001 procedural delta/actual walkthrough: inspected source branches and
+native-stimulus provenance, original/public ROUND before+after controls, independent
+strict reader paths and48 mutation tests, exact generation/archive readbacks and
+input inventories. Misuse risk: treating expected metadata or the diagnostic
+constants as a predicted display/accepted formatter. Mitigation: no target text
+predictions, new paired native qualification still mandatory. Developer-maintainer
+self-review only, not independent human/system/release assurance. Existing
+hazards/rollback and unchanged division/ListItem ladder retained.
+
+NEXT SAME: clean signed source freeze, fresh safe prefix/fullPSI observation then
+NEW BOTH explicit audit+DAW native-only CLEAR. Absent new capture root/exact reused
+observer/no host compiler/new FLL/VM. Frozen worker first8-record native0 -> strict
+single0 BEFORE repeat -> repeat0/paired0; each immediate prefixidle and fullPSI
+avg10 AND avg60<1%/nice10. Preserve any stop and release promptly. Native pair is
+UNRUN, no reservation/window requested; exact conversion/formatter/parent and
+division/ListItem acceptance stay OPEN. No owner-input blocker/automation pause.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
