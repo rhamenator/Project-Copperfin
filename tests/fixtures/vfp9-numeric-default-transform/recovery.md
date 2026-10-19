@@ -3975,3 +3975,31 @@ byte-equal comparisons, input checks and gates. Only then take clean signed
 source freeze and request NEW BOTH native-only CLEAR plus Request Guard release/
 coordination; immediate EACH-launch gates remain mandatory. Do not run either
 completed shifted-value16 pair or the completed original/shifted pair again.
+
+### Original-width archived-source replay2 passes — unchanged source
+
+After fresh gates cleared, the EXACT retained replay1 command was run with ONLY
+the root changed to build/default-transform-original-width-source-replay2.
+Clean offline base4438af550/BEFORE status empty; no caller/reader/worker/source
+change. Allseven archived-source stages0/empty stderr: source/cases regenerate
+byte-exact, strict source-only parent reader byte-exact,48 synthetic reader and
+13 synthetic worker tests repeat byte-exact, both archived shell syntaxes pass.
+Original and archive input hashes BEFORE+AFTER EACH0; every immediate prefix1/
+fullPSI0.00/0.05%/guard0/nice-n10. Old replay1 pre-child75 remains intact.
+
+Eighty-two supplemental receipts (exact command/actual shell completion, clean
+BEFORE source/status, inventories, seven full stage gates/logs/results/checks)
+at replay2-* with replay2-manifest/REPLAY2-SHA256SUMS bring source archive to359
+gzip receipts. Allthree inventories and compressed/decoded sizes/hashes/exact
+host bytes verified. This finishes source qualification, not native execution.
+LOW DQ-DV001 actual walkthrough extends the prior source review with immutable
+source byte identity, allseven execution receipts and strict original/archive
+hashes, not a new formatter expectation or native/internal/Windows proof.
+Existing hazards/mitigations/rollback and assertion preservation unchanged.
+
+NEXT: clean signed source freeze, NEW explicit audit+DAW native-only CLEAR and
+Request Guard release/coordination; fresh EACH-child idle/fullPSI gates. Run
+original-width-consumer-capture.sh ONCE only if all coordination/gates pass,
+strict single BEFORE repeat, preserve all raw/status/partial results, release
+the window promptly. Reuse exact observer; no compiler/newFLL/VM. The completed
+shifted-value/native pairs are not part of this new ORIGINAL-width capture.
