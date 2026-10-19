@@ -3271,6 +3271,85 @@ guards/failures. Any target equivalence is an observation to recover, not an
 assumption. Full exact-conversion/expectations/ORIGINAL/SAME/hosted/review ladder
 remains OPEN. No owner-input blocker or automation pause.
 
+## 2026-10-19 signed D13 shifted-consumer native pair — QUALIFIED16
+
+Completed the preceding NEXT from actual clean signed/DCO source
+1b248f7a474e92fe24c13392fd6c95fe0b154828 after NEW explicit audit AND DAW
+native-only CLEAR. The clearance snapshots/turn identities are retained, not
+inferred from prior RELEASE messages. No host compiler/new FLL/VM; reused exact
+observer0b1fcd2ba81b95631cb52e6ecd0d4afa721b450a967402f504d1852a49e9e9ac.
+Inherited override UNSET; process-local WINEDLLOVERRIDES=msvcr71=n. Both immediate
+prefixidle1/fullPSI avg10 AND avg60=0.00/0.00%/guard0/nice-n10. Both windows now
+RELEASED; post-prefix idle1, no standing native/compiler/Wine/VM reservation.
+
+Actual first native0/empty/DONE16/strict-single0 BEFORE repeat; repeat0/empty/
+DONE16/paired reader0. All42 raw fields repeat-identical/16 records, inactive
+slot differences0; exact original/actual inline-ROUND before+after/settings/
+N40/18 target/BRS/F17/CW027F/Microsoft32 controls pass. BOTH raw digest:
+764bc67a4feedce531033ac8b1fa52adcca9bd5844af00c4d18575f0140667e5.
+Once-per-FLL backing-file sample/later image-path checks remain NOT atomic
+mapped-code, Windows execution, internal-call or descendant-cleanup proof.
+Ordinary-shell fallback is NOT REA Evidence or cleanup attestation.
+
+Completed hostbuild/default-transform-shifted-consumer-captures1 retains exact
+native/source/status/input/clearance/release receipts; working root
+build/default-transform-shifted-consumer is ABSENT after validated move. Observer
+and proprietary SDK-linked FLLs stay HOST-ONLY; no FLL included in the archive.
+shifted-consumer-captures1 initially65 gzip receipts, manifest/SHA256SUMS; every
+compressed hash/gunzip size/hash/host byte verified. Native qualification is
+independent of the later AFTER-capture analyzer source.
+
+analyze-shifted-consumer.cjs binds the qualified source/raw digest, projects all16
+raw42-field records, normalizes ONLY inactive Numeric integer slots for active
+metadata comparison, and compares exact decimal text separately from padding/
+signed-zero spelling. Eight decimal metric checks pass. Archived FROZEN strict
+reader replay0/empty/report byte-exact; analysis0/readback0/empty/byte-identical,
+input hashes before+after EACH0, immediate prefixidle1/fullPSI both windows<1%/
+nice-n10. Across two native+three offline launches maxima0.14/0.03% (separate
+maxima, not one sample). BEFORE analyzer snapshot/base1b248f7a4+dirty POST-native
+analysis snapshots are NOT native source freezes.
+
+Finite observations (no reconstructed route equivalence was presumed):
+
+- Original target reconstruction: all8 TF AND STR strings exactly equal their
+  original parent controls, including both FIXED modes/signs in this sample.
+- Original->shifted N40/18 payload interventions:8 comparisons; TF changes2
+  decimal values (lower positive/negative endpoints, FIXED ON), STR changes4
+  (those lower endpoints, both FIXED). All other respective strings unchanged.
+- Signed adjacent original target pairs: TF changes2/2 ON,0/2 OFF; STR changes2/2
+  in BOTH FIXED modes. Shifted adjacent target pairs change0/2 for either consumer
+  or FIXED mode. The shifted route removes these observed transitions, not a
+  recovered original-display algorithm or accepted precision/bias repair.
+- Across16 target TF/STR comparisons:16 literal gaps,9 trimmed-literal gaps,
+  8 exact decimal-value gaps (all OFF),1 both-zero sign-spelling gap. Retained
+  signs/literals are not collapsed into the magnitude metric.
+
+Hostbuild/default-transform-shifted-analysis1 intact. Thirty-three supplemental
+gzip source/analysis/reader/readback/input/gate/full-shell receipts, verification-
+manifest/VERIFICATION-SHA256SUMS ->98 total native+verification gzip receipts;
+both inventories and all gunzip sizes/hashes/host bytes checked. No native rerun
+for analysis. Original30-file source pressure guard and236-file source-test
+failure/correction/qualification archive remain intact and historically scoped.
+
+LOW DQ-DV-5611-NUMERIC-DEFAULT-TRANSFORM-001 walkthrough: checked first-strict-
+before-repeat ordering, exact source/runtime controls, all16 raw projections,
+eight original baselines and separate value/sign/literal comparisons. Misuse
+risk: treating shifted-route success or N40 normalization as original expression
+or universal conversion equivalence. Native-only controls and explicit finite
+counterexamples/metadata boundary retain that gap. Actual developer-maintainer
+self-review plus native/reader/metric/archive checks, not independent/system/
+release assurance. Existing HZ-data-corruption-01/HZ-runtime-crash-01/
+HZ-doc-command-01/rollback unchanged; no parent/division/ListItem closure.
+
+NEXT bounded prerequisite: prepare same signed shifted payloads at their native
+measured width32 versus controlled width40, both scale18/D13/FIXED, with original/
+public-ROUND before+after controls. This tests the explicit N32->N40 normalization
+boundary, not a guessed formatter/tolerance/internal sequence. Source/contract/
+independent strict reader/synthetic checks/freeze BEFORE any new native capture;
+NEW BOTH resource clearance and all immediate gates. Do NOT replay the completed
+16-row original/shifted pair. Exact conversion/expectations/unchanged division
+ORIGINAL-SAME/hosted/exact-head review ladder remains OPEN; no owner-input blocker.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
