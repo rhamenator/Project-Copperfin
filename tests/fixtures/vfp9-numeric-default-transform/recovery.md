@@ -3062,6 +3062,86 @@ AND avg60<1%/nice-n10 EACH offline launch; NEW BOTH explicit resource CLEAR befo
 any compiler/native work. Full recovery/expectation/ORIGINAL/SAME/hosted/review
 ladder remains OPEN, including uncancelled division/ListItem prerequisites.
 
+## 2026-10-19 exact measured-operand discriminator
+
+Completed the preceding NEXT with compare-collapsed-stage-operands.cjs. It
+binds/replays the archived stage-join source/results, unchanged raw validators,
+and264 original input tuples to the native-frozen arithmetic cases (gzip digest
+in the original SHA256SUMS, source bytes exact). Diagnostic expressions explicitly
+name independent scaled/raised/INT evaluations;0.5, bias and cap remain REJECTED
+graph stimuli, not requirements. All264 nodes/220 pairs/176 plateaus retained,
+six uncaptured gaps excluded. Exact reduced BigInt fractions preserve the
+measured product shifted*powUp and sum scaled+1/2 without binary64 re-rounding.
+Observed nonnegative integer intervals [quantized,quantized+1) are retained per
+endpoint; comparisons use shared intervals only when observed integers coincide.
+Neither the interval nor a coincident integer decision predicts original display.
+
+First analysis1 FAILED1 before readback: own analyzer incorrectly assumed all
+observed quantized integers were0/1. Retained data also includes100/101/267/268/
+999/1000; native evidence/reader unchanged. BEFORE failing source/inputs, actual
+empty stdout/stderr/status/gates/full shell result retained in host
+build/default-transform-collapsed-operands1 and11 pass1 gzip receipts. No after
+hash check/readback is claimed. This is an AFTER-capture analyzer defect, not a
+product issue/native failure. Source corrected to arbitrary nonnegative observed
+integer intervals, including a non-unit-boundary metric check. Separate host
+build/default-transform-collapsed-operands2 preserves corrected execution.
+
+Corrected pass2:14 new metric checks cover exact signed/subnormal conversion,
+fraction reduction/zero, addition/multiplication/boundaries/decisions/nonfinite
+rejection. Replayed stage9/inventory8/classification9/shared raw8 checks pass.
+Fresh528 raw/control joins, all input tuples and both native arithmetic field
+captures unchanged. Analysis0/readback0/empty/byte-identical, input hashes
+before+after EACH0. BEFORE pass2 source snapshot; base7dce8dfc7+dirty snapshots
+explicitly POST-check, not a clean native freeze.
+
+Finite measured-operand results (integer decisions belong ONLY to the rejected
+diagnostic graph; changes alone are not correct original decimal magnitudes):
+
+| Pair set | Pairs | Distinct exact measured products | Product+half decisions differ | Exact measured-scaled+half decisions differ | Measured raised/INT decisions differ |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Original display changes | 44 | 44 | 16 | 18 | 32 |
+| Original display plateaus | 176 | 174 | 28 | 26 | 10 |
+| Scaled tuple collapses across display changes | 2 | 2 | 0 | 0 | 0 |
+| Raised/quantized tuple collapses across display changes | 12 | 12 | 10 | 6 | 0 |
+
+Among twelve raised/quantized collapse pairs (observed integer1), ten exact
+products straddle the diagnostic half boundary; two D13 products are BOTH above
+it, despite distinct exact values and an original-display transition. Exact
+scaled+half falls less/equal on six pairs, equal/greater on four, greater/greater
+on two; measured raised is equal/equal at1 on all twelve. The two scaled-collapse
+witnesses remain159->160/165->166, both D13/signs. Thus a product-precision-only
+or add-half-only substitution is not established by these observations; across
+all44 changes the exact product decision misses28 and changes on28 plateaus.
+No fitted boundary/tolerance/cap or internal operation/precision attribution.
+
+collapsed-operands-analysis1 retains34 baseline gzip receipts (11 failed pass1,
+23 corrected pass2), manifest/SHA256SUMS; all gunzip sizes/hashes/host bytes
+verified. Separate archived pass2 source equals executed source; recomputation0/
+empty/exact to BOTH pass2 reports/input hashes BEFORE+AFTER0. Ten supplemental
+gzip receipts/verification-manifest/VERIFICATION-SHA256SUMS ->44 total verified.
+Each launch (including failed pass1) fresh prefixidle1/fullPSI avg10 AND avg60
+0.00/0.00%/guard0/nice-n10. Ordinary shell NOT REA Evidence/native/Windows/
+internal-call/atomic-image/cleanup proof; no native/compiler/Wine/VM reservation.
+
+LOW DQ-DV-5611-NUMERIC-DEFAULT-TRANSFORM-001 delta/walkthrough: checked explicit
+non-unit integer intervals and fourteen metric cases, retained failed assumption,
+all pair accounting and the signed D13 above-boundary counterexamples. Misuse:
+promoting preserved exact distinctions to an accepted precision repair. Mitigation:
+keep incorrect/coincident decisions and plateau counterexamples alongside every
+exact fraction; no production code/expectation changed. Actual developer-
+maintainer self-review/automated checks, not independent/system/release assurance.
+HZ-data-corruption-01/HZ-runtime-crash-01/HZ-doc-command-01/rollback unchanged.
+
+NEXT bounded native-evidence preparation: signed D13 original-versus-observed-
+shifted-payload consumer discriminator, using the two witness pairs and exact
+original/public-ROUND before+after controls. Reconstructed shifted payloads are
+a NEW route observation, never assumed equivalent to the independently evaluated
+expression or original display. Freeze source/contract/strict reader and focused
+synthetic checks BEFORE execution. Reuse the verified observer, no new FLL/VM;
+NEW explicit BOTH audit+DAW native-only CLEAR and immediate idle-prefix/fullPSI
+avg10 AND avg60<1%/nice-n10 EACH native launch. Exact formatter recovery and
+expectations/unchanged division ORIGINAL-SAME/hosted/review ladder remain OPEN.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
