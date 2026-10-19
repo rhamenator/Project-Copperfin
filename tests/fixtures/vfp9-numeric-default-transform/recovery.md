@@ -3142,6 +3142,74 @@ NEW explicit BOTH audit+DAW native-only CLEAR and immediate idle-prefix/fullPSI
 avg10 AND avg60<1%/nice-n10 EACH native launch. Exact formatter recovery and
 expectations/unchanged division ORIGINAL-SAME/hosted/review ladder remain OPEN.
 
+## 2026-10-19 signed D13 shifted-consumer source preparation — checks pending
+
+Derived bounded contract under RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001 and the
+preceding NEXT: parent159/160/165/166 atD13, original/shifted target kinds,
+both FIXED ->8 routes/16 records/42 fields. Files emit-shifted-consumer.cjs,
+shifted-consumer.prg, shifted-consumer-cases.json, audit-shifted-consumer.cjs,
+check-shifted-reader.cjs, shifted-consumer-capture.sh. No production change.
+
+Original bits3D2C1E8DBBA38061/62 and BD counterparts; measured positive ABS-shift
+bits3D2C25C268497683/84. Sign-copy from original is a fixture-derived NEW route,
+not observed signed expression arithmetic. Native measured shift metadata was
+N32/18; target deliberately N40/18 for every TRANSFORM/STR/CFNMETA/BRS/F17
+consumer. No local assignment of the wrapped target/ROUND result. Reconstructed
+route/metadata normalization are NOT assumed equivalent to the original inline
+expression or display, and no expected new target strings are emitted.
+
+Caller independently brackets targets with original N40/18 and actual inline
+ROUND(original,D) controls before+after; settings/type/BRS/CW/exact Microsoft32
+binding checked by the strict reader. Emitter replays archived stage/raw checks
+to derive stimuli. Reader uses a separate literal witness table and binds BOTH
+retained arithmetic runs/raw shift fields36..40 and exact original/public-ROUND
+parent controls; no emitter import/target formatter. Planned synthetic reader
+tests exercise arbitrary valid target text, rejected mutations, runtime/status/
+footer and inactive Numeric-integer-slot exclusions, not compatibility strings.
+
+Guarded worker reuses the verified observer; no new FLL/compiler/VM. Requires
+clean source and NEW explicit BOTH native-only clearance; no overwrite of an
+existing attempt root. Native-only process override/inherited override guard,
+observer/source/input hashes, first native/strict single reader BEFORE repeat,
+paired reader/all42 repeat-field audit remain required. Shell pipefail protects
+the combined prior/nested raw-input inventory. None of this worker is executed.
+
+Actual source/cases bootstrap0/empty, immediate prefixidle1/fullPSI avg10/avg60
+0.00/0.00%/guard0/nice-n10 each; outputs equal current draft byte-for-byte.
+The subsequent ten-stage source-check pipeline ACTUALLY stopped guard75 before
+its FIRST syntax child at fullPSI63.42/33.67%/prefixidle1. There is NO syntax
+status/stdout/stderr, reader run, synthetic-test count, PRG compilation, native
+run or clean-native execution freeze to qualify. Do not describe the draft as
+tested merely because its emitter completed. Input hashes BEFORE guard passed;
+no after-check pipeline result claimed.
+
+Hostbuild/default-transform-shifted-source-checks1 and archive
+shifted-consumer-source-checks1 retain30 gzip files: BEFORE source snapshots,
+bootstrap outputs/status/gates/full actual shell, input inventory, pre-child
+guard/full shell, POST-guard base9e90410f1/dirty snapshots. Manifest/SHA256SUMS,
+all gunzip sizes/hashes/host bytes checked; current draft equals snapshots.
+Post-guard state is NOT a native freeze. Ordinary shell NOT REA Evidence/native/
+Windows/internal-call/atomic-image/cleanup proof. No resource reservation.
+
+LOW DQ-DV-5611-NUMERIC-DEFAULT-TRANSFORM-001 procedural delta/manual walkthrough:
+reviewed8-route/16-record construction, signed stimuli, deliberate N32->N40
+boundary, original/ROUND bracketing and fail-before-repeat ordering. Misuse risk
+is promoting sign-copy/reconstruction or unrun reader tests to parity evidence;
+separate source-only/guard metadata and no expected target strings prevent that
+claim. Actual developer self-review plus bootstrap/byte-preservation only; planned
+automated reader validation remains OPEN, not development acceptance/independent/
+system/release assurance. HZ-data-corruption-01/HZ-runtime-crash-01/
+HZ-doc-command-01/rollback unchanged. No parent/division/ListItem closure.
+
+NEXT SAME source unit: after fresh immediate idle-prefix/fullPSI avg10 AND
+avg60<1%, use NEW build/default-transform-shifted-source-checks2 and receipt
+names; preserve checks1. Verify archived draft/input hashes, then run all ten
+source stages (JS syntax3, shell syntax1, regeneration2, byte comparisons2,
+source-only reader1, synthetic reader1) at nice-n10 with fresh gates. Source
+freeze/sign and full reader evidence precede any native execution; request NEW
+explicit BOTH native-only resource CLEAR and apply all immediate native gates.
+No owner-input blocker/automation pause. Exact conversion recovery remains open.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
