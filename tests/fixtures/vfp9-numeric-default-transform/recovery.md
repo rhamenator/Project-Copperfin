@@ -4003,3 +4003,68 @@ original-width-consumer-capture.sh ONCE only if all coordination/gates pass,
 strict single BEFORE repeat, preserve all raw/status/partial results, release
 the window promptly. Reuse exact observer; no compiler/newFLL/VM. The completed
 shifted-value/native pairs are not part of this new ORIGINAL-width capture.
+
+## 2026-10-19 — ORIGINAL D13 width native pair qualified; offline replay guarded
+
+Clean signed/DCO source freeze0b381796591c5ef074e8bec185a3bd8728fb27aa,
+same qualified caller/strict reader/every-child guarded worker, NEW explicit
+audit+DAW native-only CLEAR and Request Guard VM-window release/no conflict.
+Actual coordination prompts/responses/pre-request shell and release are retained.
+No compiler/new FLL/VM. Exact observer reused; process-only msvcr71=n, inherited
+override UNSET, prior Microsoft32 binding/ABI/once-file-sampling limits unchanged.
+
+Worker ONCE: first native0, strict first-only reader0 BEFORE repeat, repeat0,
+paired reader0; every preparatory/native/reader child0/empty stderr. All16 records/
+42 raw fields repeat-identical, inactive Numeric integer-slot differences0.
+Both raw SHA2c8edbd66a1030613e6bf39d203fac3bfcb7bb221e614205bf4a244e12a6924f.
+Every immediate launch prefix1/fullPSI0.00/0.00%/guard0/nice-n10; native first/
+repeat gates and all input hashes BEFORE+AFTER EACH0 retained. Window promptly
+RELEASED to allthree coordinators; post-prefix idle/no reservation/job.
+Combined inspection shell exit1 is its FINAL idle-prefix pgrep, NOT native/
+reader failure; separate actual child status files are all0 and stderr empty.
+
+Validated and moved completed root to build/default-transform-original-width-
+consumer-captures1; worker root build/default-transform-original-width-consumer
+ABSENT. Native/source/runtime/FXP/control/gate/status/hash/actual-shell/inspection/
+coordination/release receipts initially99 gzip files at original-width-consumer-
+captures1 with manifest/SHA256SUMS. All compressed/decoded sizes/hashes/exact
+host bytes verified. Own authored PRG/FXP retained, no proprietary SDK/FLL binary.
+Ordinary shell is NOT REA Evidence/Windows parity/internal-call/atomic mapped-code
+or descendant-cleanup attestation. Prior provenance limitations are not upgraded.
+
+Direct audit inspection (not yet the AFTER-capture exact-decimal analyzer):
+all8 paired width32/40 target TF+STR Character strings are identical; the signed
+original adjacent display transitions remain at both widths. This is a finite
+null width intervention on these four ORIGINAL D13 payloads, not a universal
+width rule or formatter/precision repair. All original/public ROUND controls
+remain raw-exact before+after. The completed shifted-width and expression pairs
+were NOT rerun; no target Character strings were used as expected inputs.
+
+New AFTER-capture analyze-original-width-consumer.cjs binds source freeze/raw
+digest, every raw42-field/active metadata/control projection and both runs;
+retains literal/padding/exact decimal value/zero-sign distinctions and original
+width interventions/adjacent pairs. Eight metric checks authored, UNRUN.
+First offline command at build/default-transform-original-width-analysis1 stops
+shell75 BEFORE frozen-reader replay: idleprefix1/fullPSI48.41/13.75%/guard75.
+No reader/syntax/analyzer/readback child status or AFTER check exists; successful
+native qualification above is unaffected. BEFORE source/base0b381+dirty
+AFTER-capture snapshots, full exact command/actual shell, input-before/hash/gate
+receipts retained. Ten supplementary gzip files plus verification-manifest/
+VERIFICATION-SHA256SUMS bring archive109; both inventories/all compressed and
+decoded sizes/hashes/exact host bytes verified. Later PSI remained high; no
+native retry, backup monitoring, owner-input blocker or automation pause.
+
+LOW DQ-DV001 actual walkthrough extends source qualification with fresh clearance,
+strict-first-before-repeat, all16/42 raw field identity, every-child gate/hash/
+status, preserved runtime limits, prompt release and exact pre-child verification
+stop. Developer-maintainer self-review only, not independent/system/release
+assurance. Existing hazards/mitigations/rollback/assertion preservation unchanged.
+No formatter/expected emitter, tolerance/cap, compatibility or parent closure.
+
+NEXT SAME AFTER-capture analyzer: exact command in analysis1-shell-completion.json.gz
+at NEW build/default-transform-original-width-analysis2 (change ONLY root) after
+fresh idle/fullPSI avg10 AND avg60<1%. Frozen reader/syntax/analysis/readback must
+all actually pass, reports byte-exact, eight metric checks, hashes/gates retained;
+archive/review before interpreting metrics or choosing the next metadata stimulus.
+No new native run/compiler/VM needed for this step; native source freeze remains
+0b3817965, distinct from the AFTER-capture analyzer/evidence commit.
