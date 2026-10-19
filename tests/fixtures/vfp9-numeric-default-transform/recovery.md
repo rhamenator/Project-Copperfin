@@ -4274,3 +4274,77 @@ OFF display without assuming a formula or fitting a threshold. Qualify source/
 generation/synthetic reader+guarded-worker/archive replays and clean signed
 freeze BEFORE any NEW native resource coordination. No compiler/newFLL/VM needed.
 Wider Numeric representation/conversion/display/division/ListItem acceptance OPEN.
+
+### Intermediate D13 decimal metadata14..17 source qualification — native UNRUN
+
+Bounded derived RQ/VR-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001 continuation of the
+observed13/18 display intervention: emit-original-scale-middle-consumer.cjs
+generates original-scale-middle-consumer.prg/cases.json. Four ORIGINAL signed
+payloads parent159/160/165/166, D13 and width40 fixed, metadata14/15/16/17 ONLY,
+bothFIXED:16 routes/32 records/42 fields. No13/18 or completed native rerun.
+Every target consumer uses fresh inline CFNDEC(CFNWIDTH(targetPayload,40),scale);
+no numeric argument/result assignment, shifted arithmetic or sign-copy. Original
+N40/18 and public inline ROUND controls before+after remain independently bound
+to eight parent raw observations/digest254b46da...; no target strings predicted.
+
+Independent audit-original-scale-middle-consumer.cjs uses literal seeds and
+binds source/all32 expected routes/42 raw fields/active metadata/payload/settings/
+runtime/before+after/repeat controls. check-original-scale-middle-reader.cjs
+passes54 SYNTHETIC tests (allfour valid target-scale swaps at both observations,
+wrong width/record count, field/control/status/stderr/runtime/repeat mutations,
+baseline/single/paired and inactive Numeric integer-slot-only acceptance).
+These arbitrary synthetic target strings are NOT native expected text.
+check-original-scale-middle-worker.cjs passes13 harmless SYNTHETIC extracted-
+checked() tests, fake prefix/pressure and harmless children; never the whole
+native worker or native paths, and not actual resource clearance evidence.
+Native worker original-scale-middle-consumer-capture.sh preserves clean-tree/
+new-root/override/source hashes/every-child idle/fullPSI/nice gates and strict
+single-reader BEFORE repeat. Resource flag acknowledges external coordination,
+never grants it. No compiler/newFLL/VM needed, existing observer reused later.
+
+Actual NEW host original-scale-middle-generate1:2 stages0/empty. First
+original-scale-middle-source-checks1:11 stages0/empty, synthetic-reader fails1
+at stage12 because wrong-count mutation still searched for old DONE|16 in the
+new DONE|32 baseline, changing nothing. Failure/stderr/BEFORE source and input
+snapshots/actual shell retained; no failed-stage AFTER hashes or worker stage
+claimed. This is an own test-porting error, not a native/production defect.
+Correction uses DONE|32->DONE|31 plus explicit must-change assertion. NEW host
+original-scale-middle-source-checks2:all13 stages0/empty/regeneration byte-exact,
+54reader+13worker checks pass/input hashes BEFORE+AFTER EACH0. Generation and
+initial11 successful stages also retain before+after checks; immediate prefix1/
+fullPSIavg10<=0.19/avg60<=0.20%/guard0/nice-n10 across all attempted stages.
+BEFORE base62b6a90b8+dirty snapshots are NOT native freeze; generation/failed
+pass retain old test source intentionally, successful pass binds corrected source.
+
+original-scale-middle-source-checks1 archive276 gzip plus manifest/SHA256SUMS
+preserves allthree host roots and actual commands/completions. NEW host
+original-scale-middle-source-replay1 compiles gzip-archived successful-pass
+sources at original module paths with explicit archived/current byte identity:
+seven stages0/empty/byte-exact generation/source-reader/54reader+13worker outputs,
+original/archive hashes BEFORE+AFTER EACH0/prefix1/fullPSIavg10<=0.42/avg60<=0.21%/
+guard0/nice10. Archived shell sources syntax ONLY.83 supplementary receipts
+bring total359 gzip files; both inventories/checksum lists/compressed+decoded
+sizes/hashes/exact host bytes verified. All host roots/failure snapshots intact;
+no SDK/FLL binary. Ordinary shell is NOT REA Evidence/native results/Windows/
+internal-call/atomic mapped-code or descendant-cleanup attestation.
+
+LOW DQ-DV001 procedural delta: only new intermediate metadata stimuli/counts,
+independent reader and new-root workers. Actual walkthrough: source generation/
+regeneration/source-control binding, retained inert-mutation failure/correction,
+54reader/13worker tests, byte-exact archived source replay and all receipt hashes.
+Developer-maintainer self-review only, not independent human/system/release
+assurance. HZ-data-corruption-01/HZ-runtime-crash-01/HZ-doc-command-01 mitigations
+unchanged: never mistake synthetic text or fields alone for parity, never weaken
+ORIGINAL/SAME/control assertions or use guessed tolerance. Rollback: withdraw
+this diagnostic source, retain receipts and correct trace/handoff before a run;
+no runtime release or field notification needed for source-only checkpoint.
+
+NEXT clean signed source freeze then NEW explicit audit+DAW native-only CLEAR,
+Request Guard renewed two-VM window RELEASE/no conflict, fresh idle/fullPSIavg10
+ANDavg60<1% EVERY child. Audit19:08UTC HOLD15.07/46.44% is resource-state data;
+later passing small offline gates do NOT grant native permission. No native/
+compiler/Wine/VM window requested or launched here, no reservation/job. SAME
+frozen worker ONCE, strict-single BEFORE repeat, paired qualification, prompt
+release and archive BEFORE AFTER-capture interpretation. No target display rule,
+formatter/helper/hook/expected emitter, production change/PR/parent closure or
+owner-input pause. Exact conversion/display/division/ListItem acceptance OPEN.
