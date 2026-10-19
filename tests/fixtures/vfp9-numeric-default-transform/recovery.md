@@ -2844,7 +2844,7 @@ retains20 gzip receipts/source/results/gates/full shell/input inventory/checks,
 manifest/SHA256SUMS, all gunzip sizes/hashes/host bytes verified. Source-base and
 dirty-status snapshots are explicitly POST-check, not a clean native freeze.
 
-Separate executable archived-source recomputation is NOT yet performed:
+At the prior checkpoint, separate executable archived-source recomputation was NOT yet performed:
 audit then reported HOLD17.16/3.29 and31.91/8.51, with local fullPSI52.89/32.41.
 No replay was attempted and this is NOT worker guard75/native failure. NEXT
 SAME slice: after fresh immediate prefix-idle/full avg10 AND avg60<1% gates,
@@ -2862,6 +2862,64 @@ before further execution. Misuse risk is treating a near-fit as an accepted
 formatter; retain all counterexamples and no production hook. Developer self-
 review only, not independent/system/release assurance. Hazards/rollback unchanged;
 exact conversion/display and retained division/ListItem ladder remain open.
+
+The deferred half-grid archive check is now COMPLETE: all20 baseline file
+sizes/hashes/host bytes and archived-source equality verified; actual independent
+offline recomputation0/empty stderr/byte-exact to both archived analysis/readback,
+input hashes0 BEFORE and AFTER,14 new/eight reused metric checks. Immediate
+prefix-idle1/full PSI0.00/0.00/guard0/nice-n10. Ten supplemental gzip receipts,
+verification-manifest/VERIFICATION-SHA256SUMS bring decimal-half-grid-analysis1
+to30 byte-compared gzip receipts without overwriting baseline. Hostroot1 intact.
+Ordinary shell NOT REA Evidence or native replay. All four candidates remain
+rejected; completion of archival verification does not accept any formatter.
+
+## Current-capture adjacent transitions — inventory0, archive replay guarded
+
+inventory-adjacent-transitions.cjs derives only actually adjacent observations
+from the qualified CURRENT264 ORIGINAL N40/18 FIXED ON inputs, same applied D
+and sign. It reuses the unchanged archived-source-bound raw validator (fresh528
+controls/eight checks/output byte-exact), explicitly checks original N40/18/
+real/CW descriptors and raw projection, and orders finite payloads by magnitude
+using BigInt bits. Eight new rank/sign/adjacency/nonfinite checks pass. No old
+runtime captures are used to qualify a new transition, and no uncaptured gap is
+interpolated. Conflicting coincident payloads would remain unqualified rather
+than being discarded. This is a retained-observation inventory, not a search
+for a fitted threshold/tolerance or another native capture.
+
+Actual inventory0/readback0/empty stderr/byte-identical, each behind fresh
+prefix-idle1/fullPSI avg10 AND avg60<1%/guard0/nice-n10. The264 distinct payload
+nodes form38 setting/sign groups,44 contiguous components and220 adjacent pairs;
+six nonadjacent gaps are excluded. There are44 observed TRANSFORM decimal-value
+changes and44 STR changes,0 consumer-boundary disagreements,0 coincident-payload
+conflicts, and no component lacking an adjacent observed value change. Literal,
+signed-zero and both endpoint bytes/indices remain attached to every pair.
+One raw payload step is NOT evidence of global monotonicity/unique threshold,
+metadata sufficiency, internal operation order or a production conversion rule.
+
+adjacent-transition-inventory1 retains20 baseline gzip receipts/source/results/
+gates/full shell/input hashes, manifest/SHA256SUMS, all gunzip sizes/hashes/host
+bytes verified. Host build/default-transform-adjacent-inventory1 intact; source-
+base/dirty snapshots explicitly POST-check, not a clean native execution freeze.
+A separate archival replay then stopped at actual pressure guard75/fullPSI
+60.39/45.28%/prefix-idle1 BEFORE child analyzer. No archive-recompute status/
+stdout/stderr/report exists. Five supplemental forensic gzip receipts plus
+verification-guard-manifest/GUARD-SHA256SUMS retain that guard;25 total gzip
+receipts byte-compared, archivedRecomputeAnalyzerInvoked:false. This does not
+invalidate the earlier actual inventory/readback, nor qualify the missing
+archival replay. No native/compiler/Wine/VM invocation or reserved window.
+
+NEXT SAME slice after fresh offline idle-prefix/fullPSI avg10 AND avg60<1%
+gates: use NEW receipt names/root to verify archived source and inputs, execute
+byte-equivalent source, compare exact to baseline inventory/readback, append
+verification receipts without overwriting guard/baseline. Then join the rejected
+exact-half-grid candidates to these observed adjacent endpoints, keeping all
+counterexamples and no fitted/interpolated thresholds. Any new native work
+requires NEW BOTH resource clearance. No owner-input blocker/automation pause.
+LOW DQ-DV001 walkthrough checked same-context grouping, all264 input accounting,
+finite bit-rank assertions, exclusions and pre-child guard ordering; actual
+eight new/eight reused checks and initial readback support this source delta.
+Developer self-review only, not independent/system/release assurance. Existing
+hazards/rollback unchanged; exact conversion/display/division/ListItem remain open.
 
 ## Traceability and development-document walkthrough
 

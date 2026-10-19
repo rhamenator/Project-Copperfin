@@ -1,0 +1,66 @@
+{
+  "analysisOnly": true,
+  "nativeInvoked": false,
+  "ordinaryShellNotReaEvidence": true,
+  "baselineGzipFiles": 20,
+  "supplementalGzipFiles": 10,
+  "archivedSourceEqualsExecuted": true,
+  "recomputeStatus": 0,
+  "reportByteExact": true,
+  "inputHashesBefore": 0,
+  "inputHashesAfter": 0,
+  "metricSelfChecks": 14,
+  "reusedValidatorMetricChecks": 8,
+  "files": [
+    {
+      "name": "archive-recompute-shell-completion.json",
+      "bytes": 398,
+      "sha256": "31a5d3cb0ae4010310eec827512df0f1c021a77f53a2636af82b95729287fb02"
+    },
+    {
+      "name": "archive-recompute.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "archive-recompute.inputs-after.txt",
+      "bytes": 3389,
+      "sha256": "ba85b7d234fc5b825560c7fa3d28f9cdfbbf96d16541e7045d1a38b65b641ed6"
+    },
+    {
+      "name": "archive-recompute.inputs-before.txt",
+      "bytes": 3389,
+      "sha256": "ba85b7d234fc5b825560c7fa3d28f9cdfbbf96d16541e7045d1a38b65b641ed6"
+    },
+    {
+      "name": "archive-recompute.json",
+      "bytes": 1314757,
+      "sha256": "3bc2a98534f4e6386501a57810fd4538c9b48ffe0bdc303da16c9ea18ac7cc40"
+    },
+    {
+      "name": "archive-recompute.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "archive-recompute.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "archive-recompute.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "0c1cd301170e75c84127de3e3066f98944733f6200bff7ed00e4d159226b4b73"
+    },
+    {
+      "name": "archive-recompute.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "archive-recompute.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
