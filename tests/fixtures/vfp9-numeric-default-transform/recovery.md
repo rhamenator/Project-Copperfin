@@ -4121,3 +4121,82 @@ generation/source/synthetic reader+worker/archive checks and clean signed freeze
 BEFORE NEW resource coordination/native execution; no compiler/newFLL/VM needed.
 No tolerance, guessed rounding precision, canonical-double shortcut or formatter
 implementation/parent closure is justified by the null width result.
+
+### Original D13 decimal-metadata13/18 source qualification — native UNRUN
+
+Bounded derived RQ/VR-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001 discriminator:
+emit-original-scale-consumer.cjs generates original-scale-consumer.prg/cases.json.
+Exactly four signed ORIGINAL witnesses parent159/160/165/166, bits
+3D2C1E8DBBA38061/62 and BD2C1E8DBBA38061/62, D13, width40, decimal metadata13/18,
+both FIXED modes:8 routes/16 records/42 fields. Target consumers reconstruct
+CFNDEC(CFNWIDTH(targetPayload,40),inputScale[index]) independently every time;
+no numeric argument/result assignment, sign-copy, shifted arithmetic or target
+Character predictions. Original N40/18 and public inline ROUND controls before+
+after remain bound to eight independent raw parent observations/digest254b46da...
+The completed D16/17/18 scale sample is distinct and was NOT rerun.
+
+Independent audit-original-scale-consumer.cjs binds literal seeds, generated
+source, all42 raw fields, settings, active metadata/payload/control/runtime
+identity and before/after equality. check-original-scale-reader.cjs passes50
+SYNTHETIC tests: baseline/single/paired, control and malformed field rejection,
+both valid decimal-metadata swaps rejected at both target observations, wrong
+width rejected, status/stderr/runtime/repeat mutation rejection and acceptance
+of ONLY inactive Numeric integer-slot differences. Arbitrary synthetic target
+text is not native compatibility evidence. check-original-scale-worker.cjs
+passes13 SYNTHETIC tests using ONLY extracted checked() with fake pressure/prefix
+functions and harmless children, never the whole native worker/native paths.
+This covers both I/O windows at/either side of1%, missing full PSI, busy/error
+prefix, status/stderr/hash failure and partial-result preservation/order.
+
+original-scale-source-check.sh generate/check ran at NEW host roots
+build/default-transform-original-scale-generate1 and original-scale-source-checks1:
+2 generation+13 source stages0/empty; regeneration byte-exact, all input hashes
+BEFORE+AFTER EACH0, immediate prefix1/fullPSI avg10=0.00/avg60<=0.02%/guard0/
+nice-n10. BEFORE source base1bd7b3ed9 plus dirty source snapshots is NOT a clean
+native freeze. New native worker original-scale-consumer-capture.sh retains
+every-child gates/immutable inputs/strict-first-before-repeat/process-local
+Microsoft32 override and refuses a dirty source tree. Flag is acknowledgement
+of external coordination only, never a resource grant. Reuses observer; no
+compiler/newFLL/VM required. Native worker has NOT executed in this checkpoint.
+
+Source archive original-scale-source-checks1 initially158 gzip receipts plus
+manifest/SHA256SUMS. Packaging first misclassified source-reader.guard.status
+as a source snapshot and failed ENOENT; actual failure retained. Corrected
+explicit source-name classification verified the partial gzip bytes without
+overwriting any existing file, then completed all compressed/decoded hashes,
+sizes and exact host-byte checks. This was a packaging failure, not a source,
+reader, host-pressure, native or production failure; no defect issue inferred.
+
+NEW build/default-transform-original-scale-source-replay1 compiles gzip-archived
+sources at original module paths with explicit archived/current byte identity;
+allseven stages0/empty/byte-exact generation/source-reader/synthetic readbacks,
+50 reader+13 worker checks, original/archive hashes BEFORE+AFTER EACH0, immediate
+prefix1/fullPSI0.00/0.00%/guard0/nice10. Shell worker replay is syntax ONLY.
+83 supplemental receipts with full exact replay command/actual shell and
+packaging correction bring total241 gzip files; both manifests/checksum lists,
+compressed/decoded sizes/hashes/exact host bytes verified. All host roots intact;
+no SDK/FLL binary archived. Ordinary shell is NOT REA Evidence, native result,
+Windows/internal-call/atomic mapped-code or descendant-cleanup attestation.
+
+LOW DQ-DV-5611-NUMERIC-DEFAULT-TRANSFORM-001 procedural delta: introduce only the
+decimal-metadata discriminator, independent fail-closed reader and new-root
+workers, preserving existing native controls/acceptance. Actual walkthrough:
+source generation, field/source binding,50 reader mutations,13 harmless helper
+tests, archived source replay and byte checks; developer-maintainer self-review
+only, NOT independent human/system/release assurance. Existing HZ-data-corruption-
+01/HZ-runtime-crash-01/HZ-doc-command-01 mitigations remain: never accept synthetic
+strings, partial captures, metadata-only parity or guessed tolerance; do not
+weaken ORIGINAL/SAME. Rollback is withdraw this diagnostic slice, preserve
+receipts and correct the trace/handoff before another run; no runtime release
+or field notification is needed for this source-only checkpoint.
+
+NEXT: clean signed source freeze, then NEW explicit audit+DAW native-only CLEAR
+and Request Guard release/no conflicting window, fresh idle/full I/O PSI avg10
+AND avg60<1% before EVERY child. Audit18:11UTC HOLD0.00/2.93% is retained as
+resource-state data, not authority; later passing offline gates do NOT grant a
+native window. No reservation/native/compiler/Wine/VM job here. Run the frozen
+worker once with strict-single BEFORE repeat, qualify paired raw fields, promptly
+release, archive original receipts before AFTER-capture interpretation. Existing
+width/shifted/expression captures stay complete, all parent Numeric/conversion/
+division/ListItem implementation and acceptance remain OPEN. No owner-input
+blocker, production formatter/helper/hook/expected emitter or PR created.
