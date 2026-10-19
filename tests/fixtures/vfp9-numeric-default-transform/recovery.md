@@ -1920,6 +1920,78 @@ is accepting rejected graph or unchecked conversion buffers; unchanged gap/
 independent controls/new native-only freeze/bounds gates mitigate it. Existing
 hazards/rollback/notification apply, no owner-input blocker or automation pause.
 
+### _gcvt ABI/buffer foundation — source-only, UNCOMPILED/UNRUN
+
+Allowed primary interface facts:
+https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/gcvt?view=msvc-170
+and x86 default C calling convention:
+https://learn.microsoft.com/en-us/cpp/cpp/cdecl?view=msvc-140
+OWN typed pointer is char* (__cdecl *)(double,int,char*); not a guessed VFP
+DECLARE ABI, _gcvt_s or substitute CRT. Documentation is interface evidence,
+NOT version-specific native output or proof VFP uses this function. Read-only
+installed-drive header inventory found no stdlib.h/float.h/crtdefs.h; a numeric
+_CVTBUFSIZE value is NOT recovered or asserted. No proprietary source copied.
+
+Instead derive a conservative own allocation bound from the explicitly checked
+binary64 domain (sizeof8/radix2/mantissa53/exponents1024,-1021): every exact
+fixed decimal has at most309 integer digits and1074 fraction places (2^-1074).
+Allow310 integer digits for significant rounding carry, plus decimal point,
+sign,NUL:1387 bytes. Scientific15..17-significant-digit notation is shorter.
+2048 bytes exceeds this conservative sum, not a guessed _CVTBUFSIZE. This relies
+on the documented converted-number/no-padding interface, not undocumented
+legacy instructions. Must still reject corruption/error/oversized report.
+
+gcvt-boundary.h is the EXACT first-party helper shared by new native handler
+and future direct host tests. It rejects nonfinite values, non-15/16/17 counts
+and null function/buffer/result before conversion; initializes2048 own bytes
+nonzero with16 adjacent canary bytes EACH side. After ONE call, reject canary
+damage/NULL/foreign or interior returned pointer before any pointer dereference;
+scan ONLY own initialized buffer up to2048 for NUL, reject report>=128bytes,
+then validate nonempty signed decimal/scientific ASCII grammar and bounded copy.
+No formatting algorithm/rounding/allocator/CW writes. Canaries detect adjacent
+damage, NOT arbitrary memory safety of a broken CRT. Failures remain failures,
+not permission to relax pointer/grammar/length checks after native evidence.
+
+gcvt-probe.c derives from OWN crt-probe.c, adding ONLY new shared-header include,
+CFNGCVT fastcall handler, fourth typed dispatch entry/count. gcvt-source-check.cjs
+actually restores/removes those additions and compares all remaining identity/
+old-control/entry/source bytes EXACT. Existing crt-probe.c/header/binaries remain
+unchanged. New handler uses already-loaded module/public _gcvt export, original
+read-only exact module/path/hash/PE32 binding, native argument bytes/count/CW
+before+after, buffer capacity/canary/pointer controls and hex text. No DLL load/
+replacement/global config, address disclosure or proprietary byte return.
+Static buffer avoids a large freestanding32-bit stack dependency;1536 output
+bound covers <=518 module hex+254 text hex+fixed fields. No stale FLL reuse.
+
+gcvt-boundary-check.c plans115 direct assertions PER compiler using deterministic
+stubs, never real CRT: legal text/counts, invalid grammar/counts/nonfinite input,
+signed zero/subnormal/extreme finite payload preservation, returnNULL/foreign/
+interior pointers, all32 individual canary bytes,127/128 report edge,2047-byte
+terminated output versus unterminated2048, non-ASCII rejection, null parameters
+and forbidden-call counters. Stub faults write own
+explicit guard fields, not undefined out-of-bounds test accesses. Planned GNU+
+Clang ASan/UBSan builds/checks have NOT run. Stub tests never prove native output,
+x86 ABI execution, module binding or global formatter parity.
+
+Node syntax+gcvt-source-check.cjs+diff-check0, source-only fields explicitly
+compiled:false/nativeInvoked:false. These are ACTUAL source checks, not C syntax,
+test, compiler/link/native results. No build worker/root/test binary/FLL yet.
+NEXT finish new same264/bothFIXED/positive15/16/17 caller/inventory/independent
+reader/separate build-capture workers and freeze ALL sources BEFORE any compiler/
+import/link. Then fresh BOTH compiler-only window/all immediate gates, exact
+GNU+Clang115 helper assertions each plus unchanged SHA/PE boundary tests; separate
+NEW BOTH native-only window/strict first BEFORE repeat. SDK binaries HOST-ONLY.
+No completed-pair replay, changed production formatter or accepted precision.
+
+LOW DQ-DV001 walkthrough: manually traced public signature, buffer-bound proof,
+pre-CRT guards/one-call/return ownership/canaries/bounded scan/copy, output bound,
+typed dispatch and exact source restoration. Audited all planned115 test paths
+and fault-injection writes; Node source checks above actually pass. Developer
+self-review only, not native/independent-human/system/release assurance. Misuse
+would conflate stub plans/source checking with runtime safety/parity; explicit
+UNCOMPILED/UNRUN state and next source-freeze/guarded two-window ladder mitigate.
+Existing hazards/rollback/notification retained, no owner-input blocker/pause.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
