@@ -2672,6 +2672,70 @@ decimals: inspect actual result metadata before defining same-payload/changed-
 scale interventions. Any new native caller must be independently read/frozen
 and obtain NEW BOTH resource clearance; completed captures must not be replayed.
 
+## Same-payload scale intervention — source foundation, native UNRUN
+
+emit-scale-intervention.cjs, scale-intervention.prg/cases.json,
+audit-scale-intervention.cjs and scale-intervention-capture.sh define a new
+bounded discriminator, not a completed native replay or expected formatter.
+Six retained signed parent inputs (indices193/199,205/211,217/223) come from
+the hash-bound qualified round-inline archive. D16/17 each reconstruct original
+and observed ROUND payload at scale18 versus scaleD, width40/bothFIXED; D18
+already has scale18 on both routes, so only two unchanged-scale control routes
+are emitted. Total20 routes/40 contexts/42 fields, applied D16..18.
+
+Every target consumer receives INLINE CFNDEC(CFNWIDTH(targetPayload,40),scale),
+never a locally assigned Numeric argument/result. Original N40/18 and actual
+INLINE ROUND(original,D) are independently sampled BEFORE and AFTER target
+observations, with exact bound-parent metadata/BRS/TRANSFORM/STR/F17/settings
+controls. Target metadata/BRS/TRANSFORM/STR/F17/type are observed before/after.
+Reconstructed ROUND payload's NEW display is deliberately NOT required to equal
+the parent ROUND expression: metadata/payload equality alone is not presumed
+sufficient. No new output strings, precision cap, tolerance or causal rule is
+calculated. Reader tolerates only the inactive Numeric integer slot, preserving
+all active metadata, literals, signed-zero spelling and exact repeat checks.
+
+Source-only Node syntax/emitter regeneration and byte comparisons, independent
+reader's12 raw-bound parent contexts, bash syntax and diff-check all return0.
+check-scale-reader.cjs passes44 SYNTHETIC reader checks (valid first/paired
+structure; rejection of metadata/BRS/settings/runtime/text/footer/status changes;
+inactive Numeric integer-slot acceptance). Arbitrary synthetic target text is
+reader-test input, NOT native behavior or compatibility expected strings.
+All nine successful source-check stages have immediate prefix-idle1/full I/O
+PSI avg10 AND avg60<1%/guard0, nice-n10; not VFP syntax/behavior qualification.
+
+Earlier synthetic attempt1 failed because a purported changed original display
+was already byte30. Diagnostic attempt2 explicitly identifies inert column10.
+The test correction uses a different literal and asserts each mutation actually
+changes its field; actual attempt3 passes. This was a test-stimulus error, not
+a newly discovered product defect. Both failed results/source copies are kept,
+not called native failures or retroqualified by the later pass.
+scale-intervention-source-checks1 retains132 gzip receipts for all three
+attempts, manifest/checksums and exact host-byte/gunzip comparisons. First two
+source copies were made after execution; attempt3 snapshots precede checks.
+Host build/default-transform-scale-source-check1/2/3 remain intact. No native
+capture root, compiler/new FLL, Wine/VFP or VM invocation; existing SDK-linked
+observers remain HOST-ONLY. Ordinary shell NOT REA Evidence or cleanup proof.
+
+LOW DQ-DV001 procedure delta: replace a proposed probe with a fixed40-context
+caller/independent42-field reader/no-overwrite native worker; keep NEW BOTH
+resource clearance, immediate per-launch idle/full-PSI gates and strict-first
+BEFORE repeat. Walkthrough checked all42 field offsets, parent/target route
+separation, control bracketing, fail-before-repeat path and44 synthetic checks.
+Developer-maintainer self-review only, not independent/system/release assurance.
+Misuse risk is treating a reconstructed result as an already equivalent native
+route, or treating source/synthetic checks as native evidence. Mitigations are
+separate target observations, exact parent controls, retained failures and
+explicit UNRUN state. Hazards/rollback/field-notification policy unchanged.
+
+NEXT: native worker remains UNRUN. Audit released its separate job then reported
+resource HOLD fullPSI19.78/3.90%; no native/compiler window is reserved here.
+After NEW explicit audit AND DAW native-only CLEAR, require immediate prefix-idle
+and BOTH fullPSI avg10/avg60<1% EACH launch. Reuse verified observer/no rebuild,
+strict first40-row read before repeat, retain any failure without weakening
+controls, then archive independent readback before interpreting outcomes.
+No owner-input blocker or automation pause; conversion/display recovery and
+the retained division/ListItem implementation ladder remain open.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
