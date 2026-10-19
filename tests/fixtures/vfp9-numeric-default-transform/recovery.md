@@ -3412,6 +3412,30 @@ each native launch needs its own immediate gates/nice-n10. Do not replay the
 completed original/shifted16 pair, run the new width route only. No owner-input
 blocker or automation pause; pressure is an execution gate, not product steering.
 
+## Width discriminator archived-source replay2 completed
+
+NEW build/default-transform-shifted-width-archive-replay2, from clean signed/DCO
+04645b1c90f711f914484b62194e2a6f53adab3e, runs the SAME four archived expanded
+sources after resolved I/O pressure. Archived emitter source/cases, strict reader
+source-only and synthetic checker all0/empty stderr; all four reports byte-exact,
+parent8+shifted8 controls and48 synthetic checks pass again. Inputs hashes BEFORE
+and AFTER EACH0. Every immediate prefixidle1/guard0/nice-n10/fullPSI avg10/avg60
+<1%; maximum avg10=0.00, avg60=0.15%. BEFORE clean source/status snapshots retained.
+No native invocation or native-compatibility target string is inferred.
+
+Forty-one supplemental source/gate/hash/report/actual full-shell receipts plus
+verification-manifest/VERIFICATION-SHA256SUMS bring shifted-width-source-checks1
+to302 gzip receipts. All three inventories, compressed hashes/gunzip sizes/hashes/
+exact hostbytes verified. Prior guard1/fullPSI3.80/0.71 and packaging parse failure
+remain immutable; source/reader/caller/native worker unchanged. LOW DQ-DV001
+walkthrough checks SAME archived inputs and byte comparisons, rather than treating
+prior stop as a pass. Existing hazards/rollback/non-REA limitations unchanged.
+
+NEXT: clean signed source freeze and NEW BOTH native-only clearance; absent
+build/default-transform-shifted-width-consumer root, exact reused observer,
+first0/strict-single0 BEFORE repeat/paired0, each immediate idle/PSI gate/nice10.
+No compiler/new FLL/VM; no repeat of completed original/shifted16 pair.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
