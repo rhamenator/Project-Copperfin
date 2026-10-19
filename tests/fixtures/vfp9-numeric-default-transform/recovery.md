@@ -2136,6 +2136,46 @@ changed, and no G17 uniqueness was promoted to a requirement. Developer
 self-review only, not independent-human/system/release assurance. Existing
 hazards/rollback/notification remain open; no issue/compatibility closure.
 
+## Next public fixed-count STR discriminator — SOURCE ONLY
+
+emit-str-fixed.cjs now generates str-fixed.prg and str-fixed-cases.json from
+the qualified G17 parent subset, independently checking both raw hashes and
+all264 original input tuples. Same ORIGINAL finite payloads/INLINE N40/18/
+D0..18/bothFIXED,528 rows/24 fields per run. Explicit STR(...,40,15) and
+STR(...,40,18) each observed as public VARTYPE plus hex text; no expected
+strings/rounding/formatter rule. Counts15/18 are stimuli, not inferred caps.
+Original metadata/BRS/TRANSFORM/current-D STR and applied typed settings plus
+public F17/G17 controls bracket the new consumers. All numeric consumers use
+inline constructors; only character observations assigned. First load/native
+control/runtime error emits one record/no DONE and returns before next case.
+
+audit-str-fixed.cjs requires original controls and FULL F17/G17 strings exact
+to the accepted parent (including module/CW/buffer identity), before/after
+Numeric N40/18 active descriptor/BRS, applied typed settings, new Character
+STR results of requested width40, complete topology/footer/empty stderr and
+full typed repeat. Only unused Numeric.integer slot may differ. It does not
+compute or predict either new string. First --single0 required before repeat.
+
+str-fixed-capture.sh is native-only/no compiler: clean-tree/no-overwrite,
+source snapshots/regeneration exact, current own observer source byte-exact
+to accepted archived source, FLL SHA0b1fcd2ba81b95631cb52e6ecd0d4afa721b450a967402f504d1852a49e9e9ac,
+all source/helper/runtime/metadata-FLL/parent digests, inherited override empty/
+process-onlymsvcr71=n, nice-n10, NEW BOTH native-only CLEAR and immediate
+idleprefix/fullPSI avg10 AND avg60<1% at each launch. Strict-first before repeat.
+Observer/SDK binaries remain HOSTONLY, no completed-pair replay/global edits/VM.
+
+Actual source Node syntax/emitter parent validation/bash syntax/diff-check0.
+No native worker/root/request/reservation/run/STR expected artifact yet; source
+and reader have NOT been native-qualified. Resource hold still requires fresh
+measurements and NEW BOTH coordination. GCVT acceptance above is not STR proof.
+
+LOW DQ-DV001 delta walkthrough: checked all24 field indices and exact parent
+control reconstruction; traced new public STR calls between original/runtime
+controls, no numeric assignment, first-error/no-footer stop and first strict
+before repeat. Node source checks only, not VFP syntax/runtime/behavior proof.
+Developer self-review, no independent-human/system/release assurance. Existing
+hazards/rollback remain; rejected models and division checks stay uncancelled.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
