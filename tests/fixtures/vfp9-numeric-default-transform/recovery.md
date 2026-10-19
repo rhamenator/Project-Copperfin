@@ -3210,6 +3210,67 @@ freeze/sign and full reader evidence precede any native execution; request NEW
 explicit BOTH native-only resource CLEAR and apply all immediate native gates.
 No owner-input blocker/automation pause. Exact conversion recovery remains open.
 
+## 2026-10-19 D13 source validation — complete, native pair still pending
+
+Continued the SAME source unit after the preserved checks1 pre-child I/O guard;
+no completed native capture was restarted. Verified all30 prior compressed
+receipts/gunzip sizes/hashes/host bytes and exact six draft-source snapshots
+before NEW hostbuild/default-transform-shifted-source-checks2 execution. Source
+baseb6c59e169 and status were captured BEFORE checks (clean). First nine stages0:
+JS syntax3/shell syntax1/regeneration2/byte comparisons2/source-only reader1.
+The reader independently checked8 original/ROUND parent contexts and8 measured
+shift contexts,16 rows/42 fields, newResultsRead:false/nativeInvoked:false.
+
+Synthetic stage FAILED1: its column14 mutation supplied zero, but the first
+parent ROUND control was already zero. The test's explicit non-inert assertion
+stopped before that mutation was submitted to the reader. Full original source,
+input inventory/gates/status/stdout/stderr/actual shell results are preserved;
+no full synthetic-test pass or post-failure input hash is claimed for checks2.
+This is a synthetic-fixture defect, not native/strict-reader/product failure.
+
+Only check-shifted-reader.cjs changed: column14 now mutates to binary64 one
+(3FF0000000000000), still explicitly asserted different from the baseline.
+Caller, cases, strict native reader and worker remained byte-identical. Separate
+hostbuild/default-transform-shifted-source-checks3 snapshots precede execution;
+baseb6c59e169+dirty checker-only delta recorded, NOT clean native execution freeze.
+All ten stages0/empty stderr, input hashes BEFORE+AFTER EACH0. Source-only reader
+controls8+8 pass; syntheticReaderSelfTests44 passes with arbitrary target text,
+rejected metadata/payload/settings/runtime/status/footer/repeat mutations, and
+only inactive Numeric integer-slot repeat differences accepted. These44 tests
+are structural/control validation, NOT native compatibility expected strings.
+
+shifted-consumer-source-checks2 archive retains199 baseline gzip receipts
+(99 failed checks2+100 corrected checks3), manifest/SHA256SUMS. Separate byte-
+equivalent archived-source replay verifies regeneration2/source-reader/synthetic
+reader: four actual stages0/empty/byte-exact to retained outputs,44 tests again,
+input hashes BEFORE+AFTER EACH0. Thirty-seven supplemental gzip receipts plus
+verification-manifest/VERIFICATION-SHA256SUMS ->236 total; all compressed hashes,
+gunzip sizes/hashes/exact host bytes checked. Prior30-file guard archive untouched.
+All24 major source/replay invocations had immediate prefixidle1/guard0/fullPSI
+avg10 AND avg60<1% (maxima0.18/0.03%, separate maxima, not one sample), nice-n10.
+No VFP/PRG compiler/native/Wine/VM invocation or resource reservation. Ordinary
+shell NOT REA Evidence/Windows/internal-call/atomic-image/cleanup proof.
+
+LOW DQ-DV-5611-NUMERIC-DEFAULT-TRANSFORM-001 delta/walkthrough now includes actual
+ten-stage and44 mutation evidence plus archive replay. Examined the failed inert
+mutation/correction, original control preservation, strict-single-before-repeat
+ordering, deliberate sign-copy/N32->N40 boundary and synthetic-only text. Misuse:
+promoting source/reader checks to native result equivalence. The unrun native
+state and absence of new expected strings remain explicit. Actual developer-
+maintainer self-review/automated development evidence, not independent/system/
+release assurance. Existing HZ-data-corruption-01/HZ-runtime-crash-01/
+HZ-doc-command-01/rollback unchanged; no parent/division/ListItem closure.
+
+NEXT source freeze/sign and NEW explicit BOTH audit+DAW native-only CLEAR for
+shifted-consumer-capture.sh --fresh-both-clear. Source checks are complete, but
+the16-row native pair is UNRUN. Reuse exact observer, no new compiler/FLL/VM;
+clean branch, absent capture root, observer/input/native-only-runtime guards and
+idle-prefix/fullPSI avg10 AND avg60<1% EACH native launch. First native0/strict
+single0 BEFORE repeat, then paired/all42 raw-field validation; preserve all
+guards/failures. Any target equivalence is an observation to recover, not an
+assumption. Full exact-conversion/expectations/ORIGINAL/SAME/hosted/review ladder
+remains OPEN. No owner-input blocker or automation pause.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
