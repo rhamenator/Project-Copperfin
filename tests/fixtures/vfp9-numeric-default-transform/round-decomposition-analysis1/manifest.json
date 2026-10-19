@@ -1,0 +1,139 @@
+{
+  "analysisOnly": true,
+  "nativeInvoked": false,
+  "ordinaryShellNotReaEvidence": true,
+  "sourceCommit": "3c2737c053be06bde5a497fe2638fa663c87996c",
+  "sourceStatusClean": true,
+  "firstAndReadbackStatus": 0,
+  "firstAndReadbackByteExact": true,
+  "metricSelfChecks": 8,
+  "sharedContexts": 528,
+  "onContexts": 264,
+  "files": [
+    {
+      "name": "decomposition.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "decomposition.inputs-check.txt",
+      "bytes": 1254,
+      "sha256": "ab33df46b8fae26c9c2703a376f24205b6237ab067230adf05f2ae4dabce6f66"
+    },
+    {
+      "name": "decomposition.json",
+      "bytes": 856307,
+      "sha256": "0dd6e8fcdffa8e17d5e8f6aaf977f096e207b8d116ef701ea5fbeaa3520d5c1c"
+    },
+    {
+      "name": "decomposition.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "decomposition.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "decomposition.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "026985bf2219e485044eea6009063274ebe8e132776688e6bbbb7911a8cc1006"
+    },
+    {
+      "name": "decomposition.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "decomposition.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "final-inputs-check.txt",
+      "bytes": 1254,
+      "sha256": "ab33df46b8fae26c9c2703a376f24205b6237ab067230adf05f2ae4dabce6f66"
+    },
+    {
+      "name": "finished.utc",
+      "bytes": 21,
+      "sha256": "65e35b14037c75ee601814d409695e6c0709677e9dd9f5e0f4d4a1f857e81d34"
+    },
+    {
+      "name": "inputs.sha256",
+      "bytes": 2122,
+      "sha256": "c6135c6d0283870506d5290e7fdab8888327750ac8fdce5d051e194110e7b0a2"
+    },
+    {
+      "name": "readback.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "readback.inputs-check.txt",
+      "bytes": 1254,
+      "sha256": "ab33df46b8fae26c9c2703a376f24205b6237ab067230adf05f2ae4dabce6f66"
+    },
+    {
+      "name": "readback.json",
+      "bytes": 856307,
+      "sha256": "0dd6e8fcdffa8e17d5e8f6aaf977f096e207b8d116ef701ea5fbeaa3520d5c1c"
+    },
+    {
+      "name": "readback.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "readback.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "readback.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "1f5ec026f14136b1cfec7d7b6576c5b515e5b4a37c97e7f35af075b18f7f4a59"
+    },
+    {
+      "name": "readback.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "readback.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "shell-completion.json",
+      "bytes": 126,
+      "sha256": "3df59b39815407d547cd39efee556989516d7975dcd0a36cf67cc56ceccad227"
+    },
+    {
+      "name": "source-base-commit.txt",
+      "bytes": 41,
+      "sha256": "e4e0e4ca448f9b388f9dcdbdaf1db226f8543caba7339b3898a2525db00c62c3"
+    },
+    {
+      "name": "source-decompose-round-observations.cjs",
+      "bytes": 10579,
+      "sha256": "5bef6df304430d0cfb9f535b32c5001c43c91e02f82e72fb4d2724c1c7bb3f96"
+    },
+    {
+      "name": "source-round-decomposition-check.sh",
+      "bytes": 2322,
+      "sha256": "16b8c628d039daf588569adf7fce37a5b0f2627520bb47de0668b6682a229691"
+    },
+    {
+      "name": "source-status.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "started.utc",
+      "bytes": 21,
+      "sha256": "3291532ad9f1dcbe766abdb6c29cd5cb97f03a195003858b0308d1a0f09ec36a"
+    }
+  ]
+}

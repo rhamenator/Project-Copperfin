@@ -2613,7 +2613,7 @@ UNRUN source copies were made AFTER the guard, not claimed executed snapshots.
 Hostbuild/default-transform-round-decomposition1 intact. Ordinary shell NOT REA
 Evidence. Existing capture archives remain immutable, no native replay.
 
-NEXT SAME bounded slice: once fresh immediate resource gates pass, run the
+At this source-only checkpoint, NEXT SAME bounded slice was to run the
 frozen offline worker in a NEW root build/default-transform-round-decomposition2.
 Do not overwrite guard1 or infer results from its absence of child output.
 Preserve any analyzer/gate failure, then exact readback/traceability before
@@ -2621,8 +2621,56 @@ claiming this decomposition verified. No owner decision required; automation
 remains active. All native/compiler work still needs NEW BOTH clearance.
 LOW DQ-DV001 source walkthrough checked selected raw-field offsets, active-slot
 selection, value/literal partition assertions and pre-child stop ordering;
-runtime/data verification is explicitly pending. Developer self-review only,
+runtime/data verification was explicitly pending. Developer self-review only,
 not independent/system/release assurance; hazards/rollback unchanged.
+
+## Exact decimal/literal ROUND decomposition — offline verified
+
+The separate frozen worker actually ran at clean signed/DCO source
+3c2737c053be06bde5a497fe2638fa663c87996c in
+build/default-transform-round-decomposition2. Analysis0/readback0/empty stderr,
+byte-identical outputs, input hashes0, eight metric sanity assertions pass.
+Each launch had prefix-idle1/guard0/full I/O PSI avg10/avg60 0.00/0.04%,
+nice-n10. No compiler, Wine/VFP or VM was invoked; no native window reserved.
+The earlier pre-child guard1 remains unrun/unqualified and is not overwritten.
+
+Exact raw-bound joins check all528 OFF/ON contexts across the qualified inline
+ROUND, arithmetic and STR16/17 archives. All528 inline/stored payload+text
+results agree; only active width differs. The following measurements concern
+ONLY the264 FIXED ON contexts, with exact decimal coefficient/exponent equality
+separate from raw literal equality, leading-space differences and zero spelling:
+
+| Pair | Literal differences | Decimal-value differences | Same value/different literal | Zero-sign differences |
+| --- | ---: | ---: | ---: | ---: |
+| Original TRANSFORM / ROUND TRANSFORM | 180 | 132 | 48 | 48 |
+| Original STR / ROUND STR | 132 | 132 | 0 | 0 |
+| Original TRANSFORM / original STR | 264 | 0 | 264 | 57 |
+| ROUND TRANSFORM / ROUND STR | 264 | 0 | 264 | 0 |
+
+Thus180 TRANSFORM literal differences are NOT180 numerical differences:
+132 are decimal-value differences and48 are signed-zero spelling differences.
+The original TRANSFORM/STR decimal-value coincidence is bounded to these264
+contexts and does not establish text parity or a universal formatter/conversion
+rule. Per-D indices, four-way comparisons and payload-zero signs are retained.
+Binary-payload-versus-decimal representation gaps are not called conversion bugs.
+
+round-decomposition-analysis1 retains35 gzip receipts (25 baseline plus10
+supplemental), manifests and both SHA256SUMS/VERIFICATION-SHA256SUMS. All gzip
+sizes/hashes/host bytes verified; archived source equals the executed frozen
+source. Separate nice-n10 offline recomputation behind prefix-idle1/full PSI
+0.00/0.00/guard0 returns0/empty stderr and matches archived output byte-exactly;
+final selected input hashes0. Host root2 remains intact. Ordinary shell NOT REA
+Evidence, new native evidence, mapped-image proof or descendant-cleanup attestation.
+
+LOW DQ-DV001 walkthrough checked actual literal/value partitions, signed-zero
+preservation, selected raw controls and archive replay. Developer self-review
+only, not independent/system/release assurance. Hazards/rollback unchanged.
+No production formatter/expectation emitter, accepted precision cap/tolerance,
+compatibility parity or division/ListItem completion follows. Next bounded
+question is whether observed D16..18 value gaps depend on value-associated
+decimals: inspect actual result metadata before defining same-payload/changed-
+scale interventions. Any new native caller must be independently read/frozen
+and obtain NEW BOTH resource clearance; completed captures must not be replayed.
 
 ## Traceability and development-document walkthrough
 
