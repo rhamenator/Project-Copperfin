@@ -3760,3 +3760,63 @@ correction; interpret only actual successful reports, archive/report replay and
 byte-check receipts, then update this chronology/matrix/changelog/handoff. No
 new native run, compiler or VM is needed for this bounded question. No accepted
 boundary/parity, parent closure or unchanged division ORIGINAL/SAME relaxation.
+
+### Fresh resource gates pass — preaddition2 qualification, same unchanged source
+
+Following the preserved guard, both full I/O thresholds cleared. SAME source
+at clean signed/DCO8494e9d1a was run ONCE at NEW host
+build/default-transform-preaddition2: Node syntax0/bash syntax0/analysis0/
+readback0/BEFORE-source snapshot replay0, all stderr empty. Reports byte-identical;
+input hashes BEFORE+AFTER EACH0. Every immediate prefix1/fullPSI avg10=0.00%,
+avg60=0.90..0.93%/guard0, every child nice-n10. All19 new metric checks pass,
+with unchanged bound14 measured-operand/9 stage/8 inventory/9 classification/
+8 raw-validator checks. The clean BEFORE source/base snapshot is an offline
+analysis freeze, NOT a native source freeze or qualification of old runtimes.
+
+Exact addition sums differ from the rounded shifted payload at all264 nodes:
+130 below/134 above/zero equal. Hypothetical pre-addition versus post-addition
+half-up decisions differ at12 endpoints; magnitude gaps against observed
+TF+STR are34 versus30. Among18 retained graph rejections, the two hypothetical
+routes have6 versus4 magnitude gaps; neither recovers the actual formatter.
+All literal/zero-sign/active metadata fields remain observations in full nodes,
+not generated outputs or collapsed into this magnitude-only comparison.
+
+Across44 actual display transitions, preserving the sum distinguishes14 (misses30),
+versus16 using the rounded shifted product. It invents30 changes on176 observed
+plateaus, versus28 after addition rounding. Addition rounding changes boundary
+decisions on10 transition pairs and14 plateau pairs. Among12 raised-tuple
+collapses the pre-addition decisions differ4, versus10 post-addition. Both D13
+scaled-collapse witnesses159->160/165->166 still give1 at BOTH endpoints in
+BOTH routes: distinct exact sums/products are NOT sufficient display boundaries.
+This rejects retaining addition precision alone as a repair of this diagnostic
+graph; it does not identify native internal operation order/precision or rule
+out precision loss elsewhere. No accepted formatter/expected strings result.
+
+Successful source/base/status/gates/inputs/reports/actual shell completion are
+53 gzip receipts in preaddition-analysis2. NEW host
+build/default-transform-preaddition-archive1 replays the GZIP-archived source at
+its original module path: status0/empty stderr/byte-exact report, original and
+archive inputs BEFORE+AFTER0, immediate idleprefix1/fullPSI0.00/0.30%/guard0/
+nice-n10. Fifteen supplemental receipts with actual command/completion and
+verification-manifest/VERIFICATION-SHA256SUMS bring total68. Both inventories,
+all compressed and decoded sizes/hashes and exact host bytes verified. All
+guard/source/host roots remain intact. No compiler/native/VM/reservation used.
+
+LOW DQ-DV001 actual walkthrough now checks executed19 tests, dependency replays,
+all264 nodes/220 pairs/176 plateaus/18 rejections, D13 counterexamples,
+literal/magnitude separation, clean BEFORE source identity, full I/O/idle/nice
+gates and archived byte-exact rerun. Developer-maintainer self-review only;
+existing hazards/mitigations/rollback above unchanged. No independent/system/
+release assurance, original/SAME relaxation or parent/division/ListItem closure.
+
+NEXT bounded OFFLINE join: compare these pre-addition endpoint/pair decisions
+BY INDEX with the retained exact-decimal `decimal_prebias_cap15` candidate in
+decimal-half-grid-analysis1/half-grid-adjacency-analysis1 (sources
+test-decimal-half-grid.cjs/join-half-grid-adjacency.cjs). Both aggregates are34 magnitude gaps,
+14 coincident/30 missed/30 invented changes; aggregate equality is NOT evidence
+of identical rows. Bind/replay frozen sources/raw and verify endpoint decisions,
+pair membership and counterexample identity on all264/220, retaining every
+plateau/sign/rejected row. Distinguish measured BINARY bias/powUp effects from
+true DECIMAL bias/powers without fitting a new candidate, assuming formatter
+internals or repeating native runs. Select a new stimulus only from the actual
+unexplained counterexamples, never from a tolerance or guessed precision rule.
