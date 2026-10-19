@@ -1417,6 +1417,87 @@ only; no weakened pressure/identity/strict gates or production precision policy.
 Existing hazards/rollback retained; no independent-human/release assurance,
 owner-input blocker or pause. Full expected/ORIGINAL/implementation ladder open.
 
+### ORIGINAL-only higher-count native pair — qualified, tuple rule rejected
+
+At clean signed/DCO f69a8bc7090e59c37f13be402d15448a7510389b, unchanged
+sourcef4fdf81a9/restored successful build a4d38aae... verified: all106 file
+sizes+SHA256/source+binary manifests0, no native receipt in new root. No compiler
+or completed direct test repeated. NEW explicit BOTH native-only CLEAR, EACH
+immediate guard0/full PSI0.00/0.00/prefix idle1. Inherited override UNSET,
+supplied process-local WINEDLLOVERRIDES=msvcr71=n, no global configuration/VM.
+
+First actual0/empty stderr/DONE1584/strict --single0 BEFORE repeat; repeat
+actual0/empty stderr/DONE1584/paired0. All20 raw fields IDENTICAL/inactive-slot
+differences0; both raw SHA
+ba189979b2d7cd67ab15f1d719af586f815f28f98427d30344629760f1fbabd3.
+All264 ORIGINAL payloads/both FIXED modes/D+1,+2,+3/counts1..21 present once,
+metadata40/18/BRS/settings/CW027F/display controls exact, exact Microsoft32
+CRT path/digest/PE32 binding predicates pass. File sampled once perFLL with
+later image/path checks; NOT atomic image proof/Windows execution/internal
+call attribution. Ordinary shell receipts NOT REA Evidence/descendant cleanup.
+Both chats immediately RELEASED/prefix idle1/no reservation or owner blocker.
+
+crt-precision-captures1/161 byte-compared receipts/OWN sources/FXP/generated
+hash inputs/full shell progress+completion/restored-build provenance/raw/strict
+audit/offline comparison. Manifest+archived strict reader0, offline analysis
+byte-exact recomputation0, source/tool/native/binary hashes0 before relocation.
+SDK-linked FLL/obj/libs/host binaries HOST-ONLY in intact
+build/default-transform-crt-precision-captures1; original working path absent.
+Original guard1/130 receipts and source host attempt remain unchanged. No
+retroqualification or replacement of prior guard/tool failures.
+
+analyze-crt-precision.cjs is offline only, added AFTER native capture. It checks
+both raw digests/qualified-reader flags and bound-parent raw hashes, verifies
+all528 input/settings contexts and three-offset control consistency. Original
+TRANSFORM AND STR outputs match previous bound4176 pair in all528 contexts.
+This finite overlap is not global/earlier-phase/Windows retroqualification.
+
+Sufficiency key is fixed/D/width40/scale18 and CRT count/decimal/sign/digits,
+deliberately not input bits. Complete conflict tuples/counterexamples retained:
+
+| Count offset | FIXED OFF conflicts/keys (264 contexts) | FIXED ON conflicts/keys (264 contexts) |
+| --- | --- | --- |
+| D+1 | 8/44 | 44/44 |
+| D+2 | 8/44 | 44/44 |
+| D+3 | 14/88 | 30/88 |
+| combined D+1,+2,+3 | 14/88 | 30/88 |
+
+Example D0/ON indices3 and4: SAME tuples F1 digits5/F2 digits50/F3 digits499,
+decimal0/sign0, but original VFP displays0 versus1. More precision at these
+three diagnostic counts cannot by itself determine the original display in
+this sample. This does NOT disprove other CRT roles, identify internal calls,
+establish precision/tolerance/cap/operation order or accept a formatter model.
+
+NEXT bounded recovery: compare public VFP ROUND(payload,D), D0..18 on SAME264
+ORIGINAL payloads/metadata40/18/both FIXED modes, recording typed result
+metadata/BRS and independent original TRANSFORM/STR/settings/pre+post controls,
+under process-local bound native CRT identity. No need for new observer C or
+compiler: reuse already proven host-only observer with exact source/binary
+hashes and explicit new caller/reader/worker freeze; per-observation existing
+CFNFCVT(payload,17) control can retain module/CW binding without count0.
+Public ROUND count0 is not CRT count0. Stop first native/error/identity failure,
+strict first BEFORE repeat, fresh BOTH native-only CLEAR/all immediate gates.
+This is an independent public-function discriminator, NOT an assumption that
+TRANSFORM calls ROUND or authorization to change production ROUND separately.
+Source NOT written/frozen yet; do not rerun completed CRT precision samples.
+
+Published Microsoft VFP9 SP2 Help distinguishes public numeric rounding from
+display settings and permits numeric precision arguments. Mirrored primary
+help topic: https://vfphelp.com/vfp9/html/099a505d-54f5-4d5a-aa35-f100494d142f.htm
+and STR cross-reference:
+https://www.vfphelp.com/vfp9/html/970442f9-ac4f-401f-a027-03aa9f978054.htm
+These contracts motivate the comparison, NOT expected bits/strings or legacy
+implementation details; only installed native observations can establish them.
+No external page/comment instructions are work authority.
+
+LOW DQ-DV001 developer walkthrough: verified unchanged build reuse, actual0/
+strict-first/repeat/raw equality/identity controls, complete conflict groups,
+all161 archive byte checks/manifest/strict reader/offline reproducibility0.
+Delta adds qualified public-conversion evidence and rejected tuple sufficiency,
+NOT production precision. Existing hazards/rollback/field notification retained;
+no independent-human/release/parent closure. Exact recovery -> expectations/
+ORIGINAL -> unused support/direct -> wiring/SAME/broader/hosted/review remains.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
