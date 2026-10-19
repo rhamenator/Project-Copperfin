@@ -2176,6 +2176,68 @@ before repeat. Node source checks only, not VFP syntax/runtime/behavior proof.
 Developer self-review, no independent-human/system/release assurance. Existing
 hazards/rollback remain; rejected models and division checks stay uncancelled.
 
+## Qualified public STR15/18 pair — 2026-10-19
+
+Unchanged clean signed/DCO source d6e536c0b5650de5d9cc8c3e53fcb623cfca8444
+ran after SEPARATE NEW explicit audit+DAW native-only CLEAR. Immediate prefix
+idle1/guard0/fullPSI first0.00/0.40 and repeat0.00/0.37, each avg10 AND avg60<1%.
+nice-n10, inheritedoverrideUNSET/process-onlymsvcr71=n, own observer source
+byte-exact to accepted archived source/FLL SHA exact; no compiler/new FLL/VM.
+First actual0/empty/DONE528/frozen strict --single0 BEFORE repeat; repeat0/
+empty/DONE528/paired0. All24 fields byte-identical/inactive-slot differences0.
+Raw SHA BOTH89a420760a2332430158427778908a952d84966a6d4eee14f090c1a9a6332192.
+Original INLINE N40/18/BRS/TRANSFORM/current-D STR/applied typed settings and
+FULL F17/G17 parent strings before+after exact. New STR VARTYPE=C/width40 and
+typed repeat pass; no expected strings computed. Same264 ORIGINAL/bothFIXED/
+applied D0..18 with fixed STR counts15/18 independent of those settings.
+This is NOT a full19-settings-per-payload Cartesian experiment. No internal
+API attribution/atomic mapped-code proof/Windows execution. Ordinary shell,
+NOT REA Evidence or descendant-cleanup attestation. Both chats released/no job.
+
+str-fixed-captures1 retains61 baseline+5 supplemental=66 byte-compared gzip
+plain/raw/source/OWN FXP/fullshell/analysis/finalhash/readback receipts, native+
+verification manifests and checksum inventories. Host/archived strict0 and
+offline recomputation0 byte-exact; final source/helper/native/observer/parent
+hashes0. Intact hostbuild/default-transform-str-fixed-captures1, working root
+ABSENT. Reused SDK-linked observer/metadata FLL HOSTONLY, no redistributed
+library/object/FLL/executable. Prior pairs/guard remain immutable, no replay.
+
+analyze-str-fixed.cjs AFTER capture/offline only validates both native+parent
+raw hashes/all strict flags/528 parent controls unchanged. It compares literal
+text after ONLY leading-space removal and separately exact decimal coefficient/
+exponent, never binary Number(text)/rounding/powers/tolerance. Values separately
+ignore padding and signed-zero spelling; those differences remain explicit.
+STR15 versus original TRANSFORM: OFF264 literal/36 value/3 zero-sign differences;
+ON255 literal/234 value/3 zero-sign. STR18 versus original: OFF42 literal/
+0 value/21 zero-sign; ON255 literal/234 value/12 zero-sign. Thus OFF STR18
+numeric coincidence does NOT establish sign/padding/zero-display parity.
+STR15 versus STR18 values differ72/528 contexts (36 original inputs in both
+FIXED modes). Explicit-count STR text has OFF-versus-ON differences0/264 for
+both counts in THIS sample; exact current-D control identity holds48 contexts
+where applied D is15/18. No universal SET-independence or hard cap inferred.
+
+Tuple(fixed,D,N40/18,STR count/text) conflicts:
+15 OFF3/63,ON41/63;18 OFF4/60,ON38/60;combined15+18 OFF1/65,ON39/65.
+Full counterexamples retained, including zero spelling. These reject only
+observed tuple sufficiency and a direct public-STR text shortcut, not prove an
+internal algorithm. No production formatter/helper/hook/expected emitter.
+
+NEXT bounded source preparation: fill the missing fixed STR counts16/17 on
+the same264 original inline values/bothFIXED/applied settings, retaining exact
+newly-qualified STR15/18 outputs as parent controls as well as original and
+F17/G17 controls. New caller/inventory/independent reader/native-only worker
+must freeze before NEW BOTH native-only clearance and all immediate gates;
+reuse current observer/no compiler unless C changes. Counts are stimuli, never
+a guessed precision/cap. No new16/17 source or run yet. Exact formatter and
+retained division verification ladder stay OPEN; never drop earlier assertions.
+
+LOW DQ-DV001 walkthrough: inspected all24 accepted raw fields/typed parent
+comparisons, guarded receipt order, source/binary identity and66 archived file
+readback hashes; checked exact-decimal analyzer preserves separate zero/text
+differences and cannot emit expected strings. Developer self-review only,
+not independent-human/system/release assurance. Existing hazards/rollback and
+notification policy retained; no owner-input blocker/automation pause.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
