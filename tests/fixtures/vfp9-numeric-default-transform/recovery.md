@@ -1498,6 +1498,55 @@ NOT production precision. Existing hazards/rollback/field notification retained;
 no independent-human/release/parent closure. Exact recovery -> expectations/
 ORIGINAL -> unused support/direct -> wiring/SAME/broader/hosted/review remains.
 
+### Public ROUND typed-result discriminator — source freeze, UNRUN
+
+emit-round-result.cjs checks BOTH raw parent hashesba189979b2d7cd67... and
+selects identical264 ORIGINAL input/D/index tuples. round-result.prg/inventory
+record ROUND(argument,D), argument explicitly Numeric40/18, both FIXED modes,
+D0..18/528 rows/run. Independent original metadata/BRS/TRANSFORM/STR/settings
+are bracketed by CFNFCVT(argument,17) controls with exact native binding/CW.
+Result metadata/BRS/TRANSFORM/STR are sampled before+after the control call.
+First binding/runtime error emits ONE failure/no DONE and returns. No expected
+numeric bits, display text, tolerance, cap or assumed internal call generated.
+
+audit-round-result.cjs requires26 fields/full528 unique keys, all input
+descriptors/BRS/settings/parent original display+STR exact, before+after CRT
+identity/argument/CW/output equal, finite typed result/BRS/metadata/display/STR
+stable and typed repeat. Result values are observations, not assumed ROUND
+arithmetic. Only documented inactive slots are normalized: Numeric.integer,
+Integer.real/decimals. Public VARTYPE must be N for BOTH carriers; raw published
+Value.type selects meaningful fields. Primary Microsoft VFP9 SP2 Help mirror:
+https://vfphelp.com/vfp9/html/b05ef476-980c-492f-81f5-1be0eb7ef8d9.htm
+Pre-freeze walkthrough corrected the initial draft mapping that conflated
+VARTYPE with the raw carrier tag; no failed native capture/reader was rewritten.
+
+round-result-capture.sh uses new build/default-transform-round-result, refuses
+an attempted/dirty root, records inherited/supplied native-only environment,
+checks reused FLL SHAa4d38aaecf67837c06b0d640746bc44b56b126d697cd0519c1b25c1b7934b090
+from host build/default-transform-crt-precision-captures1, compares actual
+observer C/header bytes to archived proven sources and hashes ALL current
+caller/reader/worker/observer/native inputs. No compiler or new observer needed.
+Each native invocation still requires fresh BOTH CLEAR/full avg10 AND avg60<1%/
+idle prefix, actual first0/strict0 BEFORE repeat and complete paired strict0.
+Ordinary shell NOT REA Evidence/descendant-cleanup proof; no prior capture replay,
+global DLL/registry/helper changes or VM. SDK-containing binaries HOST-ONLY.
+
+Node syntax/emitter PRG+inventory regeneration/cmp/bash-n/diff-check0 under
+set-e/pipefail. Source checks ONLY, NOT native execution or ROUND/display parity.
+NEXT sign/freeze/clean source, verify unchanged observer hash/source, NEW BOTH
+native-only CLEAR and immediate guards, invoke new worker. Preserve every
+guard/error/full actual status, never overwrite old attempts or weaken first
+gate. No new production ROUND work or assumed TRANSFORM implementation.
+
+LOW DQ-DV001 developer walkthrough: traced264*2 keys,26 field indices, independent
+parent controls/CRT17 before+after, Numeric-vs-Integer inactive-slot treatment,
+first-error/no-footer and strict-first-before-repeat flow. Source checks0 above,
+not compiler/native/independent-human/release assurance. Delta is an independent
+public function comparison; misuse as an accepted formatting rule would risk
+silent data corruption, mitigated by explicit observation-only inventory and
+remaining exact-recovery/ORIGINAL/implementation ladder. Existing hazards/
+rollback/field notification retained; no owner-input blocker/pause.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
