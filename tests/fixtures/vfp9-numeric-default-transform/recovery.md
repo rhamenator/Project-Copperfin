@@ -2921,6 +2921,71 @@ eight new/eight reused checks and initial readback support this source delta.
 Developer self-review only, not independent/system/release assurance. Existing
 hazards/rollback unchanged; exact conversion/display/division/ListItem remain open.
 
+## 2026-10-19 adjacent archive replay and rejected-candidate endpoint join
+
+The preceding NEXT archival replay is now completed, not retroactively qualified:
+NEW archive-recompute2 names preserve the original pre-child guard75 untouched.
+Baseline20/prior guard5 manifests, checksum inventories and gunzip size/hash/host
+bytes pass before execution; archived source equals executed current source.
+Fresh prefixidle1/fullPSI avg10/avg60=0.14/0.21%, guard0/nice-n10; actual
+recompute0/empty stderr/byte-exact to BOTH archived inventory/readback, input
+hashes before+after0. Ten supplemental gzip receipts plus verification-manifest/
+VERIFICATION-SHA256SUMS give35 inventory receipts total; all bytes verified.
+Host build/default-transform-adjacent-inventory1 remains intact. No native launch.
+
+Derived same-slice AFTER-capture question: do the four rejected candidates change
+on the actual observed adjacent endpoint pairs, rather than merely producing a
+similar aggregate count? join-half-grid-adjacency.cjs binds/replays BOTH archived
+candidate and inventory sources/results, including the raw validator, checks
+source digests and all264 unique endpoint index/D/bits/public-ROUND/TF/STR joins,
+and retains all220 adjacent pairs per candidate. Four category truth-table checks
+plus replayed14 candidate/eight inventory/eight shared raw-validator checks pass.
+No new model, interpolation, expectation or formatter is introduced.
+
+| Already rejected candidate | Endpoint magnitude gaps | Coincident changes only | Missed observed changes | Invented changes on observed plateaus | Shared plateaus |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| unbiased_at_D | 150 | 0 | 44 | 0 | 176 |
+| unbiased_cap15 | 132 | 0 | 44 | 0 | 176 |
+| decimal_prebias_at_D | 64 | 14 | 30 | 24 | 152 |
+| decimal_prebias_cap15 | 34 | 14 | 30 | 30 | 146 |
+
+All candidates compare220 pairs, including44 observed native TF/STR value
+changes. The cap15+prebias candidate's44 predicted changes match only14 of those
+observed pairs: equal total counts are not boundary or endpoint agreement.
+Coincident change alone is not correct magnitude; both endpoint magnitudes match
+on76/88/138/156 pairs respectively. Six uncaptured gaps remain excluded; no
+global monotonicity/unique threshold claim. Literal padding/zero signs remain
+observations, not predictions. These mathematical candidates stay REJECTED.
+
+Actual analysis0/readback0/empty/byte-identical, each immediate prefixidle1/
+fullPSI0.09/0.21%/guard0/nice-n10, input hashes before+after each0. Baseline23
+gzip receipts in half-grid-adjacency-analysis1 include BEFORE source snapshot,
+input inventory, gates, reports and full actual shell result. Source-base/dirty
+snapshots are explicitly POST-check (basefb86f6f86), not native clean freezes.
+Separate archive-source recomputation0/empty/byte-exact to both reports, fresh
+prefixidle1/fullPSI0.00/0.13%/guard0/nice-n10/input hashes before+after0. Ten
+supplemental receipts/verification-manifest/VERIFICATION-SHA256SUMS yield33 gzip
+receipts; all compressed hashes/gunzip sizes/hashes/host bytes verified. Host
+build/default-transform-half-grid-adjacency1 remains intact. Ordinary shell,
+NOT REA Evidence/native/Windows/internal-call/atomic-image/cleanup proof.
+
+LOW DQ-DV-5611-NUMERIC-DEFAULT-TRANSFORM-001 delta/walkthrough: checked four
+truth-table outcomes, same-context exhaustive joins, raw adjacency, all rejected
+endpoints and excluded gaps. Misuse would promote equal aggregate counts to an
+accepted formatter; the exact pair ledger and retained rejections prevent that
+interpretation. Developer-maintainer self-review plus the actual automated
+checks above, not independent/system/release assurance. Existing
+HZ-data-corruption-01/HZ-runtime-crash-01/HZ-doc-command-01 and rollback unchanged.
+
+NEXT bounded same-slice question: join these observed endpoint changes/plateaus
+to retained public ROUND and diagnostic arithmetic-stage payloads to identify
+which observable stages collapse distinct display endpoints. This is an offline
+discriminator, not an inference of VFP's internal call/operation order. Fresh
+idle-prefix/fullPSI avg10 AND avg60<1%/nice-n10 each offline launch; NEW BOTH
+resource clearance before any native/compiler work. Exact display conversion,
+native-only expectations, unchanged division ORIGINAL/SAME and full acceptance
+ladder remain OPEN; no production formatter/helper/hook or compatibility closure.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
