@@ -3820,3 +3820,70 @@ plateau/sign/rejected row. Distinguish measured BINARY bias/powUp effects from
 true DECIMAL bias/powers without fitting a new candidate, assuming formatter
 internals or repeating native runs. Select a new stimulus only from the actual
 unexplained counterexamples, never from a tolerance or guessed precision rule.
+
+## 2026-10-19 — index-exact pre-addition/decimal candidate join qualified
+
+`join-preaddition-decimal.cjs` binds/replays the frozen preaddition-analysis2
+source/report and half-grid-adjacency-analysis1 source/report, including their
+transitive native raw/control validators. It joins all264 ON nodes and220 actual
+adjacent pairs BY INDEX, checking payload, setting, sign, literals, exact decimal
+observations and native effective-count bytes. Full prior metadata and18 graph
+rejections remain in the report; six uncaptured gaps remain excluded. This is a
+comparison of two already REJECTED hypothetical quantizers, not a new model.
+
+Result: zero endpoint integer-decision differences, zero magnitude-gap membership
+differences, zero pair-category or pair endpoint-decision differences. The SAME34
+failed endpoint indices occur in both candidates (SAME6 among18 graph rejections).
+Every pair-category set matches:14 coincident changes,30 missed changes,
+30 invented changes on176 observed plateaus,146 shared plateaus. All19 setting
+groups independently have zero endpoint differences. D13 missed pairs159->160/
+165->166 and invented157->158/163->164 remain explicit counterexamples, not
+accepted boundaries. Equality applies to these decisions/membership ONLY, not
+exact operands, global equivalence, formatter algorithm/order or precision.
+Measured binary bias/powUp rather than true decimal counterparts does not
+explain the remaining gaps in THIS sample under the hypothetical half-up graph.
+
+`preaddition-decimal-check.sh` is a separate fail-closed offline worker: BEFORE
+source/base/status snapshots, input hashes BEFORE+AFTER EACH stage, idle prefix,
+full I/O PSI avg10 AND avg60<1%, nice-n10 EACH child, fresh roots only. Actual
+host build/default-transform-preaddition-decimal1 from base3c452cace+dirty new
+source snapshots: Node syntax0/bash syntax0/analysis0/readback0/BEFORE-source
+snapshot replay0, empty stderr, reports byte-identical, all input checks0.
+Thirteen new metric tests pass, including all four pair categories, canonical
+unit strings, equal-count/different-membership witness, order-independent sets,
+duplicate rejection and indexed lookup. Bound prior19 pre-addition/4 decimal
+join/14 decimal candidate/14 measured operand/9 stage/8 inventory/9 classification/
+8 raw-validator checks remain unchanged. Immediate prefix1/fullPSI0.00/0.04%/
+guard0 for allfive stages; no compiler, native, VM or reservation.
+
+NEW host build/default-transform-preaddition-decimal-archive1 replays gzip-
+archived source at its original module path:0/empty stderr/byte-exact report,
+original and archive input hashes BEFORE+AFTER0; prefix1/fullPSI0.00/0.01%/
+guard0/nice10. Archive preaddition-decimal-analysis1 contains53 original+15
+verification=68 gzip receipts with both manifests/checksum inventories. All
+compressed/decoded sizes/hashes/exact host bytes checked. BEFORE snapshots are
+offline source evidence, NOT a clean native freeze. All older guard roots,
+captures, raw/runtime provenance and rejected hypotheses remain intact.
+
+LOW `DQ-DV-5611-NUMERIC-DEFAULT-TRANSFORM-001` procedural delta/walkthrough:
+replace an aggregate coincidence with index-exact endpoint/pair/set comparison;
+inspect every join key, native count, preserved signed literal/active metadata,
+13 executed self-checks, transitive source/raw replays, per-child resource gates,
+all reports and archived byte-exact recomputation. Developer-maintainer self-
+review only, not independent/system/release assurance. Existing hazards,
+mitigations, rollback and field notification above unchanged. No formatter,
+native expected emitter, fitted constant/tolerance, production change, parent
+closure or unchanged division ORIGINAL/SAME/assertion relaxation.
+
+NEXT bounded discriminator: prepare ORIGINAL D13 payload width32 versus width40
+routes at SAME decimals18 for signed parent159/160/165/166, both FIXED modes,
+with original/public ROUND controls before+after and independent strict reader.
+The completed width test used SHIFTED payloads, not these original adjacent
+display-transition inputs; do not replay it or generalize its finite null result.
+Use emit-shifted-width-consumer.cjs and its qualified reader/worker as a template,
+not as new native evidence. Preserve payload/scale and vary width ONLY; no target
+width32 strings assumed. Parent N40/18 strings/metadata/payloads must retain raw
+controls. Qualify generated source and synthetic reader coverage, archive/source
+replays and clean signed freeze BEFORE any native run. Then NEW BOTH explicit
+native-only CLEAR plus immediate idle/fullPSI gates, reused observer, nice10.
+No compiler/new FLL/VM needed unless later evidence demonstrates otherwise.
