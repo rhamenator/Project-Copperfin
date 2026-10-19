@@ -2482,7 +2482,7 @@ readbacks; reviewed mathematical-versus-observed labeling and avoided an
 addition-only repair claim. Developer self-review only, NOT independent human/
 system/release assurance. Existing hazards/rollback/notification unchanged.
 
-### Six-input public near-half consumers — SOURCE ONLY
+### Six-input public near-half consumers — source freeze and qualified pair
 
 emit-half-consumers.cjs derives the three observed positive scaled operands
 from hash-bound graph classification/native parent records, then adds explicit
@@ -2521,6 +2521,61 @@ only, not independent/system/release assurance; hazards/rollback unchanged.
 Next obtain NEW BOTH native-only clearance, enforce immediate gates, qualify
 first before repeat and retain all receipts, including any guard/failure.
 Exact formatter/retained division ladder stay OPEN; no fitted model accepted.
+
+#### Qualified twelve-context pair — 2026-10-19
+
+Actual unchanged clean signed/DCO sourcecadc31c74e6bf8fb7efd627eefe9ddef3b0cad0d
+ran after NEW separate explicit audit+DAW native-only CLEAR. Both immediate
+prefixidle1/guard0/fullPSI avg10/avg60=0.00/0.00%; nice-n10/inheritedoverrideUNSET/
+process-localmsvcr71=n/all source-helper-runtime-observer-parent hashes0.
+No compiler/new FLL/VM. First actual0/empty/DONE12/strict --single0 BEFORE
+repeat; repeat0/empty/DONE12/paired0. All28 raw fields byte-identical/inactive
+differences0. Raw SHA BOTH:
+1d09046e3665a9d190684ff010b1b406b21add51a014f9e005b37cac75ff6469.
+Argument N40/18/BRS/settings/F17 identity and original/ROUND before+after
+controls pass. Both chats RELEASED, postcapture prefixidle1/no reservation/job.
+Once-perFLL file sample/later module checks retain earlier limits: NOT atomic
+mapped-code proof, Windows execution or VFP internal-call attribution. Ordinary
+shell NOT REA Evidence or descendant-cleanup attestation.
+
+Observed in this finite six-input/D0/INLINE N40/18 experiment:
+
+- Each positive half-neighbor, including the immediate binary64 neighbor BELOW
+  half, produces public ROUND payload3FF0000000000000 and display/STR `1`.
+  Explicit negative mirrors produce BFF0000000000000 and `-1`.
+- All12 ROUND results are Numeric tag4E/width40/scale0/CW027F, not Integer.
+  This is a bounded observation, not a universal public ROUND carrier rule.
+- Original STR(input,40,0) equals ROUND-result STR byte-for-byte in all12.
+  FIXED ON original TRANSFORM equals result TRANSFORM in all6 ON contexts.
+- FIXED OFF original TRANSFORM is `0.500000000000000000` or its negative
+  spelling for all three neighbors per sign, whereas result TRANSFORM is
+  signed one. Original payload controls still distinguish the three inputs;
+  identical text is not identical input data or general formatting parity.
+
+summarize-half-consumers.cjs AFTER capture verifies both raw hashes/strict flags
+and retains literal hex plus decoded observations, no numeric conversion model
+or expected emitter. half-consumers-captures1 retains64 baseline+5 supplemental
+=69 byte-compared gzip plain/source/OWN FXP/full-shell/summary/finalhash/readback
+receipts, native+verification manifests/checksums. Archived strict0/summary
+recomputation0, reports byte-exact to host; final input hashes0. Intact host
+build/default-transform-half-consumers-captures1; working root ABSENT. SDK
+observer/metadata FLL HOSTONLY/no redistributed linked binaries. No completed
+capture replay or prior-capture provenance upgrade.
+
+NEXT bounded OFFLINE recovery: decompose public ROUND versus original
+TRANSFORM differences in the existing264 ON contexts into exact decimal-value
+versus literal metadata/zero/sign effects. Join retained round-inline and
+arithmetic/STR controls by raw hash and identical input/settings; do not assume
+the old text mismatch count is a numeric mismatch count. This six-input result
+does not repair the18 rejected graph cases or establish the wider conversion
+policy. No new native window needed for that analysis. Native expectations/
+ORIGINAL/SAME/hosted/review and retained division ladder remain OPEN.
+
+LOW DQ-DV001 delta walkthrough checked accepted28-field topology/strict-first
+ordering, active N/I comparison, unchanged helper/runtime identity and69 archive
+readbacks/literal summary reproducibility. Developer self-review only, NOT
+independent human/system/release assurance. Existing hazards/rollback and
+notification retained; no owner-input blocker/automation pause.
 
 ## Traceability and development-document walkthrough
 
