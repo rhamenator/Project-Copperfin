@@ -3887,3 +3887,91 @@ controls. Qualify generated source and synthetic reader coverage, archive/source
 replays and clean signed freeze BEFORE any native run. Then NEW BOTH explicit
 native-only CLEAR plus immediate idle/fullPSI gates, reused observer, nice10.
 No compiler/new FLL/VM needed unless later evidence demonstrates otherwise.
+
+## 2026-10-19 — ORIGINAL D13 width source prepared; archive replay pressure-blocked
+
+New emit-original-width-consumer.cjs/generated original-width-consumer.prg/
+original-width-consumer-cases.json hold four signed ORIGINAL payloads from
+parent159/160/165/166, scale18 and DECIMALS13 fixed; vary width32 versus40,
+both FIXED modes:8 input routes/16 records/42 fields. Positive bits
+3D2C1E8DBBA38061/62 and negative BD counterparts come from original parent
+raw evidence, NOT shifted payloads or fixture sign-copy. No bias/power/quantizer,
+target Character predictions or assumed universal width rule is introduced.
+Inline CFNDEC(CFNWIDTH(targetPayload,inputWidth[index]),inputScale[index]) is
+supplied afresh to EVERY consumer; no Numeric argument/result assignment.
+Original N40/18 and public inline ROUND controls surround target observations.
+
+Independent audit-original-width-consumer.cjs uses its own four literal seeds,
+validates all8 selected OFF/ON parent controls against both retained raw runs,
+then requires exact input order/coverage, VARTYPE, active Numeric metadata,
+BRS, settings, parent before/after Character strings and public ROUND controls,
+target before/after agreement, strict runtime path/digest/PE/control state,
+first-only gate BEFORE repeat and paired active-field agreement. Inactive
+Numeric integer slots remain the only repeat exclusions, explicitly counted.
+No target string (including the new width40 route) is fabricated or assumed.
+This is source/reader preparation, NOT newly observed native output.
+
+original-width-consumer-capture.sh reuses the existing observer with its exact
+source/binary digest checks; rejects inherited nonempty DLL overrides and records
+process-local msvcr71=n. NEW BOTH native-only CLEAR plus Request Guard release/
+coordination required; the acknowledgment flag itself grants no clearance.
+Unlike the prior template, EVERY preparatory Node/strict-reader/native launch
+has idle prefix/full I/O PSI avg10 AND avg60<1%/nice-n10 and input checks BEFORE/
+AFTER. Nonzero child status/empty-stderr requirements fail closed; any partial
+native report and original child status are retained. No compiler/new FLL/VM.
+Native worker/root build/default-transform-original-width-consumer remain UNRUN/
+ABSENT. Source freeze/native qualification still require the archive replay below.
+
+Actual offline stages: original-width-source-check.sh generate at NEW
+build/default-transform-original-width-generate1 completes2 stages0/empty.
+Generated outputs applied to source without shell source writes; initial
+build/default-transform-original-width-source-checks1 completes11 stages0/empty,
+48 synthetic reader checks. Expanded pass2 at NEW
+build/default-transform-original-width-source-checks2 completes13 stages0/empty,
+48 reader +13 worker checks; generation/parent source contract byte-exact/input
+hashes BEFORE+AFTER EACH0, immediate idleprefix1/fullPSI0.00/0.00%/guard0/nice10.
+BEFORE source/base07cad3c5c+dirty snapshots retained for EACH pass; not a native
+clean freeze. Source-only reader confirms8 parent controls/newResultsRead=false.
+
+check-original-width-worker.cjs extracts ONLY the checked() function, uses
+synthetic pgrep/pressure data and harmless shell children in its own temporary
+root; never executes capture.sh or a native path. Executed checks cover clear
+gate, busy/error prefix, equality and exceedance of EACH PSI limit, missing full
+record, child7/retained output, stderr98, input mutation, partial-result/status
+retention and native/strict-reader ordering in source. These finite tests are
+NOT actual host clearance, native execution or descendant-cleanup proof.
+Reader tests cover every active field/control/runtime/width and repeat mutation,
+valid width swaps, malformed framing/errors and inactive-slot-only acceptance;
+synthetic target text is deliberately arbitrary, NOT compatibility expectations.
+
+Base source archive original-width-source-checks1 contains266 gzip receipts from
+generation/initial/expanded passes. All compressed and decoded sizes/hashes and
+exact host bytes verified. NEW archived-source replay command at
+build/default-transform-original-width-source-replay1 plans seven stages
+(emitter source/cases, source reader, reader+worker synthetic tests, both shell
+syntaxes), but stops shell75 BEFORE its FIRST Node child: idleprefix1/fullPSI
+48.79/25.77%/guard75. Original+archive BEFORE hash checks0; no child status,
+report, AFTER hash check or successful archived-source execution claimed.
+Exact full command/actual shell completion and10 guard/source/hash receipts
+are preserved (11 supplementary gzip total); verification-manifest and
+VERIFICATION-SHA256SUMS bring archive to277 receipts, all compressed/decoded/
+host bytes verified. Later PSI remained above gate; this is a pressure stop,
+not syntax/analyzer/native/product failure. No backup monitoring or resource
+window reservation was used. The Request Guard window remains a separate hold.
+
+LOW DQ-DV001 procedural delta/walkthrough: original rather than shifted target
+bits; independent literal-seed/raw-parent checks; new EVERY-child resource gate;
+actual2/11/13-stage receipts and48+13 synthetic results; explicit pre-child guard
+and UNRUN archive/native labels. Developer-maintainer self-review only, not
+independent/system/release assurance. Existing hazards/mitigations/rollback and
+notification policy above remain unchanged. No formatter/expected emitter,
+fitted tolerance/production change/parent closure/division SAME relaxation.
+
+NEXT SAME unchanged source: once fresh idle/fullPSI avg10 AND avg60<1%, replay
+the exact archived-source command retained in replay1-shell-completion.json.gz
+at NEW build/default-transform-original-width-source-replay2 (update ONLY the
+root name; never overwrite replay1). Archive/review the seven actual results,
+byte-equal comparisons, input checks and gates. Only then take clean signed
+source freeze and request NEW BOTH native-only CLEAR plus Request Guard release/
+coordination; immediate EACH-launch gates remain mandatory. Do not run either
+completed shifted-value16 pair or the completed original/shifted pair again.

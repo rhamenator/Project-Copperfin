@@ -1,0 +1,106 @@
+{
+  "sourceOnly": true,
+  "nativeInvoked": false,
+  "ordinaryShellNotReaEvidence": true,
+  "archivedSourceRecomputeInvoked": false,
+  "preChildGuardStatus": 75,
+  "fullIoPsi": {
+    "avg10": 48.79,
+    "avg60": 25.77
+  },
+  "prefixStatus": 1,
+  "stage": "regenerate-source",
+  "inputsBeforeStatus": 0,
+  "inputsAfterChecked": false,
+  "earlierSourceChecksRemainPassed": true,
+  "files": [
+    {
+      "name": "replay1-archive-inputs.sha256",
+      "hostRelativePath": "build/default-transform-original-width-source-replay1/archive-inputs.sha256",
+      "bytes": 48363,
+      "sha256": "9ed0cd8fe5992c7b5b22166ebeb41c40ea0be98b7c8861821ade6c0f310c7010",
+      "gzipBytes": 2892,
+      "gzipSha256": "643527f33e8213c9510c9f84671d910b624509caf3758ee0a3acb887c0d9c4e4"
+    },
+    {
+      "name": "replay1-original-inputs.sha256",
+      "hostRelativePath": "build/default-transform-original-width-source-replay1/original-inputs.sha256",
+      "bytes": 3695,
+      "sha256": "a2a4d29f240bc095032e74026aaf673021837eea9082bce33bd3ab4ea81609db",
+      "gzipBytes": 1091,
+      "gzipSha256": "7da44c0623b505d4baf1754ccb7b67cd9e8ae8156db7ef8af0a50996dd1bef07"
+    },
+    {
+      "name": "replay1-regenerate-source.archive-before.txt",
+      "hostRelativePath": "build/default-transform-original-width-source-replay1/regenerate-source.archive-before.txt",
+      "bytes": 31747,
+      "sha256": "f85b265305b5a713d631bd33b8ef9013f7e6751aaab7630f294869bf76fc1630",
+      "gzipBytes": 1192,
+      "gzipSha256": "934735a153f7fb1bab2ed83b3b79aaeb59e3ebd258a95bf5871f0cf23c17df2b"
+    },
+    {
+      "name": "replay1-regenerate-source.guard.status",
+      "hostRelativePath": "build/default-transform-original-width-source-replay1/regenerate-source.guard.status",
+      "bytes": 3,
+      "sha256": "84b9bb077be0d8a29d0d01ef350d718b77c2ec5f40c3ab90502b1b4b5016c550",
+      "gzipBytes": 23,
+      "gzipSha256": "9503d121cee88e1607182a9aa795c71fd294b2afb5cbec5648864d8fd2df9ab1"
+    },
+    {
+      "name": "replay1-regenerate-source.original-before.txt",
+      "hostRelativePath": "build/default-transform-original-width-source-replay1/regenerate-source.original-before.txt",
+      "bytes": 2145,
+      "sha256": "ddb5b68ac18d1bba96118404da9325e147440ddd0aa5456650ca3212b659fdc9",
+      "gzipBytes": 318,
+      "gzipSha256": "db41398215e3daee888c836bf18100dc7e57878b06f1635fd465b7ebfd065b63"
+    },
+    {
+      "name": "replay1-regenerate-source.prefix.status",
+      "hostRelativePath": "build/default-transform-original-width-source-replay1/regenerate-source.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "d381e5a9b7c1c71b5fb3fef202103bf4b6098ce288f148735de1ecf61d4e3b75"
+    },
+    {
+      "name": "replay1-regenerate-source.prefix.txt",
+      "hostRelativePath": "build/default-transform-original-width-source-replay1/regenerate-source.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+    },
+    {
+      "name": "replay1-regenerate-source.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-original-width-source-replay1/regenerate-source.pressure-before.txt",
+      "bytes": 118,
+      "sha256": "598f828a83189a9e5570b935d434b494577f72a36303c062036f969328541d92",
+      "gzipBytes": 98,
+      "gzipSha256": "5388dd08bbc1e80bf2fa133ce2c75aa96d652f1407d1a0bd5c5cd47c4a1264b7"
+    },
+    {
+      "name": "replay1-shell-completion.json",
+      "hostRelativePath": "build/default-transform-original-width-source-replay1/shell-completion.json",
+      "bytes": 6727,
+      "sha256": "3f5952ba9911b0783ea17de3f7a739eabd2bbe1986e5f518862f95472a382269",
+      "gzipBytes": 1332,
+      "gzipSha256": "413bdc96c8e31aa9b04b0b310813f93a0d21d89a3930aff493841977def20ec2"
+    },
+    {
+      "name": "replay1-source-base-commit.txt",
+      "hostRelativePath": "build/default-transform-original-width-source-replay1/source-base-commit.txt",
+      "bytes": 41,
+      "sha256": "edbeacad505440f2b3d0d934173b7e4c4d6973e3523d3592969d2855c39f2004",
+      "gzipBytes": 60,
+      "gzipSha256": "843dc16c25bdc5e5cc151d2438fc22fff729dd1d18751b6d8845179114a0e08b"
+    },
+    {
+      "name": "replay1-source-status.txt",
+      "hostRelativePath": "build/default-transform-original-width-source-replay1/source-status.txt",
+      "bytes": 732,
+      "sha256": "db38b08e0c6c389d61e81e9381a705ecfd0e9cc698f0a4d95c4118a2169c209a",
+      "gzipBytes": 161,
+      "gzipSha256": "f370c316c7be639e3befea03c866cdec00c052f6a5fb9e6505a7ce54977be650"
+    }
+  ]
+}
