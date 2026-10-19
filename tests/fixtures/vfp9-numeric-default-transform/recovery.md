@@ -2238,7 +2238,7 @@ differences and cannot emit expected strings. Developer self-review only,
 not independent-human/system/release assurance. Existing hazards/rollback and
 notification policy retained; no owner-input blocker/automation pause.
 
-## Missing fixed STR16/17 discriminator — SOURCE ONLY
+## Fixed STR16/17 discriminator — source freeze and qualified pair
 
 emit-str-middle.cjs generates str-middle.prg/str-middle-cases.json from the
 qualified STR15/18 parent, verifying both raw hashes and all264 input tuples.
@@ -2277,6 +2277,76 @@ native controls, all32 reader offsets, first-error/no-footer, source identity
 and native-only re-entry. LOW DQ-DV001 developer self-review only, NOT VFP
 syntax/runtime/independent-human/system/release acceptance. Existing hazards/
 rollback/notification retained; exact conversion/division ladder still open.
+
+### Qualified STR16/17 pair — 2026-10-19
+
+Unchanged clean signed/DCO source33bf50ae6d81113508d075a4611fabf710853aca
+ran after SEPARATE NEW explicit audit+DAW native-only CLEAR. Both immediate
+guards0/prefix idle1/fullPSI avg10/avg60=0.00/0.00%, each below1%. nice-n10,
+inheritedoverrideUNSET/process-onlymsvcr71=n; reused observer/source/native/
+parent hashes0. No compiler/new FLL/VM. First actual0/empty/DONE528/strict
+--single0 BEFORE repeat; repeat0/empty/DONE528/paired0. All32 raw fields
+byte-identical/inactive-slot differences0. Raw SHA BOTH:
+13fba5c3663d1d44f0cf514d481abfc66e16063e3e300d1c8e33502b10282c6c.
+Every parent original/N40/18/BRS/current-D STR/applied typed setting/F17/G17
+control exact; prior STR15/18 strings exact BOTH before and after new16/17.
+New strings are Character/width40; no expected string was computed. Same264
+ORIGINAL/bothFIXED/applied D0..18, not a full19-settings-per-payload Cartesian
+experiment. Runtime path/file/CW controls retain prior limits: NOT atomic
+mapped-code proof, Windows execution or VFP internal-call attribution. Ordinary
+shell, NOT REA Evidence or descendant-cleanup attestation. Both chats RELEASED;
+prefix idle after capture, no reservation/job.
+
+str-middle-captures1 retains65 baseline+5 supplemental=70 byte-compared gzip
+plain/raw/source/OWN FXP/fullshell/analysis/finalhash/readback receipts, native+
+verification manifests/checksums. Archived strict0/offline recomputation0,
+reports byte-exact to host; final input hashes0. Intact host directory
+build/default-transform-str-middle-captures1; working root ABSENT. SDK-linked
+observer/metadata FLL HOSTONLY; no redistributed FLL/object/library/executable.
+Earlier pairs/guards/failed attempts immutable, no completed capture replay.
+
+analyze-str-middle.cjs AFTER capture/offline only validates both current and
+parent raw digests/strict flags/all528 shared original+native+STR15/18 controls.
+Only this overlap is compared, NOT broad retroqualification. Exact decimal
+coefficient/exponent comparisons never use binary Number(text), rounding,
+powers or tolerance. Value metric separately ignores padding and signed-zero
+spelling; literal and zero-sign differences/counterexamples remain explicit.
+
+STR count versus original TRANSFORM, per264 contexts (trimmed literal / exact
+decimal value / zero-sign differences):
+
+| Count | FIXED OFF | FIXED ON |
+| --- | --- | --- |
+| 15 | 264 / 36 / 3 | 255 / 234 / 3 |
+| 16 | 264 / 24 / 9 | 255 / 234 / 6 |
+| 17 | 264 / 12 / 15 | 255 / 234 / 9 |
+| 18 | 42 / 0 / 21 | 255 / 234 / 12 |
+
+Pairwise exact value differences over528 contexts:15/16=24,15/17=48,
+15/18=72,16/17=24,16/18=48,17/18=24. Explicit-count STR OFF-versus-ON text
+differences0/264 for each of15..18 in THIS sample; current-D exact identity96
+contexts at D15..18. Neither universal setting independence nor a cap follows.
+OFF18 value coincidence remains NOT sign/padding/zero-display parity.
+
+Tuple(fixed,D,N40/18,count/text) conflicts (conflicting/distinct keys):
+15 OFF3/63 ON41/63;16 OFF4/62 ON40/62;17 OFF5/61 ON39/61;
+18 OFF4/60 ON38/60;ALL15..18 OFF1/69 ON35/69. Full counterexamples retained.
+Even all four strings do not suffice for original display. No production
+formatter/helper/hook, expected emitter, hard cap, fitted tolerance or lookup.
+
+NEXT bounded offline recovery: join these qualified fixed-count strings to
+the already-qualified native CRT F15..18 ORIGINAL overlap, using exact decimal
+coefficient/exponent plus separate padding/zero-sign comparisons. Verify raw
+hashes and input/control identity before comparison; no native replay or new
+runtime qualification. This is a discriminator, not permission to implement a
+guessed algorithm. Exact formatter/retained division verification remain OPEN.
+
+LOW DQ-DV001 delta walkthrough: inspected all32 accepted raw-field offsets,
+strict-first receipt order, parent15/18 before+after controls, runtime/source
+identity and70 archived readback hashes; independently recomputed analysis
+and kept separate zero/text metrics. Developer self-review only, NOT independent
+human/system/release assurance. Existing hazards/rollback/notification retained;
+no owner-input blocker or automation pause.
 
 ## Traceability and development-document walkthrough
 
