@@ -2238,6 +2238,46 @@ differences and cannot emit expected strings. Developer self-review only,
 not independent-human/system/release assurance. Existing hazards/rollback and
 notification policy retained; no owner-input blocker/automation pause.
 
+## Missing fixed STR16/17 discriminator — SOURCE ONLY
+
+emit-str-middle.cjs generates str-middle.prg/str-middle-cases.json from the
+qualified STR15/18 parent, verifying both raw hashes and all264 input tuples.
+Same ORIGINAL INLINE N40/18/bothFIXED/applied D0..18,528 rows/32 fields/run.
+New STR16/17 VARTYPE+hex strings are observations, not expected text. Prior
+STR15/18 types+strings are evaluated BOTH before+after the new calls, checked
+exactly to parent; original metadata/BRS/TRANSFORM/current-D STR/settings and
+F17/G17 bracket all public STR calls. No stored numeric argument. First control/
+load/runtime error stops with one error/no DONE, never runs next case.
+
+audit-str-middle.cjs independently requires complete topology/footer,24 original
+parent fields plus8 appended new/after-control fields, all active N40/18/BRS,
+typed settings, FULL F17/G17 strings, every parent STR15/18 before+after byte,
+new Character width40 strings and typed paired repeat. Only unused N.integer
+may differ. It computes neither new string. First strict --single before repeat.
+The previous parent's JSON projection omitted applied-setting hex fields;
+this reader explicitly recovers ACTUAL fields8..11 from hash-bound raw24-field
+parent records rather than compare against undefined or manufacture strings.
+Source-only reader mode verifies all528 parent schemas/settings/STR/control
+objects and reports nativeInvoked:false/newResultsRead:false. That mode is NOT
+native result qualification; real worker uses the complete strict reader.
+
+str-middle-capture.sh remains native-only/no compiler: clean-tree/no-overwrite,
+own source snapshots/regeneration, accepted observer source+FLL exact, accepted
+parent caller/inventory source byte-exact, all runtime/helper/parent/input
+digests, nice-n10, inheritedoverrideempty/process-onlymsvcr71=n. NEW BOTH native
+clearance and immediate fullPSI avg10 AND avg60<1%/idleprefix EACH launch,
+stop-on-failure/strict-first before repeat. SDK binaries HOSTONLY/no VM/global
+change/completed capture replay. No observer C changes or rebuild needed.
+
+Actual Node syntax/emitter+parent source checks/bash syntax/diff-check0 ONLY;
+no native worker/root/request/reservation/result yet at this source checkpoint.
+Counts16/17 are comparison stimuli, not inferred caps. Source32-field delta
+walkthrough verified new calls lie between old STR before+after and original/
+native controls, all32 reader offsets, first-error/no-footer, source identity
+and native-only re-entry. LOW DQ-DV001 developer self-review only, NOT VFP
+syntax/runtime/independent-human/system/release acceptance. Existing hazards/
+rollback/notification retained; exact conversion/division ladder still open.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
