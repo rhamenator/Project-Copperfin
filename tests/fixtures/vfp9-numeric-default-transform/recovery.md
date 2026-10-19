@@ -3503,6 +3503,52 @@ ROUND controls and independent metadata/payload checks. Source qualification/
 clean freeze/NEW BOTH CLEAR before any new native run. Exact conversion/division/
 ListItem remain OPEN; no owner-input blocker/automation pause.
 
+## Width discriminator offline analysis2 completed without native replay
+
+Resolved pressure prerequisite only; NEW build/default-transform-shifted-width-
+analysis2 from clean signed/DCO52838d1a28d87e6a0246af412940b546de7cb062 runs the
+SAME retained three offline stages. Archived FROZEN strict reader0/empty stderr/
+report byte-exact against native audit; analyzer0/readback0/empty/byte-identical.
+Inputs hashes BEFORE+AFTER EACH0; all immediate prefixidle1/fullPSI0.00/0.01%/
+guard0/nice-n10. BEFORE analyzer source and clean source/status snapshots retained;
+this AFTER-native analysis base is NOT native source freeze0ec07074a. No native
+invocation/window/compiler/new FLL/VM. Prior analysis1 guard75 remains immutable.
+
+Exact-decimal metric8 self-checks pass; all16 raw42-field records/projected report
+tuples and before/after controls checked. Eight width32->40 interventions: zero
+TF or STR literal, trimmed-literal, exact decimal-value or zero-sign differences.
+Signed adjacent shifted pairs have no TF/STR differences under either width and
+FIXED setting (2 comparisons per width/FIXED). Across16 TF-versus-STR pairs:
+16 literal gaps/8 trimmed-literal gaps/8 decimal-value gaps (all FIXED OFF), zero
+both-zero sign-spelling gaps. This qualifies the earlier direct audit inspection,
+not universal width independence, actual expression equivalence, a bias/precision
+rule, formatter parity or a relaxation of any original regression.
+
+Thirty-three supplemental source/report/gate/hash/full actual-shell receipts plus
+verification-manifest/VERIFICATION-SHA256SUMS bring shifted-width-consumer-captures1
+to109 gzip receipts (63 native+13 guard+33 verification). All three inventories,
+compressed hashes/gunzip sizes/hashes/exact hostbytes verified. Host analysis2 and
+all earlier native/source/guard roots intact; runtime/FLL identity limitations and
+ordinary-shell NOT REA Evidence/cleanup-attestation limits unchanged.
+
+LOW DQ-DV001 actual walkthrough: replayed the exact pre-child-held command into a
+new root; checked archived reader/result equality, independent width metadata,
+all16 projections,8 metric checks, finite value/sign/literal comparisons and
+before/after input inventories. Developer-maintainer self-review, not independent
+human/system/release assurance. Misuse risk and mitigation unchanged: do not
+promote finite width equality to actual-expression or universal formatter policy.
+Existing hazards/rollback stay; no compatibility, division or ListItem closure.
+
+NEXT bounded source preparation: positive D13 actual inline shifted expression
+ABS(payload)+(0.0005*(10^(-D))) from the retained REJECTED diagnostic graph versus
+reconstructed SAME measured N32/18 payload for parent159/160, both FIXED. Preserve
+original/public ROUND controls and exact independent metadata/payload checks;
+no target display predictions. This is a route-boundary test, NOT a proposed
+formatter bias/formula or new production change. Independent reader/synthetic
+source qualification and clean freeze BEFORE new BOTH clearance/each immediate
+native gate. Do not replay either completed16-row pair. Exact conversion and
+unchanged division ORIGINAL/SAME/hosted/review ladder remain OPEN.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
