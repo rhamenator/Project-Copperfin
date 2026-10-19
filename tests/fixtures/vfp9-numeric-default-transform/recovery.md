@@ -1547,6 +1547,36 @@ silent data corruption, mitigated by explicit observation-only inventory and
 remaining exact-recovery/ORIGINAL/implementation ladder. Existing hazards/
 rollback/field notification retained; no owner-input blocker/pause.
 
+### ROUND pre-launch pressure guard — no native execution
+
+At clean signed/DCO ec4e26cff57cee88254a4f75b1365a6287f6615c, a NEW
+explicit BOTH-chat native-only CLEAR was obtained. Worker immediately checked
+the unchanged observer SHA/proven C/header, source cleanliness/input hashes,
+native-only environment and idle prefix1, then stopped75 before first VFP:
+full PSI avg10=11.94/avg60=3.26. No first native status/stdout/stderr/result,
+strict acceptance/repeat/FXP/footer exists. This is a distinct actual worker
+guard, not the prior audit HOLD before worker start. Both windows RELEASED.
+
+round-result-guard1/26 byte-compared compressed plain receipts/OWN sources,
+manifest0 and host+archived audit-round-guard.cjs forensic0. Source/tool/native/
+observer inputs sha256sum0 before relocation. Intact original host attempt at
+build/default-transform-round-result-guard1; original working root ABSENT.
+No new compiler/native execution or SDK binary redistribution. Full ordinary
+shell result retained, NOT REA Evidence or descendant-cleanup attestation.
+Guard checker added AFTER attempt and explicitly reports pairedQualified:false.
+
+NEXT: unchanged ROUND caller/reader/worker and existing observer need no rebuild.
+New clean source checkpoint plus NEW BOTH native-only CLEAR/all immediate gates
+permits a fresh root, never overwrite/replay the guarded attempt. Original
+source freeze and both prior failures remain. No owner-input blocker/pause.
+
+LOW DQ-DV001 delta walkthrough: checked actual pre-launch control flow against
+all26 archived source/receipt bytes, missing-native predicates and manifest;
+forensic reader0 is not semantic/native qualification. Misuse would turn a
+resource stop into false compatibility evidence; explicit no-invocation fields
+and unchanged native/strict-first gates mitigate that risk. Existing hazards,
+rollback/notification and development self-review limits apply.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
