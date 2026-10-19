@@ -4068,3 +4068,56 @@ all actually pass, reports byte-exact, eight metric checks, hashes/gates retaine
 archive/review before interpreting metrics or choosing the next metadata stimulus.
 No new native run/compiler/VM needed for this step; native source freeze remains
 0b3817965, distinct from the AFTER-capture analyzer/evidence commit.
+
+### Original-width offline analysis2 qualified — SAME source, no native rerun
+
+After fresh I/O gates cleared, the EXACT retained analysis1 command ran with
+ONLY root changed to build/default-transform-original-width-analysis2. Clean
+AFTER-capture basecbaba4ac3/BEFORE status empty, native freeze0b3817965 unchanged.
+Frozen native-source reader0/empty/report byte-exact, analyzer syntax0,
+analysis0/readback0/empty/byte-identical; allfour stages input hashes BEFORE+
+AFTER EACH0, immediate prefix1/fullPSI0.00/0.60%/guard0/nice-n10. All8 metric
+self-checks pass and all16 raw42-field/active metadata/control projections bind
+to the unchanged paired native digest. Earlier analysis1 pre-child75 retained.
+
+Finite results: all8 width32/40 interventions have zero TF+STR literal/trimmed/
+exact-value/zero-sign differences. At EACH width, both signed adjacent pairs
+change STR value under OFF and ON (2/2 per group); TF changes2/2 ON,0/2 OFF.
+TF-versus-STR across16 contexts:16 literal differences,10 trimmed differences,
+8 exact decimal-value differences (all OFF) and2 both-zero sign-spelling gaps
+(negative lower endpoint ON, both widths). Literal/padding/sign distinctions
+are not collapsed into a guessed binary-versus-decimal defect metric.
+The original D13 transitions persist regardless of tested width; finite null
+interventions do NOT imply universal width independence or repair/validate the
+rejected arithmetic graph, precision/order, propagation or accepted formatter.
+
+Additional NEW build/default-transform-original-width-analysis-replay1 executes
+the gzip-archived AFTER-capture analyzer at its original module path:0/empty/
+byte-exact report,8 metric checks, hashes BEFORE+AFTER0, immediate prefix1/fullPSI
+0.00/0.25%/guard0/nice10. Frozen/current source bytes explicitly matched; this
+is source-bound offline recomputation, not new runtime qualification. Fifty-five
+supplemental source/base/status/full command/actual shell/report/gate/hash receipts
+and analysis2-manifest/ANALYSIS2-SHA256SUMS bring native archive to164 gzip files
+(99 native+10 old guard+55 verification). Allthree inventories and compressed/
+decoded sizes/hashes/exact host bytes verified. No native/compiler/VM/reservation.
+
+LOW DQ-DV001 actual walkthrough: executed frozen-reader and exact raw projection
+checks, literal/value/zero-sign metrics and8 self-checks, both widths/settings/
+signs/all8 interventions/adjacent groups, preserved failure, clean AFTER-capture
+source identity and archived byte-exact recomputation. Developer-maintainer
+self-review only; existing hazards/mitigations/rollback/notification unchanged,
+no independent/system/release assurance or original/SAME relaxation.
+
+NEXT bounded source discriminator: ORIGINAL D13 decimal metadata13 versus18,
+width40 fixed, SAME four signed payloads159/160/165/166 and both FIXED modes.
+Vary decimal metadata ONLY through inline CFNDEC(CFNWIDTH(targetPayload,40),scale),
+preserving payload bits, D13, parent N40/18 and public ROUND controls before+
+after, independent strict reader and no target-string predictions. This does
+NOT repeat the completed scale pair: emit-scale-intervention.cjs selected
+parents193/199/205/211/217/223 at D16/17/18, not these D13 adjacent witnesses.
+Use the qualified original-width source/reader/every-child guarded worker and
+the old scale source as templates, not evidence for new target text. Qualify
+generation/source/synthetic reader+worker/archive checks and clean signed freeze
+BEFORE NEW resource coordination/native execution; no compiler/newFLL/VM needed.
+No tolerance, guessed rounding precision, canonical-double shortcut or formatter
+implementation/parent closure is justified by the null width result.
