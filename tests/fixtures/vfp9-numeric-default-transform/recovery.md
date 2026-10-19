@@ -2577,6 +2577,53 @@ readbacks/literal summary reproducibility. Developer self-review only, NOT
 independent human/system/release assurance. Existing hazards/rollback and
 notification retained; no owner-input blocker/automation pause.
 
+### Public ROUND value/text decomposition — SOURCE ONLY, resource-gated
+
+decompose-round-observations.cjs is AFTER-capture analysis source for the
+existing round-inline/arithmetic-inline/str-middle qualified archives. It
+requires raw first+repeat hashes/checksum inventories and528 shared original
+input/settings/N40/18/BRS/display/current-D STR/F17 controls, active N/I stored
+and inline ROUND-result fields and before/after identities. It is designed to
+decompose264 ON observations into exact decimal-value differences versus
+same-value literal differences, retaining zero-sign and padding metrics and
+per-setting/case evidence. Inline/stored metadata differences remain separate.
+Exact decimal coefficient/exponent comparisons never use binary Number(text)
+or classify binary-payload-versus-decimal representation gaps as formatting
+failures. Eight metric sanity assertions are written but NOT RUN yet.
+
+round-decomposition-check.sh is an offline-only/no-overwrite worker that
+snapshots source/base-commit/dirty status, binds all selected archive/source
+hashes and runs analysis plus byte-exact readback, each behind immediate
+Wine-idle/full I/O PSI avg10 AND avg60<1% gates, nice-n10. It has NO compiler,
+Wine/VFP or VM launch and grants no native clearance. It records gate75
+explicitly on any FUTURE failed pressure check. Runtime source/base status
+must not be mistaken for a clean native source freeze or paired qualification.
+
+Actual Node syntax0/bash syntax0/diff-check0 ONLY. Initial inline pre-analysis
+wrapper stopped at fullPSI1.62/1.07%/prefixidle1 BEFORE child analyzer spawn or
+source snapshot: actual wrapper assertion exit1, NOT worker guard75. No child
+status/stdout/stderr/report exists, no source/data check pass or numeric
+decomposition result is claimed. Later host sample full42.39/13.67% prevented
+re-entry; audit's separate HOLD remains respected, no native/compiler window.
+
+round-decomposition-guard1 retains7 gzip prefix/pressure/full-shell/forensic/
+UNRUN-current-source receipts, manifest/checksums, all host-byte-compared;
+forensic0 explicitly analyzerInvoked:false/nativeInvoked:false/pairedQualified:false.
+UNRUN source copies were made AFTER the guard, not claimed executed snapshots.
+Hostbuild/default-transform-round-decomposition1 intact. Ordinary shell NOT REA
+Evidence. Existing capture archives remain immutable, no native replay.
+
+NEXT SAME bounded slice: once fresh immediate resource gates pass, run the
+frozen offline worker in a NEW root build/default-transform-round-decomposition2.
+Do not overwrite guard1 or infer results from its absence of child output.
+Preserve any analyzer/gate failure, then exact readback/traceability before
+claiming this decomposition verified. No owner decision required; automation
+remains active. All native/compiler work still needs NEW BOTH clearance.
+LOW DQ-DV001 source walkthrough checked selected raw-field offsets, active-slot
+selection, value/literal partition assertions and pre-child stop ordering;
+runtime/data verification is explicitly pending. Developer self-review only,
+not independent/system/release assurance; hazards/rollback unchanged.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only

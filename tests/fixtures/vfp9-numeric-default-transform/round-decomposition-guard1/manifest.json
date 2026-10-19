@@ -1,0 +1,44 @@
+{
+  "analysisOnly": true,
+  "nativeInvoked": false,
+  "analyzerInvoked": false,
+  "ordinaryShellNotReaEvidence": true,
+  "sourceBaseCommit": "5fdc21a880454cc8b0edc3b4cb5c03ef6abe3c96",
+  "files": [
+    {
+      "name": "UNRUN-current-decompose-round-observations.cjs",
+      "bytes": 10579,
+      "sha256": "5bef6df304430d0cfb9f535b32c5001c43c91e02f82e72fb4d2724c1c7bb3f96"
+    },
+    {
+      "name": "UNRUN-current-round-decomposition-check.sh",
+      "bytes": 2322,
+      "sha256": "16b8c628d039daf588569adf7fce37a5b0f2627520bb47de0668b6682a229691"
+    },
+    {
+      "name": "guard-classification.json",
+      "bytes": 548,
+      "sha256": "f7e78269373af4082acd0af8af63392c0e0d897b5a76b06d3ab53c70a8df1d1e"
+    },
+    {
+      "name": "prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pressure-before.txt",
+      "bytes": 114,
+      "sha256": "ee291d1fb3d31baefa690e84ddda65e7fa4a8f7704d8a17e356ff6b737f5e454"
+    },
+    {
+      "name": "shell-completion.json",
+      "bytes": 883,
+      "sha256": "ed2be4ce059f34b24a15f44e9f83278833e235868dbf703b113c5fb7489650d3"
+    }
+  ]
+}
