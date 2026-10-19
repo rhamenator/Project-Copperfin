@@ -1,0 +1,132 @@
+{
+  "analysisOnly": true,
+  "nativeInvoked": false,
+  "ordinaryShellNotReaEvidence": true,
+  "sourceBaseCommit": "86643e1e6d0231bcd9ab46e526d50c3bb6e936cc",
+  "sourceSha256": "cdd1cd59f2142d67d12ea45f50f5f32815b189047353a04dc00e90320218f395",
+  "pass1Status": 0,
+  "pass2Status": 0,
+  "pass2Delta": "Additional exact comparison of original magnitude plus observed bias times observed powUp; mathematical relation, not a new observed execution precision.",
+  "metricSelfChecks": 9,
+  "sharedContexts": 528,
+  "onMagnitudes": 264,
+  "rejected": 18,
+  "readbackStatus": 0,
+  "readbackByteExact": true,
+  "files": [
+    {
+      "name": "pass1-classification.json",
+      "host": "build/default-transform-graph-classification1/classification.json",
+      "bytes": 572341,
+      "sha256": "4b60d6742460bb0b4bb8cedc78fd09c6c886b988781373f826f74745999e1390"
+    },
+    {
+      "name": "pass1-classification.status",
+      "host": "build/default-transform-graph-classification1/classification.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "pass1-classification.stderr",
+      "host": "build/default-transform-graph-classification1/classification.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pass1-prefix.status",
+      "host": "build/default-transform-graph-classification1/prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "pass1-prefix.txt",
+      "host": "build/default-transform-graph-classification1/prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pass1-pressure-before.txt",
+      "host": "build/default-transform-graph-classification1/pressure-before.txt",
+      "bytes": 114,
+      "sha256": "1cde9da620c91e07e7def4d3716b3905ddc1b7fe521a4b6c5fc6b129c46c3ede"
+    },
+    {
+      "name": "pass1-shell-completion.json",
+      "host": "build/default-transform-graph-classification1/shell-completion.json",
+      "bytes": 1263,
+      "sha256": "0c5c2db3a90ea78e71cb009509c3f8d7090aa8aa3161a884fba19cd92a54bd70"
+    },
+    {
+      "name": "pass1-source-classify-graph-rejections.cjs",
+      "host": "build/default-transform-graph-classification1/source-classify-graph-rejections.cjs",
+      "bytes": 12053,
+      "sha256": "8115e2e43bc8ea992381e6c5a305329b5eaa2fe43a4ae9e7f6e11ed7b1b8eed7"
+    },
+    {
+      "name": "pass2-classification.json",
+      "host": "build/default-transform-graph-classification2/classification.json",
+      "bytes": 592890,
+      "sha256": "e58c9027351f6e4cb4ee6878a2c06711c8339d3dc3a0bb3e41ab3dda38647916"
+    },
+    {
+      "name": "pass2-classification.status",
+      "host": "build/default-transform-graph-classification2/classification.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "pass2-classification.stderr",
+      "host": "build/default-transform-graph-classification2/classification.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pass2-prefix.status",
+      "host": "build/default-transform-graph-classification2/prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "pass2-prefix.txt",
+      "host": "build/default-transform-graph-classification2/prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pass2-pressure-before.txt",
+      "host": "build/default-transform-graph-classification2/pressure-before.txt",
+      "bytes": 114,
+      "sha256": "c3f5fc4c4bb9e2631ab83c1e23c43a3049662acfdda6a1f624aa27e491f49dbf"
+    },
+    {
+      "name": "pass2-readback-classification.json",
+      "host": "build/default-transform-graph-classification2/readback-classification.json",
+      "bytes": 592890,
+      "sha256": "e58c9027351f6e4cb4ee6878a2c06711c8339d3dc3a0bb3e41ab3dda38647916"
+    },
+    {
+      "name": "pass2-readback-classification.status",
+      "host": "build/default-transform-graph-classification2/readback-classification.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "pass2-readback-classification.stderr",
+      "host": "build/default-transform-graph-classification2/readback-classification.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pass2-shell-completion.json",
+      "host": "build/default-transform-graph-classification2/shell-completion.json",
+      "bytes": 1361,
+      "sha256": "00018b6cfb9ae7cd6a175ab0aec22511732679a3a6928c073fd69356eaef4221"
+    },
+    {
+      "name": "pass2-source-classify-graph-rejections.cjs",
+      "host": "build/default-transform-graph-classification2/source-classify-graph-rejections.cjs",
+      "bytes": 12567,
+      "sha256": "cdd1cd59f2142d67d12ea45f50f5f32815b189047353a04dc00e90320218f395"
+    }
+  ]
+}

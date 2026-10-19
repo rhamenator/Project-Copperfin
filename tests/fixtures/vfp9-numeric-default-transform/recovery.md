@@ -2405,6 +2405,83 @@ signed decimal positions, empty-return exclusion,9 sanity checks and18 archive
 readbacks. Developer self-review only, not independent/release assurance;
 existing hazards, rollback and notification unchanged.
 
+### Retained arithmetic-graph rejection classification — offline only
+
+classify-graph-rejections.cjs joins the qualified arithmetic-inline-captures1
+and str-middle-captures1 archives AFTER capture. Both first/repeat raw digests
+and published checksum inventories bind the reports/raw inputs and retained
+comparison.json; raw-to-projection checks cover all528 original contexts,
+metadata/BRS/settings/display/current-D STR/F17 runtime controls, stored public
+ROUND results and all8 typed arithmetic stages before+after control. Integer
+and Numeric tags select active slots, not public VARTYPE=N alone. The new
+classification does NOT infer an input formatter from Copperfin behavior.
+
+All264 ON magnitude comparisons independently reproduce the retained18
+rejections and exact index list. Binary64 bits are decoded to exact integer
+ratios, including subnormal/sign handling; observed effectiveCount/quantized
+values must be nonnegative safe integers. Decimal text is compared by exact
+integer cross-products, never Number(displayText). Nine metric sanity checks0.
+No power/bias/cap/rounding constant is fitted or promoted to a requirement.
+
+Within these18 rejected ON magnitudes:
+
+These are18 signed contexts:9 distinct absolute input payloads, each observed
+with both signs, not18 independent absolute magnitudes.
+
+| Comparison of observed stage values | Below | Equal | Above |
+| --- | --- | --- | --- |
+| Observed scaled versus 1/2 | 10 | 6 | 2 |
+| Exact scaled + 1/2 versus 1 | 10 | 6 | 2 |
+| Observed raised versus 1 | 0 | 18 | 0 |
+| Exact observed shifted times observed powUp versus 1/2 | 14 | 0 | 4 |
+| Exact (input magnitude + observed bias) times observed powUp versus 1/2 | 12 | 0 | 6 |
+
+Exact operations in the last rows are mathematical comparisons of captured
+operands, NOT observed execution with a different precision, a corrected graph
+or VFP internals. In particular, avoiding rounding ONLY in the add-half step
+cannot explain all18:8 scaled operands are already equal/above half. Neither
+an x87/internal-order attribution nor a precision repair is established.
+
+All18 original TRANSFORM ON displays are zero-valued (sign spelling retained),
+and current-D STR has the same magnitude in all18; the observed public ROUND
+result payload is also zero in all18. Each fixed STR15/16/17/18 result instead
+has magnitude strictly BETWEEN that zero display and the rejected graph's
+quantized magnitude in every case (72 comparisons). Thus the high-count STR
+observations retain information absent from the current-D conversion, but
+they do not provide its conversion sequence or an accepted formatter. Full
+signed input/display/STR hex and all typed-stage counterexamples remain in
+the report; magnitude comparisons do not establish sign/padding equivalence.
+
+graph-rejection-classification1 retains19 gzip source/output/status/prefix/
+pressure/full-shell/readback receipts, manifest and checksum inventory, all
+byte-compared to intact hostbuild/default-transform-graph-classification1/2.
+Pass1/status0 and final pass2/status0/empty stderr/9 checks/readback0/report
+byte-exact. Pass2 adds the last exact-operand comparison above; pass1 remains
+immutable. Both actual runs nice-n10 with immediate prefixidle1/fullPSI
+avg10 AND avg60 below1%. ALL nativeInvoked:false/analysisOnly; no compiler,
+Wine, VM or new runtime qualification. Ordinary shell NOT REA Evidence or
+descendant-cleanup attestation; earlier provenance limits remain unchanged.
+
+NEXT bounded source preparation: compare public consumers at the THREE
+observed near-half scaled payloads 3FDFFFFFFFFFFFFF/3FE0000000000000/
+3FE0000000000001 and their explicit negative-sign stimulus counterparts.
+Keep argument INLINE N40/18, apply D0/bothFIXED, and observe original
+TRANSFORM/STR versus INLINE public ROUND(input,0) descriptor/BRS/display/STR,
+bracketed by unchanged argument/F17 module controls. Six inputs/12 contexts;
+negative mirrors are stimuli, not observed negative arithmetic stages. Do not
+replay earlier264-input captures or compute expected new strings. Freeze caller,
+inventory, independent reader and native-only guarded worker BEFORE NEW BOTH
+clearance; reuse proven observer/no compiler unless own C changes. This asks
+whether those public consumers differ at the observed half-neighbor operands;
+it does NOT assume VFP internally uses the rejected scalar graph. No new
+caller/run yet. Exact conversion/expectations/retained division ladder OPEN.
+
+LOW DQ-DV001 walkthrough checked528 raw/control joins, active N/I selection,
+264 exact comparisons/18 retained indices,9 metric checks and19 archive
+readbacks; reviewed mathematical-versus-observed labeling and avoided an
+addition-only repair claim. Developer self-review only, NOT independent human/
+system/release assurance. Existing hazards/rollback/notification unchanged.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
