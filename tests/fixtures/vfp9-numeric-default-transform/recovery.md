@@ -3436,6 +3436,73 @@ build/default-transform-shifted-width-consumer root, exact reused observer,
 first0/strict-single0 BEFORE repeat/paired0, each immediate idle/PSI gate/nice10.
 No compiler/new FLL/VM; no repeat of completed original/shifted16 pair.
 
+## Width32/40 native pair qualified; offline readback held by fresh pressure
+
+Clean signed/DCO/G native source freeze:
+0ec07074a6d6140bc25a876bf7f940bd426c5f86. NEW explicit BOTH audit+DAW native-only
+CLEAR received and actual source/request/clearance receipts retained. Fresh
+pre-request fullPSI0.00/0.03%, prefixidle. Run the frozen worker ONCE: first
+native0, strict-single0 BEFORE repeat, repeat0, paired reader0, all stderrs empty.
+Sixteen records/all42 fields repeat-identical; inactive-slot differences0. Both
+raw SHA b3f9e1bb7b5aa25bd61edbcaa733e779635422b9cb055e432be470fd21b9a139.
+Each immediate native prefixidle1/guard0/fullPSI0.00/0.01%/nice-n10. Existing
+observer reused, process-local Microsoft32 override/inheritedUNSET; no host
+compiler/new FLL/VM. BOTH windows promptly RELEASED; post-worker prefixidle.
+
+Validated/moved completed host root to build/default-transform-shifted-width-
+consumer-captures1; original working root ABSENT. Native/source/runtime/control/
+status/input/actual shell/clearance/release receipts and own compiled FXP retained.
+No FLL/proprietary SDK binary included. Archive shifted-width-consumer-captures1
+has63 native gzip receipts/manifest/SHA256SUMS, compressed hashes/gunzip sizes/
+hashes/exact hostbytes verified. Identity/binding still NOT atomic mapped-code,
+Windows execution, formatter internal-call or descendant-cleanup proof; ordinary
+shell is NOT REA Evidence or cleanup attestation.
+
+Direct inspection of the qualified native audit shows identical target TF and
+STR Character bytes for all8 width32/40 comparisons; both widths are actually
+observed and independently checked, not inferred from strings. This is finite
+source-qualified native observation, not accepted universal width-independence,
+original expression equivalence, precision repair or formatter rule. Formal
+archived-reader replay/exact-decimal decomposition is still pending below.
+
+AFTER capture, add analyze-shifted-width-consumer.cjs: binds exact source/raw
+digest and all16 raw projections, compares width interventions and signed
+adjacent pairs, preserving decimal magnitude, literal padding and signed-zero
+metrics separately. Its source is NOT part of native freeze or accepted evidence
+of its own correctness. Audit's independent reference window was respected;
+offline test launches held until its explicit RELEASE. On resumption NEW host
+build/default-transform-shifted-width-analysis1 stops at first immediate gate:
+prefixidle1/fullPSI19.43/4.73%/guard75 BEFORE archived-reader child. No childstatus,
+stderr/stdout/report or post-child hashes claimed. Archive-reader replay, analyzer,
+metric self-checks and readback all UNRUN; no failure of native/reader/analyzer.
+Later direct fullPSI37.11/14.41% confirms HOLD. BEFORE analyzer/source-base0ec+
+dirty AFTER-native snapshots and full actual shell/guard receipts retained.
+
+Thirteen supplemental forensic gzip receipts/guard-manifest/GUARD-SHA256SUMS
+bring native archive to76 total; both inventories and all compressed/gunzip
+sizes/hashes/host bytes verified. Small forensic packaging ionice3/nice10 only;
+no new native run or resource reservation. Source archive302 unchanged; its
+earlier source-replay pressure stop and packaging failure remain historical.
+
+LOW DQ-DV001 procedural delta/walkthrough: inspected strict-first-before-repeat,
+explicit width metadata and8 paired native string equalities; verified no child
+result after offline guard75. Misuse risk: upgrading finite equalities into a
+formatter or claiming unrun metric checks. Retain gaps and next exact re-entry;
+developer-maintainer self-review only, not independent/system/release assurance.
+HZ-data-corruption-01/HZ-runtime-crash-01/HZ-doc-command-01 and rollback unchanged.
+
+NEXT SAME after fresh idle/fullPSI avg10 AND avg60<1%: run THREE offline stages
+from retained guard-shell-completion.json.gz into NEW width-analysis2 root,
+archived FROZEN strict reader/report byte match, analyzer/readback byte match,
+input hashes BEFORE+AFTER EACH0/nice10. Do NOT rerun completed native pair.
+Only after that result, next bounded source discriminator is positive D13 actual
+inline ABS(payload)+(0.0005*(10^(-D))) from the retained REJECTED diagnostic graph
+versus reconstruction of the SAME measured N32/18 shifted payload. This tests a
+route boundary, not a proposed formatter bias/formula; retain original/public
+ROUND controls and independent metadata/payload checks. Source qualification/
+clean freeze/NEW BOTH CLEAR before any new native run. Exact conversion/division/
+ListItem remain OPEN; no owner-input blocker/automation pause.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
