@@ -2482,6 +2482,46 @@ readbacks; reviewed mathematical-versus-observed labeling and avoided an
 addition-only repair claim. Developer self-review only, NOT independent human/
 system/release assurance. Existing hazards/rollback/notification unchanged.
 
+### Six-input public near-half consumers — SOURCE ONLY
+
+emit-half-consumers.cjs derives the three observed positive scaled operands
+from hash-bound graph classification/native parent records, then adds explicit
+negative-sign mirrors as stimuli (not observed negative arithmetic stages).
+half-consumers.prg/half-consumers-cases.json freeze6 inputs/D0/bothFIXED,
+12 records/run/28 fields. Argument is INLINE N40/18 at every numeric consumer;
+public ROUND(input,0) is independently evaluated inline for type/active
+descriptor/BRS/display/STR before+after F17 control. No stored argument or
+ROUND result and no computed expected new strings. Original metadata/BRS/
+display/STR are also read before+after. First library/control/runtime error
+emits one error/no footer and returns without proceeding to another input.
+
+audit-half-consumers.cjs checks source route/topology and independently requires
+complete12-row footer, exact input metadata/BRS/applied typed settings, full F17
+module/CW identity, valid active N/I result slots, before+after equality and
+typed paired repeat. Only inactive N.integer or I.real/decimals may differ.
+Original/result display and STR bytes are observations; no result0/1/string/
+width assumption is manufactured. STR return width40 is explicit argument
+validation, not formatter parity. Strict --single must pass BEFORE repeat.
+Source-only mode explicitly nativeInvoked:false/newResultsRead:false.
+
+half-consumers-capture.sh is native-only: clean-tree/no-overwrite, regenerated
+caller/inventory exact, byte-exact accepted helper-source reuse and FLL SHA
+0b1fcd2ba81b95631cb52e6ecd0d4afa721b450a967402f504d1852a49e9e9ac,
+all source/parent/helper/runtime hashes, inheritedoverrideempty/process-local
+msvcr71=n, nice-n10, NEW separate BOTH native-only CLEAR and immediate idle
+prefix/fullPSI avg10 AND avg60<1% EACH launch. Stop on failure/strict-first gate.
+SDK binaries HOSTONLY; no compiler/new helper/VM/global change/native replay.
+
+Actual source Node syntax/emitter generation/source-only reader/bash syntax/
+diff-check0. No native run/root/result yet at this source checkpoint; source
+checks are not VFP syntax/runtime or new behavior qualification. LOW DQ-DV001
+walkthrough checked all28 field positions, inline routes, signed-stimulus
+provenance, active-slot comparisons and stop/gate ordering. Developer self-review
+only, not independent/system/release assurance; hazards/rollback unchanged.
+Next obtain NEW BOTH native-only clearance, enforce immediate gates, qualify
+first before repeat and retain all receipts, including any guard/failure.
+Exact formatter/retained division ladder stay OPEN; no fitted model accepted.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
