@@ -1732,6 +1732,71 @@ for a retained object or a formatter algorithm could silently corrupt display;
 explicit route contracts/independent parent/raw controls mitigate that misuse.
 Existing hazards/rollback/notification apply; no owner-input blocker/pause.
 
+### INLINE ROUND result pair — qualified528, assignment boundary observed
+
+Clean signed/DCO41a425fb464ed11b5991bfa906ce87c1f22ecf6e, NEW explicit BOTH
+native-only CLEAR; immediate each guard0/prefix idle1/full PSI0.00/0.01
+(avg10/avg60). Existing observer/source/native/generation-parent hashes0,
+inherited override UNSET/process-localmsvcr71=n. No compiler/new FLL/VM.
+First actual0/empty stderr/DONE528/strict --single0 BEFORE repeat; repeat
+actual0/empty/DONE528/paired0. All35 raw fields identical/inactive differences0,
+both raw SHA
+254b46dadbb71fa51b10e8439d51785b2c2aa3eb871c8c948fd3b8bdd3da4873.
+
+All264/bothFIXED/D0..18 keys/original40/18/BRS/settings/parent original+stored
+result/CRT17 before-after module/argument/CW027F controls exact. Inline result
+active descriptor/BRS/display/STR stable across control call/repeat. File
+sampled once perFLL/later loaded-image/path rechecks, NOT atomic mapped-code
+proof/Windows execution/internal-call attribution. Ordinary shell NOT REA
+Evidence/descendant-cleanup attestation. Both chats RELEASED/prefix idle1.
+
+round-inline-captures1/57 byte-compared plain/source/OWN FXP/full shell/raw/
+strict/offline comparison receipts; manifest+archived strict0/host-archive
+audit byte-exact0/offline byte-exact recomputation0/input-tool-native-observer-
+parent hashes0 before relocation. Intact host
+build/default-transform-round-inline-captures1; working root ABSENT. SDK-linked
+observer and metadata FLL remain HOST-ONLY, not redistributed. Prior captures/
+failed first-only attempt/guard remain unchanged; no completed pair replay.
+
+analyze-round-inline.cjs added AFTER capture/offline only checks both raw
+digests/qualified flags/stored-parent raw hashes/all528 original+stored controls
+unchanged. This finite overlap ONLY, not broad/Windows retroqualification.
+
+For each FIXED mode264 contexts: inline-vs-stored payload/display/STR differences0,
+active metadata differs ONLY width264. Inline width40 retains input width;
+stored width follows previously observed normalized descriptor. This is a
+bounded observed ROUND route result, NOT universal assignment behavior.
+Inline-vs-original TRANSFORM mismatches252OFF/180ON and STR132each. Inline
+descriptor/payload tuples (including FIXED/D/original40/18/result carrier/width/
+decimals/payload, deliberately not input bits) still conflict8/44OFF (48contexts),
+44/44ON (264contexts), same as stored. Full tuples/all comparisons retained.
+D0/ON idx3vs4 now both INLINE Numeric width40/scale0/+0, yet original0vs1.
+Result assignment does not explain these display distinctions. No accepted
+formatter, tolerance/cap/operation order/internal-call or parity follows.
+
+NEXT bounded recovery: isolate the remaining public-arithmetic expression
+evaluation route, not replay the completed scalar graph. The earlier REJECTED
+graph used numeric local assignments between powDown/bias/shifted/powUp/scaled/
+raised/INT stages. Observe the SAME graph's stages as INLINE expressions with
+no numeric intermediate assignment, on SAME264 inputs/D/bothFIXED, alongside
+original40/18/settings/BRS/display/STR and exact before-after CRT17 controls.
+Prior constants and MIN(D,15) remain REJECTED-hypothesis stimulus ONLY, never
+requirements or proposed tolerance/cap. This is a route/precision discriminator,
+not permission to implement the graph or call it TRANSFORM internals. Existing
+observer can be reused/no compiler. Freeze NEW bounded source/inventory/reader/
+worker, fresh BOTH native-only CLEAR/all immediate gates, strict first BEFORE
+repeat. Sources NOT written yet. Do not repeat completed scalar/CRT/ROUND pairs.
+
+LOW DQ-DV001 walkthrough: checked actual first/strict/repeat statuses,35 fields/
+528 key controls, raw equality/identity,57 archive byte checks/manifest/strict/
+offline reproducibility0, differing active metadata fields and complete tuple
+collisions. Explicitly distinguished expression evaluations from object identity
+and finite route behavior from a general requirement. Developer self-review
+only, not independent-human/system/release acceptance. Misuse of rejected graph
+constants as a formatter rule risks silent data corruption; observation-only
+contracts/independent original controls/exact recovery ladder remain mitigation.
+Existing hazards/rollback/notification retained, no owner-input blocker/pause.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
