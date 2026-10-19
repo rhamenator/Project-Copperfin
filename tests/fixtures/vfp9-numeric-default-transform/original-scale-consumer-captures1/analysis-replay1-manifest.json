@@ -1,0 +1,122 @@
+{
+  "analysisOnly": true,
+  "nativeInvoked": false,
+  "archivedSourceIdentityExplicitlyMatched": true,
+  "metricSelfChecks": 8,
+  "fullIoPsiAvg10": 0,
+  "fullIoPsiAvg60": 0,
+  "files": [
+    {
+      "name": "analysis-replay1-analysis-packaging-completion.json",
+      "hostRelativePath": "build/default-transform-original-scale-analysis-replay1/analysis-packaging-completion.json",
+      "bytes": 213,
+      "sha256": "4df771e6f656f658e0e49c001065bec94cb9d6a20842d2aedfde5115265365e8",
+      "gzipBytes": 180,
+      "gzipSha256": "08cdd911882c0141709de0ec818c4bc9acb5c5611629d8e65d3500ef711255c4"
+    },
+    {
+      "name": "analysis-replay1-inputs-after.txt",
+      "hostRelativePath": "build/default-transform-original-scale-analysis-replay1/inputs-after.txt",
+      "bytes": 12597,
+      "sha256": "c02e24cc321d162e314c810f93f378f1acbc2b2c58f2a987c943394fa27f8db1",
+      "gzipBytes": 789,
+      "gzipSha256": "9a0311ad54a365bcc965da941f630c0838b49e8b437142644a32dad5dfb11896"
+    },
+    {
+      "name": "analysis-replay1-inputs-before.txt",
+      "hostRelativePath": "build/default-transform-original-scale-analysis-replay1/inputs-before.txt",
+      "bytes": 12597,
+      "sha256": "c02e24cc321d162e314c810f93f378f1acbc2b2c58f2a987c943394fa27f8db1",
+      "gzipBytes": 789,
+      "gzipSha256": "9a0311ad54a365bcc965da941f630c0838b49e8b437142644a32dad5dfb11896"
+    },
+    {
+      "name": "analysis-replay1-inputs.sha256",
+      "hostRelativePath": "build/default-transform-original-scale-analysis-replay1/inputs.sha256",
+      "bytes": 19789,
+      "sha256": "f066b010709f78d9d7a8f81b4d8e70d23ccd986b9dc8df1af81ff49a9ca1507d",
+      "gzipBytes": 2789,
+      "gzipSha256": "b0b0eaa24f7c5796a56cb35fd051ff7c5cbbd45eec88db804dd03a85f73b69e3"
+    },
+    {
+      "name": "analysis-replay1-replay.guard.status",
+      "hostRelativePath": "build/default-transform-original-scale-analysis-replay1/replay.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "analysis-replay1-replay.json",
+      "hostRelativePath": "build/default-transform-original-scale-analysis-replay1/replay.json",
+      "bytes": 38834,
+      "sha256": "b705685c37d891e14f774d0f6541fcf6efe33322ccf58e6a35bbb8d43ad194ca",
+      "gzipBytes": 1947,
+      "gzipSha256": "5de346853ef730690fb487e52e48a3a49b77e1c5b9e7df6784f2a12ec0fc819a"
+    },
+    {
+      "name": "analysis-replay1-replay.prefix.status",
+      "hostRelativePath": "build/default-transform-original-scale-analysis-replay1/replay.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78"
+    },
+    {
+      "name": "analysis-replay1-replay.prefix.txt",
+      "hostRelativePath": "build/default-transform-original-scale-analysis-replay1/replay.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "analysis-replay1-replay.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-original-scale-analysis-replay1/replay.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "37ce96b282305ef5763090f80fa53894ff2f37f99b58fcf7eb1b5a9cf7460173",
+      "gzipBytes": 85,
+      "gzipSha256": "e1a757c8f82ac7ccce27571cdcc3e507cff6d9e6275534b641d7af1ba0a63e4c"
+    },
+    {
+      "name": "analysis-replay1-replay.status",
+      "hostRelativePath": "build/default-transform-original-scale-analysis-replay1/replay.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "analysis-replay1-replay.stderr",
+      "hostRelativePath": "build/default-transform-original-scale-analysis-replay1/replay.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "analysis-replay1-shell-completion.json",
+      "hostRelativePath": "build/default-transform-original-scale-analysis-replay1/shell-completion.json",
+      "bytes": 2447,
+      "sha256": "1136420ef459ac9d26d231ba5832c881a6720c655c106a057af7d7c0bc05bcfc",
+      "gzipBytes": 956,
+      "gzipSha256": "5a17b3da206656f4b1cc1733c3b0d65cad8daa50afeafc0f749f5279d6813cdc"
+    },
+    {
+      "name": "analysis-replay1-source-base-commit.txt",
+      "hostRelativePath": "build/default-transform-original-scale-analysis-replay1/source-base-commit.txt",
+      "bytes": 41,
+      "sha256": "29d5625a61ccd35a76f85a5650455d4faf234ef347607093d60b6e6acb7eeb4f",
+      "gzipBytes": 59,
+      "gzipSha256": "0762de90b3f92539f80c039d3f3279cef5d0eac30957d338699de3399c3c06bb"
+    },
+    {
+      "name": "analysis-replay1-source-status.txt",
+      "hostRelativePath": "build/default-transform-original-scale-analysis-replay1/source-status.txt",
+      "bytes": 169,
+      "sha256": "a6b0eb0ed6b21a227c1808f7f24ba9077a6f34b9cd4490455af9f852699506a7",
+      "gzipBytes": 111,
+      "gzipSha256": "29228f2f8d9e054a90b1e5a6dae5acb38225bc15ebfe81e95344ae8d1d91fba9"
+    }
+  ]
+}

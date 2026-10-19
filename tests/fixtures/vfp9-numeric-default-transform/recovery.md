@@ -4200,3 +4200,77 @@ release, archive original receipts before AFTER-capture interpretation. Existing
 width/shifted/expression captures stay complete, all parent Numeric/conversion/
 division/ListItem implementation and acceptance remain OPEN. No owner-input
 blocker, production formatter/helper/hook/expected emitter or PR created.
+
+### Original D13 decimal-metadata13/18 native pair and offline analysis qualified
+
+Clean signed/DCO/G source freeze26407441cae30774f2b75ee381edf60a3b4c6c0f
+executed SAME frozen caller/reader/worker, ONCE, 2026-10-19T18:45:33..18:45:40Z.
+NEW audit+DAW explicit native-only CLEAR, Request Guard released/no conflicting
+heavy window; actual tool snapshots retained. Earlier HOLD is not erased or
+treated as permission. No compiler/newFLL/VM: reused verified observer, inherited
+overrides UNSET and process-local Microsoft32-only runtime binding.
+First0/strict-single0 BEFORE repeat/repeat0/paired0, all stderr empty;16 records/
+all42 raw fields byte-identical, inactive-slot differences0. Both raw SHA256
+ec82060851762e0314f7b08434c170e89f2acbcbcf2b1fb9946d15bac812148d.
+Allseven preparatory/native/reader children prefix1/fullPSIavg10=0.00/avg60<=0.06%/
+guard0/nice-n10/input hashes BEFORE+AFTER EACH0. Original/public ROUND controls,
+target active metadata/payload before+after and exact runtime controls pass.
+Combined inspection shell exit1 is FINAL idle-prefix pgrep, not native/reader
+failure (allseven actual child status files0). Promptly RELEASED allthree
+coordinators, audit acknowledgement; no active native job/reservation.
+
+Validated/moved root to build/default-transform-original-scale-consumer-captures1;
+worker root build/default-transform-original-scale-consumer ABSENT. Archive
+original-scale-consumer-captures1 initially100 native gzip receipts, includes
+own authored PRG/FXP, frozen source/control/status/gate/hash/raw/runtime/actual
+shell/inspection and clearance/release snapshots; no proprietary SDK/FLL binary.
+Compressed/decoded hashes/sizes/exact host bytes verified before interpretation.
+Ordinary shell is NOT REA Evidence/Windows parity/internal-call/atomic mapped-code
+or descendant-cleanup attestation; no earlier environment is retroqualified.
+
+AFTER-capture analyze-original-scale-consumer.cjs binds exact native freeze/raw
+digest and all16 raw42-field/active metadata/control projections. Eight metric
+self-checks keep padding/literal/exact decimal-value/zero-sign differences apart;
+no native target strings inferred or used as expectations before capture.
+NEW build/default-transform-original-scale-analysis1: frozen archived reader0/
+empty/report byte-exact to native audit, syntax0/analysis0/readback0/empty/
+byte-identical, eight metric tests; hashes BEFORE+AFTER EACH0/prefix1/fullPSI0/0/
+guard0/nice10. BEFORE base26407441c+dirty AFTER-capture source/archive status is
+NOT native freeze. NEW original-scale-analysis-replay1 compiles gzip-archived
+analyzer at original module path after explicit archived/current source byte
+identity:0/empty/byte-exact/eight tests/input hashes before+after0/prefix1/fullPSI
+0/0/guard0/nice10.43 analysis+14 replay receipts bring total157 gzip files; all
+three inventories/checksum lists/compressed+decoded sizes/hashes/host bytes pass.
+All host roots and earlier source packaging failure/correction receipts intact.
+
+FINITE results (four signed ORIGINAL D13 payloads, metadata13/18, width40):
+8 metadata interventions change TF literal/trimmed/exact decimal value4 times,
+all FIXED OFF; ON changes0 and zero-sign changes0. STR changes0/8 for every
+metric. At metadata13 both signed adjacent pairs change TF+STR value2/2 under
+OFF and ON. At metadata18 STR still changes2/2 both modes, TF changes0/2 OFF
+and2/2 ON. Across16 target TFversusSTR:16 literal/8 trimmed/4 exact decimal-value
+gaps (all OFF at metadata18) and3 both-zero sign-spelling gaps (negative lower
+endpoint165:OFF+ON at metadata13, ON at metadata18). This measured intervention
+supports value-associated decimal-metadata relevance to these default displays;
+it does NOT establish a universal scale formula, exact formatter internals,
+rounding/precision order, conversion/propagation rule, or general parity.
+
+LOW DQ-DV001 walkthrough extends source qualification with actual fresh resource
+clearance/strict-first order/all42 raw field equality/runtime binding, distinct
+metadata-only comparisons and8 exact-decimal metric tests, frozen-reader and
+archived-analyzer byte-exact replays, prompt release and preserved failures.
+Developer-maintainer self-review only, NOT independent human/system/release
+assurance. Existing hazards/mitigations/rollback/field-notification boundaries
+unchanged. No expected emitter, tolerance/canonical-double shortcut, production
+change, PR or acceptance/parent closure. Division ORIGINAL/SAME remains intact.
+
+NEXT bounded SOURCE discriminator: intermediate decimal metadata14/15/16/17 at
+fixedwidth40 on SAME ORIGINAL signed D13 witnesses159/160/165/166/bothFIXED,
+16routes/32records/42fields. Existing13/18 captures remain complete, not rerun.
+Fresh inline target reconstruction at every consumer, original N40/18/public
+inline ROUND controls before+after, independent literal/raw-parent reader and
+no target Character predictions. This brackets the observed metadata-sensitive
+OFF display without assuming a formula or fitting a threshold. Qualify source/
+generation/synthetic reader+guarded-worker/archive replays and clean signed
+freeze BEFORE any NEW native resource coordination. No compiler/newFLL/VM needed.
+Wider Numeric representation/conversion/display/division/ListItem acceptance OPEN.
