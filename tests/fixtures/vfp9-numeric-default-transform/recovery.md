@@ -3606,6 +3606,74 @@ avg10 AND avg60<1%/nice10. Preserve any stop and release promptly. Native pair i
 UNRUN, no reservation/window requested; exact conversion/formatter/parent and
 division/ListItem acceptance stay OPEN. No owner-input blocker/automation pause.
 
+## Positive D13 actual-expression/reconstruction native pair qualified
+
+Clean signed/DCO/G source freeze964d3aae606634b4f7593dcaa012d1fc46aadd99, unchanged
+from source qualification180 receipts. Fresh15:15:34UTC prefixidle/fullPSI0.00/
+0.01% then NEW BOTH explicit audit+DAW native-only CLEAR; exact requests and actual
+clearance snapshots retained. Frozen worker ran ONCE: first native0, strict-single0
+BEFORE repeat, repeat0, paired reader0; all stderrs empty. Eight records/all42
+raw fields repeat-identical; inactive Numeric integer-slot differences0. Both raw
+SHA321cf441f436db9c77de2aa872f6c5b52c3cc9d22cb7b8211399062006470355.
+Immediate native gates first prefix1/fullPSI0.86/0.29%/guard0 and repeat prefix1/
+fullPSI0.88/0.31%/guard0, each nice-n10. All are below BOTH1% thresholds, not a
+waiver of the gate. Exact observer reused/native-only Microsoft32 override/
+inheritedUNSET; no host compiler/new FLL/VM. BOTH promptly RELEASED/post-prefixidle.
+
+Validated/moved completed host root to build/default-transform-shifted-expression-
+consumer-captures1; original worker root ABSENT. Native/source/runtime/status/
+input/control/actual shell/inspection/clearance/release receipts and own FXP
+retained; no FLL/proprietary SDK binary included. The combined direct-inspection
+shell exit1 comes from its final idle-prefix pgrep, NOT native/reader failure;
+actual four native/reader status files0 and inspection stdout retained verbatim.
+Archive shifted-expression-consumer-captures1 initially64 native gzip receipts,
+manifest/SHA256SUMS; compressed hashes/gunzip sizes/hashes/exact hostbytes verified.
+Ordinary shell is NOT REA Evidence/Windows/internal-call/atomic mapped-code or
+descendant-cleanup proof; prior runtime identity limitations unchanged.
+
+AFTER-capture analyze-shifted-expression-consumer.cjs binds the exact source/raw
+digest and all8 raw42-field projections/active metadata, before/after controls;
+compares actual expression versus reconstruction and the adjacent positive pair,
+keeping exact decimal values/literals/padding/zero signs separate. Eight metric
+self-checks pass. Host build/default-transform-shifted-expression-analysis1:
+archived FROZEN reader0/empty/report byte-exact, analysis0/readback0/empty/byte-
+identical, input hashes BEFORE+AFTER EACH0, every immediate prefix1/fullPSI0.00/
+0.04%/guard0/nice-n10. BEFORE analyzer snapshot/base964+dirty AFTER-native source/
+status is NOT native clean freeze. Cosmetic inherited shell completion word
+"width" is preserved; actual paths/source/raw digest/eight contexts identify the
+expression-route analysis, not a rerun or mislabeled qualification of width data.
+
+Finite observations: all4 actual-expression/reconstructed pairs have identical
+observed active N32/18 tuples AND TF/STR Character strings; literal/trimmed/value/
+zero-sign differences0 for both consumers. Parent159->160 shifted adjacent pair
+has no TF/STR change in either route/FIXED mode (one comparison per group).
+TF-versus-STR across8 contexts:8 literal/4 trimmed/4 exact-value gaps (all OFF),
+zero both-zero sign gaps. In this sample no expression/reconstruction difference
+explains the diagnostic graph mismatch. This does NOT establish universal route
+equivalence, internal formatter sequence/precision, accepted bias/formatter or
+parity, nor rescue the REJECTED graph or original regression.
+
+Thirty-three supplemental source/reader/report/gate/hash/actual-shell receipts,
+verification-manifest/VERIFICATION-SHA256SUMS bring native archive to97 gzip
+receipts. Both inventories and all compressed/gunzip sizes/hashes/hostbytes
+verified. All host roots/older guard and failure receipts retained; no replay of
+either completed16-row pair. LOW DQ-DV001 actual walkthrough checked first-strict-
+before-repeat, explicit actual branch versus reconstruction, exact native/control
+tuples, frozen reader,8 metric tests and finite comparison coverage. Developer-
+maintainer self-review only, not independent human/system/release assurance.
+Existing HZ-data-corruption-01/HZ-runtime-crash-01/HZ-doc-command-01/rollback stay.
+
+NEXT bounded OFFLINE discriminator, not another native replay or the completed
+measured-shifted-product calculation: compare exact pre-addition operands
+ABS(original)+measured native bias with the measured rounded shifted payload,
+then use observed native powUp. Cover retained264 ON endpoints/220 adjacent pairs
+and all plateaus, preserving source/raw controls and rejected cases. Determine
+whether precision lost AT the addition can distinguish actual display boundaries;
+do not assume any internal operation/precision or fit a tolerance. Prior measured
+shifted*powUp and exact decimal-bias candidates remain rejected/unchanged. This
+is a hypothesis discriminator, not formatter acceptance. Exact conversion/division
+ORIGINAL-SAME/hosted/review/ListItem remain OPEN; no owner-input blocker/pause.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
