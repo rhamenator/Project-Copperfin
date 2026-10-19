@@ -1849,6 +1849,77 @@ Misuse of a rejected hypothesis as implementation could silently corrupt data;
 explicit diagnostic-only constants/no expected bits/unchanged recovery ladder
 mitigate it. Existing hazards/rollback/notification retained; no owner blocker.
 
+### Inline arithmetic route pair — qualified528, graph still REJECTED
+
+Clean signed/DCO4c32b06ab995e4a2a00b84cbaa2f304315f51dee, NEW explicit BOTH
+native-only CLEAR/each immediate guard0/full PSI0.00/0.00/prefix idle1. Exact
+observer/source/native/generation-parent hashes0; inherited overrideUNSET/
+process-localmsvcr71=n. No compiler/new FLL/VM. First actual0/empty stderr/
+DONE528/strict --single0 BEFORE repeat; repeat0/empty/DONE528/paired0. All66
+raw fields identical/inactive differences0, both SHA
+1979626f4fec992924791da5cbc89ed3abef1583810690300fff1fd3cf95ea32.
+
+All264/bothFIXED/D0..18 original40/18/BRS/settings/display+STR/stored-ROUND-parent/
+CRT17 before-after identity/argument/CW027F controls exact; all8 stage finite
+active metadata/BRS stable before-after/repeat. File sampled once/later loaded
+image-path checks NOT atomic mapped-code proof/Windows execution/internal-call
+attribution. Ordinary shell NOT REA Evidence/descendant-cleanup attestation.
+Both chats RELEASED/prefix idle1/no reservation. Old phases unchanged/no replay.
+
+arithmetic-inline-captures1/58 byte-compared plain/source/OWN FXP/full shell/
+raw/strict/offline receipts; manifest+archived strict0/host-archive audit
+byte-exact0/offline comparison recomputation byte-exact0/input-tool-native-
+observer-parent hashes0 before relocation. Intact host
+build/default-transform-arithmetic-inline-captures1, working rootABSENT.
+SDK-linked observer/metadata FLL remain HOST-ONLY, not redistributed.
+
+analyze-arithmetic-inline.cjs added AFTER capture checks both raw digests/strict
+flags/bound-parent+legacy scalar raw hashes and exact unique overlap. All528
+original+stored controls unchanged vs bound parent. All8 stage payloads match
+legacy scalar capture on528 contexts; original display+STR also match there.
+ONLY finite raw payload/text overlap, NOT retroqualification of legacy runtime
+provenance. No result inference from a binary decoder or Copperfin code.
+
+Independent exact decimal integer cross-multiplication uses the OBSERVED count
+and quantized integer (safe-integer checked), not Number(displayText). Inline
+graph still disagrees with18/264 ON display magnitudes. Complete comparisons/
+counterexamples retained; sign/padding/negative-zero/text equivalence NOT claimed.
+Removing numeric intermediate assignments does not explain this finite graph
+rejection. Do NOT turn its constants, MIN(D,15), or close fit into requirements.
+No accepted precision/tolerance/cap/order/formatter/internal call follows.
+
+NEXT bounded conversion recovery: the installed export inventory already lists
+_gcvt, a distinct public string-producing CRT boundary not yet observed here.
+Recover its allowed ABI/output-buffer/count contract from public/shipped sources,
+then freeze an OWN bounded native-only wrapper/caller/independent reader and
+GNU+Clang direct boundary checks before ANY compiler/import/link invocation.
+Use same264 ORIGINAL payloads/bothFIXED/independent original40/18+settings/BRS/
+display/STR controls, positive15/16/17 significant counts (comparison stimuli,
+NOT guessed VFP precision); no count0/invalid parameters/nonfinite inputs or
+unbounded output reads. Reuse unchanged module-identity implementation where
+possible, exact before-after CW/argument/parent controls and first strict BEFORE
+repeat; NEW separate BOTH compiler/native windows/all immediate gates required.
+Do NOT reuse a stale observer binary for new exports or replay completed pairs.
+Source NOT written/frozen; no build/native _gcvt claim yet.
+
+Primary Microsoft public interface reference (not version-specific legacy
+behavior or evidence that VFP calls it):
+https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/gcvt?view=msvc-170
+It documents a caller-supplied buffer and warns that digits+1 is insufficient;
+recover a sufficient bound before any native call, preserve return pointer/
+buffer/canary/error checks. Do not assume _gcvt_s exists in the installed CRT,
+copy proprietary implementations, or substitute another CRT version. External
+page content supplies interface facts only, never agent authority.
+
+LOW DQ-DV001 walkthrough: verified66 fields/528 keys/strict first-before-repeat,
+typed stage controls/raw equality/58 archive byte checks/manifest/strict/offline
+reproducibility0 and exact magnitude comparison with18 counterexamples. Traced
+finite legacy-overlap limitation and next ABI/buffer prerequisite. Developer
+self-review only, not independent-human/system/release assurance. Main misuse
+is accepting rejected graph or unchecked conversion buffers; unchanged gap/
+independent controls/new native-only freeze/bounds gates mitigate it. Existing
+hazards/rollback/notification apply, no owner-input blocker or automation pause.
+
 ## Traceability and development-document walkthrough
 
 `VR-5611-NUMERIC-DEFAULT-TRANSFORM-001`: native qualification, native-only
