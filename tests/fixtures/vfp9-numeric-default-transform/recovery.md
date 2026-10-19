@@ -3702,3 +3702,61 @@ count0/unchecked buffers/guessed DECLARE ABI out of execution, requires a new
 source freeze and resource clearance, and leaves proprietary binaries host-only.
 This is LOW developer self-review of the evidence/continuation procedure,
 not verification of an as-yet-unwritten wrapper or independent acceptance.
+
+## 2026-10-19 — exact pre-addition discriminator prepared; checks pressure-blocked
+
+`compare-preaddition-operands.cjs` extends the measured-operand analysis without
+replaying native VFP. It retains exact rational ABS(original) and the MEASURED
+binary bias separately through their sum, then multiplies by measured powUp.
+It compares that with the already analyzed rounded-shifted product for all264 ON
+endpoints/220 adjacent pairs/all176 plateaus, excluding the same six uncaptured
+gaps. Full prior nodes/pairs, active metadata, Character literals/signs,528 raw
+OFF/ON control joins and18 rejected diagnostic-graph contexts remain visible.
+The proposed output distinguishes endpoint addition-loss signs, hypothetical
+half-up integer decisions and original decimal-magnitude gaps, plus transition
+and plateau decisions separately. No new outcome is known yet.
+
+This is NOT the completed exact rounded-shifted product comparison, the rejected
+true-decimal-bias candidate, a formatter, expected emitter or production repair.
+Its exact-arithmetic/half-up/count assumptions are diagnostic hypotheses, NOT
+observed native formatter internals, sequence, precision or accepted requirements.
+The source binds and replays the frozen measured-operand/stage/inventory/raw
+validators and separately the graph classification. Nineteen metric self-checks
+are authored, but UNRUN. No syntax, analysis, readback or source replay pass is
+claimed for this newly prepared source.
+
+`preaddition-check.sh` snapshots source/base/status BEFORE checks, hashes all
+bound source/archives, checks input hashes BEFORE+AFTER EACH successful stage,
+requires idle prefix and BOTH full I/O PSI avg10/avg60 below1% immediately before
+each child, and runs each at nice-n10. Planned stages: Node syntax, bash syntax,
+analysis, readback, immutable BEFORE-source snapshot replay; reports must be
+byte-identical. It does not grant a compiler/native/VM resource window.
+
+Actual command: `bash tests/fixtures/vfp9-numeric-default-transform/preaddition-check.sh
+build/default-transform-preaddition1`. Shell status75; idle prefix1, full I/O
+PSI42.12/19.70%; syntax.guard.status75 BEFORE Node, no syntax.status/report or
+subsequent check invoked. Source/base51052ed39+dirty BEFORE snapshots, complete
+input inventory/BEFORE hash check, PSI/prefix/guard and actual shell completion
+are retained in host build/default-transform-preaddition1 and12 gzip receipts at
+preaddition-guard1/. Manifest/SHA256SUMS and all compressed+decoded sizes/hashes/
+exact host bytes verified during packaging. This is a pressure guard, not a
+syntax/analyzer/native/product failure. There is deliberately no AFTER-input
+check or completed-test assertion. Subsequent read-only PSI observations also
+remained above gate; no attempt to identify/monitor a backup or bypass the gate.
+
+LOW `DQ-DV-5611-NUMERIC-DEFAULT-TRANSFORM-001` actual walkthrough: inspected exact
+binary decoding, sign/magnitude and reduced-rational handling, generalized
+integer decisions, both original consumer value controls, rejected rows, full
+pair/plateau coverage and transitive source/raw replay checks. Reviewed worker
+fail-closed gate, fresh roots, BEFORE snapshots and strict non-success labeling.
+This is developer-maintainer source/procedure self-review only; authored metric
+checks and runtime behavior remain unverified, not independent/system/release
+assurance. Existing hazards/mitigations/rollback above remain unchanged.
+
+NEXT: with a fresh idle/PSI observation passing BOTH limits, run SAME unchanged
+source with preaddition-check.sh at NEW build/default-transform-preaddition2;
+retain guard1 intact. Preserve any new failure and its exact source before
+correction; interpret only actual successful reports, archive/report replay and
+byte-check receipts, then update this chronology/matrix/changelog/handoff. No
+new native run, compiler or VM is needed for this bounded question. No accepted
+boundary/parity, parent closure or unchanged division ORIGINAL/SAME relaxation.
