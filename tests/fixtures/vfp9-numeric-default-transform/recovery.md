@@ -4513,3 +4513,52 @@ retain separate capture provenance, test all five consecutive metadata edges,
 classify literal/padding/value/zero-sign changes without guessing a general rule.
 No native rerun required. Exact conversion/display/propagation, unchanged division
 ORIGINAL/SAME/hosted/review and ListItem acceptance remain OPEN.
+
+### Index-exact original metadata13..18 join — 2026-10-20
+
+join-original-scale-consumers.cjs binds both distinct native manifests/source
+commits/raw digests and both archived analysis manifests.48 compound keys
+(parent/FIXED/scale), all raw42-field target projections, original/public ROUND
+active control tuples/settings and CRT identity tuples are checked BEFORE
+joining. Only inactive Numeric integer slots are removed.48 shared-control
+comparisons pass; separate source/raw provenance retained, not same-session or
+internal-call evidence.40 consecutive metadata edges/24 signed adjacent pairs/
+48 target TF-versus-STR contexts, eight decimal metrics and five rejection
+self-checks (duplicate key, altered control/runtime/width/payload).
+
+Preserve build/default-transform-original-scale-join1: both frozen archived
+analyzers+syntax0, then own analyzer1 from an incorrect global route-index
+assumption (indices restart under each FIXED mode). No failed-stage AFTER,
+readback/replay claimed. Corrected to raw compound identity and prior report
+lookup by index+parent+FIXED+kind. NEW original-scale-join2 completes six guarded
+stages0/empty: both frozen analyzers/source-byte identity/byte-exact old reports,
+syntax, join, independent readback, gzip-frozen join at original module path.
+Join/readback/replay byte-identical, immutable input hashes BEFORE+AFTER EACH0,
+idleprefix1/full I/O PSI both thresholds pass/nice-n10. No native/compiler/VM.
+104 gzip source/status/gates/hash/report/full-command/completion receipts across
+both roots are compressed/decoded-size/hash and exact-host-byte verified under
+original-scale-join-captures1 with manifest/SHA256SUMS. Existing captures untouched.
+
+Observed finite results:13->14 changes four TF exact decimal values (all OFF),
+while14->15/15->16/16->17/17->18 each changes four literal/trimmed spellings but
+zero values. No metadata edge changes STR or zero sign. Across24 signed adjacent
+payload pairs TF distinguishes14, STR24. TFvsSTR48 literal/28 trimmed/20 value/
+seven zero-sign gaps remain separate. No universal metadata/rounding/precision
+rule, tolerance/cap or accepted formatter inferred.
+
+LOW DQ-DV001 developer walkthrough: validate compound-key uniqueness and complete
+grid, exact per-capture projections, reject mutated cross-capture controls,
+preserve failed assumption/source/status, replay immutable analyzers and new
+source, inspect metric categories and byte-verification. Developer self-review
+only, not independent human/system/release assurance; existing hazards/rollback/
+notification/unchanged ORIGINAL assertion boundaries retained.
+
+NEXT bounded source discriminator: SAME four original signed payloads, width40,
+target metadata13/14, SET DECIMALS12/14, FIXED OFF/ON (16 routes/32 records).
+Vary the previously fixed D13 setting around the observed metadata13->14 value
+boundary, with fresh inline reconstruction per consumer and independent raw
+parent/public ROUND controls. No guessed target strings/arithmetic/shift/signcopy
+or repeated D13 native capture. Prepare/fail-closed reader and guarded-worker
+source checks first; native only after signed source freeze and NEW explicit
+audit+DAW/Request Guard resource coordination. Exact display/conversion/
+propagation, division ORIGINAL/SAME/hosted/review and ListItem remain OPEN.
