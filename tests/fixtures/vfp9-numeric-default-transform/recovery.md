@@ -4514,6 +4514,48 @@ classify literal/padding/value/zero-sign changes without guessing a general rule
 No native rerun required. Exact conversion/display/propagation, unchanged division
 ORIGINAL/SAME/hosted/review and ListItem acceptance remain OPEN.
 
+### DECIMALS12/14 source preparation checkpoint — 2026-10-20
+
+emit-original-setting-consumer.cjs generates original-setting-consumer.prg and
+original-setting-consumer-cases.json: SAME four signed original D13 payloads,
+SET DECIMALS12/14, metadata13/14, width40/bothFIXED,16routes/32records/42fields.
+No numeric argument/result assignment; fresh inline reconstruction for every
+consumer, original N40/18/public inline ROUND before+after. Independent literal
+source checker check-original-setting-source.cjs checks168 inventory/source/
+route/runtime assertions. It does NOT qualify a results reader or native worker.
+Source-only ten guarded stages in build/default-transform-original-setting-source1
+all0/empty: generation2, syntax2, source check, regeneration2, frozen gzip source/
+cases/checker replays3. Regenerated/replayed source/cases/report byte-identical,
+immutable hashes BEFORE+AFTER EACH0, idleprefix1/fullPSI0/0/nice-n10.100 receipts
+at original-setting-source-checks1, compressed/decoded-size/hash/exact-host-byte
+verified with manifest/SHA256SUMS. Base3f129dceb+dirty source is NOT native freeze.
+No native/compiler/VM/newFLL or target/control display predictions.
+
+Important new-setting boundary: old D13 original/ROUND display and ROUND payload
+are NOT valid expectations at D12/14. Old raw seed evidence still establishes
+original payload/provenance/runtime binding, not changed-setting controls. NEXT
+independent results reader must validate original payload/active N40/18/runtime,
+new settings and target metadata/payload, observe new-setting parent/ROUND
+tuples without guessing their values, verify before/after invariance, per-context
+repeat equality and cross-metadata control equality at SAME parent/setting/FIXED.
+Do not silently copy D13 display/ROUND expectations or claim them independently
+native-qualified. Reader must retain raw newly observed ROUND metadata/payload
+and strings, with exact finite/active metadata/runtime checks and strict-single
+BEFORE repeat. Synthetic tests must reject changed active controls and malformed
+records while explicitly labeling arbitrary synthetic strings NOT expectations.
+Then author fail-closed per-child guarded worker/synthetic helper tests, source
+and archived-source qualification; only after clean signed freeze/NEW explicit
+audit+DAW/Request Guard clearance may native execute. No worker authored/run yet.
+
+LOW DQ-DV001 developer walkthrough: inspect independent literal16-route grid,
+all repeated fresh consumer expressions,42-column layout, absence of numeric
+result assignment, changed-setting nonprediction policy, actual168 checks,
+byte-identical regeneration/replay and per-child gates/hash receipts. Maintainer
+self-review only, not independent human/system/release assurance. Existing hazard/
+rollback/notification/ORIGINAL assertion-preservation boundaries unchanged.
+Full source qualification/native evidence/recovery/formatter acceptance remain
+OPEN; no parent/division/ListItem completion or compatibility change claimed.
+
 ### Index-exact original metadata13..18 join — 2026-10-20
 
 join-original-scale-consumers.cjs binds both distinct native manifests/source
