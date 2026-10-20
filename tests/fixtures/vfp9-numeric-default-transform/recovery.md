@@ -4514,6 +4514,57 @@ classify literal/padding/value/zero-sign changes without guessing a general rule
 No native rerun required. Exact conversion/display/propagation, unchanged division
 ORIGINAL/SAME/hosted/review and ListItem acceptance remain OPEN.
 
+### DECIMALS12/14 qualified native pair — 2026-10-20
+
+At clean signed/DCO/G source freeze886b8720d56fa770847c79a9dacba4dbdf1d0a5f,
+NEW audit+DAW explicit CLEAR and Request Guard no-conflict/release preceded ONE
+worker invocation20:46:25..20:46:33UTC. Seven children0/empty: regenerate source/
+cases, parent-source reader, first native, strict-single BEFORE repeat, repeat,
+paired audit. Every child idleprefix1/full I/O PSI avg10+avg60=0/0/guard0/nice-n10,
+immutable input hashes BEFORE+AFTER EACH0. No compiler/newFLL/VM; observer reused
+and process-local Microsoft32 override/inheritedUNSET verified. Prompt RELEASE
+to allthree after completion; no remaining own native/compiler/VM reservation.
+
+32records/run/all42rawfields repeat-identical/inactive slots0, rawSHA both
+47232c78c28f7b7536b654b3c85fd94bd7a6eead587f719298f80762f02c2499.
+Original payload/N40/18/runtime and target metadata/payload/settings are exact;
+new-setting before-after/repeat/cross-metadata parent/ROUND invariance passes.
+Changed-setting original/ROUND tuple values remain newly observed, not copied
+D13 expectations or formatter acceptance. No target comparison metrics yet.
+
+Validated complete root moved to
+build/default-transform-original-setting-consumer-captures1; workerroot absent.
+100 source/ownPRG+FXP/raw/status/hash/gate/runtime/actual shell initial+completion/
+fresh coordination+release gzip receipts at matching fixture archive; no SDK/FLL
+binary. Manifest/checksumlist and compressed/decoded size/hash/exact host bytes
+verified. Combined post-run inspection shell1 is final idle-prefix pgrep, NOT
+native or reader failure. Frozen native-reader replay at original module path
+with explicit archive/current source identity0/empty/report byte-exact to audit,
+input hashes before+after0/prefix1/fullPSI0/0/nice10, host
+original-setting-native-reader-replay1.14 verified supplemental receipts bring
+native archive114; earlier source100+283 receipts intact. AFTER-capture dirty
+archive snapshots are NOT native freeze. Ordinary shell NOT REA Evidence or
+Windows/internal-call/atomic mapped-image/descendant-cleanup attestation.
+
+LOW DQ-DV001 actual developer walkthrough: fresh three-party coordination,
+unchanged signed source, per-child resource/hash gates, strict first-reader
+before repeat, all42rawfields/control/runtime equality, prompt release, separate
+native/AFTER-capture provenance, gzip-reader identity/readback and all receipt
+byte checks. Maintainer self-review only, not independent human/system/release
+assurance. Existing hazard/rollback/notification/ORIGINAL boundaries unchanged.
+
+NEXT bounded AFTER-capture analyze-original-setting-consumer.cjs: bind source
+freeze/digest/native manifest/all32 raw42 projections and observed control tuples.
+Compare16 metadata13->14 interventions at SAME parent/D/FIXED,16 setting12->14
+interventions at SAME parent/metadata/FIXED,16 signed adjacent payload pairs
+(two pairs x2 D x2 metadata x2 FIXED),32 TFvsSTR contexts. Setting interventions
+must NOT presume control/ROUND values unchanged across D. Separate literal/
+padding/exact decimal value/zero-sign with independent metric tests; no guessed
+strings/threshold/cap/universal formula. Frozen reader/syntax/analysis/readback/
+gzip-analyzer replay and immutable inputs/gates must pass+archive BEFORE metrics
+are interpreted. No native rerun/compiler/VM needed; formatter/conversion/
+propagation/division ORIGINAL/SAME/hosted/review/ListItem acceptance remain OPEN.
+
 ### DECIMALS12/14 reader and guarded-worker qualification — 2026-10-20
 
 audit-original-setting-consumer.cjs now independently validates the literal
