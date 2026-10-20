@@ -4514,6 +4514,55 @@ classify literal/padding/value/zero-sign changes without guessing a general rule
 No native rerun required. Exact conversion/display/propagation, unchanged division
 ORIGINAL/SAME/hosted/review and ListItem acceptance remain OPEN.
 
+### Unwired selected-consumer spelling hypothesis — 2026-10-20
+
+check-original-setting-spelling-hypothesis.cjs binds the complete48 selected
+classification report by manifest digest/source/count/compound identities.
+Diagnostic candidate only: trim observed STR leading padding; selected zero OFF
+becomes bare0 with raw-input sign, zero ON keeps observed fractions/exponent
+spelling with raw-input sign; nonzero observed STR body unchanged. Finite input
+payload/sign/count/context/width validation, no binary floating conversion or
+guessed target values. Thirty independent positive/negative zero/nonzero/
+fraction/exponent and invalid text/nonfinite payload/context/count/width/sign
+tests; candidate expected cases synthetic, NOT native compatibility assertions.
+Complete48 exact observedTF versus candidate hex comparisons retain every
+mismatch rather than discarding it or weakening ORIGINAL assertions.
+
+Host original-setting-spelling-hypothesis1 five guarded stages0/empty: frozen
+parent classifier/current-byte identity/byte-exact report, syntax, candidate
+analysis, independent readback and gzip-frozen source original-path replay.
+Reports byte-identical/immutable hashes BEFORE+AFTER EACH0/idleprefix1/fullPSI
+0/0/nice-n10.52 gzip source/status/gate/hash/actualcommand/report receipts at
+original-setting-spelling-hypothesis-captures1, compressed/decoded size/hash/
+exacthostbytes verified before interpretation. Base79d50b749+dirty snapshot is
+AFTER-capture, not native freeze. Prior inputs/failures untouched.
+
+Finite outcome48 exactTFhex matches/0 mismatches. This establishes ONLY the
+tested rendering relation over these already-observed public STR inputs, NOT
+how Copperfin should compute numeric decimal digits, an internal native call
+graph or general default formatter. No production helper/hook/expected emitter,
+numeric-conversion algorithm, tolerance/cap or compatibility acceptance.
+
+LOW DQ-DV001 actual developer walkthrough: validate native-source/context/count
+identity,30 independent candidate/boundary tests, explicit raw sign for rounded
+zero versus observed nonzero sign, full48 exacthex comparisons/mismatch retention,
+per-child status/resource/hash gates, source/readback/archive bytes. Maintainer
+self-review only, not independent human/system/release assurance; existing
+hazards/rollback/notification/ORIGINAL boundaries retained. No native/compiler/VM.
+
+NEXT bounded broader retained-oracle test: original528-context str-fixed pair,
+original Numeric metadata18. OFF selects actual public STR18; ON selects actual
+current-D originalStrHex. Bind current native raw/audit/runtime/meta identities
+and original control graph before selection; reuse UNCHANGED raw-sign/zero-
+rendering logic (only validation adapts to admitted broader observed counts).
+All528 exact TF hex comparisons with complete per-index/count/source provenance,
+retain every mismatch and do not fit a count cap or tolerance. First frozen
+native reader/source/parent replay, independent metric/boundary tests, gated
+analysis/readback/gzip-source replay and archives. This is broader value/payload/
+setting evidence, not repeating48 or completed STR count-tuple sufficiency tests.
+No new native stimulus required. Exact numeric conversion/default formatting/
+propagation, division ORIGINAL/SAME/hosted/review and ListItem acceptance OPEN.
+
 ### Selected-consumer exact spelling classification — 2026-10-20
 
 analyze-original-setting-spelling.cjs binds the144-comparison report by manifest
