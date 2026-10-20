@@ -4514,6 +4514,58 @@ classify literal/padding/value/zero-sign changes without guessing a general rule
 No native rerun required. Exact conversion/display/propagation, unchanged division
 ORIGINAL/SAME/hosted/review and ListItem acceptance remain OPEN.
 
+### Selected-consumer exact spelling classification — 2026-10-20
+
+analyze-original-setting-spelling.cjs binds the144-comparison report by manifest
+digest, validates all selector/source/count/payload identities and complete48
+parent/FIXED/D/metadata coverage. Select ON same-setting STR and OFF metadata-
+count STR; recompute all144 exact decimal/literal/trimmed/zero-sign metrics,
+not merely the selected aggregate. Raw text/profiles preserve leading spaces,
+sign/fraction/trailing-zero/exponent spellings and input payload sign. Fourteen
+independent profile/metric tests and six duplicate/missing/damaged identity/count/
+selector rejection tests; no target normalization or replacement strings.
+
+Host original-setting-spelling1 five guarded stages0/empty: frozen parent cross-
+consumer replay/current-source identity/byte-exact report, syntax, classification,
+independent readback and gzip-frozen source original-path replay. Reports byte-
+identical/input hashes BEFORE+AFTER EACH0/idleprefix1/fullPSI0/0/nice-n10.
+52 gzip source/status/gate/hash/actualcommand/report receipts at original-setting-
+spelling-captures1, compressed/decoded sizes/hashes/exacthostbytes verified before
+interpreting. Basebec48f066+dirty AFTER-capture snapshot not native freeze.
+Existing captures/failures intact; no native/compiler/VM/production behavior.
+
+Observed48 selected pairs:36 padding-only,12 zero-spelling,0 different-value,
+0 equal-nonzero-different-spelling. OFF24:18 padding-only/six zero-spelling/three
+zero-sign gaps; ON24:18 padding-only/six zero-spelling/six zero-sign gaps. All
+literal pairs differ due STR width40 padding; all12 trimmed differences are
+zero. OFF TF is bare0 or-0 versus fixed fractional STR zero (six contexts);
+ON TF retains fractional digits and negative input sign while STR zero is
+unsigned (six contexts). Nine sign gaps correspond to negative input payloads;
+three positive OFF zeros differ only by fractional zero spelling. This is raw
+finite evidence, not a universal zero/rounding/default formatter rule.
+
+LOW DQ-DV001 actual developer walkthrough: select one actual STR observation per
+complete context, reject wrong counts/source identities/duplicates/missing rows,
+recompute parent metrics, inspect raw12 zero cases and input sign, distinguish
+padding/value/zero sign/fraction spellings, gate/hash/status/byte-exact source
+readback and archive verification. Maintainer self-review only, not independent
+human/system/release assurance. Existing hazards/rollback/notification and exact
+ORIGINAL assertion boundaries retained; no compatibility acceptance.
+
+NEXT bounded unwired spelling hypothesis test from observed48: remove public
+STR leading padding; for a numerically zero selected result, OFF emits bare0
+with raw-input negative sign, ON preserves its fractional zeros with raw-input
+negative sign. Preserve nonzero observed STR body. Test explicit positive/
+negative zero and nonzero, fraction/exponent spelling and invalid count/context
+boundaries independently, then compare ALL48 exact TF hex strings with source/
+count provenance; retain every mismatch. Do not treat selected public STR values
+as a newly recovered numeric conversion algorithm, hook production, weaken exact
+ORIGINAL tests or claim universal parity. Gated source/readback/gzip-replay/
+archive first, then seek broader retained-oracle count/payload coverage before
+any new native stimulus. No native rerun needed for this hypothesis test.
+Exact propagation/conversion/formatter implementation, division acceptance and
+ListItem supplied-column READ remain OPEN.
+
 ### Observed STR cross-consumer discriminator — 2026-10-20
 
 compare-original-setting-str.cjs binds allthree source/raw+analysis manifests
