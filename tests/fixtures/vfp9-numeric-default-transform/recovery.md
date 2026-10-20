@@ -4348,3 +4348,61 @@ frozen worker ONCE, strict-single BEFORE repeat, paired qualification, prompt
 release and archive BEFORE AFTER-capture interpretation. No target display rule,
 formatter/helper/hook/expected emitter, production change/PR/parent closure or
 owner-input pause. Exact conversion/display/division/ListItem acceptance OPEN.
+
+### Intermediate14..17 first native attempt — pressure stop, NOT qualified
+
+Owner directly restarted the heartbeat on2026-10-20. Live admitted parents
+#5611/#6776/#7189 still OPEN/owner/exact agent-approved; derived tracking#7210
+unchanged. SAME clean signed/DCO/G source freeze
+a8f46bbf80c83d8859353c8d0f81ec5af5130007, no source modification/native rerun
+of any completed checkpoint. NEW audit+DAW explicit native-only CLEAR and
+Request Guard released/no conflict, actual request/snapshot/message receipts
+retained. Audit limited concurrent work to remote CI-log review; no local
+conflicting launch was admitted. Reused observer/process-local Microsoft32
+binding/inherited overridesUNSET; no compiler/newFLL/VM/reboot/backup monitoring.
+
+Frozen original-scale-middle-consumer-capture.sh ran ONCE. Three preparatory
+stages0/empty, first native0/empty; their immediate prefix1/fullPSI0.00/0.01%/
+guard0/nice-n10/input hashes BEFORE+AFTER EACH0 retained. BEFORE first-structure
+reader: prefix1 but full I/O PSIavg10/avg60=1.48/0.33%, guard75 and workerexit75.
+The strict-single reader DID NOT launch; no reader status/JSON/AFTER hashes,
+repeat or paired audit exists. No paired qualification, target comparison,
+metadata conclusion or compatibility result is claimed from this attempt.
+First raw report/out/result files match, observed terminator DONE|32, SHA256
+aa6b7f0675cd237c89c0719abce44ea693e90efdc3fa9a92c292a7472a693a43.
+Basic preservation/terminator checks are NOT the unrun independent reader.
+The pressure guard is a resource stop, not a native/production defect or a
+reason to weaken the gate, bypass first-reader order or invent expected text.
+
+Promptly RELEASED allthree resource owners; audit acknowledged no capacity/
+no paired qualification. Request Guard subsequently reported a modest local
+test window; future native/compiler work must coordinate NEW availability.
+Post-stop prefix idle; combined inspection shell exit1 is its FINAL idle-prefix
+pgrep, not a failed native child. No active own native job/reservation.
+After fresh packaging gates, validated/moved partial root to
+build/default-transform-original-scale-middle-consumer-guard1; original worker
+root now ABSENT, no report overwritten. New archive original-scale-middle-
+consumer-guard1 contains73 gzip receipts plus manifest/SHA256SUMS: exact source/
+PRG/ownFXP/raw/status/gates/hashes/actual shell/inspection/coordination/releases.
+Every compressed/decoded size/hash/exact host byte verified. No SDK/FLL binary.
+Ordinary shell is NOT REA Evidence, Windows/internal-call/atomic-image or
+descendant-cleanup attestation. Earlier source359 receipts/test correction and
+Oct19 coordination-only deferral root remain intact, not retroqualified.
+
+LOW DQ-DV001 actual walkthrough: new explicit clearance, unchanged clean source,
+three preparatory passes/native0, preserved first raw bytes, demonstrated
+fail-closed75 BEFORE strict reader/repeat, prompt release, partial-not-qualified
+manifest and byte-verified archive. Developer-maintainer self-review only,
+not independent human/system/release assurance. Existing HZ-data-corruption-01/
+HZ-runtime-crash-01/HZ-doc-command-01 mitigations, rollback/notification and
+ORIGINAL/SAME preservation remain unchanged. No behavior shipped/parent closure.
+
+NEXT only after pressure block actually clears AND NEW audit+DAW native-only
+CLEAR plus Request Guard current no-conflict/release: fresh idle/full I/O PSI
+avg10 ANDavg60<1% EACH child. SAME caller/reader/worker/source bytes (bind to
+a8f46bbf8) at a new clean signed evidence head may run a NEW full pair at the
+now-absent original working root. Preserve guard1 intact; the unqualified first
+attempt is not a completed native pair. Strict-single MUST pass BEFORE repeat,
+then paired raw qualification/prompt release/archive BEFORE AFTER-capture
+analysis. Do not reuse old clearances or interpret this partial report instead.
+No new compiler/FLL/VM needed. No owner-input blocker or automation pause.
