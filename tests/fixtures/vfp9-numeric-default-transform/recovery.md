@@ -4514,6 +4514,43 @@ classify literal/padding/value/zero-sign changes without guessing a general rule
 No native rerun required. Exact conversion/display/propagation, unchanged division
 ORIGINAL/SAME/hosted/review and ListItem acceptance remain OPEN.
 
+### Broader528 retained spelling test — owner-directed, 2026-10-20
+
+check-original-broad-spelling-hypothesis.cjs preserves the narrow candidate's
+rendering body unchanged; only validation admits observed settings0..18 and
+metadata18. Original str-fixed raw89a420760a2332430158427778908a952d84966a6d4eee14f090c1a9a6332192,
+all528 source/index/FIXED/payload/N40/18/current-setting tuples validated.
+OFF uses ACTUALstr18Hex; ON ACTUALoriginalStrHex/current-D. All528 exact native
+TFhex comparisons retained, with complete observations and mismatch array.
+Thirty independent boundary/rendering tests retained; no tolerance/cap or
+weakened exact assertion. No original division assertion altered.
+
+Host original-broad-spelling-hypothesis1: frozen native reader/source identity/
+byte-exact audit and gcvt parent graph, syntax, analysis, independent readback,
+gzip-frozen original-path source replay all0/empty/byte-exact. Immutable hashes
+BEFORE+AFTER EACH0/idleprefix1/BOTH fullPSI<1%/nice10.52 source/status/gate/hash/
+actualcommand/report gzip receipts at original-broad-spelling-hypothesis-captures1,
+compressed/decoded sizes/hashes/exacthostbytes verified before interpretation.
+Outcome528 exact matches/0 mismatches (264 OFF/264 ON). Existing48 and earlier
+failed hypotheses untouched. Base62312ee35+dirty AFTER-capture, not native freeze.
+
+This broader exact consumer/rendering relation still takes actual native STR
+digits as INPUT. It is NOT an implemented numeric digit-conversion algorithm,
+universal formatter/internal call graph, or production/compatibility acceptance.
+Exact numeric conversion recovery and unchanged division ORIGINAL/SAME/hosted/
+review/ListItem remain OPEN. LOW DQ-DV001 maintainer self-review/walkthrough:
+inspect unchanged rendering body, broader validator-only delta, exact native
+reader/parent identity, full528 coverage,30 tests, per-child gates/hash/status,
+exacthex mismatch retention and archive bytes; not independent human/system
+assurance. Existing hazards/rollback/notification remain unchanged.
+
+Direct owner steering additionally admits CodeQL alert#1 remediation, tracking
+issue#7214; Numeric checkpoint preserved and temporarily deferred while that
+bounded fix proceeds. Dedicated branch fix/codeql-zip-slip-7214 from main240ac.
+Numeric re-entry: recover actual public STR digit conversion against the retained
+native-only CRT/count evidence; do not substitute these observed STR inputs for
+a Copperfin implementation or relax ORIGINAL. No native/compiler/VM run here.
+
 ### Unwired selected-consumer spelling hypothesis — 2026-10-20
 
 check-original-setting-spelling-hypothesis.cjs binds the complete48 selected
