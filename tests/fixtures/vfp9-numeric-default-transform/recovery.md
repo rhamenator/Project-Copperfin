@@ -4514,6 +4514,63 @@ classify literal/padding/value/zero-sign changes without guessing a general rule
 No native rerun required. Exact conversion/display/propagation, unchanged division
 ORIGINAL/SAME/hosted/review and ListItem acceptance remain OPEN.
 
+### DECIMALS12/14 reader and guarded-worker qualification — 2026-10-20
+
+audit-original-setting-consumer.cjs now independently validates the literal
+16-route grid/32 records/all42 fields, old raw-parent8 payload/runtime provenance,
+actual new settings and target active metadata/payload. New-setting original
+display/STR and public ROUND active metadata/payload/display/STR are observed,
+NOT copied D13 expectations or guessed constants. Original active N40/18/payload/
+runtime remain anchored; newly observed ROUND is finite Numeric with matching
+raw payload, without assuming its width/decimals/value. Before/after, per-context
+repeat and SAME parent/setting/FIXED cross-metadata control equality are mandatory.
+Raw observations retain active control tuples and ROUND metadata/payload. Only
+the inactive Numeric integer slot is normalized; no payload/text differences
+are tolerated across repeats. Strict-single reader runs BEFORE native repeat.
+
+check-original-setting-reader.cjs passes61 SYNTHETIC tests: baseline single/pair,
+bad order/fields/settings/status/runtime/control/payload/metadata/length/count,
+active before-after damage, synchronized but cross-metadata control drift,
+nonfinite ROUND, fractional DECIMALS and repeat mismatch rejected. Deliberately
+arbitrary coherent finite ROUND tuples (including different width/decimals) are
+accepted, demonstrating that synthetic text and D13 tuples are NOT expectations.
+Inactive-integer-only difference is accepted and reported, never payload damage.
+
+original-setting-consumer-capture.sh requires fresh external coordination flag,
+clean source, inherited override unset, exact reused binary/source identities,
+NEW output root and per-child immutable hashes/idleprefix/BOTH full I/O PSI<1%/
+nice-n10 gates. It preserves partial native reports on failure, runs strict
+first reader BEFORE repeat and paired audit, never silently reuses capture roots.
+check-original-setting-worker.cjs extracts ONLY checked() and passes13 harmless
+synthetic guard/status/hash/partial-report/source-order tests; fake PSI/prefix
+are NOT actual host clearance. No whole native script/native paths executed.
+
+Host original-setting-reader1: four stages0/empty, reader source-only and61 tests;
+reader-replay1: two gzip-frozen source/test stages0/empty/byte-exact/current-source
+identity. New original-setting-source-checks2: all14 stages0/empty, regenerated
+source/cases byte-exact,168 independent source assertions,61 reader+13 worker
+checks. New original-setting-source-replay2: eight archived-source stages0/empty,
+six original-path/current-byte-identity JS replays plus two shell syntax-only
+checks; exact regeneration/168+61+13 again. Immutable hashes BEFORE+AFTER EACH0,
+idleprefix1/fullPSI avg10<=0.00/avg60<=0.03%/nice-n10.283 gzip receipts across
+four roots at original-setting-reader-checks1, all manifests/checksumlists and
+compressed/decoded sizes/hashes/exact host bytes checked; all nine qualification
+source snapshots additionally match current files. Earlier100 source receipts
+unchanged. Base43c7cb51f+dirty source/evidence snapshots NOT native capture.
+
+LOW DQ-DV001 actual developer walkthrough: independently inspect source-route
+grid and new-setting provenance boundary; run source/reader/guard misuse tests,
+preserve new observations, source-byte identity, actual per-child gates/status/
+hashes and archived readbacks. Maintainer self-review only, NOT independent
+human/system/release assurance. Existing hazards/rollback/notification and
+unchanged ORIGINAL assertion boundaries retained. No production behavior change.
+
+NEXT clean signed/DCO source/evidence freeze, then NEW explicit audit+DAW CLEAR
+and Request Guard no-conflict/release plus fresh per-child gates before ONE new
+native pair. No native/compiler/VM/newFLL has run; prior D13 captures untouched.
+No guessed new-setting control/target strings, formula/cap/tolerance or formatter
+parity claim. Full recovery/implementation/division/ListItem acceptance OPEN.
+
 ### DECIMALS12/14 source preparation checkpoint — 2026-10-20
 
 emit-original-setting-consumer.cjs generates original-setting-consumer.prg and
