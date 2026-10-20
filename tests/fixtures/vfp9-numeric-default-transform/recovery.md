@@ -4514,6 +4514,56 @@ classify literal/padding/value/zero-sign changes without guessing a general rule
 No native rerun required. Exact conversion/display/propagation, unchanged division
 ORIGINAL/SAME/hosted/review and ListItem acceptance remain OPEN.
 
+### Index-exact D12/13/14 join — 2026-10-20
+
+join-original-setting-consumers.cjs binds three distinct native source/raw and
+AFTER-capture analysis manifests: original-scale D13/scale13, original-scale-
+middle D13/scale14, original-setting D12+14/scales13+14. Original analyzers
+validate every source observation BEFORE selection;48 compound parent/FIXED/D/
+metadata keys join.48 same-D control and shared original-payload/N40/18/runtime/
+target identity comparisons pass. Across-D original/ROUND strings/payloads are
+retained as observations, NOT assumed equal.24 metadata edges/32 consecutive
+D edges/24 signed adjacent pairs/48 TFvsSTR contexts; eight decimal metric+six
+join misuse checks (duplicate/control/runtime/width/payload rejection, changed-D
+control acceptance without relaxing shared identity).
+
+Host original-setting-join1 seven guarded stages0/empty: allthree frozen source
+analyzers/current-byte identity/byte-exact old reports, syntax, join, independent
+readback and gzip-frozen join replay at original module path. Reports byte-
+identical/input hashes BEFORE+AFTER EACH0/idleprefix1/BOTH fullPSI<1%/nice-n10.
+72 gzip source/status/gates/hash/fullcommand+completion/report receipts at
+original-setting-join-captures1; manifest/checksumlist/compressed+decoded sizes/
+hashes/exact hostbytes verified BEFORE interpreting metrics. Basefb92a017c+
+dirty AFTER-capture source snapshots NOT native freeze. Existing inputs intact.
+
+Finite observations: eachD metadata13->14 changes4 TF values(allOFF)/0 STR.
+D12->13:8 TF spelling/4 value changes,16 STR spelling/8 value changes;
+D13->14:8 TF spelling/8 value changes,16 STR spelling/value changes. No edge
+changes zero sign. Adjacent FIXED ON distinctions2/2 at bothmetadata ONLY D13,
+0/2 at D12/14. OFF TF2/2 at metadata13 and0/2 at14 for allD; STR2/2 bothmetadata/
+bothFIXED onlyD13,0/2 D12/14.48 TFvsSTR contexts48literal/24trimmed/14value/eight
+zero-sign gaps separate. No fitted tolerance/cap or universal formatter rule.
+
+LOW DQ-DV001 actual developer walkthrough: immutable per-source replay before
+selection, full compound grid and source/raw provenance, same-D control versus
+across-D observation policy, six independent join misuse checks, eight metric
+tests, per-child status/resource/hash receipts, byte-exact archived-source
+readback and receipt verification. Maintainer self-review only, NOT independent
+human/system/release assurance. Existing hazard/rollback/notification and
+unchanged ORIGINAL assertions retained; no native/compiler/VM/production change.
+
+NEXT bounded offline cross-consumer discriminator using this SAME48-context
+grid: for each TRANSFORM output, join actual retained public STR outputs at
+counts12/13/14 for SAME parent/metadata/FIXED (144 comparisons). Preserve the
+STR observation's sourceD/count provenance; check payload/active metadata and
+shared runtime identity before comparing. Classify same-setting count versus
+metadata-count exact values/spelling/padding/zero sign, without treating either
+candidate as an internal call graph or universal formatting algorithm. This
+uses observed cross-setting STR counts, not a new native probe or the already
+completed same-D TFvsSTR comparisons alone. Source/replay/metric/hash gates and
+archival must pass before interpreting. Exact conversion/display/propagation,
+division ORIGINAL/SAME/hosted/review and ListItem acceptance remain OPEN.
+
 ### DECIMALS12/14 AFTER-capture analysis — 2026-10-20
 
 analyze-original-setting-consumer.cjs binds native freeze886b8720d and exact
