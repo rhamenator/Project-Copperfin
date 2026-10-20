@@ -4514,6 +4514,57 @@ classify literal/padding/value/zero-sign changes without guessing a general rule
 No native rerun required. Exact conversion/display/propagation, unchanged division
 ORIGINAL/SAME/hosted/review and ListItem acceptance remain OPEN.
 
+### Observed STR cross-consumer discriminator — 2026-10-20
+
+compare-original-setting-str.cjs binds allthree source/raw+analysis manifests
+and the completed D12/13/14 join report digest/projections. Same48-context grid,
+each TF compared with actual retained public STR counts12/13/14 at SAME parent/
+metadata/FIXED=144 comparisons. Shared original payload/active metadata/runtime
+checked; across-D ROUND/control changes remain observations. STR provenance
+retains capture/index/sourceD/publicCount, not fabricated target strings.
+Eight metric+six join+two independent count-selector tests.48 same-setting and
+48 metadata-count selections asserted, including their intentional overlap.
+
+Host original-setting-str1 eight guarded stages0/empty: three frozen analyzers+
+parent join byte-exact replays/current-byte identity, syntax, new analysis,
+independent readback and gzip-frozen source replay at original module path.
+Reports byte-identical/immutable hashes BEFORE+AFTER EACH0/idleprefix1/fullPSI
+both thresholds pass/nice-n10.82 source/status/gate/hash/fullcommand+completion/
+report gzip receipts at original-setting-str-captures1, all compressed/decoded
+sizes/hashes/exacthostbytes verified before interpretation. Base7a14bff46+dirty
+AFTER-capture snapshots not native freeze. Existing source/capture failures intact.
+
+Finite observations: all144 comparisons144 literal/108 trimmed/82 exact-value/
+16 zero-sign gaps. Same-setting count48 comparisons48literal/24trimmed/14value/
+eight zero-sign gaps; metadata-count48 comparisons48literal/23trimmed/14value/
+five zero-sign gaps. ByFIXED: OFF metadata-count24 comparisons0 value gaps but
+six trimmed/three zero-sign gaps; ON same-setting24 comparisons0 value gaps but
+six trimmed/six zero-sign gaps. The opposite count selectors each have14 value
+gaps. Thus selecting OFF metadata-count/ON same-setting count has zero observed
+decimal-value gaps across48, but twelve trimmed-spelling and nine zero-sign gaps
+remain. This finite observed consumer relation is NOT an internal call graph,
+general formatter/rounding/conversion policy or implementation acceptance.
+
+LOW DQ-DV001 actual developer walkthrough: rebind source/parent-join digests,
+compare complete compound-grid projections, verify public count provenance,
+explicit selector overlap/count tests, exact decimal/zero metrics, reject damaged
+shared identity while allowing across-D controls, actual per-child gates/hash/
+status, source/report replay and archive bytes. Maintainer self-review only, not
+independent human/system/release assurance. No native/compiler/VM/production
+change; existing hazards/rollback/notification/ORIGINAL boundaries retained.
+
+NEXT bounded offline selected-consumer spelling recovery: choose ON same-D STR
+and OFF metadata-count STR from these actual144 comparisons, assert48-context
+coverage and source/count identity, inspect/classify all twelve trimmed-text
+differences separately from leading padding and nine zero-sign differences.
+Preserve raw signed-zero/width/decimal spelling and exact decimal-value evidence;
+do not guess a normalization from aggregates, relax exact ORIGINAL assertions,
+or call finite numeric equality parity. Author source/metric/rejection tests,
+gated analysis/readback/gzip-source replay and verified archive BEFORE adopting
+any spelling hypothesis or choosing a further native stimulus. No native rerun
+needed. Exact propagation/conversion/formatter implementation, division
+ORIGINAL/SAME/hosted/review and ListItem acceptance remain OPEN.
+
 ### Index-exact D12/13/14 join — 2026-10-20
 
 join-original-setting-consumers.cjs binds three distinct native source/raw and

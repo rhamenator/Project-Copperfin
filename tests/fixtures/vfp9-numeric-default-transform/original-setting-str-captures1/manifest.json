@@ -1,0 +1,663 @@
+{
+  "afterCapture": true,
+  "nativeInvoked": false,
+  "sourceBase": "7a14bff463b8a5c5bb312613fcf15d7db2342d16",
+  "files": [
+    {
+      "name": "analysis.guard.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/analysis.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "analysis.inputs-after.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/analysis.inputs-after.txt",
+      "bytes": 69901,
+      "sha256": "683b1eb41c452dc04d13bf7853579439933c54957e6ec9dd177cb35bc9b15043",
+      "gzipBytes": 2812,
+      "gzipSha256": "9ec3f6de37379b81afe0b62f1605b4956fb6db681a5bced383d58cfae728c975"
+    },
+    {
+      "name": "analysis.inputs-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/analysis.inputs-before.txt",
+      "bytes": 69901,
+      "sha256": "683b1eb41c452dc04d13bf7853579439933c54957e6ec9dd177cb35bc9b15043",
+      "gzipBytes": 2812,
+      "gzipSha256": "9ec3f6de37379b81afe0b62f1605b4956fb6db681a5bced383d58cfae728c975"
+    },
+    {
+      "name": "analysis.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/analysis.json",
+      "bytes": 127510,
+      "sha256": "9afbaec6cf496ee6efc78daecdbc0371064ad4ab749eb363352d1d1dfadbf337",
+      "gzipBytes": 3816,
+      "gzipSha256": "acacbf22bd01a7cc48be56d4fcb1b1c3074ac9a911d0dec07e7ead8cadeb8ea2"
+    },
+    {
+      "name": "analysis.prefix.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/analysis.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78"
+    },
+    {
+      "name": "analysis.prefix.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/analysis.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "analysis.pressure-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/analysis.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "ef3fc19ad4f92aac3576394089be7b42dbfdc6a9a8034543a1bcc4cfafbfbfec",
+      "gzipBytes": 77,
+      "gzipSha256": "33fb3088a7bd3d97a78f6c62234e2773357d7a91c1a0c208d07576d32f84ccb9"
+    },
+    {
+      "name": "analysis.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/analysis.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "analysis.stderr.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/analysis.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "archived-replay.guard.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/archived-replay.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "archived-replay.inputs-after.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/archived-replay.inputs-after.txt",
+      "bytes": 69901,
+      "sha256": "683b1eb41c452dc04d13bf7853579439933c54957e6ec9dd177cb35bc9b15043",
+      "gzipBytes": 2812,
+      "gzipSha256": "9ec3f6de37379b81afe0b62f1605b4956fb6db681a5bced383d58cfae728c975"
+    },
+    {
+      "name": "archived-replay.inputs-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/archived-replay.inputs-before.txt",
+      "bytes": 69901,
+      "sha256": "683b1eb41c452dc04d13bf7853579439933c54957e6ec9dd177cb35bc9b15043",
+      "gzipBytes": 2812,
+      "gzipSha256": "9ec3f6de37379b81afe0b62f1605b4956fb6db681a5bced383d58cfae728c975"
+    },
+    {
+      "name": "archived-replay.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/archived-replay.json",
+      "bytes": 127510,
+      "sha256": "9afbaec6cf496ee6efc78daecdbc0371064ad4ab749eb363352d1d1dfadbf337",
+      "gzipBytes": 3816,
+      "gzipSha256": "acacbf22bd01a7cc48be56d4fcb1b1c3074ac9a911d0dec07e7ead8cadeb8ea2"
+    },
+    {
+      "name": "archived-replay.prefix.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/archived-replay.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78"
+    },
+    {
+      "name": "archived-replay.prefix.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/archived-replay.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "archived-replay.pressure-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/archived-replay.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "ef3fc19ad4f92aac3576394089be7b42dbfdc6a9a8034543a1bcc4cfafbfbfec",
+      "gzipBytes": 77,
+      "gzipSha256": "33fb3088a7bd3d97a78f6c62234e2773357d7a91c1a0c208d07576d32f84ccb9"
+    },
+    {
+      "name": "archived-replay.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/archived-replay.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "archived-replay.stderr.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/archived-replay.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "frozen-source.cjs.gz.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/frozen-source.cjs.gz",
+      "bytes": 4077,
+      "sha256": "7c3fc47bff7c2284880babc101cd34472088f6972865be02adf152f88a9a92f5",
+      "gzipBytes": 4100,
+      "gzipSha256": "8c5d0f3c4a496fc6130b0bdf290a7c1ac55b791c1d0cb6aa564d951c1e605d75"
+    },
+    {
+      "name": "inputs.sha256.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/inputs.sha256",
+      "bytes": 106977,
+      "sha256": "a73f48d5318006ec68eecc1f7f499331703049f06f1128ef02d1f1929c80c780",
+      "gzipBytes": 11044,
+      "gzipSha256": "7ba0549717b42c65a18bbfa4bc6a1a4fcd106d24a6309d17d4aa4b6ad55dd376"
+    },
+    {
+      "name": "original-scale-expected.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale-expected.json",
+      "bytes": 38834,
+      "sha256": "b705685c37d891e14f774d0f6541fcf6efe33322ccf58e6a35bbb8d43ad194ca",
+      "gzipBytes": 1947,
+      "gzipSha256": "5de346853ef730690fb487e52e48a3a49b77e1c5b9e7df6784f2a12ec0fc819a"
+    },
+    {
+      "name": "original-scale-middle-expected.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale-middle-expected.json",
+      "bytes": 87989,
+      "sha256": "c2ca1cfab7aeb5f1a35bdab79842270899de3603c5578068901e094c4020ce5f",
+      "gzipBytes": 2793,
+      "gzipSha256": "d190d297ebeacff071b4f5c9f88a2c17fa5e69fea65bebd1f312a03e37ea22a5"
+    },
+    {
+      "name": "original-scale-middle.guard.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale-middle.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "original-scale-middle.inputs-after.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale-middle.inputs-after.txt",
+      "bytes": 69901,
+      "sha256": "683b1eb41c452dc04d13bf7853579439933c54957e6ec9dd177cb35bc9b15043",
+      "gzipBytes": 2812,
+      "gzipSha256": "9ec3f6de37379b81afe0b62f1605b4956fb6db681a5bced383d58cfae728c975"
+    },
+    {
+      "name": "original-scale-middle.inputs-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale-middle.inputs-before.txt",
+      "bytes": 69901,
+      "sha256": "683b1eb41c452dc04d13bf7853579439933c54957e6ec9dd177cb35bc9b15043",
+      "gzipBytes": 2812,
+      "gzipSha256": "9ec3f6de37379b81afe0b62f1605b4956fb6db681a5bced383d58cfae728c975"
+    },
+    {
+      "name": "original-scale-middle.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale-middle.json",
+      "bytes": 87989,
+      "sha256": "c2ca1cfab7aeb5f1a35bdab79842270899de3603c5578068901e094c4020ce5f",
+      "gzipBytes": 2793,
+      "gzipSha256": "d190d297ebeacff071b4f5c9f88a2c17fa5e69fea65bebd1f312a03e37ea22a5"
+    },
+    {
+      "name": "original-scale-middle.prefix.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale-middle.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78"
+    },
+    {
+      "name": "original-scale-middle.prefix.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale-middle.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "original-scale-middle.pressure-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale-middle.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "6711895baf517aa371b9c421bd3df07b8db17a4ca23e905a787cf8e41d0a1121",
+      "gzipBytes": 77,
+      "gzipSha256": "c775ecea023a0c488e52a62c0c93f12e30bc66227362e1d8e2aa4488a5d1cca5"
+    },
+    {
+      "name": "original-scale-middle.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale-middle.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "original-scale-middle.stderr.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale-middle.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "original-scale.guard.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "original-scale.inputs-after.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale.inputs-after.txt",
+      "bytes": 69901,
+      "sha256": "683b1eb41c452dc04d13bf7853579439933c54957e6ec9dd177cb35bc9b15043",
+      "gzipBytes": 2812,
+      "gzipSha256": "9ec3f6de37379b81afe0b62f1605b4956fb6db681a5bced383d58cfae728c975"
+    },
+    {
+      "name": "original-scale.inputs-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale.inputs-before.txt",
+      "bytes": 69901,
+      "sha256": "683b1eb41c452dc04d13bf7853579439933c54957e6ec9dd177cb35bc9b15043",
+      "gzipBytes": 2812,
+      "gzipSha256": "9ec3f6de37379b81afe0b62f1605b4956fb6db681a5bced383d58cfae728c975"
+    },
+    {
+      "name": "original-scale.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale.json",
+      "bytes": 38834,
+      "sha256": "b705685c37d891e14f774d0f6541fcf6efe33322ccf58e6a35bbb8d43ad194ca",
+      "gzipBytes": 1947,
+      "gzipSha256": "5de346853ef730690fb487e52e48a3a49b77e1c5b9e7df6784f2a12ec0fc819a"
+    },
+    {
+      "name": "original-scale.prefix.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78"
+    },
+    {
+      "name": "original-scale.prefix.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "original-scale.pressure-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "6711895baf517aa371b9c421bd3df07b8db17a4ca23e905a787cf8e41d0a1121",
+      "gzipBytes": 77,
+      "gzipSha256": "c775ecea023a0c488e52a62c0c93f12e30bc66227362e1d8e2aa4488a5d1cca5"
+    },
+    {
+      "name": "original-scale.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "original-scale.stderr.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-scale.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "original-setting-expected.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-setting-expected.json",
+      "bytes": 150218,
+      "sha256": "5323292e8b81b733665b999950374e1d1000d5c97c714d8f74b82aa746d7dd2c",
+      "gzipBytes": 4224,
+      "gzipSha256": "0da7a798f4e741dbc4c2ac94661c42dffbda81d6015847ef16cdf00c7176b258"
+    },
+    {
+      "name": "original-setting.guard.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-setting.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "original-setting.inputs-after.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-setting.inputs-after.txt",
+      "bytes": 69901,
+      "sha256": "683b1eb41c452dc04d13bf7853579439933c54957e6ec9dd177cb35bc9b15043",
+      "gzipBytes": 2812,
+      "gzipSha256": "9ec3f6de37379b81afe0b62f1605b4956fb6db681a5bced383d58cfae728c975"
+    },
+    {
+      "name": "original-setting.inputs-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-setting.inputs-before.txt",
+      "bytes": 69901,
+      "sha256": "683b1eb41c452dc04d13bf7853579439933c54957e6ec9dd177cb35bc9b15043",
+      "gzipBytes": 2812,
+      "gzipSha256": "9ec3f6de37379b81afe0b62f1605b4956fb6db681a5bced383d58cfae728c975"
+    },
+    {
+      "name": "original-setting.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-setting.json",
+      "bytes": 150218,
+      "sha256": "5323292e8b81b733665b999950374e1d1000d5c97c714d8f74b82aa746d7dd2c",
+      "gzipBytes": 4224,
+      "gzipSha256": "0da7a798f4e741dbc4c2ac94661c42dffbda81d6015847ef16cdf00c7176b258"
+    },
+    {
+      "name": "original-setting.prefix.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-setting.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78"
+    },
+    {
+      "name": "original-setting.prefix.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-setting.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "original-setting.pressure-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-setting.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "6711895baf517aa371b9c421bd3df07b8db17a4ca23e905a787cf8e41d0a1121",
+      "gzipBytes": 77,
+      "gzipSha256": "c775ecea023a0c488e52a62c0c93f12e30bc66227362e1d8e2aa4488a5d1cca5"
+    },
+    {
+      "name": "original-setting.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-setting.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "original-setting.stderr.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/original-setting.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "parent-join-expected.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/parent-join-expected.json",
+      "bytes": 163946,
+      "sha256": "259362a8743759397e2930a498dfd87720ddd329404ef849fea1b69112d9d0fa",
+      "gzipBytes": 4728,
+      "gzipSha256": "b5bd26d10369d732536eabd8d8f0f4bad5e9afeea82a089a2686fa78f03a752c"
+    },
+    {
+      "name": "parent-join.guard.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/parent-join.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "parent-join.inputs-after.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/parent-join.inputs-after.txt",
+      "bytes": 69901,
+      "sha256": "683b1eb41c452dc04d13bf7853579439933c54957e6ec9dd177cb35bc9b15043",
+      "gzipBytes": 2812,
+      "gzipSha256": "9ec3f6de37379b81afe0b62f1605b4956fb6db681a5bced383d58cfae728c975"
+    },
+    {
+      "name": "parent-join.inputs-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/parent-join.inputs-before.txt",
+      "bytes": 69901,
+      "sha256": "683b1eb41c452dc04d13bf7853579439933c54957e6ec9dd177cb35bc9b15043",
+      "gzipBytes": 2812,
+      "gzipSha256": "9ec3f6de37379b81afe0b62f1605b4956fb6db681a5bced383d58cfae728c975"
+    },
+    {
+      "name": "parent-join.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/parent-join.json",
+      "bytes": 163946,
+      "sha256": "259362a8743759397e2930a498dfd87720ddd329404ef849fea1b69112d9d0fa",
+      "gzipBytes": 4728,
+      "gzipSha256": "b5bd26d10369d732536eabd8d8f0f4bad5e9afeea82a089a2686fa78f03a752c"
+    },
+    {
+      "name": "parent-join.prefix.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/parent-join.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78"
+    },
+    {
+      "name": "parent-join.prefix.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/parent-join.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "parent-join.pressure-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/parent-join.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "6711895baf517aa371b9c421bd3df07b8db17a4ca23e905a787cf8e41d0a1121",
+      "gzipBytes": 77,
+      "gzipSha256": "c775ecea023a0c488e52a62c0c93f12e30bc66227362e1d8e2aa4488a5d1cca5"
+    },
+    {
+      "name": "parent-join.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/parent-join.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "parent-join.stderr.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/parent-join.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "readback.guard.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/readback.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "readback.inputs-after.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/readback.inputs-after.txt",
+      "bytes": 69901,
+      "sha256": "683b1eb41c452dc04d13bf7853579439933c54957e6ec9dd177cb35bc9b15043",
+      "gzipBytes": 2812,
+      "gzipSha256": "9ec3f6de37379b81afe0b62f1605b4956fb6db681a5bced383d58cfae728c975"
+    },
+    {
+      "name": "readback.inputs-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/readback.inputs-before.txt",
+      "bytes": 69901,
+      "sha256": "683b1eb41c452dc04d13bf7853579439933c54957e6ec9dd177cb35bc9b15043",
+      "gzipBytes": 2812,
+      "gzipSha256": "9ec3f6de37379b81afe0b62f1605b4956fb6db681a5bced383d58cfae728c975"
+    },
+    {
+      "name": "readback.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/readback.json",
+      "bytes": 127510,
+      "sha256": "9afbaec6cf496ee6efc78daecdbc0371064ad4ab749eb363352d1d1dfadbf337",
+      "gzipBytes": 3816,
+      "gzipSha256": "acacbf22bd01a7cc48be56d4fcb1b1c3074ac9a911d0dec07e7ead8cadeb8ea2"
+    },
+    {
+      "name": "readback.prefix.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/readback.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78"
+    },
+    {
+      "name": "readback.prefix.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/readback.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "readback.pressure-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/readback.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "ef3fc19ad4f92aac3576394089be7b42dbfdc6a9a8034543a1bcc4cfafbfbfec",
+      "gzipBytes": 77,
+      "gzipSha256": "33fb3088a7bd3d97a78f6c62234e2773357d7a91c1a0c208d07576d32f84ccb9"
+    },
+    {
+      "name": "readback.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/readback.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "readback.stderr.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/readback.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "shell-completion.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/shell-completion.json",
+      "bytes": 6901,
+      "sha256": "fb06bec5aab11d965de968d12105d1c2350e18b7b337a9dfae5ee92c012c7430",
+      "gzipBytes": 1359,
+      "gzipSha256": "45f3673bd21893cb3e61ce9fc8587e0a3865117a35832ef10e4b7c88672511dd"
+    },
+    {
+      "name": "source-base-commit.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/source-base-commit.txt",
+      "bytes": 41,
+      "sha256": "074204644dd8ecb00851e729177db75079c9013f664b0d33f7a07724b4e8ed0a",
+      "gzipBytes": 59,
+      "gzipSha256": "5bb3932c2e530212bbc612709bebc7dfd3a15c71b26abb23d213d7e47957e7aa"
+    },
+    {
+      "name": "source-compare-original-setting-str.cjs.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/source-compare-original-setting-str.cjs",
+      "bytes": 10333,
+      "sha256": "24d990e32ee283473bfb17feb4fb505aa2d3da4467573bd25fc659bb6af57517",
+      "gzipBytes": 4064,
+      "gzipSha256": "72034995468f07bcce958841f2becc57e5c7442fd132b98316be27aa8cb63f05"
+    },
+    {
+      "name": "source-status.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/source-status.txt",
+      "bytes": 82,
+      "sha256": "9a390768c15131b15ee1d1c18f075b8779d76ff71aac62374f833c90d37e33b2",
+      "gzipBytes": 92,
+      "gzipSha256": "49aa6e42c7ad343be296f28a11e5553b3a3049eee1edda005eb1f690c8a27699"
+    },
+    {
+      "name": "syntax.guard.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/syntax.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "syntax.inputs-after.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/syntax.inputs-after.txt",
+      "bytes": 69901,
+      "sha256": "683b1eb41c452dc04d13bf7853579439933c54957e6ec9dd177cb35bc9b15043",
+      "gzipBytes": 2812,
+      "gzipSha256": "9ec3f6de37379b81afe0b62f1605b4956fb6db681a5bced383d58cfae728c975"
+    },
+    {
+      "name": "syntax.inputs-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/syntax.inputs-before.txt",
+      "bytes": 69901,
+      "sha256": "683b1eb41c452dc04d13bf7853579439933c54957e6ec9dd177cb35bc9b15043",
+      "gzipBytes": 2812,
+      "gzipSha256": "9ec3f6de37379b81afe0b62f1605b4956fb6db681a5bced383d58cfae728c975"
+    },
+    {
+      "name": "syntax.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/syntax.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "syntax.prefix.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/syntax.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78"
+    },
+    {
+      "name": "syntax.prefix.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/syntax.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "syntax.pressure-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/syntax.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "ef3fc19ad4f92aac3576394089be7b42dbfdc6a9a8034543a1bcc4cfafbfbfec",
+      "gzipBytes": 77,
+      "gzipSha256": "33fb3088a7bd3d97a78f6c62234e2773357d7a91c1a0c208d07576d32f84ccb9"
+    },
+    {
+      "name": "syntax.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/syntax.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "syntax.stderr.gz",
+      "hostRelativePath": "build/default-transform-original-setting-str1/syntax.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    }
+  ]
+}
