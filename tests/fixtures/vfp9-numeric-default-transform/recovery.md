@@ -4472,3 +4472,44 @@ readback/gzip-archived analyzer replay and immutable input hashes/gates must
 actually pass and archive before interpreting metrics/selecting another stimulus.
 No native rerun/compiler/VM needed. Exact display/conversion/propagation,
 division ORIGINAL/SAME/hosted/review and ListItem acceptance remain OPEN.
+
+### Intermediate14..17 AFTER-capture analysis — 2026-10-20
+
+Completed analyze-original-scale-middle-consumer.cjs from evidence HEAD
+b3f3538557912af9d98b2db87ab496b8c6ed1eae (AFTER-capture dirty source snapshot,
+not a native source freeze). It binds the daf531078 native manifest, a8f46bbf8
+source-byte freeze, exact aa6b7f0675cd237c89c0719abce44ea693e90efdc3fa9a92c292a7472a693a43
+raw digest, all32 records/42-field projections and active metadata/control tuples.
+Host build/default-transform-original-scale-middle-analysis1: frozen archived
+reader/syntax/analysis/independent readback all0/empty stderr, report byte-exact;
+eight independent decimal-value/zero-sign metric checks. Input hashes BEFORE and
+AFTER EACH0, immediate idleprefix1/full I/O PSI avg10+avg60=0/0, nice-n10.
+Archived analyzer replay at original module path explicitly matches current
+source bytes and produces byte-exact report, status0/empty/hashes before+after0,
+same fresh gates. Its host root is original-scale-middle-analysis-replay1.
+42 analysis+13 replay receipts supplement116 native/reader receipts:171 total
+gzip receipts, with separate manifests/checksum lists. New compressed/decoded
+sizes/hashes and exact host bytes checked; earlier source359/guard73 untouched.
+
+Observed finite sample:24 adjacent metadata interventions14->15->16->17 change
+12 TRANSFORM literal/trimmed strings but ZERO exact decimal values/zero signs;
+STR changes0/24. Across16 signed adjacent payload pairs TRANSFORM distinguishes
+both pairs under FIXED ON at every scale, neither under OFF; STR distinguishes
+both under both modes at every scale.32 TF-versus-STR contexts have32 literal,
+20 trimmed-literal,16 exact-value gaps and4 zero-sign gaps, separately counted.
+No precision/cap/tolerance/formatter rule inferred from finite equalities.
+
+LOW DQ-DV001 actual developer walkthrough: inspect all raw projections, enforce
+metadata-only/payload adjacency invariants, independent exact-decimal metrics,
+source-bound frozen-reader and analyzer replays, per-child gates/hash integrity,
+byte-exact readback and archived/host bytes. Developer self-review only, NOT
+independent human/system/release assurance. No native/compiler/VM invoked,
+production formatter/helper/hook/expected emitter or compatibility acceptance.
+
+NEXT bounded offline discriminator: index-exact join of completed original
+metadata13/18 and14..17 captures for the SAME four payloads/D13/width40/bothFIXED.
+Validate shared parent/control/runtime identities across captures BEFORE joining;
+retain separate capture provenance, test all five consecutive metadata edges,
+classify literal/padding/value/zero-sign changes without guessing a general rule.
+No native rerun required. Exact conversion/display/propagation, unchanged division
+ORIGINAL/SAME/hosted/review and ListItem acceptance remain OPEN.
