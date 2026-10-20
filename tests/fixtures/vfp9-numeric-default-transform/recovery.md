@@ -4514,6 +4514,52 @@ classify literal/padding/value/zero-sign changes without guessing a general rule
 No native rerun required. Exact conversion/display/propagation, unchanged division
 ORIGINAL/SAME/hosted/review and ListItem acceptance remain OPEN.
 
+### DECIMALS12/14 AFTER-capture analysis — 2026-10-20
+
+analyze-original-setting-consumer.cjs binds native freeze886b8720d and exact
+47232c78c28f7b7536b654b3c85fd94bd7a6eead587f719298f80762f02c2499
+raw digest, all32raw42-field projections, including newly observed active
+original/ROUND control tuple/metadata/payload. Unique parent/FIXED/D/scale grid,
+16 metadata13->14 interventions,16 D12->14 interventions,16 signed adjacent
+pairs and32 TFvsSTR contexts. Metadata comparisons require same-D controls;
+setting comparisons preserve changed original/ROUND observations without
+requiring control equality across D. Eight independent decimal/zero-sign tests.
+
+Host original-setting-analysis1 frozen native-reader/syntax/analysis/independent
+readback0/empty, audit/report byte-exact; original-setting-analysis-replay1 gzip-
+frozen analyzer at original module path/current-byte identity0/empty/report
+byte-exact. Immutable hashes BEFORE+AFTER EACH0/immediate idleprefix1/BOTH full
+I/O PSI<1%/nice-n10.42+13 compressed/decoded-size/hash/exact-host-byte-verified
+receipts supplement114 native/reader receipts ->169 total, with separate
+manifests/checksumlists. Base256693f35+dirty AFTER-capture snapshots not native
+freeze; earlier source100+283 and all failed/older captures unchanged.
+
+Observed finite results: metadata changes affect8 TF literal/trimmed/value
+comparisons,0 STR/zero-sign; setting changes affect8 TF literal/trimmed/value
+and16 STR literal/trimmed/value comparisons,0 zero-sign. Signed adjacent TF
+distinguishes2/2 OFF at scale13 at bothD,0/2 OFF at scale14 and0/2 ON at both
+scales/D. STR distinguishes0/2 throughout.32 TFvsSTR contexts retain32 literal/
+16 trimmed/10 exact-value/five zero-sign gaps separately. No general rounding/
+metadata/setting formula, fitted cap/tolerance, formatter or parity acceptance.
+
+LOW DQ-DV001 actual maintainer walkthrough: inspect complete compound-key grid,
+all raw projections/active control observations, distinguish same-D control
+invariance from across-D observation, exact metric tests, per-child status/gates/
+hashes, byte-identical reader/analysis/replay and receipt bytes. Developer
+self-review only, not independent human/system/release assurance. No native/
+compiler/VM/production change; existing hazards/rollback/notification and
+unchanged ORIGINAL assertion boundaries retained.
+
+NEXT bounded offline index-exact join of retained D12/D14 setting capture with
+D13 scale13 from original-scale and scale14 from original-scale-middle captures:
+four payloads x3D x2metadata x2FIXED=48 contexts. Bind distinct source/raw
+provenance and shared payload/active metadata/runtime; SAME-D controls must
+match, across-D ROUND/control values need NOT. Classify D12->13/13->14 setting
+edges, metadata13->14 and signed adjacent distinctions with separate spelling/
+padding/value/zero-sign metrics. This is NOT a repeat of completed D13-only
+metadata13..18 join and requires no native rerun. Exact recovery/implementation/
+division ORIGINAL/SAME/hosted/review and ListItem acceptance remain OPEN.
+
 ### DECIMALS12/14 qualified native pair — 2026-10-20
 
 At clean signed/DCO/G source freeze886b8720d56fa770847c79a9dacba4dbdf1d0a5f,
