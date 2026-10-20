@@ -1,0 +1,130 @@
+{
+  "verificationOnly": true,
+  "nativeInvoked": false,
+  "frozenSourceIdentityExplicitlyMatched": true,
+  "reportByteExact": true,
+  "fullIoPsiAvg10": 0,
+  "fullIoPsiAvg60": 0,
+  "files": [
+    {
+      "name": "reader-replay1-inputs-after.txt",
+      "hostRelativePath": "build/default-transform-original-scale-middle-reader-replay1/inputs-after.txt",
+      "bytes": 13414,
+      "sha256": "5f953c2dbbc6904bedc74a20308820e18e183f11b9260af64eccd4d27cc4d5f6",
+      "gzipBytes": 806,
+      "gzipSha256": "245b1042f9c6d4c8a7bab6960c33e737f2d338d2f566945e9a49ec1c68a70e47"
+    },
+    {
+      "name": "reader-replay1-inputs-before.txt",
+      "hostRelativePath": "build/default-transform-original-scale-middle-reader-replay1/inputs-before.txt",
+      "bytes": 13414,
+      "sha256": "5f953c2dbbc6904bedc74a20308820e18e183f11b9260af64eccd4d27cc4d5f6",
+      "gzipBytes": 806,
+      "gzipSha256": "245b1042f9c6d4c8a7bab6960c33e737f2d338d2f566945e9a49ec1c68a70e47"
+    },
+    {
+      "name": "reader-replay1-inputs.sha256",
+      "hostRelativePath": "build/default-transform-original-scale-middle-reader-replay1/inputs.sha256",
+      "bytes": 20606,
+      "sha256": "3299a1e4405f26b7a58c198c3b542178722ec82c9ab9c4cf6775692781d2ade1",
+      "gzipBytes": 2794,
+      "gzipSha256": "874f7390e44073c37f41b391f17b357c0f3d45295deac5d6efd7761df08e80e3"
+    },
+    {
+      "name": "reader-replay1-native-audit.json",
+      "hostRelativePath": "build/default-transform-original-scale-middle-reader-replay1/native-audit.json",
+      "bytes": 50672,
+      "sha256": "adc6b75b29c80239401e285be888ce719f04122fb880fa343069d895158c81ac",
+      "gzipBytes": 1767,
+      "gzipSha256": "764bb3d1877e7dcc4e883f974b5d28b51b3e2114b85cbb2ffad8c74915ed76b8"
+    },
+    {
+      "name": "reader-replay1-native-packaging-completion.json",
+      "hostRelativePath": "build/default-transform-original-scale-middle-reader-replay1/native-packaging-completion.json",
+      "bytes": 406,
+      "sha256": "970451508b70d4408813cc90310b3b045c25afec050b7fc3ac7263502d5ee4c6",
+      "gzipBytes": 310,
+      "gzipSha256": "5de26b2c83b3e4c49ae44b8dd708d4b45b8f20097e46a656ccff8a0639b57b78"
+    },
+    {
+      "name": "reader-replay1-replay.guard.status",
+      "hostRelativePath": "build/default-transform-original-scale-middle-reader-replay1/replay.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "reader-replay1-replay.json",
+      "hostRelativePath": "build/default-transform-original-scale-middle-reader-replay1/replay.json",
+      "bytes": 50672,
+      "sha256": "adc6b75b29c80239401e285be888ce719f04122fb880fa343069d895158c81ac",
+      "gzipBytes": 1767,
+      "gzipSha256": "764bb3d1877e7dcc4e883f974b5d28b51b3e2114b85cbb2ffad8c74915ed76b8"
+    },
+    {
+      "name": "reader-replay1-replay.prefix.status",
+      "hostRelativePath": "build/default-transform-original-scale-middle-reader-replay1/replay.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78"
+    },
+    {
+      "name": "reader-replay1-replay.prefix.txt",
+      "hostRelativePath": "build/default-transform-original-scale-middle-reader-replay1/replay.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "reader-replay1-replay.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-original-scale-middle-reader-replay1/replay.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "85c529445e6eabfd4d79e72dd0dfbb6392fa356aaaffd7e236d41a53999b62fe",
+      "gzipBytes": 77,
+      "gzipSha256": "b615561cd5bb763c059a88f073ead3586ab5d8f344eb0861125d353aa8fd67c5"
+    },
+    {
+      "name": "reader-replay1-replay.status",
+      "hostRelativePath": "build/default-transform-original-scale-middle-reader-replay1/replay.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "reader-replay1-replay.stderr",
+      "hostRelativePath": "build/default-transform-original-scale-middle-reader-replay1/replay.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "reader-replay1-shell-completion.json",
+      "hostRelativePath": "build/default-transform-original-scale-middle-reader-replay1/shell-completion.json",
+      "bytes": 2841,
+      "sha256": "470ee915cdf2de178d8700f3130137316dd29b5583f581f77db7211555b72f82",
+      "gzipBytes": 1073,
+      "gzipSha256": "9fab8748997f2d386b06c336bb91e302907f62b8df4313e13ff2203f83839b45"
+    },
+    {
+      "name": "reader-replay1-source-base-commit.txt",
+      "hostRelativePath": "build/default-transform-original-scale-middle-reader-replay1/source-base-commit.txt",
+      "bytes": 41,
+      "sha256": "f414c8648fe04bc031b847ea881abc7cd8d2bb95ed31ed2dae4413871fcc3f0d",
+      "gzipBytes": 59,
+      "gzipSha256": "56a763bded11eec2836b7cc8527f14f6f00eff37fad3a9140d7f30106501264a"
+    },
+    {
+      "name": "reader-replay1-source-status.txt",
+      "hostRelativePath": "build/default-transform-original-scale-middle-reader-replay1/source-status.txt",
+      "bytes": 91,
+      "sha256": "4c74446ba32a892fd0581039d7bedf7eb8b87b1b372653573643744f3a4f27bb",
+      "gzipBytes": 99,
+      "gzipSha256": "12a73c145b031227d699c484939c4a49c82eda05cb1d5fa19633fc090dce5406"
+    }
+  ]
+}

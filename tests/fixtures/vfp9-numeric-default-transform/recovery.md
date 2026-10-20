@@ -4406,3 +4406,69 @@ attempt is not a completed native pair. Strict-single MUST pass BEFORE repeat,
 then paired raw qualification/prompt release/archive BEFORE AFTER-capture
 analysis. Do not reuse old clearances or interpret this partial report instead.
 No new compiler/FLL/VM needed. No owner-input blocker or automation pause.
+
+### Intermediate14..17 NEW native pair qualified — earlier guard1 unchanged
+
+After the pressure block cleared (fresh fullPSI0.00/0.00%), NEW explicit audit+
+DAW native-only CLEAR and Request Guard current no-conflict CLEAR obtained.
+Actual resource requests/snapshots retained; no prior clearance reused. SAME
+worker executed ONCE18:14:25..18:14:32UTC2026-10-20 from clean signed/DCO/G
+evidence head daf531078fccbed0208a563a2a5d869fc671649e. All nine snapshotted
+caller/reader/helper/input source files explicitly compare byte-for-byte to
+source freeze a8f46bbf80c83d8859353c8d0f81ec5af5130007 via git-show and current
+files; exact SHA/source-byte identity receipt retained. No caller/reader/worker
+source change, compiler/newFLL/VM/reboot/backup monitoring. Observer reused;
+process-local Microsoft32 binding/inherited overridesUNSET retained.
+
+First0/strict-single0 BEFORE repeat/repeat0/paired0; allseven preparatory/native/
+reader children0/empty/prefix1/fullPSI0.00/0.00%/guard0/nice-n10/input hashes
+BEFORE+AFTER EACH0.32 records/all42 raw fields repeat-identical; inactive Numeric
+integer-slot differences0. Parent original/public inline ROUND controls, active
+target metadata/payload/settings/runtime before+after checks pass. Both raw SHA
+aa6b7f0675cd237c89c0719abce44ea693e90efdc3fa9a92c292a7472a693a43.
+This happens to match the earlier partial first raw digest; guard1 remains
+SEPARATELY UNQUALIFIED, with its pre-reader75/no-repeat state intact. No
+environment, clearance, reader execution or pair is retroactively claimed.
+
+Promptly RELEASED allthree resource owners, audit/Request Guard acknowledgements;
+post-prefix idle/fullPSI0/0/no active own job/reservation. Combined inspection
+shell exit1 is FINAL idle-prefix pgrep, not child failure. Validated/moved NEW
+complete root to build/default-transform-original-scale-middle-consumer-captures1;
+original worker root ABSENT, prior consumer-guard1 preserved separately.
+Archive original-scale-middle-consumer-captures1 initially101 gzip files includes
+own authored PRG/FXP/source/raw/status/runtime/gate/hash/full actual shell/
+inspection/clearance/release/source-byte-identity receipts. No SDK/FLL binary.
+All compressed/decoded sizes/hashes/exact host bytes verified before analysis.
+
+NEW build/default-transform-original-scale-middle-reader-replay1 compiles the
+gzip-archived frozen native reader at original module path with explicit current/
+archived byte identity:0/empty/report byte-exact to captured native audit,
+input hashes BEFORE+AFTER0/prefix1/fullPSI0/0/guard0/nice10. BEFORE base daf531078
+plus dirty archive/status is an AFTER-capture verification snapshot, not native
+freeze.15 reader-replay receipts bring total116 gzip files; both manifests/
+checksum lists/compressed+decoded sizes/hashes/exact host bytes verified. Source
+359 receipts/test correction, guard1's73 receipts and coordination1 remain intact.
+Ordinary shell is NOT REA Evidence/Windows/internal-call/atomic mapped-code or
+descendant-cleanup attestation. No full formatting/propagation/conversion parity.
+
+LOW DQ-DV001 actual walkthrough: fresh resource coordination/clean unchanged
+source, strict-single BEFORE repeat, all32/42 raw equality and independent
+metadata/control/runtime checks, prompt release, separately preserved failure,
+source-byte identity, frozen-reader replay and all receipt-byte checks.
+Developer-maintainer self-review only, NOT independent human/system/release
+assurance. Existing hazard/mitigation/rollback/notification and ORIGINAL/SAME
+assertion-preservation boundaries unchanged. No production formatter/helper/
+hook/expected emitter, target metrics, tolerance/canonical-double shortcut,
+PR or parent acceptance/closure inferred from native qualification alone.
+
+NEXT bounded AFTER-capture source: analyze-original-scale-middle-consumer.cjs,
+bind NEW manifest source daf531078/source-byte freeze a8f46bbf8 and exact raw
+digest, all32 raw42-field/control/active metadata projections. Compare24 adjacent
+metadata14->15->16->17 interventions,16 signed adjacent-payload pairs across
+bothFIXED/allfour scales,32 target TFversusSTR contexts. Keep literal/padding/
+exact decimal value/zero-sign separate with independent metric self-checks; no
+guessed target strings or universal formula. Frozen reader/syntax/analysis/
+readback/gzip-archived analyzer replay and immutable input hashes/gates must
+actually pass and archive before interpreting metrics/selecting another stimulus.
+No native rerun/compiler/VM needed. Exact display/conversion/propagation,
+division ORIGINAL/SAME/hosted/review and ListItem acceptance remain OPEN.
