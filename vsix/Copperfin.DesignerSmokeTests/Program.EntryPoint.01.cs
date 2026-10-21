@@ -35,6 +35,7 @@ internal static partial class Program
             return runner.Finish();
         }
 
+        runner.Run(nameof(SmokeArchiveExtractionContainment), SmokeArchiveExtractionContainment);
         runner.Run(nameof(SmokeDesignSurfaceWithSyntheticReportLayout), SmokeDesignSurfaceWithSyntheticReportLayout);
         runner.Run(nameof(SmokeInvariantReportGeometryParsing), SmokeInvariantReportGeometryParsing);
         runner.Run(nameof(SmokeLocalizedReportDesignSurfaceContext), SmokeLocalizedReportDesignSurfaceContext);
