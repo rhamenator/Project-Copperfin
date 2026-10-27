@@ -1,5 +1,39 @@
 # Default Numeric TRANSFORM recovery — #5611/#6776/#7189, tracking #7210
 
+## Exact binary rounding diagnostic — 2026-10-27
+
+Owner-directed diagnostic tests pass28 checks: known BRS payload byte order,
+signed zero, subnormal/minimum-normal/maximum-finite boundaries, exact positive
+and negative ties, neighboring payloads, sub-binary64 decimal distinctions and
+invalid inputs. Exact BigInt binary rational scaling produces truncation,
+nearest-even and nearest-away hypotheses, not native expected strings.
+
+The hash-bound retained STRmiddle source supplies all2,112 cells (528 original
+contexts at counts15..18). Five guarded stages passed:28 tests, strict native
+reader replay, analysis, byte-equal repeat and independently implemented binary
+bit-string/rational readback of every row, group and full mismatch selection.
+Each child had prefix-idle status1, both full I/O PSI averages below1%, nice10,
+empty stderr/status0 and immutable input hashes checked before/after. No native
+execution occurred. Receipts and four source versions are retained in
+`exact-binary-str-captures1`, with35 gzip entries verified compressed/decoded
+sizes/SHA256 and exact host bytes; host root is `build/exact-binary-str1`.
+
+Per FIXED mode, count15/16/17/18 truncation value mismatches are190/208/214/220;
+nearest-even and nearest-away each have48/104/132/152. Raw zero-sign differences
+are3/9/15/21. All2,112 raw observations and1,682 rows with any hypothesis-value
+or zero-sign mismatch are retained. Signed zero is compared separately from
+integer numeric equality; assertions were not weakened. These counterexamples
+reject all three hypotheses as universal replacements for the observed STR
+conversion. No general formatter or internal-call rule is accepted.
+
+LOW DQ-DV001 developer self-review walkthrough: trace pinned source/raw reader
+to payload/count/text, check exact tie and negative-zero boundaries, independent
+readback and complete mismatch list, then archived bytes. Not independent human
+assurance. Existing hazards/rollback apply; production and ORIGINAL assertions
+are unchanged. NEXT characterize exact signed residuals of the nearest-rounding
+counterexamples, retaining count/payload/source context; do not fit tolerances
+or discard mismatches.
+
 ## Retained STR/CRT coverage inventory — 2026-10-27
 
 ### Exact same-count comparison of available cells
