@@ -9,6 +9,10 @@ const output = JSON.parse(fs.readFileSync(process.argv[2]));
 const read = name => JSON.parse(z.gunzipSync(fs.readFileSync(path.join(__dirname,name,'audit.json.gz'))));
 const str = read('str-middle-captures1').observations;
 const crt = read('crt-nativeonly-captures1').observations;
+if (output.sourceHashes.precision) {
+  a.equal(output.sourceHashes.precision,'ba189979b2d7cd67ab15f1d719af586f815f28f98427d30344629760f1fbabd3');
+  crt.push(...read('crt-precision-captures1').observations);
+}
 a.equal(output.coverageOnly,true); a.equal(output.candidateOrEqualityEvidence,false);
 a.equal(output.qualifiedJoinOrDigitEquality,false); a.equal(output.nativeInvoked,false);
 let available=0; const expectedMissing=[]; let position=0;

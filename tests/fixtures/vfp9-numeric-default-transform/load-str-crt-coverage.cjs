@@ -41,5 +41,37 @@ function main(root) {
     nativeInvoked: false, qualifiedJoinOrDigitEquality: false,
     limitation: 'Coverage only. Native-reader replay, metadata/runtime equivalence and digit comparison remain separate gates.'};
 }
-module.exports = {load, main};
-if (require.main === module) console.log(JSON.stringify(main(__dirname), null, 2));
+function combined(root) {
+  const base = main(root);
+  const str = load(path.join(root, 'str-middle-captures1'), base.sourceHashes.str, 528);
+  const crt = load(path.join(root, 'crt-nativeonly-captures1'), base.sourceHashes.crt, 4176);
+  const precisionHash = 'ba189979b2d7cd67ab15f1d719af586f815f28f98427d30344629760f1fbabd3';
+  const precision = load(path.join(root, 'crt-precision-captures1'), precisionHash, 1584);
+  for (const flag of ['metadataAndBRSExact', 'settingsAndRuntimeModuleExact'])
+    a.equal(precision[flag], true);
+  qualifyPrecision(str.observations, precision.observations);
+  return {...inventory(str.observations,[...crt.observations,...precision.observations]),
+    sourceHashes:{...base.sourceHashes,precision:precisionHash},nativeInvoked:false,
+    qualifiedJoinOrDigitEquality:false,
+    limitation:'Coverage only; raw-reader replay remains a separate gate. Sampled runtime controls are not atomic mapped-image proof or digit equality.'};
+}
+function qualifyPrecision(strRows, precisionRows) {
+  const byContext = new Map(strRows.map(r => [JSON.stringify([r.index,r.fixed]),r]));
+  a.equal(byContext.size,strRows.length);
+  const runtime = ['module','fileSample','fileSize','fileSha256','machine','magic','stamp',
+    'imageSize','checksum','cw0','cw1'];
+  for (const r of precisionRows) {
+    const s = byContext.get(JSON.stringify([r.index,r.fixed])); a(s);
+    a.equal(r.route,'ORIGINAL'); a.equal(r.kind,'F');
+    a([1,2,3].includes(r.count-r.setting));
+    a.equal(r.bits,s.bits); a.equal(r.argumentBits,s.bits); a.equal(r.setting,s.setting);
+    a.equal(r.displayHex,s.originalDisplayHex); a.equal(r.strHex,s.originalStrHex);
+    for (const field of runtime) {a.equal(typeof r.crt[field],'string');
+      a.equal(r.crt[field],s.crt[field]);}
+  }
+}
+module.exports = {load, main, combined, qualifyPrecision};
+if (require.main === module) {
+  a([undefined,'--combined'].includes(process.argv[2]));
+  console.log(JSON.stringify(process.argv[2] === '--combined' ? combined(__dirname) : main(__dirname), null, 2));
+}

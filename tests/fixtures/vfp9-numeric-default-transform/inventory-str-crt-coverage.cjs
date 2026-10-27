@@ -14,7 +14,9 @@ function inventory(strRows, crtRows) {
   for (const r of crtRows) {
     if (r.route !== 'ORIGINAL' || r.kind !== 'F') continue;
     a.equal(r.argumentBits, r.bits);
-    a(Number.isInteger(r.count) && r.count >= 1 && r.count <= 18);
+    // The separately retained D+1/+2/+3 experiment reaches count21.
+    // Admitting its inventory does not qualify cross-capture equivalence.
+    a(Number.isInteger(r.count) && r.count >= 1 && r.count <= 21);
     const k = key(r, r.count);
     a(!available.has(k), 'duplicate native CRT context');
     available.set(k, r);

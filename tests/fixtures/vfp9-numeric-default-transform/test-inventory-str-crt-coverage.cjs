@@ -33,4 +33,9 @@ check(() => {const r = inventory([s], [{...c,crt:{digits:'',decimal:'FFFFFFF1',s
   a.equal(r.availableCells,1); a.equal(r.candidateOrEqualityEvidence,false);
   // An empty native return proves availability only, never numeric equality.
   a(!Object.hasOwn(r.cells[0],'value'));});
+check(() => a.equal(inventory([s], [{...c,count:21}]).availableCells,0));
+check(() => a.throws(() => inventory([s], [{...c,count:22}])));
+check(() => {const native=[c,{...c,count:16},{...c,count:17},{...c,count:18}];
+  a.equal(inventory([s],native).availableCells,4);
+  a.throws(() => inventory([s],[...native,{...c,count:16}]),/duplicate native/);});
 console.log(JSON.stringify({syntheticCoverageTests: tests, nativeInvoked: false}));

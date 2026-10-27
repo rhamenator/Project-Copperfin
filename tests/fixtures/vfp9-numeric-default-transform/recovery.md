@@ -2,6 +2,45 @@
 
 ## Retained STR/CRT coverage inventory — 2026-10-27
 
+### Additional retained count coverage
+
+The separately qualified ORIGINAL-only D+1/+2/+3 CRT experiment has pinned raw
+SHA256 `ba189979b2d7cd67ab15f1d719af586f815f28f98427d30344629760f1fbabd3`.
+The combined loader validates original payload/argument/setting/display/STR and
+all eleven sampled runtime/control-word fields before combining coverage. Its
+reader separately validates metadata and all 1,584 records. This does not turn
+sampled module controls into atomic image binding or establish digit equality.
+The experimental count bound reaches21; requested STR cells remain15..18.
+
+Combined coverage has 2,112 requested cells,384 available,1,728 missing. Full
+cell and missing lists remain in `str-crt-coverage-captures2/inventory.out.gz`.
+Nineteen synthetic coverage, twelve loader and twenty-four cross-source checks
+pass. Ten guarded offline stages passed with empty stderr, prefix-idle status1,
+both full I/O PSI averages below1%, nice10 and input hashes before/after. The
+precision reader matched its frozen source. Independent nested-source lookup
+verified every cell and missing-list entry; repeated inventory was byte-equal.
+
+Independent readback source changed after the execution manifest was frozen.
+The initial prehash correctly failed; retain `independent.inputs-before.txt.gz`.
+Only that source was then explicitly excluded from the stable input manifest
+and separately hash-bound before/after readback. No old execution manifest was
+rewritten or used to retroqualify the new source. Archive2 contains102 gzip
+source/receipt files; compressed/decoded sizes and hashes and exact host bytes
+were verified. Seven current source hashes bound archival inputs before/after;
+host `build/default-transform-str-crt-coverage2` retains postarchive verification.
+Archive1 and its source versions remain unchanged.
+
+LOW DQ-DV001 maintainer walkthrough: inspect the complete context key and
+cross-source rejection tests, frozen-reader identity, sampled runtime limits,
+all requested/missing rows, explicit source-version transition, independent
+lookup and archive byte checks. This is developer self-review, not independent
+human/release assurance. Existing hazards/rollback apply. No native execution,
+digit-generation candidate, tolerance or ORIGINAL assertion change occurred.
+NEXT select a bounded digit-conversion discriminator from the384 available
+cells, retaining complete counterexamples, before deciding whether any of the
+1,728 missing cells require new native stimulus. Missing observations must not
+be synthesized from other counts or rounded outputs.
+
 `inventory-str-crt-coverage.cjs` and `load-str-crt-coverage.cjs` inventory the
 requested STR15/16/17/18 cells of the retained 528-context public consumer grid.
 Availability requires the same original index, FIXED mode, payload, setting and

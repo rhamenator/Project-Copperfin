@@ -6,6 +6,8 @@
 set -euo pipefail
 cd /home/rich/.codex/worktrees/numeric-literal-display-5611/Project-Copperfin
 out=${1-}
+mode=${2-}
+[[ "$mode" = '' || "$mode" = '--combined' ]] || exit 93
 [[ "$out" =~ ^build/default-transform-str-crt-coverage[0-9]+$ ]] || exit 93
 test ! -e "$out" || exit 96
 mkdir "$out"
@@ -15,6 +17,7 @@ git status --porcelain > "$out/source-status.txt"
 sha256sum "$fixture"/*.cjs "$fixture"/*.json "$fixture"/*.prg \
  "$fixture"/str-middle-captures1/* "$fixture"/str-fixed-captures1/* \
  "$fixture"/gcvt-captures1/* "$fixture"/crt-nativeonly-captures1/* \
+ "$fixture"/crt-precision-captures1/* \
  "$fixture/str-crt-coverage-check.sh" > "$out/inputs.sha256"
 stage() {
  local name=$1; shift
@@ -38,10 +41,19 @@ stage() {
 }
 stage coverage-tests node "$fixture/test-inventory-str-crt-coverage.cjs"
 stage loader-tests node "$fixture/test-load-str-crt-coverage.cjs"
+if [ "$mode" = '--combined' ]; then
+ stage precision-join-tests node "$fixture/test-str-crt-precision-join.cjs"
+ stage precision-reader node "$fixture/audit-crt-precision.cjs" "$fixture/crt-precision-captures1"
+fi
 stage str-reader node "$fixture/audit-str-middle.cjs" "$fixture/str-middle-captures1"
 stage crt-reader node "$fixture/audit-crt.cjs" "$fixture/crt-nativeonly-captures1"
 stage overlap-prerequisite node "$fixture/analyze-str-crt-overlap.cjs"
-stage inventory node "$fixture/load-str-crt-coverage.cjs"
-stage repeat node "$fixture/load-str-crt-coverage.cjs"
+if [ "$mode" = '--combined' ]; then
+ stage inventory node "$fixture/load-str-crt-coverage.cjs" --combined
+ stage repeat node "$fixture/load-str-crt-coverage.cjs" --combined
+else
+ stage inventory node "$fixture/load-str-crt-coverage.cjs"
+ stage repeat node "$fixture/load-str-crt-coverage.cjs"
+fi
 stage readback cmp "$out/inventory.out" "$out/repeat.out"
 printf 'Offline coverage stages complete; no native invoked\n'
