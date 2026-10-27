@@ -1,5 +1,52 @@
 # Default Numeric TRANSFORM recovery — #5611/#6776/#7189, tracking #7210
 
+## Retained STR/CRT coverage inventory — 2026-10-27
+
+`inventory-str-crt-coverage.cjs` and `load-str-crt-coverage.cjs` inventory the
+requested STR15/16/17/18 cells of the retained 528-context public consumer grid.
+Availability requires the same original index, FIXED mode, payload, setting and
+conversion count in the native-only CRT capture. SHIFTED and E-kind records
+cannot fill F-kind cells. This inventory is not a metadata/runtime equivalence
+join or a digit-conversion comparison; empty CRT returns prove availability
+only, never numeric equality. No native expected text is generated.
+
+The retained grid requests 2,112 cells; 96 have corresponding native F-count
+observations and 2,016 do not. Every requested and missing cell is retained in
+`str-crt-coverage-captures1/inventory.out.gz`. The earlier accepted 96-context
+comparison is not new evidence and cannot stand in for missing count/payload
+coverage. The completed broader528 rendering relation still takes native STR
+digits as input; it is not a recovered conversion algorithm.
+
+Six source files and receipts are retained in `str-crt-coverage-captures1`:
+82 gzip files, manifest compressed/decoded byte counts and SHA256 verified
+against original host bytes. Host `build/default-transform-str-crt-coverage1`
+retains the post-archive source-hash check. Six source hashes bound archival
+inputs, including the later independent-readback source. The original execution
+manifest predates that readback source; do not claim it bound that later source.
+Both native reader files were byte-compared to their frozen archive sources.
+Eight offline stages passed, empty stderr, fresh prefix-idle status1, both full
+I/O PSI averages below1%, nice10, immutable inputs before/after each child.
+Independent nested source lookup checked all cells and the complete missing
+list; inventory repeat was byte-identical. Sixteen synthetic coverage and twelve
+synthetic loader checks passed. A first loader-test attempt used an incorrect
+in-memory path slice and failed before native evidence access; corrected from
+slice2 to slice3. No production defect is inferred from that harness failure.
+
+LOW DQ-DV001 maintainer self-review/walkthrough: trace source hashes and raw
+reader flags to the retained archives, inspect duplicate rejection, route/kind/
+payload/count separation, input immutability and empty-return non-equality,
+then independently reconstruct every cell and verify archive bytes. This is
+developer self-review, not independent human or release assurance. Existing
+hazards, rollback and notification boundaries remain unchanged. Roll back only
+this diagnostic inventory if its selection is wrong; never rewrite native
+observations or relax ORIGINAL assertions to match it.
+
+NEXT inventory the additional retained D+1/+2/+3 count evidence against missing
+cells, preserving distinct metadata/runtime provenance before any combined
+conversion conclusion. Do not assume those captures fill cells merely because
+counts coincide. No new native stimulus, production formatter, tolerance,
+conversion acceptance or division/ListItem completion is claimed here.
+
 ## Pre-observation contract
 
 `RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001` derives from owner Numeric
