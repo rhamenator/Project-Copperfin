@@ -2,6 +2,40 @@
 
 ## Retained STR/CRT coverage inventory — 2026-10-27
 
+### Exact same-count comparison of available cells
+
+`analyze-str-crt-cells.cjs` compares all384 available cells, retaining raw STR
+text, CRT digits/point/sign, context, source controls and all1,728 missing cells.
+`compare-str-crt-cell.cjs` uses exact BigInt coefficient/exponent comparison;
+empty native returns remain unavailable numeric values, never invented zero.
+Twenty-one synthetic metric tests cover signed zero, empty returns, exponents,
+negative decimal points, sub-binary64-resolution differences and malformed data.
+Fourteen guarded stages passed, empty stderr, immutable inputs before/after,
+prefix-idle and both full I/O PSI averages below1%; repeated output is byte-equal.
+Independent rational cross-multiplication readback binds every row to raw source
+controls and verifies exact-value/zero-sign flags and all groups without sharing
+the metric normalizer. That later reader is separately hash-bound, not claimed
+to have existed in the original execution manifest.
+
+For each FIXED mode there are48 contexts per count-setting offset. Offset0 has
+12 empty returns and36 exact-value differences; offset1 has0 empty and36 value
+differences; offsets2 and3 each have0 empty and24 value differences. All groups
+have0 zero-sign differences. Offset0 repeats the earlier96-cell control and is
+not new evidence. These finite counterexamples reject universal same-count CRT
+value equivalence for these consumers; they do not establish a replacement
+conversion rule, internal call graph, metadata parity or production formatter.
+Every mismatch remains in `str-crt-coverage-captures3/cell-analysis.out.gz`.
+
+Archive3 retains137 gzip source/receipt entries, with compressed and decoded
+sizes/SHA256 and exact captured host-byte verification; eleven current sources
+were unchanged across archival. No native/VM/compiler execution or ORIGINAL
+assertion change occurred. LOW DQ-DV001 developer self-review walkthrough checks
+raw source binding, empty-return separation, exact arithmetic and complete
+counterexamples against independent readback and archive bytes; this is not
+independent human assurance. Existing hazards and rollback boundaries apply.
+NEXT recover the conversion discriminator behind the nonempty value gaps;
+do not synthesize missing native observations or fit a tolerance to the totals.
+
 ### Additional retained count coverage
 
 The separately qualified ORIGINAL-only D+1/+2/+3 CRT experiment has pinned raw

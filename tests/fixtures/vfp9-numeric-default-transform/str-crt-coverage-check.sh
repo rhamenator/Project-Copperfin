@@ -8,6 +8,8 @@ cd /home/rich/.codex/worktrees/numeric-literal-display-5611/Project-Copperfin
 out=${1-}
 mode=${2-}
 [[ "$mode" = '' || "$mode" = '--combined' ]] || exit 93
+analysis=${3-}
+[[ "$analysis" = '' || "$analysis" = '--cells' ]] || exit 93
 [[ "$out" =~ ^build/default-transform-str-crt-coverage[0-9]+$ ]] || exit 93
 test ! -e "$out" || exit 96
 mkdir "$out"
@@ -56,4 +58,10 @@ else
  stage repeat node "$fixture/load-str-crt-coverage.cjs"
 fi
 stage readback cmp "$out/inventory.out" "$out/repeat.out"
+if [ "$analysis" = '--cells' ]; then
+ stage cell-metric-tests node "$fixture/test-compare-str-crt-cell.cjs"
+ stage cell-analysis node "$fixture/analyze-str-crt-cells.cjs"
+ stage cell-repeat node "$fixture/analyze-str-crt-cells.cjs"
+ stage cell-bytecompare cmp "$out/cell-analysis.out" "$out/cell-repeat.out"
+fi
 printf 'Offline coverage stages complete; no native invoked\n'
