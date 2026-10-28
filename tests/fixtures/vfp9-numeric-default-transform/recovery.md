@@ -2,6 +2,37 @@
 
 ## Exact binary rounding diagnostic — 2026-10-27
 
+### Signed residual characterization
+
+`exact-str-residual.cjs` retains observed-minus-nearest integer residuals in
+units10^-count and orients magnitude residuals using the raw payload sign,
+including rounded zero. Fifteen synthetic checks pass. The analyzer pins the
+parent compressed report SHA256
+`f95a4192f2a4889b50f6bb9e9b3d238124583eb89e07516b2df2ed1ac3df106f`,
+decoded manifest hash and native source hash. Every original row is preserved.
+Five guarded stages (syntax, tests, parent readback, analysis/repeat) passed;
+separate independent readback verifies all2,112 parent identities, both signed
+residuals, all16 histograms and complete mismatch selection. Later reader source
+is separately bound, not retroactively inserted into the old execution manifest.
+Prefix-idle, both full I/O PSI averages below1%, nice10, empty stderr/status0,
+and input hashes before/after apply. Archive `exact-str-residual-captures1`
+contains49 gzip entries verified compressed/decoded sizes/hashes/exact host bytes;
+four source versions were unchanged across archival.
+
+For OFF nearest-even, count15 has216 zero residuals and48 at+1 magnitude unit.
+Count16 ranges-5..+5 with160 zero; count17 ranges-50..+50 with132 zero;
+count18 ranges-500..+500 with112 zero. These are finite observations, not bounds
+for other inputs or a fitted correction. Complete histograms for both modes and
+FIXED policies and every counterexample remain archived. A constant single-unit
+adjustment cannot explain the observed higher-count residuals. No tolerance,
+production conversion rule or ORIGINAL assertion change is accepted.
+
+LOW DQ-DV001 developer self-review traces parent hashes/raw sign, exact delta,
+independent per-row recomputation, histograms and archive bytes. This is not
+independent human assurance; existing hazards/rollback apply. NEXT investigate
+count-to-count residual relationships on identical payload/FIXED contexts using
+retained raw observations, without guessing a decimal cap or erasing mismatches.
+
 Owner-directed diagnostic tests pass28 checks: known BRS payload byte order,
 signed zero, subnormal/minimum-normal/maximum-finite boundaries, exact positive
 and negative ties, neighboring payloads, sub-binary64 decimal distinctions and
