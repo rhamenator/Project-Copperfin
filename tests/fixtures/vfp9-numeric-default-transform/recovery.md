@@ -4,6 +4,36 @@
 
 ### Signed residual characterization
 
+#### Adjacent requested-count relationships
+
+`join-exact-str-counts.cjs` requires each original index/FIXED context's complete
+unique15..18 count grid and unchanged payload/setting. All1,584 adjacent pairs
+retain both full endpoints and exact observed, nearest and residual steps,
+asserting observedStep=nearestStep+residualStep. Twelve synthetic join checks
+pass, including malformed/incomplete/duplicate/mixed-context rejection.
+Four guarded stages passed (tests, parent readback, analysis, byte-equal repeat),
+followed by separate independent endpoint lookup and verification of all pairs,
+six histograms and complete nonzero list. Prefix-idle, full I/O PSI below1%,
+nice10, empty stderr/status0 and input hashes before/after apply. The later
+independent source is separately bound, not retrobound. Archive
+`exact-str-counts-captures1` retains38 gzip entries with compressed/decoded
+size/hash and exact host-byte checks; four source versions remained unchanged.
+
+For each FIXED mode and each15->16/16->17/17->18 step,252 of264 observations
+have observedStep0. The remaining12 split six negative/six positive, with
+step sizes respectively10,100,1000 units of the higher requested decimal count.
+All72 nonzero pairs and all1,584 endpoints remain retained. Thus these retained
+STR values mostly append precision without changing numeric value, but not
+universally; neither a fixed decimal cap nor a universal append-only conversion
+is established. No tolerance or ORIGINAL assertion change is accepted.
+
+LOW DQ-DV001 developer walkthrough traces pinned parent manifest, complete-grid
+rejection tests, independent endpoint/conservation/group checks and archive
+bytes. Not independent human assurance; existing hazards/rollback apply.
+NEXT isolate the72 changing pairs and bind their exact payload/settings to
+existing nearest residuals to distinguish count-driven changes from unchanged
+payload groups, retaining all counterexamples before choosing new stimulus.
+
 `exact-str-residual.cjs` retains observed-minus-nearest integer residuals in
 units10^-count and orients magnitude residuals using the raw payload sign,
 including rounded zero. Fifteen synthetic checks pass. The analyzer pins the
