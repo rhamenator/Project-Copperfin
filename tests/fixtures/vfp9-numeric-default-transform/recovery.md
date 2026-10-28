@@ -2,6 +2,52 @@
 
 ## Exact binary rounding diagnostic — 2026-10-27
 
+### Next bounded native discriminator: ambient setting independence
+
+Selection checkpoint: `select-str-ambient-witnesses.cjs` binds the qualified
+STRmiddle raw hash, actual full OFF/ON controls and N40/18 metadata. Ten focused
+rejection checks pass. Four guarded offline stages passed (tests, strict native
+reader replay, selection/repeat byte-equality), then independent parent lookup
+verified six payloads,12 original controls, sign-bit pairing and144 planned
+observations. Original inputs remained unchanged before/after each child;
+prefix-idle, both full I/O PSI averages below1%, nice10 and empty stderr/status0
+apply. The later reader is separately bound, not retroactively included in the
+original execution manifest. `str-ambient-selection-captures1` retains37 gzip
+source/receipt entries verified compressed/decoded size/hash and exact host
+bytes, with three source versions stable across archival. This qualifies
+stimulus selection only: no new native experiment or output acceptance occurred.
+LOW DQ-DV001 developer walkthrough checks the documented index correction,
+full parent controls, rejection boundaries, independent sign-pair lookup and
+archive bytes; not independent human assurance. Existing hazards/rollback apply.
+
+Pre-observation specification, not executed or accepted: the retained STRmiddle
+grid binds each payload to its original SET DECIMALS; it explicitly is not a
+settings Cartesian experiment. Existing CRT precision offsets change conversion
+counts, not that payload-to-setting binding. Therefore count-step arithmetic
+alone cannot separate ambient-setting dependence from explicit STR-count
+behavior. Do not repeat those aggregate analyses as a new discriminator.
+
+Select actual source indices184,185,186 and their negative witnesses190,191,192
+from the hash-qualified STRmiddle inventory, retaining their exact bits and
+original setting. Before execution verify those are the intended signed
+witnesses rather than inferring pair relationships from index proximity. Source
+inspection corrected the initial proposed223..225: those belong to different
+setting18 payloads, not sign counterparts. Actual positive bits are
+3CC1FF130772E184/185/186; negative190..192 differ only in sign bit and all six
+original settings are15. Preserve this selection correction; no run used the
+incorrect proposal. Use
+the same ORIGINAL INLINE N40/18 route and width40, explicit STR counts15..18,
+FIXED OFF/ON, and independently applied ambient DECIMALS0,13,18:144 public STR
+observations. Counts/settings are interventions, not a precision-cap model.
+Retain original-setting control calls before/after, actual SET readbacks,
+metadata/BRS, raw output type/width/hex and installed-runtime sampled identity/
+control-word provenance. Require strict first-run validation before repeat,
+exact pair readback and complete mismatch retention. No generated expected
+strings, hidden normalization, tolerance or production changes are authorized
+by this experiment. Native/compiler execution still requires current resource
+coordination and the existing fresh pressure/prefix gates; this specification
+does not reserve or start a VM or Wine process.
+
 ### Signed residual characterization
 
 #### Adjacent requested-count relationships
