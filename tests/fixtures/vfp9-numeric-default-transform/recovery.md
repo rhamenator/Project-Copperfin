@@ -6,6 +6,29 @@
 
 #### Adjacent requested-count relationships
 
+Arithmetic step relations are retained in `exact-str-step-relation-captures1`:
+all1,584 pairs, both exact-nearest modes,72 changing outcomes and unchanged
+controls. Thirteen synthetic checks and four guarded stages pass; separate
+independent endpoint arithmetic verifies every category,12 groups and the full
+changing list. Archive38 gzip entries passed compressed/decoded size/hash and
+exact host-byte checks with four sources stable. Later reader binding remains
+separate. Existing prefix/PSI/nice10/immutable-input controls apply.
+
+For OFF and either nearest mode,15->16 has160 both-zero,92 cancelled and12
+mixed steps.16->17 has184 both-zero,68 cancelled and12 residual-only;
+17->18 has168 both-zero,84 cancelled and12 residual-only. No changing step
+equals the exact-nearest step in these OFF groups. Here residual-only means
+nearestStep0 and observedStep nonzero; cancelled means observedStep0 but nearest
+and residual steps cancel. These are arithmetic identities, NOT causal or
+internal implementation attribution. Complete ON groups and all endpoints are
+retained rather than inferred from OFF. No rounding repair/tolerance follows.
+LOW DQ-DV001 developer walkthrough checks conservation, negative/zero/bigint
+boundaries, independent raw-endpoint categories and archive bytes; not
+independent human assurance. Existing hazards/rollback apply; ORIGINAL unchanged.
+NEXT use the retained changing payload/count witnesses to specify a bounded
+native discriminator for conversion precision (not another aggregate relabeling),
+checking existing captures first and preserving exact count/source provenance.
+
 The completed context partition (`exact-str-changes-captures1`) binds the
 count-report compressed SHA256
 `d007657a0fc003559ea9b9e4b08d9e23c6060f23108cfdd4b9a23b2780e2c46e`
