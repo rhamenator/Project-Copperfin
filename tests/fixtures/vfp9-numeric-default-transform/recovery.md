@@ -6,6 +6,30 @@
 
 #### Adjacent requested-count relationships
 
+The completed context partition (`exact-str-changes-captures1`) binds the
+count-report compressed SHA256
+`d007657a0fc003559ea9b9e4b08d9e23c6060f23108cfdd4b9a23b2780e2c46e`
+and decoded manifest. All528 contexts retain their complete three pairs and
+shared endpoints. Twelve synthetic checks and four guarded stages passed;
+separate independent lookup recomputes the changing classification directly
+from observed integers, validates every endpoint, both partitions and eight
+grouped index lists. Archive38 gzip entries passed compressed/decoded size/hash
+and exact host-byte verification, with four source versions unchanged. Later
+reader binding is separate; existing prefix/PSI/input-hash/nice10 controls apply.
+
+There are72 changing contexts and456 unchanged. Each FIXED mode has36 changing
+contexts, all changing on exactly one adjacent-count step; none changes twice
+or three times. Both modes have the same changing indices:184..186,190..219,
+223..225. Complete payload/settings and nearest residuals remain attached;
+this is not evidence of a universal cap or causal conversion mechanism.
+LOW DQ-DV001 developer walkthrough checks parent binding, complete-grid and
+shared-endpoint rejection, independent observed-integer classification and
+archived bytes. Not independent human assurance; existing hazards/rollback
+apply. No production, tolerance or ORIGINAL assertion changes.
+NEXT compare each changing step's exact nearest-rounding transition to its
+observed transition and retain all72 outcomes, distinguishing changes explained
+by exact rounding from residual-only changes before choosing new native stimuli.
+
 `join-exact-str-counts.cjs` requires each original index/FIXED context's complete
 unique15..18 count grid and unchanged payload/setting. All1,584 adjacent pairs
 retain both full endpoints and exact observed, nearest and residual steps,
