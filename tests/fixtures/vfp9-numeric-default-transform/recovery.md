@@ -62,6 +62,17 @@ allocation and floating-control writes. This is still source/stub evidence only:
 the FLL handler, strict native reader and worker remain to be authored before a
 fresh resource gate can authorize compilation or a native run.
 
+The FLL handler source now binds the existing loaded MSVCR71 module through the
+retained path/header/hash gate, resolves both exports without loading a DLL and
+calls the guarded comparison boundary as `CFNSPRTF(value,count)`. Its bounded
+4096-byte response retains payload bits, count, control words, exact module
+identity, both public output strings, both grammar flags and equality, including
+false flags and unequal text. It does not modify the completed `_fcvt`, `_ecvt`
+or `_gcvt` handlers. The expanded frozen-source check passes27 assertions and
+the same45 stub boundary checks still pass. No freestanding/native compile or
+Wine execution has occurred; the generated VFP stimulus, strict reader and
+first-run-gated worker remain pending.
+
 Stimulus/reader source checkpoint (prepared before the native capture):
 `emit-str-ambient.cjs` derives a36-record/144-observation public stimulus from
 the selected six payloads, with originalD15 controls before/after each ambient

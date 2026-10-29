@@ -17,3 +17,7 @@
   `%.*f`/counts15..18, structural output validation and mismatch-preserving dual
   results/grammar flags. Pass45 stub boundary checks and17 exact source assertions; the native
   handler/reader/worker and any compiled execution remain pending.
+- Add the source-only `CFNSPRTF` handler over the retained loaded-module identity
+  gate. Its bounded response preserves both export strings, grammar/equality
+  flags, payload/control words and module identity;27 exact source assertions
+  pass, with compilation and native observation still deferred.

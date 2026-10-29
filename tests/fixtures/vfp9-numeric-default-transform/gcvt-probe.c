@@ -7,6 +7,7 @@
  */
 #include "crt-binding.h"
 #include "gcvt-boundary.h"
+#include "sprintf-boundary.h"
 /* Default experiment unchanged. The separate precision discriminator opts in
  * to counts19..21; this is NOT a VFP precision cap or production policy. */
 #ifndef CRT_FIXED_COUNT_MAX
@@ -309,13 +310,73 @@ static void __fastcall general_conversion(NumericParameters *p) {
     *out=0;_RetChar(output);
 }
 /* END first-party guarded _gcvt handler. */
+/* BEGIN first-party guarded public sprintf/_snprintf comparison handler. */
+static void __fastcall sprintf_conversion(NumericParameters *p) {
+    union { double value; unsigned char bytes[8]; } input;
+    double count_value;
+    if(p->count!=2 || !numeric(&p->args[0],&input.value) || !numeric(&p->args[1],&count_value)) {
+        _RetChar("ERROR:SPRINTF_PARAMETER");return;
+    }
+    if((input.bytes[7]&0x7f)==0x7f && (input.bytes[6]&0xf0)==0xf0) {
+        _RetChar("ERROR:SPRINTF_NONFINITE");return;
+    }
+    if(!(count_value==15 || count_value==16 || count_value==17 || count_value==18)) {
+        _RetChar("ERROR:SPRINTF_COUNT");return;
+    }
+    /* Query the exact module already loaded by VFP; never load or replace it. */
+    void *module=GetModuleHandleA("msvcr71.dll");
+    if(!module) { _RetChar("ERROR:MODULE");return; }
+    char module_path[260];
+    unsigned long length=GetModuleFileNameA(module,module_path,sizeof(module_path));
+    if(!length || length>=sizeof(module_path)) { _RetChar("ERROR:MODULEPATH");return; }
+    module_path[length]=0;
+    if(!bind_module(module,module_path,length)) { _RetChar("ERROR:MODULEBINDING");return; }
+    SprintfFunction sprintf_function=(SprintfFunction)GetProcAddress(module,"sprintf");
+    SnprintfFunction snprintf_function=(SnprintfFunction)GetProcAddress(module,"_snprintf");
+    if(!sprintf_function || !snprintf_function) { _RetChar("ERROR:SPRINTF_EXPORT");return; }
+    /* VFP invokes synchronous evaluation-thread handlers. Static owned buffers
+     * avoid allocator use and a large freestanding stack-probe dependency. */
+    static SprintfBuffer sprintf_buffer,snprintf_buffer;
+    SprintfResult result;
+    unsigned before=control_word();
+    int status=sprintf_call(sprintf_function,snprintf_function,input.value,count_value,
+                            &sprintf_buffer,&snprintf_buffer,&result);
+    unsigned after=control_word();
+    if(status!=SPRINTF_OK) {
+        char error[44],*e=text(error,"ERROR:SPRINTF_BOUNDARY:");
+        e=hex(e,(unsigned)status,8);*e=0;_RetChar(error);return;
+    }
+    /* <=518 module hex +2*766 text hex + identity/fixed fields <4096. Both
+     * public results are emitted even when equality or grammar is false. */
+    static char output[4096];char *out=output;
+    out=text(out,"kind=S;count=");out=hex(out,(unsigned)(int)count_value,8);
+    out=text(out,";real=");for(int i=7;i>=0;--i)out=hex(out,input.bytes[i],2);
+    out=text(out,";cw0=");out=hex(out,before,4);out=text(out,";cw1=");out=hex(out,after,4);
+    out=text(out,";module=");for(unsigned i=0;i<length;++i)out=hex(out,(unsigned char)module_path[i],2);
+    out=text(out,";fileSample=ONCE;fileSize=");out=hex(out,bound_size,8);
+    out=text(out,";fileSha256=");for(unsigned i=0;i<32;++i)out=hex(out,bound_digest[i],2);
+    out=text(out,";machine=");out=hex(out,bound_pe.machine,4);
+    out=text(out,";magic=");out=hex(out,bound_pe.magic,4);
+    out=text(out,";stamp=");out=hex(out,bound_pe.stamp,8);
+    out=text(out,";imageSize=");out=hex(out,bound_pe.image_size,8);
+    out=text(out,";checksum=");out=hex(out,bound_pe.checksum,8);
+    out=text(out,";capacity=");out=hex(out,SPRINTF_CAPACITY,8);
+    out=text(out,";canary=PASS;sprintfGrammar=");out=hex(out,result.sprintf_grammar,1);
+    out=text(out,";snprintfGrammar=");out=hex(out,result.snprintf_grammar,1);
+    out=text(out,";equal=");out=hex(out,result.equal,1);
+    out=text(out,";sprintf=");for(unsigned i=0;i<result.sprintf_used;++i)out=hex(out,(unsigned char)result.sprintf_text[i],2);
+    out=text(out,";snprintf=");for(unsigned i=0;i<result.snprintf_used;++i)out=hex(out,(unsigned char)result.snprintf_text[i],2);
+    *out=0;_RetChar(output);
+}
+/* END first-party guarded public sprintf/_snprintf comparison handler. */
 static PublicInfo functions[]={
     {"CFNFCVT",fixed_conversion,2,"NN"},
     {"CFNECVT",significant_conversion,2,"NN"},
     {"CFNBIND",binding_diagnostic,0,""},
-    {"CFNGCVT",general_conversion,2,"NN"}
+    {"CFNGCVT",general_conversion,2,"NN"},
+    {"CFNSPRTF",sprintf_conversion,2,"NN"}
 };
-__declspec(dllexport) PublicTable _FoxTable={0,4,functions};
+__declspec(dllexport) PublicTable _FoxTable={0,5,functions};
 /* Same first-party entry pattern as cause-probe.c; installed SDK stays host-only. */
 typedef void (*Initializer)(void);
 #pragma section(".CRT$XCA",read)
