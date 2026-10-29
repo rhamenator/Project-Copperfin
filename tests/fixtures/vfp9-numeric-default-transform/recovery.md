@@ -4,6 +4,39 @@
 
 ### Next bounded native discriminator: ambient setting independence
 
+Stimulus/reader source checkpoint (native experiment still UNEXECUTED):
+`emit-str-ambient.cjs` derives a36-record/144-observation public stimulus from
+the selected six payloads, with originalD15 controls before/after each ambient
+window. Inspection added direct ambient metadata/BRS and after-setting receipts;
+the frozen record has44 fields, not the initially proposed38. Source SHA256 is
+`7031945d2b9ac4dafc4d31a2640fe05363b4e2ad2e50aa123b6b64b8baacd945`.
+`read-str-ambient-record.cjs`, `read-str-ambient-run.cjs` and
+`audit-str-ambient.cjs` require all controls, exact source/environment/status/
+stdout/raw binding, complete order/framing and a first-structure gate before
+paired qualification. Paired differences allow only inactive integer metadata
+slots after active metadata validation; raw equality/differences remain visible.
+
+Six guarded offline stages passed:20 generated-source,44 record,13 full-run and
+13 audit synthetic checks (90 total), generated-source/repeat byte-equality;
+each child had a15-second bound, prefix-idle/full I/O PSI below1%/nice10,
+empty stderr/status0 and immutable inputs before/after. Synthetic audit records
+are harness tests, never native ambient results. Initial audit tests exceeded
+30 seconds while constructing oversized Buffer assertion diagnostics; a bounded
+five-second trace localized this. Exact Buffer.equals predicates with bounded
+messages replace diagnostic-heavy deepEqual; all13 rejection checks then passed
+within10 seconds and in the full suite. The earlier process outcome was not
+recoverable and was never claimed as a pass. No native or production defect is
+inferred. `str-ambient-source-captures1` retains47 gzip source/receipt entries
+with compressed/decoded size/hash and exact host-byte verification; eight source
+versions remained unchanged. Frozen generated PRG is retained in that archive.
+
+LOW DQ-DV001 developer walkthrough checks loop/field order, ambient before/after
+metadata, first-error stop, malformed/status/source rejection, first-run gate,
+bounded failure diagnostics and archive bytes. Not independent human assurance;
+existing hazards/rollback apply. NEXT obtain fresh native resource coordination,
+revalidate observer/source/runtime hashes, strict first-run gate before repeat,
+and preserve every ambient mismatch. Source readiness is not capture acceptance.
+
 Selection checkpoint: `select-str-ambient-witnesses.cjs` binds the qualified
 STRmiddle raw hash, actual full OFF/ON controls and N40/18 metadata. Ten focused
 rejection checks pass. Four guarded offline stages passed (tests, strict native
