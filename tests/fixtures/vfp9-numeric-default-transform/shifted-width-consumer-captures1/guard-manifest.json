@@ -1,0 +1,94 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001",
+  "ordinaryShellNotReaEvidence": true,
+  "nativeInvoked": false,
+  "analysisInvoked": false,
+  "archiveReaderReplayInvoked": false,
+  "preChildGuardStatus": 75,
+  "prefixStatus": 1,
+  "guardFullPsi": {
+    "avg10": 19.43,
+    "avg60": 4.73
+  },
+  "pending": "SAME three offline stages in new analysis2 root, do not repeat native capture",
+  "files": [
+    {
+      "name": "guard-archived-reader.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-analysis1/archived-reader.guard.status",
+      "bytes": 3,
+      "sha256": "84b9bb077be0d8a29d0d01ef350d718b77c2ec5f40c3ab90502b1b4b5016c550"
+    },
+    {
+      "name": "guard-archived-reader.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-analysis1/archived-reader.inputs-before.txt",
+      "bytes": 22614,
+      "sha256": "d87c501dcf122e6abf551096fdf2dff7d965d9f8db6afe246e20cbe0f079009b"
+    },
+    {
+      "name": "guard-archived-reader.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-analysis1/archived-reader.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "guard-archived-reader.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-analysis1/archived-reader.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "guard-archived-reader.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-analysis1/archived-reader.pressure-before.txt",
+      "bytes": 116,
+      "sha256": "a460d73ef7e886424707a5ccf0f9ef13d70674687775e1f46371afc1ee247b38"
+    },
+    {
+      "name": "guard-inputs.sha256",
+      "hostRelativePath": "build/default-transform-shifted-width-analysis1/inputs.sha256",
+      "bytes": 36378,
+      "sha256": "4316be77589f43a268176a4a70347dab3d36abedaf1f02ee14f7cef8d7a54087"
+    },
+    {
+      "name": "guard-native-archive-completion.json",
+      "hostRelativePath": "build/default-transform-shifted-width-analysis1/native-archive-completion.json",
+      "bytes": 308,
+      "sha256": "902f64a437eb2c37b2345ae57b93ff4664d6b4b93bf538053475a8f513ef36a4"
+    },
+    {
+      "name": "guard-post-stop-pressure.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-analysis1/post-stop-pressure.txt",
+      "bytes": 120,
+      "sha256": "531f9fd0ff1f8afed900c061124844ae7a23a958a4bde217cca5a18c1dda3f63"
+    },
+    {
+      "name": "guard-pre-check-source-commit.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-analysis1/pre-check-source-commit.txt",
+      "bytes": 41,
+      "sha256": "2b3f324662c4e207c8b57b47e17d3a90c106b761f8d879db067293f9eed2023f"
+    },
+    {
+      "name": "guard-pre-check-source-status.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-analysis1/pre-check-source-status.txt",
+      "bytes": 167,
+      "sha256": "c114c97f144b5ec334edf8a4fd315bd7317c73ae74bd72094d35a705ebc8e33f"
+    },
+    {
+      "name": "guard-prior-inputs.sha256",
+      "hostRelativePath": "build/default-transform-shifted-width-analysis1/prior-inputs.sha256",
+      "bytes": 25283,
+      "sha256": "1f4fcfe37bb7414025625f5fb45b5740e9e0bf7e534f4bbf402f5549dd027b65"
+    },
+    {
+      "name": "guard-shell-completion.json",
+      "hostRelativePath": "build/default-transform-shifted-width-analysis1/shell-completion.json",
+      "bytes": 3052,
+      "sha256": "6452dbc2a968bb08dca3aad70e7c7f0b73ea82375d65eacf37bdd7545fc0d736"
+    },
+    {
+      "name": "guard-source-analyze-shifted-width-consumer.cjs",
+      "hostRelativePath": "build/default-transform-shifted-width-analysis1/source-analyze-shifted-width-consumer.cjs",
+      "bytes": 7870,
+      "sha256": "054348b82f902dc87a74581ec8fd72b0595e92a46e489164c92cc15161b234f8"
+    }
+  ]
+}

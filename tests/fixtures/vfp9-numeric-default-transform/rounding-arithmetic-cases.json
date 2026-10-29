@@ -1,0 +1,1873 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001",
+  "parentNativeSha256": [
+    "6972cb22232ddd776ec25491bb461b051e88c297d5e98d1bf9eea5bd519e1a3f",
+    "b6e43abea8d3290d46e231a72e0ec6807c25551b266cfa156d91f393f4baacc2"
+  ],
+  "inputs": [
+    {
+      "index": 1,
+      "group": 1,
+      "setting": 0,
+      "bits": "3FDFF7CED9168727",
+      "offset": -2
+    },
+    {
+      "index": 2,
+      "group": 1,
+      "setting": 0,
+      "bits": "3FDFF7CED9168728",
+      "offset": -1
+    },
+    {
+      "index": 3,
+      "group": 1,
+      "setting": 0,
+      "bits": "3FDFF7CED9168729",
+      "offset": 0
+    },
+    {
+      "index": 4,
+      "group": 1,
+      "setting": 0,
+      "bits": "3FDFF7CED916872A",
+      "offset": 1
+    },
+    {
+      "index": 5,
+      "group": 1,
+      "setting": 0,
+      "bits": "3FDFF7CED916872B",
+      "offset": 2
+    },
+    {
+      "index": 6,
+      "group": 1,
+      "setting": 0,
+      "bits": "3FDFF7CED916872C",
+      "offset": 3
+    },
+    {
+      "index": 7,
+      "group": 2,
+      "setting": 0,
+      "bits": "BFDFF7CED9168727",
+      "offset": -2
+    },
+    {
+      "index": 8,
+      "group": 2,
+      "setting": 0,
+      "bits": "BFDFF7CED9168728",
+      "offset": -1
+    },
+    {
+      "index": 9,
+      "group": 2,
+      "setting": 0,
+      "bits": "BFDFF7CED9168729",
+      "offset": 0
+    },
+    {
+      "index": 10,
+      "group": 2,
+      "setting": 0,
+      "bits": "BFDFF7CED916872A",
+      "offset": 1
+    },
+    {
+      "index": 11,
+      "group": 2,
+      "setting": 0,
+      "bits": "BFDFF7CED916872B",
+      "offset": 2
+    },
+    {
+      "index": 12,
+      "group": 2,
+      "setting": 0,
+      "bits": "BFDFF7CED916872C",
+      "offset": 3
+    },
+    {
+      "index": 13,
+      "group": 3,
+      "setting": 1,
+      "bits": "3FA9930BE0DED285",
+      "offset": -2
+    },
+    {
+      "index": 14,
+      "group": 3,
+      "setting": 1,
+      "bits": "3FA9930BE0DED286",
+      "offset": -1
+    },
+    {
+      "index": 15,
+      "group": 3,
+      "setting": 1,
+      "bits": "3FA9930BE0DED287",
+      "offset": 0
+    },
+    {
+      "index": 16,
+      "group": 3,
+      "setting": 1,
+      "bits": "3FA9930BE0DED288",
+      "offset": 1
+    },
+    {
+      "index": 17,
+      "group": 3,
+      "setting": 1,
+      "bits": "3FA9930BE0DED289",
+      "offset": 2
+    },
+    {
+      "index": 18,
+      "group": 3,
+      "setting": 1,
+      "bits": "3FA9930BE0DED28A",
+      "offset": 3
+    },
+    {
+      "index": 19,
+      "group": 4,
+      "setting": 1,
+      "bits": "BFA9930BE0DED285",
+      "offset": -2
+    },
+    {
+      "index": 20,
+      "group": 4,
+      "setting": 1,
+      "bits": "BFA9930BE0DED286",
+      "offset": -1
+    },
+    {
+      "index": 21,
+      "group": 4,
+      "setting": 1,
+      "bits": "BFA9930BE0DED287",
+      "offset": 0
+    },
+    {
+      "index": 22,
+      "group": 4,
+      "setting": 1,
+      "bits": "BFA9930BE0DED288",
+      "offset": 1
+    },
+    {
+      "index": 23,
+      "group": 4,
+      "setting": 1,
+      "bits": "BFA9930BE0DED289",
+      "offset": 2
+    },
+    {
+      "index": 24,
+      "group": 4,
+      "setting": 1,
+      "bits": "BFA9930BE0DED28A",
+      "offset": 3
+    },
+    {
+      "index": 25,
+      "group": 5,
+      "setting": 2,
+      "bits": "3F7475A31A4BDB9D",
+      "offset": -2
+    },
+    {
+      "index": 26,
+      "group": 5,
+      "setting": 2,
+      "bits": "3F7475A31A4BDB9E",
+      "offset": -1
+    },
+    {
+      "index": 27,
+      "group": 5,
+      "setting": 2,
+      "bits": "3F7475A31A4BDB9F",
+      "offset": 0
+    },
+    {
+      "index": 28,
+      "group": 5,
+      "setting": 2,
+      "bits": "3F7475A31A4BDBA0",
+      "offset": 1
+    },
+    {
+      "index": 29,
+      "group": 5,
+      "setting": 2,
+      "bits": "3F7475A31A4BDBA1",
+      "offset": 2
+    },
+    {
+      "index": 30,
+      "group": 5,
+      "setting": 2,
+      "bits": "3F7475A31A4BDBA2",
+      "offset": 3
+    },
+    {
+      "index": 31,
+      "group": 6,
+      "setting": 2,
+      "bits": "BF7475A31A4BDB9D",
+      "offset": -2
+    },
+    {
+      "index": 32,
+      "group": 6,
+      "setting": 2,
+      "bits": "BF7475A31A4BDB9E",
+      "offset": -1
+    },
+    {
+      "index": 33,
+      "group": 6,
+      "setting": 2,
+      "bits": "BF7475A31A4BDB9F",
+      "offset": 0
+    },
+    {
+      "index": 34,
+      "group": 6,
+      "setting": 2,
+      "bits": "BF7475A31A4BDBA0",
+      "offset": 1
+    },
+    {
+      "index": 35,
+      "group": 6,
+      "setting": 2,
+      "bits": "BF7475A31A4BDBA1",
+      "offset": 2
+    },
+    {
+      "index": 36,
+      "group": 6,
+      "setting": 2,
+      "bits": "BF7475A31A4BDBA2",
+      "offset": 3
+    },
+    {
+      "index": 37,
+      "group": 7,
+      "setting": 3,
+      "bits": "3F405E1C15097C7E",
+      "offset": -2
+    },
+    {
+      "index": 38,
+      "group": 7,
+      "setting": 3,
+      "bits": "3F405E1C15097C7F",
+      "offset": -1
+    },
+    {
+      "index": 39,
+      "group": 7,
+      "setting": 3,
+      "bits": "3F405E1C15097C80",
+      "offset": 0
+    },
+    {
+      "index": 40,
+      "group": 7,
+      "setting": 3,
+      "bits": "3F405E1C15097C81",
+      "offset": 1
+    },
+    {
+      "index": 41,
+      "group": 7,
+      "setting": 3,
+      "bits": "3F405E1C15097C82",
+      "offset": 2
+    },
+    {
+      "index": 42,
+      "group": 7,
+      "setting": 3,
+      "bits": "3F405E1C15097C83",
+      "offset": 3
+    },
+    {
+      "index": 43,
+      "group": 8,
+      "setting": 3,
+      "bits": "BF405E1C15097C7E",
+      "offset": -2
+    },
+    {
+      "index": 44,
+      "group": 8,
+      "setting": 3,
+      "bits": "BF405E1C15097C7F",
+      "offset": -1
+    },
+    {
+      "index": 45,
+      "group": 8,
+      "setting": 3,
+      "bits": "BF405E1C15097C80",
+      "offset": 0
+    },
+    {
+      "index": 46,
+      "group": 8,
+      "setting": 3,
+      "bits": "BF405E1C15097C81",
+      "offset": 1
+    },
+    {
+      "index": 47,
+      "group": 8,
+      "setting": 3,
+      "bits": "BF405E1C15097C82",
+      "offset": 2
+    },
+    {
+      "index": 48,
+      "group": 8,
+      "setting": 3,
+      "bits": "BF405E1C15097C83",
+      "offset": 3
+    },
+    {
+      "index": 49,
+      "group": 9,
+      "setting": 4,
+      "bits": "3F0A302CEE7593FD",
+      "offset": -2
+    },
+    {
+      "index": 50,
+      "group": 9,
+      "setting": 4,
+      "bits": "3F0A302CEE7593FE",
+      "offset": -1
+    },
+    {
+      "index": 51,
+      "group": 9,
+      "setting": 4,
+      "bits": "3F0A302CEE7593FF",
+      "offset": 0
+    },
+    {
+      "index": 52,
+      "group": 9,
+      "setting": 4,
+      "bits": "3F0A302CEE759400",
+      "offset": 1
+    },
+    {
+      "index": 53,
+      "group": 9,
+      "setting": 4,
+      "bits": "3F0A302CEE759401",
+      "offset": 2
+    },
+    {
+      "index": 54,
+      "group": 9,
+      "setting": 4,
+      "bits": "3F0A302CEE759402",
+      "offset": 3
+    },
+    {
+      "index": 55,
+      "group": 10,
+      "setting": 4,
+      "bits": "BF0A302CEE7593FD",
+      "offset": -2
+    },
+    {
+      "index": 56,
+      "group": 10,
+      "setting": 4,
+      "bits": "BF0A302CEE7593FE",
+      "offset": -1
+    },
+    {
+      "index": 57,
+      "group": 10,
+      "setting": 4,
+      "bits": "BF0A302CEE7593FF",
+      "offset": 0
+    },
+    {
+      "index": 58,
+      "group": 10,
+      "setting": 4,
+      "bits": "BF0A302CEE759400",
+      "offset": 1
+    },
+    {
+      "index": 59,
+      "group": 10,
+      "setting": 4,
+      "bits": "BF0A302CEE759401",
+      "offset": 2
+    },
+    {
+      "index": 60,
+      "group": 10,
+      "setting": 4,
+      "bits": "BF0A302CEE759402",
+      "offset": 3
+    },
+    {
+      "index": 61,
+      "group": 11,
+      "setting": 5,
+      "bits": "3ED4F357252ADCCA",
+      "offset": -2
+    },
+    {
+      "index": 62,
+      "group": 11,
+      "setting": 5,
+      "bits": "3ED4F357252ADCCB",
+      "offset": -1
+    },
+    {
+      "index": 63,
+      "group": 11,
+      "setting": 5,
+      "bits": "3ED4F357252ADCCC",
+      "offset": 0
+    },
+    {
+      "index": 64,
+      "group": 11,
+      "setting": 5,
+      "bits": "3ED4F357252ADCCD",
+      "offset": 1
+    },
+    {
+      "index": 65,
+      "group": 11,
+      "setting": 5,
+      "bits": "3ED4F357252ADCCE",
+      "offset": 2
+    },
+    {
+      "index": 66,
+      "group": 11,
+      "setting": 5,
+      "bits": "3ED4F357252ADCCF",
+      "offset": 3
+    },
+    {
+      "index": 67,
+      "group": 12,
+      "setting": 5,
+      "bits": "BED4F357252ADCCA",
+      "offset": -2
+    },
+    {
+      "index": 68,
+      "group": 12,
+      "setting": 5,
+      "bits": "BED4F357252ADCCB",
+      "offset": -1
+    },
+    {
+      "index": 69,
+      "group": 12,
+      "setting": 5,
+      "bits": "BED4F357252ADCCC",
+      "offset": 0
+    },
+    {
+      "index": 70,
+      "group": 12,
+      "setting": 5,
+      "bits": "BED4F357252ADCCD",
+      "offset": 1
+    },
+    {
+      "index": 71,
+      "group": 12,
+      "setting": 5,
+      "bits": "BED4F357252ADCCE",
+      "offset": 2
+    },
+    {
+      "index": 72,
+      "group": 12,
+      "setting": 5,
+      "bits": "BED4F357252ADCCF",
+      "offset": 3
+    },
+    {
+      "index": 73,
+      "group": 13,
+      "setting": 6,
+      "bits": "3EA0C2AC1DBBE3D4",
+      "offset": -2
+    },
+    {
+      "index": 74,
+      "group": 13,
+      "setting": 6,
+      "bits": "3EA0C2AC1DBBE3D5",
+      "offset": -1
+    },
+    {
+      "index": 75,
+      "group": 13,
+      "setting": 6,
+      "bits": "3EA0C2AC1DBBE3D6",
+      "offset": 0
+    },
+    {
+      "index": 76,
+      "group": 13,
+      "setting": 6,
+      "bits": "3EA0C2AC1DBBE3D7",
+      "offset": 1
+    },
+    {
+      "index": 77,
+      "group": 13,
+      "setting": 6,
+      "bits": "3EA0C2AC1DBBE3D8",
+      "offset": 2
+    },
+    {
+      "index": 78,
+      "group": 13,
+      "setting": 6,
+      "bits": "3EA0C2AC1DBBE3D9",
+      "offset": 3
+    },
+    {
+      "index": 79,
+      "group": 14,
+      "setting": 6,
+      "bits": "BEA0C2AC1DBBE3D4",
+      "offset": -2
+    },
+    {
+      "index": 80,
+      "group": 14,
+      "setting": 6,
+      "bits": "BEA0C2AC1DBBE3D5",
+      "offset": -1
+    },
+    {
+      "index": 81,
+      "group": 14,
+      "setting": 6,
+      "bits": "BEA0C2AC1DBBE3D6",
+      "offset": 0
+    },
+    {
+      "index": 82,
+      "group": 14,
+      "setting": 6,
+      "bits": "BEA0C2AC1DBBE3D7",
+      "offset": 1
+    },
+    {
+      "index": 83,
+      "group": 14,
+      "setting": 6,
+      "bits": "BEA0C2AC1DBBE3D8",
+      "offset": 2
+    },
+    {
+      "index": 84,
+      "group": 14,
+      "setting": 6,
+      "bits": "BEA0C2AC1DBBE3D9",
+      "offset": 3
+    },
+    {
+      "index": 85,
+      "group": 15,
+      "setting": 7,
+      "bits": "3E6AD11362C63956",
+      "offset": -2
+    },
+    {
+      "index": 86,
+      "group": 15,
+      "setting": 7,
+      "bits": "3E6AD11362C63957",
+      "offset": -1
+    },
+    {
+      "index": 87,
+      "group": 15,
+      "setting": 7,
+      "bits": "3E6AD11362C63958",
+      "offset": 0
+    },
+    {
+      "index": 88,
+      "group": 15,
+      "setting": 7,
+      "bits": "3E6AD11362C63959",
+      "offset": 1
+    },
+    {
+      "index": 89,
+      "group": 15,
+      "setting": 7,
+      "bits": "3E6AD11362C6395A",
+      "offset": 2
+    },
+    {
+      "index": 90,
+      "group": 15,
+      "setting": 7,
+      "bits": "3E6AD11362C6395B",
+      "offset": 3
+    },
+    {
+      "index": 91,
+      "group": 16,
+      "setting": 7,
+      "bits": "BE6AD11362C63956",
+      "offset": -2
+    },
+    {
+      "index": 92,
+      "group": 16,
+      "setting": 7,
+      "bits": "BE6AD11362C63957",
+      "offset": -1
+    },
+    {
+      "index": 93,
+      "group": 16,
+      "setting": 7,
+      "bits": "BE6AD11362C63958",
+      "offset": 0
+    },
+    {
+      "index": 94,
+      "group": 16,
+      "setting": 7,
+      "bits": "BE6AD11362C63959",
+      "offset": 1
+    },
+    {
+      "index": 95,
+      "group": 16,
+      "setting": 7,
+      "bits": "BE6AD11362C6395A",
+      "offset": 2
+    },
+    {
+      "index": 96,
+      "group": 16,
+      "setting": 7,
+      "bits": "BE6AD11362C6395B",
+      "offset": 3
+    },
+    {
+      "index": 97,
+      "group": 17,
+      "setting": 8,
+      "bits": "3E35740F82382DDD",
+      "offset": -2
+    },
+    {
+      "index": 98,
+      "group": 17,
+      "setting": 8,
+      "bits": "3E35740F82382DDE",
+      "offset": -1
+    },
+    {
+      "index": 99,
+      "group": 17,
+      "setting": 8,
+      "bits": "3E35740F82382DDF",
+      "offset": 0
+    },
+    {
+      "index": 100,
+      "group": 17,
+      "setting": 8,
+      "bits": "3E35740F82382DE0",
+      "offset": 1
+    },
+    {
+      "index": 101,
+      "group": 17,
+      "setting": 8,
+      "bits": "3E35740F82382DE1",
+      "offset": 2
+    },
+    {
+      "index": 102,
+      "group": 17,
+      "setting": 8,
+      "bits": "3E35740F82382DE2",
+      "offset": 3
+    },
+    {
+      "index": 103,
+      "group": 18,
+      "setting": 8,
+      "bits": "BE35740F82382DDD",
+      "offset": -2
+    },
+    {
+      "index": 104,
+      "group": 18,
+      "setting": 8,
+      "bits": "BE35740F82382DDE",
+      "offset": -1
+    },
+    {
+      "index": 105,
+      "group": 18,
+      "setting": 8,
+      "bits": "BE35740F82382DDF",
+      "offset": 0
+    },
+    {
+      "index": 106,
+      "group": 18,
+      "setting": 8,
+      "bits": "BE35740F82382DE0",
+      "offset": 1
+    },
+    {
+      "index": 107,
+      "group": 18,
+      "setting": 8,
+      "bits": "BE35740F82382DE1",
+      "offset": 2
+    },
+    {
+      "index": 108,
+      "group": 18,
+      "setting": 8,
+      "bits": "BE35740F82382DE2",
+      "offset": 3
+    },
+    {
+      "index": 109,
+      "group": 19,
+      "setting": 9,
+      "bits": "3E0129A601C68B17",
+      "offset": -2
+    },
+    {
+      "index": 110,
+      "group": 19,
+      "setting": 9,
+      "bits": "3E0129A601C68B18",
+      "offset": -1
+    },
+    {
+      "index": 111,
+      "group": 19,
+      "setting": 9,
+      "bits": "3E0129A601C68B19",
+      "offset": 0
+    },
+    {
+      "index": 112,
+      "group": 19,
+      "setting": 9,
+      "bits": "3E0129A601C68B1A",
+      "offset": 1
+    },
+    {
+      "index": 113,
+      "group": 19,
+      "setting": 9,
+      "bits": "3E0129A601C68B1B",
+      "offset": 2
+    },
+    {
+      "index": 114,
+      "group": 19,
+      "setting": 9,
+      "bits": "3E0129A601C68B1C",
+      "offset": 3
+    },
+    {
+      "index": 115,
+      "group": 20,
+      "setting": 9,
+      "bits": "BE0129A601C68B17",
+      "offset": -2
+    },
+    {
+      "index": 116,
+      "group": 20,
+      "setting": 9,
+      "bits": "BE0129A601C68B18",
+      "offset": -1
+    },
+    {
+      "index": 117,
+      "group": 20,
+      "setting": 9,
+      "bits": "BE0129A601C68B19",
+      "offset": 0
+    },
+    {
+      "index": 118,
+      "group": 20,
+      "setting": 9,
+      "bits": "BE0129A601C68B1A",
+      "offset": 1
+    },
+    {
+      "index": 119,
+      "group": 20,
+      "setting": 9,
+      "bits": "BE0129A601C68B1B",
+      "offset": 2
+    },
+    {
+      "index": 120,
+      "group": 20,
+      "setting": 9,
+      "bits": "BE0129A601C68B1C",
+      "offset": 3
+    },
+    {
+      "index": 121,
+      "group": 21,
+      "setting": 10,
+      "bits": "3DCB75D6693DAB5A",
+      "offset": -2
+    },
+    {
+      "index": 122,
+      "group": 21,
+      "setting": 10,
+      "bits": "3DCB75D6693DAB5B",
+      "offset": -1
+    },
+    {
+      "index": 123,
+      "group": 21,
+      "setting": 10,
+      "bits": "3DCB75D6693DAB5C",
+      "offset": 0
+    },
+    {
+      "index": 124,
+      "group": 21,
+      "setting": 10,
+      "bits": "3DCB75D6693DAB5D",
+      "offset": 1
+    },
+    {
+      "index": 125,
+      "group": 21,
+      "setting": 10,
+      "bits": "3DCB75D6693DAB5E",
+      "offset": 2
+    },
+    {
+      "index": 126,
+      "group": 21,
+      "setting": 10,
+      "bits": "3DCB75D6693DAB5F",
+      "offset": 3
+    },
+    {
+      "index": 127,
+      "group": 22,
+      "setting": 10,
+      "bits": "BDCB75D6693DAB5A",
+      "offset": -2
+    },
+    {
+      "index": 128,
+      "group": 22,
+      "setting": 10,
+      "bits": "BDCB75D6693DAB5B",
+      "offset": -1
+    },
+    {
+      "index": 129,
+      "group": 22,
+      "setting": 10,
+      "bits": "BDCB75D6693DAB5C",
+      "offset": 0
+    },
+    {
+      "index": 130,
+      "group": 22,
+      "setting": 10,
+      "bits": "BDCB75D6693DAB5D",
+      "offset": 1
+    },
+    {
+      "index": 131,
+      "group": 22,
+      "setting": 10,
+      "bits": "BDCB75D6693DAB5E",
+      "offset": 2
+    },
+    {
+      "index": 132,
+      "group": 22,
+      "setting": 10,
+      "bits": "BDCB75D6693DAB5F",
+      "offset": 3
+    },
+    {
+      "index": 133,
+      "group": 23,
+      "setting": 11,
+      "bits": "3D95F7DEBA97BC48",
+      "offset": -2
+    },
+    {
+      "index": 134,
+      "group": 23,
+      "setting": 11,
+      "bits": "3D95F7DEBA97BC49",
+      "offset": -1
+    },
+    {
+      "index": 135,
+      "group": 23,
+      "setting": 11,
+      "bits": "3D95F7DEBA97BC4A",
+      "offset": 0
+    },
+    {
+      "index": 136,
+      "group": 23,
+      "setting": 11,
+      "bits": "3D95F7DEBA97BC4B",
+      "offset": 1
+    },
+    {
+      "index": 137,
+      "group": 23,
+      "setting": 11,
+      "bits": "3D95F7DEBA97BC4C",
+      "offset": 2
+    },
+    {
+      "index": 138,
+      "group": 23,
+      "setting": 11,
+      "bits": "3D95F7DEBA97BC4D",
+      "offset": 3
+    },
+    {
+      "index": 139,
+      "group": 24,
+      "setting": 11,
+      "bits": "BD95F7DEBA97BC48",
+      "offset": -2
+    },
+    {
+      "index": 140,
+      "group": 24,
+      "setting": 11,
+      "bits": "BD95F7DEBA97BC49",
+      "offset": -1
+    },
+    {
+      "index": 141,
+      "group": 24,
+      "setting": 11,
+      "bits": "BD95F7DEBA97BC4A",
+      "offset": 0
+    },
+    {
+      "index": 142,
+      "group": 24,
+      "setting": 11,
+      "bits": "BD95F7DEBA97BC4B",
+      "offset": 1
+    },
+    {
+      "index": 143,
+      "group": 24,
+      "setting": 11,
+      "bits": "BD95F7DEBA97BC4C",
+      "offset": 2
+    },
+    {
+      "index": 144,
+      "group": 24,
+      "setting": 11,
+      "bits": "BD95F7DEBA97BC4D",
+      "offset": 3
+    },
+    {
+      "index": 145,
+      "group": 25,
+      "setting": 12,
+      "bits": "3D61931895463039",
+      "offset": -2
+    },
+    {
+      "index": 146,
+      "group": 25,
+      "setting": 12,
+      "bits": "3D6193189546303A",
+      "offset": -1
+    },
+    {
+      "index": 147,
+      "group": 25,
+      "setting": 12,
+      "bits": "3D6193189546303B",
+      "offset": 0
+    },
+    {
+      "index": 148,
+      "group": 25,
+      "setting": 12,
+      "bits": "3D6193189546303C",
+      "offset": 1
+    },
+    {
+      "index": 149,
+      "group": 25,
+      "setting": 12,
+      "bits": "3D6193189546303D",
+      "offset": 2
+    },
+    {
+      "index": 150,
+      "group": 25,
+      "setting": 12,
+      "bits": "3D6193189546303E",
+      "offset": 3
+    },
+    {
+      "index": 151,
+      "group": 26,
+      "setting": 12,
+      "bits": "BD61931895463039",
+      "offset": -2
+    },
+    {
+      "index": 152,
+      "group": 26,
+      "setting": 12,
+      "bits": "BD6193189546303A",
+      "offset": -1
+    },
+    {
+      "index": 153,
+      "group": 26,
+      "setting": 12,
+      "bits": "BD6193189546303B",
+      "offset": 0
+    },
+    {
+      "index": 154,
+      "group": 26,
+      "setting": 12,
+      "bits": "BD6193189546303C",
+      "offset": 1
+    },
+    {
+      "index": 155,
+      "group": 26,
+      "setting": 12,
+      "bits": "BD6193189546303D",
+      "offset": 2
+    },
+    {
+      "index": 156,
+      "group": 26,
+      "setting": 12,
+      "bits": "BD6193189546303E",
+      "offset": 3
+    },
+    {
+      "index": 157,
+      "group": 27,
+      "setting": 13,
+      "bits": "3D2C1E8DBBA3805F",
+      "offset": -2
+    },
+    {
+      "index": 158,
+      "group": 27,
+      "setting": 13,
+      "bits": "3D2C1E8DBBA38060",
+      "offset": -1
+    },
+    {
+      "index": 159,
+      "group": 27,
+      "setting": 13,
+      "bits": "3D2C1E8DBBA38061",
+      "offset": 0
+    },
+    {
+      "index": 160,
+      "group": 27,
+      "setting": 13,
+      "bits": "3D2C1E8DBBA38062",
+      "offset": 1
+    },
+    {
+      "index": 161,
+      "group": 27,
+      "setting": 13,
+      "bits": "3D2C1E8DBBA38063",
+      "offset": 2
+    },
+    {
+      "index": 162,
+      "group": 27,
+      "setting": 13,
+      "bits": "3D2C1E8DBBA38064",
+      "offset": 3
+    },
+    {
+      "index": 163,
+      "group": 28,
+      "setting": 13,
+      "bits": "BD2C1E8DBBA3805F",
+      "offset": -2
+    },
+    {
+      "index": 164,
+      "group": 28,
+      "setting": 13,
+      "bits": "BD2C1E8DBBA38060",
+      "offset": -1
+    },
+    {
+      "index": 165,
+      "group": 28,
+      "setting": 13,
+      "bits": "BD2C1E8DBBA38061",
+      "offset": 0
+    },
+    {
+      "index": 166,
+      "group": 28,
+      "setting": 13,
+      "bits": "BD2C1E8DBBA38062",
+      "offset": 1
+    },
+    {
+      "index": 167,
+      "group": 28,
+      "setting": 13,
+      "bits": "BD2C1E8DBBA38063",
+      "offset": 2
+    },
+    {
+      "index": 168,
+      "group": 28,
+      "setting": 13,
+      "bits": "BD2C1E8DBBA38064",
+      "offset": 3
+    },
+    {
+      "index": 169,
+      "group": 29,
+      "setting": 14,
+      "bits": "3CF67ED7C94F99E4",
+      "offset": -2
+    },
+    {
+      "index": 170,
+      "group": 29,
+      "setting": 14,
+      "bits": "3CF67ED7C94F99E5",
+      "offset": -1
+    },
+    {
+      "index": 171,
+      "group": 29,
+      "setting": 14,
+      "bits": "3CF67ED7C94F99E6",
+      "offset": 0
+    },
+    {
+      "index": 172,
+      "group": 29,
+      "setting": 14,
+      "bits": "3CF67ED7C94F99E7",
+      "offset": 1
+    },
+    {
+      "index": 173,
+      "group": 29,
+      "setting": 14,
+      "bits": "3CF67ED7C94F99E8",
+      "offset": 2
+    },
+    {
+      "index": 174,
+      "group": 29,
+      "setting": 14,
+      "bits": "3CF67ED7C94F99E9",
+      "offset": 3
+    },
+    {
+      "index": 175,
+      "group": 30,
+      "setting": 14,
+      "bits": "BCF67ED7C94F99E4",
+      "offset": -2
+    },
+    {
+      "index": 176,
+      "group": 30,
+      "setting": 14,
+      "bits": "BCF67ED7C94F99E5",
+      "offset": -1
+    },
+    {
+      "index": 177,
+      "group": 30,
+      "setting": 14,
+      "bits": "BCF67ED7C94F99E6",
+      "offset": 0
+    },
+    {
+      "index": 178,
+      "group": 30,
+      "setting": 14,
+      "bits": "BCF67ED7C94F99E7",
+      "offset": 1
+    },
+    {
+      "index": 179,
+      "group": 30,
+      "setting": 14,
+      "bits": "BCF67ED7C94F99E8",
+      "offset": 2
+    },
+    {
+      "index": 180,
+      "group": 30,
+      "setting": 14,
+      "bits": "BCF67ED7C94F99E9",
+      "offset": 3
+    },
+    {
+      "index": 181,
+      "group": 31,
+      "setting": 15,
+      "bits": "3CC1FF130772E181",
+      "offset": -2
+    },
+    {
+      "index": 182,
+      "group": 31,
+      "setting": 15,
+      "bits": "3CC1FF130772E182",
+      "offset": -1
+    },
+    {
+      "index": 183,
+      "group": 31,
+      "setting": 15,
+      "bits": "3CC1FF130772E183",
+      "offset": 0
+    },
+    {
+      "index": 184,
+      "group": 31,
+      "setting": 15,
+      "bits": "3CC1FF130772E184",
+      "offset": 1
+    },
+    {
+      "index": 185,
+      "group": 31,
+      "setting": 15,
+      "bits": "3CC1FF130772E185",
+      "offset": 2
+    },
+    {
+      "index": 186,
+      "group": 31,
+      "setting": 15,
+      "bits": "3CC1FF130772E186",
+      "offset": 3
+    },
+    {
+      "index": 187,
+      "group": 32,
+      "setting": 15,
+      "bits": "BCC1FF130772E181",
+      "offset": -2
+    },
+    {
+      "index": 188,
+      "group": 32,
+      "setting": 15,
+      "bits": "BCC1FF130772E182",
+      "offset": -1
+    },
+    {
+      "index": 189,
+      "group": 32,
+      "setting": 15,
+      "bits": "BCC1FF130772E183",
+      "offset": 0
+    },
+    {
+      "index": 190,
+      "group": 32,
+      "setting": 15,
+      "bits": "BCC1FF130772E184",
+      "offset": 1
+    },
+    {
+      "index": 191,
+      "group": 32,
+      "setting": 15,
+      "bits": "BCC1FF130772E185",
+      "offset": 2
+    },
+    {
+      "index": 192,
+      "group": 32,
+      "setting": 15,
+      "bits": "BCC1FF130772E186",
+      "offset": 3
+    },
+    {
+      "index": 193,
+      "group": 33,
+      "setting": 16,
+      "bits": "3CC203398FC21737",
+      "offset": -2
+    },
+    {
+      "index": 194,
+      "group": 33,
+      "setting": 16,
+      "bits": "3CC203398FC21738",
+      "offset": -1
+    },
+    {
+      "index": 195,
+      "group": 33,
+      "setting": 16,
+      "bits": "3CC203398FC21739",
+      "offset": 0
+    },
+    {
+      "index": 196,
+      "group": 33,
+      "setting": 16,
+      "bits": "3CC203398FC2173A",
+      "offset": 1
+    },
+    {
+      "index": 197,
+      "group": 33,
+      "setting": 16,
+      "bits": "3CC203398FC2173B",
+      "offset": 2
+    },
+    {
+      "index": 198,
+      "group": 33,
+      "setting": 16,
+      "bits": "3CC203398FC2173C",
+      "offset": 3
+    },
+    {
+      "index": 199,
+      "group": 34,
+      "setting": 16,
+      "bits": "BCC203398FC21737",
+      "offset": -2
+    },
+    {
+      "index": 200,
+      "group": 34,
+      "setting": 16,
+      "bits": "BCC203398FC21738",
+      "offset": -1
+    },
+    {
+      "index": 201,
+      "group": 34,
+      "setting": 16,
+      "bits": "BCC203398FC21739",
+      "offset": 0
+    },
+    {
+      "index": 202,
+      "group": 34,
+      "setting": 16,
+      "bits": "BCC203398FC2173A",
+      "offset": 1
+    },
+    {
+      "index": 203,
+      "group": 34,
+      "setting": 16,
+      "bits": "BCC203398FC2173B",
+      "offset": 2
+    },
+    {
+      "index": 204,
+      "group": 34,
+      "setting": 16,
+      "bits": "BCC203398FC2173C",
+      "offset": 3
+    },
+    {
+      "index": 205,
+      "group": 35,
+      "setting": 17,
+      "bits": "3CC203A3D096CFC9",
+      "offset": -2
+    },
+    {
+      "index": 206,
+      "group": 35,
+      "setting": 17,
+      "bits": "3CC203A3D096CFCA",
+      "offset": -1
+    },
+    {
+      "index": 207,
+      "group": 35,
+      "setting": 17,
+      "bits": "3CC203A3D096CFCB",
+      "offset": 0
+    },
+    {
+      "index": 208,
+      "group": 35,
+      "setting": 17,
+      "bits": "3CC203A3D096CFCC",
+      "offset": 1
+    },
+    {
+      "index": 209,
+      "group": 35,
+      "setting": 17,
+      "bits": "3CC203A3D096CFCD",
+      "offset": 2
+    },
+    {
+      "index": 210,
+      "group": 35,
+      "setting": 17,
+      "bits": "3CC203A3D096CFCE",
+      "offset": 3
+    },
+    {
+      "index": 211,
+      "group": 36,
+      "setting": 17,
+      "bits": "BCC203A3D096CFC9",
+      "offset": -2
+    },
+    {
+      "index": 212,
+      "group": 36,
+      "setting": 17,
+      "bits": "BCC203A3D096CFCA",
+      "offset": -1
+    },
+    {
+      "index": 213,
+      "group": 36,
+      "setting": 17,
+      "bits": "BCC203A3D096CFCB",
+      "offset": 0
+    },
+    {
+      "index": 214,
+      "group": 36,
+      "setting": 17,
+      "bits": "BCC203A3D096CFCC",
+      "offset": 1
+    },
+    {
+      "index": 215,
+      "group": 36,
+      "setting": 17,
+      "bits": "BCC203A3D096CFCD",
+      "offset": 2
+    },
+    {
+      "index": 216,
+      "group": 36,
+      "setting": 17,
+      "bits": "BCC203A3D096CFCE",
+      "offset": 3
+    },
+    {
+      "index": 217,
+      "group": 37,
+      "setting": 18,
+      "bits": "3CC203AE70AC1571",
+      "offset": -2
+    },
+    {
+      "index": 218,
+      "group": 37,
+      "setting": 18,
+      "bits": "3CC203AE70AC1572",
+      "offset": -1
+    },
+    {
+      "index": 219,
+      "group": 37,
+      "setting": 18,
+      "bits": "3CC203AE70AC1573",
+      "offset": 0
+    },
+    {
+      "index": 220,
+      "group": 37,
+      "setting": 18,
+      "bits": "3CC203AE70AC1574",
+      "offset": 1
+    },
+    {
+      "index": 221,
+      "group": 37,
+      "setting": 18,
+      "bits": "3CC203AE70AC1575",
+      "offset": 2
+    },
+    {
+      "index": 222,
+      "group": 37,
+      "setting": 18,
+      "bits": "3CC203AE70AC1576",
+      "offset": 3
+    },
+    {
+      "index": 223,
+      "group": 38,
+      "setting": 18,
+      "bits": "BCC203AE70AC1571",
+      "offset": -2
+    },
+    {
+      "index": 224,
+      "group": 38,
+      "setting": 18,
+      "bits": "BCC203AE70AC1572",
+      "offset": -1
+    },
+    {
+      "index": 225,
+      "group": 38,
+      "setting": 18,
+      "bits": "BCC203AE70AC1573",
+      "offset": 0
+    },
+    {
+      "index": 226,
+      "group": 38,
+      "setting": 18,
+      "bits": "BCC203AE70AC1574",
+      "offset": 1
+    },
+    {
+      "index": 227,
+      "group": 38,
+      "setting": 18,
+      "bits": "BCC203AE70AC1575",
+      "offset": 2
+    },
+    {
+      "index": 228,
+      "group": 38,
+      "setting": 18,
+      "bits": "BCC203AE70AC1576",
+      "offset": 3
+    },
+    {
+      "index": 229,
+      "group": 39,
+      "setting": 2,
+      "bits": "3FF01475A31A4BD9",
+      "offset": -2
+    },
+    {
+      "index": 230,
+      "group": 39,
+      "setting": 2,
+      "bits": "3FF01475A31A4BDA",
+      "offset": -1
+    },
+    {
+      "index": 231,
+      "group": 39,
+      "setting": 2,
+      "bits": "3FF01475A31A4BDB",
+      "offset": 0
+    },
+    {
+      "index": 232,
+      "group": 39,
+      "setting": 2,
+      "bits": "3FF01475A31A4BDC",
+      "offset": 1
+    },
+    {
+      "index": 233,
+      "group": 39,
+      "setting": 2,
+      "bits": "3FF01475A31A4BDD",
+      "offset": 2
+    },
+    {
+      "index": 234,
+      "group": 39,
+      "setting": 2,
+      "bits": "3FF01475A31A4BDE",
+      "offset": 3
+    },
+    {
+      "index": 235,
+      "group": 40,
+      "setting": 2,
+      "bits": "BFF01475A31A4BD9",
+      "offset": -2
+    },
+    {
+      "index": 236,
+      "group": 40,
+      "setting": 2,
+      "bits": "BFF01475A31A4BDA",
+      "offset": -1
+    },
+    {
+      "index": 237,
+      "group": 40,
+      "setting": 2,
+      "bits": "BFF01475A31A4BDB",
+      "offset": 0
+    },
+    {
+      "index": 238,
+      "group": 40,
+      "setting": 2,
+      "bits": "BFF01475A31A4BDC",
+      "offset": 1
+    },
+    {
+      "index": 239,
+      "group": 40,
+      "setting": 2,
+      "bits": "BFF01475A31A4BDD",
+      "offset": 2
+    },
+    {
+      "index": 240,
+      "group": 40,
+      "setting": 2,
+      "bits": "BFF01475A31A4BDE",
+      "offset": 3
+    },
+    {
+      "index": 241,
+      "group": 41,
+      "setting": 2,
+      "bits": "40056663C74FB547",
+      "offset": -2
+    },
+    {
+      "index": 242,
+      "group": 41,
+      "setting": 2,
+      "bits": "40056663C74FB548",
+      "offset": -1
+    },
+    {
+      "index": 243,
+      "group": 41,
+      "setting": 2,
+      "bits": "40056663C74FB549",
+      "offset": 0
+    },
+    {
+      "index": 244,
+      "group": 41,
+      "setting": 2,
+      "bits": "40056663C74FB54A",
+      "offset": 1
+    },
+    {
+      "index": 245,
+      "group": 41,
+      "setting": 2,
+      "bits": "40056663C74FB54B",
+      "offset": 2
+    },
+    {
+      "index": 246,
+      "group": 41,
+      "setting": 2,
+      "bits": "40056663C74FB54C",
+      "offset": 3
+    },
+    {
+      "index": 247,
+      "group": 42,
+      "setting": 2,
+      "bits": "C0056663C74FB547",
+      "offset": -2
+    },
+    {
+      "index": 248,
+      "group": 42,
+      "setting": 2,
+      "bits": "C0056663C74FB548",
+      "offset": -1
+    },
+    {
+      "index": 249,
+      "group": 42,
+      "setting": 2,
+      "bits": "C0056663C74FB549",
+      "offset": 0
+    },
+    {
+      "index": 250,
+      "group": 42,
+      "setting": 2,
+      "bits": "C0056663C74FB54A",
+      "offset": 1
+    },
+    {
+      "index": 251,
+      "group": 42,
+      "setting": 2,
+      "bits": "C0056663C74FB54B",
+      "offset": 2
+    },
+    {
+      "index": 252,
+      "group": 42,
+      "setting": 2,
+      "bits": "C0056663C74FB54C",
+      "offset": 3
+    },
+    {
+      "index": 253,
+      "group": 43,
+      "setting": 2,
+      "bits": "4023FD6FFC115DF4",
+      "offset": -2
+    },
+    {
+      "index": 254,
+      "group": 43,
+      "setting": 2,
+      "bits": "4023FD6FFC115DF5",
+      "offset": -1
+    },
+    {
+      "index": 255,
+      "group": 43,
+      "setting": 2,
+      "bits": "4023FD6FFC115DF6",
+      "offset": 0
+    },
+    {
+      "index": 256,
+      "group": 43,
+      "setting": 2,
+      "bits": "4023FD6FFC115DF7",
+      "offset": 1
+    },
+    {
+      "index": 257,
+      "group": 43,
+      "setting": 2,
+      "bits": "4023FD6FFC115DF8",
+      "offset": 2
+    },
+    {
+      "index": 258,
+      "group": 43,
+      "setting": 2,
+      "bits": "4023FD6FFC115DF9",
+      "offset": 3
+    },
+    {
+      "index": 259,
+      "group": 44,
+      "setting": 2,
+      "bits": "C023FD6FFC115DF4",
+      "offset": -2
+    },
+    {
+      "index": 260,
+      "group": 44,
+      "setting": 2,
+      "bits": "C023FD6FFC115DF5",
+      "offset": -1
+    },
+    {
+      "index": 261,
+      "group": 44,
+      "setting": 2,
+      "bits": "C023FD6FFC115DF6",
+      "offset": 0
+    },
+    {
+      "index": 262,
+      "group": 44,
+      "setting": 2,
+      "bits": "C023FD6FFC115DF7",
+      "offset": 1
+    },
+    {
+      "index": 263,
+      "group": 44,
+      "setting": 2,
+      "bits": "C023FD6FFC115DF8",
+      "offset": 2
+    },
+    {
+      "index": 264,
+      "group": 44,
+      "setting": 2,
+      "bits": "C023FD6FFC115DF9",
+      "offset": 3
+    }
+  ],
+  "groups": 44,
+  "inputCount": 264,
+  "recordsPerRun": 528,
+  "width": 40,
+  "scale": 18,
+  "arithmeticFields": [
+    "powDown",
+    "bias",
+    "shifted",
+    "effectiveCount",
+    "powUp",
+    "scaled",
+    "raised",
+    "quantized"
+  ],
+  "limitation": "Native-only arithmetic discrimination around44 qualified signed local edges. Six explicit input payloads/group, both FIXED modes, unchanged source descriptors/applied settings. A provisional public-language operation graph is observed, NOT accepted as formatter or requirement: powDown=10^(-D), bias=.0005*powDown, shifted=ABS(input)+bias, q=MIN(D,15), powUp=10^q, scaled=shifted*powUp, raised=scaled+.5, quantized=INT(raised). Scalar assignments are part of this experiment. Actual TRANSFORM/STR strings remain independent observations; no tolerance, cap, operation-order, all-input or implementation parity claim."
+}

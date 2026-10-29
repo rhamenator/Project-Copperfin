@@ -1,0 +1,113 @@
+{
+  "analysisOnly": true,
+  "nativeInvoked": false,
+  "ordinaryShellNotReaEvidence": true,
+  "sourceBase": "51052ed39989931ac9cedf6a2e01e9fe3e08be7b",
+  "cleanNativeSourceFreeze": false,
+  "preChildGuardStatus": 75,
+  "stage": "syntax",
+  "checksInvoked": false,
+  "fullIoPressure": {
+    "avg10": 42.12,
+    "avg60": 19.7
+  },
+  "inputsAfterChecked": false,
+  "files": [
+    {
+      "name": "inputs.sha256",
+      "hostRelativePath": "build/default-transform-preaddition1/inputs.sha256",
+      "bytes": 61085,
+      "sha256": "06546a0d2ee2ee2e00c843095afaed457dbd2bab46c34bc97bbe6968f6b34b80",
+      "gzipBytes": 9126,
+      "gzipSha256": "1af8273264ed779481f1fd9c30b35ac642d737a7a474d54769b696fcc04b61e9"
+    },
+    {
+      "name": "shell-completion.json",
+      "hostRelativePath": "build/default-transform-preaddition1/shell-completion.json",
+      "bytes": 284,
+      "sha256": "0c02f849de2e508fc5e741809496c54006720dae299e5355889e852c15ded7f3",
+      "gzipBytes": 214,
+      "gzipSha256": "4e1a7f5ec4c099565c7ca9a0a02209c554e4c2d6061e8845b2885c63c835413c"
+    },
+    {
+      "name": "source-base-commit.txt",
+      "hostRelativePath": "build/default-transform-preaddition1/source-base-commit.txt",
+      "bytes": 41,
+      "sha256": "7161c85fd9f9d45a0e2e45200278867a125082116995f731c7cbc5fbe045c24e",
+      "gzipBytes": 60,
+      "gzipSha256": "5ac0632992f8188959b9596b24aa7ef921419507a4835d900f27787fab22d86c"
+    },
+    {
+      "name": "source-compare-preaddition-operands.cjs",
+      "hostRelativePath": "build/default-transform-preaddition1/source-compare-preaddition-operands.cjs",
+      "bytes": 10927,
+      "sha256": "3387b375d0e445ee7b7296da665f5ec14d22f2f426943f5bd3a666c468ec78c5",
+      "gzipBytes": 3922,
+      "gzipSha256": "f95cf309c5c9cc835473ec03f3724e9fd5f54b4beb1f273d49e0c0639eb58b59"
+    },
+    {
+      "name": "source-preaddition-check.sh",
+      "hostRelativePath": "build/default-transform-preaddition1/source-preaddition-check.sh",
+      "bytes": 3437,
+      "sha256": "2c4d82cb2b5edb5d3c34806056db467fb298ba57274e739952e1fd61d49a7709",
+      "gzipBytes": 1356,
+      "gzipSha256": "da608932b09d1431be9c01264f5d80b02c616ee15847cb334da47ea29e3177f7"
+    },
+    {
+      "name": "source-status.txt",
+      "hostRelativePath": "build/default-transform-preaddition1/source-status.txt",
+      "bytes": 152,
+      "sha256": "16c297035334edee93c9f45d77eb96551b621c3afd688779a4655a1f2a20b881",
+      "gzipBytes": 106,
+      "gzipSha256": "9e006933bf0afe70a913ee11e37fea89bba6d8571348993cdac6d293c98f09dc"
+    },
+    {
+      "name": "started.utc",
+      "hostRelativePath": "build/default-transform-preaddition1/started.utc",
+      "bytes": 21,
+      "sha256": "7bf0e0b0b4588cac2a346b1ec4c0115c607949559f8f7c26f0cc7530fe4ec806",
+      "gzipBytes": 41,
+      "gzipSha256": "123080de672394e95e057f8560a98f71fc1476c5c06c233d6e8438949110b11e"
+    },
+    {
+      "name": "syntax.guard.status",
+      "hostRelativePath": "build/default-transform-preaddition1/syntax.guard.status",
+      "bytes": 3,
+      "sha256": "84b9bb077be0d8a29d0d01ef350d718b77c2ec5f40c3ab90502b1b4b5016c550",
+      "gzipBytes": 23,
+      "gzipSha256": "9503d121cee88e1607182a9aa795c71fd294b2afb5cbec5648864d8fd2df9ab1"
+    },
+    {
+      "name": "syntax.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-preaddition1/syntax.inputs-before.txt",
+      "bytes": 38021,
+      "sha256": "753e85fef870352040eb03e112d0e1c054b158c7b714330fda0fd5b891617760",
+      "gzipBytes": 2085,
+      "gzipSha256": "57f58e0ee9c01995e2d51bff3edade91518ed3ec62483565b6cc6e1287df90ae"
+    },
+    {
+      "name": "syntax.prefix.status",
+      "hostRelativePath": "build/default-transform-preaddition1/syntax.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "d381e5a9b7c1c71b5fb3fef202103bf4b6098ce288f148735de1ecf61d4e3b75"
+    },
+    {
+      "name": "syntax.prefix.txt",
+      "hostRelativePath": "build/default-transform-preaddition1/syntax.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+    },
+    {
+      "name": "syntax.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-preaddition1/syntax.pressure-before.txt",
+      "bytes": 118,
+      "sha256": "59ef084c0139bf58e57f57c5c1c4900e54c3fe6b9059b950af65a0f147be147c",
+      "gzipBytes": 98,
+      "gzipSha256": "dc0dbe0badee14dfbe972d56397e252c94e45b7aa9970eb243e9e72115425fb0"
+    }
+  ]
+}

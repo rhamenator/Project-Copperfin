@@ -1,0 +1,1894 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001",
+  "baseline": "240ac51cbbaa3114a08a687142e67fe4969ea212",
+  "settings": [
+    0,
+    2,
+    18
+  ],
+  "seeds": [
+    "0.50",
+    "-0.50",
+    "0.00",
+    "-0.00",
+    "1E-14",
+    "1E-18",
+    "-1E-18",
+    "1.234567890123456789"
+  ],
+  "widths": [
+    1,
+    2,
+    3,
+    4,
+    12,
+    20,
+    40
+  ],
+  "scales": [
+    0,
+    1,
+    2,
+    14,
+    15,
+    18
+  ],
+  "rows": [
+    {
+      "kind": "baseline",
+      "seed": "0.50",
+      "expression": "0.50",
+      "index": 1
+    },
+    {
+      "kind": "clone",
+      "seed": "0.50",
+      "expression": "CFNCLONE(0.50)",
+      "index": 2
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 1,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(0.50,1),0)",
+      "index": 3
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 2,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(0.50,2),0)",
+      "index": 4
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 2,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(0.50,2),1)",
+      "index": 5
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 3,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(0.50,3),0)",
+      "index": 6
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 3,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(0.50,3),1)",
+      "index": 7
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 3,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(0.50,3),2)",
+      "index": 8
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 4,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(0.50,4),0)",
+      "index": 9
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 4,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(0.50,4),1)",
+      "index": 10
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 4,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(0.50,4),2)",
+      "index": 11
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 12,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(0.50,12),0)",
+      "index": 12
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 12,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(0.50,12),1)",
+      "index": 13
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 12,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(0.50,12),2)",
+      "index": 14
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 20,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(0.50,20),0)",
+      "index": 15
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 20,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(0.50,20),1)",
+      "index": 16
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 20,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(0.50,20),2)",
+      "index": 17
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 20,
+      "scale": 14,
+      "expression": "CFNDEC(CFNWIDTH(0.50,20),14)",
+      "index": 18
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 20,
+      "scale": 15,
+      "expression": "CFNDEC(CFNWIDTH(0.50,20),15)",
+      "index": 19
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 20,
+      "scale": 18,
+      "expression": "CFNDEC(CFNWIDTH(0.50,20),18)",
+      "index": 20
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 40,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(0.50,40),0)",
+      "index": 21
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 40,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(0.50,40),1)",
+      "index": 22
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 40,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(0.50,40),2)",
+      "index": 23
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 40,
+      "scale": 14,
+      "expression": "CFNDEC(CFNWIDTH(0.50,40),14)",
+      "index": 24
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 40,
+      "scale": 15,
+      "expression": "CFNDEC(CFNWIDTH(0.50,40),15)",
+      "index": 25
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.50",
+      "width": 40,
+      "scale": 18,
+      "expression": "CFNDEC(CFNWIDTH(0.50,40),18)",
+      "index": 26
+    },
+    {
+      "kind": "baseline",
+      "seed": "-0.50",
+      "expression": "-0.50",
+      "index": 27
+    },
+    {
+      "kind": "clone",
+      "seed": "-0.50",
+      "expression": "CFNCLONE(-0.50)",
+      "index": 28
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 1,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,1),0)",
+      "index": 29
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 2,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,2),0)",
+      "index": 30
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 2,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,2),1)",
+      "index": 31
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 3,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,3),0)",
+      "index": 32
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 3,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,3),1)",
+      "index": 33
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 3,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,3),2)",
+      "index": 34
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 4,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,4),0)",
+      "index": 35
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 4,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,4),1)",
+      "index": 36
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 4,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,4),2)",
+      "index": 37
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 12,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,12),0)",
+      "index": 38
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 12,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,12),1)",
+      "index": 39
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 12,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,12),2)",
+      "index": 40
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 20,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,20),0)",
+      "index": 41
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 20,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,20),1)",
+      "index": 42
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 20,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,20),2)",
+      "index": 43
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 20,
+      "scale": 14,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,20),14)",
+      "index": 44
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 20,
+      "scale": 15,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,20),15)",
+      "index": 45
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 20,
+      "scale": 18,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,20),18)",
+      "index": 46
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 40,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,40),0)",
+      "index": 47
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 40,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,40),1)",
+      "index": 48
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 40,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,40),2)",
+      "index": 49
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 40,
+      "scale": 14,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,40),14)",
+      "index": 50
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 40,
+      "scale": 15,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,40),15)",
+      "index": 51
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.50",
+      "width": 40,
+      "scale": 18,
+      "expression": "CFNDEC(CFNWIDTH(-0.50,40),18)",
+      "index": 52
+    },
+    {
+      "kind": "baseline",
+      "seed": "0.00",
+      "expression": "0.00",
+      "index": 53
+    },
+    {
+      "kind": "clone",
+      "seed": "0.00",
+      "expression": "CFNCLONE(0.00)",
+      "index": 54
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 1,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(0.00,1),0)",
+      "index": 55
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 2,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(0.00,2),0)",
+      "index": 56
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 2,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(0.00,2),1)",
+      "index": 57
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 3,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(0.00,3),0)",
+      "index": 58
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 3,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(0.00,3),1)",
+      "index": 59
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 3,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(0.00,3),2)",
+      "index": 60
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 4,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(0.00,4),0)",
+      "index": 61
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 4,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(0.00,4),1)",
+      "index": 62
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 4,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(0.00,4),2)",
+      "index": 63
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 12,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(0.00,12),0)",
+      "index": 64
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 12,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(0.00,12),1)",
+      "index": 65
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 12,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(0.00,12),2)",
+      "index": 66
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 20,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(0.00,20),0)",
+      "index": 67
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 20,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(0.00,20),1)",
+      "index": 68
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 20,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(0.00,20),2)",
+      "index": 69
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 20,
+      "scale": 14,
+      "expression": "CFNDEC(CFNWIDTH(0.00,20),14)",
+      "index": 70
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 20,
+      "scale": 15,
+      "expression": "CFNDEC(CFNWIDTH(0.00,20),15)",
+      "index": 71
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 20,
+      "scale": 18,
+      "expression": "CFNDEC(CFNWIDTH(0.00,20),18)",
+      "index": 72
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 40,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(0.00,40),0)",
+      "index": 73
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 40,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(0.00,40),1)",
+      "index": 74
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 40,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(0.00,40),2)",
+      "index": 75
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 40,
+      "scale": 14,
+      "expression": "CFNDEC(CFNWIDTH(0.00,40),14)",
+      "index": 76
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 40,
+      "scale": 15,
+      "expression": "CFNDEC(CFNWIDTH(0.00,40),15)",
+      "index": 77
+    },
+    {
+      "kind": "intervention",
+      "seed": "0.00",
+      "width": 40,
+      "scale": 18,
+      "expression": "CFNDEC(CFNWIDTH(0.00,40),18)",
+      "index": 78
+    },
+    {
+      "kind": "baseline",
+      "seed": "-0.00",
+      "expression": "-0.00",
+      "index": 79
+    },
+    {
+      "kind": "clone",
+      "seed": "-0.00",
+      "expression": "CFNCLONE(-0.00)",
+      "index": 80
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 1,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,1),0)",
+      "index": 81
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 2,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,2),0)",
+      "index": 82
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 2,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,2),1)",
+      "index": 83
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 3,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,3),0)",
+      "index": 84
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 3,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,3),1)",
+      "index": 85
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 3,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,3),2)",
+      "index": 86
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 4,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,4),0)",
+      "index": 87
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 4,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,4),1)",
+      "index": 88
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 4,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,4),2)",
+      "index": 89
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 12,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,12),0)",
+      "index": 90
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 12,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,12),1)",
+      "index": 91
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 12,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,12),2)",
+      "index": 92
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 20,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,20),0)",
+      "index": 93
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 20,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,20),1)",
+      "index": 94
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 20,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,20),2)",
+      "index": 95
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 20,
+      "scale": 14,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,20),14)",
+      "index": 96
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 20,
+      "scale": 15,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,20),15)",
+      "index": 97
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 20,
+      "scale": 18,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,20),18)",
+      "index": 98
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 40,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,40),0)",
+      "index": 99
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 40,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,40),1)",
+      "index": 100
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 40,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,40),2)",
+      "index": 101
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 40,
+      "scale": 14,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,40),14)",
+      "index": 102
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 40,
+      "scale": 15,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,40),15)",
+      "index": 103
+    },
+    {
+      "kind": "intervention",
+      "seed": "-0.00",
+      "width": 40,
+      "scale": 18,
+      "expression": "CFNDEC(CFNWIDTH(-0.00,40),18)",
+      "index": 104
+    },
+    {
+      "kind": "baseline",
+      "seed": "1E-14",
+      "expression": "1E-14",
+      "index": 105
+    },
+    {
+      "kind": "clone",
+      "seed": "1E-14",
+      "expression": "CFNCLONE(1E-14)",
+      "index": 106
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 1,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,1),0)",
+      "index": 107
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 2,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,2),0)",
+      "index": 108
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 2,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,2),1)",
+      "index": 109
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 3,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,3),0)",
+      "index": 110
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 3,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,3),1)",
+      "index": 111
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 3,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,3),2)",
+      "index": 112
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 4,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,4),0)",
+      "index": 113
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 4,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,4),1)",
+      "index": 114
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 4,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,4),2)",
+      "index": 115
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 12,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,12),0)",
+      "index": 116
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 12,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,12),1)",
+      "index": 117
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 12,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,12),2)",
+      "index": 118
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 20,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,20),0)",
+      "index": 119
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 20,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,20),1)",
+      "index": 120
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 20,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,20),2)",
+      "index": 121
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 20,
+      "scale": 14,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,20),14)",
+      "index": 122
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 20,
+      "scale": 15,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,20),15)",
+      "index": 123
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 20,
+      "scale": 18,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,20),18)",
+      "index": 124
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 40,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,40),0)",
+      "index": 125
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 40,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,40),1)",
+      "index": 126
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 40,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,40),2)",
+      "index": 127
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 40,
+      "scale": 14,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,40),14)",
+      "index": 128
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 40,
+      "scale": 15,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,40),15)",
+      "index": 129
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-14",
+      "width": 40,
+      "scale": 18,
+      "expression": "CFNDEC(CFNWIDTH(1E-14,40),18)",
+      "index": 130
+    },
+    {
+      "kind": "baseline",
+      "seed": "1E-18",
+      "expression": "1E-18",
+      "index": 131
+    },
+    {
+      "kind": "clone",
+      "seed": "1E-18",
+      "expression": "CFNCLONE(1E-18)",
+      "index": 132
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 1,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,1),0)",
+      "index": 133
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 2,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,2),0)",
+      "index": 134
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 2,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,2),1)",
+      "index": 135
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 3,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,3),0)",
+      "index": 136
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 3,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,3),1)",
+      "index": 137
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 3,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,3),2)",
+      "index": 138
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 4,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,4),0)",
+      "index": 139
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 4,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,4),1)",
+      "index": 140
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 4,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,4),2)",
+      "index": 141
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 12,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,12),0)",
+      "index": 142
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 12,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,12),1)",
+      "index": 143
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 12,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,12),2)",
+      "index": 144
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 20,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,20),0)",
+      "index": 145
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 20,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,20),1)",
+      "index": 146
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 20,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,20),2)",
+      "index": 147
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 20,
+      "scale": 14,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,20),14)",
+      "index": 148
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 20,
+      "scale": 15,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,20),15)",
+      "index": 149
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 20,
+      "scale": 18,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,20),18)",
+      "index": 150
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 40,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,40),0)",
+      "index": 151
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 40,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,40),1)",
+      "index": 152
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 40,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,40),2)",
+      "index": 153
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 40,
+      "scale": 14,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,40),14)",
+      "index": 154
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 40,
+      "scale": 15,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,40),15)",
+      "index": 155
+    },
+    {
+      "kind": "intervention",
+      "seed": "1E-18",
+      "width": 40,
+      "scale": 18,
+      "expression": "CFNDEC(CFNWIDTH(1E-18,40),18)",
+      "index": 156
+    },
+    {
+      "kind": "baseline",
+      "seed": "-1E-18",
+      "expression": "-1E-18",
+      "index": 157
+    },
+    {
+      "kind": "clone",
+      "seed": "-1E-18",
+      "expression": "CFNCLONE(-1E-18)",
+      "index": 158
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 1,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,1),0)",
+      "index": 159
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 2,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,2),0)",
+      "index": 160
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 2,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,2),1)",
+      "index": 161
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 3,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,3),0)",
+      "index": 162
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 3,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,3),1)",
+      "index": 163
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 3,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,3),2)",
+      "index": 164
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 4,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,4),0)",
+      "index": 165
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 4,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,4),1)",
+      "index": 166
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 4,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,4),2)",
+      "index": 167
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 12,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,12),0)",
+      "index": 168
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 12,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,12),1)",
+      "index": 169
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 12,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,12),2)",
+      "index": 170
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 20,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,20),0)",
+      "index": 171
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 20,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,20),1)",
+      "index": 172
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 20,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,20),2)",
+      "index": 173
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 20,
+      "scale": 14,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,20),14)",
+      "index": 174
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 20,
+      "scale": 15,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,20),15)",
+      "index": 175
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 20,
+      "scale": 18,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,20),18)",
+      "index": 176
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 40,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,40),0)",
+      "index": 177
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 40,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,40),1)",
+      "index": 178
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 40,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,40),2)",
+      "index": 179
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 40,
+      "scale": 14,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,40),14)",
+      "index": 180
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 40,
+      "scale": 15,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,40),15)",
+      "index": 181
+    },
+    {
+      "kind": "intervention",
+      "seed": "-1E-18",
+      "width": 40,
+      "scale": 18,
+      "expression": "CFNDEC(CFNWIDTH(-1E-18,40),18)",
+      "index": 182
+    },
+    {
+      "kind": "baseline",
+      "seed": "1.234567890123456789",
+      "expression": "1.234567890123456789",
+      "index": 183
+    },
+    {
+      "kind": "clone",
+      "seed": "1.234567890123456789",
+      "expression": "CFNCLONE(1.234567890123456789)",
+      "index": 184
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 1,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,1),0)",
+      "index": 185
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 2,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,2),0)",
+      "index": 186
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 2,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,2),1)",
+      "index": 187
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 3,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,3),0)",
+      "index": 188
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 3,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,3),1)",
+      "index": 189
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 3,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,3),2)",
+      "index": 190
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 4,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,4),0)",
+      "index": 191
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 4,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,4),1)",
+      "index": 192
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 4,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,4),2)",
+      "index": 193
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 12,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,12),0)",
+      "index": 194
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 12,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,12),1)",
+      "index": 195
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 12,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,12),2)",
+      "index": 196
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 20,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,20),0)",
+      "index": 197
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 20,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,20),1)",
+      "index": 198
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 20,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,20),2)",
+      "index": 199
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 20,
+      "scale": 14,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,20),14)",
+      "index": 200
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 20,
+      "scale": 15,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,20),15)",
+      "index": 201
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 20,
+      "scale": 18,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,20),18)",
+      "index": 202
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 40,
+      "scale": 0,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,40),0)",
+      "index": 203
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 40,
+      "scale": 1,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,40),1)",
+      "index": 204
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 40,
+      "scale": 2,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,40),2)",
+      "index": 205
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 40,
+      "scale": 14,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,40),14)",
+      "index": 206
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 40,
+      "scale": 15,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,40),15)",
+      "index": 207
+    },
+    {
+      "kind": "intervention",
+      "seed": "1.234567890123456789",
+      "width": 40,
+      "scale": 18,
+      "expression": "CFNDEC(CFNWIDTH(1.234567890123456789,40),18)",
+      "index": 208
+    },
+    {
+      "kind": "rounding",
+      "expression": "0.5",
+      "index": 209
+    },
+    {
+      "kind": "rounding",
+      "expression": "-0.5",
+      "index": 210
+    },
+    {
+      "kind": "rounding",
+      "expression": "1.5",
+      "index": 211
+    },
+    {
+      "kind": "rounding",
+      "expression": "-1.5",
+      "index": 212
+    },
+    {
+      "kind": "rounding",
+      "expression": "2.5",
+      "index": 213
+    },
+    {
+      "kind": "rounding",
+      "expression": "-2.5",
+      "index": 214
+    },
+    {
+      "kind": "rounding",
+      "expression": "2.675",
+      "index": 215
+    },
+    {
+      "kind": "rounding",
+      "expression": "-2.675",
+      "index": 216
+    },
+    {
+      "kind": "rounding",
+      "expression": "1.005",
+      "index": 217
+    },
+    {
+      "kind": "rounding",
+      "expression": "-1.005",
+      "index": 218
+    },
+    {
+      "kind": "rounding",
+      "expression": "9.995",
+      "index": 219
+    },
+    {
+      "kind": "rounding",
+      "expression": "-9.995",
+      "index": 220
+    },
+    {
+      "kind": "rounding",
+      "expression": "0.499999999999999",
+      "index": 221
+    },
+    {
+      "kind": "rounding",
+      "expression": "0.500000000000001",
+      "index": 222
+    },
+    {
+      "kind": "rounding",
+      "expression": "1.2345678901234545",
+      "index": 223
+    },
+    {
+      "kind": "rounding",
+      "expression": "1.2345678901234555",
+      "index": 224
+    },
+    {
+      "kind": "rounding",
+      "expression": "1.2345678901234565",
+      "index": 225
+    },
+    {
+      "kind": "rounding",
+      "expression": "1.2345678901234575",
+      "index": 226
+    },
+    {
+      "kind": "rounding",
+      "expression": "1.2345678901234585",
+      "index": 227
+    },
+    {
+      "kind": "rounding",
+      "expression": "9.999999999999999",
+      "index": 228
+    },
+    {
+      "kind": "rounding",
+      "expression": "99.999999999999999",
+      "index": 229
+    },
+    {
+      "kind": "rounding",
+      "expression": "999999999.123456789",
+      "index": 230
+    },
+    {
+      "kind": "rounding",
+      "expression": "-999999999.123456789",
+      "index": 231
+    },
+    {
+      "kind": "rounding",
+      "expression": "12345678901234.5625",
+      "index": 232
+    },
+    {
+      "kind": "rounding",
+      "expression": "-12345678901234.5625",
+      "index": 233
+    },
+    {
+      "kind": "rounding",
+      "expression": "999999999999999.5",
+      "index": 234
+    },
+    {
+      "kind": "rounding",
+      "expression": "999999999999999.9",
+      "index": 235
+    },
+    {
+      "kind": "rounding",
+      "expression": "1000000000000000.5",
+      "index": 236
+    },
+    {
+      "kind": "rounding",
+      "expression": "0.00000000000000049",
+      "index": 237
+    },
+    {
+      "kind": "rounding",
+      "expression": "0.00000000000000050",
+      "index": 238
+    },
+    {
+      "kind": "rounding",
+      "expression": "0.00000000000000051",
+      "index": 239
+    },
+    {
+      "kind": "rounding",
+      "expression": "-0.00000000000000049",
+      "index": 240
+    }
+  ],
+  "stored": [
+    {
+      "index": 1,
+      "expression": "0.5",
+      "name": "frozen1"
+    },
+    {
+      "index": 2,
+      "expression": "2.50",
+      "name": "frozen2"
+    },
+    {
+      "index": 3,
+      "expression": "1.00",
+      "name": "frozen3"
+    },
+    {
+      "index": 4,
+      "expression": "-0.00",
+      "name": "frozen4"
+    },
+    {
+      "index": 5,
+      "expression": "1E-14",
+      "name": "frozen5"
+    },
+    {
+      "index": 6,
+      "expression": "-1E-18",
+      "name": "frozen6"
+    },
+    {
+      "index": 7,
+      "expression": "1.234567890123456789",
+      "name": "frozen7"
+    },
+    {
+      "index": 8,
+      "expression": "(0.5)",
+      "name": "frozen8"
+    },
+    {
+      "index": 9,
+      "expression": "(2.50)",
+      "name": "frozen9"
+    },
+    {
+      "index": 10,
+      "expression": "(1E-14)",
+      "name": "frozen10"
+    },
+    {
+      "index": 11,
+      "expression": "(1E-18)",
+      "name": "frozen11"
+    },
+    {
+      "index": 12,
+      "expression": "(1E+20)",
+      "name": "frozen12"
+    }
+  ],
+  "recordsPerRun": 1872,
+  "limitation": "EVALUATE-only pure controlled width/scale interventions, restricted to width>scale for probe safety after the retained incomplete f07ab8b0c attempt; not a production validity or crash-cause claim. Independent typed/BRS readback and unchanged clone controls; not a compiled-route equivalence claim. Stored private values are explicitly assigned compiled expressions once at each birth setting/FIXED state, then read under all display settings without reassignment. STR(value,40,current DECIMALS) is an observed diagnostic, not the expected TRANSFORM model. No callbacks, pictures, Currency, locale, division change, decompilation or VM."
+}

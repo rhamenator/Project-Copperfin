@@ -1,0 +1,206 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001",
+  "inputCount": 20,
+  "recordsPerRun": 40,
+  "fieldsPerRecord": 42,
+  "parentNativeSha256": "254b46dadbb71fa51b10e8439d51785b2c2aa3eb871c8c948fd3b8bdd3da4873",
+  "inputs": [
+    {
+      "index": 1,
+      "parentIndex": 193,
+      "originalBits": "3CC203398FC21737",
+      "bits": "3CC203398FC21737",
+      "setting": 16,
+      "scale": 18,
+      "kind": "original"
+    },
+    {
+      "index": 2,
+      "parentIndex": 193,
+      "originalBits": "3CC203398FC21737",
+      "bits": "3CC203398FC21737",
+      "setting": 16,
+      "scale": 16,
+      "kind": "original"
+    },
+    {
+      "index": 3,
+      "parentIndex": 193,
+      "originalBits": "3CC203398FC21737",
+      "bits": "3CC203AF9EE75616",
+      "setting": 16,
+      "scale": 18,
+      "kind": "round"
+    },
+    {
+      "index": 4,
+      "parentIndex": 193,
+      "originalBits": "3CC203398FC21737",
+      "bits": "3CC203AF9EE75616",
+      "setting": 16,
+      "scale": 16,
+      "kind": "round"
+    },
+    {
+      "index": 5,
+      "parentIndex": 199,
+      "originalBits": "BCC203398FC21737",
+      "bits": "BCC203398FC21737",
+      "setting": 16,
+      "scale": 18,
+      "kind": "original"
+    },
+    {
+      "index": 6,
+      "parentIndex": 199,
+      "originalBits": "BCC203398FC21737",
+      "bits": "BCC203398FC21737",
+      "setting": 16,
+      "scale": 16,
+      "kind": "original"
+    },
+    {
+      "index": 7,
+      "parentIndex": 199,
+      "originalBits": "BCC203398FC21737",
+      "bits": "BCC203AF9EE75616",
+      "setting": 16,
+      "scale": 18,
+      "kind": "round"
+    },
+    {
+      "index": 8,
+      "parentIndex": 199,
+      "originalBits": "BCC203398FC21737",
+      "bits": "BCC203AF9EE75616",
+      "setting": 16,
+      "scale": 16,
+      "kind": "round"
+    },
+    {
+      "index": 9,
+      "parentIndex": 205,
+      "originalBits": "3CC203A3D096CFC9",
+      "bits": "3CC203A3D096CFC9",
+      "setting": 17,
+      "scale": 18,
+      "kind": "original"
+    },
+    {
+      "index": 10,
+      "parentIndex": 205,
+      "originalBits": "3CC203A3D096CFC9",
+      "bits": "3CC203A3D096CFC9",
+      "setting": 17,
+      "scale": 17,
+      "kind": "original"
+    },
+    {
+      "index": 11,
+      "parentIndex": 205,
+      "originalBits": "3CC203A3D096CFC9",
+      "bits": "3CC203AF9EE75616",
+      "setting": 17,
+      "scale": 18,
+      "kind": "round"
+    },
+    {
+      "index": 12,
+      "parentIndex": 205,
+      "originalBits": "3CC203A3D096CFC9",
+      "bits": "3CC203AF9EE75616",
+      "setting": 17,
+      "scale": 17,
+      "kind": "round"
+    },
+    {
+      "index": 13,
+      "parentIndex": 211,
+      "originalBits": "BCC203A3D096CFC9",
+      "bits": "BCC203A3D096CFC9",
+      "setting": 17,
+      "scale": 18,
+      "kind": "original"
+    },
+    {
+      "index": 14,
+      "parentIndex": 211,
+      "originalBits": "BCC203A3D096CFC9",
+      "bits": "BCC203A3D096CFC9",
+      "setting": 17,
+      "scale": 17,
+      "kind": "original"
+    },
+    {
+      "index": 15,
+      "parentIndex": 211,
+      "originalBits": "BCC203A3D096CFC9",
+      "bits": "BCC203AF9EE75616",
+      "setting": 17,
+      "scale": 18,
+      "kind": "round"
+    },
+    {
+      "index": 16,
+      "parentIndex": 211,
+      "originalBits": "BCC203A3D096CFC9",
+      "bits": "BCC203AF9EE75616",
+      "setting": 17,
+      "scale": 17,
+      "kind": "round"
+    },
+    {
+      "index": 17,
+      "parentIndex": 217,
+      "originalBits": "3CC203AE70AC1571",
+      "bits": "3CC203AE70AC1571",
+      "setting": 18,
+      "scale": 18,
+      "kind": "original"
+    },
+    {
+      "index": 18,
+      "parentIndex": 217,
+      "originalBits": "3CC203AE70AC1571",
+      "bits": "3CC203AF9EE75616",
+      "setting": 18,
+      "scale": 18,
+      "kind": "round"
+    },
+    {
+      "index": 19,
+      "parentIndex": 223,
+      "originalBits": "BCC203AE70AC1571",
+      "bits": "BCC203AE70AC1571",
+      "setting": 18,
+      "scale": 18,
+      "kind": "original"
+    },
+    {
+      "index": 20,
+      "parentIndex": 223,
+      "originalBits": "BCC203AE70AC1571",
+      "bits": "BCC203AF9EE75616",
+      "setting": 18,
+      "scale": 18,
+      "kind": "round"
+    }
+  ],
+  "inputRoute": "Inline CFNDEC(CFNWIDTH(targetPayload,40),inputScale[index]) at every target consumer; no stored numeric argument/result.",
+  "parentRoute": "Original N40/18 and INLINE ROUND(original,appliedD), before/after target observations.",
+  "width": 40,
+  "controlCount": 17,
+  "runtimeEnvironment": "WINEDLLOVERRIDES=msvcr71=n",
+  "observerSha256": "0b1fcd2ba81b95631cb52e6ecd0d4afa721b450a967402f504d1852a49e9e9ac",
+  "limitation": "D16/17 same-payload scale intervention plus D18 unchanged-scale controls, both signs/FIXED. Reconstructed ROUND payload is a new route: its strings are NOT assumed equal to the parent ROUND expression. No internal-call, universal conversion or formatter proof.",
+  "modulePath": "C:\\windows\\system32\\MSVCR71.dll",
+  "moduleSha256": "8094af5ee310714caebccaeee7769ffb08048503ba478b879edfef5f1a24fefe",
+  "moduleFileSize": 348160,
+  "modulePe": {
+    "machine": 332,
+    "magic": 267,
+    "stamp": 1045831340,
+    "imageSize": 352256,
+    "checksum": 389609
+  }
+}

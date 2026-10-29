@@ -1,0 +1,493 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001",
+  "parent": "RQ-CF-PRG-NUMERIC-METADATA-001",
+  "baseline": "240ac51cbbaa3114a08a687142e67fe4969ea212",
+  "settings": [
+    0,
+    1,
+    2,
+    6,
+    14,
+    18
+  ],
+  "routes": [
+    "EVAL",
+    "COMPILED",
+    "STORE-EVAL",
+    "STORE-COMPILED"
+  ],
+  "literals": [
+    "2",
+    "3",
+    "7",
+    "5",
+    "1",
+    "0",
+    "0.5",
+    "0.25",
+    "2.50",
+    "0.50",
+    "0.3",
+    "0.000000000000000001",
+    "1.234567890123456789",
+    "00.50",
+    "0.125",
+    "0.0",
+    "0.00",
+    "-0.00",
+    "-0.5",
+    "-2.50",
+    "1.00",
+    "123.4500",
+    "00123.4500",
+    "1.234567",
+    "1.23456789",
+    "1.23456789012345",
+    "1.234567890123456",
+    "1.2345678901234567",
+    "1.23456789012345678",
+    "0.00001",
+    "0.0000000001",
+    "0.00000000000001",
+    "0.000000000000001",
+    "0.0000000000000001",
+    "0.00000000000000001",
+    "0.0000000000000000010",
+    "-0.000000000000000001",
+    "9.99999999999999",
+    "9.999999999999999",
+    "99.99999999999999",
+    "999999999.5",
+    "9999999999.5",
+    "999999999999999.5",
+    "2147483647",
+    "2147483648",
+    "-2147483648",
+    "-2147483649",
+    "9999999999999999",
+    "99999999999999999",
+    "999999999999999999",
+    "1E-1",
+    "1E-14",
+    "1E-18",
+    "1E-20",
+    "1.25E-2",
+    "1E+20",
+    "1E+100",
+    "1E+308"
+  ],
+  "rows": [
+    {
+      "kind": "literal",
+      "expression": "2",
+      "index": 1
+    },
+    {
+      "kind": "literal",
+      "expression": "3",
+      "index": 2
+    },
+    {
+      "kind": "literal",
+      "expression": "7",
+      "index": 3
+    },
+    {
+      "kind": "literal",
+      "expression": "5",
+      "index": 4
+    },
+    {
+      "kind": "literal",
+      "expression": "1",
+      "index": 5
+    },
+    {
+      "kind": "literal",
+      "expression": "0",
+      "index": 6
+    },
+    {
+      "kind": "literal",
+      "expression": "0.5",
+      "index": 7
+    },
+    {
+      "kind": "literal",
+      "expression": "0.25",
+      "index": 8
+    },
+    {
+      "kind": "literal",
+      "expression": "2.50",
+      "index": 9
+    },
+    {
+      "kind": "literal",
+      "expression": "0.50",
+      "index": 10
+    },
+    {
+      "kind": "literal",
+      "expression": "0.3",
+      "index": 11
+    },
+    {
+      "kind": "literal",
+      "expression": "0.000000000000000001",
+      "index": 12
+    },
+    {
+      "kind": "literal",
+      "expression": "1.234567890123456789",
+      "index": 13
+    },
+    {
+      "kind": "literal",
+      "expression": "00.50",
+      "index": 14
+    },
+    {
+      "kind": "literal",
+      "expression": "0.125",
+      "index": 15
+    },
+    {
+      "kind": "literal",
+      "expression": "0.0",
+      "index": 16
+    },
+    {
+      "kind": "literal",
+      "expression": "0.00",
+      "index": 17
+    },
+    {
+      "kind": "literal",
+      "expression": "-0.00",
+      "index": 18
+    },
+    {
+      "kind": "literal",
+      "expression": "-0.5",
+      "index": 19
+    },
+    {
+      "kind": "literal",
+      "expression": "-2.50",
+      "index": 20
+    },
+    {
+      "kind": "literal",
+      "expression": "1.00",
+      "index": 21
+    },
+    {
+      "kind": "literal",
+      "expression": "123.4500",
+      "index": 22
+    },
+    {
+      "kind": "literal",
+      "expression": "00123.4500",
+      "index": 23
+    },
+    {
+      "kind": "literal",
+      "expression": "1.234567",
+      "index": 24
+    },
+    {
+      "kind": "literal",
+      "expression": "1.23456789",
+      "index": 25
+    },
+    {
+      "kind": "literal",
+      "expression": "1.23456789012345",
+      "index": 26
+    },
+    {
+      "kind": "literal",
+      "expression": "1.234567890123456",
+      "index": 27
+    },
+    {
+      "kind": "literal",
+      "expression": "1.2345678901234567",
+      "index": 28
+    },
+    {
+      "kind": "literal",
+      "expression": "1.23456789012345678",
+      "index": 29
+    },
+    {
+      "kind": "literal",
+      "expression": "0.00001",
+      "index": 30
+    },
+    {
+      "kind": "literal",
+      "expression": "0.0000000001",
+      "index": 31
+    },
+    {
+      "kind": "literal",
+      "expression": "0.00000000000001",
+      "index": 32
+    },
+    {
+      "kind": "literal",
+      "expression": "0.000000000000001",
+      "index": 33
+    },
+    {
+      "kind": "literal",
+      "expression": "0.0000000000000001",
+      "index": 34
+    },
+    {
+      "kind": "literal",
+      "expression": "0.00000000000000001",
+      "index": 35
+    },
+    {
+      "kind": "literal",
+      "expression": "0.0000000000000000010",
+      "index": 36
+    },
+    {
+      "kind": "literal",
+      "expression": "-0.000000000000000001",
+      "index": 37
+    },
+    {
+      "kind": "literal",
+      "expression": "9.99999999999999",
+      "index": 38
+    },
+    {
+      "kind": "literal",
+      "expression": "9.999999999999999",
+      "index": 39
+    },
+    {
+      "kind": "literal",
+      "expression": "99.99999999999999",
+      "index": 40
+    },
+    {
+      "kind": "literal",
+      "expression": "999999999.5",
+      "index": 41
+    },
+    {
+      "kind": "literal",
+      "expression": "9999999999.5",
+      "index": 42
+    },
+    {
+      "kind": "literal",
+      "expression": "999999999999999.5",
+      "index": 43
+    },
+    {
+      "kind": "literal",
+      "expression": "2147483647",
+      "index": 44
+    },
+    {
+      "kind": "literal",
+      "expression": "2147483648",
+      "index": 45
+    },
+    {
+      "kind": "literal",
+      "expression": "-2147483648",
+      "index": 46
+    },
+    {
+      "kind": "literal",
+      "expression": "-2147483649",
+      "index": 47
+    },
+    {
+      "kind": "literal",
+      "expression": "9999999999999999",
+      "index": 48
+    },
+    {
+      "kind": "literal",
+      "expression": "99999999999999999",
+      "index": 49
+    },
+    {
+      "kind": "literal",
+      "expression": "999999999999999999",
+      "index": 50
+    },
+    {
+      "kind": "literal",
+      "expression": "1E-1",
+      "index": 51
+    },
+    {
+      "kind": "literal",
+      "expression": "1E-14",
+      "index": 52
+    },
+    {
+      "kind": "literal",
+      "expression": "1E-18",
+      "index": 53
+    },
+    {
+      "kind": "literal",
+      "expression": "1E-20",
+      "index": 54
+    },
+    {
+      "kind": "literal",
+      "expression": "1.25E-2",
+      "index": 55
+    },
+    {
+      "kind": "literal",
+      "expression": "1E+20",
+      "index": 56
+    },
+    {
+      "kind": "literal",
+      "expression": "1E+100",
+      "index": 57
+    },
+    {
+      "kind": "literal",
+      "expression": "1E+308",
+      "index": 58
+    },
+    {
+      "kind": "group",
+      "expression": "(0.5)",
+      "index": 59
+    },
+    {
+      "kind": "minus",
+      "expression": "-(0.5)",
+      "index": 60
+    },
+    {
+      "kind": "iif",
+      "expression": "IIF(.T.,0.5,0)",
+      "index": 61
+    },
+    {
+      "kind": "group",
+      "expression": "(2.50)",
+      "index": 62
+    },
+    {
+      "kind": "minus",
+      "expression": "-(2.50)",
+      "index": 63
+    },
+    {
+      "kind": "iif",
+      "expression": "IIF(.T.,2.50,0)",
+      "index": 64
+    },
+    {
+      "kind": "group",
+      "expression": "(0.00)",
+      "index": 65
+    },
+    {
+      "kind": "minus",
+      "expression": "-(0.00)",
+      "index": 66
+    },
+    {
+      "kind": "iif",
+      "expression": "IIF(.T.,0.00,0)",
+      "index": 67
+    },
+    {
+      "kind": "group",
+      "expression": "(0.000000000000000001)",
+      "index": 68
+    },
+    {
+      "kind": "minus",
+      "expression": "-(0.000000000000000001)",
+      "index": 69
+    },
+    {
+      "kind": "iif",
+      "expression": "IIF(.T.,0.000000000000000001,0)",
+      "index": 70
+    },
+    {
+      "kind": "group",
+      "expression": "(1.234567890123456789)",
+      "index": 71
+    },
+    {
+      "kind": "minus",
+      "expression": "-(1.234567890123456789)",
+      "index": 72
+    },
+    {
+      "kind": "iif",
+      "expression": "IIF(.T.,1.234567890123456789,0)",
+      "index": 73
+    },
+    {
+      "kind": "group",
+      "expression": "(2147483648)",
+      "index": 74
+    },
+    {
+      "kind": "minus",
+      "expression": "-(2147483648)",
+      "index": 75
+    },
+    {
+      "kind": "iif",
+      "expression": "IIF(.T.,2147483648,0)",
+      "index": 76
+    },
+    {
+      "kind": "group",
+      "expression": "(1E-18)",
+      "index": 77
+    },
+    {
+      "kind": "minus",
+      "expression": "-(1E-18)",
+      "index": 78
+    },
+    {
+      "kind": "iif",
+      "expression": "IIF(.T.,1E-18,0)",
+      "index": 79
+    },
+    {
+      "kind": "group",
+      "expression": "(1E+20)",
+      "index": 80
+    },
+    {
+      "kind": "minus",
+      "expression": "-(1E+20)",
+      "index": 81
+    },
+    {
+      "kind": "iif",
+      "expression": "IIF(.T.,1E+20,0)",
+      "index": 82
+    }
+  ],
+  "recordsPerRun": 3936,
+  "limitation": "Finite literal/default TRANSFORM recovery, not producer or arithmetic policy. Pure roots replay for metadata/BRS/display. Store routes assign to a local at the current settings before observing; they are not evidence for values assigned under another setting. No callbacks, fields, Currency, pictures, locale changes, VM, or implementation imports."
+}

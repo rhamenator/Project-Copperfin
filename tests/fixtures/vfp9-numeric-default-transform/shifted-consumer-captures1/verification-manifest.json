@@ -1,0 +1,329 @@
+{
+  "nativePairStillQualified": true,
+  "analysisOnly": true,
+  "nativeInvoked": false,
+  "ordinaryShellNotReaEvidence": true,
+  "baselineGzipFiles": 65,
+  "supplementalGzipFiles": 33,
+  "archiveReaderStatus": 0,
+  "archiveReaderByteExact": true,
+  "analysisStatus": 0,
+  "readbackStatus": 0,
+  "byteExact": true,
+  "metricSelfChecks": 8,
+  "inputHashesBeforeAfterEach0": true,
+  "sourceAnalysisSnapshotBeforeExecution": true,
+  "postNativeAnalysisSourceBase": "1b248f7a474e92fe24c13392fd6c95fe0b154828",
+  "analysisSourceNotNativeFreeze": true,
+  "summary": {
+    "payloadInterventions": {
+      "transform": {
+        "comparisons": 8,
+        "literalDifferent": 2,
+        "trimmedLiteralDifferent": 2,
+        "valueDifferent": 2,
+        "zeroSignDifferent": 0
+      },
+      "str": {
+        "comparisons": 8,
+        "literalDifferent": 4,
+        "trimmedLiteralDifferent": 4,
+        "valueDifferent": 4,
+        "zeroSignDifferent": 0
+      }
+    },
+    "originalReconstructionBaselines": {
+      "transform": {
+        "comparisons": 8,
+        "literalDifferent": 0,
+        "trimmedLiteralDifferent": 0,
+        "valueDifferent": 0,
+        "zeroSignDifferent": 0
+      },
+      "str": {
+        "comparisons": 8,
+        "literalDifferent": 0,
+        "trimmedLiteralDifferent": 0,
+        "valueDifferent": 0,
+        "zeroSignDifferent": 0
+      }
+    },
+    "adjacentByKindAndFixed": {
+      "original": {
+        "OFF": {
+          "transform": {
+            "comparisons": 2,
+            "literalDifferent": 0,
+            "trimmedLiteralDifferent": 0,
+            "valueDifferent": 0,
+            "zeroSignDifferent": 0
+          },
+          "str": {
+            "comparisons": 2,
+            "literalDifferent": 2,
+            "trimmedLiteralDifferent": 2,
+            "valueDifferent": 2,
+            "zeroSignDifferent": 0
+          }
+        },
+        "ON": {
+          "transform": {
+            "comparisons": 2,
+            "literalDifferent": 2,
+            "trimmedLiteralDifferent": 2,
+            "valueDifferent": 2,
+            "zeroSignDifferent": 0
+          },
+          "str": {
+            "comparisons": 2,
+            "literalDifferent": 2,
+            "trimmedLiteralDifferent": 2,
+            "valueDifferent": 2,
+            "zeroSignDifferent": 0
+          }
+        }
+      },
+      "shifted": {
+        "OFF": {
+          "transform": {
+            "comparisons": 2,
+            "literalDifferent": 0,
+            "trimmedLiteralDifferent": 0,
+            "valueDifferent": 0,
+            "zeroSignDifferent": 0
+          },
+          "str": {
+            "comparisons": 2,
+            "literalDifferent": 0,
+            "trimmedLiteralDifferent": 0,
+            "valueDifferent": 0,
+            "zeroSignDifferent": 0
+          }
+        },
+        "ON": {
+          "transform": {
+            "comparisons": 2,
+            "literalDifferent": 0,
+            "trimmedLiteralDifferent": 0,
+            "valueDifferent": 0,
+            "zeroSignDifferent": 0
+          },
+          "str": {
+            "comparisons": 2,
+            "literalDifferent": 0,
+            "trimmedLiteralDifferent": 0,
+            "valueDifferent": 0,
+            "zeroSignDifferent": 0
+          }
+        }
+      }
+    },
+    "targetTransformVsStr": {
+      "comparisons": 16,
+      "literalDifferent": 16,
+      "trimmedLiteralDifferent": 9,
+      "valueDifferent": 8,
+      "zeroSignDifferent": 1
+    }
+  },
+  "files": [
+    {
+      "name": "analysis1-analysis.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/analysis.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "analysis1-analysis.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/analysis.inputs-after.txt",
+      "bytes": 22378,
+      "sha256": "882f6916c91691447fb92365bef178c2573a9f06a1b6500e0eccfb7969d5c797"
+    },
+    {
+      "name": "analysis1-analysis.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/analysis.inputs-before.txt",
+      "bytes": 22378,
+      "sha256": "882f6916c91691447fb92365bef178c2573a9f06a1b6500e0eccfb7969d5c797"
+    },
+    {
+      "name": "analysis1-analysis.json",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/analysis.json",
+      "bytes": 49675,
+      "sha256": "ff7141fd9370c530f212b6a3f5104795cf762448372933afb3602fa356b37d95"
+    },
+    {
+      "name": "analysis1-analysis.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/analysis.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "analysis1-analysis.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/analysis.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "analysis1-analysis.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/analysis.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "3fbc651d3274ec910e156ccfabc596d47eaecdc2df27cf19c2d7d5aa7aa0ce5c"
+    },
+    {
+      "name": "analysis1-analysis.status",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/analysis.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "analysis1-analysis.stderr",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/analysis.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "analysis1-archive-reader.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/archive-reader.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "analysis1-archive-reader.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/archive-reader.inputs-after.txt",
+      "bytes": 22378,
+      "sha256": "882f6916c91691447fb92365bef178c2573a9f06a1b6500e0eccfb7969d5c797"
+    },
+    {
+      "name": "analysis1-archive-reader.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/archive-reader.inputs-before.txt",
+      "bytes": 22378,
+      "sha256": "882f6916c91691447fb92365bef178c2573a9f06a1b6500e0eccfb7969d5c797"
+    },
+    {
+      "name": "analysis1-archive-reader.json",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/archive-reader.json",
+      "bytes": 25464,
+      "sha256": "c99ca9d0ccfca28a3100c970145626c91006ea07d7c8ed275b8249be4d3514c2"
+    },
+    {
+      "name": "analysis1-archive-reader.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/archive-reader.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "analysis1-archive-reader.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/archive-reader.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "analysis1-archive-reader.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/archive-reader.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "3fbc651d3274ec910e156ccfabc596d47eaecdc2df27cf19c2d7d5aa7aa0ce5c"
+    },
+    {
+      "name": "analysis1-archive-reader.status",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/archive-reader.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "analysis1-archive-reader.stderr",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/archive-reader.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "analysis1-inputs.sha256",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/inputs.sha256",
+      "bytes": 36266,
+      "sha256": "6fe5d55737b44d0148b41d45f48b2b22ad349a18c0e38368eb2f3cb53c5f2f29"
+    },
+    {
+      "name": "analysis1-post-native-analysis-base.txt",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/post-native-analysis-base.txt",
+      "bytes": 41,
+      "sha256": "b1827f6e2eca72e14025a8b1ff4609df878af2986e684171e9ddf9ccf1d082ae"
+    },
+    {
+      "name": "analysis1-post-native-analysis-status.txt",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/post-native-analysis-status.txt",
+      "bytes": 155,
+      "sha256": "5e62ca4f8307b6e863000b2064a14adee6537ce263cf70956a5f3d6b5db2f7d6"
+    },
+    {
+      "name": "analysis1-readback.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/readback.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "analysis1-readback.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/readback.inputs-after.txt",
+      "bytes": 22378,
+      "sha256": "882f6916c91691447fb92365bef178c2573a9f06a1b6500e0eccfb7969d5c797"
+    },
+    {
+      "name": "analysis1-readback.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/readback.inputs-before.txt",
+      "bytes": 22378,
+      "sha256": "882f6916c91691447fb92365bef178c2573a9f06a1b6500e0eccfb7969d5c797"
+    },
+    {
+      "name": "analysis1-readback.json",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/readback.json",
+      "bytes": 49675,
+      "sha256": "ff7141fd9370c530f212b6a3f5104795cf762448372933afb3602fa356b37d95"
+    },
+    {
+      "name": "analysis1-readback.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/readback.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "analysis1-readback.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/readback.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "analysis1-readback.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/readback.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "3fbc651d3274ec910e156ccfabc596d47eaecdc2df27cf19c2d7d5aa7aa0ce5c"
+    },
+    {
+      "name": "analysis1-readback.status",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/readback.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "analysis1-readback.stderr",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/readback.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "analysis1-shell-completion.json",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/shell-completion.json",
+      "bytes": 2390,
+      "sha256": "3ad65ad69cad3c1759b0b2f5328d19e7b20358434aa2061977e2cccf883bfd01"
+    },
+    {
+      "name": "analysis1-source-analyze-shifted-consumer.cjs",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/source-analyze-shifted-consumer.cjs",
+      "bytes": 8043,
+      "sha256": "813a9590a1e7caf23c856ae3bd546933283576f3b1c22f3d19ea954e5d7ca8c2"
+    },
+    {
+      "name": "analysis1-source-audit-shifted-consumer.cjs",
+      "hostRelativePath": "build/default-transform-shifted-analysis1/source-audit-shifted-consumer.cjs",
+      "bytes": 13487,
+      "sha256": "023a9db38103c7cd4d60d009b995b7383b1a24511c87763244ec18819b3f9641"
+    }
+  ]
+}
