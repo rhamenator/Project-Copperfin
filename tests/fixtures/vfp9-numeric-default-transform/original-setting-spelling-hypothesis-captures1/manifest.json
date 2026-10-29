@@ -1,0 +1,423 @@
+{
+  "afterCapture": true,
+  "nativeInvoked": false,
+  "sourceBase": "79d50b74931d133b04cd411c38ace53fd4d954f3",
+  "files": [
+    {
+      "name": "analysis.guard.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/analysis.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "analysis.inputs-after.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/analysis.inputs-after.txt",
+      "bytes": 85321,
+      "sha256": "894431f7cc50cdc0353deebd50b932356d214e91c6d0a55a945c08896cbb6d96",
+      "gzipBytes": 3375,
+      "gzipSha256": "1be379c1bc64c64ac879f0dc62451b9a86a91a568e72431a7f65dc1c3c3f53ec"
+    },
+    {
+      "name": "analysis.inputs-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/analysis.inputs-before.txt",
+      "bytes": 85321,
+      "sha256": "894431f7cc50cdc0353deebd50b932356d214e91c6d0a55a945c08896cbb6d96",
+      "gzipBytes": 3375,
+      "gzipSha256": "1be379c1bc64c64ac879f0dc62451b9a86a91a568e72431a7f65dc1c3c3f53ec"
+    },
+    {
+      "name": "analysis.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/analysis.json",
+      "bytes": 35803,
+      "sha256": "556d1200e69b4a6036cf8825d2ec095f17c0a65f8707742b07a28a72dc9edfab",
+      "gzipBytes": 1922,
+      "gzipSha256": "d2ee038c9042a2edcec35b8b034027e6157652c4ce600d8441ca226f7a0f2a1c"
+    },
+    {
+      "name": "analysis.prefix.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/analysis.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78"
+    },
+    {
+      "name": "analysis.prefix.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/analysis.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "analysis.pressure-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/analysis.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "5b722b828892584394f6ac0198184c3f9d4c14ae6dae0cd11e856868f573da8f",
+      "gzipBytes": 77,
+      "gzipSha256": "40f588349c594fd8f469b427c410c5dbddc5909bdbe9d531da34c1885cb5ad28"
+    },
+    {
+      "name": "analysis.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/analysis.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "analysis.stderr.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/analysis.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "archived-replay.guard.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/archived-replay.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "archived-replay.inputs-after.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/archived-replay.inputs-after.txt",
+      "bytes": 85321,
+      "sha256": "894431f7cc50cdc0353deebd50b932356d214e91c6d0a55a945c08896cbb6d96",
+      "gzipBytes": 3375,
+      "gzipSha256": "1be379c1bc64c64ac879f0dc62451b9a86a91a568e72431a7f65dc1c3c3f53ec"
+    },
+    {
+      "name": "archived-replay.inputs-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/archived-replay.inputs-before.txt",
+      "bytes": 85321,
+      "sha256": "894431f7cc50cdc0353deebd50b932356d214e91c6d0a55a945c08896cbb6d96",
+      "gzipBytes": 3375,
+      "gzipSha256": "1be379c1bc64c64ac879f0dc62451b9a86a91a568e72431a7f65dc1c3c3f53ec"
+    },
+    {
+      "name": "archived-replay.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/archived-replay.json",
+      "bytes": 35803,
+      "sha256": "556d1200e69b4a6036cf8825d2ec095f17c0a65f8707742b07a28a72dc9edfab",
+      "gzipBytes": 1922,
+      "gzipSha256": "d2ee038c9042a2edcec35b8b034027e6157652c4ce600d8441ca226f7a0f2a1c"
+    },
+    {
+      "name": "archived-replay.prefix.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/archived-replay.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78"
+    },
+    {
+      "name": "archived-replay.prefix.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/archived-replay.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "archived-replay.pressure-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/archived-replay.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "90f9a282a4132924cb051e0c0c851cc7b5b62eaff2faa2c684dcb2a7a6850c9f",
+      "gzipBytes": 77,
+      "gzipSha256": "c468217a9bdaac5847d31f153ba0c5799b9dc7226427f7b8c031aa7fee20eebe"
+    },
+    {
+      "name": "archived-replay.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/archived-replay.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "archived-replay.stderr.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/archived-replay.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "frozen-source.cjs.gz.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/frozen-source.cjs.gz",
+      "bytes": 2119,
+      "sha256": "df32aedb4536d447efee1e25103e3c35ec25e7ff3be24d035356e8adc5031eb4",
+      "gzipBytes": 2142,
+      "gzipSha256": "8c20613401b7c143096daa40c4ac169870e1bc6eff2bf6dceba978dabd5750af"
+    },
+    {
+      "name": "inputs.sha256.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/inputs.sha256",
+      "bytes": 131077,
+      "sha256": "c8ab1adb5467f63cb3ca6209adecc701cbd5a69faf21b0b4e12a2512c9157f48",
+      "gzipBytes": 12757,
+      "gzipSha256": "157a41f26179e4fcc3eaaf141f95e7771d30232c38b4bbbeeca28df12a8a1a17"
+    },
+    {
+      "name": "parent-classifier-expected.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/parent-classifier-expected.json",
+      "bytes": 68756,
+      "sha256": "62cdff13cf0189bdb775a0f9fb49217eb478283a5497b498c70e85d10f921298",
+      "gzipBytes": 2696,
+      "gzipSha256": "71334b2c9f24d80540fb54c211ed0db26185d17642364dc15f99459103fdd71d"
+    },
+    {
+      "name": "parent-classifier.guard.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/parent-classifier.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "parent-classifier.inputs-after.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/parent-classifier.inputs-after.txt",
+      "bytes": 85321,
+      "sha256": "894431f7cc50cdc0353deebd50b932356d214e91c6d0a55a945c08896cbb6d96",
+      "gzipBytes": 3375,
+      "gzipSha256": "1be379c1bc64c64ac879f0dc62451b9a86a91a568e72431a7f65dc1c3c3f53ec"
+    },
+    {
+      "name": "parent-classifier.inputs-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/parent-classifier.inputs-before.txt",
+      "bytes": 85321,
+      "sha256": "894431f7cc50cdc0353deebd50b932356d214e91c6d0a55a945c08896cbb6d96",
+      "gzipBytes": 3375,
+      "gzipSha256": "1be379c1bc64c64ac879f0dc62451b9a86a91a568e72431a7f65dc1c3c3f53ec"
+    },
+    {
+      "name": "parent-classifier.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/parent-classifier.json",
+      "bytes": 68756,
+      "sha256": "62cdff13cf0189bdb775a0f9fb49217eb478283a5497b498c70e85d10f921298",
+      "gzipBytes": 2696,
+      "gzipSha256": "71334b2c9f24d80540fb54c211ed0db26185d17642364dc15f99459103fdd71d"
+    },
+    {
+      "name": "parent-classifier.prefix.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/parent-classifier.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78"
+    },
+    {
+      "name": "parent-classifier.prefix.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/parent-classifier.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "parent-classifier.pressure-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/parent-classifier.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "5b722b828892584394f6ac0198184c3f9d4c14ae6dae0cd11e856868f573da8f",
+      "gzipBytes": 77,
+      "gzipSha256": "40f588349c594fd8f469b427c410c5dbddc5909bdbe9d531da34c1885cb5ad28"
+    },
+    {
+      "name": "parent-classifier.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/parent-classifier.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "parent-classifier.stderr.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/parent-classifier.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "readback.guard.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/readback.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "readback.inputs-after.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/readback.inputs-after.txt",
+      "bytes": 85321,
+      "sha256": "894431f7cc50cdc0353deebd50b932356d214e91c6d0a55a945c08896cbb6d96",
+      "gzipBytes": 3375,
+      "gzipSha256": "1be379c1bc64c64ac879f0dc62451b9a86a91a568e72431a7f65dc1c3c3f53ec"
+    },
+    {
+      "name": "readback.inputs-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/readback.inputs-before.txt",
+      "bytes": 85321,
+      "sha256": "894431f7cc50cdc0353deebd50b932356d214e91c6d0a55a945c08896cbb6d96",
+      "gzipBytes": 3375,
+      "gzipSha256": "1be379c1bc64c64ac879f0dc62451b9a86a91a568e72431a7f65dc1c3c3f53ec"
+    },
+    {
+      "name": "readback.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/readback.json",
+      "bytes": 35803,
+      "sha256": "556d1200e69b4a6036cf8825d2ec095f17c0a65f8707742b07a28a72dc9edfab",
+      "gzipBytes": 1922,
+      "gzipSha256": "d2ee038c9042a2edcec35b8b034027e6157652c4ce600d8441ca226f7a0f2a1c"
+    },
+    {
+      "name": "readback.prefix.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/readback.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78"
+    },
+    {
+      "name": "readback.prefix.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/readback.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "readback.pressure-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/readback.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "90f9a282a4132924cb051e0c0c851cc7b5b62eaff2faa2c684dcb2a7a6850c9f",
+      "gzipBytes": 77,
+      "gzipSha256": "c468217a9bdaac5847d31f153ba0c5799b9dc7226427f7b8c031aa7fee20eebe"
+    },
+    {
+      "name": "readback.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/readback.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "readback.stderr.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/readback.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "shell-completion.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/shell-completion.json",
+      "bytes": 4591,
+      "sha256": "a34d63f6513a42f15f77509fa4ac4c28b6397a229dee4bf8781886dde5053cc6",
+      "gzipBytes": 1250,
+      "gzipSha256": "bdb4dcdbae3d34598fb4349079f04a8561cc9fb8f76ad72e41f0648ac2f67852"
+    },
+    {
+      "name": "source-base-commit.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/source-base-commit.txt",
+      "bytes": 41,
+      "sha256": "c04f6db8eb298eeb61c7052100c8c394e5042ad84fa7414d6f489659559ebf5e",
+      "gzipBytes": 59,
+      "gzipSha256": "74b3cf81a5bb06e697289f57f5b9ed7fff7bceb5bf1d35530d318b08f63ce0c8"
+    },
+    {
+      "name": "source-check-original-setting-spelling-hypothesis.cjs.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/source-check-original-setting-spelling-hypothesis.cjs",
+      "bytes": 4718,
+      "sha256": "d640de275423cca8a142bcfb75f7a8bf9927419c8e525e23f49aa927c1ba63fb",
+      "gzipBytes": 2066,
+      "gzipSha256": "8dc2761e3e3f9d05b8ebc79b3dc6c7480166d021f8fa1b4819fb131464901346"
+    },
+    {
+      "name": "source-status.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/source-status.txt",
+      "bytes": 96,
+      "sha256": "b7c0d643aa3136ad89731635ba426dc9fb5231580c12c39963667de7556d9a87",
+      "gzipBytes": 102,
+      "gzipSha256": "065dba929d74713bb70b853f293717e227932af1ee8259e04c87e57b9b3baf99"
+    },
+    {
+      "name": "syntax.guard.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/syntax.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "syntax.inputs-after.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/syntax.inputs-after.txt",
+      "bytes": 85321,
+      "sha256": "894431f7cc50cdc0353deebd50b932356d214e91c6d0a55a945c08896cbb6d96",
+      "gzipBytes": 3375,
+      "gzipSha256": "1be379c1bc64c64ac879f0dc62451b9a86a91a568e72431a7f65dc1c3c3f53ec"
+    },
+    {
+      "name": "syntax.inputs-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/syntax.inputs-before.txt",
+      "bytes": 85321,
+      "sha256": "894431f7cc50cdc0353deebd50b932356d214e91c6d0a55a945c08896cbb6d96",
+      "gzipBytes": 3375,
+      "gzipSha256": "1be379c1bc64c64ac879f0dc62451b9a86a91a568e72431a7f65dc1c3c3f53ec"
+    },
+    {
+      "name": "syntax.json.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/syntax.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "syntax.prefix.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/syntax.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78"
+    },
+    {
+      "name": "syntax.prefix.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/syntax.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "name": "syntax.pressure-before.txt.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/syntax.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "5b722b828892584394f6ac0198184c3f9d4c14ae6dae0cd11e856868f573da8f",
+      "gzipBytes": 77,
+      "gzipSha256": "40f588349c594fd8f469b427c410c5dbddc5909bdbe9d531da34c1885cb5ad28"
+    },
+    {
+      "name": "syntax.status.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/syntax.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "gzipBytes": 22,
+      "gzipSha256": "de76e512a414e118fc8bc46cc3043f18cb60a7aa7b997d9564d30aae0cac9eee"
+    },
+    {
+      "name": "syntax.stderr.gz",
+      "hostRelativePath": "build/default-transform-original-setting-spelling-hypothesis1/syntax.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    }
+  ]
+}

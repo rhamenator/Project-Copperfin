@@ -1,0 +1,76 @@
+{
+  "analysisOnly": true,
+  "nativeInvoked": false,
+  "ordinaryShellNotReaEvidence": true,
+  "baselineGzipFiles": 34,
+  "pass1FailureGzipFiles": 11,
+  "pass2BaselineGzipFiles": 23,
+  "supplementalGzipFiles": 10,
+  "archivedSourceEqualsExecuted": true,
+  "recomputeStatus": 0,
+  "reportByteExact": true,
+  "inputHashesBefore": 0,
+  "inputHashesAfter": 0,
+  "files": [
+    {
+      "name": "pass2-archive-recompute-shell-completion.json",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/archive-recompute-shell-completion.json",
+      "bytes": 462,
+      "sha256": "7f9af00276635788d8d209998c74ddcfd636ea36315e61585968abf7ae6e7899"
+    },
+    {
+      "name": "pass2-archive-recompute.guard.status",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/archive-recompute.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "pass2-archive-recompute.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/archive-recompute.inputs-after.txt",
+      "bytes": 18098,
+      "sha256": "ce5b75287b70b4d7147beef56ffdf9969edba0d6fa1f4697c3176eeadb69df45"
+    },
+    {
+      "name": "pass2-archive-recompute.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/archive-recompute.inputs-before.txt",
+      "bytes": 18098,
+      "sha256": "ce5b75287b70b4d7147beef56ffdf9969edba0d6fa1f4697c3176eeadb69df45"
+    },
+    {
+      "name": "pass2-archive-recompute.json",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/archive-recompute.json",
+      "bytes": 2027943,
+      "sha256": "9e36051a8ca876c13beffa7e469a023f83e206fb7c6e774ed180aef7ef59dd95"
+    },
+    {
+      "name": "pass2-archive-recompute.prefix.status",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/archive-recompute.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "pass2-archive-recompute.prefix.txt",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/archive-recompute.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pass2-archive-recompute.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/archive-recompute.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "00afbf8a48d3200eeab335d571a28457dda110c3345bd9c822a42eb7fd940c7d"
+    },
+    {
+      "name": "pass2-archive-recompute.status",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/archive-recompute.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "pass2-archive-recompute.stderr",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/archive-recompute.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

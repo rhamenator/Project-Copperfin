@@ -1,0 +1,99 @@
+{
+  "analysisOnly": true,
+  "nativeInvoked": false,
+  "ordinaryShellNotReaEvidence": true,
+  "afterCaptureAnalyzerInvoked": false,
+  "frozenReaderReplayInvoked": false,
+  "preChildGuardStatus": 75,
+  "fullIoPsi": {
+    "avg10": 48.41,
+    "avg60": 13.75
+  },
+  "prefixStatus": 1,
+  "stage": "frozen-reader",
+  "inputsBeforeStatus": 0,
+  "inputsAfterChecked": false,
+  "nativeQualificationUnchanged": true,
+  "files": [
+    {
+      "name": "analysis1-frozen-reader.guard.status",
+      "hostRelativePath": "build/default-transform-original-width-analysis1/frozen-reader.guard.status",
+      "bytes": 3,
+      "sha256": "84b9bb077be0d8a29d0d01ef350d718b77c2ec5f40c3ab90502b1b4b5016c550",
+      "gzipBytes": 23,
+      "gzipSha256": "9503d121cee88e1607182a9aa795c71fd294b2afb5cbec5648864d8fd2df9ab1"
+    },
+    {
+      "name": "analysis1-frozen-reader.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-original-width-analysis1/frozen-reader.inputs-before.txt",
+      "bytes": 12474,
+      "sha256": "3cf2f0400d8b09b49c0e33c1463de4a9500dacf37ac2a66a05cfca33d2cd1027",
+      "gzipBytes": 775,
+      "gzipSha256": "9c5846534f92af66ac563b761c75c56c4a361aedb080e6871cdae6f9ff87efa8"
+    },
+    {
+      "name": "analysis1-frozen-reader.prefix.status",
+      "hostRelativePath": "build/default-transform-original-width-analysis1/frozen-reader.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "gzipBytes": 22,
+      "gzipSha256": "d381e5a9b7c1c71b5fb3fef202103bf4b6098ce288f148735de1ecf61d4e3b75"
+    },
+    {
+      "name": "analysis1-frozen-reader.prefix.txt",
+      "hostRelativePath": "build/default-transform-original-width-analysis1/frozen-reader.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipBytes": 20,
+      "gzipSha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+    },
+    {
+      "name": "analysis1-frozen-reader.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-original-width-analysis1/frozen-reader.pressure-before.txt",
+      "bytes": 118,
+      "sha256": "8ac100dda429ac5a0dd24202fc309bed56e1cc4f9a34bffc58f5ccb077757ae9",
+      "gzipBytes": 97,
+      "gzipSha256": "3055bbedb9e75a84d56a7b7a56d82aea921c98fa00a00158947e5abcd669a970"
+    },
+    {
+      "name": "analysis1-inputs.sha256",
+      "hostRelativePath": "build/default-transform-original-width-analysis1/inputs.sha256",
+      "bytes": 19604,
+      "sha256": "625caa72b0dac52397adbd13721d266a7885fb643e981e8e8f077b87de0b78be",
+      "gzipBytes": 2757,
+      "gzipSha256": "9cf11dbb42ad902ad22e5be67335eae2eb22de549a4a4687468ca6138cd66368"
+    },
+    {
+      "name": "analysis1-shell-completion.json",
+      "hostRelativePath": "build/default-transform-original-width-analysis1/shell-completion.json",
+      "bytes": 3295,
+      "sha256": "5b0779a23c721f6b0957714436e6d46c532d555254d112549fd58462e67f072c",
+      "gzipBytes": 1187,
+      "gzipSha256": "70d2309334a72909e0abd74feb5c983c979acde99d21ce4121e8ab7e5b7a9d8e"
+    },
+    {
+      "name": "analysis1-source-analyze-original-width-consumer.cjs",
+      "hostRelativePath": "build/default-transform-original-width-analysis1/source-analyze-original-width-consumer.cjs",
+      "bytes": 7895,
+      "sha256": "d0c8a85e7d1e2f1e48c8c71f5efb8fe03d7c55322de10b326b2d13a12f32f3f5",
+      "gzipBytes": 3297,
+      "gzipSha256": "21e103509d7838bdba2f95df6253d1fb0a574505da2f2210730efcb942500303"
+    },
+    {
+      "name": "analysis1-source-base-commit.txt",
+      "hostRelativePath": "build/default-transform-original-width-analysis1/source-base-commit.txt",
+      "bytes": 41,
+      "sha256": "7e81c34453f719e5031fbc244e0f1bb75b0eed7caee442b39facc859e853f1fc",
+      "gzipBytes": 60,
+      "gzipSha256": "ca38b35363d49a4a679014040c5225a0e17aab6cb1fb49ab5a27db0d9c16ac63"
+    },
+    {
+      "name": "analysis1-source-status.txt",
+      "hostRelativePath": "build/default-transform-original-width-analysis1/source-status.txt",
+      "bytes": 169,
+      "sha256": "86f10468dfa151d906ad56e859f19eb2d322eb653ba120ba4b545e75e801b257",
+      "gzipBytes": 113,
+      "gzipSha256": "55c0cb67cdb721bb4a29446b2b24ac65b356cf1c1043e7cf49e823117ecd75e2"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001",
+  "inputCount": 8,
+  "recordsPerRun": 16,
+  "fieldsPerRecord": 42,
+  "parentNativeSha256": "254b46dadbb71fa51b10e8439d51785b2c2aa3eb871c8c948fd3b8bdd3da4873",
+  "inputs": [
+    {
+      "index": 1,
+      "parentIndex": 159,
+      "originalBits": "3D2C1E8DBBA38061",
+      "bits": "3D2C1E8DBBA38061",
+      "setting": 13,
+      "scale": 13,
+      "width": 40,
+      "kind": "scale13"
+    },
+    {
+      "index": 2,
+      "parentIndex": 159,
+      "originalBits": "3D2C1E8DBBA38061",
+      "bits": "3D2C1E8DBBA38061",
+      "setting": 13,
+      "scale": 18,
+      "width": 40,
+      "kind": "scale18"
+    },
+    {
+      "index": 3,
+      "parentIndex": 160,
+      "originalBits": "3D2C1E8DBBA38062",
+      "bits": "3D2C1E8DBBA38062",
+      "setting": 13,
+      "scale": 13,
+      "width": 40,
+      "kind": "scale13"
+    },
+    {
+      "index": 4,
+      "parentIndex": 160,
+      "originalBits": "3D2C1E8DBBA38062",
+      "bits": "3D2C1E8DBBA38062",
+      "setting": 13,
+      "scale": 18,
+      "width": 40,
+      "kind": "scale18"
+    },
+    {
+      "index": 5,
+      "parentIndex": 165,
+      "originalBits": "BD2C1E8DBBA38061",
+      "bits": "BD2C1E8DBBA38061",
+      "setting": 13,
+      "scale": 13,
+      "width": 40,
+      "kind": "scale13"
+    },
+    {
+      "index": 6,
+      "parentIndex": 165,
+      "originalBits": "BD2C1E8DBBA38061",
+      "bits": "BD2C1E8DBBA38061",
+      "setting": 13,
+      "scale": 18,
+      "width": 40,
+      "kind": "scale18"
+    },
+    {
+      "index": 7,
+      "parentIndex": 166,
+      "originalBits": "BD2C1E8DBBA38062",
+      "bits": "BD2C1E8DBBA38062",
+      "setting": 13,
+      "scale": 13,
+      "width": 40,
+      "kind": "scale13"
+    },
+    {
+      "index": 8,
+      "parentIndex": 166,
+      "originalBits": "BD2C1E8DBBA38062",
+      "bits": "BD2C1E8DBBA38062",
+      "setting": 13,
+      "scale": 18,
+      "width": 40,
+      "kind": "scale18"
+    }
+  ],
+  "inputRoute": "Inline CFNDEC(CFNWIDTH(targetPayload,40),inputScale[index]) at every target consumer; no stored numeric argument/result.",
+  "parentRoute": "Original N40/18 and INLINE ROUND(original,appliedD), before/after target observations.",
+  "scales": [
+    13,
+    18
+  ],
+  "width": 40,
+  "controlCount": 17,
+  "runtimeEnvironment": "WINEDLLOVERRIDES=msvcr71=n",
+  "observerSha256": "0b1fcd2ba81b95631cb52e6ecd0d4afa721b450a967402f504d1852a49e9e9ac",
+  "limitation": "Four signed ORIGINAL D13 payloads at adjacent native display transitions, decimal metadata13 versus18, same width40 and both FIXED. Payloads and controls originate in retained original raw evidence, NOT shifted arithmetic; reconstruction is a NEW route. No target display predictions, universal decimal-metadata rule, fitted constants/internal sequence/formatter proof.",
+  "modulePath": "C:\\windows\\system32\\MSVCR71.dll",
+  "moduleSha256": "8094af5ee310714caebccaeee7769ffb08048503ba478b879edfef5f1a24fefe",
+  "moduleFileSize": 348160,
+  "modulePe": {
+    "machine": 332,
+    "magic": 267,
+    "stamp": 1045831340,
+    "imageSize": 352256,
+    "checksum": 389609
+  }
+}

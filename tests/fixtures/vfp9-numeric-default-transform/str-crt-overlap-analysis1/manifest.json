@@ -1,0 +1,133 @@
+{
+  "analysisOnly": true,
+  "nativeInvoked": false,
+  "ordinaryShellNotReaEvidence": true,
+  "sourceBaseCommit": "4d3e06f33be534d3c159180fbb1c620d05e4a4ed",
+  "sourceSha256": "9052f01b43efccebb09ca9f49e05d4ae2ac9315bbc7104b7db72476da7b53a62",
+  "attempt1": {
+    "status": 1,
+    "reason": "New offline reader assumed a JSON manifest absent from the older CRT archive; no native action. Corrected to published SHA256SUMS, retaining raw hashes and all control predicates."
+  },
+  "attempt2": {
+    "status": 0,
+    "metricSelfChecksAddedLater": true
+  },
+  "attempt3": {
+    "status": 0,
+    "metricSelfChecks": 9,
+    "originalContextsChecked": 528,
+    "fixedCountOverlap": 96,
+    "readbackStatus": 0,
+    "readbackByteExact": true
+  },
+  "files": [
+    {
+      "name": "attempt1-analysis.json",
+      "host": "build/default-transform-str-crt-overlap1/analysis.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "attempt1-analysis.status",
+      "host": "build/default-transform-str-crt-overlap1/analysis.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "attempt1-analysis.stderr",
+      "host": "build/default-transform-str-crt-overlap1/analysis.stderr",
+      "bytes": 1326,
+      "sha256": "738e37587546edcdb9b07fa70cde3ecbc1b380ff9823d3cb247d86b3eda3f758"
+    },
+    {
+      "name": "attempt1-pressure-before.txt",
+      "host": "build/default-transform-str-crt-overlap1/pressure-before.txt",
+      "bytes": 114,
+      "sha256": "87eec11c573dd1f82fd93f7794a80415feb2c39cfb3b128f86d4ecad43a2acb2"
+    },
+    {
+      "name": "attempt1-source-analyze-str-crt-overlap.cjs",
+      "host": "build/default-transform-str-crt-overlap1/source-analyze-str-crt-overlap.cjs",
+      "bytes": 9008,
+      "sha256": "4b8369344c8e94a23f6cfe9dabbc334cf1ba4078137013a0b4e5769474798512"
+    },
+    {
+      "name": "attempt2-analysis.json",
+      "host": "build/default-transform-str-crt-overlap2/analysis.json",
+      "bytes": 109242,
+      "sha256": "2495384ee47b86eeed5b3cc0da4749fc8965246a567f611bc14bac8c3a27a70b"
+    },
+    {
+      "name": "attempt2-analysis.status",
+      "host": "build/default-transform-str-crt-overlap2/analysis.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "attempt2-analysis.stderr",
+      "host": "build/default-transform-str-crt-overlap2/analysis.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "attempt2-pressure-before.txt",
+      "host": "build/default-transform-str-crt-overlap2/pressure-before.txt",
+      "bytes": 114,
+      "sha256": "9f1202e6d93d4efdab0d092cf26bea56320a17eb50f108f64fc793ef87d9ec69"
+    },
+    {
+      "name": "attempt2-source-analyze-str-crt-overlap.cjs",
+      "host": "build/default-transform-str-crt-overlap2/source-analyze-str-crt-overlap.cjs",
+      "bytes": 9306,
+      "sha256": "5f6a90925a6c4d07b82f5542a504372c65511a8fac439db88cc09fdac3cb5b71"
+    },
+    {
+      "name": "attempt3-analysis.json",
+      "host": "build/default-transform-str-crt-overlap3/analysis.json",
+      "bytes": 109267,
+      "sha256": "38b5a09e4e553d888608586ff541f77c849544cee75670937eaf859453680ea7"
+    },
+    {
+      "name": "attempt3-analysis.status",
+      "host": "build/default-transform-str-crt-overlap3/analysis.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "attempt3-analysis.stderr",
+      "host": "build/default-transform-str-crt-overlap3/analysis.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "attempt3-pressure-before.txt",
+      "host": "build/default-transform-str-crt-overlap3/pressure-before.txt",
+      "bytes": 114,
+      "sha256": "3eff83f4504df7fdde10d7fcdc7140c3fe4d46cb3a00441844dc87fbf0a66994"
+    },
+    {
+      "name": "attempt3-readback-analysis.json",
+      "host": "build/default-transform-str-crt-overlap3/readback-analysis.json",
+      "bytes": 109267,
+      "sha256": "38b5a09e4e553d888608586ff541f77c849544cee75670937eaf859453680ea7"
+    },
+    {
+      "name": "attempt3-readback-analysis.status",
+      "host": "build/default-transform-str-crt-overlap3/readback-analysis.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "attempt3-readback-analysis.stderr",
+      "host": "build/default-transform-str-crt-overlap3/readback-analysis.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "attempt3-source-analyze-str-crt-overlap.cjs",
+      "host": "build/default-transform-str-crt-overlap3/source-analyze-str-crt-overlap.cjs",
+      "bytes": 10277,
+      "sha256": "9052f01b43efccebb09ca9f49e05d4ae2ac9315bbc7104b7db72476da7b53a62"
+    }
+  ]
+}

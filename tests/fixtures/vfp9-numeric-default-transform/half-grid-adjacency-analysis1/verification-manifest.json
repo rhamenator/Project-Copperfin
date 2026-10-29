@@ -1,0 +1,64 @@
+{
+  "analysisOnly": true,
+  "nativeInvoked": false,
+  "ordinaryShellNotReaEvidence": true,
+  "baselineGzipFiles": 23,
+  "supplementalGzipFiles": 10,
+  "archivedSourceEqualsExecuted": true,
+  "recomputeStatus": 0,
+  "reportByteExact": true,
+  "inputHashesBefore": 0,
+  "inputHashesAfter": 0,
+  "files": [
+    {
+      "name": "archive-recompute-shell-completion.json",
+      "bytes": 448,
+      "sha256": "623556a28b356a810be5da96c6f758d07a4af6260afdd876ddcc05c6a63ba1e8"
+    },
+    {
+      "name": "archive-recompute.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "archive-recompute.inputs-after.txt",
+      "bytes": 11592,
+      "sha256": "1c935214d8afa8252115f8e9172a700629ba9f7f0a32fc4db65575936387d59c"
+    },
+    {
+      "name": "archive-recompute.inputs-before.txt",
+      "bytes": 11592,
+      "sha256": "1c935214d8afa8252115f8e9172a700629ba9f7f0a32fc4db65575936387d59c"
+    },
+    {
+      "name": "archive-recompute.json",
+      "bytes": 1204647,
+      "sha256": "83bdbf5a65be734883dbe3021b0a2f775eb876e546142b4bfc1b4bd9c322449a"
+    },
+    {
+      "name": "archive-recompute.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "archive-recompute.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "archive-recompute.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "64acda79764ed5e45aee76218b3a84db8883a0afba0def147d47f09907088512"
+    },
+    {
+      "name": "archive-recompute.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "archive-recompute.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

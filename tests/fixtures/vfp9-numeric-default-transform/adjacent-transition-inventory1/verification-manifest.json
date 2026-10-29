@@ -1,0 +1,67 @@
+{
+  "analysisOnly": true,
+  "nativeInvoked": false,
+  "ordinaryShellNotReaEvidence": true,
+  "baselineGzipFiles": 20,
+  "priorGuardGzipFiles": 5,
+  "supplementalGzipFiles": 10,
+  "archivedSourceEqualsExecuted": true,
+  "recomputeStatus": 0,
+  "reportByteExact": true,
+  "inputHashesBefore": 0,
+  "inputHashesAfter": 0,
+  "metricSelfChecks": 8,
+  "reusedValidatorMetricChecks": 8,
+  "files": [
+    {
+      "name": "archive-recompute2-shell-completion.json",
+      "bytes": 523,
+      "sha256": "48927f61da44fedc4f15cab9393d79a51acb6832a093a5852fc0fc2c93d7f3b7"
+    },
+    {
+      "name": "archive-recompute2.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "archive-recompute2.inputs-after.txt",
+      "bytes": 3474,
+      "sha256": "d5c841b7ccaeb854b850bbb9acc8c72e29f9c4a78555ecef550d107584a7aa1b"
+    },
+    {
+      "name": "archive-recompute2.inputs-before.txt",
+      "bytes": 3474,
+      "sha256": "d5c841b7ccaeb854b850bbb9acc8c72e29f9c4a78555ecef550d107584a7aa1b"
+    },
+    {
+      "name": "archive-recompute2.json",
+      "bytes": 600310,
+      "sha256": "9bd62640465aa0955b29299e188e99978312eea0986fe91b500b3cf068b25240"
+    },
+    {
+      "name": "archive-recompute2.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "archive-recompute2.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "archive-recompute2.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "f4be27a8cbcaa5c0e224f4fdd0d141a8af3ff5f2a1646222ffc77cfbd959756c"
+    },
+    {
+      "name": "archive-recompute2.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "archive-recompute2.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

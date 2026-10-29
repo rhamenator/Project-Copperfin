@@ -1,0 +1,65 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001",
+  "inputCount": 6,
+  "recordsPerRun": 12,
+  "fieldsPerRecord": 28,
+  "parentNativeSha256": "1979626f4fec992924791da5cbc89ed3abef1583810690300fff1fd3cf95ea32",
+  "classificationSha256": "e58c9027351f6e4cb4ee6878a2c06711c8339d3dc3a0bb3e41ab3dda38647916",
+  "inputs": [
+    {
+      "index": 1,
+      "setting": 0,
+      "bits": "3FDFFFFFFFFFFFFF",
+      "provenance": "Observed positive scaled operand in retained rejected graph."
+    },
+    {
+      "index": 2,
+      "setting": 0,
+      "bits": "3FE0000000000000",
+      "provenance": "Observed positive scaled operand in retained rejected graph."
+    },
+    {
+      "index": 3,
+      "setting": 0,
+      "bits": "3FE0000000000001",
+      "provenance": "Observed positive scaled operand in retained rejected graph."
+    },
+    {
+      "index": 4,
+      "setting": 0,
+      "bits": "BFDFFFFFFFFFFFFF",
+      "provenance": "Explicit negative-sign mirror stimulus; not an observed negative scaled stage."
+    },
+    {
+      "index": 5,
+      "setting": 0,
+      "bits": "BFE0000000000000",
+      "provenance": "Explicit negative-sign mirror stimulus; not an observed negative scaled stage."
+    },
+    {
+      "index": 6,
+      "setting": 0,
+      "bits": "BFE0000000000001",
+      "provenance": "Explicit negative-sign mirror stimulus; not an observed negative scaled stage."
+    }
+  ],
+  "inputRoute": "Inline CFNDEC(CFNWIDTH(payload,40),18) at every numeric consumer; no stored argument/result.",
+  "roundRoute": "Inline ROUND(CFNDEC(CFNWIDTH(payload,40),18),0) at every result consumer.",
+  "width": 40,
+  "scale": 18,
+  "appliedDecimals": 0,
+  "controlCount": 17,
+  "runtimeEnvironment": "WINEDLLOVERRIDES=msvcr71=n",
+  "observerSha256": "0b1fcd2ba81b95631cb52e6ecd0d4afa721b450a967402f504d1852a49e9e9ac",
+  "limitation": "Six explicit signed half-neighbor stimuli/D0/bothFIXED only. New public ROUND and display outputs are observations, not expected results or an internal arithmetic graph. No Windows parity, atomic mapped-code proof or accepted formatter.",
+  "modulePath": "C:\\windows\\system32\\MSVCR71.dll",
+  "moduleSha256": "8094af5ee310714caebccaeee7769ffb08048503ba478b879edfef5f1a24fefe",
+  "moduleFileSize": 348160,
+  "modulePe": {
+    "machine": 332,
+    "magic": 267,
+    "stamp": 1045831340,
+    "imageSize": 352256,
+    "checksum": 389609
+  }
+}

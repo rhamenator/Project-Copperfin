@@ -1,0 +1,1525 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001",
+  "sourceOnly": true,
+  "nativeInvoked": false,
+  "ordinaryShellNotReaEvidence": true,
+  "sourceBase": "96cd0a4d23ce347de27f34f39b0109d307f91b35",
+  "preCheckClean": false,
+  "nativeSourceFreeze": false,
+  "generationStages": 2,
+  "initialStages": 11,
+  "initialSyntheticTests": 46,
+  "expandedStages": 11,
+  "expandedSyntheticTests": 48,
+  "widthMutations": "32->40 and40->32, before+after metadata independently",
+  "allStagesStatus0": true,
+  "inputHashesBeforeAfterEach0": true,
+  "files": [
+    {
+      "name": "generate-generate-cases.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-cases.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "generate-generate-cases.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-cases.inputs-after.txt",
+      "bytes": 15268,
+      "sha256": "9dc6a19925dc04d94e27dd21e33606a1f43daf83cd6e0786910ad85d947a0b5a"
+    },
+    {
+      "name": "generate-generate-cases.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-cases.inputs-before.txt",
+      "bytes": 15268,
+      "sha256": "9dc6a19925dc04d94e27dd21e33606a1f43daf83cd6e0786910ad85d947a0b5a"
+    },
+    {
+      "name": "generate-generate-cases.out",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-cases.out",
+      "bytes": 3173,
+      "sha256": "24c17150d7debe9a0faad0aea920c61bec1929121de38ca941e1d43ce8915c31"
+    },
+    {
+      "name": "generate-generate-cases.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-cases.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "generate-generate-cases.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-cases.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "generate-generate-cases.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-cases.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "d94c1ea3577e2a6bb68f2e6f9c89faa284cc50a4bafda5ed266ceb97044f8694"
+    },
+    {
+      "name": "generate-generate-cases.status",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-cases.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "generate-generate-cases.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-cases.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "generate-generate-source.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-source.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "generate-generate-source.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-source.inputs-after.txt",
+      "bytes": 15268,
+      "sha256": "9dc6a19925dc04d94e27dd21e33606a1f43daf83cd6e0786910ad85d947a0b5a"
+    },
+    {
+      "name": "generate-generate-source.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-source.inputs-before.txt",
+      "bytes": 15268,
+      "sha256": "9dc6a19925dc04d94e27dd21e33606a1f43daf83cd6e0786910ad85d947a0b5a"
+    },
+    {
+      "name": "generate-generate-source.out",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-source.out",
+      "bytes": 8918,
+      "sha256": "8b0303c9073bc9521f54c8767277d0de2ba025699114502b6398aa5dc460da36"
+    },
+    {
+      "name": "generate-generate-source.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-source.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "generate-generate-source.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-source.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "generate-generate-source.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-source.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "6183d98f35f5c5c7d099a653ddfb8e51a74f1f5440c76548a7ac08ff8f283f8d"
+    },
+    {
+      "name": "generate-generate-source.status",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-source.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "generate-generate-source.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/generate-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "generate-inputs.sha256",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/inputs.sha256",
+      "bytes": 24630,
+      "sha256": "afebda51f1b1a14023730942cca2f286c2b361e7e434859b49354a0784fb6677"
+    },
+    {
+      "name": "generate-pre-check-source-commit.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/pre-check-source-commit.txt",
+      "bytes": 41,
+      "sha256": "7eca8a7fb9b236007e6bf159d302540e2fdc62e8c0fdca9cdcf0327c671d7495"
+    },
+    {
+      "name": "generate-pre-check-source-status.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/pre-check-source-status.txt",
+      "bytes": 405,
+      "sha256": "a3e457dd2205da5d267125d6cff745fb0dbab6613d6dce5d1280d66c138d4af6"
+    },
+    {
+      "name": "generate-prior-inputs.sha256",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/prior-inputs.sha256",
+      "bytes": 23743,
+      "sha256": "21633afb6af8a6f8855c964612864136962a7e4fa0f3a84043833382a380013e"
+    },
+    {
+      "name": "generate-shell-completion.json",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/shell-completion.json",
+      "bytes": 187,
+      "sha256": "7ec08785f27d285f7e4380ccebae066c1e6c4cab80e51b84b181cdb938ef4aa7"
+    },
+    {
+      "name": "generate-source-audit-shifted-width-consumer.cjs",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/source-audit-shifted-width-consumer.cjs",
+      "bytes": 13615,
+      "sha256": "42135ce5306f5255e56b304c0611fec21bb36b7d0fba74bb65f40605857dd4aa"
+    },
+    {
+      "name": "generate-source-check-shifted-width-reader.cjs",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/source-check-shifted-width-reader.cjs",
+      "bytes": 5962,
+      "sha256": "1aa1dc3ed17a74e5bcf8971fdb4dcf3012901bb88afe3d2000cce9070a701ef0"
+    },
+    {
+      "name": "generate-source-emit-shifted-width-consumer.cjs",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/source-emit-shifted-width-consumer.cjs",
+      "bytes": 8583,
+      "sha256": "0f9899cf11b418e02d860d9ebc971bd1e47843f2bcc81953445c1af05405c77e"
+    },
+    {
+      "name": "generate-source-shifted-width-consumer-capture.sh",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/source-shifted-width-consumer-capture.sh",
+      "bytes": 6261,
+      "sha256": "736f1b19d01864baa07f7ea30ad212f077fb6f4669357f47deb55ce41965e7ac"
+    },
+    {
+      "name": "generate-source-shifted-width-source-check.sh",
+      "hostRelativePath": "build/default-transform-shifted-width-generate1/source-shifted-width-source-check.sh",
+      "bytes": 4003,
+      "sha256": "cba1d360a079cd80c0dc86202aac0b71708c22aed9feb4438f296db490f4b075"
+    },
+    {
+      "name": "initial-compare-cases.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-cases.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-compare-cases.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-cases.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-compare-cases.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-cases.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-compare-cases.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-cases.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-compare-cases.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-cases.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "initial-compare-cases.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-cases.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-compare-cases.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-cases.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "a6f7c73bc6bb6709ae3b08507918b15014eeb081ce76acc1b1ea8850fd5902f6"
+    },
+    {
+      "name": "initial-compare-cases.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-cases.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-compare-cases.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-cases.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-compare-source.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-source.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-compare-source.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-source.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-compare-source.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-source.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-compare-source.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-source.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-compare-source.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-source.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "initial-compare-source.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-source.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-compare-source.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-source.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "a0c7bb001f713d9b15acef297d70ea0e75925c5350d81c6a29c0b24b2e4c576c"
+    },
+    {
+      "name": "initial-compare-source.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-source.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-compare-source.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/compare-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-inputs.sha256",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/inputs.sha256",
+      "bytes": 24915,
+      "sha256": "efd3f9545d9d7dc2846eded610829bcf17daf12045154884be83d59488d35509"
+    },
+    {
+      "name": "initial-pre-check-source-commit.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/pre-check-source-commit.txt",
+      "bytes": 41,
+      "sha256": "7eca8a7fb9b236007e6bf159d302540e2fdc62e8c0fdca9cdcf0327c671d7495"
+    },
+    {
+      "name": "initial-pre-check-source-status.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/pre-check-source-status.txt",
+      "bytes": 564,
+      "sha256": "4f64aac2f025a0bbdbd9ad2ddee33655781855bb8908a17ad865c72f07841139"
+    },
+    {
+      "name": "initial-prior-inputs.sha256",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/prior-inputs.sha256",
+      "bytes": 23743,
+      "sha256": "21633afb6af8a6f8855c964612864136962a7e4fa0f3a84043833382a380013e"
+    },
+    {
+      "name": "initial-regenerate-cases.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-cases.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-regenerate-cases.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-cases.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-regenerate-cases.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-cases.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-regenerate-cases.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-cases.out",
+      "bytes": 3173,
+      "sha256": "24c17150d7debe9a0faad0aea920c61bec1929121de38ca941e1d43ce8915c31"
+    },
+    {
+      "name": "initial-regenerate-cases.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-cases.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "initial-regenerate-cases.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-cases.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-regenerate-cases.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-cases.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "a0c7bb001f713d9b15acef297d70ea0e75925c5350d81c6a29c0b24b2e4c576c"
+    },
+    {
+      "name": "initial-regenerate-cases.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-cases.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-regenerate-cases.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-cases.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-regenerate-source.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-source.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-regenerate-source.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-source.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-regenerate-source.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-source.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-regenerate-source.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-source.out",
+      "bytes": 8918,
+      "sha256": "8b0303c9073bc9521f54c8767277d0de2ba025699114502b6398aa5dc460da36"
+    },
+    {
+      "name": "initial-regenerate-source.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-source.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "initial-regenerate-source.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-source.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-regenerate-source.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-source.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "3be83ad7c5e39a7d397e89d03cdc0454a0e766cbbf41550d8caccd120c0a083f"
+    },
+    {
+      "name": "initial-regenerate-source.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-source.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-regenerate-source.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/regenerate-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-shell-completion.json",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/shell-completion.json",
+      "bytes": 373,
+      "sha256": "1ce247d398314abedbc433d1b0557c0f10982aa0f7f417e162d6b4afd9eea69c"
+    },
+    {
+      "name": "initial-source-audit-shifted-width-consumer.cjs",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/source-audit-shifted-width-consumer.cjs",
+      "bytes": 13615,
+      "sha256": "42135ce5306f5255e56b304c0611fec21bb36b7d0fba74bb65f40605857dd4aa"
+    },
+    {
+      "name": "initial-source-check-shifted-width-reader.cjs",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/source-check-shifted-width-reader.cjs",
+      "bytes": 5962,
+      "sha256": "1aa1dc3ed17a74e5bcf8971fdb4dcf3012901bb88afe3d2000cce9070a701ef0"
+    },
+    {
+      "name": "initial-source-emit-shifted-width-consumer.cjs",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/source-emit-shifted-width-consumer.cjs",
+      "bytes": 8583,
+      "sha256": "0f9899cf11b418e02d860d9ebc971bd1e47843f2bcc81953445c1af05405c77e"
+    },
+    {
+      "name": "initial-source-reader.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/source-reader.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-source-reader.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/source-reader.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-source-reader.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/source-reader.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-source-reader.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/source-reader.out",
+      "bytes": 165,
+      "sha256": "f51e2e0b4c9e914f3a81cbb4c18c0f884f9b951ed013eef60f0243930d0703cf"
+    },
+    {
+      "name": "initial-source-reader.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/source-reader.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "initial-source-reader.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/source-reader.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-source-reader.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/source-reader.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "09fc6e4d3923e5bca53cb9d20d590671b295e8a0140f81bdeb213e290a6d4739"
+    },
+    {
+      "name": "initial-source-reader.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/source-reader.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-source-reader.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/source-reader.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-source-shifted-width-consumer-capture.sh",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/source-shifted-width-consumer-capture.sh",
+      "bytes": 6261,
+      "sha256": "736f1b19d01864baa07f7ea30ad212f077fb6f4669357f47deb55ce41965e7ac"
+    },
+    {
+      "name": "initial-source-shifted-width-consumer-cases.json",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/source-shifted-width-consumer-cases.json",
+      "bytes": 3173,
+      "sha256": "24c17150d7debe9a0faad0aea920c61bec1929121de38ca941e1d43ce8915c31"
+    },
+    {
+      "name": "initial-source-shifted-width-consumer.prg",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/source-shifted-width-consumer.prg",
+      "bytes": 8918,
+      "sha256": "8b0303c9073bc9521f54c8767277d0de2ba025699114502b6398aa5dc460da36"
+    },
+    {
+      "name": "initial-source-shifted-width-source-check.sh",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/source-shifted-width-source-check.sh",
+      "bytes": 4003,
+      "sha256": "cba1d360a079cd80c0dc86202aac0b71708c22aed9feb4438f296db490f4b075"
+    },
+    {
+      "name": "initial-syntax-emitter.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-emitter.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-syntax-emitter.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-emitter.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-syntax-emitter.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-emitter.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-syntax-emitter.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-emitter.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-syntax-emitter.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-emitter.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "initial-syntax-emitter.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-emitter.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-syntax-emitter.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-emitter.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "b5ba997bcb07111c17dcc4117aa7af8ed12f0ea598a2b044c92d75cde5045c8b"
+    },
+    {
+      "name": "initial-syntax-emitter.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-emitter.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-syntax-emitter.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-emitter.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-syntax-offline-worker.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-offline-worker.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-syntax-offline-worker.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-offline-worker.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-syntax-offline-worker.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-offline-worker.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-syntax-offline-worker.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-offline-worker.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-syntax-offline-worker.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-offline-worker.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "initial-syntax-offline-worker.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-offline-worker.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-syntax-offline-worker.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-offline-worker.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "3be83ad7c5e39a7d397e89d03cdc0454a0e766cbbf41550d8caccd120c0a083f"
+    },
+    {
+      "name": "initial-syntax-offline-worker.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-offline-worker.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-syntax-offline-worker.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-offline-worker.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-syntax-reader-tests.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader-tests.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-syntax-reader-tests.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader-tests.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-syntax-reader-tests.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader-tests.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-syntax-reader-tests.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader-tests.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-syntax-reader-tests.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader-tests.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "initial-syntax-reader-tests.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader-tests.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-syntax-reader-tests.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader-tests.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "b5ba997bcb07111c17dcc4117aa7af8ed12f0ea598a2b044c92d75cde5045c8b"
+    },
+    {
+      "name": "initial-syntax-reader-tests.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader-tests.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-syntax-reader-tests.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader-tests.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-syntax-reader.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-syntax-reader.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-syntax-reader.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-syntax-reader.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-syntax-reader.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "initial-syntax-reader.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-syntax-reader.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "b5ba997bcb07111c17dcc4117aa7af8ed12f0ea598a2b044c92d75cde5045c8b"
+    },
+    {
+      "name": "initial-syntax-reader.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-syntax-reader.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-reader.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-syntax-worker.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-worker.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-syntax-worker.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-worker.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-syntax-worker.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-worker.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-syntax-worker.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-worker.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-syntax-worker.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-worker.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "initial-syntax-worker.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-worker.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-syntax-worker.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-worker.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "b5ba997bcb07111c17dcc4117aa7af8ed12f0ea598a2b044c92d75cde5045c8b"
+    },
+    {
+      "name": "initial-syntax-worker.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-worker.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-syntax-worker.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/syntax-worker.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-synthetic-reader.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/synthetic-reader.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-synthetic-reader.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/synthetic-reader.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-synthetic-reader.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/synthetic-reader.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "307c5504633c2bea5e93e9cb3643be1bc18eb2c8feb85cfa93527bb45e9b3abd"
+    },
+    {
+      "name": "initial-synthetic-reader.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/synthetic-reader.out",
+      "bytes": 165,
+      "sha256": "238c7dd14967dfe6e7ecdb0b3afaedfbefeb22c4a0c3a4e16720cebd6f2abb5a"
+    },
+    {
+      "name": "initial-synthetic-reader.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/synthetic-reader.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "initial-synthetic-reader.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/synthetic-reader.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "initial-synthetic-reader.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/synthetic-reader.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "09fc6e4d3923e5bca53cb9d20d590671b295e8a0140f81bdeb213e290a6d4739"
+    },
+    {
+      "name": "initial-synthetic-reader.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/synthetic-reader.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "initial-synthetic-reader.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks1/synthetic-reader.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-compare-cases.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-cases.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-compare-cases.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-cases.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-compare-cases.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-cases.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-compare-cases.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-cases.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-compare-cases.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-cases.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "expanded-compare-cases.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-cases.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-compare-cases.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-cases.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "fe0f919edd61a1cdcadfbdbfa136a8a418d4bd3d6c854dbd28d4de53304e3f6f"
+    },
+    {
+      "name": "expanded-compare-cases.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-cases.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-compare-cases.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-cases.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-compare-source.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-source.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-compare-source.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-source.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-compare-source.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-source.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-compare-source.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-source.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-compare-source.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-source.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "expanded-compare-source.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-source.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-compare-source.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-source.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "fe0f919edd61a1cdcadfbdbfa136a8a418d4bd3d6c854dbd28d4de53304e3f6f"
+    },
+    {
+      "name": "expanded-compare-source.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-source.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-compare-source.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/compare-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-inputs.sha256",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/inputs.sha256",
+      "bytes": 24915,
+      "sha256": "e0a2b78b091e036a7a6755ac587caebe7b16be9bee30ab1b2049444abb4d32b6"
+    },
+    {
+      "name": "expanded-pre-check-source-commit.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/pre-check-source-commit.txt",
+      "bytes": 41,
+      "sha256": "7eca8a7fb9b236007e6bf159d302540e2fdc62e8c0fdca9cdcf0327c671d7495"
+    },
+    {
+      "name": "expanded-pre-check-source-status.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/pre-check-source-status.txt",
+      "bytes": 564,
+      "sha256": "4f64aac2f025a0bbdbd9ad2ddee33655781855bb8908a17ad865c72f07841139"
+    },
+    {
+      "name": "expanded-prior-inputs.sha256",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/prior-inputs.sha256",
+      "bytes": 23743,
+      "sha256": "21633afb6af8a6f8855c964612864136962a7e4fa0f3a84043833382a380013e"
+    },
+    {
+      "name": "expanded-regenerate-cases.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-cases.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-regenerate-cases.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-cases.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-regenerate-cases.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-cases.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-regenerate-cases.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-cases.out",
+      "bytes": 3173,
+      "sha256": "24c17150d7debe9a0faad0aea920c61bec1929121de38ca941e1d43ce8915c31"
+    },
+    {
+      "name": "expanded-regenerate-cases.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-cases.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "expanded-regenerate-cases.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-cases.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-regenerate-cases.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-cases.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "4648a643b15f32acf07daa43ad8c429d474882a4c9da825fcfded93972f2b64d"
+    },
+    {
+      "name": "expanded-regenerate-cases.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-cases.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-regenerate-cases.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-cases.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-regenerate-source.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-source.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-regenerate-source.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-source.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-regenerate-source.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-source.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-regenerate-source.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-source.out",
+      "bytes": 8918,
+      "sha256": "8b0303c9073bc9521f54c8767277d0de2ba025699114502b6398aa5dc460da36"
+    },
+    {
+      "name": "expanded-regenerate-source.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-source.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "expanded-regenerate-source.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-source.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-regenerate-source.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-source.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "cdecb61e303365cf4d0cda18809c879d45844a9c619d5784e9046a77942f7f73"
+    },
+    {
+      "name": "expanded-regenerate-source.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-source.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-regenerate-source.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/regenerate-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-shell-completion.json",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/shell-completion.json",
+      "bytes": 373,
+      "sha256": "afa3c47c8672a41df10bdcd65580d61b5fbebc551da0654738ef9defd94d09d6"
+    },
+    {
+      "name": "expanded-source-audit-shifted-width-consumer.cjs",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/source-audit-shifted-width-consumer.cjs",
+      "bytes": 13648,
+      "sha256": "b41d659b4d660e7a49b422f8a75aeb889160d8f98cb419757234e0eae2a70971"
+    },
+    {
+      "name": "expanded-source-check-shifted-width-reader.cjs",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/source-check-shifted-width-reader.cjs",
+      "bytes": 6015,
+      "sha256": "c05383c575e8f54539c81cd8f1ba66d2c90dacf2c7fca46200ed346af2f94aba"
+    },
+    {
+      "name": "expanded-source-emit-shifted-width-consumer.cjs",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/source-emit-shifted-width-consumer.cjs",
+      "bytes": 8583,
+      "sha256": "0f9899cf11b418e02d860d9ebc971bd1e47843f2bcc81953445c1af05405c77e"
+    },
+    {
+      "name": "expanded-source-reader.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/source-reader.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-source-reader.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/source-reader.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-source-reader.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/source-reader.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-source-reader.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/source-reader.out",
+      "bytes": 165,
+      "sha256": "f51e2e0b4c9e914f3a81cbb4c18c0f884f9b951ed013eef60f0243930d0703cf"
+    },
+    {
+      "name": "expanded-source-reader.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/source-reader.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "expanded-source-reader.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/source-reader.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-source-reader.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/source-reader.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "6379db964c446c1ec2e01b2e0abdbb1e39e17e84d745712824d3b45937df7a5a"
+    },
+    {
+      "name": "expanded-source-reader.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/source-reader.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-source-reader.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/source-reader.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-source-shifted-width-consumer-capture.sh",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/source-shifted-width-consumer-capture.sh",
+      "bytes": 6261,
+      "sha256": "736f1b19d01864baa07f7ea30ad212f077fb6f4669357f47deb55ce41965e7ac"
+    },
+    {
+      "name": "expanded-source-shifted-width-consumer-cases.json",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/source-shifted-width-consumer-cases.json",
+      "bytes": 3173,
+      "sha256": "24c17150d7debe9a0faad0aea920c61bec1929121de38ca941e1d43ce8915c31"
+    },
+    {
+      "name": "expanded-source-shifted-width-consumer.prg",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/source-shifted-width-consumer.prg",
+      "bytes": 8918,
+      "sha256": "8b0303c9073bc9521f54c8767277d0de2ba025699114502b6398aa5dc460da36"
+    },
+    {
+      "name": "expanded-source-shifted-width-source-check.sh",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/source-shifted-width-source-check.sh",
+      "bytes": 4003,
+      "sha256": "cba1d360a079cd80c0dc86202aac0b71708c22aed9feb4438f296db490f4b075"
+    },
+    {
+      "name": "expanded-syntax-emitter.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-emitter.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-syntax-emitter.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-emitter.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-syntax-emitter.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-emitter.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-syntax-emitter.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-emitter.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-syntax-emitter.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-emitter.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "expanded-syntax-emitter.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-emitter.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-syntax-emitter.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-emitter.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "daa20e8c1f503ed5d45708b3e20d527d742fbc0fe37936180a0f71ee8a6611bb"
+    },
+    {
+      "name": "expanded-syntax-emitter.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-emitter.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-syntax-emitter.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-emitter.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-syntax-offline-worker.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-offline-worker.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-syntax-offline-worker.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-offline-worker.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-syntax-offline-worker.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-offline-worker.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-syntax-offline-worker.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-offline-worker.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-syntax-offline-worker.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-offline-worker.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "expanded-syntax-offline-worker.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-offline-worker.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-syntax-offline-worker.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-offline-worker.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "cdecb61e303365cf4d0cda18809c879d45844a9c619d5784e9046a77942f7f73"
+    },
+    {
+      "name": "expanded-syntax-offline-worker.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-offline-worker.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-syntax-offline-worker.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-offline-worker.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-syntax-reader-tests.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader-tests.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-syntax-reader-tests.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader-tests.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-syntax-reader-tests.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader-tests.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-syntax-reader-tests.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader-tests.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-syntax-reader-tests.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader-tests.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "expanded-syntax-reader-tests.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader-tests.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-syntax-reader-tests.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader-tests.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "cdecb61e303365cf4d0cda18809c879d45844a9c619d5784e9046a77942f7f73"
+    },
+    {
+      "name": "expanded-syntax-reader-tests.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader-tests.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-syntax-reader-tests.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader-tests.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-syntax-reader.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-syntax-reader.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-syntax-reader.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-syntax-reader.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-syntax-reader.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "expanded-syntax-reader.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-syntax-reader.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "daa20e8c1f503ed5d45708b3e20d527d742fbc0fe37936180a0f71ee8a6611bb"
+    },
+    {
+      "name": "expanded-syntax-reader.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-syntax-reader.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-reader.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-syntax-worker.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-worker.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-syntax-worker.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-worker.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-syntax-worker.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-worker.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-syntax-worker.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-worker.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-syntax-worker.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-worker.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "expanded-syntax-worker.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-worker.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-syntax-worker.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-worker.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "cdecb61e303365cf4d0cda18809c879d45844a9c619d5784e9046a77942f7f73"
+    },
+    {
+      "name": "expanded-syntax-worker.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-worker.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-syntax-worker.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/syntax-worker.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-synthetic-reader.guard.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/synthetic-reader.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-synthetic-reader.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/synthetic-reader.inputs-after.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-synthetic-reader.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/synthetic-reader.inputs-before.txt",
+      "bytes": 15429,
+      "sha256": "7b62822c5a1ff656fdc20dbc4d80cfcdd80a6b21df7fe06f55b7c964c8d49ba2"
+    },
+    {
+      "name": "expanded-synthetic-reader.out",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/synthetic-reader.out",
+      "bytes": 165,
+      "sha256": "4fe013a738a96e832b1c13ea236fbf8af9b4ef2575d61051bf58db9eda0f5e12"
+    },
+    {
+      "name": "expanded-synthetic-reader.prefix.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/synthetic-reader.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "expanded-synthetic-reader.prefix.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/synthetic-reader.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "expanded-synthetic-reader.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/synthetic-reader.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "1d1719143357aea5d01f06118f1d5336fb047775b709885b2d06b92466c88da6"
+    },
+    {
+      "name": "expanded-synthetic-reader.status",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/synthetic-reader.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "expanded-synthetic-reader.stderr",
+      "hostRelativePath": "build/default-transform-shifted-width-source-checks2/synthetic-reader.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "archive-packaging-attempt1.json",
+      "hostRelativePath": "build/default-transform-shifted-width-archive1/packaging-attempt1.json",
+      "bytes": 6999,
+      "sha256": "9de0415ef3f44c3e81c808dd14a71ba6c53f75dcddc3c904f5bec3070bd66fc8"
+    }
+  ]
+}

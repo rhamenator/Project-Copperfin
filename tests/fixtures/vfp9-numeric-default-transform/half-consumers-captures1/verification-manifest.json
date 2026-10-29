@@ -1,0 +1,36 @@
+{
+  "ordinaryShellNotReaEvidence": true,
+  "archivedStrictStatus": 0,
+  "archivedSummaryStatus": 0,
+  "readbackReportsByteEqual": true,
+  "finalInputHashesStatus": 0,
+  "hostDirectory": "build/default-transform-half-consumers-captures1",
+  "workingRootAbsent": true,
+  "files": [
+    {
+      "name": "archive-audit.json",
+      "bytes": 19868,
+      "sha256": "d7db403a3b4dbc2b6c45dead0c04222cc53cc94f1896633f42fcc11728c9f72b"
+    },
+    {
+      "name": "archive-audit.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "archive-summary.json",
+      "bytes": 10376,
+      "sha256": "7135f2f85f334de207d9097b8c0a6a12039f0b032dd226c7ee8598f999158de7"
+    },
+    {
+      "name": "archive-summary.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "host-finalization-shell.json",
+      "bytes": 344,
+      "sha256": "934077af2fd916908b523e56434965a5d8d7f2dba99e0fc190eea0fa59192dba"
+    }
+  ]
+}

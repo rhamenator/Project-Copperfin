@@ -1,0 +1,14 @@
+a98ff2ecf50234a8a55cc9832908e4dd24db14d9bd5ea118e97937abc98fdd39  tests/fixtures/vfp9-numeric-default-transform/rounding-decimals3-guard1/capture-pair.sh.gz
+288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78  tests/fixtures/vfp9-numeric-default-transform/rounding-decimals3-guard1/first.prefix-check.status.gz
+59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2  tests/fixtures/vfp9-numeric-default-transform/rounding-decimals3-guard1/first.prefix-processes.txt.gz
+96d5921ea32519797719450d94aca905330ff281e93bd992b906a5b7a3a97cbd  tests/fixtures/vfp9-numeric-default-transform/rounding-decimals3-guard1/first.pressure-before.txt.gz
+123740289ad938b533c31c5e66cc0d805eddbcf8d94ea5f3bc707fa3943f7ec4  tests/fixtures/vfp9-numeric-default-transform/rounding-decimals3-guard1/first.pressure-guard.status.gz
+329fdeb34f7525f4290a9d2b3766a435bae967acd02bc1f6ff04fe3d625a88ae  tests/fixtures/vfp9-numeric-default-transform/rounding-decimals3-guard1/first.started.utc.gz
+b0ab5bf5de7d499c6e214f42a166a934a58a903e33fe0bc6aa6d15bc48407cd7  tests/fixtures/vfp9-numeric-default-transform/rounding-decimals3-guard1/inputs.sha256.gz
+288118306e4c7cb89d91b48edff339671496aa31d362532219909f9c370e0f78  tests/fixtures/vfp9-numeric-default-transform/rounding-decimals3-guard1/prefix-postcheck.status.gz
+59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2  tests/fixtures/vfp9-numeric-default-transform/rounding-decimals3-guard1/prefix-postcheck.txt.gz
+213d8ed41c622d2ed24ccf8e6b46c27dab814c533554855aaff98fdad2c79482  tests/fixtures/vfp9-numeric-default-transform/rounding-decimals3-guard1/probe.prg.gz
+e9c496160eed70597cfa5513e45785d65425de7b77c4e658878fa6ea9b44979d  tests/fixtures/vfp9-numeric-default-transform/rounding-decimals3-guard1/rea-process-evidence.json.gz
+2a5d15dda2fd56b0fd61c98dba8eae49c32274b74d901f4f12ecefba876e5338  tests/fixtures/vfp9-numeric-default-transform/rounding-decimals3-guard1/source-commit.txt.gz
+59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2  tests/fixtures/vfp9-numeric-default-transform/rounding-decimals3-guard1/source-status.txt.gz
+bf146186ecb4a77ebba1482656e2d7c1ab52778ffa315ba5c40a3c7ae6539a73  tests/fixtures/vfp9-numeric-default-transform/rounding-decimals3-guard1/started.utc.gz

@@ -1,0 +1,38 @@
+{
+  "analysisOnly": true,
+  "nativeInvoked": false,
+  "ordinaryShellNotReaEvidence": true,
+  "baselineGzipFiles": 20,
+  "supplementalGuardGzipFiles": 5,
+  "archiveRecomputeGuardStatus": 75,
+  "archivedRecomputeAnalyzerInvoked": false,
+  "archivedRecomputeQualified": false,
+  "initialInventoryAndReadbackStatus": 0,
+  "files": [
+    {
+      "name": "archive-recompute-shell-completion.json",
+      "bytes": 321,
+      "sha256": "d2fcf1b4339ce3c1557570d284e9326f28fdd981b93ff2f58cb8b4143f1d5262"
+    },
+    {
+      "name": "archive-recompute.guard.status",
+      "bytes": 3,
+      "sha256": "84b9bb077be0d8a29d0d01ef350d718b77c2ec5f40c3ab90502b1b4b5016c550"
+    },
+    {
+      "name": "archive-recompute.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "archive-recompute.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "archive-recompute.pressure-before.txt",
+      "bytes": 120,
+      "sha256": "dec3c28ffbc02d0ad43f25d38d76cd6ed8b779e3f5520bae186435b9944f0245"
+    }
+  ]
+}

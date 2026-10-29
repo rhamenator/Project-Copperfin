@@ -1,0 +1,91 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001",
+  "nativeCenterSha256": "45d1e318ba670f980f191c574a83d7d14206069468f35a53827537469018bea2",
+  "centers": [
+    {
+      "id": 1,
+      "expression": "0.5",
+      "setting": 0,
+      "low": -512,
+      "high": 32,
+      "bits": "3FE0000000000000",
+      "first": 1,
+      "last": 545
+    },
+    {
+      "id": 2,
+      "expression": "1.005",
+      "setting": 2,
+      "low": -32,
+      "high": 32,
+      "bits": "3FF0147AE147AE14",
+      "first": 546,
+      "last": 610
+    },
+    {
+      "id": 3,
+      "expression": "2.675",
+      "setting": 2,
+      "low": -32,
+      "high": 32,
+      "bits": "4005666666666666",
+      "first": 611,
+      "last": 675
+    },
+    {
+      "id": 4,
+      "expression": "9.995",
+      "setting": 2,
+      "low": -32,
+      "high": 32,
+      "bits": "4023FD70A3D70A3D",
+      "first": 676,
+      "last": 740
+    },
+    {
+      "id": 5,
+      "expression": "0.00000000000000050",
+      "setting": 15,
+      "low": -32,
+      "high": 32,
+      "bits": "3CC203AF9EE75616",
+      "first": 741,
+      "last": 805
+    },
+    {
+      "id": 6,
+      "expression": "1.2345678901234565",
+      "setting": 15,
+      "low": -32,
+      "high": 32,
+      "bits": "3FF3C0CA428C59FA",
+      "first": 806,
+      "last": 870
+    },
+    {
+      "id": 7,
+      "expression": "999999999.123456789",
+      "setting": 7,
+      "low": -32,
+      "high": 32,
+      "bits": "41CDCD64FF8FCD6F",
+      "first": 871,
+      "last": 935
+    },
+    {
+      "id": 8,
+      "expression": "12345678901234.5625",
+      "setting": 2,
+      "low": -32,
+      "high": 32,
+      "bits": "42A674E79C5FE520",
+      "first": 936,
+      "last": 1000
+    }
+  ],
+  "inputCount": 1000,
+  "recordsPerRun": 2000,
+  "width": 40,
+  "scale": 18,
+  "limitation": "Adjacent finite positive binary64 inputs around eight observed native payloads. CTOBIN(BS) identity and public-ABI width40/scale18 clone must be read back exactly before acceptance. Both FIXED modes at each declared critical DECIMALS setting; no general tolerance/algorithm or compiled-route claim. No callbacks, division/product change, VM, FLL rebuild or decompilation."
+}

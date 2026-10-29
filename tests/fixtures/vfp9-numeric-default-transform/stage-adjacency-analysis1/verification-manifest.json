@@ -1,0 +1,64 @@
+{
+  "analysisOnly": true,
+  "nativeInvoked": false,
+  "ordinaryShellNotReaEvidence": true,
+  "baselineGzipFiles": 23,
+  "supplementalGzipFiles": 10,
+  "archivedSourceEqualsExecuted": true,
+  "recomputeStatus": 0,
+  "reportByteExact": true,
+  "inputHashesBefore": 0,
+  "inputHashesAfter": 0,
+  "files": [
+    {
+      "name": "archive-recompute-shell-completion.json",
+      "bytes": 445,
+      "sha256": "46d57da476e1f0c031e6b3b384d5155e3bb1beaa61ee31db4a766784ceea86f9"
+    },
+    {
+      "name": "archive-recompute.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "archive-recompute.inputs-after.txt",
+      "bytes": 13993,
+      "sha256": "15d8b7996a5a9ca0a73cb9bb144d3b73d0fefe5977df0c494ce78ef084432d03"
+    },
+    {
+      "name": "archive-recompute.inputs-before.txt",
+      "bytes": 13993,
+      "sha256": "15d8b7996a5a9ca0a73cb9bb144d3b73d0fefe5977df0c494ce78ef084432d03"
+    },
+    {
+      "name": "archive-recompute.json",
+      "bytes": 1446057,
+      "sha256": "e465d8351168e676dc483fc34d43f9dd18a249caf2e704cab0f5405715642fdf"
+    },
+    {
+      "name": "archive-recompute.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "archive-recompute.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "archive-recompute.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "4d719efb51299f8865331624af14734393cc49bfdddf9fc00529721bae072583"
+    },
+    {
+      "name": "archive-recompute.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "archive-recompute.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

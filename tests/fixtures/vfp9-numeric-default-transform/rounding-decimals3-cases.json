@@ -1,0 +1,318 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001",
+  "parentNativeSha256": "b6e43abea8d3290d46e231a72e0ec6807c25551b266cfa156d91f393f4baacc2",
+  "groups": [
+    {
+      "id": 1,
+      "center": 1,
+      "expression": "5e-1",
+      "setting": 0,
+      "bits": "3FE0000000000000",
+      "negative": false
+    },
+    {
+      "id": 2,
+      "center": 1,
+      "expression": "5e-1",
+      "setting": 0,
+      "bits": "3FE0000000000000",
+      "negative": true
+    },
+    {
+      "id": 3,
+      "center": 2,
+      "expression": "5e-2",
+      "setting": 1,
+      "bits": "3FA999999999999A",
+      "negative": false
+    },
+    {
+      "id": 4,
+      "center": 2,
+      "expression": "5e-2",
+      "setting": 1,
+      "bits": "3FA999999999999A",
+      "negative": true
+    },
+    {
+      "id": 5,
+      "center": 3,
+      "expression": "5e-3",
+      "setting": 2,
+      "bits": "3F747AE147AE147B",
+      "negative": false
+    },
+    {
+      "id": 6,
+      "center": 3,
+      "expression": "5e-3",
+      "setting": 2,
+      "bits": "3F747AE147AE147B",
+      "negative": true
+    },
+    {
+      "id": 7,
+      "center": 4,
+      "expression": "5e-4",
+      "setting": 3,
+      "bits": "3F40624DD2F1A9FC",
+      "negative": false
+    },
+    {
+      "id": 8,
+      "center": 4,
+      "expression": "5e-4",
+      "setting": 3,
+      "bits": "3F40624DD2F1A9FC",
+      "negative": true
+    },
+    {
+      "id": 9,
+      "center": 5,
+      "expression": "5e-5",
+      "setting": 4,
+      "bits": "3F0A36E2EB1C432D",
+      "negative": false
+    },
+    {
+      "id": 10,
+      "center": 5,
+      "expression": "5e-5",
+      "setting": 4,
+      "bits": "3F0A36E2EB1C432D",
+      "negative": true
+    },
+    {
+      "id": 11,
+      "center": 6,
+      "expression": "5e-6",
+      "setting": 5,
+      "bits": "3ED4F8B588E368F1",
+      "negative": false
+    },
+    {
+      "id": 12,
+      "center": 6,
+      "expression": "5e-6",
+      "setting": 5,
+      "bits": "3ED4F8B588E368F1",
+      "negative": true
+    },
+    {
+      "id": 13,
+      "center": 7,
+      "expression": "5e-7",
+      "setting": 6,
+      "bits": "3EA0C6F7A0B5ED8D",
+      "negative": false
+    },
+    {
+      "id": 14,
+      "center": 7,
+      "expression": "5e-7",
+      "setting": 6,
+      "bits": "3EA0C6F7A0B5ED8D",
+      "negative": true
+    },
+    {
+      "id": 15,
+      "center": 8,
+      "expression": "5e-8",
+      "setting": 7,
+      "bits": "3E6AD7F29ABCAF48",
+      "negative": false
+    },
+    {
+      "id": 16,
+      "center": 8,
+      "expression": "5e-8",
+      "setting": 7,
+      "bits": "3E6AD7F29ABCAF48",
+      "negative": true
+    },
+    {
+      "id": 17,
+      "center": 9,
+      "expression": "5e-9",
+      "setting": 8,
+      "bits": "3E35798EE2308C3A",
+      "negative": false
+    },
+    {
+      "id": 18,
+      "center": 9,
+      "expression": "5e-9",
+      "setting": 8,
+      "bits": "3E35798EE2308C3A",
+      "negative": true
+    },
+    {
+      "id": 19,
+      "center": 10,
+      "expression": "5e-10",
+      "setting": 9,
+      "bits": "3E012E0BE826D695",
+      "negative": false
+    },
+    {
+      "id": 20,
+      "center": 10,
+      "expression": "5e-10",
+      "setting": 9,
+      "bits": "3E012E0BE826D695",
+      "negative": true
+    },
+    {
+      "id": 21,
+      "center": 11,
+      "expression": "5e-11",
+      "setting": 10,
+      "bits": "3DCB7CDFD9D7BDBB",
+      "negative": false
+    },
+    {
+      "id": 22,
+      "center": 11,
+      "expression": "5e-11",
+      "setting": 10,
+      "bits": "3DCB7CDFD9D7BDBB",
+      "negative": true
+    },
+    {
+      "id": 23,
+      "center": 12,
+      "expression": "5e-12",
+      "setting": 11,
+      "bits": "3D95FD7FE1796495",
+      "negative": false
+    },
+    {
+      "id": 24,
+      "center": 12,
+      "expression": "5e-12",
+      "setting": 11,
+      "bits": "3D95FD7FE1796495",
+      "negative": true
+    },
+    {
+      "id": 25,
+      "center": 13,
+      "expression": "5e-13",
+      "setting": 12,
+      "bits": "3D619799812DEA11",
+      "negative": false
+    },
+    {
+      "id": 26,
+      "center": 13,
+      "expression": "5e-13",
+      "setting": 12,
+      "bits": "3D619799812DEA11",
+      "negative": true
+    },
+    {
+      "id": 27,
+      "center": 14,
+      "expression": "5e-14",
+      "setting": 13,
+      "bits": "3D2C25C268497682",
+      "negative": false
+    },
+    {
+      "id": 28,
+      "center": 14,
+      "expression": "5e-14",
+      "setting": 13,
+      "bits": "3D2C25C268497682",
+      "negative": true
+    },
+    {
+      "id": 29,
+      "center": 15,
+      "expression": "5e-15",
+      "setting": 14,
+      "bits": "3CF6849B86A12B9B",
+      "negative": false
+    },
+    {
+      "id": 30,
+      "center": 15,
+      "expression": "5e-15",
+      "setting": 14,
+      "bits": "3CF6849B86A12B9B",
+      "negative": true
+    },
+    {
+      "id": 31,
+      "center": 16,
+      "expression": "5e-16",
+      "setting": 15,
+      "bits": "3CC203AF9EE75616",
+      "negative": false
+    },
+    {
+      "id": 32,
+      "center": 16,
+      "expression": "5e-16",
+      "setting": 15,
+      "bits": "3CC203AF9EE75616",
+      "negative": true
+    },
+    {
+      "id": 33,
+      "center": 17,
+      "expression": "5e-16 (qualified native payload)",
+      "setting": 16,
+      "bits": "3CC203AF9EE75616",
+      "negative": false
+    },
+    {
+      "id": 34,
+      "center": 17,
+      "expression": "5e-16 (qualified native payload)",
+      "setting": 16,
+      "bits": "3CC203AF9EE75616",
+      "negative": true
+    },
+    {
+      "id": 35,
+      "center": 18,
+      "expression": "5e-16 (qualified native payload)",
+      "setting": 17,
+      "bits": "3CC203AF9EE75616",
+      "negative": false
+    },
+    {
+      "id": 36,
+      "center": 18,
+      "expression": "5e-16 (qualified native payload)",
+      "setting": 17,
+      "bits": "3CC203AF9EE75616",
+      "negative": true
+    },
+    {
+      "id": 37,
+      "center": 19,
+      "expression": "5e-16 (qualified native payload)",
+      "setting": 18,
+      "bits": "3CC203AF9EE75616",
+      "negative": false
+    },
+    {
+      "id": 38,
+      "center": 19,
+      "expression": "5e-16 (qualified native payload)",
+      "setting": 18,
+      "bits": "3CC203AF9EE75616",
+      "negative": true
+    }
+  ],
+  "lowOffset": "-4503599627370496",
+  "highOffset": "0",
+  "width": 40,
+  "scale": 18,
+  "maxQueriesPerGroup": 54,
+  "limitation": "Type-aware native-feedback DECIMALS0..18/both signs. Same explicit input bits and bounds as prior refinement; previous readback ERROR rows remain unqualified. VARTYPE and hex TRANSFORM text record both native SET return types, without assuming character DECIMALS. Exact applied numeric count/mode, constructor/path/metadata/BRS/adjacent endpoints/paired-repeat required. No guessed tolerance, formatting model or general conversion algorithm.",
+  "appliedSettingsRequired": true,
+  "settingTypesRecorded": true
+}

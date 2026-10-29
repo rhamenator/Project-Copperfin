@@ -1,0 +1,37 @@
+{
+  "baselineFiles": 61,
+  "supplementalFiles": 5,
+  "totalByteCompared": 66,
+  "archivedStrictReadback": 0,
+  "archivedAnalysisRecomputation": 0,
+  "hostArchiveOutputsByteExact": true,
+  "hostRoot": "build/default-transform-str-fixed-captures1",
+  "workingRootAbsent": true,
+  "files": [
+    {
+      "name": "archive-audit.json",
+      "bytes": 1067790,
+      "sha256": "952c51ffa62ee5a6b9b426fe5ff2f5ef18975f69ab13a1ce9fd5c28ebb636635"
+    },
+    {
+      "name": "archive-audit.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "archive-analysis.json",
+      "bytes": 519116,
+      "sha256": "a31a08873c9f6188e8b59ba034183fc42e9b226c3fad62622d9ccb8ed883116d"
+    },
+    {
+      "name": "archive-analysis.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "host-finalization-shell.json",
+      "bytes": 304,
+      "sha256": "79f592bf9ba1197ca5fa4a9802f4cfb1fbcdc4d2c1fe11bc15f1fbc478946550"
+    }
+  ]
+}

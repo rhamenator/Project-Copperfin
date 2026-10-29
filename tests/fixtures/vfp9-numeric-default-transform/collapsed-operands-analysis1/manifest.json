@@ -1,0 +1,224 @@
+{
+  "analysisOnly": true,
+  "nativeInvoked": false,
+  "ordinaryShellNotReaEvidence": true,
+  "postCheckSourceBase": "7dce8dfc7b795d3337c8036944eee2e00eb3c3be",
+  "cleanNativeSourceFreeze": false,
+  "pass1Status": 1,
+  "pass1ReadbackInvoked": false,
+  "pass1Reason": "analyzer incorrectly restricted observed quantized integer to0/1; retained data also includes100/101/267/268/999/1000; no native or product failure",
+  "pass2AnalysisStatus": 0,
+  "pass2ReadbackStatus": 0,
+  "byteExact": true,
+  "metricSelfChecks": 14,
+  "replayedStageMetricChecks": 9,
+  "replayedInventoryMetricChecks": 8,
+  "replayedClassificationMetricChecks": 9,
+  "reusedRawValidatorMetricChecks": 8,
+  "files": [
+    {
+      "name": "pass1-analysis.guard.status",
+      "hostRelativePath": "build/default-transform-collapsed-operands1/analysis.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "pass1-analysis.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-collapsed-operands1/analysis.inputs-before.txt",
+      "bytes": 18098,
+      "sha256": "ce5b75287b70b4d7147beef56ffdf9969edba0d6fa1f4697c3176eeadb69df45"
+    },
+    {
+      "name": "pass1-analysis.json",
+      "hostRelativePath": "build/default-transform-collapsed-operands1/analysis.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pass1-analysis.prefix.status",
+      "hostRelativePath": "build/default-transform-collapsed-operands1/analysis.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "pass1-analysis.prefix.txt",
+      "hostRelativePath": "build/default-transform-collapsed-operands1/analysis.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pass1-analysis.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-collapsed-operands1/analysis.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "784498300f0be2f88e65c2ca67036444508a7316c962860eb7635e6cccac083c"
+    },
+    {
+      "name": "pass1-analysis.status",
+      "hostRelativePath": "build/default-transform-collapsed-operands1/analysis.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "pass1-analysis.stderr",
+      "hostRelativePath": "build/default-transform-collapsed-operands1/analysis.stderr",
+      "bytes": 1184,
+      "sha256": "5220c77662c0c8ddf0145bf4d213ec1f18f022fa3a62825eb547598626c44498"
+    },
+    {
+      "name": "pass1-inputs.sha256",
+      "hostRelativePath": "build/default-transform-collapsed-operands1/inputs.sha256",
+      "bytes": 29010,
+      "sha256": "07f9a3ed891079aecd603a491346f3c7a58e18eb2b594094bc7807b89e3f3951"
+    },
+    {
+      "name": "pass1-shell-completion.json",
+      "hostRelativePath": "build/default-transform-collapsed-operands1/shell-completion.json",
+      "bytes": 2302,
+      "sha256": "5dc6165d234bf7d5f91478e28290325730a003c1c0f222ba9ad67cb7772b64c0"
+    },
+    {
+      "name": "pass1-source-compare-collapsed-stage-operands.cjs",
+      "hostRelativePath": "build/default-transform-collapsed-operands1/source-compare-collapsed-stage-operands.cjs",
+      "bytes": 8590,
+      "sha256": "1464cb0f1dfb1c9c2e17e05f882d176e7065d7e859ed9721067c5b5348203008"
+    },
+    {
+      "name": "pass2-analysis.guard.status",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/analysis.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "pass2-analysis.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/analysis.inputs-after.txt",
+      "bytes": 18098,
+      "sha256": "ce5b75287b70b4d7147beef56ffdf9969edba0d6fa1f4697c3176eeadb69df45"
+    },
+    {
+      "name": "pass2-analysis.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/analysis.inputs-before.txt",
+      "bytes": 18098,
+      "sha256": "ce5b75287b70b4d7147beef56ffdf9969edba0d6fa1f4697c3176eeadb69df45"
+    },
+    {
+      "name": "pass2-analysis.json",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/analysis.json",
+      "bytes": 2027943,
+      "sha256": "9e36051a8ca876c13beffa7e469a023f83e206fb7c6e774ed180aef7ef59dd95"
+    },
+    {
+      "name": "pass2-analysis.prefix.status",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/analysis.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "pass2-analysis.prefix.txt",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/analysis.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pass2-analysis.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/analysis.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "46482b20a97ded0bf31c6c0cea36c55c5acd463fb897dcbcaf5d454ba463abae"
+    },
+    {
+      "name": "pass2-analysis.status",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/analysis.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "pass2-analysis.stderr",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/analysis.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pass2-inputs.sha256",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/inputs.sha256",
+      "bytes": 29010,
+      "sha256": "dd19f444dc016d87505219d66b85dbd8039851fbb97ce98d1a1e134d66ce7c2b"
+    },
+    {
+      "name": "pass2-post-check-source-base.txt",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/post-check-source-base.txt",
+      "bytes": 41,
+      "sha256": "c4a27182f6827a09f4807835ffebb59b829ba5588dadd6afb2c88c9745eb59be"
+    },
+    {
+      "name": "pass2-post-check-source-status.txt",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/post-check-source-status.txt",
+      "bytes": 86,
+      "sha256": "5dd16eb0d389421b364e4a55a503dad48fe934ef721aa179e167da274d64ae72"
+    },
+    {
+      "name": "pass2-readback.guard.status",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/readback.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "pass2-readback.inputs-after.txt",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/readback.inputs-after.txt",
+      "bytes": 18098,
+      "sha256": "ce5b75287b70b4d7147beef56ffdf9969edba0d6fa1f4697c3176eeadb69df45"
+    },
+    {
+      "name": "pass2-readback.inputs-before.txt",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/readback.inputs-before.txt",
+      "bytes": 18098,
+      "sha256": "ce5b75287b70b4d7147beef56ffdf9969edba0d6fa1f4697c3176eeadb69df45"
+    },
+    {
+      "name": "pass2-readback.json",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/readback.json",
+      "bytes": 2027943,
+      "sha256": "9e36051a8ca876c13beffa7e469a023f83e206fb7c6e774ed180aef7ef59dd95"
+    },
+    {
+      "name": "pass2-readback.prefix.status",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/readback.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "pass2-readback.prefix.txt",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/readback.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pass2-readback.pressure-before.txt",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/readback.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "c2eb1655151f4912923e468f007b41729fd2abe7c3308efc3dde19bd42b47392"
+    },
+    {
+      "name": "pass2-readback.status",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/readback.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "pass2-readback.stderr",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/readback.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pass2-shell-completion.json",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/shell-completion.json",
+      "bytes": 5846,
+      "sha256": "475873fba86531d08c6197ded830a61500c1f86ac48f6938e09eed7fda668f16"
+    },
+    {
+      "name": "pass2-source-compare-collapsed-stage-operands.cjs",
+      "hostRelativePath": "build/default-transform-collapsed-operands2/source-compare-collapsed-stage-operands.cjs",
+      "bytes": 9716,
+      "sha256": "6aff2f0dd3728639d00f37e2ff3d87e30d197aaebad64b5444383d7ce16b0f46"
+    }
+  ]
+}

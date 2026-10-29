@@ -1,0 +1,131 @@
+{
+  "analysisOnly": true,
+  "nativeInvoked": false,
+  "ordinaryShellNotReaEvidence": true,
+  "postCheckSourceBase": "fb86f6f860aa23dbebc6b585c8157d87f660c86a",
+  "cleanNativeSourceFreeze": false,
+  "analysisStatus": 0,
+  "readbackStatus": 0,
+  "byteExact": true,
+  "metricSelfChecks": 4,
+  "replayedCandidateMetricChecks": 14,
+  "replayedInventoryMetricChecks": 8,
+  "reusedRawValidatorMetricChecks": 8,
+  "files": [
+    {
+      "name": "analysis.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "analysis.inputs-after.txt",
+      "bytes": 11592,
+      "sha256": "1c935214d8afa8252115f8e9172a700629ba9f7f0a32fc4db65575936387d59c"
+    },
+    {
+      "name": "analysis.inputs-before.txt",
+      "bytes": 11592,
+      "sha256": "1c935214d8afa8252115f8e9172a700629ba9f7f0a32fc4db65575936387d59c"
+    },
+    {
+      "name": "analysis.json",
+      "bytes": 1204647,
+      "sha256": "83bdbf5a65be734883dbe3021b0a2f775eb876e546142b4bfc1b4bd9c322449a"
+    },
+    {
+      "name": "analysis.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "analysis.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "analysis.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "a69178ad66bfb87953e0085817be789b82c2bbfc500ce0f04e4be82260098c87"
+    },
+    {
+      "name": "analysis.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "analysis.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "inputs.sha256",
+      "bytes": 18660,
+      "sha256": "a63cc46dceea5196c53262670e32d9f4a207df59ec88f378bbe4684931749e3b"
+    },
+    {
+      "name": "post-check-source-base.txt",
+      "bytes": 41,
+      "sha256": "5b2e6688a65c31eb1c6230286ca6af3741ec07ecef9b6648a41d89d25b8c1d6f"
+    },
+    {
+      "name": "post-check-source-status.txt",
+      "bytes": 1443,
+      "sha256": "661fc15d44e46cd45b893c6e572b8b1d45f30c0319cf64af839c0e122eff29e2"
+    },
+    {
+      "name": "readback.guard.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "readback.inputs-after.txt",
+      "bytes": 11592,
+      "sha256": "1c935214d8afa8252115f8e9172a700629ba9f7f0a32fc4db65575936387d59c"
+    },
+    {
+      "name": "readback.inputs-before.txt",
+      "bytes": 11592,
+      "sha256": "1c935214d8afa8252115f8e9172a700629ba9f7f0a32fc4db65575936387d59c"
+    },
+    {
+      "name": "readback.json",
+      "bytes": 1204647,
+      "sha256": "83bdbf5a65be734883dbe3021b0a2f775eb876e546142b4bfc1b4bd9c322449a"
+    },
+    {
+      "name": "readback.prefix.status",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "readback.prefix.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "readback.pressure-before.txt",
+      "bytes": 114,
+      "sha256": "558df57fc0b7bfe44133f255be59855cc3fc115e8221d0f4458c1d81445a663c"
+    },
+    {
+      "name": "readback.status",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "readback.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "shell-completion.json",
+      "bytes": 1614,
+      "sha256": "385c5a5f82adbd784452d1dc82613b5c6204f0ea87f7053a49fad397ff485e2d"
+    },
+    {
+      "name": "source-join-half-grid-adjacency.cjs",
+      "bytes": 6268,
+      "sha256": "b9883185295fdf3be053fd58a2bf7415f423e545a5ef7d60a9d6d166d8de6817"
+    }
+  ]
+}
