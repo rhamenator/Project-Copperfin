@@ -37,12 +37,20 @@ branch `fix/numeric-small-divisor-5611`. Pre-integration signed/DCO pushed head
 `3b7a5163618ea92420f63b70c5cac265cdd08807`, completed ORIGINAL
 `031d790abcde424ab8622833ad81bc43248f2f3e`. No PR/helper/hook.
 
-Oct29 19:43UTC: fetched current main and admitted issue metadata; branch was
-clean, good-signed, 123 main commits behind / 10 slice commits ahead, with no
-PR. Merged `origin/main`; the only conflict was this continuation brief, now
-resolved to current compact state. NEXT finish the signed+DCO merge commit,
-verify exact branch status/diff, and run the unchanged ORIGINAL focused evidence
-before any support/direct implementation.
+Oct29 19:43UTC: integrated current main as signed+DCO merge `280ab08022e890f7ef168a1390da62c4294ecad7`;
+the only conflict was this continuation brief. Production `src/` and `include/`
+remain exactly main-identical. A fresh pressure-gated, single-job O0/g0 ORIGINAL
+build completed with configure0/build0 and the exact seven tests: six unchanged
+controls PASS, only `test_prg_engine_numeric_small_divisor` fails as required,
+with no skip/error. Independent audit0 retains exactly 6,920 descriptor, 320
+signed-zero bit, 964 display (882 core/70 literal/12 runtime), zero literal-bit/
+evaluation/control failures, total8,204. Source hashes18 stayed unchanged; all
+four full I/O PSI gates were0.00/0.00. Current host receipts are preserved in
+ignored `build/small-divisor-original-refresh1-evidence/` with complete mismatch
+console SHA `2c928c14b2b93f23c69a70e5fc4e0258718712d125d26a788435dfadcdc4d136`
+and JUnit SHA `d9219f4841365556f1fb647ca4ab3038739fb70e7ed987b81ed1c01d8aa00ba2`.
+NEXT implement only the previously frozen unused pure support/direct helper,
+verify its GNU Werror and Clang sanitizer frontiers, then stop before wiring.
 
 Preserve all exact assertions: seven ORIGINAL CTests previously showed old six
 PASS/new fail across 6,920 descriptors, 320 signed-zero payloads, and 964
