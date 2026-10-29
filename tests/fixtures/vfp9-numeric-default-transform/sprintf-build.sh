@@ -7,6 +7,19 @@ test "${1-}" = --fresh-resource-clear || exit 93
 cd /home/rich/.codex/worktrees/numeric-literal-display-5611/Project-Copperfin
 capture_root=build/default-transform-sprintf
 fixture=tests/fixtures/vfp9-numeric-default-transform
+# Fail before creating a partial build directory when the shared native prefix
+# or measured host capacity is unavailable. Per-stage guards still revalidate.
+set +e
+pgrep -a -x 'wine|wine64|wine-preloader|wineserver|wineserver64|vfp9.exe' >/dev/null
+initial_prefix_status=$?
+awk '$1=="full" {split($2,a,"=");split($3,b,"=");found=1;if(a[2]>=1||b[2]>=1)exit 75} END {if(!found)exit 75}' /proc/pressure/io
+initial_io_status=$?
+awk '$1=="MemAvailable:" {found=1;if($2<8388608)exit 75} END {if(!found)exit 75}' /proc/meminfo
+initial_memory_status=$?
+set -e
+test "$initial_prefix_status" -eq 1 || exit 76
+test "$initial_io_status" -eq 0 || exit 75
+test "$initial_memory_status" -eq 0 || exit 75
 test ! -e "$capture_root" || exit 96
 mkdir "$capture_root"
 git status --porcelain > "$capture_root/build-source-status.txt"

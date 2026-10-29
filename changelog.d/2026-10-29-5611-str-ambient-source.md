@@ -33,3 +33,5 @@
 - Freeze separate exact-head build and nonblocking-lock capture workers with
   per-stage hashes/resource guards, GNU/Clang sanitizer boundaries, strict
   first-run-before-repeat gating and process cleanup. Thirty-five source checks pass.
+- Fail the build before creating its output directory when Wine is active, full
+  I/O PSI reaches1%, or available memory is below8GiB; retain per-stage guards.

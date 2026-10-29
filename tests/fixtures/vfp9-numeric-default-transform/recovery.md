@@ -126,6 +126,15 @@ was invoked by this checkpoint. A fresh scheduled resource gate may now run the
 bounded build, validate it, then run the first capture and only repeat if its
 strict receipt passes.
 
+The first scheduled build gate did not launch: measured full I/O PSI was about
+12% avg10/13% avg60, above the frozen1% threshold, while the Wine prefix and
+shared lock were clear and memory was ample. No output directory or compiler
+process was created. A focused fail-before-mutation repair now checks idle Wine,
+I/O pressure and8GiB MemAvailable before the build directory is created, while
+retaining every per-stage recheck. Thirty-seven exact worker/build assertions
+and shell syntax pass. The next wake must perform a fresh compact measurement;
+do not delete or bypass the guard and do not infer capacity from this deferral.
+
 Stimulus/reader source checkpoint (prepared before the native capture):
 `emit-str-ambient.cjs` derives a36-record/144-observation public stimulus from
 the selected six payloads, with originalD15 controls before/after each ambient
