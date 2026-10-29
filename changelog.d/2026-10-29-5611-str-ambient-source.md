@@ -24,3 +24,6 @@
 - Freeze the264-payload/1,056-record VFP stimulus and separate inventory for
  2,112 retained OFF/ON comparisons. Eighteen exact generator and frozen-byte
   checks pass; no expected strings enter the PRG and no native route is run.
+- Add a strict18-field record parser with independent module/control/grammar/
+  equality validation and mismatch retention for both exports and FIXED modes,
+  including non-grammar and over-width output. Twenty-five synthetic checks pass.

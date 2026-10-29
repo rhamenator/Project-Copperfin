@@ -2916,8 +2916,17 @@
       }
     }
   ],
-  "modulePath": "C:\\Windows\\SysWOW64\\msvcr71.dll",
+  "modulePath": "C:\\windows\\system32\\MSVCR71.dll",
   "moduleSha256": "8094af5ee310714caebccaeee7769ffb08048503ba478b879edfef5f1a24fefe",
+  "moduleFileSize": 348160,
+  "modulePe": {
+    "machine": 332,
+    "magic": 267,
+    "stamp": 1045831340,
+    "imageSize": 352256,
+    "checksum": 389609
+  },
+  "runtimeEnvironment": "WINEDLLOVERRIDES=msvcr71=n",
   "format": "%.*f",
   "bufferBytes": 2048,
   "exports": [

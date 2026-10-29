@@ -8,8 +8,9 @@ const root=__dirname,read=n=>fs.readFileSync(path.join(root,n)),sha=b=>crypto.cr
 const archive='str-middle-captures1/',gzip=read(archive+'audit.json.gz'),sums=new Map(read(archive+'SHA256SUMS').toString().trim().split('\n').map(line=>{const i=line.indexOf('  ');return[line.slice(i+2),line.slice(0,i)];}));
 a.equal(sha(gzip),sums.get('audit.json.gz'));const raw=z.gunzipSync(gzip),audit=JSON.parse(raw);a.equal(sha(raw),'57d15b3231e2fb881ab632479e456711005f4df106664064aeb3c7bd6a3c44f5');
 const {plan}=require('./plan-sprintf-discriminator.cjs'),selected=plan(audit.observations);a.equal(selected.inputs,264);a.equal(selected.crtCalls,1056);a.deepEqual(selected.counts,[15,16,17,18]);
+const crt=JSON.parse(read('crt-cases.json'));a.equal(crt.moduleSha256,'8094af5ee310714caebccaeee7769ffb08048503ba478b879edfef5f1a24fefe');
 const inv={requirement:'RQ-CF-PRG-NUMERIC-DEFAULT-TRANSFORM-001',parentDecodedSha256:sha(raw),inputCount:264,recordsPerRun:1056,fieldsPerRecord:18,
- counts:selected.counts,inputs:selected.cases,modulePath:'C:\\Windows\\SysWOW64\\msvcr71.dll',moduleSha256:'8094af5ee310714caebccaeee7769ffb08048503ba478b879edfef5f1a24fefe',
+ counts:selected.counts,inputs:selected.cases,modulePath:crt.modulePath,moduleSha256:crt.moduleSha256,moduleFileSize:crt.moduleFileSize,modulePe:crt.modulePe,runtimeEnvironment:crt.runtimeEnvironment,
  format:'%.*f',bufferBytes:2048,exports:['sprintf','_snprintf'],fixedMode:'OFF',vfpControlComparisons:2112,
  inputRoute:'Inline CFNDEC(CFNWIDTH(payload,40),18) at every numeric consumer; no stored numeric argument.',
  limitation:'Public MSVCR71 fixed-format comparison only. Retained OFF/ON VFP expected hex and fresh STR controls are observations, not an internal-call attribution, formatter acceptance, Windows parity or production algorithm.'};

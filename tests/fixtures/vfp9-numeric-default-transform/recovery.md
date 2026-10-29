@@ -85,6 +85,18 @@ exact generator/frozen-byte assertions pass; generated source and inventory are
 FLL or Wine. Host full I/O PSI was about25% at selection, so the bounded wake
 remained lightweight; strict reader and first-run-gated worker are still next.
 
+The strict per-record reader foundation now verifies all18 fields, inline
+metadata/BRS/STR and `_fcvt` before/after controls, applied DECIMALS/FIXED state,
+exact loaded-module identity and every `CFNSPRTF` structural field. It
+independently recomputes equality and count-specific fixed grammar. Both export
+strings remain raw, and every difference against both retained OFF/ON VFP values
+is materialized with export, mode, expected/actual hex, raw text and over-width
+status; non-grammar and over-width output are observations, not discarded
+records. The inventory now carries file size, PE identity and required runtime
+environment from the retained CRT cases. Twenty-five synthetic parser checks
+and all18 generator checks pass. This is record-level source verification only;
+complete run framing/repeat qualification and the gated worker remain pending.
+
 Stimulus/reader source checkpoint (prepared before the native capture):
 `emit-str-ambient.cjs` derives a36-record/144-observation public stimulus from
 the selected six payloads, with originalD15 controls before/after each ambient
