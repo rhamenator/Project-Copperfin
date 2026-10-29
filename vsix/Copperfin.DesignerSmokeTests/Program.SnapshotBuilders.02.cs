@@ -494,10 +494,10 @@ internal static partial class Program
 
         var archiveDirectory = normalizedRelativePath.Substring(0, directorySeparatorIndex + 1);
         var assetFileName = normalizedRelativePath.Substring(directorySeparatorIndex + 1);
-        var extractionRoot = Path.Combine(
+        var extractionRoot = GetArchiveEntryDestinationPath(
             GetArchiveExtractionBaseRoot(zipPath),
             archiveDirectory.Replace('/', Path.DirectorySeparatorChar));
-        var extractedAssetPath = Path.Combine(extractionRoot, assetFileName);
+        var extractedAssetPath = GetArchiveEntryDestinationPath(extractionRoot, assetFileName);
         var extractedAssetInfo = new FileInfo(extractedAssetPath);
         if (extractedAssetInfo.Exists && extractedAssetInfo.IsReadOnly)
         {
@@ -516,10 +516,15 @@ internal static partial class Program
             return null;
         }
 
-        foreach (var entry in matchingEntries)
+        var extractionPlan = matchingEntries.Select(entry => new
         {
-            var relativeEntryPath = entry.FullName.Substring(archiveDirectory.Length).Replace('/', Path.DirectorySeparatorChar);
-            var destinationPath = Path.Combine(extractionRoot, relativeEntryPath);
+            Entry = entry,
+            Destination = GetArchiveEntryDestinationPath(extractionRoot, entry.FullName.Substring(archiveDirectory.Length))
+        }).ToList();
+        foreach (var item in extractionPlan)
+        {
+            var entry = item.Entry;
+            var destinationPath = item.Destination;
             var destinationDirectory = Path.GetDirectoryName(destinationPath);
             if (!string.IsNullOrWhiteSpace(destinationDirectory))
             {
@@ -552,7 +557,7 @@ internal static partial class Program
         }
 
         var archivePrefix = normalizedArchiveRoot + "/";
-        var extractionRoot = Path.Combine(
+        var extractionRoot = GetArchiveEntryDestinationPath(
             GetArchiveExtractionBaseRoot(zipPath),
             normalizedArchiveRoot.Replace('/', Path.DirectorySeparatorChar));
         var completionMarker = Path.Combine(extractionRoot, ".copperfin-extract-complete");
@@ -573,10 +578,15 @@ internal static partial class Program
             return null;
         }
 
-        foreach (var entry in matchingEntries)
+        var extractionPlan = matchingEntries.Select(entry => new
         {
-            var relativeEntryPath = entry.FullName.Substring(archivePrefix.Length).Replace('/', Path.DirectorySeparatorChar);
-            var destinationPath = Path.Combine(extractionRoot, relativeEntryPath);
+            Entry = entry,
+            Destination = GetArchiveEntryDestinationPath(extractionRoot, entry.FullName.Substring(archivePrefix.Length))
+        }).ToList();
+        foreach (var item in extractionPlan)
+        {
+            var entry = item.Entry;
+            var destinationPath = item.Destination;
             var destinationDirectory = Path.GetDirectoryName(destinationPath);
             if (!string.IsNullOrWhiteSpace(destinationDirectory))
             {
@@ -621,9 +631,15 @@ internal static partial class Program
             return null;
         }
 
-        foreach (var entry in fileEntries)
+        var extractionPlan = fileEntries.Select(entry => new
         {
-            var destinationPath = Path.Combine(extractionRoot, entry.FullName.Replace('/', Path.DirectorySeparatorChar));
+            Entry = entry,
+            Destination = GetArchiveEntryDestinationPath(extractionRoot, entry.FullName)
+        }).ToList();
+        foreach (var item in extractionPlan)
+        {
+            var entry = item.Entry;
+            var destinationPath = item.Destination;
             var destinationDirectory = Path.GetDirectoryName(destinationPath);
             if (!string.IsNullOrWhiteSpace(destinationDirectory))
             {
@@ -646,6 +662,28 @@ internal static partial class Program
 
         File.WriteAllText(completionMarker, "complete");
         return extractionRoot;
+    }
+
+    // RQ-CF-DESIGNER-ARCHIVE-7214: archive names never authorize writes outside the extraction root.
+    private static string GetArchiveEntryDestinationPath(string extractionRoot, string entryPath)
+    {
+        // Treat both ZIP separators alike even on Unix. Reject drive-relative paths there too.
+        var relativePath = entryPath.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
+        if (string.IsNullOrWhiteSpace(relativePath) || Path.IsPathRooted(relativePath) ||
+            relativePath.IndexOf(':') >= 0 ||
+            relativePath.Split(Path.DirectorySeparatorChar).Any(segment => segment == ".."))
+        {
+            throw new InvalidDataException("Archive entry is outside its extraction root.");
+        }
+
+        var fullRoot = Path.GetFullPath(extractionRoot).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        var destinationPath = Path.GetFullPath(Path.Combine(fullRoot, relativePath));
+        if (!destinationPath.StartsWith(fullRoot, StringComparison.Ordinal))
+        {
+            throw new InvalidDataException("Archive entry is outside its extraction root.");
+        }
+
+        return destinationPath;
     }
 
     private static string GetArchiveExtractionBaseRoot(string zipPath)

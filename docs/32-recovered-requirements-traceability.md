@@ -21,6 +21,12 @@ parent product requirement or hazard. When allowed evidence and implementation
 disagree, use `gap` or `exception`; never rewrite the requirement to describe
 whatever the code happens to do.
 
+## Designer archive containment
+
+| Requirement | Allowed source | Implementation | Verification and status |
+| --- | --- | --- | --- |
+| RQ-CF-DESIGNER-ARCHIVE-7214 | Explicit owner CodeQL remediation request; parent RQ-CF-REL-002 package-trust boundary | `GetArchiveEntryDestinationPath` and prevalidated extraction plans in `Program.SnapshotBuilders.02.cs`; [boundary and hazards](91-designer-archive-containment.md) | `SmokeArchiveExtractionContainment`, registered managed smoke and explicit Linux CI invocation; exact-head managed execution, CodeQL and independent review pending. |
+
 ## Numeric division context recovery
 
 ### Assignment prerequisites

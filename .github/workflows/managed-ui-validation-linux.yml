@@ -55,6 +55,16 @@ jobs:
             --list-tests \
             2>&1 | tee artifacts/managed-ui-linux/test-list.log
 
+      - name: Run archive extraction containment regression under Xvfb
+        shell: bash
+        run: |
+          set -o pipefail
+          scripts/run-designer-smoke-portable.sh \
+            --no-build \
+            --display-mode xvfb \
+            --exact SmokeArchiveExtractionContainment \
+            2>&1 | tee artifacts/managed-ui-linux/archive-containment.log
+
       - name: Run standalone shell smoke tests under Xvfb
         shell: bash
         run: |
