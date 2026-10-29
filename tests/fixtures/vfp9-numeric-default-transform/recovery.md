@@ -73,6 +73,18 @@ the same45 stub boundary checks still pass. No freestanding/native compile or
 Wine execution has occurred; the generated VFP stimulus, strict reader and
 first-run-gated worker remain pending.
 
+The generated stimulus is now frozen source-only. `emit-sprintf.cjs` revalidates
+the byte-qualified STRmiddle audit and derives exactly264 finite payloads and
+their original DECIMALS settings without embedding expected strings in the PRG.
+The generated run is1,056 records (four counts15..18 per payload), FIXED OFF,
+with inline width40/scale18 consumers and before/after metadata, BRS bits, fresh
+STR text and `_fcvt` controls around every `CFNSPRTF` call. Its separate inventory
+retains both OFF/ON expected VFP hex values for2,112 later comparisons. Eighteen
+exact generator/frozen-byte assertions pass; generated source and inventory are
+18,460 and136,099 bytes respectively. This step did not compile or execute the
+FLL or Wine. Host full I/O PSI was about25% at selection, so the bounded wake
+remained lightweight; strict reader and first-run-gated worker are still next.
+
 Stimulus/reader source checkpoint (prepared before the native capture):
 `emit-str-ambient.cjs` derives a36-record/144-observation public stimulus from
 the selected six payloads, with originalD15 controls before/after each ambient

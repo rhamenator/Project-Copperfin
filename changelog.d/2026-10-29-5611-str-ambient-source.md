@@ -21,3 +21,6 @@
   gate. Its bounded response preserves both export strings, grammar/equality
   flags, payload/control words and module identity;27 exact source assertions
   pass, with compilation and native observation still deferred.
+- Freeze the264-payload/1,056-record VFP stimulus and separate inventory for
+ 2,112 retained OFF/ON comparisons. Eighteen exact generator and frozen-byte
+  checks pass; no expected strings enter the PRG and no native route is run.
