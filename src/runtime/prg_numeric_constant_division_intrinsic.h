@@ -19,9 +19,11 @@ namespace detail {
 
 inline std::optional<ConstantDivisionIntrinsicResult> constant_division_intrinsic_impl(
     const PrgValue& left, const PrgValue& right, double quotient,
-    bool constant_literal_node, bool allow_nonwhole_real) noexcept {
+    bool constant_literal_node, bool allow_nonwhole_real,
+    bool allow_small_divisor) noexcept {
     if (!constant_literal_node || !std::isfinite(quotient) ||
-        std::abs(quotient) >= 10000000000.0 || std::abs(right.number_value) < 1.0) {
+        std::abs(quotient) >= 10000000000.0 || right.number_value == 0.0 ||
+        (!allow_small_divisor && std::abs(right.number_value) < 1.0)) {
         return std::nullopt;
     }
     const auto eligible = [allow_nonwhole_real](const PrgValue& value) {
@@ -69,7 +71,8 @@ inline std::optional<ConstantDivisionIntrinsicResult> constant_division_intrinsi
 inline std::optional<ConstantDivisionIntrinsicResult> constant_division_intrinsic(
     const PrgValue& left, const PrgValue& right, double quotient,
     bool constant_literal_node) noexcept {
-    return detail::constant_division_intrinsic_impl(left,right,quotient,constant_literal_node,false);
+    return detail::constant_division_intrinsic_impl(
+        left,right,quotient,constant_literal_node,false,false);
 }
 
 // RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-NONWHOLE-001:
@@ -81,7 +84,20 @@ inline std::optional<ConstantDivisionIntrinsicResult> constant_division_intrinsi
 inline std::optional<ConstantDivisionIntrinsicResult> constant_nonwhole_division_intrinsic(
     const PrgValue& left, const PrgValue& right, double quotient,
     bool constant_literal_node) noexcept {
-    return detail::constant_division_intrinsic_impl(left,right,quotient,constant_literal_node,true);
+    return detail::constant_division_intrinsic_impl(
+        left,right,quotient,constant_literal_node,true,false);
+}
+
+// RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-SMALL-DIVISOR-001:
+// fixtures/vfp9-numeric-division-context/small-divisor-recovery.md.
+// This pure, currently unused support extends only the independently frozen
+// finite literal-derived frontier. The caller must prove constant-node origin;
+// zero/nonfinite/magnitude/metadata and Integer bounds remain fail-closed.
+inline std::optional<ConstantDivisionIntrinsicResult> constant_small_divisor_intrinsic(
+    const PrgValue& left, const PrgValue& right, double quotient,
+    bool constant_literal_node) noexcept {
+    return detail::constant_division_intrinsic_impl(
+        left,right,quotient,constant_literal_node,true,true);
 }
 
 } // namespace copperfin::runtime

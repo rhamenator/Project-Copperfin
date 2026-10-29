@@ -1,0 +1,1 @@
+- 2026-10-29: Add bounded, still-unwired Numeric small-divisor intrinsic support after refreshing the exact current-main ORIGINAL failure gate, preserving zero, nonfinite, metadata, magnitude, provenance and Integer limits.

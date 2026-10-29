@@ -348,3 +348,39 @@ Diagnostic0 means reproduction succeeded, not product parity. Both chats receive
 RELEASED; no native/VFP/Wine/VM run or runtime/library rebuild occurred. Keep this
 division branch unchanged while selecting a separate admitted Numeric-display
 prerequisite worktree from origin/main; do not remove its frozen assertions.
+
+## Current-main ORIGINAL refresh and unused direct support
+
+After the display prerequisite merged in PR #7225, signed+DCO merge
+`280ab08022e890f7ef168a1390da62c4294ecad7` integrated current main without a
+production conflict; `src/` and `include/` were main-identical before support.
+A fresh single-job O0/g0 ORIGINAL run passed configure/build and executed the
+same seven tests: six controls pass, only the frozen small-divisor public test
+fails, with no skip/error. Independent audit0 retains the exact unchanged
+6,920 descriptor, 320 signed-zero bit, 964 display (882 core/70 literal/12
+runtime), zero literal-bit/evaluation/control, total8,204 failures. All18 source
+hashes remained stable and every full I/O PSI gate was0.00/0.00. Complete host
+receipts are retained in ignored
+`build/small-divisor-original-refresh1-evidence/`; console SHA-256
+`2c928c14b2b93f23c69a70e5fc4e0258718712d125d26a788435dfadcdc4d136`,
+JUnit SHA-256
+`d9219f4841365556f1fb647ca4ab3038739fb70e7ed987b81ed1c01d8aa00ba2`.
+
+Only after that refreshed ORIGINAL, `constant_small_divisor_intrinsic` was added
+as pure unused support. It reuses the frozen bounded intrinsic calculation while
+making the small-divisor admission explicit; provenance, zero, nonfinite,
+magnitude, metadata, storage and Integer limits remain fail-closed. Existing
+`constant_division_intrinsic` and `constant_nonwhole_division_intrinsic`
+continue to reject the previously excluded divisor frontier. No parser/runtime
+caller or product wiring is added in this phase.
+
+The independently frozen direct test passes under GNU warnings-as-errors and
+Clang warnings-as-errors with ASan/UBSan/float-cast-overflow/no recovery, and as
+the registered focused CTest. It validates all56 small-divisor native roots,
+all68 prior nonwhole roots, all640 older native rows, immutable operands and all
+unsupported-domain controls. Compiler/run stderr are empty, input hashes remain
+unchanged, and the immediate pressure gate is0.00/0.00. Host receipts are in
+ignored `build/small-divisor-support1/`. This is development verification of
+unused support, not SAME, hosted, review, release or compatibility completion.
+NEXT freeze the bounded caller/wiring delta, then run the unchanged public SAME
+and broader named gates without weakening any display assertion.

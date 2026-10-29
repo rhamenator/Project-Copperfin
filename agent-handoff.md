@@ -49,8 +49,16 @@ four full I/O PSI gates were0.00/0.00. Current host receipts are preserved in
 ignored `build/small-divisor-original-refresh1-evidence/` with complete mismatch
 console SHA `2c928c14b2b93f23c69a70e5fc4e0258718712d125d26a788435dfadcdc4d136`
 and JUnit SHA `d9219f4841365556f1fb647ca4ab3038739fb70e7ed987b81ed1c01d8aa00ba2`.
-NEXT implement only the previously frozen unused pure support/direct helper,
-verify its GNU Werror and Clang sanitizer frontiers, then stop before wiring.
+Oct29 20:47UTC unused pure support/direct helper COMPLETE, still unwired.
+`constant_small_divisor_intrinsic` makes only the frozen small-divisor admission
+explicit while existing helpers retain their old frontier and every provenance,
+zero/nonfinite/magnitude/metadata/storage/Integer rejection remains. GNU Werror,
+Clang Werror ASan+UBSan+float-cast-overflow/no-recovery and registered CTest all
+compile/run0:56 small-divisor roots +68 prior nonwhole roots +640 older rows and
+bounded controls pass, input hashes unchanged, stderr empty, pressure0.00/0.00.
+Receipts: ignored `build/small-divisor-support1/`. Recovery/requirements/changelog
+updated. NEXT freeze and implement only the bounded caller/wiring delta, then run
+the unchanged public SAME and broader named gates; never weaken display assertions.
 
 Preserve all exact assertions: seven ORIGINAL CTests previously showed old six
 PASS/new fail across 6,920 descriptors, 320 signed-zero payloads, and 964

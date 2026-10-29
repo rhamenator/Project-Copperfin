@@ -338,6 +338,19 @@ current main240ac51cb, not a division scope expansion or suppressed assertion.
 No helper/hook/SAME or compatibility completion. Full provenance/reader limits/
 pressure-deferral and re-entry are in the same recovery contract/archive.
 
+After PR #7225 satisfied the independent display prerequisite, current main was
+integrated at signed+DCO `280ab0802`. A fresh unchanged ORIGINAL configure/build
+returned0 and the same seven tests retained six control passes plus the sole
+small-divisor public failure:6,920 descriptor/320 signed-zero/964 display and
+zero literal-bit/evaluation/control mismatches, audit0/no skips/errors. The pure
+unused `constant_small_divisor_intrinsic` support now passes the independent
+56 small-divisor roots,68 prior nonwhole roots,640 older native rows and bounded
+rejection controls under GNU Werror, Clang Werror ASan/UBSan/float-cast-overflow
+no-recovery, and registered CTest. Existing helper frontiers remain unchanged;
+no parser/runtime caller, SAME result, hosted execution, review or compatibility
+completion is claimed. Exact chronology and host receipt hashes are retained in
+the recovery contract; bounded wiring and unchanged SAME remain next.
+
 Subsequent exact current readback for #7210: single GNU O0/g0 TU compile0/run0,
 300 literal contexts/70 display mismatches with metadata/bits all matching,
 verified original archives unchanged. Native-only cross-check audit0. At D0/
