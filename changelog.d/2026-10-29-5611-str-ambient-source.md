@@ -8,3 +8,8 @@
   mismatches across DECIMALS0/13/18, FIXED OFF/ON and STR counts15..18. Archive
   all raw records and receipts as67 verified gzip entries; production and
   original assertions remain unchanged.
+- Select the next exact digit-conversion discriminator against the installed
+  MSVCR71 `sprintf`/`_snprintf` fixed-format route:264 retained payloads,
+  counts15..18,2,112 VFP control comparisons and1,056 bounded CRT calls. Preserve
+  eight rejection checks and17 verified source-only receipts; no compiler,
+  native call, formatter attribution or production rule is claimed.

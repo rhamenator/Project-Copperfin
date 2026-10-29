@@ -28,6 +28,25 @@ Ordinary shell/Wine evidence remains public-observation evidence, not REA atomic
 mapped-image or internal-call proof. No VM, compiler, new FLL, tolerance,
 ORIGINAL assertion or production change was used.
 
+The zero ambient mismatches reject ambient SET DECIMALS as the discriminator
+for this observed explicit-STR grid. The next bounded conversion discriminator
+is the installed MSVCR71 public `sprintf`/`_snprintf` fixed-format route, which
+was not covered by the completed `_fcvt`, `_ecvt` and `_gcvt` comparisons.
+Read-only PE export inspection confirms both symbols in the same retained
+module SHA256
+`8094af5ee310714caebccaeee7769ffb08048503ba478b879edfef5f1a24fefe`.
+`plan-sprintf-discriminator.cjs` binds the byte-qualified STRmiddle audit and
+selects all264 payloads, counts15..18 and both FIXED control rows:1,056 bounded
+CRT calls compared against2,112 exact retained VFP strings. It preserves the
+full expected hex, requires OFF/ON equality before deduplicating CRT calls and
+uses only `%.*f` with a2,048-byte owned buffer. Eight synthetic rejection checks
+cover missing controls and changed FIXED text. A guarded source-only replay had
+idle Wine prefix, unchanged parent/module/source hashes, empty stderr/status0;
+`sprintf-discriminator-plan-captures1` retains17 gzip source/output/gate/hash/
+export receipts with compressed and decoded hashes. This is source-only selection:
+no compiler/FLL/native call has run, and public CRT agreement would not prove
+VFP internal call attribution, formatter acceptance or a production algorithm.
+
 Stimulus/reader source checkpoint (prepared before the native capture):
 `emit-str-ambient.cjs` derives a36-record/144-observation public stimulus from
 the selected six payloads, with originalD15 controls before/after each ambient
