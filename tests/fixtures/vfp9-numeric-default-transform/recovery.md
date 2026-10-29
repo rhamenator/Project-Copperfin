@@ -110,6 +110,22 @@ and the sole inactive-slot exception. Together with25 record-parser and18
 generator checks, this remains source-only. The capture worker/build binding is
 the remaining harness step before a fresh resource-gated compile/native run.
 
+The build/capture workers are now source-frozen but unexecuted. The build worker
+requires a clean exact head and fresh output directory, rehashes all inputs
+before/after every nice10 stage, requires idle Wine prefixes and full I/O PSI
+avg10/avg60 below1%, runs all source suites plus GNU/Clang sanitizer checks,
+then produces a freestanding32-bit FLL without invoking Wine. The capture worker
+requires that exact successful build/commit, obtains the nonblocking shared
+`copperfin-wine-vfp9.lock`, rechecks immutable inputs, idle prefixes, I/O pressure
+and at least8GiB MemAvailable before each run, preserves partial results and
+requires empty stderr/process cleanup. The repeat is textually and operationally
+after the exact first-run mismatch receipt. Thirty-five exact worker/build
+assertions and both shell syntax checks pass; they also prohibit VM commands,
+forced Wine cleanup and build-time VFP execution. No compiler or native route
+was invoked by this checkpoint. A fresh scheduled resource gate may now run the
+bounded build, validate it, then run the first capture and only repeat if its
+strict receipt passes.
+
 Stimulus/reader source checkpoint (prepared before the native capture):
 `emit-str-ambient.cjs` derives a36-record/144-observation public stimulus from
 the selected six payloads, with originalD15 controls before/after each ambient

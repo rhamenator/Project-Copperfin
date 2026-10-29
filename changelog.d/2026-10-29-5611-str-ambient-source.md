@@ -30,3 +30,6 @@
 - Add strict complete-run and repeat qualification with an exact first-run
   mismatch receipt, ordered1,056-record framing and only validated inactive
   integer-slot repeat differences. Eleven synthetic qualification checks pass.
+- Freeze separate exact-head build and nonblocking-lock capture workers with
+  per-stage hashes/resource guards, GNU/Clang sanitizer boundaries, strict
+  first-run-before-repeat gating and process cleanup. Thirty-five source checks pass.
