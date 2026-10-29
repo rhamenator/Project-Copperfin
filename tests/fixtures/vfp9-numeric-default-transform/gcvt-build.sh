@@ -18,14 +18,14 @@ git rev-parse HEAD > "$capture_root/build-source-commit.txt"
 sdk='/home/rich/copperfin-wine-vfp9/drive_c/Program Files (x86)/Microsoft Visual FoxPro 9/Samples/API/winapims.lib'
 legacy=/home/rich/dev/Project-Copperfin/build/pr7203-completed/native-evidence/diagnostic
 linker=/home/rich/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/rust-lld
-sources='gcvt-probe.c gcvt-boundary.h gcvt-boundary-check.c gcvt-source-check.cjs emit-gcvt.cjs gcvt.prg gcvt-cases.json audit-gcvt.cjs gcvt-build.sh gcvt-capture.sh crt-probe.c crt-binding.h crt-binding-check.c crt-binding-check.cjs crt-kernel32.def crt-cases.json crt.prg'
+sources='gcvt-probe.c gcvt-boundary.h sprintf-boundary.h gcvt-boundary-check.c gcvt-source-check.cjs emit-gcvt.cjs gcvt.prg gcvt-cases.json audit-gcvt.cjs gcvt-build.sh gcvt-capture.sh crt-probe.c crt-binding.h crt-binding-check.c crt-binding-check.cjs crt-kernel32.def crt-cases.json crt.prg'
 for name in $sources; do cp "$fixture/$name" "$capture_root/source-$name"; done
 node "$fixture/gcvt-source-check.cjs" > "$capture_root/source-check.json"
 node "$fixture/emit-gcvt.cjs" source > "$capture_root/regenerated.prg"
 node "$fixture/emit-gcvt.cjs" cases > "$capture_root/regenerated-cases.json"
 cmp "$fixture/gcvt.prg" "$capture_root/regenerated.prg"
 cmp "$fixture/gcvt-cases.json" "$capture_root/regenerated-cases.json"
-sha256sum "$fixture/gcvt-probe.c" "$fixture/gcvt-boundary.h" "$fixture/gcvt-boundary-check.c" "$fixture/gcvt-source-check.cjs" "$fixture/emit-gcvt.cjs" "$fixture/gcvt.prg" "$fixture/gcvt-cases.json" "$fixture/audit-gcvt.cjs" "$fixture/gcvt-build.sh" "$fixture/gcvt-capture.sh" "$fixture/crt-probe.c" "$fixture/crt-binding.h" "$fixture/crt-binding-check.c" "$fixture/crt-binding-check.cjs" "$fixture/crt-kernel32.def" "$fixture/crt-cases.json" "$fixture/crt.prg" "$fixture/arithmetic-inline-captures1/"{audit.json,first-results.txt,repeat-results.txt}.gz "$sdk" "$legacy/kernel32-stdcall.lib" "$legacy/msvcrt.lib" /usr/bin/gcc /usr/bin/clang /usr/bin/llvm-dlltool-21 "$linker" /home/rich/copperfin-wine-vfp9/drive_c/windows/syswow64/msvcr71.dll > "$capture_root/build-inputs.sha256"
+sha256sum "$fixture/gcvt-probe.c" "$fixture/gcvt-boundary.h" "$fixture/sprintf-boundary.h" "$fixture/gcvt-boundary-check.c" "$fixture/gcvt-source-check.cjs" "$fixture/emit-gcvt.cjs" "$fixture/gcvt.prg" "$fixture/gcvt-cases.json" "$fixture/audit-gcvt.cjs" "$fixture/gcvt-build.sh" "$fixture/gcvt-capture.sh" "$fixture/crt-probe.c" "$fixture/crt-binding.h" "$fixture/crt-binding-check.c" "$fixture/crt-binding-check.cjs" "$fixture/crt-kernel32.def" "$fixture/crt-cases.json" "$fixture/crt.prg" "$fixture/arithmetic-inline-captures1/"{audit.json,first-results.txt,repeat-results.txt}.gz "$sdk" "$legacy/kernel32-stdcall.lib" "$legacy/msvcrt.lib" /usr/bin/gcc /usr/bin/clang /usr/bin/llvm-dlltool-21 "$linker" /home/rich/copperfin-wine-vfp9/drive_c/windows/syswow64/msvcr71.dll > "$capture_root/build-inputs.sha256"
 stage() {
  local label=$1
  shift
