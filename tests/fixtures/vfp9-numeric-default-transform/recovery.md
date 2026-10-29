@@ -4,7 +4,31 @@
 
 ### Next bounded native discriminator: ambient setting independence
 
-Stimulus/reader source checkpoint (native experiment still UNEXECUTED):
+Native capture result (2026-10-29): the exact first-run gate passed before the
+repeat was launched. Both runs retained36 records/144 observations and were
+byte-identical at SHA256
+`76562c8a088e371ccea64a95798b11fabbbfe604395f62982b5397efbc6f3099`;
+all status receipts are0, stderr is empty, both prefix checks are idle and both
+full I/O PSI avg10/avg60 readings are below1%. The96 exact comparisons between
+ambient DECIMALS0 and13/18 found zero public STR mismatches for all six
+sign-paired payloads, FIXED OFF/ON and explicit counts15..18. This supports
+ambient-setting independence only for the observed grid; it does not identify
+an internal formatter, precision cap or production algorithm.
+
+`analyze-str-ambient.cjs` does not assume equality: it retains every exact
+hex mismatch with payload, sign, FIXED mode, explicit count and both ambient
+settings. The qualified run's complete mismatch list is empty. Its synthetic
+test proves a changed count17 observation is retained rather than normalized.
+`str-ambient-captures1` preserves67 gzip entries including both raw runs, the
+complete44-field observations, first/paired audit reports, pressure/prefix/
+hash receipts, frozen source and analyzer sources. Every entry passed compressed
+and decoded size/hash verification against the host bytes; manifest SHA256 is
+`1304c58f52eca5e2e7a30a31490c993e853aaebb2d41f635b7d3797f0facc50d`.
+Ordinary shell/Wine evidence remains public-observation evidence, not REA atomic
+mapped-image or internal-call proof. No VM, compiler, new FLL, tolerance,
+ORIGINAL assertion or production change was used.
+
+Stimulus/reader source checkpoint (prepared before the native capture):
 `emit-str-ambient.cjs` derives a36-record/144-observation public stimulus from
 the selected six payloads, with originalD15 controls before/after each ambient
 window. Inspection added direct ambient metadata/BRS and after-setting receipts;
@@ -33,9 +57,8 @@ versions remained unchanged. Frozen generated PRG is retained in that archive.
 LOW DQ-DV001 developer walkthrough checks loop/field order, ambient before/after
 metadata, first-error stop, malformed/status/source rejection, first-run gate,
 bounded failure diagnostics and archive bytes. Not independent human assurance;
-existing hazards/rollback apply. NEXT obtain fresh native resource coordination,
-revalidate observer/source/runtime hashes, strict first-run gate before repeat,
-and preserve every ambient mismatch. Source readiness is not capture acceptance.
+existing hazards/rollback apply. The later native result above is the capture
+acceptance; source readiness alone was not treated as acceptance.
 
 Selection checkpoint: `select-str-ambient-witnesses.cjs` binds the qualified
 STRmiddle raw hash, actual full OFF/ON controls and N40/18 metadata. Ten focused
