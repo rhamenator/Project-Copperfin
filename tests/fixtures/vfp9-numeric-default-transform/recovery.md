@@ -47,6 +47,21 @@ export receipts with compressed and decoded hashes. This is source-only selectio
 no compiler/FLL/native call has run, and public CRT agreement would not prove
 VFP internal call attribution, formatter acceptance or a production algorithm.
 
+The first caller foundation is now source-frozen without invoking that native
+route. `sprintf-boundary.h` admits only finite binary64 values and exact counts
+15..18, passes the literal `%.*f` to both installed-export-shaped cdecl
+interfaces and owns independent2,048-byte guarded buffers. It validates return
+length, NUL termination and capacity before copying into384-byte result fields.
+Crucially, unequal `sprintf` and `_snprintf` strings and non-fixed-grammar text
+are retained with explicit equality/grammar flags rather than rejected. The direct
+stub test passes45 boundary checks including unequal-output preservation,
+nonfinite/count rejection, each return/length/termination/grammar/canary failure
+and null parameters. Seventeen frozen-source assertions require exact call order,
+literal format/capacity/counts, guard-before-second-call and prohibit DLL loads,
+allocation and floating-control writes. This is still source/stub evidence only:
+the FLL handler, strict native reader and worker remain to be authored before a
+fresh resource gate can authorize compilation or a native run.
+
 Stimulus/reader source checkpoint (prepared before the native capture):
 `emit-str-ambient.cjs` derives a36-record/144-observation public stimulus from
 the selected six payloads, with originalD15 controls before/after each ambient

@@ -13,3 +13,7 @@
   counts15..18,2,112 VFP control comparisons and1,056 bounded CRT calls. Preserve
   eight rejection checks and17 verified source-only receipts; no compiler,
   native call, formatter attribution or production rule is claimed.
+- Freeze the guarded caller boundary with independent2,048-byte buffers, exact
+  `%.*f`/counts15..18, structural output validation and mismatch-preserving dual
+  results/grammar flags. Pass45 stub boundary checks and17 exact source assertions; the native
+  handler/reader/worker and any compiled execution remain pending.
