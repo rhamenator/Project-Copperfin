@@ -73,6 +73,30 @@ the same45 stub boundary checks still pass. No freestanding/native compile or
 Wine execution has occurred; the generated VFP stimulus, strict reader and
 first-run-gated worker remain pending.
 
+Native result (2026-10-29): the exact first-run gate passed before repeat and
+both1,056-record runs are byte-identical (1,740,734 bytes, SHA256
+`5e0ee3eb89584d634d6f53fcefe6b41f5f1d48a468aba0982d75bd3022288371`).
+All status, stderr, resource, prefix-cleanup, immutable-input and exact build
+gates passed. The qualified reader retains1,732 exact export x FIXED-mode
+mismatches across433 payload/count cells and148 payloads:212 at count15,416 at
+16,512 at17 and592 at18. `sprintf` and `_snprintf` are identical in every1,056
+call and each contributes866 mismatches; OFF and ON each contribute866. All
+outputs satisfy the frozen fixed grammar, none exceed width40, and no mismatch
+is normalized away. For example, payload `3FDFF7CED9168727` at count16 yields
+VFP `0.4995000000000000` but both public CRT exports yield
+`0.4994999999999998`. This rejects public MSVCR71 `%.*f` equality as a universal
+VFP STR digit-conversion model; it does not establish VFP internal call paths,
+accept a production formatter or derive the remaining digit-conversion rule.
+
+`sprintf-captures1` stores all300 qualified non-proprietary build/source/raw/
+receipt/mismatch files as gzip plus exact compressed and decoded byte/hash
+metadata; manifest SHA256 is
+`0eaa59c7174b6bb67e1e94552a37204fca8f27953d9c0c3139e963187aaf433d`.
+The archive verifier requires every decoded file to equal its retained host
+source. Proprietary SDK-derived FLL/object/import-library and local sanitizer
+binaries remain host-only and are represented by hashes, PE listings and build
+receipts. The earlier fail-closed build remains separately retained host-only.
+
 The generated stimulus is now frozen source-only. `emit-sprintf.cjs` revalidates
 the byte-qualified STRmiddle audit and derives exactly264 finite payloads and
 their original DECIMALS settings without embedding expected strings in the PRG.

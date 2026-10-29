@@ -37,3 +37,7 @@
   I/O PSI reaches1%, or available memory is below8GiB; retain per-stage guards.
 - Keep all non-link stderr empty while byte-qualifying the exact four rust-lld
   SDK `.debug$S` warnings observed after every build/link stage returned zero.
+- Qualify byte-identical1,056-record first/repeat runs of both public fixed CRT
+  exports and preserve all1,732 VFP mismatches across433 cells/148 payloads.
+  Archive300 non-proprietary raw/build/receipt files with compressed and decoded
+  hashes; public `%.*f` equality is rejected as a universal VFP STR model.
