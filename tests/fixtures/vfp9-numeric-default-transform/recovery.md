@@ -135,6 +135,17 @@ retaining every per-stage recheck. Thirty-seven exact worker/build assertions
 and shell syntax pass. The next wake must perform a fresh compact measurement;
 do not delete or bypass the guard and do not infer capacity from this deferral.
 
+The first exact-head build reached a successful link but failed closed at the
+generic empty-stderr gate (exit98). All17 stages through link returned0, all
+source/boundary/binding checks passed, and only the link stage emitted four
+identical rust-lld warnings about SDK/library `.debug$S` sections with magic2;
+no Wine/native run occurred. The complete failed build directory is retained as
+`build/default-transform-sprintf-failed-1`. The worker now keeps empty-stderr
+requirements for every other stage and compares link stderr byte-for-byte with
+those exact four known warnings. Any count/text change still fails. Forty-one
+worker/build source assertions and shell syntax pass. This is a harness evidence
+repair, not acceptance of the FLL; rebuild from a clean exact head is required.
+
 Stimulus/reader source checkpoint (prepared before the native capture):
 `emit-str-ambient.cjs` derives a36-record/144-observation public stimulus from
 the selected six payloads, with originalD15 controls before/after each ambient

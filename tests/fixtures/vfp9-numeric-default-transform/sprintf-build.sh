@@ -59,7 +59,6 @@ stage() {
  cat /proc/pressure/io > "$capture_root/$label.io-pressure-after.txt"
  date -u +%FT%TZ > "$capture_root/$label.finished.utc"
  test "$status" -eq 0 || exit "$status"
- test ! -s "$capture_root/$label.stderr" || exit 98
  sha256sum -c "$capture_root/build-inputs.sha256" > "$capture_root/$label.inputs-after.txt"
 }
 
@@ -82,6 +81,15 @@ cmp "$capture_root/expected-boundary.stdout" "$capture_root/boundary-clang-check
 stage import /usr/bin/llvm-dlltool-21 -m i386 -k -d "$fixture/crt-kernel32.def" -l "$capture_root/crt-kernel32.lib"
 stage compile /usr/bin/clang --target=i686-pc-windows-msvc -std=c11 -O0 -ffreestanding -fno-builtin -fno-stack-protector -Wall -Wextra -Werror -c "$fixture/gcvt-probe.c" -o "$capture_root/sprintf-probe.obj"
 stage link "$linker" -flavor link /dll /nodefaultlib /machine:x86 /entry:CrtEntry@12 "/out:$capture_root/sprintf-probe.fll" "$capture_root/sprintf-probe.obj" "$capture_root/crt-kernel32.lib" "$sdk" "$legacy/kernel32-stdcall.lib" "$legacy/msvcrt.lib"
+for label in source-boundary source-emitter source-record source-audit source-worker host-gnu check-gnu host-clang check-clang boundary-gnu-build boundary-gnu-check boundary-clang-build boundary-clang-check import compile; do
+ test ! -s "$capture_root/$label.stderr" || exit 98
+done
+printf '%s\n' \
+ 'rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2' \
+ 'rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2' \
+ 'rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2' \
+ 'rust-lld: warning: ignoring section .debug$S with unrecognized magic 0x2' > "$capture_root/expected-link.stderr"
+cmp "$capture_root/expected-link.stderr" "$capture_root/link.stderr"
 sha256sum -c "$capture_root/build-inputs.sha256" > "$capture_root/build-inputs-check.txt"
 sha256sum "$capture_root"/{sprintf-probe.fll,sprintf-probe.obj,crt-kernel32.lib,binding-gnu,binding-clang,sprintf-gnu,sprintf-clang} > "$capture_root/built.sha256"
 file "$capture_root/sprintf-probe.fll" > "$capture_root/built-file.txt"

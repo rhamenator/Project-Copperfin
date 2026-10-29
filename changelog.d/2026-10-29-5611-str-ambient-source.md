@@ -35,3 +35,5 @@
   first-run-before-repeat gating and process cleanup. Thirty-five source checks pass.
 - Fail the build before creating its output directory when Wine is active, full
   I/O PSI reaches1%, or available memory is below8GiB; retain per-stage guards.
+- Keep all non-link stderr empty while byte-qualifying the exact four rust-lld
+  SDK `.debug$S` warnings observed after every build/link stage returned zero.

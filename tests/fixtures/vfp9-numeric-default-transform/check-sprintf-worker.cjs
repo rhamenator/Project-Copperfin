@@ -16,6 +16,7 @@ has('test ! -s "$capture_root/first-structure.stderr" || exit 98');has('test ! -
 for(const forbidden of ['virsh','VBoxManage','qemu-system','rm -','wineserver -k','killall']){a.equal(worker.includes(forbidden),false,forbidden);++checks;}
 a.equal((worker.match(/native_run repeat/g)||[]).length,1);++checks;
 for(const token of ['test ! -e "$capture_root" || exit 96','source-audit node "$fixture/test-audit-sprintf.cjs"','boundary-clang-check','--target=i686-pc-windows-msvc','/entry:CrtEntry@12','/out:$capture_root/sprintf-probe.fll','sha256sum -c "$capture_root/build-inputs.sha256"']){a(build.includes(token),token);++checks;}
+for(const token of ['for label in source-boundary source-emitter source-record source-audit source-worker','test ! -s "$capture_root/$label.stderr" || exit 98','expected-link.stderr','cmp "$capture_root/expected-link.stderr" "$capture_root/link.stderr"']){a(build.includes(token),token);++checks;}
 buildBefore('test "$initial_io_status" -eq 0 || exit 75','test ! -e "$capture_root" || exit 96');++checks;
 buildBefore('test "$initial_memory_status" -eq 0 || exit 75','test ! -e "$capture_root" || exit 96');++checks;
 for(const forbidden of ['vfp9-probe','WINEDLLOVERRIDES=msvcr71=n','virsh','VBoxManage','qemu-system']){a.equal(build.includes(forbidden),false,forbidden);++checks;}
