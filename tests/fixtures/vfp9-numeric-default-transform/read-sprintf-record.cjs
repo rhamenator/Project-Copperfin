@@ -35,6 +35,6 @@ function readRecord(line,row,count,inv){
  a.equal(f[13],'N');const decimalText=ascii(f[14]);a.match(decimalText,/^\s*[0-9]+(?:\.0+)?\s*$/);a.equal(Number(decimalText),row.setting);a.equal(f[15],'C');a.equal(ascii(f[16]),'OFF');a.equal(f[17],'OFF');
  const actual={sprintf:paddedHex(parsed.sprintfText),snprintf:paddedHex(parsed.snprintfText)},mismatches=[];
  for(const [name,hex]of Object.entries(actual))for(const [fixed,expected]of [['OFF',expectedOff],['ON',expectedOn]])if(hex!==expected)mismatches.push({export:name,fixed,expectedHex:expected,actualHex:hex,rawText:parsed[name+'Text'],overWidth:parsed[name+'Text'].length>40});
- return {index:row.index,bits:row.bits,setting:row.setting,count,meta:meta(f[4],row.bits),freshStrHex:f[6],control:before,crt:parsed,actual,mismatches};
+ return {index:row.index,bits:row.bits,setting:row.setting,count,meta:meta(f[4],row.bits),freshStrHex:f[6],control:before,crt:parsed,actual,mismatches,fields:f};
 }
 module.exports={ascii,fields,identity,meta,control,crt,paddedHex,readRecord};

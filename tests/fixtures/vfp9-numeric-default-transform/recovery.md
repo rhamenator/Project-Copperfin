@@ -97,6 +97,19 @@ environment from the retained CRT cases. Twenty-five synthetic parser checks
 and all18 generator checks pass. This is record-level source verification only;
 complete run framing/repeat qualification and the gated worker remain pending.
 
+Complete-run qualification is now source-frozen. `audit-sprintf.cjs` requires
+status0/empty stderr, exact runtime environment, stdout/results identity, VFP9
+version framing, all1,056 ordered records and DONE count. Its `--single` result
+is the mandatory first-run receipt and includes the complete mismatch array;
+paired qualification binds that exact receipt before reading the repeat, then
+requires observation and mismatch identity while allowing only validated
+inactive Numeric integer-slot differences. Eleven complete-reader synthetic
+checks cover the passing first/pair, status/stderr/environment/framing/record
+rejection, receipt binding, repeat divergence, positive mismatch preservation
+and the sole inactive-slot exception. Together with25 record-parser and18
+generator checks, this remains source-only. The capture worker/build binding is
+the remaining harness step before a fresh resource-gated compile/native run.
+
 Stimulus/reader source checkpoint (prepared before the native capture):
 `emit-str-ambient.cjs` derives a36-record/144-observation public stimulus from
 the selected six payloads, with originalD15 controls before/after each ambient

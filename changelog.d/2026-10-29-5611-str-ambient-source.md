@@ -27,3 +27,6 @@
 - Add a strict18-field record parser with independent module/control/grammar/
   equality validation and mismatch retention for both exports and FIXED modes,
   including non-grammar and over-width output. Twenty-five synthetic checks pass.
+- Add strict complete-run and repeat qualification with an exact first-run
+  mismatch receipt, ordered1,056-record framing and only validated inactive
+  integer-slot repeat differences. Eleven synthetic qualification checks pass.
