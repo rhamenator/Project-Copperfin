@@ -104,7 +104,8 @@ void public_cases(const std::string& mode,int selected){
 }
 }
 int main(int argc,char** argv){ScopedEnvironmentValue locale("COPPERFIN_LOCALE");set_env_value("COPPERFIN_LOCALE","en-US",true);
- if(argc==3&&(std::string(argv[1])=="COPPERFIN"||std::string(argv[1])=="VFP9")&&
+ if(argc==1){expect(numbers.size()==11&&exacts.size()==4,"ListItem COLUMN frozen tables");}
+ else if(argc==3&&(std::string(argv[1])=="COPPERFIN"||std::string(argv[1])=="VFP9")&&
   (std::string(argv[2])=="1"||std::string(argv[2])=="2")){public_cases(argv[1],std::string(argv[2])=="1"?1:2);
   expect(public_count==92,"ListItem COLUMN complete public count");}
  else{std::cerr<<"Expected COPPERFIN|VFP9 1|2\n";return 2;}
