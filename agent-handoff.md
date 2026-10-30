@@ -321,7 +321,7 @@ metadata-absent fallback), then run SAME before broader qualification. Do not
 apply the rule to every generic double formatter.
 
 Support checkpoint is signed commit
-`8800b9ee29b0778a27b897c0521b4b7086a604ad` (good owner EDDSA signature),
+`3c097dda1b15736afd90a26d1a163818180919d5` (good owner EDDSA signature and DCO),
 pushed to `origin/fix/numeric-small-divisor-5611`. The only remaining tracked
 worktree delta is the previously retained two-file consumer wiring; no PR is
 open yet.
@@ -343,6 +343,25 @@ complete 9/9 gate was rerun clean. NEXT bounded step: record this checkpoint
 in a signed commit, push it, then run the named broader hosted qualification
 before opening a PR and requesting Claude-first exact-head review. No PR is
 open yet.
+
+Integration checkpoint is signed commit
+`2b492d5b270965aba8cdbdab936a10d934a079e2` (good owner EDDSA signature and DCO),
+pushed to `origin/fix/numeric-small-divisor-5611`. NEXT is the named broader
+hosted qualification; no PR is open yet.
+
+Oct30 12:00UTC qualification checkpoint: both final implementation commits
+were rewritten tree-identically to add the required DCO trailers, remain good
+owner-EDDSA signed, and were exact-lease pushed as support
+`3c097dda1b15736afd90a26d1a163818180919d5` and integration
+`2b492d5b270965aba8cdbdab936a10d934a079e2`. The previously clean focused/SAME
+results remain exact-tree evidence. Nine additional pure Numeric metadata,
+context, assignment, runtime-division and literal-payload helper gates passed
+9/9 with complete isolation labels. A local broader runtime build was stopped
+without claiming a gate result when the recovered Ninja log forced a costly
+unrelated dependency rebuild; no test failed, and no VM/native/Wine resource
+was used. Hosted Linux/Windows/macOS qualification remains required on the
+exact PR head. NEXT: commit this checkpoint, open the PR, request Claude-first
+exact-head review, and let hosted CI provide the broad platform qualification.
 
 Preserve all exact assertions: seven ORIGINAL CTests previously showed old six
 PASS/new fail across 6,920 descriptors, 320 signed-zero payloads, and 964
