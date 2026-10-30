@@ -60,6 +60,266 @@ Receipts: ignored `build/small-divisor-support1/`. Recovery/requirements/changel
 updated. NEXT freeze and implement only the bounded caller/wiring delta, then run
 the unchanged public SAME and broader named gates; never weaken display assertions.
 
+Oct29 21:55UTC first bounded wiring attempt is intentionally UNCOMMITTED and the
+first unchanged SAME result is preserved, not repeated or hidden. The two-file
+delta only routes the existing proven constant-node path through
+`constant_small_divisor_intrinsic` and updates its stale "unused" comment; no
+test/expected/display code changed. Single-job rebuild0. Exact eight-test SAME
+ran once: five controls/helpers pass; three gates fail. The new public gate now
+has zero descriptor/bit/literal-bit/evaluation/control failures but retains
+exactly 804 display mismatches. The older constant/nonwhole gates retain 20/40
+now-obsolete outside-scope control failures for `5/0.5` and
+`(1/3)/(1/3)`; do not weaken them silently. Full JUnit (including every
+mismatch) is ignored at `build/small-divisor-same1-evidence/junit.xml`, SHA-256
+`5000131c3728f00baf09276983bf2d1d733bb08bc9a14aa07e75bf509ef6288a`.
+This is an actionable SAME failure: preserve the dirty two-file delta and exact
+evidence. NEXT diagnose the independently required metadata-aware default
+TRANSFORM consumer versus the already admitted display prerequisite, and decide
+the explicit strengthening of the two superseded outside-scope assertions;
+never change the frozen small-divisor display expectations to obtain a pass.
+
+Oct29 22:55UTC bounded display diagnostic REJECTED and fully rolled back from
+production. The narrow hypothesis “FIXED OFF selects value metadata decimals;
+FIXED ON selects SET DECIMALS” increased the unchanged public mismatch count
+from804 to826 while leaving descriptor/bit/evaluation/control failures at zero.
+Every mismatch is retained at ignored
+`build/small-divisor-display-diagnostic1/junit.xml`, SHA-256
+`222b4c4dfebbf4b0f94c03de90f544bff0ead63c6230da7e4f5e2f813dfc8ad8`.
+`src/runtime/prg_engine_string_functions.cpp` is restored byte-for-byte (no
+diff); do not revive this selector shortcut or infer a formatter from metadata
+alone. The active dirty production delta remains exactly the two bounded wiring
+files, plus this handoff. #5611/#6776/#7189 remain owner-authored OPEN; no PR.
+NEXT bounded step is offline mismatch classification against the already
+retained exact digit-conversion/selected-consumer evidence before any new
+formatter edit or SAME repeat. Do not rerun native/Wine evidence.
+
+Oct30 00:00UTC bounded OFFLINE classifier COMPLETE with no product/test/native
+change. A standalone GNU Werror tool replays the current pictureless formatter
+over all245 admitted frozen rows x5 settings x2 FIXED and exactly reproduces
+402 per-mode/804 two-mode SAME display mismatches. Classification is disjoint:
+187 precision/spelling,135 same-precision digit conversion,80 zero spelling;
+269 FIXED OFF/133 ON;361 core/35 literal/6 runtime; scale-vs-setting
+146 equal/181 greater/75 less. Thus metadata-vs-setting precision selection
+cannot solve the current gate even where scale equals setting, and the rejected
+selector cannot be revived as a proxy for digit conversion. Ignored source,
+binary and byte-identical report/replay are in
+`build/small-divisor-display-classification1/`; report SHA-256
+`06ce0469383f90b3b658f61186ebb59215f6bf1b7c5b3f798cb1405a6b04eb71`,
+classifier source SHA-256
+`60ce3507d58463c62ed89fcd5ee30cf89e925d34a6cc38f829dee75d94bf61a5`.
+NEXT bounded recovery must treat exact digit conversion(135), precision
+selection/spelling(187), and zero sign/spelling(80) as separate evidenced
+consumer foundations before another formatter edit/SAME. Do not weaken the
+public oracle or rerun completed Wine/native captures.
+
+Oct30 01:00UTC bounded OFFLINE exact-bit evidence join COMPLETE; no product,
+test, native or Wine execution. The135 same-precision digit mismatches collapse
+to14 unique binary64 payloads. Scanning27 retained default-TRANSFORM audit
+archives finds exact-bit overlap for only7 payloads/17 rows;7 payloads/118 rows
+remain uncovered by those broader consumer audits. One intentionally failed
+`intervention-attempt1` empty audit is reported as skipped, not treated as
+evidence. Exact-bit overlap itself is explicitly not route/precision/spelling
+proof. Ignored emitter/input/join/full report are in
+`build/small-divisor-digit-evidence-join1/`; report SHA-256
+`dfa443bd56b0a927016c2426b81ee381cf4baaa488ac69c8f2705d50af7b2e8b`,
+input SHA-256 `74d38bd54bf32f44fe1b4fe8c8c9f3eb011320c52305e6ee55451c64c624b081`.
+This rules out claiming the completed broader evidence already covers the
+division digit frontier. NEXT bounded offline step: classify the seven uncovered
+payloads/118 rows against distinct portable conversion candidates and the exact
+small-divisor strings, retaining every mismatch; no formatter hook/SAME/native
+rerun until one evidenced conversion foundation exists.
+
+Oct30 02:00UTC bounded OFFLINE portable-candidate classification COMPLETE; no
+product, test, native, Wine, or VM execution. GNU15 and Clang21 Werror builds
+produced byte-identical 118-row TSV evidence. The existing classic stream and
+`to_chars(fixed)` candidates match0/118. Explicit 14/15/16-fixed-decimal
+cap-and-pad hypotheses match14/76/14 rows; the 15-decimal variant with rounded
+zero sign normalization matches102/118 and all7 payloads, but is only a
+hypothesis, not a product rule. Every remaining mismatch is the same negative
+tiny payload:16 rows require context-dependent zero/sign/leading-zero spelling.
+Moreover the identical bits+18-decimals+FIXED ON key has two native expected
+spellings across8 rows (`-0.000000000000000000` and
+`-.000000000000000000`), proving one payload/setting/FIXED conversion alone
+cannot satisfy the frozen oracle. Ignored source, GNU/Clang TSVs and full report
+are at `build/small-divisor-digit-candidates1/`; report SHA-256
+`d0ff0568925189545f3383cf68d61284b772a358aad22175232eb3483ccfb02c`,
+byte-identical TSV SHA-256
+`6f6bd479d303be983f06258f8a63eeaeb6acd6364b59b67c930b71314e2abd3d`.
+NEXT bounded offline step: join those16 residual rows back to frozen expression
+descriptors and value-associated width/decimal metadata to identify the required
+consumer-context discriminator; do not promote cap15/zero normalization into a
+formatter or rerun SAME/native evidence before that discriminator is evidenced.
+
+Oct30 03:00UTC bounded OFFLINE residual-metadata join COMPLETE; no product,
+test, native, Wine, or VM execution. After a fail-closed Werror compile caught
+and corrected the diagnostic's field-name/signedness mistake, GNU15 and Clang21
+produced byte-identical 16-row TSV evidence. All rows share payload
+`BC42725DD1D243AC` and scale18; display widths are20(10 rows),21(4),22(2).
+Exactly8 rows have setting below scale and8 reach scale. For the identical
+bits+setting18+FIXED ON key, width20/scale18 (`display_width == scale+2`)
+requires `-.000000000000000000`, while width21/22 (`>= scale+3`) requires
+`-0.000000000000000000`. The other8 residuals are width20, setting below
+scale, FIXED OFF, and require the sign-only `-`. Thus associated width/decimal
+metadata is the frozen discriminator missing from payload+setting+FIXED for
+this residual frontier, without proving a producer call graph or universal
+formatter rule. Ignored source, byte-identical GNU/Clang TSVs and full report
+are in `build/small-divisor-digit-residual-metadata1/`; report SHA-256
+`ec2a910360394e1eb3eba0dd61e037c80bc37eeae90ade7cc775d745fd100245`,
+TSV SHA-256
+`c25b73aa10e58625b04c9325cd07ff5ce922a4a4362b04ec4daedb50570428a7`.
+NEXT bounded offline step: exercise the evidenced15-decimal cap-and-pad plus
+metadata-aware rounded-zero spelling against the complete135-row same-precision
+digit subset (including the17 broader-audit-covered rows), retaining every
+mismatch; no production formatter hook or SAME/native rerun yet.
+
+Oct30 04:00UTC bounded OFFLINE complete digit candidate PASS; no product,
+test, native, Wine, or VM execution. The first Werror compile failed closed
+because Boost multiprecision is not installed and produced no evidence; the
+diagnostic was replaced with a dependency-free two-word exact binary-rational
+rounder. GNU15 and Clang21 Werror then produced byte-identical135-row TSVs with
+135 exact matches/0 mismatches across all14 payloads, including the17 rows
+covered by broader audits. The finite-frontier candidate rounds the exact
+binary64 rational to `min(requested decimals,15)` decimal places with ties away
+from zero, pads to the requested decimals, and uses associated scale/width at
+the evidenced rounded-zero sign/leading-zero boundary. Equality is bounded
+evidence only, not a VFP internal algorithm or universal formatter rule.
+Ignored source, TSVs and full report are at
+`build/small-divisor-digit-full-candidate1/`; report SHA-256
+`24e7e4671508982f8aa90ce738411c43f1b8b3a8591e46b2d76f0743a492dd47`,
+byte-identical TSV SHA-256
+`13fc9a19ff1b431e2ed2837f1bc92d44f14787a5ccb892d089dc84e7af2d8ca9`.
+NEXT bounded offline step: replay this candidate over the complete245-row x5
+settings x2 FIXED frozen display frontier and prove its effect on all804 current
+mismatches without obscuring the independent187 precision/spelling and80 zero-
+spelling classes; no production hook or SAME/native rerun before that result.
+
+Oct30 05:00UTC bounded OFFLINE full-frontier replay COMPLETE; no product,
+test, native, Wine, or VM execution. GNU15 and Clang21 Werror produced
+byte-identical2,450-context TSVs preserving every candidate residual. The
+current formatter reproduces402 mismatches per mode/804 SAME. Applying the
+evidenced digit candidate only after preserving the current consumer-selected
+fraction length and leaving exact-zero handling untouched reduces this to250
+per mode/500 SAME:152 corrections per mode,0 regressions. It corrects all135
+same-precision digit rows plus17 rounded-nonzero precision/spelling rows; it
+retains exactly170 independent precision/spelling and80 exact-zero spelling
+rows, with no same-precision digit residual. This establishes a bounded
+non-regressing finite frontier, not a universal formatter or internal-call
+claim. Ignored source, full mismatch TSVs and report are at
+`build/small-divisor-digit-frontier-replay1/`; report SHA-256
+`a10f2b451d69ccd4132c8626fc54f85ebd6cc9ff628b0a33a8b734c96649593e`,
+byte-identical TSV SHA-256
+`b1687a8ff4f1f085c2feb51238cf2a681accd5f1acb75288dfb67ed53cf08d13`.
+NEXT bounded offline step: classify the retained170 precision/spelling rows by
+associated width/scale, requested setting, FIXED, sign and exact spelling shape
+before defining a consumer precision-selection foundation; preserve the80
+exact-zero rows as a separate later foundation and do not hook production yet.
+
+Oct30 06:00UTC bounded OFFLINE precision/spelling classification COMPLETE; no
+product, test, native, Wine, or VM execution. Byte-identical GNU/Clang-derived
+reports retain every one of the170 nonzero residual rows. All170 are FIXED OFF,
+and every native expected spelling has exactly the value-associated
+`decimal_places` count:36 where scale equals SET DECIMALS,96 where scale is
+greater, and38 where scale is less. The frontier spans all five settings,
+scales0..18, widths `scale+2` through `scale+12`,71 negative/99 nonnegative,
+141 core/25 literal/4 runtime rows, and158 fractional/12 integer spellings.
+This is a bounded metadata precision-selection correlation downstream of the
+independently evidenced digit/rounding foundation; it does not revive the
+previously rejected metadata-only formatter shortcut or claim a universal
+internal rule. Ignored classifier and complete identical reports are at
+`build/small-divisor-precision-classification1/`; report SHA-256
+`dc95b08992f9ff60723f8e32af1c8a3598d9cd9849460b9823425a70009ee135`.
+NEXT bounded offline step: full-frontier replay of the digit foundation with
+FIXED OFF selecting associated scale and FIXED ON retaining the setting, while
+leaving exact-zero handling untouched; require0 regressions and preserve the80
+exact-zero rows before any production hook or SAME/native rerun.
+
+Oct30 06:35UTC bounded OFFLINE full-frontier precision replay COMPLETE; no
+product, test, native, Wine, or VM execution. The first proposed broad selector
+(FIXED OFF use associated scale except values rounding to zero at the current
+setting) was rejected: it produced653 regressions per mode and is not a viable
+foundation. The refined GNU/Clang-identical replay uses associated scale for
+FIXED OFF, SET DECIMALS for FIXED ON, exact binary64 half-away conversion with
+the evidenced15-digit cap, and beyond-cap padding only for fractional/FIXED
+spellings. Across all2,450 contexts it reduces the current402 mismatches per
+mode to128:274 corrections,0 regressions. The retained128 split exactly into80
+previously separated exact-zero spellings and48 nonzero spellings; all48
+nonzero residuals become equal after trimming trailing fractional zeroes, so
+the remaining nonzero frontier is solely value-associated trailing-zero
+retention rather than digit conversion or decimal-position selection. This is
+a bounded finite-frontier candidate, not a universal formatter/internal-call
+claim. Ignored replay source, byte-identical complete TSVs and asserted report
+are at `build/small-divisor-precision-frontier-replay1/`; report SHA-256
+`0ec142ef40b4b38ee61af31e03f91b7fb6eb8c7cbbd8485a74602b3e61e05515`,
+identical TSV SHA-256
+`10b9533f0113bd80303dd59fe0df53c6bb2ddb609ca1912a62465e84093a0c37`.
+NEXT bounded offline step: classify the48 trailing-zero-retention rows against
+expression/provenance, associated width/scale, setting, sign and integral vs
+fractional shape, while preserving the80 exact-zero rows as a separate later
+foundation. Do not hook production or rerun SAME/native until retention has a
+non-regressing evidenced selector.
+
+Oct30 07:35UTC bounded OFFLINE trailing-zero-retention recovery COMPLETE; no
+product, test, native, Wine, or VM execution. All48 retained nonzero rows are
+FIXED OFF, span seven payloads/12 settings (33 core/15 literal-control), and
+share one finite-frontier discriminator: non-integral values retain their full
+value-associated scale, while integral values remain unpadded. No currently
+correct nonzero FIXED-OFF row has a shorter fractional spelling than its
+associated scale. Adding only that discriminator to the exact digit/precision
+replay reduces402 current mismatches per mode to80:322 corrections,0
+regressions,0 nonzero residuals. The retained80 are exactly the already
+separated exact-zero spellings. GNU and Clang TSVs are byte-identical. This is
+a bounded finite-frontier result, not a universal formatter/internal-call
+claim. Updated ignored replay evidence remains at
+`build/small-divisor-precision-frontier-replay1/`; report SHA-256
+`eeceb9c0bd31d532026af6188228b965b023d7a548836b90b9ca941be6557978`,
+identical TSV SHA-256
+`02fe5e4794251c964177f2f70783c1916fa78d266d14ddff2471ae502ced1a71`.
+NEXT bounded offline step: classify the80 exact-zero spellings by signed
+payload, FIXED, setting, associated width/scale and expected sign/leading-zero
+shape. Preserve them as a separate foundation and do not hook production or
+rerun SAME/native until the exact-zero selector also passes the full frontier
+with0 regressions.
+
+Oct30 08:35UTC bounded OFFLINE exact-zero recovery and combined frontier replay
+COMPLETE; no product, test, native, Wine, or VM execution. All80 retained rows
+are the negative-zero payload `8000000000000000`:40 FIXED OFF and40 FIXED ON,
+16 at each setting0/2/6/14/18. Native display normalizes the exact-zero sign to
+positive while preserving FIXED precision (`0`, `0.00`, `0.000000`,
+`0.00000000000000`, `0.000000000000000000`). Applying only that rule to the
+already evidenced digit/precision/trailing-zero model makes the complete2,450
+context replay exact:402 corrections per mode,0 candidate mismatches,0
+regressions. Positive-zero/currently-correct rows remain unchanged; this finite
+frontier does not authorize broader payload canonicalization. GNU and Clang
+TSVs are byte-identical. Updated ignored replay evidence remains at
+`build/small-divisor-precision-frontier-replay1/`; report SHA-256
+`15eeda830e3f7d4025b25433f0593f49ac3ce961a2afbbb2d748170d667f5a81`,
+identical TSV SHA-256
+`6c3dffd2bdd5ca59b580dc175353235c70609a99ba776685bab0c9dbd8b597db`.
+NEXT bounded implementation step: extract the exact finite conversion and
+metadata-aware FIXED/OFF selection into pure fail-closed internal display
+support with direct GNU/Clang fixture coverage. Keep it unused until the direct
+support gate passes; then integrate only the admitted value-associated Numeric
+display path and rerun SAME. Do not alter the shared generic formatter by an
+unscoped rule.
+
+Oct30 09:35UTC bounded UNUSED production display-support slice COMPLETE; no
+consumer integration, native, Wine, or VM execution. Added pure fail-closed
+`value_associated_numeric_display()` in
+`src/runtime/prg_numeric_value_display.h`: portable two-word exact binary64
+conversion, half-away rounding,15-digit cap, checked magnitude/metadata/setting
+bounds, associated-scale FIXED-OFF retention, integral trimming, rounded-zero
+sign/width rules and exact-zero sign normalization. It accepts only bounded
+Real metadata or bounded integral Integer metadata and remains unused. Added
+`test_prg_numeric_value_display_helper.cpp`, CMake registration and explicit
+complete/parallel-safe isolation audit. Direct GNU15 and Clang builds with
+`-Wall -Wextra -Wpedantic -Werror` each passed all2,450 frozen native display
+contexts plus fail-closed controls. Focused CMake/CTest passed the new support
+test and the existing small-divisor helper gate (2/2), with complete isolation
+labels. NEXT bounded step: review and integrate this support only at the
+metadata-bearing VFP9 Numeric display boundary (preserving COPPERFIN-mode and
+metadata-absent fallback), then run SAME before broader qualification. Do not
+apply the rule to every generic double formatter.
+
 Preserve all exact assertions: seven ORIGINAL CTests previously showed old six
 PASS/new fail across 6,920 descriptors, 320 signed-zero payloads, and 964
 displays (882 core/12 runtime/70 literal). Nonzero payload gaps are zero. The
