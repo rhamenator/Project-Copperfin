@@ -57,6 +57,9 @@ int main() {
     expect(!value_associated_numeric_display(
                2.5, {1U, 0U, PrgNumericStorage::integer}, 2U, false),
            "fractional Integer payload rejected");
+    expect(!value_associated_numeric_display(
+               1000000.0, {10U, 0U, PrgNumericStorage::integer}, 18U, true),
+           "scaled quotient wider than uint64 rejected");
 
     if (failures) return 1;
     std::cout << rows << " frozen value-associated Numeric displays and fail-closed controls passed\n";

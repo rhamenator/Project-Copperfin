@@ -363,6 +363,22 @@ was used. Hosted Linux/Windows/macOS qualification remains required on the
 exact PR head. NEXT: commit this checkpoint, open the PR, request Claude-first
 exact-head review, and let hosted CI provide the broad platform qualification.
 
+PR #7229 opened at signed+DCO head
+`2cd32797b3a82ad35e76c757d139c85f30e55740`; Claude-first review was requested
+and acknowledged. Oct30 12:50UTC, an actionable exact-head Codex review finding
+identified silent truncation when a two-word scaled quotient remained wider
+than64 bits after a right shift. The bounded repair rejects any remaining
+high-word bits before assembling the uint64 quotient, so this unsupported
+high-scale case fails closed to the existing consumer fallback. A direct
+regression covers the reported `1000000`/18-decimal Integer case. GNU15 and
+Clang21 Werror direct tests each pass all2,450 frozen contexts plus the new
+overflow control; registered helper CTest passes1/1 with complete isolation.
+A local runtime rebuild was stopped without claiming a result when the damaged
+Ninja log again expanded it into unrelated design-library compilation. NEXT:
+commit and push the signed+DCO review fix, verify its exact diff, request fresh
+Claude-first exact-head review, and require fresh hosted qualification before
+resolving the conversation or merging.
+
 Preserve all exact assertions: seven ORIGINAL CTests previously showed old six
 PASS/new fail across 6,920 descriptors, 320 signed-zero payloads, and 964
 displays (882 core/12 runtime/70 literal). Nonzero payload gaps are zero. The

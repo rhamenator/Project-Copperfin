@@ -62,6 +62,10 @@ inline std::optional<std::uint64_t> numeric_display_round_power_of_two(
             ? ((value.low >> 63U) & 1U) != 0U
             : ((value.high >> (high_shift - 1U)) & 1U) != 0U;
     } else if (right != 0U) {
+        // The exact quotient is wider than 64 bits whenever any high-word
+        // bit remains above the low-word window after the shift. Fail closed
+        // instead of silently discarding those significant bits.
+        if ((value.high >> right) != 0U) return std::nullopt;
         quotient = (value.high << (64U - right)) | (value.low >> right);
         at_least_half = ((value.low >> (right - 1U)) & 1U) != 0U;
     } else {
