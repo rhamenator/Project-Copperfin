@@ -492,15 +492,18 @@ prerequisite blocks pre-code requirements/helper/assertion/wiring. See
 [specific options and complete retained evidence](../../tests/fixtures/vfp9-listitem-column-numeric/numeric-origin-policy-gap.md).
 That owner-choice pause is historical: direct owner steering on 2026-10-15
 selects the wider Numeric compatibility prerequisite under #5611/#6776.
-Published-interface interventions establish decimal-place metadata as causal;
-the complete conversion formula remains unrecovered. See the
+Published-interface interventions establish decimal-place metadata as causal.
+The retained factorial/settings audit now recovers decimal quantization at the
+attached decimal count plus two followed by integer projection, explaining all
+1,816 first/repeat invocations without a binary tolerance. See the
 [prerequisite recovery](../../tests/fixtures/vfp9-listitem-column-numeric/metadata-foundation.md)
 and [bounded value-carrier map](../../tests/fixtures/vfp9-listitem-column-numeric/metadata-carrier-requirements.md).
 The first carrier slice only added optional value-owned attributes. A later
 bounded foundation now adds a distinct UNUSED supplied-column helper and direct
-fixture that admit exact integral payloads mapping to positive selectors only; every fractional
-Numeric remains fail-closed while the causal decimal-metadata formula is still
-unrecovered. No caller, allocation or public behavior changes. Consumers must
+fixture that preserve exact integral checked conversion and the recovered
+metadata-sensitive fractional formula. Missing/malformed fractional metadata
+remains fail-closed in VFP9 mode. No caller, allocation or public behavior
+changes. Consumers must
 rebuild against the changed C++ value layout; future conversion/wiring still
 requires operation-specific bounds, complete originals and safety evidence. No
 new hazard severity/status, Numeric/list family, independent-human or release

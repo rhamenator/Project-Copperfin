@@ -22,6 +22,12 @@ PrgValue attributed(double value, std::uint32_t decimals) {
     return result;
 }
 
+PrgValue integer_attributed(double value, std::uint32_t decimals) {
+    auto result = make_number_value(value);
+    result.numeric_metadata = PrgNumericMetadata{13U, decimals, PrgNumericStorage::integer};
+    return result;
+}
+
 void check(const PrgValue& value, Result modern, Result legacy, const char* label) {
     expect(checked_listitem_column_numeric_argument(value, NumericBehavior::copperfin) == modern,
         std::string("ListItem column COPPERFIN ") + label);
@@ -44,13 +50,27 @@ int main() {
     check(make_uint64_value(33), 33, 33, "exact unsigned");
     check(make_uint64_value(4294967329ULL), {}, 33, "exact unsigned alias");
 
-    // Deliberate fail-closed frontier: these are known native-valid values,
-    // but no fractional result is admitted before the complete metadata rule.
-    check(attributed(2.5, 1U), {}, {}, "ordinary fractional deferred");
+    // Native-backed decimal quantization: VFP9 rounds to the value-associated
+    // decimal count plus two before truncating. COPPERFIN remains direct truncation.
+    check(attributed(2.5, 1U), 2, 2, "ordinary fractional");
     const double near_one = 1.0 - 90.0 * std::ldexp(1.0, -53);
-    check(attributed(near_one, 2U), {}, {}, "near one decimal2 deferred");
-    check(attributed(near_one, 14U), {}, {}, "same bits decimal14 deferred");
+    check(attributed(near_one, 2U), {}, 1, "near one decimal2 quantized");
+    check(attributed(near_one, 14U), {}, {}, "same bits decimal14 retained");
+    const double near_two = 2.0 - 90.0 * std::ldexp(1.0, -53);
+    check(attributed(near_two, 2U), 1, 2, "near two decimal2 quantized");
+    check(attributed(near_two, 14U), 1, 1, "near two decimal14 retained");
+    const double near_nine = 9.0 - 563.0 * std::ldexp(1.0, -49);
+    check(attributed(near_nine, 2U), 8, 9, "near nine decimal2 quantized");
+    check(attributed(near_nine, 12U), 8, 8, "near nine decimal12 retained");
+    check(attributed(1.49, 2U), 1, 1, "one point four nine");
+    check(attributed(1.5, 1U), 1, 1, "one point five");
+    check(attributed(1.9, 1U), 1, 1, "one point nine");
+    check(attributed(2.9, 1U), 2, 2, "two point nine");
     check(attributed(0.9, 0U), {}, {}, "sub-one invalid");
+    check(attributed(2147483647.1, 1U), INT32_MAX, {}, "raw value above VFP9 ceiling");
+    check(make_number_value(2.5), 2, {}, "fraction without metadata fail-closed in VFP9");
+    check(integer_attributed(2.5, 1U), 2, {}, "fraction with integer storage fail-closed in VFP9");
+    check(attributed(2.5, 307U), 2, {}, "fraction beyond checked decimal range");
 
     auto typed_null = attributed(2.0, 0U);
     typed_null.is_null = true;
@@ -60,6 +80,6 @@ int main() {
     check(make_string_value("2"), {}, {}, "Character");
     check(make_currency_value(20000), {}, {}, "Currency");
 
-    std::cout << "ListItem supplied-column exact foundation passed\n";
+    std::cout << "ListItem supplied-column decimal conversion foundation passed\n";
     return 0;
 }

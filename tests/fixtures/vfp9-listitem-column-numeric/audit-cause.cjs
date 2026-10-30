@@ -10,6 +10,18 @@ const root = process.argv[2];
 const metadata = text => Object.fromEntries(text.split(';').map(part => part.split('=')));
 const documented = m => ({type:m.type, width:m.width, decimals:m.decimals, real:m.real, cw:m.cw});
 const noDecimals = m => ({type:m.type, width:m.width, real:m.real, cw:m.cw});
+const doubleFromBits = hex => Buffer.from(hex, 'hex').readDoubleBE(0);
+function modeledOutcome(row) {
+  const value = doubleFromBits(row.argument.real);
+  const decimalPlaces = Number.parseInt(row.argument.decimals, 16);
+  assert(decimalPlaces <= 18, 'retained diagnostic decimal range');
+  // All retained operands are positive. toFixed performs decimal
+  // quantization; Number then removes presentation-only trailing zeroes.
+  const quantized = Number(value.toFixed(decimalPlaces + 2));
+  const column = Math.trunc(quantized);
+  return column >= 1 && column <= 0x7fffffff
+    ? `0/C:id${row.id}c${column}` : '31/<not-called>';
+}
 function capture(phase, count) {
   const first = fs.readFileSync(path.join(root, `${phase}-first-results.txt`));
   assert.deepEqual(first, fs.readFileSync(path.join(root, `${phase}-repeat-results.txt`)));
@@ -67,7 +79,11 @@ for(const r of factorial.rows.values()) {
   const raw=lookup(factorial,r.kind,r.id,r.operand,'raw');
   if(v==='clone') {assert.equal(outcome(r),outcome(raw)); ++cloneControls;}
   if(v.startsWith('width')) {assert.equal(outcome(r),outcome(raw)); ++widthControls;}
+  assert.equal(outcome(r),modeledOutcome(r),
+    'round to value decimal places plus two, then truncate');
 }
+for(const r of settings.rows.values()) assert.equal(outcome(r),modeledOutcome(r),
+  'settings row follows attached-metadata conversion model');
 for(const kind of ['ListBox','ComboBox']) for(const id of ['11','22']) {
   const decimal=lookup(factorial,kind,id,'1-1E-14','raw');
   const power=lookup(factorial,kind,id,'1-90*2^(-53)','raw');
@@ -99,4 +115,5 @@ assert.equal(decimalPairs,48); assert.equal(widthControls,88); assert.equal(clon
 console.log(JSON.stringify({nativeDiagnosticOnly:true,factorialRows:748,settingsRows:160,
   sameBitsSameWidthSameCWDecimalOnlyOutcomePairs:decimalPairs,widthOnlyControls:widthControls,
   cloneControls,factorialRawSHA256:factorial.sha256,settingsRawSHA256:settings.sha256,
-  conclusion:'The attached decimal-place descriptor causally changes near-integer ListItem column coercion; display width and current SET DECIMALS at read time do not explain these controlled results. No complete conversion formula or product fix claimed.'}));
+  conversionModel:'round the Numeric value to its attached decimal-place count plus two, then truncate',
+  conclusion:'The conversion model explains every retained factorial and settings row; display width and current SET DECIMALS at read time do not explain the controlled outcomes. Product wiring remains separately gated.'}));

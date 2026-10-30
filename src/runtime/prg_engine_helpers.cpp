@@ -6,6 +6,7 @@
 
 #include "localized_text.h"
 #include "prg_compatibility_error.h"
+#include "prg_engine_numeric_functions.h"
 
 #include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/platform/path.h"
@@ -2822,14 +2823,14 @@ std::optional<std::int32_t> checked_listitem_numeric_argument(
 }
 
 // RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001 / VR-5611-LISTITEM-COLUMN-NUMERIC-001.
-// The retained native evidence proves decimal-place metadata is causal for
-// fractional values near an integer, but does not yet recover the complete
-// conversion formula. Keep this first helper deliberately fail-closed: exact
-// integral payloads are unambiguous, while every fractional Numeric (including
-// ordinary 2.5 and the same-bits/different-metadata near-one pair) is deferred.
-// This helper is UNUSED by production until that gap and both original-suite
-// gates are complete. Exact64 and NaN/nonfinite behavior derives from the
-// #5611/#6776 checked-conversion parent, not unsupported native syntax.
+// Retained factorial/settings interventions recover VFP9 fractional coercion
+// as decimal quantization at the value-associated decimal count plus two,
+// followed by integer projection. This is a decimal conversion rule, not a
+// binary epsilon. Width and SET DECIMALS at read time are controlled out.
+// Metadata-free or non-Real fractional payloads remain fail-closed in VFP9
+// mode. This helper stays UNUSED by production until both original-suite gates
+// complete. Exact64 and NaN/nonfinite behavior derives from the #5611/#6776
+// checked-conversion parent, not unsupported native syntax.
 std::optional<std::int32_t> checked_listitem_column_numeric_argument(
     const PrgValue& value, const NumericBehavior behavior) {
     if (value.is_null || (value.kind != PrgValueKind::number &&
@@ -2838,16 +2839,28 @@ std::optional<std::int32_t> checked_listitem_column_numeric_argument(
     }
     constexpr auto upper = std::numeric_limits<std::int32_t>::max();
     if (value.kind == PrgValueKind::number) {
-        if (!std::isfinite(value.number_value) ||
-            std::trunc(value.number_value) != value.number_value) {
-            return std::nullopt;
-        }
+        if (!std::isfinite(value.number_value)) return std::nullopt;
         if (behavior != NumericBehavior::vfp9) {
-            return value.number_value >= 1.0 && value.number_value <= static_cast<double>(upper)
-                ? std::optional<std::int32_t>(static_cast<std::int32_t>(value.number_value))
+            const double projected = std::trunc(value.number_value);
+            return projected >= 1.0 && projected <= static_cast<double>(upper)
+                ? std::optional<std::int32_t>(static_cast<std::int32_t>(projected))
                 : std::nullopt;
         }
         if (value.number_value > static_cast<double>(upper)) return std::nullopt;
+        if (std::trunc(value.number_value) != value.number_value) {
+            if (!value.numeric_metadata.has_value() ||
+                value.numeric_metadata->storage != PrgNumericStorage::real ||
+                value.numeric_metadata->decimal_places > 306U) {
+                return std::nullopt;
+            }
+            const auto quantized = round_decimal_value_checked(
+                value.number_value, static_cast<int>(value.numeric_metadata->decimal_places + 2U));
+            if (!quantized.has_value()) return std::nullopt;
+            const auto projected = vfp9_numeric_to_int32(make_number_value(*quantized));
+            return projected >= 1 && projected <= upper
+                ? std::optional<std::int32_t>(static_cast<std::int32_t>(projected))
+                : std::nullopt;
+        }
     }
     if (behavior == NumericBehavior::vfp9) {
         const auto projected = vfp9_numeric_to_int32(value);

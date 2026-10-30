@@ -6130,7 +6130,7 @@ foreach(addlistitem_column_mode IN ITEMS COPPERFIN VFP9)
     endforeach()
 endforeach()
 # RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001 / VR-5611-LISTITEM-COLUMN-NUMERIC-001.
-# Direct-only fail-closed helper foundation; no public caller is wired yet.
+# Direct-only checked decimal-conversion foundation; no public caller is wired yet.
 copperfin_add_test(test_prg_engine_listitem_column_numeric cf_xbase_runtime
     test_prg_engine_listitem_column_numeric.cpp
     prg_engine_test_support.cpp

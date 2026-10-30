@@ -100,6 +100,22 @@ checks the documented Numeric fields, while retaining every original byte.
 These are native diagnostics, not full Copperfin regression/acceptance,
 system isolation, independent-human assurance or release qualification.
 
+## 2026-10-30 retained-evidence formula recovery
+
+The earlier text above accurately records that the 2026-10-15 diagnostic did
+not then claim a complete conversion formula. The bounded implementation
+continuation subsequently tested one decimal rule against every retained row:
+round the Numeric value to its attached decimal-place count plus two, then
+truncate to the column selector. The updated `audit-cause.cjs` verifies that
+model against all 748 factorial and 160 settings rows in each byte-identical
+first/repeat capture (1,816 native invocations total). It returns zero with no
+mismatch. This is decimal quantization, not an inferred binary epsilon.
+
+The still-unwired helper and its direct GNU/Clang test now implement that
+recovered rule with checked metadata/range containment. Complete original-suite
+and caller gates remain open; this addendum is not public-runtime acceptance or
+parent/hazard/release closure.
+
 ## Reproduction and provenance boundaries
 
 The first-party cause-probe.c is a native-only32-bit FLL diagnostic using

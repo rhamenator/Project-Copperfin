@@ -14,11 +14,12 @@ as causal for the near-integer discrepancy](cause-established.md). Ordinary2.5
 reads column2. The owner requested diagnosis, not implementation or automation
 resumption; earlier unknown-cause statements below are historical.
 
-Current continuation: owner product/scope choice required under
-[#7189](https://github.com/rhamenator/Project-Copperfin/issues/7189); see
-[repeatable same-bits native counterexamples and viable options](numeric-origin-policy-gap.md).
-The earlier selection/recovery checkpoint below is retained history, not a
-claim that the newly demonstrated native origin distinction is resolved.
+Current continuation: the owner selected the metadata-compatible path under
+[#7189](https://github.com/rhamenator/Project-Copperfin/issues/7189). The
+retained factorial/settings audit now recovers the conversion formula, and the
+bounded helper implements it without caller wiring; see
+[unused-helper foundation](unused-helper-phase.md). The earlier choice and
+selection/recovery checkpoints below are retained history.
 
 Selection-only checkpoint from origin/main
 b6d1a7634e56435ad3326d92f13efa3f4fe241d3, after PR7187 merge and owned cleanup.
