@@ -496,11 +496,15 @@ Published-interface interventions establish decimal-place metadata as causal;
 the complete conversion formula remains unrecovered. See the
 [prerequisite recovery](../../tests/fixtures/vfp9-listitem-column-numeric/metadata-foundation.md)
 and [bounded value-carrier map](../../tests/fixtures/vfp9-listitem-column-numeric/metadata-carrier-requirements.md).
-The first carrier slice only adds optional value-owned attributes, not producers,
-display or index interpretation, allocation or casts. Consumers must rebuild
-against the changed C++ value layout; future conversions still require
-operation-specific bounds/safety evidence. No new hazard severity/status,
-Numeric/list family, independent-human or release closure is claimed.
+The first carrier slice only added optional value-owned attributes. A later
+bounded foundation now adds a distinct UNUSED supplied-column helper and direct
+fixture that admit exact integral payloads mapping to positive selectors only; every fractional
+Numeric remains fail-closed while the causal decimal-metadata formula is still
+unrecovered. No caller, allocation or public behavior changes. Consumers must
+rebuild against the changed C++ value layout; future conversion/wiring still
+requires operation-specific bounds, complete originals and safety evidence. No
+new hazard severity/status, Numeric/list family, independent-human or release
+closure is claimed. See the [unused-helper phase](../../tests/fixtures/vfp9-listitem-column-numeric/unused-helper-phase.md).
 
 ## Bounded AddListItem missing-ID numeric-column linkage
 

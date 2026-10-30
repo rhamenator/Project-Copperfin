@@ -399,6 +399,12 @@ std::optional<std::int32_t> checked_indextoitemid_numeric_argument(const PrgValu
 // checked signed32 default; explicit both-sign low32/huge0, NaN containment.
 std::optional<std::int32_t> checked_itemidtoindex_numeric_argument(const PrgValue& value, NumericBehavior behavior);
 std::optional<std::int32_t> checked_listitem_numeric_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001: exact/integral fail-closed
+// foundation for the supplied second selector. Fractional Numeric values stay
+// unsupported until the metadata-dependent native conversion is recovered.
+// UNUSED by production pending the complete helper/original-suite gate.
+std::optional<std::int32_t> checked_listitem_column_numeric_argument(
+    const PrgValue& value, NumericBehavior behavior);
 // RQ-CF-PRG-LIST-INDEX-NUMERIC-001: independently recovered display-row READ.
 // Distinct operation policy; UNUSED through BOTH full original suites.
 std::optional<std::int32_t> checked_list_index_numeric_argument(const PrgValue& value, NumericBehavior behavior);

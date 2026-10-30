@@ -2821,6 +2821,50 @@ std::optional<std::int32_t> checked_listitem_numeric_argument(
         ? std::optional<std::int32_t>(static_cast<std::int32_t>(exact)) : std::nullopt;
 }
 
+// RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001 / VR-5611-LISTITEM-COLUMN-NUMERIC-001.
+// The retained native evidence proves decimal-place metadata is causal for
+// fractional values near an integer, but does not yet recover the complete
+// conversion formula. Keep this first helper deliberately fail-closed: exact
+// integral payloads are unambiguous, while every fractional Numeric (including
+// ordinary 2.5 and the same-bits/different-metadata near-one pair) is deferred.
+// This helper is UNUSED by production until that gap and both original-suite
+// gates are complete. Exact64 and NaN/nonfinite behavior derives from the
+// #5611/#6776 checked-conversion parent, not unsupported native syntax.
+std::optional<std::int32_t> checked_listitem_column_numeric_argument(
+    const PrgValue& value, const NumericBehavior behavior) {
+    if (value.is_null || (value.kind != PrgValueKind::number &&
+        value.kind != PrgValueKind::int64 && value.kind != PrgValueKind::uint64)) {
+        return std::nullopt;
+    }
+    constexpr auto upper = std::numeric_limits<std::int32_t>::max();
+    if (value.kind == PrgValueKind::number) {
+        if (!std::isfinite(value.number_value) ||
+            std::trunc(value.number_value) != value.number_value) {
+            return std::nullopt;
+        }
+        if (behavior != NumericBehavior::vfp9) {
+            return value.number_value >= 1.0 && value.number_value <= static_cast<double>(upper)
+                ? std::optional<std::int32_t>(static_cast<std::int32_t>(value.number_value))
+                : std::nullopt;
+        }
+        if (value.number_value > static_cast<double>(upper)) return std::nullopt;
+    }
+    if (behavior == NumericBehavior::vfp9) {
+        const auto projected = vfp9_numeric_to_int32(value);
+        return projected >= 1 && projected <= upper
+            ? std::optional<std::int32_t>(static_cast<std::int32_t>(projected))
+            : std::nullopt;
+    }
+    if (value.kind == PrgValueKind::int64) {
+        return value.int64_value >= 1 && value.int64_value <= upper
+            ? std::optional<std::int32_t>(static_cast<std::int32_t>(value.int64_value))
+            : std::nullopt;
+    }
+    return value.uint64_value >= 1U && value.uint64_value <= static_cast<std::uint64_t>(upper)
+        ? std::optional<std::int32_t>(static_cast<std::int32_t>(value.uint64_value))
+        : std::nullopt;
+}
+
 // RQ-CF-PRG-LIST-INDEX-NUMERIC-001 / VR-5611-LIST-INDEX-NUMERIC-001.
 // Independent List display-row probe, not a ListItem identity policy oracle.
 // UNUSED by production through BOTH complete original compiler suites.
