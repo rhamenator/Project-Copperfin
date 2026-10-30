@@ -1,1 +1,1 @@
-- 2026-10-30: Recover the metadata-sensitive Numeric conversion model for the still-unwired ListItem supplied-column helper, with retained native-evidence audit and checked fractional containment.
+- 2026-10-30: Recover the metadata-sensitive Numeric conversion model for the still-unwired ListItem supplied-column helper, with retained native-evidence audit, checked fractional containment, and frozen original-before-wire public tests.

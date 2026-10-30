@@ -18,7 +18,8 @@ Current continuation: the owner selected the metadata-compatible path under
 [#7189](https://github.com/rhamenator/Project-Copperfin/issues/7189). The
 retained factorial/settings audit now recovers the conversion formula, and the
 bounded helper implements it without caller wiring; see
-[unused-helper foundation](unused-helper-phase.md). The earlier choice and
+[unused-helper foundation](unused-helper-phase.md) and the
+[frozen safe-public original phase](frozen-original-phase.md). The earlier choice and
 selection/recovery checkpoints below are retained history.
 
 Selection-only checkpoint from origin/main

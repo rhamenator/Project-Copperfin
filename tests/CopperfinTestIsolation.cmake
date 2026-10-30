@@ -1186,6 +1186,14 @@ function(copperfin_configure_native_test_isolation)
         # RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001: direct-only deterministic
         # helper fixture; no child/network/filesystem/external resources.
         test_prg_engine_listitem_column_numeric
+        # RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001 public originals: generated
+        # PRGs/workareas/private unique temps/scoped locale; no child/network/
+        # samples/external resources. Conservative serial scheduling.
+        test_prg_engine_listitem_column_numeric_public
+        test_prg_engine_listitem_column_numeric_public_copperfin_session1
+        test_prg_engine_listitem_column_numeric_public_copperfin_session2
+        test_prg_engine_listitem_column_numeric_public_vfp9_session1
+        test_prg_engine_listitem_column_numeric_public_vfp9_session2
         # RQ-CF-PRG-ADDLISTITEM-NEW-COLUMN-NUMERIC-001 source audit: private
         # generated PRGs/workareas/unique owned temps/scoped locale; no child,
         # network, samples or external resources. Conservative SERIAL, not DV.

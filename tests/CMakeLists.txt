@@ -6135,6 +6135,17 @@ copperfin_add_test(test_prg_engine_listitem_column_numeric cf_xbase_runtime
     test_prg_engine_listitem_column_numeric.cpp
     prg_engine_test_support.cpp
 )
+copperfin_add_test(test_prg_engine_listitem_column_numeric_public cf_xbase_runtime
+    test_prg_engine_listitem_column_numeric_public.cpp
+    prg_engine_test_support.cpp
+)
+foreach(listitem_column_mode IN ITEMS COPPERFIN VFP9)
+    string(TOLOWER "${listitem_column_mode}" listitem_column_mode_lower)
+    foreach(listitem_column_session IN ITEMS 1 2)
+        add_test(NAME test_prg_engine_listitem_column_numeric_public_${listitem_column_mode_lower}_session${listitem_column_session}
+            COMMAND $<TARGET_FILE:test_prg_engine_listitem_column_numeric_public> ${listitem_column_mode} ${listitem_column_session})
+    endforeach()
+endforeach()
 # RQ-CF-PRG-ADDLISTITEM-NEW-COLUMN-NUMERIC-001 / VR-5611-ADDLISTITEM-NEW-COLUMN-NUMERIC-001/002.
 # Missing-ID THIRD column only. Safe-original public shards; PRE-WIRE-authored
 # hostile vectors are fixed-only, NEVER old-caller execution qualification.
