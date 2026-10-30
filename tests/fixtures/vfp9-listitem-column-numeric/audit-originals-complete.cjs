@@ -18,18 +18,18 @@ function auditRaw(raw,inventory){
   const passed=line.match(/^(\d+): ListItem supplied-column decimal conversion foundation passed$/);if(passed)directPass.push(starts.get(passed[1]));
  }
  flush();
- const subjects=lines.map(l=>l.match(/^\s*(\d+)\/100 Test\s+#(\d+):\s+(\S+)\s+\.{3,}\s*(Passed|\*\*\*Failed)\s+[\d.]+ sec$/)).filter(Boolean);
+ const subjects=lines.map(l=>l.match(/^\s*(\d+)\/106 Test\s+#(\d+):\s+(\S+)\s+\.{3,}\s*(Passed|\*\*\*Failed)\s+[\d.]+ sec$/)).filter(Boolean);
  const names=subjects.map(m=>m[3]).sort(),failed=subjects.filter(m=>m[4]==='***Failed').map(m=>m[3]).sort();
  const prior=names.filter(n=>!current.includes(n)),expectedPrior=inventory.filter(n=>!current.includes(n));
  const unrelated=failures.filter(f=>!shards.includes(f.subject)||!/^ListItem COLUMN /.test(f.text));
  const diagnostics=lines.filter(l=>/AddressSanitizer|UndefinedBehaviorSanitizer|runtime error:|SUMMARY:.*Sanitizer|LeakSanitizer/.test(l));
  const errors=[];
- if(inventory.length!==100||new Set(inventory).size!==100||expectedPrior.length!==94)errors.push('configured inventory100/prior94');
- if(subjects.length!==100||new Set(names).size!==100||!same(names,inventory))errors.push('complete unique execution100');
- if(startCount!==100||starts.size!==100||subjects.some(m=>starts.get(m[2])!==m[3]))errors.push('unique starts match every result');
- if(!same(subjects.map(m=>Number(m[1])),Array.from({length:100},(_,i)=>i+1)))errors.push('complete ordered CTest ordinals');
- if(!same(prior,expectedPrior)||subjects.filter(m=>expectedPrior.includes(m[3])).some(m=>m[4]!=='Passed'))errors.push('all prior94 must pass');
- if(!same(failed,shards)||!/^96% tests passed, 4 tests failed out of 100$/m.test(raw))errors.push('only four public shards fail');
+ if(inventory.length!==106||new Set(inventory).size!==106||expectedPrior.length!==100)errors.push('configured inventory106/prior100');
+ if(subjects.length!==106||new Set(names).size!==106||!same(names,inventory))errors.push('complete unique execution106');
+ if(startCount!==106||starts.size!==106||subjects.some(m=>starts.get(m[2])!==m[3]))errors.push('unique starts match every result');
+ if(!same(subjects.map(m=>Number(m[1])),Array.from({length:106},(_,i)=>i+1)))errors.push('complete ordered CTest ordinals');
+ if(!same(prior,expectedPrior)||subjects.filter(m=>expectedPrior.includes(m[3])).some(m=>m[4]!=='Passed'))errors.push('all prior100 must pass');
+ if(!same(failed,shards)||!/^96% tests passed, 4 tests failed out of 106$/m.test(raw))errors.push('only four public shards fail');
  if(!subjects.some(m=>m[3]===direct&&m[4]==='Passed')||!subjects.some(m=>m[3]===prefix&&m[4]==='Passed'))errors.push('direct and bare inventory pass');
  const wanted=[{subject:prefix,public:0},...shards.map(subject=>({subject,public:92}))].sort((a,b)=>a.subject.localeCompare(b.subject));
  if(!same(counters.sort((a,b)=>String(a.subject).localeCompare(String(b.subject))),wanted)||!same(directPass,[direct]))errors.push('direct/bare/four shard counters');
@@ -40,7 +40,7 @@ function auditRaw(raw,inventory){
 }
 function auditEvidence(evidence){
  const fixture='tests/fixtures/vfp9-listitem-column-numeric';
- const inventory=listNames(fs.readFileSync(fixture+'/pre-freeze-original100-test-names.txt','utf8'));
+ const inventory=listNames(fs.readFileSync(fixture+'/pre-freeze-original106-test-names.txt','utf8'));
  const manifest=fs.readFileSync(fixture+'/frozen-original-inputs.sha256','utf8');
  assert.strictEqual(manifest,fs.readFileSync(path.join(evidence,'frozen-original-inputs.sha256'),'utf8'),'frozen manifest copies');
  const entries=manifest.trim().split('\n').map(l=>{const m=l.match(/^([a-f0-9]{64})  (.+)$/);assert(m,'manifest syntax');return {hash:m[1],file:m[2]};});
@@ -65,4 +65,4 @@ function auditEvidence(evidence){
  return {results,identicalSelectedFullFailures:identical,complete:results.every(r=>r.complete)&&identical};
 }
 module.exports={auditRaw,auditEvidence};
-if(require.main===module){try{assert.strictEqual(process.argv.length,3,'Expected completed original100 evidence directory');const audit=auditEvidence(process.argv[2]);for(const r of audit.results){const {failures,...summary}=r;console.log(JSON.stringify(summary));for(const failure of failures)console.log(JSON.stringify({compiler:r.compiler,...failure}));}console.log(JSON.stringify({complete:audit.complete,identicalSelectedFullFailures:audit.identicalSelectedFullFailures,note:'BOTH completed original100 audit only; failures are not fixed acceptance.'}));process.exitCode=audit.complete?0:1;}catch(error){console.error(error.stack);process.exitCode=1;}}
+if(require.main===module){try{assert.strictEqual(process.argv.length,3,'Expected completed original106 evidence directory');const audit=auditEvidence(process.argv[2]);for(const r of audit.results){const {failures,...summary}=r;console.log(JSON.stringify(summary));for(const failure of failures)console.log(JSON.stringify({compiler:r.compiler,...failure}));}console.log(JSON.stringify({complete:audit.complete,identicalSelectedFullFailures:audit.identicalSelectedFullFailures,note:'BOTH completed original106 audit only; failures are not fixed acceptance.'}));process.exitCode=audit.complete?0:1;}catch(error){console.error(error.stack);process.exitCode=1;}}

@@ -28,8 +28,8 @@ original failure evidence, not acceptance. Both complete compiler-wide
 original suites, their full raw/counter/source-hash audit and caller wiring
 remain future gates.
 
-The exact original-before-wire suite is frozen as 100 unique CTest subjects:
-94 prior controls plus the unused direct helper, bare inventory and four public
+The exact original-before-wire suite is frozen as 106 unique CTest subjects:
+100 prior controls plus the unused direct helper, bare inventory and four public
 mode/session shards. `frozen-original-inputs.sha256` covers the runtime public
 headers and PRG engine implementation, all PRG-engine test sources, CMake and
 isolation registrations, and the original driver/auditors. The deliberately

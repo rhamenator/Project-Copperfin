@@ -13,7 +13,7 @@ trap 'rm -f "$paths"' EXIT
         "$fixture/audit-originals-complete.cjs" \
         "$fixture/audit-test-metadata.cjs" \
         "$fixture/freeze-original-inputs.sh" \
-        "$fixture/pre-freeze-original100-test-names.txt" \
+        "$fixture/pre-freeze-original106-test-names.txt" \
         "$fixture/run-originals.sh"
 } | LC_ALL=C sort -u > "$paths"
 while IFS= read -r file; do
