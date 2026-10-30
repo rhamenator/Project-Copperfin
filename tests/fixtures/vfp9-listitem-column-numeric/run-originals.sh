@@ -7,6 +7,7 @@ cd /home/rich/.codex/worktrees/listitem-column-read-5611/Project-Copperfin || ex
 evidence=build/listitem-column-native
 mkdir -p "$evidence/tmp"
 chmod 700 "$evidence/tmp"
+cp tests/fixtures/vfp9-listitem-column-numeric/frozen-original-inputs.sha256 "$evidence/frozen-original-inputs.sha256"
 export TMPDIR=/home/rich/.codex/worktrees/listitem-column-read-5611/Project-Copperfin/build/listitem-column-native/tmp
 export ASAN_OPTIONS=detect_leaks=0
 export UBSAN_OPTIONS=print_stacktrace=1
