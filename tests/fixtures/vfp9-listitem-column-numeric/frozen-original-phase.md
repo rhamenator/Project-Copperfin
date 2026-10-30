@@ -27,3 +27,11 @@ fails only as expected against the still-unwired legacy caller; this is frozen
 original failure evidence, not acceptance. Both complete compiler-wide
 original suites, their full raw/counter/source-hash audit and caller wiring
 remain future gates.
+
+The exact original-before-wire suite is frozen as 100 unique CTest subjects:
+94 prior controls plus the unused direct helper, bare inventory and four public
+mode/session shards. `frozen-original-inputs.sha256` covers the runtime public
+headers and PRG engine implementation, all PRG-engine test sources, CMake and
+isolation registrations, and the original driver/auditors. The deliberately
+broad source inventory prevents an unrelated PRG test or included runtime file
+from changing between the two compiler executions without detection.
