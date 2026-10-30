@@ -320,6 +320,30 @@ metadata-bearing VFP9 Numeric display boundary (preserving COPPERFIN-mode and
 metadata-absent fallback), then run SAME before broader qualification. Do not
 apply the rule to every generic double formatter.
 
+Support checkpoint is signed commit
+`8800b9ee29b0778a27b897c0521b4b7086a604ad` (good owner EDDSA signature),
+pushed to `origin/fix/numeric-small-divisor-5611`. The only remaining tracked
+worktree delta is the previously retained two-file consumer wiring; no PR is
+open yet.
+
+Oct30 11:15UTC bounded metadata-bearing display integration/SAME slice
+COMPLETE; no native, Wine, or VM execution. The parser's proven-constant
+division path now selects the independently frozen small-divisor intrinsic,
+and `format_value_for_display()` consumes the exact support only for values
+that carry admitted Numeric metadata. Metadata-absent and out-of-frontier
+values retain the generic formatter fallback; the documented value-associated
+display contract is preserved in both COPPERFIN and VFP9 numeric-conversion
+modes. Existing predecessor fixtures were strengthened in place for `5/0.5`
+and `(1/3)/(1/3)` while the two unadmitted controls remain unknown. The focused
+five-test runtime/helper set passed 5/5. The exact prior eight-test SAME gate
+plus the new display-helper test passed 9/9 with complete isolation labels.
+`git diff --check` passed. Ninja emitted a recoverable premature-log warning;
+the two initially absent helper executables were built explicitly and the
+complete 9/9 gate was rerun clean. NEXT bounded step: record this checkpoint
+in a signed commit, push it, then run the named broader hosted qualification
+before opening a PR and requesting Claude-first exact-head review. No PR is
+open yet.
+
 Preserve all exact assertions: seven ORIGINAL CTests previously showed old six
 PASS/new fail across 6,920 descriptors, 320 signed-zero payloads, and 964
 displays (882 core/12 runtime/70 literal). Nonzero payload gaps are zero. The

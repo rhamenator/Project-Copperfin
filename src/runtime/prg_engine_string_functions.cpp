@@ -7,6 +7,7 @@
 #include "prg_engine_helpers.h"
 #include "localized_text.h"
 #include "prg_compatibility_error.h"
+#include "prg_numeric_value_display.h"
 
 #include <algorithm>
 #include <cmath>
@@ -216,6 +217,18 @@ std::string format_value_for_display(
 
     const std::string fixed_setting = normalize_identifier(trim_copy(set_callback("FIXED")));
     const bool fixed = fixed_setting == "on" || fixed_setting == "true" || fixed_setting == "yes" || fixed_setting == "1";
+
+    // RQ-CF-PRG-NUMERIC-VALUE-DISPLAY-001: a value-associated Numeric carries
+    // its own width/scale contract. This documented legacy behavior applies in
+    // both numeric-conversion modes; fail closed to the generic formatter when
+    // the value or descriptor is outside the independently frozen frontier.
+    if (value.numeric_metadata) {
+        if (auto associated = value_associated_numeric_display(
+                value.number_value, *value.numeric_metadata,
+                static_cast<unsigned>(decimals), fixed)) {
+            return apply_numeric_picture_symbols(std::move(*associated), true, false, set_callback);
+        }
+    }
 
     std::ostringstream stream;
     stream.imbue(std::locale::classic());

@@ -6,6 +6,7 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "fixtures/vfp9-numeric-division-context/constant-public-expected.h"
 #include "fixtures/vfp9-numeric-division-context/nonwhole-timing-expected.h"
+#include "fixtures/vfp9-numeric-division-context/small-divisor-public-expected.h"
 
 #include <bit>
 #include <chrono>
@@ -109,8 +110,15 @@ int main() {
                                label + " native bits", bitFailures);
                     }
                     expect(newlyAdmitted == 3, context + " all three old controls strengthened", controlFailures);
+                    const auto smallDivisor = session.evaluate_watch_expression("5/0.5");
+                    expect(smallDivisor.ok && smallDivisor.value.kind == PrgValueKind::number &&
+                               !smallDivisor.value.is_null &&
+                               smallDivisor.value.numeric_metadata ==
+                                   copperfin::test::native_small_divisor_rows[0].metadata[d] &&
+                               std::bit_cast<std::uint64_t>(smallDivisor.value.number_value) ==
+                                   copperfin::test::native_small_divisor_rows[0].bits,
+                           context + " superseded small-divisor control strengthened", controlFailures);
                     for (const auto expression : {
-                             "5/0.5",
                              "1E300/iTwo", "iFive/(1E300)", "(iFive*2)/iTwo",
                              "((5/2)*1)/iTwo", "((5/2)+0)/iTwo", "2^(5/2)/iTwo"}) {
                         const auto result = session.evaluate_watch_expression(expression);

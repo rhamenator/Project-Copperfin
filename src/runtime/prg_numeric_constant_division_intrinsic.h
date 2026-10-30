@@ -90,8 +90,8 @@ inline std::optional<ConstantDivisionIntrinsicResult> constant_nonwhole_division
 
 // RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-SMALL-DIVISOR-001:
 // fixtures/vfp9-numeric-division-context/small-divisor-recovery.md.
-// This pure, currently unused support extends only the independently frozen
-// finite literal-derived frontier. The caller must prove constant-node origin;
+// This pure support extends only the independently frozen finite
+// literal-derived frontier. The caller must prove constant-node origin;
 // zero/nonfinite/magnitude/metadata and Integer bounds remain fail-closed.
 inline std::optional<ConstantDivisionIntrinsicResult> constant_small_divisor_intrinsic(
     const PrgValue& left, const PrgValue& right, double quotient,
