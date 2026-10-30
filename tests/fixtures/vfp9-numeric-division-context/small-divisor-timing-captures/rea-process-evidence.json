@@ -1,0 +1,1818 @@
+{
+  "evidence_id": "ev_fd4b732a00f0417c8dff284784201267982a63ece6f5e3d19b008c6098513f39",
+  "subject": null,
+  "provider": {
+    "id": "rea-process",
+    "name": "REA process capture",
+    "version": "3"
+  },
+  "analysis_profile": null,
+  "predicate_type": "rea.process-capture",
+  "operation": "capture_process_scenario",
+  "parameters": {
+    "executable_name": "bash",
+    "argument_count": 2,
+    "event_count": 0,
+    "filesystem_observation_path_count": 1,
+    "normalization": {
+      "paths": false,
+      "pids": true,
+      "ports": true,
+      "time_bucket_ms": 10,
+      "patterns": []
+    }
+  },
+  "raw_result": null,
+  "normalized_result": {
+    "manifest": {
+      "rea_version": "6.5.0",
+      "provider_version": "3",
+      "platform": "linux",
+      "architecture": "x64",
+      "pty_backend": "node-pty",
+      "started_at": "2026-10-18T10:31:18.281Z",
+      "completed_at": "2026-10-18T10:31:34.822Z",
+      "scenario": {
+        "executable": "/bin/bash",
+        "arguments": [
+          "-c",
+          "set -u\nsha256sum -c build/small-divisor-native/timing-captures/pre-capture.sha256 > build/small-divisor-native/timing-captures/source-check-before.log || exit 74\nfor task_native_run in first repeat; do\n cat /proc/pressure/io > build/small-divisor-native/timing-captures/\"$task_native_run\"-io-before.txt\n awk '/^full / {split($2,a,\"=\"); split($3,b,\"=\"); exit !(a[2] < 1 && b[2] < 1)}' build/small-divisor-native/timing-captures/\"$task_native_run\"-io-before.txt || exit 75\n date -u +%FT%TZ > build/small-divisor-native/timing-captures/\"$task_native_run\"-start.utc\n nice -n 10 /home/rich/bin/vfp9-probe tests/fixtures/vfp9-numeric-division-context/small-divisor-timing.prg --result build/small-divisor-native/timing-results.txt > build/small-divisor-native/timing-captures/\"$task_native_run\".out 2> build/small-divisor-native/timing-captures/\"$task_native_run\".stderr\n task_probe_rc=$?\n printf '%s\\n' \"$task_probe_rc\" > build/small-divisor-native/timing-captures/\"$task_native_run\".status\n if [ \"$task_probe_rc\" -ne 0 ]; then exit \"$task_probe_rc\"; fi\n cp build/small-divisor-native/timing-results.txt build/small-divisor-native/timing-captures/\"$task_native_run\"-results.txt\n cat /proc/pressure/io > build/small-divisor-native/timing-captures/\"$task_native_run\"-io-after.txt\n date -u +%FT%TZ > build/small-divisor-native/timing-captures/\"$task_native_run\"-end.utc\n sha256sum -c build/small-divisor-native/timing-captures/pre-capture.sha256 > build/small-divisor-native/timing-captures/source-check-after-\"$task_native_run\".log || exit 74\ndone\nwc -c build/small-divisor-native/timing-captures/first-results.txt build/small-divisor-native/timing-captures/repeat-results.txt\ncat build/small-divisor-native/timing-captures/first.status build/small-divisor-native/timing-captures/repeat.status\n"
+        ],
+        "working_directory": "/home/rich/.codex/worktrees/numeric-small-divisor-5611/Project-Copperfin",
+        "environment": {},
+        "filesystem_observation_paths": [
+          "/home/rich/.codex/worktrees/numeric-small-divisor-5611/Project-Copperfin/build/small-divisor-native/timing-captures"
+        ],
+        "terminal": {
+          "columns": 100,
+          "rows": 24,
+          "scrollback": 100
+        },
+        "events": [],
+        "timeout_ms": 60000,
+        "idle_timeout_ms": 30000,
+        "settle_ms": 1000,
+        "limits": {
+          "output_bytes": 200000,
+          "files": 40,
+          "file_bytes": 10000000,
+          "processes": 60,
+          "filesystem_depth": 16
+        },
+        "normalization": {
+          "paths": false,
+          "pids": true,
+          "ports": true,
+          "time_bucket_ms": 10,
+          "patterns": []
+        },
+        "executable_sha256": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd"
+      },
+      "comparison_contract": {
+        "working_directory": "/home/rich/.codex/worktrees/numeric-small-divisor-5611/Project-Copperfin",
+        "environment": {},
+        "ambient_environment": "unknown",
+        "filesystem_observation_paths": [
+          "/home/rich/.codex/worktrees/numeric-small-divisor-5611/Project-Copperfin/build/small-divisor-native/timing-captures"
+        ],
+        "terminal": {
+          "columns": 100,
+          "rows": 24,
+          "scrollback": 100
+        },
+        "events": [],
+        "timeout_ms": 60000,
+        "idle_timeout_ms": 30000,
+        "settle_ms": 1000,
+        "limits": {
+          "output_bytes": 200000,
+          "files": 40,
+          "file_bytes": 10000000,
+          "processes": 60,
+          "filesystem_depth": 16
+        },
+        "normalization": {
+          "paths": false,
+          "pids": true,
+          "ports": true,
+          "time_bucket_ms": 10,
+          "patterns": []
+        },
+        "port_normalization_version": "contextual-endpoints-v2",
+        "rendered_line_format": "trailing-spaces-trimmed-v1"
+      },
+      "full_scenario_sha256": "b8a9d8fd7e17edbda6cebf4f3d3eed0739ca04d3b71614962a547f7107b55939",
+      "comparison_contract_sha256": "4639fd13e05a0edda0d0a99d6c30ef93f8d7329c5127eef1c45933139b70ead7",
+      "selected_executable_sha256": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd",
+      "executable_sha256": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd",
+      "executable_identity": {
+        "state": "path_metadata_unchanged",
+        "reason": null
+      },
+      "normalization_sha256": "5c58aa1aa890197f15f9c59ef755d01120e6e07f356fa1ef2f20787e63b6fa87"
+    },
+    "normalization": {
+      "paths": false,
+      "pids": true,
+      "ports": true,
+      "time_bucket_ms": 10,
+      "patterns": []
+    },
+    "frames": [
+      {
+        "sequence": 0,
+        "at_ms": 16310,
+        "data": " 927528 build/small-divisor-native/timing-captures/first-results.txt\r\n 927528 build/small-divisor-native/timing-captures/repeat-results.txt\r\n1855056 total\r\n"
+      },
+      {
+        "sequence": 1,
+        "at_ms": 16320,
+        "data": "0\r\n0\r\n"
+      }
+    ],
+    "rendered_frames": [
+      {
+        "sequence": 0,
+        "at_ms": 16310,
+        "columns": 100,
+        "rows": 24,
+        "cursor_x": 0,
+        "cursor_y": 3,
+        "active_buffer": "normal",
+        "lines": [
+          " 927528 build/small-divisor-native/timing-captures/first-results.txt",
+          " 927528 build/small-divisor-native/timing-captures/repeat-results.txt",
+          "1855056 total",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "serialized_state": " 927528 build/small-divisor-native/timing-captures/first-results.txt\r\n 927528 build/small-divisor-native/timing-captures/repeat-results.txt\r\n1855056 total\u001b[1B\u001b[13D"
+      },
+      {
+        "sequence": 1,
+        "at_ms": 16320,
+        "columns": 100,
+        "rows": 24,
+        "cursor_x": 0,
+        "cursor_y": 5,
+        "active_buffer": "normal",
+        "lines": [
+          " 927528 build/small-divisor-native/timing-captures/first-results.txt",
+          " 927528 build/small-divisor-native/timing-captures/repeat-results.txt",
+          "1855056 total",
+          "0",
+          "0",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "serialized_state": " 927528 build/small-divisor-native/timing-captures/first-results.txt\r\n 927528 build/small-divisor-native/timing-captures/repeat-results.txt\r\n1855056 total\r\n0\r\n0\u001b[1B\u001b[1D"
+      }
+    ],
+    "interaction_events": [],
+    "exit": {
+      "code": 0,
+      "signal": 0,
+      "reason": "exited"
+    },
+    "settlement": {
+      "state": "quiesced",
+      "elapsed_ms": 170,
+      "cleanup_outcome": "not_required"
+    },
+    "process_samples": [
+      {
+        "at_ms": 0,
+        "pid": 1,
+        "parent_pid": 2,
+        "command": "/bin/bash -c set -u\nsha256sum -c build/small-divisor-native/timing-captures/pre-capture.sha256 > build/small-divisor-native/timing-captures/source-check-before.log || exit 74\nfor task_native_run in first repeat; do\n cat /proc/pressure/io > build/small-divisor-native/timing-captures/\"$task_native_run\"-io-before.txt\n awk '/^full / {split($2,a,\"=\"); split($3,b,\"=\"); exit !(a[2] < 1 && b[2] < 1)}' build/small-divisor-native/timing-captures/\"$task_native_run\"-io-before.txt || exit 75\n date -u +%FT%TZ > build/small-divisor-native/timing-captures/\"$task_native_run\"-start.utc\n nice -n 10 /home/rich/bin/vfp9-probe tests/fixtures/vfp9-numeric-division-context/small-divisor-timing.prg --result build/small-divisor-native/timing-results.txt > build/small-divisor-native/timing-captures/\"$task_native_run\".out 2> build/small-divisor-native/timing-captures/\"$task_native_run\".stderr\n task_probe_rc=$?\n printf '%s\\n' \"$task_probe_rc\" > build/small-divisor-native/timing-captures/\"$task_native_run\".status\n if [ \"$task_probe_rc\" -ne 0 ]; then exit \"$task_probe_rc\"; fi\n cp build/small-divisor-native/timing-results.txt build/small-divisor-native/timing-captures/\"$task_native_run\"-results.txt\n cat /proc/pressure/io > build/small-divisor-native/timing-captures/\"$task_native_run\"-io-after.txt\n date -u +%FT%TZ > build/small-divisor-native/timing-captures/\"$task_native_run\"-end.utc\n sha256sum -c build/small-divisor-native/timing-captures/pre-capture.sha256 > build/small-divisor-native/timing-captures/source-check-after-\"$task_native_run\".log || exit 74\ndone\nwc -c build/small-divisor-native/timing-captures/first-results.txt build/small-divisor-native/timing-captures/repeat-results.txt\ncat build/small-divisor-native/timing-captures/first.status build/small-divisor-native/timing-captures/repeat.status",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 0,
+        "pid": 3,
+        "parent_pid": 1,
+        "command": "sha256sum -c build/small-divisor-native/timing-captures/pre-capture.sha256",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 50,
+        "pid": 4,
+        "parent_pid": 1,
+        "command": "awk /^full / {split($2,a,\"=\"); split($3,b,\"=\"); exit !(a[2] < 1 && b[2] < 1)} build/small-divisor-native/timing-captures/first-io-before.txt",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 100,
+        "pid": 5,
+        "parent_pid": 1,
+        "command": "bash /home/rich/.pyenv/libexec/pyenv-exec python3 /home/rich/bin/vfp9-probe tests/fixtures/vfp9-numeric-division-context/small-divisor-timing.prg --result build/small-divisor-native/timing-results.txt",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 100,
+        "pid": 6,
+        "parent_pid": 5,
+        "command": "bash /home/rich/.pyenv/libexec/pyenv-version-name -f",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 100,
+        "pid": 7,
+        "parent_pid": 6,
+        "command": "bash /home/rich/.pyenv/libexec/pyenv-version-name -f",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 100,
+        "pid": 8,
+        "parent_pid": 7,
+        "command": "bash /home/rich/.pyenv/libexec/pyenv-version-file-read /home/rich/.pyenv/version",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 150,
+        "pid": 9,
+        "parent_pid": 5,
+        "command": "bash /home/rich/.pyenv/libexec/pyenv-which python3",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 150,
+        "pid": 10,
+        "parent_pid": 9,
+        "command": "bash /home/rich/.pyenv/libexec/pyenv-which python3",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 150,
+        "pid": 11,
+        "parent_pid": 10,
+        "command": "tr a-z- A-Z_",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 150,
+        "pid": 12,
+        "parent_pid": 10,
+        "command": "sed s/[^A-Z0-9_]/_/g",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 250,
+        "pid": 5,
+        "parent_pid": 1,
+        "command": "/usr/bin/python3 /home/rich/bin/vfp9-probe tests/fixtures/vfp9-numeric-division-context/small-divisor-timing.prg --result build/small-divisor-native/timing-results.txt",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 300,
+        "pid": 13,
+        "parent_pid": 5,
+        "command": "/bin/sh /usr/bin/xvfb-run -a -s -screen 0 1024x768x24 wine /home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe -cZ:\\home\\rich\\.codex\\worktrees\\numeric-small-divisor-5611\\Project-Copperfin\\build\\small-divisor-native\\vfp9-probe-egj9yl4u\\probe.fpw",
+        "process_group_id": 13,
+        "session_id": 13
+      },
+      {
+        "at_ms": 300,
+        "pid": 14,
+        "parent_pid": 13,
+        "command": "Xvfb :99 -screen 0 1024x768x24 -nolisten tcp -auth /tmp/xvfb-run.oULdts/Xauthority",
+        "process_group_id": 13,
+        "session_id": 13
+      },
+      {
+        "at_ms": 350,
+        "pid": 15,
+        "parent_pid": 14,
+        "command": "sh -c \"/usr/bin/xkbcomp\" -w 1 \"-R/usr/share/X11/xkb\" -xkm \"-\" -em1 \"The XKEYBOARD keymap compiler (xkbcomp) reports:\" -emp \"> \" -eml \"Errors from xkbcomp are not fatal to the X server\" \"/tmp/server-99.xkm\"",
+        "process_group_id": 13,
+        "session_id": 13
+      },
+      {
+        "at_ms": 350,
+        "pid": 16,
+        "parent_pid": 15,
+        "command": "/usr/bin/xkbcomp -w 1 -R/usr/share/X11/xkb -xkm - -em1 The XKEYBOARD keymap compiler (xkbcomp) reports: -emp >  -eml Errors from xkbcomp are not fatal to the X server /tmp/server-99.xkm",
+        "process_group_id": 13,
+        "session_id": 13
+      },
+      {
+        "at_ms": 400,
+        "pid": 17,
+        "parent_pid": 13,
+        "command": "/usr/lib/x86_64-linux-gnu/wine/wine /home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe -cZ:\\home\\rich\\.codex\\worktrees\\numeric-small-divisor-5611\\Project-Copperfin\\build\\small-divisor-native\\vfp9-probe-egj9yl4u\\probe.fpw",
+        "process_group_id": 13,
+        "session_id": 13
+      },
+      {
+        "at_ms": 1260,
+        "pid": 17,
+        "parent_pid": 13,
+        "command": "/home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe -cZ:\\home\\rich\\.codex\\worktrees\\numeric-small-divisor-5611\\Project-Copperfin\\build\\small-divisor-native\\vfp9-probe-egj9yl4u\\probe.fpw",
+        "process_group_id": 13,
+        "session_id": 13
+      },
+      {
+        "at_ms": 7920,
+        "pid": 18,
+        "parent_pid": 13,
+        "command": "xauth remove :99",
+        "process_group_id": 13,
+        "session_id": 13
+      },
+      {
+        "at_ms": 7970,
+        "pid": 13,
+        "parent_pid": 5,
+        "command": "",
+        "process_group_id": 13,
+        "session_id": 13
+      },
+      {
+        "at_ms": 8070,
+        "pid": 19,
+        "parent_pid": 1,
+        "command": "sha256sum -c build/small-divisor-native/timing-captures/pre-capture.sha256",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 8120,
+        "pid": 20,
+        "parent_pid": 1,
+        "command": "bash /home/rich/.pyenv/shims/python3 /home/rich/bin/vfp9-probe tests/fixtures/vfp9-numeric-division-context/small-divisor-timing.prg --result build/small-divisor-native/timing-results.txt",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 8170,
+        "pid": 20,
+        "parent_pid": 1,
+        "command": "bash /home/rich/.pyenv/libexec/pyenv-exec python3 /home/rich/bin/vfp9-probe tests/fixtures/vfp9-numeric-division-context/small-divisor-timing.prg --result build/small-divisor-native/timing-results.txt",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 8170,
+        "pid": 21,
+        "parent_pid": 20,
+        "command": "bash /home/rich/.pyenv/libexec/pyenv-version-name -f",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 8170,
+        "pid": 22,
+        "parent_pid": 21,
+        "command": "/usr/bin/env bash /home/rich/.pyenv/libexec/pyenv-hooks version-name",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 8220,
+        "pid": 23,
+        "parent_pid": 20,
+        "command": "bash /home/rich/.pyenv/libexec/pyenv-which python3",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 8270,
+        "pid": 24,
+        "parent_pid": 20,
+        "command": "bash /home/rich/.pyenv/libexec/pyenv-hooks exec",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 8270,
+        "pid": 25,
+        "parent_pid": 24,
+        "command": "bash /home/rich/.pyenv/libexec/pyenv-hooks exec",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 8320,
+        "pid": 20,
+        "parent_pid": 1,
+        "command": "/usr/bin/python3 /home/rich/bin/vfp9-probe tests/fixtures/vfp9-numeric-division-context/small-divisor-timing.prg --result build/small-divisor-native/timing-results.txt",
+        "process_group_id": 1,
+        "session_id": 1
+      },
+      {
+        "at_ms": 8370,
+        "pid": 26,
+        "parent_pid": 20,
+        "command": "/bin/sh /usr/bin/xvfb-run -a -s -screen 0 1024x768x24 wine /home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe -cZ:\\home\\rich\\.codex\\worktrees\\numeric-small-divisor-5611\\Project-Copperfin\\build\\small-divisor-native\\vfp9-probe-ph3vpios\\probe.fpw",
+        "process_group_id": 26,
+        "session_id": 26
+      },
+      {
+        "at_ms": 8370,
+        "pid": 27,
+        "parent_pid": 26,
+        "command": "Xvfb :99 -screen 0 1024x768x24 -nolisten tcp -auth /tmp/xvfb-run.JLjhbE/Xauthority",
+        "process_group_id": 26,
+        "session_id": 26
+      },
+      {
+        "at_ms": 8420,
+        "pid": 28,
+        "parent_pid": 27,
+        "command": "sh -c \"/usr/bin/xkbcomp\" -w 1 \"-R/usr/share/X11/xkb\" -xkm \"-\" -em1 \"The XKEYBOARD keymap compiler (xkbcomp) reports:\" -emp \"> \" -eml \"Errors from xkbcomp are not fatal to the X server\" \"/tmp/server-99.xkm\"",
+        "process_group_id": 26,
+        "session_id": 26
+      },
+      {
+        "at_ms": 8420,
+        "pid": 29,
+        "parent_pid": 28,
+        "command": "/usr/bin/xkbcomp -w 1 -R/usr/share/X11/xkb -xkm - -em1 The XKEYBOARD keymap compiler (xkbcomp) reports: -emp >  -eml Errors from xkbcomp are not fatal to the X server /tmp/server-99.xkm",
+        "process_group_id": 26,
+        "session_id": 26
+      },
+      {
+        "at_ms": 8470,
+        "pid": 30,
+        "parent_pid": 26,
+        "command": "/usr/lib/x86_64-linux-gnu/wine/wine /home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe -cZ:\\home\\rich\\.codex\\worktrees\\numeric-small-divisor-5611\\Project-Copperfin\\build\\small-divisor-native\\vfp9-probe-ph3vpios\\probe.fpw",
+        "process_group_id": 26,
+        "session_id": 26
+      },
+      {
+        "at_ms": 9320,
+        "pid": 30,
+        "parent_pid": 26,
+        "command": "/home/rich/copperfin-wine-vfp9/drive_c/hotfix968409/vfp9.exe -cZ:\\home\\rich\\.codex\\worktrees\\numeric-small-divisor-5611\\Project-Copperfin\\build\\small-divisor-native\\vfp9-probe-ph3vpios\\probe.fpw",
+        "process_group_id": 26,
+        "session_id": 26
+      },
+      {
+        "at_ms": 16130,
+        "pid": 26,
+        "parent_pid": 20,
+        "command": "",
+        "process_group_id": 26,
+        "session_id": 26
+      },
+      {
+        "at_ms": 16280,
+        "pid": 31,
+        "parent_pid": 1,
+        "command": "sha256sum -c build/small-divisor-native/timing-captures/pre-capture.sha256",
+        "process_group_id": 1,
+        "session_id": 1
+      }
+    ],
+    "filesystem_checkpoints": [
+      {
+        "name": "before",
+        "at_ms": 0,
+        "files": [
+          {
+            "path": "root_0:.",
+            "mode": 16893,
+            "size": 4096,
+            "type": "directory",
+            "sha256": null,
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:pre-capture.sha256",
+            "mode": 33204,
+            "size": 1078,
+            "type": "file",
+            "sha256": "8a3c2e4cbbcc6aa8bb1808c62ec4f30ef90768d2ba37caf6844db0e40c19f62c",
+            "symlink_target": null
+          }
+        ],
+        "effects": [],
+        "truncated": false
+      },
+      {
+        "name": "after_settlement",
+        "at_ms": 16540,
+        "files": [
+          {
+            "path": "root_0:.",
+            "mode": 16893,
+            "size": 4096,
+            "type": "directory",
+            "sha256": null,
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:first-end.utc",
+            "mode": 33204,
+            "size": 21,
+            "type": "file",
+            "sha256": "55e6a38038bfa62f7bdad508bd44ecb7bbd7e351dc519d9cd669ecc4951b57e4",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:first-io-after.txt",
+            "mode": 33204,
+            "size": 114,
+            "type": "file",
+            "sha256": "c96664318277e825f3f808816e4d091abc1c7ee2fc5b7b8cd65d6a645c5cb940",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:first-io-before.txt",
+            "mode": 33204,
+            "size": 114,
+            "type": "file",
+            "sha256": "547d75ac907a64dc580a8c66ec5fc107add4db2748b308e0bd0aae1bc09d904c",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:first-results.txt",
+            "mode": 33204,
+            "size": 927528,
+            "type": "file",
+            "sha256": "1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:first-start.utc",
+            "mode": 33204,
+            "size": 21,
+            "type": "file",
+            "sha256": "c3eb83346478da1cd838b5aacc304902b083c1c4a0cb51defff5b22032256f39",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:first.out",
+            "mode": 33204,
+            "size": 927528,
+            "type": "file",
+            "sha256": "1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:first.status",
+            "mode": 33204,
+            "size": 2,
+            "type": "file",
+            "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:first.stderr",
+            "mode": 33204,
+            "size": 0,
+            "type": "file",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:pre-capture.sha256",
+            "mode": 33204,
+            "size": 1078,
+            "type": "file",
+            "sha256": "8a3c2e4cbbcc6aa8bb1808c62ec4f30ef90768d2ba37caf6844db0e40c19f62c",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:repeat-end.utc",
+            "mode": 33204,
+            "size": 21,
+            "type": "file",
+            "sha256": "5102d9d0af283ef6327d56c6699df7e0b64268464beeda8ac79dd008a153423e",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:repeat-io-after.txt",
+            "mode": 33204,
+            "size": 114,
+            "type": "file",
+            "sha256": "bb2fa05defef620ebbf225caba79cc0cb854928c3c7d9d59761dc455b336da61",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:repeat-io-before.txt",
+            "mode": 33204,
+            "size": 114,
+            "type": "file",
+            "sha256": "c96664318277e825f3f808816e4d091abc1c7ee2fc5b7b8cd65d6a645c5cb940",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:repeat-results.txt",
+            "mode": 33204,
+            "size": 927528,
+            "type": "file",
+            "sha256": "1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:repeat-start.utc",
+            "mode": 33204,
+            "size": 21,
+            "type": "file",
+            "sha256": "55e6a38038bfa62f7bdad508bd44ecb7bbd7e351dc519d9cd669ecc4951b57e4",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:repeat.out",
+            "mode": 33204,
+            "size": 927528,
+            "type": "file",
+            "sha256": "1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:repeat.status",
+            "mode": 33204,
+            "size": 2,
+            "type": "file",
+            "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:repeat.stderr",
+            "mode": 33204,
+            "size": 0,
+            "type": "file",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:source-check-after-first.log",
+            "mode": 33204,
+            "size": 582,
+            "type": "file",
+            "sha256": "3415f9a9500ead8fc996db14aa223d8418e285bae73847e0eae2c2d9c484eec4",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:source-check-after-repeat.log",
+            "mode": 33204,
+            "size": 582,
+            "type": "file",
+            "sha256": "3415f9a9500ead8fc996db14aa223d8418e285bae73847e0eae2c2d9c484eec4",
+            "symlink_target": null
+          },
+          {
+            "path": "root_0:source-check-before.log",
+            "mode": 33204,
+            "size": 582,
+            "type": "file",
+            "sha256": "3415f9a9500ead8fc996db14aa223d8418e285bae73847e0eae2c2d9c484eec4",
+            "symlink_target": null
+          }
+        ],
+        "effects": [
+          {
+            "path": "root_0:.",
+            "status": "unchanged",
+            "before": {
+              "path": "root_0:.",
+              "mode": 16893,
+              "size": 4096,
+              "type": "directory",
+              "sha256": null,
+              "symlink_target": null
+            },
+            "after": {
+              "path": "root_0:.",
+              "mode": 16893,
+              "size": 4096,
+              "type": "directory",
+              "sha256": null,
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:first-end.utc",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:first-end.utc",
+              "mode": 33204,
+              "size": 21,
+              "type": "file",
+              "sha256": "55e6a38038bfa62f7bdad508bd44ecb7bbd7e351dc519d9cd669ecc4951b57e4",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:first-io-after.txt",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:first-io-after.txt",
+              "mode": 33204,
+              "size": 114,
+              "type": "file",
+              "sha256": "c96664318277e825f3f808816e4d091abc1c7ee2fc5b7b8cd65d6a645c5cb940",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:first-io-before.txt",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:first-io-before.txt",
+              "mode": 33204,
+              "size": 114,
+              "type": "file",
+              "sha256": "547d75ac907a64dc580a8c66ec5fc107add4db2748b308e0bd0aae1bc09d904c",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:first-results.txt",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:first-results.txt",
+              "mode": 33204,
+              "size": 927528,
+              "type": "file",
+              "sha256": "1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:first-start.utc",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:first-start.utc",
+              "mode": 33204,
+              "size": 21,
+              "type": "file",
+              "sha256": "c3eb83346478da1cd838b5aacc304902b083c1c4a0cb51defff5b22032256f39",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:first.out",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:first.out",
+              "mode": 33204,
+              "size": 927528,
+              "type": "file",
+              "sha256": "1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:first.status",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:first.status",
+              "mode": 33204,
+              "size": 2,
+              "type": "file",
+              "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:first.stderr",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:first.stderr",
+              "mode": 33204,
+              "size": 0,
+              "type": "file",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:pre-capture.sha256",
+            "status": "unchanged",
+            "before": {
+              "path": "root_0:pre-capture.sha256",
+              "mode": 33204,
+              "size": 1078,
+              "type": "file",
+              "sha256": "8a3c2e4cbbcc6aa8bb1808c62ec4f30ef90768d2ba37caf6844db0e40c19f62c",
+              "symlink_target": null
+            },
+            "after": {
+              "path": "root_0:pre-capture.sha256",
+              "mode": 33204,
+              "size": 1078,
+              "type": "file",
+              "sha256": "8a3c2e4cbbcc6aa8bb1808c62ec4f30ef90768d2ba37caf6844db0e40c19f62c",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:repeat-end.utc",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:repeat-end.utc",
+              "mode": 33204,
+              "size": 21,
+              "type": "file",
+              "sha256": "5102d9d0af283ef6327d56c6699df7e0b64268464beeda8ac79dd008a153423e",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:repeat-io-after.txt",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:repeat-io-after.txt",
+              "mode": 33204,
+              "size": 114,
+              "type": "file",
+              "sha256": "bb2fa05defef620ebbf225caba79cc0cb854928c3c7d9d59761dc455b336da61",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:repeat-io-before.txt",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:repeat-io-before.txt",
+              "mode": 33204,
+              "size": 114,
+              "type": "file",
+              "sha256": "c96664318277e825f3f808816e4d091abc1c7ee2fc5b7b8cd65d6a645c5cb940",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:repeat-results.txt",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:repeat-results.txt",
+              "mode": 33204,
+              "size": 927528,
+              "type": "file",
+              "sha256": "1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:repeat-start.utc",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:repeat-start.utc",
+              "mode": 33204,
+              "size": 21,
+              "type": "file",
+              "sha256": "55e6a38038bfa62f7bdad508bd44ecb7bbd7e351dc519d9cd669ecc4951b57e4",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:repeat.out",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:repeat.out",
+              "mode": 33204,
+              "size": 927528,
+              "type": "file",
+              "sha256": "1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:repeat.status",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:repeat.status",
+              "mode": 33204,
+              "size": 2,
+              "type": "file",
+              "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:repeat.stderr",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:repeat.stderr",
+              "mode": 33204,
+              "size": 0,
+              "type": "file",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:source-check-after-first.log",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:source-check-after-first.log",
+              "mode": 33204,
+              "size": 582,
+              "type": "file",
+              "sha256": "3415f9a9500ead8fc996db14aa223d8418e285bae73847e0eae2c2d9c484eec4",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:source-check-after-repeat.log",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:source-check-after-repeat.log",
+              "mode": 33204,
+              "size": 582,
+              "type": "file",
+              "sha256": "3415f9a9500ead8fc996db14aa223d8418e285bae73847e0eae2c2d9c484eec4",
+              "symlink_target": null
+            }
+          },
+          {
+            "path": "root_0:source-check-before.log",
+            "status": "created",
+            "before": null,
+            "after": {
+              "path": "root_0:source-check-before.log",
+              "mode": 33204,
+              "size": 582,
+              "type": "file",
+              "sha256": "3415f9a9500ead8fc996db14aa223d8418e285bae73847e0eae2c2d9c484eec4",
+              "symlink_target": null
+            }
+          }
+        ],
+        "truncated": false
+      }
+    ],
+    "event_journal": [
+      {
+        "capture_order": 0,
+        "collection": "filesystem_checkpoints",
+        "index": 0
+      },
+      {
+        "capture_order": 1,
+        "collection": "process_samples",
+        "index": 0
+      },
+      {
+        "capture_order": 2,
+        "collection": "process_samples",
+        "index": 1
+      },
+      {
+        "capture_order": 3,
+        "collection": "process_samples",
+        "index": 2
+      },
+      {
+        "capture_order": 4,
+        "collection": "process_samples",
+        "index": 3
+      },
+      {
+        "capture_order": 5,
+        "collection": "process_samples",
+        "index": 4
+      },
+      {
+        "capture_order": 6,
+        "collection": "process_samples",
+        "index": 5
+      },
+      {
+        "capture_order": 7,
+        "collection": "process_samples",
+        "index": 6
+      },
+      {
+        "capture_order": 8,
+        "collection": "process_samples",
+        "index": 7
+      },
+      {
+        "capture_order": 9,
+        "collection": "process_samples",
+        "index": 8
+      },
+      {
+        "capture_order": 10,
+        "collection": "process_samples",
+        "index": 9
+      },
+      {
+        "capture_order": 11,
+        "collection": "process_samples",
+        "index": 10
+      },
+      {
+        "capture_order": 12,
+        "collection": "process_samples",
+        "index": 11
+      },
+      {
+        "capture_order": 13,
+        "collection": "process_samples",
+        "index": 12
+      },
+      {
+        "capture_order": 14,
+        "collection": "process_samples",
+        "index": 13
+      },
+      {
+        "capture_order": 15,
+        "collection": "process_samples",
+        "index": 14
+      },
+      {
+        "capture_order": 16,
+        "collection": "process_samples",
+        "index": 15
+      },
+      {
+        "capture_order": 17,
+        "collection": "process_samples",
+        "index": 16
+      },
+      {
+        "capture_order": 18,
+        "collection": "process_samples",
+        "index": 17
+      },
+      {
+        "capture_order": 19,
+        "collection": "process_samples",
+        "index": 18
+      },
+      {
+        "capture_order": 20,
+        "collection": "process_samples",
+        "index": 19
+      },
+      {
+        "capture_order": 21,
+        "collection": "process_samples",
+        "index": 20
+      },
+      {
+        "capture_order": 22,
+        "collection": "process_samples",
+        "index": 21
+      },
+      {
+        "capture_order": 23,
+        "collection": "process_samples",
+        "index": 22
+      },
+      {
+        "capture_order": 24,
+        "collection": "process_samples",
+        "index": 23
+      },
+      {
+        "capture_order": 25,
+        "collection": "process_samples",
+        "index": 24
+      },
+      {
+        "capture_order": 26,
+        "collection": "process_samples",
+        "index": 25
+      },
+      {
+        "capture_order": 27,
+        "collection": "process_samples",
+        "index": 26
+      },
+      {
+        "capture_order": 28,
+        "collection": "process_samples",
+        "index": 27
+      },
+      {
+        "capture_order": 29,
+        "collection": "process_samples",
+        "index": 28
+      },
+      {
+        "capture_order": 30,
+        "collection": "process_samples",
+        "index": 29
+      },
+      {
+        "capture_order": 31,
+        "collection": "process_samples",
+        "index": 30
+      },
+      {
+        "capture_order": 32,
+        "collection": "process_samples",
+        "index": 31
+      },
+      {
+        "capture_order": 33,
+        "collection": "process_samples",
+        "index": 32
+      },
+      {
+        "capture_order": 34,
+        "collection": "process_samples",
+        "index": 33
+      },
+      {
+        "capture_order": 35,
+        "collection": "process_samples",
+        "index": 34
+      },
+      {
+        "capture_order": 36,
+        "collection": "process_samples",
+        "index": 35
+      },
+      {
+        "capture_order": 37,
+        "collection": "process_samples",
+        "index": 36
+      },
+      {
+        "capture_order": 38,
+        "collection": "frames",
+        "index": 0
+      },
+      {
+        "capture_order": 39,
+        "collection": "rendered_frames",
+        "index": 0
+      },
+      {
+        "capture_order": 40,
+        "collection": "frames",
+        "index": 1
+      },
+      {
+        "capture_order": 41,
+        "collection": "rendered_frames",
+        "index": 1
+      },
+      {
+        "capture_order": 42,
+        "collection": "lifecycle",
+        "index": 0
+      },
+      {
+        "capture_order": 43,
+        "collection": "lifecycle",
+        "index": 1
+      },
+      {
+        "capture_order": 44,
+        "collection": "filesystem_checkpoints",
+        "index": 1
+      }
+    ],
+    "files_before": [
+      {
+        "path": "root_0:.",
+        "mode": 16893,
+        "size": 4096,
+        "type": "directory",
+        "sha256": null,
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:pre-capture.sha256",
+        "mode": 33204,
+        "size": 1078,
+        "type": "file",
+        "sha256": "8a3c2e4cbbcc6aa8bb1808c62ec4f30ef90768d2ba37caf6844db0e40c19f62c",
+        "symlink_target": null
+      }
+    ],
+    "files_after": [
+      {
+        "path": "root_0:.",
+        "mode": 16893,
+        "size": 4096,
+        "type": "directory",
+        "sha256": null,
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:first-end.utc",
+        "mode": 33204,
+        "size": 21,
+        "type": "file",
+        "sha256": "55e6a38038bfa62f7bdad508bd44ecb7bbd7e351dc519d9cd669ecc4951b57e4",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:first-io-after.txt",
+        "mode": 33204,
+        "size": 114,
+        "type": "file",
+        "sha256": "c96664318277e825f3f808816e4d091abc1c7ee2fc5b7b8cd65d6a645c5cb940",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:first-io-before.txt",
+        "mode": 33204,
+        "size": 114,
+        "type": "file",
+        "sha256": "547d75ac907a64dc580a8c66ec5fc107add4db2748b308e0bd0aae1bc09d904c",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:first-results.txt",
+        "mode": 33204,
+        "size": 927528,
+        "type": "file",
+        "sha256": "1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:first-start.utc",
+        "mode": 33204,
+        "size": 21,
+        "type": "file",
+        "sha256": "c3eb83346478da1cd838b5aacc304902b083c1c4a0cb51defff5b22032256f39",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:first.out",
+        "mode": 33204,
+        "size": 927528,
+        "type": "file",
+        "sha256": "1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:first.status",
+        "mode": 33204,
+        "size": 2,
+        "type": "file",
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:first.stderr",
+        "mode": 33204,
+        "size": 0,
+        "type": "file",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:pre-capture.sha256",
+        "mode": 33204,
+        "size": 1078,
+        "type": "file",
+        "sha256": "8a3c2e4cbbcc6aa8bb1808c62ec4f30ef90768d2ba37caf6844db0e40c19f62c",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:repeat-end.utc",
+        "mode": 33204,
+        "size": 21,
+        "type": "file",
+        "sha256": "5102d9d0af283ef6327d56c6699df7e0b64268464beeda8ac79dd008a153423e",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:repeat-io-after.txt",
+        "mode": 33204,
+        "size": 114,
+        "type": "file",
+        "sha256": "bb2fa05defef620ebbf225caba79cc0cb854928c3c7d9d59761dc455b336da61",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:repeat-io-before.txt",
+        "mode": 33204,
+        "size": 114,
+        "type": "file",
+        "sha256": "c96664318277e825f3f808816e4d091abc1c7ee2fc5b7b8cd65d6a645c5cb940",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:repeat-results.txt",
+        "mode": 33204,
+        "size": 927528,
+        "type": "file",
+        "sha256": "1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:repeat-start.utc",
+        "mode": 33204,
+        "size": 21,
+        "type": "file",
+        "sha256": "55e6a38038bfa62f7bdad508bd44ecb7bbd7e351dc519d9cd669ecc4951b57e4",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:repeat.out",
+        "mode": 33204,
+        "size": 927528,
+        "type": "file",
+        "sha256": "1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:repeat.status",
+        "mode": 33204,
+        "size": 2,
+        "type": "file",
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:repeat.stderr",
+        "mode": 33204,
+        "size": 0,
+        "type": "file",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:source-check-after-first.log",
+        "mode": 33204,
+        "size": 582,
+        "type": "file",
+        "sha256": "3415f9a9500ead8fc996db14aa223d8418e285bae73847e0eae2c2d9c484eec4",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:source-check-after-repeat.log",
+        "mode": 33204,
+        "size": 582,
+        "type": "file",
+        "sha256": "3415f9a9500ead8fc996db14aa223d8418e285bae73847e0eae2c2d9c484eec4",
+        "symlink_target": null
+      },
+      {
+        "path": "root_0:source-check-before.log",
+        "mode": 33204,
+        "size": 582,
+        "type": "file",
+        "sha256": "3415f9a9500ead8fc996db14aa223d8418e285bae73847e0eae2c2d9c484eec4",
+        "symlink_target": null
+      }
+    ],
+    "filesystem_effects": [
+      {
+        "path": "root_0:.",
+        "status": "unchanged",
+        "before": {
+          "path": "root_0:.",
+          "mode": 16893,
+          "size": 4096,
+          "type": "directory",
+          "sha256": null,
+          "symlink_target": null
+        },
+        "after": {
+          "path": "root_0:.",
+          "mode": 16893,
+          "size": 4096,
+          "type": "directory",
+          "sha256": null,
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:first-end.utc",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:first-end.utc",
+          "mode": 33204,
+          "size": 21,
+          "type": "file",
+          "sha256": "55e6a38038bfa62f7bdad508bd44ecb7bbd7e351dc519d9cd669ecc4951b57e4",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:first-io-after.txt",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:first-io-after.txt",
+          "mode": 33204,
+          "size": 114,
+          "type": "file",
+          "sha256": "c96664318277e825f3f808816e4d091abc1c7ee2fc5b7b8cd65d6a645c5cb940",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:first-io-before.txt",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:first-io-before.txt",
+          "mode": 33204,
+          "size": 114,
+          "type": "file",
+          "sha256": "547d75ac907a64dc580a8c66ec5fc107add4db2748b308e0bd0aae1bc09d904c",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:first-results.txt",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:first-results.txt",
+          "mode": 33204,
+          "size": 927528,
+          "type": "file",
+          "sha256": "1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:first-start.utc",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:first-start.utc",
+          "mode": 33204,
+          "size": 21,
+          "type": "file",
+          "sha256": "c3eb83346478da1cd838b5aacc304902b083c1c4a0cb51defff5b22032256f39",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:first.out",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:first.out",
+          "mode": 33204,
+          "size": 927528,
+          "type": "file",
+          "sha256": "1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:first.status",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:first.status",
+          "mode": 33204,
+          "size": 2,
+          "type": "file",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:first.stderr",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:first.stderr",
+          "mode": 33204,
+          "size": 0,
+          "type": "file",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:pre-capture.sha256",
+        "status": "unchanged",
+        "before": {
+          "path": "root_0:pre-capture.sha256",
+          "mode": 33204,
+          "size": 1078,
+          "type": "file",
+          "sha256": "8a3c2e4cbbcc6aa8bb1808c62ec4f30ef90768d2ba37caf6844db0e40c19f62c",
+          "symlink_target": null
+        },
+        "after": {
+          "path": "root_0:pre-capture.sha256",
+          "mode": 33204,
+          "size": 1078,
+          "type": "file",
+          "sha256": "8a3c2e4cbbcc6aa8bb1808c62ec4f30ef90768d2ba37caf6844db0e40c19f62c",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:repeat-end.utc",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:repeat-end.utc",
+          "mode": 33204,
+          "size": 21,
+          "type": "file",
+          "sha256": "5102d9d0af283ef6327d56c6699df7e0b64268464beeda8ac79dd008a153423e",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:repeat-io-after.txt",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:repeat-io-after.txt",
+          "mode": 33204,
+          "size": 114,
+          "type": "file",
+          "sha256": "bb2fa05defef620ebbf225caba79cc0cb854928c3c7d9d59761dc455b336da61",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:repeat-io-before.txt",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:repeat-io-before.txt",
+          "mode": 33204,
+          "size": 114,
+          "type": "file",
+          "sha256": "c96664318277e825f3f808816e4d091abc1c7ee2fc5b7b8cd65d6a645c5cb940",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:repeat-results.txt",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:repeat-results.txt",
+          "mode": 33204,
+          "size": 927528,
+          "type": "file",
+          "sha256": "1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:repeat-start.utc",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:repeat-start.utc",
+          "mode": 33204,
+          "size": 21,
+          "type": "file",
+          "sha256": "55e6a38038bfa62f7bdad508bd44ecb7bbd7e351dc519d9cd669ecc4951b57e4",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:repeat.out",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:repeat.out",
+          "mode": 33204,
+          "size": 927528,
+          "type": "file",
+          "sha256": "1fbf69bb808b9d3f695d3ca568023c74f238db1e1eef6a021e4d9e400c0178f6",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:repeat.status",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:repeat.status",
+          "mode": 33204,
+          "size": 2,
+          "type": "file",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:repeat.stderr",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:repeat.stderr",
+          "mode": 33204,
+          "size": 0,
+          "type": "file",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:source-check-after-first.log",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:source-check-after-first.log",
+          "mode": 33204,
+          "size": 582,
+          "type": "file",
+          "sha256": "3415f9a9500ead8fc996db14aa223d8418e285bae73847e0eae2c2d9c484eec4",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:source-check-after-repeat.log",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:source-check-after-repeat.log",
+          "mode": 33204,
+          "size": 582,
+          "type": "file",
+          "sha256": "3415f9a9500ead8fc996db14aa223d8418e285bae73847e0eae2c2d9c484eec4",
+          "symlink_target": null
+        }
+      },
+      {
+        "path": "root_0:source-check-before.log",
+        "status": "created",
+        "before": null,
+        "after": {
+          "path": "root_0:source-check-before.log",
+          "mode": 33204,
+          "size": 582,
+          "type": "file",
+          "sha256": "3415f9a9500ead8fc996db14aa223d8418e285bae73847e0eae2c2d9c484eec4",
+          "symlink_target": null
+        }
+      }
+    ],
+    "truncated": false,
+    "truncation_details": {
+      "raw_terminal": {
+        "budget_bytes": 200000,
+        "observed_bytes": 162,
+        "retained_bytes": 162,
+        "observed_frames": 2,
+        "retained_frames": 2
+      },
+      "rendered_terminal": {
+        "budget_bytes": 200000,
+        "observed_bytes": 633,
+        "retained_bytes": 633,
+        "observed_frames": 2,
+        "retained_frames": 2
+      },
+      "normalized_terminal": {
+        "budget_bytes": 200000,
+        "retained_bytes": 162,
+        "omitted_frames": 0
+      },
+      "filesystem_before": {
+        "files_limit": 40,
+        "depth_limit": 16,
+        "enumeration_truncated": false,
+        "enumeration_reasons": [],
+        "enumeration_omissions": [],
+        "hash_budget_bytes": 10000000,
+        "hashed_bytes": 1078,
+        "hash_omissions": []
+      },
+      "filesystem_after": {
+        "files_limit": 40,
+        "depth_limit": 16,
+        "enumeration_truncated": false,
+        "enumeration_reasons": [],
+        "enumeration_omissions": [],
+        "hash_budget_bytes": 10000000,
+        "hashed_bytes": 3713480,
+        "hash_omissions": []
+      },
+      "process": {
+        "sample_limit": 60,
+        "sampling_partial": false,
+        "retained_samples": 37,
+        "sample_limit_reached": false,
+        "sampling_failures": 0,
+        "first_sampling_failure": null,
+        "coverage": "sampled"
+      }
+    },
+    "limitations": [
+      "The executable digest is a prelaunch file sample; matching path metadata immediately after spawn does not prove an atomic operating-system image binding.",
+      "Process trees are sampled and may omit short-lived descendants.",
+      "Filesystem observations are before/after snapshots, not syscall traces.",
+      "Inherited host environment variables are not recorded and may affect results."
+    ],
+    "residual_unknowns": [
+      {
+        "scope": "process",
+        "reason": "Process trees are sampled and may omit short-lived descendants."
+      },
+      {
+        "scope": "process",
+        "reason": "The executable digest is a prelaunch file sample; operating-system image binding is not atomically observed."
+      },
+      {
+        "scope": "environment",
+        "reason": "Inherited host environment variables are not recorded."
+      },
+      {
+        "scope": "network",
+        "reason": "Network activity is not observed by this capture."
+      },
+      {
+        "scope": "process",
+        "reason": "Ownership of unrelated process 746418 could not be verified; it was left untouched: EACCES: permission denied, open '/proc/746418/environ'"
+      }
+    ],
+    "cleanup": {
+      "owned_process_group": "verified",
+      "temporary_root": "removed",
+      "unverified_processes": [
+        {
+          "pid": 746418,
+          "reason": "EACCES: permission denied, open '/proc/746418/environ'"
+        }
+      ]
+    }
+  },
+  "confidence": "observed",
+  "authority": "controlled-replay",
+  "environment": {
+    "id": "linux-x64",
+    "platform": "linux",
+    "architecture": "x64",
+    "isolation": "process"
+  },
+  "limitations": [
+    "Artifact identity is unavailable for this observation.",
+    "The executable digest is a prelaunch file sample; matching path metadata immediately after spawn does not prove an atomic operating-system image binding.",
+    "Process trees are sampled and may omit short-lived descendants.",
+    "Filesystem observations are before/after snapshots, not syscall traces.",
+    "Inherited host environment variables are not recorded and may affect results."
+  ],
+  "relationship_coverage": null,
+  "locations": [],
+  "evidence_links": []
+}

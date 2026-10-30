@@ -1083,10 +1083,11 @@
                             {
                                 // Intrinsic attributes flow through pure folding;
                                 // only semantic runtime boundaries consume the floor.
-                                // RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-NONWHOLE-001:
+                                // RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-NONWHOLE-001 and
+                                // RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-SMALL-DIVISOR-001:
                                 // same proven-constant path/prepared continuation state;
-                                // fractional real eligibility, never a payload tolerance.
-                                const auto intrinsic = constant_nonwhole_division_intrinsic(
+                                // fractional real/small-divisor eligibility, never a payload tolerance.
+                                const auto intrinsic = constant_small_divisor_intrinsic(
                                     left, right, result.number_value, true);
                                 if (intrinsic)
                                 {

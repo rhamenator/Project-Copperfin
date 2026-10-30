@@ -1,0 +1,16 @@
+{
+  "candidate": "Prior native intrinsic metadata/materialization and sequential binary64 division extended to finite small divisors",
+  "compared": 4480,
+  "descriptorDifferences": 0,
+  "payloadDifferences": 0,
+  "literalParseDifferences": [
+    {
+      "literal": "1.234567890123456789",
+      "native": "3FF3C0CA428C59FC",
+      "binary64": "3FF3C0CA428C59FB"
+    }
+  ],
+  "runtimeZeroHypothesis": "Unary minus after IIF preserves +0; grouped constant unary produces -0. Native complete-root evidence only, not callback timing qualification.",
+  "limitations": "Post-capture hypothesis, not an expected-value oracle. Core complete-root descriptors/payloads only; display, runtime mixtures, retained boundaries and callback timing not modeled. No production acceptance or guard relaxation.",
+  "differences": []
+}

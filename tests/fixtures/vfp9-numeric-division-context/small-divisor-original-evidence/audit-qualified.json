@@ -1,0 +1,29 @@
+{
+  "requirement": "RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-SMALL-DIVISOR-001",
+  "sourceFreeze": "3b7a5163618ea92420f63b70c5cac265cdd08807",
+  "actualExecuted": 7,
+  "actualFailed": 1,
+  "actualSkipped": 0,
+  "descriptor": 6920,
+  "bits": 320,
+  "literalBits": 0,
+  "evaluation": 0,
+  "display": 964,
+  "controls": 0,
+  "total": 8204,
+  "payloadBitPairs": {
+    "8000000000000000:0000000000000000": 240,
+    "0000000000000000:8000000000000000": 80
+  },
+  "displayFailureKinds": {
+    "core": 882,
+    "literal-control": 70,
+    "runtime-mixture": 12
+  },
+  "junitFailedSystemOutClipped": true,
+  "completeFailedOutputSource": "Lossless full CTest console block, exact summary/failure-category counts and JUnit prefix binding; no rerun or changed test expectation.",
+  "frozenSourceAndHeaderHashes": 18,
+  "rawJUnitSha256": "161d249b9866af5bbfd160b67b17415e82b38aec93522d0aacabe1690ecafda9",
+  "rawCTestSha256": "c3b8959e1212f740e4cefa2c2b996f63dcdad50f452d579d8213aeaadb73e37a",
+  "conclusion": "Actual unchanged-production ORIGINAL: only the new public regression fails. Exact failures retained; this is not support, SAME or compatibility completion."
+}

@@ -244,6 +244,122 @@ JUnit/log/counter audits0. `nonwhole-same-evidence/` retains exact receipts;
 hosted broad/selected tests, clean exact-head review/strict/resolved gates remain
 pending. This establishes focused bounded SAME only, not general Numeric parity.
 
+Subsequent PR7209 acceptance: merged240ac51cb after exact-head configured Codex
+review6247125017 (Claude first requested6247124783; silence not an inference),
+all39 checks/11 effective strict-required SUCCESS, complete conversations0.
+[Acceptance receipt](https://github.com/rhamenator/Project-Copperfin/pull/7209#issuecomment-6248161998)
+binds Windows632 actual unique passes/no skip, sanitizer44/no skip, and all16
+selected native Linux/macOS passes. Each of those latter native lanes reports
+two unrelated skipped launcher tests, explicitly not execution/release evidence.
+Raw receipts/audits are preserved in canonical build/pr7209-completed/evidence/;
+completed WT/branch cleanup and recoverable build Trash are recorded host-side.
+Only the evidenced finite literal-domain non-whole foundation is complete.
+
+Next bounded gap `RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-SMALL-DIVISOR-001`:
+[pre-observation contract](../tests/fixtures/vfp9-numeric-division-context/small-divisor-recovery.md)
+and native-only source/inventory freeze253 expressions/5,060 observations per
+run. The original freeze claims no native run, model, expected result, production
+guard relaxation or pass. LOW DQ/DV/parent hazards, resource/clean-room gates and mandatory
+Numeric/ListItem follow-ons remain; source/current behavior is not a requirement.
+
+Subsequent actual first small-divisor invocation follows signed freezec68aaadf2:
+VFP0/empty stderr/all5060 observations/no caught errors; independent host+archived
+first-only source/framing/typed/BRS/compiled-EVAL audit0. All60 nonfinite values
+are retained zero-boundaries, not changed checked policy. Initial wrapper's gate75
+ran no native process; next wrapper completes first then gate75 prevents repeat.
+REA records ev_2b96881db1a2d7607cfb89c60e36fd8afd56660d439e66f0f7af2106d07abcaa
+and ev_f6880b11682df59ee814871efc2357a4450424c28bf9f0157cc0433f69d38e29
+retain declared lifecycle/cleanup/snapshot scope and image/sampling/environment
+limitations. Raw first/FXP/status/hash/guarded attempts remain in small-divisor-
+captures/. Subsequent independent repeat under renewed BOTH-chat/low-pressure/
+idle-prefix gates is actual0/empty stderr, REA
+ev_e7b41a6b1a308d58dcd566c66f7123c8c1103b2c57ef237aa28c817cfb80bbe1,
+root quiesced/owned cleanup verified/no truncation. Unchanged paired host and
+archived auditors0 confirm all5060 raw records repeat exactly; compiled/EVAL
+differences0; complete paired audits byte-identical. Separate repeat metadata,
+source checks/statuses/pressure/times/raw outputs retained; resource window
+released to both chats. Hypothesis recovery, native-only expected vectors and
+ALL implementation gates remain pending. No native expectation, model, caller
+or runtime policy changed; paired observation is not compatibility completion.
+
+Post-capture candidate/source and rejected attempts are retained with this grid:
+zero metadata differences across4480 core rows; initial160 zero-sign payload
+differences distinguish grouped-constant unary from runtime unary after IIF.
+Separate exact zero rules fit all4480 without rounding/tolerance/nonzero payload
+correction, but are not a native expected emitter or implementation pass.
+Frozen single-evaluation small-divisor-timing source/inventory/paired auditor
+adds219 expressions/4380 rows per future run to recover callback count/final
+setting/materialization timing BEFORE implementation. Signed65da37991 precedes
+actual paired runs0/empty stderr:4380 rows each, complete raw repeat/compiled-
+EVALUATE equality, exact callback counts/final state, host+archived audits0.
+REA ev_fd4b732a00f0417c8dff284784201267982a63ece6f5e3d19b008c6098513f39
+and small-divisor-timing-captures/ retain full lifecycle/source/pressure evidence,
+including one EACCES ownership-check limitation and kernel-worker readback.
+Both-chat window released; no VM/runtime change. Rejected176- then16-difference
+timing hypotheses remain; operator-aware refinement fits all4300 finite rows,
+with80 zero-divisor nonfinite controls retained, NOT policy migration.
+Native-only expectations/ORIGINAL/support/hook/SAME/hosted/review gates remain
+pending. See the same recovery contract for LOW DQ/DV walkthrough/limitations.
+
+Small-divisor independent test freeze: native-only emitters retain253 root rows
+and219 timing rows; public245 exact kind/metadata/bits/display assertions per
+context and120 finite nonzero callback/pause-resume forms, BOTH modes/five settings/
+both FIXED. Zero root forms are included; CFObserve/zero callback assignment
+frontiers and eight zero/magnitude/scientific boundaries remain retained, not
+silently claimed. Direct56 roots/252 syntax nodes plus68 prior nonwhole roots/
+314 nodes and640 older rows; future pure helper entry point remains undefined.
+CMake/isolation/actual sanitizer target+strict-selector test coverage are frozen
+BEFORE support. Byte-exact native-header generation and source-development
+checks0 are not actual ORIGINAL or product execution. Original-build pressure/
+both-chat coordination gate still applies; see recovery contract for exact
+scope, independent scalar-assignment requirement, LOW DQ/DV and remaining gates.
+
+Actual ORIGINAL attempt1 is NOT qualifying numerical evidence: fresh BOTH-chat/
+full0.00%/0.00% clearance allows GNU O0/g0 configure0, but mid-build host full
+PSI34.93%/11.36% causes controlled interruption of the exact owned Ninja.
+Build/worker130 at122/161, no CTest/native/VM invocation;18 frozen source hashes
+still match and src/include diff from main empty. Raw commands/logs/statuses/
+pressure/source checks retained in small-divisor-original-attempt1/; both chats
+receive RELEASED after owned-process quiescence. Separate resumed complete
+ORIGINAL/actual reader audit is required before support; partial cache is not
+an artifact qualification or a product failure. No runtime change.
+
+Separate complete resumed ORIGINAL now qualifies the pre-support failure gate:
+configure/build0, seven unique actual CTests13.78s/only new public fails/no skip;
+6920 metadata/320 signed-zero bits/964 display failures, zero literal-bits/
+evaluation/control failures. Host+archived complete-console/structured-JUnit
+audits0/byte-identical,18 frozen hashes unchanged and production diff empty.
+JUnit's clipped failure text and first reader failure remain; full727146-byte
+console supplies all8204 exact failures/counters without rerun or test changes.
+Of964 display mismatches,70 are independent literal-only controls whose Numeric
+metadata/payloads match; retain a focused separate default-TRANSFORM prerequisite
+[#7210](https://github.com/rhamenator/Project-Copperfin/issues/7210) against
+current main240ac51cb, not a division scope expansion or suppressed assertion.
+No helper/hook/SAME or compatibility completion. Full provenance/reader limits/
+pressure-deferral and re-entry are in the same recovery contract/archive.
+
+After PR #7225 satisfied the independent display prerequisite, current main was
+integrated at signed+DCO `280ab0802`. A fresh unchanged ORIGINAL configure/build
+returned0 and the same seven tests retained six control passes plus the sole
+small-divisor public failure:6,920 descriptor/320 signed-zero/964 display and
+zero literal-bit/evaluation/control mismatches, audit0/no skips/errors. The pure
+unused `constant_small_divisor_intrinsic` support now passes the independent
+56 small-divisor roots,68 prior nonwhole roots,640 older native rows and bounded
+rejection controls under GNU Werror, Clang Werror ASan/UBSan/float-cast-overflow
+no-recovery, and registered CTest. Existing helper frontiers remain unchanged;
+no parser/runtime caller, SAME result, hosted execution, review or compatibility
+completion is claimed. Exact chronology and host receipt hashes are retained in
+the recovery contract; bounded wiring and unchanged SAME remain next.
+
+Subsequent exact current readback for #7210: single GNU O0/g0 TU compile0/run0,
+300 literal contexts/70 display mismatches with metadata/bits all matching,
+verified original archives unchanged. Native-only cross-check audit0. At D0/
+FIXED OFF current TRANSFORM(0.5)=`0`, native=`0.5`; current TRANSFORM(2.50)=`2`,
+native=`2.50`. Full raw/status/source/resource/artifact evidence retained in
+small-divisor-display-diagnostic/. This replaces unknown current bytes, not a
+cause/policy/helper/compatibility claim. Both-chat window released; separate
+Numeric-display prerequisite remains mandatory before unchanged division SAME.
+
 Division parent recovery increment `VR-5611-NUMERIC-DIVISION-RUNTIME-GRID-001`:
 [actual-input-controlled native runtime matrix](../tests/fixtures/vfp9-numeric-division-context/runtime-recovery.md)
 at mainb37ddf7241; paired1,620 values/run, actual0/empty stderr/no errors,

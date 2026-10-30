@@ -78,9 +78,15 @@ int main() {
                     expect(paused.reason == DebugPauseReason::breakpoint,
                            context + " paused " + paused.message, controlFailures);
                     if (paused.reason != DebugPauseReason::breakpoint) continue;
-                    unsigned selected = 0, retainedGaps = 0;
+                    unsigned selected = 0, strengthened = 0, retainedGaps = 0;
                     for (const auto& row : copperfin::test::native_nonwhole_division_rows) {
-                        row.admitted ? ++selected : ++retainedGaps;
+                        const std::string rowLabel = row.label;
+                        const bool smallDivisorPrerequisite =
+                            rowLabel == "retained-outside-scope:575" ||
+                            rowLabel == "retained-outside-scope:576";
+                        if (row.admitted) ++selected;
+                        else if (smallDivisorPrerequisite) ++strengthened;
+                        else ++retainedGaps;
                         const auto result = session.evaluate_watch_expression(row.expression);
                         const auto label = context + " " + row.label + " " + row.expression;
                         expect(result.ok, label + " evaluates " + result.message, evaluationFailures);
@@ -89,7 +95,11 @@ int main() {
                         expect(value.kind == PrgValueKind::number && !value.is_null,
                                label + " ordinary Number", evaluationFailures);
                         if (value.kind != PrgValueKind::number || value.is_null) continue;
-                        if (row.admitted) {
+                        if (row.admitted || smallDivisorPrerequisite) {
+                            // The two former small-divisor controls are now inside
+                            // the separately frozen/admitted prerequisite; strengthen
+                            // their existing native expectations instead of deleting
+                            // or weakening the assertions.
                             expect(value.numeric_metadata == row.metadata[d],
                                    label + " native descriptor", descriptorFailures);
                             const auto actual = std::bit_cast<std::uint64_t>(value.number_value);
@@ -98,13 +108,12 @@ int main() {
                             expect(actual == row.bits, label + " bits actual=" + hex(actual) +
                                    " native=" + hex(row.bits), bitFailures);
                         } else {
-                            // Retain native expectations, without claiming parity outside the slice.
                             expect(!value.numeric_metadata,
                                    label + " retained unknown producer", controlFailures);
                         }
                     }
-                    expect(selected == 574 && retainedGaps == 4,
-                           context + " exact frozen frontier inventory", controlFailures);
+                    expect(selected == 574 && strengthened == 2 && retainedGaps == 2,
+                           context + " exact frozen plus strengthened frontier inventory", controlFailures);
                     expect(session.evaluate_watch_expression(".NULL./(5/2)").value.is_null,
                            context + " NULL unchanged", controlFailures);
                     expect(!session.evaluate_watch_expression("(5/2)/.T.").ok,
