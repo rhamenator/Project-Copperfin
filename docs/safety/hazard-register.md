@@ -510,9 +510,10 @@ exact-two-argument existing-ID adapter was then wired without changing the
 first selector or other routes. Both fixed106 suites pass all subjects and the
 eight pre-wire-authored hostile shards pass56 reads each with empty sanitizer
 diagnostics and unchanged frozen inputs. Missing/malformed fractional metadata
-remains fail-closed in VFP9 mode. SAME-compiler modeled preservation, bounded
-development contracts, broader qualification, exact-head review and hosted
-integration remain open. No hazard severity/status, Numeric/list family,
+remains fail-closed in VFP9 mode. SAME-compiler modeled preservation and five
+bounded development contracts are complete as recorded below; the clean repeat
+walkthrough, broader qualification, exact-head review and hosted integration
+remain open. No hazard severity/status, Numeric/list family,
 independent-human, system, release or parent closure is claimed. See the
 [unused-helper phase](../../tests/fixtures/vfp9-listitem-column-numeric/unused-helper-phase.md)
 and [fixed-only hostile phase](../../tests/fixtures/vfp9-listitem-column-numeric/fixed-only-hostile-phase.md).

@@ -143,8 +143,11 @@ It also keeps safe-public original failures, fixed-only hostile corroboration
 and modeled excluded-scope preservation as separate evidence layers. The first
 delegated development walkthrough at exact head `d24e468c3` found missing
 arithmetic-requirement mapping, this assurance plan, and stale pre-wire wording;
-those findings are repaired here but a clean repeat walkthrough remains an open
-gate. This is maintainer development review, not independent-human, system,
+the first repair addressed those items. A repeat at `3811417a5` then found one
+incorrect fixed106 attribution, a stale intermediate gate status and two stale
+pre-wire source comments; those are repaired in the next checkpoint, but a clean
+repeat walkthrough remains an open gate. This is maintainer development review,
+not independent-human, system,
 release or hazard-closure evidence.
 
 Rollback is a reviewed revert of the bounded caller, arithmetic-metadata hooks,
