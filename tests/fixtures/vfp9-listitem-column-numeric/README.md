@@ -119,9 +119,11 @@ and each SAME-compiler baseline/fixed pair is whole-byte identical at SHA-256
 `90187666e02d52fcf6d9bc71d3ef4fe2ac4f3cd3f29985bb3bf4cb1b0b9e2611`;
 frozen source and all nine library hashes reverify. See
 [the preservation boundary and procedure](preservation-plan.md). Five
-development contracts pass; the clean repeat walkthrough, broader
-qualification, exact-head review and hosted integration remain mandatory before
-merge. No parent, hazard, system or release closure is claimed.
+development contracts pass and the required repeat MEDIUM walkthrough is clean
+at exact head `659a3f558`. A one-shot 612-input broader manifest now freezes the
+current runtime/test sources and a 131-test GNU/Clang gate, but that gate has not
+executed. Broader qualification, exact-head review and hosted integration remain
+mandatory before merge. No parent, hazard, system or release closure is claimed.
 
 ## DQ/DV-5611-LISTITEM-COLUMN-NUMERIC-001 development walkthrough
 
@@ -145,10 +147,11 @@ delegated development walkthrough at exact head `d24e468c3` found missing
 arithmetic-requirement mapping, this assurance plan, and stale pre-wire wording;
 the first repair addressed those items. A repeat at `3811417a5` then found one
 incorrect fixed106 attribution, a stale intermediate gate status and two stale
-pre-wire source comments; those are repaired in the next checkpoint, but a clean
-repeat walkthrough remains an open gate. This is maintainer development review,
-not independent-human, system,
-release or hazard-closure evidence.
+pre-wire source comments. Those repairs were confirmed by a clean read-only
+repeat at exact head `659a3f558`, including the intentionally historical
+fixed544 evidence and its two comment-only mismatches. This is maintainer
+development review, not independent-human, system, release or hazard-closure
+evidence.
 
 Rollback is a reviewed revert of the bounded caller, arithmetic-metadata hooks,
 tests and corresponding documentation while retaining native captures,

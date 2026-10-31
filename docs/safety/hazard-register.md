@@ -483,9 +483,10 @@ The initial MEDIUM delegated development walkthrough at exact head
 `d24e468c3` was NOT CLEAN: it found missing arithmetic-requirement traceability,
 an incomplete assurance plan and stale pre-wire wording. The fixture now records
 the slice-specific procedural delta, misuse boundaries, rollback and field-
-notification plan; a clean repeat walkthrough remains required before broader
-qualification. This is maintainer development review, not independent-human,
-system, release, hazard or parent closure.
+notification plan. A later repeat walkthrough is clean at exact head
+`659a3f558`; the frozen 131-test-per-compiler broader gate remains unexecuted.
+This is maintainer development review, not independent-human, system, release,
+hazard or parent closure.
 Further native recovery demonstrates identical observed Numeric/BRS/context/
 sample-state inputs with distinct results and32of120 outcome changes after a
 documented bit-preserving double roundtrip. This cannot be turned into an
@@ -510,10 +511,10 @@ exact-two-argument existing-ID adapter was then wired without changing the
 first selector or other routes. Both fixed106 suites pass all subjects and the
 eight pre-wire-authored hostile shards pass56 reads each with empty sanitizer
 diagnostics and unchanged frozen inputs. Missing/malformed fractional metadata
-remains fail-closed in VFP9 mode. SAME-compiler modeled preservation and five
-bounded development contracts are complete as recorded below; the clean repeat
-walkthrough, broader qualification, exact-head review and hosted integration
-remain open. No hazard severity/status, Numeric/list family,
+remains fail-closed in VFP9 mode. SAME-compiler modeled preservation, five
+bounded development contracts and the clean repeat walkthrough are complete as
+recorded below; the frozen broader qualification, exact-head review and hosted
+integration remain open. No hazard severity/status, Numeric/list family,
 independent-human, system, release or parent closure is claimed. See the
 [unused-helper phase](../../tests/fixtures/vfp9-listitem-column-numeric/unused-helper-phase.md)
 and [fixed-only hostile phase](../../tests/fixtures/vfp9-listitem-column-numeric/fixed-only-hostile-phase.md).
@@ -526,8 +527,8 @@ at raw SHA-256
 all compile/run/audit/comparison statuses are zero, diagnostics are empty, and
 frozen input plus nine-library hashes reverify. This closes only the modeled
 excluded-scope preservation gate. Five bounded development contracts pass at
-exact head `d24e468c3`; the repeat walkthrough, broader qualification and
-integration gates remain open.
+exact head `d24e468c3`; the repeat walkthrough is clean at `659a3f558`. The
+frozen exact-head broader qualification and integration gates remain open.
 
 ## Bounded AddListItem missing-ID numeric-column linkage
 
