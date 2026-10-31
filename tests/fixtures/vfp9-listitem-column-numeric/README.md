@@ -100,6 +100,22 @@ selection-main-inputs.initial-nine.sha256, NOT a ten-input qualification. The
 correct policy source is tests/CopperfinTestIsolation.cmake; the new ten-entry
 manifest is independently checked against origin/main, with no source changes.
 
+## Local implementation checkpoint (2026-10-31)
+
+The historical selection/recovery ordering above is now fulfilled through the
+bounded caller and hostile gates. Both complete original106 compiler suites ran
+before wiring and failed only the four expected public shards. Both complete
+fixed106 suites now pass all subjects, including four public shards at92 reads
+each, with unchanged544 frozen inputs and no sanitizer diagnostics. Each
+compiler's four pre-wire-authored fixed-only hostile shards also passes56 reads
+with empty stderr and unchanged source/binary hashes. The caller changes only
+the exact-two-argument existing-ID ListItem supplied-column Numeric/exact
+selector; first-selector behavior and every other route remain outside this
+slice. SAME-compiler modeled preservation, development contracts/delegated
+walkthrough, broader qualification, exact-head review and hosted integration
+remain mandatory before merge. No parent, hazard, system or release closure is
+claimed.
+
 ## Retained hosted qualification dependency
 
 PR7187 optional full Windows native run38636352844 attempt1 failed: all610 tests

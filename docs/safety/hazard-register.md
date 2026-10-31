@@ -498,16 +498,21 @@ attached decimal count plus two followed by integer projection, explaining all
 1,816 first/repeat invocations without a binary tolerance. See the
 [prerequisite recovery](../../tests/fixtures/vfp9-listitem-column-numeric/metadata-foundation.md)
 and [bounded value-carrier map](../../tests/fixtures/vfp9-listitem-column-numeric/metadata-carrier-requirements.md).
-The first carrier slice only added optional value-owned attributes. A later
-bounded foundation now adds a distinct UNUSED supplied-column helper and direct
-fixture that preserve exact integral checked conversion and the recovered
-metadata-sensitive fractional formula. Missing/malformed fractional metadata
-remains fail-closed in VFP9 mode. No caller, allocation or public behavior
-changes. Consumers must
-rebuild against the changed C++ value layout; future conversion/wiring still
-requires operation-specific bounds, complete originals and safety evidence. No
-new hazard severity/status, Numeric/list family, independent-human or release
-closure is claimed. See the [unused-helper phase](../../tests/fixtures/vfp9-listitem-column-numeric/unused-helper-phase.md).
+The first carrier slice only added optional value-owned attributes. The bounded
+consumer foundation then added a distinct supplied-column helper and direct
+fixture preserving exact integral checked conversion and the recovered
+metadata-sensitive fractional formula. Both original106 compiler suites
+completed before wiring, failing only the four expected public shards; the
+exact-two-argument existing-ID adapter was then wired without changing the
+first selector or other routes. Both fixed106 suites pass all subjects and the
+eight pre-wire-authored hostile shards pass56 reads each with empty sanitizer
+diagnostics and unchanged frozen inputs. Missing/malformed fractional metadata
+remains fail-closed in VFP9 mode. SAME-compiler modeled preservation, bounded
+development contracts, broader qualification, exact-head review and hosted
+integration remain open. No hazard severity/status, Numeric/list family,
+independent-human, system, release or parent closure is claimed. See the
+[unused-helper phase](../../tests/fixtures/vfp9-listitem-column-numeric/unused-helper-phase.md)
+and [fixed-only hostile phase](../../tests/fixtures/vfp9-listitem-column-numeric/fixed-only-hostile-phase.md).
 
 ## Bounded AddListItem missing-ID numeric-column linkage
 
