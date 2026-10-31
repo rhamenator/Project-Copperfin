@@ -32,6 +32,22 @@ const std::vector<Case> exacts{
  {"CAST(1 AS INT64)",1,1},{"CAST(10 AS INT64)",10,10},
  {"CAST(-4294967295 AS INT64)",{},1},{"CAST(4294967297 AS UINT64)",{},1}
 };
+// Parent-derived containment and exact64 low32 expectations authored before
+// caller migration. These inputs are fixed-only: never execute them against
+// the legacy caller or treat them as native VFP9 syntax evidence.
+const std::vector<Case> hostileNumbers{
+ {"1E20",{},{}},{"-1E20",{},{}},{"1E300",{},{}},{"-1E300",{},{}},
+ {"(1E300*1E300)",{},{}},{"(-1E300*1E300)",{}, {}}
+};
+const std::vector<Case> hostileExacts{
+ {"CAST(4294967297 AS INT64)",{},1},
+ {"CAST(-9223372036854775808 AS INT64)",{},{}},
+ {"(CAST(-9223372036854775808 AS INT64)+CAST(1 AS INT64))",{},1},
+ {"(CAST(9223372036854774784 AS INT64)+CAST(1023 AS INT64))",{},{}},
+ {"CAST(4294967297 AS UINT64)",{},1},
+ {"(CAST(9007199254740992 AS UINT64)+CAST(1 AS UINT64))",{},1},
+ {"(CAST(18446744073709549568 AS UINT64)+CAST(2047 AS UINT64))",{}, {}}
+};
 int public_count=0;
 std::string get(const RuntimePauseState& state,const char* key){
  const auto found=state.globals.find(key);return found==state.globals.end()?"<missing>":format_value(found->second);
@@ -84,11 +100,21 @@ void invoke(const fs::path& path,const std::string& mode,int selected,const std:
  expect(seen,"ListItem COLUMN captured control "+tag);
  for(const auto& event:state.events)expect(event.category!="prg.object.selected"&&event.category!="ole.invoke","ListItem COLUMN no external event "+tag);
 }
-void public_cases(const std::string& mode,int selected){
- expect(numbers.size()==11&&exacts.size()==4,"ListItem COLUMN frozen tables");
+void public_cases(const std::string& mode,int selected,bool hostile){
+ expect(numbers.size()==11&&exacts.size()==4&&hostileNumbers.size()==6&&hostileExacts.size()==7,
+  "ListItem COLUMN frozen tables");
  const auto dir=fs::temp_directory_path()/("copperfin_listitem_column_5611_"+mode+"_"+std::to_string(selected)+"_"+
   std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));fs::create_directories(dir);const auto path=dir/"query.prg";
- const bool legacy=mode=="VFP9";for(const std::string cls:{"ListBox","ComboBox"})for(int target:{11,22}){
+ const bool legacy=mode=="VFP9";
+ if(hostile){
+  for(const std::string cls:{"ListBox","ComboBox"})for(int target:{11,22}){
+   for(const auto& c:hostileNumbers)invoke(path,mode,selected,cls,target,c.source,legacy?c.legacy:c.modern);
+   for(const auto& c:hostileExacts)invoke(path,mode,selected,cls,target,c.source,legacy?c.legacy:c.modern);
+   invoke(path,mode,selected,cls,target,"(EXP(1000)-EXP(1000))",{});
+  }
+  set_env_value("COPPERFIN_LOCALE","en-US",true);std::error_code ignored;fs::remove_all(dir,ignored);return;
+ }
+ for(const std::string cls:{"ListBox","ComboBox"})for(int target:{11,22}){
   for(const auto& c:numbers)invoke(path,mode,selected,cls,target,c.source,legacy?c.legacy:c.modern);
   for(const auto& c:exacts)invoke(path,mode,selected,cls,target,c.source,legacy?c.legacy:c.modern);}
  for(const std::string cls:{"ListBox","ComboBox"})for(const std::string& config:{std::string{},
@@ -104,9 +130,11 @@ void public_cases(const std::string& mode,int selected){
 }
 }
 int main(int argc,char** argv){ScopedEnvironmentValue locale("COPPERFIN_LOCALE");set_env_value("COPPERFIN_LOCALE","en-US",true);
- if(argc==1){expect(numbers.size()==11&&exacts.size()==4,"ListItem COLUMN frozen tables");}
- else if(argc==3&&(std::string(argv[1])=="COPPERFIN"||std::string(argv[1])=="VFP9")&&
-  (std::string(argv[2])=="1"||std::string(argv[2])=="2")){public_cases(argv[1],std::string(argv[2])=="1"?1:2);
-  expect(public_count==92,"ListItem COLUMN complete public count");}
- else{std::cerr<<"Expected COPPERFIN|VFP9 1|2\n";return 2;}
+ if(argc==1){expect(numbers.size()==11&&exacts.size()==4&&hostileNumbers.size()==6&&hostileExacts.size()==7,
+  "ListItem COLUMN frozen tables");}
+ else if((argc==3||argc==4)&&(std::string(argv[1])=="COPPERFIN"||std::string(argv[1])=="VFP9")&&
+  (std::string(argv[2])=="1"||std::string(argv[2])=="2")&&(argc==3||std::string(argv[3])=="--fixed-only-hostile")){
+  public_cases(argv[1],std::string(argv[2])=="1"?1:2,argc==4);
+  expect(public_count==(argc==4?56:92),"ListItem COLUMN complete public count");}
+ else{std::cerr<<"Expected COPPERFIN|VFP9 1|2 [--fixed-only-hostile]\n";return 2;}
  std::cout<<"ListItem supplied-column frozen public cases="<<public_count<<'\n';return test_failures()==0?0:1;}
