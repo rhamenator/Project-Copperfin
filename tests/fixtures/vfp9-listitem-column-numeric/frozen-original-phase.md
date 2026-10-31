@@ -35,3 +35,15 @@ headers and PRG engine implementation, all PRG-engine test sources, CMake and
 isolation registrations, and the original driver/auditors. The deliberately
 broad source inventory prevents an unrelated PRG test or included runtime file
 from changing between the two compiler executions without detection.
+
+Both complete original106 executions finished before caller wiring. GNU and
+Clang each passed all 100 prior controls, the direct helper and the bare frozen
+inventory, and failed only the four expected public mode/session shards. Every
+shard executed 92 reads; the full 448 selected assertion failures were identical
+between compilers (`b2bac3860ac8d537a68548ec128071d4735fc8907311f07c2724b989846d0cdc`),
+with no unrelated assertion or sanitizer diagnostic. GNU raw SHA-256 is
+`541f0ede2013c0e431d95bf885ee62c2f3a6659f0af896d71331e1d955628bbd`;
+Clang raw SHA-256 is
+`fa4fc5619c85d29a241d09033d04054961d57cb4c2090d2b54a6722e4340e1d9`.
+The complete audit returned true; these failures remain pre-fix evidence, not
+acceptance of the unwired caller.
