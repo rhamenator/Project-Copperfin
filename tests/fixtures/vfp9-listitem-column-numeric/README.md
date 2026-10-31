@@ -16,9 +16,10 @@ resumption; earlier unknown-cause statements below are historical.
 
 Current continuation: the owner selected the metadata-compatible path under
 [#7189](https://github.com/rhamenator/Project-Copperfin/issues/7189). The
-retained factorial/settings audit now recovers the conversion formula, and the
-bounded helper implements it without caller wiring; see
-[unused-helper foundation](unused-helper-phase.md) and the
+retained factorial/settings audit now recovers the conversion formula. The
+historical unused-helper checkpoint implemented it without caller wiring; the
+later bounded caller is recorded in the local implementation checkpoint below.
+See [unused-helper foundation](unused-helper-phase.md) and the
 [frozen safe-public original phase](frozen-original-phase.md). The earlier choice and
 selection/recovery checkpoints below are retained history.
 
@@ -117,10 +118,44 @@ GNU and Clang sanitizer builds. All four audits pass, diagnostics are empty,
 and each SAME-compiler baseline/fixed pair is whole-byte identical at SHA-256
 `90187666e02d52fcf6d9bc71d3ef4fe2ac4f3cd3f29985bb3bf4cb1b0b9e2611`;
 frozen source and all nine library hashes reverify. See
-[the preservation boundary and procedure](preservation-plan.md). Development
-contracts/delegated walkthrough, broader qualification, exact-head review and
-hosted integration remain mandatory before merge. No parent, hazard, system or
-release closure is claimed.
+[the preservation boundary and procedure](preservation-plan.md). Five
+development contracts pass; the clean repeat walkthrough, broader
+qualification, exact-head review and hosted integration remain mandatory before
+merge. No parent, hazard, system or release closure is claimed.
+
+## DQ/DV-5611-LISTITEM-COLUMN-NUMERIC-001 development walkthrough
+
+Misuse severity is MEDIUM. The procedural delta is deliberately narrow: only
+an exact-two-argument `ListItem(existingStableId, suppliedColumn)` read with an
+already-resolved ordinary stable ID may route the second Numeric/exact-integer
+selector through the recovered checked conversion. It does not reinterpret the
+first argument as a row position, alter one-argument/other-arity calls, create
+rows, change binding/RowSourceType behavior, or claim arbitrary expression,
+column-capacity, allocation, persistence or lifecycle parity. Constant
+arithmetic metadata hooks preserve only the native-evidenced bounded chain and
+leave payloads unchanged; unsupported origins, descriptor shapes and values
+remain fail-closed.
+
+The misuse walkthrough checks that guidance cannot be read as blanket rounding,
+a binary tolerance, a canonical-double shortcut, proof that every fractional
+Numeric is valid, or authority to weaken missing/malformed-metadata rejection.
+It also keeps safe-public original failures, fixed-only hostile corroboration
+and modeled excluded-scope preservation as separate evidence layers. The first
+delegated development walkthrough at exact head `d24e468c3` found missing
+arithmetic-requirement mapping, this assurance plan, and stale pre-wire wording;
+those findings are repaired here but a clean repeat walkthrough remains an open
+gate. This is maintainer development review, not independent-human, system,
+release or hazard-closure evidence.
+
+Rollback is a reviewed revert of the bounded caller, arithmetic-metadata hooks,
+tests and corresponding documentation while retaining native captures,
+original/fixed/hostile/preservation failures and receipts for investigation.
+After rollback, rerun the frozen original/fixed and preservation contracts so a
+partial revert cannot silently restore unchecked conversion or stale claims.
+Field notification identifies the exact affected head, Numeric mode, control
+class, argument shape and evidence limitation in the pull request and admitted
+issues; correct linked requirements/hazard guidance and do not claim family,
+parent, KBX, hazard, system or release closure.
 
 ## Retained hosted qualification dependency
 

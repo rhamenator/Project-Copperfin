@@ -479,10 +479,13 @@ pairs224/188/360 now retain actual type/BRS/setup/sample-state/context and
 near-integer promotion requiring further allowed recovery; capture audits0
 are not a conversion table or completed assurance. See
 [recovery checkpoint](../../tests/fixtures/vfp9-listitem-column-numeric/recovery-observations.md).
-MEDIUM misuse analysis and
-delegated walkthrough remain planned before behavior completion. No helper,
-assertion, configuration, caller migration or acceptance claim is introduced;
-no hazard severity/status, independent-human/system/release or parent closure.
+The initial MEDIUM delegated development walkthrough at exact head
+`d24e468c3` was NOT CLEAN: it found missing arithmetic-requirement traceability,
+an incomplete assurance plan and stale pre-wire wording. The fixture now records
+the slice-specific procedural delta, misuse boundaries, rollback and field-
+notification plan; a clean repeat walkthrough remains required before broader
+qualification. This is maintainer development review, not independent-human,
+system, release, hazard or parent closure.
 Further native recovery demonstrates identical observed Numeric/BRS/context/
 sample-state inputs with distinct results and32of120 outcome changes after a
 documented bit-preserving double roundtrip. This cannot be turned into an
@@ -521,8 +524,9 @@ at raw SHA-256
 `90187666e02d52fcf6d9bc71d3ef4fe2ac4f3cd3f29985bb3bf4cb1b0b9e2611`;
 all compile/run/audit/comparison statuses are zero, diagnostics are empty, and
 frozen input plus nine-library hashes reverify. This closes only the modeled
-excluded-scope preservation gate; contracts, walkthrough, broader
-qualification and integration gates remain open.
+excluded-scope preservation gate. Five bounded development contracts pass at
+exact head `d24e468c3`; the repeat walkthrough, broader qualification and
+integration gates remain open.
 
 ## Bounded AddListItem missing-ID numeric-column linkage
 
