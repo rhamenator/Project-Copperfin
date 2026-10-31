@@ -884,6 +884,10 @@
 
             PrgValue parse_additive()
             {
+                // Each invocation argument is an independent arithmetic tree.
+                // A runtime primary in an earlier argument must not reclassify
+                // this literal-only additive subtree as runtime-derived.
+                ScopedNumericExpressionContext additive_context(numeric_runtime_primary_);
                 PrgValue left = parse_multiplicative();
                 while (true)
                 {
@@ -891,6 +895,7 @@
                     if (match("+"))
                     {
                         PrgValue right = parse_multiplicative();
+                        constant_materialized_metadata_.reset();
                         if (suppress_evaluation_)
                         {
                             left = make_empty_value();
@@ -931,12 +936,25 @@
                         }
                         else
                         {
-                            left = make_number_value(value_as_number(left) + value_as_number(right));
+                            PrgValue result = make_number_value(value_as_number(left) + value_as_number(right));
+                            if (!numeric_runtime_primary_)
+                            {
+                                const auto attributes = constant_numeric_arithmetic_metadata(
+                                    ConstantNumericArithmeticOperation::addition, left, right,
+                                    result.number_value, set_callback_("DECIMALS"), true);
+                                if (attributes)
+                                {
+                                    result.numeric_metadata = attributes->intrinsic;
+                                    constant_materialized_metadata_ = attributes->materialized;
+                                }
+                            }
+                            left = std::move(result);
                         }
                     }
                     else if (match("-"))
                     {
                         PrgValue right = parse_multiplicative();
+                        constant_materialized_metadata_.reset();
                         if (suppress_evaluation_)
                         {
                             left = make_empty_value();
@@ -986,7 +1004,19 @@
                         }
                         else
                         {
-                            left = make_number_value(value_as_number(left) - value_as_number(right));
+                            PrgValue result = make_number_value(value_as_number(left) - value_as_number(right));
+                            if (!numeric_runtime_primary_)
+                            {
+                                const auto attributes = constant_numeric_arithmetic_metadata(
+                                    ConstantNumericArithmeticOperation::subtraction, left, right,
+                                    result.number_value, set_callback_("DECIMALS"), true);
+                                if (attributes)
+                                {
+                                    result.numeric_metadata = attributes->intrinsic;
+                                    constant_materialized_metadata_ = attributes->materialized;
+                                }
+                            }
+                            left = std::move(result);
                         }
                     }
                     else
@@ -1010,6 +1040,7 @@
                     if (match("*"))
                     {
                         PrgValue right = parse_unary();
+                        constant_materialized_metadata_.reset();
                         if (suppress_evaluation_)
                         {
                             left = make_empty_value();
@@ -1029,9 +1060,20 @@
                         }
                         else
                         {
-                            left = make_number_value(value_as_number(left) * value_as_number(right));
+                            PrgValue result = make_number_value(value_as_number(left) * value_as_number(right));
+                            if (!numeric_runtime_primary_)
+                            {
+                                const auto attributes = constant_numeric_arithmetic_metadata(
+                                    ConstantNumericArithmeticOperation::multiplication, left, right,
+                                    result.number_value, set_callback_("DECIMALS"), true);
+                                if (attributes)
+                                {
+                                    result.numeric_metadata = attributes->intrinsic;
+                                    constant_materialized_metadata_ = attributes->materialized;
+                                }
+                            }
+                            left = std::move(result);
                         }
-                        constant_materialized_metadata_.reset();
                     }
                     else if (match("/"))
                     {
@@ -1253,7 +1295,19 @@
                         return make_null_value();
                     }
                     require_compatible_operands(OperatorTypeRule::power, left, right);
-                    return make_number_value(std::pow(value_as_number(left), value_as_number(right)));
+                    PrgValue result = make_number_value(std::pow(value_as_number(left), value_as_number(right)));
+                    if (!numeric_runtime_primary_)
+                    {
+                        const auto attributes = constant_numeric_arithmetic_metadata(
+                            ConstantNumericArithmeticOperation::power, left, right,
+                            result.number_value, set_callback_("DECIMALS"), true);
+                        if (attributes)
+                        {
+                            result.numeric_metadata = attributes->intrinsic;
+                            constant_materialized_metadata_ = attributes->materialized;
+                        }
+                    }
+                    return result;
                 }
                 return left;
             }
@@ -1612,6 +1666,20 @@
                     const std::string member_path = function.substr(member_separator + 1U);
                     if (is_selector_style_native_member_name(raw_member_path))
                     {
+                        const bool preserve_listitem_column_value =
+                            normalize_identifier(raw_member_path) == "listitem" &&
+                            arguments.size() == 2U && !arguments[1].is_null &&
+                            (arguments[1].kind == PrgValueKind::number ||
+                             arguments[1].kind == PrgValueKind::int64 ||
+                             arguments[1].kind == PrgValueKind::uint64);
+                        if (preserve_listitem_column_value)
+                        {
+                            // RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001: retain
+                            // exact payload/kind/metadata for the checked
+                            // method adapter; formatting would erase all three.
+                            return ole_invoke_callback_(
+                                base_name, member_path, arguments, argument_references);
+                        }
                         PrgValue current = resolve_identifier(raw_base_name);
                         std::string selector_member_name = raw_member_path;
                         selector_member_name.push_back('(');
@@ -2972,6 +3040,17 @@
                     const std::string member_path = normalized_identifier.substr(normalized_separator + 1U);
                     if (is_selector_style_native_member_name(raw_member_path))
                     {
+                        const bool preserve_listitem_column_value =
+                            normalize_identifier(raw_member_path) == "listitem" &&
+                            secondary_selector.has_value() && !secondary_selector->is_null &&
+                            (secondary_selector->kind == PrgValueKind::number ||
+                             secondary_selector->kind == PrgValueKind::int64 ||
+                             secondary_selector->kind == PrgValueKind::uint64);
+                        if (preserve_listitem_column_value)
+                        {
+                            std::vector<PrgValue> arguments{selector, *secondary_selector};
+                            return ole_invoke_callback_(base_name, member_path, arguments, {});
+                        }
                         PrgValue current = resolve_identifier(raw_base_name);
                         std::string selector_member_name =
                             raw_member_path + "[" + format_value(selector);

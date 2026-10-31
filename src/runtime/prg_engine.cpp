@@ -23,6 +23,7 @@
 #include "prg_numeric_runtime_division.h"
 #include "prg_numeric_constant_division_intrinsic.h"
 #include "prg_numeric_constant_division_materialization.h"
+#include "prg_numeric_constant_arithmetic_metadata.h"
 #include "prg_numeric_unary_metadata.h"
 #include "prg_numeric_expression_context.h"
 #include "prg_engine_internal.h"

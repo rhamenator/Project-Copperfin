@@ -260,10 +260,18 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
         }
 
         // RQ-CF-PRG-LISTITEM-NUMERIC-001: implicit column 1 READ only.
-        // Explicit columns and unsupported types retain the legacy path.
         if (arguments.size() == 1U) {
             if (auto result = read_native_list_control_item_cell_numeric(
                     runtime_object, arguments.front(), behavior); result.has_value()) {
+                return result;
+            }
+        }
+        // RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001: exact-two-argument,
+        // existing-ID READ only. Unsupported column types and every other
+        // arity retain the legacy path.
+        if (arguments.size() == 2U) {
+            if (auto result = read_native_list_control_item_cell_supplied_column_numeric(
+                    runtime_object, arguments[0], arguments[1], behavior); result.has_value()) {
                 return result;
             }
         }
@@ -967,6 +975,37 @@ std::optional<PrgValue> read_native_list_control_item_cell_numeric(
         return make_string_value("");
     }
     return read_native_list_control_item_cell(runtime_object, *checked_item_id, 0U);
+}
+
+// RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001;
+// VR-5611-LISTITEM-COLUMN-NUMERIC-001/002. The first selector deliberately
+// retains the pre-existing explicit-column conversion and precedence. Only the
+// supplied second Numeric/exact selector is migrated to the recovered checked
+// conversion. Materialization continues to precede conversion.
+std::optional<PrgValue> read_native_list_control_item_cell_supplied_column_numeric(
+    RuntimeOleObjectState& runtime_object,
+    const PrgValue& item_id,
+    const PrgValue& column,
+    NumericBehavior behavior)
+{
+    if (!is_native_list_control_runtime_object(runtime_object) || column.is_null ||
+        (column.kind != PrgValueKind::number && column.kind != PrgValueKind::int64 &&
+         column.kind != PrgValueKind::uint64)) {
+        return std::nullopt;
+    }
+
+    materialize_native_list_control_rows(runtime_object);
+    const long long requested_item_id = std::llround(value_as_number(item_id));
+    if (requested_item_id < 1LL) {
+        return make_string_value("");
+    }
+
+    const auto checked_column = checked_listitem_column_numeric_argument(column, behavior);
+    if (!checked_column.has_value()) {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
+    }
+    return read_native_list_control_item_cell(
+        runtime_object, requested_item_id, static_cast<std::size_t>(*checked_column - 1));
 }
 
 std::optional<PrgValue> read_native_list_control_item_id_for_slot(

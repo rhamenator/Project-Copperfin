@@ -366,6 +366,11 @@ std::optional<PrgValue> read_native_list_control_item_cell_numeric(
     RuntimeOleObjectState& runtime_object,
     const PrgValue& item_id,
     NumericBehavior behavior);
+std::optional<PrgValue> read_native_list_control_item_cell_supplied_column_numeric(
+    RuntimeOleObjectState& runtime_object,
+    const PrgValue& item_id,
+    const PrgValue& column,
+    NumericBehavior behavior);
 std::optional<PrgValue> read_native_list_control_item_id_for_slot(
     RuntimeOleObjectState& runtime_object,
     std::size_t row_slot);
