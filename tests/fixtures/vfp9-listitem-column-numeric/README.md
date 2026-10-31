@@ -111,10 +111,16 @@ compiler's four pre-wire-authored fixed-only hostile shards also passes56 reads
 with empty stderr and unchanged source/binary hashes. The caller changes only
 the exact-two-argument existing-ID ListItem supplied-column Numeric/exact
 selector; first-selector behavior and every other route remain outside this
-slice. SAME-compiler modeled preservation, development contracts/delegated
-walkthrough, broader qualification, exact-head review and hosted integration
-remain mandatory before merge. No parent, hazard, system or release closure is
-claimed.
+slice. The frozen excluded-scope harness subsequently captured 256 rows across
+eight contexts at the exact pre-wire commit and current candidate with both
+GNU and Clang sanitizer builds. All four audits pass, diagnostics are empty,
+and each SAME-compiler baseline/fixed pair is whole-byte identical at SHA-256
+`90187666e02d52fcf6d9bc71d3ef4fe2ac4f3cd3f29985bb3bf4cb1b0b9e2611`;
+frozen source and all nine library hashes reverify. See
+[the preservation boundary and procedure](preservation-plan.md). Development
+contracts/delegated walkthrough, broader qualification, exact-head review and
+hosted integration remain mandatory before merge. No parent, hazard, system or
+release closure is claimed.
 
 ## Retained hosted qualification dependency
 

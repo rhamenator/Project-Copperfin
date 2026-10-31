@@ -513,6 +513,16 @@ integration remain open. No hazard severity/status, Numeric/list family,
 independent-human, system, release or parent closure is claimed. See the
 [unused-helper phase](../../tests/fixtures/vfp9-listitem-column-numeric/unused-helper-phase.md)
 and [fixed-only hostile phase](../../tests/fixtures/vfp9-listitem-column-numeric/fixed-only-hostile-phase.md).
+The separately frozen excluded-scope harness now audits 256 calls in eight
+contexts across arity, unsupported second types, unusual first selectors,
+binding/RowSourceType, missing-column and ordinary-control groups. GNU and
+Clang sanitizer baseline/fixed SAME-compiler outputs are whole-byte identical
+at raw SHA-256
+`90187666e02d52fcf6d9bc71d3ef4fe2ac4f3cd3f29985bb3bf4cb1b0b9e2611`;
+all compile/run/audit/comparison statuses are zero, diagnostics are empty, and
+frozen input plus nine-library hashes reverify. This closes only the modeled
+excluded-scope preservation gate; contracts, walkthrough, broader
+qualification and integration gates remain open.
 
 ## Bounded AddListItem missing-ID numeric-column linkage
 
