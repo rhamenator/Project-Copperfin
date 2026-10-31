@@ -104,6 +104,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_numeric_real_assignment_helper
             test_prg_numeric_runtime_division_helper
             test_prg_numeric_constant_division_intrinsic_helper
+            test_prg_numeric_constant_arithmetic_metadata_helper
             test_prg_numeric_nonwhole_division_helper
             test_prg_numeric_small_divisor_helper
             test_prg_numeric_value_display_helper
