@@ -121,8 +121,12 @@ frozen source and all nine library hashes reverify. See
 [the preservation boundary and procedure](preservation-plan.md). Five
 development contracts pass and the required repeat MEDIUM walkthrough is clean
 at exact head `659a3f558`. A one-shot 612-input broader manifest now freezes the
-current runtime/test sources and a 131-test GNU/Clang gate, but that gate has not
-executed. Broader qualification, exact-head review and hosted integration remain
+current runtime/test sources and a 131-test GNU/Clang gate. Its first invocation
+failed before test execution because the runner incorrectly named the CTest-only
+isolation contract as a Ninja build target; retained attempt1 reports both builds
+status1 and `unknown target`. Corrected v2 removes only that build-list entry
+while the same regex still selects all 131 tests. Broader qualification,
+exact-head review and hosted integration remain
 mandatory before merge. No parent, hazard, system or release closure is claimed.
 
 ## DQ/DV-5611-LISTITEM-COLUMN-NUMERIC-001 development walkthrough

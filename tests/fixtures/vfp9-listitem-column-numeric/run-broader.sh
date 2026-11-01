@@ -6,6 +6,7 @@ set -u
 root=/home/rich/.codex/worktrees/listitem-column-read-5611/Project-Copperfin
 cd "$root" || exit 2
 fixture=tests/fixtures/vfp9-listitem-column-numeric
+manifest="$fixture/broader-inputs-v2.sha256"
 evidence=build/listitem-column-native
 broader="$evidence/broader"
 mkdir -p "$broader/tmp" || exit 2
@@ -28,9 +29,8 @@ for compiler in gcc clang; do
   [ "$(< "$evidence/preservation/preservation-fixed-$compiler.cmp.status")" = 0 ] || exit 4
 done
 [ "$(< "$evidence/contracts/development-contracts.status")" = 0 ] || exit 4
-sha256sum -c "$fixture/broader-inputs.sha256" > "$broader/inputs-preflight.log" || exit 5
+sha256sum -c "$manifest" > "$broader/inputs-preflight.log" || exit 5
 targets=(
-  test_native_test_isolation_contract
   test_prg_numeric_metadata
   test_prg_numeric_literal_metadata_helper test_prg_engine_numeric_literal_metadata
   test_prg_numeric_unary_metadata_helper test_prg_engine_numeric_unary_metadata
@@ -65,7 +65,7 @@ export TMPDIR="$root/$broader/tmp"
 export ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=print_stacktrace=1
 run_compiler() {
   local name="$1" build="build/listitem-column-$1" result
-  sha256sum -c "$fixture/broader-inputs.sha256" > "$broader/$name-inputs-before.log" || return 6
+  sha256sum -c "$manifest" > "$broader/$name-inputs-before.log" || return 6
   nice -n 10 ionice -c 2 -n 7 cmake --build "$build" --parallel 1 --target "${targets[@]}" > "$broader/$name-build.log" 2>&1
   result=$?; printf '%s\n' "$result" > "$broader/$name-build.status"; [ "$result" = 0 ] || return 7
   ctest --test-dir "$build" -N -R "$regex" > "$broader/$name-test-list.log" 2>&1 || return 8
@@ -77,7 +77,7 @@ run_compiler() {
   date -u +%Y-%m-%dT%H:%M:%SZ > "$broader/$name.completed-at"
   sha256sum "$broader/$name.log" "$broader/$name-junit.xml" > "$broader/$name.outputs.sha256"
   printf '%s\n' "$head" > "$broader/$name-product-head"
-  sha256sum -c "$fixture/broader-inputs.sha256" > "$broader/$name-inputs-after.log" || return 9
+  sha256sum -c "$manifest" > "$broader/$name-inputs-after.log" || return 9
   return "$result"
 }
 run_compiler gcc; gcc_status=$?
