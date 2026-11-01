@@ -1,0 +1,1 @@
+- 2026-11-01: Preserved historical Access catalog proposal, detailed Windows parser diagnosis, and 135 workspace review records from obsolete local branches in the agent-channel archive, with source commit provenance and merged-change dispositions; no runtime behavior or active workstream changed.
