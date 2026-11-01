@@ -145,6 +145,21 @@ descriptor there; the resulting W25/29/37/39 D4/8/16/18 values match the
 existing runtime-division native table. V4 corrects only that expected table,
 retains the diagnostic on future mismatch and freezes the exact current inputs.
 
+The frozen v4 gate then completed at signed+DCO exact head
+`f513e89a55906ef9abb1c10c946d76065b146caa`. GNU passed 131/131 in
+918.11 seconds and Clang with the configured sanitizers passed 131/131 in
+4964.20 seconds, with zero failures, skips or disabled tests in either JUnit
+receipt. The immutable v4 input manifest reverified before receipt packaging.
+Retained receipt SHA-256 values are GNU log
+`4e4ab899542f918bcbc00d3229226c06320bf9a9f70ddc4a4523f42be7dd1e5f`,
+GNU JUnit
+`ce65b3366af833b2e6f829a7aabc7d4861d7277851c746b8087c0c5af82c1b54`,
+Clang log
+`72bae3c791301a97d5ab4c0e2836aa4a40edc097d8c5132111446deb9edade43`
+and Clang JUnit
+`faf96e698886359a0243dbbb6377bf212391d4e7252a399affeb09838a8c70fa`.
+Exact-head review and hosted integration remain mandatory before merge.
+
 ## DQ/DV-5611-LISTITEM-COLUMN-NUMERIC-001 development walkthrough
 
 Misuse severity is MEDIUM. The procedural delta is deliberately narrow: only
