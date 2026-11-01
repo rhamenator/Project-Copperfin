@@ -129,6 +129,22 @@ while the same regex still selects all 131 tests. Broader qualification,
 exact-head review and hosted integration remain
 mandatory before merge. No parent, hazard, system or release closure is claimed.
 
+Attempt2 then completed all 131 GNU tests and found one bounded stale control:
+the earlier constant-division suite still required `((5/2)+0)/iTwo` to remain
+metadata-unknown, while this branch intentionally admits the native-evidenced
+one-integer additive chain and existing runtime-division consumer. The other
+130 tests passed. Corrected v3 strengthens those 20 mode/setting/fixed contexts
+to the composed recovered descriptors and fixes the runner's relative JUnit
+receipt path. Clang attempt2 was stopped during its build once the GNU finding
+was actionable; no Clang result is claimed.
+
+The first focused v3 assertion used the Integer-width composition for every
+setting and failed closed in 16 nonzero-DECIMALS contexts. Diagnostic output
+showed the assigned `iTwo` carries the already recovered real assignment
+descriptor there; the resulting W25/29/37/39 D4/8/16/18 values match the
+existing runtime-division native table. V4 corrects only that expected table,
+retains the diagnostic on future mismatch and freezes the exact current inputs.
+
 ## DQ/DV-5611-LISTITEM-COLUMN-NUMERIC-001 development walkthrough
 
 Misuse severity is MEDIUM. The procedural delta is deliberately narrow: only

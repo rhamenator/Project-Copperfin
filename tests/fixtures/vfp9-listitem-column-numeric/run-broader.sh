@@ -6,7 +6,7 @@ set -u
 root=/home/rich/.codex/worktrees/listitem-column-read-5611/Project-Copperfin
 cd "$root" || exit 2
 fixture=tests/fixtures/vfp9-listitem-column-numeric
-manifest="$fixture/broader-inputs-v2.sha256"
+manifest="$fixture/broader-inputs-v4.sha256"
 evidence=build/listitem-column-native
 broader="$evidence/broader"
 mkdir -p "$broader/tmp" || exit 2
@@ -72,7 +72,7 @@ run_compiler() {
   rg -q 'Total Tests: 131$' "$broader/$name-test-list.log" || return 8
   ctest --test-dir "$build" --show-only=json-v1 -R "$regex" > "$broader/$name-test-metadata.json" 2> "$broader/$name-test-metadata.stderr" || return 8
   node "$fixture/audit-test-metadata.cjs" "$broader/$name-test-metadata.json" > "$broader/$name-metadata-audit.jsonl" 2> "$broader/$name-metadata-audit.stderr" || return 8
-  nice -n 10 ionice -c 2 -n 7 ctest --test-dir "$build" -V -R "$regex" --parallel 1 --timeout 700 --output-junit "$broader/$name-junit.xml" > "$broader/$name.log" 2>&1
+  nice -n 10 ionice -c 2 -n 7 ctest --test-dir "$build" -V -R "$regex" --parallel 1 --timeout 700 --output-junit "$root/$broader/$name-junit.xml" > "$broader/$name.log" 2>&1
   result=$?; printf '%s\n' "$result" > "$broader/$name.status"
   date -u +%Y-%m-%dT%H:%M:%SZ > "$broader/$name.completed-at"
   sha256sum "$broader/$name.log" "$broader/$name-junit.xml" > "$broader/$name.outputs.sha256"

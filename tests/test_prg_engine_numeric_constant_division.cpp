@@ -1,7 +1,8 @@
 // Copyright © 2026 Richard M. Hamilton.
 // SPDX-License-Identifier: GPL-3.0-only
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
-// RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-MATERIALIZATION-001:
+// RQ-CF-PRG-NUMERIC-CONSTANT-DIVISION-MATERIALIZATION-001 /
+// RQ-CF-PRG-NUMERIC-CONSTANT-ARITHMETIC-METADATA-001:
 // independently captured native descriptors/bits, frozen BEFORE parser hooks.
 #include "copperfin/runtime/prg_engine.h"
 #include "fixtures/vfp9-numeric-division-context/constant-public-expected.h"
@@ -118,9 +119,27 @@ int main() {
                                std::bit_cast<std::uint64_t>(smallDivisor.value.number_value) ==
                                    copperfin::test::native_small_divisor_rows[0].bits,
                            context + " superseded small-divisor control strengthened", controlFailures);
+                    const PrgNumericMetadata additiveRuntimeExpected[] = {
+                        {23, 2, PrgNumericStorage::real}, {25, 4, PrgNumericStorage::real},
+                        {29, 8, PrgNumericStorage::real}, {37, 16, PrgNumericStorage::real},
+                        {39, 18, PrgNumericStorage::real}};
+                    const auto additiveRuntime =
+                        session.evaluate_watch_expression("((5/2)+0)/iTwo");
+                    if (additiveRuntime.ok && additiveRuntime.value.numeric_metadata &&
+                        additiveRuntime.value.numeric_metadata != additiveRuntimeExpected[d]) {
+                        const auto& actual = *additiveRuntime.value.numeric_metadata;
+                        std::cerr << "INFO: " << context << " additive/runtime actual W"
+                                  << actual.display_width << " D" << actual.decimal_places << '\n';
+                    }
+                    expect(additiveRuntime.ok && additiveRuntime.value.kind == PrgValueKind::number &&
+                               !additiveRuntime.value.is_null &&
+                               std::bit_cast<std::uint64_t>(additiveRuntime.value.number_value) ==
+                                   std::bit_cast<std::uint64_t>(1.25) &&
+                               additiveRuntime.value.numeric_metadata == additiveRuntimeExpected[d],
+                           context + " recovered additive/runtime descriptor", controlFailures);
                     for (const auto expression : {
                              "1E300/iTwo", "iFive/(1E300)", "(iFive*2)/iTwo",
-                             "((5/2)*1)/iTwo", "((5/2)+0)/iTwo", "2^(5/2)/iTwo"}) {
+                             "((5/2)*1)/iTwo", "2^(5/2)/iTwo"}) {
                         const auto result = session.evaluate_watch_expression(expression);
                         expect(result.ok && !result.value.numeric_metadata,
                                context + " unsupported stays unknown: " + expression, controlFailures);
