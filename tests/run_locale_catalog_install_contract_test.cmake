@@ -60,7 +60,7 @@ check_install(TRUE "valid sparse regional overlay" "")
 string(REPLACE "de-DE overlay de" "de-DE overlay fr-FR" wrong_parent_inventory "${overlay_inventory}")
 file(WRITE "${source_locales}/inventory.txt" "${wrong_parent_inventory}")
 file(WRITE "${installed_locales}/inventory.txt" "${wrong_parent_inventory}")
-check_install(FALSE "cross-language overlay parent" "Overlay parent has a different language")
+check_install(FALSE "cross-language overlay parent" "Overlay parent must be a full runtime fallback ancestor")
 file(WRITE "${source_locales}/inventory.txt" "${inventory}")
 file(WRITE "${installed_locales}/inventory.txt" "${inventory}")
 file(REMOVE_RECURSE "${source_locales}/de" "${source_locales}/de-DE"

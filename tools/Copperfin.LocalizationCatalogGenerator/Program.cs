@@ -55,10 +55,10 @@ foreach (var line in inventoryLines.Skip(1))
     }
     if ((role == "overlay") != (parent is not null) ||
         (parent is not null && (parent == locale || !locales.TryGetValue(parent, out var parentEntry) ||
-         parentEntry.Role is "pseudo" or "source" ||
-         !string.Equals(locale.Split('-')[0], parent.Split('-')[0], StringComparison.Ordinal))))
+         parentEntry.Role is "pseudo" or "source" or "overlay" ||
+         !locale.StartsWith(parent + "-", StringComparison.Ordinal))))
     {
-        throw new InvalidDataException($"Overlay parent must be a previously declared target of the same language: {locale}");
+        throw new InvalidDataException($"Overlay parent must be a previously declared runtime fallback ancestor: {locale}");
     }
 }
 if (locales.Count(entry => entry.Value.Role == "source") != 1 ||

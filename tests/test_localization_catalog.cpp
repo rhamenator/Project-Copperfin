@@ -139,6 +139,13 @@ void test_bcp47_script_locale_normalization_and_catalog_fallback() {
         "#3894: script-qualified Spanish should preserve the Latin American fallback contract");
     const std::vector<std::string> pseudo_chain = locale_fallback_chain("qPs-pLoC");
     expect(
+        locale_fallback_chain("es-ES") == std::vector<std::string>({"es-ES", "es", "en-US"}) &&
+            locale_fallback_chain("es-Latn-ES") ==
+                std::vector<std::string>({"es-Latn-ES", "es-Latn", "es", "en-US"}) &&
+            locale_fallback_chain("es-MX") ==
+                std::vector<std::string>({"es-MX", "es-419", "es", "en-US"}),
+        "#7074: Spain Spanish must not inherit Latin American prose while Mexico does");
+    expect(
         pseudo_chain == std::vector<std::string>({"qps-ploc", "qps", "en-US"}),
         "#3894: pseudo-locale fallback should preserve its established normalized identity");
     const std::vector<std::string> extension_chain =
@@ -391,8 +398,8 @@ void test_product_locale_catalogs_have_key_parity() {
             (role == "source" || role == "unreviewed" || role == "overlay" || role == "pseudo") &&
             (role != "overlay" || (!parent.empty() && parent != locale &&
                 parent != "en-US" && parent != "qps-ploc" &&
-                declared_locales.contains(parent) &&
-                locale.substr(0U, locale.find('-')) == parent.substr(0U, parent.find('-')))) &&
+                declared_locales.contains(parent) && !overlay_locales.contains(parent) &&
+                locale.starts_with(parent + "-"))) &&
             locale == copperfin::localization::normalize_locale(locale) &&
             locale.find("/") == std::string::npos &&
             locale.find("\\") == std::string::npos &&

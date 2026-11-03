@@ -18,6 +18,7 @@ def reviewed_locales() -> dict[str, tuple[str, str | None]]:
         raise ValueError("Unsupported or missing locale inventory version")
     locales = {}
     declared = set()
+    roles = {}
     for line in lines[1:]:
         fields = line.split(" ")
         if len(fields) not in (2, 3):
@@ -26,14 +27,18 @@ def reviewed_locales() -> dict[str, tuple[str, str | None]]:
         parent = fields[2] if len(fields) == 3 else None
         if (locale in declared or role not in ("source", "unreviewed", "overlay", "pseudo") or
                 (role == "overlay") != (parent is not None) or
+                (role == "source" and locale != "en-US") or
+                (role == "pseudo" and locale != "qps-ploc") or
                 (parent is not None and (parent not in locales or
-                 locale.split("-")[0] != parent.split("-")[0]))):
+                 roles[parent] == "overlay" or not locale.startswith(parent + "-")))):
             raise ValueError(f"Invalid locale inventory entry: {line}")
         declared.add(locale)
+        roles[locale] = role
         if role not in ("source", "pseudo"):
             locales[locale] = (role, parent)
-    if not locales:
-        raise ValueError("Locale inventory has no reviewed locales")
+    if not locales or sum(role == "source" for role in roles.values()) != 1 or \
+            sum(role == "pseudo" for role in roles.values()) != 1:
+        raise ValueError("Locale inventory requires reviewed locales, en-US source, and qps-ploc pseudo")
     return locales
 
 

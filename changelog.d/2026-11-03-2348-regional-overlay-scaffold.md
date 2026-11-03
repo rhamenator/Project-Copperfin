@@ -1,1 +1,1 @@
-- 2026-11-03: Scope the global left-to-right regional locale wave against pinned CLDR data and add sparse regional overlay validation, inheritance tests, and exact regional-review requirements (#2348).
+- 2026-11-03: Scope the global left-to-right regional locale wave against pinned CLDR data and add sparse regional overlay validation, inheritance tests, and exact regional-review requirements. Restrict overlays to full runtime fallback ancestors and apply CLDR regional Spanish fallback so Spain Spanish stays separate from Latin American Spanish (#2348, #7074).

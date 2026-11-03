@@ -78,7 +78,16 @@ def main() -> int:
         check(True, "empty regional overlay inherits parent")
         (locales / "inventory.txt").write_text(
             overlay_inventory.replace(f"overlay {synthetic}", "overlay en-US"), encoding="utf-8")
-        check(False, "cross-language overlay parent", "Overlay parent must be a previously declared target")
+        check(False, "cross-language overlay parent", "Overlay parent must be a previously declared runtime fallback ancestor")
+        sibling_inventory = overlay_inventory.replace(
+            f"{overlay_locale} overlay {synthetic}\n",
+            f"{synthetic}-AT unreviewed\n{overlay_locale} overlay {synthetic}-AT\n")
+        (locales / "inventory.txt").write_text(sibling_inventory, encoding="utf-8")
+        check(False, "sibling regional parent", "Overlay parent must be a previously declared runtime fallback ancestor")
+        chained_inventory = overlay_inventory.replace(
+            "qps-ploc pseudo\n", f"{overlay_locale}-AT overlay {overlay_locale}\nqps-ploc pseudo\n")
+        (locales / "inventory.txt").write_text(chained_inventory, encoding="utf-8")
+        check(False, "chained regional overlay", "Overlay parent must be a previously declared runtime fallback ancestor")
         (locales / "inventory.txt").write_text(expanded_inventory, encoding="utf-8")
         shutil.rmtree(overlay_path.parent)
         missing = dict(complete)

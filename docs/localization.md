@@ -24,8 +24,9 @@ or `<locale> overlay <parent>`.
 The roles are `source` (only `en-US`), `unreviewed` (a production-targeted
 catalog awaiting the separate per-entry release gate), and `pseudo`
 (only test-only `qps-ploc`). An `overlay` contains only keys that differ from
-its previously declared same-language parent; the runtime resolves missing
-keys through that parent and then `en-US`. Adding a full locale requires a
+its previously declared full parent, which must be a prefix fallback ancestor
+of the regional tag (for example, `de-DE overlay de`). The runtime resolves
+missing keys through that parent and then `en-US`. Adding a full locale requires a
 complete catalog and an inventory entry in the same change. The catalog generator, native parity
 test, and installer contract reject undeclared directories or declared catalogs
 with missing keys, blank values, changed placeholders, invalid UTF-8, or
