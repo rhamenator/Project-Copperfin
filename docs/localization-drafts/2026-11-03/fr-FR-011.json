@@ -1,0 +1,330 @@
+{
+  "session": "codex:/root/review_es_revisions/fr-FR-first-pass-011-2026-11-03-afa1dce5-f4d0-46a5-ae1c-5f3b7f57a464",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "reviewStatus": "unreviewed",
+  "locale": "fr-FR",
+  "input": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ScrollBars",
+      "source": "scroll-bars"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ScrollBarsTitle",
+      "source": "Scroll-bars"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WindowState",
+      "source": "window-state"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WindowStateTitle",
+      "source": "Window-state"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ShowWindow",
+      "source": "show-window"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ShowWindowTitle",
+      "source": "Show-window"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TitleBar",
+      "source": "title-bar"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TitleBarTitle",
+      "source": "Title-bar"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MousePointer",
+      "source": "mouse-pointer"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MousePointerTitle",
+      "source": "Mouse-pointer"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureMargin",
+      "source": "picture-margin"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureMarginTitle",
+      "source": "Picture-margin"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PicturePosition",
+      "source": "picture-position"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PicturePositionTitle",
+      "source": "Picture-position"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSpacing",
+      "source": "picture-spacing"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSpacingTitle",
+      "source": "Picture-spacing"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSelectionDisplay",
+      "source": "picture-selection-display"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSelectionDisplayTitle",
+      "source": "Picture-selection-display"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicInputMask",
+      "source": "dynamic-input-mask"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicInputMaskTitle",
+      "source": "Dynamic-input-mask"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicLineHeight",
+      "source": "dynamic-line-height"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicLineHeightTitle",
+      "source": "Dynamic-line-height"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicAlignment",
+      "source": "dynamic-alignment"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicAlignmentTitle",
+      "source": "Dynamic-alignment"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicCurrentControl",
+      "source": "dynamic-current-control"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicCurrentControlTitle",
+      "source": "Dynamic-current-control"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontName",
+      "source": "dynamic-font-name"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontNameTitle",
+      "source": "Dynamic-font-name"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontSize",
+      "source": "dynamic-font-size"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontSizeTitle",
+      "source": "Dynamic-font-size"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontBold",
+      "source": "dynamic-font-bold"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontBoldTitle",
+      "source": "Dynamic-font-bold"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontItalic",
+      "source": "dynamic-font-italic"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontItalicTitle",
+      "source": "Dynamic-font-italic"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontUnderline",
+      "source": "dynamic-font-underline"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontUnderlineTitle",
+      "source": "Dynamic-font-underline"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontStrikethru",
+      "source": "dynamic-font-strikethru"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontStrikethruTitle",
+      "source": "Dynamic-font-strikethru"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontOutline",
+      "source": "dynamic-font-outline"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontOutlineTitle",
+      "source": "Dynamic-font-outline"
+    }
+  ],
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ScrollBars",
+      "translation": "barres de défilement"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ScrollBarsTitle",
+      "translation": "Barres de défilement"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WindowState",
+      "translation": "état de la fenêtre"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WindowStateTitle",
+      "translation": "État de la fenêtre"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ShowWindow",
+      "translation": "afficher la fenêtre"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ShowWindowTitle",
+      "translation": "Afficher la fenêtre"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TitleBar",
+      "translation": "barre de titre"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TitleBarTitle",
+      "translation": "Barre de titre"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MousePointer",
+      "translation": "pointeur de souris"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MousePointerTitle",
+      "translation": "Pointeur de souris"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureMargin",
+      "translation": "marge de l’image"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureMarginTitle",
+      "translation": "Marge de l’image"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PicturePosition",
+      "translation": "position de l’image"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PicturePositionTitle",
+      "translation": "Position de l’image"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSpacing",
+      "translation": "espacement de l’image"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSpacingTitle",
+      "translation": "Espacement de l’image"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSelectionDisplay",
+      "translation": "affichage de l’image sélectionnée"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSelectionDisplayTitle",
+      "translation": "Affichage de l’image sélectionnée"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicInputMask",
+      "translation": "masque de saisie dynamique"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicInputMaskTitle",
+      "translation": "Masque de saisie dynamique"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicLineHeight",
+      "translation": "hauteur de ligne dynamique"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicLineHeightTitle",
+      "translation": "Hauteur de ligne dynamique"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicAlignment",
+      "translation": "alignement dynamique"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicAlignmentTitle",
+      "translation": "Alignement dynamique"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicCurrentControl",
+      "translation": "contrôle actif dynamique"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicCurrentControlTitle",
+      "translation": "Contrôle actif dynamique"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontName",
+      "translation": "nom de police dynamique"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontNameTitle",
+      "translation": "Nom de police dynamique"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontSize",
+      "translation": "taille de police dynamique"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontSizeTitle",
+      "translation": "Taille de police dynamique"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontBold",
+      "translation": "police dynamique en gras"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontBoldTitle",
+      "translation": "Police dynamique en gras"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontItalic",
+      "translation": "police dynamique en italique"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontItalicTitle",
+      "translation": "Police dynamique en italique"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontUnderline",
+      "translation": "police dynamique soulignée"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontUnderlineTitle",
+      "translation": "Police dynamique soulignée"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontStrikethru",
+      "translation": "police dynamique barrée"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontStrikethruTitle",
+      "translation": "Police dynamique barrée"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontOutline",
+      "translation": "contour de police dynamique"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontOutlineTitle",
+      "translation": "Contour de police dynamique"
+    }
+  ]
+}
