@@ -22,8 +22,9 @@ CLDR layout, fallback parent, regional terminology, complete source coverage,
 placeholder and machine-token fidelity, independent AI review with disclosed
 limits, and actual rendered UI behavior. Use shared language catalogs and
 regional overrides so variants do not duplicate every string. `qps-ploc`
-expansion is an early layout stress test, especially for long German labels;
-actual-language UI tests remain required.
+decorates strings and adds markers, which is an early layout and Unicode stress
+test. Its current transformation does not model long German compound words;
+long-label pseudo cases and actual German UI tests remain required.
 
 The deferred RTL and logographic entries require a separate design and UI
 validation workstream before they can be offered as production language packs.
