@@ -8,7 +8,7 @@ value may enter a release ledger.
 
 | Locale | First-pass strings | Independently accepted | Needs revision |
 | --- | ---: | ---: | ---: |
-| `de-DE` | 440 of 3,146 | 431 | 9 |
+| `de-DE` | 600 of 3,146 | 579 | 21 |
 | `fr-FR` | 360 of 3,146 | 331 | 29 |
 | `it-IT` | 160 of 3,146 | 150 | 10 |
 | `es-ES` | 160 of 3,146 | 156 | 4 |
