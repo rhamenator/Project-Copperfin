@@ -49,6 +49,10 @@ def validate_directory(path: Path, source: dict[str, str]) -> None:
                 raise ValueError(f"Blank translation: {batch_path}:{key}")
             if Counter(PLACEHOLDER.findall(translation)) != Counter(PLACEHOLDER.findall(source[key])):
                 raise ValueError(f"Placeholder drift: {batch_path}:{key}")
+            if translation.count("\n") != source[key].count("\n") or \
+                    len(translation) - len(translation.rstrip(" \t\n")) != \
+                    len(source[key]) - len(source[key].rstrip(" \t\n")):
+                raise ValueError(f"Layout whitespace drift: {batch_path}:{key}")
             pair = (locale, key)
             if pair in drafts:
                 raise ValueError(f"Duplicate draft key: {batch_path}:{key}")
