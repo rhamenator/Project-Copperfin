@@ -1,0 +1,328 @@
+{
+  "session": "e60cfa8f-809d-455f-b0c0-56be4243d394",
+  "locale": "fr-FR",
+  "input": [
+    {
+      "key": "RuntimeHost.Debug.Error.UnknownBreakpointForXAssetAction",
+      "source": "Unknown breakpoint for xAsset action: {action}"
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.UnknownOrNonBreakpointableXAssetAction",
+      "source": "Unknown or non-breakpointable xAsset action: {action}"
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.UnknownXAssetAction",
+      "source": "Unknown xAsset action: {command}"
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.WatchRequiresPausedState",
+      "source": "Watch evaluation requires an active paused state."
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode",
+      "source": "xAsset action breakpoints require xasset-bootstrap mode."
+    },
+    {
+      "key": "RuntimeHost.Launch.Note.CompatibilityLauncher",
+      "source": "Startup asset is not a PRG file and could not be materialized for xAsset bootstrap. This launch is falling back to compatibility-launcher mode."
+    },
+    {
+      "key": "RuntimeHost.Usage.Federation",
+      "source": "   or: {commandName} {federationBackendOption} {federationBackendValue} {federationQueryOption} {federationQueryValue} [{federationTargetOption} {federationTargetValue}]"
+    },
+    {
+      "key": "RuntimeHost.Usage.FederationPlanning",
+      "source": "       [{planningEnableOption} {booleanValue}] [{planningRequireOption} {booleanValue}] [{planningAuditOption} {booleanValue}]"
+    },
+    {
+      "key": "RuntimeHost.Usage.FederationExecution",
+      "source": "       [{federationReadOnlyExecuteOption} {booleanValue}]"
+    },
+    {
+      "key": "RuntimeHost.Usage.Manifest",
+      "source": "Usage: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{debugStopOnEntryOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]"
+    },
+    {
+      "key": "RuntimeHost.Error.BridgeFederationModeConflict",
+      "source": "Bridge invocation mode cannot be combined with federation query mode."
+    },
+    {
+      "key": "RuntimeHost.Error.FederationRequiredOptions",
+      "source": "{federationBackendOption} and {federationQueryOption} are both required in federation mode."
+    },
+    {
+      "key": "RuntimeHost.Error.FederationExecutionRequiresSqlite",
+      "source": "Read-only federation execution currently requires the sqlite backend."
+    },
+    {
+      "key": "RuntimeHost.Error.FederationExecutionTargetRequired",
+      "source": "Read-only SQLite federation execution requires --federation-target to name an existing database file."
+    },
+    {
+      "key": "RuntimeHost.Error.FederationExecutionFailed",
+      "source": "Read-only SQLite federation execution failed: {errorCode}"
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestEmptyOrInvalid",
+      "source": "Manifest is empty or invalid."
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestMissingRuntimeHostSha256",
+      "source": "Security-enabled manifest is missing runtime_host_sha256."
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestNotFound",
+      "source": "Manifest file not found."
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestVersionContractAmbiguous",
+      "source": "Manifest must contain exactly one of manifest_version or debug_manifest_version."
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestVersionMissing",
+      "source": "Manifest is missing manifest_version."
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestVersionUnsupported",
+      "source": "Unsupported manifest_version: {version}. Supported versions: {supportedVersions}."
+    },
+    {
+      "key": "RuntimeHost.Error.MaterializeVerifiedStartupSnapshotFailed",
+      "source": "Unable to materialize the verified startup snapshot: {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.RuntimeHostSha256Mismatch",
+      "source": "Runtime host hash does not match manifest digest."
+    },
+    {
+      "key": "RuntimeHost.Error.SecurityPolicyDenied",
+      "source": "Security policy denied {permission} for role '{role}'."
+    },
+    {
+      "key": "RuntimeHost.Error.TrueFalseValueRequired",
+      "source": "The {option} value must be true or false."
+    },
+    {
+      "key": "RuntimeHost.Error.VerifiedSourceUnavailable",
+      "source": "Verified package source is unavailable: {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.SourceTooLarge",
+      "source": "PRG source file {fileName} is larger than the {limit}-byte limit and was not loaded"
+    },
+    {
+      "key": "RuntimeHost.Error.AggregateSourceTooLarge",
+      "source": "Packaged PRG sources exceed the {limit}-byte aggregate limit while loading {fileName}; no more were loaded"
+    },
+    {
+      "key": "RuntimeHost.Error.AssetEntryMalformed",
+      "source": "asset entry is malformed in manifest."
+    },
+    {
+      "key": "RuntimeHost.Error.DataAssetMalformed",
+      "source": "data_asset entry is malformed in manifest."
+    },
+    {
+      "key": "RuntimeHost.Error.DataPayloadMalformed",
+      "source": "data_payload entry is malformed in manifest."
+    },
+    {
+      "key": "RuntimeHost.Error.DataPolicyMalformed",
+      "source": "data_policy is missing or unsupported in manifest."
+    },
+    {
+      "key": "RuntimeHost.Error.ExtensionPayloadMalformed",
+      "source": "extension_payload entry is malformed in manifest."
+    },
+    {
+      "key": "RuntimeHost.Error.ExtensionPayloadMissingFromPackage",
+      "source": "Extension payload is missing from the package: {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.ExtensionPayloadSha256Mismatch",
+      "source": "Extension payload hash mismatch: {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
+      "source": "Package path failed physical containment validation: {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.PackagedAssetMissing",
+      "source": "Packaged asset is missing from the package: {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.PackagedAssetDigestMissing",
+      "source": "Packaged asset is missing a verified digest: {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.PackagedAssetSha256Mismatch",
+      "source": "Packaged asset hash mismatch: {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.StartupSourceMissingFromPackage",
+      "source": "Startup source is missing from the package: {fileName}"
+    }
+  ],
+  "entries": [
+    {
+      "key": "RuntimeHost.Debug.Error.UnknownBreakpointForXAssetAction",
+      "translation": "Point d'arrêt inconnu pour l'action xAsset : {action}"
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.UnknownOrNonBreakpointableXAssetAction",
+      "translation": "Action xAsset inconnue ou ne pouvant pas recevoir de point d'arrêt : {action}"
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.UnknownXAssetAction",
+      "translation": "Action xAsset inconnue : {command}"
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.WatchRequiresPausedState",
+      "translation": "L'évaluation des espions nécessite un état de pause actif."
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode",
+      "translation": "Les points d'arrêt d'action xAsset nécessitent le mode xasset-bootstrap."
+    },
+    {
+      "key": "RuntimeHost.Launch.Note.CompatibilityLauncher",
+      "translation": "La ressource de démarrage n'est pas un fichier PRG et n'a pas pu être matérialisée pour l'amorçage xAsset. Ce lancement bascule en mode lanceur de compatibilité."
+    },
+    {
+      "key": "RuntimeHost.Usage.Federation",
+      "translation": "   ou : {commandName} {federationBackendOption} {federationBackendValue} {federationQueryOption} {federationQueryValue} [{federationTargetOption} {federationTargetValue}]"
+    },
+    {
+      "key": "RuntimeHost.Usage.FederationPlanning",
+      "translation": "       [{planningEnableOption} {booleanValue}] [{planningRequireOption} {booleanValue}] [{planningAuditOption} {booleanValue}]"
+    },
+    {
+      "key": "RuntimeHost.Usage.FederationExecution",
+      "translation": "       [{federationReadOnlyExecuteOption} {booleanValue}]"
+    },
+    {
+      "key": "RuntimeHost.Usage.Manifest",
+      "translation": "Utilisation : {commandName} {manifestOption} {manifestValue} [{debugOption}] [{debugStopOnEntryOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]"
+    },
+    {
+      "key": "RuntimeHost.Error.BridgeFederationModeConflict",
+      "translation": "Le mode d'appel de pont ne peut pas être combiné avec le mode de requête de fédération."
+    },
+    {
+      "key": "RuntimeHost.Error.FederationRequiredOptions",
+      "translation": "{federationBackendOption} et {federationQueryOption} sont tous deux requis en mode fédération."
+    },
+    {
+      "key": "RuntimeHost.Error.FederationExecutionRequiresSqlite",
+      "translation": "L'exécution de fédération en lecture seule nécessite actuellement le backend sqlite."
+    },
+    {
+      "key": "RuntimeHost.Error.FederationExecutionTargetRequired",
+      "translation": "L'exécution de fédération SQLite en lecture seule nécessite que --federation-target désigne un fichier de base de données existant."
+    },
+    {
+      "key": "RuntimeHost.Error.FederationExecutionFailed",
+      "translation": "L'exécution de fédération SQLite en lecture seule a échoué : {errorCode}"
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestEmptyOrInvalid",
+      "translation": "Le manifeste est vide ou non valide."
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestMissingRuntimeHostSha256",
+      "translation": "Le manifeste activé pour la sécurité ne contient pas runtime_host_sha256."
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestNotFound",
+      "translation": "Fichier manifeste introuvable."
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestVersionContractAmbiguous",
+      "translation": "Le manifeste doit contenir exactement l'un des champs manifest_version ou debug_manifest_version."
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestVersionMissing",
+      "translation": "Le champ manifest_version est absent du manifeste."
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestVersionUnsupported",
+      "translation": "manifest_version non pris en charge : {version}. Versions prises en charge : {supportedVersions}."
+    },
+    {
+      "key": "RuntimeHost.Error.MaterializeVerifiedStartupSnapshotFailed",
+      "translation": "Impossible de matérialiser l'instantané de démarrage vérifié : {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.RuntimeHostSha256Mismatch",
+      "translation": "Le hachage de l'hôte d'exécution ne correspond pas à l'empreinte du manifeste."
+    },
+    {
+      "key": "RuntimeHost.Error.SecurityPolicyDenied",
+      "translation": "La stratégie de sécurité a refusé {permission} pour le rôle « {role} »."
+    },
+    {
+      "key": "RuntimeHost.Error.TrueFalseValueRequired",
+      "translation": "La valeur de {option} doit être true ou false."
+    },
+    {
+      "key": "RuntimeHost.Error.VerifiedSourceUnavailable",
+      "translation": "La source de package vérifiée est indisponible : {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.SourceTooLarge",
+      "translation": "Le fichier source PRG {fileName} dépasse la limite de {limit} octets et n'a pas été chargé"
+    },
+    {
+      "key": "RuntimeHost.Error.AggregateSourceTooLarge",
+      "translation": "Les sources PRG empaquetées dépassent la limite cumulée de {limit} octets lors du chargement de {fileName} ; aucune autre n'a été chargée"
+    },
+    {
+      "key": "RuntimeHost.Error.AssetEntryMalformed",
+      "translation": "L'entrée asset est mal formée dans le manifeste."
+    },
+    {
+      "key": "RuntimeHost.Error.DataAssetMalformed",
+      "translation": "L'entrée data_asset est mal formée dans le manifeste."
+    },
+    {
+      "key": "RuntimeHost.Error.DataPayloadMalformed",
+      "translation": "L'entrée data_payload est mal formée dans le manifeste."
+    },
+    {
+      "key": "RuntimeHost.Error.DataPolicyMalformed",
+      "translation": "data_policy est absent ou non pris en charge dans le manifeste."
+    },
+    {
+      "key": "RuntimeHost.Error.ExtensionPayloadMalformed",
+      "translation": "L'entrée extension_payload est mal formée dans le manifeste."
+    },
+    {
+      "key": "RuntimeHost.Error.ExtensionPayloadMissingFromPackage",
+      "translation": "La charge utile d'extension est absente du package : {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.ExtensionPayloadSha256Mismatch",
+      "translation": "Le hachage de la charge utile d'extension ne correspond pas : {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
+      "translation": "Le chemin du package a échoué à la validation de confinement physique : {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.PackagedAssetMissing",
+      "translation": "La ressource empaquetée est absente du package : {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.PackagedAssetDigestMissing",
+      "translation": "La ressource empaquetée n'a pas d'empreinte vérifiée : {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.PackagedAssetSha256Mismatch",
+      "translation": "Le hachage de la ressource empaquetée ne correspond pas : {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.StartupSourceMissingFromPackage",
+      "translation": "La source de démarrage est absente du package : {fileName}"
+    }
+  ]
+}

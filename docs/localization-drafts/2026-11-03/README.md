@@ -9,7 +9,7 @@ value may enter a release ledger.
 | Locale | First-pass strings | Independently accepted | Needs revision |
 | --- | ---: | ---: | ---: |
 | `de-DE` | 1,080 of 3,146 | 1,027 | 53 |
-| `fr-FR` | 840 of 3,146 | 770 | 70 |
+| `fr-FR` | 1,000 of 3,146 | 907 | 93 |
 | `it-IT` | 480 of 3,146 | 437 | 43 |
 | `es-ES` | 320 of 3,146 | 311 | 9 |
 | `pt-PT` | 320 of 3,146 | 302 | 18 |

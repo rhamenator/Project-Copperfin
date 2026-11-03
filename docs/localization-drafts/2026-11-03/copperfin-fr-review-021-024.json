@@ -1,0 +1,1188 @@
+{
+  "locale": "fr-FR",
+  "scope": "Independent review of Claude Sonnet draft batches 021–024 against exact current en-US source",
+  "reviewerType": "independent_ai",
+  "reviewer": "Codex /root/review_pt_revisions",
+  "model": "GPT-6.1 Sol",
+  "reviewedAtUtc": "2026-11-03T08:44:32.755008+00:00",
+  "sourceRevision": "d67afb2f1",
+  "uncertainty": "AI linguistic and source-context review only; no native-speaker certification or rendered UI testing. Optimizer terms such as bitmap/order and remote pushdown should be checked against runtime UI context. Exact hashes bind verdicts to this draft.",
+  "checks": {
+    "sourceOrder": "all 160 entries match en-US insertion order at batch offsets 840–999",
+    "placeholderParity": "passed",
+    "protectedSyntax": "checked CLI options, JSON field names, SQL/VFP tokens, product identifiers and trailing space"
+  },
+  "counts": {
+    "entries": 160,
+    "accept": 137,
+    "revise": 23
+  },
+  "entries": [
+    {
+      "key": "Platform.Extensibility.Language.DotNet.OutputStory",
+      "sourceSha256": "8dc65fb512baad0418fc32442048b2f1688940163b7ae9c5f3496ac837cc47ec",
+      "translationSha256": "76b93d281f88c574651f5328ae245a0348579d9fa5d61d8202e9b98830962bd7",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Platform.Extensibility.Language.DotNet.Title",
+      "sourceSha256": "3d0f4abece1667302ce1b3c4a5917b799b40345a9dbaf302c477ad9ff2d186e5",
+      "translationSha256": "434b116812c017c1031da8cb899caed61503f14346c688eb400fcd650e91e339",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Platform.Extensibility.Language.DotNet.TrustBoundary",
+      "sourceSha256": "b171a7b969a673cde3b5cccefec452dfb79e2dd6707737e1109bfa553b1a122b",
+      "translationSha256": "ce7c854125bb105b59d3bb0db976ade5ead38ce734629a5608241629f431e2a1",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Platform.Extensibility.Language.Python.IntegrationMode",
+      "sourceSha256": "25c9082080007736efd5b33af7456e539d36d4d7850d23dbc87aa01418cae64c",
+      "translationSha256": "81c343855d67977b0a8ef8e365e5b7344adab7865f8996b498db38aecd48db63",
+      "verdict": "revise",
+      "reason": "“Processus annexe hors processus” is redundant; sidecar here runs out of process.",
+      "proposal": "processus auxiliaire externe",
+      "proposalSha256": "511c6a0ac4b1931e50a6d562832cd2d90ba0a569f3ec69675f574aebb27049fc"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Python.OutputStory",
+      "sourceSha256": "52dafcc9f48b688393dde35adeda5511eb701e81037e805b08c2fcb61be7121d",
+      "translationSha256": "d48e614f6ab15dfa55c4789403a2f36d786962dbd1862a1ff89cabf848b9cac0",
+      "verdict": "revise",
+      "reason": "“Fonctionnalité de tâches” is unnatural and obscures the job facility; the trusted core is the trust boundary.",
+      "proposal": "La prise en charge de Python repose sur un processus auxiliaire ou un service d'exécution de tâches pour la science des données et l'automatisation, et non sur le noyau de confiance.",
+      "proposalSha256": "56e6322f09b7e015477758859178f561bbd727398b14e4d53c02a7b870632db1"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Python.Title",
+      "sourceSha256": "a8bed254eff8eac6d9b83740afa29f3d3b9be2151f27692cb46374e40b4be2a8",
+      "translationSha256": "48c896cf59c586f926c2973287d800ff856ef8fab931151d79596a84b627b535",
+      "verdict": "revise",
+      "reason": "Align sidecar title with the external auxiliary-process meaning.",
+      "proposal": "Processus auxiliaire Python et tâches d'analyse",
+      "proposalSha256": "a4e6c4f05d6c0f304c4af082100235f4feeb23237a32532ae9bd5a755dd6a51e"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Python.TrustBoundary",
+      "sourceSha256": "7bf359ece61799f42242d7051cb01a5103a778c6ca0af08f0c246478392e9a6e",
+      "translationSha256": "d3ab02de279349dbeded64ebc705e5621708dd1fec1ce2018042b48f2723184d",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Platform.Extensibility.Language.R.IntegrationMode",
+      "sourceSha256": "25c9082080007736efd5b33af7456e539d36d4d7850d23dbc87aa01418cae64c",
+      "translationSha256": "81c343855d67977b0a8ef8e365e5b7344adab7865f8996b498db38aecd48db63",
+      "verdict": "revise",
+      "reason": "“Processus annexe hors processus” is redundant; sidecar here runs out of process.",
+      "proposal": "processus auxiliaire externe",
+      "proposalSha256": "511c6a0ac4b1931e50a6d562832cd2d90ba0a569f3ec69675f574aebb27049fc"
+    },
+    {
+      "key": "Platform.Extensibility.Language.R.OutputStory",
+      "sourceSha256": "7a7e01a6f4973835603b7b00db33a36a891b89aeb1226a8df1e804b6cbc619c2",
+      "translationSha256": "68b5a950a27bf385d11168396df2ea2435924002d2b186e7585e97815484e2cc",
+      "verdict": "revise",
+      "reason": "Avoid “fonctionnalité de tâches”, an unnatural rendering of job facility.",
+      "proposal": "La prise en charge de R repose sur un processus auxiliaire ou un service d'exécution de tâches pour le calcul statistique, la production de rapports et les flux reproductibles de science des données.",
+      "proposalSha256": "e5aa0885b029cf81d96e24baa6dda7e78eca55ce3b0d43132e498cf25b71f623"
+    },
+    {
+      "key": "Platform.Extensibility.Language.R.Title",
+      "sourceSha256": "202aaca5e25de1f3e4cb4b805b35a2fd344793ddd19aeb6ad277e2e1c5c3e36b",
+      "translationSha256": "dd9a3225799b0febc7c12e89b319ba8a747999544ad74f017c4ffaf92df271b9",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Platform.Extensibility.Language.R.TrustBoundary",
+      "sourceSha256": "7bf359ece61799f42242d7051cb01a5103a778c6ca0af08f0c246478392e9a6e",
+      "translationSha256": "d3ab02de279349dbeded64ebc705e5621708dd1fec1ce2018042b48f2723184d",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Platform.Extensibility.Language.Rust.IntegrationMode",
+      "sourceSha256": "a8e816f4a85022b241650a50dc73998e7687071d7587431b0ca513eb1bca81ea",
+      "translationSha256": "146f878ea97811050a0bf10cdaf96b6cbd13a1883c0b4bf07a6fe61335a5fc4f",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Platform.Extensibility.Language.Rust.OutputStory",
+      "sourceSha256": "85c8e4088c51ebf921e82bd5dbfbc3c1c8cd85a2ec0b82003d6acf9c5eb6f16f",
+      "translationSha256": "b9375301d9ae1c143874e68433999cc05813179cad9fe5cc8500c24af1a85761",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Platform.Extensibility.Language.Rust.Title",
+      "sourceSha256": "07f09024aec5dc532eda06a9dc6f748988c0d0597750ae94f59e5454f9d4193f",
+      "translationSha256": "548b76835b6915e988255f13bba03b58eeeb108ce5a4079f7b51699a6c831fef",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Platform.Extensibility.Language.Rust.TrustBoundary",
+      "sourceSha256": "e1342a1c4888a52ef07b0de2b4c070a00587cfed0e2296c426e83ee1b12a23c8",
+      "translationSha256": "3762e393d399a63983c54ee5d3283a118159dba137950302491142c30cd24390",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Platform.Extensibility.Language.Xbase.IntegrationMode",
+      "sourceSha256": "bef32d2c315a289576f2a6828d27edb16bb316a4d85c271f2d794045f3ea668d",
+      "translationSha256": "ab895b1023d4f15e029344f3d9d48e4d6e04c0ecddd4b30c7a72b0286f7f5df7",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Platform.Extensibility.Language.Xbase.OutputStory",
+      "sourceSha256": "c9a7ea3e5feda1f53e7bd3e3a61044254b9a0282398318f34e9464d4060a07ef",
+      "translationSha256": "08a39c36b7415305a901f705478f0ec1c0d7f901952aeca3f6dc804c43a3151d",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Platform.Extensibility.Language.Xbase.Title",
+      "sourceSha256": "381b34a85bcaff144e2a2b5124670b0a6f5a61651cf0221b8cccb86c819422b7",
+      "translationSha256": "8820790b89ec1df70693b23a078c28f2abdd31e47c1ec78dd84040f25147f4ce",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Platform.Extensibility.Language.Xbase.TrustBoundary",
+      "sourceSha256": "6d61b39fce1f236e729df71ba6fbbfd8fb69983531c66ccc10f9de0ceccfa2c3",
+      "translationSha256": "4604faa0fc0d867463d8032e2f26f66355385b49a27faaf5ada7a2f3c5fa56bd",
+      "verdict": "revise",
+      "reason": "“Noyau de confiance” better names the trusted core than “cœur de confiance”.",
+      "proposal": "noyau de confiance",
+      "proposalSha256": "85133db863e692105e09fa2b6a28335a46e979a40dd5e1ab541e7dcfec1c8943"
+    },
+    {
+      "key": "Platform.QueryTranslator.Error.SelectFromOnly",
+      "sourceSha256": "b06a992cbe1379a02ba8b13bdce9c6191eccdf649f517a9fc9fc689de6dca58b",
+      "translationSha256": "729c23bd4c77b07cbac67b4b92673865254fb23e14cc68573ee1e8d231dcf1ed",
+      "verdict": "revise",
+      "reason": "First-pass means an initial translation pass, not first-level translation; preserve SQL syntax.",
+      "proposal": "Seule une première passe de traduction SQL de SELECT...FROM est prise en charge.",
+      "proposalSha256": "f66587b8c97d3f9f3def93dd0de7a7bdcb5294b275f9cdfe72ff85cd052dbdee"
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.CreateResponseDirectoryFailed",
+      "sourceSha256": "85108493593733bc57498f597b6fdde5ec1288e68ca8909616c7b481e33e6215",
+      "translationSha256": "306938f19240eb1549a3bc9c6168c9c506002f1e191be0fbb871eaf3933bb5a9",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.PrgStartupRequired",
+      "sourceSha256": "c6ee6b7cf771117afcfbbaf60a1a9721624034b16c59a1af8cb58c14d2617968",
+      "translationSha256": "53b16cc43d4c6275511c3d47830b5f9de548f48bb719c6df31d756f6656c7755",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestArtifactNotFound",
+      "sourceSha256": "095a2dd65b8bfc426517d800f4080e834e9dd4bf1fb32abeb5e23ddbd2066f04",
+      "translationSha256": "d666ddf4071d517593ada551b64914b2b7a8b5c7b78b92df4d21f05ca0feb77e",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestDescriptorMismatch",
+      "sourceSha256": "5d766506c655559c367767dfea54a43fabf2b09648b4911821f54bf0f6ac23ea",
+      "translationSha256": "bb0d6cd76eba7c259fb92dc08d411ee8c61fdfecb33263ee2c171164ec8979c7",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestMediaTypeMismatch",
+      "sourceSha256": "5ae1782924f7884ac6e0932cb9b65409df81750506a1d719c33e9bd771ab4d45",
+      "translationSha256": "11f5815ff6fbfa5f6978488d25575c52051ddbb96064345fd6b051349f54c0d1",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestParameterCountMismatch",
+      "sourceSha256": "d66a7e2fa4350fc6ca31f42b3ad85f80a999eb858698177d8d33892183cf52dd",
+      "translationSha256": "43a3a9bca2e7f8866056e5f8a6db36c8186d67f7f961577b45d62b2fd79c944c",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestParameterNameMismatch",
+      "sourceSha256": "e5bd0f26f9f6be4a3c09fbe31eb532e99db08b2cc6f87b6bc0ef3e468513c4af",
+      "translationSha256": "13a6ba839e35ee078e26325bf1430c456c3e7e3efae9a435e8617aa24c431d63",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestSchemaVersionMismatch",
+      "sourceSha256": "46e06253b1320dc11e3cf2117e010b629457b4fcba401e3925904b1bb89c130e",
+      "translationSha256": "8506cba31b93821216ffa99c5001232e3981ab9efb4eb1df2bfa864eed171505",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequiredArguments",
+      "sourceSha256": "6b8edfc309badcca6a20ce7dd60ef627dd81131b7246909f213797b673d33173",
+      "translationSha256": "00abe66c78cbe69b9f762d1e136129381b4e28501ee3dcf596ccd430ea85ec0e",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.SourceArtifactNotFound",
+      "sourceSha256": "ada15bc6549caef851a2c3543c862b81f44c71ce1843fb94f6dac8f287282723",
+      "translationSha256": "9241178c31e35c71a5dd07d36d3d6eaaff457cd5a042ff63344dc72fe10b8952",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.SourceMissingFromPackage",
+      "sourceSha256": "cb7c5096afeb2e3bdb3af449389322a3b6e2ec0c7cd7a34c1e2f086c21589061",
+      "translationSha256": "0f60f9d84bc53a4be6f2c9df0f285a351208e7c1a09978e641c208088eb14e75",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.UnsupportedRoutineExportName",
+      "sourceSha256": "fa695074e5a2511a2450f544176916d18da8d47d5a2d1795f632b0094ef76be5",
+      "translationSha256": "3c24d30c0af250c199b84b21f353463d9d2eb98e459000044bf0bfff0be389be",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.WriteResponseArtifactFailed",
+      "sourceSha256": "72c7c6a6c2d3b35e4f4dd2b79937ec04cc064615d8248d8caf667f9784e6cb2f",
+      "translationSha256": "fb057fc1d18607e15ba428a0ecd8ef4a9df5cb984329887490da58cb2f46eb4f",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.WriteRoutineBootstrapFailed",
+      "sourceSha256": "19b199b13bc160c00c8f9ed7d551cf201470553c01b495bb3d0a0427cada81c0",
+      "translationSha256": "e16709850fa9c54af6f7bf171fd445e3b513f4556c79511ca676abe4376d50ad",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.DispatchXAssetActionFailed",
+      "sourceSha256": "f97549ecfc89f30fd399eb7e2ec748a4247ffce5039636c95bd59bae3bebbcd5",
+      "translationSha256": "5c48feded149c80d046c2d0ffd2e7a049e7303a17a03bab1cde3e7c4a77ef79e",
+      "verdict": "revise",
+      "reason": "“Distribuer une action” is misleading for dispatching a debug action; preserve xAsset and placeholder.",
+      "proposal": "Impossible d'acheminer l'action xAsset : {command}",
+      "proposalSha256": "d339264b1fdd30085bdd0b43209fd71203a4d486208249b8bc347eaff51725d4"
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.InvalidBreakpointCommand",
+      "sourceSha256": "325133964523c59aa86753c109ef00dea56e876b35a9fa3dde98cb4f33f1f448",
+      "translationSha256": "4923d74ebd5183b210727b23ae2c7844e8bf3da3f6db28e944151d93a4a3e037",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.InvalidCommand",
+      "sourceSha256": "b6eb236b64d8625c2294b395af87d43c5333c12a4e962f353bda0f0bbe6c3d7b",
+      "translationSha256": "c96ad175ac533e359f958d7545459d1be12545ed2c908d646cad499741b19f6e",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.MaterializeXAssetBootstrapFailed",
+      "sourceSha256": "f3b24796e90f96b3fb87ed8a7fb71f9c8a552a7fe3a75b8623eec077e0b7b737",
+      "translationSha256": "7771ca4aa15891e1ebb8f4c3d6e454dbaca85ce363ee6523535cf61c9e18da1b",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.NoRunnableStartupMethodsFound",
+      "sourceSha256": "2d0fe24a72b30057b36a50d1201ad9383acf3f3109dcdb44b95d272fc4a2ea16",
+      "translationSha256": "2c62f3cf753858961ac8784293252b0783702830e81ed7fbbe2d02785ad79643",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.UnknownBreakpoint",
+      "sourceSha256": "97ffe7ee4bf7ef06e7fc644d836fbed51423ab9313e1581c4af4a9f44b9c9061",
+      "translationSha256": "181712c90785dbf697652d86272e39180fa2f96eff7b005e09526fcd4435591f",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.UnknownBreakpointForXAssetAction",
+      "sourceSha256": "99a6eb06b3cfb52ba2c0096aeb49046b2469ef5adcff65d423e8b94b95402d5e",
+      "translationSha256": "38c7916a7fad85618345e254cb2349744b3f727b23bf19f87e07fcd81f490383",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.UnknownOrNonBreakpointableXAssetAction",
+      "sourceSha256": "519816696ccdeb697034c41326b583286bb0d16d1da46f51fe5d72559dba5486",
+      "translationSha256": "bb6bc31a42d370f21fdd9007da2d18901a5974b83d75bbe7f9b2d57d2309a7b6",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.UnknownXAssetAction",
+      "sourceSha256": "9bf3f648afe73e34c1e6c5a9c757b756a638f4ee097758e5b9fdf3f2f01365b0",
+      "translationSha256": "f9f781ccc5b7d4220c1f8263c3ffbc3def530133bb398034e5b6c279932fe8ca",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.WatchRequiresPausedState",
+      "sourceSha256": "42ab151bbd96561a00deb484367c59bfc44f268bfd6d137109bdf22f3dd1aa8f",
+      "translationSha256": "a580a57654f4f33a059b26a3a484c15fb97f63611464afe249aa3d2fd2c1c570",
+      "verdict": "revise",
+      "reason": "“Espions” names people/spies, not debugger watch expressions.",
+      "proposal": "L'évaluation d'une expression surveillée nécessite que l'exécution soit en pause.",
+      "proposalSha256": "dea76b6972745e0972ef4474ff8d3d33d1a9add5e3d3656aca040916460c7e1e"
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode",
+      "sourceSha256": "59cda05aa63a7b42782dc049181f9a4317f2b0b7d6d3afc453cc25c58856be68",
+      "translationSha256": "35944ee822fa306890b459d7eae3a681efa9a251ce536e92b256a8cc0f23e253",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Launch.Note.CompatibilityLauncher",
+      "sourceSha256": "f9ce805ff53ac0cca72b0d0d925fba2ff01d6f36fbc7df91f40b1462ba497337",
+      "translationSha256": "4c947b791710958d008f80e9e20b10e9d41f3cfa579c93cd9574838e486f44c5",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Usage.Federation",
+      "sourceSha256": "8fabdc8ff460b70a8e55d30b16cda60d9946f04468becbf88bce6fa5c13d8462",
+      "translationSha256": "5afaf32fbe46afe10a434cead3a5501ae56c886fa0c07155e180309bdefd149f",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Usage.FederationPlanning",
+      "sourceSha256": "b44b370bc849c0c1f507294d430914b76a7c82e3539d92a0e874c395996a90dc",
+      "translationSha256": "b44b370bc849c0c1f507294d430914b76a7c82e3539d92a0e874c395996a90dc",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Usage.FederationExecution",
+      "sourceSha256": "a2c23a8aff3b4c69c7cd22c3cb89c79012aaab0bfa91a8bf259f6bbbd0b5c7e9",
+      "translationSha256": "a2c23a8aff3b4c69c7cd22c3cb89c79012aaab0bfa91a8bf259f6bbbd0b5c7e9",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Usage.Manifest",
+      "sourceSha256": "a2e77dac4dec0eab5f661f44b4ab7a27a345dd6097390f1001dc03869e0c184d",
+      "translationSha256": "9e7b0d6f26dd876a39ae04f411dc765990f5efa1ada5776680103679cbe94ed8",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.BridgeFederationModeConflict",
+      "sourceSha256": "9597f9a998b2f5a7ef1a30f00c94929b4a5c9fa708c7aa5be4c6682af823798f",
+      "translationSha256": "47fcfbc99ffdbf9f9dc00b4a925087362294afb44c473263f315df37e6435eb7",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.FederationRequiredOptions",
+      "sourceSha256": "9872db933c2ef22c782ca758d1758f6fda1819b3ceb8daf8730b63984fd64061",
+      "translationSha256": "3ad9d6e2c11c942fd1071027e57e56d14de71beb95d3745d25f84800ffd58b4f",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.FederationExecutionRequiresSqlite",
+      "sourceSha256": "239ae0c494887ac3ba04d5c6d5d8eb5689727526e8a368a487f33d0667f3d35c",
+      "translationSha256": "fc19362470bc54adbe3b2cfc1c94b36b5470a93e27a1bd2c5b7caadbd17bb42b",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.FederationExecutionTargetRequired",
+      "sourceSha256": "11e75cc186b78a9d6e48d9ff1c90bf0dcfe257ed4ab6c4d6eaf786cc948fa449",
+      "translationSha256": "3f9084ee0f315112cf82be0f7707d166f8f0ce122e4388b73ff2c36d53b5743c",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.FederationExecutionFailed",
+      "sourceSha256": "0b6f271fb0adbb205d231380d3eb9fce322ac4ffece5a2adddb18fd3d8f10b0f",
+      "translationSha256": "16580e280788fd5cae868b08c69103a34139c2678c061935bb49714e07d761a5",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestEmptyOrInvalid",
+      "sourceSha256": "465cf1836e75ee80f74c205b0d5754b37e5ccc54b0833f771d31cd0f791d11de",
+      "translationSha256": "01e0391c2561335ee57a9c452b2bcb389a356148d051cb00f5761e478b7f5914",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestMissingRuntimeHostSha256",
+      "sourceSha256": "993902ed2742b9b84c4e4b0e8842c489a766e8e2fe02199f95fde35ce6d5e769",
+      "translationSha256": "082a6d24a78ac688c634cd3c9b4fdd7729837fcc17531205740427912c8f4918",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestNotFound",
+      "sourceSha256": "37ce6e6ac03207a1a0ee022c80746ddd4984f6383ef9fcf6979471d3c016aaaa",
+      "translationSha256": "c69a1e8618c4b5ce5d80b2a31adf159d4429553952d0684d0d6151802a2f81ef",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestVersionContractAmbiguous",
+      "sourceSha256": "2028774e12b6ff04e7e7ef2c0b1259e0ed61bb8f74d5e4ab31102afa194546dc",
+      "translationSha256": "2ce34a1118cb56fd8c4ffc09c814c9d3c4d9fd6c5eccecc437aec9be925e0abc",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestVersionMissing",
+      "sourceSha256": "71dce1583130004b9a8fae6da843fe2bde14f289696660517b1501b4e52246e7",
+      "translationSha256": "5a4504f30add4357c02c891e34fbb6d97316bb2f2572b4c3c8893402f068691a",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.ManifestVersionUnsupported",
+      "sourceSha256": "b041999d73b3a617ed415b98f6d5f600d391616a61bff3b1c78574c3611839aa",
+      "translationSha256": "9f0ea1ce8253072998e36bf618e8a6822795494ddcc8bbaae8eaac33fd5a796f",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.MaterializeVerifiedStartupSnapshotFailed",
+      "sourceSha256": "a949f8cfffc4c1e47f9256959d94942d1fded04b05ef03d040375d9c38b91361",
+      "translationSha256": "870cbdc239fc0943c574a2252a624cf23b709949e2754dcb090bccb936a270a6",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.RuntimeHostSha256Mismatch",
+      "sourceSha256": "b1a3e787f58e380e3cc6187cee53df25d4399d3c66d108bf7bcae7eb1569f834",
+      "translationSha256": "675256ab82f8c1e4630fbbb6504a4f242af0d1b5f8014167a4637233fffc4158",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.SecurityPolicyDenied",
+      "sourceSha256": "5482f4f1e0784b27bbe1f1ad95899c4199f2f3b7911d6f6ef94e418478284dcf",
+      "translationSha256": "cc3313890b893d41ee035abd3455df31bfe9e6f2d0590b9783d6e89f6807ca93",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.TrueFalseValueRequired",
+      "sourceSha256": "e765aba080cc4af9c13dde16281d849e0f271a71280ef480513e9762fc7bc9d0",
+      "translationSha256": "3f53d948df6e95bf56d322f30678564ad5dd48793b69c641e6c1ef707442db9c",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.VerifiedSourceUnavailable",
+      "sourceSha256": "1d86ac8b622a2c4ec0a5fb988b69cf152393dff692f3e9e87bdf25eb213c87fe",
+      "translationSha256": "79cd849966410fec47abf430aea5d45cbabbb12bf01a393e98b341b69fa467c6",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.SourceTooLarge",
+      "sourceSha256": "53f77d40a0646cd31ad091704e6a6765edeb6feaaf756cb76079bfb868047ea8",
+      "translationSha256": "06ef10c71bd255f905fa5e67cdc177a24ce8af1270b3fe05db9ab5a5c5af60fc",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.AggregateSourceTooLarge",
+      "sourceSha256": "bdd1b85eec154179099f05afbb3a675796f6410cdec38c7672a331fd6b73a949",
+      "translationSha256": "1a1678076bd088b81711007b493cdf9aa70204ad5bc37d3f4afb31e560faab96",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.AssetEntryMalformed",
+      "sourceSha256": "49350ab69ee38ab7f032b2cc559878499661c55d5a4894a0f7c9c7baf26bf2da",
+      "translationSha256": "515f6b336b5e0d1aad677942a2a2402166f1cb7ab788c5227b3f837455ecdc34",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.DataAssetMalformed",
+      "sourceSha256": "83107fd465e344554052c2a1cfb29f0d754e4b6587752747a9773f39a39fafa6",
+      "translationSha256": "c4e8309c17315249a62ba7a63a51f9f6a1ab464711e0787b1ac4cedda59dfdf7",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.DataPayloadMalformed",
+      "sourceSha256": "7ef1481db95ee6a5515c141431406f780b7f88e044dc4a1b5e03a71b26983ba4",
+      "translationSha256": "6560c7ee53babd0becc3f57addc91459c403c92a96186ae311dddce3f2d2057b",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.DataPolicyMalformed",
+      "sourceSha256": "26ab00838b3c0892b5b8a0b240bef033318e709988201faadf8753e547eafec7",
+      "translationSha256": "7eda56e5a0b7ecdfd0bc1666fe124b5a9758a700d91f6b06d24f8b966f503713",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.ExtensionPayloadMalformed",
+      "sourceSha256": "571406a5a81b2252c3f1cd2b83980354352661b2d070b5574edbfbe670ebb214",
+      "translationSha256": "46251a89af0783f1bd45e16ca411d80a923ae59b1838cbed4ceba124d0c7a6a5",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.ExtensionPayloadMissingFromPackage",
+      "sourceSha256": "c34c683f840cd0b4d98220d4bc8ef6370d36be554309b58cea2f6d16847964ea",
+      "translationSha256": "736525525417ac385d7243660af6fb694b0b4df695e04a1c9bdf9d6dfb596dc8",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.ExtensionPayloadSha256Mismatch",
+      "sourceSha256": "4dd58c8ee959c0e7d3b72d3410b049a28f24c00e7f4f25cafebea3d3a4532aee",
+      "translationSha256": "7b57ca81734a076b84be0fe736197c0a751a8aed35cd776605ca56edf7221f0b",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
+      "sourceSha256": "b59ff7c9272ec44a17125742b582681203dcbb54aea662934fc5e2b3e30d87ff",
+      "translationSha256": "31804e77ea5a7e495e5486b8037e64f609e2d3943687c4c3cf3ee1fdf7778ed2",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.PackagedAssetMissing",
+      "sourceSha256": "271fa48119e897d1f154e0ea1dd3ee27bbe45acc4654f87e03b966d5e1f24894",
+      "translationSha256": "d9f7fe55a4b47cd965983de21758f43c9ad8827a18da26ab1b9b042195536af5",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.PackagedAssetDigestMissing",
+      "sourceSha256": "36081d7d430c09644dc6681a2f2c2ec89a577b62e12d40baabc63f82903942af",
+      "translationSha256": "7db2037afc11c02cb0c4c16979612c7cebe93213a0ffee99d8095200360c7754",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.PackagedAssetSha256Mismatch",
+      "sourceSha256": "61d7dd5dccaadfe910fe863c224620746f9fc1a550f8666d3ffbaf834a0baad1",
+      "translationSha256": "57a680189932d2a7373406b5e3cd3892a08a2ad1b593767628be53e9cf110f4d",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.StartupSourceMissingFromPackage",
+      "sourceSha256": "2f4ac6390b77754e7ae5634d1a2b7d0f3697f06d99b316680015b5ff2f125c9e",
+      "translationSha256": "8a28e29487b4df419a5f96f1739d8f731b20e9126260b01dde7b65d8ab37c09f",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.StartupAssetDigestMissing",
+      "sourceSha256": "dba29a3f86590aa80aa34e5f6e095d90436eb7cef90891c95bb99b6a07438cc3",
+      "translationSha256": "1e6965997c9d5d4f5d88f562a5df18c3630058947b652a43c1858533f706edcd",
+      "verdict": "revise",
+      "reason": "Use “empreinte” consistently with adjacent digest/hash diagnostics; “condensat” is obscure here.",
+      "proposal": "Il manque une empreinte vérifiée du package pour le démarrage sécurisé : {fileName}",
+      "proposalSha256": "322ff3eb195493bd201bf923ba044e3d6a03c7f5db1429c20dad84d555434df7"
+    },
+    {
+      "key": "RuntimeHost.Error.UnknownArgument",
+      "sourceSha256": "503e4bca64d33f07d3879c3b7a2ae3c5dba953e82e853eac9f5e008438df863a",
+      "translationSha256": "1bac48d93ea1682fbc1c01401b014f6e5fb838b113b1759d14b4ae3856e9f43e",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.UnknownFederationBackend",
+      "sourceSha256": "8b9c041b5a03d25a55de13818760ae0a6da02cf324df14f8b784943db392a6e6",
+      "translationSha256": "66aac1742ccdb0453cc96e65937c64f732a339b7c5fc7d0b7c7309626dc4f571",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Error.UnhandledFault",
+      "sourceSha256": "452b06be5933c947872765b36c27416922d46112d475a418e081097511e9061c",
+      "translationSha256": "502c69e984fae632d1a2936b8fdd82628387ed2bf45ad2e3786a37948d08a954",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "RuntimeHost.Prompt.QuitConfirm",
+      "sourceSha256": "c7f7fc0798738df2ff0ae394786dfa8a9717afb43f5616b3f1b3f81c1c207b05",
+      "translationSha256": "50ef1050d0b9172c78ac44ac010e60a37c0d718ab50e84627cdca586155341c9",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Field.Compound",
+      "sourceSha256": "ee0df97cece494b174c6844cfd00255723152d5555215073611b8ad673c4e749",
+      "translationSha256": "f920c415b5222647fec774a2a2d74eaad84e3bf48aa57b0092bc1533274db150",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.MatchReason.HighConfidenceRushmoreMatch",
+      "sourceSha256": "4515327a45dfd53cf3235edab2478a94378fa6bb1bb1a591305e4e2dad3b99e8",
+      "translationSha256": "449c79e9ea1adb9489c2e39ee61b9848292df397c9f1e395a98d4346dfb0dc43",
+      "verdict": "revise",
+      "reason": "“À confiance élevée” is an awkward calque; confidence qualifies the heuristic match.",
+      "proposal": "correspondance Rushmore avec un niveau de confiance élevé",
+      "proposalSha256": "c621f246ebb9784b13ad6faed838332ac61735a46be5cdb9228424f61bb43b96"
+    },
+    {
+      "key": "Runtime.IndexSeek.MatchReason.ModerateConfidenceRushmoreMatch",
+      "sourceSha256": "cd00fa0bfe1f8d2153d56e2490f8167a91525eda3f6c5bfea61bd4f7333e0f0b",
+      "translationSha256": "a5f7f9806479e8f9b9c285e1e935806fe8e939ec3db03606f7b9196078d62384",
+      "verdict": "revise",
+      "reason": "“À confiance modérée” is an awkward calque; retain the moderate heuristic level.",
+      "proposal": "correspondance Rushmore avec un niveau de confiance modéré",
+      "proposalSha256": "232c593ef500800c7590d5ad0e4271ab5eff458de7c2b4b69bffc7060345fded"
+    },
+    {
+      "key": "Runtime.IndexSeek.MatchReason.NoMatch",
+      "sourceSha256": "9bc94ab9b39bfff44297d99f66b2d1dc08ba96658be582098c879d223aa84283",
+      "translationSha256": "2f5240b1b51b3d2ffb7af42f61e4672d78c927649110889c69a6070cdffac5d4",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.MatchReason.PossibleRushmoreMatch",
+      "sourceSha256": "5dcded1f8645796d4d249052182087eb722563fab71d7d64c831a7ac2fe80334",
+      "translationSha256": "57b3a0b910b406309824bee5b6bae0f23d3025a5bfa0806b31c28e890f749b90",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.EmptyOrBooleanConstant",
+      "sourceSha256": "aa51bee5de893b99cda296700bcc1e4a2351fe65fd80f3f65eb6994ecd38ef57",
+      "translationSha256": "818acf5fb33c60453471b7211e6240a23369a242e4b67473a8c596f00415c307",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.FieldBetweenRangeComparison",
+      "sourceSha256": "7c970c15627359a814d26e420c3b9c7e2f38f14eb040c9096c8cbf30b9718408",
+      "translationSha256": "5136b7f35424df7a4fbcb5dd256776622b29401ff5a0b15a75cad540b676abf0",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.SimpleFieldRuntimeEvaluatedComparison",
+      "sourceSha256": "5a93ab3ebd1c482673180281af0865cfd97e57a51ea2aeff7c950fb28a7db0ee",
+      "translationSha256": "11c594f3b0f8c7278d6113f70704c87e300f39caa039ec41b921dfaed9d234b8",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.SimpleFieldToLiteralComparison",
+      "sourceSha256": "5d69bd95b04a1f5bb7508fe7b950b1b9981342c32315b15d73fe11b9dcdc67ce",
+      "translationSha256": "c3b122f30527c446be21c2ed47de502c869322d1406efada99ffd8262bde0b52",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.TopLevelAndChain",
+      "sourceSha256": "994f62d938abb72fc3e729293a666b816ad89a1769ac8feb1dd37f085484cc08",
+      "translationSha256": "0b1bc4a347fb1b98f5086dd486a60ce5a1a2a75f2bd14526e82d29b51480ce81",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.TopLevelNotPattern",
+      "sourceSha256": "4275ff6fca26bdbb14e52feb138eb71a2c4e2899b8a70293c4106df07558ba14",
+      "translationSha256": "aca0dd2d81fe9d9bfe7b51a8f98d9a6bc7c6e2e8795c067d6a297c6aa70900e2",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.UnrecognizedOptimizationPattern",
+      "sourceSha256": "45a350b8b8d6ce38a78f7cf4141e7fcab230621622214fe28810e37192ae5004",
+      "translationSha256": "e8c07a1647a51d67e88926fb2f3ceb1a92443d4e0b55b228fea44705cab6eb2c",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.NoMatchingIndexes",
+      "sourceSha256": "c8557f482d09e01c21f2b7cbfced361adea3c21bc416d411704e5b90b2f60b08",
+      "translationSha256": "4eebeb53bf5e114148fe6e2aa355ee727c6f32c19ed3bf166fd87193dda613d6",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.CostModelRejected",
+      "sourceSha256": "e534f0f2f1eae1cbe97bf287a5d07d34e9f020ddf56a01796d2689107c91de3a",
+      "translationSha256": "0fd654a9f6c3a22be1e8e54242a13f7ae260bb42f5c59dbe867f869c4bc56a87",
+      "verdict": "revise",
+      "reason": "A scan is a table/index traversal, not an analysis; “balayage” is the technical term.",
+      "proposal": "Le modèle de coût a retenu le balayage de repli",
+      "proposalSha256": "2f182e2f264dd2ead6b7b151a53e74e71efb5c5c57a6681ac4aa053c1d5a7b4f"
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.SeekCostModelSelected",
+      "sourceSha256": "3aae14f5a3cc25d31bdedd4901aabba343a59d732c03d4ef29a89954a8236485",
+      "translationSha256": "c17e511eb91af08e72c98c90a172f09b3ff07de40aa08819bedace3379e9a06d",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.SeekCostModelRejected",
+      "sourceSha256": "4ddf6bc124b2795a963216250846f191b6fb78647872fd3cfdce683d11fd69a8",
+      "translationSha256": "5763d7c3b88fa46b2fe7d3325b6bd1454fcdc0ca2dbcff60969f40d8a7c409e2",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.SeekMetadataUnavailable",
+      "sourceSha256": "46cc0310b859fff80b5341282379c244c1869640f3a8f8e88d15434f3fa4d44e",
+      "translationSha256": "db623485cc68c12a22acc4394623fdc6682871827b06d57857220cbad8eb7e9d",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.None",
+      "sourceSha256": "9e63a101f4139e1556c40073ae3f7d1df300300bdd3fea0ff011c64c3e7c26ee",
+      "translationSha256": "ece3b0358bbd01e8c8dec01db7c38ab64884a356d39c3cfc5ed16289a76b7848",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.PlanningDisabled",
+      "sourceSha256": "f5f6d1337f02a45d0bae34d67af2c8fb61e883b697a81c681911afa300478bcc",
+      "translationSha256": "c3358d0e64488f0542d6e83bcf43c2f31308e279d480b9bcde69ea72e88f189f",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.UnsupportedExpression",
+      "sourceSha256": "3dc07732cb7c36fe2ff64b0c80caf69d27d37d742085132afd343b26b3c0b2ce",
+      "translationSha256": "02480d11173b41c42717243c669b3f76281ceb0727861d7be3e4113ab25c8bdc",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.AmbiguousExpression",
+      "sourceSha256": "856dab1420dc8f4bad8b485797af1e152bd804ab7e9423086be9c145d57d2452",
+      "translationSha256": "8783fcf45aaff1595c1410946a15669118eba38b4a5851cf409a19b11121fe4f",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.NoMatchingIndex",
+      "sourceSha256": "dafc963d6338d1b1709f1c46cd15195720ffe38de969ff326437b76ba98f9bbf",
+      "translationSha256": "c29c04bb609ac5be3bc760fb03b511a974d146110e87674f9e34f7f0a3fb7628",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.MetadataInsufficient",
+      "sourceSha256": "d04591985cad4f2afad7718f31d0ed238fbc0ca4c1dfc3d4ad6ffdad04edbb41",
+      "translationSha256": "1cd9be72d3cf78929e148e91380c8ed0671df99300438f012aa0876014e3e669",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.CostRejected",
+      "sourceSha256": "995d62c357515147d123d895239bd0fb3ba9656bfb33ed5d0e725497d1ee1cef",
+      "translationSha256": "cf0a1977d09b715f82e64d057cec3bd61720bf67d48442bc06469e49eb158c21",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.ExecutionFallback",
+      "sourceSha256": "e8280bad48ef6f5a2301b03e32b2ac95d70ff216cd45de0ebdf7ba6afd749f40",
+      "translationSha256": "f5b7b151c0102b5de247171609cac89c98eed0c878fab079767d1cb775a43ae4",
+      "verdict": "revise",
+      "reason": "“Basculé sur un repli” is tautological and unnatural; preserve post-plan fallback.",
+      "proposal": "L'exécution a dû recourir à une stratégie de repli après la sélection du plan",
+      "proposalSha256": "33bd24dda60707165729c586a434e814de4136fc54b2c4f875f562c0a6e2c4e3"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.PlanKind.TableScan",
+      "sourceSha256": "e3a2ef3c5b0c4f8403d2b2820712de5bf0feb55760ed65f7cffd4e31cd8b85a7",
+      "translationSha256": "d1ee3d7444f3b2cb32a97c814293e63e3ebcc5ee6403e7ee1f471c8be453545c",
+      "verdict": "revise",
+      "reason": "Table scan means traversing table rows, not analyzing the table.",
+      "proposal": "Balayage de table",
+      "proposalSha256": "d1799c630e75405158406941f7967e4e8ebece9858f2d67593189de4b3d5dbfb"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.PlanKind.IndexSeek",
+      "sourceSha256": "4f532b5ca9b0239296332b8fe9123974a739664a794197b508f80f431d2ab1a3",
+      "translationSha256": "94176f74120fdc20e0401e5bff3845c4baee2ec1244564c54ef946b96a429f82",
+      "verdict": "revise",
+      "reason": "Index seek searches through an index; “recherche d’index” can mean searching for an index.",
+      "proposal": "Recherche dans un index",
+      "proposalSha256": "559570c8f7ec88ad521f09bbb0fd8408f37cb5249505383fc1795d1c0e257804"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.PlanKind.IndexRangeScan",
+      "sourceSha256": "568b1d4fd99ce3638550ed36cdb349e4d09bc9a3052e7f47ec25b1da2989f180",
+      "translationSha256": "758265d090971b4ef38d9df7d8edb428a8a119baa97de0b7a181a385ea1a5610",
+      "verdict": "revise",
+      "reason": "Index range scan traverses an index range, not an analysis of that range.",
+      "proposal": "Balayage d'une plage d'index",
+      "proposalSha256": "a3497760ee93038266cbffff52d899dfcf7f6c490fe184534c7bda384656b88f"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Statistics.Absent",
+      "sourceSha256": "540ce21f8b331a40eb6f0714ea928263fd66d2c467764823639f3c158f51cf63",
+      "translationSha256": "37988c88d6995647b2ce573308b4ab08c33ba68783c18c1bef1e34d0c5aa0b02",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Statistics.Fresh",
+      "sourceSha256": "28db10779dd33f428f8da9cb288168a76666fb665bfbbac71623a7fd1d5dcc78",
+      "translationSha256": "ef18e8e0a8d1ae27f68793128315823e3a608a6e67ff15e728b14eee4af9ffa9",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Statistics.Stale",
+      "sourceSha256": "e6f61b4ecd233e274e612d9606d64c7e2d8fdf31a78e295c2224408896297998",
+      "translationSha256": "edd911def8ed8f33a2c6371b5fccafa4a557cecb8b2b79d14ddb9f96f77998cb",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Statistics.Corrupted",
+      "sourceSha256": "1bd6247672af9889cfd33f95325d6e4550e05d223200bd0e6a47080326f9ad04",
+      "translationSha256": "56d86dd5b4f7922ea172909bb45d519e690c3016b6d7f0bc76ee96b66b5afffb",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.None",
+      "sourceSha256": "619050cfd3dd7806e7e57e92a4d6372bd1c367eac1e349e792a6ff38431f2b31",
+      "translationSha256": "556d4ba92e9eeb96d25b0d2c5b672fc7313150032696cabee32474d32cdfc175",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.NotRemoteCursor",
+      "sourceSha256": "2dc2b642a9164e744dedde61de79db94a7fc86207986a7d7091c33bb3080cd42",
+      "translationSha256": "6252a9be2c10c4e3e4137373e14d7d0543d46de4c40e80872d25f3d97d21589e",
+      "verdict": "revise",
+      "reason": "Remote pushdown concerns transferring predicate processing to the remote source, not generic delegation.",
+      "proposal": "Le curseur est local ; le transfert du traitement vers une source distante ne s'applique donc pas",
+      "proposalSha256": "82292886ba6c637bd27e03bc45c092566007beee841b07cf83ee6e586e6e171b"
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.UnknownCapabilities",
+      "sourceSha256": "81c054f4f98c74f3503a5580d8c8d722eacb59349a864b411483710ac22ccfd9",
+      "translationSha256": "81304bb360cbe20bda1ac4acfe18b03ec9550b8e92ce2631209ac6fecf0e8e5f",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.UnsupportedCapability",
+      "sourceSha256": "4ad3cc20d38b5d205e992fc36549c6452c99b801f2d5b001f1381a319480c051",
+      "translationSha256": "c330d46b74c90226e033b246da2da7cbc31e179b1a256d5218a64ce2dc8abe7c",
+      "verdict": "revise",
+      "reason": "Clarifies pushdown as remote provider evaluation rather than unspecified delegation.",
+      "proposal": "Le fournisseur ne peut pas traiter ces prédicats à distance en toute sécurité",
+      "proposalSha256": "ff2720735461e67a87d8256253df2ce8f054cf95a7df03abf08cb4bd9d978074"
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.LocalResidualRequired",
+      "sourceSha256": "fc29d8663a74fb2978d5911965a5b9a7a5c1c42b343100738939cfd7e1f367f7",
+      "translationSha256": "89f8bb045c2b538b3e8168749aa08b8be8e36d23c09e78faf3552e7783850173",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.None",
+      "sourceSha256": "b38447fcc06acc32c247e630062c8d3c7ba83715e31b70e4a7d2e1f232389f67",
+      "translationSha256": "642355d7ec580471e99c01a00c47422c0d585fd44b64ecd0471e6ccfb80445a0",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.InsufficientCandidates",
+      "sourceSha256": "18fae6c6835fce31f37ec26caa2acd56e94231480502fd9626dd3e07da60dd55",
+      "translationSha256": "993b57e02967dcdf2b3bea1dae1da4fd43caa431c617b73d6d029596b0f7c2cb",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.UnsupportedPredicate",
+      "sourceSha256": "053828abddc483e0a3bb57389692390d23ced79af50ff824b7962568f3a4f759",
+      "translationSha256": "b751ea71d564edd306b41689f6e9522bfc82843428d32929c027b7c7c8869bc6",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.DuplicateOrder",
+      "sourceSha256": "b350aa7182088dfc7cd4ffb6233fdac65e091334259a5499dc2889cc8c578215",
+      "translationSha256": "a12bf192a4f46cc1128c483165c011bce6f877d31159f0f4eb1d9fdf7b546362",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.IncompatiblePredicates",
+      "sourceSha256": "b58d0766f5b4499696feb488d7064612700fa712a45361edb841cde45932becd",
+      "translationSha256": "2eae2880700b2eee02ab4c2f7c1e89f29fd727112b8eadf49e9508b42fbd1d1b",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.MemoryRiskUnknown",
+      "sourceSha256": "9b1f7d55f971b9c51bd5098effac155233e2f18456fe245c79665c896ac6688f",
+      "translationSha256": "c5b27ec89cfb84c2043f24d8d89a4ae56fee3f85b8e4e265ebdf72be719b079c",
+      "verdict": "revise",
+      "reason": "More natural French for a memory risk that could not be bounded.",
+      "proposal": "Impossible de fixer une limite au risque de consommation mémoire des bitmaps",
+      "proposalSha256": "fd1b313407ff5d78a88301c283adc1061f161bdbededd23662b5d5298aba0f0a"
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.MemoryLimit",
+      "sourceSha256": "32ac907508f228def4151c2b528aa5cf64d60d72af0a4d9e6e39812b66632c7d",
+      "translationSha256": "4253bca06726009fda6d26dbe72617e640454f23886b45042062779a3b1ac415",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.PatternFieldMatchedOrder",
+      "sourceSha256": "d782f3220ab46cc09c2eb908f7599a192f1ceee2dc35056bddd66cf5172e63aa",
+      "translationSha256": "506ffe4a4c9d9a152bb53edd95041c9b7cad0cdbf27932baa598c555a7dcdd33",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.PatternNotRecognized",
+      "sourceSha256": "3ad5c53ef61b0449babb078fb99da39aa6911fb5f67e77a544262d3bae702ad8",
+      "translationSha256": "bb6c915e206ecbbfd2918d87c7078a6277e245e596d551fb832d68ac6e0e1b16",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.Launcher.Error.ManifestMissing",
+      "sourceSha256": "4d009bbde02aeddd44e57cc799eccef1211f157aa9ec8665fce96e2c36565181",
+      "translationSha256": "1d93c48c9bcd5cdf0e2cbd71b8f057e25cd632488f05557ae539822586b4f132",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.Launcher.Error.RuntimeHostMissing",
+      "sourceSha256": "1c5a006f5e2d43094d93dc8bb909c2bb491ca5b856f2081e5a0a63c816bdd9b8",
+      "translationSha256": "8fc54b4e3bf77178c07853985751e26c5f9d738d912970635a31b854fb99a915",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.Launcher.Error.RuntimeHostStartFailed",
+      "sourceSha256": "9179461f5608ea70fe432d5453f050f568b33e345e1780a369364d054a6451b3",
+      "translationSha256": "1ef4f4a14e78459799c74a6dcf01b533bc081f751f59dea08774392afa03ec2e",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.ManifestMissing",
+      "sourceSha256": "7d1e6d438fb9e46c330a6ede2c03bbce6bb8b7f3ceb11ee72e8e9bf1f6d59f5c",
+      "translationSha256": "57e80c663b576c37c0a85e60f43f75b0a715fe4de203232313809b820e251e21",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryMissing",
+      "sourceSha256": "882ea3b8867b6bd39056f682b19dee27bbb53fd345201f4c945f048f71b14e81",
+      "translationSha256": "992a64f47053b3b729686f72f82cb63c0b23ed3d89f0826c152f2f627bc2341a",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryInvalid",
+      "sourceSha256": "c3ca050c9fb93f0f79f28a89a77ad2913959027d42bd8486b6f6b63f5d93a9de",
+      "translationSha256": "6045aff305dd75f6e8afde906404be49ab68d7ebc67ce7be8318b93cc99f2d51",
+      "verdict": "revise",
+      "reason": "“Ne sont pas valides” is idiomatic French; preserve path placeholder.",
+      "proposal": "Les métadonnées de vérification du lanceur Copperfin ne sont pas valides : {path}",
+      "proposalSha256": "3f05953f42a88ececf58a51828b0ec66148c9da38f1262a670ca09284792183f"
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryIncomplete",
+      "sourceSha256": "25c655634a98548f2c51dbf27c5cdce2a74982b6663134ec7a925f39882345f7",
+      "translationSha256": "dcfc37b288ae037845ed687610d4bba25f5b1b7a6f3ca9647960d58ad4ff4037",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.ArtifactRejected",
+      "sourceSha256": "9b5d01eb1fce74606c1e3ae6b61b11f8daa7131aca815913647dcb3632069805",
+      "translationSha256": "272d4ffbe17986d5387645d78f268224a22df13e3f9ef53f8aba042594fcc0a8",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.DigestMismatch",
+      "sourceSha256": "550669022d5d15a19d39f4600c47603fc8afff7a99f85d88c0e25e23aa1e0da4",
+      "translationSha256": "9e6f99698405aeba32efe8c3f17a9ab471a6c2937fb799bf362296e20e37fefe",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.PublicIdentityMismatch",
+      "sourceSha256": "d65b64689b362af130a8521fce3dd5020a4915ee1bf9ad66155ece47b25cc402",
+      "translationSha256": "a33d4066995ca444da8540ef84df83284976a89a39e4936b866e344ab564480f",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.TrustRequired",
+      "sourceSha256": "b88cd6b5275b90a2c8344326d44f2d988badf5cffb0a42533c09a1f92e64543d",
+      "translationSha256": "3e5eb02b1ae99580c9d473e066117a45f926da3337af3ac0a4afc2292830ccbd",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.TrustFileRejected",
+      "sourceSha256": "751190d706e9461fcdfc13cf6f1f65279dee3d9c47942d9292f3ff8d4426fae1",
+      "translationSha256": "fc0eab447b764f07960d2ca899ed60f7c6d2d743ad080d2ed589a2762e87c5be",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.TrustUnknownSigner",
+      "sourceSha256": "45296cced3459ce8ac11421e15650b39d84c02117912b5014f3912278859c08b",
+      "translationSha256": "847c72779af1628124e3b2617ca0d85fe48cd54965575b65846653a4f54fb808",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.TrustInvalid",
+      "sourceSha256": "44b0f2f1551fd9a8b468c3a9571fffd8dc06c65d6ad1f6320a511b909198b21c",
+      "translationSha256": "450666693fa2223af9bfdff77e5c221223eecc94212ff3297857e206b09830d8",
+      "verdict": "revise",
+      "reason": "Makes signature verification the failed operation rather than implying metadata performed it.",
+      "proposal": "La vérification de la signature des métadonnées de confiance du lanceur Copperfin a échoué.",
+      "proposalSha256": "27aa0f082ce3168e838d4d1f1538734ded364fb1c4ceac6b18f7b2b95916937d"
+    },
+    {
+      "key": "Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod",
+      "sourceSha256": "db5cdb7135ce5acde24ccfc5785a4fd6bb5a63bc77503cfc9566e2916c8120ec",
+      "translationSha256": "0ca49d791deeb7c69babe1afdd95a1b3116f0e5ae6805d2e2889effc52337421",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement",
+      "sourceSha256": "9a3e31f6165f0786bbde4c04f0240e99fecbfbaa487168bc235a557a44f3b8f0",
+      "translationSha256": "38d9fdf198893c2b9468b88cf8c21587a07ffe5b2712d8e565ee2ab38bdbf579",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.Error.CopyFileFailed",
+      "sourceSha256": "fbb3c6c977db29b3834082ca067b87faa9c21dea1ca6261d3cc71338e586d92e",
+      "translationSha256": "8c3056be6a89804e03cbdc633964a8764755364a07152db3e16f51ba3df9f36d",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.Error.ContentDestinationRejected",
+      "sourceSha256": "09df47f78071c11030c7dc55c4413d5496302fc15cb94edd20a80e422cc50e11",
+      "translationSha256": "ee436dab9cae2a5b267df413c16ff481c5d6fb88b72e1f84d8373e419b3fbb82",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.Error.ContentRootRejected",
+      "sourceSha256": "270fe439c9e18ca0d76e37464028fabaac85ddf5f1768026de3be9e08943b608",
+      "translationSha256": "2d472e6548c7ce7135e79ccbbe6d17b29815b345c592f3e25595f7517a05bda1",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.Error.AmbiguousProjectAssetPath",
+      "sourceSha256": "f7eecbcbe616df1b5addfff95390c4906e6b503fffc7c4ebc27569210c31b487",
+      "translationSha256": "73c0574b15e75d3fdc619f7aacaa30638a95d347ffe01f29c12e279f6c5f66f0",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.Error.DuplicateStagedAssetPath",
+      "sourceSha256": "e1e111727ccebac71b9ed494e718aa61876def61f78510fa77ed86bda7de7677",
+      "translationSha256": "d685a622a6dac3e51939c4a13e7a3351e790da11e0fa98030ac40ee9f6d4db12",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.Error.AmbiguousCompanionPath",
+      "sourceSha256": "232237bdeefacbd421dac6edf2a4e9bea5de5c85c0cdc7f3989bb36298acc8e9",
+      "translationSha256": "81bfc591fe6c67a18450b47e7fd96448ab31e0846c10a0d6114ac67057d86c0d",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.Error.CreateContentRootFailed",
+      "sourceSha256": "d32fa2739f50ffb4c9b86fa43d76563f48aee0d8f6c7183b3edc446ed3b19d3b",
+      "translationSha256": "2c405edf758cbc9a24df5cd1f4d507d94c092cd22f9fd7fa0185e4565393808e",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.Error.CreateDirectoryFailed",
+      "sourceSha256": "79fd8c565f032346c6d3d3f7d18ea5f008ce92a3fac30ddb99a2adac32b885be",
+      "translationSha256": "3663b2dc7a3f3ac4e7ebb208ff5f27358e0820398ca33c6d2df138cfd19f7da7",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.Error.CreateFileFailed",
+      "sourceSha256": "e7649c76efa6c9d5c4532d8f720c5f8ec1a94be45d4b5fe622524f132e95cb78",
+      "translationSha256": "5c549bd3848d8e2867d844b3379178375c18567db380f9eeef952880535f3085",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.Error.CreateLauncherDirectoryFailed",
+      "sourceSha256": "1b8f302ca9ece86e5bb162ca378f862671a57452028c643e85c9ff0295692750",
+      "translationSha256": "3b2d1aec7e8fe061be7ebf7aad693b30e2dfb71693a3ed0f7b9e488cf138fe2a",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed",
+      "sourceSha256": "3b9cc924bbc7f34cd0468777539a7fae13134f7e2981a97d33cb189001265d31",
+      "translationSha256": "e3c2ba0cce9e0daabf5d83aa2b524ef649522c04d282e1539f12b3fcf0fc795d",
+      "verdict": "revise",
+      "reason": "Translate generic “build directory” as compilation directory rather than leaving English “build”.",
+      "proposal": "Impossible de créer le répertoire de compilation de l'enveloppe native.",
+      "proposalSha256": "3e3f7668b71e2342e498e5dcb15519885f5e6f49bbac8ea088bd0ea50189369d"
+    },
+    {
+      "key": "Runtime.Package.Error.CreateNativeWrapperDirectoryFailed",
+      "sourceSha256": "271ac9bd38bc8ab2a5d2ded01e21af0b1918dc7499917e438196f94f8772bf4c",
+      "translationSha256": "960f6f1204e39b65d4c92619e05197c278514277cc6e9a7e69238d222c452609",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    },
+    {
+      "key": "Runtime.Package.Error.CreatePackageRootFailed",
+      "sourceSha256": "c5669fd0d0aae6e8dbe510ca9a419dc5b00e4265d48d168b4ad84c2b427a5111",
+      "translationSha256": "c6f0b636338341bebe72dd0625cbbda01c3b906c86ff36d160b34120383a0616",
+      "verdict": "accept",
+      "reason": "Meaning, French wording, placeholders and protected syntax are adequate in this source context."
+    }
+  ]
+}
