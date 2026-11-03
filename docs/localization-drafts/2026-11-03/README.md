@@ -12,7 +12,7 @@ value may enter a release ledger.
 | `fr-FR` | 680 of 3,146 | 615 | 65 |
 | `it-IT` | 480 of 3,146 | 437 | 43 |
 | `es-ES` | 160 of 3,146 | 156 | 4 |
-| `pt-PT` | 160 of 3,146 | 158 | 2 |
+| `pt-PT` | 320 of 3,146 | 302 | 18 |
 
 `de-DE` batches 000–006 and `fr-FR` batches 000–004 were authored with Claude
 Sonnet; later batches and the Italian start were authored by separate Codex

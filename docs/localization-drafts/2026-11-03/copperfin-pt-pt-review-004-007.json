@@ -1,0 +1,1335 @@
+{
+  "locale": "pt-PT",
+  "scope": {
+    "batchFiles": [
+      "/tmp/copperfin-pt-PT-004.json",
+      "/tmp/copperfin-pt-PT-005.json",
+      "/tmp/copperfin-pt-PT-006.json",
+      "/tmp/copperfin-pt-PT-007.json"
+    ],
+    "entryCount": 160
+  },
+  "reviewerType": "independent AI",
+  "reviewer": "/root/review_pt_revisions",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "reviewedAtUtc": "2026-11-03T08:04:03.489502+00:00",
+  "uncertainty": "Text and CLI call-site review only. No native European Portuguese speaker sign-off or rendered UI/runtime validation. Long labels and VFP terminology need subsequent UI/domain verification. Verdicts apply only to exact hashed values.",
+  "counts": {
+    "revise": 16,
+    "accept": 144
+  },
+  "entries": [
+    {
+      "key": "StudioHost.BuilderParse.RequestName.InvocationAdmission",
+      "batch": 4,
+      "sourceSha256": "3fb5bae2ea65a5b33c6aad4cbf375400519cfd2051709c7279abd077ef96e033",
+      "translationSha256": "29de2c7872b1dc571e979dab922840f52129c79b7e9e48da27090cfb0fe76bea",
+      "verdict": "revise",
+      "reason": "«Admissão de invocação» is an unnatural literal noun phrase; this request checks whether a Builder invocation is admissible.",
+      "proposal": "verificação de admissibilidade da invocação do Builder",
+      "proposalSha256": "7af5ef9054c58140d8a6e89dca84ed8c7051a3a02fc0fe0cf4ca1fe73c01b12a"
+    },
+    {
+      "key": "StudioHost.BuilderParse.RequestName.LaunchPlan",
+      "batch": 4,
+      "sourceSha256": "9e7c3f2caa927522d09aeae0d7017f373644f2ab37dae502195dc113e357dfd2",
+      "translationSha256": "29b8a054067657f44eed950e71dc84c3834a7bb32a7150f6ceeb6df7cf1147b9",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.MissingValue",
+      "batch": 4,
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "193c97a0a21071fe76c04b5b3ec2c445cd8686dbc156c4a0e7dfb3b02f1b243b",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderContext",
+      "batch": 4,
+      "sourceSha256": "a5a7102a5643c448b38b43b3d15320fef81a21937810c57b0b55323e143b30ac",
+      "translationSha256": "e491c01a6465a37bb7219e787f40cf5f541a3138fb0e43946b25cfa254c0240f",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderId",
+      "batch": 4,
+      "sourceSha256": "414a602a00c1442909cedb4dcf007b582339d7b6e37dd87b0ca132d377aab51c",
+      "translationSha256": "9c258a14ed9ee1159728cedb6496ff41fd055f88e650d4b317b6b8e5f91facf1",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderLaunchCommand",
+      "batch": 4,
+      "sourceSha256": "dc95fafe996fcb864232ede1cbf243cd3d220185d06c10040dad52f9d7ce3035",
+      "translationSha256": "ae20034570130af294709567be54b13ace09ab1b9815137781fa24877d35ec38",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderOrSelectionContext",
+      "batch": 4,
+      "sourceSha256": "7fc053db44bc509d4177281b0b63a3f2cc565331df82c87d6700fa3ccf6dc7b8",
+      "translationSha256": "5ed770523a8eb122c4b2b43e198385c0979d8522738f3f65d5f3c6b172cd184d",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoSelectionContext",
+      "batch": 4,
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "5402c2b6130ba8b429d53ab77a15920f040b4d73287f3aa82a2d6e579fe8665d",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.RecordNonNegativeInteger",
+      "batch": 4,
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "5bde25a0d900a8c9430102d503fcf0f78add51893a3824421d545a088151ecb8",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.UnknownBuilderContextToken",
+      "batch": 4,
+      "sourceSha256": "b35d39bc7d28d92e471842ca8102fee0f7163618921d948cce1cf9aeac33f672",
+      "translationSha256": "339e47e0950158ac918d380a36e9be1e4ac06675bf6a50cc1e694dda89f87904",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.UnknownOption",
+      "batch": 4,
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "006d49f8271656f3795739b412ff885cfdc1e7ec397ed0509569ecccc58b1c62",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.UnknownSelectionContextToken",
+      "batch": 4,
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "42038cc999d805c511b4b8002ff413900b2de92da2de02ab035a1db7359d98d0",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.BooleanValueRequired",
+      "batch": 4,
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "14e2e531fed07e5894c0694ff57da978dfa6570eeca04bee7fc32bb231685be1",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.MissingValue",
+      "batch": 4,
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "193c97a0a21071fe76c04b5b3ec2c445cd8686dbc156c4a0e7dfb3b02f1b243b",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoDesignerBuilderLaunchCommand",
+      "batch": 4,
+      "sourceSha256": "811ebf65b1097f596a7cfa4d19957c083a95affe046d0c5c61dd6b9284a81f4c",
+      "translationSha256": "d012c83b05027fe4fb27c91dd8b97df2d5231376b77a5ddbfb629180e792cd0e",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoDesignerEditorActionLaunchCommand",
+      "batch": 4,
+      "sourceSha256": "f0d44b836f4e181c34060746aa432d25f3c79687c66a391db8fe52744afd2c45",
+      "translationSha256": "d4889cd12d391be756d2d650baa692051973724c88096a47b2c2a870e6ac2e73",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoDesignerToolboxLaunchCommand",
+      "batch": 4,
+      "sourceSha256": "b1bd07d1db8cb0a0c7cf72d4a8f56fa805b3c7249128b27359f8d35ddab2573b",
+      "translationSha256": "40e12d496a951bccdc9780b905d18efc715f1b83257b2c68476077fea72ee956",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoSelectionContext",
+      "batch": 4,
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "5402c2b6130ba8b429d53ab77a15920f040b4d73287f3aa82a2d6e579fe8665d",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NonNegativeInteger",
+      "batch": 4,
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "5bde25a0d900a8c9430102d503fcf0f78add51893a3824421d545a088151ecb8",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.UnknownOption",
+      "batch": 4,
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "006d49f8271656f3795739b412ff885cfdc1e7ec397ed0509569ecccc58b1c62",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.UnknownSelectionContextToken",
+      "batch": 4,
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "42038cc999d805c511b4b8002ff413900b2de92da2de02ab035a1db7359d98d0",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.BooleanValueRequired",
+      "batch": 4,
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "14e2e531fed07e5894c0694ff57da978dfa6570eeca04bee7fc32bb231685be1",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.MissingValue",
+      "batch": 4,
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "193c97a0a21071fe76c04b5b3ec2c445cd8686dbc156c4a0e7dfb3b02f1b243b",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NoEditorActionId",
+      "batch": 4,
+      "sourceSha256": "a206d7b676c0db7f387f2b05d56a234ea5834aaee89a67207b651d18fbe64ad1",
+      "translationSha256": "5e2b893208cfded4ead867d5ddb22e21a8ac9fb2afad44ffb839b4877fbe1ed9",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NoEditorActionLaunchCommand",
+      "batch": 4,
+      "sourceSha256": "10a75a9207b35688660dd7b86adce5dd77b025792d36e3cc916815013b501b1f",
+      "translationSha256": "e485936abec73c53c04e0fadec295045a420763cb2fd5eac5f6fa324d078a982",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NoSelectionContext",
+      "batch": 4,
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "5402c2b6130ba8b429d53ab77a15920f040b4d73287f3aa82a2d6e579fe8665d",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NonNegativeInteger",
+      "batch": 4,
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "5bde25a0d900a8c9430102d503fcf0f78add51893a3824421d545a088151ecb8",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.UnknownOption",
+      "batch": 4,
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "006d49f8271656f3795739b412ff885cfdc1e7ec397ed0509569ecccc58b1c62",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.UnknownSelectionContextToken",
+      "batch": 4,
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "42038cc999d805c511b4b8002ff413900b2de92da2de02ab035a1db7359d98d0",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.MissingValue",
+      "batch": 4,
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "193c97a0a21071fe76c04b5b3ec2c445cd8686dbc156c4a0e7dfb3b02f1b243b",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.NoSelectionContext",
+      "batch": 4,
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "5402c2b6130ba8b429d53ab77a15920f040b4d73287f3aa82a2d6e579fe8665d",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.NoToolboxContext",
+      "batch": 4,
+      "sourceSha256": "cc864d8a55e2dbfb842a8ccf066dfe30ab8c1a32c261c167962af8104b8e7717",
+      "translationSha256": "53d831a55d5cb30d92ac5280cdf3a1614e15e033ba65249340df618cdf48e3b2",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.NonNegativeInteger",
+      "batch": 4,
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "5bde25a0d900a8c9430102d503fcf0f78add51893a3824421d545a088151ecb8",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownOption",
+      "batch": 4,
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "006d49f8271656f3795739b412ff885cfdc1e7ec397ed0509569ecccc58b1c62",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownSelectionContextToken",
+      "batch": 4,
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "42038cc999d805c511b4b8002ff413900b2de92da2de02ab035a1db7359d98d0",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownToolboxContextToken",
+      "batch": 4,
+      "sourceSha256": "8a11d304da398e84cda4c67e321861fb665502c9bde02d11687c6abbc3aaa99a",
+      "translationSha256": "c7b00186b324fec9e2985e5d4c80abf558d4a1ff11241d44516f7bafaceabea9",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.BatchItemRequiresToolboxItem",
+      "batch": 4,
+      "sourceSha256": "0ef478552c8822d14178bbcda47867a7a63f4ad5d1c66ada1868bce5cde17be1",
+      "translationSha256": "f2ed0d2eb9c97060b762ae8b4205fa60a3365260f1c2c6a4a58c3889c4fdb93e",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.BooleanValueRequired",
+      "batch": 4,
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "14e2e531fed07e5894c0694ff57da978dfa6570eeca04bee7fc32bb231685be1",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.FieldValueSyntax",
+      "batch": 4,
+      "sourceSha256": "0081be3546939e08397453ba775a755e6cffa1e180015c0a088cc624f378016b",
+      "translationSha256": "bec8d69d33dc05e14426cda2e18b0ea9791943fe5fcb31d4834cea8cf64e9358",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.MissingValue",
+      "batch": 4,
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "193c97a0a21071fe76c04b5b3ec2c445cd8686dbc156c4a0e7dfb3b02f1b243b",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoAssetPath",
+      "batch": 5,
+      "sourceSha256": "987ce8088b2f65ae9a91d3be28dce6f0804cf547866c9f98e5a8b806cb6a3735",
+      "translationSha256": "4f72e9ba7602e61fa2abbbcbb15e0a01f9ed31ab3a7ed69d438aae86a732ec15",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoSelectionContext",
+      "batch": 5,
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "5402c2b6130ba8b429d53ab77a15920f040b4d73287f3aa82a2d6e579fe8665d",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxContext",
+      "batch": 5,
+      "sourceSha256": "cc864d8a55e2dbfb842a8ccf066dfe30ab8c1a32c261c167962af8104b8e7717",
+      "translationSha256": "53d831a55d5cb30d92ac5280cdf3a1614e15e033ba65249340df618cdf48e3b2",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxItemId",
+      "batch": 5,
+      "sourceSha256": "74e91dfeb093813f9defae2f605e9ab5ffe26c8036081c3fbca70085f320baf0",
+      "translationSha256": "c18987e5ebd27ef43dcb59cf48650123d07cfbe768b049dd73635c960c7d0bb0",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxItemIds",
+      "batch": 5,
+      "sourceSha256": "77bfed1e57eedb29b515573b1eb702d77c7c77b6e59450a70eab2642140c867c",
+      "translationSha256": "99c6353e24a4d9fecc2c3fa2fd97511af74b632d4d93bda44786f6680e4b8b75",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxLaunchCommand",
+      "batch": 5,
+      "sourceSha256": "5cd016267197a654a7fb6f3c4aadc31450138105d83e7c77bf3beba6d6c318fc",
+      "translationSha256": "3c81d21d6b44578c1ada1982e5726f575be6d11c1f3342a229e686c20f6a8b41",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NonNegativeInteger",
+      "batch": 5,
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "5bde25a0d900a8c9430102d503fcf0f78add51893a3824421d545a088151ecb8",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.SelectionBatchCreateItemRequiresToolboxItem",
+      "batch": 5,
+      "sourceSha256": "a07a5d68d2c7437af70d67dfdb6072b2494dcdb796550ddbb3251107f9013b09",
+      "translationSha256": "9c362d5be558455c86cfc191701992117e29a15132882db03ac668b8be08980c",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.SelectionBatchDispatchItemRequiresToolboxItem",
+      "batch": 5,
+      "sourceSha256": "1958d901797eeaec22e745f62f9d0d2e83476c4f2e12e0c863ec810623c27b23",
+      "translationSha256": "ba91f413f0506eb9b6cd6aaac675fe43afe0786e0bf0cf10e182d01cf3cf40c1",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.SelectionBatchItemRequiresToolboxItem",
+      "batch": 5,
+      "sourceSha256": "ab6923ae856a0057df18f04b001f7a260328d70e4e7edc7b7f462245c5d60e87",
+      "translationSha256": "80a47f0d2f62739f52c05a0cdc3f00d191e371e298b3a1991795187a4cbcc960",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.UnknownOption",
+      "batch": 5,
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "006d49f8271656f3795739b412ff885cfdc1e7ec397ed0509569ecccc58b1c62",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.UnknownSelectionContextToken",
+      "batch": 5,
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "42038cc999d805c511b4b8002ff413900b2de92da2de02ab035a1db7359d98d0",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.UnknownToolboxContextToken",
+      "batch": 5,
+      "sourceSha256": "8a11d304da398e84cda4c67e321861fb665502c9bde02d11687c6abbc3aaa99a",
+      "translationSha256": "c7b00186b324fec9e2985e5d4c80abf558d4a1ff11241d44516f7bafaceabea9",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.AnchorSelectorsRequireAlignOrResize",
+      "batch": 5,
+      "sourceSha256": "833d2117ecf3525899726d8829ed408f510bb46ffe9c4d0e47b57dfb48b26559",
+      "translationSha256": "a5fc966a62a551b6c19518b3312699ffc3548f557e0bb6145b0c901a434273e7",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.FieldValueNameValueSyntaxRequired",
+      "batch": 5,
+      "sourceSha256": "0acd50c6b42819311788349146a40b3167bc420a968f37ef1c7bb32b267959e8",
+      "translationSha256": "dc2215e9eded7ee246df80e46a15c36806b5f7f3537dee470f9077f4f3f29da6",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.IntegerValueRequired",
+      "batch": 5,
+      "sourceSha256": "01f541b3418c3ac3c88f3bf0360a709e186962f31d36ca10ff080a3ed816b428",
+      "translationSha256": "12afef2a4da8ac78669657984e99cb3b2f5d7f33f9fd341c9b07bde137cd07b4",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.LogicalValueRequired",
+      "batch": 5,
+      "sourceSha256": "d71ebd603923bf9e9f466067a62ecccdada59b78ead603610433d978f0b2214b",
+      "translationSha256": "51bf1473f573d8183bd7c2d6f19b6a16e45a2be0502ffde3754abfd54b4e9508",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.MissingValueAfterOption",
+      "batch": 5,
+      "sourceSha256": "be5a625d879b6615012a09bac1ccf153ddf8409c181eed0b81f86b1a5e5dcaaf",
+      "translationSha256": "5141000da6387a8eae5d88d34cfc37cc53e5784382cb3d2cdd6f3ea7e5c72212",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.MixedObjectPropertyCommands",
+      "batch": 5,
+      "sourceSha256": "81971cb33158b376795acd21f9b21c77d4aeea471867de35474cbf974a759908",
+      "translationSha256": "3ae719950cd61af5d6387571f2500a23da0f8aa58b8f6bd2f0491e7a75316022",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NonNegativeValueRequired",
+      "batch": 5,
+      "sourceSha256": "c480152db555d2015dce726e0ece872539c5b556839b715e0c36e66e2c139dea",
+      "translationSha256": "22314f22affdfcc7e51b6aa1b9a8b478f1c0b113bf33b7c72f76b3bc7e49f55f",
+      "verdict": "revise",
+      "reason": "«Deve ser não negativo» is awkward Portuguese; state the nonnegative numeric requirement directly.",
+      "proposal": "O valor de {option} tem de ser igual ou superior a zero.",
+      "proposalSha256": "8962a3c4702890f65c1b8dff5adace92268a90aa9af456753eee8d5a12a3797a"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NotNegativeValueRequired",
+      "batch": 5,
+      "sourceSha256": "83c954478358996b2b30550a80211d7be65563638227a12fbdf25590c13a5d43",
+      "translationSha256": "71c72303bfcd074e803f61905a5eb10940f445bf97f1bd103bb16c1c16223ea4",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NumericValueRequired",
+      "batch": 5,
+      "sourceSha256": "7e8c761919d91f3291f023f55e91291fd1534a2db64e658f7db58f46d3db1a33",
+      "translationSha256": "24c71b7d805750e0e2bbe6531a68db5cecea8dd4232a0baa076a8f3a8ba6f646",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectArgumentsRequireMode",
+      "batch": 5,
+      "sourceSha256": "1ee93375b852a42de2cb18f5f3914275409bae34a3e07ac156c81ee9406b7cd3",
+      "translationSha256": "bd3284d543313b788317b6b2a20133fe2b9805263b8e10da678745e38a107143",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionArgumentsRequireMode",
+      "batch": 5,
+      "sourceSha256": "25219856d5fc21c43e9e8fddff39c004c5bc7104b70e7bdad6fd420e3592c22b",
+      "translationSha256": "43da2ef2c3d737b1614da26162b5a611767a8ad4a94b9e3db6b6440122634d3f",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionRequiresEitherOption",
+      "batch": 5,
+      "sourceSha256": "cf76e09779f514cc4bc5c828cfaaf83037813f4bdca482e96f9ae6942e384efa",
+      "translationSha256": "86536da62b12c80536b0adc9cdefe38bc754adc9a9f4749e1bbf3db5df802db6",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionRequiresOption",
+      "batch": 5,
+      "sourceSha256": "fd802d9299d0ec18b7db7713ec154bd93973cdfa661d0798dcc1434e14c31e2f",
+      "translationSha256": "5283ad6d4c91eeecc980ed2f20dcbdbb47e0ef82cc397dfe72343d55f1f83d4d",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionRequiresTargetSelector",
+      "batch": 5,
+      "sourceSha256": "b2ab7cddae5b1d5f98490e4a512f70a8746dc99d8e35aff8066c870d444c7951",
+      "translationSha256": "1a6546bda9b556a7c9a760fa5af20b873f54bc80a7ff297091b693440c7e2fba",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Alignment",
+      "batch": 5,
+      "sourceSha256": "47ccb97a79f5a2bff2713968c83bbbea9cd53d2edf6b0a47439910e111c95fe9",
+      "translationSha256": "d77f19d9607407ed8684c5e32ecb21f73394d574050e2ade668de6fbced13675",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.AlignmentTitle",
+      "batch": 5,
+      "sourceSha256": "9d597870c4b3f76d88d9f88411effb8f957b507e68be43af0b001e537bee0338",
+      "translationSha256": "241021c5e0ac70918ba41268b3e605cfe0d70e497a1bef5567453ec8ce0eac41",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Distribution",
+      "batch": 5,
+      "sourceSha256": "93354845030274cd4bf1686abd60ab28ec52e1a792fa6f7ccb9cbd0ddff53d12",
+      "translationSha256": "7c6c90143477cb4a29abb77760bfcc08c49931cabe8c1d82d6b47b743a1fe908",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.DistributionTitle",
+      "batch": 5,
+      "sourceSha256": "72a23e549d099bbd49b9266bb96afba35da89e5a93a91b056a61c9326c16266f",
+      "translationSha256": "0568d089e17add16d014605c5b552d7c9459735b0c57fdcf7160db3e756023e8",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Nudge",
+      "batch": 5,
+      "sourceSha256": "88884f55ac1e09aca9ad89873997508adbeedb19f7af283b54da05d996f50da1",
+      "translationSha256": "bb10c9a1afc323a73817c67c06c9a2a1384dad86799f8d414c36aaa292b66a69",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.NudgeTitle",
+      "batch": 5,
+      "sourceSha256": "a5239b85e5fb77d569e75b736dcc3ccc341dd3e6d5b8064d2f433178da0b05a7",
+      "translationSha256": "b606e5f1473751730323ee4b4c9a8546999650bf5f2a7f84e1ec314439d9224e",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Resize",
+      "batch": 5,
+      "sourceSha256": "acd532d8913e66d436b38de9acba750f92f20e16c49dafb78b69363127a38c60",
+      "translationSha256": "7fd16e4795346306a93a1ccf86beed4bbe7ff6ca50aa131e6adbbe78cdc9b403",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.ResizeTitle",
+      "batch": 5,
+      "sourceSha256": "2956e06ac0651084bbd5558dfe469615e9a5fc3072f60a09a9cb3c597a19324c",
+      "translationSha256": "2c5c1083036846e47b9fc5dfbe5e5d46d15aa0e810d599275cf9f955f2fdfbd3",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Snap",
+      "batch": 5,
+      "sourceSha256": "1c27324f013705cbf0c49f3d3bb103c7069ed5988889d426c10cfc25684f0a31",
+      "translationSha256": "0f6af31cfd5f6d2392e3b6ac904360ae3600a4be5cc5e0ee79d47ee30fa15c57",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.SnapTitle",
+      "batch": 5,
+      "sourceSha256": "98df9a59f0641d0c4409c495b8f890581d4fa8a5b180e3358a691097c8ba8af7",
+      "translationSha256": "2f95b73aac319d86cf9a1265a3eafb2a30fff36d7125a53c3ac31d1edd471b68",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresOption",
+      "batch": 5,
+      "sourceSha256": "41a9b9617b14b5187a571c8d23e30f0f26ae35651e84ad9e55c512ab3c110895",
+      "translationSha256": "0b89a48137ae3af1cfae36fd7309786bf03a30082890fefa866a8ab0648f8cf8",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresNonNegativeValue",
+      "batch": 5,
+      "sourceSha256": "4b8924b2b128cea574b5733bb8366bded84ca6f22328842c5b7a82a670475c64",
+      "translationSha256": "a574573d8c90a62d847c666f1af39f88636cf315e840e20a1222f700c2f44bcd",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresTargetSelector",
+      "batch": 5,
+      "sourceSha256": "02cc23f77334821507668e07b6daf01933f202c10aae4918a3412fe609c4d738",
+      "translationSha256": "489469e3ada94f856acf1386d043781ff4ec1808c2abe6b5d6db6afc0677a06e",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectCommandRequiresOptions",
+      "batch": 6,
+      "sourceSha256": "9ac12acb21ffc3755f17a470170583f12243fb4ebffea1209b13eee3eea37a44",
+      "translationSha256": "e6e5e924e992c7163700ba6d913df06050c08d9b3f4d04714dc9dc6782e6b1df",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectGroupRequiresFieldValue",
+      "batch": 6,
+      "sourceSha256": "156a1fabae7f679109536eeb5cad9af62867cb3e7613524792725534a41239b2",
+      "translationSha256": "b086a1f801c6cee05f792d530af709f937de6c0fd334190f4cbf4ba7df06153c",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectGroupRequiresGroupedChildSelector",
+      "batch": 6,
+      "sourceSha256": "8abe8859625bb8d15c90fd7596cd89e7a1fbe6e6714604bb5026497343756c51",
+      "translationSha256": "8403c59eb2e45b3b4fbda425ad49aaa7cf56a031c88843948cb3fadd0f672a1b",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.Rename",
+      "batch": 6,
+      "sourceSha256": "9e84869d369b2a5336f6aa599b6e91116cc3d761827ef5f4b90841b8848ec35e",
+      "translationSha256": "4074e2658144c06f1bc2fc42377e7d754cb54e480defc3fe7ee1ee1a4c38d36a",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.RenameRequiredOptions",
+      "batch": 6,
+      "sourceSha256": "b66fed63ca35a4c464467c946b19922154ca76747ae4e3cf24b0a06dacc686d8",
+      "translationSha256": "02de8424c280ba4d868175a4ceaf53a771fc3f9a6bc9592278e07d032361a9ec",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.Reorder",
+      "batch": 6,
+      "sourceSha256": "625dbdd35aabb2660d888511e35dd11bb111f6ca9fc68258e31b7c1fedc230d9",
+      "translationSha256": "6b74636bf6f4b31dda391c3df45d159de207364a663c76670f10811095e43ebc",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.Reparent",
+      "batch": 6,
+      "sourceSha256": "ee83ae2c50e6d0179b0f155f6f6a4218c6b46875b57e90e3b1efb4531b37d9f4",
+      "translationSha256": "e8c2322a22da36a903e3b0f2c5076ff7776c29c0aabd8713376e3d978af93fd6",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.ReparentRequiredOptions",
+      "batch": 6,
+      "sourceSha256": "8dbe7a160983b88d75fb5007ef674a7524d6112cba73f17d7810fcc66454d717",
+      "translationSha256": "b48d376cf443b763bf7c65d7a4ccf2d9651069a920124a643d6d63ece05d8f13",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Format",
+      "batch": 6,
+      "sourceSha256": "e904c9ccfa425ff0b055d2c533462314d35a529b055e8abe41d49bb46d827427",
+      "translationSha256": "aa32c15eaf920e0f14b773b26807f28e56c4c35af53f036fd56b3f767e9134b1",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormatTitle",
+      "batch": 6,
+      "sourceSha256": "2f343666aaa88c44430b12e6ab8a29591a069de76541125e83ff1b5acc367bf2",
+      "translationSha256": "73e1804eb968f73e9a8cb8ec3504c46bac94fa10c948614045bf30d5200e29f5",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferMode",
+      "batch": 6,
+      "sourceSha256": "16793a65e0cfda0414031efc214e4dca811321f75354f4d54a00439a161be866",
+      "translationSha256": "58e6bb60da5b0cf3f597469c264076d0b00201b77791ba08c8d86a19fcd773f5",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferModeOverride",
+      "batch": 6,
+      "sourceSha256": "1ac66255ec1e880ef991858ad3e977f57fdf25c15aee7836ccf081d35c2ded96",
+      "translationSha256": "ba9cda5bf066ff8eed03210635e4d641a688dc0d1632e4c2f8871b0cf82c62c9",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferModeOverrideTitle",
+      "batch": 6,
+      "sourceSha256": "f253db6df3bb434d13354d8b74eb7e6cd309309389d0ea0a59e42b9e4dff93ed",
+      "translationSha256": "b0dc151e0f1cab8a91ebd9b1cdf21a8c9010579859ab31a92cb921a94b163a81",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferModeTitle",
+      "batch": 6,
+      "sourceSha256": "30c00a3eca297b689c889c80304cd671e352570c9490b07edd62bec32cf8c1f6",
+      "translationSha256": "92c5c0484c45190abdee98251483020e76ca4df632cfa9be7e1c8c67e58d7759",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ButtonCount",
+      "batch": 6,
+      "sourceSha256": "fcc8421ffbc9967aacdaccd8b7776ff659a8f58be25eadf62575edb50d677e00",
+      "translationSha256": "31bbb1dd5052f43f2c4f852e17c79efdfc4d85961de492733516c0acf28e9ede",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ButtonCountTitle",
+      "batch": 6,
+      "sourceSha256": "a7f418d7b962d085b71ae806cb0b3618d15ec685ee87c87b38f4ea7644126b4e",
+      "translationSha256": "6f5dd83a86b92642c3202112c12abe8028fdb4165bf2ef070dc0dc23f0940bf6",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DefaultFilePath",
+      "batch": 6,
+      "sourceSha256": "d32bf6f762c73939521d33dd4d7cd43617d676d8567e14df86494c82f707b472",
+      "translationSha256": "99610008ebab74360e4a2f29b9f99f7a84a44096266b47db6875876e798f2bde",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DefaultFilePathTitle",
+      "batch": 6,
+      "sourceSha256": "3692d2226bc00d145561967b562c21f9bd7ca8cb398deed61a837805293572b7",
+      "translationSha256": "57da35c1433d6e1b15fec3dc05c9600288f293eda45447c531b59d965faf6274",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayOrientation",
+      "batch": 6,
+      "sourceSha256": "0e25b0d2b1fa3111050bb796698ae509620302b287299ec60a883a3f91b05633",
+      "translationSha256": "bf2ec649255860a20b21b21c3a5fdba6d47b68bf0d1d134923ad09323eb417c9",
+      "verdict": "revise",
+      "reason": "«Apresentação» may suggest a slide presentation; this is the display orientation property.",
+      "proposal": "orientação da visualização",
+      "proposalSha256": "c8528833dd374713fb7dcca01c88de6afb88137cd0b89d3fd2b7fad70455fae7"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayOrientationTitle",
+      "batch": 6,
+      "sourceSha256": "708226b8659c9150211e133219739f90e2d8acf42ab1ff5968eacdbd20a8f89b",
+      "translationSha256": "be7e6266ddbb6b36e9c1d1f3c498c164dc833cbf2e6f0f9521e1d0a14f2d8bc5",
+      "verdict": "revise",
+      "reason": "«Apresentação» may suggest a slide presentation; this is the display orientation property.",
+      "proposal": "Orientação da visualização",
+      "proposalSha256": "41f00422b7cfdc3258e85dbfb3bc4c6dc749764974faad35e90d416a44bf896a"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Caption",
+      "batch": 6,
+      "sourceSha256": "176ca52906b001daa816562988464d2af4e18590a85bc7090e28ad3faccb7f8c",
+      "translationSha256": "2d651bd0c11e07894decce130d5005c7006dd931ab15288388cb2ef76f9d2c71",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CaptionTitle",
+      "batch": 6,
+      "sourceSha256": "87d296ec94898c86baf805dbcc47af48e618ec25df0441f7471c60a7d6b05b4e",
+      "translationSha256": "61154f2a8bab2dfcb2aa6c0c0ea46874317214043ddb4af4c83858d4e736dd71",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ChildOrder",
+      "batch": 6,
+      "sourceSha256": "f4e758aa396881d1861e4ce75adcff7a0fa9b14b1b2f19fb7b37e33cbcd1ab87",
+      "translationSha256": "afaa226f218afb16f121e35f9d64de2d6a81e7a1798962a287586e2bec101284",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ChildOrderTitle",
+      "batch": 6,
+      "sourceSha256": "5b349f43f0c4abc9e0a4126b9813a10fe83b26b45af49b5b0d635b2aa35c9423",
+      "translationSha256": "e7942a9dbb7a58e1e96f024744c7b06c3956f010cc93a6a41c8d49d64a0a4a45",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnOrder",
+      "batch": 6,
+      "sourceSha256": "9af5b34f260e3973c0b87c6e78aefbc83ffdaa4bb39561688b74baef6577c986",
+      "translationSha256": "9d9d8dbb3039ef12a333b4089610872d56018cde167b13a5d628766f98b25214",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnOrderTitle",
+      "batch": 6,
+      "sourceSha256": "4b00f973063be3ccfafd98ee848355dd3da513d6e0bf51e91958a3acf083a3ad",
+      "translationSha256": "f1048263b239cf48e9ecbd2b71d5020e11b2180f0e1fe5948d70f0703563490e",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlSource",
+      "batch": 6,
+      "sourceSha256": "7703ab882568c5f5a7a6f6e20d5126012d56df90f0c912dfff45de3caf3cb95e",
+      "translationSha256": "f7b9e422c8d3e5b15817badd0a61a038952927537f20c1fdf0c8c9395bd67637",
+      "verdict": "revise",
+      "reason": "VFP ControlSource names the data source bound to a control; «origem do controlo» can mean the control’s provenance.",
+      "proposal": "origem dos dados do controlo",
+      "proposalSha256": "6e8c062ed6c38e46d3d1a14abc5d6335c269b1fde5f5c926c2a304f0507271a8"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlSourceTitle",
+      "batch": 6,
+      "sourceSha256": "5d41a6e569d0d7778c6b032e08319d6ccd02bbc5837a90fb54a6e23ecdaeeec6",
+      "translationSha256": "caeb79a8d348cdabee2e90d4854144a39b95b6c5f94471053d99681d9d1098b2",
+      "verdict": "revise",
+      "reason": "VFP ControlSource names the data source bound to a control; «origem do controlo» can mean the control’s provenance.",
+      "proposal": "Origem dos dados do controlo",
+      "proposalSha256": "7446cef0938fb06e44a007f9c136175663202ff310f05ea2e97490265b891a72"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CurrentControl",
+      "batch": 6,
+      "sourceSha256": "b7ec5dd9a3d4db3d3c2a232cc458147ed6b63847147eacfef305cdb8d8a854df",
+      "translationSha256": "cea4434b810c6968815ea097be88259befcf58b91e3583e57f318af7d79fdb48",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CurrentControlTitle",
+      "batch": 6,
+      "sourceSha256": "21cc702a231c0b1cd25d8f9975cfcd3be4833b008e7ae51e2400b4182f01dcc4",
+      "translationSha256": "6ba9fb2ad2323e792697146e9f2699bb6eec7bd6f16737e1f839b0c30f450e2b",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledPicture",
+      "batch": 6,
+      "sourceSha256": "d0c6e4b30eb31a07e7ed1d52bacf99b8e245617f0612dc52bf8d27676c29019b",
+      "translationSha256": "eef7c1d82615621f91ec734873ceaca018357f373919feb9db05e8a711832fbc",
+      "verdict": "revise",
+      "reason": "The picture is displayed when the control is disabled; «imagem quando desativado» leaves the referent ambiguous.",
+      "proposal": "imagem para o estado desativado",
+      "proposalSha256": "c9e516cdbf9ae46c8d517f16503afa361fc96a7403831449b5613bd96d3ad175"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledPictureTitle",
+      "batch": 6,
+      "sourceSha256": "727f83363c85075489beb638922c51998889587a816f51e30d05a17f01dd1a3f",
+      "translationSha256": "066d951bac4e078e13d08feb953ee47ca541435b4bdb37a817c966c3622f61d3",
+      "verdict": "revise",
+      "reason": "The picture is displayed when the control is disabled; «imagem quando desativado» leaves the referent ambiguous.",
+      "proposal": "Imagem para o estado desativado",
+      "proposalSha256": "bba4a4810c32d38a6c14019c3bfefb34d2182e95ebdb2773dfc6c7787ab66e81"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DownPicture",
+      "batch": 6,
+      "sourceSha256": "01413d021e746c95e435f5ed20bd56ecfacd32f3834f7ccae7b2bf6c5acbd1b1",
+      "translationSha256": "587d652fb88511b3cf940f7e57664917ee8fbd9d8e3a971322a989c01ac55089",
+      "verdict": "revise",
+      "reason": "The picture is displayed when the control is pressed; «imagem quando premido» leaves the referent ambiguous.",
+      "proposal": "imagem para o estado premido",
+      "proposalSha256": "f0e6bf99e2511b6f795ccb51b0977c1abd4debba50570b111e2cd96454b41a25"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DownPictureTitle",
+      "batch": 6,
+      "sourceSha256": "5649b5adb190b985b1719990e07f217e01d3be1d15bf7cbd66acddbc131458cb",
+      "translationSha256": "c8389e5a640f6953b23fb16772f967fc1d1a016676999d1f03b8a97a27113d59",
+      "verdict": "revise",
+      "reason": "The picture is displayed when the control is pressed; «imagem quando premido» leaves the referent ambiguous.",
+      "proposal": "Imagem para o estado premido",
+      "proposalSha256": "709e375ee7c6b94a956193a1efdfa157aca1c44fedb1873352d8ccd0fa8ec25c"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragIcon",
+      "batch": 6,
+      "sourceSha256": "463f3645e5c70ba65244e120dca974bf2d62db84a57e3d74b5c4b6a5810ae314",
+      "translationSha256": "96b06950be1efea6f5d3f88a347a803247b4d4fe01e27f9da5bd4806039c7119",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragIconTitle",
+      "batch": 6,
+      "sourceSha256": "e197a5b9e1987f824b3da6e1002c8cc0dc901698476bf9ddce7aad85256fbd64",
+      "translationSha256": "acf89ecc558699e2f8cb9786201c2e5dd18425ee8f7a52e9ff8edc1b9d54f919",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragMode",
+      "batch": 6,
+      "sourceSha256": "b7e5d0033079baa78b199b347b23ea9e80f6a7264659693fed26870d726c1259",
+      "translationSha256": "22199f488fc9670f92a8da359f8fdc13e84272f51584370dd40d1cc98052184b",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragModeTitle",
+      "batch": 6,
+      "sourceSha256": "96d0e0c214c50f3010f7620984c02ce61cf7388dccfc7b99e2ff5139738c21d3",
+      "translationSha256": "aef6e91641e968ba03d728de6eec0856c9969d1c8b8a0082b7b23b727f022ca8",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Curvature",
+      "batch": 6,
+      "sourceSha256": "ce97e449f49f6dfbe3f9acdb172fac5489099bf62b908d501cb466f359d91508",
+      "translationSha256": "12b9dde2af70a08507a90a4f862442c3f76f0798c555470478f4b66f91cd392c",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CurvatureTitle",
+      "batch": 6,
+      "sourceSha256": "30baef7d32d360583543842ffce89ce2ab483152c5c57d864b7df09d60cfe9ca",
+      "translationSha256": "9c935b891a9388c7d3f9b0d6a7d3b54de30373da785a4cadf09a6d9fe3604915",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DataSession",
+      "batch": 7,
+      "sourceSha256": "ebf9c4d8baa6158bd4d501fcd47e0e76e6d00d4d6e6cf1405bf1debbfe53593d",
+      "translationSha256": "dcfff32442f4dc9766b54411a4d0fb47bac2bebb13164a9aa4ca2c3e655dbb97",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DataSessionTitle",
+      "batch": 7,
+      "sourceSha256": "dbbd5c3ee7bdfe1d033da310bc3442bf362503572e0451c62a30c50e1c64ba4a",
+      "translationSha256": "367aa08848d6889c572d04f2995994e6c6d7e678438bde6b1826cc92304cf653",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawMode",
+      "batch": 7,
+      "sourceSha256": "2b3668b473e5231961b0cf44549b27d0c5f9e2305cc9f209b96e1e55ae61337f",
+      "translationSha256": "d2440b1133b29fb4097a584c60b1cccd3d057dda594a1e835a053141b917d1e9",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawModeTitle",
+      "batch": 7,
+      "sourceSha256": "2f971a2183cc9f7244a443e32f02c98bbf72cfc40ac34d1f582830c5dc7d74bc",
+      "translationSha256": "a6ca55ef22a022d08fe5b0ee1056712716622a846214ccc634bc0b57df10c8ff",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawStyle",
+      "batch": 7,
+      "sourceSha256": "3cd2b8b9dcc3bb69e413892aa74c0d121cb77bbb526985e5157375d4a232d51c",
+      "translationSha256": "25f05308948f7ed662015898b272b697a4ed4149af68f6bc4ae2e068abfdafbe",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawStyleTitle",
+      "batch": 7,
+      "sourceSha256": "7f229e19e9810d3e92fc8c9c1cd90acf8d088733b3cbe0f85d1d65083566fc54",
+      "translationSha256": "a3b1e6a47e0bac2dced5fefebe229626be440285c220112126f765c76600eee5",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawWidth",
+      "batch": 7,
+      "sourceSha256": "08fe70d46780dd5b07d65e003da881999dc4ead0fb2113a47110ca691b305b20",
+      "translationSha256": "0016fd0d1e18ee87e9ad51fd2eb4b176806083d764573b777de7af06db73ce55",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawWidthTitle",
+      "batch": 7,
+      "sourceSha256": "3f55cec09c359f9b6db6ee133828dacc70516083f44e5e936fa40743854ddd7d",
+      "translationSha256": "dc0c0661fe8d0a63e240f69665cd6ea32e78fa9d3e641830fab621d1e16da56c",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Enabled",
+      "batch": 7,
+      "sourceSha256": "fb9cf75606b4070dd6a9705810906bba28d0e2ea74ff301b999a91dbb68c7d98",
+      "translationSha256": "eb1bcf0482eeba712ec0feff48f7cc6725b4a2e56fde22e867b2861f08de981d",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.EnabledTitle",
+      "batch": 7,
+      "sourceSha256": "92c1cdfdf4cb9cf6fcca962f206de36fd5d60db1178bc9461052f8de703a0e06",
+      "translationSha256": "5fc7e20f01a4a3ed3d7e9eaf62935a6783ca9c537dc3f08aa62858d01e5092d6",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillStyle",
+      "batch": 7,
+      "sourceSha256": "3e53aca5eac738d4893cd18cf4204872394356d3b7f20f064bcb41365095e035",
+      "translationSha256": "526f03d7a4f62baa9b7a6bbc32579091fb0aefce3a896fcc730f6ad2b7531093",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillStyleTitle",
+      "batch": 7,
+      "sourceSha256": "2c8239a80d0d0666036fbfbf62fe390192a92ee20838b50b4e5752d2ad196420",
+      "translationSha256": "2f40c20a607dda79fe746acb43ee19c2cad87e857623b7d942d6de21d56224e0",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillColor",
+      "batch": 7,
+      "sourceSha256": "0a478489ed18fc4b37ffd58474d3fe95ee7680fccead96d1ebc566dc1173e47f",
+      "translationSha256": "fa27b8ba1a4bdcfda04f22f13f8cfedc1203e11f18002e4dba66de15ef09e8b7",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillColorTitle",
+      "batch": 7,
+      "sourceSha256": "cad419e6012bae9a0c8bfbca2fbb539c7a1dd98eb20bb0caccad751d0dff5c57",
+      "translationSha256": "1fe8187536853d9363f92140d2ece1a364fae47998d6900801036105f2bfde61",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormSetClass",
+      "batch": 7,
+      "sourceSha256": "690b0a0757b17f430d9ca223ad81bf3a890b02204a566ab05ed8138fc0f74bb3",
+      "translationSha256": "3e49083afa74caa403991baa7dc04461ba3b4921bad3f002be5cc02d5b784843",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormSetClassTitle",
+      "batch": 7,
+      "sourceSha256": "7fb5073d6d798d43d03c716eb48737ca3534464b368748f2aa70bb1eda65ff78",
+      "translationSha256": "7a99b2e3b5789076125bc009b69c3804593a13f99d88f44460491506ded2fb59",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineColor",
+      "batch": 7,
+      "sourceSha256": "3bb3553355d8c145747dad9434c0c82f76334c793b8a46a3677a5918e788c779",
+      "translationSha256": "5cf780f0eb53f397d3c89af2d56f457bcc24f5f9a4ac428ace91c1ccb5e7b446",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineColorTitle",
+      "batch": 7,
+      "sourceSha256": "ccdaa4598fb12369c40d81a64a71512d4ce91141647491603f3cfdd5c465a423",
+      "translationSha256": "47a5e2310191e66196bb50c71cfa3453233199594d89010537965ffc69cd419c",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLines",
+      "batch": 7,
+      "sourceSha256": "d0983396b0ae41f455674fb7cd47eab3d3c8f8edeb94e8c7cef823c1040a4cd8",
+      "translationSha256": "a3212c9d19e181c75caaf28a98640db0cdf919a2cd853e6cadb9b1722c5b64d7",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLinesTitle",
+      "batch": 7,
+      "sourceSha256": "dde547a01ee4f782d9f10af7226ce67c595e1d2057318aea18c1516705fe4666",
+      "translationSha256": "0fe2cb626c48172c9a0e88773e5d94e545a216473e44d2ed661028cfda58de17",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineWidth",
+      "batch": 7,
+      "sourceSha256": "303a9a98a85189558fd6b44d9cc969a98701f5f19457732f82c34957a9e9fef3",
+      "translationSha256": "6e102b7571f4a2f7077f08e38e07f150ff1b8fa6adb5a57f3af669d072e69dc5",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineWidthTitle",
+      "batch": 7,
+      "sourceSha256": "73e6b7582f527c93af5a3200d796e57223062c6547f5f2c3e4763e52b7bf6301",
+      "translationSha256": "51b7b26840ac5cb2ef14172f70798f961aba724b4d155708504e8394220d073e",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HeaderHeight",
+      "batch": 7,
+      "sourceSha256": "6d712f77078adffd528fa500c8681402f2aee7b88e21b108c38cbbe569f9f4d4",
+      "translationSha256": "f01880a1cce0c4410c41672cef8e0015f437cc5890b127dd80eff6ad867c358a",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HeaderHeightTitle",
+      "batch": 7,
+      "sourceSha256": "84c501fe54b91debcfd8b81425d7af927c3a2ddd9d2f3b009dc66a2fd1ca2809",
+      "translationSha256": "42abd81322f9ec8a0fcfc8e74ad0f768cc4648fbbfe85bfccfbe3c4688e1c8bf",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HelpContextId",
+      "batch": 7,
+      "sourceSha256": "386856983b660a78e8fdd86cad5dd3ad7d637174268e7d5fbbfcd2fb8b6389b8",
+      "translationSha256": "f5e1b6196fadfea6662d5bcc79be95563469ed87b7b9d2fb414ed9d56a2932fe",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HelpContextIdTitle",
+      "batch": 7,
+      "sourceSha256": "4c42fdf2b758ba93854c1863730c93bc4bf10f9aa658f0cf27752b137b60478a",
+      "translationSha256": "f5e1b6196fadfea6662d5bcc79be95563469ed87b7b9d2fb414ed9d56a2932fe",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowLineWidth",
+      "batch": 7,
+      "sourceSha256": "76982be7250a5f93f4200ba3eeae6da2b6c3b2944547ca8c6512727f104cdf8c",
+      "translationSha256": "a48ebc350e978bd4d28cacb69c324b3d81a0996530bf0a46ca40455a0dc9e67e",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowLineWidthTitle",
+      "batch": 7,
+      "sourceSha256": "2e7cd478f3aa209e9e3b688b2028245b09a55c170627bfa769c8d5412df81fa2",
+      "translationSha256": "44f7a91085172f7e702f48a7b9e7ae4264fb989c7922515b6f0516f7643925c4",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightStyle",
+      "batch": 7,
+      "sourceSha256": "c954ca80c7f519b8cba113c09c3183a0c983501dcaad63f78dab077c9d0f67ea",
+      "translationSha256": "43b32d9c40957600b6c6ca083f734047e1c9355c6e0959f9e2be358eed08f51a",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightStyleTitle",
+      "batch": 7,
+      "sourceSha256": "addf5c6f7a3692de6bbf6b2e55dd502c92a417682e4ef07abdc68ab79808000b",
+      "translationSha256": "b3626644f6d95b57ba68d46a546184b1274c7d9d4bd1393fc7aa7b6945bd1752",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InitialSelectedAlias",
+      "batch": 7,
+      "sourceSha256": "29020223b5d7f9f45068188ca29780b08a70257aab2d0e8dcea6eadda3d12642",
+      "translationSha256": "db9ba342a9e68a3cbf08c6b892b747b1ddcd89ffe3d1746650dda649c85c8fa7",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InitialSelectedAliasTitle",
+      "batch": 7,
+      "sourceSha256": "4624637b09d6df32ab8e2e91cb2c324328a8a772887744378fb93ee2e717e0c5",
+      "translationSha256": "2e46a13cc97ebbdb023f245b17e3c82163fbdcba4eda2b73608d1afcb850fb65",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InputMask",
+      "batch": 7,
+      "sourceSha256": "a722d56c62dc4ceae6f59a36a3620805736765c3e995bb5d6a4a53d2fddf9f98",
+      "translationSha256": "0a1a85073e5767be2c63343d4c3a55accf8515ac6fc08e6bcb0100b319f06ba0",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InputMaskTitle",
+      "batch": 7,
+      "sourceSha256": "36c546aa7afbdf8f4879bc79a18d3485319053e65a338fa63804d2a810dd6e12",
+      "translationSha256": "8c826a929fd976ee54705447d52966bd1b52a1d93443c610af14f7b0e0cec373",
+      "verdict": "accept",
+      "reason": "European Portuguese wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LinkMaster",
+      "batch": 7,
+      "sourceSha256": "760724f89727cbc2ed58c3f2ab7a7fb6f4e88e45332e653b00fd80af053f1241",
+      "translationSha256": "8c1ff565ac2b4566e52f23dc625166234a50c22b7175dd4921483cdabe72e3ec",
+      "verdict": "revise",
+      "reason": "VFP LinkMaster identifies the parent table/alias linked to a child grid; «ligação principal» loses the table relationship.",
+      "proposal": "tabela principal ligada",
+      "proposalSha256": "26a9a7661342009ade82d103ed610079b1e99ff2339e50e69e0023e4924cbead"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LinkMasterTitle",
+      "batch": 7,
+      "sourceSha256": "e0fdf2c7e6d53a8539d08f9e41ff36c7c5449400e94f9ab27bde41b133609bdc",
+      "translationSha256": "fb4fff9ee1c378148026798bf5f327f1ecc0758f06a5d9e9c6ab5dfddaaf91fb",
+      "verdict": "revise",
+      "reason": "VFP LinkMaster identifies the parent table/alias linked to a child grid; «ligação principal» loses the table relationship.",
+      "proposal": "Tabela principal ligada",
+      "proposalSha256": "6dc2a1c6e3a833d4aca780da64cdb66bb650346c33e3975bb12d6d54fb1928b9"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumns",
+      "batch": 7,
+      "sourceSha256": "bb074b6be1df481bd77d0415c542310d7c6f0cbf51b492b251b7fad552b2640f",
+      "translationSha256": "762b0c6619ceb1c3a35d7dde89e0ff2506ae3f4ebd43f6551c365fd82fd6235f",
+      "verdict": "revise",
+      "reason": "The --lock-columns property takes a numeric count; «bloquear colunas» reads as an imperative.",
+      "proposal": "número de colunas bloqueadas",
+      "proposalSha256": "0fc35cc202affc39ef67822c5b2d20afa2522d54e353a252eacb68951a0872d7"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsLeft",
+      "batch": 7,
+      "sourceSha256": "68ee7e89c7510010b29932074fc280ca6fa422cc78025ee04bd9ad8edb19dae9",
+      "translationSha256": "aac51bd575b9564bc67683effbc5d033edfb0ba71db16ad305b00a9ab1ce3331",
+      "verdict": "revise",
+      "reason": "The --lock-columns-left property takes a numeric count; the draft reads as an imperative.",
+      "proposal": "número de colunas bloqueadas à esquerda",
+      "proposalSha256": "97fcf2936a5c319ed03916dbf23bed75dd09f8e87a3ccd1774dbb9c98a3653f9"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsLeftTitle",
+      "batch": 7,
+      "sourceSha256": "8d6ca2e7b451efb01e96a70c48ebe9580a74ff0f5a9d62a004a4a0d0aaa12b54",
+      "translationSha256": "fd9fe3cbfd0af776350a4e6890d741f5f84609f3d04603e275dde7a562398e82",
+      "verdict": "revise",
+      "reason": "The --lock-columns-left property takes a numeric count; the draft reads as an imperative.",
+      "proposal": "Número de colunas bloqueadas à esquerda",
+      "proposalSha256": "b312e64d616b3460325f10e25e6e37edd772fa4e2d12fc525259aaffc52431ad"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsTitle",
+      "batch": 7,
+      "sourceSha256": "f909a8a9cce0bc94e3b82bc8c4d795f710419947e277e5a9149d8c58866d2f6b",
+      "translationSha256": "bb29c9d45ec896d1f47f5765142486a7f9420b3ac5eec90f656ed1352639d441",
+      "verdict": "revise",
+      "reason": "The --lock-columns property takes a numeric count; «bloquear colunas» reads as an imperative.",
+      "proposal": "Número de colunas bloqueadas",
+      "proposalSha256": "74397781e27a13dd3df808d85c19ca28b98dd627884e2bea41e5b05ef3e58fb0"
+    }
+  ]
+}
