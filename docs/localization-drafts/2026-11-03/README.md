@@ -11,7 +11,7 @@ value may enter a release ledger.
 | `de-DE` | 760 of 3,146 | 728 | 32 |
 | `fr-FR` | 680 of 3,146 | 615 | 65 |
 | `it-IT` | 480 of 3,146 | 437 | 43 |
-| `es-ES` | 160 of 3,146 | 156 | 4 |
+| `es-ES` | 320 of 3,146 | 311 | 9 |
 | `pt-PT` | 320 of 3,146 | 302 | 18 |
 
 `de-DE` batches 000–006 and `fr-FR` batches 000–004 were authored with Claude
