@@ -21,6 +21,12 @@ parent product requirement or hazard. When allowed evidence and implementation
 disagree, use `gap` or `exception`; never rewrite the requirement to describe
 whatever the code happens to do.
 
+## Localization regional fallback
+
+| Requirement | Allowed source | Architecture and implementation | Verification and status |
+| --- | --- | --- | --- |
+| `RQ-CF-LOC-REGIONAL-FALLBACK-7074` | Direct repository-owner localization request and owner-authored approved #2348/#7074; derived from the existing `es-MX`/`es-AR` regional fallback contract in `docs/localization.md`. | `locale_fallback_chain()` preserves exact and script parents. Only an explicit listed Latin American Spanish region inserts `es-419` before `es`; Spain, regionless Spanish and other regions proceed to `es` and `en-US`. Stable keys, VFP syntax and machine fields are unchanged. | `tests/test_localization_catalog.cpp` checks `es-ES`, `es-Latn-ES`, `es-Latn`, `es-MX`, `es-AR`, `es-419`, private-use boundaries and actual exact/absent catalog lookup. Local `cf_localization` build and direct resolver harness pass; the registered full CTest build was stopped after unrelated designer compilation, so CTest plus hosted platform CI remain integration gates. This policy does not certify regional wording or resolve the separate managed fallback defect #7071. `defined; direct verification passed, integration pending` |
+
 ## Designer archive containment
 
 | Requirement | Allowed source | Implementation | Verification and status |

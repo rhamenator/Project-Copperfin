@@ -46,11 +46,21 @@ Fallback is deterministic:
 ```text
 es-MX -> es-MX -> es-419 -> es -> en-US
 es-AR -> es-AR -> es-419 -> es -> en-US
+es-ES -> es-ES -> es -> en-US
+es-Latn-ES -> es-Latn-ES -> es-Latn -> es -> en-US
 pt-BR -> pt-BR -> pt -> en-US
 pt-PT -> pt-PT -> pt -> en-US
 fr-CA -> fr-CA -> fr -> en-US
 unknown -> unknown -> en-US
 ```
+
+Only an explicit Spanish region in the Latin American region set uses `es-419`:
+AR, BO, CL, CO, CR, CU, DO, EC, GT, HN, MX, NI, PA, PE, PR, PY, SV, UY,
+and VE. A script subtag before the region does not change that decision.
+`es-ES`, regionless Spanish, and Spanish with other regional subtags use their
+exact/script/language catalogs and then `en-US`; they do not inherit the Latin
+American pack. This is a fallback policy, not an assertion that `es-419` is
+linguistically unsuitable for every speaker outside the listed regions.
 
 Missing keys fall back through the locale chain. If no catalog provides a key, the lookup returns the stable key rather than blank text.
 
