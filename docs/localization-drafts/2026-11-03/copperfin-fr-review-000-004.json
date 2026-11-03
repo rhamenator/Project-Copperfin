@@ -1,0 +1,1647 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "reviewer": "/root/review_en_gb_revisions",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "sourceSessions": [
+    "a2e02e59-495f-4ed9-ba85-3dcbddff6b4b",
+    "1702901c-5945-49ff-b8e6-591ad84101e1",
+    "0b548267-3946-462b-b58d-25461a89f775",
+    "0e7bf1ee-ace3-4f19-853e-acef24b84fec",
+    "8bcc71bd-c234-4fc5-a136-3b12c93f64bf"
+  ],
+  "scope": "First 200 fr-FR generated strings, batches 000–004, independently reviewed against English source.",
+  "entries": [
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Database.Error.CompanionMissing",
+      "sourceSha256": "8148b074ee29dd425cbb9fba1367a5693acff9fe9368e3acfe6461806f1eae9e",
+      "translationSha256": "27a9608e33194b3161915f7cec85dd9ddf83bdbad0498a2f0d9d5a4569c29f0f",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Database.Error.ComponentMalformed",
+      "sourceSha256": "5cd52a8e7bce56425e22f9201de688e229cc3818ce8a8471229b8c2e224d3fb4",
+      "translationSha256": "0d0cb9b9accfde07e1f27d4cbca192fd8b11f3a4361f147350162e5a895e72be",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Database.Error.ComponentReadFailed",
+      "sourceSha256": "22a97217a75c6566764aa425a4351b8c19095070719076fb859b4e3127d126ac",
+      "translationSha256": "b4bb5dadb34a6c7bb28627c2979ae622c3053becdb820cc63719013df48eff1c",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Database.Error.ContainerMalformed",
+      "sourceSha256": "33901fdfdacf6071614a928f70d0adbc6e463bb70e97045f06b8e8ef4232d29f",
+      "translationSha256": "45ba14bd3bdf0a0583bc6d82d4ddc80acf729bdb2a0f0ca9aecf76cc0de69786",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Database.Error.ExclusiveConflict",
+      "sourceSha256": "488cb42bc114bc54a8ccca503650d707583ee3f019853dea3b7b7939384ac02b",
+      "translationSha256": "44bcb915ebd5c4f4d6260e21147cdecb527801ac38601ef82321621a6b82c49a",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Database.Error.NotFound",
+      "sourceSha256": "084206f6e3a1cf562129c611f30745950ffd6c60d264afb729a9081cab365bf7",
+      "translationSha256": "e82dab9fa4e7881b40993932a8719c05daa1e30ce49be388803979f8bd1c2a7f",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Database.Error.NotOpen",
+      "sourceSha256": "963b4242254182ed4fde007970ef247a26fe3e067eca5351c13a7578a3a1a340",
+      "translationSha256": "2f9b49db9a7b3b4fa7d02f2c9330f801e89a65c65c9d18c4a7c3afd250ac10fa",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Database.Error.PathRequired",
+      "sourceSha256": "d9ef1930743e7f332f9cd246143ec3fca82e6dcedec02b9d9eff84f1eb64725b",
+      "translationSha256": "4f612f427d9da45c78aad36ce32f82bffbebdee0d0f2d26be62022247d8ff73b",
+      "verdict": "accept",
+      "reason": "Machine token or identifier retained; French wording is faithful and natural."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Database.Error.ValidateUnsupported",
+      "sourceSha256": "219eaa457a3c39caa788ebce49691e6ce1212f7f2326c3bbb19b6c4ae2f9a594",
+      "translationSha256": "95c5b3dc38ffd9de4b976fc10fbea770b026c8a981b4f79e6267c8c7a650f01a",
+      "verdict": "revise",
+      "reason": "Replace untranslated runtime with the natural French term; command tokens remain exact.",
+      "proposal": "OPEN DATABASE VALIDATE n'est pas pris en charge par cet environnement d'exécution.",
+      "proposalSha256": "18ec7b8285c7336f0345fc0a0b1d8579a086d0352c571a270adb4c1403ce32ba"
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+      "sourceSha256": "f469cecd777a85c1bf5326c5a458da29deb1a997aa39d67634d8f6df9c99f8ad",
+      "translationSha256": "179e4858654b00991dec347243eb35211b58aa21cffb23b2bdfbd05a54236ec9",
+      "verdict": "revise",
+      "reason": "Replace English package with paquet; preserve verification and {path}.",
+      "proposal": "Les octets vérifiés du paquet ne sont pas disponibles pour le composant de base de données : {path}",
+      "proposalSha256": "5633ec2091bfab6da359ae936de28d7c8cb39a9e0bcd65d55a0f7ec1bb4f5224"
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Parser.Error.VerifiedSourceUnavailable",
+      "sourceSha256": "d60f0fc10071425afec7a59a9b2918e8020970ca24ea71a00f415b45a121b643",
+      "translationSha256": "2282adf264c0a9988d35cdf5ebfe0d42ba4ffb8b87bcceda75a34b877e88e2ca",
+      "verdict": "revise",
+      "reason": "Use paquet consistently; verified-source meaning and {path} remain exact.",
+      "proposal": "La source vérifiée du paquet n'est pas disponible : {path}",
+      "proposalSha256": "6db7335d3b9857410ebc23577b940e53c762b8131850e37b9b18bae3a1cbcce4"
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Parser.Error.VerifiedIncludeSourceUnavailable",
+      "sourceSha256": "59457083cef5d3449d8c010dfbc82c5684fce2e6e943f03051d7caa9eae9f9eb",
+      "translationSha256": "bdc1f6eccedc1af76a75892b57464e67e690c653f6d6b3b9375b27eb086232bf",
+      "verdict": "revise",
+      "reason": "Use paquet consistently while preserving all inclusion placeholders.",
+      "proposal": "La source d'inclusion vérifiée du paquet n'est pas disponible : {include} (incluse depuis {path}, ligne {line})",
+      "proposalSha256": "0daf3b290cfa674c51ce90e7356b17558c4f4c1e79080d93c0431755b560e880"
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Parser.Error.SourceSizeUnknown",
+      "sourceSha256": "929a72ed316e72c8308bc413e41079756ca5b6dbf7bc9eab0ffcb5340498fece",
+      "translationSha256": "e5f8762b3b499e307f127a21081b9e187cb85da93058e59585ba89a07b4dda9e",
+      "verdict": "revise",
+      "reason": "Fichier ordinaire is the accurate French filesystem term for regular file.",
+      "proposal": "La source PRG {path} n'est pas un fichier ordinaire ou sa taille ne peut pas être déterminée ; elle ne peut donc pas être limitée et n'a pas été chargée",
+      "proposalSha256": "b689eea448ad04f452833725ae77340b61388aef78b1e83855ab137df5ce65f4"
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Parser.Error.SourceTooLarge",
+      "sourceSha256": "51abc825cdcc1f75b58ceea128b8ba57e91ab1bc94b4ab19404bcd47204cda81",
+      "translationSha256": "3325c7a7fdd311d19c4d03157b8430810bc258253deae3203ba3d70a2ce54c14",
+      "verdict": "accept",
+      "reason": "Machine token or identifier retained; French wording is faithful and natural."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Parser.Error.AggregateSourceTooLarge",
+      "sourceSha256": "328b901497ee5ab8e22548da3a2a2c9e9149a72b43be8e5215413371f2f74a20",
+      "translationSha256": "e4ca50f41ccfc167a9c5c13da7a7bdf70615cb93e9d2898061fc1dfbf7170e3d",
+      "verdict": "accept",
+      "reason": "Machine token or identifier retained; French wording is faithful and natural."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Parser.Error.LogicalLineTooLong",
+      "sourceSha256": "d6ff5d0811fa57aacc707f4e1cb9ca82485672e80b75dcbf450bb7fbee80435d",
+      "translationSha256": "7c39009acad274a1a565f4e0d1bd94e34a2da66b72c64710a99e4045da7ff270",
+      "verdict": "accept",
+      "reason": "Machine token or identifier retained; French wording is faithful and natural."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Parser.Error.TooManySourceLines",
+      "sourceSha256": "fd4805bd80ef6f8620eceb6fd1c9e9501af241fcce2a9966d0e70b08e41ea9a1",
+      "translationSha256": "209fd15eeebc9983a1f07f44f2f923b684b60289b4099a1d6e608517b7806f58",
+      "verdict": "accept",
+      "reason": "Machine token or identifier retained; French wording is faithful and natural."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Parser.Error.TooManyIncludeFiles",
+      "sourceSha256": "1f3ebdde58806603a18fcc10ca7758472740eda73d42a47c5bae67bb0c009bc8",
+      "translationSha256": "f043d2865bbabb5edb649622f5d5cde3ab04160d51f17b091203658149a73e30",
+      "verdict": "revise",
+      "reason": "Repair dangling French clause; retain #INCLUDE, CONFIG.FPW and all placeholders.",
+      "proposal": "Trop de fichiers #INCLUDE : à la ligne {line} de {path}, la limite de {limit} fichiers serait dépassée (augmentez MAXINCLUDEFILES dans CONFIG.FPW pour l'autoriser)",
+      "proposalSha256": "0bb580bd18fc37d7c22414e30204ef802f9c1ce27761a6a8fd0fef5ec4dbb161"
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Parser.Error.IncludeFileNotFound",
+      "sourceSha256": "70d82b245b4560e052516a530ee95c4a9b4a55c37887666ac916ae77923f14f2",
+      "translationSha256": "3615bb53b9520a346646476623f6f75f16da12bc4e66f53df482987fe3f5c1b0",
+      "verdict": "accept",
+      "reason": "Machine token or identifier retained; French wording is faithful and natural."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Parser.Error.IncludeFileUnreadable",
+      "sourceSha256": "040bf8e633ef6d1354ecf03a253c85c95551c23142f9ad585e57aeeead32412b",
+      "translationSha256": "7d1573cfe51dc004f8625e2150f24b4ea9f079e1a0af1a7108e9b4a913035a6a",
+      "verdict": "accept",
+      "reason": "Machine token or identifier retained; French wording is faithful and natural."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Parser.Error.MismatchedConditional",
+      "sourceSha256": "9f0c1674dc0eafee81d64e94b18603fc86600ea6de27ee1200ab04309ae59696",
+      "translationSha256": "f034bc36aa8767335988781f2b70067e2837d4c1de7a606f375a1dc40763f93e",
+      "verdict": "accept",
+      "reason": "Machine token or identifier retained; French wording is faithful and natural."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Parser.Error.DuplicateElse",
+      "sourceSha256": "32697eacb6b3ded740f3536445e2faec95a07d6110ac10628d2490e6ae8b6033",
+      "translationSha256": "1f31f2e34dac4d237172e20b02bd8cbf6e27b342b8c6c88985f902ca92227683",
+      "verdict": "accept",
+      "reason": "Machine token or identifier retained; French wording is faithful and natural."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Prg.Parser.Error.UnterminatedConditional",
+      "sourceSha256": "a6a6284239cf042409fb6fb9abc78056bda3beda86c438bbc66d66ead93a4b93",
+      "translationSha256": "53d1f8afa55df7e0ef727a5fa209b2835aac8d911caed83ea42729cc29935c8d",
+      "verdict": "accept",
+      "reason": "Machine token or identifier retained; French wording is faithful and natural."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Command.Build",
+      "sourceSha256": "bdd254b65baac169f6ac50e8175ce6d930c1fcb086dec59808d3e0170ae2291d",
+      "translationSha256": "2605e169166296e035457ba3c6d63c0a2520c0d8a1d1a21fc070166063a0dc41",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "VSIX.Command.OpenInStudio",
+      "sourceSha256": "b4e8381a95a13bc7704ff290b4c6c72bdb6cc4b8df6cb65e1cf3bea49a3474c8",
+      "translationSha256": "e88a6cf36481cc21e7304ef4cd008c5c08f55982ca233a8c52db544bd28d6c3f",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "VSIX.Command.BuildProject",
+      "sourceSha256": "ba34cc7ae6f596ebcc6eabf6e7a137fde6861b1e5505a2d55953fed687c14dee",
+      "translationSha256": "c4f91c7562cc132fcdcbeec85988a915c3115e9451f08080fc8835af5c9c8600",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "VSIX.Command.RunProject",
+      "sourceSha256": "36fc412e4b4d1d7be109568ef7fed2c517b9585399c43764a542c7e27a261b77",
+      "translationSha256": "a5fee243b83737809b7426be3349d68e98e24f48ff88c4f9b9222a24ddde90bc",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "VSIX.Command.DebugProject",
+      "sourceSha256": "9aabfddbcc7b7f5b19d834e9a26e0c0f217dce57d51f09ae41f622b124463fa6",
+      "translationSha256": "eec98f785fd25991b29f90271cbdcab42cc6f7edbb97901f134eceffb6e2b60a",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "VSIX.CommandWindow.Title",
+      "sourceSha256": "60b3687da026a54e208bf196e39d43b4c3b5a331c109c3f14b5b760d3f349f0c",
+      "translationSha256": "656c5ef1e2874d6525073612e19d69ac503402768d9eaf4976eefc4191be30d9",
+      "verdict": "revise",
+      "reason": "Clarify that Command names the UI window, not a specific command.",
+      "proposal": "Fenêtre de commande Copperfin",
+      "proposalSha256": "0682115a0ba26654825b899174d1138b5d28538be3bbeb2fa146c3ec3fde9e4f"
+    },
+    {
+      "locale": "fr-FR",
+      "key": "VSIX.CommandWindow.Ready",
+      "sourceSha256": "e20846d20bcd60f0f57708fb7e0afdc584cfac4711ea4bb636dfce053ad50136",
+      "translationSha256": "48a42327d06f2b524e0ebce43e503f32eae8037a98f534d5240ecd616b55b722",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "VSIX.CommandWindow.Unavailable",
+      "sourceSha256": "09cfc5e1e84e3a96def219129ff43c03e2fff63e6904810a7c3703a421e04b50",
+      "translationSha256": "f231bf0484f05ddad3dc71d904fa186ccc7a36a8b59ce804f71ac06b11cdc388",
+      "verdict": "revise",
+      "reason": "Clarify the failed UI window rather than implying a command failed.",
+      "proposal": "Impossible d'ouvrir la fenêtre de commande Copperfin.",
+      "proposalSha256": "49f0636d4e7452adcaac7e372d3de39fed01706456fbc084233222a00e61a752"
+    },
+    {
+      "locale": "fr-FR",
+      "key": "VSIX.CommandWindow.SendTooltip",
+      "sourceSha256": "763a2ee8c51a9e19abe4ae185d27fda42052c58e20dfec268d7ade802a6f8bb0",
+      "translationSha256": "b16bd2178ffa44c7d3446756354084feb7789ffd81b6435eb5f9cf18e83f3d70",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "VSIX.CommandWindow.NoActiveSession",
+      "sourceSha256": "e1e951822e5ca70f9a189746919608668e97ecf70ce7ec542bf76f7150e4ed4b",
+      "translationSha256": "8609c1b08273333efd08d2e9a9171d74c76cd0c95a08c9d5d5d681ca7bb38979",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "VSIX.CommandWindow.Unsupported",
+      "sourceSha256": "404fc37220f000238c196f804a6e77d72626b03b0500658c617675c71a7d3b07",
+      "translationSha256": "25d458f36dcabeca1c75485ed2c232cd2446d7815fb3e5e76e1e20029edcb4d3",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "VSIX.TerminalWindow.Title",
+      "sourceSha256": "9a380e6c3e2802d1c80db452c055f848f6ba40835f4c144123d694b9d857742d",
+      "translationSha256": "a814c8044b2b215d403dc34d078cf809d0f4dba2cd908af6423e506df32f30fa",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "VSIX.TerminalWindow.Ready",
+      "sourceSha256": "e20846d20bcd60f0f57708fb7e0afdc584cfac4711ea4bb636dfce053ad50136",
+      "translationSha256": "48a42327d06f2b524e0ebce43e503f32eae8037a98f534d5240ecd616b55b722",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "VSIX.TerminalWindow.SendTooltip",
+      "sourceSha256": "763a2ee8c51a9e19abe4ae185d27fda42052c58e20dfec268d7ade802a6f8bb0",
+      "translationSha256": "b16bd2178ffa44c7d3446756354084feb7789ffd81b6435eb5f9cf18e83f3d70",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "VSIX.TerminalWindow.Unavailable",
+      "sourceSha256": "886c3b9c5c49652e1d5760e16acc1e29111432044384b7fab8b0686ea0fc43fb",
+      "translationSha256": "fc846fcc12d090f2fba8c2d14ac1c0f989e9b70433b23ac4b9ce6b64afc8f4aa",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "VSIX.TerminalWindow.Exited",
+      "sourceSha256": "f4b09df85ba493f94976c9ede225bc876f5aed678a2899ed5c4c1df0c93d7ddd",
+      "translationSha256": "c7dfd03847774b2256517898689c30b4fb95b947418464f7a917ac3ff5d9c934",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "VSIX.Package.Name",
+      "sourceSha256": "abfd26c0bf4f1406af85c2a5d4eefd32987c6aa8c07a2ee390ec04243dea6cfd",
+      "translationSha256": "a0e1e1d1b48485f9d324c6727da8bcefbf754cf7d6e36afff6dfa7c1a50d8538",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "VSIX.Package.Description",
+      "sourceSha256": "eceaf968cd64706a76c655b025e91703842dc75e4229ec5e60f575104eff663f",
+      "translationSha256": "b4c5216e5f0eff1366fc3e1802326ff99f69c076e4ad1ee70631bd0dbce294f5",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "BuildHost.Error.BuildPlanCreationFailed",
+      "sourceSha256": "ae2adef0015e6509d0a2ee8269f04560b58786c25505236797964736a4b0aed1",
+      "translationSha256": "3298e51c9af02afde631910b7aa120fb50f58fdd291092852b6a7f765356d2fc",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "BuildHost.Error.InvalidConfiguration",
+      "sourceSha256": "ad8e7cd43832135a54fb9bbe7fabab95f466f64423b33d5e0b8c8a597243b155",
+      "translationSha256": "f1ae7b4e234cf75b5bc17d578c785ba3291f0eaace611cba2520ed3902f59fa6",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "BuildHost.Error.DotnetPublishDenied",
+      "sourceSha256": "9bb6c6ec8edab1b7ae8451e7e899ee6deae5cc8c6a7057e1b182d7c041311e47",
+      "translationSha256": "97e7e476ddf3a6dafa4d875f2181ff61ebe1120137f736e161017261fbcf3e3a",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "BuildHost.Error.DotnetPublishFailed",
+      "sourceSha256": "a02dd70dd7e1fd29ea6aafb4b57ff3438507822b4427a98423a809132b525071",
+      "translationSha256": "187ea852737b3836852ed9e5cad401a3b48dd3d6ff91c81ca3d47ca9c94db9cc",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "BuildHost.Error.DotnetPublishFailedToStart",
+      "sourceSha256": "0f5e15bb7d2c0f955bb9f652cba994db3e6572495858120daaff00e2b76ca1c6",
+      "translationSha256": "8089a6f9d9adf18c30ebbe873487ba0d5dac7bf50cd1d8edd58961c9c6f1f1e9",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "BuildHost.Error.GeneratedLauncherMissing",
+      "sourceSha256": "8bcf1c6015021cacc3896372aff7c8fe725479175f345670ae7ad0ad2ddb17af",
+      "translationSha256": "104a87266f35559bfcd2bc88d2ab2b24516a254afc00d7def86f2e5c4190572d",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "BuildHost.Error.ReleaseSigningKeyRequired",
+      "sourceSha256": "bd7fc377d5dd860e0aa45479e0f6be5f425593da0b9b8d0ef389c7b442ff44b2",
+      "translationSha256": "530c03c79bde07116294280590e1375bb3696681c56e6516dd44ae6c52049a30",
+      "verdict": "revise",
+      "reason": "Avoid untranslated builds and preserve release/security requirement and both placeholders.",
+      "proposal": "La génération d'une version avec sécurité activée nécessite {environmentVariable} ({environmentValue}).",
+      "proposalSha256": "1060d78b55b541c85b8ddc34f5bc4b6ae8c32d402fcd2a4bd432b81082d3095a"
+    },
+    {
+      "locale": "fr-FR",
+      "key": "BuildHost.Error.RequiredProjectAndOutput",
+      "sourceSha256": "fe079aa1d54cdbc8ed88526cd6c33440d2255acd5a98ed91d2825425994c184d",
+      "translationSha256": "d28053793d8c8b0b4212d46e41868a4116fba9a5142b9551c83562603d9981aa",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "BuildHost.Error.SecurityPolicyDenied",
+      "sourceSha256": "5482f4f1e0784b27bbe1f1ad95899c4199f2f3b7911d6f6ef94e418478284dcf",
+      "translationSha256": "cc3313890b893d41ee035abd3455df31bfe9e6f2d0590b9783d6e89f6807ca93",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "BuildHost.Error.SigningKeyValidationFailed",
+      "sourceSha256": "fb1c277d77b7923edb1b8378be8572b152bdfa7d189fd9a84129d123fb521c73",
+      "translationSha256": "f00ca8ebe8fa198ede8b6a7af606a2216c40ab5c57efd12fb46f8dfa6859774e",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "BuildHost.Error.UnknownOrIncompleteArgument",
+      "sourceSha256": "8b370ef9cd50342d7b436f2a478b943657be6b7393db4a5eaae62819c53fc06b",
+      "translationSha256": "75daa4cdedd224016a4075438953da67b5d47be3c38b0775723bc05f3205b31d",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "BuildHost.Prefix.Error",
+      "sourceSha256": "842bc6e20dfa4ae50c3dae53a47ebf411b2ab3e88aac767217952adabc1ecf32",
+      "translationSha256": "ae1e670381a5b59e52c76b4dcd492d8d39f984b63d86a8663099fccb8d2547a4",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "BuildHost.Prefix.Warning",
+      "sourceSha256": "c1859ad9bea3b0b4b265c1a2bf6527b3a22e3769e98d75e8d48b5445ce91af75",
+      "translationSha256": "bddc7ddf66d54902ee4d7bb76f0c2bef0fdfbc54754474d384420e1f629961e2",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "BuildHost.Usage",
+      "sourceSha256": "ee3860f2be195de47151fd0381a3e9daf1313afae2443e5bbe5a72af47287fcd",
+      "translationSha256": "8ee9281b65fe3c04fba08b88fdde79f0fe4887d73f29b8adc20b144984bc0098",
+      "verdict": "revise",
+      "reason": "Keep <directory> as an exact CLI usage metavariable; retain all option placeholders.",
+      "proposal": "Utilisation : {commandName} {buildCommand} {projectOption} {projectValue} {outputDirOption} {outputDirValue} [{configurationOption} {configurationValue}] [{enableSecurityOption}] [{emitDotnetLauncherOption}] [{externalIncludeRootOption} <directory>] [{runtimeHostOption} {runtimeHostValue}]",
+      "proposalSha256": "7c1e0bea52029e18b2a9ba8412e6267727640b3951c7268b991226af69ede6d9"
+    },
+    {
+      "locale": "fr-FR",
+      "key": "BuildHost.Usage.LicenseStatus",
+      "sourceSha256": "fd59122d1fdcea893bf363dad3d4578ecc545a9984fdd52a63eac4fa7060c096",
+      "translationSha256": "c99fac3ee675da399643bd8526213ea2010e12db9c822a42d649caa7a6fee2b1",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "BuildHost.Warning.ProcessHardening",
+      "sourceSha256": "673ec2b8cad0641a57f892ca18d5796a77e7af4ccbd64ec75e7a7073abc3cb8d",
+      "translationSha256": "32a2ad933da9dde7a9bde21d4785f5102b07bbf7d3136e510ad7002121cec88e",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.ExpectedTopLevelObject",
+      "sourceSha256": "5e616b695f54ba0b216ac716fa3cd6ceaf329a0fbc3d3eb6bbdf97973dd55995",
+      "translationSha256": "ae5839f28099e161ab974875f7b59427510dcaaa8b2c6abf32addf89051c5068",
+      "verdict": "accept",
+      "reason": "Machine token or identifier retained; French wording is faithful and natural."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.NoFields",
+      "sourceSha256": "01a271cdc095c201255e8a61b776896a06485decae18e39fb77f5f62160cb144",
+      "translationSha256": "bf10d0d8add4bc608db166212fdb7a45d473821c0d474d4cd9773f02280718a2",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.ExpectedJsonKey",
+      "sourceSha256": "9b2c5051753c257e438e0e8b3c3d655f6e3470478527d4a0d85dec8ba614d282",
+      "translationSha256": "2f68e8a43e549ec8e1fb1a3d4b0fa18ff8d1cd18e94fb09a1e4d810d2d41baed",
+      "verdict": "accept",
+      "reason": "Machine token or identifier retained; French wording is faithful and natural."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.ExpectedColonAfterKey",
+      "sourceSha256": "70b91277d985b3da51988328ac28128ba016809f6620c665491dbd9f7940b2d7",
+      "translationSha256": "cc5b31ac33de6b26abe50bc22702486d73c9b1340558b3039754683d71a5c0b6",
+      "verdict": "accept",
+      "reason": "Machine token or identifier retained; French wording is faithful and natural."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.MalformedPayloadObject",
+      "sourceSha256": "f6781ca59c75dfbf71a74c9f6e057dcbcb3142e03faf24c5f5041beaa636dee0",
+      "translationSha256": "2abb4073aee422f626437a7127e7f07f64a24a5f81509886ddc7f904218d3ece",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.MalformedSignatureAlgorithmField",
+      "sourceSha256": "e8f00cd530b6206ae8aa0b848ca4263b7b3d7925e87f00f04697ac6db338a8d5",
+      "translationSha256": "a3d7177756406d505ec25faacbc87f8854a3a4c8c845970683b58c7fa86996f3",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.MalformedSignatureField",
+      "sourceSha256": "5819903702358c7ba15fb3513f3d99a9b80e7ace55734db8288dcb0c86da1384",
+      "translationSha256": "40de3d719dfe8d74e7af168b73881acf4953f1e48eb05af168d0f4de2e1677ed",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.UnexpectedTopLevelKey",
+      "sourceSha256": "85f85e20acc52cf879c42220a80ed57023c8056e470a2e0639fe59d563e3b778",
+      "translationSha256": "3b0afbdba196194a3b152c1d25d0881bb8d4d924082a0c37ce22a42936edbd76",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.ExpectedCommaOrObjectEnd",
+      "sourceSha256": "ab4531502cfc53360467809b796ef3926ac7b1a9d277bce89a03469624eb8684",
+      "translationSha256": "e5fc304de7710afb1ddbb5fdeef0234aafa26d7d93d19e55f5bdd43ec45c1c13",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.MissingRequiredField",
+      "sourceSha256": "06480546c7e299a0ae4f3e2889aa7c3c367c68e9b94555ea5fcc40228d2505d8",
+      "translationSha256": "3eae2e6608ecda06bca28de22d198ca61dd5d1a834f116fdf227be9a92d07d0e",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.FileNotFoundAtConfiguredPath",
+      "sourceSha256": "5c5e58df366d6cd3c8432b69457e1601291c4b4490df946f7c6c33e96d1d9f80",
+      "translationSha256": "91eb230c6cb89b79635aeda7c86071355f59ddfcd4feae5f88e2f117d6e19d3d",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.FileOpenFailed",
+      "sourceSha256": "275d3eae5e31592e90ff0a51fd8f6ff81c67d6599eae146eaa350a571d887aa8",
+      "translationSha256": "beb0cbe5235254bddc699542b653d1d61e8a2526334c09a0344286279709cb04",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.UnsupportedSignatureAlgorithm",
+      "sourceSha256": "6a548bfb133eff8938aca51366cd1510c46baaca55d5746355250552371202e4",
+      "translationSha256": "1c5b6b5edfb1c4dfc3edfe0206b9c3ceae5a7169b49bf01298aa95f78052b589",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.MissingOrInvalidSignerKeyId",
+      "sourceSha256": "bee7f28df5a898a8020854ee3d2adf0b1f70057d47cac0b29be22595d0332a71",
+      "translationSha256": "d9b544b5553320cab48a3c5c8130eaea98ed2973a3046703e497bca73236d7fc",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.UnknownSignerKeyId",
+      "sourceSha256": "b8c5056c698f24d4830fc8467ad8fa6b2a05f1eb2e8ae82dcc8bd8799bce92ca",
+      "translationSha256": "32f71100d35800ac7301d24caba0fac74e04b8328b173cdc2e52578dad2abb9d",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.InvalidSignatureEncoding",
+      "sourceSha256": "c1bfba92f5d063d1abfe269eb42724e2a0a5705b0a8224eb91db1ae64507b85a",
+      "translationSha256": "83d12cdeb502645fa5f44ebe8d455d4c825ffc745e1942df2fe4b677292b459c",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.SignatureVerificationFailed",
+      "sourceSha256": "494e718ca5cbd103100a9a1be4812b2f6650dbaac44aead78a76d3bf5431bfef",
+      "translationSha256": "3c86c57112c0d9ac470bb4a0287e5dbbdb520eadb4279fa49cc7bac1438a57a5",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.MissingOrInvalidLicenseType",
+      "sourceSha256": "ec6d7c0e8dbf6db8a9ee35bc59e045c5c72089f26526760c41a3f7a7b81c3529",
+      "translationSha256": "0e9ec193a5804b1fa8ef938e99efa55fa6a14d9fe036ec29628d33604e876550",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.IntegerFieldOutOfRange",
+      "sourceSha256": "41905c8ac282a7bae0af3af936b90e41acd6a3f5fd3ec5ff9bf9f007be6afee3",
+      "translationSha256": "392182b7297e39aa5c12b203e8bed1ddee45a39d32392a40934747facf11c2f7",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.PerpetualVersionMissing",
+      "sourceSha256": "247b6fe0f06bf34e54882a98010c78fcdc1e990942333b11a4e12fd06cde0ae0",
+      "translationSha256": "524977d459b9356af4861de69f273c9237091de92e70ced6c47c92ceaf27398d",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.SubscriptionExpiryMissing",
+      "sourceSha256": "d21b00fdd05e6cc48a9be73af37f6f3cc5dd74459717cddbe0f82e8cebf30611",
+      "translationSha256": "4e7bf0d4dba675a0dd0300dddee69d899d8bb4df722d88e00d22aaa62e277e98",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.SubscriptionExpiryInvalid",
+      "sourceSha256": "03cccd05f1d333829be9cda78cb7e56869ec45fd9211d80155865f023ee85381",
+      "translationSha256": "c6c44844a6552b476e20fd68f2d874e5a1302db3618609071524b3a2c64f53fc",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.CurrentDateInvalid",
+      "sourceSha256": "755f118e60217bdd7cd447da97be4f3bd05d552124dcdf98dd2c2ed994a375a1",
+      "translationSha256": "8ae493137d575102295983a2d166425a9f6d2bdd01bf932b02b8669defb85ade",
+      "verdict": "accept",
+      "reason": "Machine token or identifier retained; French wording is faithful and natural."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Licensing.Error.UnrecognizedLicenseType",
+      "sourceSha256": "f945c91176a8221f9dec4b63dd4e11e8bcf53b04076c3dee13a452379e07d241",
+      "translationSha256": "173685d077908d1730fb9a74a61df61dd545ace25e2b0c647e54cbee5b8ce93e",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Package.Warning.DebugStartupSourceUnresolved",
+      "sourceSha256": "7fe4c39414a343616a7191a0fd32843913d4ff2a17ea827385da982a0f7c4175",
+      "translationSha256": "a79c9d6b4ac8d35d267a264b9cf899dfe71104b54e4e1c8863d6fa751f91dc26",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Package.Warning.DotNetOutputProfileUnavailable",
+      "sourceSha256": "40f1b61a38d2ce7a6a61a2a005247b8d8291e57f54c3f8399803639ed4542c20",
+      "translationSha256": "72619c2b63283e5ee10ef9f0101883d3716e25fcf2fc6e46db8ad9263387bf2f",
+      "verdict": "accept",
+      "reason": "Machine token or identifier retained; French wording is faithful and natural."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Package.Warning.FxpSourcesUnresolved",
+      "sourceSha256": "b8d1583e429e993067556de1ffe48a70ccc342616775a4c1b08f9b7fb55e1fc9",
+      "translationSha256": "9f62be3db284b5f16cd3635f4e2578653917e386465d2424f22c208882141f76",
+      "verdict": "accept",
+      "reason": "Machine token or identifier retained; French wording is faithful and natural."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Package.Warning.LibraryExportsUnresolved",
+      "sourceSha256": "83b0b479c5582dcd1697d264ca5ac4be98ca5d87e0a6e92cdf299705e8a86ff5",
+      "translationSha256": "a54d22d620bdb09ba2eb056952d7d1d36ff0c5aca3893c15d82a05fb6a7a7336",
+      "verdict": "accept",
+      "reason": "Machine token or identifier retained; French wording is faithful and natural."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Package.Warning.MissingProjectAsset",
+      "sourceSha256": "b7587669692751b82c0238b6fbb8dd1a6db0131885eeaa3c21fe758411fd2e0c",
+      "translationSha256": "00cd6adc414951e7d54757480b8e9202905520db3bd12f31d97d5714c0dfc484",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Package.Warning.ExternalIncludeAmbiguous",
+      "sourceSha256": "9617bd539e95b27f60ab060b21499c8aa262a3334f449de074e6ec53b1b71309",
+      "translationSha256": "1cb847369332e829aad51afa954605528fa5bd5f9257c8746c208d5caa019650",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Package.Warning.ExternalIncludeRootUnavailable",
+      "sourceSha256": "cad3420b513dd0929e053396d3c8cecbcfc8b36a47161403841a385627264a71",
+      "translationSha256": "f2613dd4518ef4daf0dbc0a17137453542c38b47b07b072904eed6436d3944d2",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Package.Warning.ExternalIncludeUnresolved",
+      "sourceSha256": "28eb8e9bcc290e65bee9382ab0667495b5de04f23d88dc1073e706915f865557",
+      "translationSha256": "1e4e0de7d78a161bfdb3a42d7b530dabae71d22af8ad1ae7bccb84efe236b56a",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Package.Warning.ProjectWorkspaceUnavailable",
+      "sourceSha256": "f5b88f5c8b3750cc3a5127cc3a0ec97c75ef76d3f4eb422c1f97a26fefbb7d1a",
+      "translationSha256": "e592e951b93a462ee73faac2b4daf05d08e0fcea3bccf80a60a56b02e0782a64",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Package.Warning.SecurityProfileUnavailable",
+      "sourceSha256": "c183c8df926651b3a72f6013e1b83736a9e7f126603c7f7ff27b069c209ac69d",
+      "translationSha256": "39e8bb46b262cb89b0c97ea221ca5c4eb008442a8832156d1c4956d7b6354ba8",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Package.Warning.StartupSourceUnresolved",
+      "sourceSha256": "661c47e4feef123d1956f798bee209eede18d8a975ee510eb029ce37822a0318",
+      "translationSha256": "28216a5b42e1a20415bf7611aaa22e1b5bae63b6d2c874b7e5290e6b8865d7be",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Package.Warning.UnknownSecurityRoleRequested",
+      "sourceSha256": "324c92c1e02faf4bc9fa5227a3ca4268222ff9cf45cd5b8c9deab341dd9914c0",
+      "translationSha256": "8b969fd476aa1b14d8e12d4aad101bf96c15f531ced062c3920fc03fcd500fe9",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Package.Warning.PackageBackupCleanupFailed",
+      "sourceSha256": "fa93818644dffd2ce0621487cecf087974c3e301d202188e934d1449d8e248e2",
+      "translationSha256": "bb7ed9b342f54541398c96c8882ece86a3551500a29a12953633ec38f5d04f3c",
+      "verdict": "revise",
+      "reason": "Use natural French paquet and express materialisation as creation; preserve failure and {path}.",
+      "proposal": "Le nouveau paquet a été créé, mais la sauvegarde du paquet précédent n'a pas pu être supprimée : {path}",
+      "proposalSha256": "c774826ba7d2195b0c5955398916318021ed075695140dc7a329ab743c923e13"
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Runtime.Package.Warning.ManifestPairRewriteFailed",
+      "sourceSha256": "c7e382f15ba33660823f33fc571099e8ad70fde94964b870981779d500bb7c28",
+      "translationSha256": "6b7b0e0c419652992ff97e5906e03aee58dba2b926be1b30495be977b07c3e15",
+      "verdict": "revise",
+      "reason": "Use paquet consistently; preserve active state, manifest refresh failure and {path}.",
+      "proposal": "Le nouveau paquet est actif, mais ses manifestes d'exécution et de débogage n'ont pas pu être actualisés : {path}",
+      "proposalSha256": "e6369ccdb97024c0a02c03e9d63729e2ce3bc9b874896d6dc39df2c5b8ffa2d7"
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.BuilderExecution.Error.LaunchCommandNonZeroExit",
+      "sourceSha256": "cf6d7691e46827977a9c4cb6021d489402ce2fca21e73731b0b7af0fec7553a6",
+      "translationSha256": "9c5df22fcfe9b4b537f78fe77c1eb6c39305d73bee1f90782bf4812f7c53437e",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.DesignerExecution.Error.BuilderLaunchCommandNonZeroExit",
+      "sourceSha256": "101311655bfb8ee6fc3d28e0ad12345c67a804374dd49abcc35aa3b9c1fc3c6d",
+      "translationSha256": "4eebe81064a3e3c729866958b6159784a098f4c77980367e2f4040ec55dcc174",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.DesignerExecution.Error.ChildExecutionsFailed",
+      "sourceSha256": "221d7f567e91648ef1788f95ec4c49b52a599f596483647baf53e19a4da7f785",
+      "translationSha256": "5a676fc51d567b222e5b31d1aa9cd53c88039d3b488a9ee60dafd8ab36a04ad3",
+      "verdict": "revise",
+      "reason": "Replace literal exécutions enfants with natural French while retaining nested-execution meaning.",
+      "proposal": "Une ou plusieurs exécutions secondaires du concepteur ont échoué.",
+      "proposalSha256": "6a88ecd406d44233de211b82e7f1d8eaa6654c5286a00900586b6a7d0d36be6e"
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.DesignerExecution.Error.EditorActionLaunchCommandNonZeroExit",
+      "sourceSha256": "eae9ee1086559b066b0911f05273a786ac8dc13db831711dced3752078869aa9",
+      "translationSha256": "bb9fd269d5138cad1bda6fd541bf9b82b23b28d5b6df89b2d8beb8293a1b8326",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.DesignerExecution.Error.ToolboxLaunchCommandNonZeroExit",
+      "sourceSha256": "5a3045cf7b16e37e20695bfadc73e04712a2a472793492cfc85b3dc53ffec7f7",
+      "translationSha256": "e7a68da13a5597c1674088aff3a55b6c4dadf241b7686e87ecb558bf674df38d",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.EditorActionExecution.Error.LaunchCommandNonZeroExit",
+      "sourceSha256": "6c98204f89441c133b73ffe2d3af2dc94762260aecbd084f7d652bbc137ad2dd",
+      "translationSha256": "b5da502c148bb431c879fd062f0f6204f8fa1c49f950251b36c1460fcbc01ca5",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxExecution.Error.LaunchCommandNonZeroExit",
+      "sourceSha256": "8aaa1e2274d4ba763886ad0a22bd9ce1a7f2b9ccba1605a7e0e858c7fbfbc18a",
+      "translationSha256": "19d7d36116960b305c451750690e4b20aaa9c5f6614bd7124b372ae8bc0a3a0e",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Command.Inspect",
+      "sourceSha256": "e0723a86a5b9408aee9113031785d3d15d9702892f31a46e5fe927c0c8552675",
+      "translationSha256": "99c5331d4bfa76c9b2b2ba2c4a3481e468d57db2b33876d7a097bff254ea8d53",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Inspect.Prefix.Error",
+      "sourceSha256": "842bc6e20dfa4ae50c3dae53a47ebf411b2ab3e88aac767217952adabc1ecf32",
+      "translationSha256": "ae1e670381a5b59e52c76b4dcd492d8d39f984b63d86a8663099fccb8d2547a4",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Inspect.Prefix.Warning",
+      "sourceSha256": "c1859ad9bea3b0b4b265c1a2bf6527b3a22e3769e98d75e8d48b5445ce91af75",
+      "translationSha256": "bddc7ddf66d54902ee4d7bb76f0c2bef0fdfbc54754474d384420e1f629961e2",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "RuntimeHost.Prefix.Error",
+      "sourceSha256": "842bc6e20dfa4ae50c3dae53a47ebf411b2ab3e88aac767217952adabc1ecf32",
+      "translationSha256": "ae1e670381a5b59e52c76b4dcd492d8d39f984b63d86a8663099fccb8d2547a4",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "RuntimeHost.Prefix.Warning",
+      "sourceSha256": "c1859ad9bea3b0b4b265c1a2bf6527b3a22e3769e98d75e8d48b5445ce91af75",
+      "translationSha256": "bddc7ddf66d54902ee4d7bb76f0c2bef0fdfbc54754474d384420e1f629961e2",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.Prefix.Error",
+      "sourceSha256": "842bc6e20dfa4ae50c3dae53a47ebf411b2ab3e88aac767217952adabc1ecf32",
+      "translationSha256": "ae1e670381a5b59e52c76b4dcd492d8d39f984b63d86a8663099fccb8d2547a4",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.Prefix.Warning",
+      "sourceSha256": "c1859ad9bea3b0b4b265c1a2bf6527b3a22e3769e98d75e8d48b5445ce91af75",
+      "translationSha256": "bddc7ddf66d54902ee4d7bb76f0c2bef0fdfbc54754474d384420e1f629961e2",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Status.Ok",
+      "sourceSha256": "ab79223d998dd438418d3e3bfd4eaf9a7e49a3ff62dbfba87b907c21426e27a8",
+      "translationSha256": "bacd1bb335d325df85bc9b009bab0af2210c035ad0b72ad5168f07c3b2cf09ac",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Status.Error",
+      "sourceSha256": "554d754659ebf5a0001face4df8e7e63bab17685eae5a0515edb090b9d0e67ad",
+      "translationSha256": "1601b89402c6a3abc230eb391e1bb23515e97015c690b01ac8654d64c6d4791b",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.SelectionContext",
+      "sourceSha256": "656f344fddb7111826d8788218c52bda3d1a41ce3e6d9086dbd20899b246cf3d",
+      "translationSha256": "656f344fddb7111826d8788218c52bda3d1a41ce3e6d9086dbd20899b246cf3d",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.ToolboxContext",
+      "sourceSha256": "f961ab825952fa116e3042f7d2848dfda0561dd92f9e8928f106fcc892130477",
+      "translationSha256": "f961ab825952fa116e3042f7d2848dfda0561dd92f9e8928f106fcc892130477",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.AssetPath",
+      "sourceSha256": "cab1b019c37f6c86981c360357a2bb8470ac02f52d4474f851be9ac45a198077",
+      "translationSha256": "cab1b019c37f6c86981c360357a2bb8470ac02f52d4474f851be9ac45a198077",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.RecordIndex",
+      "sourceSha256": "15eb556bd79aa22c389c78d1785a1c2da00bb62bf3d4de4f1471cf171ceda02f",
+      "translationSha256": "15eb556bd79aa22c389c78d1785a1c2da00bb62bf3d4de4f1471cf171ceda02f",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.ObjectName",
+      "sourceSha256": "64610c8166d3bc8623e4b98a88a5e8db0b23325f7225041456d21dfac5868665",
+      "translationSha256": "64610c8166d3bc8623e4b98a88a5e8db0b23325f7225041456d21dfac5868665",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.UniqueId",
+      "sourceSha256": "32a9d8e563f5e25b0d10078a5cac3c1791beef69e1b76f235522fa2ff414aff4",
+      "translationSha256": "32a9d8e563f5e25b0d10078a5cac3c1791beef69e1b76f235522fa2ff414aff4",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.ItemCount",
+      "sourceSha256": "9837f3e911e68437e1d96f79358a109f45b06f1ab8d1c8e71546985dd9e95e24",
+      "translationSha256": "9837f3e911e68437e1d96f79358a109f45b06f1ab8d1c8e71546985dd9e95e24",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.Item",
+      "sourceSha256": "4a33eacd5fa65f2b2e2871cd131286b53c415b131666d71173bb6e3fe59361b3",
+      "translationSha256": "4a33eacd5fa65f2b2e2871cd131286b53c415b131666d71173bb6e3fe59361b3",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.ContextCount",
+      "sourceSha256": "fe67c9af419399b149f266c17dcbccbe3a0332d7da6d5fca3a19f478534bf719",
+      "translationSha256": "fe67c9af419399b149f266c17dcbccbe3a0332d7da6d5fca3a19f478534bf719",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.LaunchPlanCount",
+      "sourceSha256": "c037e436457bfddb41a951ef05e59654b60d559e0665b1cb0961abe76d618456",
+      "translationSha256": "c037e436457bfddb41a951ef05e59654b60d559e0665b1cb0961abe76d618456",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.ErrorCount",
+      "sourceSha256": "d394af78a21f8f29bdd31648d48de560f9faeed4ad0c1fa29f7e6a12efdf6f13",
+      "translationSha256": "d394af78a21f8f29bdd31648d48de560f9faeed4ad0c1fa29f7e6a12efdf6f13",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.DryRun",
+      "sourceSha256": "08d41f0253bb0ecddca5238f78cff16fe4c0249735c00e41b591380f0c5e5bac",
+      "translationSha256": "08d41f0253bb0ecddca5238f78cff16fe4c0249735c00e41b591380f0c5e5bac",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.MutatesAsset",
+      "sourceSha256": "96259b6f510be06c1bb7068578fcff457f6869095c7cda466920a9875a0f1a97",
+      "translationSha256": "96259b6f510be06c1bb7068578fcff457f6869095c7cda466920a9875a0f1a97",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntrySelectionContext",
+      "sourceSha256": "17923d0aa85f0299e88d074c1d0ce63073c28678a5140e880ea09b5f57606be0",
+      "translationSha256": "17923d0aa85f0299e88d074c1d0ce63073c28678a5140e880ea09b5f57606be0",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntryToolboxAvailable",
+      "sourceSha256": "b4d3a29a39b51c78ef6854c93cad0aa543720fee78b7602fbe1aa40d02642a98",
+      "translationSha256": "b4d3a29a39b51c78ef6854c93cad0aa543720fee78b7602fbe1aa40d02642a98",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntryItemCount",
+      "sourceSha256": "033c16a32232293109d6a0141e3f5c4d252c4e6c861d1e7f008a0081365c6b46",
+      "translationSha256": "033c16a32232293109d6a0141e3f5c4d252c4e6c861d1e7f008a0081365c6b46",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntryError",
+      "sourceSha256": "569b4757147c3e9ed26155b2aa572090a24842f1cf384e0c824e10a8bdc24f1e",
+      "translationSha256": "569b4757147c3e9ed26155b2aa572090a24842f1cf384e0c824e10a8bdc24f1e",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.SearchText",
+      "sourceSha256": "85ea57ff09cf0747e3ad7438202cbf97150ec948be890f342857ab7a8600b6f5",
+      "translationSha256": "85ea57ff09cf0747e3ad7438202cbf97150ec948be890f342857ab7a8600b6f5",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPalette.Text.Label.Category",
+      "sourceSha256": "edb2cd3b74c999af70f0b7054990f2072dc6e10a847af6ed05954b8994b730fe",
+      "translationSha256": "edb2cd3b74c999af70f0b7054990f2072dc6e10a847af6ed05954b8994b730fe",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.RushmoreExplain.Title",
+      "sourceSha256": "24165cfefd395978e88617d829808f84ab3ad070babb2172fed41b859c9b0c4b",
+      "translationSha256": "1838c9048011f914125b46ba2cd0a9a5552c85f80aeb6dddbc907f81f8b6a849",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.RushmoreExplain.Status.Ok",
+      "sourceSha256": "ab79223d998dd438418d3e3bfd4eaf9a7e49a3ff62dbfba87b907c21426e27a8",
+      "translationSha256": "bacd1bb335d325df85bc9b009bab0af2210c035ad0b72ad5168f07c3b2cf09ac",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.RushmoreExplain.Status.Error",
+      "sourceSha256": "554d754659ebf5a0001face4df8e7e63bab17685eae5a0515edb090b9d0e67ad",
+      "translationSha256": "1601b89402c6a3abc230eb391e1bb23515e97015c690b01ac8654d64c6d4791b",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.RushmoreExplain.Label.Cursor",
+      "sourceSha256": "46a4eebd20d881ecfc0ecb54f6d8346524fadb143726d256b1a045303fc67717",
+      "translationSha256": "7c1d35b4e4ebab844dc55a0056276eb174849f411001c4e322b488ee24e43420",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.RushmoreExplain.Label.Expression",
+      "sourceSha256": "b8bc0e4f01a0ebdbfe99180d4ea3cb49092d268fecd0789d2e9372fa616e9542",
+      "translationSha256": "b8bc0e4f01a0ebdbfe99180d4ea3cb49092d268fecd0789d2e9372fa616e9542",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.RushmoreExplain.Label.Selected",
+      "sourceSha256": "d7cbbb688b2e506c022e95cef8c4f629a29b9b36a6e50324e70dff466dbb95af",
+      "translationSha256": "92bc7c74551bcfd05260f8d25c9004be599b08ba506e5f07d68086b558a8e133",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.RushmoreExplain.Label.Fallback",
+      "sourceSha256": "5c7ee2074b65853f71fc5a01ce194ff26deedf6daacdb715c6beefdfd3f31b35",
+      "translationSha256": "66ddfc18aa8c865535621d63d50f0f9cae0acdcda22b060dc82ea030fe580535",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.RushmoreExplain.Error.MissingValue",
+      "sourceSha256": "327992075416d8ed43958355b72b5e477104f4082a0739d5dc794ac85a5a39fa",
+      "translationSha256": "20a9ce20a1199cd23f3259ecc5a248abf9e9d3979f903af819ac9a065e69eab1",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.RushmoreExplain.Error.UnsignedInteger",
+      "sourceSha256": "5df52a109b25d65cf455cc8fe22dcbecd6a3d389de2963d5a3c58a70137f6896",
+      "translationSha256": "a5301bef096da3e9f6d7df080318498b266a178d7e4fd1118169fb6480cdb79a",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.RushmoreExplain.Error.BooleanValue",
+      "sourceSha256": "b1f41adc4e8ec869ac9e04d386cf935212923e55585014d5227a6cc37443dbe5",
+      "translationSha256": "9f069b80dc07af2568fd593bfc732dad244a024da6c67c1cb39495be69245913",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.RushmoreExplain.Error.InvalidPlanKind",
+      "sourceSha256": "29170e567c1fcfc8c4c1b965d32371cc246db5576fa446f880dc5b4042b0d335",
+      "translationSha256": "016e354c51637d9e967ffbe4c702bc5239981001586b9017473f5297fc2bfc44",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.RushmoreExplain.Error.InvalidFallbackReason",
+      "sourceSha256": "5546faacfa2f6a23d829494e8e51a787c5fddb67749a48f0c70a418bbceebe48",
+      "translationSha256": "8361f9b992b05bfe5cf29794f1a73cb2c8f70c0a9f9057e01ecf1fcd8020b321",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.RushmoreExplain.Error.InvalidStatisticsState",
+      "sourceSha256": "013bb9cbc21a650f9bf6c3be8b64588b9e76a139b63f5877528f778506e8f4f7",
+      "translationSha256": "17b847ac6c6503c11e678d411665bb1d8946b83e5f68165561d0ca986dbc50ba",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.RushmoreExplain.Error.UnknownOption",
+      "sourceSha256": "0151d6245c5c52129aab74e10d22549ccd8519e7a441ee68e6bbd7aa2984aa65",
+      "translationSha256": "b9e9dde84cb809c6338743c09f261cfd7a191a3c2a7e1974d6f080a77d397484",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Command.Run",
+      "sourceSha256": "00d60e31a4e6b8344d4201f25a6a7dee770713107f6d097abb01559d32b17f26",
+      "translationSha256": "1ef9d952e087ae3977ee7e287afbe1043844ff03528c9c9e22143ad452ebf82b",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Diagnostic.ExpectedTokenBeforeToken",
+      "sourceSha256": "8c5ec17ef4a477950bbb2ca65991f70f3016ec3e1e1302a2e8a70cf7f4b04621",
+      "translationSha256": "894a4dc32401bc667ce61c4a73dcde07c10544cd7efd20df6e536736ee196ac3",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Diagnostic.UnterminatedString",
+      "sourceSha256": "4485f10bfc4b0132810e5419138b9d4aa18b1e65370142c22bb678b884c13729",
+      "translationSha256": "4d31128629876e03a8527b8e72f38da7ecd6ab56bae011bbf1940375ef98265c",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Error.CatalogMissing",
+      "sourceSha256": "c8c15400c0e2b81baf61506e7fe0120cb13e6fbe50795130dfb8f3dc918f4f67",
+      "translationSha256": "6c40db7b5743196b6b0d3aa210e2c10570f80a9dcc988610de003014e96e7b10",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Error.UnknownLocale",
+      "sourceSha256": "2d03b917a03667ced597af4b44bc6fbe833c9190a7864471dda2bce391062f68",
+      "translationSha256": "2ef2e095211ffe8acbf96a4c5894b377f0ee4a1aeedb4ac68c6c253de17d540d",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Help.LocaleOption",
+      "sourceSha256": "8f3d93adaf45b7387a4f50f7c8da048423e487442c3fd40251c8d7166a1b2824",
+      "translationSha256": "8bcf6fbacd6528057d404a1959ddae278146058f15767e28cde45ebd2c831c08",
+      "verdict": "revise",
+      "reason": "Use the formal imperative appropriate for user-facing help.",
+      "proposal": "Sélectionnez les paramètres régionaux de l'interface utilisateur.",
+      "proposalSha256": "b39fe52d9a9b7cd56eb965ff59b67237e637e04c2a2699f00cc260b08847d4d0"
+    },
+    {
+      "locale": "fr-FR",
+      "key": "Inspect.Usage",
+      "sourceSha256": "062291f6308f187bb995c4d4b0770f32839ea0ef9bc2a94a1bc98710688b8c88",
+      "translationSha256": "4ba3ae765503ae3f5b9cc1d78227efa165ad1e9a70ca510de0ad615193a86e06",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.Usage.Alternate",
+      "sourceSha256": "9e42d01811094feb497ece1a5eb9e3890f36f7ec0ec01df3a4805d5970bc5141",
+      "translationSha256": "1a3b29570158502d484cddb7d06b64f7f28d7ee860f0c1ad0dcf74d74373f313",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.Usage.ObjectEntry",
+      "sourceSha256": "7c01424aefe8f8b66c1f2c3b56224c5f0fbd7dd8cba269f943eac06727fee08a",
+      "translationSha256": "4715158cfd24066923afed10e91cd1eb9e87d45dc7b58067630f8a681dbe5c6c",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.Usage.Primary",
+      "sourceSha256": "3ca5332dd77af375721ea31a6bc973fb648ea42cf3f87386bd7eef9948da3bac",
+      "translationSha256": "8351f1883b81884b69f0722aeb7ea7e8233a97cb129fa7db84b93d8cb2fba291",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.Usage.SelectionContextTokens",
+      "sourceSha256": "3b6dbfaa303a5ab004611694dbe51479d6f6985bdf324a491a50874c9df08962",
+      "translationSha256": "cb1a472db22ef7c8b4a243e69cc87b8a5879afa8dfdb6fde958ccb5fe9f657bc",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.TablePreview.RecordDeleted",
+      "sourceSha256": "1185f37d33b0f89e331f101a51bb8e51165c7efda15950b86a3ebcbb363f898e",
+      "translationSha256": "24ba86a92ddbe716da72da95c979b0a688df0ff22c65964be4543b20cdcbaa22",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.BuilderParse.Error.BooleanValueRequired",
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "60708e608aca2daeac57efa3b218335f1add711b494f42f90319352e51a17dea",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.BuilderParse.Error.ContextConflict",
+      "sourceSha256": "4115eb25ae74d112501e0096033fd8f18d57f1fd25dfef6e48cbe55f310352c0",
+      "translationSha256": "41f739f6934bb6f726ae67440a5a7290ada7b376240efc246f7f08c1cd8b14b3",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.BuilderParse.RequestName.Dispatch",
+      "sourceSha256": "64d2cde0727cd59554c888720bd0982a6b2aed3ae058b8fbd26896e790d36542",
+      "translationSha256": "39f5302cabcb9dc3472fa1e2cbabf1890f40dc1d77f11a8432cebf67a6e063e1",
+      "verdict": "revise",
+      "reason": "Répartition suggests allocation; acheminement conveys dispatch to the builder.",
+      "proposal": "Acheminement vers le générateur",
+      "proposalSha256": "4cac8d4bda306044abadb83ec5bc172550d40851008cd8a8bfa8f2aee52b62e2"
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.BuilderParse.RequestName.Execute",
+      "sourceSha256": "e30fc60ace85df044b30e643285e271ee1c6dba0ff34b4f14db440f22b49b558",
+      "translationSha256": "c4e9d9500984aa1cf6c6447e74a0ff48469c83a5533b0d85f661072495499619",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.BuilderParse.RequestName.InvocationAdmission",
+      "sourceSha256": "3fb5bae2ea65a5b33c6aad4cbf375400519cfd2051709c7279abd077ef96e033",
+      "translationSha256": "15a4a6d445ff8b7678c4a2bef904bb5fccb7fc53310021e5f07276e59aff7ab1",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.BuilderParse.RequestName.LaunchPlan",
+      "sourceSha256": "9e7c3f2caa927522d09aeae0d7017f373644f2ab37dae502195dc113e357dfd2",
+      "translationSha256": "5f4a80fcb189e58e228f9544d8a3b66e49ce67eeb59bebb6461492be157af734",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.BuilderParse.Error.MissingValue",
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "8805d1cafafa1354e1c0a5b30445d2311d7c79d14ac1032a7a8304544b32dc96",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.BuilderParse.Error.NoBuilderContext",
+      "sourceSha256": "a5a7102a5643c448b38b43b3d15320fef81a21937810c57b0b55323e143b30ac",
+      "translationSha256": "2efd0ac1a2929b6a3b29da189b9ae35fb8f8b5334130c303ed6b8b379fb7e898",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.BuilderParse.Error.NoBuilderId",
+      "sourceSha256": "414a602a00c1442909cedb4dcf007b582339d7b6e37dd87b0ca132d377aab51c",
+      "translationSha256": "3034297dd0e1a273cc5a9e2313da281680497ab95c4fd3df06513529c2074daa",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.BuilderParse.Error.NoBuilderLaunchCommand",
+      "sourceSha256": "dc95fafe996fcb864232ede1cbf243cd3d220185d06c10040dad52f9d7ce3035",
+      "translationSha256": "a76dd5b76d3a06e64979ea719bf957175b0fff7e1df8e27ec1abf6d321e57dc0",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.BuilderParse.Error.NoBuilderOrSelectionContext",
+      "sourceSha256": "7fc053db44bc509d4177281b0b63a3f2cc565331df82c87d6700fa3ccf6dc7b8",
+      "translationSha256": "a2a6555820bec2a9af110c8749f226bf3192fd26248804f5fd493eba6a8838df",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.BuilderParse.Error.NoSelectionContext",
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "4159696bf363a58618d28e3a9b33e0823d0214960e340c3e7ec75dac5776c07c",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.BuilderParse.Error.RecordNonNegativeInteger",
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "f8efd4d24fc0f37402cfae48fcd0e51512eecd53bf28019cd4c84bdbc86b6699",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.BuilderParse.Error.UnknownBuilderContextToken",
+      "sourceSha256": "b35d39bc7d28d92e471842ca8102fee0f7163618921d948cce1cf9aeac33f672",
+      "translationSha256": "62965c8b9bfb24ebc5d04c79706ad5dceb00cc2b36884028de41374c5dc05a1d",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.BuilderParse.Error.UnknownOption",
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "66c769be44f6ffe41b44645802bea955dcc706a20bb630485da4c24db412165e",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.BuilderParse.Error.UnknownSelectionContextToken",
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "446ef728f13e59cc872a835ec6bb9a84ac9f34f8c52ce1c559e2a2c5d602588e",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.DesignerParse.Error.BooleanValueRequired",
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "60708e608aca2daeac57efa3b218335f1add711b494f42f90319352e51a17dea",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.DesignerParse.Error.MissingValue",
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "8805d1cafafa1354e1c0a5b30445d2311d7c79d14ac1032a7a8304544b32dc96",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.DesignerParse.Error.NoDesignerBuilderLaunchCommand",
+      "sourceSha256": "811ebf65b1097f596a7cfa4d19957c083a95affe046d0c5c61dd6b9284a81f4c",
+      "translationSha256": "c43b5c9734556db8307fc631d6169f6b93ddcce9c1fcbc6fbc23a81dedd23e30",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.DesignerParse.Error.NoDesignerEditorActionLaunchCommand",
+      "sourceSha256": "f0d44b836f4e181c34060746aa432d25f3c79687c66a391db8fe52744afd2c45",
+      "translationSha256": "7a51eb8c5f87d17320ab5a72f00150bce1b773fc8eac40c2a7ecaf803557cd64",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.DesignerParse.Error.NoDesignerToolboxLaunchCommand",
+      "sourceSha256": "b1bd07d1db8cb0a0c7cf72d4a8f56fa805b3c7249128b27359f8d35ddab2573b",
+      "translationSha256": "5d7e96fd0b8c1b146ad424ae6a02ff4b4d09c1478c8023f68e11d445928377f7",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.DesignerParse.Error.NoSelectionContext",
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "4159696bf363a58618d28e3a9b33e0823d0214960e340c3e7ec75dac5776c07c",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.DesignerParse.Error.NonNegativeInteger",
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "f8efd4d24fc0f37402cfae48fcd0e51512eecd53bf28019cd4c84bdbc86b6699",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.DesignerParse.Error.UnknownOption",
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "66c769be44f6ffe41b44645802bea955dcc706a20bb630485da4c24db412165e",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.DesignerParse.Error.UnknownSelectionContextToken",
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "446ef728f13e59cc872a835ec6bb9a84ac9f34f8c52ce1c559e2a2c5d602588e",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.EditorActionParse.Error.BooleanValueRequired",
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "60708e608aca2daeac57efa3b218335f1add711b494f42f90319352e51a17dea",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.EditorActionParse.Error.MissingValue",
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "8805d1cafafa1354e1c0a5b30445d2311d7c79d14ac1032a7a8304544b32dc96",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.EditorActionParse.Error.NoEditorActionId",
+      "sourceSha256": "a206d7b676c0db7f387f2b05d56a234ea5834aaee89a67207b651d18fbe64ad1",
+      "translationSha256": "ac93ad02e674976d099abe23f8ac30eef0baa95cdc4df82d0ebd95b208b47955",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.EditorActionParse.Error.NoEditorActionLaunchCommand",
+      "sourceSha256": "10a75a9207b35688660dd7b86adce5dd77b025792d36e3cc916815013b501b1f",
+      "translationSha256": "75789ce7d7247fcece98d29023fdad67a6b5260366569847470e1275b690707d",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.EditorActionParse.Error.NoSelectionContext",
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "4159696bf363a58618d28e3a9b33e0823d0214960e340c3e7ec75dac5776c07c",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.EditorActionParse.Error.NonNegativeInteger",
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "f8efd4d24fc0f37402cfae48fcd0e51512eecd53bf28019cd4c84bdbc86b6699",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.EditorActionParse.Error.UnknownOption",
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "66c769be44f6ffe41b44645802bea955dcc706a20bb630485da4c24db412165e",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.EditorActionParse.Error.UnknownSelectionContextToken",
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "446ef728f13e59cc872a835ec6bb9a84ac9f34f8c52ce1c559e2a2c5d602588e",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPaletteParse.Error.MissingValue",
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "8805d1cafafa1354e1c0a5b30445d2311d7c79d14ac1032a7a8304544b32dc96",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPaletteParse.Error.NoSelectionContext",
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "4159696bf363a58618d28e3a9b33e0823d0214960e340c3e7ec75dac5776c07c",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPaletteParse.Error.NoToolboxContext",
+      "sourceSha256": "cc864d8a55e2dbfb842a8ccf066dfe30ab8c1a32c261c167962af8104b8e7717",
+      "translationSha256": "1d5b9bac89282f80c2f4d88c4467aab19db98e487b423113098286cea95c0bc1",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPaletteParse.Error.NonNegativeInteger",
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "f8efd4d24fc0f37402cfae48fcd0e51512eecd53bf28019cd4c84bdbc86b6699",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownOption",
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "66c769be44f6ffe41b44645802bea955dcc706a20bb630485da4c24db412165e",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownSelectionContextToken",
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "446ef728f13e59cc872a835ec6bb9a84ac9f34f8c52ce1c559e2a2c5d602588e",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownToolboxContextToken",
+      "sourceSha256": "8a11d304da398e84cda4c67e321861fb665502c9bde02d11687c6abbc3aaa99a",
+      "translationSha256": "dbb798bae5e008bff73d95c559f8cbf49be5f700259c5db51a29b3ac38e7fdf9",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxParse.Error.BatchItemRequiresToolboxItem",
+      "sourceSha256": "0ef478552c8822d14178bbcda47867a7a63f4ad5d1c66ada1868bce5cde17be1",
+      "translationSha256": "9def244f56ba138727d29b6aaa5fde64eb363c59b6a4db27c0058de18465f82b",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxParse.Error.BooleanValueRequired",
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "60708e608aca2daeac57efa3b218335f1add711b494f42f90319352e51a17dea",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxParse.Error.FieldValueSyntax",
+      "sourceSha256": "0081be3546939e08397453ba775a755e6cffa1e180015c0a088cc624f378016b",
+      "translationSha256": "6ab11b62c694ea0292b2a1e4966cc4f1300877ac86f0c634d1f96753148433e4",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    },
+    {
+      "locale": "fr-FR",
+      "key": "StudioHost.ToolboxParse.Error.MissingValue",
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "8805d1cafafa1354e1c0a5b30445d2311d7c79d14ac1032a7a8304544b32dc96",
+      "verdict": "accept",
+      "reason": "French wording is faithful and natural for this UI context; placeholders are preserved."
+    }
+  ],
+  "residualUncertainty": "Text-only review; full catalog terminology, rendered UI and native-speaker cultural suitability remain unverified. Revised proposals require fresh exact-text review before release."
+}

@@ -1,0 +1,328 @@
+{
+  "session": "a2e02e59-495f-4ed9-ba85-3dcbddff6b4b",
+  "locale": "fr-FR",
+  "input": [
+    {
+      "key": "Runtime.Prg.Database.Error.CompanionMissing",
+      "source": "Database component is missing: {path}"
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ComponentMalformed",
+      "source": "Database component is empty or malformed: {path}"
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ComponentReadFailed",
+      "source": "Database component could not be read: {path}"
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ContainerMalformed",
+      "source": "Database container is malformed: {path} ({errorMessage})"
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ExclusiveConflict",
+      "source": "Database cannot be opened exclusively because it is already open in another data session: {path}"
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.NotFound",
+      "source": "Database was not found: {path}"
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.NotOpen",
+      "source": "Database is not open in the current data session: {database}"
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.PathRequired",
+      "source": "OPEN DATABASE requires a database path."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ValidateUnsupported",
+      "source": "OPEN DATABASE VALIDATE is not supported by this runtime."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+      "source": "Verified package bytes are unavailable for database component: {path}"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.VerifiedSourceUnavailable",
+      "source": "Verified package source is unavailable: {path}"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.VerifiedIncludeSourceUnavailable",
+      "source": "Verified package include source is unavailable: {include} (included from {path}, line {line})"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.SourceSizeUnknown",
+      "source": "PRG source {path} is not a regular file or its size cannot be determined, so it cannot be bounded and was not loaded"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.SourceTooLarge",
+      "source": "PRG source is too large: {path} is {bytes} bytes and the limit is {limit} bytes (raise MAXSOURCEBYTES in CONFIG.FPW to allow it)"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.AggregateSourceTooLarge",
+      "source": "PRG source exceeds the aggregate limit while loading {path}: {bytes} bytes against a limit of {limit} (raise MAXAGGREGATESOURCEBYTES in CONFIG.FPW to allow it)"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.LogicalLineTooLong",
+      "source": "A PRG line is too long: {path}, line {line} is {bytes} bytes and the limit is {limit} bytes (raise MAXLOGICALLINEBYTES in CONFIG.FPW to allow it)"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.TooManySourceLines",
+      "source": "PRG source has too many lines: {path} exceeds the limit of {limit} logical lines (raise MAXSOURCELINES in CONFIG.FPW to allow it)"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.TooManyIncludeFiles",
+      "source": "Too many #INCLUDE files: {path}, line {line} would exceed the limit of {limit} files (raise MAXINCLUDEFILES in CONFIG.FPW to allow it)"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.IncludeFileNotFound",
+      "source": "#INCLUDE file not found: {include} (included from {path}, line {line})"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.IncludeFileUnreadable",
+      "source": "#INCLUDE file cannot be read: {include} (included from {path}, line {line})"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.MismatchedConditional",
+      "source": "Mismatched #IF/#ELSE/#ENDIF: {directive} at {path}, line {line} has no conditional opened in this file"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.DuplicateElse",
+      "source": "Duplicate #ELSE at {path}, line {line} (the conditional was opened at {openedPath}, line {openedLine})"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.UnterminatedConditional",
+      "source": "Unterminated {directive} opened at {path}, line {line}: the matching #ENDIF is missing"
+    },
+    {
+      "key": "Command.Build",
+      "source": "Build"
+    },
+    {
+      "key": "VSIX.Command.OpenInStudio",
+      "source": "Open In Copperfin Studio"
+    },
+    {
+      "key": "VSIX.Command.BuildProject",
+      "source": "Build Copperfin Project"
+    },
+    {
+      "key": "VSIX.Command.RunProject",
+      "source": "Run Copperfin Project"
+    },
+    {
+      "key": "VSIX.Command.DebugProject",
+      "source": "Debug Copperfin Project"
+    },
+    {
+      "key": "VSIX.CommandWindow.Title",
+      "source": "Copperfin Command"
+    },
+    {
+      "key": "VSIX.CommandWindow.Ready",
+      "source": "Ready."
+    },
+    {
+      "key": "VSIX.CommandWindow.Unavailable",
+      "source": "Copperfin Command could not be opened."
+    },
+    {
+      "key": "VSIX.CommandWindow.SendTooltip",
+      "source": "Send command"
+    },
+    {
+      "key": "VSIX.CommandWindow.NoActiveSession",
+      "source": "No active Copperfin debug session."
+    },
+    {
+      "key": "VSIX.CommandWindow.Unsupported",
+      "source": "Only '? <expression>' is supported in the Copperfin Command window."
+    },
+    {
+      "key": "VSIX.TerminalWindow.Title",
+      "source": "Copperfin Terminal"
+    },
+    {
+      "key": "VSIX.TerminalWindow.Ready",
+      "source": "Ready."
+    },
+    {
+      "key": "VSIX.TerminalWindow.SendTooltip",
+      "source": "Send command"
+    },
+    {
+      "key": "VSIX.TerminalWindow.Unavailable",
+      "source": "Copperfin Terminal could not be opened."
+    },
+    {
+      "key": "VSIX.TerminalWindow.Exited",
+      "source": "Terminal process exited."
+    },
+    {
+      "key": "VSIX.Package.Name",
+      "source": "Copperfin for Visual Studio"
+    }
+  ],
+  "entries": [
+    {
+      "key": "Runtime.Prg.Database.Error.CompanionMissing",
+      "translation": "Un composant de la base de données est manquant : {path}"
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ComponentMalformed",
+      "translation": "Un composant de la base de données est vide ou mal formé : {path}"
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ComponentReadFailed",
+      "translation": "Impossible de lire un composant de la base de données : {path}"
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ContainerMalformed",
+      "translation": "Le conteneur de base de données est mal formé : {path} ({errorMessage})"
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ExclusiveConflict",
+      "translation": "Impossible d'ouvrir la base de données en mode exclusif, car elle est déjà ouverte dans une autre session de données : {path}"
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.NotFound",
+      "translation": "Base de données introuvable : {path}"
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.NotOpen",
+      "translation": "La base de données n'est pas ouverte dans la session de données actuelle : {database}"
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.PathRequired",
+      "translation": "OPEN DATABASE nécessite un chemin de base de données."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ValidateUnsupported",
+      "translation": "OPEN DATABASE VALIDATE n'est pas pris en charge par ce runtime."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+      "translation": "Les octets vérifiés du package ne sont pas disponibles pour le composant de base de données : {path}"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.VerifiedSourceUnavailable",
+      "translation": "La source vérifiée du package n'est pas disponible : {path}"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.VerifiedIncludeSourceUnavailable",
+      "translation": "La source d'inclusion vérifiée du package n'est pas disponible : {include} (incluse depuis {path}, ligne {line})"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.SourceSizeUnknown",
+      "translation": "La source PRG {path} n'est pas un fichier standard ou sa taille ne peut pas être déterminée ; elle ne peut donc pas être limitée et n'a pas été chargée"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.SourceTooLarge",
+      "translation": "La source PRG est trop volumineuse : {path} fait {bytes} octets et la limite est de {limit} octets (augmentez MAXSOURCEBYTES dans CONFIG.FPW pour l'autoriser)"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.AggregateSourceTooLarge",
+      "translation": "Les sources PRG dépassent la limite cumulée lors du chargement de {path} : {bytes} octets pour une limite de {limit} (augmentez MAXAGGREGATESOURCEBYTES dans CONFIG.FPW pour l'autoriser)"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.LogicalLineTooLong",
+      "translation": "Une ligne PRG est trop longue : {path}, la ligne {line} fait {bytes} octets et la limite est de {limit} octets (augmentez MAXLOGICALLINEBYTES dans CONFIG.FPW pour l'autoriser)"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.TooManySourceLines",
+      "translation": "La source PRG comporte trop de lignes : {path} dépasse la limite de {limit} lignes logiques (augmentez MAXSOURCELINES dans CONFIG.FPW pour l'autoriser)"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.TooManyIncludeFiles",
+      "translation": "Trop de fichiers #INCLUDE : {path}, ligne {line}, dépasserait la limite de {limit} fichiers (augmentez MAXINCLUDEFILES dans CONFIG.FPW pour l'autoriser)"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.IncludeFileNotFound",
+      "translation": "Fichier #INCLUDE introuvable : {include} (inclus depuis {path}, ligne {line})"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.IncludeFileUnreadable",
+      "translation": "Impossible de lire le fichier #INCLUDE : {include} (inclus depuis {path}, ligne {line})"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.MismatchedConditional",
+      "translation": "#IF/#ELSE/#ENDIF non appariés : {directive} à {path}, ligne {line}, n'a aucune condition ouverte dans ce fichier"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.DuplicateElse",
+      "translation": "#ELSE en double à {path}, ligne {line} (la condition a été ouverte à {openedPath}, ligne {openedLine})"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.UnterminatedConditional",
+      "translation": "{directive} non terminé, ouvert à {path}, ligne {line} : le #ENDIF correspondant est manquant"
+    },
+    {
+      "key": "Command.Build",
+      "translation": "Générer"
+    },
+    {
+      "key": "VSIX.Command.OpenInStudio",
+      "translation": "Ouvrir dans Copperfin Studio"
+    },
+    {
+      "key": "VSIX.Command.BuildProject",
+      "translation": "Générer le projet Copperfin"
+    },
+    {
+      "key": "VSIX.Command.RunProject",
+      "translation": "Exécuter le projet Copperfin"
+    },
+    {
+      "key": "VSIX.Command.DebugProject",
+      "translation": "Déboguer le projet Copperfin"
+    },
+    {
+      "key": "VSIX.CommandWindow.Title",
+      "translation": "Commande Copperfin"
+    },
+    {
+      "key": "VSIX.CommandWindow.Ready",
+      "translation": "Prêt."
+    },
+    {
+      "key": "VSIX.CommandWindow.Unavailable",
+      "translation": "Impossible d'ouvrir la commande Copperfin."
+    },
+    {
+      "key": "VSIX.CommandWindow.SendTooltip",
+      "translation": "Envoyer la commande"
+    },
+    {
+      "key": "VSIX.CommandWindow.NoActiveSession",
+      "translation": "Aucune session de débogage Copperfin active."
+    },
+    {
+      "key": "VSIX.CommandWindow.Unsupported",
+      "translation": "Seul « ? <expression> » est pris en charge dans la fenêtre de commande Copperfin."
+    },
+    {
+      "key": "VSIX.TerminalWindow.Title",
+      "translation": "Terminal Copperfin"
+    },
+    {
+      "key": "VSIX.TerminalWindow.Ready",
+      "translation": "Prêt."
+    },
+    {
+      "key": "VSIX.TerminalWindow.SendTooltip",
+      "translation": "Envoyer la commande"
+    },
+    {
+      "key": "VSIX.TerminalWindow.Unavailable",
+      "translation": "Impossible d'ouvrir le terminal Copperfin."
+    },
+    {
+      "key": "VSIX.TerminalWindow.Exited",
+      "translation": "Le processus du terminal s'est arrêté."
+    },
+    {
+      "key": "VSIX.Package.Name",
+      "translation": "Copperfin pour Visual Studio"
+    }
+  ]
+}
