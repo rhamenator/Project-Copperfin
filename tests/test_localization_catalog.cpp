@@ -136,6 +136,10 @@ void test_bcp47_script_locale_normalization_and_catalog_fallback() {
             std::vector<std::string>({"es-Latn-MX", "es-Latn", "es-419", "es", "en-US"}),
         "#3894: script-qualified Spanish should preserve the Latin American fallback contract");
     expect(
+        locale_fallback_chain("es-Latn-419") ==
+            std::vector<std::string>({"es-Latn-419", "es-Latn", "es-419", "es", "en-US"}),
+        "#7074: a numeric Latin American region retains the regional catalog after its script parent");
+    expect(
         locale_fallback_chain("es-ES") ==
             std::vector<std::string>({"es-ES", "es", "en-US"}) &&
             locale_fallback_chain("es-Latn-ES") ==

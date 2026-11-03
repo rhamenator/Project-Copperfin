@@ -410,7 +410,7 @@ std::vector<std::string> locale_fallback_chain(std::string_view locale) {
     // A script subtag may precede the region (for example es-Latn-MX).
     static const std::set<std::string_view> latin_american_spanish_regions = {
         "AR", "BO", "CL", "CO", "CR", "CU", "DO", "EC", "GT", "HN",
-        "MX", "NI", "PA", "PE", "PR", "PY", "SV", "UY", "VE"};
+        "MX", "NI", "PA", "PE", "PR", "PY", "SV", "UY", "VE", "419"};
     bool use_latin_american_spanish_fallback = false;
     if (normalized.rfind("es-", 0U) == 0U) {
         std::size_t start = 3U;
