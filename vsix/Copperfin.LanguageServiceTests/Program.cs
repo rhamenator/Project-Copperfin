@@ -311,9 +311,11 @@ internal static partial class Program
             foreach (var example in new[]
             {
                 (Locale: "es-419", Use: "Comando: abre una tabla, una tabla libre o un cursor, o cierra uno con USE IN.",
-                    AliasFunction: "Devuelve el alias actual o el alias de un área de trabajo específica si se pasa un argumento."),
+                    AliasFunction: "Devuelve el alias actual o el alias de un área de trabajo específica si se pasa un argumento.",
+                    BofFunction: "Devuelve .T. si la posición está antes del primer registro."),
                 (Locale: "pt-BR", Use: "Comando: abre uma tabela, uma tabela livre ou um cursor, ou fecha um deles com USE IN.",
-                    AliasFunction: "Retorna o alias atual ou o alias de uma área de trabalho indicada quando recebe um argumento.")
+                    AliasFunction: "Retorna o alias atual ou o alias de uma área de trabalho indicada quando recebe um argumento.",
+                    BofFunction: "Retorna .T. quando a posição está antes do primeiro registro.")
             })
             {
                 Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", example.Locale);
@@ -330,8 +332,9 @@ internal static partial class Program
                     $"#7073: {example.Locale} ALIAS() completion should localize prose and retain function identity");
                 var bof = FoxProIntelliSenseCatalog.BuildEntries(null, string.Empty, "BOF")
                     .SingleOrDefault(entry => entry.DisplayText == "BOF()" && entry.Kind == "function");
-                Expect(bof is not null && bof.Description.Contains(".T.", StringComparison.Ordinal),
-                    $"#7073: {example.Locale} BOF() completion should preserve the VFP logical token");
+                Expect(bof is not null && bof.Description == example.BofFunction &&
+                       bof.Description.Contains(".T.", StringComparison.Ordinal),
+                    $"#7073: {example.Locale} BOF() completion should localize prose and preserve the VFP token");
             }
         }
         finally

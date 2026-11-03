@@ -2535,7 +2535,7 @@
   "LanguageService.IntelliSense.Function.Year": "Devuelve el año de una fecha.",
   "LanguageService.IntelliSense.Function.CMonth": "Devuelve el nombre del mes de una fecha.",
   "LanguageService.IntelliSense.Function.Iif": "Evalúa una de dos expresiones según una condición.",
-  "LanguageService.IntelliSense.Function.File": "Comprueba si existe un archivo.",
+  "LanguageService.IntelliSense.Function.File": "Verifica si existe un archivo.",
   "LanguageService.IntelliSense.Function.CursorGetProp": "Devuelve metadatos de un cursor abierto o un adaptador de cursor remoto.",
   "LanguageService.IntelliSense.Function.CreateObject": "Crea un objeto de automatización COM o Copperfin.",
   "LanguageService.IntelliSense.Function.GetObject": "Se vincula a un objeto de automatización en ejecución o a un moniker.",

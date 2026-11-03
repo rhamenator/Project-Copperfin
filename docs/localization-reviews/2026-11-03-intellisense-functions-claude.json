@@ -4,9 +4,10 @@
   "model": "claude-sonnet-5-5",
   "mode": "Claude Code CLI print mode with tools disabled",
   "sessions": [
-    "665dd73e-2e30-4166-bdf7-580a4c529f06"
+    "665dd73e-2e30-4166-bdf7-580a4c529f06",
+    "477219ed-a63b-49ba-98ad-c0cae3420ee9"
   ],
-  "scope": "All 22 previously source-identical IntelliSense function descriptions in each of es-419 and pt-BR (44 total), proposed by Codex and independently reviewed by Claude.",
+  "scope": "All 22 previously source-identical IntelliSense function descriptions in each of es-419 and pt-BR (44 total), proposed by Codex and independently reviewed by Claude. One es-419 File() entry was refined after a code review and independently re-reviewed in the second session.",
   "entries": [
     {
       "locale": "es-419",
@@ -84,9 +85,9 @@
       "locale": "es-419",
       "key": "LanguageService.IntelliSense.Function.File",
       "sourceSha256": "3e3532a6eb7d2c2e3d60c53a188849eded9a8fafad4bf498d12ef103856ec02a",
-      "translationSha256": "8ce95ad21cc6dfea2f45c4950cfeeca05693bb2e5453da05c6b4e6aa1a3ddb3a",
+      "translationSha256": "82a110ce4231ecbeab6b0e673006137d40faaff2825800d30d7d8b5e10001816",
       "verdict": "accept",
-      "reason": "Correct and natural."
+      "reason": "Second read-only review: faithful and natural; 'Verifica' is standard Latin American technical wording, and 'archivo' is the appropriate term. Low stylistic uncertainty."
     },
     {
       "locale": "es-419",
