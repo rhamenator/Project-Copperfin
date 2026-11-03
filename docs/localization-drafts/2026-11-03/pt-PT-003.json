@@ -1,0 +1,371 @@
+{
+  "session": "afe7098f-173d-4f64-a1b3-35eddd035423",
+  "model": "gpt-6.1-sol",
+  "reviewer": "Codex /root/review_es_revisions",
+  "reviewStatus": "unreviewed_first_pass",
+  "locale": "pt-PT",
+  "input": [
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.LaunchPlanCount",
+      "source": "launch_plan_count",
+      "seed": "quantidade_planos_lancamento"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ErrorCount",
+      "source": "error_count",
+      "seed": "quantidade_erros"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.DryRun",
+      "source": "dry_run",
+      "seed": "simulacao"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.MutatesAsset",
+      "source": "mutates_asset",
+      "seed": "modifica_ativo"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntrySelectionContext",
+      "source": "entry_selection_context",
+      "seed": "contexto_selecao_entrada"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntryToolboxAvailable",
+      "source": "entry_toolbox_available",
+      "seed": "caixa_ferramentas_entrada_disponivel"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntryItemCount",
+      "source": "entry_item_count",
+      "seed": "quantidade_itens_entrada"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntryError",
+      "source": "entry_error",
+      "seed": "erro_entrada"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.SearchText",
+      "source": "search_text",
+      "seed": "texto_pesquisa"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.Category",
+      "source": "category",
+      "seed": "categoria"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Title",
+      "source": "Rushmore explain plan",
+      "seed": "Plano de explicacao do Rushmore"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Status.Ok",
+      "source": "status: ok",
+      "seed": "status: sucesso"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Status.Error",
+      "source": "status: error",
+      "seed": "status: erro"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Label.Cursor",
+      "source": "cursor",
+      "seed": "cursor"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Label.Expression",
+      "source": "expression",
+      "seed": "expressão"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Label.Selected",
+      "source": "selected",
+      "seed": "selecionado"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Label.Fallback",
+      "source": "fallback",
+      "seed": "alternativa"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.MissingValue",
+      "source": "Missing value for {option}",
+      "seed": "Falta um valor para {option}"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.UnsignedInteger",
+      "source": "Option {option} requires a non-negative integer",
+      "seed": "A opção {option} exige um inteiro não negativo"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.BooleanValue",
+      "source": "Option requires true or false",
+      "seed": "A opcao exige verdadeiro ou falso"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.InvalidPlanKind",
+      "source": "Invalid Rushmore plan kind",
+      "seed": "Tipo de plano Rushmore inválido"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.InvalidFallbackReason",
+      "source": "Invalid Rushmore fallback reason",
+      "seed": "Motivo de alternativa Rushmore invalido"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.InvalidStatisticsState",
+      "source": "Invalid Rushmore statistics state",
+      "seed": "Estado de estatísticas Rushmore inválido"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.UnknownOption",
+      "source": "Unknown Rushmore explain option: {option}",
+      "seed": "Opção de explicação Rushmore desconhecida: {option}"
+    },
+    {
+      "key": "Command.Run",
+      "source": "Run",
+      "seed": "Executar"
+    },
+    {
+      "key": "Diagnostic.ExpectedTokenBeforeToken",
+      "source": "Expected {expectedToken} before {actualToken}.",
+      "seed": "Era esperado {expectedToken} antes de {actualToken}."
+    },
+    {
+      "key": "Diagnostic.UnterminatedString",
+      "source": "Unterminated string literal.",
+      "seed": "Literal de cadeia sem terminacao."
+    },
+    {
+      "key": "Error.CatalogMissing",
+      "source": "Localization catalog is missing: {path}",
+      "seed": "O catálogo de localização está ausente: {path}"
+    },
+    {
+      "key": "Error.UnknownLocale",
+      "source": "Unknown locale: {locale}",
+      "seed": "Localidade desconhecida: {locale}"
+    },
+    {
+      "key": "Help.LocaleOption",
+      "source": "Select the user-interface locale.",
+      "seed": "Selecione a localidade da interface do usuário."
+    },
+    {
+      "key": "Inspect.Usage",
+      "source": "Usage: {commandName} [{localeOption} {localeValue}] {assetPathArgument}",
+      "seed": "Uso: {commandName} [{localeOption} {localeValue}] {assetPathArgument}"
+    },
+    {
+      "key": "StudioHost.Usage.Alternate",
+      "source": "   or: {usageTemplate}",
+      "seed": "   ou: {usageTemplate}"
+    },
+    {
+      "key": "StudioHost.Usage.ObjectEntry",
+      "source": "{objectName} object: {usageTemplate}",
+      "seed": "{objectName} objeto: {usageTemplate}"
+    },
+    {
+      "key": "StudioHost.Usage.Primary",
+      "source": "Usage: {usageTemplate}",
+      "seed": "Uso: {usageTemplate}"
+    },
+    {
+      "key": "StudioHost.Usage.SelectionContextTokens",
+      "source": "Selection context tokens: {selectionContextTokens}",
+      "seed": "Tokens de contexto de seleção: {selectionContextTokens}"
+    },
+    {
+      "key": "StudioHost.TablePreview.RecordDeleted",
+      "source": "deleted",
+      "seed": "excluído"
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.BooleanValueRequired",
+      "source": "The {option} value must be {trueValue} or {falseValue}.",
+      "seed": "O valor de {option} deve ser {trueValue} ou {falseValue}."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.ContextConflict",
+      "source": "{requestName} requests cannot provide both {builderContextOption} and {selectionContextOption}.",
+      "seed": "Solicitacoes de {requestName} nao podem fornecer {builderContextOption} e {selectionContextOption} ao mesmo tempo."
+    },
+    {
+      "key": "StudioHost.BuilderParse.RequestName.Dispatch",
+      "source": "Builder dispatch",
+      "seed": "despacho do builder"
+    },
+    {
+      "key": "StudioHost.BuilderParse.RequestName.Execute",
+      "source": "Builder execute",
+      "seed": "execucao do builder"
+    }
+  ],
+  "entries": [
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.LaunchPlanCount",
+      "translation": "launch_plan_count"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ErrorCount",
+      "translation": "error_count"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.DryRun",
+      "translation": "dry_run"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.MutatesAsset",
+      "translation": "mutates_asset"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntrySelectionContext",
+      "translation": "entry_selection_context"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntryToolboxAvailable",
+      "translation": "entry_toolbox_available"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntryItemCount",
+      "translation": "entry_item_count"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntryError",
+      "translation": "entry_error"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.SearchText",
+      "translation": "search_text"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.Category",
+      "translation": "category"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Title",
+      "translation": "Plano de análise Rushmore"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Status.Ok",
+      "translation": "status: ok"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Status.Error",
+      "translation": "status: error"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Label.Cursor",
+      "translation": "cursor"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Label.Expression",
+      "translation": "expressão"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Label.Selected",
+      "translation": "selecionado"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Label.Fallback",
+      "translation": "alternativa"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.MissingValue",
+      "translation": "Falta um valor para {option}"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.UnsignedInteger",
+      "translation": "A opção {option} requer um número inteiro não negativo"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.BooleanValue",
+      "translation": "A opção requer true ou false"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.InvalidPlanKind",
+      "translation": "Tipo de plano Rushmore inválido"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.InvalidFallbackReason",
+      "translation": "Motivo da alternativa Rushmore inválido"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.InvalidStatisticsState",
+      "translation": "Estado das estatísticas Rushmore inválido"
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.UnknownOption",
+      "translation": "Opção de análise Rushmore desconhecida: {option}"
+    },
+    {
+      "key": "Command.Run",
+      "translation": "Executar"
+    },
+    {
+      "key": "Diagnostic.ExpectedTokenBeforeToken",
+      "translation": "Esperava-se {expectedToken} antes de {actualToken}."
+    },
+    {
+      "key": "Diagnostic.UnterminatedString",
+      "translation": "Literal de cadeia de caracteres não terminado."
+    },
+    {
+      "key": "Error.CatalogMissing",
+      "translation": "Falta o catálogo de localização: {path}"
+    },
+    {
+      "key": "Error.UnknownLocale",
+      "translation": "Localidade desconhecida: {locale}"
+    },
+    {
+      "key": "Help.LocaleOption",
+      "translation": "Selecione a localidade da interface do utilizador."
+    },
+    {
+      "key": "Inspect.Usage",
+      "translation": "Utilização: {commandName} [{localeOption} {localeValue}] {assetPathArgument}"
+    },
+    {
+      "key": "StudioHost.Usage.Alternate",
+      "translation": "   ou: {usageTemplate}"
+    },
+    {
+      "key": "StudioHost.Usage.ObjectEntry",
+      "translation": "Objeto {objectName}: {usageTemplate}"
+    },
+    {
+      "key": "StudioHost.Usage.Primary",
+      "translation": "Utilização: {usageTemplate}"
+    },
+    {
+      "key": "StudioHost.Usage.SelectionContextTokens",
+      "translation": "Tokens de contexto de seleção: {selectionContextTokens}"
+    },
+    {
+      "key": "StudioHost.TablePreview.RecordDeleted",
+      "translation": "eliminado"
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.BooleanValueRequired",
+      "translation": "O valor de {option} deve ser {trueValue} ou {falseValue}."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.ContextConflict",
+      "translation": "Os pedidos {requestName} não podem incluir {builderContextOption} e {selectionContextOption} ao mesmo tempo."
+    },
+    {
+      "key": "StudioHost.BuilderParse.RequestName.Dispatch",
+      "translation": "encaminhamento do Builder"
+    },
+    {
+      "key": "StudioHost.BuilderParse.RequestName.Execute",
+      "translation": "execução do Builder"
+    }
+  ]
+}
