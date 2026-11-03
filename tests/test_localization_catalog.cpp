@@ -283,6 +283,10 @@ void test_placeholders_pseudo_locale_and_unicode() {
         copperfin::localization::pseudo_localize("[!! already pseudo-localized !!]") ==
             "[!! already pseudo-localized !!]",
         "#4378: pseudo-localization should not wrap an already decorated catalog value twice");
+    const auto stretched = copperfin::localization::pseudo_localize("A longword {name}");
+    expect(stretched.find("\xC3\x85\xC3\x85") != std::string::npos &&
+            stretched.find("{name}") != std::string::npos,
+        "#2348: pseudo-localization should stretch unbroken words without changing placeholders");
 
     expect(
         english.translate("Test.Unicode", {{"name", "Zo\xC3\xAB"}}) ==

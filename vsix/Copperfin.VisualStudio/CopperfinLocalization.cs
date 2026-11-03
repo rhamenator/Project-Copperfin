@@ -2967,7 +2967,12 @@ internal sealed class CopperfinLocalization
                 }
             }
 
-            builder.Append(PseudoCharacter(current));
+            var decorated = PseudoCharacter(current);
+            builder.Append(decorated);
+            if ("AEIOUaeiou".IndexOf(current) >= 0)
+            {
+                builder.Append(decorated);
+            }
         }
 
         builder.Append(" !!]");

@@ -98,7 +98,10 @@ Only the human-facing prose is localizable. `ENDSCAN` and `ENDIF` are language t
 
 ## Pseudo-Localization
 
-The pseudo-locale is `qps-ploc`. It decorates and expands localized prose while preserving placeholders so tests can catch hard-coded strings, ASCII assumptions, and layout-length problems.
+The pseudo-locale is `qps-ploc`. It decorates prose and doubles vowels within
+words while preserving placeholders, so tests can catch hard-coded strings,
+ASCII assumptions, and long-label layout problems. German compound labels
+still need real rendered UI checks.
 
 Pseudo-localization is a test tool, not a production language pack.
 
