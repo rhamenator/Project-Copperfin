@@ -2884,8 +2884,8 @@ internal sealed class CopperfinLocalization
 
     private static readonly HashSet<string> LatinAmericanSpanishRegions = new(StringComparer.Ordinal)
     {
-        "AR", "BO", "CL", "CO", "CR", "CU", "DO", "EC", "GT", "HN",
-        "MX", "NI", "PA", "PE", "PR", "PY", "SV", "UY", "VE", "419"
+        "AR", "BO", "BR", "BZ", "CL", "CO", "CR", "CU", "DO", "EC", "GT", "HN",
+        "JP", "MX", "NI", "PA", "PE", "PR", "PY", "SV", "US", "UY", "VE", "419"
     };
 
     private static bool IsAsciiLetters(string value) => IsAscii(value, allowLetters: true, allowDigits: false);

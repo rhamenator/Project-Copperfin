@@ -134,6 +134,10 @@ internal static partial class Program
                        new[] { "es-Latn-ES", "es-Latn", "es", "en-US", "en" }) &&
                    CopperfinLocalization.LocaleFallbackChain("es-Latn-419").SequenceEqual(
                        new[] { "es-Latn-419", "es-Latn", "es-419", "es", "en-US", "en" }) &&
+                   CopperfinLocalization.LocaleFallbackChain("es-US").SequenceEqual(
+                       new[] { "es-US", "es-419", "es", "en-US", "en" }) &&
+                   CopperfinLocalization.LocaleFallbackChain("es-JP").SequenceEqual(
+                       new[] { "es-JP", "es-419", "es", "en-US", "en" }) &&
                    CopperfinLocalization.NormalizeLocale(null) == CopperfinLocalization.DefaultLocale &&
                    CopperfinLocalization.NormalizeLocale("zh-cmn-hANS-cn") == "zh-cmn-Hans-CN" &&
                    CopperfinLocalization.NormalizeLocale("fr/../es-419") == "en-US",
