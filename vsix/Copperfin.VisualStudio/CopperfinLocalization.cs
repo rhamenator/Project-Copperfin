@@ -1455,7 +1455,7 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Property.Picture"] = "Imagen",
                 ["AssetEditor.Property.FontStyle"] = "Estilo de fuente",
                 ["AssetEditor.Property.FontSize"] = "Tamaño de fuente",
-                ["AssetEditor.Property.ReportMode"] = "Modo de estilo de fondo/dirección",
+                ["AssetEditor.Property.ReportMode"] = "Estilo de fondo / modo de dirección",
                 ["AssetEditor.Property.Float"] = "Flotante",
                 ["AssetEditor.Property.NoRepeat"] = "No repetir",
                 ["AssetEditor.Property.Stretch"] = "Extender con desbordamiento",
