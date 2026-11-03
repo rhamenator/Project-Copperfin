@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "sessions": [
+    "/root/review_pt_revisions/pt-untriaged-2-resolution",
+    "codex:/root/review_en_gb_revisions/pt-BR-untriaged-2-independent-final-2026-11-03",
+    "/root/review_pt_revisions"
+  ],
+  "scope": "Final independent disposition for two formerly source-identical pt-BR entries: revised GetObject and intentional technical Builder label.",
+  "residualUncertainty": "Builder terminology is inconsistent in neighboring generic UI labels and needs separate glossary cleanup; rendered UI remains unverified.",
+  "entries": [
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.GetObject",
+      "sourceSha256": "867f1222d06f609cc059d6612faf0ebee3fb0b17f23275348d41127e185b929f",
+      "translationSha256": "3b245e227a944ce5dee9444bac74f46fbe6734685a0ce780290d7cb378c94d0f",
+      "verdict": "accept",
+      "reason": "«Vincula-se ... a um objeto» is grammatical Brazilian Portuguese and preserves that the binding uses function-style syntax without asserting that GETOBJECT is itself a function. COM and moniker remain exact technical terms."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.EditorAction.OpenBuilder.Label",
+      "sourceSha256": "090940e7325896cc06b13348b51fbaba86a5d9d1937fc37a4e3a3f02f00401db",
+      "translationSha256": "090940e7325896cc06b13348b51fbaba86a5d9d1937fc37a4e3a3f02f00401db",
+      "verdict": "accept",
+      "reason": "Intentional source-identical “Builder” is defensible as the named VFP tool term: the adjacent action description and Form/Class/Control/Report/Grid titles use Builder, and builder.app is a filename. “Construtor” in generic Asset Editor kind/column labels is a separate glossary inconsistency."
+    }
+  ]
+}
