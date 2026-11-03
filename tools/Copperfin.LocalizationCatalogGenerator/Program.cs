@@ -134,6 +134,11 @@ foreach (var locale in locales)
         "qps-ploc" => CopperfinLocalization.PseudoLocale,
         _ => null
     };
+    if (managedLocale is null && !checkOnly)
+    {
+        throw new InvalidDataException(
+            $"Generating an unmanaged locale catalog is unsupported: {locale.Key}; use --check to validate it");
+    }
     var managedEntries = managedLocale is null
         ? new Dictionary<string, string>(StringComparer.Ordinal)
         : CopperfinLocalization.CatalogEntries(managedLocale);

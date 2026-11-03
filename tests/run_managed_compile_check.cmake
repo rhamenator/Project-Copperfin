@@ -63,9 +63,9 @@ execute_process(
 if(NOT catalog_result EQUAL 0)
     message(FATAL_ERROR "Managed localization catalog parity check failed")
 endif()
-find_program(COPPERFIN_LOCALE_PYTHON NAMES python3 python REQUIRED)
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
 execute_process(
-    COMMAND "${COPPERFIN_LOCALE_PYTHON}"
+    COMMAND "${Python3_EXECUTABLE}"
         "${SOURCE_DIR}/tests/test_locale_catalog_generator_inventory.py"
         "${DOTNET_EXECUTABLE}"
         "${SOURCE_DIR}/tools/Copperfin.LocalizationCatalogGenerator/Copperfin.LocalizationCatalogGenerator.csproj"

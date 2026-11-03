@@ -26,13 +26,13 @@ def main() -> int:
             repository / "vsix" / "Copperfin.VisualStudio" / "CopperfinLocalization.cs",
             managed_source / "CopperfinLocalization.cs",
         )
-        inventory = (repository / "resources" / "locales" / "inventory.txt").read_text()
+        inventory = (repository / "resources" / "locales" / "inventory.txt").read_text(encoding="utf-8")
         (locales / "inventory.txt").write_text(
-            inventory.replace("qps-ploc pseudo\n", "fr-FR unreviewed\nqps-ploc pseudo\n")
+            inventory.replace("qps-ploc pseudo\n", "fr-FR unreviewed\nqps-ploc pseudo\n"), encoding="utf-8"
         )
         shutil.copytree(locales / "en-US", locales / "fr-FR")
         path = locales / "fr-FR" / "strings.json"
-        complete = json.loads(path.read_text())
+        complete = json.loads(path.read_text(encoding="utf-8"))
 
         def check(expected_success: bool, label: str) -> None:
             result = subprocess.run(
@@ -49,18 +49,18 @@ def main() -> int:
         check(True, "complete fifth locale")
         missing = dict(complete)
         missing.pop("Studio.OpenDialogTitle")
-        path.write_text(json.dumps(missing, ensure_ascii=False))
+        path.write_text(json.dumps(missing, ensure_ascii=False), encoding="utf-8")
         check(False, "missing fifth-locale key")
         blank = dict(complete)
         blank["Studio.OpenDialogTitle"] = "  "
-        path.write_text(json.dumps(blank, ensure_ascii=False))
+        path.write_text(json.dumps(blank, ensure_ascii=False), encoding="utf-8")
         check(False, "blank fifth-locale value")
         placeholder = dict(complete)
         placeholder["Studio.OpenDocumentStatus"] = "Bad {unexpected} placeholder"
-        path.write_text(json.dumps(placeholder, ensure_ascii=False))
+        path.write_text(json.dumps(placeholder, ensure_ascii=False), encoding="utf-8")
         check(False, "changed fifth-locale placeholder")
-        path.write_text(json.dumps(complete, ensure_ascii=False))
-        (locales / "inventory.txt").write_text(inventory)
+        path.write_text(json.dumps(complete, ensure_ascii=False), encoding="utf-8")
+        (locales / "inventory.txt").write_text(inventory, encoding="utf-8")
         check(False, "undeclared fifth-locale directory")
     print("Synthetic fifth-locale generator checks passed.")
     return 0

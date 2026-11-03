@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
+cmake_minimum_required(VERSION 3.21)
+
 if(NOT DEFINED INSTALL_ROOT OR "${INSTALL_ROOT}" STREQUAL "")
     message(FATAL_ERROR "INSTALL_ROOT is required")
 endif()
