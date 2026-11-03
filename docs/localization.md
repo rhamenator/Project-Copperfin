@@ -29,7 +29,9 @@ with missing keys, blank values, changed placeholders, invalid UTF-8, or
 missing/changed installed artifacts. `unreviewed` reports review status, not
 content completeness; equal key counts do not establish translation quality.
 
-The source-of-truth locale is `en-US`. Placeholder catalogs currently exist for `es-419`, `pt-BR`, and `qps-ploc`. The Spanish and Portuguese catalogs are not production-ready language packs until a separate reviewed language-pack issue says so.
+The source-of-truth locale is `en-US`. `en-GB` is a v1 British/international
+English catalog with complete keys and a separate review record.
+`es-419` and `pt-BR` remain review-pending, and `qps-ploc` is test-only.
 
 ## Locale Selection
 

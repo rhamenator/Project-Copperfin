@@ -445,6 +445,14 @@ void test_product_locale_catalogs_have_key_parity() {
         }
     }
 
+    const auto british = copperfin::localization::load_catalogs(catalog_root, "en-GB");
+    expect(
+        british.translate("Licensing.Error.NoFields") == "The licence file has no fields." &&
+            british.translate("StudioHost.LaunchParse.ObjectAssignment.FillColor") == "fill-colour" &&
+            british.translate("Runtime.PrgStaticAnalysis.Diagnostic.PRG0001.Message") ==
+                "Failed to analyse PRG source: file could not be opened.",
+        "#2348: en-GB should render British prose while retaining PRG and property identities");
+
     const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     const std::string rushmore_status =
         pseudo.translate("StudioHost.RushmoreExplain.Status.Ok");
