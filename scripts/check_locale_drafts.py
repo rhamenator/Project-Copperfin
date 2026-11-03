@@ -83,10 +83,17 @@ def validate_directory(path: Path, source: dict[str, str]) -> None:
     if drafts.keys() != verdicts.keys():
         missing = sorted(drafts.keys() - verdicts.keys())
         raise ValueError(f"Drafts without independent verdicts: {missing[:5]}")
+    readme = (path / "README.md").read_text(encoding="utf-8")
     for locale, numbers in sorted(batch_numbers.items()):
         if numbers != set(range(max(numbers) + 1)):
             raise ValueError(f"Noncontiguous batches: {locale}")
         counts = Counter(verdicts[pair] for pair in drafts if pair[0] == locale)
+        row = re.search(
+            rf"^\| `{re.escape(locale)}` \| ([\d,]+) of ([\d,]+) \| ([\d,]+) \| ([\d,]+) \|$",
+            readme, re.MULTILINE)
+        expected = (sum(counts.values()), len(source), counts["accept"], counts["revise"])
+        if not row or tuple(int(value.replace(",", "")) for value in row.groups()) != expected:
+            raise ValueError(f"README counts differ from review verdicts: {path}:{locale}")
         print(f"{locale}: {sum(counts.values())} drafted; "
               f"{counts['accept']} accepted; {counts['revise']} need revision")
 
