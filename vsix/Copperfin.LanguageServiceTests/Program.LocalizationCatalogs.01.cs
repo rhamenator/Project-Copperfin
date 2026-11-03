@@ -110,6 +110,15 @@ internal static partial class Program
             var taiwan = new CopperfinLocalization("zh-Hant-TW", root);
             var spain = new CopperfinLocalization("es-ES", root);
             var mexico = new CopperfinLocalization("es-MX", root);
+            var neutralPortuguese = new CopperfinLocalization("pt", root);
+            var nativeHostStart = new System.Diagnostics.ProcessStartInfo();
+            CopperfinStudioHostBridge.ApplyLocalizationEnvironment(nativeHostStart, neutralPortuguese);
+            Expect(neutralPortuguese.Locale == "pt" &&
+                   neutralPortuguese.NativeHostLocale == "pt-BR" &&
+                   nativeHostStart.EnvironmentVariables["COPPERFIN_UI_LOCALE"] == "pt-BR" &&
+                   nativeHostStart.EnvironmentVariables["COPPERFIN_LOCALE"] == "pt-BR" &&
+                   portugal.NativeHostLocale == "pt-PT",
+                "#7071: neutral Portuguese retains UI identity but forwards pt-BR to native hosts");
             Expect(french.Locale == "fr-FR" && french.Text("Studio.OpenDialogTitle") == "Ouvrir un actif",
                 "#7071: a valid French regional catalog should load without a compiled locale branch");
             Expect(german.Locale == "de-DE" && german.Text("Studio.OpenDialogTitle") == "Asset öffnen",
